@@ -171,7 +171,7 @@ msgstr ""
 "rentas, como una comunidad de bienes o una sociedad civil sin objeto "
 "mercantil. La entidad atribuye sus rentas a sus miembros, así que no "
 "presenta ella misma esta autoliquidación. Los miembros declaran las rentas "
-"atribuidas en sus propias declaraciones."
+"atribuidas en tus propias declaraciones."
 
 #: ../../how-to/choose-modelo.md:36
 msgid ""

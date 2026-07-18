@@ -154,6 +154,14 @@ def main():
     python = _venv_python()
     if not _is_provisioned(python):
         _provision()
+    if sys.platform == "win32":
+        # CPython's os.exec* on Windows joins argv with spaces WITHOUT
+        # quoting, so a bundle under a spaced path (every real install:
+        # "...\\Claude Extensions\\...") hands the child a word-split
+        # command line and it tries to open half of its own interpreter
+        # path as the script. Supervise instead; the extra shim process
+        # still skips uv resolution on every warm launch.
+        raise SystemExit(subprocess.call([str(python), str(_SERVE)]))
     os.execv(str(python), [str(python), str(_SERVE)])
 
 

@@ -32,9 +32,9 @@ msgid ""
 "guides."
 msgstr ""
 "Esta página trata las dos ideas centrales de la herramienta: qué es "
-"realmente un cálculo guardado y qué te dice —y qué no— la comprobación de "
-"integridad. Está escrita para contribuyentes corrientes que trabajan con un "
-"{term}`modelo`; para las acciones paso a paso, enlaza con las guías "
+"realmente un cálculo guardado y qué te dice (y qué no) la comprobación de "
+"integridad. Está escrita para contribuyentes corrientes que trabajan con "
+"un {term}`modelo`; para las acciones paso a paso, enlaza con las guías "
 "prácticas."
 
 #: ../../explanation/editing-and-verifying.md:9

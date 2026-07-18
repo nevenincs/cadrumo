@@ -16,9 +16,9 @@ from urllib.parse import urlsplit
 
 from pydantic import SecretStr
 
-from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteStateGuardPolicy
+from ....persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
 from .._operator_progress import emit_operator_progress, operator_progress_sink
 from ._errors import AuthConfigurationError, AuthError
 
@@ -28,7 +28,7 @@ if TYPE_CHECKING:
 log = get_logger(__name__)
 
 DIAGNOSTIC_CAPTURE_TIMEOUT_SECONDS: Final[float] = 5.0
-DIAGNOSTIC_NAMESPACE: Final[str] = CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
+DIAGNOSTIC_NAMESPACE: Final[str] = CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace
 
 
 def auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:

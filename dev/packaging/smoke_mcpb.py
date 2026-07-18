@@ -157,7 +157,11 @@ def run_mcpb_smoke(
     logs = run_root / "logs"
     logs.mkdir()
     dist = run_root / "dist"
-    extracted = run_root / "extracted"
+    # The extraction dir DELIBERATELY contains a space: every real client
+    # install lives under a spaced path ("...\\Claude Extensions\\..."), and
+    # an unquoted-argv launch defect (os.execv word-splitting on Windows)
+    # shipped invisibly because this smoke's paths were space-free.
+    extracted = run_root / "extracted bundle"
     extracted.mkdir()
     environment = os.environ.copy()
     environment.pop("UV_PROJECT_ENVIRONMENT", None)

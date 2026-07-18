@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/classify-transactions.md:1
 msgid "Classify transactions"
-msgstr "Classifiqueu els moviments"
+msgstr "Classifica els moviments"
 
 #: ../../how-to/classify-transactions.md:3
 msgid ""
@@ -36,7 +36,7 @@ msgstr ""
 " si una fila és de negoci, personal o mixta, afegir la categoria i els "
 "camps fiscals que necessita un càlcul, registrar les proporcions d'ús "
 "mixt, la classificació per lots i per regles, i la cua de revisió que "
-"llista tot allò que encara espera una decisió. Utilitzeu-la després que "
+"llista tot allò que encara espera una decisió. Utilitza-la després que "
 "els moviments siguin al ledger del perfil actiu: les files importades "
 "tenen dates i imports, però encara no diuen com les ha de tractar el "
 "càlcul fiscal."
@@ -46,8 +46,8 @@ msgid ""
 "Classifying a transaction changes only the record on your computer. It "
 "sends nothing to Spain's Tax Agency (AEAT)."
 msgstr ""
-"Classificar un moviment només canvia el registre del vostre ordinador. No"
-" envia res a l'Agència Tributària d'Espanya (AEAT)."
+"Classificar un moviment només canvia el registre del teu ordinador. No "
+"envia res a l'Agència Tributària d'Espanya (AEAT)."
 
 #: ../../how-to/classify-transactions.md:14
 msgid "Before you start"
@@ -55,7 +55,7 @@ msgstr "Abans de començar"
 
 #: ../../how-to/classify-transactions.md:16
 msgid "You need:"
-msgstr "Necessiteu:"
+msgstr "Necessita:"
 
 #: ../../how-to/classify-transactions.md:18
 msgid ""
@@ -64,16 +64,16 @@ msgid ""
 "profile](profile-setup.md)."
 msgstr ""
 "Un perfil de contribuent actiu. Cada ordre següent treballa sobre el "
-"perfil actiu; si no n'hi ha cap, l'ordre es nega. Vegeu [Configureu el "
-"vostre perfil de contribuent](profile-setup.md)."
+"perfil actiu; si no n'hi ha cap, l'ordre es nega. Consulta [Configura el "
+"teu perfil de contribuent](profile-setup.md)."
 
 #: ../../how-to/classify-transactions.md:19
 msgid ""
 "A master-key passphrase. The tool prompts for it the first time it opens "
 "your encrypted storage in a session."
 msgstr ""
-"Una contrasenya de clau mestra. L'eina us la demana el primer cop que "
-"obre el vostre emmagatzematge xifrat en una sessió."
+"Una contrasenya de clau mestra. L'eina te la demana el primer cop que "
+"obre el teu emmagatzematge xifrat en una sessió."
 
 #: ../../how-to/classify-transactions.md:20
 msgid ""
@@ -81,7 +81,7 @@ msgid ""
 "](import-bank-statements.md) to import a bank statement or add rows by "
 "hand."
 msgstr ""
-"Un ledger amb moviments. Vegeu [Importeu i gestioneu els moviments"
+"Un ledger amb moviments. Consulta [Importa i gestiona els moviments"
 "](import-bank-statements.md) per importar un extracte bancari o afegir "
 "files a mà."
 
@@ -92,12 +92,12 @@ msgid ""
 "names."
 msgstr ""
 "L'ajuda i el text d'error de la CLI es mostren en castellà, encara que "
-"aquesta guia sigui en català. Quan un pas us remeti a `--help`, espereu "
+"aquesta guia sigui en català. Quan un pas et remeti a `--help`, espera "
 "noms d'opcions en castellà."
 
 #: ../../how-to/classify-transactions.md:24
 msgid "Review the row first"
-msgstr "Reviseu primer la fila"
+msgstr "Revisa primer la fila"
 
 #: ../../how-to/classify-transactions.md:26
 msgid ""
@@ -105,7 +105,7 @@ msgid ""
 " sequence imports the standard quarter and inspects the unclassified "
 "expense:"
 msgstr ""
-"Trobeu l'id del moviment i, tot seguit, inspeccioneu la fila abans de "
+"Troba l'id del moviment i, tot seguit, inspecciona la fila abans de "
 "classificar-la. La seqüència importa el trimestre estàndard i inspecciona"
 " la despesa sense classificar:"
 
@@ -114,17 +114,17 @@ msgid ""
 "Use the description, amount, counterparty, source document, and business "
 "context to decide how to classify the row."
 msgstr ""
-"Utilitzeu la descripció, l'import, la contrapart, el document font i el "
+"Utilitza la descripció, l'import, la contrapart, el document font i el "
 "context de negoci per decidir com classificar la fila."
 
 #: ../../how-to/classify-transactions.md:36
 msgid "Choose the classification"
-msgstr "Trieu la classificació"
+msgstr "Tria la classificació"
 
 #: ../../how-to/classify-transactions.md:38
 msgid "Use one of the ledger classification states that command help accepts:"
 msgstr ""
-"Utilitzeu un dels estats de classificació del ledger que accepta l'ajuda "
+"Utilitza un dels estats de classificació del ledger que accepta l'ajuda "
 "de l'ordre:"
 
 #: ../../how-to/classify-transactions.md:40
@@ -146,12 +146,12 @@ msgstr "`MIXED` per a un moviment que és en part de negoci i en part personal"
 #: ../../how-to/classify-transactions.md:44
 msgid "Use only these three values. Cadrumo sets the others automatically."
 msgstr ""
-"Utilitzeu només aquests tres valors. Cadrumo estableix els altres "
+"Utilitza només aquests tres valors. Cadrumo estableix els altres "
 "automàticament."
 
 #: ../../how-to/classify-transactions.md:46
 msgid "Pick a category for expenses"
-msgstr "Trieu una categoria per a les despeses"
+msgstr "Tria una categoria per a les despeses"
 
 #: ../../how-to/classify-transactions.md:48
 msgid ""
@@ -159,8 +159,8 @@ msgid ""
 "Expense rows normally need a category id before a modelo can calculate "
 "from them:"
 msgstr ""
-"Llisteu els ids de categoria admesos i, tot seguit, classifiqueu una fila"
-" de despesa amb un. Les files de despesa normalment necessiten un id de "
+"Llista els ids de categoria admesos i, tot seguit, classifica una fila de"
+" despesa amb un. Les files de despesa normalment necessiten un id de "
 "categoria abans que un model pugui calcular a partir d'elles:"
 
 #: ../../how-to/classify-transactions.md:55
@@ -168,7 +168,7 @@ msgid ""
 "For money you received (income), Cadrumo does not usually need a "
 "category. It calculates income totals automatically."
 msgstr ""
-"Per als diners que heu rebut (ingressos), Cadrumo normalment no necessita"
+"Per als diners que has rebut (ingressos), Cadrumo normalment no necessita"
 " cap categoria. Calcula els totals d'ingressos automàticament."
 
 #: ../../how-to/classify-transactions.md:58
@@ -179,16 +179,16 @@ msgid ""
 "separately, use `aeat app ledger invoice` with `--kind received` for "
 "supplier invoices and `--kind issued` for customer invoices."
 msgstr ""
-"Utilitzeu `OUTGOING` més una categoria de despesa per a compres a "
-"proveïdors i altres despeses deduïbles. Utilitzeu `INCOMING` per a "
+"Utilitza `OUTGOING` més una categoria de despesa per a compres a "
+"proveïdors i altres despeses deduïbles. Utilitza `INCOMING` per a "
 "factures emeses, pagaments de clients o serveis prestats a clients. Si "
-"també feu un seguiment dels registres de factures per separat, utilitzeu "
+"també fas un seguiment dels registres de factures per separat, utilitzes "
 "`aeat app ledger invoice` amb `--kind received` per a factures de "
 "proveïdor i `--kind issued` per a factures de client."
 
 #: ../../how-to/classify-transactions.md:64
 msgid "Add tax fields when needed"
-msgstr "Afegiu camps fiscals quan calgui"
+msgstr "Afegeix camps fiscals quan calgui"
 
 #: ../../how-to/classify-transactions.md:66
 msgid ""
@@ -196,8 +196,8 @@ msgid ""
 "sequence classifies the expense with its taxable base, rate, and IVA "
 "amount:"
 msgstr ""
-"Si una fila necessita camps fiscals regulats, afegiu només els camps que "
-"s'apliquin. La seqüència classifica la despesa amb la seva base "
+"Si una fila necessita camps fiscals regulats, afegeixes només els camps "
+"que s'apliquin. La seqüència classifica la despesa amb la seva base "
 "imposable, tipus i import d'IVA:"
 
 #: ../../how-to/classify-transactions.md:73
@@ -209,8 +209,8 @@ msgid ""
 msgstr ""
 "Els camps habituals inclouen base imposable, tipus d'IVA, import d'IVA, "
 "categoria d'IVA, categoria d'IRPF i estat membre de la UE de la "
-"contrapart per als casos d'IVA intracomunitari. Utilitzeu `aeat app "
-"ledger classify --help` per veure la llista exacta d'opcions actuals."
+"contrapart per als casos d'IVA intracomunitari. Utilitza `aeat app ledger"
+" classify --help` per veure la llista exacta d'opcions actuals."
 
 #: ../../how-to/classify-transactions.md:77
 msgid ""
@@ -218,7 +218,7 @@ msgid ""
 "by the invoice. For example, a EUR 121.00 purchase with 21 percent IVA "
 "usually has `--taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00`."
 msgstr ""
-"Per a l'IVA interior ordinari, utilitzeu la base imposable, el tipus i "
+"Per a l'IVA interior ordinari, utilitza la base imposable, el tipus i "
 "l'import que mostra la factura. Per exemple, una compra de 121,00 EUR amb"
 " un 21 per cent d'IVA sol tenir `--taxable-base 100.00 --iva-rate 0.21 "
 "--iva-amount 21.00`."
@@ -232,14 +232,14 @@ msgid ""
 "ledger classify --help` to see the accepted values."
 msgstr ""
 "La majoria de compres al tipus general del 21% no necessiten cap `--iva-"
-"category`. Afegiu-la només per a casos especials: tipus reduït (aliments,"
-" llibres), operacions exemptes, compres a proveïdors de la UE o recargo "
-"de equivalencia. Executeu `aeat app ledger classify --help` per veure els"
-" valors admesos."
+"category`. Afegeix-la només per a casos especials: tipus reduït "
+"(aliments, llibres), operacions exemptes, compres a proveïdors de la UE o"
+" recargo de equivalencia. Executa `aeat app ledger classify --help` per "
+"veure els valors admesos."
 
 #: ../../how-to/classify-transactions.md:86
 msgid "Classify mixed-use transactions"
-msgstr "Classifiqueu els moviments d'ús mixt"
+msgstr "Classifica els moviments d'ús mixt"
 
 #: ../../how-to/classify-transactions.md:88
 msgid ""
@@ -252,13 +252,13 @@ msgid ""
 "the registered home-office area against the size of your home). All three"
 " keep only the part of a cost that genuinely belongs to the business."
 msgstr ""
-"Un moviment d'ús mixt és aquell que utilitzeu en part per al negoci i en "
+"Un moviment d'ús mixt és aquell que utilitzes en part per al negoci i en "
 "part personalment, com ara una factura de telèfon, un cost de cotxe o una"
-" despesa de despatx a casa. Registreu la proporció de negoci perquè el "
+" despesa de despatx a casa. Registra la proporció de negoci perquè el "
 "càlcul comptabilitzi només la part deduïble. La proporció pot venir de "
 "tres llocs, en ordre creixent de fonamentació: un percentatge en un sol "
 "registre, una proporció per defecte desada per a tota una categoria, o "
-"una proporció calculada a partir de les vostres dades registrades (per "
+"una proporció calculada a partir de les teves dades registrades (per "
 "exemple, la superfície de despatx a casa registrada respecte a la mida de"
 " l'habitatge). Tots tres conserven només la part d'un cost que pertany "
 "realment al negoci."
@@ -317,7 +317,7 @@ msgid ""
 "List or check the saved ratios at any time. The sequence saves a ratio, "
 "lists the saved ratios, and validates them:"
 msgstr ""
-"Llisteu o comproveu les proporcions desades en qualsevol moment. La "
+"Llista o comprova les proporcions desades en qualsevol moment. La "
 "seqüència desa una proporció, llista les proporcions desades i les "
 "valida:"
 
@@ -326,8 +326,8 @@ msgid ""
 "Remove a category ratio you no longer want with `aeat app ledger ratios "
 "unset <category-id>`."
 msgstr ""
-"Elimineu una proporció de categoria que ja no vulgueu amb `aeat app "
-"ledger ratios unset <category-id>`."
+"Elimina una proporció de categoria que ja no vulguis amb `aeat app ledger"
+" ratios unset <category-id>`."
 
 #: ../../how-to/classify-transactions.md:130
 msgid ""
@@ -337,16 +337,16 @@ msgid ""
 " - see [Maintain Modelo 036 census facts in your profile](censo-"
 "update.md)."
 msgstr ""
-"Per a les despeses de despatx a casa, deseu una proporció per a la "
-"categoria de despatx a casa corresponent i assigneu-la com s'ha indicat "
+"Per a les despeses de despatx a casa, desa una proporció per a la "
+"categoria de despatx a casa corresponent i assigna-la com s'ha indicat "
 "més amunt. Les proporcions de despatx a casa segueixen el flux de treball"
-" manual o de proporció desada; mantingueu primer correctes les dades "
-"censals del vostre perfil: vegeu [Mantingueu les dades censals del Model "
-"036 al vostre perfil](censo-update.md)."
+" manual o de proporció desada; mantén primer correctes les dades censals "
+"del teu perfil: consulta [Mantén les dades censals del Model 036 al teu "
+"perfil](censo-update.md)."
 
 #: ../../how-to/classify-transactions.md:135
 msgid "Classify many rows from CSV"
-msgstr "Classifiqueu moltes files des d'un CSV"
+msgstr "Classifica moltes files des d'un CSV"
 
 #: ../../how-to/classify-transactions.md:137
 msgid ""
@@ -360,8 +360,8 @@ msgstr ""
 "columnes `transaction_id`, `classification` i dades de classificació "
 "opcionals com ara `category_id`, `business_pct`, `usage_ratio_id`, "
 "columnes de base imposable i IVA, `iva_category` i `irpf_category`. "
-"Prepareu un CSV reduït que contingui només les files que voleu canviar, "
-"una fila per moviment:"
+"Prepara un CSV reduït que contingui només les files que vols canviar, una"
+" fila per moviment:"
 
 #: ../../how-to/classify-transactions.md:150
 msgid ""
@@ -383,18 +383,18 @@ msgid ""
 "split/merge state; use the transaction workflow for those row-level "
 "edits."
 msgstr ""
-"Utilitzeu la via del CSV quan la revisió filtrada mostri moltes files que"
-" podeu classificar amb seguretat a partir de les seves descripcions, "
-"contraparts i documents font. Conserveu una còpia del fitxer. Us dona un "
-"registre de com heu classificat aquell període si més endavant se us "
+"Utilitza la via del CSV quan la revisió filtrada mostri moltes files que "
+"pots classificar amb seguretat a partir de les seves descripcions, "
+"contraparts i documents font. Conserva una còpia del fitxer. Et dona un "
+"registre de com has classificat aquell període si més endavant se et "
 "demana justificar la declaració. Aquesta via no actualitza per lots "
 "imports, descripcions, valors d'IVA, notes, adjunts ni l'estat de "
-"divisió/fusió; utilitzeu el flux de treball de moviments per a aquestes "
+"divisió/fusió; utilitza el flux de treball de moviments per a aquestes "
 "edicions a nivell de fila."
 
 #: ../../how-to/classify-transactions.md:165
 msgid "Apply stored rules automatically"
-msgstr "Apliqueu regles desades automàticament"
+msgstr "Aplica regles desades automàticament"
 
 #: ../../how-to/classify-transactions.md:167
 msgid ""
@@ -404,7 +404,7 @@ msgid ""
 "effect, then applies it:"
 msgstr ""
 "Les regles classifiquen automàticament els moviments la descripció dels "
-"quals conté una paraula o frase que especifiqueu. La coincidència ignora "
+"quals conté una paraula o frase que especifiques. La coincidència ignora "
 "les diferències entre majúscules i minúscules. La seqüència afegeix una "
 "regla, llista les regles, en previsualitza l'efecte i, tot seguit, "
 "l'aplica:"
@@ -414,12 +414,12 @@ msgid ""
 "Run `--dry-run` first. Add `--reaffirm` only if you want the rule to "
 "overwrite classifications you already set by hand."
 msgstr ""
-"Executeu `--dry-run` primer. Afegiu `--reaffirm` només si voleu que la "
-"regla sobreescrigui classificacions que ja heu establert a mà."
+"Executa `--dry-run` primer. Afegeix `--reaffirm` només si vols que la "
+"regla sobreescrigui classificacions que ja has establert a mà."
 
 #: ../../how-to/classify-transactions.md:178
 msgid "Use an LLM suggestion"
-msgstr "Utilitzeu un suggeriment d'un LLM"
+msgstr "Utilitza un suggeriment d'un LLM"
 
 #: ../../how-to/classify-transactions.md:180
 msgid ""
@@ -429,7 +429,7 @@ msgid ""
 "rate, or IRPF category."
 msgstr ""
 "Cadrumo pot utilitzar un assistent d'IA per suggerir com classificar cada"
-" moviment. El suggeriment és un punt de partida. L'heu de confirmar o "
+" moviment. El suggeriment és un punt de partida. L'has de confirmar o "
 "corregir. No emplena imports fiscals com ara la base imposable, el tipus "
 "d'IVA o la categoria d'IRPF."
 
@@ -438,13 +438,13 @@ msgid ""
 "Use [Classify transactions with an LLM](classify-with-llm.md) for the "
 "full provider, preview, apply, and override flow."
 msgstr ""
-"Utilitzeu [Classifiqueu els moviments amb un LLM](classify-with-llm.md) "
-"per al flux complet de proveïdor, previsualització, aplicació i "
+"Utilitza [Classifica els moviments amb un LLM](classify-with-llm.md) per "
+"al flux complet de proveïdor, previsualització, aplicació i "
 "sobreescriptura."
 
 #: ../../how-to/classify-transactions.md:187
 msgid "See everything that still needs a decision"
-msgstr "Vegeu tot allò que encara necessita una decisió"
+msgstr "Consulta tot allò que encara necessita una decisió"
 
 #: ../../how-to/classify-transactions.md:189
 msgid ""
@@ -458,12 +458,12 @@ msgid ""
 "queue:"
 msgstr ""
 "La cua de revisió és una única llista de tot l'àmbit del perfil de tot "
-"allò que encara vol la vostra atenció abans d'una presentació: moviments "
+"allò que encara vol la teva atenció abans d'una presentació: moviments "
 "sense classificació, registres de factures no conciliats o en disputa, i "
 "troballes de verificació sobre esborranys de models. Cada fila anomena "
 "l'ordre exacta que la resol, de manera que la cua és una llista de "
-"tasques que podeu recórrer de dalt a baix. La cua és de només lectura; "
-"els elements desapareixen quan corregiu el registre subjacent amb l'ordre"
+"tasques que pots recórrer de dalt a baix. La cua és de només lectura; els"
+" elements desapareixen quan corregeixes el registre subjacent amb l'ordre"
 " que anomena la fila. La seqüència importa el trimestre i, tot seguit, "
 "llegeix la cua:"
 
@@ -475,7 +475,7 @@ msgid ""
 msgstr ""
 "Cada fila mostra l'id de l'element, la seva mena, el registre afectat, el"
 " període, una severitat (`critical`, `high`, `normal` o `info`) i una "
-"columna final amb l'ordre a executar tot seguit. Acoteu la llista per "
+"columna final amb l'ordre a executar tot seguit. Acota la llista per "
 "mena, model o estat:"
 
 #: ../../how-to/classify-transactions.md:209
@@ -490,11 +490,11 @@ msgid ""
 msgstr ""
 "Els tokens `--kind` admesos són `ledger_transaction`, "
 "`purchase_invoice_evidence`, `payable_invoice`, `collectible_invoice` i "
-"`modelo_finding`. L'estat per defecte és `pending`. Inspeccioneu un "
+"`modelo_finding`. L'estat per defecte és `pending`. Inspecciona un "
 "element complet, inclosa l'ordre següent suggerida, amb `aeat app review "
 "view <item-id>`. Les troballes de models es fonamenten en regles del "
-"registre; afegiu `--explain` per mostrar les referències legals, o "
-"utilitzeu l'indicador global `--format json` (abans de l'ordre) per "
+"registre; afegeix `--explain` per mostrar les referències legals, o "
+"utilitza l'indicador global `--format json` (abans de l'ordre) per "
 "obtenir un camp `legal_refs` a cada fila."
 
 #: ../../how-to/classify-transactions.md:217
@@ -505,24 +505,24 @@ msgid ""
 " reported values and verify again - see [Verify a filing](verification-"
 "reports.md)."
 msgstr ""
-"Els elements de moviment desapareixen quan classifiqueu la fila (aquesta "
-"pàgina). Els elements de factura desapareixen quan enllaceu o actualitzeu"
-" la factura: vegeu [Adjunteu factures i rebuts](ledger-evidence.md). Les "
-"troballes de models desapareixen quan corregiu els valors reportats i "
-"torneu a verificar: vegeu [Verifiqueu una presentació](verification-"
-"reports.md)."
+"Els elements de moviment desapareixen quan classifiques la fila (aquesta "
+"pàgina). Els elements de factura desapareixen quan enllaces o actualitzes"
+" la factura: consulta [Adjunta factures i rebuts](ledger-evidence.md). "
+"Les troballes de models desapareixen quan corregeixes els valors "
+"reportats i tornes a verificar: consulta [Verifica una presentació"
+"](verification-reports.md)."
 
 #: ../../how-to/classify-transactions.md:223
 msgid "Confirm readiness"
-msgstr "Confirmeu la preparació"
+msgstr "Confirma la preparació"
 
 #: ../../how-to/classify-transactions.md:225
 msgid ""
 "Run preflight after classification. The sequence imports and classifies "
 "the quarter, then runs preflight and reads the ledger status:"
 msgstr ""
-"Executeu el preflight després de la classificació. La seqüència importa i"
-" classifica el trimestre i, tot seguit, executa el preflight i llegeix "
+"Executa el preflight després de la classificació. La seqüència importa i "
+"classifica el trimestre i, tot seguit, executa el preflight i llegeix "
 "l'estat del ledger:"
 
 #: ../../how-to/classify-transactions.md:232
@@ -536,7 +536,7 @@ msgstr ""
 
 #: ../../how-to/classify-transactions.md:235
 msgid "Correct a classification"
-msgstr "Corregiu una classificació"
+msgstr "Corregeix una classificació"
 
 #: ../../how-to/classify-transactions.md:237
 msgid ""
@@ -544,13 +544,13 @@ msgid ""
 "the previous classification. The sequence classifies a row as business, "
 "then corrects it to personal:"
 msgstr ""
-"Torneu a executar `classify` sobre el mateix id de moviment. Una decisió "
+"Torna a executar `classify` sobre el mateix id de moviment. Una decisió "
 "manual substitueix la classificació anterior. La seqüència classifica una"
 " fila com a negoci i, tot seguit, la corregeix a personal:"
 
 #: ../../how-to/classify-transactions.md:245
 msgid "Inspect the row again with `ledger view` before calculating."
-msgstr "Inspeccioneu la fila de nou amb `ledger view` abans de calcular."
+msgstr "Inspecciona la fila de nou amb `ledger view` abans de calcular."
 
 #: ../../how-to/classify-transactions.md:247
 msgid "Next steps"
@@ -558,27 +558,27 @@ msgstr "Passos següents"
 
 #: ../../how-to/classify-transactions.md:249
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr "[Importeu i gestioneu els moviments](import-bank-statements.md)"
+msgstr "[Importa i gestiona els moviments](import-bank-statements.md)"
 
 #: ../../how-to/classify-transactions.md:250
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
-msgstr "[Classifiqueu els moviments amb un LLM](classify-with-llm.md)"
+msgstr "[Classifica els moviments amb un LLM](classify-with-llm.md)"
 
 #: ../../how-to/classify-transactions.md:251
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
 msgstr ""
-"[Com els vostres registres esdevenen xifres fiscals](../explanation/from-"
+"[Com els teus registres esdevenen xifres fiscals](../explanation/from-"
 "records-to-figures.md)"
 
 #: ../../how-to/classify-transactions.md:252
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr "[Reviseu i proporcioneu les dades de càlcul](review-calculation-values.md)"
+msgstr "[Revisa i proporciona les dades de càlcul](review-calculation-values.md)"
 
 #: ../../how-to/classify-transactions.md:253
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
-msgstr "[Reviseu els càlculs amb Google Sheets](review-with-google-sheets.md)"
+msgstr "[Revisa els càlculs amb Google Sheets](review-with-google-sheets.md)"
 
 #: ../../how-to/classify-transactions.md:254
 msgid "[CLI reference](../cli/index.rst)"

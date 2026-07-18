@@ -72,7 +72,7 @@ msgid ""
 "what to fill in with `aeat config profile edit`."
 msgstr ""
 "**Preparación del perfil**: todos los datos del perfil que el modelo "
-"requiere. Cada dato que falta se enumera por su sección y su clave de campo, "
+"requiere. Cada dato que falta se enumera por su sección y tu clave de campo, "
 "así que sabes exactamente qué rellenar con `aeat config profile edit`."
 
 #: ../../how-to/filing-readiness.md:27

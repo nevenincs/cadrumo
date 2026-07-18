@@ -221,8 +221,8 @@ msgid ""
 " facts in your profile](censo-update.md). Censo facts can affect profile "
 "readiness and local classifications."
 msgstr ""
-"Ellenőrizze a censo-adatait a számítás előtt – lásd: [Tartsa karban a Modelo"
-" 036 censo-adatait a profiljában](censo-update.md). A censo-adatok "
+"Ellenőrizze a censo-adatait a számítás előtt, lásd: [Tartsa karban a Modelo "
+"036 censo-adatait a profiljában](censo-update.md). A censo-adatok "
 "befolyásolhatják a profil készenlétét és a helyi besorolásokat."
 
 #: ../../how-to/modelo-303.md:80

@@ -17,7 +17,9 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
+import urllib.parse
 from pathlib import Path
 from typing import Any, Final
 
@@ -161,6 +163,77 @@ def _resolve_server(plugin: dict[str, Any]) -> tuple[Path, tuple[str, ...], dict
     return Path(uvx).resolve(strict=True), resolved_args, environment, plugin_root
 
 
+# The credential-document fields that carry actual secrets. Keying on these
+# (rather than every long string value) keeps an account email or UUID from
+# tripping a spurious "credential leaked" refusal that would delete the very
+# log needed to triage a smoke failure.
+_CREDENTIAL_SECRET_FIELDS: Final[frozenset[str]] = frozenset({"accessToken", "refreshToken"})
+
+
+def _credential_secret_values(credential_path: Path, *, environment: dict[str, str]) -> tuple[str, ...]:
+    """The secret values whose appearance in a retained log refuses the run.
+
+    Collects the known token fields from the copied credential document (every
+    string value >= 16 chars as a fallback when no known field matches, so an
+    unrecognised credential shape stays covered), plus any API key or auth
+    token the environment supplies, plus a URL-encoded variant of each - the
+    one cheap re-encoding a protocol log plausibly applies.
+    """
+    secrets: list[str] = []
+    try:
+        document = json.loads(credential_path.read_text(encoding=_UTF_8))
+    except (OSError, json.JSONDecodeError):
+        document = None
+    field_hits: list[str] = []
+    long_strings: list[str] = []
+    pending: list[Any] = [document] if document is not None else []
+    while pending:
+        node = pending.pop()
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in _CREDENTIAL_SECRET_FIELDS and isinstance(value, str) and value:
+                    field_hits.append(value)
+                else:
+                    pending.append(value)
+        elif isinstance(node, list):
+            pending.extend(node)
+        elif isinstance(node, str) and len(node) >= 16:
+            long_strings.append(node)
+    secrets.extend(field_hits if field_hits else long_strings)
+    secrets.extend(
+        value for value in (environment.get("ANTHROPIC_API_KEY"), environment.get("ANTHROPIC_AUTH_TOKEN")) if value
+    )
+    return tuple(dict.fromkeys(secret for value in secrets for secret in (value, urllib.parse.quote(value, safe=""))))
+
+
+def _assert_no_credential_leak(logs: Path, *, secrets: tuple[str, ...]) -> None:
+    """Refuse to retain session evidence that carries a credential secret.
+
+    The retained evidence tree uploads as a CI artifact; the Claude debug and
+    session logs land inside it. Scanning them for the credential secret
+    values (verbatim and URL-encoded) fails closed BEFORE the run returns.
+    This covers the dominant leak shape - a token echoed intact or
+    URL-encoded into a diagnostic line - and REDUCES rather than eliminates
+    the risk: an exotic re-encoding (base64-of-header, compressed output, or
+    a substring broken by a replaced undecodable byte) would pass the scan.
+    Note the SystemExit here supersedes any in-flight exception from the
+    protected block; when a leak and a functional failure co-occur, the leak
+    refusal is deliberately the surviving signal.
+    """
+    if not secrets:
+        return
+    for log_path in sorted(logs.rglob("*")):
+        if not log_path.is_file():
+            continue
+        text = log_path.read_text(encoding=_UTF_8, errors="replace")
+        if any(secret in text for secret in secrets):
+            log_path.unlink()
+            raise SystemExit(
+                f"credential secret leaked into session log {log_path.name}; "
+                "the leaking log was deleted and the evidence run is refused",
+            )
+
+
 def _run_optional_claude_session(
     claude: Path,
     *,
@@ -223,26 +296,84 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     claude = args.claude.resolve(strict=True)
+    if sys.platform == "win32" and claude.suffix.lower() == ".ps1":
+        # An npm-installed Claude Code resolves to the PowerShell shim first
+        # (`Get-Command claude` -> claude.ps1), which CreateProcess cannot
+        # execute (WinError 193). npm always writes the sibling .cmd shim,
+        # which CreateProcess runs natively - swap to it.
+        command_shim = claude.with_suffix(".cmd")
+        if not command_shim.is_file():
+            raise SystemExit(
+                f"claude resolves to a PowerShell shim ({claude}) and no sibling "
+                ".cmd shim exists; pass the executable directly via --claude",
+            )
+        claude = command_shim
     cohort = load_python_cohort(args.cohort_dir)
     evidence_root = args.evidence_dir.resolve()
     run_root = evidence_root / f"run-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
     marketplace = run_root / "marketplace"
     workspace = run_root / "workspace"
-    config_dir = run_root / "claude-config"
+    # The isolated Claude config lives OUTSIDE the retained evidence tree: a
+    # subscription credential copied into it must never reach evidence bytes
+    # that later upload as CI artifacts or publish with a release.
+    config_dir = Path(tempfile.mkdtemp(prefix="cadrumo-plugin-smoke-claude-config-"))
     logs = run_root / "logs"
     workspace.mkdir(parents=True)
-    config_dir.mkdir(parents=True)
 
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
     environment.pop("PYTHONHOME", None)
     environment.pop("PYTHONPATH", None)
+    default_config_dir = Path(os.environ.get("CLAUDE_CONFIG_DIR", str(Path.home() / ".claude")))
     environment["CLAUDE_CONFIG_DIR"] = str(config_dir)
+    subscription_credential = default_config_dir / ".credentials.json"
+    if subscription_credential.is_file():
+        shutil.copy2(subscription_credential, config_dir / ".credentials.json")
     has_claude_credential = bool(
-        environment.get("ANTHROPIC_API_KEY") or environment.get("ANTHROPIC_AUTH_TOKEN"),
+        environment.get("ANTHROPIC_API_KEY")
+        or environment.get("ANTHROPIC_AUTH_TOKEN")
+        or subscription_credential.is_file(),
     )
     if args.run_claude_session and not has_claude_credential:
-        raise SystemExit("--run-claude-session requires ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN")
+        raise SystemExit(
+            "--run-claude-session requires ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, "
+            "or a subscription-authenticated Claude Code login "
+            f"({subscription_credential})",
+        )
 
+    credential_secrets = _credential_secret_values(config_dir / ".credentials.json", environment=environment)
+    try:
+        return _prove_installed_plugin(
+            args,
+            claude=claude,
+            cohort=cohort,
+            run_root=run_root,
+            marketplace=marketplace,
+            workspace=workspace,
+            logs=logs,
+            environment=environment,
+            has_claude_credential=has_claude_credential,
+        )
+    finally:
+        shutil.rmtree(config_dir, ignore_errors=True)
+        # Every exit path - success, refusal, or crash - scans the retained
+        # session logs for the credential secrets before the evidence survives.
+        if logs.is_dir():
+            _assert_no_credential_leak(logs, secrets=credential_secrets)
+
+
+def _prove_installed_plugin(
+    args: argparse.Namespace,
+    *,
+    claude: Path,
+    cohort: PythonCohort,
+    run_root: Path,
+    marketplace: Path,
+    workspace: Path,
+    logs: Path,
+    environment: dict[str, str],
+    has_claude_credential: bool,
+) -> int:
+    """Install the marketplace plugin and retain protocol plus session evidence."""
     manifest = materialise_marketplace(marketplace, cohort=cohort)
     _run(
         [str(claude), "plugin", "marketplace", "add", str(marketplace)],

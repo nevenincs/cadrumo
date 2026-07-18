@@ -164,22 +164,22 @@ msgid ""
 "`exclusively_deductible` - the input serves only operations that grant the "
 "right to deduct; it deducts in full."
 msgstr ""
-"`exclusively_deductible` – az előzetes áfa csak levonásra jogosító "
-"ügyleteket szolgál; teljesen levonódik."
+"`exclusively_deductible`: az előzetes áfa csak levonásra jogosító ügyleteket"
+" szolgál; teljesen levonódik."
 
 #: ../../how-to/prorrata.md:70
 msgid ""
 "`exclusively_non_deductible` - the input serves only operations that do not;"
 " it deducts nothing."
 msgstr ""
-"`exclusively_non_deductible` – az előzetes áfa csak nem jogosító ügyleteket "
+"`exclusively_non_deductible`: az előzetes áfa csak nem jogosító ügyleteket "
 "szolgál; semmit nem von le."
 
 #: ../../how-to/prorrata.md:72
 msgid "`common` - the input is shared; it deducts at the common-use percentage."
 msgstr ""
-"`common` – az előzetes áfa megosztott; a közös használatú százalékon vonódik"
-" le."
+"`common`: az előzetes áfa megosztott; a közös használatú százalékon vonódik "
+"le."
 
 #: ../../how-to/prorrata.md:74
 msgid ""
@@ -265,7 +265,7 @@ msgid ""
 "103.Dos.2) makes especial mandatory. Classify every input of the year so the"
 " tool can run this check; until then it prompts you to classify."
 msgstr ""
-"**Az especial kötelező lehet** – amikor az adózó általános prorrata szerint "
+"**Az especial kötelező lehet**: amikor az adózó általános prorrata szerint "
 "számol, és az especial legalább 10%-kal kevesebbet vonna le, a törvény (LIVA"
 " art. 103.Dos.2) kötelezővé teszi az especialt. Osztályozza az év minden "
 "előzetes áfáját, hogy az eszköz lefuttathassa ezt az ellenőrzést; addig "
@@ -276,13 +276,13 @@ msgid ""
 "**Inert classification** - an `--input-classification` tag set with no "
 "especial election for that year."
 msgstr ""
-"**Hatástalan osztályozás** – egy `--input-classification` címke, amely arra "
+"**Hatástalan osztályozás**: egy `--input-classification` címke, amely arra "
 "az évre nincs especial-választással beállítva."
 
 #: ../../how-to/prorrata.md:115
 msgid "**Unmatched sector** - a `--sector` tag naming a sector not yet declared."
 msgstr ""
-"**Párját nem lelő szektor** – egy `--sector` címke, amely egy még nem "
+"**Párját nem lelő szektor**: egy `--sector` címke, amely egy még nem "
 "deklarált szektort nevez meg."
 
 #: ../../how-to/prorrata.md:117

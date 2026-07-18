@@ -2,7 +2,9 @@
 
 This page covers installation only: get the package, install the `aeat`
 command, add the optional extras you want, and (if you use an AI assistant)
-install the agent surface. Configuration and first use start in the
+install the agent surface. If you do not have Cadrumo on your machine yet,
+start at [Get Cadrumo](download.md) for the acquisition paths and their
+current availability. Configuration and first use start in the
 [quickstart](how-to/quickstart.md) once the install checks pass.
 
 Cadrumo works without any optional service. Google export, on-host LLM vision,
@@ -18,8 +20,7 @@ You need:
 
 ## Install the CLI
 
-Public package and plugin distribution is not available yet. Use an authorized
-source checkout:
+The beta installs from the project repository:
 
 ```bash
 git clone https://github.com/nevenincs/cadrumo.git
@@ -28,9 +29,9 @@ uv sync
 uv run aeat --version
 ```
 
-Do not install Cadrumo from PyPI, a public plugin marketplace, Scoop, Homebrew,
-or a Desktop extension bundle until the project announces those channels as
-available.
+Registry listings for the packaged channels (PyPI, Scoop, Homebrew, and the
+plugin marketplace) open with the public launch; see
+[Get Cadrumo](download.md) for each channel's current status.
 
 ## Confirm the install
 
@@ -95,8 +96,7 @@ together with an agent harness: the operator rules, taxpayer-situation
 skills, and scoped agent personas that keep the assistant inside the safety
 boundary.
 
-Public plugin, Desktop extension, and package channels are not available yet.
-Run the server from the same authorized checkout:
+In the beta, run the server from the same repository checkout:
 
 ```bash
 uv sync --extra agent

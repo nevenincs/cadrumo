@@ -48,7 +48,6 @@ from pydantic import ValidationError
 from .....core import AuthProviderDescription, AuthProviderKind
 from .....core.config import Settings as _Settings
 from .....core.config import unwrap_optional_secret
-from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
@@ -1050,7 +1049,6 @@ class ClaveMovilAuthProvider(_ClaveMovilPageFlowMixin):
 
 
 __all__ = [
-    "CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE",
     "ClaveMovilApprovalTimeoutError",
     "ClaveMovilAuthProvider",
     "ClaveMovilConfigurationError",

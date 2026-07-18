@@ -57,6 +57,7 @@ _LOGGER = get_logger(__name__)
 _CALCULATION_NAMESPACE = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace
 _CALCULATION_OBJECT_KEY = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.require_default_object_key()
 _CALCULATION_CATALOGUE_VERSION = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.schema_version
+_CALCULATION_CATALOGUE_SENSITIVITY = MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.sensitivity
 _CALCULATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_calculation_revision_persistence"
 
 
@@ -141,14 +142,13 @@ class CalculationRevisionCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
-            SensitivityClass,
         )
 
         try:
             record = self._objects.load(
                 _CALCULATION_NAMESPACE,
                 _CALCULATION_OBJECT_KEY,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_CALCULATION_CATALOGUE_SENSITIVITY,
                 max_supported_version=_CALCULATION_CATALOGUE_VERSION,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
@@ -162,11 +162,11 @@ class CalculationRevisionCatalogueRepository:
         if record is None:
             return CalculationRevisionCatalogue()
         envelope = Envelope[CalculationRevisionCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        if envelope.classification is not _CALCULATION_CATALOGUE_SENSITIVITY:
             _LOGGER.error(
                 "calculation-revision catalogue classification mismatch",
                 extra={
-                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "expected_classification": _CALCULATION_CATALOGUE_SENSITIVITY.value,
                     "actual_classification": envelope.classification.value,
                 },
             )
@@ -175,7 +175,7 @@ class CalculationRevisionCatalogueRepository:
                 translated_message=_CALCULATION_PERSISTENCE_MESSAGE,
                 context={
                     "reason": "classification_mismatch",
-                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "expected_classification": _CALCULATION_CATALOGUE_SENSITIVITY.value,
                     "actual_classification": envelope.classification.value,
                 },
             )
@@ -219,18 +219,18 @@ class CalculationRevisionCatalogueRepository:
             catalogue: The :class:`CalculationRevisionCatalogue` to serialise and
                 store.
         """
-        from ..storage import Envelope, SensitivityClass
+        from ..storage import Envelope
 
         envelope = Envelope[CalculationRevisionCatalogue](
             schema_version=_CALCULATION_CATALOGUE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_CALCULATION_CATALOGUE_SENSITIVITY,
             payload=catalogue,
         )
         self._objects.save(
             namespace=_CALCULATION_NAMESPACE,
             object_key=_CALCULATION_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_CALCULATION_CATALOGUE_SENSITIVITY,
             schema_version=_CALCULATION_CATALOGUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
@@ -246,18 +246,18 @@ class CalculationRevisionCatalogueRepository:
         co-emitted with related secure objects (e.g. the participation index) in
         one :meth:`save_with_secure_object_writes` unit of work.
         """
-        from ..storage import Envelope, SecureObjectWrite, SensitivityClass
+        from ..storage import Envelope, SecureObjectWrite
 
         envelope = Envelope[CalculationRevisionCatalogue](
             schema_version=_CALCULATION_CATALOGUE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_CALCULATION_CATALOGUE_SENSITIVITY,
             payload=catalogue,
         )
         return SecureObjectWrite(
             namespace=_CALCULATION_NAMESPACE,
             object_key=_CALCULATION_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_CALCULATION_CATALOGUE_SENSITIVITY,
             schema_version=_CALCULATION_CATALOGUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),

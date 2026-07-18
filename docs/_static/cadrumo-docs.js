@@ -1523,9 +1523,29 @@
     });
   }
 
+  // Language switcher: close the native details dropdown on outside click or
+  // Escape (progressive enhancement; the disclosure works without script).
+  function initLanguageSwitcher() {
+    var switcher = document.querySelector("details[data-cadrumo-lang]");
+    if (!switcher) {
+      return;
+    }
+    document.addEventListener("click", function (event) {
+      if (switcher.open && !switcher.contains(event.target)) {
+        switcher.open = false;
+      }
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && switcher.open) {
+        switcher.open = false;
+      }
+    });
+  }
+
   ready(function () {
     initBroadcast();
     initNavActive();
+    initLanguageSwitcher();
     initCommandBlocks();
     initPalette();
     initSearchPage();

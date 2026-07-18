@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo localization <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../how-to/iva-lifecycle.md:1
 msgid "The IVA year: quarterly returns and the annual summary"
-msgstr ""
+msgstr "Az IVA-év: negyedéves bevallások és az éves összesítő"
 
 #: ../../how-to/iva-lifecycle.md:3
 msgid ""
@@ -31,6 +30,11 @@ msgid ""
 "an optional Modelo 349 branch for intra-community operations, and the "
 "annual Modelo 390 summary that must reconcile with the four quarters."
 msgstr ""
+"Ez az oldal egy teljes IVA-évet tárgyal ugyanarra a példaadózóra, mint [a "
+"jövedelemadó-év](irpf-lifecycle.md): a nyitó követelésegyenleget, négy "
+"negyedéves Modelo 303 bevallást, közöttük átvitt IVA-követeléssel, egy "
+"opcionális Modelo 349 ágat a közösségen belüli ügyletekhez, és az éves "
+"Modelo 390 összesítőt, amelynek egyeznie kell a négy negyedévvel."
 
 #: ../../how-to/iva-lifecycle.md:9
 msgid ""
@@ -39,6 +43,10 @@ msgid ""
 "Tributaria (AEAT). At each filing you upload the exported file yourself "
 "through the AEAT portal."
 msgstr ""
+"A Cadrumo (az `aeat` parancs) helyi fájlokat készít elő a spanyol "
+"adónyomtatványokhoz. Nem nyújtja be őket az Agencia Estatal de "
+"Administración Tributariának (AEAT). Minden benyújtásnál Ön maga tölti fel "
+"az exportált fájlt az AEAT-portálon keresztül."
 
 #: ../../how-to/iva-lifecycle.md:14
 msgid ""
@@ -50,16 +58,26 @@ msgid ""
 "through's stage 1 and stage 2 `profile create` and `ledger add` commands,"
 " run them first."
 msgstr ""
+"A személy és a ledger a jövedelemadó-végigfutásból folytatódik: Ana "
+"García López, tanácsadó, a tevékenység 2026. január 1-jén kezdődött. "
+"Ugyanazok az értékesítési és kiadássorok, amelyeket ott rögzített, "
+"hordozzák az IVA-részletüket (adóalap, kulcs, IVA-összeg), így újbóli "
+"bevitel nélkül táplálják az IVA-számításokat - egy ledger, két adóügyi "
+"szemszög. Ha még nem futtatta annak a végigfutásnak az 1. és 2. "
+"szakaszbeli `profile create` és `ledger add` parancsait, először futtassa "
+"őket."
 
 #: ../../how-to/iva-lifecycle.md:21
 msgid ""
 "The CLI prints help, labels, and messages in Spanish. This page keeps the"
 " explanations in English."
 msgstr ""
+"A CLI a súgót, a címkéket és az üzeneteket spanyolul nyomtatja ki. Ez az "
+"oldal a magyarázatokat megtartja."
 
 #: ../../how-to/iva-lifecycle.md:24
 msgid "Prerequisites"
-msgstr ""
+msgstr "Előfeltételek"
 
 #: ../../how-to/iva-lifecycle.md:26
 msgid ""
@@ -69,20 +87,28 @@ msgid ""
 "create one with `aeat config profile create <name>`. [Set up your "
 "taxpayer profile](profile-setup.md) walks through it."
 msgstr ""
+"Egy működő `aeat` parancs, egy mesterkulcs-jelmondat (az eszköz bekéri), "
+"valamint a profil és az első negyedéves ledger-sorok [a jövedelemadó-év "
+"1. és 2. szakaszából](irpf-lifecycle.md). Ha még nincs profilja, hozzon "
+"létre egyet az `aeat config profile create <name>` paranccsal. [Az adózói "
+"profil beállítása](profile-setup.md) végigvezeti rajta."
 
 #: ../../how-to/iva-lifecycle.md:33
 msgid "Confirm the IVA obligations:"
-msgstr ""
+msgstr "Erősítse meg az IVA-kötelezettségeket:"
 
 #: ../../how-to/iva-lifecycle.md:39
 msgid ""
 "Ordinary non-exempt profiles file Modelo 303 quarterly; monthly IVA-"
 "liquidation profiles such as REDEME file monthly. Ana is quarterly."
 msgstr ""
+"A szokásos, nem adómentes profilok negyedévente nyújtanak be Modelo "
+"303-at; a havi IVA-elszámolású profilok, például a REDEME, havonta "
+"nyújtanak be. Ana negyedéves."
 
 #: ../../how-to/iva-lifecycle.md:42
 msgid "Stage 1: the opening IVA credit balance"
-msgstr ""
+msgstr "1. szakasz: a nyitó IVA-követelésegyenleg"
 
 #: ../../how-to/iva-lifecycle.md:44
 msgid ""
@@ -93,10 +119,18 @@ msgid ""
 "you use the tool, that history is empty, so you declare the opening "
 "balance once."
 msgstr ""
+"A Modelo 303 folyamatos emlékezetet tart az időszakok között: amikor egy "
+"negyedév végén több befizetett, mint beszedett IVA-ja van, a különbség "
+"egy követelés (*compensación*), amelyet a következő bevallás "
+"felhasználhat. Az eszköz ezt a követelést egy helyi tárcában követi "
+"nyomon, amelyet a Modelo 303 előzményeiből épít fel - és amikor először "
+"használja az eszközt, ez az előzmény üres, ezért a nyitóegyenleget "
+"egyszer közli."
 
 #: ../../how-to/iva-lifecycle.md:50
 msgid "Ana started her activity this year, so her true opening balance is zero:"
 msgstr ""
+"Ana idén kezdte meg a tevékenységét, ezért a valódi nyitóegyenlege nulla:"
 
 #: ../../how-to/iva-lifecycle.md:56
 msgid ""
@@ -104,6 +138,9 @@ msgid ""
 " carrying instead of zero. Check the wallet at any time with `aeat app "
 "modelo iva-wallet balance --as-of-year 2026`."
 msgstr ""
+"Ha az előzmény közepén tér át az eszközre, nulla helyett a ténylegesen "
+"átvitt követelést vigye be. Bármikor ellenőrizheti a tárcát az `aeat app "
+"modelo iva-wallet balance --as-of-year 2026` paranccsal."
 
 #: ../../how-to/iva-lifecycle.md:60
 msgid ""
@@ -114,10 +151,17 @@ msgid ""
 "the filing in the way. If you hit it, the figure is locked exactly when "
 "you would want it locked."
 msgstr ""
+"A hibáknak van javítási útjuk (`aeat app modelo iva-wallet correct`, a "
+"`--reason` és a `--confirm` kapcsolóval) - de egy védelem abszolút: egy "
+"bevitt egyenleget, amelyet egy már benyújtott Modelo 303 felhasznált, "
+"elutasít, mert a javítása csendben megváltoztatna egy benyújtott "
+"bevallást. Az elutasítás megnevezi az útban lévő benyújtást. Ha "
+"beleütközik, a szám pontosan akkor van zárolva, amikor azt szeretné, hogy "
+"zárolva legyen."
 
 #: ../../how-to/iva-lifecycle.md:67
 msgid "Stage 2: the first quarterly return"
-msgstr ""
+msgstr "2. szakasz: az első negyedéves bevallás"
 
 #: ../../how-to/iva-lifecycle.md:69
 msgid ""
@@ -125,6 +169,9 @@ msgid ""
 "IVA detail (the sequence seeds them). Create, calculate, verify, file, "
 "and export Modelo 303 for the quarter:"
 msgstr ""
+"Az első negyedév sorai már rögzítve és osztályozva vannak az "
+"IVA-részletükkel (a sorozat előkészíti őket). Hozza létre, számítsa ki, "
+"ellenőrizze, nyújtsa be és exportálja a Modelo 303-at a negyedévre:"
 
 #: ../../how-to/iva-lifecycle.md:77
 msgid ""
@@ -134,6 +181,11 @@ msgid ""
 " Ana's rows the quarter ends with IVA to pay - repercutido exceeds "
 "soportado."
 msgstr ""
+"A számítás az osztályozott sorokat az IVA-rovatokba irányítja: az "
+"értékesítés 210 felszámított IVA-ja (repercutido), a beszerzés 105 "
+"levonható befizetett IVA-ja (soportado), és a bevitt tárca táplálja az "
+"előző kompenzáció rovatát. Ana soraival a negyedév fizetendő IVA-val "
+"zárul - a repercutido meghaladja a soportadót."
 
 #: ../../how-to/iva-lifecycle.md:82
 msgid ""
@@ -142,16 +194,22 @@ msgid ""
 "reconcile pull` (both shown in the sequence above) - the same closing "
 "rhythm as every filing in these run-throughs."
 msgstr ""
+"Töltse fel a fájlt a portálon, majd rögzítse a benyújtást az `aeat app "
+"modelo work file` paranccsal, és húzza le a justificantét az `aeat app "
+"modelo reconcile pull` paranccsal (mindkettő látható a fenti sorozatban) "
+"- ugyanaz a záró ritmus, mint e végigfutások minden benyújtásánál."
 
 #: ../../how-to/iva-lifecycle.md:87
 msgid ""
 "The per-box detail of this workflow is [Prepare a Modelo 303 IVA "
 "filing](modelo-303.md)."
 msgstr ""
+"E munkafolyamat rovatonkénti részlete a [Modelo 303 IVA-benyújtás "
+"előkészítése](modelo-303.md)."
 
 #: ../../how-to/iva-lifecycle.md:90
 msgid "Stage 3: a credit quarter, and the carry"
-msgstr ""
+msgstr "3. szakasz: egy követeléses negyedév és az átvezetés"
 
 #: ../../how-to/iva-lifecycle.md:92
 msgid ""
@@ -164,6 +222,15 @@ msgid ""
 " presentation window, which the frozen documentation sandbox cannot "
 "reproduce, so the chain is shown as display frames:"
 msgstr ""
+"Tegyük fel, hogy a második negyedév a másik irányba megy: Ana vesz egy "
+"laptopot és más eszközöket, és a levonható IVA-ja meghaladja azt, amit "
+"felszámított. Amikor a levonható IVA meghaladja a felszámított IVA-t, az "
+"eredményrovat negatív, és a bevallás a különbséget kompenzálandó "
+"követelésként vallja be: a negyedév fizetendő nélkül zárul, és a tárca "
+"megjegyzi a követelést. A teljes második negyedév Ana benyújtott első "
+"negyedévén és a júliusi benyújtási időablakon belül fut, amelyet a "
+"befagyasztott dokumentációs sandbox nem tud reprodukálni, ezért a lánc "
+"megjelenítő keretként szerepel:"
 
 #: ../../how-to/iva-lifecycle.md:103
 msgid ""
@@ -172,6 +239,10 @@ msgid ""
 "quarter's credit reduces what you pay now. Watch the balance move across "
 "the year with the wallet balance command shown running in stage 1 above."
 msgstr ""
+"A harmadik negyedévben megmutatkozik az átvezetés: ugyanaz a lánc `3T`-vel "
+"a tárcából hozza az előző kompenzáció rovatát, így a második negyedév "
+"követelése csökkenti azt, amit most fizet. Kövesse az egyenleg mozgását az "
+"év során a fenti 1. szakaszban futtatva bemutatott tárcaegyenleg-paranccsal."
 
 #: ../../how-to/iva-lifecycle.md:108
 msgid ""
@@ -179,16 +250,21 @@ msgid ""
 " is made of. Credit expires after the legal window, so the wallet also "
 "names the next expiry year."
 msgstr ""
+"Az egyenleg jelenti a teljes, az aktív és a lejárt követelést, valamint "
+"azokat a tételeket, amelyekből áll. A követelés a törvényes időablak után "
+"lejár, ezért a tárca megnevezi a következő lejárati évet is."
 
 #: ../../how-to/iva-lifecycle.md:112
 msgid "Stage 4 (optional): intra-community operations and Modelo 349"
-msgstr ""
+msgstr "4. szakasz (opcionális): közösségen belüli ügyletek és a Modelo 349"
 
 #: ../../how-to/iva-lifecycle.md:114
 msgid ""
 "Skip this stage unless you invoice clients or buy from suppliers in other"
 " EU member states."
 msgstr ""
+"Hagyja ki ezt a szakaszt, hacsak nem számláz más EU-tagállambeli "
+"ügyfeleknek, vagy nem vásárol onnan beszállítóktól."
 
 #: ../../how-to/iva-lifecycle.md:117
 msgid ""
@@ -199,6 +275,12 @@ msgid ""
 "VAT number is worth checking against the VIES register first. That check "
 "is a live read from AEAT, so it is shown as a display frame:"
 msgstr ""
+"Ha Ana felvesz egy EU-s ügyfelet, az ügyleteknek meg kell jelenniük az "
+"összesítő Modelo 349-en is - egy felsorolás, EU-s ügyfelenként, az időszak "
+"közösségen belüli ügyleteiről. Az ügyleteket a partner országát és EU-s "
+"áfaszámát hordozó számlanyilvántartásokként rögzítik, és az áfaszámot "
+"érdemes először összevetni a VIES-nyilvántartással. Ez az ellenőrzés egy "
+"élő olvasás az AEAT-tól, ezért megjelenítő keretként szerepel:"
 
 #: ../../how-to/iva-lifecycle.md:127
 msgid ""
@@ -208,10 +290,15 @@ msgid ""
 "intra-community boxes; keep the two consistent by fixing the underlying "
 "records, never the declarations."
 msgstr ""
+"A teljes munkafolyamat - számlanyilvántartások, az ügyletkulcsok, a "
+"korábbi időszakok helyesbítései - a [Modelo 349 összesítő nyilatkozat "
+"előkészítése](modelo-349.md). Ugyanezek az ügyletek táplálják a 303 "
+"közösségen belüli rovatait is; tartsa a kettőt következetesen a mögöttes "
+"nyilvántartások javításával, soha ne a bevallásokéval."
 
 #: ../../how-to/iva-lifecycle.md:133
 msgid "Stage 5: the fourth quarter and the annual summary"
-msgstr ""
+msgstr "5. szakasz: a negyedik negyedév és az éves összesítő"
 
 #: ../../how-to/iva-lifecycle.md:135
 msgid ""
@@ -225,6 +312,16 @@ msgid ""
 "that disagrees with the sum of the quarters is a blocking finding, not a "
 "warning."
 msgstr ""
+"Zárja le a negyedik negyedévet ugyanazzal a `4T` lánccal januárban. Ezután "
+"készítse el az éves Modelo 390 összesítőt, `0A` éves tokennel, ugyanabban "
+"az évben. A Modelo 390 nem vall be új számokat: összegzi az évet, és az "
+"összegeinek egyeznie kell a négy negyedéves bevallással, amelyet "
+"benyújtott. A számítás beolvassa a benyújtott Modelo 303 "
+"nyilvántartásait; egy hiányzó vagy bizonyítékkal alá nem támasztott "
+"negyedév blokkolja az éves ellenőrzést egy azt megnevező, időszakok "
+"közötti észrevétellel. Az ellenőrzés magában foglalja az egyeztetési "
+"szabályt: egy éves összeg, amely eltér a negyedévek összegétől, blokkoló "
+"észrevétel, nem figyelmeztetés."
 
 #: ../../how-to/iva-lifecycle.md:144
 msgid ""
@@ -232,16 +329,22 @@ msgid ""
 "390 registry revision, published for the 2027 filing season after this "
 "documentation is built, so the chain is shown as display frames:"
 msgstr ""
+"Az éves összesítő feloldja a négy benyújtott negyedévet és a 2026-os "
+"Modelo 390 nyilvántartási revíziót, amelyet a 2027-es benyújtási "
+"szezonra tesznek közzé, miután ez a dokumentáció felépült, ezért a lánc "
+"megjelenítő keretként szerepel:"
 
 #: ../../how-to/iva-lifecycle.md:151
 msgid ""
 "The per-box detail is [Prepare the annual Modelo 390 "
 "summary](modelo-390.md)."
 msgstr ""
+"A rovatonkénti részlet az [Éves Modelo 390 összesítő "
+"előkészítése](modelo-390.md)."
 
 #: ../../how-to/iva-lifecycle.md:154
 msgid "What you completed"
-msgstr ""
+msgstr "Amit elvégzett"
 
 #: ../../how-to/iva-lifecycle.md:156
 msgid ""
@@ -251,30 +354,36 @@ msgid ""
 "branch, and an annual summary that reconciled against the four quarters "
 "on your own record."
 msgstr ""
+"Ugyanazt az adózót vezette végig egy teljes IVA-éven: egy egyszer közölt "
+"nyitó tárcaegyenleg, egy fizetéses negyedév, egy követeléses negyedév, "
+"amelynek compensaciónja átvitt a következő bevallásba, egy opcionális "
+"összesítő ág, és egy éves összesítő, amely egyezett a saját "
+"nyilvántartásán lévő négy negyedévvel."
 
 #: ../../how-to/iva-lifecycle.md:161
 msgid "Next steps"
-msgstr ""
+msgstr "Következő lépések"
 
 #: ../../how-to/iva-lifecycle.md:163
 msgid "[The income-tax year](irpf-lifecycle.md) - the same persona through IRPF."
-msgstr ""
+msgstr "[A jövedelemadó-év](irpf-lifecycle.md) - ugyanaz a személy az IRPF-en át."
 
 #: ../../how-to/iva-lifecycle.md:164
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
-msgstr ""
+msgstr "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md)"
 
 #: ../../how-to/iva-lifecycle.md:165
 msgid "[Prepare the annual Modelo 390 summary](modelo-390.md)"
-msgstr ""
+msgstr "[Éves Modelo 390 összesítő előkészítése](modelo-390.md)"
 
 #: ../../how-to/iva-lifecycle.md:166
 msgid "[Prepare a Modelo 349 recapitulative declaration](modelo-349.md)"
-msgstr ""
+msgstr "[Modelo 349 összesítő nyilatkozat előkészítése](modelo-349.md)"
 
 #: ../../how-to/iva-lifecycle.md:167
 msgid ""
 "[Deduct input IVA under prorrata](prorrata.md) - when your activity mixes"
 " IVA-taxed and exempt operations."
 msgstr ""
-
+"[Előzetes IVA levonása prorrata alatt](prorrata.md) - amikor a "
+"tevékenysége IVA-köteles és adómentes ügyleteket kever."

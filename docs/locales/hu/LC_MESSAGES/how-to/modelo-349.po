@@ -48,9 +48,9 @@ msgid ""
 msgstr ""
 "A Modelo 349 nem vall be cuotát: tisztán felsorolás. A bevallás egy "
 "összesítő blokkot hordoz (hány közösségen belüli szereplővel kereskedett és "
-"milyen összegekben), és szereplőnként egy részletsort – országkód, EU-s "
-"afaszám, név, ügyletkulcs és alap –, valamint helyesbítő sorokat, amikor egy"
-" korábban bevallott időszakot javít."
+"milyen összegekben), és szereplőnként egy részletsort (országkód, EU-s "
+"afaszám, név, ügyletkulcs és alap), valamint helyesbítő sorokat, amikor egy "
+"korábban bevallott időszakot javít."
 
 #: ../../how-to/modelo-349.md:16
 msgid ""
@@ -84,7 +84,7 @@ msgid ""
 "calendar surfaces which applies to you:"
 msgstr ""
 "Ellenőrizze az alkalmazhatóságot és a gyakoriságot. A Modelo 349 negyedéves "
-"(`1T`–`4T`) vagy havi (`01`–`12`) a profiljától és az ügyletmennyiségeitől "
+"(`1T`-`4T`) vagy havi (`01`-`12`) a profiljától és az ügyletmennyiségeitől "
 "függően; a naptár megmutatja, melyik vonatkozik Önre:"
 
 #: ../../how-to/modelo-349.md:33
@@ -116,7 +116,7 @@ msgstr ""
 "mielőtt rá hagyatkozna, az `aeat app live verify nif-iva ESB12345678` "
 "paranccsal. Egy érvénytelen vagy nem regisztrált szám a leggyakoribb 349-es "
 "javítás oka később; most ellenőrizni olcsóbb. Ez egy élő, csak olvasható "
-"parancs – lásd: [AEAT-értesítések és élő megfigyelések ellenőrzése](check-"
+"parancs, lásd: [AEAT-értesítések és élő megfigyelések ellenőrzése](check-"
 "aeat-notifications.md)."
 
 #: ../../how-to/modelo-349.md:45
@@ -129,9 +129,9 @@ msgid ""
 "supply to a German customer and a service to a French one - then creates the"
 " draft, aggregates the invoices into the declaration, and verifies it:"
 msgstr ""
-"Az alábbi előkészítés két közösségen belüli kiállított számlát rögzít – egy "
-"termékértékesítést egy német ügyfélnek és egy szolgáltatást egy franciának "
-"–, majd létrehozza a piszkozatot, összesíti a számlákat a bevallásba, és "
+"Az alábbi előkészítés két közösségen belüli kiállított számlát rögzít (egy "
+"termékértékesítést egy német ügyfélnek és egy szolgáltatást egy franciának),"
+" majd létrehozza a piszkozatot, összesíti a számlákat a bevallásba, és "
 "ellenőrzi:"
 
 #: ../../how-to/modelo-349.md:55
@@ -160,7 +160,7 @@ msgstr ""
 "A szereplőnkénti sor mezői (országkód, EU-s afaszám, név, ügyletkulcs, alap)"
 " a számlarekordokból származnak; egy számlán hiányzó partneradat itt hiányzó"
 " sorértékként jelenik meg. Inkább a számlarekordot javítsa, mintsem hogy "
-"kézi értéket kényszerítsen ki – a felsorolásnak meg kell egyeznie a "
+"kézi értéket kényszerítsen ki: a felsorolásnak meg kell egyeznie a "
 "számlabizonyítékaival."
 
 #: ../../how-to/modelo-349.md:71

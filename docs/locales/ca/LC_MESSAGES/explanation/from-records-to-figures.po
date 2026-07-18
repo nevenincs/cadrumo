@@ -201,8 +201,8 @@ msgid ""
 " do."
 msgstr ""
 "Aquí és on apareixen les xifres. L'eina llegeix dues coses: els teus "
-"registres preparats per a efectes tributaris del període, i el teu perfil"
-" —qui ets i què fas—."
+"registres preparats per a efectes tributaris del període, i el teu "
+"perfil: qui ets i què fas."
 
 #: ../../explanation/from-records-to-figures.md:54
 msgid ""
@@ -219,9 +219,9 @@ msgstr ""
 " relacionen les caselles entre si. Una despesa que has marcat com a "
 "material d'oficina va a parar a la casella per a aquell tipus de despesa."
 " Els ingressos van a la seva pròpia casella. A partir d'aquí, les regles "
-"sumen, resten i apliquen tipus —ingressos totals menys despeses deduïbles"
+"sumen, resten i apliquen tipus (ingressos totals menys despeses deduïbles"
 " per arribar a una xifra neta, un tipus aplicat per arribar a l'impost a "
-"pagar— fins que cada casella del formulari conté una xifra."
+"pagar) fins que cada casella del formulari conté una xifra."
 
 #: ../../explanation/from-records-to-figures.md:56
 msgid ""

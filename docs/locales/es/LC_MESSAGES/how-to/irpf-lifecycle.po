@@ -103,7 +103,7 @@ msgid ""
 msgstr ""
 "Crea el perfil con `aeat config profile`, tal como explica [Configurar tu "
 "perfil de contribuyente](profile-setup.md). El entorno de pruebas de la "
-"documentación aprovisiona su propio perfil, así que esta creación se muestra "
+"documentación aprovisiona tu propio perfil, así que esta creación se muestra "
 "como un panel ilustrativo:"
 
 #: ../../how-to/irpf-lifecycle.md:40
@@ -199,7 +199,7 @@ msgid ""
 msgstr ""
 "La verificación informa de `completeness_status complete` y "
 "`granted_verificado_completo true` (la secuencia de arriba lo comprueba). La "
-"exportación escribe el fichero-BOE e imprime su ruta, su tamaño y su suma de "
+"exportación escribe el fichero-BOE e imprime tu ruta, su tamaño y su suma de "
 "comprobación SHA-256; anota la suma de comprobación, identifica exactamente "
 "qué archivo subes."
 

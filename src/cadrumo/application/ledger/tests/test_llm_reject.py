@@ -121,6 +121,7 @@ def test_reject_records_event_and_does_not_mutate(
         _classification_suggestion(tx_id),
         bucket_id=_BUCKET,
         reason="wrong category, this is personal",
+        source_command="aeat app ledger classify --llm --reject",
         transaction_repository=repository,
         bucket_event_repository=events,
         occurred_at=_NOW,
@@ -167,6 +168,7 @@ def test_reject_saturated_suggestion_captures_iva_category(
         saturated,
         bucket_id=_BUCKET,
         reason="rate looks wrong",
+        source_command="aeat app ledger classify --llm --reject",
         transaction_repository=repository,
         bucket_event_repository=events,
         occurred_at=_NOW,
@@ -184,6 +186,7 @@ def test_reject_unknown_transaction_raises(
         reject_llm_suggestion(
             _classification_suggestion("tx_does_not_exist"),
             bucket_id=_BUCKET,
+            source_command="aeat app ledger classify --llm --reject",
             transaction_repository=repository,
             bucket_event_repository=events,
         )
@@ -204,6 +207,7 @@ def test_reject_via_workflow_matches_the_direct_primitive_default(
         _classification_suggestion(tx_id),
         bucket_id=_BUCKET,
         reason="direct primitive path",
+        source_command="aeat app ledger classify --llm --reject",
         transaction_repository=repository,
         bucket_event_repository=events,
         occurred_at=_NOW,

@@ -235,9 +235,9 @@ msgid ""
 "residence, declaration type, or family composition. Update your profile "
 "instead of entering the value manually."
 msgstr ""
-"**Profiltény** – a Cadrumo az adózói profiljából tölti ki, például lakóhely,"
-" bevallástípus vagy családi összetétel. Frissítse a profilját, ahelyett hogy"
-" kézzel adná meg az értéket."
+"**Profiltény**: a Cadrumo az adózói profiljából tölti ki, például lakóhely, "
+"bevallástípus vagy családi összetétel. Frissítse a profilját, ahelyett hogy "
+"kézzel adná meg az értéket."
 
 #: ../../how-to/review-calculation-values.md:104
 msgid ""
@@ -245,7 +245,7 @@ msgid ""
 "transactions and invoices. You cannot override these; fix the ledger "
 "instead."
 msgstr ""
-"**Ledger source** – a Cadrumo az osztályozott tranzakciói és számlái "
+"**Ledger source**: a Cadrumo az osztályozott tranzakciói és számlái "
 "összegzésével számítja ki. Ezeket nem írhatja felül; ehelyett javítsa a "
 "főkönyvet."
 
@@ -254,7 +254,7 @@ msgid ""
 "**Prior filed revision** - carried forward from an earlier period you "
 "already filed in Cadrumo."
 msgstr ""
-"**Prior filed revision** – egy korábbi időszakból áthozva, amelyet már "
+"**Prior filed revision**: egy korábbi időszakból áthozva, amelyet már "
 "benyújtott a Cadrumóban."
 
 #: ../../how-to/review-calculation-values.md:108
@@ -262,7 +262,7 @@ msgid ""
 "**Relation** - folded in from another modelo's earlier figures. Supply it "
 "with `--relation KEY=VALUE` only when the modelo's help names the relation."
 msgstr ""
-"**Relation** – egy másik modelo korábbi adataiból beolvasztva. Csak akkor "
+"**Relation**: egy másik modelo korábbi adataiból beolvasztva. Csak akkor "
 "adja meg a `--relation KULCS=ÉRTÉK` opcióval, amikor a modelo súgója "
 "megnevezi a relációt."
 
@@ -271,7 +271,7 @@ msgid ""
 "**Manual** - this kind always needs you to type a value, with `--binding "
 "KEY=VALUE`, or `--casilla` for a box."
 msgstr ""
-"**Manual** – ez a fajta mindig megköveteli, hogy értéket írjon be, a "
+"**Manual**: ez a fajta mindig megköveteli, hogy értéket írjon be, a "
 "`--binding KULCS=ÉRTÉK` opcióval, vagy egy rovathoz a `--casilla` opcióval."
 
 #: ../../how-to/review-calculation-values.md:113
@@ -440,19 +440,19 @@ msgstr "Használja e rekordtípusok egyikét:"
 
 #: ../../how-to/review-calculation-values.md:186
 msgid "`miembro` - an attribution member (Modelo 184)."
-msgstr "`miembro` – egy hozzárendelési tag (Modelo 184)."
+msgstr "`miembro`: egy hozzárendelési tag (Modelo 184)."
 
 #: ../../how-to/review-calculation-values.md:187
 msgid "`vinculada` - a related-party operation (Modelo 232)."
-msgstr "`vinculada` – egy kapcsolt ügylet (Modelo 232)."
+msgstr "`vinculada`: egy kapcsolt ügylet (Modelo 232)."
 
 #: ../../how-to/review-calculation-values.md:188
 msgid "`contraparte` - a declared counterparty (Modelo 347)."
-msgstr "`contraparte` – egy bejelentett partner (Modelo 347)."
+msgstr "`contraparte`: egy bejelentett partner (Modelo 347)."
 
 #: ../../how-to/review-calculation-values.md:189
 msgid "`operador` - an intra-community operator (Modelo 349)."
-msgstr "`operador` – egy közösségen belüli szereplő (Modelo 349)."
+msgstr "`operador`: egy közösségen belüli szereplő (Modelo 349)."
 
 #: ../../how-to/review-calculation-values.md:191
 msgid ""
@@ -464,18 +464,18 @@ msgstr ""
 
 #: ../../how-to/review-calculation-values.md:194
 msgid "Modelo 184 - the members' `porcentaje` values must sum to 100."
-msgstr "Modelo 184 – a tagok `porcentaje` értékeinek összege 100 kell hogy legyen."
+msgstr "Modelo 184: a tagok `porcentaje` értékeinek összege 100 kell hogy legyen."
 
 #: ../../how-to/review-calculation-values.md:195
 msgid "Modelo 347 - a counterparty's annual total must exceed 3,005.06 euros."
-msgstr "Modelo 347 – egy partner éves összegének meg kell haladnia a 3005,06 eurót."
+msgstr "Modelo 347: egy partner éves összegének meg kell haladnia a 3005,06 eurót."
 
 #: ../../how-to/review-calculation-values.md:196
 msgid ""
 "Modelo 349 - the operator's intra-community NIF must match its country "
 "format."
 msgstr ""
-"Modelo 349 – a szereplő közösségen belüli NIF-jének meg kell egyeznie az "
+"Modelo 349: a szereplő közösségen belüli NIF-jének meg kell egyeznie az "
 "országformátumával."
 
 #: ../../how-to/review-calculation-values.md:198

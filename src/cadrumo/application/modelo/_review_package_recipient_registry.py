@@ -53,7 +53,6 @@ from ...adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_FINGERPRINT_REGISTRY_NAMESPACE as _NAMESPACE,
 )
 from ...adapters.persistence.storage import (
-    SensitivityClass,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
 )
@@ -199,7 +198,7 @@ class RecipientFingerprintRegistryRepository:
             record = self._objects.load(
                 _NAMESPACE.namespace,
                 self._object_key,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_NAMESPACE.sensitivity,
                 max_supported_version=_NAMESPACE.schema_version,
             )
             if record is None:
@@ -296,7 +295,7 @@ class RecipientFingerprintRegistryRepository:
         self._objects.save(
             namespace=_NAMESPACE.namespace,
             object_key=self._object_key,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_NAMESPACE.sensitivity,
             schema_version=_NAMESPACE.schema_version,
             written_at=_utc_now(),
             payload=register.model_dump_json().encode(_UTF_8_ENCODING),

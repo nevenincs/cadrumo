@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/manage-invoices.md:1
 msgid "Manage business invoices"
-msgstr "Gestione las facturas de su negocio"
+msgstr "Gestiona las facturas de tu negocio"
 
 #: ../../how-to/manage-invoices.md:3
 msgid ""
@@ -28,10 +28,9 @@ msgid ""
 "customer owes you and the money you owe a supplier. This guide covers "
 "both kinds and shows which records feed your tax calculations."
 msgstr ""
-"Registre las facturas que su negocio emite y recibe: el dinero que un "
-"cliente le debe y el dinero que usted debe a un proveedor. Esta guía "
-"cubre ambos tipos y muestra qué registros alimentan sus cálculos "
-"fiscales."
+"Registra las facturas que tu negocio emite y recibe: el dinero que un "
+"cliente le debe y el dinero que debes a un proveedor. Esta guía cubre "
+"ambos tipos y muestra qué registros alimentan sus cálculos fiscales."
 
 #: ../../how-to/manage-invoices.md:7
 msgid ""
@@ -42,12 +41,13 @@ msgid ""
 "*issued* invoice (you billed a customer) or a *received* invoice (a "
 "supplier billed you)."
 msgstr ""
-"Una factura de negocio no es lo mismo que un recibo de compra que usted "
-"adjunta como evidencia. Los recibos respaldan un gasto deducible en un "
-"movimiento del ledger (consulte [Adjunte facturas y recibos](ledger-"
-"evidence.md)). Las facturas de negocio que se registran aquí son los "
-"documentos comerciales en sí: una factura *emitida* (usted facturó a un "
-"cliente) o una factura *recibida* (un proveedor le facturó)."
+"Una factura de negocio no es lo mismo que un recibo de compra que "
+"adjuntas como evidencia. Los recibos respaldan un gasto deducible en un "
+"movimiento del ledger (consulta [Adjunta facturas y "
+"recibos](ledger-evidence.md)). Las facturas de negocio que se registran "
+"aquí son los documentos comerciales en sí: una factura *emitida* "
+"(facturaste a un cliente) o una factura *recibida* (un proveedor le "
+"facturó)."
 
 #: ../../how-to/manage-invoices.md:13
 msgid "Before you start"
@@ -65,7 +65,7 @@ msgid ""
 msgstr ""
 "Un perfil de contribuyente activo. Todos los comandos siguientes operan "
 "sobre el perfil activo; si no hay ninguno definido, el comando se niega a"
-" continuar. Consulte [Configure su perfil de contribuyente](profile-"
+" continuar. Consulta [Configura tu perfil de contribuyente](profile-"
 "setup.md)."
 
 #: ../../how-to/manage-invoices.md:20
@@ -103,7 +103,7 @@ msgid ""
 "they do **not** feed a modelo calculation."
 msgstr ""
 "**El registro de factura** (`aeat app ledger invoice ...`) es su libro "
-"contable de quién le debe y a quién debe. Úselo para registrar, listar y "
+"contable de quién le debe y a quién debe. Úsalo para registrar, listar y "
 "editar facturas. Estos registros sirven para el seguimiento; por sí solos"
 " **no** alimentan el cálculo de un modelo."
 
@@ -126,8 +126,8 @@ msgid ""
 " calculation or be reconciled against a payment, also create it in the "
 "catalogue with `invoice catalogue create`."
 msgstr ""
-"Registre las facturas cotidianas con `invoice add`. Cuando una factura "
-"deba impulsar un cálculo o conciliarse con un pago, créela además en el "
+"Registra las facturas cotidianas con `invoice add`. Cuando una factura "
+"deba impulsar un cálculo o conciliarse con un pago, créala además en el "
 "catálogo con `invoice catalogue create`."
 
 #: ../../how-to/manage-invoices.md:43
@@ -138,11 +138,11 @@ msgid ""
 msgstr ""
 "Todos los comandos aceptan `--kind issued` o `--kind received`. *Issued* "
 "significa que un cliente le debe (una factura por cobrar); *received* "
-"significa que usted debe a un proveedor (una factura por pagar)."
+"significa que debes a un proveedor (una factura por pagar)."
 
 #: ../../how-to/manage-invoices.md:47
 msgid "Record an issued invoice"
-msgstr "Registre una factura emitida"
+msgstr "Registra una factura emitida"
 
 #: ../../how-to/manage-invoices.md:49
 msgid ""
@@ -150,7 +150,7 @@ msgid ""
 "`invoice_id`, the resolved `source_kind` (`collectible_invoice`), and the"
 " values you entered:"
 msgstr ""
-"Registre una factura que envió a un cliente. El comando devuelve el nuevo"
+"Registra una factura que envió a un cliente. El comando devuelve el nuevo"
 " `invoice_id`, el `source_kind` resuelto (`collectible_invoice`) y los "
 "valores que introdujo:"
 
@@ -159,24 +159,24 @@ msgid ""
 "Record the short `invoice_id`; you address the invoice by it (or by an "
 "unambiguous prefix)."
 msgstr ""
-"Anote el `invoice_id` corto; con él (o con un prefijo inequívoco) se "
+"Anota el `invoice_id` corto; con él (o con un prefijo inequívoco) se "
 "refiere a la factura."
 
 #: ../../how-to/manage-invoices.md:60
 msgid "Record a received invoice"
-msgstr "Registre una factura recibida"
+msgstr "Registra una factura recibida"
 
 #: ../../how-to/manage-invoices.md:62
 msgid ""
 "Record an invoice a supplier sent you. The `source_kind` resolves to "
 "`payable_invoice`:"
 msgstr ""
-"Registre una factura que le envió un proveedor. El `source_kind` se "
+"Registra una factura que le envió un proveedor. El `source_kind` se "
 "resuelve a `payable_invoice`:"
 
 #: ../../how-to/manage-invoices.md:69
 msgid "List, view, update, and remove"
-msgstr "Liste, consulte, actualice y elimine"
+msgstr "Lista, consulta, actualiza y elimina"
 
 #: ../../how-to/manage-invoices.md:71
 msgid ""
@@ -184,13 +184,13 @@ msgid ""
 "remove it. The view of one invoice takes its id (or an unambiguous "
 "prefix) and the kind:"
 msgstr ""
-"Liste ambos tipos o filtre por uno, añada una nota a una factura guardada"
-" y elimínela después. La consulta de una factura toma su id (o un prefijo"
+"Lista ambos tipos o filtra por uno, añade una nota a una factura guardada"
+" y elimínala después. La consulta de una factura toma su id (o un prefijo"
 " inequívoco) y el tipo:"
 
 #: ../../how-to/manage-invoices.md:78
 msgid "Record an intra-community invoice"
-msgstr "Registre una factura intracomunitaria"
+msgstr "Registra una factura intracomunitaria"
 
 #: ../../how-to/manage-invoices.md:80
 msgid ""
@@ -200,7 +200,7 @@ msgid ""
 "Modelo 349 operation type:"
 msgstr ""
 "Una entrega a, o una adquisición de, una empresa registrada a efectos de "
-"IVA en otro país de la UE es una operación intracomunitaria. Regístrela "
+"IVA en otro país de la UE es una operación intracomunitaria. Regístrala "
 "en la factura emitida o recibida con el país y el número de IVA europeo "
 "de la contraparte, más el tipo de operación del Modelo 349:"
 
@@ -221,7 +221,7 @@ msgstr ""
 
 #: ../../how-to/manage-invoices.md:95
 msgid "Feed a calculation from the catalogue"
-msgstr "Alimente un cálculo desde el catálogo"
+msgstr "Alimenta un cálculo desde el catálogo"
 
 #: ../../how-to/manage-invoices.md:97
 msgid ""
@@ -232,12 +232,12 @@ msgid ""
 "calculates the Modelo 349 recapitulative declaration for the period the "
 "invoice falls in:"
 msgstr ""
-"Para que una factura llegue al cálculo de un modelo, créela en el "
-"catálogo. La copia del catálogo es la que lee un cálculo y la que usted "
-"puede vincular a un movimiento bancario. La secuencia cataloga una "
-"entrega intracomunitaria, lista e inspecciona el catálogo, y luego crea y"
-" calcula la declaración recapitulativa del Modelo 349 para el periodo en "
-"el que cae la factura:"
+"Para que una factura llegue al cálculo de un modelo, créala en el "
+"catálogo. La copia del catálogo es la que lee un cálculo y la que puedes "
+"vincular a un movimiento bancario. La secuencia cataloga una entrega "
+"intracomunitaria, lista e inspecciona el catálogo, y luego crea y calcula "
+"la declaración recapitulativa del Modelo 349 para el periodo en el que "
+"cae la factura:"
 
 #: ../../how-to/manage-invoices.md:107
 msgid ""
@@ -248,10 +248,10 @@ msgid ""
 " is the call-off-stock transfer key; rectification rows use separate "
 "rectified-period and base fields."
 msgstr ""
-"Para una operación intracomunitaria, pase `--operation-type` para que el "
-"catálogo estampe la clasificación que lee el cálculo del Modelo 349. Use "
+"Para una operación intracomunitaria, pasa `--operation-type` para que el "
+"catálogo estampe la clasificación que lee el cálculo del Modelo 349. Usa "
 "`E`, `H`, `M`, `S`, `T`, `R`, `D` o `C` para las facturas emitidas del "
-"catálogo. Use `A`, `I` o `T` para las facturas recibidas del catálogo. En"
+"catálogo. Usa `A`, `I` o `T` para las facturas recibidas del catálogo. En"
 " el Modelo 349, `R` es la clave de transferencia de ventas en consigna; "
 "las filas de rectificación usan campos separados de periodo rectificado y"
 " base."
@@ -268,7 +268,7 @@ msgstr ""
 
 #: ../../how-to/manage-invoices.md:116
 msgid "Link a catalogue invoice to a transaction"
-msgstr "Vincule una factura del catálogo a un movimiento"
+msgstr "Vincula una factura del catálogo a un movimiento"
 
 #: ../../how-to/manage-invoices.md:118
 msgid ""
@@ -276,7 +276,7 @@ msgid ""
 "it. The sequence records a transaction, catalogues an invoice, links "
 "them, and confirms the link on the catalogue copy:"
 msgstr ""
-"Vincule una factura del catálogo al movimiento bancario que la pagó o la "
+"Vincula una factura del catálogo al movimiento bancario que la pagó o la "
 "cobró. La secuencia registra un movimiento, cataloga una factura, los "
 "vincula y confirma el vínculo en la copia del catálogo:"
 
@@ -287,8 +287,8 @@ msgid ""
 " a removal of a still-linked invoice is refused, so the bank transaction "
 "never ends up citing an invoice that no longer exists:"
 msgstr ""
-"Elimine una factura del catálogo que creó por error, confirmando con "
-"`--yes`. Desvincule primero la factura si sigue vinculada a un "
+"Elimina una factura del catálogo que creó por error, confirmando con "
+"`--yes`. Desvincula primero la factura si sigue vinculada a un "
 "movimiento: la eliminación de una factura aún vinculada se rechaza, de "
 "modo que el movimiento bancario nunca acaba citando una factura que ya no"
 " existe:"
@@ -306,7 +306,7 @@ msgid ""
 msgstr ""
 "Las facturas del catálogo alimentan el **Modelo 349** (la declaración "
 "recapitulativa de operaciones intracomunitarias) mediante el tipo de "
-"operación que usted les estampa al crearlas. Este es el modelo que sus "
+"operación que les estampas al crearlas. Este es el modelo que sus "
 "facturas emitidas y recibidas impulsan directamente."
 
 #: ../../how-to/manage-invoices.md:142
@@ -320,9 +320,9 @@ msgid ""
 msgstr ""
 "Sus **autoliquidaciones de IVA no leen estos registros de factura**. El "
 "Modelo 303 (IVA trimestral) y el Modelo 390 (resumen anual de IVA) se "
-"calculan a partir de sus movimientos del ledger clasificados, no a partir"
-" del catálogo de facturas. Registre el ingreso y el gasto en el ledger y "
-"clasifíquelo (consulte [Clasifique los movimientos](classify-"
+"calculan a partir de tus movimientos del ledger clasificados, no a partir"
+" del catálogo de facturas. Registra el ingreso y el gasto en el ledger y "
+"clasifícalo (consulta [Clasifica los movimientos](classify-"
 "transactions.md)); las autoliquidaciones de IVA leen el ledger. Registrar"
 " una factura aquí no la añade a un Modelo 303."
 
@@ -334,7 +334,7 @@ msgid ""
 msgstr ""
 "Las ventas transfronterizas B2C bajo el régimen de ventanilla única "
 "(Modelo 369) son un flujo aparte que todavía no es accesible desde "
-"`invoice catalogue create`; regístrelas mediante el flujo específico de "
+"`invoice catalogue create`; regístralas mediante el flujo específico de "
 "la ventanilla única (OSS)."
 
 #: ../../how-to/manage-invoices.md:153
@@ -343,15 +343,15 @@ msgstr "A dónde ir después"
 
 #: ../../how-to/manage-invoices.md:155
 msgid "[Attach invoices and receipts](ledger-evidence.md)"
-msgstr "[Adjunte facturas y recibos](ledger-evidence.md)"
+msgstr "[Adjunta facturas y recibos](ledger-evidence.md)"
 
 #: ../../how-to/manage-invoices.md:156
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr "[Importe y gestione los movimientos](import-bank-statements.md)"
+msgstr "[Importa y gestiona los movimientos](import-bank-statements.md)"
 
 #: ../../how-to/manage-invoices.md:157
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr "[Revise y aporte las entradas de cálculo](review-calculation-values.md)"
+msgstr "[Revisa y aporta las entradas de cálculo](review-calculation-values.md)"
 
 #: ../../how-to/manage-invoices.md:158
 msgid "[How to prepare a Modelo 303 quarterly filing](modelo-303.md)"

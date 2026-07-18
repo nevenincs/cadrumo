@@ -56,10 +56,16 @@ class ToolCallTelemetryRecord(BaseModel):
         route: The confirmation route the call took (a
             ``ConfirmRoute``/``ConfirmDecision`` value string), so override
             and refusal rates are computable from telemetry alone.
+        transport: The transport that actually served the call (an
+            ``McpTransport`` value string: warm in-process, supervised
+            subprocess, or the degraded subprocess fallback); empty for a
+            refusal that never dispatched.
         is_error: Whether the call returned an error result.
         duration_ms: Wall-clock round-trip duration.
-        executable_sha256: SHA-256 of the exact executable path supplied to
-            the supervised runtime; empty when no child was launched.
+        executable_sha256: SHA-256 of the attested environment CLI path - the
+            executable supplied to the supervised runtime, or the resolved
+            sibling CLI of the environment a warm in-process call served from;
+            empty when the call never dispatched.
         arguments_sha256: SHA-256 of the canonical arguments JSON.
         result_sha256: SHA-256 of the result text; empty for refused calls
             that never ran.
@@ -72,6 +78,7 @@ class ToolCallTelemetryRecord(BaseModel):
     tool_name: str = Field(min_length=1)
     command_key: str = ""
     route: str = ""
+    transport: str = ""
     is_error: bool = False
     duration_ms: int = Field(ge=0, default=0)
     executable_sha256: str = ""
@@ -203,6 +210,7 @@ class SessionTelemetryWriter:
         tool_name: str,
         command_key: str = "",
         route: str = "",
+        transport: str = "",
         is_error: bool = False,
         duration_ms: int = 0,
         executable_text: str = "",
@@ -220,6 +228,7 @@ class SessionTelemetryWriter:
             tool_name=tool_name,
             command_key=command_key,
             route=route,
+            transport=transport,
             is_error=is_error,
             duration_ms=duration_ms,
             executable_sha256=content_sha256(executable_text) if executable_text else "",
@@ -227,10 +236,15 @@ class SessionTelemetryWriter:
             result_sha256=content_sha256(result_text) if result_text else "",
         )
         self._sequence += 1
-        self._directory.mkdir(parents=True, exist_ok=True)
-        with self.path.open("a", encoding=_UTF_8) as sink:
-            sink.write(json.dumps(row.model_dump(mode="json"), ensure_ascii=False, sort_keys=True))
-            sink.write("\n")
+        # Best-effort write: telemetry is diagnostics, never a dependency of
+        # the tool call it observes. A telemetry directory that turned
+        # unwritable mid-session must not fail the call; the row is still
+        # returned so the caller's in-memory view stays coherent.
+        with contextlib.suppress(OSError):
+            self._directory.mkdir(parents=True, exist_ok=True)
+            with self.path.open("a", encoding=_UTF_8) as sink:
+                sink.write(json.dumps(row.model_dump(mode="json"), ensure_ascii=False, sort_keys=True))
+                sink.write("\n")
         return row
 
 

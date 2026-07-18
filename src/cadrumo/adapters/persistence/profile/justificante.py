@@ -28,7 +28,7 @@ from collections.abc import Iterator
 from typing import ClassVar, override
 
 from ....domain.justificante import Justificante
-from ..storage import SecureBoundRepository, SensitivityClass
+from ..storage import JUSTIFICANTE_METADATA_NAMESPACE, SecureBoundRepository, SensitivityClass
 
 
 class JustificanteRepository(SecureBoundRepository[Justificante]):
@@ -42,9 +42,9 @@ class JustificanteRepository(SecureBoundRepository[Justificante]):
     plaintext metadata from disk.
     """
 
-    namespace: ClassVar[str] = "cadrumo.domain.justificante.metadata"
-    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
-    schema_version: ClassVar[int] = 1
+    namespace: ClassVar[str] = JUSTIFICANTE_METADATA_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = JUSTIFICANTE_METADATA_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = JUSTIFICANTE_METADATA_NAMESPACE.schema_version
 
     @override
     @classmethod

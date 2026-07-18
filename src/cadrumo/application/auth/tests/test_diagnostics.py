@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import SensitivityClass
+from ....adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, SensitivityClass
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, UTF_8_ENCODING, load_external_constants
+from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
 from .._diagnostics import (
@@ -40,7 +40,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         older = datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
         newer = datetime(2026, 5, 19, 9, 0, tzinfo=UTC)
         repo.save(
-            namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+            namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
             object_key="diag-old",
             classification=SensitivityClass.SESSION,
             schema_version=1,
@@ -57,7 +57,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
             ).encode(UTF_8_ENCODING),
         )
         repo.save(
-            namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+            namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
             object_key="diag-new",
             classification=SensitivityClass.SESSION,
             schema_version=1,

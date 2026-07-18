@@ -31,7 +31,7 @@ from pydantic import ValidationError
 
 from ....core.logging import get_logger
 from ....domain.submission import ModeloPresentado
-from ..storage import SecureBoundRepository, SensitivityClass
+from ..storage import SUBMISSION_RECORDS_NAMESPACE, SecureBoundRepository, SensitivityClass
 
 _log = get_logger(__name__)
 
@@ -53,9 +53,9 @@ class SubmissionRepository(SecureBoundRepository[ModeloPresentado]):
             SQL object store composed by the bound repository base.
     """
 
-    namespace: ClassVar[str] = "cadrumo.domain.submission.records"
-    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.AUDIT
-    schema_version: ClassVar[int] = 1
+    namespace: ClassVar[str] = SUBMISSION_RECORDS_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = SUBMISSION_RECORDS_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = SUBMISSION_RECORDS_NAMESPACE.schema_version
 
     @override
     @classmethod

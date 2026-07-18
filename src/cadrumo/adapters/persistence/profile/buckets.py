@@ -56,6 +56,7 @@ _LOGGER = get_logger(__name__)
 _NAMESPACE = BUCKET_EVENT_HISTORY_NAMESPACE.namespace
 _OBJECT_KEY = BUCKET_EVENT_HISTORY_NAMESPACE.require_default_object_key()
 _CATALOGUE_VERSION = BUCKET_EVENT_HISTORY_NAMESPACE.schema_version
+_CATALOGUE_SENSITIVITY = BUCKET_EVENT_HISTORY_NAMESPACE.sensitivity
 
 
 class BucketEventHistoryRepository:
@@ -127,14 +128,13 @@ class BucketEventHistoryRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
-            SensitivityClass,
         )
 
         try:
             record = self._objects.load(
                 _NAMESPACE,
                 _OBJECT_KEY,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_CATALOGUE_SENSITIVITY,
                 max_supported_version=_CATALOGUE_VERSION,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
@@ -159,7 +159,7 @@ class BucketEventHistoryRepository:
                 suggestion="aeat config repair --help",
                 translated_message="errors.storage.stored_data_validation_boundary",
             ) from exc
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        if envelope.classification is not _CATALOGUE_SENSITIVITY:
             _LOGGER.error(
                 "bucket-event-history catalogue classification mismatch classification=%s",
                 envelope.classification.value,
@@ -169,7 +169,7 @@ class BucketEventHistoryRepository:
                     "namespace": _NAMESPACE,
                     "object_key": _OBJECT_KEY,
                     "classification": envelope.classification.value,
-                    "expected": SensitivityClass.FINANCIAL.value,
+                    "expected": _CATALOGUE_SENSITIVITY.value,
                 },
                 translated_message="errors.integrity.integrity_storage_classification",
             )
@@ -213,18 +213,18 @@ class BucketEventHistoryRepository:
         :class:`~adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly.
         """
-        from ..storage import Envelope, SecureObjectWrite, SensitivityClass
+        from ..storage import Envelope, SecureObjectWrite
 
         envelope = Envelope[BucketEventHistoryCatalogue](
             schema_version=_CATALOGUE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_CATALOGUE_SENSITIVITY,
             payload=catalogue,
         )
         return SecureObjectWrite(
             namespace=_NAMESPACE,
             object_key=_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_CATALOGUE_SENSITIVITY,
             schema_version=_CATALOGUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),

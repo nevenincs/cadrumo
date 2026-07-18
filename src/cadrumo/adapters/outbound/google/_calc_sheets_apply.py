@@ -58,7 +58,6 @@ from ....application.storage.calc_sheets import (
     hex_to_rgb_floats,
 )
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.config import Settings as _Settings
 from ..storage import (
     OutboundStorageConflictError,
     OutboundStorageNetworkError,
@@ -78,7 +77,21 @@ from ._calc_sheets_apply_values import (
 
 _FOLDER_MIME: Final[str] = "application/vnd.google-apps.folder"
 _SPREADSHEET_MIME: Final[str] = "application/vnd.google-apps.spreadsheet"
-_VAULT_FOLDER_NAME: Final[str] = _Settings().cadrumo_google_drive_vault_folder_name
+
+
+def _vault_folder_name() -> str:
+    """Read the Drive vault folder name at call time, never at import time.
+
+    A module-scope ``Settings()`` resolves the storage root while the module
+    imports; the CLI ``config`` subtree (and therefore the MCP schema build)
+    imports this adapter, so an import-time refusal would kill the whole
+    entrypoint instead of the one Drive operation that needs the setting.
+    """
+    from ....core.config import load_settings
+
+    return load_settings().cadrumo_google_drive_vault_folder_name
+
+
 _CALC_SHEETS_FOLDER_NAME: Final[str] = "calc-sheets"
 _OWNERSHIP_KEY: Final[str] = "cadrumo_vault_app"
 _OWNERSHIP_VALUE: Final[str] = "cadrumo"
@@ -981,7 +994,7 @@ def _open_or_create_plan_spreadsheet(
     root_folder_id: str,
     tab_titles: tuple[str, ...],
 ) -> tuple[dict[str, Any], str]:
-    vault_folder_id = _ensure_folder(drive, parent_id=root_folder_id, name=_VAULT_FOLDER_NAME)
+    vault_folder_id = _ensure_folder(drive, parent_id=root_folder_id, name=_vault_folder_name())
     calc_folder_id = _ensure_folder(drive, parent_id=vault_folder_id, name=_CALC_SHEETS_FOLDER_NAME)
     period_folder_id = _ensure_folder(drive, parent_id=calc_folder_id, name=_subfolder_name(plan))
 

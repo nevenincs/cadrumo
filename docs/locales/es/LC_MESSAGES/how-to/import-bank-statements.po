@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/import-bank-statements.md:1
 msgid "Import and manage transactions"
-msgstr ""
+msgstr "Importar y gestionar transacciones"
 
 #: ../../how-to/import-bank-statements.md:3
 msgid ""
@@ -31,6 +30,11 @@ msgid ""
 " bank statement is just a date and an amount - the tax meaning is added "
 "later, in classification."
 msgstr ""
+"Esta página cubre el flujo de transacciones del ledger: importar tu extracto "
+"bancario, añadir a mano las transacciones que falten, revisarlas y "
+"corregirlas, y comprobar la preparación antes de un cálculo. Una línea de un "
+"extracto bancario es solo una fecha y un importe: el significado fiscal se "
+"añade después, en la clasificación."
 
 #: ../../how-to/import-bank-statements.md:9
 msgid ""
@@ -38,66 +42,83 @@ msgid ""
 " run an import command. Tax calculations use the transactions you have "
 "saved under the active profile."
 msgstr ""
+"Tus registros bancarios no se añaden automáticamente. aeat importa solo "
+"cuando ejecutas una orden de importación. Los cálculos fiscales usan las "
+"transacciones que has guardado bajo el perfil activo."
 
 #: ../../how-to/import-bank-statements.md:13
 msgid "Before you start"
-msgstr ""
+msgstr "Antes de empezar"
 
 #: ../../how-to/import-bank-statements.md:15
 msgid "You need:"
-msgstr ""
+msgstr "Necesitas:"
 
 #: ../../how-to/import-bank-statements.md:17
 msgid "a working `aeat` command"
-msgstr ""
+msgstr "una orden `aeat` que funcione"
 
 #: ../../how-to/import-bank-statements.md:18
 msgid ""
 "an active taxpayer profile; see [Set up your taxpayer profile](profile-"
 "setup.md)"
 msgstr ""
+"un perfil de contribuyente activo; consulta [Configurar tu perfil de "
+"contribuyente](profile-setup.md)"
 
 #: ../../how-to/import-bank-statements.md:19
 msgid ""
 "a master-key passphrase. The tool prompts for it the first time it opens "
 "your encrypted storage in a session"
 msgstr ""
+"una frase de contraseña de clave maestra. La herramienta te la pide la "
+"primera vez que abre tu almacenamiento cifrado en una sesión"
 
 #: ../../how-to/import-bank-statements.md:21
 msgid ""
 "a bank statement file or directory, unless you are adding transactions by"
 " hand"
 msgstr ""
+"un archivo o directorio de extracto bancario, salvo que estés añadiendo "
+"transacciones a mano"
 
 #: ../../how-to/import-bank-statements.md:22
 msgid ""
 "for AEAT census-derived home-office ratios, reviewed censo facts; see "
 "[Link Modelo 036 census information](censo-update.md)"
 msgstr ""
+"para los porcentajes de oficina en casa derivados del censo de la AEAT, "
+"datos del censo revisados; consulta [Vincular la información censal del "
+"Modelo 036](censo-update.md)"
 
 #: ../../how-to/import-bank-statements.md:25
 msgid "Confirm the active profile before you write transaction data:"
-msgstr ""
+msgstr "Confirma el perfil activo antes de escribir datos de transacciones:"
 
 #: ../../how-to/import-bank-statements.md:31
 msgid "Statement file format"
-msgstr ""
+msgstr "Formato del archivo de extracto"
 
 #: ../../how-to/import-bank-statements.md:33
 msgid ""
 "A bank CSV uses a semicolon (`;`) separator and comma decimals. The first"
 " line is the column header; each later line is one movement:"
 msgstr ""
+"Un CSV bancario usa un separador de punto y coma (`;`) y decimales con coma. "
+"La primera línea es la cabecera de columnas; cada línea posterior es un "
+"movimiento:"
 
 #: ../../how-to/import-bank-statements.md:42
 msgid ""
 "The sign of `Importe` carries the direction: a positive amount is income,"
 " a negative amount is an expense."
 msgstr ""
+"El signo de `Importe` indica la dirección: un importe positivo es un "
+"ingreso, un importe negativo es un gasto."
 
 #: ../../how-to/import-bank-statements.md:45
 msgid "Preview an import"
-msgstr ""
+msgstr "Previsualiza una importación"
 
 #: ../../how-to/import-bank-statements.md:47
 msgid ""
@@ -106,6 +127,10 @@ msgid ""
 "The sequence previews the standard quarter's statement, imports it, and "
 "confirms one imported row:"
 msgstr ""
+"Haz primero una prueba en seco. Una prueba en seco muestra lo que `aeat` "
+"importaría y no guarda ninguna fila. Luego repite la orden sin `--dry-run` "
+"para guardar las filas. La secuencia previsualiza el extracto del trimestre "
+"estándar, lo importa y confirma una fila importada:"
 
 #: ../../how-to/import-bank-statements.md:56
 msgid ""
@@ -116,6 +141,12 @@ msgid ""
 "ledger import --help` or see the [CLI reference](../cli/index.rst) for "
 "the current provider list."
 msgstr ""
+"`--provider csv` nombra el formato del extracto. `--provider auto` le pide a "
+"`aeat` que lo detecte. Los proveedores reconocidos son `auto`, `csv`, `ofx`, "
+"`qfx`, `xlsx`, `excel`, `n26`, `pdf` y `pdf-n26`. Si la detección elige el "
+"formato equivocado, sustituye `auto` por el proveedor exacto; ejecuta `aeat "
+"app ledger import --help` o consulta la [referencia de la CLI](../cli/"
+"index.rst) para la lista actual de proveedores."
 
 #: ../../how-to/import-bank-statements.md:62
 msgid ""
@@ -123,14 +154,19 @@ msgid ""
 "missing file (`El archivo de origen no existe: ...`); fix the path and "
 "run it again."
 msgstr ""
+"Si la ruta no existe, la orden se niega limpiamente y nombra el archivo que "
+"falta (`El archivo de origen no existe: ...`); corrige la ruta y ejecútala "
+"de nuevo."
 
 #: ../../how-to/import-bank-statements.md:65
 msgid "Save imported rows with diagnostics"
-msgstr ""
+msgstr "Guarda las filas importadas con diagnósticos"
 
 #: ../../how-to/import-bank-statements.md:67
 msgid "Add `--verify` when you want import diagnostics alongside the save:"
 msgstr ""
+"Añade `--verify` cuando quieras diagnósticos de importación junto con el "
+"guardado:"
 
 #: ../../how-to/import-bank-statements.md:73
 msgid ""
@@ -139,10 +175,14 @@ msgid ""
 "want to label the import with a fiscal period; leave it out and aeat "
 "assigns the period from each transaction's date automatically."
 msgstr ""
+"Si la fuente de diagnóstico debe apuntar a un archivo original distinto, "
+"pásalo con `--file <original>`. Usa `--period` solo cuando quieras a "
+"propósito etiquetar la importación con un periodo fiscal; omítelo y aeat "
+"asigna el periodo automáticamente a partir de la fecha de cada transacción."
 
 #: ../../how-to/import-bank-statements.md:78
 msgid "Add one transaction manually"
-msgstr ""
+msgstr "Añade una transacción a mano"
 
 #: ../../how-to/import-bank-statements.md:80
 msgid ""
@@ -152,16 +192,23 @@ msgid ""
 " or went out, and the command refuses a negative amount. `OUTGOING` is "
 "for expenses; `INCOMING` is for income:"
 msgstr ""
+"Usa `ledger add` cuando falte una transacción en los extractos importados. "
+"Los campos obligatorios son fecha, importe, dirección y descripción. Escribe "
+"el importe como una cifra positiva: la dirección indica si el dinero entró o "
+"salió, y la orden rechaza un importe negativo. `OUTGOING` es para los "
+"gastos; `INCOMING` es para los ingresos:"
 
 #: ../../how-to/import-bank-statements.md:90
 msgid ""
 "The third direction, `INTERNAL_TRANSFER`, records money moved between "
 "your own accounts."
 msgstr ""
+"La tercera dirección, `INTERNAL_TRANSFER`, registra el dinero movido entre "
+"tus propias cuentas."
 
 #: ../../how-to/import-bank-statements.md:93
 msgid "Record tax details on a manual transaction"
-msgstr ""
+msgstr "Registra los detalles fiscales en una transacción manual"
 
 #: ../../how-to/import-bank-statements.md:95
 msgid ""
@@ -170,44 +217,60 @@ msgid ""
 " total (taxable base plus IVA), and the tool refuses the row if the base "
 "plus IVA does not match the gross to the cent:"
 msgstr ""
+"`ledger add` acepta los mismos campos fiscales que estableces durante la "
+"clasificación, así que registras una transacción completa en un solo paso. "
+"`--amount` es el total bruto (base imponible más IVA), y la herramienta "
+"rechaza la fila si la base más el IVA no coincide con el bruto hasta el "
+"céntimo:"
 
 #: ../../how-to/import-bank-statements.md:104
 msgid "Useful optional fields:"
-msgstr ""
+msgstr "Campos opcionales útiles:"
 
 #: ../../how-to/import-bank-statements.md:106
 msgid "`--currency` records a non-euro amount; it defaults to `EUR`."
 msgstr ""
+"`--currency` registra un importe en una moneda distinta del euro; su valor "
+"predeterminado es `EUR`."
 
 #: ../../how-to/import-bank-statements.md:107
 msgid "`--counterparty` records who you paid or were paid by."
-msgstr ""
+msgstr "`--counterparty` registra a quién pagaste o quién te pagó."
 
 #: ../../how-to/import-bank-statements.md:108
 msgid ""
 "`--category-id` assigns the income or expense category. Run `aeat app "
 "ledger categories` to list the ids."
 msgstr ""
+"`--category-id` asigna la categoría de ingreso o gasto. Ejecuta `aeat app "
+"ledger categories` para enumerar los ids."
 
 #: ../../how-to/import-bank-statements.md:110
 msgid ""
 "`--taxable-base`, `--iva-rate`, and `--iva-amount` record the IVA "
 "breakdown."
 msgstr ""
+"`--taxable-base`, `--iva-rate` e `--iva-amount` registran el desglose del "
+"IVA."
 
 #: ../../how-to/import-bank-statements.md:111
 msgid "`--irpf-category` records the IRPF (personal income tax) category."
 msgstr ""
+"`--irpf-category` registra la categoría de IRPF (impuesto sobre la renta de "
+"las personas físicas)."
 
 #: ../../how-to/import-bank-statements.md:112
 msgid ""
 "`--source-jurisdiction` records the country a movement belongs to, as an "
 "ISO two-letter code, which matters for non-resident scopes."
 msgstr ""
+"`--source-jurisdiction` registra el país al que pertenece un movimiento, "
+"como un código ISO de dos letras, que importa para los ámbitos de no "
+"residentes."
 
 #: ../../how-to/import-bank-statements.md:114
 msgid "`--notes` adds a short operator note."
-msgstr ""
+msgstr "`--notes` añade una nota breve del operador."
 
 #: ../../how-to/import-bank-statements.md:116
 msgid ""
@@ -216,6 +279,11 @@ msgid ""
 "For the IVA category, EU member-state, and usage-ratio semantics behind "
 "these fields, see [Classify transactions](classify-transactions.md)."
 msgstr ""
+"Para un movimiento en parte de la actividad y en parte personal, establece "
+"`--classification MIXED` y el porcentaje de la actividad con `--business-"
+"pct`, un valor de `0` a `1`. Para la semántica de la categoría de IVA, el "
+"Estado miembro de la UE y el porcentaje de uso que hay detrás de estos "
+"campos, consulta [Clasificar transacciones](classify-transactions.md)."
 
 #: ../../how-to/import-bank-statements.md:121
 msgid ""
@@ -223,16 +291,22 @@ msgid ""
 "exists separately from the bank movement. Received invoices are supplier "
 "invoices you owe; issued invoices are customer invoices owed to you:"
 msgstr ""
+"Usa las órdenes de factura cuando además necesites hacer seguimiento de si "
+"existe una factura por separado del movimiento bancario. Las facturas "
+"recibidas son facturas de proveedor que debes; las facturas emitidas son "
+"facturas a clientes que te deben:"
 
 #: ../../how-to/import-bank-statements.md:129
 msgid ""
 "For the full invoice-record workflow, see [Attach invoices and receipts"
 "](ledger-evidence.md)."
 msgstr ""
+"Para el flujo completo de registros de factura, consulta [Adjuntar facturas "
+"y recibos](ledger-evidence.md)."
 
 #: ../../how-to/import-bank-statements.md:132
 msgid "Review rows"
-msgstr ""
+msgstr "Revisa las filas"
 
 #: ../../how-to/import-bank-statements.md:134
 msgid ""
@@ -240,6 +314,9 @@ msgid ""
 "event history. The sequence imports the quarter and walks the read "
 "commands:"
 msgstr ""
+"Enumera las filas, acota la lista con filtros, examina una fila y lee su "
+"historial de eventos. La secuencia importa el trimestre y recorre las "
+"órdenes de lectura:"
 
 #: ../../how-to/import-bank-statements.md:141
 msgid ""
@@ -247,10 +324,13 @@ msgid ""
 "and `ledger check` to report aggregate ledger anomalies across periods. "
 "Both are local-only:"
 msgstr ""
+"Para una cola de revisión más amplia, usa `ledger review` para examinar "
+"filas seleccionadas y `ledger check` para informar de anomalías agregadas "
+"del ledger entre periodos. Ambas son solo locales:"
 
 #: ../../how-to/import-bank-statements.md:149
 msgid "Export rows for review"
-msgstr ""
+msgstr "Exporta filas para revisar"
 
 #: ../../how-to/import-bank-statements.md:151
 msgid ""
@@ -258,22 +338,31 @@ msgid ""
 "keeps the export aligned with the transaction dates. Exports are review "
 "snapshots, not an edit-and-reimport path:"
 msgstr ""
+"Exporta el ledger activo a un archivo. El filtro `--year` y `--period` "
+"mantiene la exportación alineada con las fechas de las transacciones. Las "
+"exportaciones son instantáneas de revisión, no una vía de editar y "
+"reimportar:"
 
 #: ../../how-to/import-bank-statements.md:159
 msgid ""
 "Add `--export-format xlsx` to write an XLSX snapshot instead, and use the"
 " annual token `0A` when a whole year is the review scope."
 msgstr ""
+"Añade `--export-format xlsx` para escribir en su lugar una instantánea XLSX, "
+"y usa el token anual `0A` cuando el alcance de la revisión sea un año "
+"completo."
 
 #: ../../how-to/import-bank-statements.md:162
 msgid ""
 "To change saved rows, use `ledger update`, `ledger classify`, `ledger "
 "allocate`, `ledger split`, or `ledger merge`."
 msgstr ""
+"Para cambiar filas guardadas, usa `ledger update`, `ledger classify`, "
+"`ledger allocate`, `ledger split` o `ledger merge`."
 
 #: ../../how-to/import-bank-statements.md:165
 msgid "Update a row"
-msgstr ""
+msgstr "Actualiza una fila"
 
 #: ../../how-to/import-bank-statements.md:167
 msgid ""
@@ -281,6 +370,10 @@ msgid ""
 "amount, direction, currency, counterparty, description, taxable base, IVA"
 " rate, IVA amount, IRPF category, notes, or group label:"
 msgstr ""
+"Usa `ledger update` para los campos editables de la transacción: fecha, "
+"fecha de valor, importe, dirección, moneda, contraparte, descripción, base "
+"imponible, tipo de IVA, cuota de IVA, categoría de IRPF, notas o etiqueta de "
+"grupo:"
 
 #: ../../how-to/import-bank-statements.md:175
 msgid ""
@@ -290,10 +383,15 @@ msgid ""
 "resetting rows - see [Correct mistakes in your ledger](correct-ledger-"
 "entries.md)."
 msgstr ""
+"Una actualización da a la transacción un id nuevo; un id que anotaste antes "
+"sigue resolviéndose en `view`, `history` y `track`. Para el flujo de "
+"corrección completo -dividir, fusionar, archivar, apartar, eliminar y "
+"restablecer filas- consulta [Corregir errores en tu ledger](correct-ledger-"
+"entries.md)."
 
 #: ../../how-to/import-bank-statements.md:180
 msgid "Attach evidence to a transaction"
-msgstr ""
+msgstr "Adjunta evidencia a una transacción"
 
 #: ../../how-to/import-bank-statements.md:182
 msgid ""
@@ -301,12 +399,18 @@ msgid ""
 "from `aeat app ledger evidence add`. The sequence records evidence and an"
 " expense, then attaches one to the other:"
 msgstr ""
+"Adjunta evidencia de compra segura a una transacción. El id de la evidencia "
+"viene de `aeat app ledger evidence add`. La secuencia registra una evidencia "
+"y un gasto, y luego adjunta uno al otro:"
 
 #: ../../how-to/import-bank-statements.md:190
 msgid ""
 "`attach` is the single door for purchase evidence. The `link` command "
 "binds a transaction to a reconciliation-catalogue invoice only."
 msgstr ""
+"`attach` es la única puerta para la evidencia de compra. La orden `link` "
+"vincula una transacción únicamente a una factura del catálogo de "
+"conciliación."
 
 #: ../../how-to/import-bank-statements.md:193
 msgid ""
@@ -316,6 +420,11 @@ msgid ""
 "](ledger-evidence.md) for the full evidence and invoice-record workflow, "
 "including the `--attachment-id` option and its current limitation."
 msgstr ""
+"La opción `link --invoice-id` espera un id del catálogo de facturas de "
+"conciliación (que rellenan los flujos de importación y conciliación), no un "
+"id de `aeat app ledger invoice add`. Consulta [Adjuntar facturas y recibos"
+"](ledger-evidence.md) para el flujo completo de evidencia y registros de "
+"factura, incluida la opción `--attachment-id` y su limitación actual."
 
 #: ../../how-to/import-bank-statements.md:200
 msgid ""
@@ -324,6 +433,10 @@ msgid ""
 "against your own authorized account rather than in the documentation "
 "sandbox:"
 msgstr ""
+"Descarga un documento directamente desde Google Drive al almacenamiento de "
+"evidencia cifrado con `doclink`. Esta orden accede a Google Drive, así que "
+"se ejecuta contra tu propia cuenta autorizada en lugar de en el entorno de "
+"pruebas de la documentación:"
 
 #: ../../how-to/import-bank-statements.md:207
 msgid ""
@@ -334,10 +447,16 @@ msgid ""
 "refused source, download the document yourself and attach it with `aeat "
 "app ledger attach --attachment-id`."
 msgstr ""
+"La orden descarga el archivo de Drive, guarda sus bytes cifrados junto con "
+"la transacción y conserva el enlace original como procedencia. Los enlaces "
+"de Gmail, las URL arbitrarias y los archivos de Drive fuera del ámbito "
+"concedido se rechazan: la evidencia siempre lleva el documento en sí, nunca "
+"un enlace a secas. Para una fuente rechazada, descarga el documento tú mismo "
+"y adjúntalo con `aeat app ledger attach --attachment-id`."
 
 #: ../../how-to/import-bank-statements.md:214
 msgid "Fix a wrong row"
-msgstr ""
+msgstr "Corrige una fila incorrecta"
 
 #: ../../how-to/import-bank-statements.md:216
 msgid ""
@@ -347,10 +466,15 @@ msgid ""
 "workflow, with an example for each command and guidance on picking the "
 "least destructive fix."
 msgstr ""
+"Dividir un movimiento mixto en partes, volver a fusionar una división "
+"errónea, y archivar, apartar, eliminar o restablecer filas son todas "
+"correcciones. [Corregir errores en tu ledger](correct-ledger-entries.md) "
+"reúne ese flujo, con un ejemplo para cada orden y orientación sobre cómo "
+"elegir la corrección menos destructiva."
 
 #: ../../how-to/import-bank-statements.md:222
 msgid "Classify rows"
-msgstr ""
+msgstr "Clasifica las filas"
 
 #: ../../how-to/import-bank-statements.md:224
 msgid ""
@@ -358,6 +482,9 @@ msgid ""
 "need a business/personal/mixed decision, and expense rows need a "
 "category:"
 msgstr ""
+"Clasifica las filas antes de calcular. Como mínimo, las filas de actividad "
+"importadas necesitan una decisión de actividad/personal/mixta, y las filas "
+"de gasto necesitan una categoría:"
 
 #: ../../how-to/import-bank-statements.md:231
 msgid ""
@@ -365,10 +492,14 @@ msgid ""
 "- bulk CSV classification, mixed-use allocation, tax fields, stored "
 "rules, and [LLM-assisted suggestions](classify-with-llm.md)."
 msgstr ""
+"[Clasificar transacciones](classify-transactions.md) reúne el flujo "
+"completo: clasificación en bloque por CSV, asignación de uso mixto, campos "
+"fiscales, reglas guardadas y [sugerencias asistidas por LLM](classify-with-"
+"llm.md)."
 
 #: ../../how-to/import-bank-statements.md:235
 msgid "Check readiness for a filing period"
-msgstr ""
+msgstr "Comprueba la preparación para un periodo de presentación"
 
 #: ../../how-to/import-bank-statements.md:237
 msgid ""
@@ -378,6 +509,11 @@ msgid ""
 "classification, category, base, IVA amount, IVA rate, split reference, or"
 " unconvertible currency:"
 msgstr ""
+"Ejecuta la comprobación previa antes de calcular un modelo, y luego "
+"comprueba el estado general del ledger. La comprobación previa examina cada "
+"registro dentro del periodo y señala todo lo que aún falta antes de fiarse "
+"de cualquier suma: una clasificación, categoría, base, cuota de IVA, tipo de "
+"IVA o referencia de división que falte, o una moneda no convertible:"
 
 #: ../../how-to/import-bank-statements.md:246
 msgid ""
@@ -386,6 +522,10 @@ msgid ""
 "only when the active profile and target period are ready enough for the "
 "modelo you are preparing."
 msgstr ""
+"La comprobación no cambia nada; nombra las filas que no están listas para "
+"que corrijas la materia prima antes de fiarte de cualquier total. Continúa "
+"al cálculo solo cuando el perfil activo y el periodo objetivo estén "
+"suficientemente listos para el modelo que estás preparando."
 
 #: ../../how-to/import-bank-statements.md:251
 msgid ""
@@ -394,10 +534,14 @@ msgid ""
 "modelo calculation surface to Sheets; it is separate from ledger CSV/XLSX"
 " export."
 msgstr ""
+"Para la revisión de cálculos en Google Sheets, consulta [Revisar cálculos "
+"con Google Sheets](review-with-google-sheets.md). Ese flujo exporta una "
+"superficie de cálculo de un modelo a Sheets; es independiente de la "
+"exportación del ledger a CSV/XLSX."
 
 #: ../../how-to/import-bank-statements.md:256
 msgid "If a command stops with an error"
-msgstr ""
+msgstr "Si una orden se detiene con un error"
 
 #: ../../how-to/import-bank-statements.md:258
 msgid ""
@@ -405,10 +549,13 @@ msgid ""
 " the ledger is not ready, use [Diagnose and repair your local "
 "setup](troubleshooting.md)."
 msgstr ""
+"Si una orden informa de que no hay ningún perfil activo, de que el periodo "
+"no es válido o de que el ledger no está listo, usa [Diagnosticar y reparar "
+"tu instalación local](troubleshooting.md)."
 
 #: ../../how-to/import-bank-statements.md:262
 msgid "Next steps"
-msgstr ""
+msgstr "Próximos pasos"
 
 #: ../../how-to/import-bank-statements.md:264
 msgid ""
@@ -416,34 +563,38 @@ msgid ""
 "evidence.md) - understand what imported rows mean and how they differ "
 "from tax facts and filing evidence."
 msgstr ""
+"[Importación, exportación y evidencia](../reference/import-export-and-"
+"evidence.md): entiende qué significan las filas importadas y en qué se "
+"diferencian de los datos fiscales y la evidencia de presentación."
 
 #: ../../how-to/import-bank-statements.md:267
 msgid "[Classify transactions](classify-transactions.md)"
-msgstr ""
+msgstr "[Clasificar transacciones](classify-transactions.md)"
 
 #: ../../how-to/import-bank-statements.md:268
 msgid "[Classify transactions with an LLM](classify-with-llm.md)"
-msgstr ""
+msgstr "[Clasificar transacciones con un LLM](classify-with-llm.md)"
 
 #: ../../how-to/import-bank-statements.md:269
 msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md)"
 msgstr ""
+"[Cómo tus registros se convierten en cifras fiscales](../explanation/from-"
+"records-to-figures.md)"
 
 #: ../../how-to/import-bank-statements.md:270
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
-msgstr ""
+msgstr "[Revisar cálculos con Google Sheets](review-with-google-sheets.md)"
 
 #: ../../how-to/import-bank-statements.md:271
 msgid "[Quickstart: produce a modelo file](quickstart.md)"
-msgstr ""
+msgstr "[Inicio rápido: producir un archivo de modelo](quickstart.md)"
 
 #: ../../how-to/import-bank-statements.md:272
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr ""
+msgstr "[Revisar y aportar los datos de cálculo](review-calculation-values.md)"
 
 #: ../../how-to/import-bank-statements.md:273
 msgid "[CLI reference](../cli/index.rst)"
-msgstr ""
-
+msgstr "[Referencia de la CLI](../cli/index.rst)"

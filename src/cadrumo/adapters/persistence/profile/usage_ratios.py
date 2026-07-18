@@ -52,6 +52,7 @@ __all__ = [
 
 _LOGGER = get_logger(__name__)
 _USAGE_RATIO_VERSION = USAGE_RATIO_PROFILE_NAMESPACE.schema_version
+_USAGE_RATIO_SENSITIVITY = USAGE_RATIO_PROFILE_NAMESPACE.sensitivity
 _USAGE_RATIO_NAMESPACE = USAGE_RATIO_PROFILE_NAMESPACE.namespace
 
 
@@ -62,7 +63,7 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage import Envelope, SensitivityClass
+    from ..storage import Envelope
     from ..storage.errors import ClassificationError, EnvelopeVersionError
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -72,17 +73,17 @@ def load_usage_ratios(*, bucket_id: str, objects: SecureObjectRepository | None 
         record = repository.load(
             _USAGE_RATIO_NAMESPACE,
             object_key,
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_USAGE_RATIO_SENSITIVITY,
             max_supported_version=_USAGE_RATIO_VERSION,
         )
         if record is None:
             _LOGGER.debug("usage-ratios object not found; returning empty profile bucket_id=%s", bucket_id)
             return UsageRatioProfile()
         envelope = Envelope[UsageRatioProfile].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        if envelope.classification is not _USAGE_RATIO_SENSITIVITY:
             raise ClassificationError(
                 f"usage-ratio profile object has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.FINANCIAL}",
+                f"consumer expected {_USAGE_RATIO_SENSITIVITY}",
             )
         if envelope.schema_version > _USAGE_RATIO_VERSION:
             raise EnvelopeVersionError(
@@ -140,13 +141,13 @@ def save_usage_ratios(
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage import Envelope, SensitivityClass
+    from ..storage import Envelope
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
     envelope = Envelope[UsageRatioProfile](
         schema_version=_USAGE_RATIO_VERSION,
         written_at=now(),
-        classification=SensitivityClass.FINANCIAL,
+        classification=_USAGE_RATIO_SENSITIVITY,
         payload=profile,
     )
     object_key = usage_ratios_object_key(bucket_id)
@@ -155,7 +156,7 @@ def save_usage_ratios(
         repository.save(
             namespace=_USAGE_RATIO_NAMESPACE,
             object_key=object_key,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_USAGE_RATIO_SENSITIVITY,
             schema_version=_USAGE_RATIO_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),

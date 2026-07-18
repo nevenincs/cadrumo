@@ -36,7 +36,7 @@ See Also:
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
 from .....domain.calculations.registry import RemoteStateGuardPolicy
@@ -45,8 +45,6 @@ from ._errors import AuthConfigurationError, AuthError
 
 if TYPE_CHECKING:
     from .....core.config import Settings
-
-DIAGNOSTIC_NAMESPACE: Final[str] = "cadrumo.outbound.aeat.auth.clave_permanente.diagnostics"
 
 
 def clave_permanente_auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:
@@ -142,7 +140,6 @@ def clave_permanente_login_error(
 
 
 __all__ = [
-    "DIAGNOSTIC_NAMESPACE",
     "ClavePermanenteFailureMode",
     "classify_identity",
     "clave_permanente_auth_browser_action_policy",

@@ -73,6 +73,7 @@ def test_apply_evidence_split_refuses_a_no_split_verdict(
         apply_evidence_split(
             suggestion,
             bucket_id=_BUCKET,
+            source_command="aeat app ledger split --llm --apply",
             transaction_repository=repository,
             bucket_event_repository=events,
             occurred_at=_NOW,
@@ -96,6 +97,7 @@ def test_apply_evidence_classification_writes_in_place_from_the_lone_child(
     result = apply_evidence_classification(
         suggestion,
         bucket_id=_BUCKET,
+        source_command="aeat app ledger classify --read-evidence --auto-split --apply",
         transaction_repository=repository,
         bucket_event_repository=events,
         occurred_at=_NOW,
@@ -128,4 +130,9 @@ def test_apply_evidence_classification_refuses_a_multi_child_split(
         read_evidence=False,
     )
     with pytest.raises(TransactionValidationError, match="recommends a split"):
-        apply_evidence_classification(suggestion, bucket_id=_BUCKET, transaction_repository=repository)
+        apply_evidence_classification(
+            suggestion,
+            bucket_id=_BUCKET,
+            source_command="aeat app ledger classify --read-evidence --auto-split --apply",
+            transaction_repository=repository,
+        )

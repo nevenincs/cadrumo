@@ -303,7 +303,7 @@ msgid ""
 "Each registered certificate has its own expiry date. Check all registered"
 " certificates in one pass, not only the active one:"
 msgstr ""
-"Cada certificado registrado tiene su propia fecha de caducidad. Comprueba "
+"Cada certificado registrado tiene tu propia fecha de caducidad. Comprueba "
 "todos los certificados registrados de una sola pasada, no solo el activo:"
 
 #: ../../how-to/authenticate-with-aeat.md:160

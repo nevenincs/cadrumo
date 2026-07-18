@@ -13,13 +13,22 @@ from typing import override
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from .....core.config import Settings
+from .....core.config import load_settings
 from .....core.logging import get_logger
 from .._errors import LLMConfigError
 from .._models import LLMProvider
 from .base import ProviderCompletion, ProviderRequest, _ProviderAdapter, check_http_error
 
-_OPENAI_CHAT_URL = Settings().cadrumo_llm_openai_chat_completions_url
+
+def _openai_chat_url() -> str:
+    """Read the chat-completions URL at call time, never at import time.
+
+    A module-scope ``Settings()`` resolves the storage root while the module
+    imports, so an import-time refusal would kill any entrypoint whose import
+    chain reaches this adapter instead of the one request that needs the URL.
+    """
+    return load_settings().cadrumo_llm_openai_chat_completions_url
+
 
 _logger = get_logger(__name__)
 
@@ -118,7 +127,7 @@ class OpenAIAdapter(_ProviderAdapter):
         messages.append({"role": "user", "content": request.prompt})
         async with httpx.AsyncClient(timeout=self._timeout_s) as client:
             response = await client.post(
-                _OPENAI_CHAT_URL,
+                _openai_chat_url(),
                 headers={"Authorization": f"Bearer {self._api_key}"},
                 json={
                     "model": request.model,

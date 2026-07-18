@@ -731,8 +731,8 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help=(
             "Redirect a full build's HTML output (and its Pagefind index and sitemap) to this directory "
-            "instead of docs/_build/html. Used by the deploy publisher to build each localized site into "
-            "a per-language subdirectory. Full builds only; not valid with --single-page or explicit paths."
+            "instead of the canonical HTML output root. Used by the deploy publisher to build each localized "
+            "site into a per-language subdirectory. Full builds only; not valid with --single-page or explicit paths."
         ),
     )
     args = parser.parse_args(argv)

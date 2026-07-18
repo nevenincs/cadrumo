@@ -1,0 +1,252 @@
+"""Reacquire the Cadrumo Python cohort from PyPI and repeat installed tax work.
+
+This post-publication check installs ``cadrumo[agent]`` and both mandatory data
+distributions FROM a public package index (no local wheels), proves every
+installed distribution's wheel bytes match the promoted cohort digest, and then
+repeats the grounded installed CLI and MCP tax-work oracles from that index-only
+environment. It refuses instructively when the index does not yet serve the
+promoted version (implements post-release-distribution plan row P03.S14).
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import shutil
+import subprocess
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Final
+
+from dev.packaging._acquire_common import (
+    PYTHON_COHORT_WHEEL_NAMES,
+    AcquisitionError,
+    require_command_succeeded,
+    run_installed_behavior_oracles,
+    venv_executable,
+    verify_python_cohort_download,
+)
+from dev.packaging.python_cohort import PythonCohort, load_python_cohort
+
+_UTF_8: Final[str] = "utf-8"
+_DEFAULT_INDEX_URL: Final[str] = "https://pypi.org/simple"
+
+
+def _resolve_executable(name: str, override: Path | None) -> Path:
+    """Resolve a required build executable from an override or PATH."""
+    if override is not None:
+        return override.expanduser().resolve(strict=True)
+    found = shutil.which(name)
+    if found is None:
+        raise AcquisitionError(f"required executable not found on PATH: {name}")
+    return Path(found).resolve(strict=True)
+
+
+def _run(argv: list[str], *, cwd: Path, log: Path) -> subprocess.CompletedProcess[str]:
+    """Run one acquisition subprocess, retaining its full output to a log file."""
+    completed = subprocess.run(  # noqa: S603 - fixed resolved executables and declarative argv
+        argv,
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        encoding=_UTF_8,
+        errors="replace",
+        check=False,
+    )
+    log.write_text(
+        f"argv={json.dumps(argv)}\ncwd={cwd}\nexit_code={completed.returncode}\n"
+        f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
+        encoding=_UTF_8,
+    )
+    return completed
+
+
+def _download_cohort_wheels(
+    venv_python: Path,
+    *,
+    cohort: PythonCohort,
+    index_url: str,
+    download_dir: Path,
+    run_root: Path,
+    logs: Path,
+) -> None:
+    """Download every cohort distribution wheel from the public index.
+
+    Refuses instructively (never a bare traceback) when the index does not yet
+    serve the promoted version for any distribution.
+    """
+    download_dir.mkdir(parents=True, exist_ok=True)
+    for distribution in PYTHON_COHORT_WHEEL_NAMES:
+        completed = _run(
+            [
+                str(venv_python),
+                "-m",
+                "pip",
+                "download",
+                "--no-deps",
+                "--only-binary=:all:",
+                "--index-url",
+                index_url,
+                "--dest",
+                str(download_dir),
+                f"{distribution}=={cohort.version}",
+            ],
+            cwd=run_root,
+            log=logs / f"pip-download-{distribution}.log",
+        )
+        require_command_succeeded(
+            returncode=completed.returncode,
+            stderr=completed.stderr,
+            mechanism="pip download",
+            endpoint=index_url,
+            version=cohort.version,
+            next_step=f"publish {distribution}=={cohort.version} to {index_url} and rerun",
+        )
+
+
+def run_pypi_acquisition(
+    *,
+    cohort_dir: Path,
+    evidence_dir: Path,
+    index_url: str,
+    python: str,
+    uv_executable: Path | None,
+    timeout_seconds: float,
+) -> Path:
+    """Install from PyPI, verify cohort digests, and repeat installed oracles.
+
+    Args:
+        cohort_dir: The promoted Python cohort directory (expected digests).
+        evidence_dir: The directory retaining per-run evidence.
+        index_url: The public package index to install and download from.
+        python: The interpreter version/identifier for the fresh venv.
+        uv_executable: An explicit ``uv`` path, or ``None`` to resolve from PATH.
+        timeout_seconds: Per-command timeout for the installed oracles.
+
+    Returns:
+        The path to the retained JSON evidence document.
+
+    Raises:
+        AcquisitionError: If the index lacks the version or bytes drift.
+    """
+    cohort = load_python_cohort(cohort_dir)
+    uv = _resolve_executable("uv", uv_executable)
+    evidence_root = evidence_dir.resolve()
+    evidence_root.mkdir(parents=True, exist_ok=True)
+    run_root = evidence_root / f"run-{datetime.now(UTC).strftime('%Y%m%dT%H%M%S%fZ')}"
+    run_root.mkdir()
+    logs = run_root / "logs"
+    logs.mkdir()
+    venv = run_root / "venv"
+    download_dir = run_root / "downloads"
+
+    create = _run(
+        [str(uv), "venv", str(venv), "--python", python, "--seed"],
+        cwd=run_root,
+        log=logs / "uv-venv.log",
+    )
+    if create.returncode != 0:
+        raise AcquisitionError(f"could not create the acquisition virtualenv: {create.stderr.strip()[:200]}")
+    venv_python = venv_executable(venv, "python")
+
+    _download_cohort_wheels(
+        venv_python,
+        cohort=cohort,
+        index_url=index_url,
+        download_dir=download_dir,
+        run_root=run_root,
+        logs=logs,
+    )
+    verified = verify_python_cohort_download(
+        download_dir,
+        cohort,
+        mechanism="pip download",
+        endpoint=index_url,
+    )
+
+    install = _run(
+        [
+            str(uv),
+            "pip",
+            "install",
+            "--python",
+            str(venv_python),
+            "--index-url",
+            index_url,
+            f"cadrumo[agent]=={cohort.version}",
+            f"cadrumo-data-manuals=={cohort.version}",
+            f"cadrumo-data-official=={cohort.version}",
+        ],
+        cwd=run_root,
+        log=logs / "uv-pip-install.log",
+    )
+    require_command_succeeded(
+        returncode=install.returncode,
+        stderr=install.stderr,
+        mechanism="uv pip install",
+        endpoint=index_url,
+        version=cohort.version,
+        next_step=f"publish cadrumo[agent]=={cohort.version} to {index_url} and rerun",
+    )
+
+    aeat = venv_executable(venv, "aeat")
+    mcp = venv_executable(venv, "cadrumo-mcp")
+    tax_evidence, mcp_evidence = run_installed_behavior_oracles(
+        cli=aeat,
+        mcp_server=mcp,
+        storage_root=run_root / "oracle-state",
+        work_dir=run_root / "oracle-work",
+        timeout_seconds=timeout_seconds,
+    )
+
+    evidence = {
+        "schema": "cadrumo.packaging.acquire-pypi.v1",
+        "status": "passed",
+        "completed_at": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
+        "index_url": index_url,
+        "cohort": {
+            "source_commit": cohort.source_commit,
+            "version": cohort.version,
+            "sha256": {name: cohort.sha256[name] for name in PYTHON_COHORT_WHEEL_NAMES},
+        },
+        "verified_wheels": {name: str(path) for name, path in verified.items()},
+        "installed_tax_oracle": tax_evidence.to_jsonable(),
+        "installed_mcp_oracle": mcp_evidence.to_jsonable(),
+    }
+    evidence_path = run_root / "acquire-pypi-evidence.json"
+    evidence_path.write_text(
+        json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding=_UTF_8,
+    )
+    return evidence_path
+
+
+def _parser() -> argparse.ArgumentParser:
+    """Return the argument parser for the PyPI reacquisition check."""
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--cohort-dir", required=True, type=Path, help="Promoted Python cohort directory.")
+    parser.add_argument("--evidence-dir", required=True, type=Path, help="Directory retaining per-run evidence.")
+    parser.add_argument("--index-url", default=_DEFAULT_INDEX_URL, help="Public package index to acquire from.")
+    parser.add_argument("--python", default="3.13", help="Interpreter version for the fresh venv.")
+    parser.add_argument("--uv", type=Path, default=None, help="Explicit uv executable (defaults to PATH).")
+    parser.add_argument("--timeout-seconds", type=float, default=180.0)
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the PyPI reacquisition verification from the command line."""
+    args = _parser().parse_args(argv)
+    evidence = run_pypi_acquisition(
+        cohort_dir=args.cohort_dir,
+        evidence_dir=args.evidence_dir,
+        index_url=args.index_url,
+        python=args.python,
+        uv_executable=args.uv,
+        timeout_seconds=args.timeout_seconds,
+    )
+    print(evidence)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

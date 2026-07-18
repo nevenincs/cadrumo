@@ -303,14 +303,14 @@ msgstr "Válassza ki a szervezettípust:"
 
 #: ../../how-to/profile-setup.md:127
 msgid "`natural_person` - an individual."
-msgstr "`natural_person` – egy magánszemély."
+msgstr "`natural_person`: egy magánszemély."
 
 #: ../../how-to/profile-setup.md:128
 msgid ""
 "`legal_entity` - a company. Record its legal form too, such as `sl`, `sa`, "
 "or `cooperativa`."
 msgstr ""
-"`legal_entity` – egy cég. Rögzítse a jogi formáját is, például `sl`, `sa` "
+"`legal_entity`: egy cég. Rögzítse a jogi formáját is, például `sl`, `sa` "
 "vagy `cooperativa`."
 
 #: ../../how-to/profile-setup.md:130
@@ -318,7 +318,7 @@ msgid ""
 "`attribution_entity` - a co-ownership or community of goods whose income is "
 "attributed to its members."
 msgstr ""
-"`attribution_entity` – egy közös tulajdon vagy javak közössége, amelynek "
+"`attribution_entity`: egy közös tulajdon vagy javak közössége, amelynek "
 "jövedelme a tagjaihoz rendelődik."
 
 #: ../../how-to/profile-setup.md:133
@@ -331,27 +331,27 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:136
 msgid "`actividad_economica` - business or professional activity."
-msgstr "`actividad_economica` – üzleti vagy szakmai tevékenység."
+msgstr "`actividad_economica`: üzleti vagy szakmai tevékenység."
 
 #: ../../how-to/profile-setup.md:137
 msgid "`trabajo` - salaried employment."
-msgstr "`trabajo` – béres foglalkoztatás."
+msgstr "`trabajo`: béres foglalkoztatás."
 
 #: ../../how-to/profile-setup.md:138
 msgid "`capital_inmobiliario` - rental income from property."
-msgstr "`capital_inmobiliario` – ingatlanból származó bérleti jövedelem."
+msgstr "`capital_inmobiliario`: ingatlanból származó bérleti jövedelem."
 
 #: ../../how-to/profile-setup.md:139
 msgid "`capital_mobiliario` - investment income such as dividends or interest."
-msgstr "`capital_mobiliario` – befektetési jövedelem, például osztalék vagy kamat."
+msgstr "`capital_mobiliario`: befektetési jövedelem, például osztalék vagy kamat."
 
 #: ../../how-to/profile-setup.md:140
 msgid "`ganancias_patrimoniales` - capital gains."
-msgstr "`ganancias_patrimoniales` – tőkenyereség."
+msgstr "`ganancias_patrimoniales`: tőkenyereség."
 
 #: ../../how-to/profile-setup.md:141
 msgid "`pension` - a retirement or disability pension."
-msgstr "`pension` – nyugdíj vagy rokkantsági járadék."
+msgstr "`pension`: nyugdíj vagy rokkantsági járadék."
 
 #: ../../how-to/profile-setup.md:143
 msgid ""
@@ -442,27 +442,27 @@ msgstr "Állítsa be az `--iva-regime` értéket az adózó IVA-rendszerére:"
 #: ../../how-to/profile-setup.md:183
 msgid "`GENERAL` - the standard regime; files quarterly IVA through Modelo 303."
 msgstr ""
-"`GENERAL` – a szokásos rendszer; a Modelo 303-on keresztül nyújt be "
+"`GENERAL`: a szokásos rendszer; a Modelo 303-on keresztül nyújt be "
 "negyedéves áfát."
 
 #: ../../how-to/profile-setup.md:184
 msgid "`SIMPLIFICADO` - the simplified, module-based regime."
-msgstr "`SIMPLIFICADO` – az egyszerűsített, modulokon alapuló rendszer."
+msgstr "`SIMPLIFICADO`: az egyszerűsített, modulokon alapuló rendszer."
 
 #: ../../how-to/profile-setup.md:185
 msgid "`RECARGO_EQUIVALENCIA` - the equivalence surcharge for qualifying retailers."
 msgstr ""
-"`RECARGO_EQUIVALENCIA` – az egyenértékűségi pótlék a jogosult "
+"`RECARGO_EQUIVALENCIA`: az egyenértékűségi pótlék a jogosult "
 "kiskereskedőknek."
 
 #: ../../how-to/profile-setup.md:186
 msgid "`REAGP` - the special regime for agriculture, livestock, and fishing."
-msgstr "`REAGP` – a mezőgazdaság, állattenyésztés és halászat különleges rendszere."
+msgstr "`REAGP`: a mezőgazdaság, állattenyésztés és halászat különleges rendszere."
 
 #: ../../how-to/profile-setup.md:187
 msgid "`EXENTO` - exempt activities, such as some education or healthcare."
 msgstr ""
-"`EXENTO` – mentesített tevékenységek, például egyes oktatási vagy "
+"`EXENTO`: mentesített tevékenységek, például egyes oktatási vagy "
 "egészségügyi."
 
 #: ../../how-to/profile-setup.md:189
@@ -491,33 +491,31 @@ msgid ""
 "`--has-employees` or `--pays-professionals-with-retencion` - pays salaries "
 "or professional fees with withholding."
 msgstr ""
-"`--has-employees` vagy `--pays-professionals-with-retencion` – béreket vagy "
+"`--has-employees` vagy `--pays-professionals-with-retencion`: béreket vagy "
 "szakmai díjakat fizet forrásadóval."
 
 #: ../../how-to/profile-setup.md:199
 msgid "`--pays-rent-with-retencion` - pays business-premises rent with withholding."
-msgstr ""
-"`--pays-rent-with-retencion` – üzlethelyiség-bérleti díjat fizet "
-"forrásadóval."
+msgstr "`--pays-rent-with-retencion`: üzlethelyiség-bérleti díjat fizet forrásadóval."
 
 #: ../../how-to/profile-setup.md:200
 msgid "`--does-intracomunitario` - trades with businesses in other EU countries."
-msgstr "`--does-intracomunitario` – más EU-országbeli vállalkozásokkal kereskedik."
+msgstr "`--does-intracomunitario`: más EU-országbeli vállalkozásokkal kereskedik."
 
 #: ../../how-to/profile-setup.md:201
 msgid ""
 "`--third-party-transactions-above-347-threshold` - transactions with third "
 "parties exceed the Modelo 347 threshold."
 msgstr ""
-"`--third-party-transactions-above-347-threshold` – a harmadik felekkel "
-"kötött ügyletek meghaladják a Modelo 347 küszöbét."
+"`--third-party-transactions-above-347-threshold`: a harmadik felekkel kötött"
+" ügyletek meghaladják a Modelo 347 küszöbét."
 
 #: ../../how-to/profile-setup.md:203
 msgid ""
 "`--bienes-extranjero-above-threshold` - foreign assets exceed the legal "
 "threshold."
 msgstr ""
-"`--bienes-extranjero-above-threshold` – a külföldi vagyon meghaladja a "
+"`--bienes-extranjero-above-threshold`: a külföldi vagyon meghaladja a "
 "törvényi küszöböt."
 
 #: ../../how-to/profile-setup.md:205
@@ -527,11 +525,11 @@ msgid ""
 "agricultural, livestock, or forestry activity income. For activity starts, "
 "record the coverage fact for the current payment period."
 msgstr ""
-"`--art109-activity-income-withholding-ge-70pct` – a RIRPF 109. cikke "
-"szerinti 70 százalékos jövedelemfedezeti kivétel alkalmazandó a lefedett "
-"szakmai, mezőgazdasági, állattenyésztési vagy erdészeti tevékenységi "
-"jövedelemre. Tevékenységkezdéseknél rögzítse a fedezeti tényt az aktuális "
-"fizetési időszakra."
+"`--art109-activity-income-withholding-ge-70pct`: a RIRPF 109. cikke szerinti"
+" 70 százalékos jövedelemfedezeti kivétel alkalmazandó a lefedett szakmai, "
+"mezőgazdasági, állattenyésztési vagy erdészeti tevékenységi jövedelemre. "
+"Tevékenységkezdéseknél rögzítse a fedezeti tényt az aktuális fizetési "
+"időszakra."
 
 #: ../../how-to/profile-setup.md:210
 msgid ""
@@ -822,21 +820,21 @@ msgid ""
 "`cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM "
 "provider. Off by default. Barred for gestor profiles."
 msgstr ""
-"`cloud_evidence_upload` – érzékeny bizonyíték küldésének engedélyezése egy "
+"`cloud_evidence_upload`: érzékeny bizonyíték küldésének engedélyezése egy "
 "felhőalapú LLM-szolgáltatónak. Alapértelmezés szerint kikapcsolva. Gestor-"
 "profiloknál tiltott."
 
 #: ../../how-to/profile-setup.md:311
 msgid "`llm_vision` - read invoices with the on-host vision model. On by default."
 msgstr ""
-"`llm_vision` – számlák olvasása a gépen futó vision-modellel. Alapértelmezés"
-" szerint bekapcsolva."
+"`llm_vision`: számlák olvasása a gépen futó vision-modellel. Alapértelmezés "
+"szerint bekapcsolva."
 
 #: ../../how-to/profile-setup.md:312
 msgid "`google_export` - export calculations to Google Sheets. On by default."
 msgstr ""
-"`google_export` – számítások exportálása Google Táblázatokba. Alapértelmezés"
-" szerint bekapcsolva."
+"`google_export`: számítások exportálása Google Táblázatokba. Alapértelmezés "
+"szerint bekapcsolva."
 
 #: ../../how-to/profile-setup.md:314
 msgid ""
@@ -864,8 +862,8 @@ msgid ""
 "creates, renames, and edits a profile before browsing and filtering its "
 "history:"
 msgstr ""
-"Egy profil minden változása – létrehozás, szerkesztések, importok, "
-"osztályozások, számítások és benyújtások – eseményként rögzül annak a "
+"Egy profil minden változása (létrehozás, szerkesztések, importok, "
+"osztályozások, számítások és benyújtások) eseményként rögzül annak a "
 "profilnak a csak-hozzáfűző előzményében (egy napló, amelyet olvashat, de nem"
 " módosíthat). Az előzmények olvasásához aktív profil szükséges, ezért "
 "kijelentkezés után előbb váltson rá. A példa létrehoz, átnevez és szerkeszt "

@@ -22,6 +22,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -95,6 +96,38 @@ def test_every_user_page_is_fully_translated(language: str) -> None:
     )
 
 
+@pytest.mark.parametrize("language", TARGET_LANGUAGES)
+def test_translations_introduce_no_machine_text_dashes(language: str) -> None:
+    """No msgstr carries more em/en dashes than its msgid (operator house style).
+
+    The English source is em-dash-ratcheted; a translation that introduces
+    em or en dashes absent from its source segment is the canonical
+    machine-generated-text marker the operator has barred from this corpus.
+    Legitimate dashes present in the source stay representable, because the
+    bound is the source's own count per entry, never zero.
+    """
+    dashes = ("—", "–")
+    failures: list[str] = []
+    for page in user_scope_source_pages(_DOCS):
+        po_path = _catalogue_path(language, page)
+        if not po_path.is_file():
+            continue
+        with po_path.open("rb") as handle:
+            catalogue = read_po(handle)
+        for message in catalogue:
+            if not message.id or not message.string:
+                continue
+            source = sum(str(message.id).count(dash) for dash in dashes)
+            translated = sum(str(message.string).count(dash) for dash in dashes)
+            if translated > source:
+                excerpt = str(message.string)[:80].replace("\n", " ")
+                failures.append(f"{page}: +{translated - source} ({excerpt}...)")
+    assert not failures, (
+        f"{language}: {len(failures)} msgstr(s) introduce em/en dashes absent from their msgid "
+        f"(machine-text marker; rephrase with commas, parentheses, or colons):\n  " + "\n  ".join(failures)
+    )
+
+
 def _conf_language_config() -> dict[str, object]:
     """Evaluate ``docs/conf.py`` and return its language-switch configuration.
 
@@ -117,7 +150,7 @@ def _conf_language_config() -> dict[str, object]:
     env = {
         **os.environ,
         "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(_REPO_ROOT / "docs" / "_build" / "cadrumo-locale-parity-store"),
+        "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-locale-parity-"),
     }
     result = subprocess.run(
         [sys.executable, "-c", script],
@@ -161,3 +194,23 @@ def test_docs_target_languages_equal_output_language_minus_english() -> None:
         f"{sorted(all_languages)} (English is a valid build language, it is only excluded as a translation target)"
     )
     assert config["language"] == "en", "the default documentation build language must stay English"
+
+
+@pytest.mark.parametrize("language", TARGET_LANGUAGES)
+def test_no_orphan_catalogues(language: str) -> None:
+    """No committed catalogue outlives its source page.
+
+    The completeness and drift gates both iterate the current source page set, so
+    a catalogue whose source page was later deleted or renamed would linger
+    uncaught - translated (or half-translated) text for a page that no longer
+    ships. This asserts every committed ``.po`` maps to a current user-scope
+    source page, enumerating any orphan whose source is gone.
+    """
+    expected = {Path(page).with_suffix(".po").as_posix() for page in user_scope_source_pages(_DOCS)}
+    lc_messages = _LOCALES / language / "LC_MESSAGES"
+    present = {po.relative_to(lc_messages).as_posix() for po in lc_messages.rglob("*.po")}
+    orphans = sorted(present - expected)
+    assert not orphans, (
+        f"{language}: {len(orphans)} orphan catalogue(s) whose source page no longer exists "
+        f"(remove the catalogue or restore the source page):\n  " + "\n  ".join(orphans)
+    )

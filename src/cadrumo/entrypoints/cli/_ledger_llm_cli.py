@@ -400,6 +400,7 @@ def _emit_single(
             suggestion,
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger classify --read-evidence --auto-split --apply",
         )
     except TransactionValidationError as exc:
         raise _bad(str(exc)) from exc
@@ -847,6 +848,7 @@ def ledger_operator_iva_derive(
             transaction_id=resolved_id,
             iva_category=iva_category,
             actor=actor or resolve_active_bucket_id() or "operator",
+            source_command="aeat app ledger classify --iva-category --saturate",
             transaction_repository=transaction_repository,
         )
     except TransactionValidationError as exc:

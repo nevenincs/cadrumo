@@ -46,7 +46,7 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
 from typing import TYPE_CHECKING
 
-from ...core import PRODUCT_IDENTITY
+from ...core import PRODUCT_IDENTITY, FormerProductStateError
 from ._call_runtime import serving_capacity_limiter
 from ._completions import complete_prompt_argument
 from ._corpus_tools import (
@@ -92,6 +92,7 @@ from ._meta_tools import (
     ToolRunOutcome,
     build_command_search_index,
     describe_command,
+    gate_refusal,
     manage_toolsets,
     meta_execute,
     search_commands_response,
@@ -99,7 +100,6 @@ from ._meta_tools import (
 from ._persona_scope import (
     AgentPersona,
     active_persona,
-    handoff_denial_message,
     is_handoff_denied,
     is_tool_in_persona_scope,
 )
@@ -462,6 +462,7 @@ def _record_telemetry(
     tool_name: str,
     command_key: str = "",
     route: str = "",
+    transport: str = "",
     is_error: bool = False,
     duration_ms: int = 0,
     executable_text: str = "",
@@ -474,6 +475,7 @@ def _record_telemetry(
             tool_name=tool_name,
             command_key=command_key,
             route=route,
+            transport=transport,
             is_error=is_error,
             duration_ms=duration_ms,
             executable_text=executable_text,
@@ -716,6 +718,7 @@ def build_server(
             tool_name=descriptor.name,
             command_key=key,
             route=route.value,
+            transport=outcome.transport.value,
             is_error=is_error,
             duration_ms=int((time.monotonic() - started) * 1000),
             executable_text=outcome.executable,
@@ -878,14 +881,13 @@ def build_server(
         key = command_key_for_tool(name, command_keys=[d.command_key for d in descriptors])
         if key is None:
             return CallToolResult(content=[TextContent(type="text", text=f"unmapped tool: {name}")], isError=True)
-        scope_refusal = persona_scope_refusal(persona=persona, command_key=key)
-        if scope_refusal is not None:
-            return CallToolResult(content=[TextContent(type="text", text=scope_refusal)], isError=True)
-        if persona is not None and is_handoff_denied(persona=persona, command_key=key):
-            return CallToolResult(
-                content=[TextContent(type="text", text=handoff_denial_message(persona=persona, command_key=key))],
-                isError=True,
-            )
+        # The persona-scope, handoff-denial, and permanent live-write gate is
+        # composed EXACTLY ONCE, by the single shared :func:`gate_refusal` the
+        # ``execute`` meta-path also runs, so a refused call carries one refusal
+        # and the two entry points cannot compose divergent (or doubled) refusals.
+        gate = gate_refusal(persona=persona, descriptor=descriptor)
+        if gate is not None:
+            return CallToolResult(content=[TextContent(type="text", text=gate)], isError=True)
         identity_refusal = identity_gate_refusal(key, state=identity_state)
         if identity_refusal is not None:
             _record_telemetry(telemetry, tool_name=name, command_key=key, route="identity_block", is_error=True)
@@ -955,6 +957,7 @@ def build_server(
             tool_name=name,
             command_key=key,
             route=route_label,
+            transport=outcome.transport.value,
             is_error=is_error,
             duration_ms=int((time.monotonic() - started) * 1000),
             executable_text=outcome.executable,
@@ -1136,7 +1139,18 @@ def _run_server(
     import anyio
     from mcp.server.stdio import stdio_server
 
-    telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
+    # Telemetry is diagnostics, never a startup dependency: resolving its
+    # directory needs the storage root, and on a machine carrying retired
+    # former-product state that resolution REFUSES. The refusal must surface
+    # instructively on the tool calls that actually need storage - not kill
+    # the server before it can speak the protocol. Serve without telemetry
+    # and put one line on stderr (the client's MCP log) naming why.
+    telemetry: SessionTelemetryWriter | None
+    try:
+        telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
+    except FormerProductStateError as error:
+        telemetry = None
+        sys.stderr.write(f"cadrumo MCP serving without telemetry (storage root unavailable): {error}\n")
     server: Server = build_server(descriptors, persona=persona, telemetry=telemetry, surface_mode=surface_mode)
 
     async def _amain() -> None:

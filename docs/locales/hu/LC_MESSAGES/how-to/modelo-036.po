@@ -32,12 +32,12 @@ msgid ""
 " your profile, see [maintain Modelo 036 census facts in your profile](censo-"
 "update.md)."
 msgstr ""
-"A Modelo 036 az AEAT nyilvántartási bevallása – az az űrlap, amellyel "
+"A Modelo 036 az AEAT nyilvántartási bevallása: az az űrlap, amellyel "
 "bejelenti, módosítja vagy megszünteti adójogi helyzetét. Ezt Ön maga nyújtja"
 " be az AEAT Sede Electrónicáján (a sede), a hivatalos online portálon. Az "
 "ezen az oldalon szereplő parancsok utólag csak azt a tényt rögzítik a helyi "
-"auditnyomvonalában – soha nem nyújtanak be semmit az AEAT-nál. Ahhoz, hogy a"
-" nyilvántartott censo-adatai naprakészek maradjanak a profiljában, lásd: "
+"auditnyomvonalában: soha nem nyújtanak be semmit az AEAT-nál. Ahhoz, hogy a "
+"nyilvántartott censo-adatai naprakészek maradjanak a profiljában, lásd: "
 "[tartsa karban a Modelo 036 censo-adatait a profiljában](censo-update.md)."
 
 #: ../../how-to/modelo-036.md:10
@@ -53,7 +53,7 @@ msgid ""
 "An active profile - see [set up your taxpayer profile](profile-setup.md). "
 "The commands below refuse without one (`No hay un perfil activo`)."
 msgstr ""
-"Egy aktív profilra – lásd: [állítsa be adózói profilját](profile-setup.md). "
+"Egy aktív profilra, lásd: [állítsa be adózói profilját](profile-setup.md). "
 "Az alábbi parancsok e nélkül elutasítanak (`No hay un perfil activo`)."
 
 #: ../../how-to/modelo-036.md:16
@@ -73,8 +73,8 @@ msgid ""
 "Optional: the justificante - the receipt number the sede shows after you "
 "file."
 msgstr ""
-"Opcionális: a justificante – a bizonylatszám, amelyet a sede a benyújtás "
-"után mutat."
+"Opcionális: a justificante, azaz a bizonylatszám, amelyet a sede a benyújtás"
+" után mutat."
 
 #: ../../how-to/modelo-036.md:21
 msgid "The runtime emits help, prompts, and messages in Spanish."
@@ -124,7 +124,7 @@ msgid ""
 " sede. `--sede-justificante` is optional and accepts up to 128 characters. "
 "`--note` adds an optional note for your own records, up to 512 characters."
 msgstr ""
-"A `--declared-on` kötelező – az ISO-dátum (év-hónap-nap), amikor a sedénél "
+"A `--declared-on` kötelező: az ISO-dátum (év-hónap-nap), amikor a sedénél "
 "benyújtotta. A `--sede-justificante` opcionális, és legfeljebb 128 karaktert"
 " fogad el. A `--note` egy opcionális megjegyzést ad hozzá a saját "
 "nyilvántartásához, legfeljebb 512 karakteren."
@@ -139,11 +139,11 @@ msgstr "A parancs kiírja a mentett rekordot:"
 
 #: ../../how-to/modelo-036.md:56
 msgid "A `declaration_id` - a long reference number for the record."
-msgstr "Egy `declaration_id` – a rekord hosszú hivatkozási száma."
+msgstr "Egy `declaration_id`: a rekord hosszú hivatkozási száma."
 
 #: ../../how-to/modelo-036.md:57
 msgid "The event kind - alta, modificacion, or baja."
-msgstr "Az eseményfajta – alta, modificacion vagy baja."
+msgstr "Az eseményfajta: alta, modificacion vagy baja."
 
 #: ../../how-to/modelo-036.md:58
 msgid "The declared-on date."
@@ -203,7 +203,7 @@ msgid ""
 "Re-running the command with identical values is safe - it records no "
 "additional declaration, and you get the same declaration ID back."
 msgstr ""
-"A parancs azonos értékekkel való újrafuttatása biztonságos – nem rögzít "
+"A parancs azonos értékekkel való újrafuttatása biztonságos, nem rögzít "
 "további bevallást, és ugyanazt a bevallásazonosítót kapja vissza."
 
 #: ../../how-to/modelo-036.md:85
@@ -238,7 +238,7 @@ msgid ""
 "facts in your profile](censo-update.md)."
 msgstr ""
 "Miután az AEAT feldolgozta a bevallását, frissítse kézzel a profiljában lévő"
-" censo-adatokat, hogy megegyezzenek azzal, amit benyújtott – lásd: [tartsa "
+" censo-adatokat, hogy megegyezzenek azzal, amit benyújtott, lásd: [tartsa "
 "karban a Modelo 036 censo-adatait a profiljában](censo-update.md)."
 
 #: ../../how-to/modelo-036.md:99
