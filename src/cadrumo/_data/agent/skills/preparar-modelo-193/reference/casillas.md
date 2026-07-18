@@ -52,5 +52,5 @@ computed from; they are not a separate manual entry surface.
   not on the 193.
 - A nonzero perceptor count with a zero total base or zero total retenciones
   on the declarante summary is the under-declaration shape to question
-  before any export (see `operator-grounding` and
-  `operator-safety-handoff`).
+  before any export (see `cadrumo-operator-grounding` and
+  `cadrumo-operator-safety-handoff`).

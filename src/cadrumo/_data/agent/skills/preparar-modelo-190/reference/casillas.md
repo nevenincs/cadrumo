@@ -58,5 +58,5 @@ totals are computed from; they are not a separate manual entry surface.
   suspicious zero on the Modelo 111 quarter itself, not on the 190.
 - A nonzero perceptor count with a zero total percepciones or zero total
   retenciones on the declarante summary is the under-declaration shape to
-  question before any export (see `operator-grounding` and
-  `operator-safety-handoff`).
+  question before any export (see `cadrumo-operator-grounding` and
+  `cadrumo-operator-safety-handoff`).

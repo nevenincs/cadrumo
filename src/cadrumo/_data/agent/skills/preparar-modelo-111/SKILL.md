@@ -95,7 +95,7 @@ retenciones aggregation, not IVA repercutido/soportado) and the period grammar
   06, 09, 12, 15, 18, 21, 24, and 27 reported in the revision; a nonzero
   perceptor count (01/07/13) with a zero base or zero retención sum on the
   same block is the under-declaration shape to question before export (see
-  `operator-grounding`).
+  `cadrumo-operator-grounding`).
 - Every reported casilla value is quoted verbatim from the JSON, with its
   `legal_refs`/`source_refs`.
 

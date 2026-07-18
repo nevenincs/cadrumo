@@ -116,7 +116,7 @@ it. Either way, `01` stays the manual, taxpayer-supplied figure you report.
   re-deriving the arithmetic.
 - A positive `01` with a zero `02`, or positive rendimiento with a zero `15` and
   no declared reduction, is the under-declaration shape to question before any
-  export (see `operator-grounding` and `operator-safety-handoff`).
+  export (see `cadrumo-operator-grounding` and `cadrumo-operator-safety-handoff`).
 - Cross-quarter carry (`11`, sourced from the prior quarter's
   `saldo-negativo-fin-periodo`) is revision-stamped; if a prior quarter's value
   cannot be confirmed, surface the advisory rather than trusting a silent zero.

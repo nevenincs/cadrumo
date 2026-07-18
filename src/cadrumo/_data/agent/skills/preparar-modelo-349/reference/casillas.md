@@ -68,8 +68,8 @@ original figure it replaces.
   (non-ledger-derived) block. A `0` on a declarante total, or a missing
   operator row, traces back to the source invoice's intra-community
   classification (direction, clave, counterpart country, NIF-IVA) — question
-  it there, not on the 349 (see `operator-grounding` and
-  `operator-safety-handoff`).
+  it there, not on the 349 (see `cadrumo-operator-grounding` and
+  `cadrumo-operator-safety-handoff`).
 - Confirm the period's cadence before reading casillas: the registry's
   filing schedule switches Modelo 349 between quarterly (`1T`-`4T`) and
   monthly (`01`-`12`) tokens based on the

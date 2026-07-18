@@ -58,7 +58,7 @@ Before handing off, confirm in the calculate / revision JSON:
 - The rendimiento casilla (03) is consistent with declared ingresos (01) minus
   gastos (02); if ingresos are positive but the instalment (07) is zero with no
   declared reduction, treat it as suspect and ask the taxpayer to confirm before
-  proceeding (see `operator-grounding`).
+  proceeding (see `cadrumo-operator-grounding`).
 - Every reported casilla value is quoted verbatim from the JSON, with its
   `legal_refs`/`source_refs`.
 

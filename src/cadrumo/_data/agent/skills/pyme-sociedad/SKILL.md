@@ -59,7 +59,7 @@ CLI derives and delegates every filing to the per-modelo skill that owns it.
      after the year's pagos fraccionados): drive the same spine against its own
      `aeat app modelo describe` / `casillas` output. A positive resultado
      contable resolving to a zero base or cuota with no declared reduction is
-     suspect (see `operator-grounding`); do not treat a clean verify with zero
+     suspect (see `cadrumo-operator-grounding`); do not treat a clean verify with zero
      findings on positive input as sufficient without confirming with the
      taxpayer.
    - Any other surfaced modelo (informativas, censo): drive the same spine.

@@ -92,7 +92,7 @@ Modelo 115's annual roll-up is Modelo 180, not Modelo 190.
 - Casilla 03 (retenciones) is consistent with 19% of casilla 02 (base) as
   reported in the revision; a nonzero perceptor count (01) with a zero base
   or zero retención sum (02/03) is the under-declaration shape to question
-  before export (see `operator-grounding`).
+  before export (see `cadrumo-operator-grounding`).
 - Every reported casilla value is quoted verbatim from the JSON, with its
   `legal_refs`/`source_refs`.
 

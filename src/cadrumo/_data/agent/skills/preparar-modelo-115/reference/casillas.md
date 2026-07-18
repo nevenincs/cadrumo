@@ -42,7 +42,7 @@ a landlord).
   by re-deriving the arithmetic.
 - A nonzero perceptor count (01) with a zero base or zero retención sum
   (02/03) is the under-declaration shape to question before any export (see
-  `operator-grounding` and `operator-safety-handoff`).
+  `cadrumo-operator-grounding` and `cadrumo-operator-safety-handoff`).
 - Casilla 04's prior-autoliquidación correction is operator-supplied, not
   cross-period carried; do not assume it defaults to zero without asking
   whether an amendment applies.
