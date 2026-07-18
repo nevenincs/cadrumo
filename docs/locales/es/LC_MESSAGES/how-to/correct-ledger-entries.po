@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/correct-ledger-entries.md:1
 msgid "Correct mistakes in your ledger"
-msgstr ""
+msgstr "Corregir errores en tu ledger"
 
 #: ../../how-to/correct-ledger-entries.md:3
 msgid ""
@@ -30,14 +29,18 @@ msgid ""
 "always see what a transaction looked like before and after. Everything "
 "happens on your computer - nothing is sent anywhere."
 msgstr ""
+"Corrige transacciones incorrectas en tu ledger sin perder el rastro de lo "
+"que ha cambiado. Cada corrección deja una entrada visible en el historial, "
+"así que siempre puedes ver cómo era una transacción antes y después. Todo "
+"ocurre en tu ordenador: no se envía nada a ningún sitio."
 
 #: ../../how-to/correct-ledger-entries.md:5
 msgid "Before you start"
-msgstr ""
+msgstr "Antes de empezar"
 
 #: ../../how-to/correct-ledger-entries.md:7
 msgid "You need:"
-msgstr ""
+msgstr "Necesitas:"
 
 #: ../../how-to/correct-ledger-entries.md:9
 msgid ""
@@ -45,16 +48,21 @@ msgid ""
 "profile; if none is set, the command refuses. See [Set up your taxpayer "
 "profile](profile-setup.md)."
 msgstr ""
+"Un perfil de contribuyente activo. Todas las órdenes de abajo trabajan sobre "
+"el perfil activo; si no hay ninguno establecido, la orden se niega. Consulta "
+"[Configurar tu perfil de contribuyente](profile-setup.md)."
 
 #: ../../how-to/correct-ledger-entries.md:10
 msgid ""
 "A master-key passphrase. The tool prompts for it the first time it opens "
 "your encrypted storage in a session."
 msgstr ""
+"Una frase de contraseña de clave maestra. La herramienta te la pide la "
+"primera vez que abre tu almacenamiento cifrado en una sesión."
 
 #: ../../how-to/correct-ledger-entries.md:11
 msgid "A ledger with transactions in it."
-msgstr ""
+msgstr "Un ledger con transacciones."
 
 #: ../../how-to/correct-ledger-entries.md:13
 msgid ""
@@ -62,6 +70,9 @@ msgid ""
 "one in detail. The sequence below records an example expense, lists the "
 "ledger, and inspects that row:"
 msgstr ""
+"Para localizar la transacción que quieres corregir, enumera tus "
+"transacciones y examina una en detalle. La secuencia de abajo registra un "
+"gasto de ejemplo, enumera el ledger y examina esa fila:"
 
 #: ../../how-to/correct-ledger-entries.md:19
 msgid ""
@@ -69,62 +80,81 @@ msgid ""
 "lifecycle state. The [transactions guide](import-bank-statements.md) "
 "covers listing and filtering in depth."
 msgstr ""
+"La orden `view` informa del id, el importe, la dirección, la descripción y "
+"el estado del ciclo de vida. La [guía de transacciones](import-bank-"
+"statements.md) trata en profundidad la enumeración y el filtrado."
 
 #: ../../how-to/correct-ledger-entries.md:21
 msgid "Pick your fix"
-msgstr ""
+msgstr "Elige tu corrección"
 
 #: ../../how-to/correct-ledger-entries.md:23
 msgid ""
 "If one transaction has a wrong amount, date, or text, [update it"
 "](#update-fields-on-a-transaction)."
 msgstr ""
+"Si una transacción tiene un importe, una fecha o un texto incorrectos, "
+"[actualízala](#update-fields-on-a-transaction)."
 
 #: ../../how-to/correct-ledger-entries.md:24
 msgid ""
 "If a transaction should not exist at all, [remove "
 "it](#remove-a-transaction)."
 msgstr ""
+"Si una transacción no debería existir en absoluto, [elimínala](#remove-a-"
+"transaction)."
 
 #: ../../how-to/correct-ledger-entries.md:25
 msgid ""
 "If the same purchase was imported twice, remove the duplicate - or "
 "[archive it](#archive-a-transaction) to keep a deliberate trace of it."
 msgstr ""
+"Si la misma compra se importó dos veces, elimina el duplicado, o [archívalo"
+"](#archive-a-transaction) para conservar un rastro deliberado de él."
 
 #: ../../how-to/correct-ledger-entries.md:26
 msgid ""
 "If one payment covers two different things, [split it](#split-one-"
 "transaction-into-parts)."
 msgstr ""
+"Si un pago cubre dos cosas distintas, [divídelo](#split-one-transaction-into-"
+"parts)."
 
 #: ../../how-to/correct-ledger-entries.md:27
 msgid ""
 "If you split something and want it back together, [merge the parts"
 "](#merge-split-parts-back)."
 msgstr ""
+"Si dividiste algo y quieres volver a juntarlo, [fusiona las partes](#merge-"
+"split-parts-back)."
 
 #: ../../how-to/correct-ledger-entries.md:28
 msgid ""
 "If you're unsure about a transaction and want it out of the way, [stash "
 "it](#stash-a-transaction-you-are-unsure-about)."
 msgstr ""
+"Si tienes dudas sobre una transacción y quieres quitarla de en medio, "
+"[apártala](#stash-a-transaction-you-are-unsure-about)."
 
 #: ../../how-to/correct-ledger-entries.md:29
 msgid ""
 "If you want to keep a transaction in history but out of everyday lists, "
 "[archive it](#archive-a-transaction)."
 msgstr ""
+"Si quieres conservar una transacción en el historial pero fuera de las "
+"listas del día a día, [archívala](#archive-a-transaction)."
 
 #: ../../how-to/correct-ledger-entries.md:30
 msgid ""
 "If you stashed or archived a transaction by mistake, [restore it to "
 "active](#restore-a-stashed-or-archived-transaction)."
 msgstr ""
+"Si apartaste o archivaste una transacción por error, [restáurala a activa"
+"](#restore-a-stashed-or-archived-transaction)."
 
 #: ../../how-to/correct-ledger-entries.md:32
 msgid "Update fields on a transaction"
-msgstr ""
+msgstr "Actualiza campos de una transacción"
 
 #: ../../how-to/correct-ledger-entries.md:34
 msgid ""
@@ -132,6 +162,9 @@ msgid ""
 "wrong price, corrects the amount and description, and confirms the "
 "correction:"
 msgstr ""
+"Cambia uno o más campos directamente. La secuencia registra una silla a un "
+"precio incorrecto, corrige el importe y la descripción, y confirma la "
+"corrección:"
 
 #: ../../how-to/correct-ledger-entries.md:40
 msgid ""
@@ -142,6 +175,12 @@ msgid ""
 "direction, currency, counterparty, description, taxable-base, iva-rate, "
 "iva-amount, irpf-category, notes, and group."
 msgstr ""
+"Cada opción reemplaza por completo ese campo: escribe el nuevo valor "
+"completo, no un añadido al anterior. Escribe el importe como una cifra "
+"positiva: el campo de dirección indica si el dinero entró o salió, y un "
+"importe negativo se rechaza. Los campos actualizables son: fecha, fecha de "
+"valor, importe, dirección, moneda, contraparte, descripción, base imponible, "
+"tipo de IVA, cuota de IVA, categoría de IRPF, notas y grupo."
 
 #: ../../how-to/correct-ledger-entries.md:42
 msgid ""
@@ -153,6 +192,14 @@ msgid ""
 "use the current ID from the update output or from `list`, because those "
 "commands act on the live transaction."
 msgstr ""
+"Una actualización da a la transacción un nuevo ID: la salida de la "
+"actualización lo imprime. No tienes que hacer seguimiento del cambio para "
+"las órdenes de lectura: un ID que anotaste antes de la actualización sigue "
+"respondiendo en `history`, `view` y `track`, resolviéndose a la transacción "
+"corregida, exactamente igual que el `view` de arriba. Para otra mutación "
+"-otro `update`, `classify` o `archive`- usa el ID actual de la salida de la "
+"actualización o de `list`, porque esas órdenes actúan sobre la transacción "
+"viva."
 
 #: ../../how-to/correct-ledger-entries.md:44
 msgid ""
@@ -160,10 +207,13 @@ msgid ""
 "transactions refuse it, as does a split parent - the active parts of a "
 "split can be updated normally."
 msgstr ""
+"Update solo funciona sobre transacciones activas. Las transacciones "
+"archivadas y apartadas lo rechazan, igual que un padre de división: las "
+"partes activas de una división se pueden actualizar con normalidad."
 
 #: ../../how-to/correct-ledger-entries.md:46
 msgid "Remove a transaction"
-msgstr ""
+msgstr "Elimina una transacción"
 
 #: ../../how-to/correct-ledger-entries.md:48
 msgid ""
@@ -171,16 +221,21 @@ msgid ""
 "with `--dry-run`, then remove it for real. The removed id no longer "
 "resolves, which is how the sequence confirms the deletion:"
 msgstr ""
+"Remove borra una transacción de tus registros activos. Haz primero una vista "
+"previa con `--dry-run` y luego elimínala de verdad. El id eliminado ya no se "
+"resuelve, que es como la secuencia confirma el borrado:"
 
 #: ../../how-to/correct-ledger-entries.md:54
 msgid ""
 "A removed transaction is gone from your active records: the final `view` "
 "refuses because the id no longer names an active row."
 msgstr ""
+"Una transacción eliminada desaparece de tus registros activos: el `view` "
+"final se niega porque el id ya no nombra una fila activa."
 
 #: ../../how-to/correct-ledger-entries.md:56
 msgid "Split one transaction into parts"
-msgstr ""
+msgstr "Divide una transacción en partes"
 
 #: ../../how-to/correct-ledger-entries.md:58
 msgid ""
@@ -189,6 +244,10 @@ msgid ""
 "Amounts and descriptions pair up one per part: the first amount goes with"
 " the first description, and so on:"
 msgstr ""
+"Cuando un pago cubre dos cosas distintas -por ejemplo, un pago con tarjeta "
+"que mezcla artículos de la actividad y personales-, divídelo en partes. Los "
+"importes y las descripciones se emparejan uno por parte: el primer importe "
+"va con la primera descripción, y así sucesivamente:"
 
 #: ../../how-to/correct-ledger-entries.md:64
 msgid ""
@@ -198,10 +257,15 @@ msgid ""
 "full `full_id`. Copy those ids - the merge command needs them to undo the"
 " split."
 msgstr ""
+"La transacción original pasa a ser el padre de la división, y las partes "
+"cargan con el saldo a partir de entonces. La salida de la división imprime "
+"una fila `child_transactions` por parte, cada una con un `display_id` corto "
+"y un `full_id` completo. Copia esos ids: la orden de fusión los necesita "
+"para deshacer la división."
 
 #: ../../how-to/correct-ledger-entries.md:66
 msgid "Merge split parts back"
-msgstr ""
+msgstr "Vuelve a fusionar las partes de una división"
 
 #: ../../how-to/correct-ledger-entries.md:68
 msgid ""
@@ -210,6 +274,10 @@ msgid ""
 "merge. The sequence splits a payment, then merges the parts into one "
 "fresh transaction:"
 msgstr ""
+"Para deshacer una división, vuelve a fusionar las partes usando los ids de "
+"las hijas que imprimió la división. Nombra todas las partes hermanas: la "
+"orden rechaza una fusión parcial. La secuencia divide un pago y luego "
+"fusiona las partes en una transacción nueva:"
 
 #: ../../how-to/correct-ledger-entries.md:74
 msgid ""
@@ -218,10 +286,14 @@ msgid ""
 "output, the parts are active rows: run `aeat app ledger list` and read "
 "their ids from the listing."
 msgstr ""
+"Las partes y el padre original pasan al historial, y la fusión crea una "
+"transacción nueva en su lugar. Si ya no tienes la salida de la división, las "
+"partes son filas activas: ejecuta `aeat app ledger list` y lee sus ids del "
+"listado."
 
 #: ../../how-to/correct-ledger-entries.md:76
 msgid "Stash a transaction you are unsure about"
-msgstr ""
+msgstr "Aparta una transacción sobre la que tienes dudas"
 
 #: ../../how-to/correct-ledger-entries.md:78
 msgid ""
@@ -229,6 +301,9 @@ msgid ""
 "out of ordinary work. The sequence stashes a row and confirms its new "
 "lifecycle state:"
 msgstr ""
+"Stash aparta una transacción para más adelante. Una transacción apartada se "
+"mantiene fuera del trabajo ordinario. La secuencia aparta una fila y "
+"confirma su nuevo estado del ciclo de vida:"
 
 #: ../../how-to/correct-ledger-entries.md:84
 msgid ""
@@ -239,10 +314,16 @@ msgid ""
 "but not its new lifecycle state, so `view` is how you confirm the change "
 "took effect."
 msgstr ""
+"Usa stash para una fila que aún no has resuelto y archive para una fila que "
+"has apartado a propósito, como un duplicado confirmado. Ambas son "
+"reversibles: [restore](#restore-a-stashed-or-archived-transaction) devuelve "
+"la fila a activa. La orden `stash` imprime los campos de la transacción pero "
+"no su nuevo estado del ciclo de vida, así que `view` es como confirmas que "
+"el cambio surtió efecto."
 
 #: ../../how-to/correct-ledger-entries.md:86
 msgid "Archive a transaction"
-msgstr ""
+msgstr "Archiva una transacción"
 
 #: ../../how-to/correct-ledger-entries.md:88
 msgid ""
@@ -250,16 +331,23 @@ msgid ""
 "the right choice for duplicates you want to keep a deliberate trace of. "
 "The sequence archives a duplicate row and confirms the state change:"
 msgstr ""
+"Archive mantiene una transacción en el historial pero fuera del trabajo "
+"ordinario: es la opción adecuada para los duplicados de los que quieres "
+"conservar un rastro deliberado. La secuencia archiva una fila duplicada y "
+"confirma el cambio de estado:"
 
 #: ../../how-to/correct-ledger-entries.md:94
 msgid ""
 "Like stash, the command prints the transaction's fields but not its new "
 "lifecycle state, so `view` confirms the row now reads `ARCHIVED`."
 msgstr ""
+"Igual que stash, la orden imprime los campos de la transacción pero no su "
+"nuevo estado del ciclo de vida, así que `view` confirma que la fila ahora "
+"muestra `ARCHIVED`."
 
 #: ../../how-to/correct-ledger-entries.md:96
 msgid "Restore a stashed or archived transaction"
-msgstr ""
+msgstr "Restaura una transacción apartada o archivada"
 
 #: ../../how-to/correct-ledger-entries.md:98
 msgid ""
@@ -268,6 +356,9 @@ msgid ""
 "your everyday lists and totals. The sequence stashes a row and then "
 "restores it:"
 msgstr ""
+"Si apartaste o archivaste una transacción por error, restáurala a activa. "
+"Restore es la inversa de stash y archive: la fila vuelve a tus listas y "
+"totales del día a día. La secuencia aparta una fila y luego la restaura:"
 
 #: ../../how-to/correct-ledger-entries.md:104
 msgid ""
@@ -277,6 +368,11 @@ msgid ""
 "identify the stashed rows from the ids you stashed, or from each row's "
 "lifecycle state shown by `view`."
 msgstr ""
+"Restore acepta el mismo prefijo de id que aceptan las demás órdenes. Para "
+"recuperar varias filas apartadas por error, restaura cada una por su id: no "
+"necesitas restablecer todo el ledger. List no tiene un filtro solo para "
+"apartadas, así que identifica las filas apartadas por los ids que apartaste, "
+"o por el estado del ciclo de vida de cada fila que muestra `view`."
 
 #: ../../how-to/correct-ledger-entries.md:106
 msgid ""
@@ -285,10 +381,14 @@ msgid ""
 "behind a return you have presented. Restore one of these only after you "
 "have corrected the filing through an amendment."
 msgstr ""
+"Restore rechaza una fila que ya está activa, y rechaza una fila cuyo periodo "
+"ya has presentado: restaurarla cambiaría los datos que hay detrás de una "
+"declaración que has presentado. Restaura una de estas solo después de haber "
+"corregido la presentación mediante una declaración complementaria."
 
 #: ../../how-to/correct-ledger-entries.md:108
 msgid "Review what changed"
-msgstr ""
+msgstr "Revisa lo que ha cambiado"
 
 #: ../../how-to/correct-ledger-entries.md:110
 msgid ""
@@ -296,6 +396,10 @@ msgid ""
 "order, run `ledger history`. The sequence splits a payment, then reads "
 "the history with the sibling flag to follow the whole split family:"
 msgstr ""
+"Cada corrección queda registrada. Para ver todas las acciones sobre una "
+"transacción en orden, ejecuta `ledger history`. La secuencia divide un pago "
+"y luego lee el historial con la opción de hermanas para seguir toda la "
+"familia de la división:"
 
 #: ../../how-to/correct-ledger-entries.md:116
 msgid ""
@@ -305,10 +409,15 @@ msgid ""
 "history. The [CLI reference](../cli/index.rst) covers every field the "
 "history shows."
 msgstr ""
+"El historial enumera cada acción en orden con su marca de tiempo y su "
+"referencia de evento. Los detalles como el motivo y los valores nuevos están "
+"en la salida JSON. Para ver un valor antes de un cambio, lee los eventos "
+"anteriores del historial. La [referencia de la CLI](../cli/index.rst) cubre "
+"todos los campos que muestra el historial."
 
 #: ../../how-to/correct-ledger-entries.md:118
 msgid "Evidence and corrections"
-msgstr ""
+msgstr "Evidencia y correcciones"
 
 #: ../../how-to/correct-ledger-entries.md:120
 msgid ""
@@ -317,10 +426,15 @@ msgid ""
 "transactions and re-attach evidence where needed. The [evidence guide"
 "](ledger-evidence.md) covers attaching and checking evidence."
 msgstr ""
+"Un registro de evidencia adjunto -un recibo o una factura- no se borra "
+"cuando corriges una transacción. Después de una división o una fusión, "
+"comprueba las transacciones nuevas y vuelve a adjuntar la evidencia donde "
+"haga falta. La [guía de evidencia](ledger-evidence.md) trata cómo adjuntar y "
+"comprobar la evidencia."
 
 #: ../../how-to/correct-ledger-entries.md:122
 msgid "Start over as a last resort"
-msgstr ""
+msgstr "Empieza de cero como último recurso"
 
 #: ../../how-to/correct-ledger-entries.md:124
 msgid ""
@@ -329,6 +443,10 @@ msgid ""
 " sequence records a row, previews the reset, clears the ledger, and "
 "confirms nothing remains:"
 msgstr ""
+"Si el ledger no tiene arreglo -por ejemplo, después de importar los archivos "
+"equivocados repetidamente-, vacíalo y reconstrúyelo. Haz primero una vista "
+"previa y luego confirma. La secuencia registra una fila, muestra una vista "
+"previa del restablecimiento, vacía el ledger y confirma que no queda nada:"
 
 #: ../../how-to/correct-ledger-entries.md:130
 msgid ""
@@ -336,10 +454,12 @@ msgid ""
 "[transactions guide](import-bank-statements.md) to rebuild it from your "
 "statements."
 msgstr ""
+"Reset vacía todo el ledger del perfil activo. Usa la [guía de transacciones"
+"](import-bank-statements.md) para reconstruirlo a partir de tus extractos."
 
 #: ../../how-to/correct-ledger-entries.md:132
 msgid "Where to get help"
-msgstr ""
+msgstr "Dónde conseguir ayuda"
 
 #: ../../how-to/correct-ledger-entries.md:134
 #, python-brace-format
@@ -350,32 +470,44 @@ msgid ""
 "with anyone, strip tax identifiers such as your NIF, CIF, DNI, NIE, or "
 "NII."
 msgstr ""
+"Si una orden se niega o falla, consulta la [guía de resolución de problemas"
+"](troubleshooting.md). Los términos que no conozcas se explican en el "
+"{doc}`glosario </_generated/glossary>`. Antes de compartir la salida de una "
+"orden con nadie, elimina los identificadores fiscales como tu NIF, CIF, DNI, "
+"NIE o NII."
 
 #: ../../how-to/correct-ledger-entries.md:136
 msgid "Next steps"
-msgstr ""
+msgstr "Próximos pasos"
 
 #: ../../how-to/correct-ledger-entries.md:138
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) - bring in "
 "new transactions."
 msgstr ""
+"[Importar y gestionar transacciones](import-bank-statements.md): trae "
+"transacciones nuevas."
 
 #: ../../how-to/correct-ledger-entries.md:139
 msgid ""
 "[Attach evidence to transactions](ledger-evidence.md) - back your "
 "corrections with receipts."
 msgstr ""
+"[Adjuntar evidencia a las transacciones](ledger-evidence.md): respalda tus "
+"correcciones con recibos."
 
 #: ../../how-to/correct-ledger-entries.md:140
 msgid ""
 "[Classify transactions](classify-transactions.md) - prepare corrected "
 "rows for tax calculations."
 msgstr ""
+"[Clasificar transacciones](classify-transactions.md): prepara las filas "
+"corregidas para los cálculos fiscales."
 
 #: ../../how-to/correct-ledger-entries.md:141
 msgid ""
 "[CLI reference](../cli/index.rst) - full field detail for every ledger "
 "command."
 msgstr ""
-
+"[Referencia de la CLI](../cli/index.rst): detalle completo de campos para "
+"todas las órdenes del ledger."
