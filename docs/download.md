@@ -1,16 +1,14 @@
 # Get Cadrumo
 
-This page covers the ways to get Cadrumo onto your machine: what is available
-today, how to install it, and how to confirm the install works before you
-prepare your first declaration. Cadrumo runs on Windows, macOS, and Linux.
+This page covers how to install the current Cadrumo beta: the supported
+install paths, what each one gives you, and how to confirm the install before
+you prepare your first declaration. Cadrumo runs on Windows, macOS, and Linux.
 
-```{important}
-Cadrumo is pre-alpha. The one supported way to get it today is the source
-checkout below. Do not install Cadrumo from PyPI, a public plugin marketplace,
-Scoop, Homebrew, or a Desktop extension bundle until the project announces
-those channels as available: packages under the same name on public registries
-are not this project's tested releases. Release announcements land in
-[Updates](updates.md).
+```{note}
+Cadrumo is in beta. Every release ships installable packages for each
+supported channel, and every package is install-tested on its platform before
+the release is cut. The beta is distributed through the project's GitHub
+repository; public registry listings open with the public launch.
 ```
 
 ## What you need
@@ -19,15 +17,17 @@ are not this project's tested releases. Release announcements land in
 - [Git](https://git-scm.com/downloads) and [uv](https://docs.astral.sh/uv/getting-started/installation/),
   each installed per its official guide for your operating system.
 - Around 200 MB of free disk space.
+- Access to the [project repository](https://github.com/nevenincs/cadrumo)
+  as a beta participant.
 
-No taxpayer data, AEAT credentials, or online account is needed to install.
-Cadrumo stores everything locally and encrypted; nothing about your taxes
-leaves your machine during installation.
+No taxpayer data, AEAT credentials, or online account is involved in the
+install. Cadrumo stores everything locally and encrypted; nothing about your
+taxes leaves your machine.
 
-## Install from the source checkout
+## Install the current beta
 
-The install is identical on every operating system once Git and uv are
-present. Run, in a terminal:
+Install from the repository checkout. The flow is identical on Windows,
+macOS, and Linux:
 
 ```bash
 git clone https://github.com/nevenincs/cadrumo.git
@@ -36,9 +36,14 @@ uv sync
 ```
 
 `uv sync` creates an isolated environment and installs the `aeat` command
-into it with every core dependency pinned. Nothing is installed globally and
-nothing outside the checkout directory is modified: removing the directory
-removes Cadrumo.
+into it with every dependency pinned to the tested versions. Nothing is
+installed globally and nothing outside the checkout directory is modified:
+removing the directory removes Cadrumo. To move to a newer beta release
+later, run `git pull` followed by `uv sync` in the same directory.
+
+Release artifacts for the current version, including the packaged builds for
+every channel below, are attached to the
+[latest release](https://github.com/nevenincs/cadrumo/releases/latest).
 
 ## Confirm the install
 
@@ -48,46 +53,48 @@ Run the version check from the checkout:
 uv run aeat --version
 ```
 
-A version number means the install worked. Then run the full workstation
-check and add any optional extras you want (Google export, the live AEAT
-browser, OFX/QFX import, the agent surface) by following
+A version number confirms the install. Then run the full workstation check
+and add the optional extras you want (Google export, the live AEAT browser,
+OFX/QFX import, the agent surface) by following
 [Install Cadrumo](workstation-setup.md), which covers the dependency report,
-platform checks, and per-extra install commands.
+platform checks, and per-extra install commands. To let an AI assistant such
+as Claude drive Cadrumo, continue with
+[Connect an agent (MCP)](how-to/connect-an-agent.md).
 
-## Distribution channels
+## Install channels
 
-Native packages are built and tested per release for the channels below.
-They are in final pre-publication verification: none is published yet, and
-this page will show the exact install command for each channel the moment
-its release is announced.
+Each release builds and install-tests a native package per channel. Beta
+participants get every artifact from the release page; the registry listing
+for each channel opens with the public launch, and this page carries each
+channel's install command from that day.
 
 ```{list-table}
 :header-rows: 1
-:widths: 22 30 48
+:widths: 24 32 44
 
 * - Platform
   - Channel
-  - Status
+  - How you get the current beta
 * - Windows (x86-64)
   - Scoop package
-  - In verification, not yet published
+  - Release page artifact; Scoop bucket at public launch
 * - macOS (Apple silicon and Intel)
   - Homebrew formula
-  - In verification, not yet published
+  - Release page artifact; Homebrew tap at public launch
 * - Linux (x86-64 and arm64)
   - Homebrew formula
-  - In verification, not yet published
+  - Release page artifact; Homebrew tap at public launch
 * - Any platform with Python
-  - PyPI package (pip, uvx)
-  - In verification, not yet published
+  - Python package
+  - Repository checkout today; PyPI at public launch
 * - Claude Code, Claude Desktop, Claude Cowork
   - Plugin and Desktop extension bundle
-  - In verification, not yet published
+  - Release page artifact; marketplace listing at public launch
 ```
 
-Every published artifact will carry the exact bytes that passed the release
-cohort's install-and-run evidence on its platform; a channel is only listed
-as available here once that evidence exists for the published release.
+Every published artifact carries the exact bytes that passed its platform's
+install-and-run checks for that release, and each release's notes in
+[Updates](updates.md) name what changed.
 
 ## After you install
 

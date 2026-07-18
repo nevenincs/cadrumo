@@ -5,7 +5,7 @@ download links, event notes, and support routes. The banner and footer point her
 so important project status is available from every documentation page.
 
 ```{important}
-Cadrumo is pre-alpha software. Treat every release note as potentially relevant
+Cadrumo is in beta. Treat every release note as potentially relevant
 before upgrading, and verify filing deadlines, forms, and submission rules with
 the Agencia Estatal de Administración Tributaria (AEAT) before you file.
 ```
@@ -54,7 +54,7 @@ links to release and issue activity.
 
 ## Current status
 
-Cadrumo is local-first, pre-alpha software for preparing Spanish tax filing
+Cadrumo is local-first beta software for preparing Spanish tax filing
 records ([read the full disclaimer](disclaimer.md)).
 
 Expect breaking changes while the command-line interface (CLI) workflows,
