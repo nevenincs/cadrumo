@@ -32,7 +32,7 @@ msgstr ""
 "A Cadrumo minden profilt, tranzakciót, bizonyítékdarabot és benyújtást "
 "egyetlen mesterkulcs alatt titkosít. Az Ön jelmondata nyitja ezt a kulcsot. "
 "Ha elveszíti a jelmondatot, és nincs helyreállítási kulcsa, az adatokat "
-"senki – Ön sem – tudja visszafejteni."
+"senki (Ön sem) tudja visszafejteni."
 
 #: ../../how-to/protect-data-access.md:8
 msgid ""
@@ -59,7 +59,7 @@ msgid ""
 "The first command below refuses without one (`No se pudo determinar ningún "
 "bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
 msgstr ""
-"Egy aktív profilra – lásd: [állítsa be adózói profilját](profile-setup.md). "
+"Egy aktív profilra, lásd: [állítsa be adózói profilját](profile-setup.md). "
 "Az alábbi első parancs e nélkül elutasít (`No se pudo determinar ningún "
 "bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
 
@@ -345,7 +345,7 @@ msgid ""
 " see where encrypted custody ends and deliberate plaintext handoffs begin."
 msgstr ""
 "[Importálás, export és bizonyíték](../reference/import-export-and-"
-"evidence.md) – lássa, hol ér véget a titkosított őrizet, és hol kezdődnek a "
+"evidence.md): lássa, hol ér véget a titkosított őrizet, és hol kezdődnek a "
 "szándékos, nyílt szövegű átadások."
 
 #: ../../how-to/protect-data-access.md:151
@@ -353,7 +353,7 @@ msgid ""
 "[Set up your taxpayer profile](profile-setup.md) - create, export, and "
 "import profiles."
 msgstr ""
-"[Állítsa be adózói profilját](profile-setup.md) – profilok létrehozása, "
+"[Állítsa be adózói profilját](profile-setup.md): profilok létrehozása, "
 "exportálása és importálása."
 
 #: ../../how-to/protect-data-access.md:153
@@ -361,11 +361,11 @@ msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - for storage or "
 "integrity problems that do not need a reset."
 msgstr ""
-"[Diagnosztizálja és javítsa a helyi beállítását](troubleshooting.md) – olyan"
-" tárolási vagy integritási problémákhoz, amelyekhez nincs szükség "
+"[Diagnosztizálja és javítsa a helyi beállítását](troubleshooting.md): olyan "
+"tárolási vagy integritási problémákhoz, amelyekhez nincs szükség "
 "visszaállításra."
 
 #: ../../how-to/protect-data-access.md:155
 msgid "[CLI reference](../cli/index.rst) - full option reference."
-msgstr "[CLI-referencia](../cli/index.rst) – a teljes opcióreferencia."
+msgstr "[CLI-referencia](../cli/index.rst): a teljes opcióreferencia."
 

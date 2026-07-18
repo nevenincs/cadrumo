@@ -498,7 +498,7 @@ msgid ""
 "figures.md) - understand the transaction-to-box pipeline."
 msgstr ""
 "[Hogyan válnak a rekordjai adószámokká](../explanation/from-records-to-"
-"figures.md) – értse meg a tranzakció-rovat folyamatot."
+"figures.md): értse meg a tranzakció-rovat folyamatot."
 
 #: ../../how-to/quickstart.md:234
 msgid ""
