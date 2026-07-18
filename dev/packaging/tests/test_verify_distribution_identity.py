@@ -130,14 +130,17 @@ def test_accepted_mcp_product_tuple_passes_every_real_projection() -> None:
 
 
 def test_real_client_display_descriptions_report_missing_bilingual_claim_parity() -> None:
-    """Plugin, marketplace-plugin, and marketplace fields carry approved bilingual pairs (S07-S08).
+    """All five client-display fields carry approved bilingual pairs (S07-S09).
 
-    MCPB fields are not yet wired; the overall ok stays False until all five
-    client-display fields carry approved pairs.
+    S09 wires the MCPB short description and long_description. The long_description
+    covers all six claims and its row becomes compliant=True. The short description
+    covers only capability, safety, and never_files_live. The overall ok stays False
+    because the short client-display fields (plugin, marketplace-plugin, marketplace,
+    and mcpb short) do not carry all six required claims in parity.
     """
     descriptions = verify_distribution_identity(_REPO_ROOT).to_document()["product_descriptions"]
 
-    assert descriptions["ok"] is False  # mcpb not yet wired
+    assert descriptions["ok"] is False  # short fields do not cover all six claims
     assert descriptions["required_languages"] == ["English", "Spanish"]
     assert descriptions["required_claims"] == [
         "capability",
@@ -147,8 +150,9 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
         "human_confirmation",
         "never_files_live",
     ]
-    # S07 enrolled 2 pairs (plugin + marketplace-plugin); S08 adds the marketplace pair.
-    assert descriptions["approved_pair_count"] == 3
+    # S07 enrolled 2 pairs (plugin + marketplace-plugin); S08 adds the marketplace pair;
+    # S09 adds the mcpb short description and long_description pairs.
+    assert descriptions["approved_pair_count"] == 5
     assert descriptions["product_review_required"] is False
     # model_facing_descriptions count and sha256 are the sibling rename executor's
     # surface (MCP tool/argument descriptions change as renames land). Only check the
@@ -174,7 +178,10 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
         ("mcpb_client_display", "long_description"),
     ]
     assert all(row["value"] for row in observations)
-    assert all(row["compliant"] is False for row in observations)
+    # Row 4 (mcpb long_description) is the only compliant row: all six claims pass.
+    # The four short fields lack the full claim set so they remain compliant=False.
+    assert observations[4]["compliant"] is True
+    assert all(row["compliant"] is False for row in (observations[0], observations[1], observations[2], observations[3]))
 
     # --- Rows 0 and 2 (plugin + marketplace-plugin): approved bilingual pair wired ---
     for row in (observations[0], observations[2]):
@@ -224,16 +231,41 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
         "never_files_live",
     }
 
-    # --- Rows 3 and 4 (mcpb): not yet wired ---
-    for row in (observations[3], observations[4]):
-        assert row["english_label"] is False
-        assert row["spanish_label"] is False
-        assert row["english_text"] == ""
-        assert row["spanish_text"] == ""
-        assert row["unlabeled_text"] == row["value"]
-        assert row["translation_approved"] is False
-        assert all(claim["parity"] is False for claim in row["claims"])
-        assert all(claim["spanish"] is False for claim in row["claims"])
+    # --- Row 3 (mcpb short description): approved bilingual pair wired (S09) ---
+    mcpb_short = observations[3]
+    assert mcpb_short["english_label"] is True
+    assert mcpb_short["spanish_label"] is True
+    assert mcpb_short["english_text"] != ""
+    assert mcpb_short["spanish_text"] != ""
+    assert mcpb_short["unlabeled_text"] == ""
+    assert mcpb_short["translation_approved"] is True
+    assert [claim["name"] for claim in mcpb_short["claims"]] == descriptions["required_claims"]
+    # Short description: capability, safety, never_files_live pass in both;
+    # privacy, on_host_storage, human_confirmation absent from this short field.
+    assert {claim["name"] for claim in mcpb_short["claims"] if claim["english"]} == {
+        "capability",
+        "safety",
+        "never_files_live",
+    }
+    assert {claim["name"] for claim in mcpb_short["claims"] if claim["spanish"]} == {
+        "capability",
+        "safety",
+        "never_files_live",
+    }
+
+    # --- Row 4 (mcpb long_description): approved bilingual pair wired (S09), compliant ---
+    mcpb_long = observations[4]
+    assert mcpb_long["english_label"] is True
+    assert mcpb_long["spanish_label"] is True
+    assert mcpb_long["english_text"] != ""
+    assert mcpb_long["spanish_text"] != ""
+    assert mcpb_long["unlabeled_text"] == ""
+    assert mcpb_long["translation_approved"] is True
+    assert [claim["name"] for claim in mcpb_long["claims"]] == descriptions["required_claims"]
+    # Long description covers all six required claims in both English and Spanish.
+    assert {claim["name"] for claim in mcpb_long["claims"] if claim["english"]} == set(descriptions["required_claims"])
+    assert {claim["name"] for claim in mcpb_long["claims"] if claim["spanish"]} == set(descriptions["required_claims"])
+    assert all(claim["parity"] is True for claim in mcpb_long["claims"])
 
 
 def test_supported_english_and_spanish_language_labels_are_parsed() -> None:
