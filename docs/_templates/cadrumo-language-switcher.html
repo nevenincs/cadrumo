@@ -1,0 +1,30 @@
+{#-
+  Header language switcher. Links the current page to its counterpart under each
+  per-language site root emitted by the deploy publisher (`/` = en, `/es/`,
+  `/ca/`, `/hu/`). Dependency-free: pure server-rendered anchors, no script and no
+  external asset. The language set, current language, and default flag come from
+  docs/conf.py html_context; the per-page hrefs are computed from the page's
+  relative path to its own language root.
+-#}
+{%- if cadrumo_docs_languages -%}
+{#- Relative path from this page to its current language root (e.g. '../' or ''). -#}
+{%- set _root = pathto(master_doc) -%}
+{%- if '/' in _root -%}{%- set _root_uri = _root.rsplit('/', 1)[0] ~ '/' -%}{%- else -%}{%- set _root_uri = '' -%}{%- endif -%}
+{#- The shared base holding every language root: the current root for the default
+    (en, served at the base) build, one level up for a localized subdir build. -#}
+{%- set _docs_base = _root_uri if cadrumo_docs_language_is_default else _root_uri ~ '../' -%}
+<nav class="cadrumo-header-lang" aria-label="Language" style="display:flex;align-items:center;gap:0.35rem;">
+  {%- for _lang in cadrumo_docs_languages -%}
+    {%- if _lang.code == cadrumo_docs_default_language -%}
+    {%- set _href = _docs_base ~ pagename ~ '.html' -%}
+    {%- else -%}
+    {%- set _href = _docs_base ~ _lang.code ~ '/' ~ pagename ~ '.html' -%}
+    {%- endif -%}
+    {%- if _lang.code == cadrumo_docs_language -%}
+    <span class="cadrumo-header-nav-link" aria-current="true" lang="{{ _lang.code }}">{{ _lang.label }}</span>
+    {%- else -%}
+    <a class="cadrumo-header-nav-link" href="{{ _href }}" lang="{{ _lang.code }}" hreflang="{{ _lang.code }}">{{ _lang.label }}</a>
+    {%- endif -%}
+  {%- endfor -%}
+</nav>
+{%- endif -%}
