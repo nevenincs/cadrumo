@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -13,7 +12,7 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -21,67 +20,91 @@ msgstr ""
 
 #: ../../how-to/review-with-google-sheets.md:1
 msgid "Review calculations with Google Sheets"
-msgstr ""
+msgstr "Számítások felülvizsgálata Google Táblázatokkal"
 
 #: ../../how-to/review-with-google-sheets.md:3
 msgid ""
-"This page covers the spreadsheet review of a modelo calculation: "
-"exporting it to Google Sheets, checking how each total is reached with "
-"live formulas, and pulling your reviewed edits back as typed filing "
-"inputs. Pull returns those edits without persisting them. This workflow "
-"is for reviewing calculated values after your profile and transactions "
-"are ready. It is not a bank statement import or bulk edit tool."
+"This page covers the spreadsheet review of a modelo calculation: exporting "
+"it to Google Sheets, checking how each total is reached with live formulas, "
+"and pulling your reviewed edits back as typed filing inputs. Pull returns "
+"those edits without persisting them. This workflow is for reviewing "
+"calculated values after your profile and transactions are ready. It is not a"
+" bank statement import or bulk edit tool."
 msgstr ""
+"Ez az oldal egy modelo-számítás táblázatos felülvizsgálatát tárgyalja: az "
+"exportálását Google Táblázatokba, annak ellenőrzését, hogyan áll össze az "
+"egyes összegek élő formulákkal, és a felülvizsgált szerkesztései "
+"visszahúzását tipizált benyújtási bemenetként. A visszahúzás anélkül adja "
+"vissza ezeket a szerkesztéseket, hogy tárolná őket. Ez a munkafolyamat a "
+"kiszámított értékek felülvizsgálatára szolgál, miután a profilja és a "
+"tranzakciói készen állnak. Nem bankszámlakivonat-importáló vagy tömeges "
+"szerkesztő eszköz."
 
 #: ../../how-to/review-with-google-sheets.md:10
 msgid ""
-"Google Sheets is the review surface. The codebase also contains an "
-"offline `.xlsx` serializer, but the current operator command surface does"
-" not expose it. Use Google Sheets when you want to review and adjust."
+"Google Sheets is the review surface. The codebase also contains an offline "
+"`.xlsx` serializer, but the current operator command surface does not expose"
+" it. Use Google Sheets when you want to review and adjust."
 msgstr ""
+"A Google Táblázatok a felülvizsgálati felület. A kódbázis egy offline "
+"`.xlsx` szerializálót is tartalmaz, de a jelenlegi kezelői parancsfelület "
+"nem tárja fel. Használja a Google Táblázatokat, amikor felül szeretné "
+"vizsgálni és igazítani."
 
 #: ../../how-to/review-with-google-sheets.md:14
 msgid ""
 "The local configuration commands on this page (status, folder binding, "
-"logout) and the ledger readiness checks run live at build time. The "
-"commands that reach Google Drive and Sheets run against your own "
-"authorized account rather than the documentation sandbox, so they are "
-"shown as display-only frames."
+"logout) and the ledger readiness checks run live at build time. The commands"
+" that reach Google Drive and Sheets run against your own authorized account "
+"rather than the documentation sandbox, so they are shown as display-only "
+"frames."
 msgstr ""
+"Az oldalon szereplő helyi konfigurációs parancsok (státusz, mappakötés, "
+"kijelentkezés) és a főkönyvi készenléti ellenőrzések élőben futnak az "
+"összeállítás idején. Azok a parancsok, amelyek elérik a Google Drive-ot és a"
+" Táblázatokat, az Ön saját engedélyezett fiókjával futnak, nem a "
+"dokumentációs tesztkörnyezetben, ezért csak megjelenítési keretekként "
+"szerepelnek."
 
 #: ../../how-to/review-with-google-sheets.md:19
 msgid "Before you start"
-msgstr ""
+msgstr "Mielőtt hozzákezd"
 
 #: ../../how-to/review-with-google-sheets.md:21
 msgid "You need:"
-msgstr ""
+msgstr "Szüksége lesz:"
 
 #: ../../how-to/review-with-google-sheets.md:23
 msgid "an active profile; see [Set up your taxpayer profile](profile-setup.md)"
-msgstr ""
+msgstr "egy aktív profilra; lásd: [Állítsa be adózói profilját](profile-setup.md)"
 
 #: ../../how-to/review-with-google-sheets.md:24
 msgid ""
 "classified transaction data; see [Import and manage transactions](import-"
 "bank-statements.md)"
 msgstr ""
+"osztályozott tranzakciós adatokra; lásd: [Tranzakciók importálása és "
+"kezelése](import-bank-statements.md)"
 
 #: ../../how-to/review-with-google-sheets.md:25
 msgid "a modelo and period ready enough to calculate"
-msgstr ""
+msgstr "egy modelóra és időszakra, amely eléggé készen áll a számításhoz"
 
 #: ../../how-to/review-with-google-sheets.md:26
 msgid ""
-"a Google API credentials file (a Desktop OAuth client JSON from the "
-"[Google Cloud Console](https://console.cloud.google.com/))"
+"a Google API credentials file (a Desktop OAuth client JSON from the [Google "
+"Cloud Console](https://console.cloud.google.com/))"
 msgstr ""
+"egy Google API hitelesítőadat-fájlra (egy asztali OAuth-ügyfél JSON a "
+"[Google Cloud Console-ból](https://console.cloud.google.com/))"
 
 #: ../../how-to/review-with-google-sheets.md:28
 msgid ""
 "the ID of a Google Drive folder where Cadrumo should create spreadsheets "
 "(copy the ID from the folder's URL in Google Drive)"
 msgstr ""
+"egy Google Drive-mappa azonosítójára, ahol a Cadrumónak táblázatokat kell "
+"létrehoznia (másolja az azonosítót a mappa URL-jéből a Google Drive-ban)"
 
 #: ../../how-to/review-with-google-sheets.md:31
 msgid ""
@@ -89,54 +112,74 @@ msgid ""
 "does not use an older `aeat-vault/` folder; export a new workbook before "
 "pulling edits into Cadrumo."
 msgstr ""
+"A Cadrumo a `cadrumo-vault/` mappáját azon a Drive-mappán belül hozza létre."
+" Nem használ egy régebbi `aeat-vault/` mappát; exportáljon egy új "
+"munkafüzetet, mielőtt szerkesztéseket húzna vissza a Cadrumóba."
 
 #: ../../how-to/review-with-google-sheets.md:35
 msgid "Configure Google access"
-msgstr ""
+msgstr "Google-hozzáférés beállítása"
 
 #: ../../how-to/review-with-google-sheets.md:37
 msgid ""
-"Register the Desktop OAuth client for the active profile and run the "
-"consent flow. Both reach Google, so they are display-only here:"
+"Register the Desktop OAuth client for the active profile and run the consent"
+" flow. Both reach Google, so they are display-only here:"
 msgstr ""
+"Regisztrálja az asztali OAuth-ügyfelet az aktív profilhoz, és futtassa a "
+"hozzájárulási folyamatot. Mindkettő eléri a Google-t, ezért itt csak "
+"megjelenítés:"
 
 #: ../../how-to/review-with-google-sheets.md:43
 msgid ""
-"Check the Google status and set the Drive folder where Cadrumo will "
-"create spreadsheets. These are local configuration commands, so they run "
-"here. On an unconfigured profile the status reads not-connected, and the "
-"folder you set reads back verbatim:"
+"Check the Google status and set the Drive folder where Cadrumo will create "
+"spreadsheets. These are local configuration commands, so they run here. On "
+"an unconfigured profile the status reads not-connected, and the folder you "
+"set reads back verbatim:"
 msgstr ""
+"Ellenőrizze a Google-státuszt, és állítsa be a Drive-mappát, ahol a Cadrumo "
+"táblázatokat fog létrehozni. Ezek helyi konfigurációs parancsok, ezért itt "
+"lefutnak. Egy be nem állított profilon a státusz nincs-csatlakoztatva "
+"értéket mutat, és a beállított mappa szó szerint olvasható vissza:"
 
 #: ../../how-to/review-with-google-sheets.md:52
 msgid ""
-"Probe the connection once the OAuth client is registered. The probe "
-"reaches Google, so it is display-only here:"
+"Probe the connection once the OAuth client is registered. The probe reaches "
+"Google, so it is display-only here:"
 msgstr ""
+"Vizsgálja a kapcsolatot, amint az OAuth-ügyfél regisztrálva van. A vizsgálat"
+" eléri a Google-t, ezért itt csak megjelenítés:"
 
 #: ../../how-to/review-with-google-sheets.md:58
 msgid ""
 "The Google integration is profile-scoped. If you switch profiles, check "
 "Google status and folder binding again."
 msgstr ""
+"A Google-integráció profilra korlátozott. Ha profilokat vált, ellenőrizze "
+"újra a Google-státuszt és a mappakötést."
 
 #: ../../how-to/review-with-google-sheets.md:61
 msgid "Export a calculation workbook"
-msgstr ""
+msgstr "Egy számítási munkafüzet exportálása"
 
 #: ../../how-to/review-with-google-sheets.md:63
 msgid ""
-"Export the registry calculation surface for one modelo, year, and period."
-" The export creates a Google Sheets workbook inside the configured "
-"`cadrumo-vault/` area in Drive:"
+"Export the registry calculation surface for one modelo, year, and period. "
+"The export creates a Google Sheets workbook inside the configured `cadrumo-"
+"vault/` area in Drive:"
 msgstr ""
+"Exportálja a nyilvántartási számítási felületet egy modelóhoz, évhez és "
+"időszakhoz. Az export egy Google Táblázatok munkafüzetet hoz létre a Drive-"
+"ban beállított `cadrumo-vault/` területen belül:"
 
 #: ../../how-to/review-with-google-sheets.md:70
 msgid ""
-"It is a calculation review surface, not a bank statement export. Use "
-"`aeat app ledger export` when you need a CSV, JSONL, or XLSX snapshot of "
-"ledger rows."
+"It is a calculation review surface, not a bank statement export. Use `aeat "
+"app ledger export` when you need a CSV, JSONL, or XLSX snapshot of ledger "
+"rows."
 msgstr ""
+"Ez egy számítás-felülvizsgálati felület, nem bankszámlakivonat-export. "
+"Használja az `aeat app ledger export` parancsot, amikor a főkönyvi sorok "
+"CSV-, JSONL- vagy XLSX-pillanatképére van szüksége."
 
 #: ../../how-to/review-with-google-sheets.md:73
 msgid ""
@@ -144,10 +187,13 @@ msgid ""
 "values carried from related filings, such as annual summaries or prior-"
 "quarter carryovers."
 msgstr ""
+"A `--prefill-relations` opciót csak akkor használja, amikor azt szeretné, "
+"hogy a táblázat tartalmazza a kapcsolódó benyújtásokból áthozott értékeket, "
+"például éves összesítőket vagy korábbi negyedévi áthozatokat."
 
 #: ../../how-to/review-with-google-sheets.md:77
 msgid "Pull your edits back"
-msgstr ""
+msgstr "Húzza vissza a szerkesztéseit"
 
 #: ../../how-to/review-with-google-sheets.md:79
 msgid ""
@@ -156,36 +202,49 @@ msgid ""
 "include edited row-level data assembled as structured observations. The "
 "command does not persist those observations:"
 msgstr ""
+"A munkafüzet felülvizsgálata vagy szerkesztése után húzza vissza a tipizált "
+"szerkesztéseket a Táblázatból. Adja hozzá az `--assemble-observations` "
+"opciót, amikor azt szeretné, hogy a parancs kimenete tartalmazza a "
+"szerkesztett sorszintű adatokat strukturált megfigyelésekként összeállítva. "
+"A parancs nem tárolja ezeket a megfigyeléseket:"
 
 #: ../../how-to/review-with-google-sheets.md:87
 msgid ""
-"The pull command checks that the spreadsheet belongs to the current "
-"profile and matches the expected filing period. If it refuses, re-export "
-"and retry from the new spreadsheet."
+"The pull command checks that the spreadsheet belongs to the current profile "
+"and matches the expected filing period. If it refuses, re-export and retry "
+"from the new spreadsheet."
 msgstr ""
+"A visszahúzó parancs ellenőrzi, hogy a táblázat az aktuális profilhoz "
+"tartozik, és megegyezik a várt benyújtási időszakkal. Ha elutasít, "
+"exportáljon újra, és próbálja újra az új táblázatból."
 
 #: ../../how-to/review-with-google-sheets.md:91
 msgid "Compute casilla values from the Sheet"
-msgstr ""
+msgstr "Casilla-értékek kiszámítása a Táblázatból"
 
 #: ../../how-to/review-with-google-sheets.md:93
 msgid ""
 "Run `compute` when you want Cadrumo to calculate casilla values from the "
-"edits in the Sheet. It pulls the operator-edited cells, runs the "
-"calculation engine over them, and displays the result. It persists "
-"nothing:"
+"edits in the Sheet. It pulls the operator-edited cells, runs the calculation"
+" engine over them, and displays the result. It persists nothing:"
 msgstr ""
+"Futtassa a `compute` parancsot, amikor azt szeretné, hogy a Cadrumo a "
+"Táblázatban lévő szerkesztésekből számítson casilla-értékeket. Behúzza a "
+"kezelő által szerkesztett cellákat, lefuttatja rajtuk a számítási motort, és"
+" megjeleníti az eredményt. Semmit nem tárol:"
 
 #: ../../how-to/review-with-google-sheets.md:100
 msgid ""
-"The compute command checks that the spreadsheet matches the expected "
-"filing period. If it refuses, re-export and retry from the new "
-"spreadsheet."
+"The compute command checks that the spreadsheet matches the expected filing "
+"period. If it refuses, re-export and retry from the new spreadsheet."
 msgstr ""
+"A compute parancs ellenőrzi, hogy a táblázat megegyezik a várt benyújtási "
+"időszakkal. Ha elutasít, exportáljon újra, és próbálja újra az új "
+"táblázatból."
 
 #: ../../how-to/review-with-google-sheets.md:103
 msgid "Check the spreadsheet calculation"
-msgstr ""
+msgstr "Ellenőrizze a táblázat számítását"
 
 #: ../../how-to/review-with-google-sheets.md:105
 msgid ""
@@ -194,56 +253,78 @@ msgid ""
 "Agencia Estatal de Administración Tributaria (AEAT) outputs, pass it "
 "explicitly with `--scenario`:"
 msgstr ""
+"Futtassa a calc-sheets ellenőrző parancsot ugyanarra a modelóra, évre és "
+"időszakra. Ha van egy forgatókönyv-JSON-ja kezelői bemenetekkel és várt "
+"Agencia Estatal de Administración Tributaria (AEAT) kimenetekkel, adja át "
+"kifejezetten a `--scenario` opcióval:"
 
 #: ../../how-to/review-with-google-sheets.md:113
 msgid ""
-"Verification compares the calculation surfaces implemented by the app. It"
-" does not submit a filing to AEAT."
+"Verification compares the calculation surfaces implemented by the app. It "
+"does not submit a filing to AEAT."
 msgstr ""
+"Az ellenőrzés összehasonlítja az alkalmazás által megvalósított számítási "
+"felületeket. Nem nyújt be benyújtást az AEAT-hoz."
 
 #: ../../how-to/review-with-google-sheets.md:116
 msgid "Back up your encrypted records to Drive"
-msgstr ""
+msgstr "Mentse a titkosított rekordjait a Drive-ra"
 
 #: ../../how-to/review-with-google-sheets.md:118
 msgid ""
-"Keep an off-machine copy of your encrypted records by mirroring them to "
-"the configured Drive folder. Preview with `--dry-run` first; it reports "
-"what would upload per storage area without changing anything. Narrow a "
-"large push with `--namespace` or `--limit`:"
+"Keep an off-machine copy of your encrypted records by mirroring them to the "
+"configured Drive folder. Preview with `--dry-run` first; it reports what "
+"would upload per storage area without changing anything. Narrow a large push"
+" with `--namespace` or `--limit`:"
 msgstr ""
+"Tartson egy gépen kívüli másolatot a titkosított rekordjairól úgy, hogy "
+"tükrözi őket a beállított Drive-mappába. Előbb tekintse meg a `--dry-run` "
+"opcióval; ez jelenti, mit töltene fel tárolási területenként anélkül, hogy "
+"bármit módosítana. Szűkítsen egy nagy feltöltést a `--namespace` vagy a "
+"`--limit` opcióval:"
 
 #: ../../how-to/review-with-google-sheets.md:126
 msgid ""
-"Only ciphertext is uploaded. Your records leave the machine exactly as "
-"they sit encrypted on disk, and the master key never leaves your "
-"computer, so the Drive copy is unreadable without it. The mirror is one-"
-"way: Cadrumo writes the copy and never reads Drive back as a source of "
-"truth for your records."
+"Only ciphertext is uploaded. Your records leave the machine exactly as they "
+"sit encrypted on disk, and the master key never leaves your computer, so the"
+" Drive copy is unreadable without it. The mirror is one-way: Cadrumo writes "
+"the copy and never reads Drive back as a source of truth for your records."
 msgstr ""
+"Csak titkosított szöveg kerül feltöltésre. A rekordjai pontosan úgy hagyják "
+"el a gépet, ahogy titkosítva vannak a lemezen, és a mesterkulcs soha nem "
+"hagyja el a számítógépét, így a Drive-másolat olvashatatlan nélküle. A "
+"tükrözés egyirányú: a Cadrumo megírja a másolatot, és soha nem olvassa "
+"vissza a Drive-ot a rekordjai hiteles forrásaként."
 
 #: ../../how-to/review-with-google-sheets.md:131
 msgid "Sign out of Google"
-msgstr ""
+msgstr "Jelentkezzen ki a Google-ból"
 
 #: ../../how-to/review-with-google-sheets.md:133
 msgid ""
-"Clear the Google session for the active profile. Logout is a local "
-"command, so it runs here. It removes the saved session token and its "
-"metadata. The registered OAuth client is kept on purpose, so a later "
-"`aeat config google login` can sign in again without re-importing the "
-"Cloud Console JSON:"
+"Clear the Google session for the active profile. Logout is a local command, "
+"so it runs here. It removes the saved session token and its metadata. The "
+"registered OAuth client is kept on purpose, so a later `aeat config google "
+"login` can sign in again without re-importing the Cloud Console JSON:"
 msgstr ""
+"Törölje a Google-munkamenetet az aktív profilhoz. A kijelentkezés helyi "
+"parancs, ezért itt lefut. Eltávolítja a mentett munkamenet-tokent és annak "
+"metaadatait. A regisztrált OAuth-ügyfél szándékosan megmarad, így egy "
+"későbbi `aeat config google login` újra bejelentkezhet a Cloud Console JSON "
+"újbóli importálása nélkül:"
 
 #: ../../how-to/review-with-google-sheets.md:142
 msgid "Where this fits"
-msgstr ""
+msgstr "Hová illeszkedik ez"
 
 #: ../../how-to/review-with-google-sheets.md:144
 msgid ""
-"Use this after transaction review and classification. Confirm the period "
-"is ready before you rely on the calculation workbook:"
+"Use this after transaction review and classification. Confirm the period is "
+"ready before you rely on the calculation workbook:"
 msgstr ""
+"Ezt a tranzakció-felülvizsgálat és -osztályozás után használja. Erősítse "
+"meg, hogy az időszak készen áll, mielőtt a számítási munkafüzetre "
+"hagyatkozna:"
 
 #: ../../how-to/review-with-google-sheets.md:151
 msgid ""
@@ -251,37 +332,48 @@ msgid ""
 "proportionality references, finish those in [Classify transactions"
 "](classify-transactions.md) before relying on the calculation workbook."
 msgstr ""
+"Ha a főkönyvből még hiányoznak kategóriák, áfamezők, deviza vagy arányossági"
+" hivatkozások, fejezze be azokat a [Tranzakciók osztályozása](classify-"
+"transactions.md) oldalon, mielőtt a számítási munkafüzetre hagyatkozna."
 
 #: ../../how-to/review-with-google-sheets.md:156
 msgid ""
 "For casilla-level manual inputs, bindings, offsets, and revisions, use "
 "[Review and supply calculation inputs](review-calculation-values.md)."
 msgstr ""
+"A casilla-szintű kézi bemenetekhez, kötésekhez, ellentételezésekhez és "
+"revíziókhoz használja a [Számítási bemenetek felülvizsgálata és megadása"
+"](review-calculation-values.md) oldalt."
 
 #: ../../how-to/review-with-google-sheets.md:159
 msgid "Next steps"
-msgstr ""
+msgstr "Következő lépések"
 
 #: ../../how-to/review-with-google-sheets.md:161
 msgid ""
-"[Import, export, and evidence](../reference/import-export-and-"
-"evidence.md) - understand why a Google Sheet is a review surface rather "
-"than filing evidence or calculation authority."
+"[Import, export, and evidence](../reference/import-export-and-evidence.md) -"
+" understand why a Google Sheet is a review surface rather than filing "
+"evidence or calculation authority."
 msgstr ""
+"[Importálás, export és bizonyíték](../reference/import-export-and-"
+"evidence.md) – értse meg, miért egy Google-táblázat felülvizsgálati felület,"
+" nem pedig benyújtási bizonyíték vagy számítási hiteles forrás."
 
 #: ../../how-to/review-with-google-sheets.md:164
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr ""
+msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
 #: ../../how-to/review-with-google-sheets.md:165
 msgid "[Classify transactions](classify-transactions.md)"
-msgstr ""
+msgstr "[Tranzakciók osztályozása](classify-transactions.md)"
 
 #: ../../how-to/review-with-google-sheets.md:166
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
+"[Számítási bemenetek felülvizsgálata és megadása](review-calculation-"
+"values.md)"
 
 #: ../../how-to/review-with-google-sheets.md:167
 msgid "[CLI reference](../cli/index.rst)"
-msgstr ""
+msgstr "[CLI-referencia](../cli/index.rst)"
 
