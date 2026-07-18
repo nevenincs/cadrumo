@@ -1,0 +1,199 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 22:29+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../download.md:1
+msgid "Get Cadrumo"
+msgstr ""
+
+#: ../../download.md:3
+msgid ""
+"This page covers the ways to get Cadrumo onto your machine: what is "
+"available today, how to install it, and how to confirm the install works "
+"before you prepare your first declaration. Cadrumo runs on Windows, "
+"macOS, and Linux."
+msgstr ""
+
+#: ../../download.md:8
+msgid ""
+"Cadrumo is pre-alpha. The one supported way to get it today is the source"
+" checkout below. Do not install Cadrumo from PyPI, a public plugin "
+"marketplace, Scoop, Homebrew, or a Desktop extension bundle until the "
+"project announces those channels as available: packages under the same "
+"name on public registries are not this project's tested releases. Release"
+" announcements land in [Updates](updates.md)."
+msgstr ""
+
+#: ../../download.md:16
+msgid "What you need"
+msgstr ""
+
+#: ../../download.md:18
+msgid "Python 3.13 or newer."
+msgstr ""
+
+#: ../../download.md:19
+msgid ""
+"[Git](https://git-scm.com/downloads) and [uv](https://docs.astral.sh/uv"
+"/getting-started/installation/), each installed per its official guide "
+"for your operating system."
+msgstr ""
+
+#: ../../download.md:21
+msgid "Around 200 MB of free disk space."
+msgstr ""
+
+#: ../../download.md:23
+msgid ""
+"No taxpayer data, AEAT credentials, or online account is needed to "
+"install. Cadrumo stores everything locally and encrypted; nothing about "
+"your taxes leaves your machine during installation."
+msgstr ""
+
+#: ../../download.md:27
+msgid "Install from the source checkout"
+msgstr ""
+
+#: ../../download.md:29
+msgid ""
+"The install is identical on every operating system once Git and uv are "
+"present. Run, in a terminal:"
+msgstr ""
+
+#: ../../download.md:38
+msgid ""
+"`uv sync` creates an isolated environment and installs the `aeat` command"
+" into it with every core dependency pinned. Nothing is installed globally"
+" and nothing outside the checkout directory is modified: removing the "
+"directory removes Cadrumo."
+msgstr ""
+
+#: ../../download.md:43
+msgid "Confirm the install"
+msgstr ""
+
+#: ../../download.md:45
+msgid "Run the version check from the checkout:"
+msgstr ""
+
+#: ../../download.md:51
+msgid ""
+"A version number means the install worked. Then run the full workstation "
+"check and add any optional extras you want (Google export, the live AEAT "
+"browser, OFX/QFX import, the agent surface) by following [Install Cadrumo"
+"](workstation-setup.md), which covers the dependency report, platform "
+"checks, and per-extra install commands."
+msgstr ""
+
+#: ../../download.md:57
+msgid "Distribution channels"
+msgstr ""
+
+#: ../../download.md:59
+msgid ""
+"Native packages are built and tested per release for the channels below. "
+"They are in final pre-publication verification: none is published yet, "
+"and this page will show the exact install command for each channel the "
+"moment its release is announced."
+msgstr ""
+
+#: ../../download.md:68
+msgid "Platform"
+msgstr ""
+
+#: ../../download.md:69
+msgid "Channel"
+msgstr ""
+
+#: ../../download.md:70
+msgid "Status"
+msgstr ""
+
+#: ../../download.md:71
+msgid "Windows (x86-64)"
+msgstr ""
+
+#: ../../download.md:72
+msgid "Scoop package"
+msgstr ""
+
+#: ../../download.md:73 ../../download.md:76 ../../download.md:79
+#: ../../download.md:82 ../../download.md:85
+msgid "In verification, not yet published"
+msgstr ""
+
+#: ../../download.md:74
+msgid "macOS (Apple silicon and Intel)"
+msgstr ""
+
+#: ../../download.md:75 ../../download.md:78
+msgid "Homebrew formula"
+msgstr ""
+
+#: ../../download.md:77
+msgid "Linux (x86-64 and arm64)"
+msgstr ""
+
+#: ../../download.md:80
+msgid "Any platform with Python"
+msgstr ""
+
+#: ../../download.md:81
+msgid "PyPI package (pip, uvx)"
+msgstr ""
+
+#: ../../download.md:83
+msgid "Claude Code, Claude Desktop, Claude Cowork"
+msgstr ""
+
+#: ../../download.md:84
+msgid "Plugin and Desktop extension bundle"
+msgstr ""
+
+#: ../../download.md:88
+msgid ""
+"Every published artifact will carry the exact bytes that passed the "
+"release cohort's install-and-run evidence on its platform; a channel is "
+"only listed as available here once that evidence exists for the published"
+" release."
+msgstr ""
+
+#: ../../download.md:92
+msgid "After you install"
+msgstr ""
+
+#: ../../download.md:98
+msgid "Quickstart"
+msgstr ""
+
+#: ../../download.md:103
+msgid "Take the shortest path from an empty profile to an exported modelo file."
+msgstr ""
+
+#: ../../download.md:106
+msgid "Connect an agent (MCP)"
+msgstr ""
+
+#: ../../download.md:111
+msgid ""
+"Let an AI assistant such as Claude drive Cadrumo with you, on your "
+"machine."
+msgstr ""
+
