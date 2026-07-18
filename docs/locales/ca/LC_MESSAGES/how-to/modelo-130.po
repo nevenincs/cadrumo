@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/modelo-130.md:1
 msgid "Prepare a Modelo 130 IRPF instalment"
-msgstr ""
+msgstr "Prepara un pagament fraccionat de l'IRPF amb el Modelo 130"
 
 #: ../../how-to/modelo-130.md:3
 msgid ""
@@ -34,16 +33,26 @@ msgid ""
 "Físicas. Actividades económicas en estimación directa. Pago "
 "fraccionado.\""
 msgstr ""
+"Aquesta pàgina tracta la presentació trimestral del Modelo 130: la cadena "
+"completa de crear-calcular-verificar-exportar, el comportament acumulatiu "
+"des de l'inici de l'any que fa que cada trimestre s'edifiqui sobre els "
+"anteriors, i els valors de període anterior que un trimestre posterior "
+"arrossega. El Modelo 130 és el pagament a compte de l'IRPF per a activitat "
+"per compte propi en estimación directa; el títol oficial del registre és "
+"«Impuesto sobre la Renta de las Personas Físicas. Actividades económicas en "
+"estimación directa. Pago fraccionado.»"
 
 #: ../../how-to/modelo-130.md:11
 msgid ""
 "`aeat` does not submit Modelo 130 to AEAT. Export creates a local file "
 "that you upload through the official AEAT channel yourself."
 msgstr ""
+"`aeat` no presenta el Modelo 130 a l'AEAT. L'exportació crea un fitxer "
+"local que puges tu mateix pel canal oficial de l'AEAT."
 
 #: ../../how-to/modelo-130.md:14
 msgid "The tool needs a master-key passphrase and prompts for it."
-msgstr ""
+msgstr "L'eina necessita una contrasenya de clau mestra i la demana."
 
 #: ../../how-to/modelo-130.md:16
 msgid ""
@@ -52,10 +61,14 @@ msgid ""
 "<name>` before you start. [Set up your taxpayer profile](profile-"
 "setup.md) walks through it."
 msgstr ""
+"**Requisit:** un perfil de contribuent vàlid amb activitat per compte propi "
+"en estimación directa. Crea'n un amb `aeat config profile create <name>` "
+"abans de començar. [Configura el teu perfil de contribuent](profile-"
+"setup.md) t'hi guia."
 
 #: ../../how-to/modelo-130.md:20
 msgid "The complete first-quarter chain"
-msgstr ""
+msgstr "La cadena completa del primer trimestre"
 
 #: ../../how-to/modelo-130.md:22
 msgid ""
@@ -64,10 +77,15 @@ msgid ""
 " and a classified ledger, then creates the draft, calculates it, and "
 "verifies it. Each load-bearing detail is explained under the sequence."
 msgstr ""
+"Aquest és el camí complet, des d'un magatzem buit fins a un esborrany "
+"verificat, per a un declarant del primer període. La preparació de més "
+"avall configura un perfil per compte propi i un ledger classificat, i tot "
+"seguit crea l'esborrany, el calcula i el verifica. Cada detall determinant "
+"s'explica sota la seqüència."
 
 #: ../../how-to/modelo-130.md:31
 msgid "Load-bearing details:"
-msgstr ""
+msgstr "Detalls determinants:"
 
 #: ../../how-to/modelo-130.md:33
 msgid ""
@@ -75,12 +93,18 @@ msgid ""
 "profile MUST carry `--name` and `--surnames`, or export later refuses "
 "with \"requires the operator name\"."
 msgstr ""
+"Crea el perfil amb `--quiet` per a la forma no interactiva. El perfil ha de "
+"portar `--name` i `--surnames`, o l'exportació més tard es negarà amb "
+"«requires the operator name»."
 
 #: ../../how-to/modelo-130.md:36
 msgid ""
 "`--activity-start-date 2026-01-01` scopes the prior-period dependency out"
 " for a first period. Without it, verify blocks on the previous quarter."
 msgstr ""
+"`--activity-start-date 2026-01-01` deixa fora d'abast la dependència del "
+"període anterior per a un primer període. Sense això, la verificació es "
+"bloqueja pel trimestre anterior."
 
 #: ../../how-to/modelo-130.md:38
 msgid ""
@@ -88,6 +112,10 @@ msgid ""
 "amount`); the tool enforces the sum to the cent. A deductible-expense row"
 " needs `--category-id` (list ids with `aeat app ledger categories`)."
 msgstr ""
+"`ledger add --amount` és l'import BRUT (`--taxable-base` + `--iva-amount`); "
+"l'eina fa complir la suma fins al cèntim. Una fila de despesa deduïble "
+"necessita `--category-id` (llista els ids amb `aeat app ledger "
+"categories`)."
 
 #: ../../how-to/modelo-130.md:42
 msgid ""
@@ -97,6 +125,13 @@ msgid ""
 "Later quarters resolve them from your own filed history instead - see "
 "[the cumulative behaviour](#each-quarter-is-cumulative) below."
 msgstr ""
+"Els tres valors `--binding ...=0` són els arrossegaments de període "
+"anterior que un veritable primer període no té: els resultats negatius de "
+"trimestres anteriors, els pagaments fraccionats abonats abans i la renda "
+"neta de l'any passat (que s'utilitza per a la minoración). Els trimestres "
+"posteriors els resolen a partir del teu propi historial presentat: "
+"consulta [el comportament acumulatiu](#each-quarter-is-cumulative) més "
+"avall."
 
 #: ../../how-to/modelo-130.md:47
 msgid ""
@@ -105,16 +140,23 @@ msgid ""
 "base minus expense base - and a pago fraccionado (casilla `04`) of "
 "`100.00`, 20 percent of the net."
 msgstr ""
+"Amb les dues files de més amunt, el càlcul informa d'uns ingressos "
+"acumulats (casilla `01`) de `1000.00`, un rendimiento neto (casilla `03`) "
+"de `500.00` -base d'ingressos menys base de despeses- i un pago fraccionado "
+"(casilla `04`) de `100.00`, el 20 per cent del net."
 
 #: ../../how-to/modelo-130.md:51
 msgid ""
 "`verify` reports `completeness complete` and `granted true`. Export then "
 "writes the `.boe` and reports its path, byte size, and SHA-256 checksum."
 msgstr ""
+"`verify` informa de `completeness complete` i `granted true`. Després "
+"l'exportació escriu el `.boe` i n'informa el camí, la mida en bytes i la "
+"suma de verificació SHA-256."
 
 #: ../../how-to/modelo-130.md:54
 msgid "Before you create the draft"
-msgstr ""
+msgstr "Abans de crear l'esborrany"
 
 #: ../../how-to/modelo-130.md:56
 msgid ""
@@ -122,12 +164,17 @@ msgid ""
 " profile with self-employed activity under estimación directa; check "
 "applicability with `aeat app overview explain 130`."
 msgstr ""
+"[Configura el teu perfil de contribuent](profile-setup.md). El Modelo 130 "
+"s'aplica a un perfil amb activitat per compte propi en estimación directa; "
+"comprova l'aplicabilitat amb `aeat app overview explain 130`."
 
 #: ../../how-to/modelo-130.md:59
 msgid ""
 "[Plan your filing calendar](filing-calendar.md). Modelo 130 uses "
 "quarterly periods `1T` through `4T` only."
 msgstr ""
+"[Planifica el teu calendari de presentacions](filing-calendar.md). El "
+"Modelo 130 utilitza només períodes trimestrals de `1T` a `4T`."
 
 #: ../../how-to/modelo-130.md:61
 msgid ""
@@ -135,10 +182,14 @@ msgid ""
 "[classify them](classify-transactions.md). Modelo 130 reads classified "
 "business income and expense rows; expenses need a category."
 msgstr ""
+"[Importa o afegeix les teves transaccions](import-bank-statements.md) i, "
+"tot seguit, [classifica-les](classify-transactions.md). El Modelo 130 "
+"llegeix les files d'ingressos i despeses de negoci classificades; les "
+"despeses necessiten una categoria."
 
 #: ../../how-to/modelo-130.md:65
 msgid "What Modelo 130 calculates"
-msgstr ""
+msgstr "Què calcula el Modelo 130"
 
 #: ../../how-to/modelo-130.md:67
 msgid ""
@@ -153,6 +204,17 @@ msgid ""
 " negative casilla-17 balance is carried forward as `saldo-negativo-fin-"
 "periodo` for later quarters."
 msgstr ""
+"El Modelo 130 calcula el pagament a compte de l'IRPF del trimestre a partir "
+"de les xifres de la teva activitat des de l'inici de l'any: els ingressos "
+"acumulats (casilla `01`) menys les despeses deduïbles acumulades (casilla "
+"`02`) donen el rendimiento neto (casilla `03`); el pagament fraccionat "
+"(casilla `04`) és un percentatge d'aquest net; els pagaments fraccionats "
+"anteriors ja abonats aquest any (casilla `05`) i les retencions que has "
+"suportat (casilla `06`) se'n descompten; la minoración segons el nivell de "
+"renda neta (casilla `13`) i els resultats negatius de trimestres anteriors "
+"(casilla `15`) ajusten la xifra; i la casilla `19` és el resultat final. Un "
+"saldo negatiu de la casilla 17 s'arrossega com a `saldo-negativo-fin-"
+"periodo` per als trimestres posteriors."
 
 #: ../../how-to/modelo-130.md:78
 msgid ""
@@ -162,10 +224,16 @@ msgid ""
 " you (withholdings, second-activity volume, vivienda habitual deduction, "
 "prior complementary results). Inspect what is bound, missing, or manual:"
 msgstr ""
+"El ledger alimenta les xifres acumulades d'ingressos, despeses i retencions "
+"a través dels bindings del registre; les presentacions anteriors alimenten "
+"els arrossegaments. Les casilles `06`, `08`, `10`, `16` i `18` són entrades "
+"manuals per als casos que t'apliquen (retencions, volum d'una segona "
+"activitat, deducció per vivienda habitual, resultats complementaris "
+"anteriors). Inspecciona què és vinculat, què falta o què és manual:"
 
 #: ../../how-to/modelo-130.md:88
 msgid "Supply a manual box value"
-msgstr ""
+msgstr "Aporta el valor d'una casilla manual"
 
 #: ../../how-to/modelo-130.md:90
 msgid ""
@@ -174,6 +242,10 @@ msgid ""
 "it in the same calculate call as the first-period bindings, then review "
 "the saved calculation to confirm your value landed:"
 msgstr ""
+"La casilla `06` (Retenciones e ingresos a cuenta) és una casilla manual: el "
+"ledger no l'omple, així que l'aportes a mà amb `--casilla`. Passa-la a la "
+"mateixa crida de càlcul que els bindings del primer període i, tot seguit, "
+"revisa el càlcul desat per confirmar que el teu valor hi ha quedat:"
 
 #: ../../how-to/modelo-130.md:99
 msgid ""
@@ -183,10 +255,16 @@ msgid ""
 "and see [Review and supply calculation inputs](review-calculation-"
 "values.md) for the full input workflow."
 msgstr ""
+"`--casilla` només funciona en casilles `manual`; una casilla `bound` "
+"emplenada des del teu ledger (com la casilla `02`) rebutja la substitució. "
+"Comprova el tipus d'una casilla amb `aeat app modelo casillas 130` (la "
+"seqüència d'inspecció de més amunt ho mostra), i consulta [Revisa i aporta "
+"entrades de càlcul](review-calculation-values.md) per al flux d'entrada "
+"complet."
 
 #: ../../how-to/modelo-130.md:105
 msgid "Each quarter is cumulative"
-msgstr ""
+msgstr "Cada trimestre és acumulatiu"
 
 #: ../../how-to/modelo-130.md:107
 msgid ""
@@ -195,6 +273,11 @@ msgid ""
 "June; each quarter's instalment is computed on the whole year so far, and"
 " the instalments you already paid come off through casilla `05`."
 msgstr ""
+"El Modelo 130 és un formulari des de l'inici de l'any, no un formulari per "
+"tram trimestral. La casilla `01` del segon trimestre cobreix de gener a "
+"juny, no d'abril a juny; el pagament fraccionat de cada trimestre es "
+"calcula sobre tot l'any transcorregut, i els pagaments fraccionats que ja "
+"has abonat se'n descompten a través de la casilla `05`."
 
 #: ../../how-to/modelo-130.md:112
 msgid ""
@@ -202,24 +285,34 @@ msgid ""
 "window for `2T` is January 1 to June 30) and `previous_filing` bindings "
 "that read your own earlier filed quarters:"
 msgstr ""
+"L'eina ho implementa mitjançant bindings acumulatius del ledger (la "
+"finestra del ledger per a `2T` és de l'1 de gener al 30 de juny) i bindings "
+"`previous_filing` que llegeixen els teus propis trimestres presentats "
+"abans:"
 
 #: ../../how-to/modelo-130.md:116
 msgid ""
 "`modelo-130-pagos-fraccionados-anteriores` - the instalments already paid"
 " this year, from your filed `1T`..`3T` records."
 msgstr ""
+"`modelo-130-pagos-fraccionados-anteriores`: els pagaments fraccionats ja "
+"abonats aquest any, a partir dels teus registres presentats de `1T` a `3T`."
 
 #: ../../how-to/modelo-130.md:118
 msgid ""
 "`modelo-130-resultados-negativos-anteriores` - negative results carried "
 "from earlier quarters."
 msgstr ""
+"`modelo-130-resultados-negativos-anteriores`: els resultats negatius "
+"arrossegats de trimestres anteriors."
 
 #: ../../how-to/modelo-130.md:120
 msgid ""
 "`irpf.previous_year_economic_activity_net_income` - last year's net "
 "income, which decides the minoración tier."
 msgstr ""
+"`irpf.previous_year_economic_activity_net_income`: la renda neta de l'any "
+"passat, que decideix el tram de la minoración."
 
 #: ../../how-to/modelo-130.md:123
 msgid ""
@@ -230,10 +323,18 @@ msgid ""
 "blocks with a cross-period finding - record or reconcile that earlier "
 "filing first (see [Reconcile a filing](reconcile.md))."
 msgstr ""
+"Per a un primer període aquests no tenen historial, per això la cadena del "
+"primer trimestre els passa com a `--binding ...=0`. Per als trimestres "
+"posteriors NO passis zeros: deixa els bindings sense assignar perquè es "
+"resolguin a partir del trimestre anterior presentat. Si el trimestre "
+"anterior no està presentat i evidenciat localment, la verificació es "
+"bloqueja amb una troballa de període creuat: registra o concilia primer "
+"aquella presentació anterior (consulta [Concilia una presentació](reconcile."
+"md))."
 
 #: ../../how-to/modelo-130.md:130
 msgid "Calculate, review, verify, export"
-msgstr ""
+msgstr "Calcula, revisa, verifica, exporta"
 
 #: ../../how-to/modelo-130.md:132
 msgid ""
@@ -241,6 +342,9 @@ msgid ""
 "](filing-spine.md) for how work units and calculation revisions behave. "
 "In short:"
 msgstr ""
+"La cadena és el flux de treball de presentació estàndard: consulta [El flux "
+"de treball de presentació](filing-spine.md) per saber com es comporten les "
+"unitats de treball i les revisions de càlcul. En resum:"
 
 #: ../../how-to/modelo-130.md:140
 msgid ""
@@ -252,6 +356,14 @@ msgid ""
 "runs end to end, executed, on [Prepare a Modelo 303 IVA "
 "filing](modelo-303.md):"
 msgstr ""
+"Un cop l'esborrany es verifica, exporta'l. L'exportació es nega fins que "
+"cada fila de despesa deduïble porti evidència de factura de compra "
+"vinculada (consulta [Adjunta factures i rebuts](ledger-evidence.md)); "
+"aquest exemple senzill del Modelo 130 omet aquesta evidència, de manera que "
+"l'exportació i el marcador de presentat posterior al portal es mostren com "
+"a marcs il·lustratius. La cadena completa d'evidència fins a l'exportació "
+"s'executa de punta a punta a [Prepara una presentació d'IVA amb el Modelo "
+"303](modelo-303.md):"
 
 #: ../../how-to/modelo-130.md:150
 msgid ""
@@ -261,6 +373,11 @@ msgid ""
 "reconcile against the justificante (see [Reconcile a "
 "filing](reconcile.md))."
 msgstr ""
+"Cada casilla calculada porta la seva fórmula, les seves referències legals "
+"i les seves referències d'origen; mostra-les amb la vista de la revisió o "
+"[revisa els valors del càlcul](review-calculation-values.md). Després de "
+"registrar el marcador, concilia contra el justificante (consulta [Concilia "
+"una presentació](reconcile.md))."
 
 #: ../../how-to/modelo-130.md:156
 msgid ""
@@ -268,28 +385,31 @@ msgid ""
 "four instalments are folded into Modelo 100 as payments on account. See "
 "[Prepare the annual Modelo 100 Renta declaration](modelo-100.md)."
 msgstr ""
+"Els resultats trimestrals del Modelo 130 alimenten la teva declaració anual "
+"de la Renta: els quatre pagaments fraccionats s'integren al Modelo 100 com "
+"a pagaments a compte. Consulta [Prepara la declaració anual de la Renta del "
+"Modelo 100](modelo-100.md)."
 
 #: ../../how-to/modelo-130.md:160
 msgid "Next steps"
-msgstr ""
+msgstr "Passos següents"
 
 #: ../../how-to/modelo-130.md:162
 msgid "[The income-tax year (run-through)](irpf-lifecycle.md)"
-msgstr ""
+msgstr "[L'any de l'impost sobre la renda (recorregut)](irpf-lifecycle.md)"
 
 #: ../../how-to/modelo-130.md:163
 msgid "[The filing workflow](filing-spine.md)"
-msgstr ""
+msgstr "[El flux de treball de presentació](filing-spine.md)"
 
 #: ../../how-to/modelo-130.md:164
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr ""
+msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
 #: ../../how-to/modelo-130.md:165
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
-msgstr ""
+msgstr "[Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat.md)"
 
 #: ../../how-to/modelo-130.md:166
 msgid "[Reconcile a filing](reconcile.md)"
-msgstr ""
-
+msgstr "[Concilia una presentació](reconcile.md)"
