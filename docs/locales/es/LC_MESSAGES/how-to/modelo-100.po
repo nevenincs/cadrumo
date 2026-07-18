@@ -200,7 +200,7 @@ msgstr ""
 "La mayoría de las casillas del Modelo 100 son entradas manuales "
 "opcionales para situaciones que el ledger no puede conocer (detalles de "
 "los rendimientos del trabajo, rendimientos del capital, deducciones). "
-"Averigüe qué le corresponde y qué sigue faltando:"
+"Averigua qué te corresponde y qué sigue faltando:"
 
 #: ../../how-to/modelo-100.md:86
 msgid ""

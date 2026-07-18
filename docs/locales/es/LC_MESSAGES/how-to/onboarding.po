@@ -85,7 +85,7 @@ msgstr "Clasifica cada movimiento."
 
 #: ../../how-to/onboarding.md:24
 msgid "Find out which modelos apply to you."
-msgstr "Averigüe qué modelos le corresponden."
+msgstr "Averigua qué modelos te corresponden."
 
 #: ../../how-to/onboarding.md:25
 msgid "Check readiness, calculate, and verify."
@@ -197,7 +197,7 @@ msgstr "Continúa con: [Clasifica los movimientos](classify-transactions.md)."
 
 #: ../../how-to/onboarding.md:68
 msgid "Stage 4 - Find out which modelos apply"
-msgstr "Etapa 4: Averigüe qué modelos le corresponden"
+msgstr "Etapa 4: Averigua qué modelos te corresponden"
 
 #: ../../how-to/onboarding.md:70
 msgid ""
@@ -211,7 +211,8 @@ msgstr ""
 
 #: ../../how-to/onboarding.md:74
 msgid "Continue with: [Find out which modelos apply to you](choose-modelo.md)."
-msgstr "Continúa con: [Averigüe qué modelos le corresponden](choose-modelo.md)."
+msgstr ""
+"Continúa con: [Averigua qué modelos te corresponden](choose-modelo.md)."
 
 #: ../../how-to/onboarding.md:76
 msgid "Stage 5 - Check readiness, calculate, and verify"

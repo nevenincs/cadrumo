@@ -28,7 +28,7 @@ msgid ""
 "local records to a file you can upload yourself through the Agencia "
 "Estatal de Administración Tributaria (AEAT) portal."
 msgstr ""
-"Usa esto cuando sea nuevo en Cadrumo y quiera el camino más corto desde "
+"Usa esto cuando seas nuevo en Cadrumo y quieras el camino más corto desde "
 "tus registros locales hasta un fichero que puedas subir tú mismo por el "
 "portal de la Agencia Estatal de Administración Tributaria (AEAT)."
 
@@ -436,7 +436,7 @@ msgstr "Sube el fichero `.boe` exportado."
 #: ../../how-to/quickstart.md:207
 msgid "Review, sign, and keep the justificante AEAT issues after filing."
 msgstr ""
-"Revisa, firme y conserva el justificante que la AEAT emite tras la "
+"Revisa, firma y conserva el justificante que la AEAT emite tras la "
 "presentación."
 
 #: ../../how-to/quickstart.md:209

@@ -718,7 +718,7 @@ msgstr "Entrar en el código"
 
 #: ../../architecture/index.md:346
 msgid "Use this overview to orient, then drop into the detail:"
-msgstr "Usa esta visión general para orientarse y luego baje al detalle:"
+msgstr "Usa esta visión general para orientarte y luego baja al detalle:"
 
 #: ../../architecture/index.md:348
 msgid ""
@@ -773,7 +773,7 @@ msgid ""
 "modelo, fichero-BOE, or justificante) you want defined."
 msgstr ""
 "**El glosario**: {doc}`/_generated/glossary` para cualquier término "
-"(casilla, modelo, fichero-BOE o justificante) que quiera ver definido."
+"(casilla, modelo, fichero-BOE o justificante) que quieras ver definido."
 
 #: ../../architecture/index.md:361
 #, python-brace-format

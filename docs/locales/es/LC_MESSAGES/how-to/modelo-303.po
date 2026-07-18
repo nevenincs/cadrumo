@@ -586,7 +586,7 @@ msgid ""
 "List the saved revisions, then show the current revision's persisted "
 "values:"
 msgstr ""
-"Lista las revisiones guardadas y muestre después los valores persistidos "
+"Lista las revisiones guardadas y muestra después los valores persistidos "
 "de la revisión actual:"
 
 #: ../../how-to/modelo-303.md:224
