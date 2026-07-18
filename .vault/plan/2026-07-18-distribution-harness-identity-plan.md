@@ -129,9 +129,9 @@ Author the product-reviewed English and Spanish product copy carrying all six re
 
 Re-pin the migrated model-facing inventory, drive the distribution-identity verifier to exit zero, and recapture the installed-client evidence rows in the close audit.
 
-- [ ] `P04.S10` - Re-pin the frozen model-facing-description digest to the migrated prompt and resource identifier inventory and update the verifier self-test expectations to the migrated compliant-surface counts; `dev/packaging/verify_distribution_identity.py`.
-- [ ] `P04.S11` - Run the distribution-identity verifier and prove it exits zero, capturing the JSON evidence document as the acceptance artifact; `dev/packaging/verify_distribution_identity.py`.
-- [ ] `P04.S12` - Prove the rule-surface conformance gate and the full harness, generation, eval, and MCP test surface are green, re-run the S69-shape installed-client evidence recapture across the claimed Claude clients, and reconcile every observation in the close audit; `src/cadrumo/agent/tests/test_rule_surface_conformance.py`.
+- [x] `P04.S10` - Re-pin the frozen model-facing-description digest to the migrated prompt and resource identifier inventory and update the verifier self-test expectations to the migrated compliant-surface counts; `dev/packaging/verify_distribution_identity.py`.
+- [x] `P04.S11` - Run the distribution-identity verifier and prove it exits zero, capturing the JSON evidence document as the acceptance artifact; `dev/packaging/verify_distribution_identity.py`.
+- [x] `P04.S12` - Prove the rule-surface conformance gate and the full harness, generation, eval, and MCP test surface are green, re-run the S69-shape installed-client evidence recapture across the claimed Claude clients, and reconcile every observation in the close audit; `src/cadrumo/agent/tests/test_rule_surface_conformance.py`.
 
 ## Description
 

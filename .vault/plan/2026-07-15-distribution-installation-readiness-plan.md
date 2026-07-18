@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-07-17'
+modified: '2026-07-18'
 tier: L3
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -103,8 +103,8 @@ translation. A failed check leaves its row open for a separate approved implemen
 - [x] `W02.P06.S05` - Prove cohort construction is deterministic complete and non-rebuilding; `dev/packaging/tests/test_release_cohort.py`.
 - [x] `W02.P06.S27` - Install the marketplace-served plugin in Claude and require MCP startup plus a tax-work tool call; `dev/packaging/smoke_plugin_install.py`.
 - [x] `W02.P06.S30` - Install MCPB through each claimed client and require the real tax-work tool call; `packaging/mcpb/tests/test_client_install.py`.
-- [ ] `W02.P06.S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple; `dev/packaging/verify_distribution_identity.py, src/cadrumo/_data/agent, src/cadrumo/agent, src/cadrumo/entrypoints/mcp`.
-- [ ] `W02.P06.S68` - Verify English and Spanish MCP product descriptions in plugin, marketplace, MCPB, and client-display metadata while preserving English-only model-facing descriptions; `dev/packaging/verify_distribution_identity.py, src/cadrumo/agent/_workspace.py, packaging/mcpb/manifest.json`.
+- [x] `W02.P06.S67` - Inventory generated harness identifiers and compare `cadrumo-` names plus MCP product identities with the accepted tuple; `dev/packaging/verify_distribution_identity.py, src/cadrumo/_data/agent, src/cadrumo/agent, src/cadrumo/entrypoints/mcp`.
+- [x] `W02.P06.S68` - Verify English and Spanish MCP product descriptions in plugin, marketplace, MCPB, and client-display metadata while preserving English-only model-facing descriptions; `dev/packaging/verify_distribution_identity.py, src/cadrumo/agent/_workspace.py, packaging/mcpb/manifest.json`.
 
 ## Wave `W03` - Prove platforms and clients
 
