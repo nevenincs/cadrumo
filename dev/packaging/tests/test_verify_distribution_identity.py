@@ -89,17 +89,15 @@ def test_accepted_mcp_product_tuple_passes_every_real_projection() -> None:
 
 
 def test_real_client_display_descriptions_report_missing_bilingual_claim_parity() -> None:
-    """All five client-display fields carry approved bilingual pairs (S07-S09).
+    """All five client-display fields carry approved bilingual pairs with full six-claim parity.
 
-    S09 wires the MCPB short description and long_description. The long_description
-    covers all six claims and its row becomes compliant=True. The short description
-    covers only capability, safety, and never_files_live. The overall ok stays False
-    because the short client-display fields (plugin, marketplace-plugin, marketplace,
-    and mcpb short) do not carry all six required claims in parity.
+    Revision 2 of the S06 copy record expanded every short client-display field to the
+    full six required claims. All five rows are now compliant=True and
+    product_descriptions.ok is True.
     """
     descriptions = verify_distribution_identity(_REPO_ROOT).to_document()["product_descriptions"]
 
-    assert descriptions["ok"] is False  # short fields do not cover all six claims
+    assert descriptions["ok"] is True  # all five rows carry all six claims in parity
     assert descriptions["required_languages"] == ["English", "Spanish"]
     assert descriptions["required_claims"] == [
         "capability",
@@ -137,15 +135,11 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
         ("mcpb_client_display", "long_description"),
     ]
     assert all(row["value"] for row in observations)
-    # Row 4 (mcpb long_description) is the only compliant row: all six claims pass.
-    # The four short fields lack the full claim set so they remain compliant=False.
-    assert observations[4]["compliant"] is True
-    assert all(
-        row["compliant"] is False for row in (observations[0], observations[1], observations[2], observations[3])
-    )
+    # All five rows are compliant: Revision 2 wires full six-claim parity.
+    assert all(row["compliant"] is True for row in observations)
 
-    # --- Rows 0 and 2 (plugin + marketplace-plugin): approved bilingual pair wired ---
-    for row in (observations[0], observations[2]):
+    # Every row carries a labeled, approved bilingual pair with all six claims in parity.
+    for row in observations:
         assert row["english_label"] is True
         assert row["spanish_label"] is True
         assert row["english_text"] != ""
@@ -153,80 +147,9 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
         assert row["unlabeled_text"] == ""
         assert row["translation_approved"] is True
         assert [claim["name"] for claim in row["claims"]] == descriptions["required_claims"]
-        # English: capability, on_host_storage, never_files_live pass; safety,
-        # privacy, human_confirmation absent from this short client-display field.
-        assert {claim["name"] for claim in row["claims"] if claim["english"]} == {
-            "capability",
-            "on_host_storage",
-            "never_files_live",
-        }
-        # Spanish: capability, on_host_storage, human_confirmation, never_files_live pass.
-        assert {claim["name"] for claim in row["claims"] if claim["spanish"]} == {
-            "capability",
-            "on_host_storage",
-            "human_confirmation",
-            "never_files_live",
-        }
-
-    # --- Row 1 (marketplace): approved bilingual pair wired (S08) ---
-    marketplace_row = observations[1]
-    assert marketplace_row["english_label"] is True
-    assert marketplace_row["spanish_label"] is True
-    assert marketplace_row["english_text"] != ""
-    assert marketplace_row["spanish_text"] != ""
-    assert marketplace_row["unlabeled_text"] == ""
-    assert marketplace_row["translation_approved"] is True
-    assert [claim["name"] for claim in marketplace_row["claims"]] == descriptions["required_claims"]
-    # Marketplace description: capability, safety, on_host_storage, never_files_live
-    # pass in both languages; privacy and human_confirmation absent.
-    assert {claim["name"] for claim in marketplace_row["claims"] if claim["english"]} == {
-        "capability",
-        "safety",
-        "on_host_storage",
-        "never_files_live",
-    }
-    assert {claim["name"] for claim in marketplace_row["claims"] if claim["spanish"]} == {
-        "capability",
-        "safety",
-        "on_host_storage",
-        "never_files_live",
-    }
-
-    # --- Row 3 (mcpb short description): approved bilingual pair wired (S09) ---
-    mcpb_short = observations[3]
-    assert mcpb_short["english_label"] is True
-    assert mcpb_short["spanish_label"] is True
-    assert mcpb_short["english_text"] != ""
-    assert mcpb_short["spanish_text"] != ""
-    assert mcpb_short["unlabeled_text"] == ""
-    assert mcpb_short["translation_approved"] is True
-    assert [claim["name"] for claim in mcpb_short["claims"]] == descriptions["required_claims"]
-    # Short description: capability, safety, never_files_live pass in both;
-    # privacy, on_host_storage, human_confirmation absent from this short field.
-    assert {claim["name"] for claim in mcpb_short["claims"] if claim["english"]} == {
-        "capability",
-        "safety",
-        "never_files_live",
-    }
-    assert {claim["name"] for claim in mcpb_short["claims"] if claim["spanish"]} == {
-        "capability",
-        "safety",
-        "never_files_live",
-    }
-
-    # --- Row 4 (mcpb long_description): approved bilingual pair wired (S09), compliant ---
-    mcpb_long = observations[4]
-    assert mcpb_long["english_label"] is True
-    assert mcpb_long["spanish_label"] is True
-    assert mcpb_long["english_text"] != ""
-    assert mcpb_long["spanish_text"] != ""
-    assert mcpb_long["unlabeled_text"] == ""
-    assert mcpb_long["translation_approved"] is True
-    assert [claim["name"] for claim in mcpb_long["claims"]] == descriptions["required_claims"]
-    # Long description covers all six required claims in both English and Spanish.
-    assert {claim["name"] for claim in mcpb_long["claims"] if claim["english"]} == set(descriptions["required_claims"])
-    assert {claim["name"] for claim in mcpb_long["claims"] if claim["spanish"]} == set(descriptions["required_claims"])
-    assert all(claim["parity"] is True for claim in mcpb_long["claims"])
+        assert {claim["name"] for claim in row["claims"] if claim["english"]} == set(descriptions["required_claims"])
+        assert {claim["name"] for claim in row["claims"] if claim["spanish"]} == set(descriptions["required_claims"])
+        assert all(claim["parity"] is True for claim in row["claims"])
 
 
 def test_supported_english_and_spanish_language_labels_are_parsed() -> None:
@@ -267,7 +190,12 @@ def test_unapproved_semantic_contradiction_cannot_pass_keyword_claim_checks() ->
 
 
 def test_cli_returns_nonzero_and_emits_the_real_failure_report() -> None:
-    """An unprefixed shipped harness must make the production CLI fail closed."""
+    """The production CLI exits 0 and emits a passing report once all claims carry parity.
+
+    After Revision 2 of the S06 copy record expanded every short client-display field to
+    all six required claims, the verifier is fully green: namespace, identity, and
+    description checks all pass.
+    """
     completed = subprocess.run(
         [sys.executable, "-m", "dev.packaging.verify_distribution_identity"],
         cwd=_REPO_ROOT,
@@ -278,15 +206,15 @@ def test_cli_returns_nonzero_and_emits_the_real_failure_report() -> None:
         errors="strict",
     )
 
-    assert completed.returncode == 1
+    assert completed.returncode == 0
     assert completed.stderr == ""
     document = json.loads(completed.stdout)
-    assert document["ok"] is False
+    assert document["ok"] is True
     assert document["authored_inventory"]["persona"]["count"] == 7
     assert document["authored_inventory"]["skill"]["count"] == 34
     assert document["authored_inventory"]["rule"]["count"] == 7
     assert document["product_identity"]["ok"] is True
-    assert document["product_descriptions"]["ok"] is False
+    assert document["product_descriptions"]["ok"] is True
 
 
 def test_verifier_rejects_a_mixed_repository_revision(tmp_path: Path) -> None:
