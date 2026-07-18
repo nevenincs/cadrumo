@@ -40,7 +40,7 @@ msgid ""
 "-privacy-safe-support-request)."
 msgstr ""
 "Busca el error en los encabezados de abajo y sigue sus pasos. Si no "
-"aparece, salte a [Prepara una solicitud de soporte respetuosa con la "
+"aparece, salta a [Prepara una solicitud de soporte respetuosa con la "
 "privacidad](#prepare-a-privacy-safe-support-request)."
 
 #: ../../how-to/troubleshooting.md:10
@@ -69,7 +69,7 @@ msgid ""
 msgstr ""
 "El comando necesita un perfil de contribuyente y no hay ninguno activo. "
 "Primero inspecciona qué cree la herramienta que está activo, y luego "
-"ejecute la comprobación de reparación sin cambiar nada. Un perfil sano "
+"ejecuta la comprobación de reparación sin cambiar nada. Un perfil sano "
 "informa de `ready`; un puntero local roto informa de la acción de "
 "reparación que puede realizar:"
 
@@ -503,7 +503,7 @@ msgid ""
 "When the steps on this page don't resolve the problem, gather this before"
 " asking for help:"
 msgstr ""
-"Cuando los pasos de esta página no resuelvan el problema, reúna esto "
+"Cuando los pasos de esta página no resuelvan el problema, reúne esto "
 "antes de pedir ayuda:"
 
 #: ../../how-to/troubleshooting.md:209

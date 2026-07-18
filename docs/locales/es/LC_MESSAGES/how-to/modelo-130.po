@@ -248,7 +248,7 @@ msgstr ""
 "La casilla `06` (Retenciones e ingresos a cuenta) es una casilla manual: "
 "el ledger no la rellena, así que la aportas a mano con `--casilla`. "
 "Pásala en la misma llamada de cálculo que los bindings del primer "
-"periodo, y revise después el cálculo guardado para confirmar que su valor "
+"periodo, y revisa después el cálculo guardado para confirmar que su valor "
 "quedó registrado:"
 
 #: ../../how-to/modelo-130.md:99

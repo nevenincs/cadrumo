@@ -174,7 +174,7 @@ msgid ""
 "one by its id (the setup step records the same alta shown above so the "
 "list has a row):"
 msgstr ""
-"Lista las declaraciones que ha registrado en el perfil activo y abra "
+"Lista las declaraciones que has registrado en el perfil activo y abre "
 "después una por su id (el paso de preparación registra la misma alta "
 "mostrada arriba para que la lista tenga una fila):"
 
@@ -260,7 +260,7 @@ msgstr ""
 #, python-brace-format
 msgid "For unfamiliar terms, see the {doc}`glossary </_generated/glossary>`."
 msgstr ""
-"Para términos que le resulten desconocidos, consulte el {doc}`glosario "
+"Para términos que te resulten desconocidos, consulta el {doc}`glosario "
 "</_generated/glossary>`."
 
 #: ../../how-to/modelo-036.md:103

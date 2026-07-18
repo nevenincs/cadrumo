@@ -267,7 +267,7 @@ msgid ""
 "switch <name>` when you return."
 msgstr ""
 "No se elimina nada del perfil. Selecciónalo de nuevo con `aeat config "
-"switch <name>` cuando vuelva."
+"switch <name>` cuando vuelvas."
 
 #: ../../how-to/protect-data-access.md:117
 msgid "Reset local state (last resort)"
