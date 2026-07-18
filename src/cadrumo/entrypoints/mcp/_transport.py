@@ -15,10 +15,12 @@ rather than wedging the whole warm transport.
 
 from __future__ import annotations
 
+import functools
 import sys
 import sysconfig
 import threading
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from enum import StrEnum
 from pathlib import Path
 
 from ...adapters.persistence.storage import close_active_bucket_session
@@ -39,15 +41,23 @@ from ._input_schema import cli_argv_for
 from ._meta_tools import ToolRunOutcome
 from ._tools import McpToolDescriptor
 
-# The telemetry ``executable`` observation for a call served through the warm
-# in-process runtime, where no child executable exists. It stands in the same
-# field the subprocess transport fills with the resolved CLI executable path, so
-# a payload-free telemetry row records which transport served the call.
-_INPROCESS_MARKER = "<in-process>"
-# The telemetry ``executable`` observation for a warm-eligible verb that degraded
-# to the subprocess transport because the warm capture was busy or wedged, so a
-# degradation is visible in telemetry as well as in the envelope's warning Notice.
-_WEDGE_FALLBACK_MARKER = "<subprocess-wedge-fallback>"
+
+class McpTransport(StrEnum):
+    """Which transport actually served one MCP tool call.
+
+    Recorded verbatim in the telemetry ``transport`` field. ``executable`` is
+    reserved for the installed-cohort attestation (the resolved sibling CLI
+    path of the environment that served the call) on every transport, so the
+    installed MCP oracle can bind each call to the exact tested cohort whether
+    the call ran warm in-process or as a supervised child.
+    """
+
+    INPROCESS = "inprocess"
+    SUBPROCESS = "subprocess"
+    # A warm-eligible verb that degraded to the subprocess transport because the
+    # warm capture was busy or wedged; the degradation also carries a warning
+    # Notice on the envelope, so it is visible in both channels.
+    SUBPROCESS_FALLBACK = "subprocess_fallback"
 
 
 def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: float) -> dict[str, object]:
@@ -85,6 +95,22 @@ def _installed_cli_executable() -> str:
     return str(executable)
 
 
+@functools.cache
+def _attested_cli_executable() -> str:
+    """The sibling CLI path attested for warm in-process calls, or empty.
+
+    The warm runtime drives the same installed distribution the sibling CLI
+    launches, so the resolved CLI path is the truthful environment identity
+    for a call no child process served. A broken installation attests empty
+    instead of raising - the installed MCP oracle then fails loudly on the
+    missing attestation rather than the call failing on telemetry.
+    """
+    try:
+        return _installed_cli_executable()
+    except OSError:
+        return ""
+
+
 def _cli_resolution_refusal_envelope(error: OSError) -> dict[str, object]:
     """Build a structured refusal for an incomplete MCP installation."""
     return {
@@ -96,11 +122,12 @@ def _cli_resolution_refusal_envelope(error: OSError) -> dict[str, object]:
 
 @dataclass(frozen=True)
 class SubprocessToolOutcome(ToolRunOutcome):
-    """One supervised CLI dispatch and the executable actually passed to it."""
+    """One tool dispatch, its attested environment CLI, and its serving transport."""
 
     envelope: dict[str, object]
     is_error: bool
     executable: str
+    transport: McpTransport
 
 
 def _run_subprocess_tool(
@@ -141,6 +168,7 @@ def _run_subprocess_tool(
             envelope=_cli_resolution_refusal_envelope(error),
             is_error=True,
             executable="",
+            transport=McpTransport.SUBPROCESS,
         )
     if result.timed_out:
         return SubprocessToolOutcome(
@@ -151,6 +179,7 @@ def _run_subprocess_tool(
             ),
             is_error=True,
             executable=result.executable,
+            transport=McpTransport.SUBPROCESS,
         )
     envelope, is_error = parse_cli_envelope(
         CompletedCliRun(stdout=result.stdout, stderr=result.stderr, returncode=result.returncode),
@@ -159,6 +188,7 @@ def _run_subprocess_tool(
         envelope=envelope,
         is_error=is_error,
         executable=result.executable,
+        transport=McpTransport.SUBPROCESS,
     )
 
 
@@ -300,14 +330,24 @@ def _run_inprocess_tool(
             _timeout_refusal_envelope(command_key=descriptor.command_key, tier=tier, timeout_s=timeout_s),
             _inprocess_timeout_notice(command_key=descriptor.command_key),
         )
-        return SubprocessToolOutcome(envelope=envelope, is_error=True, executable=_INPROCESS_MARKER)
+        return SubprocessToolOutcome(
+            envelope=envelope,
+            is_error=True,
+            executable=_attested_cli_executable(),
+            transport=McpTransport.INPROCESS,
+        )
     run = holder.get("run")
     if run is None:
         # The capture could not be acquired within the bound (a slow or wedged
         # prior call still holds it): signal the caller to degrade to subprocess.
         return None
     envelope, is_error = parse_cli_envelope(run)
-    return SubprocessToolOutcome(envelope=envelope, is_error=is_error, executable=_INPROCESS_MARKER)
+    return SubprocessToolOutcome(
+        envelope=envelope,
+        is_error=is_error,
+        executable=_attested_cli_executable(),
+        transport=McpTransport.INPROCESS,
+    )
 
 
 def _degraded_subprocess_outcome(
@@ -327,7 +367,7 @@ def _degraded_subprocess_outcome(
         outcome.envelope,
         _warm_degradation_notice(command_key=descriptor.command_key, wedged=wedged),
     )
-    return SubprocessToolOutcome(envelope=envelope, is_error=outcome.is_error, executable=_WEDGE_FALLBACK_MARKER)
+    return replace(outcome, envelope=envelope, transport=McpTransport.SUBPROCESS_FALLBACK)
 
 
 def _run_tool(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> SubprocessToolOutcome:
