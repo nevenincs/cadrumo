@@ -61,9 +61,10 @@ def test_plugin_manifest_carries_required_fields(tmp_path: Path) -> None:
     assert document["license"] == "Apache-2.0"
     assert document["author"] == {"name": "CADRUMO tax assistant project"}
     assert isinstance(document["keywords"], list) and document["keywords"]
-    # The one-liner distilled from the mcpb manifest states the never-files boundary.
+    # Bilingual (English + Spanish) copy; "never files" stated in the English section.
     assert "never files" in document["description"].lower()
-    assert document["description"].startswith("Operate Cadrumo through the Cadrumo Spanish-tax CLI:")
+    assert document["description"].startswith("English: Operate Cadrumo, the deterministic Spanish-tax CLI,")
+    assert "\nEspañol: " in document["description"]
     assert "aeat Spanish-tax CLI" not in document["description"]
 
 
@@ -102,16 +103,16 @@ def test_read_only_persona_maps_to_a_disallowed_tools_denylist(tmp_path: Path) -
     agents_dir = tmp_path / "agents"
     # The coordinator's tool scope declares itself read-only (orchestration only),
     # so it carries a workspace-mutation denylist; a state-mutating persona does not.
-    coordinator = _agent_frontmatter(agents_dir / "coordinator.md")
+    coordinator = _agent_frontmatter(agents_dir / "cadrumo-coordinator.md")
     assert coordinator["disallowedTools"] == ["Edit", "Write", "NotebookEdit"]
-    classifier = _agent_frontmatter(agents_dir / "classifier.md")
+    classifier = _agent_frontmatter(agents_dir / "cadrumo-classifier.md")
     assert "disallowedTools" not in classifier
 
 
 def test_plugin_agent_body_preserves_the_shipped_persona_prose(tmp_path: Path) -> None:
     materialise_plugin(tmp_path)
-    written = (tmp_path / "agents" / "coordinator.md").read_text(encoding=_UTF_8)
-    shipped = harness_root().joinpath("personas", "coordinator.md").read_text(encoding=_UTF_8)
+    written = (tmp_path / "agents" / "cadrumo-coordinator.md").read_text(encoding=_UTF_8)
+    shipped = harness_root().joinpath("personas", "cadrumo-coordinator.md").read_text(encoding=_UTF_8)
     # The persona prose rides verbatim as the agent system prompt after the frontmatter.
     assert written.endswith(shipped)
 
@@ -141,11 +142,11 @@ def test_version_interpolates_into_manifest_and_mcp_pin(tmp_path: Path) -> None:
 
 
 def test_persona_default_interpolates_into_user_config(tmp_path: Path) -> None:
-    materialise_plugin(tmp_path, persona_default="verifier")
+    materialise_plugin(tmp_path, persona_default="cadrumo-verifier")
     document = json.loads((tmp_path / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
     persona = document["userConfig"]["persona"]
     assert persona["type"] == "string"
-    assert persona["default"] == "verifier"
+    assert persona["default"] == "cadrumo-verifier"
     assert persona["required"] is False
 
 

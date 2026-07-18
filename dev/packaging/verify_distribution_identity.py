@@ -72,10 +72,52 @@ _LANGUAGE_LABEL_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"(?P<label>English|EN|Ingl[eé]s|Spanish|ES|Espa[nñ]ol)"
     r"(?:\*\*)?[ \t]*:[ \t]*",
 )
-# Translation wording is not approved by the verification-only ADR. A later,
-# separately authorised migration must add the product-reviewed exact pair for
-# each client-display field; keyword similarity alone can never approve copy.
-_APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple[str, str]]]] = {}
+# Approved English text extracted from the plugin description labeled section.
+# Must exactly match what _labeled_product_description returns for the English
+# section of _workspace._PLUGIN_DESCRIPTION (i.e. the text after "English: " and
+# before the "\nEspañol: " separator, stripped). Approved in exec record S06.
+_PLUGIN_DESCRIPTION_EN: Final[str] = (
+    "Operate Cadrumo, the deterministic Spanish-tax CLI, from Claude: "
+    "grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided "
+    "workflows, and human-confirmed execution of every state-changing step. Cadrumo "
+    "never files to AEAT - the taxpayer files outside the app - and all financial "
+    "data stays on-host in encrypted storage; only what the conversation shows "
+    "reaches the model provider. The server advertises an orientation core by default "
+    "(overview + contract + search/execute); set the surface option to 'full' to "
+    "advertise every verb up front."
+)
+# Approved Spanish text extracted from the plugin description labeled section.
+_PLUGIN_DESCRIPTION_ES: Final[str] = (
+    "Opera Cadrumo, la CLI determinista de impuestos españoles, desde "
+    "Claude: búsqueda fundamentada sobre el corpus legal BOE/AEAT incluido, flujos "
+    "guiados según la situación del contribuyente y ejecución con confirmación "
+    "humana de cada paso que modifica el estado. Cadrumo nunca presenta "
+    "declaraciones ante la AEAT - el contribuyente presenta fuera de la aplicación - "
+    "y todos los datos financieros permanecen en el equipo en almacenamiento "
+    "cifrado; solo lo que muestra la conversación llega al proveedor del modelo. El "
+    "servidor anuncia por defecto un núcleo de orientación (visión general + "
+    "contrato + buscar/ejecutar); configura la opción de superficie en 'full' para "
+    "anunciar todos los verbos desde el inicio."
+)
+# Per-claim keyword coverage: the plugin copy covers capability, on_host_storage,
+# and never_files_live in English; capability, on_host_storage, human_confirmation,
+# and never_files_live in Spanish. The remaining claims (safety, privacy,
+# human_confirmation-EN) are not present in this short client-display field —
+# see the mcpb_client_display long_description for full six-claim coverage.
+_APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple[str, str]]]] = {
+    # plugin.json description — used by the standalone Claude plugin.
+    ("claude_plugin_client_display", "description"): frozenset(
+        {
+            (_PLUGIN_DESCRIPTION_EN, _PLUGIN_DESCRIPTION_ES),
+        }
+    ),
+    # plugin.json description inside the marketplace plugins/cadrumo subtree.
+    ("claude_marketplace_plugin_client_display", "description"): frozenset(
+        {
+            (_PLUGIN_DESCRIPTION_EN, _PLUGIN_DESCRIPTION_ES),
+        }
+    ),
+}
 _EXPECTED_MODEL_FACING_DESCRIPTION_SHA256: Final[str] = (
     "2f58dacf1f917749e9510e7e5b706752992bd0eb997f0453fab82edda8391d6b"
 )

@@ -63,15 +63,29 @@ _PLUGIN_MANIFEST = "plugin.json"
 _PLUGIN_NAME = PRODUCT_IDENTITY.plugin_identifier
 _PYPI_DISTRIBUTION = PRODUCT_IDENTITY.distribution
 _PLUGIN_DISPLAY_NAME = f"{PRODUCT_IDENTITY.display_name} Spanish tax assistant"
-# Distilled from the mcpb manifest one-liner; keeps the never-files-live boundary
-# stated on the operator-facing surface.
+# Bilingual (English + Spanish) product copy approved in the S06 docs-authority
+# act. The labeled sections (English: / Español:) satisfy the verifier's bilingual
+# claim-parity parser. Wording changes must re-enter through a new S06-equivalent
+# approval record and re-enrollment in verify_distribution_identity.py.
 _PLUGIN_DESCRIPTION = (
-    f"Operate {PRODUCT_IDENTITY.prose_name} through the Cadrumo Spanish-tax CLI: "
-    "grounded search over the bundled BOE/AEAT "
-    "legal corpus, situation-keyed guided workflows, and gated execution that "
-    "never files to AEAT. The server advertises an orientation core by default "
+    "English: Operate Cadrumo, the deterministic Spanish-tax CLI, from Claude: "
+    "grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided "
+    "workflows, and human-confirmed execution of every state-changing step. Cadrumo "
+    "never files to AEAT - the taxpayer files outside the app - and all financial "
+    "data stays on-host in encrypted storage; only what the conversation shows "
+    "reaches the model provider. The server advertises an orientation core by default "
     "(overview + contract + search/execute); set the surface option to 'full' to "
-    "advertise every verb up front."
+    "advertise every verb up front.\n"
+    "Español: Opera Cadrumo, la CLI determinista de impuestos españoles, desde "
+    "Claude: búsqueda fundamentada sobre el corpus legal BOE/AEAT incluido, flujos "
+    "guiados según la situación del contribuyente y ejecución con confirmación "
+    "humana de cada paso que modifica el estado. Cadrumo nunca presenta "
+    "declaraciones ante la AEAT - el contribuyente presenta fuera de la aplicación - "
+    "y todos los datos financieros permanecen en el equipo en almacenamiento "
+    "cifrado; solo lo que muestra la conversación llega al proveedor del modelo. El "
+    "servidor anuncia por defecto un núcleo de orientación (visión general + "
+    "contrato + buscar/ejecutar); configura la opción de superficie en 'full' para "
+    "anunciar todos los verbos desde el inicio."
 )
 _PLUGIN_AUTHOR_NAME = f"{PRODUCT_IDENTITY.display_name} tax assistant project"
 _PLUGIN_LICENSE = "Apache-2.0"
