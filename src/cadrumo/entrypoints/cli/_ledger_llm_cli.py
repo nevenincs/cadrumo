@@ -424,6 +424,41 @@ def _emit_single(
     _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
 
 
+def _emit_llm_single_classify(
+    ctx: typer.Context,
+    result: ManualLedgerTransactionResult,
+    *,
+    extra_lines: tuple[str, ...] = (),
+) -> None:
+    """Emit the canonical single-transaction classify quintet for an LLM apply result.
+
+    The ``--llm --apply`` and ``--llm --saturate --apply`` terminals are both
+    single-transaction mutations that emit the mutation quintet
+    (``LedgerClassifySingleResult``). ``extra_lines`` carries any substrate lines
+    (e.g. the saturated IVA category) surfaced between the provenance and the
+    review status.
+    """
+    from ._ledger_payloads import LedgerClassifySingleResult
+
+    review_status = ledger_transaction_review_status(result.transaction)
+    classify_result = LedgerClassifySingleResult.model_validate(
+        {
+            "bucket_id": result.ref.bucket_id,
+            "transaction_id": result.transaction.transaction_id,
+            "bucket_event_ids": list(result.bucket_event_ids),
+            "review_status": review_status,
+            "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
+        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
+        *extra_lines,
+        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+    ]
+    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+
+
 def ledger_classify_llm(
     ctx: typer.Context,
     *,
@@ -452,7 +487,6 @@ def ledger_classify_llm(
     ``--classification`` / ``--from-csv`` override.
     """
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
-    from ._ledger_payloads import LedgerClassifySingleResult
 
     if classification is not None or from_csv is not None:
         raise _bad(
@@ -574,27 +608,9 @@ def ledger_classify_llm(
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     assert isinstance(result, ManualLedgerTransactionResult)
-
-    transaction_payload = ledger_transaction_payload(result.transaction)
-    review_status = ledger_transaction_review_status(result.transaction)
-    # D1: the --llm --apply path is a single-transaction mutation, so it emits the
-    # canonical mutation quintet (LedgerClassifySingleResult); the llm provenance
-    # is surfaced in the operator-facing text lines below.
-    classify_result = LedgerClassifySingleResult.model_validate(
-        {
-            "bucket_id": result.ref.bucket_id,
-            "transaction_id": result.transaction.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    lines = [
-        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
-        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-    ]
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
+    # D1: the --llm --apply path is a single-transaction mutation; it emits the
+    # canonical mutation quintet with the llm provenance in the text lines.
+    _emit_llm_single_classify(ctx, result)
 
 
 def ledger_saturate_llm(
@@ -627,7 +643,6 @@ def ledger_saturate_llm(
     ``classify`` flags remain the explicit per-field override.
     """
     from ._ledger_llm_payloads import LedgerClassifyLlmSaturateResult
-    from ._ledger_payloads import LedgerClassifySingleResult
 
     if classification is not None or from_csv is not None:
         raise _bad(
@@ -768,28 +783,13 @@ def ledger_saturate_llm(
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
     assert isinstance(result, ManualLedgerTransactionResult)
-
-    transaction_payload = ledger_transaction_payload(result.transaction)
-    review_status = ledger_transaction_review_status(result.transaction)
     # D1: the --llm --saturate --apply path is a single-transaction mutation; it
-    # emits the canonical mutation quintet (the saturated substrate is already
-    # persisted on `transaction`), with the substrate surfaced in the text lines.
-    classify_result = LedgerClassifySingleResult.model_validate(
-        {
-            "bucket_id": result.ref.bucket_id,
-            "transaction_id": result.transaction.transaction_id,
-            "bucket_event_ids": list(result.bucket_event_ids),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
+    # emits the canonical mutation quintet with the derived IVA category in the lines.
+    _emit_llm_single_classify(
+        ctx,
+        result,
+        extra_lines=(f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",),
     )
-    lines = [
-        f"{tr('cli.ledger.labels.id')}\t{result.transaction.transaction_id}",
-        f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{result.transaction.classified_by}",
-        f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
-        f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-    ]
-    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
 
 
 def ledger_operator_iva_derive(
