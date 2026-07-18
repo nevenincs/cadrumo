@@ -17,6 +17,7 @@ import os
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 from typing import Any, Final
@@ -228,21 +229,62 @@ def main(argv: list[str] | None = None) -> int:
     run_root = evidence_root / f"run-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
     marketplace = run_root / "marketplace"
     workspace = run_root / "workspace"
-    config_dir = run_root / "claude-config"
+    # The isolated Claude config lives OUTSIDE the retained evidence tree: a
+    # subscription credential copied into it must never reach evidence bytes
+    # that later upload as CI artifacts or publish with a release.
+    config_dir = Path(tempfile.mkdtemp(prefix="cadrumo-plugin-smoke-claude-config-"))
     logs = run_root / "logs"
     workspace.mkdir(parents=True)
-    config_dir.mkdir(parents=True)
 
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
     environment.pop("PYTHONHOME", None)
     environment.pop("PYTHONPATH", None)
+    default_config_dir = Path(os.environ.get("CLAUDE_CONFIG_DIR", str(Path.home() / ".claude")))
     environment["CLAUDE_CONFIG_DIR"] = str(config_dir)
+    subscription_credential = default_config_dir / ".credentials.json"
+    if subscription_credential.is_file():
+        shutil.copy2(subscription_credential, config_dir / ".credentials.json")
     has_claude_credential = bool(
-        environment.get("ANTHROPIC_API_KEY") or environment.get("ANTHROPIC_AUTH_TOKEN"),
+        environment.get("ANTHROPIC_API_KEY")
+        or environment.get("ANTHROPIC_AUTH_TOKEN")
+        or subscription_credential.is_file(),
     )
     if args.run_claude_session and not has_claude_credential:
-        raise SystemExit("--run-claude-session requires ANTHROPIC_API_KEY or ANTHROPIC_AUTH_TOKEN")
+        raise SystemExit(
+            "--run-claude-session requires ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, "
+            "or a subscription-authenticated Claude Code login "
+            f"({subscription_credential})",
+        )
 
+    try:
+        return _prove_installed_plugin(
+            args,
+            claude=claude,
+            cohort=cohort,
+            run_root=run_root,
+            marketplace=marketplace,
+            workspace=workspace,
+            logs=logs,
+            environment=environment,
+            has_claude_credential=has_claude_credential,
+        )
+    finally:
+        shutil.rmtree(config_dir, ignore_errors=True)
+
+
+def _prove_installed_plugin(
+    args: argparse.Namespace,
+    *,
+    claude: Path,
+    cohort: PythonCohort,
+    run_root: Path,
+    marketplace: Path,
+    workspace: Path,
+    logs: Path,
+    environment: dict[str, str],
+    has_claude_credential: bool,
+) -> int:
+    """Install the marketplace plugin and retain protocol plus session evidence."""
     manifest = materialise_marketplace(marketplace, cohort=cohort)
     _run(
         [str(claude), "plugin", "marketplace", "add", str(marketplace)],
