@@ -13,7 +13,7 @@ import subprocess
 import time
 from collections.abc import Iterable, Iterator, Mapping
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -62,9 +62,23 @@ from ._workbook_parity_types import (
     WorkbookScanStatus,
 )
 
-_PARITY_DEFAULTS = _Settings()
-
 _log = get_logger(__name__)
+
+
+def _parity_settings() -> _Settings:
+    """Load parity-timeout settings at call time, never at import time.
+
+    A module-scope ``Settings()`` resolves the storage root while this module
+    imports, so any refusal that resolution raises (for example the
+    former-product-state refusal) would kill every entrypoint that merely
+    imports the registry package - including the MCP server before it can
+    speak the protocol. Deferring to call time keeps the refusal on the
+    command that actually needs storage, where it surfaces instructively.
+    """
+    from ....core.config import load_settings
+
+    return load_settings()
+
 
 __all__ = [
     "ParityStatus",
@@ -131,7 +145,9 @@ class _BinaryXlsConversionContext:
 class WorkbookScanOptions:
     """Controls for bounded workbook discovery."""
 
-    per_file_timeout_seconds: float = _PARITY_DEFAULTS.cadrumo_workbook_parity_per_file_timeout_s
+    per_file_timeout_seconds: float = field(
+        default_factory=lambda: _parity_settings().cadrumo_workbook_parity_per_file_timeout_s,
+    )
     max_formula_refs: int = 500
 
 
@@ -423,7 +439,7 @@ def run_workbook_with_libreoffice(
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=_PARITY_DEFAULTS.cadrumo_workbook_parity_recalc_timeout_s,
+                timeout=_parity_settings().cadrumo_workbook_parity_recalc_timeout_s,
             )
         except subprocess.TimeoutExpired as exc:
             raise RegistryValidationError("LibreOffice workbook recalculation timed out") from exc
@@ -572,7 +588,7 @@ def _converted_binary_xls_path(
                 check=True,
                 capture_output=True,
                 text=True,
-                timeout=_PARITY_DEFAULTS.cadrumo_workbook_parity_libreoffice_timeout_s,
+                timeout=_parity_settings().cadrumo_workbook_parity_libreoffice_timeout_s,
             )
         except subprocess.TimeoutExpired as exc:
             raise _BinaryXlsConversionError("LibreOffice binary XLS conversion timed out") from exc
