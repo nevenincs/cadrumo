@@ -217,7 +217,7 @@ def prompt_document(name: str, arguments: dict[str, str] | None = None) -> Promp
             brief_text=_orientation_brief(),
             embedded=(
                 EmbeddedDocument(
-                    uri=resource_uri(HarnessResourceKind.RULE, "operating-rules"),
+                    uri=resource_uri(HarnessResourceKind.RULE, "cadrumo-operating-rules"),
                     text=operator_rules_text(),
                 ),
             ),
