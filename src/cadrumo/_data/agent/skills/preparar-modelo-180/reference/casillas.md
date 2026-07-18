@@ -56,8 +56,8 @@ not by itself mean the per-perceptor breakdown is complete.
   covers the full year.
 - A nonzero perceptor count with a zero total base or zero total
   retenciones on the declarante summary is the under-declaration shape to
-  question before any export (see `operator-grounding` and
-  `operator-safety-handoff`).
+  question before any export (see `cadrumo-operator-grounding` and
+  `cadrumo-operator-safety-handoff`).
 - The per-perceptor rows are manual: a declarante summary that reconciles
   against the four Modelo 115 quarters does not guarantee the per-perceptor
   breakdown is complete or that it sums to those totals. Check it

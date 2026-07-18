@@ -77,7 +77,7 @@ def test_default_layout_is_the_workspace_mirror(tmp_path: Path) -> None:
     payload = json.loads(result.output)["result"]
     # No --layout means the Claude-native workspace mirror, not the plugin.
     assert payload["layout"] == "workspace"
-    assert (out / ".claude" / "rules" / "operator-operating-rules.md").is_file()
+    assert (out / ".claude" / "rules" / "cadrumo-operator-operating-rules.md").is_file()
     assert not (out / ".claude-plugin").exists()
 
 

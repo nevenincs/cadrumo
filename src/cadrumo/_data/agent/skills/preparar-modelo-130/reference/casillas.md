@@ -37,7 +37,7 @@ directa). The load-bearing casillas an operator reads:
   re-deriving the arithmetic.
 - A positive rendimiento with a zero instalment, or positive ingresos with a zero
   result and no declared reduction, is the under-declaration shape to question
-  before any export (see `operator-grounding` and `operator-safety-handoff`).
+  before any export (see `cadrumo-operator-grounding` and `cadrumo-operator-safety-handoff`).
 - Cross-quarter carry (the prior-instalment subtraction) is revision-stamped; if a
   prior quarter's value cannot be confirmed, surface the advisory rather than
   trusting a silent zero.

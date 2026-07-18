@@ -4,7 +4,7 @@ Guards against wrong lifecycle sequencing surfacing as a cross-surface contradic
 ``modelo readiness`` reporting ``ready: True`` for a modelo whose ``work`` verb is
 blocked. This is the enforcement surface for the "Contradictions between surfaces are a
 stop, not a retry" section of
-``src/cadrumo/_data/agent/rules/operator-lifecycle-ordering.md``.
+``src/cadrumo/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``.
 
 The only deterministic, clock-free CLI reproduction of the contradiction relied on a
 modelo revision with ZERO registry calculation bindings: Modelo 347
@@ -225,7 +225,7 @@ def test_retry_past_the_contradiction_fails_the_dimension() -> None:
     (``readiness_ready=True, blocking_step_refused=True``) and appends retry-shaped
     mutating steps (``modelo.work.calculate`` with tweaked args, then ``modelo.export``)
     after the blocking-step boundary - reproducing the exact "retry-until-it-works"
-    pattern ``operator-lifecycle-ordering`` forbids ("never to re-run export or file
+    pattern ``cadrumo-operator-lifecycle-ordering`` forbids ("never to re-run export or file
     against an unverified or previously-blocked revision to route around the finding") -
     and proves the checker catches it. Without this proof the dimension could pass
     vacuously regardless of what trajectory it was handed.

@@ -68,7 +68,7 @@ The load-bearing groups an operator navigates:
 - A strictly positive base liquidable general with a zero cuota resultante de
   la autoliquidación and no declared minimo-personal-y-familiar or deducción
   explanation is the under-declaration shape to question before any export
-  (see `operator-grounding` and `operator-safety-handoff`). It is legitimate
+  (see `cadrumo-operator-grounding` and `cadrumo-operator-safety-handoff`). It is legitimate
   for a filer whose base sits at or below the mínimo, so confirm rather than
   assume either way.
 - The Modelo 130/131 pagos-fraccionados fold-in and the retenciones

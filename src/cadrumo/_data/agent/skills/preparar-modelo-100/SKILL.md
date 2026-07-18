@@ -108,7 +108,7 @@ reporting positive taxable income with no computed liability.
   negative bases). Only the actividades económicas section, where the
   taxpayer has one, is ledger-derived the way Modelo 130/303 are. Route a
   missing profile fact or a missing manual entry to the role that owns it
-  (see `operator-orientation-routing`) rather than guessing a value.
+  (see `cadrumo-operator-orientation-routing`) rather than guessing a value.
 - **The cuota chain is long and staged.** Base imponible general and del
   ahorro, base liquidable general and del ahorro, the estatal and autonómica
   escalas, the mínimo personal y familiar at both levels, cuota íntegra,

@@ -52,7 +52,7 @@ retenciones/ingresos a cuenta withheld on them.
   by re-deriving the arithmetic.
 - A nonzero perceptor count with a zero base or zero retención sum on the same
   ledger-derived block is the under-declaration shape to question before any
-  export (see `operator-grounding` and `operator-safety-handoff`).
+  export (see `cadrumo-operator-grounding` and `cadrumo-operator-safety-handoff`).
 - Casilla 29's prior-autoliquidación correction is operator-supplied, not
   cross-period carried; do not assume it defaults to zero without asking
   whether an amendment applies.

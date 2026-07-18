@@ -661,7 +661,7 @@ def check_contradiction_scenario(
         failures.append(
             f"trajectory continues with mutating verb(s) {', '.join(offending)} after the signalled "
             f"contradiction at '{scenario.must_halt_after}' — the operator must stop and report a "
-            "readiness-vs-blocking-surface disagreement, never retry past it (operator-lifecycle-ordering)",
+            "readiness-vs-blocking-surface disagreement, never retry past it (cadrumo-operator-lifecycle-ordering)",
         )
 
     return ContradictionVerdict(

@@ -69,8 +69,8 @@ groups an operator navigates:
 - A strictly positive `00500` with a zero `00501`, or a strictly positive
   `00501` with a zero base imponible (`DP200014:00552`) and no declared
   ajuste/BIN compensation/corrección explaining it, is the under-declaration
-  shape to question before any export (see `operator-grounding` and
-  `operator-safety-handoff`). It is legitimate for a loss-making year or a
+  shape to question before any export (see `cadrumo-operator-grounding` and
+  `cadrumo-operator-safety-handoff`). It is legitimate for a loss-making year or a
   year with full BIN compensation, so confirm rather than assume either way.
 - The BIN compensation applied (`DP200014:00547`) is BLOCKING-capped by both
   the art. 26.1 elective ceiling and the opening stock (`00670`) - a verify

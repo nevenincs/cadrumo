@@ -100,7 +100,7 @@ Modelo 202 and Modelo 303 for a sociedad.
   extracontables and BIN compensation - never re-derive that arithmetic
   yourself, read it from the calculate step. Route a missing or disputed
   accounting figure to the role that owns operator-entered facts (see
-  `operator-orientation-routing`); never assert a resultado contable value
+  `cadrumo-operator-orientation-routing`); never assert a resultado contable value
   yourself.
 - **A chained sequence of under-declaration ADVISORY guards spans that
   handoff.** Because `00500`, `00501`, and the base imponible are manually

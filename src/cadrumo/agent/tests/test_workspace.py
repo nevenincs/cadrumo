@@ -35,7 +35,7 @@ def test_materialise_writes_the_claude_native_layout(tmp_path: Path) -> None:
     assert manifest.personas_written == 7
     assert manifest.skills_written == len(_shipped_skill_names())
 
-    assert (tmp_path / ".claude" / "rules" / "operator-operating-rules.md").is_file()
+    assert (tmp_path / ".claude" / "rules" / "cadrumo-operator-operating-rules.md").is_file()
     assert (tmp_path / ".claude" / "agents" / "coordinator.md").is_file()
     assert (tmp_path / ".claude" / "skills" / "preparar-modelo-130" / "SKILL.md").is_file()
     # The progressive-disclosure reference a SKILL cites must travel with it.
