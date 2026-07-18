@@ -37,7 +37,8 @@ from ._models import (
 _log = get_logger(__name__)
 
 _CACHE_NAMESPACE = LLM_CACHE_NAMESPACE.namespace
-_CACHE_VERSION = 1
+_CACHE_VERSION = LLM_CACHE_NAMESPACE.schema_version
+_CACHE_SENSITIVITY = LLM_CACHE_NAMESPACE.sensitivity
 
 
 class LLMCache:
@@ -107,7 +108,7 @@ class LLMCache:
         record = secure_object_repository_for_active_bucket().load(
             _CACHE_NAMESPACE,
             self._object_key_for(key),
-            expected_class=SensitivityClass.DIAGNOSTIC,
+            expected_class=_CACHE_SENSITIVITY,
             max_supported_version=_CACHE_VERSION,
         )
         if record is None:
@@ -180,7 +181,7 @@ class LLMCache:
             secure_object_repository_for_active_bucket().save(
                 namespace=_CACHE_NAMESPACE,
                 object_key=self._object_key_for(key),
-                classification=SensitivityClass.DIAGNOSTIC,
+                classification=_CACHE_SENSITIVITY,
                 schema_version=_CACHE_VERSION,
                 written_at=now(),
                 payload=payload,
@@ -202,7 +203,7 @@ class LLMCache:
             record
             for record in secure_object_repository_for_active_bucket().list_records(
                 _CACHE_NAMESPACE,
-                expected_class=SensitivityClass.DIAGNOSTIC,
+                expected_class=_CACHE_SENSITIVITY,
                 max_supported_version=_CACHE_VERSION,
             )
             if self._payload_root_matches(record.payload)
@@ -238,7 +239,7 @@ class LLMCache:
         rows: list[tuple[CachedEntry, str]] = []
         for record in repository.list_records(
             _CACHE_NAMESPACE,
-            expected_class=SensitivityClass.DIAGNOSTIC,
+            expected_class=_CACHE_SENSITIVITY,
             max_supported_version=_CACHE_VERSION,
         ):
             if not self._payload_root_matches(record.payload):

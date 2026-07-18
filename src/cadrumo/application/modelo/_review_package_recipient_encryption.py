@@ -124,7 +124,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_ENCRYPTION_KEY_NAMESPACE as _NAMESPACE,
 )
-from ...adapters.persistence.storage import DecryptionError, SensitivityClass
+from ...adapters.persistence.storage import DecryptionError
 from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
@@ -260,7 +260,7 @@ def ensure_recipient_encryption_keypair(
     existing = repository.load(
         _NAMESPACE.namespace,
         object_key,
-        expected_class=SensitivityClass.SECRET,
+        expected_class=_NAMESPACE.sensitivity,
         max_supported_version=_NAMESPACE.schema_version,
     )
     if existing is not None:
@@ -277,7 +277,7 @@ def ensure_recipient_encryption_keypair(
     repository.save(
         namespace=_NAMESPACE.namespace,
         object_key=object_key,
-        classification=SensitivityClass.SECRET,
+        classification=_NAMESPACE.sensitivity,
         schema_version=_NAMESPACE.schema_version,
         written_at=keypair.created_at,
         payload=keypair.model_dump_json().encode(UTF_8_ENCODING),
@@ -307,7 +307,7 @@ def load_recipient_encryption_keypair(
     record = repository.load(
         _NAMESPACE.namespace,
         object_key,
-        expected_class=SensitivityClass.SECRET,
+        expected_class=_NAMESPACE.sensitivity,
         max_supported_version=_NAMESPACE.schema_version,
     )
     if record is None:
