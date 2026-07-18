@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:20+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:1
 msgid "Recording a filing, and why the tool never files for you"
-msgstr ""
+msgstr "Bevallás rögzítése, és miért nem nyújt be sosem az eszköz Ön helyett"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:3
 msgid ""
@@ -31,10 +30,16 @@ msgid ""
 "answer is that you file it yourself, and the tool keeps a careful record "
 "around that act. This page is about why the boundary sits where it does."
 msgstr ""
+"Ez az oldal az út utolsó szakaszáról szól: a határvonalról az Ön saját "
+"gépén végzett munka és a valódi Agencia Estatal de Administración "
+"Tributaria (AEAT, a spanyol adóhivatal) között. A rövid válasz az, hogy "
+"Ön maga nyújtja be, az eszköz pedig gondos nyilvántartást vezet e "
+"cselekvés körül. Ez az oldal arról szól, miért ott húzódik a határvonal, "
+"ahol."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:9
 msgid "The boundary is permanent"
-msgstr ""
+msgstr "A határvonal állandó"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:11
 msgid ""
@@ -44,6 +49,12 @@ msgid ""
 "on. The submit path is built to refuse, every time, with a clear error "
 "rather than a quiet attempt."
 msgstr ""
+"Az eszköz sosem nyújthat be egy bevallást, nem regisztrálhat semmit, és "
+"nem változtathat meg egyetlen értéket sem a hivatalnál. Ez nem egy óvatos"
+" alapértelmezés, amelyet később kikapcsolhatna. Nincs beállítás, nincs "
+"kapcsoló, és nincs szakértői mód, amely bekapcsolná. A beküldési útvonal "
+"úgy épült, hogy minden alkalommal elutasítson, egy világos hibaüzenettel,"
+" nem pedig egy csendes próbálkozással."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:13
 msgid ""
@@ -53,10 +64,15 @@ msgid ""
 "impossible, the tool removes that risk entirely and keeps you in the "
 "chair where the law expects you to be."
 msgstr ""
+"Ez az elutasítás szándékos. Egy adóbevallás benyújtása jogi cselekmény, "
+"az Ön nevével. Egy szoftver, amely megnyomhatná a gombot Ön helyett, "
+"olyan kockázatot hordozna, amelyet sosem láthat teljesen át. Azzal, hogy "
+"a beküldést lehetetlenné teszi, az eszköz teljesen kiküszöböli ezt a "
+"kockázatot, és Önt tartja a székben, ahol a törvény elvárja."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:15
 msgid "Read-only access is the only connection"
-msgstr ""
+msgstr "A csak olvasható hozzáférés az egyetlen kapcsolat"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:17
 msgid ""
@@ -66,6 +82,12 @@ msgid ""
 "agency holds about you. It reads this so it can show it to you and "
 "compare it against your local work."
 msgstr ""
+"Amikor összeköti az eszközt a hivatallal, egyetlen dolgot ad meg neki: "
+"azt a képességet, hogy csak megtekintésre olvassa a saját adatait az "
+"AEAT-tól. Megnézheti a már benyújtott bevallásait, a nyilvántartott "
+"igazolásokat, és a tényeket, amelyeket a hivatal tart Önről. Azért "
+"olvassa ezt, hogy megmutassa Önnek, és összehasonlítsa a helyi "
+"munkájával."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:19
 msgid ""
@@ -73,10 +95,13 @@ msgid ""
 "edits, or registers. Reading your data, view-only, is the whole of what "
 "it can do at the agency."
 msgstr ""
+"Az ellenkező irányba semmi sem áramlik. A kapcsolatnak nincs útvonala, "
+"amely írna, szerkesztene vagy regisztrálna. Az adatai csak megtekintésre "
+"olvasása minden, amit a hivatalnál tehet."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:21
 msgid "You upload the file yourself"
-msgstr ""
+msgstr "Ön maga tölti fel a fájlt"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:23
 msgid ""
@@ -87,16 +112,25 @@ msgid ""
 "holds your credentials for this and never stands between you and the "
 "agency at that moment."
 msgstr ""
+"A valódi beküldés az Ön saját böngészőjében történik, a hivatal "
+"weboldalán, az Ön saját bejelentkezési hitelesítő adataival – egy "
+"digitális tanúsítvánnyal vagy Cl@ve-val (a spanyol kormány közös "
+"azonosítási bejelentkezésével). Önmagaként jelentkezik be, feltölti az "
+"eszköz által előkészített fájlt, és megnyomja a beküldést. Az eszköz "
+"sosem őrzi ehhez a hitelesítő adatait, és sosem áll Ön és a hivatal közé "
+"abban a pillanatban."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:25
 msgid ""
 "For the steps, see [Upload your exported modelo at the AEAT portal"
 "](../how-to/file-at-aeat.md)."
 msgstr ""
+"A lépésekhez lásd [Töltse fel az exportált modelóját az AEAT portálján"
+"](../how-to/file-at-aeat.md)."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:27
 msgid "Recording a filing in your own records"
-msgstr ""
+msgstr "Egy bevallás rögzítése a saját nyilvántartásában"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:29
 msgid ""
@@ -105,6 +139,10 @@ msgid ""
 " filed - a local note in your own records, like writing \"sent\" next to "
 "an invoice in your ledger."
 msgstr ""
+"Miután Ön maga feltöltötte a bevallást, visszatér, és véglegesként jelöli"
+" meg azt az elmentett változatot a saját előzményében. Ez a benyújtás "
+"rögzítése – egy helyi feljegyzés a saját nyilvántartásában, mint amikor "
+"egy számla mellé odaírja a ledgerében, hogy „elküldve”."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:31
 msgid ""
@@ -113,10 +151,14 @@ msgid ""
 "filed, so that later, when you look back, you know which numbers went out"
 " and when."
 msgstr ""
+"Ez semmit sem változtat a hivatalnál. Nem nyújt be, nem küld újra, és nem"
+" erősít meg semmit az AEAT-tal. Egyetlen változatot jelöl meg a "
+"válaszként, amelyet ténylegesen benyújtott, hogy később, amikor "
+"visszatekint, tudja, mely számok mentek ki és mikor."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:33
 msgid "Checking your record against the agency's receipt"
-msgstr ""
+msgstr "A nyilvántartása egyeztetése a hivatal igazolásával"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:35
 msgid ""
@@ -125,6 +167,10 @@ msgid ""
 "against that receipt to catch any disagreement. This is checking your "
 "record against the agency's receipt."
 msgstr ""
+"Amikor benyújt, a hivatal átad Önnek egy justificantét – a hivatalos "
+"igazolást arról, amit kapott. Az eszköz összehasonlíthatja a helyi "
+"számait ezzel az igazolással, hogy elkapjon bármely eltérést. Ez a "
+"nyilvántartása egyeztetése a hivatal igazolásával."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:37
 msgid ""
@@ -132,16 +178,22 @@ msgid ""
 " agency to do its work. You hand it the justificante; it reports whether "
 "your record matches, diverges, or doesn't line up with any receipt yet."
 msgstr ""
+"Az összehasonlítás csak az Ön által megadott igazolást olvassa. A "
+"munkájához nem lép kapcsolatba a hivatallal. Ön átadja neki a "
+"justificantét; az jelenti, hogy a nyilvántartása egyezik, eltér, vagy még"
+" nem illeszkedik egyetlen igazoláshoz sem."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:39
 msgid ""
 "For the steps, see [Reconcile a filed modelo against its justificante"
 "](../how-to/reconcile.md)."
 msgstr ""
+"A lépésekhez lásd [Egyeztessen egy benyújtott modelót a justificantéjével"
+"](../how-to/reconcile.md)."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:41
 msgid "What this comparison can and can't tell you"
-msgstr ""
+msgstr "Mit tud és mit nem tud megmondani ez az összehasonlítás"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:43
 msgid ""
@@ -154,10 +206,19 @@ msgid ""
 "in [Reconcile a filed modelo against its justificante](../how-"
 "to/reconcile.md)."
 msgstr ""
+"Az összehasonlítás megerősíti, hogy a helyi nyilvántartása egyezik az "
+"igazolás fejlécmezőivel – a modelo, a bevallási év, az időszak és az "
+"adóazonosítója –, és megnevez minden mezőt, amely eltér. Nem hasonlítja "
+"össze az egyes rovatértékeket, és nem élő újraellenőrzése a számításának "
+"a hivatallal szemben: ezen lépések egyike sem vezeti le újra az adóját; "
+"azt erősítik meg, mi került benyújtásra, és őrzik meg annak bizonyítékát."
+" A pontos hatókör és az eltéréskezelési lépések az [Egyeztessen egy "
+"benyújtott modelót a justificantéjével](../how-to/reconcile.md) oldalon "
+"találhatók."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:51
 msgid "Where this sits in the journey"
-msgstr ""
+msgstr "Hol helyezkedik el ez az útban"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:53
 msgid ""
@@ -166,6 +227,11 @@ msgid ""
 "result - is yours to do locally; this page is where that local work meets"
 " the real agency, across a line the tool will not cross."
 msgstr ""
+"Ez a folyamat vége, amelyet az [áttekintés](index.md) vázol fel. Minden, "
+"ami előtte van – a modelo felépítése, ellenőrzése, az eredmény rögzítése "
+"–, az Öné, helyben elvégzendő; ez az oldal az, ahol az a helyi munka "
+"találkozik a valódi hivatallal, egy vonal mentén, amelyet az eszköz nem "
+"lép át."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:55
 msgid ""
@@ -175,4 +241,10 @@ msgid ""
 "evidence the tool can lean on for later returns, which [How filings build"
 " on earlier ones](building-on-earlier-filings.md) explains."
 msgstr ""
+"Ha egy összehasonlítás eltérést mutat, és Ön kijavítja, a kijavított "
+"változat újraellenőrzését az [Egy számítás szerkesztése és ellenőrzése"
+"](editing-and-verifying.md) ismerteti. És amint egy bevallás rögzült, "
+"bizonyítékká válik, amelyre az eszköz későbbi bevallásoknál támaszkodhat,"
+" amit a [Hogyan épülnek a bevallások a korábbiakra](building-on-earlier-"
+"filings.md) magyaráz."
 

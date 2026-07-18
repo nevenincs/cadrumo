@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:20+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../explanation/editing-and-verifying.md:1
 msgid "Editing and verifying a calculation"
-msgstr ""
+msgstr "Egy számítás szerkesztése és ellenőrzése"
 
 #: ../../explanation/editing-and-verifying.md:3
 #, python-brace-format
@@ -32,10 +31,15 @@ msgid ""
 "{term}`modelo`; for the step-by-step actions it links out to the how-to "
 "guides."
 msgstr ""
+"Ez az oldal az eszköz szívében rejlő két gondolatról szól: mi is "
+"valójában egy elmentett számítás, és mit mond el – és mit nem – a "
+"teljességi ellenőrzés. Mindennapi adózóknak íródott, akik egy "
+"{term}`modelo`n dolgoznak; a lépésről lépésre teendőkhöz a how-to "
+"útmutatókra hivatkozik."
 
 #: ../../explanation/editing-and-verifying.md:9
 msgid "A calculation is a saved version, not a final answer"
-msgstr ""
+msgstr "A számítás elmentett változat, nem végleges válasz"
 
 #: ../../explanation/editing-and-verifying.md:11
 msgid ""
@@ -48,6 +52,15 @@ msgid ""
 "its numbers commit to nothing until you decide they do. The mechanics "
 "live in [The filing workflow](../how-to/filing-spine.md)."
 msgstr ""
+"Minden alkalommal, amikor lefuttat egy számítást, az eszköz ezt az "
+"eredményt saját változatként menti el, és megtartja a korábbiakat is. "
+"Semmi sem íródik felül. Az adóügyi munka ritkán helyes elsőre: beír egy "
+"adatot, számol, észrevesz valami eltérőt, kijavítja, és újra számol – és "
+"minden próbálkozás a lemezen marad, a pontos tartalma alapján azonosítva,"
+" így összehasonlíthatja a változatokat és visszaléphet. Egy elmentett "
+"változat egy próbálkozás nyilvántartása, nem ítélet; számai semmire sem "
+"köteleznek, amíg Ön így nem dönt. A mechanika [A bevallási munkafolyamat"
+"](../how-to/filing-spine.md) oldalon található."
 
 #: ../../explanation/editing-and-verifying.md:20
 msgid ""
@@ -57,10 +70,16 @@ msgid ""
 "[Review and supply calculation inputs](../how-to/review-calculation-"
 "values.md)."
 msgstr ""
+"Egy modelo casillákból (számozott rovatokból) áll. Minden rovat vagy "
+"tartalmaz egy értéket, vagy vár egyre. A szerkesztés az a művelet, "
+"amellyel megadja egy rovatnak azt az értéket, amelyre az űrlapnak még "
+"szüksége van, majd újraszámol, hogy az összegek ezt tükrözzék – lásd "
+"[Számítási bemenetek áttekintése és megadása](../how-to/review-"
+"calculation-values.md)."
 
 #: ../../explanation/editing-and-verifying.md:25
 msgid "What verifying checks"
-msgstr ""
+msgstr "Mit ellenőriz a verifikálás"
 
 #: ../../explanation/editing-and-verifying.md:27
 msgid ""
@@ -76,6 +95,18 @@ msgid ""
 "finding is covered in [Verify a draft filing](../how-to/verification-"
 "reports.md)."
 msgstr ""
+"A verifikálás teljességi ellenőrzést futtat egy piszkozaton a hivatalnak "
+"az adott modelóra és évre közzétett szabályaival szemben: minden kötelező"
+" rovatnak van értéke, az összegek egyeznek, egyik rovat sem mond ellent a"
+" másiknak, és semmi sem gátolja az űrlapot – beleértve a piszkozaton "
+"kívüli feltételeket is, például hogy egy korábbi időszak, amelyre ez az "
+"űrlap épül, be van-e nyújtva és bizonyítékkal alátámasztva. Az ellenőrzés"
+" az eredménytől függetlenül elment egy jelentést, és a piszkozat három "
+"állapot egyikébe kerül: **teljes** (verifikált és zárolt), **hiányos** "
+"(kötelező rovatok még üresek), vagy **gátolt** (egy megbukott szabály "
+"vagy egy feloldatlan függőség, a jelentésben megnevezve). Az ellenőrzés "
+"futtatását és az egyes megállapítások kezelését a [Egy piszkozatbevallás "
+"verifikálása](../how-to/verification-reports.md) oldal ismerteti."
 
 #: ../../explanation/editing-and-verifying.md:38
 msgid ""
@@ -84,10 +115,17 @@ msgid ""
 "succeed\", or \"I am on time\" - the tool never contacts AEAT, and the "
 "check ignores deadlines entirely."
 msgstr ""
+"Egy sikeres ellenőrzés helyi ellenőrzés: azt jelenti, hogy „a piszkozatom"
+" teljes és következetes”, sosem azt, hogy „az AEAT elfogadta a "
+"bevallásomat”, „a feltöltés sikerülni fog”, vagy „időben vagyok” – az "
+"eszköz sosem lép kapcsolatba az AEAT-tal, és az ellenőrzés teljesen "
+"figyelmen kívül hagyja a határidőket."
 
 #: ../../explanation/editing-and-verifying.md:43
 msgid "Why the tool wants a verified version before it builds the upload file"
 msgstr ""
+"Miért kér az eszköz egy verifikált változatot, mielőtt megépíti a "
+"feltöltési fájlt"
 
 #: ../../explanation/editing-and-verifying.md:45
 msgid ""
@@ -97,10 +135,16 @@ msgid ""
 " The check is the gate a version has to clear before it can become a "
 "filing - protection against an incomplete draft being filed by accident."
 msgstr ""
+"A feltöltési fájl az, ami elhagyja az eszközt és a hivatalhoz kerül, "
+"ezért csak olyan változatból épül, amely átment a teljességi ellenőrzésen"
+" (vagy amelyet már benyújtottként rögzítettek). Az eszköz elutasít egy "
+"sima piszkozatot. Az ellenőrzés az a kapu, amelyet egy változatnak át "
+"kell jutnia, mielőtt bevallássá válhat – védelem az ellen, hogy egy "
+"hiányos piszkozatot véletlenül benyújtsanak."
 
 #: ../../explanation/editing-and-verifying.md:51
 msgid "Where this sits in the journey"
-msgstr ""
+msgstr "Hol helyezkedik el ez az útban"
 
 #: ../../explanation/editing-and-verifying.md:53
 msgid ""
@@ -111,4 +155,11 @@ msgid ""
 "outputs are covered in [Reviewing your numbers and producing the upload "
 "file](reviewing-and-exporting.md)."
 msgstr ""
+"Ez az oldal a [működési áttekintés](index.md) csoportjának része. A "
+"korábbi bevallások a későbbiekbe táplálnak be; arról, hogyan gördül "
+"tovább egy verifikált korábbi időszak, lásd a [Hogyan épülnek a "
+"bevallások a korábbiakra](building-on-earlier-filings.md) oldalt. Miután "
+"egy változat átment az ellenőrzésen, a következő kimeneteket a [Számai "
+"áttekintése és a feltöltési fájl előállítása](reviewing-and-exporting.md)"
+" oldal ismerteti."
 
