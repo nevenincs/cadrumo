@@ -141,12 +141,12 @@ def test_every_advertised_resource_uri_resolves_as_markdown() -> None:
 
 
 def test_a_skill_a_rule_and_a_persona_resolve_verbatim() -> None:
-    skill = read_harness_resource(resource_uri(HarnessResourceKind.SKILL, "preparar-modelo-130"))
+    skill = read_harness_resource(resource_uri(HarnessResourceKind.SKILL, "cadrumo-preparar-modelo-130"))
     persona = read_harness_resource(resource_uri(HarnessResourceKind.PERSONA, "cadrumo-verifier"))
     assert persona.text == _shipped_persona_text("cadrumo-verifier")
     # The skill body is the shipped SKILL.md frontmatter + prose.
     assert skill.text.startswith("---")
-    assert "name: preparar-modelo-130" in skill.text
+    assert "name: cadrumo-preparar-modelo-130" in skill.text
 
 
 def test_templates_declare_the_three_kinds() -> None:

@@ -37,9 +37,9 @@ def test_materialise_writes_the_claude_native_layout(tmp_path: Path) -> None:
 
     assert (tmp_path / ".claude" / "rules" / "cadrumo-operator-operating-rules.md").is_file()
     assert (tmp_path / ".claude" / "agents" / "cadrumo-coordinator.md").is_file()
-    assert (tmp_path / ".claude" / "skills" / "preparar-modelo-130" / "SKILL.md").is_file()
+    assert (tmp_path / ".claude" / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").is_file()
     # The progressive-disclosure reference a SKILL cites must travel with it.
-    assert (tmp_path / ".claude" / "skills" / "preparar-modelo-130" / "reference" / "casillas.md").is_file()
+    assert (tmp_path / ".claude" / "skills" / "cadrumo-preparar-modelo-130" / "reference" / "casillas.md").is_file()
 
 
 def test_the_prior_flat_layout_is_gone(tmp_path: Path) -> None:
@@ -68,8 +68,8 @@ def test_written_rules_and_personas_match_the_shipped_bytes(tmp_path: Path) -> N
 
 def test_written_skill_document_matches_the_shipped_bytes(tmp_path: Path) -> None:
     materialise_workspace(tmp_path)
-    shipped = harness_root().joinpath("skills", "preparar-modelo-130", "SKILL.md").read_text(encoding=_UTF_8)
-    written = (tmp_path / ".claude" / "skills" / "preparar-modelo-130" / "SKILL.md").read_text(encoding=_UTF_8)
+    shipped = harness_root().joinpath("skills", "cadrumo-preparar-modelo-130", "SKILL.md").read_text(encoding=_UTF_8)
+    written = (tmp_path / ".claude" / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").read_text(encoding=_UTF_8)
     assert written == shipped
 
 

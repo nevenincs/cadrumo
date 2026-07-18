@@ -47,7 +47,7 @@ def test_plugin_layout_emits_envelope_and_schema_valid_tree(tmp_path: Path) -> N
     assert payload["persona_default"] == ""
 
     assert (out / ".claude-plugin" / "plugin.json").is_file()
-    assert (out / "skills" / "preparar-modelo-130" / "SKILL.md").is_file()
+    assert (out / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").is_file()
     assert (out / "agents" / "cadrumo-coordinator.md").is_file()
     assert (out / ".mcp.json").is_file()
     mcp = json.loads((out / ".mcp.json").read_text(encoding="utf-8"))
