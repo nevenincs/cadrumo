@@ -27,7 +27,9 @@ related:
   - '[[2026-07-18-user-docs-localization-W03-P06-S19]]'
   - '[[2026-07-18-user-docs-localization-W03-P06-S20]]'
   - '[[2026-07-18-user-docs-localization-W03-P06-S21]]'
+  - '[[2026-07-18-user-docs-localization-W03-P06-S22]]'
   - '[[2026-07-18-user-docs-localization-adr]]'
+  - '[[2026-07-18-user-docs-localization-audit]]'
   - '[[2026-07-18-user-docs-localization-plan]]'
   - '[[2026-07-18-user-docs-localization-research]]'
 ---
@@ -41,6 +43,10 @@ Auto-generated index of all documents tagged with `#user-docs-localization`.
 ### adr
 
 - `2026-07-18-user-docs-localization-adr` - `user-docs-localization` adr: `docs localization via gettext catalogues with an all-languages completeness gate` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-18-user-docs-localization-audit` - `user-docs-localization` audit: `campaign close honesty review`
 
 ### exec
 
@@ -65,6 +71,7 @@ Auto-generated index of all documents tagged with `#user-docs-localization`.
 - `2026-07-18-user-docs-localization-W03-P06-S19` - Emit per-language site roots from the deploy publisher with a theme language switcher and per-language search index regeneration
 - `2026-07-18-user-docs-localization-W03-P06-S20` - Run the full docs-check lane and the complete language matrix at HEAD and record the green evidence
 - `2026-07-18-user-docs-localization-W03-P06-S21` - Dispatch an independent code review over the campaign commits and action every finding
+- `2026-07-18-user-docs-localization-W03-P06-S22` - Run the fresh-context honesty review against the closure summary and persist the audit before declaring the campaign complete
 
 ### plan
 
