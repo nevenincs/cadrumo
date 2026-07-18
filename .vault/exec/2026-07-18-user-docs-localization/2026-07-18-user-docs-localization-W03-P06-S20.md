@@ -59,13 +59,15 @@ related:
 
 ## Outcome
 
-`docs-check`: 148 passed, 3 failed in 32m52s. Triage of the three failures:
-- Noncanonical docs build root gate: an infra defect of this campaign - two localization test helpers pinned their storage root under the repository build tree, and the new build-driver help text embedded a literal build path that the gate's regex mis-read. Fixed by moving the test storage to an OS temp dir and rewording the help text (this campaign's own commit).
-- Spanish and Catalan nitpicky user-scope builds pass clean. The Hungarian nitpicky build fails on two broken glossary cross-references in the file-at-aeat page: the Hungarian translation accented the invariant AEAT domain stems inside term roles, so the term targets no longer resolve. A translation-markup defect routed to the coordinator for a translator fix.
-- Em-dash prose ratchet: two em dashes in the English import-export-and-evidence reference page, introduced by an unrelated docs commit outside this campaign, exceed the baseline. Routed to the coordinator; it is not a localization defect and correcting the English source would require a catalogue reconciliation.
+Final matrix GREEN: the full `docs-check` lane (which includes the new catalogue drift gate, the per-language nitpicky `-W` es/ca/hu build matrix, completeness, parity, the full autodoc nitpicky build, doc8, and interrogate) passes 154 passed, 0 failed. Each language completeness gate confirms zero untranslated and zero fuzzy; the Spanish end-to-end build renders the eyeball artifact at the canonical HTML output root (`lang="es"`).
 
-Localization completeness (es/ca/hu) and parity gates all pass; the three completeness gates confirm 2994/2994 entries per language with zero untranslated and zero fuzzy. Collect-only on the docs test tree is clean. The Spanish end-to-end build succeeds; the eyeball artifact renders at the canonical HTML output root (`lang="es"`).
+The green state was reached through a triaged evidence chain. The first matrix run returned 148 passed / 3 failed with three distinct causes, each resolved:
+- Infra (this campaign): the noncanonical-docs-build-root gate flagged two localization test helpers that pinned their storage root under the build tree, plus a build-driver help string embedding a literal build path the gate's regex mis-read. Fixed by moving test storage to an OS temp dir and rewording the help text.
+- Translation (Hungarian): the file-at-aeat page accented the invariant AEAT stems inside term roles, breaking two glossary cross-references; the coordinator restored the bare stems.
+- Em-dash ratchet: two em dashes in the English import-export-and-evidence page (from an unrelated docs commit) reworded to parentheses and the three catalogues mirrored, single-msgid delta.
+
+Reconciling the em-dash re-extraction surfaced a latent structural gap: a peer commit had regenerated the environment-overrides reference with new MCP/verdict-cache settings without re-syncing the catalogues, and the completeness gate (reading catalogues against themselves) could not see it. This campaign closed the gap: a new catalogue-vs-source drift gate asserts every page's freshly-extracted source msgid set equals each committed catalogue's, and an honest re-sync landed the drift as a deliberate completeness-debt window until the three translators topped up the five new descriptions per language.
 
 ## Notes
 
-This step is NOT closed: the matrix is not fully green. Two reds remain, both owned outside this executor - the Hungarian term-target defect (translator fix) and the unrelated English em-dash ratchet (source/reconciliation decision). The campaign's own infra defect is fixed and committed. The step closes once both routed reds land and the matrix reruns green.
+One transient peer regression required a re-run: the first final `docs-check` returned 9 failures, all CLI-reference / autodoc-build tests broken by a registry import-time refusal via `_workbook_parity.py` (the localization gates themselves passed). It was fixed at HEAD by peer commit `219ed57a6e`; the re-run against fixed HEAD is the 154-passed green record. The drift gate runs a real gettext extraction, so it carries the integration marker (in a dedicated module, since the completeness module is unit-marked and the two markers cannot share a module) and joins the docs lane by the docs marker.
