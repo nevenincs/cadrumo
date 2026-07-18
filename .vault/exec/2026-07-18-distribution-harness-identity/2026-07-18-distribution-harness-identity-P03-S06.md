@@ -140,3 +140,67 @@ cohorte de distribución de Cadrumo, fijada por sus resúmenes criptográficos.
   Spanish texts as the approved pair for that specific surface and field; a
   later wording edit is a new approval through this record, never an in-place
   tweak at the enrollment site.
+
+## Revision 2 (2026-07-18): six-claim parity for the short fields
+
+The verifier requires all six claims on every client-display field; the
+original short blocks carried a subset. The long description (block 4) is
+unchanged. The following REPLACE blocks 1-3; the wiring re-enrolls these exact
+texts.
+
+### 1r. Plugin description (plugin and marketplace-plugin fields)
+
+English: Operate Cadrumo, the deterministic Spanish-tax CLI, from Claude:
+grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided
+workflows, and human-confirmed execution of every state-changing step. Cadrumo
+is read-only toward AEAT and never files - live submission is impossible and
+the taxpayer files outside the app. All financial data stays on-host in
+encrypted storage; only what the conversation shows reaches the model
+provider. The server advertises an orientation core by default (overview +
+contract + search/execute); set the surface option to 'full' to advertise
+every verb up front.
+
+Español: Opera Cadrumo, la CLI determinista de impuestos españoles, desde
+Claude: búsqueda fundamentada sobre el corpus legal BOE/AEAT incluido, flujos
+guiados según la situación del contribuyente y ejecución con confirmación
+humana de cada paso que modifica el estado. Cadrumo es de solo lectura frente
+a la AEAT y nunca presenta declaraciones - la presentación en vivo es
+imposible y el contribuyente presenta fuera de la aplicación. Todos los datos
+financieros permanecen en el equipo en almacenamiento cifrado; solo lo que
+muestra la conversación llega al proveedor del modelo. El servidor anuncia por
+defecto un núcleo de orientación (visión general + contrato + buscar/
+ejecutar); configura la opción de superficie en 'full' para anunciar todos los
+verbos desde el inicio.
+
+### 2r. Marketplace description
+
+English: Neve plugin marketplace - Claude plugins including the Cadrumo
+Spanish-tax assistant: read-only toward AEAT, it never files (the taxpayer
+files outside the app), every state change needs human confirmation, financial
+data stays on-host in encrypted storage, and only the conversation reaches the
+model provider.
+
+Español: Marketplace de plugins de Neve - plugins de Claude, incluido el
+asistente de impuestos españoles Cadrumo: de solo lectura frente a la AEAT,
+nunca presenta declaraciones (el contribuyente presenta fuera de la
+aplicación), cada cambio de estado requiere confirmación humana, los datos
+financieros permanecen en el equipo en almacenamiento cifrado y solo la
+conversación llega al proveedor del modelo.
+
+### 3r. MCPB description (short)
+
+English: Operate Cadrumo, a deterministic Spanish-tax CLI, as an MCP tool
+surface: grounded search over the bundled BOE/AEAT legal corpus,
+situation-keyed guided workflows, and human-confirmed execution of every
+state-changing step. Read-only toward AEAT - it never files; the taxpayer
+files outside the app. Financial data stays on-host in encrypted storage, and
+only the conversation reaches the model provider.
+
+Español: Opera Cadrumo, una CLI determinista de impuestos españoles, como
+superficie de herramientas MCP: búsqueda fundamentada sobre el corpus legal
+BOE/AEAT incluido, flujos guiados según la situación del contribuyente y
+ejecución con confirmación humana de cada paso que modifica el estado. De solo
+lectura frente a la AEAT - nunca presenta declaraciones; el contribuyente
+presenta fuera de la aplicación. Los datos financieros permanecen en el equipo
+en almacenamiento cifrado y solo la conversación llega al proveedor del
+modelo.
