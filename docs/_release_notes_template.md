@@ -18,7 +18,7 @@ Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM UTC (N hours)
 
 ## Highlights
 
-- One or two sentences on the most Kent-visible change in this release.
+- One or two sentences on the most user-visible change in this release.
 
 ## Features
 
