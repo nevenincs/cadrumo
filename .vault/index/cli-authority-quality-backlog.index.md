@@ -14,6 +14,7 @@ related:
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S06]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S07]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S08]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P03-S10]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S27]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P04-S11]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P04-S12]]'
@@ -22,6 +23,8 @@ related:
   - '[[2026-07-17-cli-authority-quality-backlog-P05-S15]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P05-S16]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P05-S17]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P06-S18]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P06-S19]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P07-S20]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P07-S21]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P08-S22]]'
@@ -67,9 +70,12 @@ Auto-generated index of all documents tagged with `#cli-authority-quality-backlo
 - `2026-07-17-cli-authority-quality-backlog-P09-S24` - Assert binding validator-dispatch completeness: every BindingSourceKind member has a dispatch entry in the validator registry or a documented mesh-only deferral, so a new source kind cannot ship unvalidated
 - `2026-07-17-cli-authority-quality-backlog-P11-S26` - Add a structural no-build/no-publish assertion to the publish-workflow guardrail test: denylist-scan every step run and uses in the validate job (or pin the full step allowlist) so a differently-spelled build or publish command cannot slip past the exact-substring guards, gated on the guardrail test failing if any validate-job step invokes a build or publish tool
 - `2026-07-17-cli-authority-quality-backlog-P03-S08` - Remove duplicate namespace metadata from profile, calculation, aggregation, and filed-observation repositories and bind repository construction to registry definitions
+- `2026-07-17-cli-authority-quality-backlog-P03-S10` - Replace literal-membership namespace checks with a non-vacuous production-root adoption gate that recognizes cadrumo-prefixed declarations, detects local metadata declarations, and proves each storage binding consumes the registered definition
 - `2026-07-17-cli-authority-quality-backlog-P03-S27` - NEEDS ADJUDICATION and prerequisite for P03.S09: resolve the split namespace authority where clave-diagnostics namespace values are duplicated across core.external_constants (CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, used by _clave_movil_support.py), a raw literal in _clave_permanente_support.py line 49 (no CLAVE_PERMANENTE core symbol, asymmetric), and the adapters storage registry (CLAVE_MOVIL and PERMANENTE_DIAGNOSTICS_NAMESPACE whose .namespace values are themselves raw literals duplicating core), plus raw classification SensitivityClass.SESSION and schema_version 1 at _clave_movil_page_flow.py lines 460-461 duplicating the registry namespace .sensitivity and .schema_version. Decide the single authority (core.external_constants versus the adapters storage registry) and whether registry values source from core, then single-source all consumers, gated on one authority with no duplicated namespace literal across core, registry, and consumer
 - `2026-07-17-cli-authority-quality-backlog-P05-S16` - Route classify --auto-split and split --llm through the typed review workflow with distinct invocation origins and remove CLI-owned review branching and application source-command defaults
 - `2026-07-17-cli-authority-quality-backlog-P05-S17` - Prove suggestion, saturation, rejection, no-split, multi-child split, invocation-origin attribution, and CLI-route parity against real persistence and model subprocess boundaries
+- `2026-07-17-cli-authority-quality-backlog-P06-S18` - GATED (blocked until the mcp-call-latency plan completes): make the MCP server direct dispatch path call gate_refusal() once so a refused call is not composed twice into the envelope
+- `2026-07-17-cli-authority-quality-backlog-P06-S19` - GATED (blocked until the mcp-call-latency plan completes): add a per-verb CLI-versus-MCP schema-parity diff proving every operator verb exposes the same request and response schema across both surfaces
 - `2026-07-17-cli-authority-quality-backlog-P10-S25` - Triage the two low-severity entrypoints structural duplications the duplication-authority audit surfaced (repeated iterator shapes and thin synchronous wrappers): confirm each on the current tree by exact declaration, caller, and writer-path inspection, then either record a disposition note classifying it as intentionally distinct incidental similarity or consolidate it behind one shared abstraction proven substitutable against every consumer contract, so no duplicated policy, state ownership, or persistence behavior survives unclassified
 
 ### plan
