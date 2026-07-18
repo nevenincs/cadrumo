@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../reference/filesystem-state-and-safety.md:1
 msgid "Filesystem, state, and safety"
-msgstr ""
+msgstr "Sistema de fitxers, estat i seguretat"
 
 #: ../../reference/filesystem-state-and-safety.md:3
 msgid ""
@@ -29,56 +28,62 @@ msgid ""
 "tax authority referenced by the filing and live-read boundaries on this "
 "page."
 msgstr ""
+"L'Agencia Estatal de Administración Tributaria (AEAT) és l'autoritat "
+"tributària externa a què fan referència els límits de presentació i de "
+"lectura en directe d'aquesta pàgina."
 
 #: ../../reference/filesystem-state-and-safety.md:6
 msgid "Local state layout"
-msgstr ""
+msgstr "Disposició de l'estat local"
 
 #: ../../reference/filesystem-state-and-safety.md:8
 msgid ""
 "`CADRUMO_LOCAL_STORAGE_ROOT` selects the root of Cadrumo-owned local "
 "state. The default depends on how Cadrumo runs:"
 msgstr ""
+"`CADRUMO_LOCAL_STORAGE_ROOT` selecciona l'arrel de l'estat local "
+"propietat de Cadrumo. El valor per defecte depèn de com s'executa "
+"Cadrumo:"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Run mode"
-msgstr ""
+msgstr "Mode d'execució"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Default storage root"
-msgstr ""
+msgstr "Arrel d'emmagatzematge per defecte"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Source checkout"
-msgstr ""
+msgstr "Còpia del codi font"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`<repository>/var/storage`"
-msgstr ""
+msgstr "`<repository>/var/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Installed on Windows"
-msgstr ""
+msgstr "Instal·lat a Windows"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`%LOCALAPPDATA%/cadrumo/storage`"
-msgstr ""
+msgstr "`%LOCALAPPDATA%/cadrumo/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Installed on Linux"
-msgstr ""
+msgstr "Instal·lat a Linux"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage`"
-msgstr ""
+msgstr "`$XDG_DATA_HOME/cadrumo/storage`, o `~/.local/share/cadrumo/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Installed on macOS"
-msgstr ""
+msgstr "Instal·lat a macOS"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`~/Library/Application Support/cadrumo/storage`"
-msgstr ""
+msgstr "`~/Library/Application Support/cadrumo/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md:18
 msgid ""
@@ -89,16 +94,25 @@ msgid ""
 "blobs, and audit paths derive from the same product root unless an "
 "explicit Cadrumo setting overrides them."
 msgstr ""
+"L'estat del perfil té l'àmbit del bucket sota `<root>/buckets/<bucket-"
+"id>/`. El bucket conté `db/cadrumo.db`, blobs xifrats, material "
+"d'auditoria, `manifest.toml`, `.lock` i una indicació de la llengua de "
+"sortida. El material de claus s'arrela sota `<root>/keystore/<bucket-"
+"id>/`. Els testimonis, els registres, els secrets, els blobs i les rutes "
+"d'auditoria deriven de la mateixa arrel del producte tret que una "
+"configuració explícita de Cadrumo els substitueixi."
 
 #: ../../reference/filesystem-state-and-safety.md:25
 msgid ""
 "Google Drive mirroring uses a Cadrumo-owned `cadrumo-vault/` folder. A "
 "former `aeat-vault/` folder is not adopted."
 msgstr ""
+"La rèplica a Google Drive utilitza una carpeta `cadrumo-vault/` propietat"
+" de Cadrumo. Una antiga carpeta `aeat-vault/` no s'adopta."
 
 #: ../../reference/filesystem-state-and-safety.md:28
 msgid "Old `aeat`-named storage is refused, not migrated"
-msgstr ""
+msgstr "L'emmagatzematge antic amb el nom `aeat` es refusa, no es migra"
 
 #: ../../reference/filesystem-state-and-safety.md:30
 msgid ""
@@ -107,6 +121,10 @@ msgid ""
 "`aeat.*`, `aeat-test.*`, or `aeat-tests.*` secure-object namespaces, and "
 "former bundle or Drive-folder names."
 msgstr ""
+"Cadrumo refusa l'estat antic reconeixible del producte. Això inclou un "
+"directori germà d'estat d'aplicació `aeat`, una base de dades `aeat.db`, "
+"els espais de noms d'objectes segurs `aeat.*`, `aeat-test.*` o `aeat-"
+"tests.*`, i els noms antics de paquet o de carpeta de Drive."
 
 #: ../../reference/filesystem-state-and-safety.md:35
 msgid ""
@@ -115,80 +133,94 @@ msgid ""
 "former bytes untouched and requires the operator to choose a separate, "
 "explicit disposition."
 msgstr ""
+"El refús no és destructiu. Cadrumo no llegeix, no s'hi connecta, no "
+"copia, no mou, no torna a xifrar, no suprimeix, no migra ni adopta aquell"
+" estat. La detecció deixa els bytes antics intactes i requereix que "
+"l'operador triï una disposició separada i explícita."
 
 #: ../../reference/filesystem-state-and-safety.md:39
 msgid "Safety and filing scope"
-msgstr ""
+msgstr "Seguretat i abast de la presentació"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Surface"
-msgstr ""
+msgstr "Superfície"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Cadrumo behavior"
-msgstr ""
+msgstr "Comportament de Cadrumo"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Calculation and verification"
-msgstr ""
+msgstr "Càlcul i verificació"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Local; evaluates saved records against bundled registry rules and evidence"
 msgstr ""
+"Local; avalua els registres desats contra les regles del registre "
+"incloses i l'evidència"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Export"
-msgstr ""
+msgstr "Exportació"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
 "Writes an AEAT-compatible local file after verification and required "
 "evidence gates pass; portal acceptance is not guaranteed"
 msgstr ""
+"Escriu un fitxer local compatible amb l'AEAT després que la verificació i"
+" les barreres d'evidència requerides passin; l'acceptació al portal no es"
+" garanteix"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Live AEAT access"
-msgstr ""
+msgstr "Accés en directe a l'AEAT"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Separately invoked, authenticated, and read-only"
-msgstr ""
+msgstr "Invocat per separat, autenticat i de només lectura"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Submission"
-msgstr ""
+msgstr "Tramesa"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Forbidden; no Cadrumo submission command exists"
-msgstr ""
+msgstr "Prohibida; no existeix cap ordre de tramesa de Cadrumo"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Official filing"
-msgstr ""
+msgstr "Presentació oficial"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Performed by a human through an official AEAT channel"
-msgstr ""
+msgstr "Duta a terme per una persona a través d'un canal oficial de l'AEAT"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Filing history"
-msgstr ""
+msgstr "Historial de presentacions"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
 "Recorded locally after the human filing; reconciliation compares totals "
 "and, for enrolled modelos, captured per-casilla values"
 msgstr ""
+"Registrat localment després de la presentació humana; la conciliació "
+"compara els totals i, per als models inscrits, els valors capturats per "
+"casella"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Responsibility"
-msgstr ""
+msgstr "Responsabilitat"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
 "The taxpayer or authorized filer reviews figures, meets deadlines, "
 "uploads, and retains the justificante"
 msgstr ""
+"El contribuent o el declarant autoritzat revisa les xifres, compleix els "
+"terminis, puja el fitxer i conserva el justificant"
 
 #: ../../reference/filesystem-state-and-safety.md:51
 msgid ""
@@ -197,4 +229,9 @@ msgid ""
 "explanation](../explanation/recording-a-filing-and-the-boundary.md) "
 "explains why submission stays outside Cadrumo."
 msgstr ""
+"Consulta [Protegeix l'accés a les teves dades](../how-to/protect-data-"
+"access.md) per a les tasques de recuperació, bloqueig, exportació i "
+"restabliment. L'[explicació del límit de "
+"presentació](../explanation/recording-a-filing-and-the-boundary.md) "
+"explica per què la tramesa es manté fora de Cadrumo."
 
