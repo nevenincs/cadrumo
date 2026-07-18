@@ -496,6 +496,27 @@ if _USER_SCOPE:
     # overview; drop it so the user-scope preview nav has no dead API link.
     html_context["cadrumo_nav"] = [entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/index"]
 
+# ── Language switcher ────────────────────────────────────────────────────────
+# The deploy publisher emits per-language site roots (``/`` = en, ``/es/``,
+# ``/ca/``, ``/hu/``). The header language switcher (docs/_templates) links the
+# current page to its counterpart under each language root. The set derives from
+# OutputLanguage (English first as the authoring source, then the translation
+# targets in enum order) - never a second hand-listed set - and each entry
+# carries its endonym, the language's own name, which is the same in every build.
+_DOCS_LANGUAGE_ENDONYMS = {
+    OutputLanguage.EN: "English",
+    OutputLanguage.ES: "Español",
+    OutputLanguage.CA: "Català",
+    OutputLanguage.HU: "Magyar",
+}
+_DOCS_LANGUAGE_ORDER = (OutputLanguage.EN, *(member for member in OutputLanguage if member is not OutputLanguage.EN))
+html_context["cadrumo_docs_language"] = language
+html_context["cadrumo_docs_default_language"] = OutputLanguage.EN.value
+html_context["cadrumo_docs_language_is_default"] = language == OutputLanguage.EN.value
+html_context["cadrumo_docs_languages"] = [
+    {"code": member.value, "label": _DOCS_LANGUAGE_ENDONYMS[member]} for member in _DOCS_LANGUAGE_ORDER
+]
+
 # ── Publishing metadata ─────────────────────────────────────────────────────
 ogp_site_name = f"{PRODUCT_IDENTITY.prose_name} documentation"
 ogp_site_url = html_baseurl
