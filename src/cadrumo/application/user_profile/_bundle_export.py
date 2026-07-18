@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING
 
 from ...core import fsync_parent_dir
 from ...core.atomic_write import atomic_write_hardened_bytes
+from ...core.external_constants import UTF_8_ENCODING
 from ...core.hashing import sha256_hex
 from ...core.locks import exclusive_file_lock
 from ...core.locks_errors import LockAcquisitionError
@@ -119,7 +120,7 @@ def prepare_profile_export(
     with _profile_export_runtime(pointer.bucket_id):
         bundle = _serialize_export_bundle(pointer.bucket_id)
         payload = _render_export_payload(bundle, request=request)
-    payload_bytes = payload.encode("utf-8")
+    payload_bytes = payload.encode(UTF_8_ENCODING)
     staged_path = _stage_export_tempfile(request.destination, payload_bytes)
     try:
         categories = bundle_data_categories(bundle)
