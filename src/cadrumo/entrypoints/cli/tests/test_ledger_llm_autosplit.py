@@ -132,6 +132,7 @@ def test_list_hide_llm_rejected_retains_unrelated_rows(tmp_path: Path) -> None:
         bucket_id="00000000-0000-4000-8000-000000000000",
         reason="operator declined the recorded suggestion",
         actor="operator",
+        source_command="aeat app ledger classify --llm --reject",
     )
     assert rejection.transaction_id == rejected_id
 

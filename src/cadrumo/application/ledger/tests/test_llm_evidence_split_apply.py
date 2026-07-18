@@ -57,6 +57,7 @@ def test_apply_splits_parent_and_classifies_children(
     result = apply_evidence_split(
         suggestion,
         bucket_id=_BUCKET,
+        source_command="aeat app ledger split --llm --apply",
         transaction_repository=repository,
         bucket_event_repository=events,
         occurred_at=_NOW,
@@ -104,6 +105,7 @@ def test_apply_links_parent_invoice_evidence_to_each_child(
     result = apply_evidence_split(
         suggestion,
         bucket_id=_BUCKET,
+        source_command="aeat app ledger split --llm --apply",
         transaction_repository=repository,
         bucket_event_repository=events,
         occurred_at=_NOW,
@@ -133,6 +135,7 @@ def test_apply_child_numbers_are_registry_derived_not_model(
     result = apply_evidence_split(
         suggestion,
         bucket_id=_BUCKET,
+        source_command="aeat app ledger split --llm --apply",
         transaction_repository=repository,
         bucket_event_repository=events,
         occurred_at=_NOW,
@@ -170,6 +173,7 @@ def test_split_children_retain_lineage_and_evidence_provenance(
     result = apply_evidence_split(
         suggestion,
         bucket_id=_BUCKET,
+        source_command="aeat app ledger split --llm --apply",
         transaction_repository=repository,
         bucket_event_repository=events,
         occurred_at=_NOW,
@@ -218,6 +222,7 @@ def test_split_child_evidence_failure_leaves_everything_unchanged(
         apply_evidence_split(
             suggestion,
             bucket_id=_BUCKET,
+            source_command="aeat app ledger split --llm --apply",
             transaction_repository=repository,
             bucket_event_repository=events,
             occurred_at=_NOW,
