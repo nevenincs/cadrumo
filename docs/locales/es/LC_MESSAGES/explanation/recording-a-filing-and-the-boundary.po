@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:1
 msgid "Recording a filing, and why the tool never files for you"
-msgstr ""
+msgstr "Registrar una presentación y por qué la herramienta nunca presenta por ti"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:3
 msgid ""
@@ -31,10 +30,16 @@ msgid ""
 "answer is that you file it yourself, and the tool keeps a careful record "
 "around that act. This page is about why the boundary sits where it does."
 msgstr ""
+"Esta página trata el último tramo del recorrido: la línea entre el trabajo "
+"que haces en tu propio ordenador y la Agencia Estatal de Administración "
+"Tributaria real (AEAT, la agencia tributaria española). La respuesta breve "
+"es que la presentas tú mismo, y la herramienta mantiene un registro "
+"cuidadoso en torno a ese acto. Esta página trata de por qué la frontera está "
+"donde está."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:9
 msgid "The boundary is permanent"
-msgstr ""
+msgstr "La frontera es permanente"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:11
 msgid ""
@@ -44,6 +49,11 @@ msgid ""
 "on. The submit path is built to refuse, every time, with a clear error "
 "rather than a quiet attempt."
 msgstr ""
+"La herramienta nunca puede presentar una declaración, registrar nada ni "
+"cambiar un solo valor en la Agencia. Esto no es un valor por defecto "
+"prudente que pudieras desactivar más adelante. No hay ajuste, ni opción, ni "
+"modo experto que lo active. La vía de presentación está construida para "
+"negarse, siempre, con un error claro en lugar de un intento silencioso."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:13
 msgid ""
@@ -53,10 +63,15 @@ msgid ""
 "impossible, the tool removes that risk entirely and keeps you in the "
 "chair where the law expects you to be."
 msgstr ""
+"Esa negativa es deliberada. Presentar una declaración es un acto jurídico "
+"con tu nombre. Un programa que pudiera pulsar el botón en tu lugar acarrearía "
+"un riesgo que nunca puedes ver del todo. Al hacer imposible la presentación, "
+"la herramienta elimina por completo ese riesgo y te mantiene en el asiento "
+"en el que la ley espera que estés."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:15
 msgid "Read-only access is the only connection"
-msgstr ""
+msgstr "El acceso de solo lectura es la única conexión"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:17
 msgid ""
@@ -66,6 +81,11 @@ msgid ""
 "agency holds about you. It reads this so it can show it to you and "
 "compare it against your local work."
 msgstr ""
+"Cuando conectas la herramienta con la Agencia, le concedes una sola cosa: la "
+"capacidad de leer tus propios datos de la AEAT, solo de consulta. Puede ver "
+"las declaraciones que ya has presentado, los justificantes registrados y los "
+"datos que la Agencia tiene sobre ti. Lee esto para poder mostrártelo y "
+"compararlo con tu trabajo local."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:19
 msgid ""
@@ -73,10 +93,13 @@ msgid ""
 "edits, or registers. Reading your data, view-only, is the whole of what "
 "it can do at the agency."
 msgstr ""
+"Nada fluye en sentido contrario. La conexión no tiene ninguna vía que "
+"escriba, edite o registre. Leer tus datos, solo de consulta, es todo lo que "
+"puede hacer en la Agencia."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:21
 msgid "You upload the file yourself"
-msgstr ""
+msgstr "El fichero lo subes tú mismo"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:23
 msgid ""
@@ -87,16 +110,24 @@ msgid ""
 "holds your credentials for this and never stands between you and the "
 "agency at that moment."
 msgstr ""
+"La presentación real ocurre en tu propio navegador, en la web de la Agencia, "
+"con tus propias credenciales de acceso: un certificado digital o Cl@ve (el "
+"sistema de identidad compartido del Gobierno de España). Te identificas como "
+"tú mismo, subes el fichero que preparó la herramienta y pulsas presentar. La "
+"herramienta nunca guarda tus credenciales para esto ni se interpone entre tú "
+"y la Agencia en ese momento."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:25
 msgid ""
 "For the steps, see [Upload your exported modelo at the AEAT portal"
 "](../how-to/file-at-aeat.md)."
 msgstr ""
+"Para los pasos, consulta [Sube tu modelo exportado en el portal de la AEAT]"
+"(../how-to/file-at-aeat.md)."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:27
 msgid "Recording a filing in your own records"
-msgstr ""
+msgstr "Registrar una presentación en tus propios registros"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:29
 msgid ""
@@ -105,6 +136,10 @@ msgid ""
 " filed - a local note in your own records, like writing \"sent\" next to "
 "an invoice in your ledger."
 msgstr ""
+"Después de haber subido tú mismo la declaración, vuelves y marcas esa "
+"versión guardada como definitiva en tu propio historial. Esto es registrar "
+"que has presentado: una anotación local en tus propios registros, como "
+"escribir «enviada» junto a una factura en tu ledger."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:31
 msgid ""
@@ -113,10 +148,13 @@ msgid ""
 "filed, so that later, when you look back, you know which numbers went out"
 " and when."
 msgstr ""
+"No cambia nada en la Agencia. No presenta, ni reenvía, ni confirma nada con "
+"la AEAT. Marca una versión como la respuesta que realmente presentaste, para "
+"que después, cuando eches la vista atrás, sepas qué cifras salieron y cuándo."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:33
 msgid "Checking your record against the agency's receipt"
-msgstr ""
+msgstr "Cotejar tu registro con el justificante de la Agencia"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:35
 msgid ""
@@ -125,6 +163,10 @@ msgid ""
 "against that receipt to catch any disagreement. This is checking your "
 "record against the agency's receipt."
 msgstr ""
+"Cuando presentas, la Agencia te da un justificante: el resguardo oficial que "
+"confirma lo que recibió. La herramienta puede comparar tus cifras locales "
+"con ese justificante para detectar cualquier discrepancia. Esto es cotejar "
+"tu registro con el justificante de la Agencia."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:37
 msgid ""
@@ -132,16 +174,21 @@ msgid ""
 " agency to do its work. You hand it the justificante; it reports whether "
 "your record matches, diverges, or doesn't line up with any receipt yet."
 msgstr ""
+"La comparación lee únicamente el justificante que aportas. No contacta con "
+"la Agencia para hacer su trabajo. Le entregas el justificante; te informa de "
+"si tu registro coincide, diverge o todavía no encaja con ningún justificante."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:39
 msgid ""
 "For the steps, see [Reconcile a filed modelo against its justificante"
 "](../how-to/reconcile.md)."
 msgstr ""
+"Para los pasos, consulta [Concilia un modelo presentado con su justificante]"
+"(../how-to/reconcile.md)."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:41
 msgid "What this comparison can and can't tell you"
-msgstr ""
+msgstr "Qué puede y qué no puede decirte esta comparación"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:43
 msgid ""
@@ -154,10 +201,18 @@ msgid ""
 "in [Reconcile a filed modelo against its justificante](../how-"
 "to/reconcile.md)."
 msgstr ""
+"La comparación confirma que tu registro local coincide con los campos de "
+"cabecera del justificante —el modelo, el año de presentación, el periodo y "
+"tu NIF— y nombra cualquier campo que no coincida. No compara los valores de "
+"las casillas individuales, ni es una revisión en vivo de tus cálculos frente "
+"a la Agencia: ninguno de estos pasos vuelve a calcular tu impuesto; "
+"confirman lo que se presentó y conservan la prueba de ello. El alcance "
+"exacto y los pasos para tratar las discrepancias están en [Concilia un "
+"modelo presentado con su justificante](../how-to/reconcile.md)."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:51
 msgid "Where this sits in the journey"
-msgstr ""
+msgstr "Dónde encaja esto en el recorrido"
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:53
 msgid ""
@@ -166,6 +221,10 @@ msgid ""
 "result - is yours to do locally; this page is where that local work meets"
 " the real agency, across a line the tool will not cross."
 msgstr ""
+"Este es el final del circuito que expone la [visión general](index.md). Todo "
+"lo anterior —construir el modelo, comprobarlo, registrar el resultado— es "
+"cosa tuya en local; esta página es donde ese trabajo local se encuentra con "
+"la Agencia real, cruzando una línea que la herramienta no traspasará."
 
 #: ../../explanation/recording-a-filing-and-the-boundary.md:55
 msgid ""
@@ -175,4 +234,9 @@ msgid ""
 "evidence the tool can lean on for later returns, which [How filings build"
 " on earlier ones](building-on-earlier-filings.md) explains."
 msgstr ""
-
+"Si una comparación revela una discrepancia y la corriges, volver a comprobar "
+"la versión corregida se explica en [Editar y verificar un cálculo](editing-"
+"and-verifying.md). Y una vez registrada, una presentación se convierte en "
+"evidencia en la que la herramienta puede apoyarse para declaraciones "
+"posteriores, lo que explica [Cómo las presentaciones se apoyan en las "
+"anteriores](building-on-earlier-filings.md)."

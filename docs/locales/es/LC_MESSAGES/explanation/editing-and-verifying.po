@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../explanation/editing-and-verifying.md:1
 msgid "Editing and verifying a calculation"
-msgstr ""
+msgstr "Editar y verificar un cálculo"
 
 #: ../../explanation/editing-and-verifying.md:3
 #, python-brace-format
@@ -32,10 +31,15 @@ msgid ""
 "{term}`modelo`; for the step-by-step actions it links out to the how-to "
 "guides."
 msgstr ""
+"Esta página trata las dos ideas centrales de la herramienta: qué es "
+"realmente un cálculo guardado y qué te dice —y qué no— la comprobación de "
+"integridad. Está escrita para contribuyentes corrientes que trabajan con un "
+"{term}`modelo`; para las acciones paso a paso, enlaza con las guías "
+"prácticas."
 
 #: ../../explanation/editing-and-verifying.md:9
 msgid "A calculation is a saved version, not a final answer"
-msgstr ""
+msgstr "Un cálculo es una versión guardada, no una respuesta definitiva"
 
 #: ../../explanation/editing-and-verifying.md:11
 msgid ""
@@ -48,6 +52,15 @@ msgid ""
 "its numbers commit to nothing until you decide they do. The mechanics "
 "live in [The filing workflow](../how-to/filing-spine.md)."
 msgstr ""
+"Cada vez que ejecutas un cálculo, la herramienta guarda ese resultado como "
+"una versión propia y conserva las anteriores. No se sobrescribe nada. El "
+"trabajo fiscal rara vez sale bien a la primera: introduces una cifra, "
+"calculas, detectas algo raro, lo corriges y vuelves a calcular; y cada "
+"intento queda en disco, identificado por su contenido exacto, para que "
+"puedas comparar versiones y volver atrás. Una versión guardada es el "
+"registro de un intento, no un veredicto; sus cifras no comprometen a nada "
+"hasta que tú lo decidas. La mecánica está en [El flujo de presentación]"
+"(../how-to/filing-spine.md)."
 
 #: ../../explanation/editing-and-verifying.md:20
 msgid ""
@@ -57,10 +70,15 @@ msgid ""
 "[Review and supply calculation inputs](../how-to/review-calculation-"
 "values.md)."
 msgstr ""
+"Un modelo se compone de casillas (recuadros numerados). Cada casilla "
+"contiene un valor o espera uno. Editar es el acto de dar a una casilla el "
+"valor que el modelo aún necesita y volver a calcular para que los totales lo "
+"reflejen; consulta [Revisar y aportar datos de cálculo](../how-to/review-"
+"calculation-values.md)."
 
 #: ../../explanation/editing-and-verifying.md:25
 msgid "What verifying checks"
-msgstr ""
+msgstr "Qué comprueba la verificación"
 
 #: ../../explanation/editing-and-verifying.md:27
 msgid ""
@@ -76,6 +94,18 @@ msgid ""
 "finding is covered in [Verify a draft filing](../how-to/verification-"
 "reports.md)."
 msgstr ""
+"Verificar ejecuta una comprobación de integridad sobre un borrador frente a "
+"las reglas que la Agencia publica para ese modelo y año: cada casilla "
+"obligatoria tiene un valor, las sumas cuadran sin que una casilla contradiga "
+"a otra y nada bloquea el modelo, incluidas condiciones ajenas al propio "
+"borrador, como que un periodo anterior en el que se apoya este modelo esté "
+"presentado y evidenciado. La comprobación guarda un informe sea cual sea el "
+"resultado, y el borrador queda en uno de tres estados: **completo** "
+"(verificado y bloqueado), **incompleto** (aún hay casillas obligatorias "
+"vacías) o **bloqueado** (una regla incumplida o una dependencia sin "
+"resolver, indicada en el informe). Ejecutar la comprobación y actuar sobre "
+"cada hallazgo se explica en [Verificar un borrador de presentación](../how-"
+"to/verification-reports.md)."
 
 #: ../../explanation/editing-and-verifying.md:38
 msgid ""
@@ -84,10 +114,16 @@ msgid ""
 "succeed\", or \"I am on time\" - the tool never contacts AEAT, and the "
 "check ignores deadlines entirely."
 msgstr ""
+"Una comprobación superada es una comprobación local: significa «mi borrador "
+"está completo y es coherente», nunca «la AEAT aceptó mi presentación», «la "
+"subida saldrá bien» o «voy a tiempo»; la herramienta nunca contacta con la "
+"AEAT y la comprobación ignora por completo los plazos."
 
 #: ../../explanation/editing-and-verifying.md:43
 msgid "Why the tool wants a verified version before it builds the upload file"
 msgstr ""
+"Por qué la herramienta quiere una versión verificada antes de generar el "
+"fichero para subir"
 
 #: ../../explanation/editing-and-verifying.md:45
 msgid ""
@@ -97,10 +133,16 @@ msgid ""
 " The check is the gate a version has to clear before it can become a "
 "filing - protection against an incomplete draft being filed by accident."
 msgstr ""
+"El fichero para subir es lo que sale de la herramienta y va a la Agencia, "
+"así que solo se genera a partir de una versión que ha superado la "
+"comprobación de integridad (o de una ya registrada como presentada). La "
+"herramienta rechaza un borrador sin más. La comprobación es la puerta que "
+"una versión debe franquear antes de poder convertirse en una presentación: "
+"una protección frente a que un borrador incompleto se presente por accidente."
 
 #: ../../explanation/editing-and-verifying.md:51
 msgid "Where this sits in the journey"
-msgstr ""
+msgstr "Dónde encaja esto en el recorrido"
 
 #: ../../explanation/editing-and-verifying.md:53
 msgid ""
@@ -111,4 +153,10 @@ msgid ""
 "outputs are covered in [Reviewing your numbers and producing the upload "
 "file](reviewing-and-exporting.md)."
 msgstr ""
-
+"Esta página forma parte del grupo de la [visión general de cómo funciona]"
+"(index.md). Las presentaciones anteriores alimentan las posteriores; para "
+"saber cómo se arrastra un periodo anterior verificado, consulta [Cómo las "
+"presentaciones se apoyan en las anteriores](building-on-earlier-filings.md). "
+"Una vez que una versión ha superado la comprobación, las siguientes salidas "
+"se tratan en [Revisar tus cifras y generar el fichero para subir](reviewing-"
+"and-exporting.md)."
