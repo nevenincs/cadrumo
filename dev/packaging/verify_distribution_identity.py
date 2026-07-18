@@ -104,6 +104,23 @@ _PLUGIN_DESCRIPTION_ES: Final[str] = (
 # and never_files_live in Spanish. The remaining claims (safety, privacy,
 # human_confirmation-EN) are not present in this short client-display field —
 # see the mcpb_client_display long_description for full six-claim coverage.
+# Approved English text extracted from the marketplace description labeled section.
+# Must exactly match what _labeled_product_description returns for the English
+# section of _workspace._MARKETPLACE_DESCRIPTION (stripped). Approved in S06.
+_MARKETPLACE_DESCRIPTION_EN: Final[str] = (
+    "Neve plugin marketplace - Claude plugins including the Cadrumo "
+    "Spanish-tax assistant (read-only toward AEAT: it never files; financial data "
+    "stays on-host)."
+)
+# Approved Spanish text extracted from the marketplace description labeled section.
+_MARKETPLACE_DESCRIPTION_ES: Final[str] = (
+    "Marketplace de plugins de Neve - plugins de Claude, incluido el "
+    "asistente de impuestos españoles Cadrumo (solo lectura frente a la AEAT: "
+    "nunca presenta declaraciones; los datos financieros permanecen en el equipo)."
+)
+# Per-claim keyword coverage for marketplace description: capability, safety,
+# on_host_storage, and never_files_live pass in both English and Spanish.
+# Privacy and human_confirmation are absent from this short marketplace blurb.
 _APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple[str, str]]]] = {
     # plugin.json description — used by the standalone Claude plugin.
     ("claude_plugin_client_display", "description"): frozenset(
@@ -115,6 +132,12 @@ _APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple
     ("claude_marketplace_plugin_client_display", "description"): frozenset(
         {
             (_PLUGIN_DESCRIPTION_EN, _PLUGIN_DESCRIPTION_ES),
+        }
+    ),
+    # marketplace.json description — the Neve marketplace manifest.
+    ("claude_marketplace_client_display", "description"): frozenset(
+        {
+            (_MARKETPLACE_DESCRIPTION_EN, _MARKETPLACE_DESCRIPTION_ES),
         }
     ),
 }

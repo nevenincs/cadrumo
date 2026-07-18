@@ -137,7 +137,14 @@ _MARKETPLACE_MANIFEST = "marketplace.json"
 # (``<plugin>@neve``), independent of the repo it is served from; kebab-case
 # (lowercase) is required by the claude.ai marketplace sync.
 _MARKETPLACE_NAME = "neve"
-_MARKETPLACE_DESCRIPTION = "Neve plugin marketplace — Claude plugins including the Cadrumo Spanish-tax assistant."
+_MARKETPLACE_DESCRIPTION = (
+    "English: Neve plugin marketplace - Claude plugins including the Cadrumo "
+    "Spanish-tax assistant (read-only toward AEAT: it never files; financial data "
+    "stays on-host).\n"
+    "Español: Marketplace de plugins de Neve - plugins de Claude, incluido el "
+    "asistente de impuestos españoles Cadrumo (solo lectura frente a la AEAT: "
+    "nunca presenta declaraciones; los datos financieros permanecen en el equipo)."
+)
 _MARKETPLACE_OWNER_NAME = _PLUGIN_AUTHOR_NAME
 _MARKETPLACE_PLUGINS_SUBDIR = "plugins"
 # The relative source the marketplace manifest points at, resolved from the
