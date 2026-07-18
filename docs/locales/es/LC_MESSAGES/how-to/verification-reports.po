@@ -1,0 +1,429 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/verification-reports.md:1
+msgid "Verify a draft filing and act on the findings"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:3
+msgid ""
+"This page covers the verification of a draft filing: running the check, "
+"reading the saved report, and acting on each kind of finding. "
+"Verification checks your saved calculation locally against the official "
+"form rules and saves a report of what it found. Nothing is sent to AEAT; "
+"everything happens on your computer. The order is always the same: "
+"calculate, then verify, then export or record the filing."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:10
+msgid ""
+"The check asks three things: does every required box have a value; do the"
+" sums add up consistently, with no box contradicting another; and does "
+"anything block the form from being treated as complete. It also checks "
+"conditions outside the draft itself: that any earlier period this form "
+"builds on is filed and evidenced, that the running IVA balance carried "
+"between periods reconciles, and that every carried-forward figure still "
+"points at the revision it was filed under."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:18
+msgid ""
+"A passed check is a local check. Treat it as \"my draft is complete and "
+"consistent\", never as \"I have filed\" or \"I am on time\". Verifying is"
+" **not** the agency accepting your filing (the tool never contacts AEAT),"
+" **not** a guarantee the upload will succeed (submission happens "
+"separately, outside the tool), and **not** a deadline check (a draft can "
+"pass long after the deadline; see [the deadline section](#the-filing-"
+"deadline-has-passed))."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:25
+msgid "Before you start"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:27
+msgid ""
+"**Requirement:** an active taxpayer profile with a name and surnames, and"
+" a calculated draft to check. Create a profile with `aeat config profile "
+"create`, supplying the name, surnames, and an activity-start date. The "
+"activity-start date matters for a first filing: it scopes out the "
+"dependency on a prior period you never filed, so verification can pass. "
+"See [Set up your profile](profile-setup.md)."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:34
+msgid ""
+"You also need a master-key passphrase (Cadrumo prompts for it). For a "
+"first-period Modelo 303, record some business activity in the ledger, "
+"then create and calculate the draft. The sequence below does all of this "
+"from the seed ledger."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:39
+msgid ""
+"If you want to understand how filings and saved calculations fit "
+"together, read [The filing workflow](filing-spine.md) first."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:42
+msgid "Run verification"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:44
+msgid ""
+"Create the draft, calculate it, verify it, and open the saved report. "
+"Verify saves a report whether or not the draft passes, and `verification-"
+"report view` reopens it by id:"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:52
+msgid ""
+"Period tokens are `0A` for annual, `1T` to `4T` for quarters, and `01` to"
+" `12` for months - see [Period tokens and dates](filing-calendar.md"
+"#period-tokens-and-dates)."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:55
+msgid ""
+"With the profile and draft above, this first-period Modelo 303 passes: "
+"the report reads `granted_verificado_completo` `true` and a "
+"`completeness_status` of `complete` - the saved calculation is now "
+"verified and ready to export."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:59
+msgid ""
+"When the draft does not pass, the report reads "
+"`granted_verificado_completo` `false` and a `completeness_status` of "
+"`incomplete` or `blocked`, and the saved calculation stays a draft. The "
+"command saves the report in both cases, so you can return to the findings"
+" later."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:64
+msgid ""
+"By default `work verify` checks the current saved calculation, and it "
+"checks only drafts. To pick a different draft, use `--select latest-"
+"draft` or pass that calculation's revision ID directly. Use `--by` to "
+"record who ran the check."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:68
+msgid "List your verification reports"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:70
+msgid ""
+"Every verification run leaves a report. List them with `aeat app modelo "
+"verification-report list`."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:73
+msgid ""
+"To narrow the list to the reports for one saved calculation, add "
+"`--calculation-revision-id` with that calculation's ID."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:76
+msgid "View a report and read the findings"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:78
+msgid ""
+"Open one report by its ID with `aeat app modelo verification-report view "
+"<verification-report-id>` (the sequence above did exactly this on the "
+"report it had just produced)."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:82
+msgid "The report shows:"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:84
+msgid "The completeness status: `complete`, `incomplete`, or `blocked`."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:85
+msgid "Whether the draft became verified (`granted_verificado_completo`)."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:86
+msgid "When the run happened and who ran it."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:87
+msgid "How many casillas the calculation resolved."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:88
+msgid "Which required casillas are still missing."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:89
+msgid "The list of findings."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:91
+msgid "Each finding carries:"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:93
+msgid "A severity: **blocking** or **warning**."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:94
+msgid "The affected casilla, where one applies."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:95
+msgid "A message describing what the rule checked."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:96
+msgid "A suggested next action."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:97
+msgid "The legal references behind the rule, where the rule has them."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:99
+msgid ""
+"For the legal references in machine-readable form, render the report as "
+"JSON. `--format json` is a global flag, so it goes before the command. "
+"The card in [Run verification](#run-verification) does exactly this: its "
+"closing frame is the JSON `verification-report view` of the report it "
+"just produced."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:104
+msgid ""
+"Each finding in the JSON output carries `legal_refs` and `source_refs`. "
+"Most findings name a legal reference - a cross-period dependency, for "
+"example, cites the law behind the prior-filing carry. A few purely "
+"structural checks, such as an unresolved registry snapshot, have none, so"
+" those fields are empty for them."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:109
+msgid ""
+"Blocking findings prevent the draft from becoming verified, and export "
+"needs a verified calculation. Warnings do not block; read them, decide "
+"whether they apply to you, and move on."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:113
+msgid "After any fix: re-run verification"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:115
+msgid ""
+"After you change anything, run `aeat app modelo work verify` again for "
+"the same target, exactly as the card in [Run verification](#run-"
+"verification) does. That card addresses the draft by its revision id; "
+"passing `--modelo`, `--year`, and `--period` instead re-runs the check "
+"against the current draft for that target."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:120
+msgid ""
+"Confirm the finding you addressed is gone from the new report. Repeat "
+"until the result shows `granted_verificado_completo` `true`. Each symptom"
+" section in this guide finishes with this re-run step."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:124
+msgid "The report says incomplete"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:126
+msgid ""
+"Incomplete means required casillas have no value yet. The report lists "
+"which ones under **missing required casillas**."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:129
+msgid ""
+"`--casilla` works only on boxes whose input kind is `manual`. A box "
+"filled from your ledger or another source is `bound`, and `--casilla` "
+"refuses it with `cannot override bucket-derived source-bound casillas`. "
+"Fix the source for those. See [Review your calculation values](review-"
+"calculation-values.md). Check which kind a box is, then supply the value "
+"for a manual one and recalculate:"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:139
+msgid ""
+"Then [re-run verification](#after-any-fix-re-run-verification). For the "
+"full input workflow, including where values come from and how to check "
+"them, see [Review your calculation values](review-calculation-values.md)."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:143
+msgid "The report says blocked"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:145
+msgid ""
+"Blocked means at least one blocking finding stands between your draft and"
+" a verified calculation. You cannot export the draft until you resolve "
+"every blocking finding."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:149
+msgid ""
+"Read each finding's suggested next action first; it tells you what the "
+"tool expects you to do. The common kinds of blocking finding:"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:152
+msgid ""
+"**A cross-field rule failed.** Two or more casillas disagree in a way the"
+" form rules do not allow. Check the values named in the finding against "
+"your records."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:154
+msgid ""
+"**A value could not be derived.** The tool needed to compute a casilla "
+"but your data did not provide enough input. Supply the missing input or "
+"enter the value directly."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:157
+msgid ""
+"**A prior-period record is missing.** This filing depends on a filing "
+"from an earlier period that is missing or unconfirmed. Record or confirm "
+"that earlier filing first. If you had no obligation in that earlier "
+"period because you had not started your activity yet, set your activity-"
+"start date on the profile so the dependency is scoped out (replace `me` "
+"with your profile name):"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:167
+msgid "After each fix, [re-run verification](#after-any-fix-re-run-verification)."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:169
+msgid "Export refuses because no verified calculation exists"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:171
+msgid ""
+"Export needs a verified (or locally-filed) saved calculation. It refuses "
+"a plain draft with a message such as \"current revision is still draft; "
+"verify it before exporting\" or \"no exportable verified or filed "
+"revision exists\". If the saved calculation is still a draft, verify it "
+"first, as in [After any fix: re-run verification](#after-any-fix-re-run-"
+"verification). Check where the filing stands, then retry the export once "
+"verification grants verified-complete:"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:183
+msgid "More than one filing matches"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:185
+msgid ""
+"When more than one filing or saved calculation matches the modelo, year, "
+"and period you named, the tool refuses to guess and prints the candidates"
+" instead."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:188
+msgid ""
+"List your filings with their work-unit IDs with `aeat app modelo work "
+"list`, then target the one you mean by passing its work-unit ID directly "
+"to `aeat app modelo work verify --work-unit-id <work-unit-id>`."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:192
+msgid ""
+"To confirm which filing a command touched, check its state and the "
+"actions taken on it:"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:199
+msgid "The filing deadline has passed"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:201
+msgid ""
+"Verification does not check filing deadlines. It still runs for a past "
+"period and can pass; the deadline gate applies later, when you record the"
+" filing with `work file`."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:205
+msgid ""
+"If the deadline has passed, file late through AEAT's own channels; "
+"consult AEAT or an advisor about any surcharges that may apply."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:208
+msgid "Where to get help"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:210
+msgid ""
+"Command labels and messages display in Spanish to match the official AEAT"
+" forms, while this guide is in English. The field names this guide names "
+"- `granted_verificado_completo`, `completeness_status`, "
+"`finding_legal_refs` - match the output exactly, so you can map a Spanish"
+" line back to the step that describes it."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:216
+#, python-brace-format
+msgid ""
+"If a report or an error message does not match what this guide describes,"
+" see [Diagnose and repair](troubleshooting.md). Unfamiliar terms are "
+"defined in the {doc}`glossary </_generated/glossary>`. Before you share "
+"command output to ask for help, remove personal tax identifiers such as "
+"your NIF, CIF, DNI, NIE, or NII."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:222
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/verification-reports.md:224
+msgid ""
+"[File at AEAT](file-at-aeat.md): upload the exported file at the AEAT "
+"portal."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:225
+msgid ""
+"[Review your calculation values](review-calculation-values.md): check and"
+" correct the inputs behind each casilla."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:226
+msgid ""
+"[The filing workflow](filing-spine.md): how filings, saved calculations, "
+"and reports fit together."
+msgstr ""
+
+#: ../../how-to/verification-reports.md:227
+msgid "[CLI reference](../cli/index.rst): every command and option."
+msgstr ""
+

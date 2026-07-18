@@ -1,0 +1,102 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../_release_notes_template.md:14
+msgid "Cadrumo vX.Y.Z"
+msgstr ""
+
+#: ../../_release_notes_template.md:16
+msgid ""
+"Released: YYYY-MM-DD Soak window: YYYY-MM-DD HH:MM UTC → YYYY-MM-DD HH:MM"
+" UTC (N hours)"
+msgstr ""
+
+#: ../../_release_notes_template.md:19
+msgid "Highlights"
+msgstr ""
+
+#: ../../_release_notes_template.md:21
+msgid "One or two sentences on the most Kent-visible change in this release."
+msgstr ""
+
+#: ../../_release_notes_template.md:23
+msgid "Features"
+msgstr ""
+
+#: ../../_release_notes_template.md:25
+msgid "(from `CHANGELOG.md` `### Features` for this version)"
+msgstr ""
+
+#: ../../_release_notes_template.md:27
+msgid "Bug Fixes"
+msgstr ""
+
+#: ../../_release_notes_template.md:29
+msgid "(from `CHANGELOG.md` `### Bug Fixes` for this version)"
+msgstr ""
+
+#: ../../_release_notes_template.md:31
+msgid "Breaking Changes"
+msgstr ""
+
+#: ../../_release_notes_template.md:33
+msgid ""
+"None. _(or: enumerate explicitly — pre-1.0 releases may carry breaking "
+"changes in a minor bump; state the migration step for each.)_"
+msgstr ""
+
+#: ../../_release_notes_template.md:36
+msgid "Upgrade"
+msgstr ""
+
+#: ../../_release_notes_template.md:42
+msgid "or, for an existing install:"
+msgstr ""
+
+#: ../../_release_notes_template.md:48
+msgid "Rollback"
+msgstr ""
+
+#: ../../_release_notes_template.md:50
+msgid ""
+"If this release regresses, see `RELEASING.md#rollback-procedure`. In "
+"short: the previous version remains installable and this version can be "
+"yanked from PyPI without breaking anyone pinned to an earlier pin."
+msgstr ""
+
+#: ../../_release_notes_template.md:54
+msgid "Verification"
+msgstr ""
+
+#: ../../_release_notes_template.md:56
+msgid "`just packaging-smoke` green on Linux/WSL"
+msgstr ""
+
+#: ../../_release_notes_template.md:57
+msgid "`uvx --from cadrumo==X.Y.Z aeat --version` resolves on a clean machine"
+msgstr ""
+
+#: ../../_release_notes_template.md:58
+msgid ""
+"`pip install cadrumo==X.Y.Z` pulls both exact-version data distributions"
+"     and `aeat app registry verify` runs clean"
+msgstr ""
+

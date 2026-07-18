@@ -1,0 +1,638 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../reference/import-export-and-evidence.md:1
+msgid "Import, export, and evidence"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:3
+msgid ""
+"At a high level, the architecture turns source documents and operator "
+"inputs into a traceable tax position. It deliberately separates “data we "
+"received,” “values we calculated,” “a file prepared for the Agencia "
+"Estatal de Administración Tributaria (AEAT),” and “evidence that AEAT "
+"actually received it.”"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:9
+msgid ""
+"`source documents → typed financial facts → registry-grounded calculation"
+" → AEAT upload file → official filing evidence`"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:11
+msgid "What the data actually represents"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Layer"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Actual data"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Meaning for you"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Source evidence"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"Taxpayer document bytes, provenance, and content digests; separately, "
+"official source material grounds the registry"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"The original material supporting the tax position and the sources "
+"governing its interpretation"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Ledger facts"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"Typed transactions, direction, category, amount, dates, and linked "
+"evidence"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"The economic events that may participate in a return; the filing period "
+"is derived from their dates"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Registry"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+#, python-brace-format
+msgid ""
+"{term}`modelo` revision, numbered {term}`casilla` fields, formulas, "
+"bindings, legal references, and export layout"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "The versioned rulebook used to interpret the facts"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Calculation revision"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Inputs, observations, overrides, calculated casillas, and provenance"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "A reproducible attempt at calculating one return"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Filing record"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"Current or superseded filing state linked to a calculation revision and "
+"optionally carrying external AEAT evidence"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "What the application records as filed, and the history behind it"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Official evidence"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+#, python-brace-format
+msgid ""
+"{term}`justificante`, AEAT verification record, or captured filed "
+"declaration"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Evidence originating from AEAT after submission"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:22
+msgid ""
+"Every calculated casilla can carry formula, legal, and source provenance."
+" Ledger evidence records which financial facts contributed to it. Review "
+"the values in [Review calculation values](../how-to/review-calculation-"
+"values.md), then follow the full revision workflow in [Prepare and manage"
+" filings](../how-to/filing-spine.md)."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:27
+msgid "What can be imported"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:29
+msgid "**Bank and financial transactions:**"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:31
+msgid "CSV or TXT containing supported delimited bank data"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:32
+msgid "XLSX, but not legacy XLS"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:33
+msgid "OFX or QFX when the optional OFX dependency is installed"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:34
+msgid "Recognized German-language N26 monthly statement PDFs"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:36
+msgid ""
+"These become normalized ledger transactions, not tax-return values "
+"directly. File detection also uses content signatures to avoid trusting "
+"misleading extensions. Importing a row does not infer business use, "
+"category, taxable base, Impuesto sobre el Valor Añadido (IVA), or "
+"Impuesto sobre la Renta de las Personas Físicas (IRPF) treatment. See "
+"[Import and manage transactions](../how-to/import-bank-statements.md)."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:43
+msgid "**Purchase invoices and receipts:**"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:45
+msgid "PDF"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:46
+msgid "PNG or JPEG image evidence"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:47
+msgid "CSV or XLSX for structured invoice-catalogue rows"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:49
+msgid ""
+"Document bytes are stored as evidence and can then be linked to ledger "
+"facts. Structured invoice rows, document evidence, and bank transactions "
+"remain separate records until you link them. They substantiate a "
+"transaction or IVA treatment; merely importing an invoice does not "
+"automatically make it deductible. See [Attach invoices and receipts"
+"](../how-to/ledger-evidence.md) and [Manage business invoices](../how-to"
+"/manage-invoices.md)."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:56
+msgid "**AEAT declaration copies:**"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:58
+msgid ""
+"PDF, but only where the relevant Modelo and revision have an exact "
+"extraction profile"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:61
+msgid ""
+"These produce observed casilla values with document digest and registry "
+"revision provenance. They are observations, not automatically trusted "
+"calculation authority. Casilla reconciliation currently covers modelos "
+"100, 111, 130, 190, 303, and 390."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:66
+msgid "**AEAT submitted-data files:**"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:68
+msgid "Fixed-width “Diseño de Registros” files"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:69
+msgid "XML-dictionary layouts"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:71
+msgid ""
+"These can be parsed into casilla observations where a complete registry "
+"layout exists. Support is revision-specific, not universal. This surface "
+"parses AEAT archive bytes; the submitted-data importer is not a general "
+"CSV importer."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:75
+msgid "**AEAT justificantes:**"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:77
+msgid "Justificante PDF or a receipt read from AEAT"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:79
+msgid ""
+"The parser extracts receipt metadata such as Modelo, period, taxpayer, "
+"submission time, verification code, and totals. A justificante supports "
+"the claim that AEAT returned specific receipt information. It is not "
+"necessarily a complete representation of every filed casilla, and it does"
+" not prove that the tax answer is correct. See [Reconcile a filing"
+"](../how-to/reconcile.md)."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:85
+msgid "**Google Drive and Sheets:**"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:87
+msgid ""
+"Drive links and folder pulls acquire supported PDF, PNG, and JPEG bytes "
+"through the normal encrypted attachment path."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:89
+msgid ""
+"Sheets can provide typed operator, binding, and relation edits for "
+"calculation. Pull can also assemble row-set observations in its output."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:91
+msgid ""
+"Sheet-based computation uses the canonical local calculation engine and "
+"is explicitly non-persistent until another canonical workflow accepts the"
+" result."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:95
+msgid ""
+"Google is an optional acquisition and review adapter, not the tax "
+"database, ledger authority, calculation authority, or recovery system. "
+"See [Review calculations with Google Sheets](../how-to/review-with-"
+"google-sheets.md)."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:99
+msgid "What each export actually means"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Export"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Purpose"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "What it does not prove"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "AEAT fichero or XML export"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"Produces the local payload you can upload through AEAT’s official "
+"interface where the selected Modelo revision has a complete registry "
+"export layout"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "It does not prove submission or acceptance"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Google Sheet export"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Human review, reconciliation, parity checking, and what-if editing"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "It is not a filing artefact or authoritative calculation record"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Accountant review package"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"Shares the draft, calculation revision, provenance, and ledger evidence "
+"when present in a checksum-verifiable ZIP"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Checksums alone do not identify who created or approved it"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Evidence bundle"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"Forensic package containing referenced record bytes and a content-"
+"addressed manifest"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "It is not itself AEAT-issued evidence"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Portable profile export"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"Produces a structured, portable copy of one profile — identity and facts,"
+" work units, ledger transactions, calculation revisions, and filing "
+"records — as a JSON bundle, passphrase-encrypted by default"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"It is not a full backup: attachment evidence bytes, AEAT captures, and "
+"the audit trail are excluded"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Subject-access request"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid ""
+"Produces the same portable profile bundle as a data-subject right-of-"
+"access response"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "It is not AEAT-issued evidence and not a full backup"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Sealed custody archive"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "Backup and full recovery of the secured profile"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md
+msgid "It is not the same thing as an audit or accountant package"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:111
+msgid ""
+"The filing exporter explicitly writes a local file and never contacts "
+"AEAT. It can reread the output and detect drift from the approved draft "
+"for parser-covered casillas. It reports any unchecked casillas "
+"separately. This remains pre-filing verification. Follow [Upload your "
+"exported modelo at the AEAT portal](../how-to/file-at-aeat.md) to "
+"complete the operator-controlled filing steps."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:118
+msgid ""
+"The application labels local exports as "
+"`local_export_not_official_aeat_filing_evidence`. Official proof must "
+"come back from AEAT as a justificante, filed-declaration history, "
+"verification record, or captured filed copy."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:123
+msgid ""
+"The base accountant review ZIP is plaintext and checksum-verifiable. "
+"Separate operations can add an Ed25519 signature envelope or encrypt the "
+"package for a registered recipient. Verify signatures against a trusted "
+"public key. Signing, counter-signing, receipt verification, and recipient"
+" encryption are distinct operations. A review-only handoff carries no "
+"filing authority."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:129
+msgid ""
+"Signing and counter-signing leave the ZIP plaintext. Creating a counter-"
+"signature does not verify the operator signature or archive; receipt "
+"verification performs those checks. Recipient encryption encrypts the "
+"bytes supplied to it, but does not first require checksum or signature "
+"verification. After decryption, verify the recovered package and "
+"signatures separately."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:136
+msgid ""
+"The portable profile export and the subject-access request are the same "
+"operation with two purposes. The `aeat config profile export` command "
+"writes a passphrase-encrypted bundle by default, with a cleartext option "
+"for unencrypted JSON intended only for local or subject-access handling; "
+"the `aeat config profile subject-access-request` command writes that same"
+" bundle as a right-of-access response. Both go through one export service"
+" and one bundle schema; the data categories the response reports are "
+"derived from the bundle itself, not a fixed list. Publication is atomic: "
+"the bundle is staged, then replaced into place in one step, so a crash "
+"never leaves a half-written file. The cleartext form is equally readable "
+"once it leaves the application whichever purpose produced it, so both "
+"carry the same handoff risk. Delete a cleartext bundle after the local or"
+" subject-access handling is complete; do not email, sync, or transfer it."
+" Neither is a full backup; use the sealed custody archive for that."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:151
+msgid ""
+"The sealed custody archive serves a different purpose. It is an encrypted"
+" full-custody recovery transport for classified durable custody. Process-"
+"local and rebuildable derivatives are deliberately excluded. Without a "
+"recovery passphrase, restoration requires the matching active bucket key."
+" A recovery passphrase permits restoration into a fresh storage root."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:157
+msgid "What an audit export is for"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:159
+msgid ""
+"When an audit or professional review is requested, the audit evidence "
+"bundle is intended to let the recipient establish:"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:162
+msgid "Which original records supported the return."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:163
+msgid "Whether those bytes still match their recorded SHA-256 digests."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:164
+msgid "Which ledger facts contributed to which casillas."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:165
+msgid "Which registry and legal references governed the calculation."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:166
+msgid "Which calculation revision and filing record were involved."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:167
+msgid "Whether later revisions superseded the original position."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:169
+msgid ""
+"The audit evidence bundle ZIP file contains reachable record bytes "
+"followed by `manifest.json`. Failed verification prevents export; "
+"incomplete packages require an explicit override. Replay reruns the "
+"bundle checks but never contacts AEAT or recalculates the tax result. "
+"Through the current command-line interface, replay cannot verify "
+"referenced record bytes because no payload loader is supplied."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:176
+msgid ""
+"The current audit commands do not yet provide a complete one-command "
+"audit handoff. It has no payload-loader registry or bundle-build command."
+" Every non-empty audit evidence bundle therefore appears incomplete "
+"through the command-line interface. A forced incomplete export may omit "
+"records and may contain only the manifest. Do not treat that output as a "
+"complete evidence package."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:182
+msgid "What a complete audit handoff means"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:184
+msgid "A genuinely complete audit handoff would normally combine:"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:186
+msgid "Official AEAT evidence proving submission."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:187
+msgid "The exact submitted-file digest or captured filed copy."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:188
+msgid ""
+"A verified audit evidence bundle containing every referenced supporting "
+"record."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:189
+msgid ""
+"The calculation or review package explaining how those records produced "
+"the declared casillas."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:192
+msgid ""
+"That combination supports both halves of the audit question: “Was this "
+"actually filed?” and “What facts, rules, and calculations produced it?”"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:195
+msgid ""
+"The audit evidence bundle does not currently include every item listed "
+"above. Assemble and verify the missing items separately; a bundle is "
+"complete only when every referenced supporting record and payload is "
+"present."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:199
+msgid "Important limitations"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:201
+msgid ""
+"Support is limited to Modelo and revision combinations backed by "
+"registered, authoritative layouts and real evidence. Consequently:"
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:204
+msgid ""
+"Import and export support must not be described as universal across all "
+"Modelos and periods."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:206
+msgid "Filed declaración-PDF extraction requires an exact registered profile."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:207
+msgid ""
+"An operator-supplied local observation, local export, checksum, Google "
+"Sheet, or review ZIP cannot prove AEAT acceptance. A locally held AEAT "
+"justificante can become official evidence. Import it through the "
+"external-evidence workflow."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:211
+msgid ""
+"Integrity proves that bytes have not changed; it does not establish "
+"signer identity or independent legal authenticity. Use the separate "
+"review-package signing workflow when author identity matters."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:214
+msgid ""
+"Evidence is encrypted in normal custody. Base review and audit ZIPs are "
+"deliberate plaintext exports, so secure delivery becomes your "
+"responsibility."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:216
+msgid ""
+"A forced incomplete audit evidence bundle export is not a complete "
+"handoff."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:217
+msgid ""
+"Replay reruns bundle checks. Through the current command-line interface, "
+"it cannot verify referenced bytes, and it does not reproduce or "
+"recalculate the tax decision."
+msgstr ""
+
+#: ../../reference/import-export-and-evidence.md:221
+msgid ""
+"For storage, recovery, and external-access boundaries, see [Protect "
+"access to taxpayer data](../how-to/protect-data-access.md) and "
+"[Filesystem, state, and safety](filesystem-state-and-safety.md)."
+msgstr ""
+

@@ -1,0 +1,482 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/classify-with-llm.md:1
+msgid "Classify transactions with an LLM"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:3
+msgid ""
+"This page covers the LLM-assisted classification workflow: setting up a "
+"provider, previewing a suggestion for one transaction, the review loop "
+"(apply, reject, or override), saturating the IVA tax fields, and reading "
+"an attached invoice with a model, on your own machine or, with explicit "
+"consent, through a cloud provider. The suggestion is always a starting "
+"point: you confirm or correct it, and the model never sets a euro amount."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:10
+msgid ""
+"Classification does not contact AEAT and does not submit anything. The "
+"provider CLI may contact its own external service depending on your "
+"provider setup; see [the privacy boundary](#privacy-boundary) before "
+"using real taxpayer data."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:15
+msgid ""
+"The LLM and vision commands on this page need a provider CLI or a local "
+"vision model that the documentation sandbox does not run, so they are "
+"shown as display-only frames. The local commands around them run live at "
+"build time."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:19
+msgid "Before you start"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:21
+msgid "You need:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:23
+msgid ""
+"An active profile, see [set up your taxpayer profile](profile-setup.md), "
+"and at least one transaction in its ledger to classify. See [Import and "
+"manage transactions](import-bank-statements.md)."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:26
+msgid ""
+"Your master-key passphrase. The command opens the encrypted ledger, so it"
+" prompts for the passphrase."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:28
+msgid "A provider CLI installed, on `PATH`, and logged in."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:30
+msgid "The runtime emits help, prompts, and messages in Spanish."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:32
+msgid "Set up a provider"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:34
+msgid ""
+"`aeat` does not store LLM credentials and has no separate LLM account "
+"configuration. It runs a provider CLI that is already installed and "
+"authenticated on your system. The classification command accepts provider"
+" names such as `claude`, `antigravity`, and `codex`; `antigravity` uses "
+"Google's `agy` CLI, the supported successor to the retired standalone "
+"`gemini` CLI."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:41
+msgid ""
+"List the provider CLIs visible on `PATH`. Each row reports a provider, "
+"its status (`available` or `unavailable`), and a fix when something is "
+"missing:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:47
+msgid ""
+"This checks discoverability only, not account login. The local vision "
+"reader appears here too: `ollama-vision` shows `unavailable` with a fix "
+"until Ollama is running. For a wider check that also reports profile "
+"service capabilities, run `aeat config check`; it lists each LLM provider"
+" as `disponible` or `ausente` with the fix for each problem."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:53
+msgid ""
+"Install and authenticate the provider with its own CLI or account flow. "
+"The login command and data-retention settings belong to the provider, not"
+" to `aeat`. Then smoke-test with a preview, which saves nothing:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:60
+msgid ""
+"A logged-out provider makes the command refuse and relay the provider's "
+"own error (for example `La clasificacion por LLM fallo: claude CLI exited"
+" with 1: 'Not logged in ...'`). Complete that provider's login and retry."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:64
+msgid "Ask for a suggestion"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:66
+msgid ""
+"Find a row that still needs classification and inspect it. Then send that"
+" one row to the provider for a preview:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:73
+msgid ""
+"`aeat` sends that one row to the selected provider CLI, which suggests a "
+"classification (`BUSINESS`, `PERSONAL`, or `MIXED`), an expense category "
+"when it can choose one from the allowed list, a confidence, and a short "
+"reason. In preview mode nothing is saved. For the full machine-readable "
+"record, including the `provenance` (`llm:<provider>`) and `persisted` "
+"fields, put the global JSON flag before the subcommand:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:83
+msgid ""
+"Use the row description, amount, direction, counterparty, and source "
+"documents to decide whether the suggestion makes sense. For the "
+"underlying manual concepts, see [Classify transactions](classify-"
+"transactions.md)."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:87
+msgid "Review, apply, reject, or override"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:89
+msgid "The review loop has four terminals:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:91
+msgid ""
+"**Review.** Preview without `--apply`. Nothing is saved; walking away "
+"leaves the row unchanged."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:93
+msgid ""
+"**Apply.** Persist the suggestion after review. The apply output shows "
+"the transaction id, `clasificado-por llm:<provider>`, and the new review "
+"status; provenance, confidence, and reason are recorded with the "
+"classification event."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:96
+msgid ""
+"**Reject.** Record that the model was wrong, with your reason, as an "
+"audit event; the row stays unclassified and the record stays in history. "
+"`--reject` cannot be combined with `--apply`. Previewing and walking away"
+" also changes nothing, but `--reject` is what writes the audit trail."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:100
+msgid ""
+"**Override.** Classify manually whenever the suggestion is wrong or "
+"incomplete. Manual classification always wins and supersedes a derived or"
+" model-applied value."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:104
+msgid ""
+"Apply and reject both run the provider, so they are shown as display-only"
+" frames:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:110
+msgid ""
+"Override runs entirely on your machine. Classify the row by hand with the"
+" classification and category you choose:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:117
+msgid ""
+"If the row is mixed-use, the LLM suggestion alone is not enough; supply "
+"the business share through the normal [mixed-use workflow](classify-"
+"transactions.md#classify-mixed-use-transactions). After important "
+"corrections, re-run preflight for the period:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:126
+msgid "Fill in the tax fields automatically"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:128
+msgid ""
+"A plain applied suggestion saves the classification and the expense "
+"category; it does not fill in the regulated tax fields. Add `--saturate` "
+"to also select an IVA category and derive the taxable base, IVA rate, and"
+" IVA amount. The model never invents a number: it only selects the IVA "
+"category; the rate comes from the registry, and the base and IVA amount "
+"are computed from the transaction total:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:138
+msgid ""
+"The preview adds the selected IVA category and, when the category has a "
+"Spanish rate, the derived figures; base and IVA always add up to the "
+"transaction total. A category with no simple Spanish rate (an intra-"
+"community supply, a reverse-charge purchase) shows a note instead of "
+"numbers, and you complete those by hand. The model may also decline and "
+"return `unknown` rather than guess; re-run, or pick the category "
+"yourself."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:145
+msgid ""
+"When you already know the IVA category, or the model returned `unknown`, "
+"classify the row as business first, then let the system derive the "
+"numbers without any `--llm`. This derives the figures from the official "
+"rate exactly as the model path does and records them as system-derived. "
+"It only touches the IVA fields, and the row must already be classified "
+"business or mixed:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:155
+msgid ""
+"To override any field by hand, classify manually with the figures "
+"yourself. The taxable base plus IVA must equal the transaction total to "
+"the cent:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:162
+msgid ""
+"IRPF category is still entered manually in [Classify transactions"
+"](classify-transactions.md). Use [Review and supply calculation inputs"
+"](review-calculation-values.md) when a modelo later reports missing "
+"values."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:167
+msgid "Read the attached invoice"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:169
+msgid ""
+"Attach a purchase invoice or receipt to a transaction (see [Attach "
+"invoices and receipts](ledger-evidence.md)), then let the model read it "
+"while classifying with `--read-evidence`. The model chooses the spending "
+"category and the IVA situation from what it reads; `aeat` derives every "
+"euro amount from the registry. How the document is read depends on the "
+"file:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:175
+msgid ""
+"**A scanned PDF or an image** is read on your own machine by a local "
+"vision model. Nothing leaves the machine, no acknowledgement is needed, "
+"no `--llm` provider is needed, and it works in gestor and professional "
+"deployments."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:179
+msgid ""
+"**A text-layer PDF** has its text extracted and sent to a cloud provider "
+"(the same `--llm` providers). This sends the text off your machine, so it"
+" is off by default, barred for gestor deployments, and gated behind an "
+"explicit per-run acknowledgement."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:184
+msgid ""
+"Prefer the on-host path. Install Ollama and pull the default vision model"
+" first (this is an Ollama command, not an `aeat` command):"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:191
+msgid ""
+"`qwen2.5vl:3b` is about 3 GB and runs on a consumer GPU or on CPU. On an "
+"8 GB or larger GPU, pull `qwen2.5vl:7b` for stronger reading of dense "
+"scans; for a low-memory or CPU-only machine, pull `moondream`. Then "
+"classify from the attached image, previewing first. Override the vision "
+"model for one run with `--vision-model qwen2.5vl:7b`:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:200
+msgid ""
+"Reading a text-layer PDF through a cloud provider requires all of the "
+"following, or the command refuses and explains why:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:203
+msgid ""
+"The installation permits it. Cloud evidence reads are off by default and "
+"stay off in gestor installations; whoever administers the installation "
+"decides this deployment setting."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:206
+msgid ""
+"You acknowledge it on this run with `--evidence-acknowledged`. The "
+"acknowledgement is never remembered; pass it every time."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:212
+msgid ""
+"The acknowledgement gates the upload of the invoice text only. A "
+"transaction with no attached evidence sends nothing extra: the provider "
+"receives only the transaction row, exactly as in the plain suggestion "
+"flow."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:216
+msgid "Split a multi-line invoice automatically"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:218
+msgid ""
+"When the model reads an invoice with several lines at different rates or "
+"categories, the preview adds a `split recommended` note with the exact "
+"command to separate them. Each line must become its own entry so its "
+"deductible IVA and base-rate expense file independently. To act on it in "
+"one step, add `--auto-split`. `--auto-split` requires `--read-evidence` "
+"and cannot combine with the manual override flags:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:228
+msgid ""
+"A multi-line invoice previews one child transaction per line, each with "
+"its own category, IVA category, and registry-derived base and IVA; the "
+"children sum exactly to the original amount. A single-line invoice is "
+"classified in place with no split."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:233
+msgid "How `aeat` protects the documents it reads"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:235
+msgid ""
+"Invoice bytes live only in encrypted secure storage. Reading decrypts "
+"them into memory for the one call and never writes them to a temp file, a"
+" log, or a cache."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:238
+msgid ""
+"A scanned or image read sends the image only to the local model over a "
+"loopback connection on your machine. Nothing leaves the machine."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:240
+msgid ""
+"A text-layer read sends only the extracted text, and only to a cloud "
+"provider you explicitly permitted and acknowledged. It never sends the "
+"PDF bytes."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:243
+msgid ""
+"The model selects only the classification, the category, the IVA "
+"category, and a split proportion. `aeat` derives every rate, base, and "
+"IVA amount from the registry, and refuses to persist a result whose parts"
+" do not add up. When the printed IVA does not match the computed IVA, the"
+" review shows an advisory so you can check before filing."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:249
+msgid "Evidence deployment settings"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:251
+msgid ""
+"Consent and model settings are deployment configuration, off by default "
+"and administered outside this workflow. The full list lives in the "
+"[environment overrides reference](../reference/environment-overrides.md)."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:255
+msgid "See how each suggestion was produced"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:257
+msgid ""
+"Every applied result records how it was produced, so a later review shows"
+" the source:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:260
+msgid "`llm:local-vision:<model>`: read on-host by the local vision model."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:261
+msgid "`llm:<provider>:<model>`: classified by a cloud provider."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:262
+msgid ""
+"`derived:iva-category`: you chose the IVA category and `aeat` derived the"
+" rest."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:264
+msgid "`manual`: you set the classification by hand."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:266
+msgid "Inspect a transaction and its history at any time:"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:272
+msgid "Limits and batch alternatives"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:274
+msgid ""
+"The LLM path is single-transaction only; it cannot be combined with "
+"`--from-csv` or manual `--classification` flags. For bulk work use the "
+"CSV-based manual path (`aeat app ledger classify --from-csv "
+"./classifications.csv`) or deterministic stored rules (`aeat app ledger "
+"rule add` then `rule apply --dry-run` then `rule apply`); both are "
+"covered in [Classify transactions](classify-transactions.md)."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:281
+msgid "Privacy boundary"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:283
+msgid ""
+"LLM classification calls the selected provider CLI on your machine. That "
+"CLI may send prompt data to the provider's cloud service, depending on "
+"how that provider works and how your account is configured. Treat "
+"transaction descriptions, counterparties, amounts, categories, and any "
+"profile context in the prompt as taxpayer data. Do not use production "
+"data with an LLM provider unless your provider setup and privacy policy "
+"permit it."
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:290
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:292
+msgid "[Classify transactions](classify-transactions.md)"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:293
+msgid "[Attach invoices and receipts](ledger-evidence.md)"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:294
+msgid "[Import and manage transactions](import-bank-statements.md)"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:295
+msgid "[Review and supply calculation inputs](review-calculation-values.md)"
+msgstr ""
+
+#: ../../how-to/classify-with-llm.md:296
+msgid "[CLI reference](../cli/index.rst)"
+msgstr ""
+

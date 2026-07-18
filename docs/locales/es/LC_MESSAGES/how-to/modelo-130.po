@@ -1,0 +1,295 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/modelo-130.md:1
+msgid "Prepare a Modelo 130 IRPF instalment"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:3
+msgid ""
+"This page covers the quarterly Modelo 130 filing: the complete create-"
+"calculate-verify-export chain, the cumulative year-to-date behaviour that"
+" makes each quarter build on the ones before it, and the prior-period "
+"values a later quarter carries in. Modelo 130 is the IRPF payment on "
+"account for self-employed activity under estimación directa; the "
+"registry's official title is \"Impuesto sobre la Renta de las Personas "
+"Físicas. Actividades económicas en estimación directa. Pago "
+"fraccionado.\""
+msgstr ""
+
+#: ../../how-to/modelo-130.md:11
+msgid ""
+"`aeat` does not submit Modelo 130 to AEAT. Export creates a local file "
+"that you upload through the official AEAT channel yourself."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:14
+msgid "The tool needs a master-key passphrase and prompts for it."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:16
+msgid ""
+"**Requirement:** a valid taxpayer profile with self-employed activity "
+"under estimación directa. Create one with `aeat config profile create "
+"<name>` before you start. [Set up your taxpayer profile](profile-"
+"setup.md) walks through it."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:20
+msgid "The complete first-quarter chain"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:22
+msgid ""
+"This is the full path from an empty store to a verified draft for a "
+"first-period filer. The preparation below sets up a self-employed profile"
+" and a classified ledger, then creates the draft, calculates it, and "
+"verifies it. Each load-bearing detail is explained under the sequence."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:31
+msgid "Load-bearing details:"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:33
+msgid ""
+"Create the profile with `--quiet` for the non-interactive form. The "
+"profile MUST carry `--name` and `--surnames`, or export later refuses "
+"with \"requires the operator name\"."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:36
+msgid ""
+"`--activity-start-date 2026-01-01` scopes the prior-period dependency out"
+" for a first period. Without it, verify blocks on the previous quarter."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:38
+msgid ""
+"`ledger add --amount` is the GROSS amount (`--taxable-base` + `--iva-"
+"amount`); the tool enforces the sum to the cent. A deductible-expense row"
+" needs `--category-id` (list ids with `aeat app ledger categories`)."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:42
+msgid ""
+"The three `--binding ...=0` values are the prior-period carries a true "
+"first period does not have: earlier quarters' negative results, earlier "
+"instalments paid, and last year's net income (used for the minoración). "
+"Later quarters resolve them from your own filed history instead - see "
+"[the cumulative behaviour](#each-quarter-is-cumulative) below."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:47
+msgid ""
+"With the two rows above, calculate reports cumulative income (casilla "
+"`01`) of `1000.00`, rendimiento neto (casilla `03`) of `500.00` - income "
+"base minus expense base - and a pago fraccionado (casilla `04`) of "
+"`100.00`, 20 percent of the net."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:51
+msgid ""
+"`verify` reports `completeness complete` and `granted true`. Export then "
+"writes the `.boe` and reports its path, byte size, and SHA-256 checksum."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:54
+msgid "Before you create the draft"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:56
+msgid ""
+"[Set up your taxpayer profile](profile-setup.md). Modelo 130 applies to a"
+" profile with self-employed activity under estimación directa; check "
+"applicability with `aeat app overview explain 130`."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:59
+msgid ""
+"[Plan your filing calendar](filing-calendar.md). Modelo 130 uses "
+"quarterly periods `1T` through `4T` only."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:61
+msgid ""
+"[Import or add your transactions](import-bank-statements.md), then "
+"[classify them](classify-transactions.md). Modelo 130 reads classified "
+"business income and expense rows; expenses need a category."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:65
+msgid "What Modelo 130 calculates"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:67
+msgid ""
+"Modelo 130 calculates the quarter's IRPF payment on account from your "
+"activity's year-to-date figures: cumulative income (casilla `01`) minus "
+"cumulative deductible expenses (casilla `02`) gives the rendimiento neto "
+"(casilla `03`); the instalment (casilla `04`) is a percentage of that "
+"net; prior instalments already paid this year (casilla `05`) and "
+"withholdings you suffered (casilla `06`) come off; the minoración by net-"
+"income level (casilla `13`) and negative results from earlier quarters "
+"(casilla `15`) adjust the figure; and casilla `19` is the final result. A"
+" negative casilla-17 balance is carried forward as `saldo-negativo-fin-"
+"periodo` for later quarters."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:78
+msgid ""
+"The ledger feeds the cumulative income, expense, and withholding figures "
+"through registry bindings; prior filings feed the carries. Casillas `06`,"
+" `08`, `10`, `16`, and `18` are manual inputs for the cases that apply to"
+" you (withholdings, second-activity volume, vivienda habitual deduction, "
+"prior complementary results). Inspect what is bound, missing, or manual:"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:88
+msgid "Supply a manual box value"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:90
+msgid ""
+"Casilla `06` (Retenciones e ingresos a cuenta) is a manual box: the "
+"ledger does not fill it, so you supply it by hand with `--casilla`. Pass "
+"it in the same calculate call as the first-period bindings, then review "
+"the saved calculation to confirm your value landed:"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:99
+msgid ""
+"`--casilla` works only on `manual` boxes; a `bound` box filled from your "
+"ledger (like casilla `02`) refuses the override. Check a box's kind with "
+"`aeat app modelo casillas 130` (the inspect sequence above shows this), "
+"and see [Review and supply calculation inputs](review-calculation-"
+"values.md) for the full input workflow."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:105
+msgid "Each quarter is cumulative"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:107
+msgid ""
+"Modelo 130 is a year-to-date form, not a quarter-slice form. The second "
+"quarter's casilla `01` covers January through June, not April through "
+"June; each quarter's instalment is computed on the whole year so far, and"
+" the instalments you already paid come off through casilla `05`."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:112
+msgid ""
+"The tool implements this through cumulative ledger bindings (the ledger "
+"window for `2T` is January 1 to June 30) and `previous_filing` bindings "
+"that read your own earlier filed quarters:"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:116
+msgid ""
+"`modelo-130-pagos-fraccionados-anteriores` - the instalments already paid"
+" this year, from your filed `1T`..`3T` records."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:118
+msgid ""
+"`modelo-130-resultados-negativos-anteriores` - negative results carried "
+"from earlier quarters."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:120
+msgid ""
+"`irpf.previous_year_economic_activity_net_income` - last year's net "
+"income, which decides the minoración tier."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:123
+msgid ""
+"For a first period these have no history, which is why the first-quarter "
+"chain passes them as `--binding ...=0`. For later quarters do NOT pass "
+"zeros: leave the bindings unset so they resolve from the filed prior "
+"quarter. If the prior quarter is not filed and evidenced locally, verify "
+"blocks with a cross-period finding - record or reconcile that earlier "
+"filing first (see [Reconcile a filing](reconcile.md))."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:130
+msgid "Calculate, review, verify, export"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:132
+msgid ""
+"The chain is the standard filing workflow - see [The filing workflow"
+"](filing-spine.md) for how work units and calculation revisions behave. "
+"In short:"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:140
+msgid ""
+"Once the draft verifies, export it. Export refuses until every "
+"deductible-expense row carries linked purchase-invoice evidence (see "
+"[Attach invoices and receipts](ledger-evidence.md)); this simple Modelo "
+"130 example omits that evidence, so the export and the post-portal filed "
+"marker are shown as display frames. The full evidence-to-export chain "
+"runs end to end, executed, on [Prepare a Modelo 303 IVA "
+"filing](modelo-303.md):"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:150
+msgid ""
+"Each computed casilla carries its formula, legal references, and source "
+"references; show them with the revision view or [review the calculation "
+"values](review-calculation-values.md). After you record the marker, "
+"reconcile against the justificante (see [Reconcile a "
+"filing](reconcile.md))."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:156
+msgid ""
+"Modelo 130's quarterly results feed your annual Renta declaration: the "
+"four instalments are folded into Modelo 100 as payments on account. See "
+"[Prepare the annual Modelo 100 Renta declaration](modelo-100.md)."
+msgstr ""
+
+#: ../../how-to/modelo-130.md:160
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:162
+msgid "[The income-tax year (run-through)](irpf-lifecycle.md)"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:163
+msgid "[The filing workflow](filing-spine.md)"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:164
+msgid "[Review and supply calculation inputs](review-calculation-values.md)"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:165
+msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
+msgstr ""
+
+#: ../../how-to/modelo-130.md:166
+msgid "[Reconcile a filing](reconcile.md)"
+msgstr ""
+
