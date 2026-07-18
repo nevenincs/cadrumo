@@ -3,17 +3,23 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-quality-backlog'
-date: '2026-07-17'
-modified: '2026-07-17'
+date: '2026-07-18'
+modified: '2026-07-18'
 related:
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S01]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S02]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S03]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P02-S04]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P02-S05]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P03-S06]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P03-S07]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P04-S11]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P04-S12]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P04-S13]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P05-S14]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P05-S15]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P05-S16]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P05-S17]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P07-S20]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P07-S21]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P08-S22]]'
@@ -41,15 +47,21 @@ Auto-generated index of all documents tagged with `#cli-authority-quality-backlo
 - `2026-07-17-cli-authority-quality-backlog-P01-S03` - Prove historical as-of boundaries are honoured on the scoped path and refused explicitly on the unscoped path rather than silently ignored
 - `2026-07-17-cli-authority-quality-backlog-P02-S04` - Add an AST recurrence gate that rejects new reducible production SHA-256 constructor and one-shot hexdigest bodies while allowing streaming, HMAC, HKDF, X509, and digest-byte uses
 - `2026-07-17-cli-authority-quality-backlog-P02-S05` - Prove the recurrence gate rejects a new reducible one-shot body and accepts every legitimate cryptographic use it must not block
+- `2026-07-17-cli-authority-quality-backlog-P03-S06` - Correct namespace registry metadata drift and make each namespace definition the sole authority for identifier, schema version, sensitivity, default object key, key grammar, owner, and custody
+- `2026-07-17-cli-authority-quality-backlog-P03-S07` - Remove duplicate namespace, version, sensitivity, catalogue-key, and custody literals from transaction, invoice, modelo participation, and bucket persistence consumers and bind them to registry definitions
 - `2026-07-17-cli-authority-quality-backlog-P04-S11` - Make filed observation persistence the sole owner of latest-record selection, deterministic history ordering, metadata enrollment, and calculation-observation writes and remove the duplicate selector and persistence loop from capture orchestration
 - `2026-07-17-cli-authority-quality-backlog-P04-S12` - Introduce one typed filed-capture finalizer and failure accumulator used by single, bulk, and source capture with explicit fail-fast single and source policy and best-effort bulk policy
 - `2026-07-17-cli-authority-quality-backlog-P04-S13` - Prove identical latest selection and history ordering across all capture routes, their distinct failure policies, and preservation of the separate strict IVA compensation persistence path
+- `2026-07-17-cli-authority-quality-backlog-P05-S14` - Define typed LLM review requests, decisions, results, and mandatory invocation origins without an application-layer default CLI source command
+- `2026-07-17-cli-authority-quality-backlog-P05-S15` - Implement one application review workflow for suggest, saturate, review, apply, reject, evidence no-split, and evidence split while composing existing canonical persistence primitives
 - `2026-07-17-cli-authority-quality-backlog-P07-S20` - Decide the profile-create prompted-question inventory contract: fix the exact set and count of questions the wizard surfaces on the payload and record the rationale as an ADR-lite decision note in the plan
 - `2026-07-17-cli-authority-quality-backlog-P07-S21` - Implement and assert the exact profile-create question count against the decided inventory so an added or dropped question fails the test loudly
 - `2026-07-17-cli-authority-quality-backlog-P08-S22` - Give the acceptance-wall meta-test a per-worker unique temp root via tmp_path_factory so concurrent pytest workers no longer share a PID-keyed directory and race
 - `2026-07-17-cli-authority-quality-backlog-P09-S23` - Audit the roughly forty select_revision callers and prove every production calculation, verification, filing, export, and projection path resolves through the law-determined canonical resolver and only asserts a stored revision_id equal, never injects it
 - `2026-07-17-cli-authority-quality-backlog-P09-S24` - Assert binding validator-dispatch completeness: every BindingSourceKind member has a dispatch entry in the validator registry or a documented mesh-only deferral, so a new source kind cannot ship unvalidated
 - `2026-07-17-cli-authority-quality-backlog-P11-S26` - Add a structural no-build/no-publish assertion to the publish-workflow guardrail test: denylist-scan every step run and uses in the validate job (or pin the full step allowlist) so a differently-spelled build or publish command cannot slip past the exact-substring guards, gated on the guardrail test failing if any validate-job step invokes a build or publish tool
+- `2026-07-17-cli-authority-quality-backlog-P05-S16` - Route classify --auto-split and split --llm through the typed review workflow with distinct invocation origins and remove CLI-owned review branching and application source-command defaults
+- `2026-07-17-cli-authority-quality-backlog-P05-S17` - Prove suggestion, saturation, rejection, no-split, multi-child split, invocation-origin attribution, and CLI-route parity against real persistence and model subprocess boundaries
 
 ### plan
 
