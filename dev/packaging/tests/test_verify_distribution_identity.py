@@ -130,14 +130,14 @@ def test_accepted_mcp_product_tuple_passes_every_real_projection() -> None:
 
 
 def test_real_client_display_descriptions_report_missing_bilingual_claim_parity() -> None:
-    """Plugin and marketplace-plugin fields now carry approved bilingual pairs (S07).
+    """Plugin, marketplace-plugin, and marketplace fields carry approved bilingual pairs (S07-S08).
 
-    Marketplace and MCPB fields are not yet wired; the overall ok stays False
-    until all five client-display fields carry approved pairs.
+    MCPB fields are not yet wired; the overall ok stays False until all five
+    client-display fields carry approved pairs.
     """
     descriptions = verify_distribution_identity(_REPO_ROOT).to_document()["product_descriptions"]
 
-    assert descriptions["ok"] is False  # marketplace + mcpb not yet wired
+    assert descriptions["ok"] is False  # mcpb not yet wired
     assert descriptions["required_languages"] == ["English", "Spanish"]
     assert descriptions["required_claims"] == [
         "capability",
@@ -147,8 +147,8 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
         "human_confirmation",
         "never_files_live",
     ]
-    # S07 enrolled 2 pairs (plugin + marketplace-plugin).
-    assert descriptions["approved_pair_count"] == 2
+    # S07 enrolled 2 pairs (plugin + marketplace-plugin); S08 adds the marketplace pair.
+    assert descriptions["approved_pair_count"] == 3
     assert descriptions["product_review_required"] is False
     # model_facing_descriptions count and sha256 are the sibling rename executor's
     # surface (MCP tool/argument descriptions change as renames land). Only check the
@@ -200,8 +200,32 @@ def test_real_client_display_descriptions_report_missing_bilingual_claim_parity(
             "never_files_live",
         }
 
-    # --- Rows 1, 3, 4 (marketplace + mcpb): not yet wired ---
-    for row in (observations[1], observations[3], observations[4]):
+    # --- Row 1 (marketplace): approved bilingual pair wired (S08) ---
+    marketplace_row = observations[1]
+    assert marketplace_row["english_label"] is True
+    assert marketplace_row["spanish_label"] is True
+    assert marketplace_row["english_text"] != ""
+    assert marketplace_row["spanish_text"] != ""
+    assert marketplace_row["unlabeled_text"] == ""
+    assert marketplace_row["translation_approved"] is True
+    assert [claim["name"] for claim in marketplace_row["claims"]] == descriptions["required_claims"]
+    # Marketplace description: capability, safety, on_host_storage, never_files_live
+    # pass in both languages; privacy and human_confirmation absent.
+    assert {claim["name"] for claim in marketplace_row["claims"] if claim["english"]} == {
+        "capability",
+        "safety",
+        "on_host_storage",
+        "never_files_live",
+    }
+    assert {claim["name"] for claim in marketplace_row["claims"] if claim["spanish"]} == {
+        "capability",
+        "safety",
+        "on_host_storage",
+        "never_files_live",
+    }
+
+    # --- Rows 3 and 4 (mcpb): not yet wired ---
+    for row in (observations[3], observations[4]):
         assert row["english_label"] is False
         assert row["spanish_label"] is False
         assert row["english_text"] == ""
