@@ -105,16 +105,16 @@ Bring every authored, generated, and installed harness identifier under the `cad
 
 Hard-cut every authored persona, skill, and rule identifier to the cadrumo- prefix, each an atomic commit that carries its suite-breaking consumers so the generators follow and the test tree stays green.
 
-- [ ] `P01.S01` - Rename the seven operator rule documents to the cadrumo- prefix and sweep every consumer in one atomic hard-cut commit: generated CLAUDE.md rule imports, MCP rule resources, operator_rules_text callers, the test_operator_rules_exist assertion, and the rule generation tests; `src/cadrumo/_data/agent/rules/`.
-- [ ] `P01.S02` - Rename the seven persona documents to the cadrumo- prefix, lift the AgentPersona StrEnum values to match, and sweep every consumer atomically: the persona-scope module and its pinning tests, the harness whoami tool file lookup, MCP server wiring, meta-tools and identity-gate tests, generation tests, and the MCPB manifest persona enumeration; `src/cadrumo/_data/agent/personas/`.
-- [ ] `P01.S03` - Rename the 34 skill directories and their SKILL.md name frontmatter to the cadrumo- prefix and sweep intra-skill name cross-references, the eval scenario skill_name fields, and the skill-name generation tests in one atomic commit; `src/cadrumo/_data/agent/skills/`.
+- [x] `P01.S01` - Rename the seven operator rule documents to the cadrumo- prefix and sweep every consumer in one atomic hard-cut commit: generated CLAUDE.md rule imports, MCP rule resources, operator_rules_text callers, the test_operator_rules_exist assertion, and the rule generation tests; `src/cadrumo/_data/agent/rules/`.
+- [x] `P01.S02` - Rename the seven persona documents to the cadrumo- prefix, lift the AgentPersona StrEnum values to match, and sweep every consumer atomically: the persona-scope module and its pinning tests, the harness whoami tool file lookup, MCP server wiring, meta-tools and identity-gate tests, generation tests, and the MCPB manifest persona enumeration; `src/cadrumo/_data/agent/personas/`.
+- [x] `P01.S03` - Rename the 34 skill directories and their SKILL.md name frontmatter to the cadrumo- prefix and sweep intra-skill name cross-references, the eval scenario skill_name fields, and the skill-name generation tests in one atomic commit; `src/cadrumo/_data/agent/skills/`.
 
 ### Phase `P02` - Prefix the MCP projection identifiers and re-baseline the eval fixtures
 
 Prefix the one non-derived MCP projection identifier and re-baseline the eval scenarios and golden expectations onto the migrated persona and skill tokens.
 
-- [ ] `P02.S04` - Prefix the orientation-prompt embedded rule-resource URI (the synthetic cadrumo://rule/operating-rules leaf) so every embedded reference carries the cadrumo- prefix, and update the prompt and resource projection tests; `src/cadrumo/entrypoints/mcp/_prompts.py`.
-- [ ] `P02.S05` - Re-baseline the eval scenarios and golden expectations onto the migrated persona and skill tokens (scenario skill_name and persona fields, identity-switch and discovery golden scores, flywheel report expectations); `src/cadrumo/agent/eval/scenarios/`.
+- [x] `P02.S04` - Prefix the orientation-prompt embedded rule-resource URI (the synthetic cadrumo://rule/operating-rules leaf) so every embedded reference carries the cadrumo- prefix, and update the prompt and resource projection tests; `src/cadrumo/entrypoints/mcp/_prompts.py`.
+- [x] `P02.S05` - Re-baseline the eval scenarios and golden expectations onto the migrated persona and skill tokens (scenario skill_name and persona fields, identity-switch and discovery golden scores, flywheel report expectations); `src/cadrumo/agent/eval/scenarios/`.
 
 ### Phase `P03` - Author and wire the bilingual MCP product descriptions
 
