@@ -46,7 +46,7 @@ from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as distribution_version
 from typing import TYPE_CHECKING
 
-from ...core import PRODUCT_IDENTITY
+from ...core import PRODUCT_IDENTITY, FormerProductStateError
 from ._call_runtime import serving_capacity_limiter
 from ._completions import complete_prompt_argument
 from ._corpus_tools import (
@@ -1140,7 +1140,18 @@ def _run_server(
     import anyio
     from mcp.server.stdio import stdio_server
 
-    telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
+    # Telemetry is diagnostics, never a startup dependency: resolving its
+    # directory needs the storage root, and on a machine carrying retired
+    # former-product state that resolution REFUSES. The refusal must surface
+    # instructively on the tool calls that actually need storage - not kill
+    # the server before it can speak the protocol. Serve without telemetry
+    # and put one line on stderr (the client's MCP log) naming why.
+    telemetry: SessionTelemetryWriter | None
+    try:
+        telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
+    except FormerProductStateError as error:
+        telemetry = None
+        sys.stderr.write(f"cadrumo MCP serving without telemetry (storage root unavailable): {error}\n")
     server: Server = build_server(descriptors, persona=persona, telemetry=telemetry, surface_mode=surface_mode)
 
     async def _amain() -> None:
