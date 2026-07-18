@@ -296,6 +296,18 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     claude = args.claude.resolve(strict=True)
+    if sys.platform == "win32" and claude.suffix.lower() == ".ps1":
+        # An npm-installed Claude Code resolves to the PowerShell shim first
+        # (`Get-Command claude` -> claude.ps1), which CreateProcess cannot
+        # execute (WinError 193). npm always writes the sibling .cmd shim,
+        # which CreateProcess runs natively - swap to it.
+        command_shim = claude.with_suffix(".cmd")
+        if not command_shim.is_file():
+            raise SystemExit(
+                f"claude resolves to a PowerShell shim ({claude}) and no sibling "
+                ".cmd shim exists; pass the executable directly via --claude",
+            )
+        claude = command_shim
     cohort = load_python_cohort(args.cohort_dir)
     evidence_root = args.evidence_dir.resolve()
     run_root = evidence_root / f"run-{time.strftime('%Y%m%dT%H%M%SZ', time.gmtime())}"
