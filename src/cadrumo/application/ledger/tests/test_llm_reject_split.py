@@ -62,6 +62,7 @@ def test_reject_split_suggestion_records_kind_split(
         suggestion,
         bucket_id=_BUCKET,
         reason="do not split this",
+        source_command="aeat app ledger classify --llm --reject",
         transaction_repository=repository,
         bucket_event_repository=events,
         occurred_at=_NOW,
@@ -96,6 +97,7 @@ def test_reject_non_active_transaction_raises(
     apply_evidence_split(
         suggestion,
         bucket_id=_BUCKET,
+        source_command="aeat app ledger split --llm --apply",
         transaction_repository=repository,
         bucket_event_repository=events,
     )
@@ -104,6 +106,7 @@ def test_reject_non_active_transaction_raises(
         reject_llm_suggestion(
             _classification_suggestion(tx_id),
             bucket_id=_BUCKET,
+            source_command="aeat app ledger classify --llm --reject",
             transaction_repository=repository,
             bucket_event_repository=events,
         )
