@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/onboarding.md:1
 msgid "The filing journey: from bank records to a filed modelo"
-msgstr ""
+msgstr "El recorregut de la presentació: dels registres bancaris a un modelo presentat"
 
 #: ../../how-to/onboarding.md:3
 msgid ""
@@ -29,6 +28,9 @@ msgid ""
 "records to a tax form you file yourself - and points you to the right "
 "guide at each stage."
 msgstr ""
+"Que ets nou a Cadrumo? Aquesta guia dibuixa el recorregut sencer -dels teus "
+"registres bancaris fins a un formulari tributari que presentes tu mateix- i "
+"t'orienta cap a la guia adequada a cada etapa."
 
 #: ../../how-to/onboarding.md:6
 msgid ""
@@ -39,6 +41,12 @@ msgid ""
 "your own credentials. Everything the tool does is local and human-gated: "
 "it builds the filing, you file it."
 msgstr ""
+"Cadrumo prepara, comprova i exporta formularis tributaris espanyols com a "
+"fitxers locals a la teva pròpia màquina. Mai no presenta res a l'Agencia "
+"Estatal de Administración Tributaria (AEAT). Tu revises cada resultat i "
+"puges tu mateix el fitxer final pel portal oficial de l'AEAT, signat amb "
+"les teves pròpies credencials. Tot el que fa l'eina és local i controlat "
+"per una persona: l'eina construeix la presentació, tu la presentes."
 
 #: ../../how-to/onboarding.md:12
 msgid ""
@@ -47,54 +55,62 @@ msgid ""
 "This page is the orientation; the Quickstart and the linked guides are "
 "where the commands live."
 msgstr ""
+"Vols el camí d'ordres concret més curt en lloc del mapa? Segueix la [Guia "
+"ràpida](quickstart.md), que executa un exemple complet de punta a punta. "
+"Aquesta pàgina és l'orientació; la Guia ràpida i les guies enllaçades són "
+"on viuen les ordres."
 
 #: ../../how-to/onboarding.md:17
 msgid "The journey at a glance"
-msgstr ""
+msgstr "El recorregut d'un cop d'ull"
 
 #: ../../how-to/onboarding.md:19
 msgid "A first filing moves through six stages:"
-msgstr ""
+msgstr "Una primera presentació passa per sis etapes:"
 
 #: ../../how-to/onboarding.md:21
 msgid "Set up your taxpayer profile."
-msgstr ""
+msgstr "Configura el teu perfil de contribuent."
 
 #: ../../how-to/onboarding.md:22
 msgid "Bring in your transactions."
-msgstr ""
+msgstr "Porta les teves transaccions."
 
 #: ../../how-to/onboarding.md:23
 msgid "Classify each transaction."
-msgstr ""
+msgstr "Classifica cada transacció."
 
 #: ../../how-to/onboarding.md:24
 msgid "Find out which modelos apply to you."
-msgstr ""
+msgstr "Descobreix quins modelos t'apliquen."
 
 #: ../../how-to/onboarding.md:25
 msgid "Check readiness, calculate, and verify."
-msgstr ""
+msgstr "Comprova la preparació, calcula i verifica."
 
 #: ../../how-to/onboarding.md:26
 msgid "Export and file at AEAT."
-msgstr ""
+msgstr "Exporta i presenta a l'AEAT."
 
 #: ../../how-to/onboarding.md:28
 msgid ""
 "Each stage below says what it is and why it matters, then links to the "
 "guide that walks the commands."
 msgstr ""
+"Cada etapa de més avall explica què és i per què importa, i tot seguit "
+"enllaça amb la guia que recorre les ordres."
 
 #: ../../how-to/onboarding.md:31
 msgid "Before you begin"
-msgstr ""
+msgstr "Abans de començar"
 
 #: ../../how-to/onboarding.md:33
 msgid ""
 "Install `cadrumo` and confirm it runs. See [Install Cadrumo"
 "](../workstation-setup.md) for installation."
 msgstr ""
+"Instal·la `cadrumo` i confirma que s'executa. Consulta [Instal·la Cadrumo"
+"](../workstation-setup.md) per a la instal·lació."
 
 #: ../../how-to/onboarding.md:36
 msgid ""
@@ -102,16 +118,22 @@ msgid ""
 "which protects your encrypted local store. The tool prompts for it the "
 "first time in a session."
 msgstr ""
+"Cada ordre que toca les teves dades necessita la teva contrasenya de clau "
+"mestra, que protegeix el teu magatzem local xifrat. L'eina la demana la "
+"primera vegada dins d'una sessió."
 
 #: ../../how-to/onboarding.md:40
 msgid ""
 "The command help, prompts, and messages render in Spanish to match the "
 "official AEAT forms, even though these guides are in English."
 msgstr ""
+"L'ajuda de les ordres, les indicacions i els missatges es mostren en "
+"castellà per coincidir amb els formularis oficials de l'AEAT, tot i que "
+"aquestes guies són en anglès."
 
 #: ../../how-to/onboarding.md:43
 msgid "Stage 1 - Set up your taxpayer profile"
-msgstr ""
+msgstr "Etapa 1 - Configura el teu perfil de contribuent"
 
 #: ../../how-to/onboarding.md:45
 msgid ""
@@ -120,14 +142,18 @@ msgid ""
 "reads. The profile decides which forms apply and how each value is "
 "computed, so it is the foundation of every filing."
 msgstr ""
+"Un perfil conté les dades d'un contribuent -identitat (NIF, CIF, DNI o "
+"NIE), activitat, règim i residència- que llegeix cada ordre posterior. El "
+"perfil decideix quins formularis apliquen i com es calcula cada valor, de "
+"manera que és el fonament de cada presentació."
 
 #: ../../how-to/onboarding.md:50
 msgid "Start here: [Set up your taxpayer profile](profile-setup.md)."
-msgstr ""
+msgstr "Comença aquí: [Configura el teu perfil de contribuent](profile-setup.md)."
 
 #: ../../how-to/onboarding.md:52
 msgid "Stage 2 - Bring in your transactions"
-msgstr ""
+msgstr "Etapa 2 - Porta les teves transaccions"
 
 #: ../../how-to/onboarding.md:54
 msgid ""
@@ -135,16 +161,20 @@ msgid ""
 " Import a bank statement, or add rows by hand. Nothing is imported until "
 "you run an import command."
 msgstr ""
+"Les teves xifres tributàries provenen dels registres d'ingressos i despeses "
+"del teu ledger. Importa un extracte bancari, o afegeix files a mà. No "
+"s'importa res fins que executes una ordre d'importació."
 
 #: ../../how-to/onboarding.md:58
 msgid ""
 "Continue with: [Import and manage transactions](import-bank-"
 "statements.md)."
 msgstr ""
+"Continua amb: [Importa i gestiona transaccions](import-bank-statements.md)."
 
 #: ../../how-to/onboarding.md:60
 msgid "Stage 3 - Classify each transaction"
-msgstr ""
+msgstr "Etapa 3 - Classifica cada transacció"
 
 #: ../../how-to/onboarding.md:62
 msgid ""
@@ -152,14 +182,18 @@ msgid ""
 " each one as business, personal, or mixed, and give business expenses a "
 "category, so the calculation counts the right amounts."
 msgstr ""
+"Una fila importada té una data i un import però encara cap significat "
+"tributari. Classifica cadascuna com a de negoci, personal o mixta, i dona a "
+"les despeses de negoci una categoria, perquè el càlcul compti els imports "
+"correctes."
 
 #: ../../how-to/onboarding.md:66
 msgid "Continue with: [Classify transactions](classify-transactions.md)."
-msgstr ""
+msgstr "Continua amb: [Classifica transaccions](classify-transactions.md)."
 
 #: ../../how-to/onboarding.md:68
 msgid "Stage 4 - Find out which modelos apply"
-msgstr ""
+msgstr "Etapa 4 - Descobreix quins modelos apliquen"
 
 #: ../../how-to/onboarding.md:70
 msgid ""
@@ -167,14 +201,17 @@ msgid ""
 "your profile facts, not from guesswork. Ask the tool for a verdict and "
 "its reasons before you prepare anything."
 msgstr ""
+"Un modelo és un formulari numerat de l'AEAT. Quins has de presentar es "
+"desprèn de les dades del teu perfil, no de suposicions. Demana a l'eina un "
+"veredicte i els seus motius abans de preparar res."
 
 #: ../../how-to/onboarding.md:74
 msgid "Continue with: [Find out which modelos apply to you](choose-modelo.md)."
-msgstr ""
+msgstr "Continua amb: [Descobreix quins modelos t'apliquen](choose-modelo.md)."
 
 #: ../../how-to/onboarding.md:76
 msgid "Stage 5 - Check readiness, calculate, and verify"
-msgstr ""
+msgstr "Etapa 5 - Comprova la preparació, calcula i verifica"
 
 #: ../../how-to/onboarding.md:78
 msgid ""
@@ -183,16 +220,24 @@ msgid ""
 "and verify the draft against the registry rules. Verification is a local "
 "check; it does not contact AEAT."
 msgstr ""
+"Abans de calcular, confirma que hi són les dades del perfil i les "
+"transaccions que un formulari necessita. Després calcula els valors del "
+"formulari a partir del teu ledger i verifica l'esborrany contra les regles "
+"del registre. La verificació és una comprovació local; no contacta amb "
+"l'AEAT."
 
 #: ../../how-to/onboarding.md:83
 msgid ""
 "Continue with: [Check that a filing is ready](filing-readiness.md), then "
 "[Verify a draft filing and act on the findings](verification-reports.md)."
 msgstr ""
+"Continua amb: [Comprova que una presentació està a punt](filing-readiness."
+"md) i, tot seguit, [Verifica una presentació en esborrany i actua sobre les "
+"troballes](verification-reports.md)."
 
 #: ../../how-to/onboarding.md:86
 msgid "Stage 6 - Export and file at AEAT"
-msgstr ""
+msgstr "Etapa 6 - Exporta i presenta a l'AEAT"
 
 #: ../../how-to/onboarding.md:88
 msgid ""
@@ -201,6 +246,10 @@ msgid ""
 "Cl@ve, then record the filing locally and reconcile AEAT's receipt "
 "against your record."
 msgstr ""
+"Exporta l'esborrany verificat al fitxer `.boe` que accepta el portal de "
+"l'AEAT. Puja'l tu mateix al portal, signat amb el teu propi certificat o "
+"amb Cl@ve, i després registra la presentació localment i concilia el rebut "
+"de l'AEAT contra el teu registre."
 
 #: ../../how-to/onboarding.md:92
 msgid ""
@@ -208,10 +257,13 @@ msgid ""
 "aeat.md), then [How to reconcile a filed modelo against its "
 "justificante](reconcile.md)."
 msgstr ""
+"Acaba amb: [Puja el teu modelo exportat al portal de l'AEAT](file-at-aeat."
+"md) i, tot seguit, [Com conciliar un modelo presentat contra el seu "
+"justificante](reconcile.md)."
 
 #: ../../how-to/onboarding.md:95
 msgid "Where to go next"
-msgstr ""
+msgstr "On anar després"
 
 #: ../../how-to/onboarding.md:97
 msgid ""
@@ -219,6 +271,9 @@ msgid ""
 "figures.md) - understand the transaction-to-box pipeline behind the "
 "stages above."
 msgstr ""
+"[Com es converteixen els teus registres en xifres tributàries](../"
+"explanation/from-records-to-figures.md) - entén el flux de transacció a "
+"casilla que hi ha darrere de les etapes de més amunt."
 
 #: ../../how-to/onboarding.md:99
 msgid ""
@@ -226,18 +281,25 @@ msgid ""
 "and-the-boundary.md) - why the tool never submits, and what \"filed\" "
 "means locally."
 msgstr ""
+"[Registrar una presentació i el límit](../explanation/recording-a-filing-"
+"and-the-boundary.md) - per què l'eina mai no presenta, i què vol dir "
+"«presentat» localment."
 
 #: ../../how-to/onboarding.md:101
 msgid ""
 "[Plan your filing calendar](filing-calendar.md) - see what is due and "
 "when."
 msgstr ""
+"[Planifica el teu calendari de presentacions](filing-calendar.md) - mira què "
+"venç i quan."
 
 #: ../../how-to/onboarding.md:102
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - if a command"
 " stops or the local state looks wrong."
 msgstr ""
+"[Diagnostica i repara la teva configuració local](troubleshooting.md) - si "
+"una ordre s'atura o l'estat local sembla incorrecte."
 
 #: ../../how-to/onboarding.md:105
 #, python-brace-format
@@ -246,4 +308,7 @@ msgid ""
 "</_generated/glossary>`. Before you share command output to ask for help,"
 " remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII."
 msgstr ""
-
+"Els termes que no et resultin familiars es defineixen al {doc}`glossari "
+"</_generated/glossary>`. Abans de compartir la sortida d'una ordre per "
+"demanar ajuda, elimina els identificadors tributaris personals com ara el "
+"teu NIF, CIF, DNI, NIE o NII."

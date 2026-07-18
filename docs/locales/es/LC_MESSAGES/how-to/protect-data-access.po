@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/protect-data-access.md:1
 msgid "Protect access to your data"
-msgstr ""
+msgstr "Proteja el acceso a sus datos"
 
 #: ../../how-to/protect-data-access.md:3
 msgid ""
@@ -30,6 +29,10 @@ msgid ""
 "the passphrase and have no recovery key, the data cannot be decrypted by "
 "anyone, including you."
 msgstr ""
+"Cadrumo cifra cada perfil, movimiento, pieza de evidencia y presentación "
+"bajo una única clave maestra. Su frase de contraseña abre esa clave. Si "
+"pierde la frase de contraseña y no tiene una clave de recuperación, nadie"
+" puede descifrar los datos, ni siquiera usted."
 
 #: ../../how-to/protect-data-access.md:8
 msgid ""
@@ -37,14 +40,18 @@ msgid ""
 "passphrase, recover access after a lost passphrase, log out safely, and "
 "reset local state only as a last resort."
 msgstr ""
+"Use esta guía para configurar una clave de recuperación antes de "
+"necesitarla, cambiar su frase de contraseña, recuperar el acceso tras "
+"perder la frase de contraseña, cerrar la sesión de forma segura y "
+"restablecer el estado local solo como último recurso."
 
 #: ../../how-to/protect-data-access.md:12
 msgid "Before you start"
-msgstr ""
+msgstr "Antes de empezar"
 
 #: ../../how-to/protect-data-access.md:14
 msgid "You need:"
-msgstr ""
+msgstr "Necesita:"
 
 #: ../../how-to/protect-data-access.md:16
 msgid ""
@@ -52,32 +59,45 @@ msgid ""
 " The first command below refuses without one (`No se pudo determinar "
 "ningún bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
 msgstr ""
+"Un perfil activo; consulte [configure su perfil de contribuyente"
+"](profile-setup.md). El primer comando siguiente se niega a continuar sin"
+" uno (`No se pudo determinar ningún bucket activo. Selecciona un perfil y"
+" vuelve a intentarlo.`)."
 
 #: ../../how-to/protect-data-access.md:19
 msgid ""
 "Your current master-key passphrase for recovery-key creation, rotation, "
 "and passphrase changes."
 msgstr ""
+"Su frase de contraseña actual de la clave maestra para crear la clave de "
+"recuperación, rotarla y cambiar la frase de contraseña."
 
 #: ../../how-to/protect-data-access.md:21
 msgid ""
 "Your recovery words for verification or recovery after a lost passphrase."
 " Recovery sets a new passphrase without requiring the lost one."
 msgstr ""
+"Sus palabras de recuperación para la verificación o la recuperación tras "
+"perder la frase de contraseña. La recuperación establece una nueva frase "
+"de contraseña sin exigir la perdida."
 
 #: ../../how-to/protect-data-access.md:24
 msgid ""
 "Use `--language en`, `es`, `ca`, or `hu` when you need a specific output "
 "language."
 msgstr ""
+"Use `--language en`, `es`, `ca` o `hu` cuando necesite un idioma de "
+"salida concreto."
 
 #: ../../how-to/protect-data-access.md:27
 msgid "Create your recovery key first"
-msgstr ""
+msgstr "Cree primero su clave de recuperación"
 
 #: ../../how-to/protect-data-access.md:29
 msgid "Do this once, right after setup, while your passphrase still works:"
 msgstr ""
+"Haga esto una vez, justo después de la configuración, mientras su frase "
+"de contraseña aún funciona:"
 
 #: ../../how-to/protect-data-access.md:34
 msgid ""
@@ -87,6 +107,11 @@ msgid ""
 "disk. Write the words down and keep them offline, separate from your "
 "computer."
 msgstr ""
+"Si aún no existe ninguna clave de recuperación, el comando crea una e "
+"imprime una clave de recuperación de veinticuatro palabras. Las palabras "
+"se muestran exactamente una vez y no se guardan nunca. Solo se escribe en"
+" disco un envoltorio cifrado de la clave maestra. Anote las palabras y "
+"consérvelas sin conexión, separadas de su ordenador."
 
 #: ../../how-to/protect-data-access.md:39
 msgid ""
@@ -94,14 +119,17 @@ msgid ""
 "key exists, the command reports its status and does not print the words "
 "again."
 msgstr ""
+"Ejecute de nuevo el mismo comando más tarde para confirmar la "
+"inscripción: una vez que existe una clave de recuperación, el comando "
+"informa de su estado y no vuelve a imprimir las palabras."
 
 #: ../../how-to/protect-data-access.md:42
 msgid "Check that your recovery key works"
-msgstr ""
+msgstr "Compruebe que su clave de recuperación funciona"
 
 #: ../../how-to/protect-data-access.md:44
 msgid "Verify the words you wrote down without changing anything:"
-msgstr ""
+msgstr "Verifique las palabras que anotó sin cambiar nada:"
 
 #: ../../how-to/protect-data-access.md:49
 msgid ""
@@ -109,30 +137,38 @@ msgid ""
 "failure code when the words do not open the recovery wrapper. Nothing is "
 "modified either way."
 msgstr ""
+"El comando informa de `verified yes` o `verified no` y sale con un código"
+" de fallo cuando las palabras no abren el envoltorio de recuperación. En "
+"ningún caso se modifica nada."
 
 #: ../../how-to/protect-data-access.md:53
 msgid "Replace the recovery key"
-msgstr ""
+msgstr "Sustituya la clave de recuperación"
 
 #: ../../how-to/protect-data-access.md:55
 msgid ""
 "If the written words may have been seen by someone else, mint a fresh "
 "recovery key:"
 msgstr ""
+"Si otra persona pudo haber visto las palabras anotadas, cree una clave de"
+" recuperación nueva:"
 
 #: ../../how-to/protect-data-access.md:61
 msgid ""
 "New words are printed exactly once. The previous recovery words stop "
 "working immediately. Store the new words as before."
 msgstr ""
+"Las nuevas palabras se imprimen exactamente una vez. Las palabras de "
+"recuperación anteriores dejan de funcionar de inmediato. Guarde las "
+"nuevas palabras como antes."
 
 #: ../../how-to/protect-data-access.md:64
 msgid "Change your passphrase"
-msgstr ""
+msgstr "Cambie su frase de contraseña"
 
 #: ../../how-to/protect-data-access.md:66
 msgid "To change the passphrase while you still know the current one:"
-msgstr ""
+msgstr "Para cambiar la frase de contraseña mientras aún conoce la actual:"
 
 #: ../../how-to/protect-data-access.md:71
 msgid ""
@@ -142,14 +178,20 @@ msgid ""
 "that opens it is replaced. For non-interactive use, pass `--new-"
 "passphrase` together with `--confirm-new-passphrase`."
 msgstr ""
+"El comando pide la frase de contraseña actual si el almacén no está ya "
+"abierto, y luego solicita dos veces (oculta) la nueva. La clave maestra "
+"en sí no cambia, así que todos los datos guardados siguen siendo "
+"legibles. Solo se sustituye la frase de contraseña que la abre. Para un "
+"uso no interactivo, pase `--new-passphrase` junto con `--confirm-new-"
+"passphrase`."
 
 #: ../../how-to/protect-data-access.md:77
 msgid "Recover after a forgotten passphrase"
-msgstr ""
+msgstr "Recupere el acceso tras olvidar la frase de contraseña"
 
 #: ../../how-to/protect-data-access.md:79
 msgid "If you forgot the passphrase but have your recovery words:"
-msgstr ""
+msgstr "Si olvidó la frase de contraseña pero tiene sus palabras de recuperación:"
 
 #: ../../how-to/protect-data-access.md:84
 msgid ""
@@ -159,6 +201,12 @@ msgid ""
 "encrypted. For non-interactive use, pass `--new-passphrase` together with"
 " `--confirm-new-passphrase` instead of being prompted."
 msgstr ""
+"El comando solicita dos veces (oculta) una nueva frase de contraseña, "
+"desbloquea la clave maestra a partir del envoltorio de recuperación y la "
+"vuelve a envolver bajo la nueva frase de contraseña. Todos los datos "
+"guardados quedan intactos. No se elimina ni se vuelve a cifrar nada. Para"
+" un uso no interactivo, pase `--new-passphrase` junto con `--confirm-new-"
+"passphrase` en lugar de que se le solicite."
 
 #: ../../how-to/protect-data-access.md:90
 msgid ""
@@ -166,10 +214,13 @@ msgid ""
 "data is permanently unreadable. The only way forward is a reset (below), "
 "which deletes it."
 msgstr ""
+"Si no tiene ni la frase de contraseña ni las palabras de recuperación, "
+"los datos cifrados son ilegibles de forma permanente. La única vía "
+"adelante es un restablecimiento (más abajo), que los elimina."
 
 #: ../../how-to/protect-data-access.md:94
 msgid "Run without a passphrase prompt"
-msgstr ""
+msgstr "Ejecute sin solicitud de frase de contraseña"
 
 #: ../../how-to/protect-data-access.md:96
 msgid ""
@@ -178,6 +229,11 @@ msgid ""
 "that process. Treat the value like the passphrase itself. Never put it in"
 " a shared shell profile, committed script, or log."
 msgstr ""
+"La automatización no puede responder a una solicitud interactiva de frase"
+" de contraseña. Para un servidor de agente, una tarea programada o un "
+"script, establezca `CADRUMO_SECRET_PASSPHRASE` para ese proceso. Trate el"
+" valor como la propia frase de contraseña. Nunca lo ponga en un perfil de"
+" shell compartido, en un script versionado ni en un registro."
 
 #: ../../how-to/protect-data-access.md:101
 msgid ""
@@ -185,10 +241,13 @@ msgid ""
 "Recovery commands use the recovery words and ask for a new passphrase "
 "instead."
 msgstr ""
+"Los comandos interactivos solicitan la frase de contraseña actual cuando "
+"la necesitan. Los comandos de recuperación usan las palabras de "
+"recuperación y piden una nueva frase de contraseña en su lugar."
 
 #: ../../how-to/protect-data-access.md:104
 msgid "Log out of the active profile"
-msgstr ""
+msgstr "Cierre la sesión del perfil activo"
 
 #: ../../how-to/protect-data-access.md:106
 msgid ""
@@ -197,16 +256,22 @@ msgid ""
 "material, disposes the bucket engines, and clears the active-profile "
 "selection:"
 msgstr ""
+"Use `aeat config profile logout` cuando termine de trabajar con un "
+"perfil. El cierre de sesión termina la sesión de almacenamiento activa, "
+"descarta el material de clave en memoria, libera los motores de bucket y "
+"borra la selección del perfil activo:"
 
 #: ../../how-to/protect-data-access.md:114
 msgid ""
 "Nothing in the profile is deleted. Select it again with `aeat config "
 "switch <name>` when you return."
 msgstr ""
+"No se elimina nada del perfil. Selecciónelo de nuevo con `aeat config "
+"switch <name>` cuando vuelva."
 
 #: ../../how-to/protect-data-access.md:117
 msgid "Reset local state (last resort)"
-msgstr ""
+msgstr "Restablezca el estado local (último recurso)"
 
 #: ../../how-to/protect-data-access.md:119
 msgid ""
@@ -215,6 +280,11 @@ msgid ""
 "authentication state, and the active profile selection. It doesn't delete"
 " exports stored elsewhere. You can't undo the reset."
 msgstr ""
+"Exporte todos los perfiles que quiera conservar antes de continuar. El "
+"restablecimiento elimina de forma permanente todos los perfiles guardados"
+" localmente, el estado de autenticación local relacionado y la selección "
+"del perfil activo. No elimina las exportaciones guardadas en otro lugar. "
+"El restablecimiento no se puede deshacer."
 
 #: ../../how-to/protect-data-access.md:127
 msgid ""
@@ -222,6 +292,10 @@ msgid ""
 "the reset explicitly. It checks retention requirements before deleting "
 "anything and refuses to start while another reset is incomplete."
 msgstr ""
+"Use `start` solo cuando pretenda eliminar todos los perfiles locales. "
+"Confirme el restablecimiento explícitamente. Comprueba los requisitos de "
+"conservación antes de eliminar nada y se niega a iniciarse mientras otro "
+"restablecimiento esté incompleto."
 
 #: ../../how-to/protect-data-access.md:130
 msgid ""
@@ -230,6 +304,11 @@ msgid ""
 "operation. Status reports an incomplete, paused, or complete operation. "
 "Its output includes the operation ID and any pause reason."
 msgstr ""
+"Use el comando de solo lectura `status` para inspeccionar la última "
+"operación sin cambiar los datos locales. Proporcione un ID de operación "
+"para inspeccionar una operación exacta. `status` informa de una operación"
+" incompleta, en pausa o completa. Su salida incluye el ID de la operación"
+" y cualquier motivo de pausa."
 
 #: ../../how-to/protect-data-access.md:134
 msgid ""
@@ -238,6 +317,11 @@ msgid ""
 "Provide an operation ID to resume an exact operation. After deletion "
 "starts, resuming the reset doesn't restore deleted data."
 msgstr ""
+"Use `resume` tras una interrupción o pausa. Confirme de nuevo el "
+"restablecimiento. Continúa la misma operación incompleta en lugar de "
+"crear otra. Proporcione un ID de operación para reanudar una operación "
+"exacta. Una vez que empieza la eliminación, reanudar el restablecimiento "
+"no restaura los datos eliminados."
 
 #: ../../how-to/protect-data-access.md:139
 msgid ""
@@ -247,16 +331,23 @@ msgid ""
 " reason. If you provide a reason without the override, the command "
 "refuses to continue."
 msgstr ""
+"Si los requisitos legales de conservación pausan el restablecimiento, "
+"deténgase si debe conservar los registros afectados. Sobreponga la pausa "
+"solo después de revisar y aceptar la consecuencia legal de conservación, "
+"y proporcione siempre un motivo no vacío. Si proporciona un motivo sin la"
+" sobreposición, el comando se niega a continuar."
 
 #: ../../how-to/protect-data-access.md:144
 msgid ""
 "See [Set up your taxpayer profile](profile-setup.md) for profile export "
 "instructions."
 msgstr ""
+"Consulte [Configure su perfil de contribuyente](profile-setup.md) para "
+"las instrucciones de exportación de perfiles."
 
 #: ../../how-to/protect-data-access.md:147
 msgid "Next steps"
-msgstr ""
+msgstr "Pasos siguientes"
 
 #: ../../how-to/protect-data-access.md:149
 msgid ""
@@ -264,20 +355,28 @@ msgid ""
 "evidence.md) - see where encrypted custody ends and deliberate plaintext "
 "handoffs begin."
 msgstr ""
+"[Importación, exportación y evidencia](../reference/import-export-and-"
+"evidence.md): vea dónde acaba la custodia cifrada y dónde empiezan los "
+"traspasos en claro deliberados."
 
 #: ../../how-to/protect-data-access.md:151
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) - create, export, and "
 "import profiles."
 msgstr ""
+"[Configure su perfil de contribuyente](profile-setup.md): cree, exporte e"
+" importe perfiles."
 
 #: ../../how-to/protect-data-access.md:153
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - for storage "
 "or integrity problems that do not need a reset."
 msgstr ""
+"[Diagnostique y repare su configuración local](troubleshooting.md): para "
+"problemas de almacenamiento o integridad que no necesitan un "
+"restablecimiento."
 
 #: ../../how-to/protect-data-access.md:155
 msgid "[CLI reference](../cli/index.rst) - full option reference."
-msgstr ""
+msgstr "[Referencia de la CLI](../cli/index.rst): referencia completa de opciones."
 

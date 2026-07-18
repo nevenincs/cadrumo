@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../reference/index.md:1
 msgid "Cadrumo reference"
-msgstr ""
+msgstr "Referència de Cadrumo"
 
 #: ../../reference/index.md:3
 msgid ""
@@ -32,6 +31,13 @@ msgid ""
 "](../how-to/index.md). For the relationships between stages, read [how "
 "imports, exports, and evidence differ](import-export-and-evidence.md)."
 msgstr ""
+"Utilitza aquesta col·lecció per consultar noms exactes, límits i "
+"superfícies tècniques generades de Cadrumo mentre treballes. Per a la "
+"instal·lació i el primer ús, comença per la [guia d'instal·lació"
+"](../workstation-setup.md) i la [guia ràpida](../how-to/quickstart.md). "
+"Per a una tasca, tria una [guia pràctica](../how-to/index.md). Per a les "
+"relacions entre etapes, llegeix [en què es diferencien importacions, "
+"exportacions i evidència](import-export-and-evidence.md)."
 
 #: ../../reference/index.md:10
 msgid ""
@@ -40,10 +46,14 @@ msgid ""
 "(MCP), and application programming interface (API) are Cadrumo product "
 "surfaces."
 msgstr ""
+"L'Agencia Estatal de Administración Tributaria (AEAT) és l'autoritat "
+"tributària externa. La interfície de línia d'ordres (CLI), el Model "
+"Context Protocol (MCP) i la interfície de programació d'aplicacions (API)"
+" són superfícies del producte Cadrumo."
 
 #: ../../reference/index.md:14
 msgid "Lookup map"
-msgstr ""
+msgstr "Mapa de consulta"
 
 #: ../../reference/index.md:16
 msgid ""
@@ -51,18 +61,25 @@ msgid ""
 " source material, authority boundaries, export purposes, and the evidence"
 " required for filing review or audit."
 msgstr ""
+"[Importació, exportació i evidència](import-export-and-evidence.md): "
+"material d'origen admès, límits d'autoritat, finalitats d'exportació i "
+"l'evidència requerida per a la revisió o l'auditoria d'una presentació."
 
 #: ../../reference/index.md:19
 msgid ""
 "[Identity and naming](identity-and-naming.md) - canonical product "
 "identifiers and the Cadrumo-versus-AEAT vocabulary."
 msgstr ""
+"[Identitat i nomenclatura](identity-and-naming.md): identificadors "
+"canònics del producte i el vocabulari de Cadrumo davant l'AEAT."
 
 #: ../../reference/index.md:21
 msgid ""
 "[Commands and configuration](commands-and-configuration.md) - CLI, "
 "workflow-stage, schema, and configuration lookups."
 msgstr ""
+"[Ordres i configuració](commands-and-configuration.md): consultes de CLI,"
+" d'etapa del flux de treball, d'esquema i de configuració."
 
 #: ../../reference/index.md:23
 msgid ""
@@ -70,12 +87,17 @@ msgid ""
 " layout, former-state refusal, local export, live-read, and filing "
 "boundaries."
 msgstr ""
+"[Sistema de fitxers, estat i seguretat](filesystem-state-and-safety.md): "
+"disposició de l'emmagatzematge, refús d'estat antic, exportació local, "
+"lectura en directe i límits de presentació."
 
 #: ../../reference/index.md:25
 msgid ""
 "[Registry, legal sources, and Python API](registry-legal-api.md) - "
 "grounding sources and generated public API pages."
 msgstr ""
+"[Registre, fonts legals i API de Python](registry-legal-api.md): fonts de"
+" fonamentació i pàgines generades de l'API pública."
 
 #: ../../reference/index.md:27
 msgid ""
@@ -84,6 +106,10 @@ msgid ""
 "Advanced deployment and development configuration; no user workflow needs"
 " them."
 msgstr ""
+"[Substitucions d'entorn](environment-overrides.md): totes les variables "
+"d'entorn que llegeix l'aplicació, generades a partir del model de "
+"configuració en directe. Configuració avançada de desplegament i de "
+"desenvolupament; cap flux de treball d'usuari no les necessita."
 
 #: ../../reference/index.md:32
 #, python-brace-format
@@ -98,4 +124,13 @@ msgid ""
 "private security reporting and its fallback when private reporting is "
 "unavailable."
 msgstr ""
+"Els termes es defineixen al {doc}`glossari </_generated/glossary>`. Per a"
+" les fallades ordinàries, utilitza [Diagnosticar i reparar](../how-"
+"to/troubleshooting.md) i, després, el [rastrejador d'incidències "
+"públic](https://github.com/nevenincs/cadrumo/issues) amb la sortida "
+"redactada. Mai no publiquis dades de contribuents, credencials o detalls "
+"de vulnerabilitats. Utilitza la [política de "
+"seguretat](https://github.com/nevenincs/cadrumo/blob/main/SECURITY.md) "
+"per a la comunicació privada de vulnerabilitats i el seu recurs "
+"alternatiu quan la comunicació privada no estigui disponible."
 

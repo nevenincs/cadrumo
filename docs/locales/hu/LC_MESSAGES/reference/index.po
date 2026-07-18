@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:20+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../reference/index.md:1
 msgid "Cadrumo reference"
-msgstr ""
+msgstr "Cadrumo referencia"
 
 #: ../../reference/index.md:3
 msgid ""
@@ -32,6 +31,13 @@ msgid ""
 "](../how-to/index.md). For the relationships between stages, read [how "
 "imports, exports, and evidence differ](import-export-and-evidence.md)."
 msgstr ""
+"Használja ezt a gyűjteményt a pontos Cadrumo-nevek, -határok és -generált"
+" technikai felületek kikeresésére munka közben. A telepítéshez és az első"
+" használathoz kezdje a [telepítési útmutatóval](../workstation-setup.md) "
+"és a [gyorsindítóval](../how-to/quickstart.md). Egy feladathoz válasszon "
+"egy [how-to útmutatót](../how-to/index.md). A szakaszok közötti "
+"kapcsolatokhoz olvassa el, [miben különbözik az importálás, az exportálás"
+" és a bizonyíték](import-export-and-evidence.md)."
 
 #: ../../reference/index.md:10
 msgid ""
@@ -40,10 +46,13 @@ msgid ""
 "(MCP), and application programming interface (API) are Cadrumo product "
 "surfaces."
 msgstr ""
+"Az Agencia Estatal de Administración Tributaria (AEAT) a külső "
+"adóhatóság. A parancssori felület (CLI), a Model Context Protocol (MCP) "
+"és az alkalmazásprogramozási felület (API) Cadrumo termékfelületek."
 
 #: ../../reference/index.md:14
 msgid "Lookup map"
-msgstr ""
+msgstr "Kikeresési térkép"
 
 #: ../../reference/index.md:16
 msgid ""
@@ -51,18 +60,25 @@ msgid ""
 " source material, authority boundaries, export purposes, and the evidence"
 " required for filing review or audit."
 msgstr ""
+"[Importálás, exportálás és bizonyíték](import-export-and-evidence.md) - "
+"támogatott forrásanyag, hivatali határok, exportcélok, valamint a "
+"bevallás áttekintéséhez vagy audithoz szükséges bizonyíték."
 
 #: ../../reference/index.md:19
 msgid ""
 "[Identity and naming](identity-and-naming.md) - canonical product "
 "identifiers and the Cadrumo-versus-AEAT vocabulary."
 msgstr ""
+"[Azonosság és elnevezés](identity-and-naming.md) - kanonikus "
+"termékazonosítók és a Cadrumo-kontra-AEAT szókincs."
 
 #: ../../reference/index.md:21
 msgid ""
 "[Commands and configuration](commands-and-configuration.md) - CLI, "
 "workflow-stage, schema, and configuration lookups."
 msgstr ""
+"[Parancsok és konfiguráció](commands-and-configuration.md) - CLI-, "
+"munkafolyamat-szakasz-, séma- és konfigurációs kikeresések."
 
 #: ../../reference/index.md:23
 msgid ""
@@ -70,12 +86,17 @@ msgid ""
 " layout, former-state refusal, local export, live-read, and filing "
 "boundaries."
 msgstr ""
+"[Fájlrendszer, állapot és biztonság](filesystem-state-and-safety.md) - "
+"tárolási elrendezés, korábbi állapot elutasítása, helyi export, élő "
+"olvasás és bevallási határok."
 
 #: ../../reference/index.md:25
 msgid ""
 "[Registry, legal sources, and Python API](registry-legal-api.md) - "
 "grounding sources and generated public API pages."
 msgstr ""
+"[Registry, jogforrások és Python API](registry-legal-api.md) - megalapozó"
+" források és generált nyilvános API-oldalak."
 
 #: ../../reference/index.md:27
 msgid ""
@@ -84,6 +105,10 @@ msgid ""
 "Advanced deployment and development configuration; no user workflow needs"
 " them."
 msgstr ""
+"[Környezeti felülírások](environment-overrides.md) - minden környezeti "
+"változó, amelyet az alkalmazás olvas, az élő beállításmodellből "
+"generálva. Haladó telepítési és fejlesztési konfiguráció; egyetlen "
+"felhasználói munkafolyamatnak sincs rá szüksége."
 
 #: ../../reference/index.md:32
 #, python-brace-format
@@ -98,4 +123,13 @@ msgid ""
 "private security reporting and its fallback when private reporting is "
 "unavailable."
 msgstr ""
+"A fogalmakat a {doc}`szójegyzék </_generated/glossary>` határozza meg. "
+"Rendes hibákhoz használja a [Diagnosztizálás és javítás](../how-"
+"to/troubleshooting.md) oldalt, majd a [nyilvános "
+"hibakövetőt](https://github.com/nevenincs/cadrumo/issues) kitakart "
+"kimenettel. Sose tegyen közzé adózói adatot, hitelesítő adatot vagy "
+"sebezhetőségi részletet. Használja a [biztonsági "
+"szabályzatot](https://github.com/nevenincs/cadrumo/blob/main/SECURITY.md)"
+" a privát biztonsági bejelentéshez, valamint annak tartalékát, ha a "
+"privát bejelentés nem elérhető."
 

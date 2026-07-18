@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/modelo-100.md:1
 msgid "Prepare the annual Modelo 100 Renta declaration"
-msgstr ""
+msgstr "Prepare la declaración anual de la Renta con el Modelo 100"
 
 #: ../../how-to/modelo-100.md:3
 msgid ""
@@ -31,6 +30,12 @@ msgid ""
 "the annual IRPF declaration; the registry's official title is \"Modelo "
 "100. Declaración del Impuesto sobre la Renta de las Personas Físicas.\""
 msgstr ""
+"Esta página cubre la presentación anual de la Renta: crear la unidad de "
+"trabajo del Modelo 100, dejar que fluyan los datos del ejercicio, aportar"
+" los valores manuales que le correspondan y verificar y exportar la "
+"declaración. El Modelo 100 es la declaración anual del IRPF; el título "
+"oficial en el registro es «Modelo 100. Declaración del Impuesto sobre la "
+"Renta de las Personas Físicas.»"
 
 #: ../../how-to/modelo-100.md:9
 msgid ""
@@ -42,20 +47,29 @@ msgid ""
 "to its source, read [How the Renta declaration is "
 "assembled](../explanation/how-renta-is-assembled.md)"
 msgstr ""
+"El Modelo 100 es el formulario más extenso que prepara la herramienta —la"
+" revisión de 2025 incluye más de dos mil casillas y doscientas fórmulas— "
+"y es la única presentación que reúne todo el ejercicio: su ledger, los "
+"datos de su perfil, sus pagos fraccionados y las retenciones que otros "
+"declararon en su nombre. Para saber cómo llegan esos valores y cómo "
+"rastrear cualquier cifra hasta su origen, lea [Cómo se compone la "
+"declaración de la Renta](../explanation/how-renta-is-assembled.md)"
 
 #: ../../how-to/modelo-100.md:15
 msgid "this page stays with the commands."
-msgstr ""
+msgstr "esta página se centra en los comandos."
 
 #: ../../how-to/modelo-100.md:17
 msgid ""
 "`aeat` does not submit Modelo 100 to AEAT. Export creates a local file "
 "that you upload through the official AEAT channel yourself."
 msgstr ""
+"`aeat` no presenta el Modelo 100 ante la AEAT. La exportación crea un "
+"fichero local que usted mismo sube por el canal oficial de la AEAT."
 
 #: ../../how-to/modelo-100.md:20
 msgid "Before you create the draft"
-msgstr ""
+msgstr "Antes de crear el borrador"
 
 #: ../../how-to/modelo-100.md:22
 msgid ""
@@ -63,6 +77,10 @@ msgid ""
 "facts. Create one with `aeat config profile create <name>`. See [Set up "
 "your taxpayer profile](profile-setup.md)."
 msgstr ""
+"**Requisito:** un perfil de contribuyente válido que contenga los datos "
+"relevantes para la Renta. Cree uno con `aeat config profile create "
+"<name>`. Consulte [Configure su perfil de contribuyente](profile-"
+"setup.md)."
 
 #: ../../how-to/modelo-100.md:26
 msgid ""
@@ -71,6 +89,10 @@ msgid ""
 "2026). Each filing year resolves to its own registry revision "
 "automatically."
 msgstr ""
+"El Modelo 100 es anual: el token de periodo es siempre `0A`, y el "
+"ejercicio de presentación es el año al que pertenece la renta (la "
+"declaración de 2025 se presenta en 2026). Cada ejercicio de presentación "
+"se resuelve automáticamente a su propia revisión del registro."
 
 #: ../../how-to/modelo-100.md:29
 msgid ""
@@ -80,6 +102,12 @@ msgid ""
 "an incomplete profile surfaces as missing values later. Manage "
 "descendants with `aeat config profile descendiente add/list/remove`."
 msgstr ""
+"[Configure su perfil de contribuyente](profile-setup.md) con los datos "
+"relevantes para la Renta: comunidad de residencia, estado civil, datos "
+"del cónyuge y de los descendientes, grados de discapacidad. El perfil "
+"alimenta decenas de bindings del Modelo 100, y un perfil incompleto "
+"aflora más tarde como valores que faltan. Gestione los descendientes con "
+"`aeat config profile descendiente add/list/remove`."
 
 #: ../../how-to/modelo-100.md:34
 msgid ""
@@ -88,6 +116,10 @@ msgid ""
 "manage transactions](import-bank-statements.md) and [Classify "
 "transactions](classify-transactions.md); confirm with:"
 msgstr ""
+"Deje el ledger del ejercicio depurado y clasificado: el Modelo 100 agrega"
+" los ingresos y los gastos deducibles de todo el año. Consulte [Importe y"
+" gestione los movimientos](import-bank-statements.md) y [Clasifique los "
+"movimientos](classify-transactions.md); confírmelo con:"
 
 #: ../../how-to/modelo-100.md:42
 msgid ""
@@ -96,6 +128,10 @@ msgid ""
 "reported on modelos 111, 123, 190, and 193 where they exist. Check what "
 "this declaration expects and what blocks it:"
 msgstr ""
+"Presente y evidencie primero los pagos fraccionados del ejercicio. El "
+"Modelo 100 integra sus pagos a cuenta de los Modelos 130/131 y las "
+"retenciones declaradas en los modelos 111, 123, 190 y 193 cuando existan."
+" Compruebe qué espera esta declaración y qué la bloquea:"
 
 #: ../../how-to/modelo-100.md:51
 msgid ""
@@ -104,10 +140,14 @@ msgid ""
 "annual verify. Record or reconcile those filings first - see [Reconcile a"
 " filing](reconcile.md)."
 msgstr ""
+"`dependencies` nombra cada presentación de origen e indica si su "
+"evidencia de estado limpio está satisfecha; un trimestre no presentado o "
+"sin evidenciar bloquea la verificación anual. Registre o concilie primero"
+" esas presentaciones; consulte [Concilie una presentación](reconcile.md)."
 
 #: ../../how-to/modelo-100.md:56
 msgid "Create, calculate, and verify"
-msgstr ""
+msgstr "Cree, calcule y verifique"
 
 #: ../../how-to/modelo-100.md:58
 msgid ""
@@ -118,6 +158,14 @@ msgid ""
 "quarterly Modelo 130 instalments, they fold in as payments on account - "
 "see [Prepare a Modelo 130 IRPF instalment](modelo-130.md)."
 msgstr ""
+"El ejemplo siguiente sigue a un declarante asalariado: un contribuyente "
+"residente en Madrid con rendimientos del trabajo que presenta una "
+"declaración individual de 2025, sin actividad por cuenta propia, de modo "
+"que las integraciones de los Modelos 130/131 y de los modelos de "
+"retención quedan fuera del alcance y la anual se resuelve solo sobre las "
+"cifras del trabajo. Si además presenta pagos fraccionados trimestrales "
+"del Modelo 130, estos se integran como pagos a cuenta; consulte [Prepare "
+"un pago fraccionado del IRPF con el Modelo 130](modelo-130.md)."
 
 #: ../../how-to/modelo-100.md:69
 msgid ""
@@ -131,6 +179,17 @@ msgid ""
 "prior period: what it does not have on record stays a visible blank for "
 "you to resolve, not a guessed zero."
 msgstr ""
+"El cálculo lee el ledger clasificado del ejercicio, los datos del perfil,"
+" las presentaciones previas que el registro integra y cualquier arrastre "
+"de la declaración del año anterior (las bases negativas se arrastran "
+"mediante un binding de presentación previa), ejecuta después las fórmulas"
+" del registro y guarda una revisión en borrador. Aquí la casilla `0003` "
+"recoge los 24000 de rendimientos del trabajo, la casilla `0012` el "
+"rendimiento neto del trabajo y la casilla `0019` la reducción por "
+"rendimientos del trabajo (art. 20 LIRPF) de 2000. La herramienta nunca "
+"inventa un periodo previo que falte: lo que no consta en su registro "
+"queda como un hueco visible para que usted lo resuelva, no como un cero "
+"supuesto."
 
 #: ../../how-to/modelo-100.md:78
 msgid ""
@@ -138,6 +197,10 @@ msgid ""
 "the ledger cannot know (employment income details, capital income, "
 "deductions). Find what applies to you and what is still missing:"
 msgstr ""
+"La mayoría de las casillas del Modelo 100 son entradas manuales "
+"opcionales para situaciones que el ledger no puede conocer (detalles de "
+"los rendimientos del trabajo, rendimientos del capital, deducciones). "
+"Averigüe qué le corresponde y qué sigue faltando:"
 
 #: ../../how-to/modelo-100.md:86
 msgid ""
@@ -146,6 +209,10 @@ msgid ""
 "needs (the main sequence above shows the full form). Recalculating "
 "replaces the current draft revision."
 msgstr ""
+"Aporte una casilla manual y recalcule pasando `--casilla 0003=24000` en "
+"el comando de cálculo, junto con los bindings que la declaración todavía "
+"necesita (la secuencia principal de arriba muestra el formato completo). "
+"Recalcular sustituye la revisión en borrador actual."
 
 #: ../../how-to/modelo-100.md:91
 msgid ""
@@ -155,10 +222,15 @@ msgid ""
 "declaration, see [Review calculations with Google Sheets](review-with-"
 "google-sheets.md)."
 msgstr ""
+"Para el flujo de entrada completo —casillas vinculadas frente a manuales,"
+" compensaciones y selección de revisión— consulte [Revise y aporte las "
+"entradas de cálculo](review-calculation-values.md). Para una revisión en "
+"hoja de cálculo de la declaración compuesta, consulte [Revise los "
+"cálculos con Google Sheets](review-with-google-sheets.md)."
 
 #: ../../how-to/modelo-100.md:97
 msgid "Export and file"
-msgstr ""
+msgstr "Exporte y presente"
 
 #: ../../how-to/modelo-100.md:99
 msgid ""
@@ -169,6 +241,13 @@ msgid ""
 "resolve it and re-run. See [Verify a draft filing](verification-"
 "reports.md)."
 msgstr ""
+"El paso de verificación de la secuencia anterior ejecutó la comprobación "
+"de completitud anual, incluidas las comprobaciones entre periodos: toda "
+"presentación dependiente debe estar presentada y evidenciada, y toda "
+"cifra arrastrada debe seguir apuntando a la revisión bajo la que se "
+"presentó. Un informe bloqueado nombra la dependencia que lo impide; "
+"resuélvala y vuelva a ejecutar. Consulte [Verifique un borrador de "
+"presentación](verification-reports.md)."
 
 #: ../../how-to/modelo-100.md:105
 msgid ""
@@ -178,34 +257,44 @@ msgid ""
 "shown as display frames, since the filed marker records a portal "
 "submission and the reconcile pull is a live read from AEAT:"
 msgstr ""
+"Exporte la declaración verificada. La cadena completa de la evidencia a "
+"la exportación se ejecuta de principio a fin, ejecutada, en [Prepare una "
+"presentación de IVA con el Modelo 303](modelo-303.md); aquí la "
+"exportación y los pasos posteriores al portal se muestran como marcos "
+"ilustrativos, ya que el marcado de presentado registra un envío por el "
+"portal y la conciliación es una lectura en vivo desde la AEAT:"
 
 #: ../../how-to/modelo-100.md:114
 msgid "See [Reconcile a filing](reconcile.md) for the reconciliation verdicts."
 msgstr ""
+"Consulte [Concilie una presentación](reconcile.md) para conocer los "
+"veredictos de conciliación."
 
 #: ../../how-to/modelo-100.md:116
 msgid "Next steps"
-msgstr ""
+msgstr "Pasos siguientes"
 
 #: ../../how-to/modelo-100.md:118
 msgid ""
 "[How the Renta declaration is assembled](../explanation/how-renta-is-"
 "assembled.md)"
 msgstr ""
+"[Cómo se compone la declaración de la Renta](../explanation/how-renta-is-"
+"assembled.md)"
 
 #: ../../how-to/modelo-100.md:119
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
-msgstr ""
+msgstr "[Prepare un pago fraccionado del IRPF con el Modelo 130](modelo-130.md)"
 
 #: ../../how-to/modelo-100.md:120
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr ""
+msgstr "[Revise y aporte las entradas de cálculo](review-calculation-values.md)"
 
 #: ../../how-to/modelo-100.md:121
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
-msgstr ""
+msgstr "[Suba su modelo exportado en el portal de la AEAT](file-at-aeat.md)"
 
 #: ../../how-to/modelo-100.md:122
 msgid "[Reconcile a filing](reconcile.md)"
-msgstr ""
+msgstr "[Concilie una presentación](reconcile.md)"
 

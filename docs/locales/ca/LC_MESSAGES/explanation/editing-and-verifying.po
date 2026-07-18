@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../explanation/editing-and-verifying.md:1
 msgid "Editing and verifying a calculation"
-msgstr ""
+msgstr "Editar i verificar un càlcul"
 
 #: ../../explanation/editing-and-verifying.md:3
 #, python-brace-format
@@ -32,10 +31,15 @@ msgid ""
 "{term}`modelo`; for the step-by-step actions it links out to the how-to "
 "guides."
 msgstr ""
+"Aquesta pàgina tracta les dues idees que són el cor de l'eina: què és "
+"realment un càlcul desat, i què et diu —i què no— la comprovació "
+"d'exhaustivitat. Està escrita per a contribuents corrents que treballen "
+"amb un {term}`model <modelo>`; per a les accions pas a pas, enllaça amb "
+"les guies pràctiques."
 
 #: ../../explanation/editing-and-verifying.md:9
 msgid "A calculation is a saved version, not a final answer"
-msgstr ""
+msgstr "Un càlcul és una versió desada, no una resposta definitiva"
 
 #: ../../explanation/editing-and-verifying.md:11
 msgid ""
@@ -48,6 +52,15 @@ msgid ""
 "its numbers commit to nothing until you decide they do. The mechanics "
 "live in [The filing workflow](../how-to/filing-spine.md)."
 msgstr ""
+"Cada vegada que executes un càlcul, l'eina desa aquell resultat com a "
+"versió pròpia i conserva els que van venir abans. No se sobreescriu res. "
+"La feina tributària rarament surt bé a la primera: introdueixes una "
+"xifra, calcules, detectes alguna cosa estranya, la corregeixes i tornes a"
+" calcular; i cada intent es queda al disc, identificat pel seu contingut "
+"exacte, de manera que pots comparar versions i tornar enrere. Una versió "
+"desada és el registre d'un intent, no un veredicte; els seus números no "
+"es comprometen a res fins que decideixes que ho fan. La mecànica es troba"
+" a [El flux de presentació](../how-to/filing-spine.md)."
 
 #: ../../explanation/editing-and-verifying.md:20
 msgid ""
@@ -57,10 +70,15 @@ msgid ""
 "[Review and supply calculation inputs](../how-to/review-calculation-"
 "values.md)."
 msgstr ""
+"Un model està fet de caselles (requadres numerats). Cada casella o bé "
+"conté un valor o bé n'espera un. Editar és l'acte de donar a una casella "
+"el valor que el formulari encara necessita, i després tornar a calcular "
+"perquè els totals el reflecteixin; consulta [Revisar i aportar les "
+"entrades del càlcul](../how-to/review-calculation-values.md)."
 
 #: ../../explanation/editing-and-verifying.md:25
 msgid "What verifying checks"
-msgstr ""
+msgstr "Què comprova la verificació"
 
 #: ../../explanation/editing-and-verifying.md:27
 msgid ""
@@ -76,6 +94,19 @@ msgid ""
 "finding is covered in [Verify a draft filing](../how-to/verification-"
 "reports.md)."
 msgstr ""
+"Verificar executa una comprovació d'exhaustivitat sobre un esborrany "
+"contra les regles publicades per l'agència per a aquell model i any: cada"
+" casella requerida té un valor, les sumes quadren sense que cap casella "
+"en contradigui una altra, i res no bloqueja el formulari —incloses "
+"condicions externes al mateix esborrany, com ara que un període anterior "
+"en què es basa aquest formulari estigui presentat i evidenciat—. La "
+"comprovació desa un informe sigui quin sigui el resultat, i l'esborrany "
+"queda en un de tres estats: **complet** (verificat i bloquejat), "
+"**incomplet** (encara hi ha caselles requerides buides) o **bloquejat** "
+"(una regla fallida o una dependència no resolta, indicada a l'informe). "
+"Executar la comprovació i actuar sobre cada troballa es tracta a "
+"[Verificar un esborrany de presentació](../how-to/verification-"
+"reports.md)."
 
 #: ../../explanation/editing-and-verifying.md:38
 msgid ""
@@ -84,10 +115,16 @@ msgid ""
 "succeed\", or \"I am on time\" - the tool never contacts AEAT, and the "
 "check ignores deadlines entirely."
 msgstr ""
+"Una comprovació superada és una comprovació local: vol dir «el meu "
+"esborrany és complet i coherent», mai «l'AEAT ha acceptat la meva "
+"presentació», «la pujada tindrà èxit» o «vaig a temps»; l'eina mai no "
+"contacta amb l'AEAT, i la comprovació ignora completament els terminis."
 
 #: ../../explanation/editing-and-verifying.md:43
 msgid "Why the tool wants a verified version before it builds the upload file"
 msgstr ""
+"Per què l'eina vol una versió verificada abans de construir el fitxer de "
+"pujada"
 
 #: ../../explanation/editing-and-verifying.md:45
 msgid ""
@@ -97,10 +134,17 @@ msgid ""
 " The check is the gate a version has to clear before it can become a "
 "filing - protection against an incomplete draft being filed by accident."
 msgstr ""
+"El fitxer de pujada és allò que surt de l'eina i va cap a l'agència, de "
+"manera que es construeix només a partir d'una versió que ha superat la "
+"comprovació d'exhaustivitat (o d'una ja registrada com a presentada). "
+"L'eina rebutja un simple esborrany. La comprovació és la barrera que una "
+"versió ha de superar abans de poder convertir-se en una presentació: una "
+"protecció contra el fet que un esborrany incomplet es presenti per "
+"accident."
 
 #: ../../explanation/editing-and-verifying.md:51
 msgid "Where this sits in the journey"
-msgstr ""
+msgstr "On se situa això dins del recorregut"
 
 #: ../../explanation/editing-and-verifying.md:53
 msgid ""
@@ -111,4 +155,11 @@ msgid ""
 "outputs are covered in [Reviewing your numbers and producing the upload "
 "file](reviewing-and-exporting.md)."
 msgstr ""
+"Aquesta pàgina forma part del grup [visió general del "
+"funcionament](index.md). Les presentacions anteriors alimenten les "
+"posteriors; per veure com un període anterior verificat s'arrossega cap "
+"endavant, consulta [Com les presentacions es basen en d'anteriors"
+"](building-on-earlier-filings.md). Un cop una versió ha superat la "
+"comprovació, els resultats següents es tracten a [Revisar els teus "
+"números i produir el fitxer de pujada](reviewing-and-exporting.md)."
 

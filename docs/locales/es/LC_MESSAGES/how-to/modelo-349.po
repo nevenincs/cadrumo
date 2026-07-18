@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/modelo-349.md:1
 msgid "Prepare a Modelo 349 recapitulative declaration"
-msgstr ""
+msgstr "Prepare una declaración recapitulativa con el Modelo 349"
 
 #: ../../how-to/modelo-349.md:3
 msgid ""
@@ -32,6 +31,13 @@ msgid ""
 " registry's official title is \"Modelo 349. Declaración Informativa. "
 "Declaración recapitulativa de operaciones intracomunitarias.\""
 msgstr ""
+"Esta página cubre la presentación del Modelo 349: registrar las "
+"operaciones intracomunitarias que enumera, comprobar los números de IVA "
+"europeos de sus contrapartes y ejecutar la cadena de crear-calcular-"
+"verificar-exportar. El Modelo 349 es la declaración informativa "
+"recapitulativa de operaciones intracomunitarias; el título oficial en el "
+"registro es «Modelo 349. Declaración Informativa. Declaración "
+"recapitulativa de operaciones intracomunitarias.»"
 
 #: ../../how-to/modelo-349.md:10
 msgid ""
@@ -41,16 +47,24 @@ msgid ""
 "code, EU VAT number, name, operation key, and base - plus rectification "
 "rows when you correct a previously declared period."
 msgstr ""
+"El Modelo 349 no declara ninguna cuota: es una simple relación. La "
+"declaración lleva un bloque resumen (con cuántos operadores "
+"intracomunitarios ha operado y por qué importes) y una fila de detalle "
+"por operador —código de país, número de IVA europeo, nombre, clave de "
+"operación y base— más filas de rectificación cuando corrige un periodo "
+"declarado previamente."
 
 #: ../../how-to/modelo-349.md:16
 msgid ""
 "`aeat` does not submit Modelo 349 to AEAT. Export creates a local file "
 "that you upload through the official AEAT channel yourself."
 msgstr ""
+"`aeat` no presenta el Modelo 349 ante la AEAT. La exportación crea un "
+"fichero local que usted mismo sube por el canal oficial de la AEAT."
 
 #: ../../how-to/modelo-349.md:19
 msgid "Before you create the draft"
-msgstr ""
+msgstr "Antes de crear el borrador"
 
 #: ../../how-to/modelo-349.md:21
 msgid ""
@@ -59,6 +73,11 @@ msgid ""
 "Create a profile with `aeat config profile create <name>`. See [Set up "
 "your taxpayer profile](profile-setup.md)."
 msgstr ""
+"**Requisito:** un perfil de contribuyente válido con actividad "
+"intracomunitaria (ROI), y los registros de factura intracomunitaria que "
+"la declaración enumera. Cree un perfil con `aeat config profile create "
+"<name>`. Consulte [Configure su perfil de contribuyente](profile-"
+"setup.md)."
 
 #: ../../how-to/modelo-349.md:26
 msgid ""
@@ -66,6 +85,9 @@ msgid ""
 "monthly (`01`-`12`) depending on your profile and operation volumes; the "
 "calendar surfaces which applies to you:"
 msgstr ""
+"Compruebe la aplicabilidad y la periodicidad. El Modelo 349 es trimestral"
+" (`1T`-`4T`) o mensual (`01`-`12`) según su perfil y su volumen de "
+"operaciones; el calendario muestra cuál le corresponde:"
 
 #: ../../how-to/modelo-349.md:33
 msgid ""
@@ -76,6 +98,14 @@ msgid ""
 "country and EU VAT number. See [Manage invoices](manage-invoices.md) and "
 "[Attach invoices and receipts](ledger-evidence.md)."
 msgstr ""
+"Registre las operaciones como registros de factura, no como simples filas"
+" del ledger. La relación del 349 se construye a partir de su catálogo de "
+"facturas: las facturas emitidas a operadores de la UE alimentan el lado "
+"de las entregas, y las facturas recibidas de proveedores de la UE "
+"alimentan el lado de las adquisiciones. Cada factura necesita el país y "
+"el número de IVA europeo de su contraparte. Consulte [Gestione las "
+"facturas](manage-invoices.md) y [Adjunte facturas y recibos](ledger-"
+"evidence.md)."
 
 #: ../../how-to/modelo-349.md:39
 msgid ""
@@ -85,10 +115,16 @@ msgid ""
 "checking now is cheaper. This is a live read-only command - see [Check "
 "AEAT notifications and live observations](check-aeat-notifications.md)."
 msgstr ""
+"Verifique el número de IVA europeo de cada contraparte en el registro "
+"VIES antes de fiarse de él con `aeat app live verify nif-iva "
+"ESB12345678`. Un número no válido o no registrado es la corrección más "
+"frecuente del 349 más adelante; comprobarlo ahora sale más barato. Este "
+"es un comando en vivo de solo lectura; consulte [Consulte notificaciones "
+"de la AEAT y observaciones en vivo](check-aeat-notifications.md)."
 
 #: ../../how-to/modelo-349.md:45
 msgid "Create, calculate, and verify"
-msgstr ""
+msgstr "Cree, calcule y verifique"
 
 #: ../../how-to/modelo-349.md:47
 msgid ""
@@ -97,6 +133,10 @@ msgid ""
 "creates the draft, aggregates the invoices into the declaration, and "
 "verifies it:"
 msgstr ""
+"La preparación siguiente registra dos facturas emitidas intracomunitarias"
+" —una entrega de bienes a un cliente alemán y un servicio a uno francés—,"
+" después crea el borrador, agrega las facturas a la declaración y la "
+"verifica:"
 
 #: ../../how-to/modelo-349.md:55
 msgid ""
@@ -107,6 +147,13 @@ msgid ""
 "operaciones`), and verify grants verified-complete. Inspect what was "
 "bound and what is missing, then show the built rows:"
 msgstr ""
+"El cálculo agrega los registros de factura del periodo a las casillas del"
+" resumen y construye las filas de detalle por operador. Con las dos "
+"facturas anteriores, el resumen informa de dos operadores "
+"intracomunitarios (`decl.numero-operadores`) por un total de 8000 euros "
+"de operaciones (`decl.importe-operaciones`), y la verificación otorga el "
+"estado verificado-completo. Inspeccione qué se vinculó y qué falta, y "
+"muestre después las filas construidas:"
 
 #: ../../how-to/modelo-349.md:66
 msgid ""
@@ -116,10 +163,16 @@ msgid ""
 "rather than forcing a manual value - the listing must match your invoice "
 "evidence."
 msgstr ""
+"Los campos de la fila por operador (código de país, número de IVA "
+"europeo, nombre, clave de operación, base) proceden de los registros de "
+"factura; un dato de contraparte que falte en una factura aflora aquí como"
+" un valor de fila que falta. Corrija el registro de factura en lugar de "
+"forzar un valor manual: la relación debe coincidir con la evidencia de "
+"sus facturas."
 
 #: ../../how-to/modelo-349.md:71
 msgid "Rectify an earlier period"
-msgstr ""
+msgstr "Rectifique un periodo anterior"
 
 #: ../../how-to/modelo-349.md:73
 msgid ""
@@ -129,14 +182,20 @@ msgid ""
 "previously declared. Record the correction on the invoice record for the "
 "original operation; the rectification rows aggregate from there."
 msgstr ""
+"Cuando cambia una operación ya declarada (una factura corregida, un "
+"abono), el 349 posterior declara la rectificación: las filas de "
+"rectificación nombran el año y el periodo rectificados, la base corregida"
+" y la base declarada previamente. Registre la corrección en el registro "
+"de factura de la operación original; las filas de rectificación se "
+"agregan a partir de ahí."
 
 #: ../../how-to/modelo-349.md:79
 msgid "Export and file"
-msgstr ""
+msgstr "Exporte y presente"
 
 #: ../../how-to/modelo-349.md:81
 msgid "Export the verified declaration:"
-msgstr ""
+msgstr "Exporte la declaración verificada:"
 
 #: ../../how-to/modelo-349.md:87
 msgid ""
@@ -144,12 +203,18 @@ msgid ""
 "against the justificante](reconcile.md). The marker records a filing you "
 "have already presented at the portal, so it is shown as a display frame:"
 msgstr ""
+"Después de presentar en el portal, registre el marcador local y luego "
+"[concilie con el justificante](reconcile.md). El marcador registra una "
+"presentación que usted ya ha presentado en el portal, por lo que se "
+"muestra como un marco ilustrativo:"
 
 #: ../../how-to/modelo-349.md:94
 msgid ""
 "The marker is optional and only applies while the obligation window is "
 "open; export is the local finish line."
 msgstr ""
+"El marcador es opcional y solo se aplica mientras la ventana de la "
+"obligación esté abierta; la exportación es la meta local."
 
 #: ../../how-to/modelo-349.md:97
 msgid ""
@@ -159,28 +224,34 @@ msgid ""
 "ledger records, not the declarations. See [Prepare a Modelo 303 IVA "
 "filing](modelo-303.md)."
 msgstr ""
+"El Modelo 349 se ejecuta junto con su Modelo 303 periódico: las mismas "
+"operaciones intracomunitarias que aparecen aquí también alimentan las "
+"casillas intracomunitarias del 303. Mantenga ambos coherentes corrigiendo"
+" los registros de factura y de ledger subyacentes, no las declaraciones. "
+"Consulte [Prepare una presentación de IVA con el Modelo "
+"303](modelo-303.md)."
 
 #: ../../how-to/modelo-349.md:102
 msgid "Next steps"
-msgstr ""
+msgstr "Pasos siguientes"
 
 #: ../../how-to/modelo-349.md:104
 msgid "[Manage invoices](manage-invoices.md)"
-msgstr ""
+msgstr "[Gestione las facturas](manage-invoices.md)"
 
 #: ../../how-to/modelo-349.md:105
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
-msgstr ""
+msgstr "[Prepare una presentación de IVA con el Modelo 303](modelo-303.md)"
 
 #: ../../how-to/modelo-349.md:106
 msgid "[Plan your filing calendar](filing-calendar.md)"
-msgstr ""
+msgstr "[Planifique su calendario de presentaciones](filing-calendar.md)"
 
 #: ../../how-to/modelo-349.md:107
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
-msgstr ""
+msgstr "[Suba su modelo exportado en el portal de la AEAT](file-at-aeat.md)"
 
 #: ../../how-to/modelo-349.md:108
 msgid "[Reconcile a filing](reconcile.md)"
-msgstr ""
+msgstr "[Concilie una presentación](reconcile.md)"
 

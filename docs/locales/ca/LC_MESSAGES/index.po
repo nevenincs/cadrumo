@@ -1,16 +1,14 @@
-# SOME DESCRIPTIVE TITLE.
+# Catalan translation of the Cadrumo documentation.
 # Copyright (C) 2026, the Cadrumo authors
 # This file is distributed under the same license as the CADRUMO package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 14:00+0200\n"
+"Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,209 +19,211 @@ msgstr ""
 
 #: ../../index.md:118
 msgid "Getting started"
-msgstr ""
+msgstr "Primers passos"
 
 #: ../../index.md:118
 msgid "Install Cadrumo"
-msgstr ""
+msgstr "Instal·la Cadrumo"
 
 #: ../../index.md:118
 msgid "Quickstart"
-msgstr ""
+msgstr "Inici ràpid"
 
 #: ../../index.md:118
 msgid "Connect an agent (MCP)"
-msgstr ""
+msgstr "Connecta un agent (MCP)"
 
 #: ../../index.md:118
 msgid "First quarterly filing"
-msgstr ""
+msgstr "Primera presentació trimestral"
 
 #: ../../index.md:118
 msgid "The income-tax year"
-msgstr ""
+msgstr "L'any de l'IRPF"
 
 #: ../../index.md:118
 msgid "The IVA year"
-msgstr ""
+msgstr "L'any de l'IVA"
 
 #: ../../index.md:130
 msgid "Set up a profile"
-msgstr ""
+msgstr "Configura un perfil"
 
 #: ../../index.md:130
 msgid "Authenticate with AEAT"
-msgstr ""
+msgstr "Autentica't amb l'AEAT"
 
 #: ../../index.md:130
 msgid "Maintain census facts"
-msgstr ""
+msgstr "Mantén les dades censals"
 
 #: ../../index.md:130
 msgid "Which modelos apply to you"
-msgstr ""
+msgstr "Quins modelos t'apliquen"
 
 #: ../../index.md:130
 msgid "Protect data access"
-msgstr ""
+msgstr "Protegeix l'accés a les dades"
 
 #: ../../index.md:130
 msgid "Your profile"
-msgstr ""
+msgstr "El teu perfil"
 
 #: ../../index.md:141
 msgid "Filing calendar"
-msgstr ""
+msgstr "Calendari de presentacions"
 
 #: ../../index.md:141
 msgid "AEAT notifications"
-msgstr ""
+msgstr "Notificacions de l'AEAT"
 
 #: ../../index.md:141
 msgid "Filing readiness"
-msgstr ""
+msgstr "Preparació per presentar"
 
 #: ../../index.md:141
 msgid "Your calendar"
-msgstr ""
+msgstr "El teu calendari"
 
 #: ../../index.md:150
 msgid "Work with transactions"
-msgstr ""
+msgstr "Treballa amb les transaccions"
 
 #: ../../index.md:81 ../../index.md:150
 msgid "Classify transactions"
-msgstr ""
+msgstr "Classifica les transaccions"
 
 #: ../../index.md:150
 msgid "Classify with an LLM"
-msgstr ""
+msgstr "Classifica amb un LLM"
 
 #: ../../index.md:150
 msgid "Attach invoices and receipts"
-msgstr ""
+msgstr "Adjunta factures i rebuts"
 
 #: ../../index.md:150
 msgid "Manage business invoices"
-msgstr ""
+msgstr "Gestiona les factures de negoci"
 
 #: ../../index.md:150
 msgid "Correct mistakes"
-msgstr ""
+msgstr "Corregeix els errors"
 
 #: ../../index.md:150
 msgid "IVA prorrata deductions"
-msgstr ""
+msgstr "Deduccions de prorrata de l'IVA"
 
 #: ../../index.md:150
 msgid "Your ledger"
-msgstr ""
+msgstr "El teu ledger"
 
 #: ../../index.md:163
 msgid "The filing workflow"
-msgstr ""
+msgstr "El flux de treball de presentació"
 
 #: ../../index.md:163
 msgid "Modelo 036 (censo)"
-msgstr ""
+msgstr "Modelo 036 (censo)"
 
 #: ../../index.md:163
 msgid "Modelo 100 (Renta)"
-msgstr ""
+msgstr "Modelo 100 (Renta)"
 
 #: ../../index.md:163
 msgid "Modelo 130 (IRPF instalment)"
-msgstr ""
+msgstr "Modelo 130 (pagament fraccionat de l'IRPF)"
 
 #: ../../index.md:163
 msgid "Modelo 303 (IVA)"
-msgstr ""
+msgstr "Modelo 303 (IVA)"
 
 #: ../../index.md:163
 msgid "Modelo 349 (intra-community)"
-msgstr ""
+msgstr "Modelo 349 (intracomunitari)"
 
 #: ../../index.md:163
 msgid "Modelo 390 (IVA summary)"
-msgstr ""
+msgstr "Modelo 390 (resum d'IVA)"
 
 #: ../../index.md:163
 msgid "Calculation inputs"
-msgstr ""
+msgstr "Entrades de càlcul"
 
 #: ../../index.md:163
 msgid "Google Sheets review"
-msgstr ""
+msgstr "Revisió amb Google Sheets"
 
 #: ../../index.md:163
 msgid "Verify a filing"
-msgstr ""
+msgstr "Verifica una presentació"
 
 #: ../../index.md:163
 msgid "File at AEAT"
-msgstr ""
+msgstr "Presenta a l'AEAT"
 
 #: ../../index.md:163
 msgid "Reconcile a filing"
-msgstr ""
+msgstr "Concilia una presentació"
 
 #: ../../index.md:163
 msgid "Your filings"
-msgstr ""
+msgstr "Les teves presentacions"
 
 #: ../../index.md:181
 msgid "Troubleshooting"
-msgstr ""
+msgstr "Resolució de problemes"
 
 #: ../../index.md:181
 msgid "Disclaimer"
-msgstr ""
+msgstr "Avís legal"
 
 #: ../../index.md:181
 msgid "Help"
-msgstr ""
+msgstr "Ajuda"
 
 #: ../../index.md:189
 msgid "Cadrumo reference"
-msgstr ""
+msgstr "Referència de Cadrumo"
 
 #: ../../index.md:189
 msgid "Reference"
-msgstr ""
+msgstr "Referència"
 
 #: ../../index.md:199
 msgid "Overview"
-msgstr ""
+msgstr "Visió general"
 
 #: ../../index.md:199
 msgid "How it works"
-msgstr ""
+msgstr "Com funciona"
 
 #: ../../index.md:206
 msgid "Updates and downloads"
-msgstr ""
+msgstr "Actualitzacions i baixades"
 
 #: ../../index.md:206
 msgid "Architecture"
-msgstr ""
+msgstr "Arquitectura"
 
 #: ../../index.md:206
 msgid "Authoring guide"
-msgstr ""
+msgstr "Guia de redacció"
 
 #: ../../index.md:206
 msgid "Project"
-msgstr ""
+msgstr "Projecte"
 
 #: ../../index.md:1
 msgid "Cadrumo documentation"
-msgstr ""
+msgstr "Documentació de Cadrumo"
 
 #: ../../index.md:3
 msgid ""
 "Paper tax forms, an envelope, a keyboard, and a calculator arranged on a "
 "desk"
 msgstr ""
+"Formularis fiscals en paper, un sobre, un teclat i una calculadora disposats "
+"sobre un escriptori"
 
 #: ../../index.md:9
 msgid ""
@@ -235,6 +235,14 @@ msgid ""
 "on [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is pre-alpha -"
 " expect breaking changes between versions."
 msgstr ""
+"Aquesta és la documentació de Cadrumo i de la seva interfície de línia "
+"d'ordres (CLI) `aeat`. Cadrumo converteix els teus registres en xifres de "
+"modelo comprovades i un fitxer d'exportació. Ets tu qui puja aquest fitxer a "
+"l'Agencia Estatal de Administración Tributaria (AEAT). Per saber què és "
+"Cadrumo i a qui s'adreça, consulta la [pàgina del "
+"producte](https://cadrumo.neve.md); el codi font és a "
+"[GitHub](https://github.com/nevenincs/cadrumo). Cadrumo està en fase "
+"pre-alfa: espera canvis incompatibles entre versions."
 
 #: ../../index.md:18
 msgid ""
@@ -245,10 +253,16 @@ msgid ""
 "submit. Read the [full disclaimer](disclaimer.md) before you rely on "
 "Cadrumo."
 msgstr ""
+"Cadrumo no és assessorament fiscal, no està afiliat a l'AEAT i no substitueix "
+"les eines oficials de l'AEAT ni l'assessorament d'un professional qualificat. "
+"Construeix, comprova i exporta fitxers localment. Ets tu qui presenta pels "
+"canals oficials de l'AEAT i continues sent responsable de cada declaració que "
+"presentes. Llegeix l'[avís legal complet](disclaimer.md) abans de confiar en "
+"Cadrumo."
 
 #: ../../index.md:25
 msgid "Where to start"
-msgstr ""
+msgstr "Per on començar"
 
 #: ../../index.md:27
 msgid ""
@@ -258,82 +272,99 @@ msgid ""
 " - one for income tax, one for IVA - walk the full cycle with real "
 "commands."
 msgstr ""
+"Aquestes guies cobreixen tot el cicle de preparació: configurar un perfil de "
+"contribuent, importar i classificar registres bancaris, comprovar què s'ha de "
+"presentar, i preparar, verificar i exportar cada modelo. Els dos anys de "
+"mostra —un per a l'IRPF i un per a l'IVA— recorren tot el cicle amb ordres "
+"reals."
 
 #: ../../index.md:37
 msgid "Start from scratch"
-msgstr ""
+msgstr "Comença de zero"
 
 #: ../../index.md:42
 msgid "Take the shortest path from an empty profile to an exported modelo file."
-msgstr ""
+msgstr "Fes el camí més curt d'un perfil buit a un fitxer de modelo exportat."
 
 #: ../../index.md:45
 msgid "Run through the income-tax year"
-msgstr ""
+msgstr "Recorre l'any de l'IRPF"
 
 #: ../../index.md:50
 msgid ""
 "Follow a worked year of Modelo 130 quarters closing into the annual "
 "Modelo 100 Renta declaration, command by command."
 msgstr ""
+"Segueix un any de mostra de trimestres del Modelo 130 que es tanquen en la "
+"declaració anual del Modelo 100 (Renta), ordre per ordre."
 
 #: ../../index.md:54
 msgid "Run through the IVA year"
-msgstr ""
+msgstr "Recorre l'any de l'IVA"
 
 #: ../../index.md:59
 msgid ""
 "Follow a worked year of Modelo 303 quarters, the Modelo 349 branch, and "
 "the annual Modelo 390 summary, command by command."
 msgstr ""
+"Segueix un any de mostra de trimestres del Modelo 303, la branca del Modelo "
+"349 i el resum anual del Modelo 390, ordre per ordre."
 
 #: ../../index.md:63
 msgid "Set up your taxpayer profile"
-msgstr ""
+msgstr "Configura el teu perfil de contribuent"
 
 #: ../../index.md:68
 msgid ""
 "Create the taxpayer profile and record the facts that decide which "
 "modelos apply."
 msgstr ""
+"Crea el perfil de contribuent i registra les dades que determinen quins "
+"modelos s'apliquen."
 
 #: ../../index.md:72
 msgid "Import and manage transactions"
-msgstr ""
+msgstr "Importa i gestiona les transaccions"
 
 #: ../../index.md:77
 msgid ""
 "Import bank statements, review the rows, and attach the evidence behind "
 "them."
 msgstr ""
+"Importa extractes bancaris, revisa les files i adjunta les proves que hi ha "
+"al darrere."
 
 #: ../../index.md:86
 msgid ""
 "Decide business, personal, or mixed use and set the category and tax "
 "fields on each row."
 msgstr ""
+"Decideix l'ús comercial, personal o mixt i defineix la categoria i els camps "
+"fiscals de cada fila."
 
 #: ../../index.md:90
 msgid "Plan your filing calendar"
-msgstr ""
+msgstr "Planifica el teu calendari de presentacions"
 
 #: ../../index.md:95
 msgid "See which modelos are due and which period to prepare next."
-msgstr ""
+msgstr "Consulta quins modelos s'han de presentar i quin període has de preparar tot seguit."
 
 #: ../../index.md:98
 msgid "Prepare your filings"
-msgstr ""
+msgstr "Prepara les teves presentacions"
 
 #: ../../index.md:103
 msgid ""
 "Prepare, verify, export, file at AEAT, and reconcile - with a recipe per "
 "modelo: 036, 100 (Renta), 130, 303, 349, and 390."
 msgstr ""
+"Prepara, verifica, exporta, presenta a l'AEAT i concilia, amb una recepta per "
+"a cada modelo: 036, 100 (Renta), 130, 303, 349 i 390."
 
 #: ../../index.md:108
 msgid "Search everything"
-msgstr ""
+msgstr "Cerca-ho tot"
 
 #: ../../index.md:110
 #, python-brace-format
@@ -347,4 +378,12 @@ msgid ""
 "data, review outputs, AEAT upload files, official filing proof, and audit"
 " packages."
 msgstr ""
-
+"Prem {kbd}`Ctrl+K` ({kbd}`Cmd+K` a macOS) a qualsevol pàgina per cercar "
+"conceptes fiscals, caselles, ordres i guies; les coincidències exactes de "
+"terme apareixen primer. Utilitza la [referència de línia "
+"d'ordres](cli/index.rst) per a ordres i opcions, i [com "
+"funciona](explanation/index.md) per veure com els registres es converteixen "
+"en xifres de modelo i quines comprovacions s'executen. Utilitza [Importació, "
+"exportació i proves](reference/import-export-and-evidence.md) per distingir "
+"les dades d'origen, les sortides de revisió, els fitxers de pujada de l'AEAT, "
+"el justificant oficial de presentació i els paquets d'auditoria."

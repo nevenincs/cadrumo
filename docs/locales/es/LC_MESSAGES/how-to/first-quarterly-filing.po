@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/first-quarterly-filing.md:1
 msgid "Prepare your first quarterly IRPF filing"
-msgstr ""
+msgstr "Preparar tu primera presentación trimestral del IRPF"
 
 #: ../../how-to/first-quarterly-filing.md:3
 msgid ""
@@ -32,6 +31,12 @@ msgid ""
 "self-employed taxpayer with a NIF, CIF, NIE, or other filing identity who"
 " is running Cadrumo for the first time."
 msgstr ""
+"Esta página cubre tu primera presentación trimestral del Modelo 130, de "
+"principio a fin: llevar un trimestre de transacciones al ledger, "
+"clasificarlas como ingresos de la actividad y gastos deducibles, preparar el "
+"borrador y comprobar que ha superado la verificación antes de exportarlo. "
+"Está escrita para un contribuyente autónomo con un NIF, CIF, NIE u otra "
+"identidad de presentación que usa Cadrumo por primera vez."
 
 #: ../../how-to/first-quarterly-filing.md:9
 msgid ""
@@ -39,6 +44,10 @@ msgid ""
 "Tributaria (AEAT). Every command below builds and checks a local file. "
 "You upload the exported file yourself through the official AEAT channel."
 msgstr ""
+"Cadrumo nunca presenta una declaración ante la Agencia Estatal de "
+"Administración Tributaria (AEAT). Todas las órdenes de abajo construyen y "
+"comprueban un archivo local. Tú mismo subes el archivo exportado a través "
+"del canal oficial de la AEAT."
 
 #: ../../how-to/first-quarterly-filing.md:13
 msgid ""
@@ -46,6 +55,10 @@ msgid ""
 "sandbox. The transactions, amounts, and taxpayer are invented. Run the "
 "same commands against your own profile to see your own figures."
 msgstr ""
+"Las órdenes de esta página se ejecutan en directo al construir la "
+"documentación en un entorno de pruebas nuevo y sintético. Las transacciones, "
+"los importes y el contribuyente son inventados. Ejecuta las mismas órdenes "
+"con tu propio perfil para ver tus propias cifras."
 
 #: ../../how-to/first-quarterly-filing.md:17
 msgid ""
@@ -53,10 +66,13 @@ msgid ""
 "profile create <name>` before you start. [Set up your profile](profile-"
 "setup.md) walks through it step by step."
 msgstr ""
+"**Requisito:** un perfil de contribuyente válido. Crea uno con `aeat config "
+"profile create <name>` antes de empezar. [Configurar tu perfil](profile-"
+"setup.md) lo explica paso a paso."
 
 #: ../../how-to/first-quarterly-filing.md:21
 msgid "Bring your quarter's transactions in"
-msgstr ""
+msgstr "Trae las transacciones de tu trimestre"
 
 #: ../../how-to/first-quarterly-filing.md:23
 msgid ""
@@ -64,6 +80,9 @@ msgid ""
 "comma-separated statement with two movements: one payment collected from "
 "a client, and one office-supplies purchase."
 msgstr ""
+"Importa el extracto bancario del trimestre. Este ejemplo lee un pequeño "
+"extracto separado por comas con dos movimientos: un cobro de un cliente y "
+"una compra de material de oficina."
 
 #: ../../how-to/first-quarterly-filing.md:31
 msgid ""
@@ -72,10 +91,14 @@ msgid ""
 "Point `--provider` at the format your bank exports; list the accepted "
 "providers with:"
 msgstr ""
+"La importación lee el extracto y guarda cada movimiento como una fila del "
+"ledger. El listado confirma que las dos filas cayeron en el primer trimestre "
+"de 2026. Apunta `--provider` al formato que exporta tu banco; enumera los "
+"proveedores admitidos con:"
 
 #: ../../how-to/first-quarterly-filing.md:39
 msgid "Classify each transaction"
-msgstr ""
+msgstr "Clasifica cada transacción"
 
 #: ../../how-to/first-quarterly-filing.md:41
 msgid ""
@@ -83,6 +106,8 @@ msgid ""
 " the tax calculation should treat it. Classify each row before you "
 "calculate."
 msgstr ""
+"Una fila importada lleva una fecha y un importe, pero todavía no dice cómo "
+"debe tratarla el cálculo del impuesto. Clasifica cada fila antes de calcular."
 
 #: ../../how-to/first-quarterly-filing.md:44
 msgid ""
@@ -91,12 +116,18 @@ msgid ""
 "from the listing above. The income classification takes only the business"
 " decision:"
 msgstr ""
+"Marca el cobro como ingreso de la actividad y la compra como gasto deducible "
+"de la actividad con una categoría. Toma cada id de transacción del listado "
+"de arriba. La clasificación de ingreso solo requiere la decisión de "
+"actividad:"
 
 #: ../../how-to/first-quarterly-filing.md:52
 msgid ""
 "For an expense, add `--category-id <category-id>` plus the taxable base "
 "and IVA fields. List the accepted categories any time:"
 msgstr ""
+"Para un gasto, añade `--category-id <category-id>` más los campos de base "
+"imponible e IVA. Enumera las categorías admitidas en cualquier momento:"
 
 #: ../../how-to/first-quarterly-filing.md:59
 msgid ""
@@ -104,10 +135,13 @@ msgid ""
 "shares, and the review queue), read [Classify transactions](classify-"
 "transactions.md)."
 msgstr ""
+"Para el flujo de clasificación completo (clasificación en bloque, "
+"porcentajes de uso mixto y la cola de revisión), lee [Clasificar "
+"transacciones](classify-transactions.md)."
 
 #: ../../how-to/first-quarterly-filing.md:62
 msgid "Prepare the Modelo 130 draft"
-msgstr ""
+msgstr "Prepara el borrador del Modelo 130"
 
 #: ../../how-to/first-quarterly-filing.md:64
 msgid ""
@@ -117,16 +151,23 @@ msgid ""
 "130 is the IRPF payment on account for self-employed activity under "
 "estimación directa."
 msgstr ""
+"Una vez clasificadas las filas del trimestre, prepara el pago fraccionado. "
+"La preparación de abajo configura un perfil de autónomo y un ledger "
+"clasificado, y luego crea el borrador, lo calcula y lo verifica. El Modelo "
+"130 es el pago a cuenta del IRPF por la actividad de autónomo en estimación "
+"directa."
 
 #: ../../how-to/first-quarterly-filing.md:73
 msgid "Read the frames in order:"
-msgstr ""
+msgstr "Lee los paneles en orden:"
 
 #: ../../how-to/first-quarterly-filing.md:75
 msgid ""
 "Create the draft for Modelo 130, first quarter 2026. The command reports "
 "a `work_unit_id` that addresses the draft."
 msgstr ""
+"Crea el borrador del Modelo 130, primer trimestre de 2026. La orden informa "
+"de un `work_unit_id` que identifica el borrador."
 
 #: ../../how-to/first-quarterly-filing.md:77
 msgid ""
@@ -139,16 +180,27 @@ msgid ""
 "percent of the net. The three `--binding ...=0` values are the prior-"
 "period carries a true first quarter does not have."
 msgstr ""
+"Calcúlalo. Cadrumo lee el ledger clasificado y rellena las casillas: la "
+"casilla `01` es el ingreso del trimestre, la casilla `02` los gastos "
+"deducibles, la casilla `03` el rendimiento neto y la casilla `04` el pago "
+"fraccionado. La casilla 01 muestra 1000.00, no los 1210.00 que cobraste: el "
+"IVA nunca forma parte de tu ingreso, así que los 210.00 de IVA quedan fuera. "
+"Con el ledger de ejemplo el rendimiento neto es `500.00` y el pago "
+"fraccionado es `100.00`, el veinte por ciento del neto. Los tres valores "
+"`--binding ...=0` son los arrastres del periodo anterior que un verdadero "
+"primer trimestre no tiene."
 
 #: ../../how-to/first-quarterly-filing.md:85
 msgid ""
 "Verify the draft. The result reads `granted_verificado_completo` true, so"
 " the draft is complete and ready to export."
 msgstr ""
+"Verifica el borrador. El resultado muestra `granted_verificado_completo` en "
+"true, así que el borrador está completo y listo para exportar."
 
 #: ../../how-to/first-quarterly-filing.md:88
 msgid "Check the figures and export"
-msgstr ""
+msgstr "Comprueba las cifras y exporta"
 
 #: ../../how-to/first-quarterly-filing.md:90
 msgid ""
@@ -160,6 +212,15 @@ msgid ""
 "evidence-to-export chain runs end to end, executed, on [Prepare a Modelo "
 "303 IVA filing](modelo-303.md):"
 msgstr ""
+"El resultado de la verificación es la señal de que el borrador está listo. "
+"Cuando `granted_verificado_completo` está en true, exporta el archivo. La "
+"exportación se niega hasta que cada fila de gasto deducible lleve vinculada "
+"la evidencia de la factura de compra; este ejemplo de primera presentación "
+"omite esa evidencia, así que la exportación y el marcador de presentado "
+"posterior al portal se muestran como paneles ilustrativos. La cadena "
+"completa de evidencia a exportación se ejecuta de principio a fin, "
+"realmente, en [Preparar una presentación de IVA con el Modelo 303](modelo-"
+"303.md):"
 
 #: ../../how-to/first-quarterly-filing.md:100
 msgid ""
@@ -168,24 +229,28 @@ msgid ""
 " IRPF instalment](modelo-130.md) for the cumulative year-to-date "
 "behaviour."
 msgstr ""
+"Un trimestre posterior se apoya en este: deja sin fijar las tres "
+"vinculaciones del periodo anterior para que se resuelvan a partir de tu "
+"historial de presentaciones. Consulta [Preparar un pago fraccionado del IRPF "
+"con el Modelo 130](modelo-130.md) para el comportamiento acumulado del año "
+"en curso."
 
 #: ../../how-to/first-quarterly-filing.md:105
 msgid "Next steps"
-msgstr ""
+msgstr "Próximos pasos"
 
 #: ../../how-to/first-quarterly-filing.md:107
 msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
-msgstr ""
+msgstr "[Preparar un pago fraccionado del IRPF con el Modelo 130](modelo-130.md)"
 
 #: ../../how-to/first-quarterly-filing.md:108
 msgid "[Classify transactions](classify-transactions.md)"
-msgstr ""
+msgstr "[Clasificar transacciones](classify-transactions.md)"
 
 #: ../../how-to/first-quarterly-filing.md:109
 msgid "[The filing workflow](filing-spine.md)"
-msgstr ""
+msgstr "[El flujo de presentación](filing-spine.md)"
 
 #: ../../how-to/first-quarterly-filing.md:110
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
-msgstr ""
-
+msgstr "[Subir tu modelo exportado en el portal de la AEAT](file-at-aeat.md)"

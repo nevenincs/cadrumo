@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0000\n"
+"Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/censo-update.md:1
 msgid "Maintain Modelo 036 census facts in your profile"
-msgstr ""
+msgstr "Mantingueu les dades censals del Model 036 al vostre perfil"
 
 #: ../../how-to/censo-update.md:3
 #, python-brace-format
@@ -30,12 +29,17 @@ msgid ""
 "correct in the active local profile. In Spain, the censo is tied to "
 "Modelo 036 registration and changes."
 msgstr ""
+"Utilitzeu aquesta guia per mantenir correctes les vostres dades censals "
+"de l'AEAT (el {term}`censo`) al perfil local actiu. A Espanya, el censo "
+"està lligat al registre i a les modificacions del Model 036."
 
 #: ../../how-to/censo-update.md:7
 msgid ""
 "This guide covers Modelo 036. Modelo 037 is superseded and not used in "
 "this workflow."
 msgstr ""
+"Aquesta guia tracta el Model 036. El Model 037 està substituït i no "
+"s'utilitza en aquest flux de treball."
 
 #: ../../how-to/censo-update.md:10
 msgid ""
@@ -45,24 +49,34 @@ msgid ""
 "application never operates. The tool does not file Modelo 036, does not "
 "submit changes to AEAT, and does not modify AEAT records."
 msgstr ""
+"Introduïu les dades censals a mà. L'eina no llegeix el vostre censo de "
+"l'AEAT: l'AEAT no publica cap vista censal de només lectura, i l'única "
+"superfície de la sede que mostra dades censals és l'eina de *modificació*"
+" del cens, que aquesta aplicació no opera mai. L'eina no presenta el "
+"Model 036, no envia canvis a l'AEAT i no modifica els registres de "
+"l'AEAT."
 
 #: ../../how-to/censo-update.md:16
 msgid "Before you start"
-msgstr ""
+msgstr "Abans de començar"
 
 #: ../../how-to/censo-update.md:18
 msgid "You need:"
-msgstr ""
+msgstr "Necessiteu:"
 
 #: ../../how-to/censo-update.md:20
 msgid ""
 "an active taxpayer profile; see [Set up your taxpayer profile](profile-"
 "setup.md)"
 msgstr ""
+"un perfil de contribuent actiu; vegeu [Configureu el vostre perfil de "
+"contribuent](profile-setup.md)"
 
 #: ../../how-to/censo-update.md:21
 msgid "the taxpayer's fiscal ID (NIF, CIF, DNI, or NIE) saved in that profile"
 msgstr ""
+"l'identificador fiscal del contribuent (NIF, CIF, DNI o NIE) desat en "
+"aquest perfil"
 
 #: ../../how-to/censo-update.md:22
 msgid ""
@@ -70,46 +84,59 @@ msgid ""
 " tax regime, IVA regime, and enrollment facts. Read them from your Modelo"
 " 036 copy or from the AEAT sede."
 msgstr ""
+"les vostres dades censals tal com les manté l'AEAT: descripció i data "
+"d'inici de l'activitat, règim fiscal, règim d'IVA i dades d'alta. Llegiu-"
+"les de la vostra còpia del Model 036 o de la sede de l'AEAT."
 
 #: ../../how-to/censo-update.md:26
 msgid ""
 "Every command on this page needs your master-key passphrase; the tool "
 "prompts for it. The tool's messages are in Spanish."
 msgstr ""
+"Cada ordre d'aquesta pàgina necessita la contrasenya de la clau mestra; "
+"l'eina us la demana. Els missatges de l'eina són en castellà."
 
 #: ../../how-to/censo-update.md:29
 msgid ""
 "If you have no profile yet, create one non-interactively with `--quiet` "
 "(a bare `profile create NAME` opens an interactive wizard instead):"
 msgstr ""
+"Si encara no teniu cap perfil, creeu-ne un de manera no interactiva amb "
+"`--quiet` (un simple `profile create NAME` obre un assistent interactiu):"
 
 #: ../../how-to/censo-update.md:35
 msgid "Check the active profile first:"
-msgstr ""
+msgstr "Comproveu primer el perfil actiu:"
 
 #: ../../how-to/censo-update.md:41
 msgid "Why census facts matter"
-msgstr ""
+msgstr "Per què són importants les dades censals"
 
 #: ../../how-to/censo-update.md:43
 msgid "Census facts drive profile-dependent workflows:"
-msgstr ""
+msgstr "Les dades censals impulsen els fluxos de treball que depenen del perfil:"
 
 #: ../../how-to/censo-update.md:45
 msgid ""
 "the activity start date keeps the filing calendar from showing "
 "obligations before your registered activity start"
 msgstr ""
+"la data d'inici de l'activitat evita que el calendari de presentacions "
+"mostri obligacions anteriors a l'inici de l'activitat registrada"
 
 #: ../../how-to/censo-update.md:47
 msgid ""
 "the tax regime, IVA regime, and Renta/IRPF regime select which modelos "
 "and which calculation paths apply"
 msgstr ""
+"el règim fiscal, el règim d'IVA i el règim de Renda/IRPF seleccionen "
+"quins models i quines vies de càlcul s'apliquen"
 
 #: ../../how-to/censo-update.md:49
 msgid "enrollment facts feed the filing calendar's obligation derivation"
 msgstr ""
+"les dades d'alta nodreixen la derivació d'obligacions del calendari de "
+"presentacions"
 
 #: ../../how-to/censo-update.md:51
 msgid ""
@@ -119,14 +146,20 @@ msgid ""
 "and refuses strict projection until you accept that basis; see [Plan your"
 " filing calendar](filing-calendar.md)."
 msgstr ""
+"Introduïu-les amb cura. L'aplicació tracta les vostres entrades com a "
+"dades declarades per l'operador, no com a dades verificades per l'AEAT. "
+"El calendari de presentacions informa de les obligacions que depenen del "
+"censo amb un avís `censo.enrolment_unverified` i es nega a fer una "
+"projecció estricta fins que accepteu aquesta base; vegeu [Planifiqueu el "
+"vostre calendari de presentacions](filing-calendar.md)."
 
 #: ../../how-to/censo-update.md:57
 msgid "Enter or correct census facts"
-msgstr ""
+msgstr "Introduïu o corregiu les dades censals"
 
 #: ../../how-to/censo-update.md:59
 msgid "Edit the active profile with the wizard:"
-msgstr ""
+msgstr "Editeu el perfil actiu amb l'assistent:"
 
 #: ../../how-to/censo-update.md:64
 msgid ""
@@ -134,16 +167,22 @@ msgid ""
 "For a scripted update, pass the field flags with `--quiet`. Name your own"
 " profile in place of `docs-sequence-sandbox`:"
 msgstr ""
+"L'assistent recorre els camps del perfil, inclosos els basats en el cens."
+" Per a una actualització automatitzada, passeu els indicadors de camp amb"
+" `--quiet`. Poseu el nom del vostre propi perfil en lloc de `docs-"
+"sequence-sandbox`:"
 
 #: ../../how-to/censo-update.md:72
 msgid ""
 "Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do "
 "not guess a regime or a start date."
 msgstr ""
+"Copieu cada valor de la vostra còpia del Model 036 o de la sede de l'AEAT"
+" exactament. No endevineu un règim ni una data d'inici."
 
 #: ../../how-to/censo-update.md:75
 msgid "Record a Modelo 036 filing done outside Cadrumo"
-msgstr ""
+msgstr "Registreu una presentació del Model 036 feta fora de Cadrumo"
 
 #: ../../how-to/censo-update.md:77
 msgid ""
@@ -154,26 +193,35 @@ msgid ""
 "change. After you record a filing, update the profile fields the filing "
 "changed."
 msgstr ""
+"Si presenteu una alta, modificación o baja del Model 036 a la sede de "
+"l'AEAT, registreu aquest fet localment perquè les presentacions "
+"posteriors s'hi puguin basar. [Registreu una declaració del Model 036 "
+"presentada a l'AEAT](modelo-036.md) conté les ordres, la sortida d'èxit i"
+" què canvia i què no canvia el registre. Després de registrar una "
+"presentació, actualitzeu els camps del perfil que la presentació hagi "
+"canviat."
 
 #: ../../how-to/censo-update.md:83
 msgid "Check the profile afterwards"
-msgstr ""
+msgstr "Comproveu el perfil després"
 
 #: ../../how-to/censo-update.md:85
 msgid "Validate the active profile after editing census facts:"
-msgstr ""
+msgstr "Valideu el perfil actiu després d'editar les dades censals:"
 
 #: ../../how-to/censo-update.md:91
 msgid "If the profile still reports missing facts, edit those fields directly:"
 msgstr ""
+"Si el perfil encara informa de dades que falten, editeu aquests camps "
+"directament:"
 
 #: ../../how-to/censo-update.md:96
 msgid "For modelo-specific readiness, use profile preflight:"
-msgstr ""
+msgstr "Per a la preparació específica d'un model, useu el preflight del perfil:"
 
 #: ../../how-to/censo-update.md:102
 msgid "Keep the facts current"
-msgstr ""
+msgstr "Mantingueu les dades actualitzades"
 
 #: ../../how-to/censo-update.md:104
 msgid ""
@@ -182,24 +230,29 @@ msgid ""
 "your latest Modelo 036 copy whenever you file a censo change, and before "
 "you plan a new filing year."
 msgstr ""
+"El vostre cens de l'AEAT pot canviar: una nova activitat, un canvi de "
+"règim, una baja. L'aplicació no pot detectar aquesta desviació. Torneu a "
+"comprovar el perfil amb la vostra còpia més recent del Model 036 cada "
+"vegada que presenteu un canvi censal, i abans de planificar un nou any de"
+" presentació."
 
 #: ../../how-to/censo-update.md:109
 msgid "Next steps"
-msgstr ""
+msgstr "Passos següents"
 
 #: ../../how-to/censo-update.md:111
 msgid "[Set up your taxpayer profile](profile-setup.md)"
-msgstr ""
+msgstr "[Configureu el vostre perfil de contribuent](profile-setup.md)"
 
 #: ../../how-to/censo-update.md:112
 msgid "[Plan your filing calendar](filing-calendar.md)"
-msgstr ""
+msgstr "[Planifiqueu el vostre calendari de presentacions](filing-calendar.md)"
 
 #: ../../how-to/censo-update.md:113
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr ""
+msgstr "[Importeu i gestioneu els moviments](import-bank-statements.md)"
 
 #: ../../how-to/censo-update.md:114
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr ""
+msgstr "[Reviseu i proporcioneu les dades de càlcul](review-calculation-values.md)"
 

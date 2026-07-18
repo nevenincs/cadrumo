@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,17 +20,20 @@ msgstr ""
 
 #: ../../reference/registry-legal-api.md:1
 msgid "Registry, legal sources, and Python API"
-msgstr ""
+msgstr "Registre, fonts legals i API de Python"
 
 #: ../../reference/registry-legal-api.md:3
 msgid ""
 "The Agencia Estatal de Administración Tributaria (AEAT) owns the official"
 " modelo structure. API means application programming interface."
 msgstr ""
+"L'Agencia Estatal de Administración Tributaria (AEAT) és propietària de "
+"l'estructura oficial dels models. API vol dir interfície de programació "
+"d'aplicacions."
 
 #: ../../reference/registry-legal-api.md:6
 msgid "Registry and legal-source lookup"
-msgstr ""
+msgstr "Consulta del registre i de les fonts legals"
 
 #: ../../reference/registry-legal-api.md:8
 msgid ""
@@ -41,56 +43,64 @@ msgid ""
 "A resolved calculation revision records the registry revision it used so "
 "later review can identify the exact rule set."
 msgstr ""
+"El registre de càlcul de Cadrumo preserva l'estructura de l'AEAT que "
+"representa: identificadors de model, períodes, seccions, caselles, "
+"fórmules, bindings, classificacions i referències de font conserven el "
+"nom que els dóna l'autoritat. Una revisió de càlcul resolta registra la "
+"revisió del registre que va utilitzar, de manera que una revisió "
+"posterior pugui identificar el conjunt exacte de regles."
 
 #: ../../reference/registry-legal-api.md
 msgid "Reference field"
-msgstr ""
+msgstr "Camp de referència"
 
 #: ../../reference/registry-legal-api.md
 msgid "Meaning"
-msgstr ""
+msgstr "Significat"
 
 #: ../../reference/registry-legal-api.md
 msgid "Registry revision"
-msgstr ""
+msgstr "Revisió del registre"
 
 #: ../../reference/registry-legal-api.md
 msgid "Exact bundled rule revision used for the calculation"
-msgstr ""
+msgstr "Revisió exacta de regles inclosa que s'ha utilitzat per al càlcul"
 
 #: ../../reference/registry-legal-api.md
 msgid "Formula or binding"
-msgstr ""
+msgstr "Fórmula o binding"
 
 #: ../../reference/registry-legal-api.md
 msgid "Deterministic route from source values to a casilla"
-msgstr ""
+msgstr "Ruta determinista dels valors d'origen fins a una casella"
 
 #: ../../reference/registry-legal-api.md
 msgid "`legal_refs`"
-msgstr ""
+msgstr "`legal_refs`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Legal provisions grounding a rule or finding"
-msgstr ""
+msgstr "Disposicions legals que fonamenten una regla o una troballa"
 
 #: ../../reference/registry-legal-api.md
 msgid "`source_refs`"
-msgstr ""
+msgstr "`source_refs`"
 
 #: ../../reference/registry-legal-api.md
 msgid "Official manual or source material supporting the implementation"
-msgstr ""
+msgstr "Manual oficial o material d'origen que dóna suport a la implementació"
 
 #: ../../reference/registry-legal-api.md
 msgid "Evidence provenance"
-msgstr ""
+msgstr "Procedència de l'evidència"
 
 #: ../../reference/registry-legal-api.md
 msgid ""
 "Local record, document, observation, or prior filed revision that "
 "supplied a value"
 msgstr ""
+"Registre local, document, observació o revisió presentada anteriorment "
+"que ha aportat un valor"
 
 #: ../../reference/registry-legal-api.md:22
 #, python-brace-format
@@ -100,10 +110,15 @@ msgid ""
 "report, and audit surfaces. Use the {doc}`glossary "
 "</_generated/glossary>` for taxpayer-facing definitions."
 msgstr ""
+"Utilitza la [referència d'ordres de l'aplicació](../cli/app.rst) generada"
+" per consultar les superfícies d'inspecció del registre, descripció de "
+"models, fórmules, informes de verificació i auditoria. Utilitza el "
+"{doc}`glossari </_generated/glossary>` per a les definicions de cara al "
+"contribuent."
 
 #: ../../reference/registry-legal-api.md:27
 msgid "Python public API lookup"
-msgstr ""
+msgstr "Consulta de l'API pública de Python"
 
 #: ../../reference/registry-legal-api.md:29
 msgid ""
@@ -112,6 +127,11 @@ msgid ""
 "documented public facades. The generated package tree lists the supported"
 " adapters, application, core, domain, entrypoint, and locale surfaces."
 msgstr ""
+"L'[API del paquet Cadrumo](../api/cadrumo.rst) generada és el punt "
+"d'entrada per a la consulta de Python. Els consumidors públics importen "
+"des de `cadrumo` i les seves façanes públiques documentades. L'arbre de "
+"paquets generat llista les superfícies admeses d'adaptadors, aplicació, "
+"nucli, domini, punt d'entrada i localització."
 
 #: ../../reference/registry-legal-api.md:34
 msgid ""
@@ -119,4 +139,8 @@ msgid ""
 "`aeat` inside the `cadrumo` package identify the external authority "
 "adapter or authority-owned vocabulary, not a second product API."
 msgstr ""
+"No hi ha cap paquet de compatibilitat d'importació de Python `aeat`. Els "
+"noms que contenen `aeat` dins del paquet `cadrumo` identifiquen "
+"l'adaptador de l'autoritat externa o vocabulari propietat de l'autoritat,"
+" no una segona API de producte."
 

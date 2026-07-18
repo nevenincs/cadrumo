@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../explanation/how-renta-is-assembled.md:1
 msgid "Deep dive: how the Renta declaration is assembled"
-msgstr ""
+msgstr "Análisis a fondo: cómo se compone la declaración de la renta"
 
 #: ../../explanation/how-renta-is-assembled.md:3
 msgid ""
@@ -33,6 +32,14 @@ msgid ""
 "real commands, because Renta is the filing where you most need to see for"
 " yourself how a value arrived."
 msgstr ""
+"Esta página trata de cómo se compone la declaración anual de la renta del "
+"modelo 100: de dónde procede cada uno de sus valores, cómo se integran en "
+"ella las presentaciones trimestrales del año, qué se arrastra de la "
+"declaración del año anterior y cómo rastrear cualquier cifra hasta su origen "
+"y su fundamento legal. Es la única página de análisis a fondo de esta "
+"sección: a diferencia de sus vecinas, nombra comandos reales, porque la "
+"renta es la presentación en la que más necesitas comprobar por ti mismo cómo "
+"llegó un valor."
 
 #: ../../explanation/how-renta-is-assembled.md:11
 msgid ""
@@ -43,10 +50,16 @@ msgid ""
 "preparation lives in [Prepare the annual Modelo 100 Renta declaration"
 "](../how-to/modelo-100.md)."
 msgstr ""
+"Los comandos se muestran para la declaración de 2025 (`--year 2025 --period "
+"0A`); sustituye tu año de presentación. Dan por hecho un perfil de "
+"contribuyente activo, creado con `aeat config profile create` como explica "
+"[Configura tu perfil de contribuyente](../how-to/profile-setup.md). La "
+"preparación paso a paso está en [Preparar la declaración anual de la renta "
+"del modelo 100](../how-to/modelo-100.md)."
 
 #: ../../explanation/how-renta-is-assembled.md:18
 msgid "One declaration, four kinds of source"
-msgstr ""
+msgstr "Una declaración, cuatro tipos de origen"
 
 #: ../../explanation/how-renta-is-assembled.md:20
 msgid ""
@@ -56,6 +69,11 @@ msgid ""
 "each one a *binding* - and every source is one of four kinds. List them "
 "for your filing year:"
 msgstr ""
+"El modelo 100 es el formulario más extenso que prepara la herramienta: la "
+"revisión de 2025 define más de dos mil casillas y doscientas fórmulas. Cada "
+"valor de él llega a través de un origen de datos declarado —el listado de "
+"abajo llama a cada uno *binding*— y cada origen es de uno de cuatro tipos. "
+"Enuméralos para tu año de presentación:"
 
 #: ../../explanation/how-renta-is-assembled.md:30
 msgid ""
@@ -64,6 +82,10 @@ msgid ""
 "These come from your taxpayer profile, one binding per fact (the "
 "`renta-2025-profile-*` rows in the listing)."
 msgstr ""
+"**Datos del perfil.** Quién eres: NIF, comunidad de residencia, estado "
+"civil, datos del cónyuge y de los descendientes, grados de discapacidad, "
+"tipo de declaración. Proceden de tu perfil de contribuyente, un binding por "
+"dato (las filas `renta-2025-profile-*` del listado)."
 
 #: ../../explanation/how-renta-is-assembled.md:34
 msgid ""
@@ -72,6 +94,10 @@ msgid ""
 "(the `renta-2025-ledger-*` rows). This is the same ledger your quarterly "
 "filings read - Renta reads the whole year at once."
 msgstr ""
+"**Agregaciones del ledger.** Lo que tu actividad ingresó y gastó: las filas "
+"de ingresos clasificados y de gastos deducibles del año, agregadas por "
+"casilla (las filas `renta-2025-ledger-*`). Es el mismo ledger que leen tus "
+"presentaciones trimestrales; la renta lee todo el año de una vez."
 
 #: ../../explanation/how-renta-is-assembled.md:38
 msgid ""
@@ -81,6 +107,11 @@ msgid ""
 "labels `relation_prefill`). The tool reads these from your own filed "
 "records, not from AEAT."
 msgstr ""
+"**Presentaciones anteriores integradas.** Lo que ya declaraste durante el "
+"año: los pagos fraccionados del modelo 130 o 131 que pagaste, y las "
+"retenciones declaradas en los modelos 111, 123, 190 y 193 cuando existen "
+"(las filas que el listado etiqueta como `relation_prefill`). La herramienta "
+"las lee de tus propios registros presentados, no de la AEAT."
 
 #: ../../explanation/how-renta-is-assembled.md:43
 msgid ""
@@ -89,6 +120,10 @@ msgid ""
 "prior declaration (the listing labels this source `previous_filing`), so "
 "this year's declaration can offset it."
 msgstr ""
+"**La declaración del año pasado.** Lo que se arrastra entre años: una base "
+"liquidable negativa de una renta anterior se arrastra desde tu propia "
+"declaración anterior presentada (el listado etiqueta este origen como "
+"`previous_filing`), de modo que la declaración de este año pueda compensarla."
 
 #: ../../explanation/how-renta-is-assembled.md:48
 msgid ""
@@ -96,10 +131,13 @@ msgid ""
 "the ledger cannot know about - is a manual casilla you supply when it "
 "applies to you. The full inventory for your year:"
 msgstr ""
+"Todo lo demás —detalles de rendimientos del trabajo, rendimientos del "
+"capital, deducciones que el ledger no puede conocer— es una casilla manual "
+"que aportas cuando te aplica. El inventario completo para tu año:"
 
 #: ../../explanation/how-renta-is-assembled.md:56
 msgid "How the quarterly filings fold in"
-msgstr ""
+msgstr "Cómo se integran las presentaciones trimestrales"
 
 #: ../../explanation/how-renta-is-assembled.md:58
 msgid ""
@@ -110,6 +148,12 @@ msgid ""
 "declaration sets them against your full-year income and settles the "
 "difference: what is still owed, or what comes back."
 msgstr ""
+"A lo largo del año pagaste el IRPF por partes: pagos fraccionados en el "
+"modelo 130 (o el 131 en módulos) y retenciones que clientes o pagadores "
+"declararon por ti. Ninguno de ellos era la versión definitiva: eran pagos a "
+"cuenta de una única liquidación anual, y la renta es donde se encuentran. La "
+"declaración los contrasta con tu renta de todo el año y liquida la "
+"diferencia: lo que aún se debe o lo que se devuelve."
 
 #: ../../explanation/how-renta-is-assembled.md:65
 msgid ""
@@ -118,6 +162,10 @@ msgid ""
 "your record. See what the declaration expects and what currently blocks "
 "it:"
 msgstr ""
+"La integración está condicionada a la evidencia. Antes de que la "
+"verificación anual se supere, cada presentación anterior de la que depende "
+"la declaración debe estar presentada y evidenciada en tu registro. Consulta "
+"qué espera la declaración y qué la bloquea actualmente:"
 
 #: ../../explanation/how-renta-is-assembled.md:73
 msgid ""
@@ -127,6 +175,11 @@ msgid ""
 "under - is scoped out from your profile facts and shown as not "
 "applicable, never silently skipped."
 msgstr ""
+"Cada fila de dependencia nombra el modelo y el periodo de origen y si su "
+"evidencia de estado limpio está satisfecha. Una dependencia que no te aplica "
+"—un modelo de retenciones que nunca presentas, un régimen de pagos "
+"fraccionados al que no estás acogido— se excluye a partir de los datos de tu "
+"perfil y se muestra como no aplicable, nunca se omite de forma silenciosa."
 
 #: ../../explanation/how-renta-is-assembled.md:79
 msgid ""
@@ -134,10 +187,14 @@ msgid ""
 " you to resolve. [How filings build on earlier ones](building-on-earlier-"
 "filings.md) explains this design rule."
 msgstr ""
+"La herramienta nunca fabrica un periodo anterior que falta: un hueco "
+"permanece visible para que lo resuelvas. [Cómo las presentaciones se apoyan "
+"en las anteriores](building-on-earlier-filings.md) explica esta regla de "
+"diseño."
 
 #: ../../explanation/how-renta-is-assembled.md:83
 msgid "What carries between years"
-msgstr ""
+msgstr "Qué se arrastra entre años"
 
 #: ../../explanation/how-renta-is-assembled.md:85
 msgid ""
@@ -148,10 +205,17 @@ msgid ""
 "prior whose revision no longer matches blocks the carry rather than "
 "silently importing figures computed under different law."
 msgstr ""
+"Una renta con una base liquidable negativa no termina sin más: el negativo "
+"se arrastra, y la declaración de un año posterior lo compensa. El arrastre "
+"lee tu propia declaración anterior presentada y vuelve a confirmar, en el "
+"momento de la lectura, que la anterior se presentó bajo la revisión del "
+"registro que declara. Una anterior cuya revisión ya no coincide bloquea el "
+"arrastre en lugar de importar de forma silenciosa cifras calculadas bajo una "
+"ley distinta."
 
 #: ../../explanation/how-renta-is-assembled.md:92
 msgid "Tracing any figure to its source and its law"
-msgstr ""
+msgstr "Rastrear cualquier cifra hasta su origen y su ley"
 
 #: ../../explanation/how-renta-is-assembled.md:94
 msgid ""
@@ -161,6 +225,11 @@ msgid ""
 "filer's draft the reads inspect, and the last step looks up one box's "
 "definition):"
 msgstr ""
+"Tras un cálculo, cada valor resuelto lleva una procedencia tipada: el "
+"binding o la fórmula que lo produjo, sus operandos y sus referencias legales "
+"y de origen. Léelas (los pasos de preparación calculan el borrador del "
+"declarante asalariado que inspeccionan las lecturas, y el último paso "
+"consulta la definición de una casilla):"
 
 #: ../../explanation/how-renta-is-assembled.md:103
 msgid ""
@@ -170,10 +239,15 @@ msgid ""
 "your machine - the records behind it, the rule that routed them, and the "
 "article of law behind the rule."
 msgstr ""
+"La salida JSON de cualquiera de estos comandos lleva `legal_refs` y "
+"`source_refs` en cada fila. Esta es la propiedad que Cadrumo preserva de "
+"extremo a extremo: si un inspector pregunta por qué una casilla contiene una "
+"cifra, la respuesta está en tu máquina: los registros que la respaldan, la "
+"regla que los encaminó y el artículo de la ley que respalda la regla."
 
 #: ../../explanation/how-renta-is-assembled.md:109
 msgid "Where this sits in the journey"
-msgstr ""
+msgstr "Dónde encaja esto en el recorrido"
 
 #: ../../explanation/how-renta-is-assembled.md:111
 msgid ""
@@ -185,4 +259,10 @@ msgid ""
 "feed it are covered in [Prepare a Modelo 130 IRPF instalment](../how-"
 "to/modelo-130.md)."
 msgstr ""
-
+"Esta página forma parte del grupo de la [visión general de cómo funciona]"
+"(index.md) y profundiza un nivel más que [Cómo las presentaciones se apoyan "
+"en las anteriores](building-on-earlier-filings.md), que explica la idea del "
+"cruce entre presentaciones en general. El flujo de preparación es [Preparar "
+"la declaración anual de la renta del modelo 100](../how-to/modelo-100.md); "
+"los pagos fraccionados trimestrales que la alimentan se tratan en [Preparar "
+"un pago fraccionado del IRPF del modelo 130](../how-to/modelo-130.md)."

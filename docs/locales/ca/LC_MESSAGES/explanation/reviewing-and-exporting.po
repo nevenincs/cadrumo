@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../explanation/reviewing-and-exporting.md:1
 msgid "Reviewing your numbers and producing the upload file"
-msgstr ""
+msgstr "Revisar els teus números i produir el fitxer de pujada"
 
 #: ../../explanation/reviewing-and-exporting.md:3
 msgid ""
@@ -29,10 +28,13 @@ msgid ""
 "complete - a spreadsheet for you to review, and the exact file the AEAT "
 "portal accepts - and why they are separate things."
 msgstr ""
+"Aquesta pàgina tracta les dues sortides que produeix l'eina un cop un "
+"càlcul està complet —un full de càlcul perquè el revisis, i el fitxer "
+"exacte que accepta el portal de l'AEAT— i per què són coses separades."
 
 #: ../../explanation/reviewing-and-exporting.md:7
 msgid "Why there are two outputs, not one"
-msgstr ""
+msgstr "Per què hi ha dues sortides, no una"
 
 #: ../../explanation/reviewing-and-exporting.md:9
 msgid ""
@@ -46,6 +48,16 @@ msgid ""
 " and its evidence, not a review surface. The walkthrough is [Review "
 "calculations with Google Sheets](../how-to/review-with-google-sheets.md)."
 msgstr ""
+"La primera sortida és per a tu. Abans de comprometre't amb cap número, "
+"vols veure com s'ha arribat a cada total i ajustar una xifra si alguna "
+"cosa no lliga. El teu càlcul es desplega a Google Sheets amb una fórmula "
+"viva darrere de cada total, de manera que una entrada corregida recalcula"
+" davant teu tot el que en depèn, i les teves edicions revisades es "
+"reincorporen a l'eina contra el càlcul exacte a partir del qual es va "
+"construir el full. El fitxer `.xlsx` fora de línia que l'eina també pot "
+"produir és un record fix del càlcul i la seva evidència, no una "
+"superfície de revisió. El recorregut és [Revisar càlculs amb Google "
+"Sheets](../how-to/review-with-google-sheets.md)."
 
 #: ../../explanation/reviewing-and-exporting.md:19
 msgid ""
@@ -59,16 +71,28 @@ msgid ""
 "in [Upload your exported modelo at the AEAT portal](../how-to/file-at-"
 "aeat.md)."
 msgstr ""
+"La segona sortida és per a la màquina de l'altra banda. L'AEAT accepta "
+"pujades només en un format de text precís, amb cada valor en una posició "
+"fixa, rebutjat si difereix en un caràcter. L'eina construeix aquell "
+"fitxer a partir del teu càlcul revisat al teu propi ordinador —generar el"
+" fitxer i trametre'l són actes separats, i l'eina mai no tramet per tu—. "
+"Quan escriu el fitxer informa d'una empremta del contingut exacte, de "
+"manera que més endavant pots demostrar quin fitxer vas pujar. Els passos "
+"són a [Puja el teu model exportat al portal de l'AEAT](../how-to/file-at-"
+"aeat.md)."
 
 #: ../../explanation/reviewing-and-exporting.md:28
 msgid ""
 "One is a review surface; the other is a delivery format. Keeping them "
 "apart is what lets each be good at what it does."
 msgstr ""
+"Una és una superfície de revisió; l'altra és un format de lliurament. "
+"Mantenir-les separades és el que permet que cadascuna sigui bona en el "
+"que fa."
 
 #: ../../explanation/reviewing-and-exporting.md:31
 msgid "Where this sits in your filing"
-msgstr ""
+msgstr "On se situa això dins de la teva presentació"
 
 #: ../../explanation/reviewing-and-exporting.md:33
 msgid ""
@@ -79,4 +103,10 @@ msgid ""
 "is covered in [Recording a filing, and why the tool never files for "
 "you](recording-a-filing-and-the-boundary.md)."
 msgstr ""
+"Aquestes sortides vénen després de la comprovació d'exhaustivitat "
+"descrita a [Editar i verificar un càlcul](editing-and-verifying.md): "
+"revisar i exportar només val la pena un cop el model està complet. "
+"Produir el fitxer de pujada no és el mateix que presentar-lo; què passa "
+"un cop tens el fitxer es tracta a [Registrar una presentació, i per què "
+"l'eina mai no presenta per tu](recording-a-filing-and-the-boundary.md)."
 

@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../explanation/index.md:1
 msgid "How Cadrumo turns your records into a tax file"
-msgstr ""
+msgstr "Com Cadrumo converteix els teus registres en un fitxer tributari"
 
 #: ../../explanation/index.md:3
 msgid ""
@@ -31,6 +30,12 @@ msgid ""
 "or NIE who prepares their own filings. AEAT is the *Agencia Estatal de "
 "Administración Tributaria*, Spain's tax agency."
 msgstr ""
+"Aquest grup de pàgines explica com Cadrumo, l'eina `aeat`, mou les teves "
+"dades des dels registres bancaris fins a un fitxer tributari acabat, i "
+"per què existeix cada pas. Està escrit per al contribuent corrent a "
+"Espanya: qualsevol persona amb NIF, CIF, DNI o NIE que prepara les seves "
+"pròpies declaracions. L'AEAT és l'*Agencia Estatal de Administración "
+"Tributaria*, l'agència tributària espanyola."
 
 #: ../../explanation/index.md:5
 msgid ""
@@ -40,10 +45,15 @@ msgid ""
 "throughs of [the income-tax year](../how-to/irpf-lifecycle.md) and [the "
 "IVA year](../how-to/iva-lifecycle.md)."
 msgstr ""
+"Llegeix-ho per entendre com encaixen les peces. Per dur a terme una tasca"
+" concreta, comença per la [pàgina d'inici](../how-to/index.md), la [Guia "
+"ràpida](../how-to/quickstart.md) pas a pas, o els recorreguts per model "
+"de [l'any de l'IRPF](../how-to/irpf-lifecycle.md) i [l'any de l'IVA"
+"](../how-to/iva-lifecycle.md)."
 
 #: ../../explanation/index.md:9
 msgid "The one promise"
-msgstr ""
+msgstr "L'única promesa"
 
 #: ../../explanation/index.md:11
 msgid ""
@@ -53,10 +63,15 @@ msgid ""
 "and why the tool never files for you](recording-a-filing-and-the-"
 "boundary.md) covers this boundary in full."
 msgstr ""
+"L'eina s'executa completament al teu propi ordinador. Prepara la "
+"declaració per tu, però mai no envia res a l'agència. Quan el fitxer està"
+" a punt, el puges tu mateix a través del portal de l'agència. [Registrar "
+"una presentació, i per què l'eina mai no presenta per tu](recording-a"
+"-filing-and-the-boundary.md) tracta aquest límit amb detall."
 
 #: ../../explanation/index.md:15
 msgid "The journey at a glance"
-msgstr ""
+msgstr "El recorregut d'un cop d'ull"
 
 #: ../../explanation/index.md:17
 msgid ""
@@ -65,16 +80,24 @@ msgid ""
 "boxes of a form, get edited and double-checked, turn into a file you can "
 "upload, and finally get recorded once you've filed it yourself."
 msgstr ""
+"Les teves dades es mouen en un sol sentit a través de l'eina. Els "
+"moviments bancaris entren, es classifiquen i es preparen per a efectes "
+"tributaris, superen una comprovació de preparació, es converteixen en les"
+" caselles numerades d'un formulari, s'editen i es revisen, esdevenen un "
+"fitxer que pots pujar i, finalment, es registren un cop l'has presentat "
+"tu mateix."
 
 #: ../../explanation/index.md:29
 msgid ""
 "Each stop on this journey is owned in depth by one member of this "
 "cluster. The five sections that follow introduce them in order."
 msgstr ""
+"Cada parada d'aquest recorregut la tracta en profunditat una de les "
+"pàgines d'aquest grup. Les cinc seccions següents les presenten en ordre."
 
 #: ../../explanation/index.md:33
 msgid "From your records to the figures on the form"
-msgstr ""
+msgstr "Dels teus registres a les xifres del formulari"
 
 #: ../../explanation/index.md:35
 msgid ""
@@ -87,10 +110,19 @@ msgid ""
 "draft. See [How your records become tax figures](from-records-to-"
 "figures.md)."
 msgstr ""
+"Els teus moviments bancaris comencen com a simples imports i dates sense "
+"cap significat tributari. Abans que l'eina pugui omplir un formulari, "
+"cada moviment es classifica en una categoria fiscal i, quan una despesa "
+"és en part personal, s'ajusta a la part afecta a l'activitat. Després, "
+"una comprovació de preparació confirma que els registres estan complets "
+"per al període. A partir d'aquí l'eina omple cada casella numerada del "
+"formulari, seguint les regles que publica l'agència, i desa el resultat "
+"com a esborrany. Consulta [Com els teus registres es converteixen en "
+"xifres tributàries](from-records-to-figures.md)."
 
 #: ../../explanation/index.md:39
 msgid "Editing and double-checking a calculation"
-msgstr ""
+msgstr "Editar i revisar un càlcul"
 
 #: ../../explanation/index.md:41
 msgid ""
@@ -100,10 +132,16 @@ msgid ""
 "whole form for missing inputs and inconsistent figures. See [Editing and "
 "verifying a calculation](editing-and-verifying.md)."
 msgstr ""
+"Un primer esborrany rarament és l'última paraula. Pots ajustar xifres, "
+"tornar a executar el càlcul i conservar una versió desada de cada intent "
+"sense perdre els anteriors. Quan estiguis a punt, una comprovació "
+"d'exhaustivitat repassa tot el formulari a la recerca d'entrades que "
+"falten i de xifres inconsistents. Consulta [Editar i verificar un càlcul"
+"](editing-and-verifying.md)."
 
 #: ../../explanation/index.md:45
 msgid "When a form builds on earlier ones"
-msgstr ""
+msgstr "Quan un formulari es basa en d'anteriors"
 
 #: ../../explanation/index.md:47
 msgid ""
@@ -113,6 +151,12 @@ msgid ""
 "and it tells you when an earlier filing isn't ready yet. See [How filings"
 " build on earlier ones](building-on-earlier-filings.md)."
 msgstr ""
+"Alguns formularis depenen de xifres que ja has presentat: un resum anual "
+"que es nodreix dels trimestres, per exemple. L'eina arrossega aquells "
+"números anteriors cap endavant perquè un formulari posterior es mantingui"
+" coherent amb el que s'ha presentat abans, i t'avisa quan una presentació"
+" anterior encara no està a punt. Consulta [Com les presentacions es basen"
+" en d'anteriors](building-on-earlier-filings.md)."
 
 #: ../../explanation/index.md:49
 msgid ""
@@ -122,10 +166,14 @@ msgid ""
 "[Deep dive: how the Renta declaration is assembled](how-renta-is-"
 "assembled.md)."
 msgstr ""
+"Per a la declaració anual de la Renda en concret —el formulari més gran i"
+" el que recull tot l'any—, una immersió dedicada recorre d'on prové cada "
+"valor i com traçar-lo, amb les ordres incloses: [Immersió: com s'assembla"
+" la declaració de la Renda](how-renta-is-assembled.md)."
 
 #: ../../explanation/index.md:53
 msgid "Reviewing your numbers and producing the upload file"
-msgstr ""
+msgstr "Revisar els teus números i produir el fitxer de pujada"
 
 #: ../../explanation/index.md:55
 msgid ""
@@ -135,10 +183,15 @@ msgid ""
 "accepts. See [Reviewing your numbers and producing the upload file"
 "](reviewing-and-exporting.md)."
 msgstr ""
+"Abans de comprometre't amb un formulari, pots revisar cada xifra i "
+"traçar-la fins a l'entrada que la va produir. Un cop n'estiguis satisfet,"
+" l'eina produeix el fitxer oficial de pujada: la disposició exacta que "
+"accepta el portal de l'agència. Consulta [Revisar els teus números i "
+"produir el fitxer de pujada](reviewing-and-exporting.md)."
 
 #: ../../explanation/index.md:59
 msgid "Recording a filing, after you upload it yourself"
-msgstr ""
+msgstr "Registrar una presentació, després que la puges tu mateix"
 
 #: ../../explanation/index.md:61
 #, python-brace-format
@@ -149,14 +202,20 @@ msgid ""
 "[Recording a filing, and why the tool never files for you](recording-a"
 "-filing-and-the-boundary.md)."
 msgstr ""
+"L'eina s'atura al fitxer. El puges a través del portal de l'agència, i "
+"l'agència et lliura un {term}`justificant <justificante>`. De tornada a "
+"l'eina, registres que la presentació està feta, perquè el teu propi "
+"historial es mantingui exacte. Consulta [Registrar una presentació, i per"
+" què l'eina mai no presenta per tu](recording-a-filing-and-the-"
+"boundary.md)."
 
 #: ../../explanation/index.md:65
 msgid "What \"verify\" and \"file\" mean here"
-msgstr ""
+msgstr "Què volen dir aquí «verificar» i «presentar»"
 
 #: ../../explanation/index.md:67
 msgid "Two everyday words have narrow, local meanings in this tool:"
-msgstr ""
+msgstr "Dues paraules corrents tenen un significat estret i local en aquesta eina:"
 
 #: ../../explanation/index.md:69
 msgid ""
@@ -165,6 +224,10 @@ msgid ""
 "missing. It does not test the form against the agency's portal, and it's "
 "not a promise the agency will accept it."
 msgstr ""
+"**Verificar** és una comprovació d'exhaustivitat i coherència que "
+"s'executa al teu propi ordinador. Confirma que el formulari es manté "
+"sòlid i que no falta res del que cal. No posa a prova el formulari contra"
+" el portal de l'agència, i no és cap promesa que l'agència l'accepti."
 
 #: ../../explanation/index.md:70
 msgid ""
@@ -172,6 +235,9 @@ msgid ""
 "as done so you don't change it by accident. It is not a submission - the "
 "tool never sends anything to the agency."
 msgstr ""
+"**Presentar** és una anotació local de «definitiu» als teus propis "
+"registres. Marca un formulari com a fet perquè no el canviïs per "
+"accident. No és una tramesa: l'eina mai no envia res a l'agència."
 
 #: ../../explanation/index.md:72
 msgid ""
@@ -179,10 +245,14 @@ msgid ""
 "calculation](editing-and-verifying.md) and [Recording a filing, and why "
 "the tool never files for you](recording-a-filing-and-the-boundary.md)."
 msgstr ""
+"Aquestes dues idees es tracten en profunditat a [Editar i verificar un "
+"càlcul](editing-and-verifying.md) i a [Registrar una presentació, i per "
+"què l'eina mai no presenta per tu](recording-a-filing-and-the-"
+"boundary.md)."
 
 #: ../../explanation/index.md:76
 msgid "How to use this cluster"
-msgstr ""
+msgstr "Com utilitzar aquest grup de pàgines"
 
 #: ../../explanation/index.md:78
 #, python-brace-format
@@ -192,6 +262,10 @@ msgid ""
 " and back to the {doc}`glossary </_generated/glossary>` for any word "
 "you're unsure of."
 msgstr ""
+"Llegeix-lo de dalt a baix per tenir la visió completa, o salta a l'etapa "
+"en què estàs treballant. Cada pàgina enllaça amb la guia pràctica que "
+"executa la seva tasca i amb el {doc}`glossari </_generated/glossary>` per"
+" a qualsevol paraula de què no estiguis segur."
 
 #: ../../explanation/index.md:80
 msgid ""
@@ -201,4 +275,10 @@ msgid ""
 "IVA year](../how-to/iva-lifecycle.md); for the shortest single-filing "
 "path, the [Quickstart](../how-to/quickstart.md)."
 msgstr ""
+"Quan alguna cosa va malament, consulta [Resolució de problemes](../how-"
+"to/troubleshooting.md). Per a un recorregut pas a pas d'un any de "
+"presentacions complet, segueix [l'any de l'IRPF](../how-to/irpf-"
+"lifecycle.md) o [l'any de l'IVA](../how-to/iva-lifecycle.md); per al camí"
+" més curt d'una sola presentació, la [Guia ràpida](../how-"
+"to/quickstart.md)."
 

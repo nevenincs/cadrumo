@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../explanation/building-on-earlier-filings.md:1
 msgid "How filings build on earlier ones"
-msgstr ""
+msgstr "Com les presentacions es basen en d'anteriors"
 
 #: ../../explanation/building-on-earlier-filings.md:3
 msgid ""
@@ -31,6 +30,12 @@ msgid ""
 "leaves for you to check. It is for anyone preparing a form that depends "
 "on earlier periods or on the whole year."
 msgstr ""
+"Aquesta pàgina tracta les connexions entre presentacions: per què un "
+"resum anual necessita els trimestres que el van precedir, com l'eina "
+"arrossega xifres cap endavant des de les teves presentacions anteriors i "
+"—igual d'important— què et deixa a tu per comprovar. És per a qualsevol "
+"persona que prepara un formulari que depèn de períodes anteriors o de tot"
+" l'any."
 
 #: ../../explanation/building-on-earlier-filings.md:9
 msgid ""
@@ -38,6 +43,10 @@ msgid ""
 "see [How your records become tax figures](from-records-to-figures.md). "
 "This page is about the connections *between* filings."
 msgstr ""
+"Si vols saber com es construeixen les xifres d'un sol període a partir "
+"dels teus registres, consulta [Com els teus registres es converteixen en "
+"xifres tributàries](from-records-to-figures.md). Aquesta pàgina tracta de"
+" les connexions *entre* presentacions."
 
 #: ../../explanation/building-on-earlier-filings.md:11
 #, python-brace-format
@@ -46,20 +55,26 @@ msgid ""
 "{term}`justificante`, {term}`AEAT`, IVA, IRPF, or RENTA - look it up in "
 "the {doc}`glossary </_generated/glossary>`."
 msgstr ""
+"Per a qualsevol terme de què no estiguis segur —{term}`model 100 <modelo "
+"100>`, {term}`casella <casilla>`, {term}`justificant <justificante>`, "
+"{term}`AEAT`, IVA, IRPF o RENDA—, cerca'l al {doc}`glossari "
+"</_generated/glossary>`."
 
 #: ../../explanation/building-on-earlier-filings.md:13
 msgid "Why a later form needs earlier figures"
-msgstr ""
+msgstr "Per què un formulari posterior necessita xifres anteriors"
 
 #: ../../explanation/building-on-earlier-filings.md:15
 msgid ""
 "Tax doesn't reset every quarter. The figures you report in one period "
 "often feed the next."
 msgstr ""
+"Els impostos no es reinicien cada trimestre. Les xifres que declares en "
+"un període sovint alimenten el següent."
 
 #: ../../explanation/building-on-earlier-filings.md:17
 msgid "Two common shapes show up across the forms:"
-msgstr ""
+msgstr "A través dels formularis apareixen dues formes habituals:"
 
 #: ../../explanation/building-on-earlier-filings.md:19
 msgid ""
@@ -68,6 +83,10 @@ msgid ""
 "filings. Modelo 100 (RENTA) pulls together the income-tax instalments and"
 " withholdings you reported through the year."
 msgstr ""
+"**Els resums anuals recullen l'any.** Un formulari anual agrega els "
+"períodes que conté. El Model 390, per exemple, resumeix les presentacions"
+" d'IVA del Model 303 de l'any. El Model 100 (RENDA) reuneix els pagaments"
+" fraccionats i les retencions d'IRPF que has declarat al llarg de l'any."
 
 #: ../../explanation/building-on-earlier-filings.md:20
 msgid ""
@@ -76,6 +95,11 @@ msgid ""
 "unused amount carried into a later period - a IVA credit you keep until a"
 " later return can use it."
 msgstr ""
+"**Els imports no utilitzats s'arrosseguen al període següent.** Si un "
+"trimestre del Model 303 et deixa amb més IVA pagat que cobrat, la "
+"diferència esdevé un import no utilitzat que s'arrossega a un període "
+"posterior: un crèdit d'IVA que conserves fins que una declaració "
+"posterior el pugui aprofitar."
 
 #: ../../explanation/building-on-earlier-filings.md:22
 msgid ""
@@ -83,10 +107,14 @@ msgid ""
 " figures you already reported. The tool carries those figures forward "
 "from your earlier filings so you don't re-enter them by hand."
 msgstr ""
+"En totes dues formes, el formulari posterior no es pot sostenir per si "
+"sol. Es remunta a xifres que ja has declarat. L'eina arrossega aquelles "
+"xifres cap endavant des de les teves presentacions anteriors perquè no "
+"les hagis de tornar a introduir a mà."
 
 #: ../../explanation/building-on-earlier-filings.md:24
 msgid "Earlier figures must be backed by evidence"
-msgstr ""
+msgstr "Les xifres anteriors han d'estar avalades per evidència"
 
 #: ../../explanation/building-on-earlier-filings.md:26
 msgid ""
@@ -96,6 +124,11 @@ msgid ""
 "completed and marked as filed. Where possible, it should come from one "
 "backed by the agency's receipt."
 msgstr ""
+"Una xifra arrossegada només és tan fiable com la presentació d'on prové. "
+"Per això l'arrossegament es basa en un principi clar. Una xifra portada "
+"d'una presentació anterior hauria de provenir d'una presentació que "
+"realment has completat i marcat com a presentada. Sempre que sigui "
+"possible, hauria de provenir d'una avalada pel justificant de l'agència."
 
 #: ../../explanation/building-on-earlier-filings.md:28
 msgid ""
@@ -106,6 +139,13 @@ msgid ""
 "missing pair to fill the gap. That's deliberate. A guessed figure in a "
 "filing is worse than a visible blank you can act on."
 msgstr ""
+"L'eina arrossega cap endavant les xifres que *té registrades* per al "
+"model, any i període coincidents. No inventa un període anterior que no "
+"hi és. Si demanes a un formulari anual que reuneixi quatre trimestres i "
+"només en té dos registrats, l'eina incorpora els dos que té; no fabrica "
+"la parella que falta per omplir el buit. Això és deliberat. Una xifra "
+"endevinada en una presentació és pitjor que un buit visible sobre el qual"
+" pots actuar."
 
 #: ../../explanation/building-on-earlier-filings.md:30
 msgid ""
@@ -114,10 +154,14 @@ msgid ""
 "figure came from a filing you completed and that it still reflects what "
 "you filed before you rely on it."
 msgstr ""
+"Per això, les xifres que arrossega cap endavant són un punt de partida "
+"que revises, no un veredicte que acceptes a cegues. Confirmes que cada "
+"xifra anterior prové d'una presentació que has completat i que encara "
+"reflecteix el que vas presentar abans de confiar-hi."
 
 #: ../../explanation/building-on-earlier-filings.md:32
 msgid "The running IVA credit balance"
-msgstr ""
+msgstr "El saldo corrent del crèdit d'IVA"
 
 #: ../../explanation/building-on-earlier-filings.md:34
 msgid ""
@@ -126,6 +170,10 @@ msgid ""
 "that unused IVA credit to carry forward and brings it into the next "
 "period's return."
 msgstr ""
+"El cas de l'IVA no utilitzat té la seva petita porció de memòria. Quan un"
+" període del Model 303 et deixa amb crèdit d'IVA, l'eina manté un "
+"registre corrent d'aquell crèdit d'IVA no utilitzat per arrossegar cap "
+"endavant i l'incorpora a la declaració del període següent."
 
 #: ../../explanation/building-on-earlier-filings.md:36
 msgid ""
@@ -135,6 +183,11 @@ msgid ""
 "carrying when you started. From there, each period updates the balance on"
 " its own."
 msgstr ""
+"Aquell registre corrent necessita un punt de partida veritable. El primer"
+" cop que utilitzes l'eina, no té cap historial del crèdit que hagis "
+"acumulat abans. Per això estableixes el saldo inicial una vegada: el "
+"crèdit d'IVA no utilitzat que ja arrossegaves quan vas començar. A partir"
+" d'aquí, cada període actualitza el saldo pel seu compte."
 
 #: ../../explanation/building-on-earlier-filings.md:38
 msgid ""
@@ -147,6 +200,15 @@ msgid ""
 "you hit that, the figure is locked because a filing already used it - "
 "which is exactly when you'd want it locked."
 msgstr ""
+"La gent comet errors amb un saldo inicial, i per això hi ha un camí de "
+"correcció. Pots corregir un saldo inicial erroni a posteriori. Una "
+"salvaguarda et protegeix: l'eina es nega a canviar la base d'un període "
+"que ja has completat i marcat com a presentat. Reescriure una xifra en "
+"què una declaració presentada ja es basava canviaria discretament aquella"
+" declaració a posteriori, de manera que la correcció es rebutja i indica "
+"la presentació que ho impedeix. Si topes amb això, la xifra està "
+"bloquejada perquè una presentació ja la va utilitzar, que és exactament "
+"quan voldries que estigués bloquejada."
 
 #: ../../explanation/building-on-earlier-filings.md:40
 msgid ""
@@ -157,10 +219,16 @@ msgid ""
 "lifecycle.md); for the yearly IVA summary alone, see [Prepare the annual "
 "Modelo 390 IVA summary](../how-to/modelo-390.md)."
 msgstr ""
+"Per veure les xifres que utilitza un càlcul, llegeix [Revisar i aportar "
+"les entrades del càlcul](../how-to/review-calculation-values.md). Tot el "
+"cicle —sembrar el saldo inicial, un trimestre amb crèdit, l'arrossegament"
+" i el resum anual— es demostra en directe a [L'any de l'IVA](../how-to"
+"/iva-lifecycle.md); per al resum anual d'IVA per si sol, consulta "
+"[Preparar el resum anual d'IVA del Model 390](../how-to/modelo-390.md)."
 
 #: ../../explanation/building-on-earlier-filings.md:42
 msgid "The annual income-tax return pulls the year together"
-msgstr ""
+msgstr "La declaració anual de la renda reuneix tot l'any"
 
 #: ../../explanation/building-on-earlier-filings.md:44
 msgid ""
@@ -170,6 +238,11 @@ msgid ""
 "reported on your behalf. None of those is the final word. RENTA gathers "
 "them."
 msgstr ""
+"La RENDA —la declaració anual de l'IRPF— és l'exemple més clar d'un "
+"formulari que viu de xifres anteriors. Al llarg de l'any declares "
+"l'impost sobre la renda a trossos: declaracions de pagaments fraccionats "
+"a mesura que avances, i retencions que altres han declarat en nom teu. "
+"Cap d'aquestes no és l'última paraula. La RENDA les reuneix."
 
 #: ../../explanation/building-on-earlier-filings.md:46
 msgid ""
@@ -180,6 +253,13 @@ msgid ""
 "instalments toward one annual settlement, and the annual return is where "
 "they meet."
 msgstr ""
+"La declaració anual es nodreix d'aquells pagaments fraccionats i "
+"retencions de les teves presentacions anteriors, els contraposa als teus "
+"ingressos de tot l'any i liquida la xifra final de l'impost sobre la "
+"renda: el que encara es deu, o el que et retornen. Els trossos que has "
+"presentat al llarg de l'any no són esdeveniments separats; són pagaments "
+"a compte d'una sola liquidació anual, i la declaració anual és on es "
+"troben."
 
 #: ../../explanation/building-on-earlier-filings.md:48
 msgid ""
@@ -187,16 +267,22 @@ msgid ""
 "withholdings the tool has on record from filings you completed. You "
 "review those before trusting the result."
 msgstr ""
+"La mateixa idea regeix les xifres: la RENDA es liquida sobre els "
+"pagaments fraccionats i les retencions que l'eina té registrats de "
+"presentacions que has completat. Els revises abans de confiar en el "
+"resultat."
 
 #: ../../explanation/building-on-earlier-filings.md:50
 msgid "What the tool checks, and what it leaves to you"
-msgstr ""
+msgstr "Què comprova l'eina, i què et deixa a tu"
 
 #: ../../explanation/building-on-earlier-filings.md:52
 msgid ""
 "It helps to be precise about the boundary here, because this is where a "
 "filing's accuracy is won or lost."
 msgstr ""
+"Convé ser precís sobre el límit aquí, perquè és on es guanya o es perd "
+"l'exactitud d'una presentació."
 
 #: ../../explanation/building-on-earlier-filings.md:54
 msgid ""
@@ -207,6 +293,12 @@ msgid ""
 "and it does not quietly sweep up every figure it can find and assume each"
 " one is correct."
 msgstr ""
+"L'eina troba i arrossega cap endavant les xifres anteriors que té "
+"registrades, coincidents per model, any i període. Aquest és el límit del"
+" que fa pel seu compte. No tracta silenciosament com a definitives unes "
+"dades de l'agència no confirmades o desactualitzades, no inventa un "
+"període anterior que no està registrat, i no recull discretament cada "
+"xifra que troba donant per fet que cadascuna és correcta."
 
 #: ../../explanation/building-on-earlier-filings.md:56
 msgid ""
@@ -216,6 +308,11 @@ msgid ""
 "prior period is a real gap to resolve, not a zero the tool filled for "
 "you."
 msgstr ""
+"El que et deixa a tu és el criteri: que cada xifra arrossegada prové "
+"d'una presentació que has completat i marcat com a presentada; que "
+"coincideix amb el justificant de l'agència d'aquella presentació allà on "
+"n'existeix un; i que un període anterior que falta és un buit real per "
+"resoldre, no un zero que l'eina t'ha omplert."
 
 #: ../../explanation/building-on-earlier-filings.md:58
 msgid ""
@@ -224,10 +321,14 @@ msgid ""
 " into a yearly summary, or from this period's credit into the next, is "
 "only as sound as your review of where it came from."
 msgstr ""
+"Aquesta divisió és el sentit. L'eina elimina la reescriptura i "
+"l'aritmètica; tu conserves la confirmació. Una xifra que flueix d'un "
+"trimestre a un resum anual, o del crèdit d'aquest període al següent, "
+"només és tan sòlida com la teva revisió d'on va sortir."
 
 #: ../../explanation/building-on-earlier-filings.md:60
 msgid "Where this sits in the journey"
-msgstr ""
+msgstr "On se situa això dins del recorregut"
 
 #: ../../explanation/building-on-earlier-filings.md:62
 msgid ""
@@ -238,6 +339,13 @@ msgid ""
 "records, read [How your records become tax figures](from-records-to-"
 "figures.md)."
 msgstr ""
+"Aquesta pàgina ha tractat les connexions entre presentacions: per què els"
+" formularis posteriors depenen dels anteriors i com les xifres "
+"s'arrosseguen cap endavant. La [visió general del funcionament](index.md)"
+" mostra on encaixa això entre els altres conceptes. Per baixar un nivell "
+"cap a com es construeixen les xifres d'un sol període a partir dels teus "
+"registres, llegeix [Com els teus registres es converteixen en xifres "
+"tributàries](from-records-to-figures.md)."
 
 #: ../../explanation/building-on-earlier-filings.md:64
 msgid ""
@@ -246,4 +354,8 @@ msgid ""
 " with [Reviewing your numbers and producing the upload file](reviewing-"
 "and-exporting.md)."
 msgstr ""
+"Un cop les teves xifres estan tancades —incloses les portades de "
+"presentacions anteriors—, el concepte següent és comprovar-les i "
+"compartir-les. Continua amb [Revisar els teus números i produir el fitxer"
+" de pujada](reviewing-and-exporting.md)."
 

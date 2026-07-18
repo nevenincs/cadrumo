@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -13,7 +12,7 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -21,15 +20,19 @@ msgstr ""
 
 #: ../../how-to/protect-data-access.md:1
 msgid "Protect access to your data"
-msgstr ""
+msgstr "Védje az adataihoz való hozzáférést"
 
 #: ../../how-to/protect-data-access.md:3
 msgid ""
-"Cadrumo encrypts every profile, transaction, piece of evidence, and "
-"filing under one master key. Your passphrase opens that key. If you lose "
-"the passphrase and have no recovery key, the data cannot be decrypted by "
-"anyone, including you."
+"Cadrumo encrypts every profile, transaction, piece of evidence, and filing "
+"under one master key. Your passphrase opens that key. If you lose the "
+"passphrase and have no recovery key, the data cannot be decrypted by anyone,"
+" including you."
 msgstr ""
+"A Cadrumo minden profilt, tranzakciót, bizonyítékdarabot és benyújtást "
+"egyetlen mesterkulcs alatt titkosít. Az Ön jelmondata nyitja ezt a kulcsot. "
+"Ha elveszíti a jelmondatot, és nincs helyreállítási kulcsa, az adatokat "
+"senki – Ön sem – tudja visszafejteni."
 
 #: ../../how-to/protect-data-access.md:8
 msgid ""
@@ -37,128 +40,167 @@ msgid ""
 "passphrase, recover access after a lost passphrase, log out safely, and "
 "reset local state only as a last resort."
 msgstr ""
+"Használja ezt az útmutatót, hogy beállítson egy helyreállítási kulcsot, "
+"mielőtt szüksége lenne rá, megváltoztassa a jelmondatát, egy elveszett "
+"jelmondat után visszaszerezze a hozzáférést, biztonságosan kijelentkezzen, "
+"és csak végső esetben visszaállítsa a helyi állapotot."
 
 #: ../../how-to/protect-data-access.md:12
 msgid "Before you start"
-msgstr ""
+msgstr "Mielőtt hozzákezd"
 
 #: ../../how-to/protect-data-access.md:14
 msgid "You need:"
-msgstr ""
+msgstr "Szüksége lesz:"
 
 #: ../../how-to/protect-data-access.md:16
 msgid ""
-"An active profile - see [set up your taxpayer profile](profile-setup.md)."
-" The first command below refuses without one (`No se pudo determinar "
-"ningún bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
+"An active profile - see [set up your taxpayer profile](profile-setup.md). "
+"The first command below refuses without one (`No se pudo determinar ningún "
+"bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
 msgstr ""
+"Egy aktív profilra – lásd: [állítsa be adózói profilját](profile-setup.md). "
+"Az alábbi első parancs e nélkül elutasít (`No se pudo determinar ningún "
+"bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
 
 #: ../../how-to/protect-data-access.md:19
 msgid ""
-"Your current master-key passphrase for recovery-key creation, rotation, "
-"and passphrase changes."
+"Your current master-key passphrase for recovery-key creation, rotation, and "
+"passphrase changes."
 msgstr ""
+"A jelenlegi mesterkulcs-jelmondatára a helyreállítási kulcs létrehozásához, "
+"cseréjéhez és a jelmondat módosításához."
 
 #: ../../how-to/protect-data-access.md:21
 msgid ""
-"Your recovery words for verification or recovery after a lost passphrase."
-" Recovery sets a new passphrase without requiring the lost one."
+"Your recovery words for verification or recovery after a lost passphrase. "
+"Recovery sets a new passphrase without requiring the lost one."
 msgstr ""
+"A helyreállítási szavaira az ellenőrzéshez vagy egy elveszett jelmondat "
+"utáni helyreállításhoz. A helyreállítás új jelmondatot állít be anélkül, "
+"hogy szükség lenne az elveszettre."
 
 #: ../../how-to/protect-data-access.md:24
 msgid ""
 "Use `--language en`, `es`, `ca`, or `hu` when you need a specific output "
 "language."
 msgstr ""
+"Használja a `--language en`, `es`, `ca` vagy `hu` opciót, amikor egy adott "
+"kimeneti nyelvre van szüksége."
 
 #: ../../how-to/protect-data-access.md:27
 msgid "Create your recovery key first"
-msgstr ""
+msgstr "Előbb hozza létre a helyreállítási kulcsát"
 
 #: ../../how-to/protect-data-access.md:29
 msgid "Do this once, right after setup, while your passphrase still works:"
 msgstr ""
+"Tegye meg ezt egyszer, közvetlenül a beállítás után, amíg a jelmondata még "
+"működik:"
 
 #: ../../how-to/protect-data-access.md:34
 msgid ""
-"If no recovery key exists yet, the command creates one and prints a "
-"twenty-four-word recovery key. The words are shown exactly once and are "
-"never stored. Only an encrypted wrapper of the master key is written to "
-"disk. Write the words down and keep them offline, separate from your "
-"computer."
+"If no recovery key exists yet, the command creates one and prints a twenty-"
+"four-word recovery key. The words are shown exactly once and are never "
+"stored. Only an encrypted wrapper of the master key is written to disk. "
+"Write the words down and keep them offline, separate from your computer."
 msgstr ""
+"Ha még nem létezik helyreállítási kulcs, a parancs létrehoz egyet, és kiír "
+"egy huszonnégy szavas helyreállítási kulcsot. A szavak pontosan egyszer "
+"jelennek meg, és soha nem kerülnek tárolásra. Csak a mesterkulcs egy "
+"titkosított burkolata íródik lemezre. Írja le a szavakat, és tartsa őket "
+"offline, a számítógépétől elkülönítve."
 
 #: ../../how-to/protect-data-access.md:39
 msgid ""
-"Run the same command again later to confirm enrollment: once a recovery "
-"key exists, the command reports its status and does not print the words "
-"again."
+"Run the same command again later to confirm enrollment: once a recovery key "
+"exists, the command reports its status and does not print the words again."
 msgstr ""
+"Futtassa ugyanezt a parancsot később újra a beregisztrálás megerősítéséhez: "
+"ha már létezik helyreállítási kulcs, a parancs jelenti annak állapotát, és "
+"nem írja ki újra a szavakat."
 
 #: ../../how-to/protect-data-access.md:42
 msgid "Check that your recovery key works"
-msgstr ""
+msgstr "Ellenőrizze, hogy a helyreállítási kulcsa működik"
 
 #: ../../how-to/protect-data-access.md:44
 msgid "Verify the words you wrote down without changing anything:"
-msgstr ""
+msgstr "Ellenőrizze a leírt szavakat anélkül, hogy bármit módosítana:"
 
 #: ../../how-to/protect-data-access.md:49
 msgid ""
-"The command reports `verified yes` or `verified no` and exits with a "
-"failure code when the words do not open the recovery wrapper. Nothing is "
-"modified either way."
+"The command reports `verified yes` or `verified no` and exits with a failure"
+" code when the words do not open the recovery wrapper. Nothing is modified "
+"either way."
 msgstr ""
+"A parancs `verified yes` vagy `verified no` értéket jelent, és hibakóddal "
+"lép ki, amikor a szavak nem nyitják a helyreállítási burkolatot. Egyik "
+"esetben sem módosul semmi."
 
 #: ../../how-to/protect-data-access.md:53
 msgid "Replace the recovery key"
-msgstr ""
+msgstr "A helyreállítási kulcs cseréje"
 
 #: ../../how-to/protect-data-access.md:55
 msgid ""
 "If the written words may have been seen by someone else, mint a fresh "
 "recovery key:"
 msgstr ""
+"Ha a leírt szavakat esetleg más is láthatta, verjen egy friss helyreállítási"
+" kulcsot:"
 
 #: ../../how-to/protect-data-access.md:61
 msgid ""
-"New words are printed exactly once. The previous recovery words stop "
-"working immediately. Store the new words as before."
+"New words are printed exactly once. The previous recovery words stop working"
+" immediately. Store the new words as before."
 msgstr ""
+"Az új szavak pontosan egyszer íródnak ki. A korábbi helyreállítási szavak "
+"azonnal érvényüket vesztik. Tárolja az új szavakat, mint korábban."
 
 #: ../../how-to/protect-data-access.md:64
 msgid "Change your passphrase"
-msgstr ""
+msgstr "A jelmondat módosítása"
 
 #: ../../how-to/protect-data-access.md:66
 msgid "To change the passphrase while you still know the current one:"
-msgstr ""
+msgstr "A jelmondat módosításához, amíg még ismeri a jelenlegit:"
 
 #: ../../how-to/protect-data-access.md:71
 msgid ""
 "The command asks for the current passphrase if the store is not already "
 "open, then prompts twice (hidden) for the new one. The master key itself "
-"does not change, so all stored data stays readable. Only the passphrase "
-"that opens it is replaced. For non-interactive use, pass `--new-"
-"passphrase` together with `--confirm-new-passphrase`."
+"does not change, so all stored data stays readable. Only the passphrase that"
+" opens it is replaced. For non-interactive use, pass `--new-passphrase` "
+"together with `--confirm-new-passphrase`."
 msgstr ""
+"A parancs bekéri a jelenlegi jelmondatot, ha a tároló még nincs nyitva, majd"
+" kétszer (rejtve) kéri az újat. Maga a mesterkulcs nem változik, így minden "
+"tárolt adat olvasható marad. Csak az azt nyitó jelmondat cserélődik. Nem "
+"interaktív használathoz adja át a `--new-passphrase` opciót a `--confirm-"
+"new-passphrase` opcióval együtt."
 
 #: ../../how-to/protect-data-access.md:77
 msgid "Recover after a forgotten passphrase"
-msgstr ""
+msgstr "Helyreállítás egy elfelejtett jelmondat után"
 
 #: ../../how-to/protect-data-access.md:79
 msgid "If you forgot the passphrase but have your recovery words:"
-msgstr ""
+msgstr "Ha elfelejtette a jelmondatot, de megvannak a helyreállítási szavai:"
 
 #: ../../how-to/protect-data-access.md:84
 msgid ""
-"The command prompts twice (hidden) for a new passphrase, unlocks the "
-"master key from the recovery wrapper, and rewraps it under the new "
-"passphrase. All stored data stays intact. Nothing is deleted or re-"
-"encrypted. For non-interactive use, pass `--new-passphrase` together with"
-" `--confirm-new-passphrase` instead of being prompted."
+"The command prompts twice (hidden) for a new passphrase, unlocks the master "
+"key from the recovery wrapper, and rewraps it under the new passphrase. All "
+"stored data stays intact. Nothing is deleted or re-encrypted. For non-"
+"interactive use, pass `--new-passphrase` together with `--confirm-new-"
+"passphrase` instead of being prompted."
 msgstr ""
+"A parancs kétszer (rejtve) kér egy új jelmondatot, feloldja a mesterkulcsot "
+"a helyreállítási burkolatból, és az új jelmondat alatt újraburkolja. Minden "
+"tárolt adat érintetlen marad. Semmi nem törlődik vagy titkosítódik újra. Nem"
+" interaktív használathoz adja át a `--new-passphrase` opciót a `--confirm-"
+"new-passphrase` opcióval együtt, ahelyett hogy bekérné."
 
 #: ../../how-to/protect-data-access.md:90
 msgid ""
@@ -166,118 +208,164 @@ msgid ""
 "data is permanently unreadable. The only way forward is a reset (below), "
 "which deletes it."
 msgstr ""
+"Ha sem a jelmondata, sem a helyreállítási szavai nincsenek meg, a "
+"titkosított adat véglegesen olvashatatlan. Az egyetlen továbblépési út egy "
+"visszaállítás (lentebb), amely törli azt."
 
 #: ../../how-to/protect-data-access.md:94
 msgid "Run without a passphrase prompt"
-msgstr ""
+msgstr "Futtatás jelmondat-bekérés nélkül"
 
 #: ../../how-to/protect-data-access.md:96
 msgid ""
 "Automation cannot answer an interactive passphrase prompt. For an agent "
-"server, scheduled job, or script, set `CADRUMO_SECRET_PASSPHRASE` for "
-"that process. Treat the value like the passphrase itself. Never put it in"
-" a shared shell profile, committed script, or log."
+"server, scheduled job, or script, set `CADRUMO_SECRET_PASSPHRASE` for that "
+"process. Treat the value like the passphrase itself. Never put it in a "
+"shared shell profile, committed script, or log."
 msgstr ""
+"Az automatizálás nem tud válaszolni egy interaktív jelmondat-kérésre. Egy "
+"ügynökszerverhez, ütemezett feladathoz vagy szkripthez állítsa be a "
+"`CADRUMO_SECRET_PASSPHRASE` értéket az adott folyamathoz. Kezelje az értéket"
+" úgy, mint magát a jelmondatot. Soha ne tegye megosztott shell-profilba, "
+"verziókezelt szkriptbe vagy naplóba."
 
 #: ../../how-to/protect-data-access.md:101
 msgid ""
-"Interactive commands prompt when they need the current passphrase. "
-"Recovery commands use the recovery words and ask for a new passphrase "
-"instead."
+"Interactive commands prompt when they need the current passphrase. Recovery "
+"commands use the recovery words and ask for a new passphrase instead."
 msgstr ""
+"Az interaktív parancsok akkor kérdeznek, amikor a jelenlegi jelmondatra van "
+"szükségük. A helyreállító parancsok a helyreállítási szavakat használják, és"
+" ehelyett egy új jelmondatot kérnek."
 
 #: ../../how-to/protect-data-access.md:104
 msgid "Log out of the active profile"
-msgstr ""
+msgstr "Kijelentkezés az aktív profilból"
 
 #: ../../how-to/protect-data-access.md:106
 msgid ""
 "Use `aeat config profile logout` when you finish working with a profile. "
-"Logout closes the active storage session, discards in-memory key "
-"material, disposes the bucket engines, and clears the active-profile "
-"selection:"
+"Logout closes the active storage session, discards in-memory key material, "
+"disposes the bucket engines, and clears the active-profile selection:"
 msgstr ""
+"Használja az `aeat config profile logout` parancsot, amikor befejezi a "
+"munkát egy profillal. A kijelentkezés lezárja az aktív tárolási "
+"munkamenetet, eldobja a memóriában lévő kulcsanyagot, megszünteti a bucket-"
+"motorokat, és törli az aktív-profil kiválasztást:"
 
 #: ../../how-to/protect-data-access.md:114
 msgid ""
-"Nothing in the profile is deleted. Select it again with `aeat config "
-"switch <name>` when you return."
+"Nothing in the profile is deleted. Select it again with `aeat config switch "
+"<name>` when you return."
 msgstr ""
+"A profilban semmi nem törlődik. Válassza ki újra az `aeat config switch "
+"<name>` paranccsal, amikor visszatér."
 
 #: ../../how-to/protect-data-access.md:117
 msgid "Reset local state (last resort)"
-msgstr ""
+msgstr "A helyi állapot visszaállítása (végső eset)"
 
 #: ../../how-to/protect-data-access.md:119
 msgid ""
-"Export every profile you want to keep before continuing. Reset "
-"permanently deletes every profile stored locally, related local "
-"authentication state, and the active profile selection. It doesn't delete"
-" exports stored elsewhere. You can't undo the reset."
+"Export every profile you want to keep before continuing. Reset permanently "
+"deletes every profile stored locally, related local authentication state, "
+"and the active profile selection. It doesn't delete exports stored "
+"elsewhere. You can't undo the reset."
 msgstr ""
+"Exportáljon minden megtartani kívánt profilt, mielőtt folytatná. A "
+"visszaállítás véglegesen töröl minden helyben tárolt profilt, a kapcsolódó "
+"helyi hitelesítési állapotot és az aktív-profil kiválasztást. Nem törli a "
+"máshol tárolt exportokat. A visszaállítás nem vonható vissza."
 
 #: ../../how-to/protect-data-access.md:127
 msgid ""
-"Use `start` only when you intend to remove all local profiles. Confirm "
-"the reset explicitly. It checks retention requirements before deleting "
-"anything and refuses to start while another reset is incomplete."
+"Use `start` only when you intend to remove all local profiles. Confirm the "
+"reset explicitly. It checks retention requirements before deleting anything "
+"and refuses to start while another reset is incomplete."
 msgstr ""
+"A `start` értéket csak akkor használja, amikor minden helyi profilt el akar "
+"távolítani. Erősítse meg a visszaállítást kifejezetten. A törlés előtt "
+"ellenőrzi a megőrzési követelményeket, és megtagadja az indítást, amíg egy "
+"másik visszaállítás befejezetlen."
 
 #: ../../how-to/protect-data-access.md:130
 msgid ""
-"Use the read-only `status` command to inspect the latest operation "
-"without changing local data. Provide an operation ID to inspect an exact "
-"operation. Status reports an incomplete, paused, or complete operation. "
-"Its output includes the operation ID and any pause reason."
+"Use the read-only `status` command to inspect the latest operation without "
+"changing local data. Provide an operation ID to inspect an exact operation. "
+"Status reports an incomplete, paused, or complete operation. Its output "
+"includes the operation ID and any pause reason."
 msgstr ""
+"Használja a csak olvasható `status` parancsot a legutóbbi művelet "
+"megvizsgálásához a helyi adatok módosítása nélkül. Adjon meg egy "
+"műveletazonosítót egy pontos művelet megvizsgálásához. A státusz egy "
+"befejezetlen, szüneteltetett vagy befejezett műveletet jelent. Kimenete "
+"tartalmazza a műveletazonosítót és bármely szünet okát."
 
 #: ../../how-to/protect-data-access.md:134
 msgid ""
 "Use `resume` after an interruption or pause. Confirm the reset again. It "
-"continues the same incomplete operation instead of creating another. "
-"Provide an operation ID to resume an exact operation. After deletion "
-"starts, resuming the reset doesn't restore deleted data."
+"continues the same incomplete operation instead of creating another. Provide"
+" an operation ID to resume an exact operation. After deletion starts, "
+"resuming the reset doesn't restore deleted data."
 msgstr ""
+"Használja a `resume` parancsot egy megszakítás vagy szünet után. Erősítse "
+"meg újra a visszaállítást. Ugyanazt a befejezetlen műveletet folytatja, "
+"ahelyett hogy egy másikat hozna létre. Adjon meg egy műveletazonosítót egy "
+"pontos művelet folytatásához. A törlés megkezdése után a visszaállítás "
+"folytatása nem állítja vissza a törölt adatokat."
 
 #: ../../how-to/protect-data-access.md:139
 msgid ""
-"If legal retention requirements pause the reset, stop if you must keep "
-"the affected records. Override the pause only after reviewing and "
-"accepting the legal retention consequence, and always provide a non-empty"
-" reason. If you provide a reason without the override, the command "
-"refuses to continue."
+"If legal retention requirements pause the reset, stop if you must keep the "
+"affected records. Override the pause only after reviewing and accepting the "
+"legal retention consequence, and always provide a non-empty reason. If you "
+"provide a reason without the override, the command refuses to continue."
 msgstr ""
+"Ha jogi megőrzési követelmények szüneteltetik a visszaállítást, álljon meg, "
+"ha meg kell tartania az érintett rekordokat. Csak a jogi megőrzési "
+"következmény felülvizsgálata és elfogadása után írja felül a szünetet, és "
+"mindig adjon meg egy nem üres indokot. Ha felülírás nélkül ad meg indokot, a"
+" parancs megtagadja a folytatást."
 
 #: ../../how-to/protect-data-access.md:144
 msgid ""
 "See [Set up your taxpayer profile](profile-setup.md) for profile export "
 "instructions."
 msgstr ""
+"A profilexportálási utasításokhoz lásd: [Állítsa be adózói profilját"
+"](profile-setup.md)."
 
 #: ../../how-to/protect-data-access.md:147
 msgid "Next steps"
-msgstr ""
+msgstr "Következő lépések"
 
 #: ../../how-to/protect-data-access.md:149
 msgid ""
-"[Import, export, and evidence](../reference/import-export-and-"
-"evidence.md) - see where encrypted custody ends and deliberate plaintext "
-"handoffs begin."
+"[Import, export, and evidence](../reference/import-export-and-evidence.md) -"
+" see where encrypted custody ends and deliberate plaintext handoffs begin."
 msgstr ""
+"[Importálás, export és bizonyíték](../reference/import-export-and-"
+"evidence.md) – lássa, hol ér véget a titkosított őrizet, és hol kezdődnek a "
+"szándékos, nyílt szövegű átadások."
 
 #: ../../how-to/protect-data-access.md:151
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) - create, export, and "
 "import profiles."
 msgstr ""
+"[Állítsa be adózói profilját](profile-setup.md) – profilok létrehozása, "
+"exportálása és importálása."
 
 #: ../../how-to/protect-data-access.md:153
 msgid ""
-"[Diagnose and repair your local setup](troubleshooting.md) - for storage "
-"or integrity problems that do not need a reset."
+"[Diagnose and repair your local setup](troubleshooting.md) - for storage or "
+"integrity problems that do not need a reset."
 msgstr ""
+"[Diagnosztizálja és javítsa a helyi beállítását](troubleshooting.md) – olyan"
+" tárolási vagy integritási problémákhoz, amelyekhez nincs szükség "
+"visszaállításra."
 
 #: ../../how-to/protect-data-access.md:155
 msgid "[CLI reference](../cli/index.rst) - full option reference."
-msgstr ""
+msgstr "[CLI-referencia](../cli/index.rst) – a teljes opcióreferencia."
 

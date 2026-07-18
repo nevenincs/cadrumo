@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../explanation/reviewing-and-exporting.md:1
 msgid "Reviewing your numbers and producing the upload file"
-msgstr ""
+msgstr "Revisar tus cifras y generar el fichero para subir"
 
 #: ../../explanation/reviewing-and-exporting.md:3
 msgid ""
@@ -29,10 +28,13 @@ msgid ""
 "complete - a spreadsheet for you to review, and the exact file the AEAT "
 "portal accepts - and why they are separate things."
 msgstr ""
+"Esta página trata las dos salidas que produce la herramienta cuando un "
+"cálculo está completo —una hoja de cálculo para que la revises y el fichero "
+"exacto que acepta el portal de la AEAT— y por qué son cosas distintas."
 
 #: ../../explanation/reviewing-and-exporting.md:7
 msgid "Why there are two outputs, not one"
-msgstr ""
+msgstr "Por qué hay dos salidas y no una"
 
 #: ../../explanation/reviewing-and-exporting.md:9
 msgid ""
@@ -46,6 +48,16 @@ msgid ""
 " and its evidence, not a review surface. The walkthrough is [Review "
 "calculations with Google Sheets](../how-to/review-with-google-sheets.md)."
 msgstr ""
+"La primera salida es para ti. Antes de dar por buenas unas cifras, querrás "
+"ver cómo se llegó a cada total y ajustar una cifra si algo parece raro. Tu "
+"cálculo se despliega en Google Sheets con una fórmula viva detrás de cada "
+"total, de modo que un dato corregido recalcula ante tus ojos todo lo que "
+"depende de él, y tus ediciones revisadas se recuperan en la herramienta "
+"contra el cálculo exacto a partir del cual se construyó la hoja. El `.xlsx` "
+"sin conexión que la herramienta también puede generar es un recuerdo fijo "
+"del cálculo y de su evidencia, no una superficie de revisión. El recorrido "
+"es [Revisar cálculos con Google Sheets](../how-to/review-with-google-"
+"sheets.md)."
 
 #: ../../explanation/reviewing-and-exporting.md:19
 msgid ""
@@ -59,16 +71,27 @@ msgid ""
 "in [Upload your exported modelo at the AEAT portal](../how-to/file-at-"
 "aeat.md)."
 msgstr ""
+"La segunda salida es para la máquina del otro extremo. La AEAT admite "
+"subidas solo en un formato de texto preciso, con cada valor en una posición "
+"fija, rechazado si difiere en un solo carácter. La herramienta construye ese "
+"fichero a partir de tu cálculo revisado en tu propio ordenador —generar el "
+"fichero y presentarlo son actos distintos, y la herramienta nunca presenta "
+"por ti—. Cuando escribe el fichero, informa de una huella del contenido "
+"exacto, para que después puedas demostrar qué fichero subiste. Los pasos "
+"están en [Sube tu modelo exportado en el portal de la AEAT](../how-to/file-"
+"at-aeat.md)."
 
 #: ../../explanation/reviewing-and-exporting.md:28
 msgid ""
 "One is a review surface; the other is a delivery format. Keeping them "
 "apart is what lets each be good at what it does."
 msgstr ""
+"Una es una superficie de revisión; el otro es un formato de entrega. "
+"Mantenerlos separados es lo que permite que cada uno haga bien su función."
 
 #: ../../explanation/reviewing-and-exporting.md:31
 msgid "Where this sits in your filing"
-msgstr ""
+msgstr "Dónde encaja esto en tu presentación"
 
 #: ../../explanation/reviewing-and-exporting.md:33
 msgid ""
@@ -79,4 +102,9 @@ msgid ""
 "is covered in [Recording a filing, and why the tool never files for "
 "you](recording-a-filing-and-the-boundary.md)."
 msgstr ""
-
+"Estas salidas llegan después de la comprobación de integridad descrita en "
+"[Editar y verificar un cálculo](editing-and-verifying.md): revisar y "
+"exportar solo merece la pena una vez que el modelo está completo. Generar el "
+"fichero para subir no es lo mismo que presentarlo; lo que ocurre después de "
+"tener el fichero se explica en [Registrar una presentación y por qué la "
+"herramienta nunca presenta por ti](recording-a-filing-and-the-boundary.md)."

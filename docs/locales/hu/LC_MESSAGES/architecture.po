@@ -1,19 +1,17 @@
-# SOME DESCRIPTIVE TITLE.
+# Hungarian translations for CADRUMO.
 # Copyright (C) 2026, the Cadrumo authors
 # This file is distributed under the same license as the CADRUMO package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -21,13 +19,15 @@ msgstr ""
 
 #: ../../architecture.md:5
 msgid "Architecture"
-msgstr ""
+msgstr "Architektúra"
 
 #: ../../architecture.md:7
 msgid ""
 "The architecture guide lives at [Architecture "
 "overview](architecture/index.md)."
 msgstr ""
+"Az architektúra-útmutató itt található: [Architektúra "
+"áttekintés](architecture/index.md)."
 
 #: ../../architecture.md:9
 msgid ""
@@ -35,4 +35,6 @@ msgid ""
 "authority pipeline, the modelo lifecycle, persistence boundaries, and the"
 " local-first safety model."
 msgstr ""
-
+"Olvassa el a kódbázis térképeként: a hexagonális rétegek, a "
+"registry-tekintély feldolgozási folyamata, a modelo életciklusa, a "
+"perzisztenciahatárok és a helyi-elsődleges biztonsági modell."

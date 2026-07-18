@@ -506,6 +506,7 @@ def build_docs(
     strict: bool,
     single_page: bool = False,
     scope: str = "full",
+    output_root: Path | None = None,
 ) -> None:
     """Run Sphinx against the selected targets.
 
@@ -520,9 +521,19 @@ def build_docs(
     ``user`` scope the API autodoc tree is excluded and the app is never imported
     for rendering (see ``CADRUMO_DOCS_SCOPE`` in ``docs/conf.py``), so the
     apidocs scaffold is skipped — a user-scope build never regenerates API stubs.
+
+    ``output_root`` redirects a full build's HTML output (and its per-build
+    Pagefind index, orphan sweep, and sitemap) to a chosen directory instead of
+    the canonical ``docs/_build/html``. The deploy publisher uses it to build each
+    localized site into a per-language subdirectory (``docs/_build/html/<lang>``)
+    without disturbing the English root. It applies only to a full build; the
+    canonical-``_build`` cleanup is skipped when redirected so a language subdir
+    build never clears the English root beside it.
     """
     docs_root = repo_root / "docs"
     targets = plan.targets
+    canonical_html_root = docs_root / "_build" / "html"
+    html_output_root = output_root if output_root is not None else canonical_html_root
     ensure_isolated_storage_root()
     command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", docs_build_jobs(os.environ)]
     env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root), "CADRUMO_DOCS_SCOPE": scope}
@@ -545,8 +556,10 @@ def build_docs(
             env["CADRUMO_DOCS_SINGLE_PAGE"] = "1"
 
     if plan.full_build_required:
-        remove_noncanonical_build_entries(docs_root)
-        out_dir = docs_root / "_build" / "html"
+        if output_root is None:
+            remove_noncanonical_build_entries(docs_root)
+        out_dir = html_output_root
+        out_dir.mkdir(parents=True, exist_ok=True)
         command.extend(
             [
                 str(docs_root),
@@ -590,7 +603,7 @@ def build_docs(
     # build: the changed-page and single-page modes write previews (temp trees
     # or a lone page) that must not regenerate the whole search index.
     if plan.full_build_required:
-        html_root = docs_root / "_build" / "html"
+        html_root = html_output_root
         remove_orphan_pages(docs_root, html_root, repo_root)
         base_url = os.environ.get("CADRUMO_DOCS_BASE_URL")
         if base_url:
@@ -713,9 +726,21 @@ def main(argv: list[str] | None = None) -> int:
             "user scope (the API autodoc tree stays English), so --language forces --scope user."
         ),
     )
+    parser.add_argument(
+        "--out-dir",
+        default=None,
+        help=(
+            "Redirect a full build's HTML output (and its Pagefind index and sitemap) to this directory "
+            "instead of docs/_build/html. Used by the deploy publisher to build each localized site into "
+            "a per-language subdirectory. Full builds only; not valid with --single-page or explicit paths."
+        ),
+    )
     args = parser.parse_args(argv)
 
     repo_root = _repo_root()
+    output_root = Path(args.out_dir) if args.out_dir else None
+    if output_root is not None and (args.single_page or args.paths):
+        raise SystemExit("--out-dir applies to a whole-scope build; it cannot combine with --single-page or paths.")
     if args.language is not None:
         # A localized build is a user-scope build: the API autodoc tree is
         # English-only, so only the operator surface is translated. conf.py reads
@@ -768,7 +793,14 @@ def main(argv: list[str] | None = None) -> int:
         print("Building changed documentation targets:", flush=True)
         for target in plan.targets:
             print(f"  {target.relative_to(repo_root)}", flush=True)
-    build_docs(repo_root, plan, strict=args.strict, single_page=bool(args.single_page), scope=scope)
+    build_docs(
+        repo_root,
+        plan,
+        strict=args.strict,
+        single_page=bool(args.single_page),
+        scope=scope,
+        output_root=output_root,
+    )
     if args.rag_index:
         update_rag_index(repo_root)
     return 0

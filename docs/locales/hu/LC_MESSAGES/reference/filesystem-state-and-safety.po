@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:20+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../reference/filesystem-state-and-safety.md:1
 msgid "Filesystem, state, and safety"
-msgstr ""
+msgstr "Fájlrendszer, állapot és biztonság"
 
 #: ../../reference/filesystem-state-and-safety.md:3
 msgid ""
@@ -29,56 +28,62 @@ msgid ""
 "tax authority referenced by the filing and live-read boundaries on this "
 "page."
 msgstr ""
+"Az Agencia Estatal de Administración Tributaria (AEAT) a külső "
+"adóhatóság, amelyre az ezen az oldalon szereplő bevallási és élő olvasási"
+" határok hivatkoznak."
 
 #: ../../reference/filesystem-state-and-safety.md:6
 msgid "Local state layout"
-msgstr ""
+msgstr "Helyi állapot elrendezése"
 
 #: ../../reference/filesystem-state-and-safety.md:8
 msgid ""
 "`CADRUMO_LOCAL_STORAGE_ROOT` selects the root of Cadrumo-owned local "
 "state. The default depends on how Cadrumo runs:"
 msgstr ""
+"A `CADRUMO_LOCAL_STORAGE_ROOT` választja ki a Cadrumo tulajdonában lévő "
+"helyi állapot gyökerét. Az alapértelmezés attól függ, hogyan fut a "
+"Cadrumo:"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Run mode"
-msgstr ""
+msgstr "Futtatási mód"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Default storage root"
-msgstr ""
+msgstr "Alapértelmezett tárolási gyökér"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Source checkout"
-msgstr ""
+msgstr "Forráskód-kicsekkolás"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`<repository>/var/storage`"
-msgstr ""
+msgstr "`<repository>/var/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Installed on Windows"
-msgstr ""
+msgstr "Windowsra telepítve"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`%LOCALAPPDATA%/cadrumo/storage`"
-msgstr ""
+msgstr "`%LOCALAPPDATA%/cadrumo/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Installed on Linux"
-msgstr ""
+msgstr "Linuxra telepítve"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage`"
-msgstr ""
+msgstr "`$XDG_DATA_HOME/cadrumo/storage`, vagy `~/.local/share/cadrumo/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Installed on macOS"
-msgstr ""
+msgstr "macOS-re telepítve"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "`~/Library/Application Support/cadrumo/storage`"
-msgstr ""
+msgstr "`~/Library/Application Support/cadrumo/storage`"
 
 #: ../../reference/filesystem-state-and-safety.md:18
 msgid ""
@@ -89,16 +94,25 @@ msgid ""
 "blobs, and audit paths derive from the same product root unless an "
 "explicit Cadrumo setting overrides them."
 msgstr ""
+"A profilállapot bucket-hatókörű a `<root>/buckets/<bucket-id>/` alatt. A "
+"bucket a `db/cadrumo.db` fájlt, titkosított blobokat, auditanyagot, a "
+"`manifest.toml` fájlt, a `.lock` fájlt és egy kimeneti nyelvi utalást "
+"tartalmaz. A kulcsanyag a `<root>/keystore/<bucket-id>/` alatt "
+"gyökerezik. A tokenek, naplók, titkok, blobok és auditútvonalak "
+"ugyanabból a termékgyökérből származnak, hacsak egy kifejezett Cadrumo-"
+"beállítás felül nem írja őket."
 
 #: ../../reference/filesystem-state-and-safety.md:25
 msgid ""
 "Google Drive mirroring uses a Cadrumo-owned `cadrumo-vault/` folder. A "
 "former `aeat-vault/` folder is not adopted."
 msgstr ""
+"A Google Drive-tükrözés egy Cadrumo tulajdonában lévő `cadrumo-vault/` "
+"mappát használ. Egy korábbi `aeat-vault/` mappát nem vesz át."
 
 #: ../../reference/filesystem-state-and-safety.md:28
 msgid "Old `aeat`-named storage is refused, not migrated"
-msgstr ""
+msgstr "A régi, `aeat` nevű tárolót elutasítja, nem migrálja"
 
 #: ../../reference/filesystem-state-and-safety.md:30
 msgid ""
@@ -107,6 +121,10 @@ msgid ""
 "`aeat.*`, `aeat-test.*`, or `aeat-tests.*` secure-object namespaces, and "
 "former bundle or Drive-folder names."
 msgstr ""
+"A Cadrumo elutasítja a felismerhető korábbi termékállapotot. Ide tartozik"
+" egy testvér `aeat` alkalmazásállapot-könyvtár, egy `aeat.db` adatbázis, "
+"az `aeat.*`, `aeat-test.*` vagy `aeat-tests.*` secure-object névterek, "
+"valamint a korábbi bundle- vagy Drive-mappanevek."
 
 #: ../../reference/filesystem-state-and-safety.md:35
 msgid ""
@@ -115,80 +133,94 @@ msgid ""
 "former bytes untouched and requires the operator to choose a separate, "
 "explicit disposition."
 msgstr ""
+"Az elutasítás nem destruktív. A Cadrumo nem olvassa, nem kapcsolódik "
+"hozzá, nem másolja, nem mozgatja, nem kulcsolja újra, nem törli, nem "
+"migrálja és nem veszi át azt az állapotot. A felismerés érintetlenül "
+"hagyja a korábbi bájtokat, és megköveteli, hogy az operátor külön, "
+"kifejezett rendelkezést válasszon."
 
 #: ../../reference/filesystem-state-and-safety.md:39
 msgid "Safety and filing scope"
-msgstr ""
+msgstr "Biztonság és bevallási hatókör"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Surface"
-msgstr ""
+msgstr "Felület"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Cadrumo behavior"
-msgstr ""
+msgstr "Cadrumo viselkedése"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Calculation and verification"
-msgstr ""
+msgstr "Számítás és verifikálás"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Local; evaluates saved records against bundled registry rules and evidence"
 msgstr ""
+"Helyi; a mentett nyilvántartásokat a beépített registry-szabályokkal és "
+"bizonyítékokkal szemben értékeli ki"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Export"
-msgstr ""
+msgstr "Exportálás"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
 "Writes an AEAT-compatible local file after verification and required "
 "evidence gates pass; portal acceptance is not guaranteed"
 msgstr ""
+"Egy AEAT-kompatibilis helyi fájlt ír, miután a verifikálás és a kötelező "
+"bizonyítékkapuk átmentek; a portál általi elfogadás nem garantált"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Live AEAT access"
-msgstr ""
+msgstr "Élő AEAT-hozzáférés"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Separately invoked, authenticated, and read-only"
-msgstr ""
+msgstr "Külön indított, hitelesített és csak olvasható"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Submission"
-msgstr ""
+msgstr "Beküldés"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Forbidden; no Cadrumo submission command exists"
-msgstr ""
+msgstr "Tiltott; nem létezik Cadrumo beküldési parancs"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Official filing"
-msgstr ""
+msgstr "Hivatalos benyújtás"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Performed by a human through an official AEAT channel"
-msgstr ""
+msgstr "Egy ember végzi egy hivatalos AEAT-csatornán keresztül"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Filing history"
-msgstr ""
+msgstr "Bevallási előzmény"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
 "Recorded locally after the human filing; reconciliation compares totals "
 "and, for enrolled modelos, captured per-casilla values"
 msgstr ""
+"Helyben rögzítve az emberi benyújtás után; az egyeztetés összehasonlítja "
+"az összegeket, és a bejegyzett modelók esetében a rögzített casillánkénti"
+" értékeket"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid "Responsibility"
-msgstr ""
+msgstr "Felelősség"
 
 #: ../../reference/filesystem-state-and-safety.md
 msgid ""
 "The taxpayer or authorized filer reviews figures, meets deadlines, "
 "uploads, and retains the justificante"
 msgstr ""
+"Az adózó vagy a felhatalmazott bevalló áttekinti a számokat, betartja a "
+"határidőket, feltölt, és megőrzi a justificantét"
 
 #: ../../reference/filesystem-state-and-safety.md:51
 msgid ""
@@ -197,4 +229,9 @@ msgid ""
 "explanation](../explanation/recording-a-filing-and-the-boundary.md) "
 "explains why submission stays outside Cadrumo."
 msgstr ""
+"A helyreállítási, zárolási, exportálási és visszaállítási feladatokhoz "
+"lásd [Védje meg az adataihoz való hozzáférést](../how-to/protect-data-"
+"access.md). A [bevallási határ magyarázata](../explanation/recording-a"
+"-filing-and-the-boundary.md) elmagyarázza, miért marad a beküldés a "
+"Cadrumón kívül."
 

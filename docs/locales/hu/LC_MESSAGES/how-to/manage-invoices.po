@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -13,7 +12,7 @@ msgstr ""
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -21,220 +20,305 @@ msgstr ""
 
 #: ../../how-to/manage-invoices.md:1
 msgid "Manage business invoices"
-msgstr ""
+msgstr "Vállalkozási számlák kezelése"
 
 #: ../../how-to/manage-invoices.md:3
 msgid ""
-"Record the invoices your business issues and receives: the money a "
-"customer owes you and the money you owe a supplier. This guide covers "
-"both kinds and shows which records feed your tax calculations."
+"Record the invoices your business issues and receives: the money a customer "
+"owes you and the money you owe a supplier. This guide covers both kinds and "
+"shows which records feed your tax calculations."
 msgstr ""
+"Rögzítse a vállalkozása által kiállított és beérkezett számlákat: az "
+"összeget, amellyel egy ügyfél tartozik Önnek, és az összeget, amellyel Ön "
+"tartozik egy beszállítónak. Ez az útmutató mindkét fajtát bemutatja, és "
+"megmutatja, mely rekordok táplálják az adószámításait."
 
 #: ../../how-to/manage-invoices.md:7
 msgid ""
 "A business invoice is not the same as a purchase receipt you attach as "
-"evidence. Receipts support a deductible expense on a ledger transaction "
-"(see [Attach invoices and receipts](ledger-evidence.md)). Business "
-"invoices recorded here are the commercial documents themselves: an "
-"*issued* invoice (you billed a customer) or a *received* invoice (a "
-"supplier billed you)."
+"evidence. Receipts support a deductible expense on a ledger transaction (see"
+" [Attach invoices and receipts](ledger-evidence.md)). Business invoices "
+"recorded here are the commercial documents themselves: an *issued* invoice "
+"(you billed a customer) or a *received* invoice (a supplier billed you)."
 msgstr ""
+"A vállalkozási számla nem ugyanaz, mint egy beszerzési bizonylat, amelyet "
+"bizonyítékként csatol. A bizonylatok egy főkönyvi tranzakció levonható "
+"kiadását támasztják alá (lásd: [Számlák és bizonylatok csatolása](ledger-"
+"evidence.md)). Az itt rögzített vállalkozási számlák maguk a kereskedelmi "
+"dokumentumok: egy *kiállított* számla (Ön számlázott egy ügyfélnek) vagy egy"
+" *beérkezett* számla (egy beszállító számlázott Önnek)."
 
 #: ../../how-to/manage-invoices.md:13
 msgid "Before you start"
-msgstr ""
+msgstr "Mielőtt hozzákezd"
 
 #: ../../how-to/manage-invoices.md:15
 msgid "You need:"
-msgstr ""
+msgstr "Szüksége lesz:"
 
 #: ../../how-to/manage-invoices.md:17
 msgid ""
-"An active taxpayer profile. Every command below works on the active "
-"profile; if none is set, the command refuses. See [Set up your taxpayer "
-"profile](profile-setup.md)."
+"An active taxpayer profile. Every command below works on the active profile;"
+" if none is set, the command refuses. See [Set up your taxpayer profile"
+"](profile-setup.md)."
 msgstr ""
+"Egy aktív adózói profilra. Az alábbi minden parancs az aktív profillal "
+"dolgozik; ha nincs beállítva, a parancs elutasítja a műveletet. Lásd: "
+"[Állítsa be adózói profilját](profile-setup.md)."
 
 #: ../../how-to/manage-invoices.md:20
 msgid ""
 "A master-key passphrase. The tool prompts for it the first time it opens "
 "your encrypted storage in a session."
 msgstr ""
+"Egy mesterkulcs-jelmondatra. Az eszköz akkor kéri be, amikor egy "
+"munkamenetben először nyitja meg titkosított tárolóját."
 
 #: ../../how-to/manage-invoices.md:23
 msgid ""
 "The `aeat` command-line interface (CLI) emits its help and messages in "
 "Spanish; the English text on this page describes what each step does."
 msgstr ""
+"Az `aeat` parancssori felület (CLI) a súgóját és üzeneteit spanyolul adja "
+"ki; az oldalon szereplő magyar szöveg leírja, mit tesz az egyes lépések."
 
 #: ../../how-to/manage-invoices.md:26
 msgid "Two ways to hold an invoice"
-msgstr ""
+msgstr "Egy számla kétféle tárolása"
 
 #: ../../how-to/manage-invoices.md:28
 msgid "Cadrumo keeps invoices in two separate places, for two different jobs."
-msgstr ""
+msgstr "A Cadrumo két különböző helyen tárolja a számlákat, két különböző célra."
 
 #: ../../how-to/manage-invoices.md:30
 msgid ""
-"**The invoice record** (`aeat app ledger invoice ...`) is your "
-"bookkeeping ledger of who owes you and whom you owe. Use it to record, "
-"list, and edit invoices. These records are for tracking; on their own "
-"they do **not** feed a modelo calculation."
+"**The invoice record** (`aeat app ledger invoice ...`) is your bookkeeping "
+"ledger of who owes you and whom you owe. Use it to record, list, and edit "
+"invoices. These records are for tracking; on their own they do **not** feed "
+"a modelo calculation."
 msgstr ""
+"**A számlarekord** (`aeat app ledger invoice ...`) az Ön könyvelési "
+"nyilvántartása arról, ki tartozik Önnek és kinek tartozik Ön. Számlák "
+"rögzítésére, listázására és szerkesztésére használja. Ezek a rekordok nyomon"
+" követésre szolgálnak; önmagukban **nem** táplálnak modelo-számítást."
 
 #: ../../how-to/manage-invoices.md:34
 msgid ""
-"**The reconciliation catalogue** (`aeat app ledger invoice catalogue "
-"...`) is the linkable copy. A catalogue invoice can be matched to a bank "
-"transaction and is the copy a calculation reads, for example the Modelo "
-"349 recapitulative declaration of intra-community operations."
+"**The reconciliation catalogue** (`aeat app ledger invoice catalogue ...`) "
+"is the linkable copy. A catalogue invoice can be matched to a bank "
+"transaction and is the copy a calculation reads, for example the Modelo 349 "
+"recapitulative declaration of intra-community operations."
 msgstr ""
+"**Az egyeztetési katalógus** (`aeat app ledger invoice catalogue ...`) az "
+"összekapcsolható másolat. Egy katalógusszámla párosítható egy banki "
+"tranzakcióval, és ez az a másolat, amelyet egy számítás olvas, például a "
+"közösségen belüli ügyletek Modelo 349 összesítő nyilatkozata."
 
 #: ../../how-to/manage-invoices.md:39
 msgid ""
-"Record everyday invoices with `invoice add`. When an invoice must drive a"
-" calculation or be reconciled against a payment, also create it in the "
+"Record everyday invoices with `invoice add`. When an invoice must drive a "
+"calculation or be reconciled against a payment, also create it in the "
 "catalogue with `invoice catalogue create`."
 msgstr ""
+"A mindennapi számlákat az `invoice add` paranccsal rögzítse. Ha egy "
+"számlának egy számítást kell hajtania, vagy egy fizetéssel kell egyeztetni, "
+"hozza létre a katalógusban is az `invoice catalogue create` paranccsal."
 
 #: ../../how-to/manage-invoices.md:43
 msgid ""
-"Every command takes `--kind issued` or `--kind received`. *Issued* means "
-"a customer owes you (a collectible invoice); *received* means you owe a "
+"Every command takes `--kind issued` or `--kind received`. *Issued* means a "
+"customer owes you (a collectible invoice); *received* means you owe a "
 "supplier (a payable invoice)."
 msgstr ""
+"Minden parancs `--kind issued` vagy `--kind received` értéket vesz fel. A "
+"*kiállított* (issued) azt jelenti, hogy egy ügyfél tartozik Önnek "
+"(behajtható számla); a *beérkezett* (received) azt jelenti, hogy Ön tartozik"
+" egy beszállítónak (fizetendő számla)."
 
 #: ../../how-to/manage-invoices.md:47
 msgid "Record an issued invoice"
-msgstr ""
+msgstr "Kiállított számla rögzítése"
 
 #: ../../how-to/manage-invoices.md:49
 msgid ""
 "Record an invoice you sent to a customer. The command returns the new "
-"`invoice_id`, the resolved `source_kind` (`collectible_invoice`), and the"
-" values you entered:"
+"`invoice_id`, the resolved `source_kind` (`collectible_invoice`), and the "
+"values you entered:"
 msgstr ""
+"Rögzítsen egy számlát, amelyet egy ügyfélnek küldött. A parancs visszaadja "
+"az új `invoice_id` azonosítót, a feloldott `source_kind` értéket "
+"(`collectible_invoice`) és a beírt értékeket:"
 
 #: ../../how-to/manage-invoices.md:57
 msgid ""
 "Record the short `invoice_id`; you address the invoice by it (or by an "
 "unambiguous prefix)."
 msgstr ""
+"Jegyezze fel a rövid `invoice_id` azonosítót; ez alapján (vagy egy "
+"egyértelmű előtag alapján) hivatkozik a számlára."
 
 #: ../../how-to/manage-invoices.md:60
 msgid "Record a received invoice"
-msgstr ""
+msgstr "Beérkezett számla rögzítése"
 
 #: ../../how-to/manage-invoices.md:62
 msgid ""
 "Record an invoice a supplier sent you. The `source_kind` resolves to "
 "`payable_invoice`:"
 msgstr ""
+"Rögzítsen egy számlát, amelyet egy beszállító küldött Önnek. A `source_kind`"
+" `payable_invoice` értékre oldódik fel:"
 
 #: ../../how-to/manage-invoices.md:69
 msgid "List, view, update, and remove"
-msgstr ""
+msgstr "Listázás, megtekintés, frissítés és eltávolítás"
 
 #: ../../how-to/manage-invoices.md:71
 msgid ""
 "List both kinds or filter to one, add a note to a stored invoice, then "
-"remove it. The view of one invoice takes its id (or an unambiguous "
-"prefix) and the kind:"
+"remove it. The view of one invoice takes its id (or an unambiguous prefix) "
+"and the kind:"
 msgstr ""
+"Listázza mindkét fajtát, vagy szűrjön egyre, adjon egy megjegyzést egy "
+"tárolt számlához, majd távolítsa el. Egyetlen számla megtekintése az "
+"azonosítóját (vagy egy egyértelmű előtagját) és a fajtáját veszi fel:"
 
 #: ../../how-to/manage-invoices.md:78
 msgid "Record an intra-community invoice"
-msgstr ""
+msgstr "Közösségen belüli számla rögzítése"
 
 #: ../../how-to/manage-invoices.md:80
 msgid ""
-"A supply to, or acquisition from, a VAT-registered business in another EU"
-" country is an intra-community operation. Record it on the issued or "
-"received invoice with the counterparty's country and EU VAT id, plus the "
-"Modelo 349 operation type:"
+"A supply to, or acquisition from, a VAT-registered business in another EU "
+"country is an intra-community operation. Record it on the issued or received"
+" invoice with the counterparty's country and EU VAT id, plus the Modelo 349 "
+"operation type:"
 msgstr ""
+"Egy másik EU-tagországbeli, afanyilvántartásba vett vállalkozásnak történő "
+"értékesítés vagy tőle való beszerzés közösségen belüli ügylet. Rögzítse a "
+"kiállított vagy beérkezett számlán a partner országával és EU-s afaszámával,"
+" valamint a Modelo 349 ügylettípusával:"
 
 #: ../../how-to/manage-invoices.md:89
 msgid ""
-"`--operation-type` takes one M349 operation key: `E` supplies of goods, "
-"`M` supplies after an exempt import, `H` the same via a fiscal "
-"representative, `A` acquisitions of goods, `T` triangular supplies, `S` "
-"services supplied, `I` services acquired, and the call-off-stock keys `R`"
-" (transfers), `D` (returns), and `C` (substitutions)."
+"`--operation-type` takes one M349 operation key: `E` supplies of goods, `M` "
+"supplies after an exempt import, `H` the same via a fiscal representative, "
+"`A` acquisitions of goods, `T` triangular supplies, `S` services supplied, "
+"`I` services acquired, and the call-off-stock keys `R` (transfers), `D` "
+"(returns), and `C` (substitutions)."
 msgstr ""
+"A `--operation-type` egy M349 ügyletkulcsot vesz fel: `E` termékértékesítés,"
+" `M` értékesítés adómentes import után, `H` ugyanez adóügyi képviselőn "
+"keresztül, `A` termékbeszerzés, `T` háromszögügyletek, `S` nyújtott "
+"szolgáltatások, `I` igénybe vett szolgáltatások, valamint a vevői készlet "
+"(call-off-stock) kulcsai: `R` (átszállítás), `D` (visszaszállítás) és `C` "
+"(helyettesítés)."
 
 #: ../../how-to/manage-invoices.md:95
 msgid "Feed a calculation from the catalogue"
-msgstr ""
+msgstr "Számítás táplálása a katalógusból"
 
 #: ../../how-to/manage-invoices.md:97
 msgid ""
-"To make an invoice reach a modelo calculation, create it in the "
-"catalogue. The catalogue copy is the one a calculation reads and the one "
-"you can link to a bank transaction. The sequence catalogues an intra-"
-"community supply, lists and inspects the catalogue, then creates and "
-"calculates the Modelo 349 recapitulative declaration for the period the "
-"invoice falls in:"
+"To make an invoice reach a modelo calculation, create it in the catalogue. "
+"The catalogue copy is the one a calculation reads and the one you can link "
+"to a bank transaction. The sequence catalogues an intra-community supply, "
+"lists and inspects the catalogue, then creates and calculates the Modelo 349"
+" recapitulative declaration for the period the invoice falls in:"
 msgstr ""
+"Ahhoz, hogy egy számla elérjen egy modelo-számítást, hozza létre a "
+"katalógusban. A katalógusmásolat az, amelyet egy számítás olvas, és amelyet "
+"egy banki tranzakcióhoz köthet. A parancssorozat katalogizál egy közösségen "
+"belüli értékesítést, listázza és megvizsgálja a katalógust, majd létrehozza "
+"és kiszámítja a Modelo 349 összesítő nyilatkozatot arra az időszakra, "
+"amelybe a számla esik:"
 
 #: ../../how-to/manage-invoices.md:107
 msgid ""
-"For an intra-community operation, pass `--operation-type` so the "
-"catalogue stamps the classification the Modelo 349 calculation reads. Use"
-" `E`, `H`, `M`, `S`, `T`, `R`, `D`, or `C` for issued catalogue invoices."
-" Use `A`, `I`, or `T` for received catalogue invoices. In Modelo 349, `R`"
-" is the call-off-stock transfer key; rectification rows use separate "
-"rectified-period and base fields."
+"For an intra-community operation, pass `--operation-type` so the catalogue "
+"stamps the classification the Modelo 349 calculation reads. Use `E`, `H`, "
+"`M`, `S`, `T`, `R`, `D`, or `C` for issued catalogue invoices. Use `A`, `I`,"
+" or `T` for received catalogue invoices. In Modelo 349, `R` is the call-off-"
+"stock transfer key; rectification rows use separate rectified-period and "
+"base fields."
 msgstr ""
+"Közösségen belüli ügylet esetén adja át a `--operation-type` értéket, hogy a"
+" katalógus rábélyegezze azt a besorolást, amelyet a Modelo 349 számítás "
+"olvas. Kiállított katalógusszámláknál használja az `E`, `H`, `M`, `S`, `T`, "
+"`R`, `D` vagy `C` értéket. Beérkezett katalógusszámláknál használja az `A`, "
+"`I` vagy `T` értéket. A Modelo 349-ben az `R` a vevői készlet átszállítási "
+"kulcsa; a helyesbítő sorok külön helyesbített-időszak és alap mezőket "
+"használnak."
 
 #: ../../how-to/manage-invoices.md:113
 msgid ""
-"An invoice is counted only in the period its invoice date falls in. "
-"Modelo 349 reads invoices strictly by date, with no carry-forward from "
-"earlier periods."
+"An invoice is counted only in the period its invoice date falls in. Modelo "
+"349 reads invoices strictly by date, with no carry-forward from earlier "
+"periods."
 msgstr ""
+"Egy számlát csak abban az időszakban vesz számításba a rendszer, amelybe a "
+"számla kelte esik. A Modelo 349 szigorúan kelet szerint olvassa a számlákat,"
+" korábbi időszakokból való áthozat nélkül."
 
 #: ../../how-to/manage-invoices.md:116
 msgid "Link a catalogue invoice to a transaction"
-msgstr ""
+msgstr "Katalógusszámla összekapcsolása egy tranzakcióval"
 
 #: ../../how-to/manage-invoices.md:118
 msgid ""
-"Link a catalogue invoice to the bank transaction that paid or collected "
-"it. The sequence records a transaction, catalogues an invoice, links "
-"them, and confirms the link on the catalogue copy:"
+"Link a catalogue invoice to the bank transaction that paid or collected it. "
+"The sequence records a transaction, catalogues an invoice, links them, and "
+"confirms the link on the catalogue copy:"
 msgstr ""
+"Kössön össze egy katalógusszámlát azzal a banki tranzakcióval, amely "
+"kifizette vagy behajtotta. A parancssorozat rögzít egy tranzakciót, "
+"katalogizál egy számlát, összekapcsolja őket, és megerősíti az "
+"összekapcsolást a katalógusmásolaton:"
 
 #: ../../how-to/manage-invoices.md:126
 msgid ""
-"Remove a catalogue invoice you created by mistake, confirming with "
-"`--yes`. Unlink the invoice first if it is still linked to a transaction:"
-" a removal of a still-linked invoice is refused, so the bank transaction "
-"never ends up citing an invoice that no longer exists:"
+"Remove a catalogue invoice you created by mistake, confirming with `--yes`. "
+"Unlink the invoice first if it is still linked to a transaction: a removal "
+"of a still-linked invoice is refused, so the bank transaction never ends up "
+"citing an invoice that no longer exists:"
 msgstr ""
+"Távolítson el egy tévedésből létrehozott katalógusszámlát, a `--yes` "
+"opcióval megerősítve. Előbb bontsa fel az összekapcsolást, ha a számla még "
+"egy tranzakcióhoz van kötve: egy még összekapcsolt számla eltávolítását "
+"elutasítja a rendszer, így a banki tranzakció soha nem hivatkozik egy már "
+"nem létező számlára:"
 
 #: ../../how-to/manage-invoices.md:135
 msgid "Which modelos read your invoices"
-msgstr ""
+msgstr "Mely modelók olvassák a számláit"
 
 #: ../../how-to/manage-invoices.md:137
 msgid ""
-"Catalogue invoices feed **Modelo 349** (the recapitulative declaration of"
-" intra-community operations) through the operation type you stamp on them"
-" when you create them. This is the modelo your issued and received "
-"invoices drive directly."
+"Catalogue invoices feed **Modelo 349** (the recapitulative declaration of "
+"intra-community operations) through the operation type you stamp on them "
+"when you create them. This is the modelo your issued and received invoices "
+"drive directly."
 msgstr ""
+"A katalógusszámlák a **Modelo 349**-et (a közösségen belüli ügyletek "
+"összesítő nyilatkozatát) táplálják azon ügylettípuson keresztül, amelyet a "
+"létrehozáskor rájuk bélyegez. Ez az a modelo, amelyet a kiállított és "
+"beérkezett számlái közvetlenül hajtanak."
 
 #: ../../how-to/manage-invoices.md:142
 msgid ""
 "Your **IVA returns do not read these invoice records**. Modelo 303 "
-"(quarterly IVA) and Modelo 390 (annual IVA summary) are computed from "
-"your classified ledger transactions, not from the invoice catalogue. "
-"Record the income and expense in the ledger and classify it (see "
-"[Classify transactions](classify-transactions.md)); the IVA returns read "
-"the ledger. Recording an invoice here does not add it to a Modelo 303."
+"(quarterly IVA) and Modelo 390 (annual IVA summary) are computed from your "
+"classified ledger transactions, not from the invoice catalogue. Record the "
+"income and expense in the ledger and classify it (see [Classify transactions"
+"](classify-transactions.md)); the IVA returns read the ledger. Recording an "
+"invoice here does not add it to a Modelo 303."
 msgstr ""
+"Az **afabevallásai nem olvassák ezeket a számlarekordokat**. A Modelo 303 "
+"(negyedéves afa) és a Modelo 390 (éves afa-összesítő) az osztályozott "
+"főkönyvi tranzakcióiból számítódik, nem a számlakatalógusból. Rögzítse a "
+"bevételt és a kiadást a főkönyvben, és osztályozza (lásd: [Tranzakciók "
+"osztályozása](classify-transactions.md)); az afabevallások a főkönyvet "
+"olvassák. Egy számla itteni rögzítése nem adja hozzá egy Modelo 303-hoz."
 
 #: ../../how-to/manage-invoices.md:149
 msgid ""
@@ -242,28 +326,34 @@ msgid ""
 "separate flow not yet reachable from `invoice catalogue create`; record "
 "those through the OSS-specific workflow."
 msgstr ""
+"Az egyablakos rendszer (One-Stop-Shop, Modelo 369) szerinti, határon átnyúló"
+" B2C értékesítések külön folyamatot alkotnak, amely az `invoice catalogue "
+"create` parancsból még nem érhető el; ezeket az OSS-specifikus "
+"munkafolyamaton keresztül rögzítse."
 
 #: ../../how-to/manage-invoices.md:153
 msgid "Where to go next"
-msgstr ""
+msgstr "Merre tovább"
 
 #: ../../how-to/manage-invoices.md:155
 msgid "[Attach invoices and receipts](ledger-evidence.md)"
-msgstr ""
+msgstr "[Számlák és bizonylatok csatolása](ledger-evidence.md)"
 
 #: ../../how-to/manage-invoices.md:156
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr ""
+msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
 #: ../../how-to/manage-invoices.md:157
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
+"[Számítási bemenetek felülvizsgálata és megadása](review-calculation-"
+"values.md)"
 
 #: ../../how-to/manage-invoices.md:158
 msgid "[How to prepare a Modelo 303 quarterly filing](modelo-303.md)"
-msgstr ""
+msgstr "[Hogyan készítsen elő egy Modelo 303 negyedéves benyújtást](modelo-303.md)"
 
 #: ../../how-to/manage-invoices.md:159
 msgid "[CLI reference](../cli/index.rst)"
-msgstr ""
+msgstr "[CLI-referencia](../cli/index.rst)"
 

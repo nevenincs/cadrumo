@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../disclaimer.md:1
 msgid "Disclaimer"
-msgstr ""
+msgstr "Aviso legal"
 
 #: ../../disclaimer.md:3
 msgid ""
@@ -31,6 +30,11 @@ msgid ""
 " with, endorsed by, or connected to the Agencia Estatal de Administración"
 " Tributaria (AEAT)."
 msgstr ""
+"Cadrumo, incluida su interfaz de línea de comandos `aeat`, es una "
+"herramienta de software, no un asesor fiscal. No presta ningún "
+"asesoramiento fiscal, jurídico, contable ni financiero, no crea ninguna "
+"relación de asesoramiento y no está afiliada, respaldada ni vinculada a "
+"la Agencia Estatal de Administración Tributaria (AEAT)."
 
 #: ../../disclaimer.md:8
 msgid ""
@@ -41,6 +45,13 @@ msgid ""
 "you enter and every declaration you file, and you should review every "
 "output before you rely on it."
 msgstr ""
+"Nada de lo que produce Cadrumo constituye asesoramiento ni garantía. "
+"Ningún cálculo, borrador, verificación ni exportación le asegura que una "
+"cifra, un modelo o una presentación sea correcta, completa o conforme con"
+" la legislación vigente. Usted es el único responsable de la exactitud, "
+"la integridad y la legalidad de cada cifra que introduzca y de cada "
+"declaración que presente, y debe revisar cada resultado antes de confiar "
+"en él."
 
 #: ../../disclaimer.md:14
 msgid ""
@@ -50,6 +61,12 @@ msgid ""
 "your circumstances, consult a qualified professional such as an asesor "
 "fiscal or gestor for advice on your situation."
 msgstr ""
+"Cadrumo nunca presenta declaraciones. No las envía a la AEAT ni puede "
+"presentarlas por usted. Usted mismo presenta la declaración, a través de "
+"los canales oficiales, y asume la responsabilidad exclusiva de esa "
+"presentación. Dado que la legislación tributaria cambia y depende de sus "
+"circunstancias, consulte a un profesional cualificado, como un asesor "
+"fiscal o un gestor, para obtener asesoramiento sobre su situación."
 
 #: ../../disclaimer.md:20
 msgid ""
@@ -57,4 +74,6 @@ msgid ""
 "Apache License 2.0. The authors accept no liability for any loss, "
 "penalty, interest, or other damage arising from its use."
 msgstr ""
-
+"Cadrumo se ofrece \"tal cual\", sin garantía de ningún tipo, bajo la "
+"licencia Apache License 2.0. Los autores no asumen responsabilidad alguna"
+" por cualquier pérdida, sanción, interés u otro daño derivado de su uso."
