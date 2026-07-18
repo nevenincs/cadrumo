@@ -252,7 +252,7 @@ def test_non_persisting_terminals_refuse_durable_execution(decision: LlmReviewDe
         )
 
 
-# ── S17: saturation / split matrix, origin attribution, CLI-route parity ──
+# ── saturation / split matrix, origin attribution, CLI-route parity ──
 
 
 def _saturated_suggestion(repository: TransactionCatalogueRepository, tx_id: str) -> LLMSaturatedSuggestion:
