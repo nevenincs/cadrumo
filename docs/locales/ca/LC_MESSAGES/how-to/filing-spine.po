@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0000\n"
+"Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/filing-spine.md:1
 msgid "The filing workflow"
-msgstr ""
+msgstr "El flux de treball de presentació"
 
 #: ../../how-to/filing-spine.md:3
 msgid ""
@@ -32,14 +31,23 @@ msgid ""
 " quickstart if you want to understand how the tool organises and stores "
 "your filing work between steps."
 msgstr ""
+"Aquesta pàgina tracta els dos blocs constructius del flux de treball de "
+"presentació —la unitat de treball (l'espai de treball desat per a un "
+"objectiu de presentació) i la revisió de càlcul (un resultat de càlcul "
+"desat)— i com create, calculate, verify, file i export trien entre ells. "
+"Utilitzeu-la després de completar el començament ràpid si voleu entendre "
+"com l'eina organitza i emmagatzema el vostre treball de presentació entre"
+" passos."
 
 #: ../../how-to/filing-spine.md:10
 msgid "Before you start"
-msgstr ""
+msgstr "Abans de començar"
 
 #: ../../how-to/filing-spine.md:12
 msgid "You need an active profile, and the tool needs your master-key passphrase."
 msgstr ""
+"Necessiteu un perfil actiu, i l'eina necessita la contrasenya de la clau "
+"mestra."
 
 #: ../../how-to/filing-spine.md:14
 msgid ""
@@ -49,26 +57,36 @@ msgid ""
 "that will reach `export` must carry a name and surnames, or `export` "
 "refuses with \"requires the operator name\":"
 msgstr ""
+"Creeu primer un perfil si no en teniu cap (vegeu [Configureu el vostre "
+"perfil de contribuent](profile-setup.md)). Passeu `--quiet` per a la "
+"forma no interactiva (un simple `profile create NAME` obre un assistent "
+"interactiu). Un perfil que arribarà a `export` ha de portar un nom i "
+"cognoms, o `export` es nega amb «requires the operator name»:"
 
 #: ../../how-to/filing-spine.md:23
 msgid ""
 "Every profile-scoped command needs the master-key passphrase; the tool "
 "prompts for it."
 msgstr ""
+"Cada ordre d'àmbit de perfil necessita la contrasenya de la clau mestra; "
+"l'eina us la demana."
 
 #: ../../how-to/filing-spine.md:26
 msgid "The CLI emits help, results, and refusals in Spanish."
-msgstr ""
+msgstr "La CLI emet l'ajuda, els resultats i els rebuigs en castellà."
 
 #: ../../how-to/filing-spine.md:28
 msgid "The filing chain"
-msgstr ""
+msgstr "La cadena de presentació"
 
 #: ../../how-to/filing-spine.md:30
 msgid ""
 "The command-line interface is the same one used in the quickstart. Run "
 "the four commands in order, from the profile above:"
 msgstr ""
+"La interfície de línia d'ordres és la mateixa que s'utilitza al "
+"començament ràpid. Executeu les quatre ordres en ordre, a partir del "
+"perfil anterior:"
 
 #: ../../how-to/filing-spine.md:37
 msgid ""
@@ -79,6 +97,14 @@ msgid ""
 "refuses. To file a period that folds in a real prior period, import that "
 "prior filing's evidence first; see [Reconcile a filing](reconcile.md)."
 msgstr ""
+"L'`--activity-start-date` del perfil anterior deixa fora de l'abast la "
+"dependència del període anterior per a aquesta primera presentació, de "
+"manera que `verify` informa `complete` i `export` escriu el `.boe`. Sense"
+" ella, `verify` es bloqueja per una dependència entre períodes sense "
+"resoldre sobre el període anterior i `export` es nega. Per presentar un "
+"període que incorpora un període anterior real, importeu primer "
+"l'evidència d'aquella presentació anterior; vegeu [Reconcilieu una "
+"presentació](reconcile.md)."
 
 #: ../../how-to/filing-spine.md:44
 msgid ""
@@ -86,40 +112,48 @@ msgid ""
 "filing you are working on. Use that shape for routine create, calculate, "
 "verify, file, export, status, history, and revision commands."
 msgstr ""
+"`--modelo`, `--year` i `--period` són la manera normal d'anomenar la "
+"presentació en què treballeu. Utilitzeu aquesta forma per a les ordres "
+"habituals create, calculate, verify, file, export, status, history i "
+"revision."
 
 #: ../../how-to/filing-spine.md:48
 msgid "Start with the visible filing target"
-msgstr ""
+msgstr "Comenceu amb l'objectiu de presentació visible"
 
 #: ../../how-to/filing-spine.md:50
 msgid "A filing target is the filing as you see it:"
-msgstr ""
+msgstr "Un objectiu de presentació és la presentació tal com la veieu:"
 
 #: ../../how-to/filing-spine.md:52
 msgid "the active profile"
-msgstr ""
+msgstr "el perfil actiu"
 
 #: ../../how-to/filing-spine.md:53
 msgid "the modelo code"
-msgstr ""
+msgstr "el codi del model"
 
 #: ../../how-to/filing-spine.md:54
 msgid "the filing year"
-msgstr ""
+msgstr "l'any de presentació"
 
 #: ../../how-to/filing-spine.md:55
 msgid "the period"
-msgstr ""
+msgstr "el període"
 
 #: ../../how-to/filing-spine.md:57
 msgid ""
 "For example, `--modelo 303 --year 2026 --period 1T` means \"Modelo 303, "
 "first quarter of 2026, for the active profile.\""
 msgstr ""
+"Per exemple, `--modelo 303 --year 2026 --period 1T` vol dir «Model 303, "
+"primer trimestre del 2026, per al perfil actiu»."
 
 #: ../../how-to/filing-spine.md:60
 msgid "That same visible target works across the normal workflow:"
 msgstr ""
+"Aquest mateix objectiu visible funciona al llarg del flux de treball "
+"normal:"
 
 #: ../../how-to/filing-spine.md:66
 msgid ""
@@ -128,10 +162,15 @@ msgid ""
 " Running the same create command again does not create a duplicate. It "
 "returns the existing saved work for that filing."
 msgstr ""
+"Si encara no existeix cap treball desat, creeu-lo primer amb `aeat app "
+"modelo work create` (la cadena i les seqüències d'objectiu visible "
+"anteriors executen la forma completa). Executar de nou la mateixa ordre "
+"create no crea cap duplicat. Retorna el treball desat existent per a "
+"aquella presentació."
 
 #: ../../how-to/filing-spine.md:71
 msgid "How a filing gets its ID"
-msgstr ""
+msgstr "Com una presentació obté el seu ID"
 
 #: ../../how-to/filing-spine.md:73
 msgid ""
@@ -139,6 +178,10 @@ msgid ""
 "most use you do not need to know or remember it. The tool finds your work"
 " automatically from the modelo, year, and period you type."
 msgstr ""
+"L'eina assigna un número de referència únic a cada espai de treball de "
+"presentació. Per a la majoria d'usos no cal que el conegueu ni el "
+"recordeu. L'eina troba el vostre treball automàticament a partir del "
+"model, l'any i el període que escriviu."
 
 #: ../../how-to/filing-spine.md:77
 msgid ""
@@ -147,14 +190,18 @@ msgid ""
 "`--revision` only when support or an error message asks you to target a "
 "specific ruleset version."
 msgstr ""
+"L'eina sap quina versió de les regles fiscals oficials s'aplica a cada "
+"formulari i període. No cal que ho trieu manualment. Utilitzeu "
+"`--revision` només quan el suport o un missatge d'error us demani que "
+"apunteu a una versió concreta del conjunt de regles."
 
 #: ../../how-to/filing-spine.md:81
 msgid "To see the reference number for a saved filing:"
-msgstr ""
+msgstr "Per veure el número de referència d'una presentació desada:"
 
 #: ../../how-to/filing-spine.md:87
 msgid "After you have the `work_unit_id`, address the same saved work by ID:"
-msgstr ""
+msgstr "Un cop tingueu el `work_unit_id`, adreceu el mateix treball desat per ID:"
 
 #: ../../how-to/filing-spine.md:92
 msgid ""
@@ -162,16 +209,22 @@ msgid ""
 " when Cadrumo reports that more than one filing matches the same modelo, "
 "year, and period."
 msgstr ""
+"Prefereix l'objectiu visible per a les ordres executades a mà. Utilitzeu "
+"el número de referència quan Cadrumo informi que més d'una presentació "
+"coincideix amb el mateix model, any i període."
 
 #: ../../how-to/filing-spine.md:95
 msgid "A work unit is one filing in progress"
-msgstr ""
+msgstr "Una unitat de treball és una presentació en curs"
 
 #: ../../how-to/filing-spine.md:97
 msgid ""
 "A work unit is the saved workspace for one filing target. It is the thing"
 " that connects later commands to the same local filing work."
 msgstr ""
+"Una unitat de treball és l'espai de treball desat per a un objectiu de "
+"presentació. És allò que connecta les ordres posteriors amb el mateix "
+"treball de presentació local."
 
 #: ../../how-to/filing-spine.md:100
 msgid ""
@@ -179,22 +232,27 @@ msgid ""
 "unit for Modelo 303 Q1 2026 (the chain sequence above runs the full "
 "form)."
 msgstr ""
+"Per exemple, `aeat app modelo work create` crea o reutilitza la unitat de"
+" treball per al Model 303 del 1T del 2026 (la seqüència de la cadena "
+"anterior executa la forma completa)."
 
 #: ../../how-to/filing-spine.md:103
 msgid "The tool keeps a record of your filing work. That record links to:"
 msgstr ""
+"L'eina manté un registre del vostre treball de presentació. Aquest "
+"registre enllaça amb:"
 
 #: ../../how-to/filing-spine.md:105
 msgid "the latest calculated draft"
-msgstr ""
+msgstr "l'últim esborrany calculat"
 
 #: ../../how-to/filing-spine.md:106
 msgid "the verified draft, if you have verified one"
-msgstr ""
+msgstr "l'esborrany verificat, si n'heu verificat un"
 
 #: ../../how-to/filing-spine.md:107
 msgid "the filed record, if you have marked one as filed locally"
-msgstr ""
+msgstr "el registre presentat, si n'heu marcat un com a presentat localment"
 
 #: ../../how-to/filing-spine.md:109
 msgid ""
@@ -203,10 +261,14 @@ msgid ""
 "work on a different filing, pass a different visible target or pass a "
 "different `work_unit_id`:"
 msgstr ""
+"Cap ordre separada «canvia» la unitat de treball actual. El perfil actiu "
+"és global, però el treball de presentació se selecciona a cada ordre. Per"
+" treballar en una presentació diferent, passeu un objectiu visible "
+"diferent o passeu un `work_unit_id` diferent:"
 
 #: ../../how-to/filing-spine.md:116
 msgid "A calculation revision is one saved result"
-msgstr ""
+msgstr "Una revisió de càlcul és un resultat desat"
 
 #: ../../how-to/filing-spine.md:118
 msgid ""
@@ -214,12 +276,18 @@ msgid ""
 "unit. It has its own reference number, the calculation-revision-id, which"
 " `calculate` creates and which is separate from the work-unit-id."
 msgstr ""
+"Una revisió de càlcul és un resultat de càlcul desat dins d'una unitat de"
+" treball. Té el seu propi número de referència, l'id de la revisió de "
+"càlcul, que `calculate` crea i que és separat de l'id de la unitat de "
+"treball."
 
 #: ../../how-to/filing-spine.md:122
 msgid ""
 "When you run `aeat app modelo work calculate`, Cadrumo saves a draft "
 "calculation revision (the chain sequence above runs it)."
 msgstr ""
+"Quan executeu `aeat app modelo work calculate`, Cadrumo desa una revisió "
+"de càlcul en esborrany (la seqüència de la cadena anterior l'executa)."
 
 #: ../../how-to/filing-spine.md:125
 msgid ""
@@ -232,10 +300,18 @@ msgid ""
 "the latest calculated draft. A saved revision is a record of one attempt,"
 " not a verdict"
 msgstr ""
+"Executar el càlcul de nou no sobreescriu el resultat antic. Cada càlcul "
+"desat és immutable: les revisions anteriors resten al disc exactament com"
+" eren, identificades pel seu contingut exacte, de manera que podeu "
+"comparar revisions i tornar-hi. Si els vostres moviments o valors manuals"
+" han canviat, l'eina crea un nou càlcul desat al costat de l'antic; si "
+"res no ha canviat, reutilitza el mateix resultat. L'eina actualitza el "
+"vostre registre de presentació per reflectir l'últim esborrany calculat. "
+"Una revisió desada és un registre d'un intent, no un veredicte"
 
 #: ../../how-to/filing-spine.md:132
 msgid "its numbers commit to nothing until you verify and file it."
-msgstr ""
+msgstr "els seus números no comprometen res fins que la verifiqueu i la presenteu."
 
 #: ../../how-to/filing-spine.md:134
 msgid ""
@@ -244,58 +320,78 @@ msgid ""
 "`aeat app modelo work revision` (the visible-target sequence above runs "
 "both)."
 msgstr ""
+"Llisteu les revisions de càlcul desades d'una presentació amb `aeat app "
+"modelo work revisions`, i mostreu els valors persistits de la revisió "
+"actual amb `aeat app modelo work revision` (la seqüència d'objectiu "
+"visible anterior executa totes dues)."
 
 #: ../../how-to/filing-spine.md:138
 msgid ""
 "If you need to view one specific saved calculation, type its reference "
 "number after the command:"
 msgstr ""
+"Si necessiteu veure un càlcul desat concret, escriviu el seu número de "
+"referència després de l'ordre:"
 
 #: ../../how-to/filing-spine.md:144
 msgid "Reference numbers to know:"
-msgstr ""
+msgstr "Números de referència a conèixer:"
 
 #: ../../how-to/filing-spine.md:146
 msgid "the filing workspace reference - from `aeat app modelo work list`"
 msgstr ""
+"la referència de l'espai de treball de presentació: de `aeat app modelo "
+"work list`"
 
 #: ../../how-to/filing-spine.md:147
 msgid "the saved calculation reference - from `aeat app modelo work revisions`"
-msgstr ""
+msgstr "la referència del càlcul desat: de `aeat app modelo work revisions`"
 
 #: ../../how-to/filing-spine.md:148
 msgid "the rules version reference - shown in status output; you rarely need this"
 msgstr ""
+"la referència de la versió de les regles: es mostra a la sortida d'estat;"
+" rarament la necessiteu"
 
 #: ../../how-to/filing-spine.md:149
 msgid "a run reference - only appears when a command was interrupted mid-way"
 msgstr ""
+"una referència d'execució: només apareix quan una ordre s'ha interromput "
+"a mig camí"
 
 #: ../../how-to/filing-spine.md:151
 msgid "How verify, file, and export choose a revision"
-msgstr ""
+msgstr "Com trien una revisió verify, file i export"
 
 #: ../../how-to/filing-spine.md:153
 msgid ""
 "Most commands start from the visible filing target and then choose the "
 "relevant calculation revision under that work unit."
 msgstr ""
+"La majoria d'ordres parteixen de l'objectiu de presentació visible i "
+"després trien la revisió de càlcul rellevant sota aquella unitat de "
+"treball."
 
 #: ../../how-to/filing-spine.md:156
 msgid ""
 "Verification defaults to the current draft revision; run it with `aeat "
 "app modelo work verify` (the chain sequence above runs it)."
 msgstr ""
+"La verificació pren per defecte la revisió d'esborrany actual; executeu-"
+"la amb `aeat app modelo work verify` (la seqüència de la cadena anterior "
+"l'executa)."
 
 #: ../../how-to/filing-spine.md:159
 msgid "Local filing defaults to the current verified revision:"
-msgstr ""
+msgstr "La presentació local pren per defecte la revisió verificada actual:"
 
 #: ../../how-to/filing-spine.md:164
 msgid ""
 "`work file` records a local filed marker. It does not submit anything to "
 "AEAT."
 msgstr ""
+"`work file` registra un marcador local de presentació. No envia res a "
+"l'AEAT."
 
 #: ../../how-to/filing-spine.md:166
 msgid ""
@@ -303,6 +399,9 @@ msgid ""
 "the current verified revision; run it with `aeat app modelo export` (the "
 "chain sequence above runs it)."
 msgstr ""
+"L'exportació pren per defecte la revisió presentada si n'existeix una. "
+"Altrament, utilitza la revisió verificada actual; executeu-la amb `aeat "
+"app modelo export` (la seqüència de la cadena anterior l'executa)."
 
 #: ../../how-to/filing-spine.md:170
 msgid ""
@@ -312,6 +411,12 @@ msgid ""
 "stops an incomplete or inconsistent draft from becoming a filing by "
 "accident."
 msgstr ""
+"L'exportació rebutja un esborrany sense més. El fitxer de pujada és "
+"l'artefacte que surt de l'eina cap a l'AEAT, de manera que només es "
+"construeix a partir d'una revisió que ha passat la comprovació de "
+"completesa (o una ja registrada com a presentada): la comprovació que "
+"evita que un esborrany incomplet o inconsistent esdevingui una "
+"presentació per accident."
 
 #: ../../how-to/filing-spine.md:175
 msgid ""
@@ -319,54 +424,69 @@ msgid ""
 "the `--output` path you choose and always produces a fixed-width fichero-"
 "BOE text file, whatever extension you give it."
 msgstr ""
+"L'extensió `.boe` és una convenció de noms. L'eina escriu el fitxer al "
+"camí `--output` que trieu i sempre produeix un fitxer de text fichero-BOE"
+" d'amplada fixa, sigui quina sigui l'extensió que li doneu."
 
 #: ../../how-to/filing-spine.md:179
 msgid "Each command automatically picks the most appropriate saved calculation:"
-msgstr ""
+msgstr "Cada ordre tria automàticament el càlcul desat més apropiat:"
 
 #: ../../how-to/filing-spine.md:181
 msgid "`verify` uses the latest draft"
-msgstr ""
+msgstr "`verify` utilitza l'últim esborrany"
 
 #: ../../how-to/filing-spine.md:182
 msgid "`file` uses the latest verified draft"
-msgstr ""
+msgstr "`file` utilitza l'últim esborrany verificat"
 
 #: ../../how-to/filing-spine.md:183
 msgid ""
 "`export` uses whichever was marked as filed; if none was filed, it uses "
 "the verified draft"
 msgstr ""
+"`export` utilitza el que s'hagi marcat com a presentat; si no se n'ha "
+"presentat cap, utilitza l'esborrany verificat"
 
 #: ../../how-to/filing-spine.md:186
 msgid ""
 "If you need a different saved calculation, use `--select` with the "
 "visible target:"
 msgstr ""
+"Si necessiteu un càlcul desat diferent, utilitzeu `--select` amb "
+"l'objectiu visible:"
 
 #: ../../how-to/filing-spine.md:192
 msgid "You can also pass exact IDs on commands that accept them:"
-msgstr ""
+msgstr "També podeu passar IDs exactes a les ordres que els accepten:"
 
 #: ../../how-to/filing-spine.md:197
 msgid "For the complete option list, see the [CLI reference](../cli/index.rst)."
 msgstr ""
+"Per a la llista completa d'opcions, vegeu la [referència de la "
+"CLI](../cli/index.rst)."
 
 #: ../../how-to/filing-spine.md:199
 msgid "Rename, discard, or review a filing's history"
-msgstr ""
+msgstr "Reanomeneu, descarteu o reviseu l'historial d'una presentació"
 
 #: ../../how-to/filing-spine.md:201
 msgid "Manage or review the lifecycle of a work unit as it progresses:"
 msgstr ""
+"Gestioneu o reviseu el cicle de vida d'una unitat de treball a mesura que"
+" avança:"
 
 #: ../../how-to/filing-spine.md:203
 msgid "`rename`: Add or update a friendly display name for the work unit:"
 msgstr ""
+"`rename`: afegiu o actualitzeu un nom visible amigable per a la unitat de"
+" treball:"
 
 #: ../../how-to/filing-spine.md:208
 msgid "`history`: Review all actions the tool has taken on this filing, in order:"
 msgstr ""
+"`history`: reviseu totes les accions que l'eina ha fet sobre aquesta "
+"presentació, en ordre:"
 
 #: ../../how-to/filing-spine.md:213
 msgid ""
@@ -374,14 +494,20 @@ msgid ""
 "action in the history log. Use this if you created the workspace by "
 "mistake or want to replace it with a fresh one:"
 msgstr ""
+"`discard`: marqueu l'espai de treball de presentació com a descartat. "
+"L'eina registra aquesta acció al registre d'historial. Utilitzeu-ho si "
+"heu creat l'espai de treball per error o el voleu substituir per un de "
+"nou:"
 
 #: ../../how-to/filing-spine.md:220
 msgid "The `--reason` text is for your own records only. It is not sent to AEAT."
 msgstr ""
+"El text `--reason` és només per als vostres registres. No s'envia a "
+"l'AEAT."
 
 #: ../../how-to/filing-spine.md:222
 msgid "Resume an interrupted filing"
-msgstr ""
+msgstr "Reprengueu una presentació interrompuda"
 
 #: ../../how-to/filing-spine.md:224
 msgid ""
@@ -389,28 +515,35 @@ msgid ""
 "connection dropped while the tool was reading live AEAT data), you can "
 "check and restart it:"
 msgstr ""
+"Si una ordre s'ha interromput a mitja execució (per exemple, perquè la "
+"connexió ha caigut mentre l'eina llegia dades de l'AEAT en directe), la "
+"podeu comprovar i reiniciar:"
 
 #: ../../how-to/filing-spine.md:228
 msgid "`runs`: List recent flow runs, from most recent to oldest:"
 msgstr ""
+"`runs`: llisteu les execucions de flux recents, de la més recent a la més"
+" antiga:"
 
 #: ../../how-to/filing-spine.md:233
 msgid ""
 "`resume`: Restart an interrupted command using the filing details or the "
 "reference number shown in the error message:"
 msgstr ""
+"`resume`: reinicieu una ordre interrompuda utilitzant els detalls de la "
+"presentació o el número de referència que es mostra al missatge d'error:"
 
 #: ../../how-to/filing-spine.md:239
 msgid "When to use exact IDs"
-msgstr ""
+msgstr "Quan utilitzar IDs exactes"
 
 #: ../../how-to/filing-spine.md:241
 msgid "Use modelo, year, and period for all normal work."
-msgstr ""
+msgstr "Utilitzeu model, any i període per a tot el treball normal."
 
 #: ../../how-to/filing-spine.md:243
 msgid "Use the exact reference number when:"
-msgstr ""
+msgstr "Utilitzeu el número de referència exacte quan:"
 
 #: ../../how-to/filing-spine.md:245
 msgid ""
@@ -418,46 +551,62 @@ msgid ""
 "year, and period (Cadrumo refuses to guess; it prints candidates for you "
 "to choose)"
 msgstr ""
+"Cadrumo us diu que més d'una presentació coincideix amb el mateix model, "
+"any i període (Cadrumo es nega a endevinar; imprimeix candidats perquè "
+"trieu)"
 
 #: ../../how-to/filing-spine.md:247
 msgid "you are replaying or inspecting one specific saved calculation"
-msgstr ""
+msgstr "esteu reproduint o inspeccionant un càlcul desat concret"
 
 #: ../../how-to/filing-spine.md:248
 msgid ""
 "support asks you to share the exact reference number from the command "
 "output"
 msgstr ""
+"el suport us demana que compartiu el número de referència exacte de la "
+"sortida de l'ordre"
 
 #: ../../how-to/filing-spine.md:250
 msgid "Next steps"
-msgstr ""
+msgstr "Passos següents"
 
 #: ../../how-to/filing-spine.md:252
 msgid ""
 "[Quickstart: produce a modelo file](quickstart.md) - the shortest path "
 "from profile to exported file."
 msgstr ""
+"[Començament ràpid: produïu un fitxer de model](quickstart.md): el camí "
+"més curt del perfil al fitxer exportat."
 
 #: ../../how-to/filing-spine.md:254
 msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) - "
 "how to inspect saved values, missing bindings, and manual inputs."
 msgstr ""
+"[Reviseu i proporcioneu les dades de càlcul](review-calculation-"
+"values.md): com inspeccionar valors desats, vinculacions que falten i "
+"entrades manuals."
 
 #: ../../how-to/filing-spine.md:256
 msgid ""
 "[Review calculations with Google Sheets](review-with-google-sheets.md) - "
 "how to inspect calculation workbooks outside the terminal."
 msgstr ""
+"[Reviseu els càlculs amb Google Sheets](review-with-google-sheets.md): "
+"com inspeccionar els llibres de càlcul fora del terminal."
 
 #: ../../how-to/filing-spine.md:258
 msgid ""
 "[Reconcile a filing](reconcile.md) - how to compare a filed modelo with "
 "its justificante."
 msgstr ""
+"[Reconcilieu una presentació](reconcile.md): com comparar un model "
+"presentat amb el seu justificante."
 
 #: ../../how-to/filing-spine.md:260
 msgid "[Command reference](../cli/index.rst) - exact flags and selector options."
 msgstr ""
+"[Referència d'ordres](../cli/index.rst): indicadors i opcions de selector"
+" exactes."
 
