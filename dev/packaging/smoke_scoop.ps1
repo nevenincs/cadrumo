@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
-    [ValidateSet("Sandbox", "Host")]
-    [string]$Mode = "Sandbox",
+    [ValidateSet("Container", "Host")]
+    [string]$Mode = "Container",
 
     [Parameter(Mandatory = $true)]
     [string]$CohortDir,
@@ -15,29 +15,27 @@ param(
     [ValidatePattern("^[A-Za-z0-9][A-Za-z0-9._-]*$")]
     [string]$AppName = "cadrumo-s19-stage",
 
+    [ValidatePattern("^[A-Za-z0-9][A-Za-z0-9._/:-]*$")]
+    [string]$ContainerImage = "mcr.microsoft.com/windows/servercore:ltsc2022",
+
     [ValidateRange(1, 240)]
     [int]$TimeoutMinutes = 60,
 
     [switch]$BootstrapScoop,
 
-    [switch]$InsideSandbox,
+    [switch]$InsideContainer,
 
-    [string]$OrchestrationNonce,
-
-    [switch]$ShutdownWhenDone
+    [string]$OrchestrationNonce
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-if ($BootstrapScoop -and -not $InsideSandbox) {
-    throw "Scoop bootstrap is restricted to the disposable Windows Sandbox child"
+if ($BootstrapScoop -and -not $InsideContainer) {
+    throw "Scoop bootstrap is restricted to the disposable Windows container child"
 }
-if ($ShutdownWhenDone -and -not $InsideSandbox) {
-    throw "automatic shutdown is restricted to the disposable Windows Sandbox child"
-}
-if ($InsideSandbox -and $Mode -ne "Host") {
-    throw "the Windows Sandbox child must execute the Host smoke implementation"
+if ($InsideContainer -and $Mode -ne "Host") {
+    throw "the Windows container child must execute the Host smoke implementation"
 }
 
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
@@ -87,21 +85,34 @@ function Install-ScoopIfRequested {
         [bool]$Requested,
 
         [Parameter(Mandatory = $true)]
-        [string]$InstallerDir
+        [string]$InstallerDir,
+
+        [Parameter(Mandatory = $true)]
+        [bool]$Elevated
     )
 
     if (-not $Requested) {
         if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
-            throw "scoop is not installed; use -BootstrapScoop only in a disposable Windows environment"
+            throw "scoop is not installed; use -BootstrapScoop only in a disposable Windows container"
         }
         return
     }
 
     if (-not (Get-Command scoop -ErrorAction SilentlyContinue)) {
         Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+        [Net.ServicePointManager]::SecurityProtocol = (
+            [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+        )
         $installer = Join-Path $InstallerDir "install-scoop.ps1"
         Invoke-WebRequest -Uri "https://get.scoop.sh" -OutFile $installer -UseBasicParsing
-        & $installer
+        # The Windows container runs its child elevated (ContainerAdministrator), so
+        # the installer's default administrator guard must be released explicitly.
+        if ($Elevated) {
+            & $installer -RunAsAdmin
+        }
+        else {
+            & $installer
+        }
         if (-not $?) {
             throw "Scoop bootstrap failed"
         }
@@ -118,32 +129,32 @@ function Install-ScoopIfRequested {
 function Get-ExecutionIdentity {
     param(
         [Parameter(Mandatory = $true)]
-        [bool]$SandboxChild,
+        [bool]$ContainerChild,
 
         [string]$Nonce
     )
 
     $runtimeIdentity = [Security.Principal.WindowsIdentity]::GetCurrent().Name
-    $observedSandbox = $runtimeIdentity.EndsWith(
-        "\WDAGUtilityAccount",
+    $observedContainer = $runtimeIdentity.EndsWith(
+        "\ContainerAdministrator",
         [System.StringComparison]::OrdinalIgnoreCase
     )
-    if ($SandboxChild) {
+    if ($ContainerChild) {
         if (-not $Nonce) {
-            throw "sandbox child execution requires an orchestration nonce"
+            throw "container child execution requires an orchestration nonce"
         }
-        if (-not $observedSandbox) {
-            throw "sandbox child identity was not observed: $runtimeIdentity"
+        if (-not $observedContainer) {
+            throw "container child identity was not observed: $runtimeIdentity"
         }
     }
     elseif ($Nonce) {
-        throw "host execution must not accept a sandbox orchestration nonce"
+        throw "host execution must not accept a container orchestration nonce"
     }
     return @{
-        mode = if ($SandboxChild) { "Sandbox" } else { "Host" }
-        orchestration_nonce = if ($SandboxChild) { $Nonce } else { $null }
+        mode = if ($ContainerChild) { "Container" } else { "Host" }
+        orchestration_nonce = if ($ContainerChild) { $Nonce } else { $null }
         runtime_identity = $runtimeIdentity
-        sandbox_identity_verified = $observedSandbox
+        container_identity_verified = $observedContainer
     }
 }
 
@@ -437,12 +448,12 @@ function Invoke-HostSmoke {
             -OutputDir $runEvidence
 
         $evidence = [ordered]@{
-            schema = "cadrumo.packaging.scoop-smoke.v1"
+            schema = "cadrumo.packaging.scoop-smoke.v2"
             status = "passed"
             mode = $ExecutionIdentity.mode
             orchestration_nonce = $ExecutionIdentity.orchestration_nonce
             runtime_identity = $ExecutionIdentity.runtime_identity
-            sandbox_identity_verified = $ExecutionIdentity.sandbox_identity_verified
+            container_identity_verified = $ExecutionIdentity.container_identity_verified
             app_name = $PackageName
             started_at = $startedAt.ToString("O")
             os = (Get-CimInstance Win32_OperatingSystem).Caption
@@ -554,8 +565,42 @@ function Invoke-HostSmoke {
         Set-Content -LiteralPath (Join-Path $resolvedEvidence "scoop-evidence.json") -Encoding UTF8
 }
 
-function Invoke-SandboxSmoke {
+function Assert-WindowsContainerRuntime {
+    $docker = Get-Command docker -ErrorAction SilentlyContinue
+    if (-not $docker) {
+        throw (
+            "Windows container runtime required: 'docker' was not found on PATH. " +
+            "Run this lane on a host with Docker in Windows-container mode " +
+            "(GitHub-hosted windows-2022, or a local Docker Desktop switched to Windows containers)."
+        )
+    }
+    $serverOs = @(& $docker.Source version --format "{{.Server.Os}}" 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        throw (
+            "Windows container runtime required: the Docker daemon did not answer " +
+            "($($serverOs -join ' ')). Start Docker in Windows-container mode."
+        )
+    }
+    $observedOs = ([string]($serverOs | Select-Object -Last 1)).Trim()
+    if ($observedOs -ne "windows") {
+        throw (
+            "Windows container runtime required: the Docker daemon is in " +
+            "'$observedOs'-container mode. Switch to Windows containers " +
+            "(Docker Desktop: 'Switch to Windows containers'; " +
+            "GitHub-hosted windows-2022 defaults to Windows containers)."
+        )
+    }
+    return $docker.Source
+}
+
+function Invoke-ContainerSmoke {
     param(
+        [Parameter(Mandatory = $true)]
+        [string]$DockerPath,
+
+        [Parameter(Mandatory = $true)]
+        [string]$Image,
+
         [Parameter(Mandatory = $true)]
         [string]$SourceCohort,
 
@@ -572,80 +617,60 @@ function Invoke-SandboxSmoke {
         [int]$MaximumMinutes
     )
 
-    $feature = Get-WindowsOptionalFeature `
-        -Online `
-        -FeatureName Containers-DisposableClientVM
-    if ($feature.State -ne "Enabled") {
-        throw "Windows Sandbox feature Containers-DisposableClientVM is not enabled"
-    }
-    $sandbox = Get-Command WindowsSandbox.exe -ErrorAction SilentlyContinue
-    if (-not $sandbox) {
-        throw "WindowsSandbox.exe is unavailable"
-    }
-
     $resolvedCohort = (Resolve-Path $SourceCohort).Path
     $resolvedManifest = (Resolve-Path $SourceManifest).Path
     New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
     $resolvedEvidence = (Resolve-Path $OutputDir).Path
-    $sandboxManifest = Join-Path $resolvedEvidence "source-manifest.json"
-    Copy-Item -LiteralPath $resolvedManifest -Destination $sandboxManifest -Force
+    $containerManifest = Join-Path $resolvedEvidence "source-manifest.json"
+    Copy-Item -LiteralPath $resolvedManifest -Destination $containerManifest -Force
 
-    $escapedRepo = [Security.SecurityElement]::Escape($RepoRoot)
-    $escapedCohort = [Security.SecurityElement]::Escape($resolvedCohort)
-    $escapedEvidence = [Security.SecurityElement]::Escape($resolvedEvidence)
     $nonce = [Guid]::NewGuid().ToString("N")
-    $command = (
-        "powershell.exe -NoProfile -ExecutionPolicy Bypass " +
-        "-File C:\repo\dev\packaging\smoke_scoop.ps1 " +
-        "-Mode Host -CohortDir C:\cohort " +
-        "-ManifestPath C:\evidence\source-manifest.json " +
-        "-EvidenceDir C:\evidence -AppName $PackageName " +
-        "-BootstrapScoop -InsideSandbox -OrchestrationNonce $nonce -ShutdownWhenDone"
+    $containerName = "cadrumo-scoop-$nonce"
+    # ltsc2022 process isolation matches the Windows Server 2022 host kernel, so no
+    # Hyper-V isolation (unavailable on GitHub-hosted runners) is needed. The repo and
+    # cohort mounts are read-only sources; only the evidence mount is writable.
+    $dockerArguments = @(
+        "run", "--rm", "--name", $containerName, "--isolation=process",
+        "-v", "${RepoRoot}:C:\repo:ro",
+        "-v", "${resolvedCohort}:C:\cohort:ro",
+        "-v", "${resolvedEvidence}:C:\evidence",
+        "--workdir", "C:\repo",
+        $Image,
+        "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
+        "-File", "C:\repo\dev\packaging\smoke_scoop.ps1",
+        "-Mode", "Host", "-InsideContainer", "-BootstrapScoop",
+        "-CohortDir", "C:\cohort",
+        "-ManifestPath", "C:\evidence\source-manifest.json",
+        "-EvidenceDir", "C:\evidence",
+        "-AppName", $PackageName,
+        "-OrchestrationNonce", $nonce
     )
-    $escapedCommand = [Security.SecurityElement]::Escape($command)
-    $configuration = @"
-<Configuration>
-  <MappedFolders>
-    <MappedFolder>
-      <HostFolder>$escapedRepo</HostFolder>
-      <SandboxFolder>C:\repo</SandboxFolder>
-      <ReadOnly>true</ReadOnly>
-    </MappedFolder>
-    <MappedFolder>
-      <HostFolder>$escapedCohort</HostFolder>
-      <SandboxFolder>C:\cohort</SandboxFolder>
-      <ReadOnly>true</ReadOnly>
-    </MappedFolder>
-    <MappedFolder>
-      <HostFolder>$escapedEvidence</HostFolder>
-      <SandboxFolder>C:\evidence</SandboxFolder>
-      <ReadOnly>false</ReadOnly>
-    </MappedFolder>
-  </MappedFolders>
-  <LogonCommand>
-    <Command>$escapedCommand</Command>
-  </LogonCommand>
-</Configuration>
-"@
-    $configurationPath = Join-Path $resolvedEvidence "cadrumo-scoop-smoke.wsb"
-    $configuration | Set-Content -LiteralPath $configurationPath -Encoding UTF8
 
     $process = Start-Process `
-        -FilePath $sandbox.Source `
-        -ArgumentList $configurationPath `
+        -FilePath $DockerPath `
+        -ArgumentList $dockerArguments `
         -PassThru `
-        -WindowStyle Hidden
+        -NoNewWindow
     if (-not $process.WaitForExit($MaximumMinutes * 60 * 1000)) {
-        $process.Kill()
-        throw "Windows Sandbox Scoop smoke exceeded $MaximumMinutes minutes"
+        & $DockerPath rm -f $containerName | Out-Null
+        try { $process.Kill() } catch { }
+        throw "Windows container Scoop smoke exceeded $MaximumMinutes minutes"
     }
+    if ($process.ExitCode -ne 0) {
+        $failurePath = Join-Path $resolvedEvidence "scoop-failure.json"
+        if (Test-Path -LiteralPath $failurePath -PathType Leaf) {
+            throw (Get-Content -LiteralPath $failurePath -Raw)
+        }
+        throw "Windows container exited with code $($process.ExitCode) without Scoop evidence"
+    }
+
     $evidencePath = Join-Path $resolvedEvidence "scoop-evidence.json"
     if (-not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
         $failurePath = Join-Path $resolvedEvidence "scoop-failure.json"
         if (Test-Path -LiteralPath $failurePath -PathType Leaf) {
             throw (Get-Content -LiteralPath $failurePath -Raw)
         }
-        throw "Windows Sandbox exited without Scoop evidence"
+        throw "Windows container exited without Scoop evidence"
     }
     $evidence = Get-Content -LiteralPath $evidencePath -Raw | ConvertFrom-Json
     $expectedManifestHash = (
@@ -653,16 +678,16 @@ function Invoke-SandboxSmoke {
     ).Hash.ToLowerInvariant()
     if (
         $evidence.status -ne "passed" -or
-        $evidence.mode -ne "Sandbox" -or
+        $evidence.mode -ne "Container" -or
         $evidence.orchestration_nonce -ne $nonce -or
         $evidence.source_manifest_sha256 -ne $expectedManifestHash -or
-        $evidence.sandbox_identity_verified -ne $true -or
+        $evidence.container_identity_verified -ne $true -or
         -not ([string]$evidence.runtime_identity).EndsWith(
-            "\WDAGUtilityAccount",
+            "\ContainerAdministrator",
             [System.StringComparison]::OrdinalIgnoreCase
         )
     ) {
-        throw "Windows Sandbox evidence identity or source binding is invalid"
+        throw "Windows container evidence identity or source binding is invalid"
     }
 }
 
@@ -676,10 +701,13 @@ foreach ($resultName in ("scoop-evidence.json", "scoop-failure.json")) {
 }
 try {
     $executionIdentity = Get-ExecutionIdentity `
-        -SandboxChild ([bool]$InsideSandbox) `
+        -ContainerChild ([bool]$InsideContainer) `
         -Nonce $OrchestrationNonce
-    if ($Mode -eq "Sandbox") {
-        Invoke-SandboxSmoke `
+    if ($Mode -eq "Container") {
+        $dockerPath = Assert-WindowsContainerRuntime
+        Invoke-ContainerSmoke `
+            -DockerPath $dockerPath `
+            -Image $ContainerImage `
             -SourceCohort $CohortDir `
             -SourceManifest $ManifestPath `
             -OutputDir $EvidenceDir `
@@ -689,7 +717,8 @@ try {
     else {
         Install-ScoopIfRequested `
             -Requested ([bool]$BootstrapScoop) `
-            -InstallerDir $EvidenceDir
+            -InstallerDir $EvidenceDir `
+            -Elevated ([bool]$InsideContainer)
         Invoke-HostSmoke `
             -SourceCohort $CohortDir `
             -SourceManifest $ManifestPath `
@@ -700,9 +729,9 @@ try {
 }
 catch {
     $failure = [ordered]@{
-        schema = "cadrumo.packaging.scoop-smoke.v1"
+        schema = "cadrumo.packaging.scoop-smoke.v2"
         status = "failed"
-        mode = if ($InsideSandbox) { "Sandbox" } else { $Mode }
+        mode = if ($InsideContainer) { "Container" } else { $Mode }
         completed_at = [DateTimeOffset]::UtcNow.ToString("O")
         error = $_.Exception.Message
         detail = $_ | Out-String
@@ -711,9 +740,4 @@ catch {
         ConvertTo-Json -Depth 10 |
         Set-Content -LiteralPath (Join-Path $EvidenceDir "scoop-failure.json") -Encoding UTF8
     throw
-}
-finally {
-    if ($ShutdownWhenDone) {
-        shutdown.exe /s /t 0
-    }
 }
