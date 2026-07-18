@@ -35,7 +35,6 @@ from ....domain.bienes_inversion import (
 from ..storage import (
     PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE,
     SecureObjectRepository,
-    SensitivityClass,
     secure_object_logical_path,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
@@ -45,6 +44,7 @@ _log = get_logger(__name__)
 
 BIENES_INVERSION_REGISTER_FILENAME = "bienes-inversion-iva-register.secure-object"
 _REGISTER_SECURE_OBJECT_VERSION = PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.schema_version
+_REGISTER_SECURE_OBJECT_SENSITIVITY = PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.sensitivity
 _REGISTER_NAMESPACE = PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.namespace
 _REGISTER_OBJECT_KEY = PROFILE_BIENES_INVERSION_IVA_REGISTER_NAMESPACE.require_default_object_key()
 
@@ -144,7 +144,7 @@ class BienesInversionIvaRegisterRepository:
             record = self._objects.load(
                 _REGISTER_NAMESPACE,
                 self._object_key,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_REGISTER_SECURE_OBJECT_SENSITIVITY,
                 max_supported_version=_REGISTER_SECURE_OBJECT_VERSION,
             )
             if record is None:
@@ -207,7 +207,7 @@ class BienesInversionIvaRegisterRepository:
         self._objects.save(
             namespace=_REGISTER_NAMESPACE,
             object_key=self._object_key,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_REGISTER_SECURE_OBJECT_SENSITIVITY,
             schema_version=_REGISTER_SECURE_OBJECT_VERSION,
             written_at=now(),
             payload=register.model_dump_json().encode(UTF_8_ENCODING),

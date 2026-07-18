@@ -63,7 +63,6 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from sqlalchemy import delete, select, update
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
@@ -94,6 +93,7 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 _log = get_logger(__name__)
 
 _TX_CATALOGUE_VERSION = TRANSACTION_CATALOGUE_NAMESPACE.schema_version
+_TX_CATALOGUE_SENSITIVITY = TRANSACTION_CATALOGUE_NAMESPACE.sensitivity
 TX_BUCKET_NAMESPACE = TRANSACTION_CATALOGUE_NAMESPACE.namespace
 
 
@@ -256,7 +256,7 @@ class TransactionCatalogueRepository:
         Raises:
             :class:`~adapters.persistence.storage.ClassificationError`:
                 If a row's inner envelope class is not
-                ``SensitivityClass.FINANCIAL``.
+                ``_TX_CATALOGUE_SENSITIVITY``.
             :class:`~adapters.persistence.storage.EnvelopeVersionError`:
                 If a row's inner envelope schema version is higher than the
                 consumer supports.
@@ -276,7 +276,7 @@ class TransactionCatalogueRepository:
         transactions: list[Transaction] = []
         for record in self._objects.list_records(
             TX_BUCKET_NAMESPACE,
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_TX_CATALOGUE_SENSITIVITY,
             max_supported_version=_TX_CATALOGUE_VERSION,
         ):
             transaction_id = wanted.get(bytes(record.object_key))
@@ -302,14 +302,14 @@ class TransactionCatalogueRepository:
                     exc_info=True,
                 )
                 raise StoredTransactionDriftError(self._bucket_id, exc) from exc
-            if envelope.classification is not SensitivityClass.FINANCIAL:
+            if envelope.classification is not _TX_CATALOGUE_SENSITIVITY:
                 raise ClassificationError(
                     context={
                         "namespace": TX_BUCKET_NAMESPACE,
                         "object_key": transaction_object_key(self._bucket_id, transaction_id),
                         "bucket_id": self._bucket_id,
                         "classification": envelope.classification.value,
-                        "expected": SensitivityClass.FINANCIAL.value,
+                        "expected": _TX_CATALOGUE_SENSITIVITY.value,
                     },
                     translated_message="errors.integrity.integrity_storage_classification",
                 )
@@ -551,7 +551,7 @@ class TransactionCatalogueRepository:
         records = self._objects.load_many(
             TX_BUCKET_NAMESPACE,
             (transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids),
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_TX_CATALOGUE_SENSITIVITY,
             max_supported_version=_TX_CATALOGUE_VERSION,
         )
         for record in records:
@@ -742,7 +742,7 @@ class TransactionCatalogueRepository:
                 SecureObjectWrite(
                     namespace=TX_BUCKET_NAMESPACE,
                     object_key=object_key,
-                    classification=SensitivityClass.FINANCIAL,
+                    classification=_TX_CATALOGUE_SENSITIVITY,
                     schema_version=_TX_CATALOGUE_VERSION,
                     written_at=transaction.modified_at,
                     payload=payload,
@@ -754,7 +754,7 @@ class TransactionCatalogueRepository:
                 SecureObjectWrite(
                     namespace=TX_BUCKET_NAMESPACE,
                     object_key=transaction_index_object_key(self._bucket_id),
-                    classification=SensitivityClass.FINANCIAL,
+                    classification=_TX_CATALOGUE_SENSITIVITY,
                     schema_version=_TX_CATALOGUE_VERSION,
                     written_at=now(),
                     payload=self._serialise_index(incoming_ids),
@@ -792,7 +792,7 @@ class TransactionCatalogueRepository:
         record = self._objects.load(
             TX_BUCKET_NAMESPACE,
             transaction_index_object_key(self._bucket_id),
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_TX_CATALOGUE_SENSITIVITY,
             max_supported_version=_TX_CATALOGUE_VERSION,
         )
         if record is None:
@@ -810,7 +810,7 @@ class TransactionCatalogueRepository:
         envelope = Envelope[_TransactionIndex](
             schema_version=_TX_CATALOGUE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_TX_CATALOGUE_SENSITIVITY,
             payload=_TransactionIndex(transaction_ids=tuple(sorted(transaction_ids))),
         )
         return envelope.model_dump_json().encode(UTF_8_ENCODING)
@@ -827,7 +827,7 @@ class TransactionCatalogueRepository:
         envelope = Envelope[Transaction](
             schema_version=_TX_CATALOGUE_VERSION,
             written_at=transaction.modified_at,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_TX_CATALOGUE_SENSITIVITY,
             payload=transaction,
         )
         return envelope.model_dump_json().encode(UTF_8_ENCODING)
