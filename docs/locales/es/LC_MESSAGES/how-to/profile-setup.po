@@ -202,7 +202,7 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:72
 msgid "Run the guided wizard when you're setting up a profile for the first time:"
-msgstr "Ejecuta el asistente guiado cuando configure un perfil por primera vez:"
+msgstr "Ejecuta el asistente guiado cuando configures un perfil por primera vez:"
 
 #: ../../how-to/profile-setup.md:77
 msgid ""
@@ -241,11 +241,11 @@ msgid ""
 "profile create`. The [worked example below](#worked-example-a-natural-"
 "person-with-an-activity) runs a complete scripted create."
 msgstr ""
-"Usa opciones con `--quiet` cuando quiera una configuración repetible y "
+"Usa opciones con `--quiet` cuando quieras una configuración repetible y "
 "automatizable, pasando el tipo de entidad, el identificador fiscal, el "
 "nombre y los apellidos a `aeat config profile create`. El [ejemplo "
-"práctico de más abajo](#worked-example-a-natural-person-with-an-activity)"
-" ejecuta una creación automatizada completa."
+"práctico de más abajo](#worked-example-a-natural-person-with-an-activity) "
+"ejecuta una creación automatizada completa."
 
 #: ../../how-to/profile-setup.md:93
 msgid ""
@@ -265,7 +265,7 @@ msgid ""
 "Add `--accept-defaults` when you intentionally want Cadrumo to fill the "
 "questions you omit from its built-in defaults."
 msgstr ""
-"Añade `--accept-defaults` cuando quiera intencionadamente que Cadrumo "
+"Añade `--accept-defaults` cuando quieras intencionadamente que Cadrumo "
 "rellene las preguntas que omite con sus valores predeterminados "
 "integrados."
 
@@ -878,11 +878,11 @@ msgid ""
 "history:"
 msgstr ""
 "Todo cambio en un perfil —creación, ediciones, importaciones, "
-"clasificaciones, cálculos y presentaciones— se registra como un evento en"
-" el historial de solo anexado de ese perfil (un registro que puede leer "
+"clasificaciones, cálculos y presentaciones— se registra como un evento en "
+"el historial de solo anexado de ese perfil (un registro que puedes leer "
 "pero no alterar). Leer el historial necesita un perfil activo, así que "
-"cambie a él primero tras el cierre de sesión. El ejemplo crea, renombra y"
-" edita un perfil antes de recorrer y filtrar su historial:"
+"cambia a él primero tras el cierre de sesión. El ejemplo crea, renombra y "
+"edita un perfil antes de recorrer y filtrar su historial:"
 
 #: ../../how-to/profile-setup.md:331
 msgid ""

@@ -60,7 +60,7 @@ msgstr "Mantener los datos censales"
 
 #: ../../index.md:130
 msgid "Which modelos apply to you"
-msgstr "Qué modelos le corresponden"
+msgstr "Qué modelos te corresponden"
 
 #: ../../index.md:130
 msgid "Protect data access"
@@ -258,7 +258,7 @@ msgstr ""
 "sustituye a las herramientas oficiales de la AEAT ni al asesoramiento de "
 "un profesional cualificado. Construye, comprueba y exporta ficheros de "
 "forma local. Tú mismo presentas a través de los canales oficiales de la "
-"AEAT y sigue siendo responsable de cada declaración que envíe. Lee el "
+"AEAT y sigues siendo responsable de cada declaración que envíes. Lee el "
 "[aviso legal completo](disclaimer.md) antes de confiar en Cadrumo."
 
 #: ../../index.md:25
@@ -323,7 +323,7 @@ msgid ""
 "modelos apply."
 msgstr ""
 "Crea el perfil de contribuyente y registra los datos que determinan qué "
-"modelos le corresponden."
+"modelos te corresponden."
 
 #: ../../index.md:72
 msgid "Import and manage transactions"

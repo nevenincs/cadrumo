@@ -137,7 +137,7 @@ msgstr ""
 #: ../../updates.md:70
 msgid "Check this section when you need to know whether a release affects:"
 msgstr ""
-"Consulta esta sección cuando necesite saber si una versión afecta a:"
+"Consulta esta sección cuando necesites saber si una versión afecta a:"
 
 #: ../../updates.md:72
 msgid "filing workflow order;"
@@ -170,10 +170,11 @@ msgid ""
 "If no packaged artifact is available for your environment, open an issue "
 "so the gap is recorded."
 msgstr ""
-"Usa el enlace de la última versión cuando necesite la versión empaquetada "
-"actual, y siga la [guía de instalación](workstation-setup.md) para "
-"instalarla. Si no hay ningún artefacto empaquetado disponible para su "
-"entorno, abre una incidencia para que quede registrada la carencia."
+"Usa el enlace de la última versión cuando necesites la versión "
+"empaquetada actual, y sigue la [guía de "
+"instalación](workstation-setup.md) para instalarla. Si no hay ningún "
+"artefacto empaquetado disponible para tu entorno, abre una incidencia "
+"para que quede registrada la carencia."
 
 #: ../../updates.md:85
 msgid "After installing or upgrading, run:"

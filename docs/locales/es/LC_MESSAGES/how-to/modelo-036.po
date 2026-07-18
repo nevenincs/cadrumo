@@ -20,7 +20,8 @@ msgstr ""
 
 #: ../../how-to/modelo-036.md:1
 msgid "Record a Modelo 036 declaration you filed at AEAT"
-msgstr "Registra una declaración del Modelo 036 que presentó ante la AEAT"
+msgstr ""
+"Registra una declaración del Modelo 036 que presentaste ante la AEAT"
 
 #: ../../how-to/modelo-036.md:3
 msgid ""
@@ -68,7 +69,7 @@ msgstr ""
 
 #: ../../how-to/modelo-036.md:18
 msgid "The date you filed the declaration at the sede."
-msgstr "La fecha en que presentó la declaración en la sede."
+msgstr "La fecha en que presentaste la declaración en la sede."
 
 #: ../../how-to/modelo-036.md:19
 msgid ""
@@ -90,7 +91,7 @@ msgstr "Registra la declaración"
 
 #: ../../how-to/modelo-036.md:25
 msgid "Pick the command that matches what you filed:"
-msgstr "Elige el comando que corresponda a lo que presentó:"
+msgstr "Elige el comando que corresponda a lo que presentaste:"
 
 #: ../../how-to/modelo-036.md:27
 msgid "If you registered an activity, record an alta."
@@ -128,9 +129,9 @@ msgid ""
 "512 characters."
 msgstr ""
 "`--declared-on` es obligatorio: la fecha en formato ISO (año-mes-día) en "
-"que presentó en la sede. `--sede-justificante` es opcional y admite hasta"
-" 128 caracteres. `--note` añade una nota opcional para tu propio archivo,"
-" de hasta 512 caracteres."
+"que presentaste en la sede. `--sede-justificante` es opcional y admite "
+"hasta 128 caracteres. `--note` añade una nota opcional para tu propio "
+"archivo, de hasta 512 caracteres."
 
 #: ../../how-to/modelo-036.md:52
 msgid "What success looks like"
@@ -218,7 +219,7 @@ msgid ""
 msgstr ""
 "Ejecutar el comando con un tipo, una fecha o un justificante corregidos "
 "registra una declaración adicional. Añade una `--note` que explique la "
-"corrección para que su rastro de auditoría siga siendo legible. Cambiar "
+"corrección para que tu rastro de auditoría siga siendo legible. Cambiar "
 "solo `--note` no crea un registro nuevo. Ningún comando edita ni elimina "
 "una declaración registrada."
 
@@ -241,10 +242,9 @@ msgid ""
 "profile by hand to match what you filed - see [maintain Modelo 036 census"
 " facts in your profile](censo-update.md)."
 msgstr ""
-"Después de que la AEAT procesa su declaración, actualice a mano los datos"
-" censales de tu perfil para que coincidan con lo que presentó; consulta "
-"[mantén los datos censales del Modelo 036 en tu perfil](censo-"
-"update.md)."
+"Después de que la AEAT procesa tu declaración, actualiza a mano los datos "
+"censales de tu perfil para que coincidan con lo que presentaste; consulta "
+"[mantén los datos censales del Modelo 036 en tu perfil](censo-update.md)."
 
 #: ../../how-to/modelo-036.md:99
 msgid "Where to get help"

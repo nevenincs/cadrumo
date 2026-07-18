@@ -45,7 +45,7 @@ msgstr "Elige la superficie adecuada"
 
 #: ../../authoring-guide.md:7
 msgid "Where you make a change depends on what you're changing:"
-msgstr "Dónde haga un cambio depende de lo que esté cambiando:"
+msgstr "Dónde hagas un cambio depende de lo que estés cambiando:"
 
 #: ../../authoring-guide.md:9
 msgid ""
