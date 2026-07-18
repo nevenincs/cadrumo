@@ -110,20 +110,20 @@ Land the gettext extraction, catalogue tree, per-language build wiring, and the 
 
 Dependencies, POT extraction, conf.py language wiring, committed es/ca/hu catalogue tree, justfile targets
 
-- [ ] `W01.P01.S01` - Add sphinx-intl and babel to the docs dependency group, refresh the lockfile, and verify both import under uv; `pyproject.toml, uv.lock`.
-- [ ] `W01.P01.S02` - Implement user-scope gettext POT extraction as a dev.docs build step writing uncommitted templates with gettext_compact disabled; `dev/docs/build.py, dev/docs/i18n.py`.
-- [ ] `W01.P01.S03` - Wire the Sphinx config to read the build language from an environment switch validated against OutputLanguage, with locale_dirs pointing at the committed catalogue tree and en as default; `docs/conf.py`.
-- [ ] `W01.P01.S04` - Scaffold the committed es, ca, and hu per-page catalogue trees via sphinx-intl update from the extracted templates; `docs/locales`.
-- [ ] `W01.P01.S05` - Add justfile targets for gettext extraction, a single-language user-scope build, and the full language-matrix build; `justfile`.
+- [x] `W01.P01.S01` - Add sphinx-intl and babel to the docs dependency group, refresh the lockfile, and verify both import under uv; `pyproject.toml, uv.lock`.
+- [x] `W01.P01.S02` - Implement user-scope gettext POT extraction as a dev.docs build step writing uncommitted templates with gettext_compact disabled; `dev/docs/build.py, dev/docs/i18n.py`.
+- [x] `W01.P01.S03` - Wire the Sphinx config to read the build language from an environment switch validated against OutputLanguage, with locale_dirs pointing at the committed catalogue tree and en as default; `docs/conf.py`.
+- [x] `W01.P01.S04` - Scaffold the committed es, ca, and hu per-page catalogue trees via sphinx-intl update from the extracted templates; `docs/locales`.
+- [x] `W01.P01.S05` - Add justfile targets for gettext extraction, a single-language user-scope build, and the full language-matrix build; `justfile`.
 
 ### Phase `W01.P02` - holistic completeness gates
 
 All-languages-present gate, OutputLanguage parity gate, per-language -W build matrix, docs-check integration
 
-- [ ] `W01.P02.S06` - Author the all-languages completeness gate asserting every user-scope page catalogue exists with zero untranslated and zero fuzzy entries per target language, failures enumerated by page, language, and counts; `dev/docs/tests/test_docs_localization.py`.
-- [ ] `W01.P02.S07` - Author the language-set parity gate asserting the docs target languages equal the OutputLanguage members minus the English source exactly; `dev/docs/tests/test_docs_localization.py`.
-- [ ] `W01.P02.S08` - Extend the build gate with per-language nitpicky warnings-as-errors user-scope builds for es, ca, and hu; `dev/docs/tests/test_docs_build.py`.
-- [ ] `W01.P02.S09` - Enroll the localization gates in the docs-check lane under the docs marker and confirm the lane runs them; `justfile, dev/docs/tests`.
+- [x] `W01.P02.S06` - Author the all-languages completeness gate asserting every user-scope page catalogue exists with zero untranslated and zero fuzzy entries per target language, failures enumerated by page, language, and counts; `dev/docs/tests/test_docs_localization.py`.
+- [x] `W01.P02.S07` - Author the language-set parity gate asserting the docs target languages equal the OutputLanguage members minus the English source exactly; `dev/docs/tests/test_docs_localization.py`.
+- [x] `W01.P02.S08` - Extend the build gate with per-language nitpicky warnings-as-errors user-scope builds for es, ca, and hu; `dev/docs/tests/test_docs_build.py`.
+- [x] `W01.P02.S09` - Enroll the localization gates in the docs-check lane under the docs marker and confirm the lane runs them; `justfile, dev/docs/tests`.
 
 ## Wave `W02` - translation of the user-scope corpus
 
