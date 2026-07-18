@@ -28,9 +28,9 @@ msgid ""
 "to a tax form you file yourself - and points you to the right guide at each "
 "stage."
 msgstr ""
-"Új a Cadrumóban? Ez az útmutató felvázolja a teljes utat – a banki "
-"rekordjaitól a saját maga által benyújtott adóűrlapig –, és minden "
-"szakaszban a megfelelő útmutatóra irányítja."
+"Új a Cadrumóban? Ez az útmutató felvázolja a teljes utat (a banki "
+"rekordjaitól a saját maga által benyújtott adóűrlapig), és minden szakaszban"
+" a megfelelő útmutatóra irányítja."
 
 #: ../../how-to/onboarding.md:6
 msgid ""
@@ -133,7 +133,7 @@ msgstr ""
 
 #: ../../how-to/onboarding.md:43
 msgid "Stage 1 - Set up your taxpayer profile"
-msgstr "1. szakasz – Állítsa be adózói profilját"
+msgstr "1. szakasz: Állítsa be adózói profilját"
 
 #: ../../how-to/onboarding.md:45
 msgid ""
@@ -142,10 +142,10 @@ msgid ""
 "profile decides which forms apply and how each value is computed, so it is "
 "the foundation of every filing."
 msgstr ""
-"Egy profil egy adózó tényeit tárolja – személyazonosság (NIF, CIF, DNI vagy "
-"NIE), tevékenység, rendszer és lakóhely –, amelyeket minden későbbi parancs "
-"beolvas. A profil dönti el, mely űrlapok alkalmazhatók, és hogyan számítódik"
-" ki az egyes értékek, ezért minden benyújtás alapja."
+"Egy profil egy adózó tényeit tárolja: a személyazonosságot (NIF, CIF, DNI "
+"vagy NIE), a tevékenységet, a rendszert és a lakóhelyet, amelyeket minden "
+"későbbi parancs beolvas. A profil dönti el, mely űrlapok alkalmazhatók, és "
+"hogyan számítódik ki az egyes értékek, ezért minden benyújtás alapja."
 
 #: ../../how-to/onboarding.md:50
 msgid "Start here: [Set up your taxpayer profile](profile-setup.md)."
@@ -153,7 +153,7 @@ msgstr "Kezdje itt: [Állítsa be adózói profilját](profile-setup.md)."
 
 #: ../../how-to/onboarding.md:52
 msgid "Stage 2 - Bring in your transactions"
-msgstr "2. szakasz – Hozza be a tranzakcióit"
+msgstr "2. szakasz: Hozza be a tranzakcióit"
 
 #: ../../how-to/onboarding.md:54
 msgid ""
@@ -173,7 +173,7 @@ msgstr ""
 
 #: ../../how-to/onboarding.md:60
 msgid "Stage 3 - Classify each transaction"
-msgstr "3. szakasz – Osztályozza minden tranzakciót"
+msgstr "3. szakasz: Osztályozza minden tranzakciót"
 
 #: ../../how-to/onboarding.md:62
 msgid ""
@@ -192,7 +192,7 @@ msgstr "Folytassa ezzel: [Tranzakciók osztályozása](classify-transactions.md)
 
 #: ../../how-to/onboarding.md:68
 msgid "Stage 4 - Find out which modelos apply"
-msgstr "4. szakasz – Derítse ki, mely modelók vonatkoznak"
+msgstr "4. szakasz: Derítse ki, mely modelók vonatkoznak"
 
 #: ../../how-to/onboarding.md:70
 msgid ""
@@ -212,7 +212,7 @@ msgstr ""
 
 #: ../../how-to/onboarding.md:76
 msgid "Stage 5 - Check readiness, calculate, and verify"
-msgstr "5. szakasz – Ellenőrizze a készenlétet, számítson és ellenőrizzen"
+msgstr "5. szakasz: Ellenőrizze a készenlétet, számítson és ellenőrizzen"
 
 #: ../../how-to/onboarding.md:78
 msgid ""
@@ -237,7 +237,7 @@ msgstr ""
 
 #: ../../how-to/onboarding.md:86
 msgid "Stage 6 - Export and file at AEAT"
-msgstr "6. szakasz – Exportáljon és nyújtson be az AEAT-nál"
+msgstr "6. szakasz: Exportáljon és nyújtson be az AEAT-nál"
 
 #: ../../how-to/onboarding.md:88
 msgid ""
@@ -271,7 +271,7 @@ msgid ""
 "above."
 msgstr ""
 "[Hogyan válnak a rekordjai adószámokká](../explanation/from-records-to-"
-"figures.md) – értse meg a fenti szakaszok mögötti tranzakció-rovat "
+"figures.md): értse meg a fenti szakaszok mögötti tranzakció-rovat "
 "folyamatot."
 
 #: ../../how-to/onboarding.md:99
@@ -281,22 +281,22 @@ msgid ""
 "locally."
 msgstr ""
 "[Egy benyújtás rögzítése és a határvonal](../explanation/recording-a-filing-"
-"and-the-boundary.md) – miért nem nyújt be soha az eszköz, és mit jelent "
+"and-the-boundary.md): miért nem nyújt be soha az eszköz, és mit jelent "
 "helyben a „benyújtott”."
 
 #: ../../how-to/onboarding.md:101
 msgid "[Plan your filing calendar](filing-calendar.md) - see what is due and when."
 msgstr ""
-"[Tervezze meg a benyújtási naptárát](filing-calendar.md) – lássa, mi és "
-"mikor esedékes."
+"[Tervezze meg a benyújtási naptárát](filing-calendar.md): lássa, mi és mikor"
+" esedékes."
 
 #: ../../how-to/onboarding.md:102
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - if a command "
 "stops or the local state looks wrong."
 msgstr ""
-"[Diagnosztizálja és javítsa a helyi beállítását](troubleshooting.md) – ha "
-"egy parancs megáll, vagy a helyi állapot hibásnak tűnik."
+"[Diagnosztizálja és javítsa a helyi beállítását](troubleshooting.md): ha egy"
+" parancs megáll, vagy a helyi állapot hibásnak tűnik."
 
 #: ../../how-to/onboarding.md:105
 #, python-brace-format

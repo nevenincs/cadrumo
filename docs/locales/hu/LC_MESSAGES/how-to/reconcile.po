@@ -50,7 +50,7 @@ msgid ""
 "from the AEAT sede (read-only), stores an encrypted copy in your profile, "
 "and reconciles in one step."
 msgstr ""
-"**Kérje le az AEAT-ból** a `reconcile pull` paranccsal – az eszköz lekéri a "
+"**Kérje le az AEAT-ból** a `reconcile pull` paranccsal: az eszköz lekéri a "
 "bizonylatot az AEAT sedéről (csak olvasható), egy titkosított másolatot "
 "tárol a profiljában, és egy lépésben egyeztet."
 
@@ -59,7 +59,7 @@ msgid ""
 "**Use a local PDF** with `reconcile file --file` - you downloaded the "
 "justificante yourself; the check is local and never contacts AEAT."
 msgstr ""
-"**Használjon egy helyi PDF-et** a `reconcile file --file` paranccsal – Ön "
+"**Használjon egy helyi PDF-et** a `reconcile file --file` paranccsal: Ön "
 "maga töltötte le a justificantét; az ellenőrzés helyi, és soha nem lép "
 "kapcsolatba az AEAT-tal."
 
@@ -88,7 +88,7 @@ msgid ""
 "for the pull commands: working AEAT authentication - see [Authenticate with "
 "AEAT](authenticate-with-aeat.md)"
 msgstr ""
-"a lekérő parancsokhoz: működő AEAT-hitelesítésre – lásd: [Hitelesítés az "
+"a lekérő parancsokhoz: működő AEAT-hitelesítésre, lásd: [Hitelesítés az "
 "AEAT-nál](authenticate-with-aeat.md)"
 
 #: ../../how-to/reconcile.md:27
@@ -246,14 +246,14 @@ msgstr "Mindkét átvitel három verdikt egyikét jelenti:"
 
 #: ../../how-to/reconcile.md:101
 msgid "**matches** - the justificante matches the local filing record."
-msgstr "**matches** – a justificante megegyezik a helyi benyújtási rekorddal."
+msgstr "**matches**: a justificante megegyezik a helyi benyújtási rekorddal."
 
 #: ../../how-to/reconcile.md:102
 msgid ""
 "**mismatches** - one or more fields differ. The report names each field and "
 "shows the local value next to the value found in the PDF."
 msgstr ""
-"**mismatches** – egy vagy több mező eltér. A jelentés megnevezi az egyes "
+"**mismatches**: egy vagy több mező eltér. A jelentés megnevezi az egyes "
 "mezőket, és a helyi értéket a PDF-ben talált érték mellett mutatja."
 
 #: ../../how-to/reconcile.md:104
@@ -261,7 +261,7 @@ msgid ""
 "**evidence_invalid** - the PDF could not be read. Check that the file is the"
 " AEAT justificante and not a different document."
 msgstr ""
-"**evidence_invalid** – a PDF-et nem lehetett beolvasni. Ellenőrizze, hogy a "
+"**evidence_invalid**: a PDF-et nem lehetett beolvasni. Ellenőrizze, hogy a "
 "fájl az AEAT-justificante, és nem egy másik dokumentum."
 
 #: ../../how-to/reconcile.md:107
@@ -427,21 +427,21 @@ msgid ""
 "still requires."
 msgstr ""
 "[Importálás, export és bizonyíték](../reference/import-export-and-"
-"evidence.md) – értse meg, mit bizonyít a justificante, és mit igényel még "
-"egy teljes auditátadás."
+"evidence.md): értse meg, mit bizonyít a justificante, és mit igényel még egy"
+" teljes auditátadás."
 
 #: ../../how-to/reconcile.md:171
 msgid ""
 "[Upload your exported modelo at the AEAT portal](file-at-aeat.md) - the "
 "filing handoff that produces the justificante."
 msgstr ""
-"[Töltse fel exportált modelóját az AEAT-portálon](file-at-aeat.md) – a "
+"[Töltse fel exportált modelóját az AEAT-portálon](file-at-aeat.md): a "
 "benyújtási átadás, amely a justificantét előállítja."
 
 #: ../../how-to/reconcile.md:173
 msgid "[Quickstart](quickstart.md) - the end-to-end filing workflow."
 msgstr ""
-"[Gyorsindító](quickstart.md) – a végponttól végpontig tartó benyújtási "
+"[Gyorsindító](quickstart.md): a végponttól végpontig tartó benyújtási "
 "munkafolyamat."
 
 #: ../../how-to/reconcile.md:174
@@ -450,17 +450,17 @@ msgid ""
 " a filing if reconciliation finds a mismatch."
 msgstr ""
 "[Számítási bemenetek felülvizsgálata és megadása](review-calculation-"
-"values.md) – módosítson egy benyújtást, ha az egyeztetés eltérést talál."
+"values.md): módosítson egy benyújtást, ha az egyeztetés eltérést talál."
 
 #: ../../how-to/reconcile.md:176
 msgid "[CLI reference](../cli/index.rst) - full option reference."
-msgstr "[CLI-referencia](../cli/index.rst) – a teljes opcióreferencia."
+msgstr "[CLI-referencia](../cli/index.rst): a teljes opcióreferencia."
 
 #: ../../how-to/reconcile.md:177
 msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - fix local "
 "readiness problems."
 msgstr ""
-"[Diagnosztizálja és javítsa a helyi beállítását](troubleshooting.md) – "
+"[Diagnosztizálja és javítsa a helyi beállítását](troubleshooting.md): "
 "javítsa a helyi készenléti problémákat."
 

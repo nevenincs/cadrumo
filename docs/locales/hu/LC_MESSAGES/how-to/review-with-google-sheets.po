@@ -356,8 +356,8 @@ msgid ""
 "evidence or calculation authority."
 msgstr ""
 "[Importálás, export és bizonyíték](../reference/import-export-and-"
-"evidence.md) – értse meg, miért egy Google-táblázat felülvizsgálati felület,"
-" nem pedig benyújtási bizonyíték vagy számítási hiteles forrás."
+"evidence.md): értse meg, miért egy Google-táblázat felülvizsgálati felület, "
+"nem pedig benyújtási bizonyíték vagy számítási hiteles forrás."
 
 #: ../../how-to/review-with-google-sheets.md:164
 msgid "[Import and manage transactions](import-bank-statements.md)"
