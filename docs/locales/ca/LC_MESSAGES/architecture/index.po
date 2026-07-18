@@ -1,0 +1,560 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../architecture/index.md:1
+msgid "Architecture overview"
+msgstr ""
+
+#: ../../architecture/index.md:3
+msgid ""
+"Cadrumo is a local-first application that prepares Spanish tax filings "
+"through the `aeat` command-line interface. It models the tax authority's "
+"regulatory registry, ingests and classifies your financial records, and "
+"computes the numbered boxes of each tax form. Then it checks the draft "
+"and exports a file you submit yourself. AEAT is the Agencia Estatal de "
+"Administración Tributaria, Spain's tax agency."
+msgstr ""
+
+#: ../../architecture/index.md:10
+msgid ""
+"Use this page as your entry point when reading the codebase for the first"
+" time. It's a map, not a directory: it names the layers, the load-bearing"
+" concepts, and the canonical types you'll navigate to, and it stops "
+"there. For exact signatures and commands, follow the links in [Crossing "
+"into the code](#crossing-into-the-code)."
+msgstr ""
+
+#: ../../architecture/index.md:16
+msgid "Why the system is shaped this way"
+msgstr ""
+
+#: ../../architecture/index.md:18
+msgid ""
+"Preparing a Spanish tax return by hand is error-prone and hard to audit. "
+"A figure on a form has to trace back to a bank movement, a regulation, "
+"and a published rule. A later annual form has to stay consistent with the"
+" quarterly ones that fed it. Three design choices answer that problem, "
+"and they shape everything else:"
+msgstr ""
+
+#: ../../architecture/index.md:24
+msgid ""
+"**Local-first.** Your financial records never leave your machine. The "
+"tool runs offline and stores encrypted payloads in a local database on "
+"disk."
+msgstr ""
+
+#: ../../architecture/index.md:26
+msgid ""
+"**The registry is the authority.** Tax rules - rates, brackets, "
+"deadlines, and the legal basis of each box - aren't hard-coded. They're "
+"authored as data, compiled, validated, and read through a single "
+"authority. A figure can always trace back to the rule that produced it."
+msgstr ""
+
+#: ../../architecture/index.md:30
+msgid ""
+"**The human files, not the tool.** The pipeline ends at an export file. "
+"Submitting it to the agency is a deliberate human step. The tool has no "
+"submission path at all, so live filing is absent rather than guarded."
+msgstr ""
+
+#: ../../architecture/index.md:34
+msgid ""
+"The structure that follows is hexagonal: business rules sit at the "
+"center, and the parsers, browsers, and storage that touch the outside "
+"world sit at the edge. Most dependencies point inward. Application "
+"composition has an explicit, controlled exception that reaches adapters. "
+"This keeps tax logic testable on its own and lets an adapter change "
+"without touching a rule."
+msgstr ""
+
+#: ../../architecture/index.md:40
+msgid "How to read this page"
+msgstr ""
+
+#: ../../architecture/index.md:42
+msgid ""
+"Four views cover the system at the highest level. Each pairs a diagram "
+"with a short explanation:"
+msgstr ""
+
+#: ../../architecture/index.md:45
+msgid "[The layers](#the-layers) - the five hexagonal layers and what each owns."
+msgstr ""
+
+#: ../../architecture/index.md:46
+msgid ""
+"[The registry authority pipeline](#the-registry-authority-pipeline) - how"
+" tax-rule data becomes the snapshots runtime code reads."
+msgstr ""
+
+#: ../../architecture/index.md:48
+msgid ""
+"[The modelo lifecycle](#the-modelo-lifecycle) - the journey from records "
+"to an export file, and how each figure is grounded."
+msgstr ""
+
+#: ../../architecture/index.md:50
+msgid ""
+"[Persistence and the safety boundary](#persistence-and-the-safety-"
+"boundary) - where state lives, and why nothing leaves."
+msgstr ""
+
+#: ../../architecture/index.md:53
+msgid "The layers"
+msgstr ""
+
+#: ../../architecture/index.md:55
+msgid ""
+"Cadrumo separates responsibilities into five layers under `src/cadrumo/`."
+" Layers normally depend only on layers inside them; application "
+"composition has the documented adapter exception."
+msgstr ""
+
+#: ../../architecture/index.md:77
+msgid ""
+"**Text alternative.** Entrypoints call the application and core layers. "
+"The application calls the domain, adapters, and core layers; adapters "
+"call domain and core; and domain calls core. The domain reaches adapters "
+"only through the annotated secure-repository seam."
+msgstr ""
+
+#: ../../architecture/index.md:82
+msgid ""
+"**`core`** is the innermost layer. It owns the cross-cutting primitives "
+"every other layer shares. Its typed enums define closed value sets such "
+"as period codes, tax domains, modelo identifiers, and binding source "
+"kinds. Core also owns the JSON envelope contract, configuration, money "
+"and time types, and the error taxonomy."
+msgstr ""
+
+#: ../../architecture/index.md:87
+msgid ""
+"**`domain`** holds pure tax rules and records: the modelo registry, "
+"casilla definitions (a casilla is one numbered box on a form), filing "
+"observations, and the calculations over them. It depends only on `core`."
+msgstr ""
+
+#: ../../architecture/index.md:90
+msgid ""
+"**`application`** orchestrates use cases. It joins domain rules with "
+"adapters to build filing drafts, aggregate the ledger, run diagnostics, "
+"and project state. It performs no input or output of its own."
+msgstr ""
+
+#: ../../architecture/index.md:93
+msgid ""
+"**`adapters`** connects the application to the outside world in three "
+"parts. `inbound` parses incoming Portable Document Format (PDF), comma-"
+"separated values (CSV), Open Financial Exchange (OFX), and Microsoft "
+"Excel Open XML (XLSX) statements. `outbound` reaches external services "
+"(AEAT browser sessions, calculation oracles, and authentication "
+"providers). `persistence` stores encrypted payloads in the local "
+"database."
+msgstr ""
+
+#: ../../architecture/index.md:99
+msgid ""
+"**`entrypoints`** exposes the application to operators. The command line "
+"lives here, and its root surface is limited to two command families, "
+"`config` and `app`."
+msgstr ""
+
+#: ../../architecture/index.md:103
+msgid ""
+"Two boundary rules keep the layers honest. Boundary data crosses as "
+"validated pydantic v2 models, never loose dictionaries. Closed value sets"
+" are declared as typed enums in `core` and flow as enum members, so an "
+"invalid value is rejected at the boundary."
+msgstr ""
+
+#: ../../architecture/index.md:108
+msgid ""
+"The dependency arrows point inward with one annotated exception. Three "
+"domain repositories - filing, justificante, and submission - sit directly"
+" on the encrypted-storage base class in `adapters.persistence`. The "
+"diagram draws that seam as a dashed edge rather than hiding it."
+msgstr ""
+
+#: ../../architecture/index.md:113
+msgid ""
+"Inside `domain` and `application`, the subpackages cluster into five "
+"conceptual groups. Some subpackages are omitted for clarity; the API "
+"reference lists them all."
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "Cluster"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`domain` subpackages"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`application` subpackages"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "Registry and calculations"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`calculations`, `modelos`, `normatives`, `manuals`"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`calculations`, `modelo`, `registry`, `aggregation`, `verification`"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "Ledger and transactions"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`transactions`, `invoices`, `categories`, `iva`, `currency`, `attachments`"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`ledger`, `transactions`, `invoices`, `evidence`, `inventory`"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "Filing and export"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`filing`, `justificante`, `submission`"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`filing`, `export`, `review`"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "Live, portals, and auth"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`portals`, `auth`, `fincas`"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`live`, `portals`, `auth`, `workflow`"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "Profile and storage"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`buckets`, `user_profile`, `contribuyente`, `deadlines`"
+msgstr ""
+
+#: ../../architecture/index.md:59
+msgid "`profile`, `storage`, `bucket_maintenance`, `setup`, `wizard`"
+msgstr ""
+
+#: ../../architecture/index.md:125
+msgid "The registry authority pipeline"
+msgstr ""
+
+#: ../../architecture/index.md:127
+msgid ""
+"The authoritative tax-model definitions aren't hard-coded. They move "
+"through a deterministic pipeline, from hand-authored source to the "
+"immutable snapshots runtime code reads. TOML is Tom's Obvious Minimal "
+"Language, a layout meant for editing."
+msgstr ""
+
+#: ../../architecture/index.md:146
+msgid ""
+"**Text alternative.** Authoring fragments flow through deterministic "
+"loading, compilation, and schema validation before the validated registry"
+" authority creates frozen snapshots for runtime projections. A whole-tree"
+" fingerprint invalidates both the compiler and authority caches whenever "
+"registry files change."
+msgstr ""
+
+#: ../../architecture/index.md:152
+msgid ""
+"Each modelo and revision is authored as fragments of TOML under "
+"`src/cadrumo/_data/registry/`. The loader and compiler (`_loader.py`) "
+"merge those fragments in a deterministic order, reject ambiguous "
+"conflicts, and compile them into strict, frozen `ModeloDefinition` and "
+"`ModeloRevision` objects. The loader keys its cache on a fingerprint of "
+"the whole tree - every file's path, size, and modification time. After a "
+"short fingerprint-cache time to live, an edit causes the loader to "
+"revalidate the fingerprint before it serves the next result."
+msgstr ""
+
+#: ../../architecture/index.md:160
+msgid ""
+"`ValidatedRegistryAuthority` is the production boundary. It validates a "
+"modelo once, caches the result, and builds a `RegistrySnapshot` for a "
+"given modelo, year, and period. The snapshot is frozen and context-bound:"
+" its legal and source references are indexed, and its referential "
+"integrity is checked at build time. Runtime consumers - filing schema "
+"providers, formula execution, export parsing, and verification - read "
+"from snapshots, never from the raw loader."
+msgstr ""
+
+#: ../../architecture/index.md:167
+msgid ""
+"The split matters. The authoring and compilation stages before the "
+"authority are implementation details. Production code requests validated "
+"modelos, deadline windows, and snapshots through the authority, so the "
+"loader stays behind that line."
+msgstr ""
+
+#: ../../architecture/index.md:172
+msgid "The modelo lifecycle"
+msgstr ""
+
+#: ../../architecture/index.md:174
+msgid ""
+"A modelo is a numbered AEAT tax form. Its data flows one way, from your "
+"records to a file you upload yourself."
+msgstr ""
+
+#: ../../architecture/index.md:200
+msgid ""
+"**Text alternative.** Financial records are ingested and classified into "
+"the encrypted ledger. An operator creates work, calculates it, verifies "
+"it, marks it locally filed, and exports a file. A human then uploads that"
+" file to AEAT outside Cadrumo."
+msgstr ""
+
+#: ../../architecture/index.md:205
+msgid ""
+"The tool ingests and classifies financial records - bank statements, "
+"invoices, and their evidence - into the encrypted ledger. From there the "
+"journey follows a fixed sequence of command-line verbs:"
+msgstr ""
+
+#: ../../architecture/index.md:209
+msgid "`aeat app modelo work create` pins a filing to a modelo, year, and period."
+msgstr ""
+
+#: ../../architecture/index.md:210
+msgid "`calculate` resolves every casilla and saves a `CalculationRevision`."
+msgstr ""
+
+#: ../../architecture/index.md:211
+msgid "`verify` runs a completeness and consistency gate over the draft."
+msgstr ""
+
+#: ../../architecture/index.md:212
+msgid "`file` marks a verified revision as internally filed."
+msgstr ""
+
+#: ../../architecture/index.md:213
+msgid ""
+"`aeat app modelo export` writes the official upload file (a fixed-layout "
+"fichero-BOE artifact) to disk."
+msgstr ""
+
+#: ../../architecture/index.md:216
+msgid ""
+"The boundary is structural. `file` is a local marker, not a submission, "
+"and `export` writes a file to your disk. No command transmits anything to"
+" the agency: the upload is a human action at the AEAT portal, modeled as "
+"a step beyond the tool's boundary. Operator live reads require their "
+"normal authentication and active-profile guards; they remain read-only. "
+"The separate `CADRUMO_LIVE_TESTS_ENABLED` opt-in gates developer live-"
+"read tests."
+msgstr ""
+
+#: ../../architecture/index.md:223
+msgid "How a figure is grounded"
+msgstr ""
+
+#: ../../architecture/index.md:225
+msgid ""
+"A casilla value isn't a bare number. It carries its provenance - the "
+"legal references, source references, and formula identifier that produced"
+" it - from the registry definition through to the operator-facing output."
+msgstr ""
+
+#: ../../architecture/index.md:253
+msgid ""
+"**Text alternative.** A registry casilla definition and resolved ledger, "
+"invoice, previous-filing, and relation inputs feed the formula engine. It"
+" emits a provenance-carrying observation that becomes a calculation "
+"revision, CLI payload, and operator-facing output."
+msgstr ""
+
+#: ../../architecture/index.md:258
+msgid ""
+"Each binding on a casilla declares a typed source. A mesh of resolvers - "
+"ledger aggregation, invoice catalogue, previous-filing carry, and cross-"
+"modelo relation prefill - turns those sources into binding values, merged"
+" through `merge_source_resolutions`. The registry formula engine "
+"evaluates the casilla's formula over the resolved inputs and stamps the "
+"result as a `CasillaObservation` carrying its `legal_refs`, "
+"`source_refs`, and `formula_id`. That observation rides inside the "
+"persisted `CalculationRevision`, then into the CLI payloads, then to the "
+"operator. The provenance never drops on the way out."
+msgstr ""
+
+#: ../../architecture/index.md:267
+msgid "Persistence and the safety boundary"
+msgstr ""
+
+#: ../../architecture/index.md:269
+msgid ""
+"All sensitive financial data lives in one place: an encrypted, per-"
+"profile store. The structure, not a convention, keeps it there."
+msgstr ""
+
+#: ../../architecture/index.md:300
+msgid ""
+"**Text alternative.** An operator selects one active profile. The "
+"resulting bucket session opens runtime factories and a secure repository,"
+" which encrypts payloads in the local database and attachment evidence. "
+"Operator AEAT checks stay read-only; only the human filing action can "
+"submit to AEAT."
+msgstr ""
+
+#: ../../architecture/index.md:305
+msgid ""
+"Key-encryption keys (KEKs) protect data-encryption keys (DEKs). The "
+"repository uses authenticated encryption with associated data (AEAD) "
+"payloads and HMAC-SHA256 lookup digests keyed from master-derived "
+"material. HMAC means hash-based message authentication code. The cipher "
+"is the Advanced Encryption Standard with 256-bit keys (AES-256)."
+msgstr ""
+
+#: ../../architecture/index.md:311
+msgid ""
+"You work one taxpayer at a time. Selecting a profile opens a bucket "
+"session, which scopes a `SecureObjectRepository` to that taxpayer's "
+"encrypted store. The repository encrypts every payload at the column "
+"boundary with a key from the `MasterKeyProvider` - the operating system "
+"keychain, or a passphrase-derived fallback. It persists the ciphertext to"
+" a local SQLite database with encrypted payload columns. Evidence bytes -"
+" invoices, statements, and decrypted documents - go through the content-"
+"addressed `AttachmentStore`, which stores the bytes themselves, never a "
+"link."
+msgstr ""
+
+#: ../../architecture/index.md:321
+msgid ""
+"Nothing in this store crosses outward to the agency as a write. The read-"
+"only live checks reach the agency only to read. The single path that "
+"reaches the agency as a write is the human upload, which sits beyond the "
+"tool's boundary. A structural test enforces the absence of any write verb"
+" in the AEAT sede adapter, so the safety posture can't erode by accident."
+msgstr ""
+
+#: ../../architecture/index.md:327
+msgid "How the documentation stays true to the code"
+msgstr ""
+
+#: ../../architecture/index.md:329
+msgid ""
+"The discipline that governs the layers governs the documentation too. "
+"Cadrumo keeps three English documentation surfaces close to the code that"
+" supplies their facts."
+msgstr ""
+
+#: ../../architecture/index.md:333
+msgid ""
+"Documentation authors write the repository markdown - this guide and the "
+"others under `docs/` - for people orienting to the project. Technical "
+"reviewers check each claim against the code before it lands. In-source "
+"docstrings supply the API reference, so authors never copy a signature "
+"into prose. Generators scaffold the source-code and command-line "
+"references from the code itself."
+msgstr ""
+
+#: ../../architecture/index.md:339
+msgid ""
+"Because generators derive the API and command-line references from "
+"source, those surfaces cannot silently drift. A strict build treats "
+"warnings as errors and fails on a broken cross-reference, a missing stub,"
+" or a command reference that no longer matches the commands."
+msgstr ""
+
+#: ../../architecture/index.md:344
+msgid "Crossing into the code"
+msgstr ""
+
+#: ../../architecture/index.md:346
+msgid "Use this overview to orient, then drop into the detail:"
+msgstr ""
+
+#: ../../architecture/index.md:348
+msgid ""
+"**The layer tree** - browse `src/cadrumo/core`, `src/cadrumo/domain`, "
+"`src/cadrumo/application`, `src/cadrumo/adapters`, and "
+"`src/cadrumo/entrypoints` to see the subpackages each cluster names."
+msgstr ""
+
+#: ../../architecture/index.md:351
+#, python-brace-format
+msgid ""
+"**The command-line reference** - {doc}`/cli/index` for exact verbs, "
+"options, and output."
+msgstr ""
+
+#: ../../architecture/index.md:353
+#, python-brace-format
+msgid ""
+"**The API reference** - {doc}`/api/cadrumo` for module signatures and the"
+" full subpackage list."
+msgstr ""
+
+#: ../../architecture/index.md:355
+#, python-brace-format
+msgid ""
+"**The registry authoring guide** - {doc}`/authoring-guide` for how to "
+"author the TOML that the pipeline compiles."
+msgstr ""
+
+#: ../../architecture/index.md:357
+#, python-brace-format
+msgid ""
+"**The pipeline explanation** - {doc}`/explanation/index` for the same "
+"journey told for the taxpayer."
+msgstr ""
+
+#: ../../architecture/index.md:359
+#, python-brace-format
+msgid ""
+"**The glossary** - {doc}`/_generated/glossary` for any term (casilla, "
+"modelo, fichero-BOE, or justificante) you want defined."
+msgstr ""
+
+#: ../../architecture/index.md:361
+#, python-brace-format
+msgid ""
+"**Getting it running** - {doc}`/how-to/quickstart` to install and prepare"
+" a first filing."
+msgstr ""
+
+#: ../../architecture/index.md:363
+msgid ""
+"**Contributing** - the project source and issue tracker live on "
+"[GitHub](https://github.com/nevenincs/cadrumo)."
+msgstr ""
+

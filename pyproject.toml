@@ -489,6 +489,7 @@ convention = "google"
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
+"dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
 "dev/packaging/smoke_browser.py" = ["S603"]
 "dev/packaging/smoke_core.py" = ["S603"]

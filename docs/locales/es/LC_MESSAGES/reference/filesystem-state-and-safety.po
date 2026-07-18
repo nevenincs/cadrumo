@@ -1,0 +1,200 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../reference/filesystem-state-and-safety.md:1
+msgid "Filesystem, state, and safety"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:3
+msgid ""
+"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
+"tax authority referenced by the filing and live-read boundaries on this "
+"page."
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:6
+msgid "Local state layout"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:8
+msgid ""
+"`CADRUMO_LOCAL_STORAGE_ROOT` selects the root of Cadrumo-owned local "
+"state. The default depends on how Cadrumo runs:"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Run mode"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Default storage root"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Source checkout"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "`<repository>/var/storage`"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Installed on Windows"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "`%LOCALAPPDATA%/cadrumo/storage`"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Installed on Linux"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "`$XDG_DATA_HOME/cadrumo/storage`, or `~/.local/share/cadrumo/storage`"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Installed on macOS"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "`~/Library/Application Support/cadrumo/storage`"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:18
+msgid ""
+"Profile state is bucket-scoped under `<root>/buckets/<bucket-id>/`. The "
+"bucket contains `db/cadrumo.db`, encrypted blobs, audit material, "
+"`manifest.toml`, `.lock`, and an output-language hint. Key material is "
+"rooted under `<root>/keystore/<bucket-id>/`. Tokens, logs, secrets, "
+"blobs, and audit paths derive from the same product root unless an "
+"explicit Cadrumo setting overrides them."
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:25
+msgid ""
+"Google Drive mirroring uses a Cadrumo-owned `cadrumo-vault/` folder. A "
+"former `aeat-vault/` folder is not adopted."
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:28
+msgid "Old `aeat`-named storage is refused, not migrated"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:30
+msgid ""
+"Cadrumo refuses recognizable former product state. This includes a "
+"sibling `aeat` application-state directory, an `aeat.db` database, "
+"`aeat.*`, `aeat-test.*`, or `aeat-tests.*` secure-object namespaces, and "
+"former bundle or Drive-folder names."
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:35
+msgid ""
+"The refusal is non-destructive. Cadrumo does not read, connect to, copy, "
+"move, re-key, delete, migrate, or adopt that state. Detection leaves the "
+"former bytes untouched and requires the operator to choose a separate, "
+"explicit disposition."
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:39
+msgid "Safety and filing scope"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Surface"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Cadrumo behavior"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Calculation and verification"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Local; evaluates saved records against bundled registry rules and evidence"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Export"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid ""
+"Writes an AEAT-compatible local file after verification and required "
+"evidence gates pass; portal acceptance is not guaranteed"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Live AEAT access"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Separately invoked, authenticated, and read-only"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Submission"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Forbidden; no Cadrumo submission command exists"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Official filing"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Performed by a human through an official AEAT channel"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Filing history"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid ""
+"Recorded locally after the human filing; reconciliation compares totals "
+"and, for enrolled modelos, captured per-casilla values"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid "Responsibility"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md
+msgid ""
+"The taxpayer or authorized filer reviews figures, meets deadlines, "
+"uploads, and retains the justificante"
+msgstr ""
+
+#: ../../reference/filesystem-state-and-safety.md:51
+msgid ""
+"See [Protect access to your data](../how-to/protect-data-access.md) for "
+"recovery, locking, export, and reset tasks. The [filing-boundary "
+"explanation](../explanation/recording-a-filing-and-the-boundary.md) "
+"explains why submission stays outside Cadrumo."
+msgstr ""
+

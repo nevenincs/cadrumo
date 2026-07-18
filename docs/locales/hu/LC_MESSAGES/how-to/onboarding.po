@@ -1,0 +1,249 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/onboarding.md:1
+msgid "The filing journey: from bank records to a filed modelo"
+msgstr ""
+
+#: ../../how-to/onboarding.md:3
+msgid ""
+"New to Cadrumo? This guide maps the whole journey - from your bank "
+"records to a tax form you file yourself - and points you to the right "
+"guide at each stage."
+msgstr ""
+
+#: ../../how-to/onboarding.md:6
+msgid ""
+"Cadrumo prepares, checks, and exports Spanish tax forms as local files on"
+" your own machine. It never submits anything to the Agencia Estatal de "
+"Administración Tributaria (AEAT). You review each result, and you upload "
+"the final file yourself through the official AEAT portal, signed with "
+"your own credentials. Everything the tool does is local and human-gated: "
+"it builds the filing, you file it."
+msgstr ""
+
+#: ../../how-to/onboarding.md:12
+msgid ""
+"Want the shortest concrete command path instead of the map? Follow the "
+"[Quickstart](quickstart.md), which runs one complete example end to end. "
+"This page is the orientation; the Quickstart and the linked guides are "
+"where the commands live."
+msgstr ""
+
+#: ../../how-to/onboarding.md:17
+msgid "The journey at a glance"
+msgstr ""
+
+#: ../../how-to/onboarding.md:19
+msgid "A first filing moves through six stages:"
+msgstr ""
+
+#: ../../how-to/onboarding.md:21
+msgid "Set up your taxpayer profile."
+msgstr ""
+
+#: ../../how-to/onboarding.md:22
+msgid "Bring in your transactions."
+msgstr ""
+
+#: ../../how-to/onboarding.md:23
+msgid "Classify each transaction."
+msgstr ""
+
+#: ../../how-to/onboarding.md:24
+msgid "Find out which modelos apply to you."
+msgstr ""
+
+#: ../../how-to/onboarding.md:25
+msgid "Check readiness, calculate, and verify."
+msgstr ""
+
+#: ../../how-to/onboarding.md:26
+msgid "Export and file at AEAT."
+msgstr ""
+
+#: ../../how-to/onboarding.md:28
+msgid ""
+"Each stage below says what it is and why it matters, then links to the "
+"guide that walks the commands."
+msgstr ""
+
+#: ../../how-to/onboarding.md:31
+msgid "Before you begin"
+msgstr ""
+
+#: ../../how-to/onboarding.md:33
+msgid ""
+"Install `cadrumo` and confirm it runs. See [Install Cadrumo"
+"](../workstation-setup.md) for installation."
+msgstr ""
+
+#: ../../how-to/onboarding.md:36
+msgid ""
+"Every command that touches your data needs your master-key passphrase, "
+"which protects your encrypted local store. The tool prompts for it the "
+"first time in a session."
+msgstr ""
+
+#: ../../how-to/onboarding.md:40
+msgid ""
+"The command help, prompts, and messages render in Spanish to match the "
+"official AEAT forms, even though these guides are in English."
+msgstr ""
+
+#: ../../how-to/onboarding.md:43
+msgid "Stage 1 - Set up your taxpayer profile"
+msgstr ""
+
+#: ../../how-to/onboarding.md:45
+msgid ""
+"A profile holds the facts about one taxpayer - identity (NIF, CIF, DNI, "
+"or NIE), activity, regime, and residence - that every later command "
+"reads. The profile decides which forms apply and how each value is "
+"computed, so it is the foundation of every filing."
+msgstr ""
+
+#: ../../how-to/onboarding.md:50
+msgid "Start here: [Set up your taxpayer profile](profile-setup.md)."
+msgstr ""
+
+#: ../../how-to/onboarding.md:52
+msgid "Stage 2 - Bring in your transactions"
+msgstr ""
+
+#: ../../how-to/onboarding.md:54
+msgid ""
+"Your tax figures come from the income and expense records in your ledger."
+" Import a bank statement, or add rows by hand. Nothing is imported until "
+"you run an import command."
+msgstr ""
+
+#: ../../how-to/onboarding.md:58
+msgid ""
+"Continue with: [Import and manage transactions](import-bank-"
+"statements.md)."
+msgstr ""
+
+#: ../../how-to/onboarding.md:60
+msgid "Stage 3 - Classify each transaction"
+msgstr ""
+
+#: ../../how-to/onboarding.md:62
+msgid ""
+"An imported row has a date and an amount but no tax meaning yet. Classify"
+" each one as business, personal, or mixed, and give business expenses a "
+"category, so the calculation counts the right amounts."
+msgstr ""
+
+#: ../../how-to/onboarding.md:66
+msgid "Continue with: [Classify transactions](classify-transactions.md)."
+msgstr ""
+
+#: ../../how-to/onboarding.md:68
+msgid "Stage 4 - Find out which modelos apply"
+msgstr ""
+
+#: ../../how-to/onboarding.md:70
+msgid ""
+"A modelo is a numbered AEAT form. Which ones you must file follows from "
+"your profile facts, not from guesswork. Ask the tool for a verdict and "
+"its reasons before you prepare anything."
+msgstr ""
+
+#: ../../how-to/onboarding.md:74
+msgid "Continue with: [Find out which modelos apply to you](choose-modelo.md)."
+msgstr ""
+
+#: ../../how-to/onboarding.md:76
+msgid "Stage 5 - Check readiness, calculate, and verify"
+msgstr ""
+
+#: ../../how-to/onboarding.md:78
+msgid ""
+"Before you calculate, confirm the profile facts and transactions a form "
+"needs are in place. Then calculate the form's values from your ledger, "
+"and verify the draft against the registry rules. Verification is a local "
+"check; it does not contact AEAT."
+msgstr ""
+
+#: ../../how-to/onboarding.md:83
+msgid ""
+"Continue with: [Check that a filing is ready](filing-readiness.md), then "
+"[Verify a draft filing and act on the findings](verification-reports.md)."
+msgstr ""
+
+#: ../../how-to/onboarding.md:86
+msgid "Stage 6 - Export and file at AEAT"
+msgstr ""
+
+#: ../../how-to/onboarding.md:88
+msgid ""
+"Export the verified draft to the `.boe` file the AEAT portal accepts. "
+"Upload it yourself at the portal, signed with your own certificate or "
+"Cl@ve, then record the filing locally and reconcile AEAT's receipt "
+"against your record."
+msgstr ""
+
+#: ../../how-to/onboarding.md:92
+msgid ""
+"Finish with: [Upload your exported modelo at the AEAT portal](file-at-"
+"aeat.md), then [How to reconcile a filed modelo against its "
+"justificante](reconcile.md)."
+msgstr ""
+
+#: ../../how-to/onboarding.md:95
+msgid "Where to go next"
+msgstr ""
+
+#: ../../how-to/onboarding.md:97
+msgid ""
+"[How your records become tax figures](../explanation/from-records-to-"
+"figures.md) - understand the transaction-to-box pipeline behind the "
+"stages above."
+msgstr ""
+
+#: ../../how-to/onboarding.md:99
+msgid ""
+"[Recording a filing and the boundary](../explanation/recording-a-filing-"
+"and-the-boundary.md) - why the tool never submits, and what \"filed\" "
+"means locally."
+msgstr ""
+
+#: ../../how-to/onboarding.md:101
+msgid ""
+"[Plan your filing calendar](filing-calendar.md) - see what is due and "
+"when."
+msgstr ""
+
+#: ../../how-to/onboarding.md:102
+msgid ""
+"[Diagnose and repair your local setup](troubleshooting.md) - if a command"
+" stops or the local state looks wrong."
+msgstr ""
+
+#: ../../how-to/onboarding.md:105
+#, python-brace-format
+msgid ""
+"Unfamiliar terms are defined in the {doc}`glossary "
+"</_generated/glossary>`. Before you share command output to ask for help,"
+" remove personal tax identifiers such as your NIF, CIF, DNI, NIE, or NII."
+msgstr ""
+

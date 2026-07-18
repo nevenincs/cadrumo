@@ -1,0 +1,249 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../explanation/building-on-earlier-filings.md:1
+msgid "How filings build on earlier ones"
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:3
+msgid ""
+"This page covers the connections between filings: why a yearly summary "
+"needs the quarters that came before it, how the tool carries figures "
+"forward from your earlier filings, and - just as important - what it "
+"leaves for you to check. It is for anyone preparing a form that depends "
+"on earlier periods or on the whole year."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:9
+msgid ""
+"If you want how a single period's figures are built from your records, "
+"see [How your records become tax figures](from-records-to-figures.md). "
+"This page is about the connections *between* filings."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:11
+#, python-brace-format
+msgid ""
+"For any term you are unsure of - {term}`modelo 100`, {term}`casilla`, "
+"{term}`justificante`, {term}`AEAT`, IVA, IRPF, or RENTA - look it up in "
+"the {doc}`glossary </_generated/glossary>`."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:13
+msgid "Why a later form needs earlier figures"
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:15
+msgid ""
+"Tax doesn't reset every quarter. The figures you report in one period "
+"often feed the next."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:17
+msgid "Two common shapes show up across the forms:"
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:19
+msgid ""
+"**Annual summaries gather the year.** A yearly form rolls up the periods "
+"inside it. Modelo 390, for example, summarises the year's Modelo 303 IVA "
+"filings. Modelo 100 (RENTA) pulls together the income-tax instalments and"
+" withholdings you reported through the year."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:20
+msgid ""
+"**Unused amounts carry into the next period.** If a Modelo 303 quarter "
+"leaves you with more IVA paid than collected, the difference becomes an "
+"unused amount carried into a later period - a IVA credit you keep until a"
+" later return can use it."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:22
+msgid ""
+"In both shapes, the later form can't stand on its own. It reaches back to"
+" figures you already reported. The tool carries those figures forward "
+"from your earlier filings so you don't re-enter them by hand."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:24
+msgid "Earlier figures must be backed by evidence"
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:26
+msgid ""
+"A carried-forward figure is only as trustworthy as the filing it came "
+"from. So the carry-forward rests on a clear principle. A figure carried "
+"in from an earlier filing should come from a filing you actually "
+"completed and marked as filed. Where possible, it should come from one "
+"backed by the agency's receipt."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:28
+msgid ""
+"The tool carries forward the figures it *has on record* for the matching "
+"modelo, year, and period. It does not invent a prior period that isn't "
+"there. If you ask a yearly form to gather four quarters and only two are "
+"on record, the tool brings in the two it has - it doesn't fabricate the "
+"missing pair to fill the gap. That's deliberate. A guessed figure in a "
+"filing is worse than a visible blank you can act on."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:30
+msgid ""
+"Because of this, the figures it carries forward are a starting point you "
+"review, not a verdict you accept blindly. You confirm that each earlier "
+"figure came from a filing you completed and that it still reflects what "
+"you filed before you rely on it."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:32
+msgid "The running IVA credit balance"
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:34
+msgid ""
+"The unused-IVA case has its own small piece of memory. When a Modelo 303 "
+"period leaves you with IVA credit, the tool keeps a running record of "
+"that unused IVA credit to carry forward and brings it into the next "
+"period's return."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:36
+msgid ""
+"That running record needs a true starting point. The first time you use "
+"the tool, it has no history of the credit you'd built up before. So you "
+"set the opening balance once - the unused IVA credit you were already "
+"carrying when you started. From there, each period updates the balance on"
+" its own."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:38
+msgid ""
+"People make mistakes with an opening balance, so there's a correction "
+"path. You can fix a wrong opening balance after the fact. One guard "
+"protects you: the tool refuses to change the basis of a period you've "
+"already completed and marked as filed. Rewriting a figure that a filed "
+"return already relied on would quietly change that return after the fact,"
+" so the correction is refused and names the filing that's in the way. If "
+"you hit that, the figure is locked because a filing already used it - "
+"which is exactly when you'd want it locked."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:40
+msgid ""
+"To see the figures a calculation is using, read [Review and supply "
+"calculation inputs](../how-to/review-calculation-values.md). The whole "
+"cycle - seeding the opening balance, a credit quarter, the carry, and the"
+" annual summary - is demonstrated live in [The IVA year](../how-to/iva-"
+"lifecycle.md); for the yearly IVA summary alone, see [Prepare the annual "
+"Modelo 390 IVA summary](../how-to/modelo-390.md)."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:42
+msgid "The annual income-tax return pulls the year together"
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:44
+msgid ""
+"RENTA - the annual income-tax return - is the clearest example of a form "
+"that lives on earlier figures. Across the year you report income tax in "
+"pieces: instalment returns as you go, and withholdings that others "
+"reported on your behalf. None of those is the final word. RENTA gathers "
+"them."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:46
+msgid ""
+"The yearly return draws on those instalments and withholdings from your "
+"earlier filings, sets them against your full-year income, and settles the"
+" final income-tax figure - what's still owed, or what comes back to you. "
+"The pieces you filed through the year aren't separate events; they're "
+"instalments toward one annual settlement, and the annual return is where "
+"they meet."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:48
+msgid ""
+"The same idea governs the figures: RENTA settles on the instalments and "
+"withholdings the tool has on record from filings you completed. You "
+"review those before trusting the result."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:50
+msgid "What the tool checks, and what it leaves to you"
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:52
+msgid ""
+"It helps to be precise about the boundary here, because this is where a "
+"filing's accuracy is won or lost."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:54
+msgid ""
+"The tool finds and carries forward the earlier figures it has on record, "
+"matched by modelo, year, and period. That's the limit of what it does on "
+"its own. It does not silently treat unconfirmed or out-of-date agency "
+"data as final, it does not invent a prior period that isn't on record, "
+"and it does not quietly sweep up every figure it can find and assume each"
+" one is correct."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:56
+msgid ""
+"What it leaves to you is the judgement: that each carried-forward figure "
+"came from a filing you completed and marked as filed; that it matches the"
+" agency's receipt for that filing where one exists; and that a missing "
+"prior period is a real gap to resolve, not a zero the tool filled for "
+"you."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:58
+msgid ""
+"This division is the point. The tool removes the re-typing and the "
+"arithmetic; you keep the confirmation. A figure that flows from a quarter"
+" into a yearly summary, or from this period's credit into the next, is "
+"only as sound as your review of where it came from."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:60
+msgid "Where this sits in the journey"
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:62
+msgid ""
+"This page covered the connections between filings - why later forms "
+"depend on earlier ones and how figures carry forward. The [how-it-works "
+"overview](index.md) maps where this fits among the other concepts. To go "
+"a level down into how a single period's figures are built from your "
+"records, read [How your records become tax figures](from-records-to-"
+"figures.md)."
+msgstr ""
+
+#: ../../explanation/building-on-earlier-filings.md:64
+msgid ""
+"Once your figures are settled - including the ones carried in from "
+"earlier filings - the next concept is checking and sharing them. Continue"
+" with [Reviewing your numbers and producing the upload file](reviewing-"
+"and-exporting.md)."
+msgstr ""
+

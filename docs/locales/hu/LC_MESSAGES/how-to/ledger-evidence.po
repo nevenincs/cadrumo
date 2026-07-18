@@ -1,0 +1,291 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/ledger-evidence.md:1
+msgid "Attach invoices and receipts to ledger transactions"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:3
+msgid ""
+"Store an evidence record for each invoice or receipt and link it to the "
+"transaction it supports. Checks, exports, and year-end reviews can then "
+"point at the document behind every number. Stored evidence remains under "
+"encrypted local custody. Google Drive pull commands reach your authorized"
+" account before storing the downloaded bytes locally."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:5
+msgid "Before you start"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:7
+msgid "You need:"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:9
+msgid ""
+"An active taxpayer profile. Evidence is stored under the active profile; "
+"if none is set, the command refuses. See [Set up your taxpayer profile"
+"](profile-setup.md)."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:10
+msgid ""
+"A master-key passphrase. The tool prompts for it the first time it opens "
+"your encrypted storage in a session."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:11
+msgid ""
+"Transactions in your ledger. If your ledger is empty, see [Import and "
+"manage transactions](import-bank-statements.md) first."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:12
+msgid ""
+"The invoice or receipt as a PDF or image file. Cadrumo copies the file's "
+"bytes into encrypted storage together with the facts you type, plus a "
+"content fingerprint and the original location as provenance. Your "
+"original file is never needed again after `add`."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:14
+msgid "Add an evidence record"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:16
+msgid ""
+"Record the invoice file and its details, then view the stored record. The"
+" file path is the only required part; every metadata flag is optional. "
+"`--iva-rate 21` means 21 %:"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:24
+msgid ""
+"The command prints the evidence ID. Note the full ID down - later "
+"commands need it. Add what you know now; update the rest later."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:26
+msgid "Link an evidence record to a transaction"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:28
+msgid ""
+"Attach the evidence record to the transaction it supports. The sequence "
+"records an evidence file and an expense, then attaches one to the other:"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:35
+msgid ""
+"A transaction carries at most one purchase-invoice evidence record. The "
+"command refuses a second one, and refuses re-attaching the same one."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:37
+msgid ""
+"For most receipts and invoices, `--purchase-invoice-evidence-id` above is"
+" the path to use; the evidence id comes straight from `evidence add`."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:39
+msgid ""
+"The `attach` command also has an `--attachment-id` option (repeatable) "
+"for a generic secure attachment that does not carry the purchase-invoice "
+"role. It expects the 64-character content id of a blob already in "
+"encrypted attachment storage, and it refuses any id that has no stored "
+"blob (`attachment_ids must reference existing secure attachment manifests"
+" and blobs`). No operator command currently prints that 64-character id -"
+" the `evidence_id` from `evidence add` is a different, shorter id and is "
+"not accepted here. Until a command surfaces the attachment id, use "
+"`--purchase-invoice-evidence-id` or `doclink` instead."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:41
+msgid "Pull a document from Google Drive instead"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:43
+msgid ""
+"When the document lives in Google Drive, pull it straight into encrypted "
+"evidence storage. This command reaches Google Drive, so it runs against "
+"your own authorized account rather than in the documentation sandbox:"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:48
+msgid ""
+"The command downloads the Drive file, stores its bytes encrypted with the"
+" transaction, and keeps the original link as provenance. Evidence always "
+"carries the document itself, never a bare link: Gmail links, arbitrary "
+"URLs, and Drive files outside the granted scope are refused. For a "
+"refused source, download the document yourself and attach it with `aeat "
+"app ledger evidence add` or `aeat app ledger attach --attachment-id`."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:50
+msgid "Bulk-fetch every invoice in a Drive folder"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:52
+msgid ""
+"Fetch every PDF and image invoice in one Drive folder at once, instead of"
+" one document at a time. Like `doclink`, this command reaches Google "
+"Drive and runs against your own authorized account:"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:57
+msgid ""
+"The command lists the folder's contents, downloads each PDF or image, and"
+" stores every file as encrypted evidence. Fetched files are not linked to"
+" a transaction yet; bind each one afterward with `aeat app ledger attach "
+"--attachment-id <attachment-id>`."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:59
+msgid ""
+"Re-run the same command any time. A file already fetched is recognized by"
+" its content and is not stored twice. A file outside the granted Drive "
+"scope is refused individually and does not stop the rest of the sweep; "
+"download it yourself and attach it with `aeat app ledger attach "
+"--attachment-id`."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:61
+msgid "Gmail bulk-fetch is not available yet."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:63
+msgid "Invoice records are a separate feature"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:65
+msgid ""
+"An invoice *record* - who owes whom, for what amount - is not a stored "
+"document. [Manage business invoices](manage-invoices.md) owns invoice "
+"records: registering issued and received invoices, the reconciliation "
+"catalogue, and linking a catalogue invoice to the transaction that "
+"settles it. This page is about the documents - PDFs and images - you "
+"store as evidence and link to transactions."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:72
+msgid "List, view, update, and remove evidence records"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:74
+msgid ""
+"List every stored record, view one in full, update its details, and "
+"remove one you no longer need. The sequence records an evidence file, "
+"lists and inspects it, changes the supplier, and confirms the change:"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:82
+msgid "Remove an evidence record you no longer need, addressing it by id:"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:87
+msgid ""
+"Removing applies to evidence records, not transactions. To fix a "
+"transaction row itself, see [Correct mistakes in your ledger](correct-"
+"ledger-entries.md)."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:89
+msgid "After you correct a row"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:91
+msgid ""
+"If you merge or split transactions, check the new rows and re-attach "
+"evidence where needed. [Correct mistakes in your ledger](correct-ledger-"
+"entries.md) covers row changes."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:93
+msgid "Where evidence shows up"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:95
+msgid ""
+"Ledger exports include the evidence link with each transaction. Ledger-"
+"derived calculations carry the evidence trail through to filing "
+"artifacts."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:97
+msgid ""
+"Read [Import, export, and evidence](../reference/import-export-and-"
+"evidence.md) for the difference between linked ledger evidence, an AEAT "
+"upload file, official filing proof, and an audit bundle."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:101
+msgid "Where to get help"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:103
+msgid "If a command fails or refuses, see [Troubleshooting](troubleshooting.md)."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:104
+#, python-brace-format
+msgid "If a term is unfamiliar, see the {doc}`Glossary </_generated/glossary>`."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:105
+msgid ""
+"Before sharing command output with anyone, strip tax identifiers such as "
+"your NIF, CIF, DNI, NIE, or NII."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:107
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:109
+msgid ""
+"[Import, export, and evidence](../reference/import-export-and-"
+"evidence.md) - understand how evidence participates in calculation, "
+"filing, and audit."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:110
+msgid ""
+"[Import and manage transactions](import-bank-statements.md) - bring more "
+"transactions into the ledger."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:111
+msgid ""
+"[Correct mistakes in your ledger](correct-ledger-entries.md) - fix "
+"mistakes in transaction rows."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:112
+msgid ""
+"[Classify transactions](classify-transactions.md) - assign tax categories"
+" to your transactions."
+msgstr ""
+
+#: ../../how-to/ledger-evidence.md:113
+msgid "[CLI reference](../cli/index.rst) - the full command surface."
+msgstr ""
+

@@ -1,0 +1,186 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../reference/identity-and-naming.md:1
+msgid "Identity and naming"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md:3
+msgid ""
+"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
+"tax authority. CLI means command-line interface. MCP means Model Context "
+"Protocol."
+msgstr ""
+
+#: ../../reference/identity-and-naming.md:6
+msgid "Canonical product identity"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Surface"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Canonical value"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Display name"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`Cadrumo`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Python package"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`cadrumo`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Root distribution"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Human CLI executable"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`aeat`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Repository"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`nevenincs/cadrumo`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP server identity"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP executable"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`cadrumo-mcp`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP tool prefix"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "MCP resource scheme"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Plugin identifier"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Product environment prefix"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`CADRUMO_`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Companion distributions"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`cadrumo-data-manuals`, `cadrumo-data-official`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Companion Python namespace"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`cadrumo_data`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md:24
+msgid ""
+"These values identify one product. There is no alternate human CLI "
+"spelling or Python import alias."
+msgstr ""
+
+#: ../../reference/identity-and-naming.md:27
+msgid "Product and authority names"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Referent"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Use"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Examples"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Cadrumo product"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`Cadrumo` or the canonical identifier in the identity table"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid ""
+"Cadrumo CLI, Cadrumo profile, `cadrumo` package, "
+"`CADRUMO_LOCAL_STORAGE_ROOT`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "Spanish tax authority"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid "`AEAT`"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md
+msgid ""
+"AEAT portal, AEAT credentials, AEAT official file, AEAT legal source, "
+"AEAT taxonomy"
+msgstr ""
+
+#: ../../reference/identity-and-naming.md:34
+msgid ""
+"AEAT is an external authority and counterparty, not the application name."
+" Authority-owned terms such as *modelo*, *casilla*, *justificante*, and "
+"official period or classification tokens keep their AEAT meaning inside "
+"Cadrumo."
+msgstr ""
+

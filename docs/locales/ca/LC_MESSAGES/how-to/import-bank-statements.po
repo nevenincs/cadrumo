@@ -1,0 +1,449 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/import-bank-statements.md:1
+msgid "Import and manage transactions"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:3
+msgid ""
+"This page covers the ledger's transaction workflow: importing your bank "
+"statement, adding any missing transactions by hand, reviewing and "
+"correcting them, and checking readiness before a calculation. A line on a"
+" bank statement is just a date and an amount - the tax meaning is added "
+"later, in classification."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:9
+msgid ""
+"Your bank records are not added automatically. aeat imports only when you"
+" run an import command. Tax calculations use the transactions you have "
+"saved under the active profile."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:13
+msgid "Before you start"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:15
+msgid "You need:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:17
+msgid "a working `aeat` command"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:18
+msgid ""
+"an active taxpayer profile; see [Set up your taxpayer profile](profile-"
+"setup.md)"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:19
+msgid ""
+"a master-key passphrase. The tool prompts for it the first time it opens "
+"your encrypted storage in a session"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:21
+msgid ""
+"a bank statement file or directory, unless you are adding transactions by"
+" hand"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:22
+msgid ""
+"for AEAT census-derived home-office ratios, reviewed censo facts; see "
+"[Link Modelo 036 census information](censo-update.md)"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:25
+msgid "Confirm the active profile before you write transaction data:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:31
+msgid "Statement file format"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:33
+msgid ""
+"A bank CSV uses a semicolon (`;`) separator and comma decimals. The first"
+" line is the column header; each later line is one movement:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:42
+msgid ""
+"The sign of `Importe` carries the direction: a positive amount is income,"
+" a negative amount is an expense."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:45
+msgid "Preview an import"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:47
+msgid ""
+"Run a dry run first. A dry run shows what `aeat` would import and saves "
+"no rows. Then repeat the command without `--dry-run` to save the rows. "
+"The sequence previews the standard quarter's statement, imports it, and "
+"confirms one imported row:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:56
+msgid ""
+"`--provider csv` names the statement format. `--provider auto` asks "
+"`aeat` to detect it. The recognized providers are `auto`, `csv`, `ofx`, "
+"`qfx`, `xlsx`, `excel`, `n26`, `pdf`, and `pdf-n26`. If detection picks "
+"the wrong format, replace `auto` with the exact provider - run `aeat app "
+"ledger import --help` or see the [CLI reference](../cli/index.rst) for "
+"the current provider list."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:62
+msgid ""
+"If the path does not exist, the command refuses cleanly and names the "
+"missing file (`El archivo de origen no existe: ...`); fix the path and "
+"run it again."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:65
+msgid "Save imported rows with diagnostics"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:67
+msgid "Add `--verify` when you want import diagnostics alongside the save:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:73
+msgid ""
+"If the diagnostic source should point at a different original file, pass "
+"it with `--file <original>`. Use `--period` only when you intentionally "
+"want to label the import with a fiscal period; leave it out and aeat "
+"assigns the period from each transaction's date automatically."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:78
+msgid "Add one transaction manually"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:80
+msgid ""
+"Use `ledger add` when a transaction is missing from imported statements. "
+"Required fields are date, amount, direction, and description. Write the "
+"amount as a positive figure - the direction carries whether money came in"
+" or went out, and the command refuses a negative amount. `OUTGOING` is "
+"for expenses; `INCOMING` is for income:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:90
+msgid ""
+"The third direction, `INTERNAL_TRANSFER`, records money moved between "
+"your own accounts."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:93
+msgid "Record tax details on a manual transaction"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:95
+msgid ""
+"`ledger add` accepts the same tax fields you set during classification, "
+"so you record a complete transaction in one step. `--amount` is the gross"
+" total (taxable base plus IVA), and the tool refuses the row if the base "
+"plus IVA does not match the gross to the cent:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:104
+msgid "Useful optional fields:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:106
+msgid "`--currency` records a non-euro amount; it defaults to `EUR`."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:107
+msgid "`--counterparty` records who you paid or were paid by."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:108
+msgid ""
+"`--category-id` assigns the income or expense category. Run `aeat app "
+"ledger categories` to list the ids."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:110
+msgid ""
+"`--taxable-base`, `--iva-rate`, and `--iva-amount` record the IVA "
+"breakdown."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:111
+msgid "`--irpf-category` records the IRPF (personal income tax) category."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:112
+msgid ""
+"`--source-jurisdiction` records the country a movement belongs to, as an "
+"ISO two-letter code, which matters for non-resident scopes."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:114
+msgid "`--notes` adds a short operator note."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:116
+msgid ""
+"For a part-business, part-personal movement, set `--classification MIXED`"
+" and the business share with `--business-pct`, a value from `0` to `1`. "
+"For the IVA category, EU member-state, and usage-ratio semantics behind "
+"these fields, see [Classify transactions](classify-transactions.md)."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:121
+msgid ""
+"Use the invoice commands when you also need to track whether an invoice "
+"exists separately from the bank movement. Received invoices are supplier "
+"invoices you owe; issued invoices are customer invoices owed to you:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:129
+msgid ""
+"For the full invoice-record workflow, see [Attach invoices and receipts"
+"](ledger-evidence.md)."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:132
+msgid "Review rows"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:134
+msgid ""
+"List rows, narrow the list with filters, inspect one row, and read its "
+"event history. The sequence imports the quarter and walks the read "
+"commands:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:141
+msgid ""
+"For a broader review queue, use `ledger review` to inspect selected rows "
+"and `ledger check` to report aggregate ledger anomalies across periods. "
+"Both are local-only:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:149
+msgid "Export rows for review"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:151
+msgid ""
+"Export the active ledger to a file. The `--year` and `--period` filter "
+"keeps the export aligned with the transaction dates. Exports are review "
+"snapshots, not an edit-and-reimport path:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:159
+msgid ""
+"Add `--export-format xlsx` to write an XLSX snapshot instead, and use the"
+" annual token `0A` when a whole year is the review scope."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:162
+msgid ""
+"To change saved rows, use `ledger update`, `ledger classify`, `ledger "
+"allocate`, `ledger split`, or `ledger merge`."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:165
+msgid "Update a row"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:167
+msgid ""
+"Use `ledger update` for editable transaction fields - date, value date, "
+"amount, direction, currency, counterparty, description, taxable base, IVA"
+" rate, IVA amount, IRPF category, notes, or group label:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:175
+msgid ""
+"An update gives the transaction a new id; an id you wrote down earlier "
+"still resolves in `view`, `history`, and `track`. For the full correction"
+" workflow - splitting, merging, archiving, stashing, removing, and "
+"resetting rows - see [Correct mistakes in your ledger](correct-ledger-"
+"entries.md)."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:180
+msgid "Attach evidence to a transaction"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:182
+msgid ""
+"Attach secure purchase evidence to a transaction. The evidence id comes "
+"from `aeat app ledger evidence add`. The sequence records evidence and an"
+" expense, then attaches one to the other:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:190
+msgid ""
+"`attach` is the single door for purchase evidence. The `link` command "
+"binds a transaction to a reconciliation-catalogue invoice only."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:193
+msgid ""
+"The `link --invoice-id` option expects an id from the reconciliation "
+"invoice catalogue (populated by the import and reconcile flows), not an "
+"id from `aeat app ledger invoice add`. See [Attach invoices and receipts"
+"](ledger-evidence.md) for the full evidence and invoice-record workflow, "
+"including the `--attachment-id` option and its current limitation."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:200
+msgid ""
+"Pull a document straight from Google Drive into encrypted evidence "
+"storage with `doclink`. This command reaches Google Drive, so it runs "
+"against your own authorized account rather than in the documentation "
+"sandbox:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:207
+msgid ""
+"The command downloads the Drive file, stores its bytes encrypted with the"
+" transaction, and keeps the original link as provenance. Gmail links, "
+"arbitrary URLs, and Drive files outside the granted scope are refused - "
+"evidence always carries the document itself, never a bare link. For a "
+"refused source, download the document yourself and attach it with `aeat "
+"app ledger attach --attachment-id`."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:214
+msgid "Fix a wrong row"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:216
+msgid ""
+"Splitting a mixed movement into parts, merging a wrong split back, and "
+"archiving, stashing, removing, or resetting rows are all corrections. "
+"[Correct mistakes in your ledger](correct-ledger-entries.md) owns that "
+"workflow, with an example for each command and guidance on picking the "
+"least destructive fix."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:222
+msgid "Classify rows"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:224
+msgid ""
+"Classify rows before calculation. At a minimum, imported business rows "
+"need a business/personal/mixed decision, and expense rows need a "
+"category:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:231
+msgid ""
+"[Classify transactions](classify-transactions.md) owns the full workflow "
+"- bulk CSV classification, mixed-use allocation, tax fields, stored "
+"rules, and [LLM-assisted suggestions](classify-with-llm.md)."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:235
+msgid "Check readiness for a filing period"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:237
+msgid ""
+"Run preflight before calculating a modelo, then check the overall ledger "
+"state. Preflight looks at each record inside the period and flags "
+"anything still missing before any sums are trusted - a missing "
+"classification, category, base, IVA amount, IVA rate, split reference, or"
+" unconvertible currency:"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:246
+msgid ""
+"The check changes nothing; it names the rows that are not ready so you "
+"fix the raw material before trusting any total. Continue to calculation "
+"only when the active profile and target period are ready enough for the "
+"modelo you are preparing."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:251
+msgid ""
+"For calculation review in Google Sheets, see [Review calculations with "
+"Google Sheets](review-with-google-sheets.md). That workflow exports a "
+"modelo calculation surface to Sheets; it is separate from ledger CSV/XLSX"
+" export."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:256
+msgid "If a command stops with an error"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:258
+msgid ""
+"If a command reports that no profile is active, the period is invalid, or"
+" the ledger is not ready, use [Diagnose and repair your local "
+"setup](troubleshooting.md)."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:262
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:264
+msgid ""
+"[Import, export, and evidence](../reference/import-export-and-"
+"evidence.md) - understand what imported rows mean and how they differ "
+"from tax facts and filing evidence."
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:267
+msgid "[Classify transactions](classify-transactions.md)"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:268
+msgid "[Classify transactions with an LLM](classify-with-llm.md)"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:269
+msgid ""
+"[How your records become tax figures](../explanation/from-records-to-"
+"figures.md)"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:270
+msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:271
+msgid "[Quickstart: produce a modelo file](quickstart.md)"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:272
+msgid "[Review and supply calculation inputs](review-calculation-values.md)"
+msgstr ""
+
+#: ../../how-to/import-bank-statements.md:273
+msgid "[CLI reference](../cli/index.rst)"
+msgstr ""
+

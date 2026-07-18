@@ -1,0 +1,261 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/filing-readiness.md:1
+msgid "Check that a filing is ready"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:3
+msgid ""
+"Verification tells you whether a draft's box values pass the registry "
+"rules. Readiness asks an earlier question: is everything the calculation "
+"depends on in place: profile facts, transaction data, and earlier "
+"filings? Use the commands in this guide before you calculate, and again "
+"before you export, so nothing silent is missing underneath a clean-"
+"looking draft."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:9
+msgid ""
+"These commands read the active profile and prompt for your master-key "
+"passphrase. Create a profile first with [Set up your taxpayer profile"
+"](profile-setup.md) if you have none."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:13
+msgid "Run the readiness report"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:15
+msgid ""
+"Find the resolved revision id first, then report whether the active "
+"profile is ready for that modelo, year, and period:"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:22
+msgid "The report covers two things:"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:24
+msgid ""
+"**Profile readiness** - every profile fact the modelo requires. Each "
+"missing fact is listed by its section and field key, so you know exactly "
+"what to fill in with `aeat config profile edit`."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:27
+msgid ""
+"**Ledger readiness** - for ledger-fed modelos, the same source checks as "
+"`aeat app ledger preflight`, listing each transaction that blocks the "
+"period and why."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:31
+msgid ""
+"Readiness does not check box-level completeness of a draft. That is what "
+"`aeat app modelo work verify` does. See [Verify a filing](verification-"
+"reports.md)."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:35
+msgid "Check what this filing depends on"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:37
+msgid ""
+"Some modelos fold in values from other filings. An annual summary reads "
+"its quarters, and a cross-modelo box reads another form's result. List "
+"the registry-declared dependencies for a filing year, then narrow to one "
+"modelo, or to one modelo and period:"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:46
+msgid ""
+"`--period` requires `--modelo`. With both set, the command also evaluates"
+" the current blockers for that exact filing (for example an earlier "
+"period whose official evidence is still missing), so you see what must be"
+" resolved before this period can safely build on the ones before it. For "
+"the background, see [Building on earlier filings](../explanation"
+"/building-on-earlier-filings.md)."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:52
+msgid "See everything that happened to a filing"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:54
+msgid ""
+"Stream every recorded lifecycle event for one modelo (calculations, "
+"verification passes and refusals, filings, amendments, imports):"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:61
+msgid ""
+"Add `--period` to narrow to one period. This is the modelo-wide audit "
+"trail; for the event stream of a single workspace, use `aeat app modelo "
+"work history`. See [The filing workflow](filing-spine.md)."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:66
+msgid "Compare two filing years"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:68
+msgid "See how this year's figures moved against last year's, box by box:"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:73
+msgid ""
+"Pass `--year` exactly twice. Each row shows the box, its label and "
+"section, both values, the difference, and the percent change; all-zero "
+"rows are omitted from the text output. The comparison uses the most "
+"recent verified revision of each year and falls back to the latest draft "
+"when no verified revision exists. A year compared from a draft is flagged"
+" `BORRADOR` in the output."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:80
+msgid ""
+"Use the comparison as a sanity check before filing: an unexpected jump in"
+" a box is worth tracing back to its transactions before you export."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:83
+msgid "Look ahead to the year-end Renta"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:85
+msgid ""
+"If you file quarterly Modelo 130 instalments, project what the year-end "
+"Modelo 100 would look like from the quarters filed so far:"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:91
+msgid ""
+"`--ccaa` names your autonomous community of tax residence, which selects "
+"the regional scale for the Modelo 100 calculation."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:94
+msgid ""
+"The output shows the accumulated Modelo 130 figures (income, expenses, "
+"net result, instalments paid) and the projected Modelo 100 result: the "
+"taxable base, the state and regional gross tax (cuota íntegra), the net "
+"tax (cuota líquida), and the resulting balance after instalments (cuota "
+"resultante)."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:99
+msgid ""
+"**Read the extrapolation flag before trusting the numbers.** With fewer "
+"than four quarters filed, the projection extrapolates a full year from "
+"the quarters available and marks the output, for example `quarters_filed "
+"2/4 (extrapolated from 2Q)`. An extrapolated projection is a planning "
+"estimate, not a draft Renta: it assumes the remaining quarters look like "
+"the filed ones."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:106
+msgid ""
+"Refine the projection with values the quarters cannot know: withholdings,"
+" personal circumstances, or specific boxes:"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:112
+msgid ""
+"Withholdings bindings default to zero when not supplied, so a projection "
+"without them overstates the balance due if you had retenciones. Each "
+"projected box carries its formula and legal references in the JSON "
+"output, the same grounding as a real calculation."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:117
+msgid ""
+"For when the year-end filing actually happens, see [Period tokens and "
+"dates](filing-calendar.md#period-tokens-and-dates)."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:120
+msgid "Trace a value to its legal basis"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:122
+msgid ""
+"Every computed value carries its grounding, and you can surface it at "
+"each review stage:"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:125
+msgid ""
+"The formula behind each computed box carries its legal and source "
+"references. See [Review and supply calculation inputs](review-"
+"calculation-values.md):"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:132
+msgid "Two more grounding surfaces round out the trace:"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:134
+msgid ""
+"Verification findings name the legal references behind each rule. See "
+"[Verify a filing](verification-reports.md)."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:136
+msgid ""
+"`aeat app review queue --explain` - pending findings with their legal "
+"references. See [the review queue](classify-transactions.md#see-"
+"everything-that-still-needs-a-decision)."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:140
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:142
+msgid ""
+"[Verify a filing](verification-reports.md) - box-level verification of "
+"the draft."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:144
+msgid ""
+"[Review and supply calculation inputs](review-calculation-values.md) - "
+"fill missing values readiness or verification surfaced."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:146
+msgid ""
+"[Building on earlier filings](../explanation/building-on-earlier-"
+"filings.md) - how cross-period dependencies work."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:148
+msgid ""
+"[The filing workflow](filing-spine.md) - workspaces, revisions, and per-"
+"workspace history."
+msgstr ""
+
+#: ../../how-to/filing-readiness.md:150
+msgid "[CLI reference](../cli/index.rst) - full option reference."
+msgstr ""
+

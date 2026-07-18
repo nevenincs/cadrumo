@@ -1,0 +1,733 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/profile-setup.md:1
+msgid "Set up your taxpayer profile"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:3
+#, python-brace-format
+msgid ""
+"A profile holds the facts about one taxpayer that every `aeat app` "
+"command reads and updates. Set one up before you import transactions, "
+"calculate a {term}`modelo`, or export a filing."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:7
+msgid ""
+"A profile is local. Creating, editing, showing, exporting, or importing a"
+" profile never submits anything to the Agencia Estatal de Administración "
+"Tributaria (AEAT). Cadrumo builds and verifies your filing on your "
+"machine; you upload it yourself."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:12
+msgid ""
+"If you haven't installed Cadrumo and run the `aeat` command yet, start "
+"with the [quickstart](quickstart.md), then come back here."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:15
+msgid "What the active profile means"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:17
+msgid ""
+"The active profile is the taxpayer context for `aeat app` commands. While"
+" a profile is active, commands such as ledger import, transaction "
+"classification, modelo calculation, export, and local filing history read"
+" and update that profile's data."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:22
+msgid ""
+"Keep one profile per taxpayer. Add a second profile when you prepare "
+"filings for another taxpayer, separate a test profile from a real one, or"
+" restore a copy under a different name. To understand why the tool is "
+"local-first and human-gated, see the [explanation "
+"guides](../explanation/index.md)."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:27
+msgid ""
+"List your profiles with `aeat config profile list`, see which one is "
+"active, add a second taxpayer, then switch to it. The example runs the "
+"whole flow: it lists the profiles, adds a second one, and switches the "
+"active context to it."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:35
+msgid ""
+"Switching changes which local ledger, modelo drafts, and filing markers "
+"`aeat app` commands use. The switch verb is `aeat config switch`, not "
+"`aeat config profile switch`."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:39
+msgid "Decide your facts before you start"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:41
+msgid ""
+"Profile setup asks a series of questions. Most are conditional: the "
+"answers you give early decide which later questions appear. Decide these "
+"facts first, and the rest of setup follows:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:45
+msgid ""
+"**Who the taxpayer is.** A natural person (an individual), a legal entity"
+" (a company such as an SL or SA), or an attribution entity (a co-"
+"ownership such as a *comunidad de bienes*, where income passes through to"
+" its members)."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:48
+msgid ""
+"**Which tax identifier applies.** Spanish citizens use their DNI as their"
+" tax identifier (NIF). Foreign individuals use their NIE. Companies use a"
+" NIF or CIF."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:51
+msgid ""
+"**What the taxpayer does.** The economic activity and which kinds of "
+"income apply: business or professional activity, salaried work, rental "
+"income, investment income, capital gains, or a pension."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:54
+msgid ""
+"**Which VAT regime applies.** Value Added Tax (IVA) determines whether "
+"the taxpayer charges and declares it, and how. The general regime files "
+"IVA through Modelo 303."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:57
+msgid ""
+"**Where the taxpayer is resident.** The autonomous community for a "
+"Spanish resident, or the country of residence for a non-resident."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:59
+msgid ""
+"**Which output language you want.** The language `cadrumo` uses for its "
+"output."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:61
+msgid ""
+"You don't need to memorize flag names. The guided wizard walks you "
+"through these decisions. For the complete, current list of flags and "
+"their accepted values, run `aeat config profile create --help` and `aeat "
+"config profile edit --help`:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:68
+msgid "Create your profile"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:70
+msgid "Create a profile interactively, or non-interactively with flags."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:72
+msgid "Run the guided wizard when you're setting up a profile for the first time:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:77
+msgid ""
+"The wizard asks the questions described in this guide. Prompt labels "
+"follow the selected output language, while official AEAT terms and stable"
+" command tokens remain recognizable across languages."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:81
+msgid ""
+"The wizard prompts for your master-key passphrase before it stores "
+"anything. For unattended runs, see [Run without a passphrase prompt"
+"](protect-data-access.md#run-without-a-passphrase-prompt)."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:85
+msgid ""
+"Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can "
+"also store its default output language."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:88
+msgid ""
+"Use flags with `--quiet` when you want a repeatable, scriptable setup, "
+"passing the entity type, tax id, name, and surnames to `aeat config "
+"profile create`. The [worked example below](#worked-example-a-natural-"
+"person-with-an-activity) runs a complete scripted create."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:93
+msgid ""
+"`--quiet` runs without prompts and uses only the flags you provide. A "
+"`--quiet` run refuses if a required flag is missing and tells you which "
+"ones to add. A scripted create needs the filing identity: the tax "
+"identifier, the entity type, and the name and surnames:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:103
+msgid ""
+"Add `--accept-defaults` when you intentionally want Cadrumo to fill the "
+"questions you omit from its built-in defaults."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:106
+msgid "Worked example: a natural person with an activity"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:108
+msgid ""
+"This example creates a natural-person profile for an individual with an "
+"economic activity, then inspects and validates it before you rely on it:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:115
+msgid "The facts setup asks for"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:117
+msgid ""
+"Setup groups its questions by decision area. These values are stable "
+"command tokens: they're case-sensitive and don't translate. Run `aeat "
+"config profile create --help` for the exhaustive flag list. It includes "
+"the conditional spouse, family-unit, non-resident, and enrollment "
+"questions this guide summarizes rather than repeats."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:123
+msgid "Who the taxpayer is"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:125
+msgid "Choose the entity type:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:127
+msgid "`natural_person` - an individual."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:128
+msgid ""
+"`legal_entity` - a company. Record its legal form too, such as `sl`, "
+"`sa`, or `cooperativa`."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:130
+msgid ""
+"`attribution_entity` - a co-ownership or community of goods whose income "
+"is attributed to its members."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:133
+msgid ""
+"For a natural person, list each kind of income that applies, repeating "
+"the flag once per category:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:136
+msgid "`actividad_economica` - business or professional activity."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:137
+msgid "`trabajo` - salaried employment."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:138
+msgid "`capital_inmobiliario` - rental income from property."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:139
+msgid "`capital_mobiliario` - investment income such as dividends or interest."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:140
+msgid "`ganancias_patrimoniales` - capital gains."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:141
+msgid "`pension` - a retirement or disability pension."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:143
+msgid ""
+"Choose `actividad_economica` only when the taxpayer runs an activity. A "
+"pure landlord, a salaried-only taxpayer, or a pensioner with no activity "
+"should not select it."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:147
+msgid ""
+"For an activity, record how IRPF estimates its yield. Direct estimation "
+"is the default and files Modelo 130. Use `--irpf-estimation-regime "
+"objetiva` for the objective-estimation (módulos) regime, which files "
+"Modelo 131 instead."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:151
+msgid "Identity"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:153
+msgid ""
+"The tax identifier (NIF, CIF, DNI, or NIE) is required. Spanish citizens "
+"use their DNI as their NIF; foreign individuals use their NIE; companies "
+"use a NIF or CIF. Record the name and surnames (or the entity's display "
+"name), the economic activity when there is one, and the fiscal-address "
+"postcode."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:158
+msgid "Where the taxpayer is resident"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:160
+msgid ""
+"For a Spanish IRPF (personal income tax) resident, set the autonomous "
+"community (`--tax-residence-ccaa`), such as `madrid` or `cataluna`."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:163
+msgid ""
+"This tool does not model the foral regimes. Setting the community to "
+"`pais_vasco` or `navarra` is refused, because residents there file with "
+"their *Hacienda Foral* under the *Concierto Económico*, not with the "
+"AEAT:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:173
+msgid ""
+"For a non-resident, set `--fiscal-residency non_resident_irnr` (not "
+"`--tax-residence-ccaa`), then supply the country of residence with "
+"`--country-of-fiscal-residence` (an ISO 3166-1 alpha-2 code, such as "
+"`DE`) and, when required, a fiscal representative with `--representante-"
+"fiscal-nif` and `--representante-fiscal-nombre`."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:179
+msgid "Which IVA regime applies"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:181
+msgid "Set `--iva-regime` to the taxpayer's IVA regime:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:183
+msgid "`GENERAL` - the standard regime; files quarterly IVA through Modelo 303."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:184
+msgid "`SIMPLIFICADO` - the simplified, module-based regime."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:185
+msgid ""
+"`RECARGO_EQUIVALENCIA` - the equivalence surcharge for qualifying "
+"retailers."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:186
+msgid "`REAGP` - the special regime for agriculture, livestock, and fishing."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:187
+msgid "`EXENTO` - exempt activities, such as some education or healthcare."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:189
+msgid ""
+"Record any IVA enrollments that apply, such as ROI (intra-community "
+"operators) or OSS (one-stop-shop for cross-border B2C sales)."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:192
+msgid "Which recurring obligations apply"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:194
+msgid ""
+"These facts decide which forms the taxpayer must file. Record the ones "
+"that are true:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:197
+msgid ""
+"`--has-employees` or `--pays-professionals-with-retencion` - pays "
+"salaries or professional fees with withholding."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:199
+msgid ""
+"`--pays-rent-with-retencion` - pays business-premises rent with "
+"withholding."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:200
+msgid "`--does-intracomunitario` - trades with businesses in other EU countries."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:201
+msgid ""
+"`--third-party-transactions-above-347-threshold` - transactions with "
+"third parties exceed the Modelo 347 threshold."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:203
+msgid ""
+"`--bienes-extranjero-above-threshold` - foreign assets exceed the legal "
+"threshold."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:205
+msgid ""
+"`--art109-activity-income-withholding-ge-70pct` - the Art. 109 RIRPF 70 "
+"percent income-coverage exception applies for covered professional, "
+"agricultural, livestock, or forestry activity income. For activity "
+"starts, record the coverage fact for the current payment period."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:210
+msgid ""
+"Leaving an obligation flag unset is not the same as marking it false. "
+"When a fact is undeclared, the readiness check reports the related form "
+"as *incomplete* (cannot determine), not *not applicable*. Record each "
+"fact you know."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:214
+msgid "Check your facts before you calculate"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:216
+msgid ""
+"A wrong or missing fact produces a wrong filing. Confirm the profile "
+"before you calculate a modelo. The example shows the active profile's "
+"readiness summary and stored facts, validates them against the schema, "
+"then checks whether the profile holds the facts a specific form needs for"
+" a specific filing context:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:225
+msgid ""
+"`preflight` names the missing fields for that `(modelo, filing-year, "
+"period)` context. Use [Choose which modelo to file](choose-modelo.md) to "
+"find the period codes a modelo accepts. Fix any wrong facts with `edit` "
+"before you continue."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:229
+msgid "How your facts decide which forms apply"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:231
+msgid ""
+"The profile facts you recorded determine which modelos the taxpayer must "
+"file. Use this mapping to sanity-check your profile, then confirm a "
+"specific form with `preflight`:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "When this is true of the taxpayer"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "These forms apply"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Is a natural person"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Modelo 100 (annual Renta)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Is a company"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid ""
+"Modelo 200 (annual IS, corporate income tax), Modelo 202 (payments on "
+"account)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Runs an activity under direct estimation"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Modelo 130 (quarterly IRPF)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Runs an activity under objective estimation (módulos)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Modelo 131"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Art. 109 activity-income coverage exception applies"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Removes the Modelo 130 obligation"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Charges VAT under the general regime"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Modelo 303 (quarterly), Modelo 390 (annual)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Pays employees or professionals with withholding"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Modelo 111 (quarterly), Modelo 190 (annual)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Pays business-premises rent with withholding"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Modelo 115 (quarterly), Modelo 180 (annual)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Trades with EU businesses"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Modelo 349"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Has third-party transactions over the 347 threshold"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Modelo 347"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Holds foreign assets over the legal threshold"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:221
+msgid "Modelo 720"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:249
+msgid ""
+"This is a guide, not the authority. The tool decides applicability from "
+"the full profile and the registry rules. To see what applies to your "
+"profile, use [Choose which modelo to file](choose-modelo.md)."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:253
+msgid "Maintain your profile"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:255
+msgid ""
+"The following steps edit a fact, rename the profile, duplicate it, delete"
+" the duplicate, and export the profile to a portable JSON file:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:262
+msgid "What each step does:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:264
+msgid ""
+"**Edit** changes only the flags you pass. Run `show`, `status`, or "
+"`validate` again after editing."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:266
+msgid ""
+"**Rename** changes only the visible label; the active-profile pointer "
+"follows it."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:268
+msgid ""
+"**Duplicate** starts a second profile from the same facts. The second "
+"name you pass is the new profile's name, the name you address it by in "
+"every later command. The new profile becomes the active one."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:271
+msgid ""
+"**Delete** removes a profile for good. If the deleted profile was active,"
+" Cadrumo clears the active-profile pointer."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:273
+msgid ""
+"**Export** writes a portable JSON file. Pass `--cleartext-local` for a "
+"local JSON file, or `--passphrase` for an encrypted transfer bundle."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:276
+msgid ""
+"Import a saved file back into another session or storage root. Import "
+"under a fresh label; the imported profile becomes the active one. A store"
+" that still holds the same profile refuses the import on the profile's "
+"identifier, so import is for restoring into a different storage root:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:284
+msgid ""
+"A portable profile file contains taxpayer data, including the tax "
+"identifier, activity, and local filing history. Store it as sensitive tax"
+" data, and don't attach it to a support request unless you've removed "
+"personal details."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:288
+msgid ""
+"Sign out without deleting the profile using `aeat config profile logout`."
+" Logout closes the active storage session, discards its in-memory keys, "
+"disposes the bucket engines, and clears the local active-profile pointer:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:296
+msgid "Choose your service capabilities"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:298
+msgid ""
+"Each profile carries its own opt-in for three optional services. The "
+"setup wizard asks these questions when you create or edit a profile, and "
+"you can change them at any time. These steps show the current posture, "
+"turn one capability off, then show the posture again:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:307
+msgid "The three capabilities are:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:309
+msgid ""
+"`cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM"
+" provider. Off by default. Barred for gestor profiles."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:311
+msgid "`llm_vision` - read invoices with the on-host vision model. On by default."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:312
+msgid "`google_export` - export calculations to Google Sheets. On by default."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:314
+msgid ""
+"Turn any capability on or off with `aeat config profile capabilities "
+"set`. The example turns `llm_vision` off. Pass `cloud_evidence_upload on`"
+" to enable cloud upload. Missing package extras produce the exact install"
+" command. See [Install Cadrumo](../workstation-setup.md) for the extras."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:319
+msgid "See what changed"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:321
+msgid ""
+"Every change to a profile - creation, edits, imports, classifications, "
+"calculations, and filings - is recorded as an event in that profile's "
+"append-only history (a log you can read but not alter). Reading history "
+"needs an active profile, so switch to it first after logout. The example "
+"creates, renames, and edits a profile before browsing and filtering its "
+"history:"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:331
+msgid ""
+"Repeat `--event-type` to include several types. An unknown type is "
+"refused with the full accepted list, so an empty value is a quick way to "
+"discover the vocabulary."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:335
+msgid ""
+"A rename appears as two events on purpose: `profile.renamed` records that"
+" the data changed, and `bucket.renamed` records that you ran the rename "
+"action. One answers \"what changed\", the other \"what was done\"."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:339
+msgid "If setup looks wrong"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:341
+msgid ""
+"If a command reports no active profile, an invalid field value, or that "
+"you're working under the wrong profile, see [Diagnose and repair your "
+"local setup](troubleshooting.md)."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:345
+msgid ""
+"When the troubleshooting steps don't resolve it, follow [Prepare a "
+"privacy-safe support request](troubleshooting.md#prepare-a-privacy-safe-"
+"support-request). It names the outputs to include and the personal data "
+"to leave out before you take the issue to the project's issue tracker."
+msgstr ""
+
+#: ../../how-to/profile-setup.md:351
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:353
+msgid "[Import and manage transactions](import-bank-statements.md)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:354
+msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:355
+msgid "[Plan your filing calendar](filing-calendar.md)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:356
+msgid "[Review and supply calculation inputs](review-calculation-values.md)"
+msgstr ""
+
+#: ../../how-to/profile-setup.md:357
+msgid "[CLI reference](../cli/index.rst)"
+msgstr ""
+

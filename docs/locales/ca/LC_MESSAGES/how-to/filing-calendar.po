@@ -1,0 +1,334 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/filing-calendar.md:1
+msgid "Plan your filing calendar"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:3
+msgid ""
+"This page covers the filing calendar: how to see what may be due, what is"
+" overdue, and what to prepare next for the [active profile](profile-"
+"setup.md#what-the-active-profile-means), and which `--year` and "
+"`--period` tokens address each filing window. A modelo is a Spanish tax "
+"form."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:9
+msgid ""
+"These commands are local unless a command is under `aeat app live`. Local"
+" calendar commands read the [active profile](profile-setup.md#what-the-"
+"active-profile-means) and local registry data. They do not file, submit, "
+"or contact the Agencia Estatal de Administración Tributaria (AEAT)."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:14
+msgid "Before you start"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:16
+msgid ""
+"You need an [active taxpayer profile](profile-setup.md#what-the-active-"
+"profile-means), and Cadrumo needs your master-key passphrase (it prompts "
+"for it). If you do not have a profile, create it with [Set up your "
+"taxpayer profile](profile-setup.md)."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:21
+msgid ""
+"The profile must declare at least one obligation, or these commands "
+"refuse with \"El perfil activo no declara este modelo fiscal\". A profile"
+" created without taxpayer type, estimation regime, or IVA regime declares"
+" no modelo and shows nothing. Declare those facts first with [Set up your"
+" taxpayer profile](profile-setup.md)."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:27
+msgid ""
+"Calendar results depend on profile facts: taxpayer type, activity start "
+"date, IVA regime, IRPF/Renta facts, withholding obligations, and other "
+"enrollment details. You maintain those facts manually in the profile - "
+"see [Maintain Modelo 036 census facts in your profile](censo-update.md)."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:32
+msgid ""
+"If a profile is still incomplete, a command may stop and name the missing"
+" facts. Fix the profile first. To see partial results before the profile "
+"is complete, add `--allow-incomplete` where the command accepts it "
+"(`agenda`, `backlog`, and `calendar`). The CLI emits help, results, and "
+"refusals in Spanish."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:37
+msgid "What are my filing obligations?"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:39
+msgid ""
+"Start with the agenda. It ranks obligations around a reference date, "
+"showing what is due today, what is coming up in the next two weeks, and "
+"what is already overdue. Pass `--allow-incomplete` on a profile whose "
+"census facts are not yet fully filled in, change the reference date with "
+"`--date`, and widen the upcoming window with `--horizon` (the default is "
+"14 days):"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:49
+msgid "To understand why one modelo appears or does not appear, use:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:55
+msgid ""
+"`explain` reports whether that modelo applies, the registry reason, and "
+"the profile facts used for the decision."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:58
+msgid "What messages have I received?"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:60
+msgid ""
+"Calendar commands do not read AEAT mailboxes. For DEHu notification "
+"snapshots, use the live notification workflow:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:66
+msgid ""
+"If you have not captured notifications yet, use [Check AEAT notifications"
+"](check-aeat-notifications.md). Live notification capture requires AEAT "
+"authentication and is read-only."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:70
+msgid "What missed modelos did I forget to file?"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:72
+msgid ""
+"Use backlog for past-due obligations that are not locally marked as "
+"presented. The default window starts 365 days before today and ends "
+"today; narrow it with `--from` and `--to` when you are checking a "
+"specific period:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:80
+msgid ""
+"Backlog is a local planning tool. It does not prove what AEAT has or has "
+"not received. It depends on the [active profile](profile-setup.md#what-"
+"the-active-profile-means), local filing markers, and local registry "
+"rules. For the local filing lifecycle, see [The filing workflow](filing-"
+"spine.md)."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:85
+msgid "What upcoming modelos will I have to file?"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:87
+msgid "Generate a calendar window:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:92
+msgid ""
+"Both dates are required in `YYYY-MM-DD` format. The calendar applies "
+"national public holidays and business-day shifts before printing "
+"deadlines."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:95
+msgid ""
+"The calendar is stricter than `agenda` and `backlog`: it also refuses "
+"while a profile check is unresolved, such as "
+"`censo.enrolment_unverified`. That check reports that your census-backed "
+"enrollment facts are operator-declared, not AEAT-verified; AEAT publishes"
+" no read-only census view the tool could confirm them against. Review the"
+" profile facts (see [Maintain Modelo 036 census facts in your profile"
+"](censo-update.md)) and add `--allow-incomplete` to print a provisional "
+"calendar. Provisional entries are marked `censo_enrolment=unverified`. "
+"Add `--all-profiles` to include every registered profile instead of only "
+"the [active profile](profile-setup.md#what-the-active-profile-means), or "
+"`--show-suppressed` to inspect obligations Cadrumo normally filters out:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:111
+msgid ""
+"Suppressed entries include obligations that do not apply given your "
+"profile facts, or that are incomplete. Each entry shows why it was "
+"suppressed."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:114
+msgid "Period tokens and dates"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:116
+msgid ""
+"Calendar commands use real inclusive dates in `YYYY-MM-DD` format, as "
+"shown above. Modelo work commands instead separate the filing year from "
+"the registry period:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:124
+msgid "The period tokens are:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:126
+msgid "`1T`: first quarter, January 1 through March 31"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:127
+msgid "`2T`: second quarter, April 1 through June 30"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:128
+msgid "`3T`: third quarter, July 1 through September 30"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:129
+msgid "`4T`: fourth quarter, October 1 through December 31"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:130
+msgid "`0A`: annual period, January 1 through December 31"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:131
+msgid "`01` through `12`: monthly periods"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:133
+msgid ""
+"Which tokens a modelo accepts is modelo-specific, not universal. A "
+"quarterly modelo such as 130 accepts only `1T` through `4T`; an annual "
+"modelo such as 390 accepts only `0A`; Modelo 303 accepts `1T` through "
+"`4T` and `01` through `12`, but not `0A`. A token the modelo does not "
+"accept is refused (for example, 303 with `0A` reports \"no revision for "
+"... period='0A'\"). To see the tokens one modelo accepts, run `aeat app "
+"modelo describe 303` and read its `Períodos` line."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:141
+msgid ""
+"Every command takes the year separately with `--year` and the period as "
+"one of these AEAT tokens. Calendar shapes such as `2026Q1` or bare `2026`"
+" are not accepted; pass `--year 2026 --period 1T` instead."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:145
+msgid ""
+"The `ledger list` and `ledger review` commands filter by period through "
+"`--filter` clauses. The period token and the year travel as two separate "
+"clauses, using the same AEAT tokens:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:153
+msgid ""
+"Pass the bare token to `period=` and the year to `year=`. The two clauses"
+" go together: `--filter period=1T` without `--filter year=2026` is "
+"refused. Combined forms such as `period=2026-1T` or `period=2026Q1` are "
+"not accepted."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:157
+msgid ""
+"For local planning, year-end is December 31 of the filing year. Annual "
+"period `0A` covers the full calendar year. The fourth quarter `4T` also "
+"ends on December 31, but it is still a quarterly period, not an annual "
+"return. The calendar commands above show deadlines after holiday and "
+"business-day adjustments."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:163
+msgid "What should I do with one modelo?"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:165
+msgid ""
+"List the modelo catalogue, then describe one modelo before creating "
+"filing work:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:171
+msgid "Then follow the filing workflow for the target modelo, year, and period:"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:173 ../../how-to/filing-calendar.md:196
+msgid "[Quickstart: produce a modelo file](quickstart.md)"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:174
+msgid "[How to prepare a Modelo 303 quarterly filing](modelo-303.md)"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:175
+msgid "[How to prepare the annual Modelo 390 summary](modelo-390.md)"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:176
+msgid "[The filing workflow](filing-spine.md)"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:178
+msgid "If results look wrong"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:180
+msgid ""
+"If a command reports missing profile facts, update the profile with [Set "
+"up your taxpayer profile](profile-setup.md). If census facts may be stale"
+" or missing, re-check them against your Modelo 036 copy with [Maintain "
+"Modelo 036 census facts in your profile](censo-update.md)."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:185
+msgid ""
+"If a command reports an invalid date, inactive profile, or readiness "
+"problem, use [Diagnose and repair your local setup](troubleshooting.md)."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:188
+msgid ""
+"For exact command flags and output fields, use the [CLI "
+"reference](../cli/index.rst)."
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:191
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:193
+msgid "[Set up your taxpayer profile](profile-setup.md)"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:194
+msgid "[Check AEAT notifications](check-aeat-notifications.md)"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:195
+msgid "[Import and manage transactions](import-bank-statements.md)"
+msgstr ""
+
+#: ../../how-to/filing-calendar.md:197
+msgid "[CLI reference](../cli/index.rst)"
+msgstr ""
+

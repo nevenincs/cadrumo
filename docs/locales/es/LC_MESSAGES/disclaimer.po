@@ -1,0 +1,60 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../disclaimer.md:1
+msgid "Disclaimer"
+msgstr ""
+
+#: ../../disclaimer.md:3
+msgid ""
+"Cadrumo, including its `aeat` command-line interface, is a software "
+"utility, not a tax advisor. It gives no tax, legal, accounting, or "
+"financial advice, creates no advisory relationship, and is not affiliated"
+" with, endorsed by, or connected to the Agencia Estatal de Administración"
+" Tributaria (AEAT)."
+msgstr ""
+
+#: ../../disclaimer.md:8
+msgid ""
+"Nothing Cadrumo produces is advice or a guarantee. No calculation, draft,"
+" verification, or export assures you that a figure, form, or filing is "
+"correct, complete, or compliant with current law. You alone are "
+"responsible for the accuracy, completeness, and legality of every figure "
+"you enter and every declaration you file, and you should review every "
+"output before you rely on it."
+msgstr ""
+
+#: ../../disclaimer.md:14
+msgid ""
+"Cadrumo never files. It does not submit to the AEAT and cannot file for "
+"you. You file yourself, through official channels, and bear sole "
+"responsibility for that filing. Because tax law changes and depends on "
+"your circumstances, consult a qualified professional such as an asesor "
+"fiscal or gestor for advice on your situation."
+msgstr ""
+
+#: ../../disclaimer.md:20
+msgid ""
+"Cadrumo is provided \"as is\", without warranty of any kind, under the "
+"Apache License 2.0. The authors accept no liability for any loss, "
+"penalty, interest, or other damage arising from its use."
+msgstr ""
+
