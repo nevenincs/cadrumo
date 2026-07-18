@@ -22,6 +22,7 @@ import json
 import os
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -117,7 +118,7 @@ def _conf_language_config() -> dict[str, object]:
     env = {
         **os.environ,
         "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(_REPO_ROOT / "docs" / "_build" / "cadrumo-locale-parity-store"),
+        "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-locale-parity-"),
     }
     result = subprocess.run(
         [sys.executable, "-c", script],

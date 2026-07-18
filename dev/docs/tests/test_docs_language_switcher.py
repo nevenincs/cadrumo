@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -133,7 +134,7 @@ def _conf_switcher_context(language: str) -> dict[str, object]:
         **os.environ,
         "CADRUMO_DOCS_PROJECT_ROOT": str(_REPO_ROOT),
         "CADRUMO_DOCS_LANGUAGE": language,
-        "CADRUMO_LOCAL_STORAGE_ROOT": str(_DOCS / "_build" / "cadrumo-switcher-ctx-store"),
+        "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-switcher-ctx-"),
     }
     result = subprocess.run(
         [sys.executable, "-c", script],
