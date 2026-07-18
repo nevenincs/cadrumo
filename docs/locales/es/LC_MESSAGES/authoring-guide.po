@@ -41,7 +41,7 @@ msgstr ""
 
 #: ../../authoring-guide.md:5
 msgid "Choose the right surface"
-msgstr "Elija la superficie adecuada"
+msgstr "Elige la superficie adecuada"
 
 #: ../../authoring-guide.md:7
 msgid "Where you make a change depends on what you're changing:"
@@ -52,7 +52,7 @@ msgid ""
 "**Repository markdown** is hand-written. Edit the README or a guide under"
 " `docs/` directly."
 msgstr ""
-"**El markdown del repositorio** se escribe a mano. Edite el README o una "
+"**El markdown del repositorio** se escribe a mano. Edita el README o una "
 "guía bajo `docs/` directamente."
 
 #: ../../authoring-guide.md:10
@@ -61,9 +61,9 @@ msgid ""
 "docstring in the source, and let Sphinx (the documentation build tool) "
 "render it. Never copy a signature into prose by hand."
 msgstr ""
-"**Los docstrings** son la única fuente de la referencia de la API. Edite "
-"el docstring en el código y deje que Sphinx (la herramienta de "
-"construcción de la documentación) lo renderice. Nunca copie una firma en "
+"**Los docstrings** son la única fuente de la referencia de la API. Edita "
+"el docstring en el código y deja que Sphinx (la herramienta de "
+"construcción de la documentación) lo renderice. Nunca copia una firma en "
 "el texto a mano."
 
 #: ../../authoring-guide.md:11
@@ -74,7 +74,7 @@ msgid ""
 msgstr ""
 "**La referencia de la API** la genera la herramienta `dev.docs.apidocs` a"
 " partir de los módulos del código. Escribe páginas stub (ficheros de "
-"referencia de marcador de posición); no edite esas páginas a mano: "
+"referencia de marcador de posición); no edites esas páginas a mano: "
 "regenérelas."
 
 #: ../../authoring-guide.md:12
@@ -84,7 +84,7 @@ msgid ""
 "commands that follow."
 msgstr ""
 "**La referencia de la CLI** se genera a partir del árbol de comandos (el "
-"conjunto completo de comandos y subcomandos de la CLI). No la edite; "
+"conjunto completo de comandos y subcomandos de la CLI). No la edites; "
 "regenérela con los comandos que se indican a continuación."
 
 #: ../../authoring-guide.md:14
@@ -129,7 +129,7 @@ msgstr ""
 
 #: ../../authoring-guide.md:21
 msgid "To rebuild the generated surfaces and verify them, run:"
-msgstr "Para reconstruir las superficies generadas y verificarlas, ejecute:"
+msgstr "Para reconstruir las superficies generadas y verificarlas, ejecuta:"
 
 #: ../../authoring-guide.md:30
 msgid ""
@@ -146,7 +146,7 @@ msgstr ""
 "navegador cada vez que cambia una página bajo `docs/` o un docstring bajo"
 " `src/cadrumo/`. Se enlaza a todas las interfaces en un puerto no "
 "predeterminado (para que un contenedor, una VM o un equipo de la LAN "
-"pueda alcanzarlo) y elige automáticamente un puerto libre; pase `just "
+"pueda alcanzarlo) y elige automáticamente un puerto libre; pasa `just "
 "docs-serve 9000` para fijar uno. Ejecutarlo por segunda vez se conecta a "
 "la vista previa ya en marcha en lugar de colisionar con ella. Añadir o "
 "eliminar un módulo sigue necesitando `python -m dev.docs.apidocs scaffold`"
@@ -181,7 +181,7 @@ msgid ""
 "sorts pages into four kinds: tutorial, how-to, reference, or explanation."
 msgstr ""
 "**Esquema.** Esboce el documento como títulos e intenciones de cada "
-"sección. Asigne a cada página un tipo de Diataxis: Diataxis es un marco "
+"sección. Asigna a cada página un tipo de Diataxis: Diataxis es un marco "
 "de documentación que clasifica las páginas en cuatro clases: tutorial, "
 "guía práctica, referencia o explicación."
 
@@ -193,7 +193,7 @@ msgid ""
 msgstr ""
 "**Refinamiento.** Un revisor sin contexto del proyecto lee solo el "
 "esquema y confirma que alguien nuevo entendería qué aporta cada sección. "
-"Revise hasta que todas las secciones lo superen."
+"Revisa hasta que todas las secciones lo superen."
 
 #: ../../authoring-guide.md:40
 msgid ""
@@ -237,7 +237,7 @@ msgstr ""
 
 #: ../../authoring-guide.md:46
 msgid "Keep the roles separate"
-msgstr "Mantenga los roles separados"
+msgstr "Mantén los roles separados"
 
 #: ../../authoring-guide.md:48
 msgid ""
@@ -247,9 +247,9 @@ msgid ""
 "quality, work from the document alone, without the codebase. The "
 "separation keeps each judgment honest."
 msgstr ""
-"Mantenga la investigación, la redacción y la revisión en manos distintas."
-" Cuando reúna contexto, no escriba el texto final. Cuando redacte, "
-"escriba a partir del contexto reunido y no invente datos. Cuando revise "
+"Mantén la investigación, la redacción y la revisión en manos distintas."
+" Cuando reúna contexto, no escribas el texto final. Cuando redacte, "
+"escribas a partir del contexto reunido y no invente datos. Cuando revise "
 "la calidad editorial, trabaje solo con el documento, sin el código. La "
 "separación mantiene honesto cada juicio."
 
@@ -266,7 +266,7 @@ msgid ""
 "should see the product, not the process that built it."
 msgstr ""
 "Las rutas, los nombres de fichero y el contenido de la documentación "
-"llevan solo nombres de dominio y de tema. No incorpore en ellos el marco "
+"llevan solo nombres de dominio y de tema. No incorpores en ellos el marco "
 "de documentación ni el proceso de gestión del proyecto. Eso descarta los "
 "identificadores de wave, fase y step, los identificadores de plan y de "
 "registro de decisiones, y las etiquetas de agente o de campaña. El lector"

@@ -34,7 +34,7 @@ msgstr ""
 "datos desde tus registros bancarios hasta un fichero de declaración "
 "terminado, y por qué existe cada paso. Está escrito para el contribuyente "
 "corriente en España: cualquier persona con NIF, CIF, DNI o NIE que prepare "
-"sus propias declaraciones. La AEAT es la *Agencia Estatal de Administración "
+"tus propias declaraciones. La AEAT es la *Agencia Estatal de Administración "
 "Tributaria*, la agencia tributaria española."
 
 #: ../../explanation/index.md:5

@@ -1218,7 +1218,7 @@ msgstr ""
 "comando combinado de estado remoto de IVA de solo lectura. Debe superar "
 "los presupuestos normales de autenticación y de superficie, pero "
 "mantenerse por debajo de los tiempos de espera del shell/herramienta del "
-"operador para que la CLI pueda cancelar y limpiar dentro de su propio "
+"operador para que la CLI pueda cancelar y limpiar dentro de tu propio "
 "proceso."
 
 #: ../../reference/environment-overrides.md
@@ -1237,7 +1237,7 @@ msgstr ""
 "presentaciones de IVA en vivo. Debe ser inferior al tiempo de espera de "
 "la superficie exterior de IVA en vivo para que los fallos parciales del "
 "historial de presentaciones puedan devolver un informe estructurado antes"
-" de que se cancele toda la superficie."
+" de que se cancela toda la superficie."
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS`"
@@ -1256,7 +1256,7 @@ msgid ""
 msgstr ""
 "Tiempo de espera exterior (ms) para cada superficie de lectura de IVA en "
 "vivo dentro de una adquisición combinada de estado remoto. Las etapas "
-"individuales del navegador tienen sus propios tiempos de espera más "
+"individuales del navegador tienen tus propios tiempos de espera más "
 "cortos; este acota toda la superficie del historial de presentaciones o "
 "de la cartera."
 
