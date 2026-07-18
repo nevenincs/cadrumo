@@ -32,7 +32,7 @@
     "persona": {
       "type": "string",
       "title": "Operator persona",
-      "description": "The harness persona scoping the tool surface (leave blank for the full surface). One of: coordinator, onboarding, ledger-groomer, classifier, modelo-preparer, verifier, reconciler.",
+      "description": "The harness persona scoping the tool surface (leave blank for the full surface). One of: cadrumo-coordinator, cadrumo-onboarding, cadrumo-ledger-groomer, cadrumo-classifier, cadrumo-modelo-preparer, cadrumo-verifier, cadrumo-reconciler.",
       "default": "",
       "required": false
     },

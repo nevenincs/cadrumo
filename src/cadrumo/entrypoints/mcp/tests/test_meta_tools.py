@@ -160,10 +160,10 @@ def test_gate_refusal_denies_the_handoff_boundary_to_a_non_verifier_persona() ->
     for persona in (AgentPersona.MODELO_PREPARER, AgentPersona.RECONCILER):
         refusal = gate_refusal(persona=persona, descriptor=export)
         assert refusal is not None
-        assert "verifier" in refusal
+        assert "cadrumo-verifier" in refusal
     # The verifier — the sole owner — is NOT denied it by the handoff rule.
     verifier_refusal = gate_refusal(persona=AgentPersona.VERIFIER, descriptor=export)
-    assert verifier_refusal is None or "verifier" not in verifier_refusal
+    assert verifier_refusal is None or "cadrumo-verifier" not in verifier_refusal
 
 
 def test_meta_execute_never_reaches_the_runner_on_a_handoff_denied_command() -> None:
@@ -180,7 +180,7 @@ def test_meta_execute_never_reaches_the_runner_on_a_handoff_denied_command() -> 
         run=boom,
     )
     assert outcome.refused is not None
-    assert "verifier" in outcome.refused
+    assert "cadrumo-verifier" in outcome.refused
     assert outcome.envelope is None
 
 
@@ -227,9 +227,9 @@ def test_describe_command_returns_the_full_descriptor_for_a_known_key() -> None:
     assert described.input_schema == by_key["modelo.export"].input_schema
     # The verifier owns the handoff; the preparer and reconciler are structurally
     # denied it, so they are absent from the reachable set while the verifier is in.
-    assert "verifier" in described.reachable_personas
-    assert "modelo-preparer" not in described.reachable_personas
-    assert "reconciler" not in described.reachable_personas
+    assert "cadrumo-verifier" in described.reachable_personas
+    assert "cadrumo-modelo-preparer" not in described.reachable_personas
+    assert "cadrumo-reconciler" not in described.reachable_personas
 
 
 def test_describe_command_returns_none_for_an_unknown_key() -> None:

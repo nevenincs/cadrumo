@@ -86,7 +86,7 @@ def _score(trajectory: LiveTrajectory, scenario: GoldenScenario) -> LiveScenario
 def _trajectory(calls: list[LiveToolCallRecord], narrations: list[LiveNarrationRecord]) -> LiveTrajectory:
     return LiveTrajectory(
         scenario="modelo-130-direct-estimation",
-        persona="verifier",
+        persona="cadrumo-verifier",
         session_id="live-harness-test",
         tool_calls=tuple(calls),
         narrations=tuple(narrations),
@@ -100,7 +100,7 @@ def test_scripted_session_captures_a_trajectory_the_scorer_scores() -> None:
     driver = ScriptedPersonaDriver([LiveCallTool(tool_name="cadrumo_harness_load", arguments_json="{}")])
     trajectory = run_live_session(
         ["cadrumo-mcp"],
-        persona="verifier",
+        persona="cadrumo-verifier",
         session_id="live-capture",
         driver=driver,
         command_key_by_tool={"cadrumo_harness_load": ""},

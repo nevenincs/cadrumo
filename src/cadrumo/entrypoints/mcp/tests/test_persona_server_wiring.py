@@ -42,8 +42,8 @@ def test_active_persona_is_none_when_env_var_is_blank() -> None:
 
 
 def test_active_persona_resolves_a_declared_member() -> None:
-    assert active_persona({PERSONA_ENV_VAR: "verifier"}) is AgentPersona.VERIFIER
-    assert active_persona({PERSONA_ENV_VAR: "modelo-preparer"}) is AgentPersona.MODELO_PREPARER
+    assert active_persona({PERSONA_ENV_VAR: "cadrumo-verifier"}) is AgentPersona.VERIFIER
+    assert active_persona({PERSONA_ENV_VAR: "cadrumo-modelo-preparer"}) is AgentPersona.MODELO_PREPARER
 
 
 def test_active_persona_raises_instructively_on_an_unrecognised_value() -> None:
@@ -104,7 +104,7 @@ def test_out_of_scope_call_is_refused_with_a_structured_message() -> None:
     assert message is not None
     assert "refused" in message
     assert "ledger.add" in message
-    assert "coordinator" in message
+    assert "cadrumo-coordinator" in message
 
 
 def test_coordinator_cannot_call_a_mutating_ledger_or_modelo_tool() -> None:
