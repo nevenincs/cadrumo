@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 22:29+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 22:29+0200\n"
+"Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../download.md:1
 msgid "Get Cadrumo"
-msgstr ""
+msgstr "Obtén Cadrumo"
 
 #: ../../download.md:3
 msgid ""
@@ -30,6 +29,10 @@ msgid ""
 "before you prepare your first declaration. Cadrumo runs on Windows, "
 "macOS, and Linux."
 msgstr ""
+"Esta página cubre las formas de conseguir Cadrumo en tu máquina: qué hay "
+"disponible hoy, cómo instalarlo y cómo confirmar que la instalación "
+"funciona antes de preparar tu primera declaración. Cadrumo funciona en "
+"Windows, macOS y Linux."
 
 #: ../../download.md:8
 msgid ""
@@ -40,14 +43,21 @@ msgid ""
 "name on public registries are not this project's tested releases. Release"
 " announcements land in [Updates](updates.md)."
 msgstr ""
+"Cadrumo está en fase pre-alpha. La única vía admitida para conseguirlo "
+"hoy es la copia del código fuente de abajo. No instales Cadrumo desde "
+"PyPI, un mercado público de plugins, Scoop, Homebrew ni un paquete de "
+"extensión de Desktop hasta que el proyecto anuncie esos canales como "
+"disponibles: los paquetes con el mismo nombre en registros públicos no "
+"son las versiones probadas de este proyecto. Los anuncios de versiones "
+"aparecen en [Actualizaciones](updates.md)."
 
 #: ../../download.md:16
 msgid "What you need"
-msgstr ""
+msgstr "Qué necesitas"
 
 #: ../../download.md:18
 msgid "Python 3.13 or newer."
-msgstr ""
+msgstr "Python 3.13 o posterior."
 
 #: ../../download.md:19
 msgid ""
@@ -55,10 +65,13 @@ msgid ""
 "/getting-started/installation/), each installed per its official guide "
 "for your operating system."
 msgstr ""
+"[Git](https://git-scm.com/downloads) y [uv](https://docs.astral.sh/uv"
+"/getting-started/installation/), cada uno instalado según su guía oficial "
+"para tu sistema operativo."
 
 #: ../../download.md:21
 msgid "Around 200 MB of free disk space."
-msgstr ""
+msgstr "Alrededor de 200 MB de espacio libre en disco."
 
 #: ../../download.md:23
 msgid ""
@@ -66,16 +79,22 @@ msgid ""
 "install. Cadrumo stores everything locally and encrypted; nothing about "
 "your taxes leaves your machine during installation."
 msgstr ""
+"No hace falta ningún dato del contribuyente, credenciales de la AEAT ni "
+"cuenta en línea para instalar. Cadrumo lo guarda todo de forma local y "
+"cifrada; nada sobre tus impuestos sale de tu máquina durante la "
+"instalación."
 
 #: ../../download.md:27
 msgid "Install from the source checkout"
-msgstr ""
+msgstr "Instala desde la copia del código fuente"
 
 #: ../../download.md:29
 msgid ""
 "The install is identical on every operating system once Git and uv are "
 "present. Run, in a terminal:"
 msgstr ""
+"La instalación es idéntica en todos los sistemas operativos una vez que "
+"Git y uv están presentes. Ejecuta, en una terminal:"
 
 #: ../../download.md:38
 msgid ""
@@ -84,14 +103,18 @@ msgid ""
 " and nothing outside the checkout directory is modified: removing the "
 "directory removes Cadrumo."
 msgstr ""
+"`uv sync` crea un entorno aislado e instala en él el comando `aeat` con "
+"todas las dependencias básicas fijadas. No se instala nada de forma "
+"global y no se modifica nada fuera del directorio de la copia: eliminar "
+"el directorio elimina Cadrumo."
 
 #: ../../download.md:43
 msgid "Confirm the install"
-msgstr ""
+msgstr "Confirma la instalación"
 
 #: ../../download.md:45
 msgid "Run the version check from the checkout:"
-msgstr ""
+msgstr "Ejecuta la comprobación de versión desde la copia:"
 
 #: ../../download.md:51
 msgid ""
@@ -101,10 +124,17 @@ msgid ""
 "](workstation-setup.md), which covers the dependency report, platform "
 "checks, and per-extra install commands."
 msgstr ""
+"Un número de versión significa que la instalación funcionó. Después "
+"ejecuta la comprobación completa de la estación de trabajo y añade los "
+"extras opcionales que quieras (exportación a Google, el navegador en vivo "
+"de la AEAT, la importación OFX/QFX, la superficie de agente) siguiendo "
+"[Instalar Cadrumo](workstation-setup.md), que cubre el informe de "
+"dependencias, las comprobaciones de plataforma y los comandos de "
+"instalación de cada extra."
 
 #: ../../download.md:57
 msgid "Distribution channels"
-msgstr ""
+msgstr "Canales de distribución"
 
 #: ../../download.md:59
 msgid ""
@@ -113,59 +143,63 @@ msgid ""
 "and this page will show the exact install command for each channel the "
 "moment its release is announced."
 msgstr ""
+"Los paquetes nativos se compilan y se prueban en cada versión para los "
+"canales de abajo. Están en la verificación final previa a la publicación:"
+" todavía no se ha publicado ninguno, y esta página mostrará el comando de "
+"instalación exacto de cada canal en cuanto se anuncie su versión."
 
 #: ../../download.md:68
 msgid "Platform"
-msgstr ""
+msgstr "Plataforma"
 
 #: ../../download.md:69
 msgid "Channel"
-msgstr ""
+msgstr "Canal"
 
 #: ../../download.md:70
 msgid "Status"
-msgstr ""
+msgstr "Estado"
 
 #: ../../download.md:71
 msgid "Windows (x86-64)"
-msgstr ""
+msgstr "Windows (x86-64)"
 
 #: ../../download.md:72
 msgid "Scoop package"
-msgstr ""
+msgstr "Paquete de Scoop"
 
 #: ../../download.md:73 ../../download.md:76 ../../download.md:79
 #: ../../download.md:82 ../../download.md:85
 msgid "In verification, not yet published"
-msgstr ""
+msgstr "En verificación, aún sin publicar"
 
 #: ../../download.md:74
 msgid "macOS (Apple silicon and Intel)"
-msgstr ""
+msgstr "macOS (Apple silicon e Intel)"
 
 #: ../../download.md:75 ../../download.md:78
 msgid "Homebrew formula"
-msgstr ""
+msgstr "Fórmula de Homebrew"
 
 #: ../../download.md:77
 msgid "Linux (x86-64 and arm64)"
-msgstr ""
+msgstr "Linux (x86-64 y arm64)"
 
 #: ../../download.md:80
 msgid "Any platform with Python"
-msgstr ""
+msgstr "Cualquier plataforma con Python"
 
 #: ../../download.md:81
 msgid "PyPI package (pip, uvx)"
-msgstr ""
+msgstr "Paquete de PyPI (pip, uvx)"
 
 #: ../../download.md:83
 msgid "Claude Code, Claude Desktop, Claude Cowork"
-msgstr ""
+msgstr "Claude Code, Claude Desktop, Claude Cowork"
 
 #: ../../download.md:84
 msgid "Plugin and Desktop extension bundle"
-msgstr ""
+msgstr "Plugin y paquete de extensión de Desktop"
 
 #: ../../download.md:88
 msgid ""
@@ -174,26 +208,33 @@ msgid ""
 "only listed as available here once that evidence exists for the published"
 " release."
 msgstr ""
+"Cada artefacto publicado llevará los bytes exactos que superaron la "
+"evidencia de instalación y ejecución de la cohorte de versión en su "
+"plataforma; un canal solo aparece como disponible aquí cuando esa "
+"evidencia existe para la versión publicada."
 
 #: ../../download.md:92
 msgid "After you install"
-msgstr ""
+msgstr "Después de instalar"
 
 #: ../../download.md:98
 msgid "Quickstart"
-msgstr ""
+msgstr "Guía rápida"
 
 #: ../../download.md:103
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr ""
+"Toma el camino más corto desde un perfil vacío hasta un fichero de modelo "
+"exportado."
 
 #: ../../download.md:106
 msgid "Connect an agent (MCP)"
-msgstr ""
+msgstr "Conecta un agente (MCP)"
 
 #: ../../download.md:111
 msgid ""
 "Let an AI assistant such as Claude drive Cadrumo with you, on your "
 "machine."
 msgstr ""
-
+"Deja que un asistente de IA como Claude maneje Cadrumo contigo, en tu "
+"máquina."
