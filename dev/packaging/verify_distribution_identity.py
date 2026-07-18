@@ -121,6 +121,53 @@ _MARKETPLACE_DESCRIPTION_ES: Final[str] = (
 # Per-claim keyword coverage for marketplace description: capability, safety,
 # on_host_storage, and never_files_live pass in both English and Spanish.
 # Privacy and human_confirmation are absent from this short marketplace blurb.
+# Approved English text extracted from the MCPB manifest description labeled section.
+# Must exactly match what _labeled_product_description returns for the English
+# section of packaging/mcpb/manifest.json "description" (stripped). Approved in S06.
+_MCPB_DESCRIPTION_EN: Final[str] = (
+    "Operate Cadrumo, a deterministic Spanish-tax CLI, as an MCP tool surface: "
+    "grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided "
+    "workflows, and gated execution that never files to AEAT."
+)
+# Approved Spanish text extracted from the MCPB manifest description labeled section.
+_MCPB_DESCRIPTION_ES: Final[str] = (
+    "Opera Cadrumo, una CLI determinista de impuestos españoles, como superficie de "
+    "herramientas MCP: búsqueda fundamentada sobre el corpus legal BOE/AEAT incluido, "
+    "flujos guiados según la situación del contribuyente y ejecución controlada que "
+    "nunca presenta declaraciones ante la AEAT."
+)
+# Per-claim keyword coverage for mcpb description: capability, safety, never_files_live
+# pass in both EN and ES. Privacy, on_host_storage, and human_confirmation are absent
+# from this short field — see the mcpb_client_display long_description for all six claims.
+# Approved English text extracted from the MCPB manifest long_description labeled section.
+# Must exactly match what _labeled_product_description returns for the English section
+# of packaging/mcpb/manifest.json "long_description" (stripped). Approved in S06.
+_MCPB_LONG_DESCRIPTION_EN: Final[str] = (
+    "The Cadrumo console exposes a deterministic Spanish-tax CLI to any MCP client. "
+    "It carries the operator rules, the taxpayer-situation skills, and guided-workflow "
+    "prompts; a read-only corpus and terminology search for legal grounding; and a "
+    "human-in-the-loop confirmation gate on every state-changing verb. Live submission "
+    "to AEAT is permanently impossible - no such tool exists; the taxpayer files outside "
+    "the app. All financial data stays on-host in encrypted storage; only the "
+    "conversation and the figures the assistant sees reach the LLM client's provider. "
+    "The bundle contains the exact digest-pinned Cadrumo distribution cohort."
+)
+# Approved Spanish text extracted from the MCPB manifest long_description labeled section.
+_MCPB_LONG_DESCRIPTION_ES: Final[str] = (
+    "La consola de Cadrumo expone una CLI determinista de impuestos españoles a "
+    "cualquier cliente MCP. Incorpora las reglas del operador, las habilidades por "
+    "situación del contribuyente y los avisos de flujo guiado; una búsqueda de solo "
+    "lectura sobre el corpus legal y la terminología para la fundamentación jurídica; "
+    "y una puerta de confirmación humana en cada verbo que modifica el estado. La "
+    "presentación en vivo ante la AEAT es permanentemente imposible - no existe tal "
+    "herramienta; el contribuyente presenta fuera de la aplicación. Todos los datos "
+    "financieros permanecen en el equipo en almacenamiento cifrado; solo la conversación "
+    "y las cifras que ve el asistente llegan al proveedor del cliente LLM. El paquete "
+    "contiene exactamente la cohorte de distribución de Cadrumo, fijada por sus "
+    "resúmenes criptográficos."
+)
+# Per-claim keyword coverage for mcpb long_description: all six claims pass in both
+# EN and ES. Approved in S06 as the full-coverage product statement.
 _APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple[str, str]]]] = {
     # plugin.json description — used by the standalone Claude plugin.
     ("claude_plugin_client_display", "description"): frozenset(
@@ -138,6 +185,18 @@ _APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple
     ("claude_marketplace_client_display", "description"): frozenset(
         {
             (_MARKETPLACE_DESCRIPTION_EN, _MARKETPLACE_DESCRIPTION_ES),
+        }
+    ),
+    # packaging/mcpb/manifest.json description — short capability summary.
+    ("mcpb_client_display", "description"): frozenset(
+        {
+            (_MCPB_DESCRIPTION_EN, _MCPB_DESCRIPTION_ES),
+        }
+    ),
+    # packaging/mcpb/manifest.json long_description — all six claims covered.
+    ("mcpb_client_display", "long_description"): frozenset(
+        {
+            (_MCPB_LONG_DESCRIPTION_EN, _MCPB_LONG_DESCRIPTION_ES),
         }
     ),
 }
