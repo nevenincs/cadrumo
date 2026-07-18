@@ -276,8 +276,8 @@ msgstr ""
 "Estas guías cubren todo el ciclo de preparación: configurar un perfil de "
 "contribuyente, importar y clasificar los registros bancarios, comprobar "
 "lo que hay que presentar, y preparar, verificar y exportar cada modelo. "
-"Los dos años de ejemplo —uno para el IRPF y otro para el IVA— recorren el"
-" ciclo completo con comandos reales."
+"Los dos años de ejemplo (uno para el IRPF y otro para el IVA) recorren el "
+"ciclo completo con comandos reales."
 
 #: ../../index.md:37
 msgid "Start from scratch"

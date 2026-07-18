@@ -50,8 +50,8 @@ msgstr ""
 "El Modelo 349 no declara ninguna cuota: es una simple relación. La "
 "declaración lleva un bloque resumen (con cuántos operadores "
 "intracomunitarios ha operado y por qué importes) y una fila de detalle "
-"por operador —código de país, número de IVA europeo, nombre, clave de "
-"operación y base— más filas de rectificación cuando corrige un periodo "
+"por operador (código de país, número de IVA europeo, nombre, clave de "
+"operación y base) más filas de rectificación cuando corrige un periodo "
 "declarado previamente."
 
 #: ../../how-to/modelo-349.md:16
@@ -133,9 +133,9 @@ msgid ""
 "creates the draft, aggregates the invoices into the declaration, and "
 "verifies it:"
 msgstr ""
-"La preparación siguiente registra dos facturas emitidas intracomunitarias"
-" —una entrega de bienes a un cliente alemán y un servicio a uno francés—,"
-" después crea el borrador, agrega las facturas a la declaración y la "
+"La preparación siguiente registra dos facturas emitidas intracomunitarias "
+"(una entrega de bienes a un cliente alemán y un servicio a uno francés), "
+"después crea el borrador, agrega las facturas a la declaración y la "
 "verifica:"
 
 #: ../../how-to/modelo-349.md:55

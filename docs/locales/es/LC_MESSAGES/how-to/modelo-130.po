@@ -144,7 +144,7 @@ msgid ""
 msgstr ""
 "Con las dos filas anteriores, el cálculo informa de unos ingresos "
 "acumulados (casilla `01`) de `1000.00`, un rendimiento neto (casilla "
-"`03`) de `500.00` —base de ingresos menos base de gasto— y un pago "
+"`03`) de `500.00` (base de ingresos menos base de gasto) y un pago "
 "fraccionado (casilla `04`) de `100.00`, el 20 por ciento del neto."
 
 #: ../../how-to/modelo-130.md:51

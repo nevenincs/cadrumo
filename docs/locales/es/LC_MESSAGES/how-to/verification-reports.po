@@ -536,9 +536,9 @@ msgstr ""
 "Las etiquetas y los mensajes de los comandos se muestran en español para "
 "coincidir con los formularios oficiales de la AEAT, mientras que esta "
 "guía está en inglés. Los nombres de campo que esta guía nombra "
-"—`granted_verificado_completo`, `completeness_status`, "
-"`finding_legal_refs`— coinciden exactamente con la salida, para que pueda"
-" relacionar una línea en español con el paso que la describe."
+"(`granted_verificado_completo`, `completeness_status`, "
+"`finding_legal_refs`) coinciden exactamente con la salida, para que pueda "
+"relacionar una línea en español con el paso que la describe."
 
 #: ../../how-to/verification-reports.md:216
 #, python-brace-format
