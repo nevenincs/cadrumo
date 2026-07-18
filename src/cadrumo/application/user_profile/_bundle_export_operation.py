@@ -219,9 +219,7 @@ class ProfileBundleExportJournalRepository:
     def prepared(self) -> tuple[ProfileBundleExportOperation, ...]:
         """Return journals still in the ``PREPARED`` (unpublished) state."""
         return tuple(
-            operation
-            for operation in self.list()
-            if operation.status is ProfileBundleExportOperationStatus.PREPARED
+            operation for operation in self.list() if operation.status is ProfileBundleExportOperationStatus.PREPARED
         )
 
     def _ensure_root(self) -> None:

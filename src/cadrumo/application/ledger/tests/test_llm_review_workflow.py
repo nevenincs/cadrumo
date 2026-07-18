@@ -36,6 +36,7 @@ from .._llm_review_workflow import (
     LlmReviewInvocationOrigin,
     execute_reviewed_decision,
 )
+from .._models import ManualLedgerTransactionResult
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -112,6 +113,7 @@ def test_apply_composes_classification_primitive_with_derived_source_command(
     )
 
     # Delegation happened: the transaction is now classified in real storage.
+    assert isinstance(result, ManualLedgerTransactionResult)
     assert result.transaction.transaction_id == tx_id
     assert result.transaction.business_classification is BusinessClassification.BUSINESS
 
@@ -119,10 +121,7 @@ def test_apply_composes_classification_primitive_with_derived_source_command(
     classified = _events_of(events, BucketEventType.LEDGER_TRANSACTION_CLASSIFIED)
     assert len(classified) == 1
     assert classified[0].payload["source_command"] == "aeat app ledger classify --llm --apply"
-    assert (
-        classified[0].payload["source_command"]
-        == LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY.source_command
-    )
+    assert classified[0].payload["source_command"] == LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY.source_command
 
 
 def test_reject_composes_reject_primitive_and_mutates_nothing(

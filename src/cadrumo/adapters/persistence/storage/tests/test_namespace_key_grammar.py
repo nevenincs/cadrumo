@@ -15,10 +15,9 @@ import re
 
 import pytest
 
-from cadrumo.application.calculations import member_observation_key, observation_key
-from cadrumo.core import Period
-from cadrumo.domain.transactions import transaction_index_object_key, transaction_object_key
-
+from .....application.calculations import member_observation_key, observation_key
+from .....core import Period
+from .....domain.transactions import transaction_index_object_key, transaction_object_key
 from .. import CALCULATION_OBSERVATIONS_NAMESPACE, TRANSACTION_CATALOGUE_NAMESPACE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

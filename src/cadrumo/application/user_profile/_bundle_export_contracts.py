@@ -120,8 +120,7 @@ def bundle_data_categories(bundle: UserProfilePortableExport) -> tuple[str, ...]
         if (category := _CATEGORY_BY_BUNDLE_FIELD.get(field_name)) is not None
     )
     carried = tuple(
-        f"{_CARRIED_NAMESPACE_CATEGORY_PREFIX}{namespace}"
-        for namespace in bundle.coverage_manifest.carried_namespaces
+        f"{_CARRIED_NAMESPACE_CATEGORY_PREFIX}{namespace}" for namespace in bundle.coverage_manifest.carried_namespaces
     )
     return (*schema_categories, *carried)
 
