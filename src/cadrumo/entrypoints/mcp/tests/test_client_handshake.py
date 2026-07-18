@@ -67,7 +67,7 @@ def test_in_process_client_initializes_lists_and_round_trips_a_read_only_call() 
 async def _stdio_handshake() -> _HandshakeObservation:
     params = StdioServerParameters(
         command="cadrumo-mcp",
-        env={**os.environ, "CADRUMO_MCP_PERSONA": "verifier"},
+        env={**os.environ, "CADRUMO_MCP_PERSONA": "cadrumo-verifier"},
     )
     async with (
         stdio_client(params) as (read_stream, write_stream),

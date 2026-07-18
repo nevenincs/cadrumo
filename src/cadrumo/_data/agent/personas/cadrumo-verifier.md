@@ -55,8 +55,8 @@ post-verification handoff via `aeat app modelo export` plus the filing marker,
 only after a clean verify. You issue no destructive or custody command, and you
 never touch the live AEAT tree.
 
-The runtime persona-scope gate is family-granular: it grants `modelo-preparer`,
-`verifier`, and `reconciler` the same `families={"modelo"}` boundary because the
+The runtime persona-scope gate is family-granular: it grants `cadrumo-modelo-preparer`,
+`cadrumo-verifier`, and `cadrumo-reconciler` the same `families={"modelo"}` boundary because the
 manifest exposes no finer split within that family. It therefore cannot
 structurally stop you from calling a preparer verb (`aeat app modelo work
 create`) or a reconciler verb (`aeat app modelo reconcile pull`) - the boundary
