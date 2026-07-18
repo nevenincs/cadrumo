@@ -77,7 +77,7 @@ def test_orientation_prompt_embeds_the_operator_rules() -> None:
     assert "aeat console" not in document.brief_text.casefold()
     embedded_texts = [item.text for item in document.embedded]
     assert operator_rules_text() in embedded_texts
-    assert document.embedded[0].uri == "cadrumo://rule/operating-rules"
+    assert document.embedded[0].uri == "cadrumo://rule/cadrumo-operating-rules"
 
 
 def test_unknown_prompt_name_raises_prompt_not_found() -> None:
