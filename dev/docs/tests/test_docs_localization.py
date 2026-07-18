@@ -96,6 +96,38 @@ def test_every_user_page_is_fully_translated(language: str) -> None:
     )
 
 
+@pytest.mark.parametrize("language", TARGET_LANGUAGES)
+def test_translations_introduce_no_machine_text_dashes(language: str) -> None:
+    """No msgstr carries more em/en dashes than its msgid (operator house style).
+
+    The English source is em-dash-ratcheted; a translation that introduces
+    em or en dashes absent from its source segment is the canonical
+    machine-generated-text marker the operator has barred from this corpus.
+    Legitimate dashes present in the source stay representable, because the
+    bound is the source's own count per entry, never zero.
+    """
+    dashes = ("—", "–")
+    failures: list[str] = []
+    for page in user_scope_source_pages(_DOCS):
+        po_path = _catalogue_path(language, page)
+        if not po_path.is_file():
+            continue
+        with po_path.open("rb") as handle:
+            catalogue = read_po(handle)
+        for message in catalogue:
+            if not message.id or not message.string:
+                continue
+            source = sum(str(message.id).count(dash) for dash in dashes)
+            translated = sum(str(message.string).count(dash) for dash in dashes)
+            if translated > source:
+                excerpt = str(message.string)[:80].replace("\n", " ")
+                failures.append(f"{page}: +{translated - source} ({excerpt}...)")
+    assert not failures, (
+        f"{language}: {len(failures)} msgstr(s) introduce em/en dashes absent from their msgid "
+        f"(machine-text marker; rephrase with commas, parentheses, or colons):\n  " + "\n  ".join(failures)
+    )
+
+
 def _conf_language_config() -> dict[str, object]:
     """Evaluate ``docs/conf.py`` and return its language-switch configuration.
 
