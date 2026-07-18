@@ -61,13 +61,16 @@ schema_version from the registry def.
 ## Constraints
 
 Execution touches `core/external_constants.py` (delete the symbol) and the
-auth-zone consumers (`_clave_movil_support.py`, `_clave_movil_page_flow.py`,
+clave-diagnostics consumers (`_clave_movil_support.py`, `_clave_movil_page_flow.py`,
 `_clave_movil.py`, `_clave_permanente_support.py`, `auth/__init__.py`) plus their
-tests. Those auth-zone files are the operator's active P04 custody-door surface
-and the S08 quiescence zone; execution MUST wait for that door to settle and land
-as one atomic explicit-path commit. The dependent step S09 already encodes this
-deferral. This ADR settles the DECISION; it does not authorise editing the auth
-zone before the door commits.
+tests, and lands as one atomic explicit-path commit. A working-tree check at
+adjudication time confirmed all seven files are clean: the operator's active P04
+door is the CUSTODY/master-key surface (`user_profile/_custody.py`,
+`_config/_custody_secret.py`, `_config_payloads.py`, `_config/_secure_input.py`,
+`storage/master_key/_master_key.py`) — a different subsystem from the
+clave-diagnostics files. The earlier deferral assumption (that the clave files
+were the door surface) was incorrect; execution therefore proceeds without door
+collision, guarded by a per-file git-diff gate that aborts if a peer edit lands.
 
 ## Implementation
 
