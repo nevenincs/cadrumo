@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/prorrata.md:1
 msgid "Apply IVA prorrata deductions"
-msgstr ""
+msgstr "Aplica deduccions de prorrata d'IVA"
 
 #: ../../how-to/prorrata.md:3
 msgid ""
@@ -32,16 +31,25 @@ msgid ""
 "prorrata choice once and the tool applies it to Modelo 303 and Modelo 390"
 " automatically."
 msgstr ""
+"Fes servir aquesta guia quan el contribuent no pot deduir tot l'IVA "
+"suportat. Això passa quan l'activitat barreja operacions que atorguen el "
+"dret a deduir amb operacions que no (operacions exemptes sense dret a "
+"deduir). L'IVA espanyol ho anomena *prorrata*. Registra la tria de prorrata "
+"del contribuent una vegada i l'eina l'aplica automàticament al Modelo 303 i "
+"al Modelo 390."
 
 #: ../../how-to/prorrata.md:9
 msgid ""
 "Cadrumo does not submit anything to AEAT. The prorrata register is local,"
 " profile-scoped taxpayer state, not an AEAT filing surface."
 msgstr ""
+"Cadrumo no presenta res a l'AEAT. El registre de prorrata és un estat del "
+"contribuent local i limitat al perfil, no una superfície de presentació de "
+"l'AEAT."
 
 #: ../../how-to/prorrata.md:12
 msgid "The tool needs a master-key passphrase and prompts for it."
-msgstr ""
+msgstr "L'eina necessita una contrasenya de clau mestra i la demana."
 
 #: ../../how-to/prorrata.md:14
 msgid ""
@@ -49,10 +57,13 @@ msgid ""
 "profile create <name>` before you start. [Set up your taxpayer profile"
 "](profile-setup.md) walks through it."
 msgstr ""
+"**Requisit:** un perfil de contribuent vàlid. Crea'n un amb `aeat config "
+"profile create <name>` abans de començar. [Configura el teu perfil de "
+"contribuent](profile-setup.md) t'hi guia."
 
 #: ../../how-to/prorrata.md:18
 msgid "Which prorrata applies"
-msgstr ""
+msgstr "Quina prorrata aplica"
 
 #: ../../how-to/prorrata.md:20
 msgid ""
@@ -60,6 +71,9 @@ msgid ""
 " every deductible input for the year. Use it when the taxpayer has no "
 "reason to separate inputs."
 msgstr ""
+"**Prorrata general** (LIVA art. 104): un únic percentatge de deducció "
+"s'aplica a cada input deduïble de l'any. Fes-la servir quan el contribuent "
+"no tingui cap motiu per separar els inputs."
 
 #: ../../how-to/prorrata.md:23
 msgid ""
@@ -68,6 +82,11 @@ msgid ""
 "deducting operations deduct nothing, and shared (\"common\") inputs "
 "deduct at the general percentage. Tag each input with its use."
 msgstr ""
+"**Prorrata especial** (LIVA art. 103): cada input dedueix segons el seu "
+"propi ús. Els inputs plenament deduïbles dedueixen la totalitat, els inputs "
+"utilitzats només per a operacions que no dedueixen no dedueixen res, i els "
+"inputs compartits («comuns») dedueixen al percentatge general. Etiqueta "
+"cada input amb el seu ús."
 
 #: ../../how-to/prorrata.md:28
 msgid ""
@@ -75,24 +94,30 @@ msgid ""
 "own settlement already produces. Use this guide only when the taxpayer "
 "elects a percentage or splits the business into differentiated sectors."
 msgstr ""
+"Si no optes per res, l'eina manté el tractament general de tota l'entitat "
+"que la seva pròpia liquidació ja produeix. Fes servir aquesta guia només "
+"quan el contribuent opta per un percentatge o divideix el negoci en sectors "
+"diferenciats."
 
 #: ../../how-to/prorrata.md:32
 msgid "Elect general prorrata"
-msgstr ""
+msgstr "Opta per la prorrata general"
 
 #: ../../how-to/prorrata.md:34
 msgid "Elect the year's general percentage:"
-msgstr ""
+msgstr "Opta pel percentatge general de l'any:"
 
 #: ../../how-to/prorrata.md:40
 msgid "`--ejercicio` is the filing year the election covers."
-msgstr ""
+msgstr "`--ejercicio` és l'any de presentació que cobreix l'opció."
 
 #: ../../how-to/prorrata.md:41
 msgid ""
 "`--percentage` is the provisional deduction percentage, 0 to 100 (LIVA "
 "art. 104.Uno + 105.Uno)."
 msgstr ""
+"`--percentage` és el percentatge de deducció provisional, de 0 a 100 (LIVA "
+"art. 104.Uno + 105.Uno)."
 
 #: ../../how-to/prorrata.md:43
 msgid ""
@@ -102,14 +127,19 @@ msgid ""
 " percentage, or `--provenance inicio_actividad` with `--reference` for a "
 "start-of-activity proposal."
 msgstr ""
+"La font del percentatge (`--provenance`) és per defecte "
+"`carried_prior_definitiva` (el percentatge definitiu de l'any anterior). "
+"Passa `--provenance aeat_autorizada` amb `--reference` per a un percentatge "
+"autoritzat per l'AEAT, o `--provenance inicio_actividad` amb `--reference` "
+"per a una proposta d'inici d'activitat."
 
 #: ../../how-to/prorrata.md:48
 msgid "Elect especial prorrata and classify inputs"
-msgstr ""
+msgstr "Opta per la prorrata especial i classifica els inputs"
 
 #: ../../how-to/prorrata.md:50
 msgid "Elect especial for the year:"
-msgstr ""
+msgstr "Opta per l'especial per a l'any:"
 
 #: ../../how-to/prorrata.md:56
 msgid ""
@@ -117,30 +147,37 @@ msgid ""
 "shared inputs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). The same "
 "`--provenance` and `--reference` options apply."
 msgstr ""
+"Aquí `--percentage` és el percentatge d'ús comú, el tipus aplicat als "
+"inputs compartits (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). S'apliquen "
+"les mateixes opcions `--provenance` i `--reference`."
 
 #: ../../how-to/prorrata.md:60
 msgid "Then tag each input row with its use when you add it:"
-msgstr ""
+msgstr "Després etiqueta cada fila d'input amb el seu ús quan l'afegeixis:"
 
 #: ../../how-to/prorrata.md:66
 msgid "`--input-classification` takes one value:"
-msgstr ""
+msgstr "`--input-classification` pren un valor:"
 
 #: ../../how-to/prorrata.md:68
 msgid ""
 "`exclusively_deductible` - the input serves only operations that grant "
 "the right to deduct; it deducts in full."
 msgstr ""
+"`exclusively_deductible` - l'input serveix només operacions que atorguen el "
+"dret a deduir; dedueix la totalitat."
 
 #: ../../how-to/prorrata.md:70
 msgid ""
 "`exclusively_non_deductible` - the input serves only operations that do "
 "not; it deducts nothing."
 msgstr ""
+"`exclusively_non_deductible` - l'input serveix només operacions que no ho "
+"fan; no dedueix res."
 
 #: ../../how-to/prorrata.md:72
 msgid "`common` - the input is shared; it deducts at the common-use percentage."
-msgstr ""
+msgstr "`common` - l'input és compartit; dedueix al percentatge d'ús comú."
 
 #: ../../how-to/prorrata.md:74
 msgid ""
@@ -148,40 +185,53 @@ msgid ""
 "tag is inert: the input deducts under the general percentage. Elect "
 "especial to make the tag take effect."
 msgstr ""
+"Si etiquetes un input però no optes per l'especial per a aquell any, l'eina "
+"adverteix que l'etiqueta és inert: l'input dedueix sota el percentatge "
+"general. Opta per l'especial perquè l'etiqueta tingui efecte."
 
 #: ../../how-to/prorrata.md:78
 msgid "Declare a differentiated sector"
-msgstr ""
+msgstr "Declara un sector diferenciat"
 
 #: ../../how-to/prorrata.md:80
 msgid ""
 "Declare a differentiated sector when part of the activity has its own "
 "deduction regime (LIVA arts. 9.1.c / 101):"
 msgstr ""
+"Declara un sector diferenciat quan una part de l'activitat té el seu propi "
+"règim de deducció (LIVA arts. 9.1.c / 101):"
 
 #: ../../how-to/prorrata.md:87
 msgid ""
 "`--sector-id` is a stable id the register entries and ledger rows "
 "reference."
 msgstr ""
+"`--sector-id` és un id estable que referencien les entrades del registre i "
+"les files del ledger."
 
 #: ../../how-to/prorrata.md:88
 msgid ""
 "`--letra` is the LIVA art. 9.1.c letra that makes the sector "
 "differentiated: `a`, `b`, `c`, or `d`."
 msgstr ""
+"`--letra` és la letra de l'art. 9.1.c de la LIVA que fa que el sector sigui "
+"diferenciat: `a`, `b`, `c` o `d`."
 
 #: ../../how-to/prorrata.md:90
 msgid ""
 "`--activity-code` is a CNAE or IAE code grouped into the sector. Repeat "
 "it for each code; give at least one."
 msgstr ""
+"`--activity-code` és un codi CNAE o IAE agrupat dins del sector. Repeteix-lo "
+"per a cada codi; indica'n almenys un."
 
 #: ../../how-to/prorrata.md:93
 msgid ""
 "Scope an election to a sector with `--sector`, and tag a row's sector "
 "with `--sector` on `ledger add`:"
 msgstr ""
+"Limita una opció a un sector amb `--sector`, i etiqueta el sector d'una fila "
+"amb `--sector` a `ledger add`:"
 
 #: ../../how-to/prorrata.md:100
 msgid ""
@@ -189,16 +239,22 @@ msgid ""
 "is unmatched: the input deducts at the common-use percentage until you "
 "declare the sector. Declare the sector first, or fix the id."
 msgstr ""
+"Si etiquetes una fila amb un sector que no has declarat, l'eina adverteix "
+"que l'etiqueta no té correspondència: l'input dedueix al percentatge d'ús "
+"comú fins que declares el sector. Declara el sector primer, o corregeix "
+"l'id."
 
 #: ../../how-to/prorrata.md:104
 msgid "Read the settlement advisories"
-msgstr ""
+msgstr "Llegeix els advertiments de la liquidació"
 
 #: ../../how-to/prorrata.md:106
 msgid ""
 "When you calculate the year-end Modelo 303 (the 4T settlement), the tool "
 "may surface non-blocking advisories:"
 msgstr ""
+"Quan calcules el Modelo 303 de tancament d'exercici (la liquidació del 4T), "
+"l'eina pot mostrar advertiments no bloquejadors:"
 
 #: ../../how-to/prorrata.md:109
 #, python-format
@@ -208,16 +264,25 @@ msgid ""
 "103.Dos.2) makes especial mandatory. Classify every input of the year so "
 "the tool can run this check; until then it prompts you to classify."
 msgstr ""
+"**L'especial pot ser obligatòria** - quan el contribuent calcula sota la "
+"prorrata general i l'especial deduiria almenys un 10% menys, la llei (LIVA "
+"art. 103.Dos.2) fa que l'especial sigui obligatòria. Classifica cada input "
+"de l'any perquè l'eina pugui fer aquesta comprovació; fins llavors et "
+"demana que classifiquis."
 
 #: ../../how-to/prorrata.md:113
 msgid ""
 "**Inert classification** - an `--input-classification` tag set with no "
 "especial election for that year."
 msgstr ""
+"**Classificació inert** - una etiqueta `--input-classification` establerta "
+"sense cap opció d'especial per a aquell any."
 
 #: ../../how-to/prorrata.md:115
 msgid "**Unmatched sector** - a `--sector` tag naming a sector not yet declared."
 msgstr ""
+"**Sector sense correspondència** - una etiqueta `--sector` que anomena un "
+"sector encara no declarat."
 
 #: ../../how-to/prorrata.md:117
 msgid ""
@@ -225,34 +290,42 @@ msgid ""
 "inputs](review-calculation-values.md) before you [verify the filing"
 "](verification-reports.md)."
 msgstr ""
+"Aquests són advertiments, no refusos. Llegeix-los juntament amb les "
+"[entrades de càlcul](review-calculation-values.md) abans de [verificar la "
+"presentació](verification-reports.md)."
 
 #: ../../how-to/prorrata.md:121
 msgid "Review the register"
-msgstr ""
+msgstr "Revisa el registre"
 
 #: ../../how-to/prorrata.md:123
 msgid "List every election and declared sector on the active profile:"
-msgstr ""
+msgstr "Llista cada opció i cada sector declarat al perfil actiu:"
 
 #: ../../how-to/prorrata.md:129
 msgid "Next steps"
-msgstr ""
+msgstr "Passos següents"
 
 #: ../../how-to/prorrata.md:131
 msgid ""
 "[Classify transactions](classify-transactions.md) so each input carries "
 "the data prorrata needs."
 msgstr ""
+"[Classifica transaccions](classify-transactions.md) perquè cada input porti "
+"les dades que necessita la prorrata."
 
 #: ../../how-to/prorrata.md:133
 msgid ""
 "[Review calculation inputs](review-calculation-values.md) to see the "
 "deducted amounts."
 msgstr ""
+"[Revisa les entrades de càlcul](review-calculation-values.md) per veure els "
+"imports deduïts."
 
 #: ../../how-to/prorrata.md:135
 msgid ""
 "[Prepare a Modelo 303 IVA filing](modelo-303.md) and [the annual Modelo "
 "390 summary](modelo-390.md)."
 msgstr ""
-
+"[Prepara una presentació d'IVA amb el Modelo 303](modelo-303.md) i [el resum "
+"anual del Modelo 390](modelo-390.md)."
