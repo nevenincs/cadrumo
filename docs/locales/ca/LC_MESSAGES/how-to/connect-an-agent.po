@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/connect-an-agent.md:1
 msgid "Connect an agent (MCP)"
-msgstr "Connecteu un agent (MCP)"
+msgstr "Connecta un agent (MCP)"
 
 #: ../../how-to/connect-an-agent.md:3
 msgid ""
@@ -31,11 +31,11 @@ msgid ""
 "to the Agencia Estatal de Administración Tributaria (AEAT): the agent "
 "surface exposes the same local, gated commands the CLI does."
 msgstr ""
-"Utilitzeu això quan vulgueu que un assistent d'IA, com ara Claude, operi "
-"Cadrumo amb vós. L'assistent llegeix els vostres registres, demana al "
-"motor que executi càlculs i explica els resultats en llenguatge planer. "
-"Cada xifra continua venint del motor determinista, i mai no s'envia res a"
-" l'Agencia Estatal de Administración Tributaria (AEAT): la superfície de "
+"Utilitza això quan vulguis que un assistent d'IA, com ara Claude, operi "
+"Cadrumo amb tu. L'assistent llegeix els teus registres, demana al motor "
+"que executi càlculs i explica els resultats en llenguatge planer. Cada "
+"xifra continua venint del motor determinista, i mai no s'envia res a "
+"l'Agencia Estatal de Administración Tributaria (AEAT): la superfície de "
 "l'agent exposa les mateixes ordres locals i condicionades que la CLI."
 
 #: ../../how-to/connect-an-agent.md:10
@@ -73,24 +73,24 @@ msgid ""
 " channels."
 msgstr ""
 "L'adquisició via connector públic, extensió d'escriptori i PyPI encara no"
-" està disponible. De moment, connecteu-vos des d'un checkout de codi font"
-" autoritzat. Els artefactes de connector i extensió generats són "
-"candidats a llançament, no canals d'instal·lació públics."
+" està disponible. De moment, connecta't des d'un checkout de codi font "
+"autoritzat. Els artefactes de connector i extensió generats són candidats"
+" a llançament, no canals d'instal·lació públics."
 
 #: ../../how-to/connect-an-agent.md:24
 msgid "Prepare the source checkout"
-msgstr "Prepareu el checkout del codi font"
+msgstr "Prepara el checkout del codi font"
 
 #: ../../how-to/connect-an-agent.md:33
 msgid "Register the source server"
-msgstr "Registreu el servidor de codi font"
+msgstr "Registra el servidor de codi font"
 
 #: ../../how-to/connect-an-agent.md:35
 msgid ""
 "Register `uv run cadrumo-mcp` as a stdio server and set the checkout as "
 "the working directory. In clients that accept a JSON server definition:"
 msgstr ""
-"Registreu `uv run cadrumo-mcp` com a servidor stdio i establiu el "
+"Registra `uv run cadrumo-mcp` com a servidor stdio i estableix el "
 "checkout com a directori de treball. En els clients que accepten una "
 "definició de servidor en JSON:"
 
@@ -100,9 +100,9 @@ msgid ""
 "checkout. Do not replace this with `uvx`, a marketplace install, or a "
 "downloaded extension until public distribution is announced."
 msgstr ""
-"Substituïu el camí d'exemple pel camí absolut al vostre checkout "
-"autoritzat. No ho substituïu per `uvx`, una instal·lació de mercat o una "
-"extensió descarregada fins que s'anunciï la distribució pública."
+"Substitueix el camí d'exemple pel camí absolut al teu checkout "
+"autoritzat. No ho substitueixis per `uvx`, una instal·lació de mercat o "
+"una extensió descarregada fins que s'anunciï la distribució pública."
 
 #: ../../how-to/connect-an-agent.md:54
 msgid "Before the first agent session"
@@ -118,8 +118,8 @@ msgid ""
 msgstr ""
 "El servidor utilitza el mateix magatzem local xifrat i el mateix perfil "
 "actiu que la CLI. Un servidor no pot respondre a una sol·licitud de "
-"contrasenya, de manera que configureu primer la contrasenya per a "
-"execucions desateses: vegeu [Executeu sense sol·licitud de contrasenya"
+"contrasenya, de manera que configures primer la contrasenya per a "
+"execucions desateses: consulta [Executa sense sol·licitud de contrasenya"
 "](protect-data-access.md#run-without-a-passphrase-prompt)."
 
 #: ../../how-to/connect-an-agent.md:61
@@ -140,7 +140,7 @@ msgstr ""
 " esborranys i preparar exportacions, perquè són operacions locals. No pot"
 " presentar, notificar ni enviar res a l'AEAT, i no pot inventar cap "
 "xifra: els càlculs sempre s'executen dins del motor determinista, i cada "
-"valor conserva les seves referències legals. Vós reviseu i presenteu vós "
+"valor conserva les seves referències legals. Tu revises i presentes tu "
 "mateix, exactament com al [Començament ràpid](quickstart.md) i a la [guia"
 " de presentació](file-at-aeat.md)."
 
