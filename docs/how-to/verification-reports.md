@@ -39,6 +39,7 @@ seed ledger.
 If you want to understand how filings and saved calculations fit together,
 read [The filing workflow](filing-spine.md) first.
 
+(run-verification)=
 ## Run verification
 
 Create the draft, calculate it, verify it, and open the saved report. Verify
@@ -110,6 +111,7 @@ Blocking findings prevent the draft from becoming verified, and export needs a
 verified calculation. Warnings do not block; read them, decide whether they
 apply to you, and move on.
 
+(after-any-fix-re-run-verification)=
 ## After any fix: re-run verification
 
 After you change anything, run `aeat app modelo work verify` again for the same
@@ -196,6 +198,7 @@ on it:
 :verify: Confirm the work unit's state and action history read back.
 ```
 
+(the-filing-deadline-has-passed)=
 ## The filing deadline has passed
 
 Verification does not check filing deadlines. It still runs for a past period and

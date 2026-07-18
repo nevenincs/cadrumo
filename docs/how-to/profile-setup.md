@@ -12,6 +12,7 @@ upload it yourself.
 If you haven't installed Cadrumo and run the `aeat` command yet, start with the
 [quickstart](quickstart.md), then come back here.
 
+(what-the-active-profile-means)=
 ## What the active profile means
 
 The active profile is the taxpayer context for `aeat app` commands. While a
@@ -103,6 +104,7 @@ and run the command again: --entity-type --name --surnames.
 Add `--accept-defaults` when you intentionally want Cadrumo to fill the questions
 you omit from its built-in defaults.
 
+(worked-example-a-natural-person-with-an-activity)=
 ### Worked example: a natural person with an activity
 
 This example creates a natural-person profile for an individual with an

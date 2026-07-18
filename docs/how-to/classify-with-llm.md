@@ -29,6 +29,7 @@ You need:
 
 The runtime emits help, prompts, and messages in Spanish.
 
+(set-up-a-provider)=
 ## Set up a provider
 
 `aeat` does not store LLM credentials and has no separate LLM account
@@ -278,6 +279,7 @@ CSV-based manual path (`aeat app ledger classify --from-csv
 add` then `rule apply --dry-run` then `rule apply`); both are covered in
 [Classify transactions](classify-transactions.md).
 
+(privacy-boundary)=
 ## Privacy boundary
 
 LLM classification calls the selected provider CLI on your machine. That CLI
