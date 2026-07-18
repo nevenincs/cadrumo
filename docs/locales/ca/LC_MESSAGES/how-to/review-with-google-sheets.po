@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/review-with-google-sheets.md:1
 msgid "Review calculations with Google Sheets"
-msgstr ""
+msgstr "Revisa càlculs amb Google Sheets"
 
 #: ../../how-to/review-with-google-sheets.md:3
 msgid ""
@@ -32,6 +31,13 @@ msgid ""
 "is for reviewing calculated values after your profile and transactions "
 "are ready. It is not a bank statement import or bulk edit tool."
 msgstr ""
+"Aquesta pàgina tracta la revisió en full de càlcul d'un càlcul de modelo: "
+"exportar-lo a Google Sheets, comprovar com s'arriba a cada total amb "
+"fórmules en directe i baixar les teves edicions revisades com a entrades de "
+"presentació tipades. La baixada retorna aquestes edicions sense fer-les "
+"persistents. Aquest flux de treball serveix per revisar valors calculats "
+"un cop el teu perfil i les teves transaccions estan a punt. No és una eina "
+"d'importació d'extractes bancaris ni d'edició massiva."
 
 #: ../../how-to/review-with-google-sheets.md:10
 msgid ""
@@ -39,6 +45,10 @@ msgid ""
 "offline `.xlsx` serializer, but the current operator command surface does"
 " not expose it. Use Google Sheets when you want to review and adjust."
 msgstr ""
+"Google Sheets és la superfície de revisió. El codi també conté un "
+"serialitzador `.xlsx` fora de línia, però la superfície d'ordres d'operador "
+"actual no l'exposa. Fes servir Google Sheets quan vulguis revisar i "
+"ajustar."
 
 #: ../../how-to/review-with-google-sheets.md:14
 msgid ""
@@ -48,40 +58,55 @@ msgid ""
 "authorized account rather than the documentation sandbox, so they are "
 "shown as display-only frames."
 msgstr ""
+"Les ordres de configuració local d'aquesta pàgina (estat, vinculació de "
+"carpeta, tancament de sessió) i les comprovacions de preparació del ledger "
+"s'executen en directe en el moment de la generació. Les ordres que "
+"accedeixen a Google Drive i Sheets s'executen contra el teu propi compte "
+"autoritzat i no pas a l'entorn de proves de la documentació, de manera que "
+"es mostren com a marcs només il·lustratius."
 
 #: ../../how-to/review-with-google-sheets.md:19
 msgid "Before you start"
-msgstr ""
+msgstr "Abans de començar"
 
 #: ../../how-to/review-with-google-sheets.md:21
 msgid "You need:"
-msgstr ""
+msgstr "Necessites:"
 
 #: ../../how-to/review-with-google-sheets.md:23
 msgid "an active profile; see [Set up your taxpayer profile](profile-setup.md)"
 msgstr ""
+"un perfil actiu; consulta [Configura el teu perfil de contribuent](profile-"
+"setup.md)"
 
 #: ../../how-to/review-with-google-sheets.md:24
 msgid ""
 "classified transaction data; see [Import and manage transactions](import-"
 "bank-statements.md)"
 msgstr ""
+"dades de transaccions classificades; consulta [Importa i gestiona "
+"transaccions](import-bank-statements.md)"
 
 #: ../../how-to/review-with-google-sheets.md:25
 msgid "a modelo and period ready enough to calculate"
-msgstr ""
+msgstr "un modelo i un període prou a punt per calcular"
 
 #: ../../how-to/review-with-google-sheets.md:26
 msgid ""
 "a Google API credentials file (a Desktop OAuth client JSON from the "
 "[Google Cloud Console](https://console.cloud.google.com/))"
 msgstr ""
+"un fitxer de credencials de l'API de Google (un JSON de client OAuth "
+"d'escriptori de la [Google Cloud Console](https://console.cloud.google."
+"com/))"
 
 #: ../../how-to/review-with-google-sheets.md:28
 msgid ""
 "the ID of a Google Drive folder where Cadrumo should create spreadsheets "
 "(copy the ID from the folder's URL in Google Drive)"
 msgstr ""
+"l'ID d'una carpeta de Google Drive on Cadrumo hauria de crear els fulls de "
+"càlcul (copia l'ID de l'URL de la carpeta a Google Drive)"
 
 #: ../../how-to/review-with-google-sheets.md:31
 msgid ""
@@ -89,16 +114,22 @@ msgid ""
 "does not use an older `aeat-vault/` folder; export a new workbook before "
 "pulling edits into Cadrumo."
 msgstr ""
+"Cadrumo crea la seva carpeta `cadrumo-vault/` dins d'aquella carpeta de "
+"Drive. No utilitza cap carpeta `aeat-vault/` antiga; exporta un llibre de "
+"treball nou abans de baixar edicions cap a Cadrumo."
 
 #: ../../how-to/review-with-google-sheets.md:35
 msgid "Configure Google access"
-msgstr ""
+msgstr "Configura l'accés a Google"
 
 #: ../../how-to/review-with-google-sheets.md:37
 msgid ""
 "Register the Desktop OAuth client for the active profile and run the "
 "consent flow. Both reach Google, so they are display-only here:"
 msgstr ""
+"Registra el client OAuth d'escriptori per al perfil actiu i executa el flux "
+"de consentiment. Tots dos accedeixen a Google, de manera que aquí són només "
+"il·lustratius:"
 
 #: ../../how-to/review-with-google-sheets.md:43
 msgid ""
@@ -107,22 +138,30 @@ msgid ""
 "here. On an unconfigured profile the status reads not-connected, and the "
 "folder you set reads back verbatim:"
 msgstr ""
+"Comprova l'estat de Google i estableix la carpeta de Drive on Cadrumo "
+"crearà els fulls de càlcul. Aquestes són ordres de configuració local, de "
+"manera que aquí s'executen. En un perfil no configurat, l'estat mostra no "
+"connectat, i la carpeta que estableixes es torna a mostrar literalment:"
 
 #: ../../how-to/review-with-google-sheets.md:52
 msgid ""
 "Probe the connection once the OAuth client is registered. The probe "
 "reaches Google, so it is display-only here:"
 msgstr ""
+"Prova la connexió un cop el client OAuth està registrat. La prova accedeix a "
+"Google, de manera que aquí és només il·lustrativa:"
 
 #: ../../how-to/review-with-google-sheets.md:58
 msgid ""
 "The Google integration is profile-scoped. If you switch profiles, check "
 "Google status and folder binding again."
 msgstr ""
+"La integració de Google està limitada al perfil. Si canvies de perfil, "
+"torna a comprovar l'estat de Google i la vinculació de carpeta."
 
 #: ../../how-to/review-with-google-sheets.md:61
 msgid "Export a calculation workbook"
-msgstr ""
+msgstr "Exporta un llibre de treball de càlcul"
 
 #: ../../how-to/review-with-google-sheets.md:63
 msgid ""
@@ -130,6 +169,9 @@ msgid ""
 " The export creates a Google Sheets workbook inside the configured "
 "`cadrumo-vault/` area in Drive:"
 msgstr ""
+"Exporta la superfície de càlcul del registre per a un modelo, un any i un "
+"període. L'exportació crea un llibre de treball de Google Sheets dins de "
+"l'àrea `cadrumo-vault/` configurada a Drive:"
 
 #: ../../how-to/review-with-google-sheets.md:70
 msgid ""
@@ -137,6 +179,9 @@ msgid ""
 "`aeat app ledger export` when you need a CSV, JSONL, or XLSX snapshot of "
 "ledger rows."
 msgstr ""
+"És una superfície de revisió de càlcul, no una exportació d'extracte "
+"bancari. Fes servir `aeat app ledger export` quan necessitis una "
+"instantània CSV, JSONL o XLSX de les files del ledger."
 
 #: ../../how-to/review-with-google-sheets.md:73
 msgid ""
@@ -144,10 +189,13 @@ msgid ""
 "values carried from related filings, such as annual summaries or prior-"
 "quarter carryovers."
 msgstr ""
+"Fes servir `--prefill-relations` només quan vulguis que el full de càlcul "
+"inclogui valors arrossegats de presentacions relacionades, com ara resums "
+"anuals o arrossegaments de trimestres anteriors."
 
 #: ../../how-to/review-with-google-sheets.md:77
 msgid "Pull your edits back"
-msgstr ""
+msgstr "Baixa les teves edicions"
 
 #: ../../how-to/review-with-google-sheets.md:79
 msgid ""
@@ -156,6 +204,11 @@ msgid ""
 "include edited row-level data assembled as structured observations. The "
 "command does not persist those observations:"
 msgstr ""
+"Després de revisar o editar el llibre de treball, baixa les edicions "
+"tipades del full. Afegeix `--assemble-observations` quan vulguis que la "
+"sortida de l'ordre inclogui les dades editades a nivell de fila "
+"assemblades com a observacions estructurades. L'ordre no fa persistents "
+"aquestes observacions:"
 
 #: ../../how-to/review-with-google-sheets.md:87
 msgid ""
@@ -163,10 +216,13 @@ msgid ""
 "profile and matches the expected filing period. If it refuses, re-export "
 "and retry from the new spreadsheet."
 msgstr ""
+"L'ordre de baixada comprova que el full de càlcul pertany al perfil actual "
+"i que coincideix amb el període de presentació esperat. Si es nega, torna a "
+"exportar i torna a provar-ho des del full de càlcul nou."
 
 #: ../../how-to/review-with-google-sheets.md:91
 msgid "Compute casilla values from the Sheet"
-msgstr ""
+msgstr "Calcula els valors de casilla a partir del full"
 
 #: ../../how-to/review-with-google-sheets.md:93
 msgid ""
@@ -175,6 +231,9 @@ msgid ""
 "calculation engine over them, and displays the result. It persists "
 "nothing:"
 msgstr ""
+"Executa `compute` quan vulguis que Cadrumo calculi els valors de casilla a "
+"partir de les edicions del full. Baixa les cel·les editades per l'operador, "
+"hi executa el motor de càlcul i mostra el resultat. No fa res persistent:"
 
 #: ../../how-to/review-with-google-sheets.md:100
 msgid ""
@@ -182,10 +241,13 @@ msgid ""
 "filing period. If it refuses, re-export and retry from the new "
 "spreadsheet."
 msgstr ""
+"L'ordre compute comprova que el full de càlcul coincideix amb el període de "
+"presentació esperat. Si es nega, torna a exportar i torna a provar-ho des "
+"del full de càlcul nou."
 
 #: ../../how-to/review-with-google-sheets.md:103
 msgid "Check the spreadsheet calculation"
-msgstr ""
+msgstr "Comprova el càlcul del full de càlcul"
 
 #: ../../how-to/review-with-google-sheets.md:105
 msgid ""
@@ -194,16 +256,22 @@ msgid ""
 "Agencia Estatal de Administración Tributaria (AEAT) outputs, pass it "
 "explicitly with `--scenario`:"
 msgstr ""
+"Executa l'ordre de verificació de calc-sheets per al mateix modelo, any i "
+"període. Si tens un JSON d'escenari amb entrades d'operador i sortides "
+"esperades de l'Agencia Estatal de Administración Tributaria (AEAT), passa'l "
+"explícitament amb `--scenario`:"
 
 #: ../../how-to/review-with-google-sheets.md:113
 msgid ""
 "Verification compares the calculation surfaces implemented by the app. It"
 " does not submit a filing to AEAT."
 msgstr ""
+"La verificació compara les superfícies de càlcul implementades per "
+"l'aplicació. No presenta cap declaració a l'AEAT."
 
 #: ../../how-to/review-with-google-sheets.md:116
 msgid "Back up your encrypted records to Drive"
-msgstr ""
+msgstr "Fes una còpia de seguretat dels teus registres xifrats a Drive"
 
 #: ../../how-to/review-with-google-sheets.md:118
 msgid ""
@@ -212,6 +280,10 @@ msgid ""
 "what would upload per storage area without changing anything. Narrow a "
 "large push with `--namespace` or `--limit`:"
 msgstr ""
+"Conserva una còpia fora de la màquina dels teus registres xifrats reflectint-"
+"los a la carpeta de Drive configurada. Previsualitza primer amb `--dry-run`; "
+"informa de què es pujaria per àrea d'emmagatzematge sense canviar res. "
+"Limita una pujada gran amb `--namespace` o `--limit`:"
 
 #: ../../how-to/review-with-google-sheets.md:126
 msgid ""
@@ -221,10 +293,15 @@ msgid ""
 "way: Cadrumo writes the copy and never reads Drive back as a source of "
 "truth for your records."
 msgstr ""
+"Només es puja text xifrat. Els teus registres surten de la màquina "
+"exactament tal com estan xifrats al disc, i la clau mestra mai no surt del "
+"teu ordinador, de manera que la còpia de Drive és il·legible sense ella. El "
+"mirall és unidireccional: Cadrumo escriu la còpia i mai no torna a llegir "
+"Drive com a font de veritat dels teus registres."
 
 #: ../../how-to/review-with-google-sheets.md:131
 msgid "Sign out of Google"
-msgstr ""
+msgstr "Tanca la sessió de Google"
 
 #: ../../how-to/review-with-google-sheets.md:133
 msgid ""
@@ -234,16 +311,24 @@ msgid ""
 "`aeat config google login` can sign in again without re-importing the "
 "Cloud Console JSON:"
 msgstr ""
+"Esborra la sessió de Google per al perfil actiu. El tancament de sessió és "
+"una ordre local, de manera que aquí s'executa. Elimina el testimoni de "
+"sessió desat i les seves metadades. El client OAuth registrat es conserva a "
+"propòsit, de manera que un `aeat config google login` posterior pot tornar a "
+"iniciar sessió sense tornar a importar el JSON de la Cloud Console:"
 
 #: ../../how-to/review-with-google-sheets.md:142
 msgid "Where this fits"
-msgstr ""
+msgstr "On encaixa això"
 
 #: ../../how-to/review-with-google-sheets.md:144
 msgid ""
 "Use this after transaction review and classification. Confirm the period "
 "is ready before you rely on the calculation workbook:"
 msgstr ""
+"Fes servir això després de la revisió i la classificació de transaccions. "
+"Confirma que el període està a punt abans de refiar-te del llibre de treball "
+"de càlcul:"
 
 #: ../../how-to/review-with-google-sheets.md:151
 msgid ""
@@ -251,16 +336,22 @@ msgid ""
 "proportionality references, finish those in [Classify transactions"
 "](classify-transactions.md) before relying on the calculation workbook."
 msgstr ""
+"Si al ledger encara li falten categories, camps d'IVA, divisa o referències "
+"de proporcionalitat, acaba-les a [Classifica transaccions](classify-"
+"transactions.md) abans de refiar-te del llibre de treball de càlcul."
 
 #: ../../how-to/review-with-google-sheets.md:156
 msgid ""
 "For casilla-level manual inputs, bindings, offsets, and revisions, use "
 "[Review and supply calculation inputs](review-calculation-values.md)."
 msgstr ""
+"Per a les entrades manuals a nivell de casilla, els bindings, els "
+"desplaçaments i les revisions, fes servir [Revisa i aporta entrades de "
+"càlcul](review-calculation-values.md)."
 
 #: ../../how-to/review-with-google-sheets.md:159
 msgid "Next steps"
-msgstr ""
+msgstr "Passos següents"
 
 #: ../../how-to/review-with-google-sheets.md:161
 msgid ""
@@ -268,20 +359,22 @@ msgid ""
 "evidence.md) - understand why a Google Sheet is a review surface rather "
 "than filing evidence or calculation authority."
 msgstr ""
+"[Importació, exportació i evidència](../reference/import-export-and-"
+"evidence.md) - entén per què un full de Google és una superfície de revisió "
+"i no pas evidència de presentació o autoritat de càlcul."
 
 #: ../../how-to/review-with-google-sheets.md:164
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr ""
+msgstr "[Importa i gestiona transaccions](import-bank-statements.md)"
 
 #: ../../how-to/review-with-google-sheets.md:165
 msgid "[Classify transactions](classify-transactions.md)"
-msgstr ""
+msgstr "[Classifica transaccions](classify-transactions.md)"
 
 #: ../../how-to/review-with-google-sheets.md:166
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr ""
+msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
 
 #: ../../how-to/review-with-google-sheets.md:167
 msgid "[CLI reference](../cli/index.rst)"
-msgstr ""
-
+msgstr "[Referència de la CLI](../cli/index.rst)"
