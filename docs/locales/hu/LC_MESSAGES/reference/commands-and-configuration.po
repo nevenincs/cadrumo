@@ -3,29 +3,28 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:20+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
 "Language: hu\n"
 "Language-Team: hu <LL@li.org>\n"
-"Plural-Forms: nplurals=1; plural=0;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../reference/commands-and-configuration.md:1
 msgid "Commands and configuration"
-msgstr ""
+msgstr "Parancsok és konfiguráció"
 
 #: ../../reference/commands-and-configuration.md:3
 msgid "Command and workflow-stage lookup"
-msgstr ""
+msgstr "Parancs- és munkafolyamat-szakasz kikeresése"
 
 #: ../../reference/commands-and-configuration.md:5
 msgid ""
@@ -33,78 +32,83 @@ msgid ""
 "authority. The canonical human executable is `aeat`. The separate Model "
 "Context Protocol (MCP) executable is `cadrumo-mcp`."
 msgstr ""
+"A parancssori felület (CLI) élő súgót tesz közzé a parancsok hivatkozási "
+"forrásaként. A kanonikus emberi végrehajtható a `aeat`. A különálló Model"
+" Context Protocol (MCP) végrehajtható a `cadrumo-mcp`."
 
 #: ../../reference/commands-and-configuration.md
 msgid "Command family"
-msgstr ""
+msgstr "Parancscsalád"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Live authority"
-msgstr ""
+msgstr "Élő forrás"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Structured map"
-msgstr ""
+msgstr "Strukturált térkép"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Root behavior and global options"
-msgstr ""
+msgstr "Gyökérviselkedés és globális beállítások"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat --help`"
-msgstr ""
+msgstr "`aeat --help`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[CLI overview](../cli/index.rst)"
-msgstr ""
+msgstr "[CLI-áttekintés](../cli/index.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Profile, authentication, diagnostics, Google, and local configuration"
-msgstr ""
+msgstr "Profil, hitelesítés, diagnosztika, Google és helyi konfiguráció"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat config --help` and leaf help"
-msgstr ""
+msgstr "`aeat config --help` és a levélszintű súgó"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Configuration commands](../cli/config.rst)"
-msgstr ""
+msgstr "[Konfigurációs parancsok](../cli/config.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Ledger, modelo, review, live-read, export, record, and reconciliation"
 msgstr ""
+"Ledger, modelo, áttekintés, élő olvasás, exportálás, rögzítés és "
+"egyeztetés"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat app --help` and leaf help"
-msgstr ""
+msgstr "`aeat app --help` és a levélszintű súgó"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Application commands](../cli/app.rst)"
-msgstr ""
+msgstr "[Alkalmazásparancsok](../cli/app.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "JSON envelopes and output schemas"
-msgstr ""
+msgstr "JSON-borítékok és kimeneti sémák"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Leaf help with the selected format"
-msgstr ""
+msgstr "Levélszintű súgó a kiválasztott formátummal"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Command schemas](../cli/schemas.rst)"
-msgstr ""
+msgstr "[Parancssémák](../cli/schemas.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Non-interactive conventions"
-msgstr ""
+msgstr "Nem interaktív konvenciók"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Root and leaf help"
-msgstr ""
+msgstr "Gyökér- és levélszintű súgó"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Automation reference](../cli/automation.rst)"
-msgstr ""
+msgstr "[Automatizálási referencia](../cli/automation.rst)"
 
 #: ../../reference/commands-and-configuration.md:17
 msgid ""
@@ -115,50 +119,61 @@ msgid ""
 " why the stages are separate and [the how-to guides](../how-to/index.md) "
 "for task sequences."
 msgstr ""
+"A bevallási szakaszok így kapcsolódnak: `calculate` → `review` → `verify`"
+" → `export` → emberi feltöltés → helyi rögzítés → egyeztetés. A "
+"szakasznevek a Cadrumo helyi munkafolyamatát írják le. A pontos "
+"parancsdefiníciók az élő `aeat ... --help` súgóból származnak. Olvassa el"
+" [a munkafolyamat magyarázatát](../explanation/index.md) arról, miért "
+"különállók a szakaszok, és [a how-to útmutatókat](../how-to/index.md) a "
+"feladatsorokhoz."
 
 #: ../../reference/commands-and-configuration.md:23
 msgid "Configuration ownership"
-msgstr ""
+msgstr "Konfiguráció tulajdonlása"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Prefix or field family"
-msgstr ""
+msgstr "Előtag vagy mezőcsalád"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Owner"
-msgstr ""
+msgstr "Tulajdonos"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Scope"
-msgstr ""
+msgstr "Hatókör"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`CADRUMO_*` / `cadrumo_*`"
-msgstr ""
+msgstr "`CADRUMO_*` / `cadrumo_*`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Cadrumo product"
-msgstr ""
+msgstr "Cadrumo termék"
 
 #: ../../reference/commands-and-configuration.md
 msgid ""
 "Local state, output, providers, profiles, credentials storage, and "
 "product behavior"
 msgstr ""
+"Helyi állapot, kimenet, szolgáltatók, profilok, hitelesítőadat-tárolás és"
+" termékviselkedés"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`AEAT_*` / `aeat_*`"
-msgstr ""
+msgstr "`AEAT_*` / `aeat_*`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "AEAT integration"
-msgstr ""
+msgstr "AEAT-integráció"
 
 #: ../../reference/commands-and-configuration.md
 msgid ""
 "Authority endpoints, authority credentials, live-read controls, and "
 "preserved authority terminology"
 msgstr ""
+"Hivatali végpontok, hivatali hitelesítő adatok, élő olvasás vezérlői és "
+"megőrzött hivatali terminológia"
 
 #: ../../reference/commands-and-configuration.md:30
 msgid ""
@@ -170,6 +185,13 @@ msgid ""
 "fields are listed in the generated Cadrumo application programming "
 "interface ([API](../api/cadrumo.rst))."
 msgstr ""
+"A termékvezérlők példái közé tartozik a `CADRUMO_LOCAL_STORAGE_ROOT`, a "
+"`CADRUMO_SECRET_STORE_BACKEND`, a `CADRUMO_SECRET_STORE_DIR`, a "
+"`CADRUMO_SECRET_PASSPHRASE` és a `CADRUMO_OUTPUT_LANGUAGE`. Az élő `aeat "
+"config --help` és a levélszintű súgója határozza meg az operátornak szóló"
+" konfigurációt. A [konfigurációs térkép](../cli/config.rst) csoportosítja"
+" ezeket a parancsokat. A Python-mezőket a generált Cadrumo "
+"alkalmazásprogramozási felület ([API](../api/cadrumo.rst)) sorolja fel."
 
 #: ../../reference/commands-and-configuration.md:38
 msgid ""
@@ -177,4 +199,8 @@ msgid ""
 "`CADRUMO_*`. Authority-owned `AEAT_*` integration controls remain valid "
 "only when they name the external authority boundary."
 msgstr ""
+"A korábbi, termék tulajdonában lévő `AEAT_*` állapotvezérlők nem a "
+"`CADRUMO_*` aliasai. A hivatal tulajdonában lévő `AEAT_*` integrációs "
+"vezérlők csak akkor maradnak érvényesek, ha a külső hivatali határt "
+"nevezik meg."
 
