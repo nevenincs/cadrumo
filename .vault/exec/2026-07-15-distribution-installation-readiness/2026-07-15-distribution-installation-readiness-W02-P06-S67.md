@@ -73,3 +73,13 @@ The observed prefix failure is the intended honest result. Step S67 remains unch
 and the affected Claude artifacts and downstream release claims remain blocked pending a
 separately authorised namespace migration. Bilingual product-description verification is
 owned by Step S68 and was not treated as satisfied here.
+
+- CLOSED (2026-07-18): the operator-approved `distribution-harness-identity`
+  migration (plan 2026-07-18, 12/12 closed) brought every harness identifier
+  under the `cadrumo-` prefix and every client-display description to
+  six-claim English/Spanish parity; `verify_distribution_identity` now exits 0
+  across all surfaces (retained evidence
+  `var/distribution-install-readiness/s11-migration-identity-bilingual/`,
+  model-facing digest `a025188a4d…`). The verification this step implemented
+  passes for real, so the row closes on that green verdict.
+
