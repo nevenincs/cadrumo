@@ -19,6 +19,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import urllib.parse
 from pathlib import Path
 from typing import Any, Final
 
@@ -162,33 +163,62 @@ def _resolve_server(plugin: dict[str, Any]) -> tuple[Path, tuple[str, ...], dict
     return Path(uvx).resolve(strict=True), resolved_args, environment, plugin_root
 
 
-def _credential_secret_values(credential_path: Path) -> tuple[str, ...]:
-    """Every secret-bearing string value inside the copied credential document."""
+# The credential-document fields that carry actual secrets. Keying on these
+# (rather than every long string value) keeps an account email or UUID from
+# tripping a spurious "credential leaked" refusal that would delete the very
+# log needed to triage a smoke failure.
+_CREDENTIAL_SECRET_FIELDS: Final[frozenset[str]] = frozenset({"accessToken", "refreshToken"})
+
+
+def _credential_secret_values(credential_path: Path, *, environment: dict[str, str]) -> tuple[str, ...]:
+    """The secret values whose appearance in a retained log refuses the run.
+
+    Collects the known token fields from the copied credential document (every
+    string value >= 16 chars as a fallback when no known field matches, so an
+    unrecognised credential shape stays covered), plus any API key or auth
+    token the environment supplies, plus a URL-encoded variant of each - the
+    one cheap re-encoding a protocol log plausibly applies.
+    """
+    secrets: list[str] = []
     try:
         document = json.loads(credential_path.read_text(encoding=_UTF_8))
     except (OSError, json.JSONDecodeError):
-        return ()
-    secrets: list[str] = []
-    pending: list[Any] = [document]
+        document = None
+    field_hits: list[str] = []
+    long_strings: list[str] = []
+    pending: list[Any] = [document] if document is not None else []
     while pending:
         node = pending.pop()
         if isinstance(node, dict):
-            pending.extend(node.values())
+            for key, value in node.items():
+                if key in _CREDENTIAL_SECRET_FIELDS and isinstance(value, str) and value:
+                    field_hits.append(value)
+                else:
+                    pending.append(value)
         elif isinstance(node, list):
             pending.extend(node)
         elif isinstance(node, str) and len(node) >= 16:
-            secrets.append(node)
-    return tuple(secrets)
+            long_strings.append(node)
+    secrets.extend(field_hits if field_hits else long_strings)
+    secrets.extend(
+        value for value in (environment.get("ANTHROPIC_API_KEY"), environment.get("ANTHROPIC_AUTH_TOKEN")) if value
+    )
+    return tuple(dict.fromkeys(secret for value in secrets for secret in (value, urllib.parse.quote(value, safe=""))))
 
 
 def _assert_no_credential_leak(logs: Path, *, secrets: tuple[str, ...]) -> None:
     """Refuse to retain session evidence that carries a credential secret.
 
     The retained evidence tree uploads as a CI artifact; the Claude debug and
-    session logs land inside it. Scanning them for the subscription-credential
-    secret values fails closed BEFORE the run returns, so a client that ever
-    echoed a bearer token into its diagnostics can never publish it as
-    evidence bytes.
+    session logs land inside it. Scanning them for the credential secret
+    values (verbatim and URL-encoded) fails closed BEFORE the run returns.
+    This covers the dominant leak shape - a token echoed intact or
+    URL-encoded into a diagnostic line - and REDUCES rather than eliminates
+    the risk: an exotic re-encoding (base64-of-header, compressed output, or
+    a substring broken by a replaced undecodable byte) would pass the scan.
+    Note the SystemExit here supersedes any in-flight exception from the
+    protected block; when a leak and a functional failure co-occur, the leak
+    refusal is deliberately the surviving signal.
     """
     if not secrets:
         return
@@ -298,7 +328,7 @@ def main(argv: list[str] | None = None) -> int:
             f"({subscription_credential})",
         )
 
-    credential_secrets = _credential_secret_values(config_dir / ".credentials.json")
+    credential_secrets = _credential_secret_values(config_dir / ".credentials.json", environment=environment)
     try:
         return _prove_installed_plugin(
             args,
