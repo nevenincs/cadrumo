@@ -29,7 +29,7 @@ name = "identidad-perfil-switch-reconfirm"
 modelo = "130"
 filing_year = 2024
 period = "1T"
-skill_name = "preparar-modelo-130"
+skill_name = "cadrumo-preparar-modelo-130"
 provenance_required = true
 # The quarter result (07); in the revision's AEAT-grounded computed-and-verified
 # casilla set, so the shared verification dimension is grounded, not vacuous.

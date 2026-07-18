@@ -14,7 +14,7 @@ name = "resumen-anual-annual-window"
 modelo = "390"
 filing_year = 2023
 period = "0A"
-skill_name = "resumen-anual"
+skill_name = "cadrumo-resumen-anual"
 provenance_required = true
 expected_computed_casillas = [
   "iva.anual.cuota-devengada-total",

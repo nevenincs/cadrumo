@@ -15,12 +15,15 @@ from pydantic import ValidationError
 
 from ...application.ledger import (
     LLMProvider,
+    LlmReviewDecision,
+    LlmReviewInvocationOrigin,
+    LLMSplitApplyResult,
     PurchaseInvoiceEvidenceInputError,
     SplitChildCommand,
-    apply_evidence_split,
     archive_manual_transaction,
     attach_manual_transaction_evidence,
     compute_display_id_width,
+    execute_reviewed_decision,
     is_llm_provider_available,
     mark_transaction_reviewed_excluded,
     merge_transactions,
@@ -883,12 +886,13 @@ def _ledger_split_llm(
 
     Without ``--apply`` the proposed children (derived amounts, model-selected
     categories, registry-derived IVA) are previewed and nothing is persisted.
-    With ``--apply`` (and ``--yes``) the reviewed proposal drives
-    :func:`apply_evidence_split`: the single-writer
-    split plus per-child classification, registry-derived numbers,
-    parent-invoice evidence link, and ``llm:<model>`` provenance. The manual
-    ``--child-amount`` / ``--child-description`` flags are the explicit operator
-    override and cannot be combined with ``--llm``.
+    With ``--apply`` (and ``--yes``) the reviewed proposal is routed through the
+    one review workflow (:func:`~application.ledger.execute_reviewed_decision`)
+    with the ``SPLIT_LLM`` origin, which delegates to the single-writer split
+    plus per-child classification, registry-derived numbers, parent-invoice
+    evidence link, and ``llm:<model>`` provenance. The manual ``--child-amount`` /
+    ``--child-description`` flags are the explicit operator override and cannot be
+    combined with ``--llm``.
     """
     from ._ledger_payloads import LedgerSplitChildProposalPayload, LedgerSplitResult
 
@@ -977,8 +981,10 @@ def _ledger_split_llm(
         return
 
     try:
-        applied = apply_evidence_split(
+        applied = execute_reviewed_decision(
             suggestion,
+            origin=LlmReviewInvocationOrigin.SPLIT_LLM,
+            decision=LlmReviewDecision.SPLIT,
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
             transaction_repository=transaction_repository,
@@ -987,6 +993,7 @@ def _ledger_split_llm(
         raise _bad(str(exc)) from exc
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    assert isinstance(applied, LLMSplitApplyResult)
 
     child_id_rows = _split_child_id_rows(applied.child_transaction_ids)
     result = LedgerSplitResult.model_validate(

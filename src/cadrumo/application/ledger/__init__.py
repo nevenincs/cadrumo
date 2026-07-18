@@ -192,6 +192,14 @@ from ._llm_diagnostics import (
     LlmUsageProviderMetrics,
     build_llm_diagnostics_report,
 )
+from ._llm_review_workflow import (
+    LlmReviewDecision,
+    LlmReviewInvocationOrigin,
+    LlmReviewRequest,
+    LlmReviewResult,
+    ReviewedSuggestion,
+    execute_reviewed_decision,
+)
 from ._models import (
     BULK_CLASSIFY_ALLOWED_COLUMNS,
     ApplyRulesAppliedRow,
@@ -309,6 +317,10 @@ __all__ = [
     "LedgerTransactionTrackingPayload",
     "LlmConfidenceProviderMetrics",
     "LlmDiagnosticsReport",
+    "LlmReviewDecision",
+    "LlmReviewInvocationOrigin",
+    "LlmReviewRequest",
+    "LlmReviewResult",
     "LlmUsageProviderMetrics",
     "ManualLedgerTransactionCommand",
     "ManualLedgerTransactionPatch",
@@ -327,6 +339,7 @@ __all__ = [
     "RatiosCensoOverrideWarning",
     "RatiosValidationFinding",
     "RatiosValidationReport",
+    "ReviewedSuggestion",
     "SplitChildCommand",
     "SplitTransactionResult",
     "add_classification_rule",
@@ -347,6 +360,7 @@ __all__ = [
     "create_manual_transaction",
     "derive_operator_iva_substrate",
     "eligible_ratio_categories",
+    "execute_reviewed_decision",
     "export_ledger_transactions",
     "extract_invoice_draft_from_evidence",
     "extract_invoice_fields",

@@ -82,6 +82,9 @@ class ProfileBundleExportTarget(BaseModel):
 
     destination: Path
 
+    # TYPE-IGNORE-RATIONALE-PYDANTIC-COMPUTED-FIELD:
+    # pydantic v2 computed_field stacked over property trips the checker's
+    # prop-decorator rule; the runtime is the sanctioned pydantic idiom.
     @computed_field  # type: ignore[prop-decorator]
     @property
     def identity(self) -> str:
@@ -117,8 +120,7 @@ def bundle_data_categories(bundle: UserProfilePortableExport) -> tuple[str, ...]
         if (category := _CATEGORY_BY_BUNDLE_FIELD.get(field_name)) is not None
     )
     carried = tuple(
-        f"{_CARRIED_NAMESPACE_CATEGORY_PREFIX}{namespace}"
-        for namespace in bundle.coverage_manifest.carried_namespaces
+        f"{_CARRIED_NAMESPACE_CATEGORY_PREFIX}{namespace}" for namespace in bundle.coverage_manifest.carried_namespaces
     )
     return (*schema_categories, *carried)
 

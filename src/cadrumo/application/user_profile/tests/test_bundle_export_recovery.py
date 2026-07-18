@@ -203,7 +203,7 @@ def test_crash_before_replace_reconciles_as_prepared_with_no_completion_event(tm
 
 
 def test_crash_after_replace_reconciles_to_a_completed_event_via_the_content_digest(tmp_path: Path) -> None:
-    # Contract (S11): a crash between the atomic replace and the COMPLETED
+    # Contract: a crash between the atomic replace and the COMPLETED
     # journal write leaves a durably-published bundle with only a PREPARED
     # journal. Reconcile detects the publication via the recorded content digest
     # and emits the owed PROFILE_EXPORTED event, so no durably-published bundle is

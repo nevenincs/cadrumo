@@ -63,15 +63,31 @@ _PLUGIN_MANIFEST = "plugin.json"
 _PLUGIN_NAME = PRODUCT_IDENTITY.plugin_identifier
 _PYPI_DISTRIBUTION = PRODUCT_IDENTITY.distribution
 _PLUGIN_DISPLAY_NAME = f"{PRODUCT_IDENTITY.display_name} Spanish tax assistant"
-# Distilled from the mcpb manifest one-liner; keeps the never-files-live boundary
-# stated on the operator-facing surface.
+# Bilingual (English + Spanish) product copy approved in the S06 docs-authority
+# act. The labeled sections (English: / Español:) satisfy the verifier's bilingual
+# claim-parity parser. Wording changes must re-enter through a new S06-equivalent
+# approval record and re-enrollment in verify_distribution_identity.py.
 _PLUGIN_DESCRIPTION = (
-    f"Operate {PRODUCT_IDENTITY.prose_name} through the Cadrumo Spanish-tax CLI: "
-    "grounded search over the bundled BOE/AEAT "
-    "legal corpus, situation-keyed guided workflows, and gated execution that "
-    "never files to AEAT. The server advertises an orientation core by default "
-    "(overview + contract + search/execute); set the surface option to 'full' to "
-    "advertise every verb up front."
+    "English: Operate Cadrumo, the deterministic Spanish-tax CLI, from Claude: "
+    "grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided "
+    "workflows, and human-confirmed execution of every state-changing step. Cadrumo "
+    "is read-only toward AEAT and never files - live submission is impossible and "
+    "the taxpayer files outside the app. All financial data stays on-host in "
+    "encrypted storage; only what the conversation shows reaches the model "
+    "provider. The server advertises an orientation core by default (overview + "
+    "contract + search/execute); set the surface option to 'full' to advertise "
+    "every verb up front.\n"
+    "Español: Opera Cadrumo, la CLI determinista de impuestos españoles, desde "
+    "Claude: búsqueda fundamentada sobre el corpus legal BOE/AEAT incluido, flujos "
+    "guiados según la situación del contribuyente y ejecución con confirmación "
+    "humana de cada paso que modifica el estado. Cadrumo es de solo lectura frente "
+    "a la AEAT y nunca presenta declaraciones - la presentación en vivo es "
+    "imposible y el contribuyente presenta fuera de la aplicación. Todos los datos "
+    "financieros permanecen en el equipo en almacenamiento cifrado; solo lo que "
+    "muestra la conversación llega al proveedor del modelo. El servidor anuncia por "
+    "defecto un núcleo de orientación (visión general + contrato + buscar/ejecutar); "
+    "configura la opción de superficie en 'full' para anunciar todos los verbos "
+    "desde el inicio."
 )
 _PLUGIN_AUTHOR_NAME = f"{PRODUCT_IDENTITY.display_name} tax assistant project"
 _PLUGIN_LICENSE = "Apache-2.0"
@@ -123,7 +139,19 @@ _MARKETPLACE_MANIFEST = "marketplace.json"
 # (``<plugin>@neve``), independent of the repo it is served from; kebab-case
 # (lowercase) is required by the claude.ai marketplace sync.
 _MARKETPLACE_NAME = "neve"
-_MARKETPLACE_DESCRIPTION = "Neve plugin marketplace — Claude plugins including the Cadrumo Spanish-tax assistant."
+_MARKETPLACE_DESCRIPTION = (
+    "English: Neve plugin marketplace - Claude plugins including the Cadrumo "
+    "Spanish-tax assistant: read-only toward AEAT, it never files (the taxpayer "
+    "files outside the app), every state change needs human confirmation, financial "
+    "data stays on-host in encrypted storage, and only the conversation reaches the "
+    "model provider.\n"
+    "Español: Marketplace de plugins de Neve - plugins de Claude, incluido el "
+    "asistente de impuestos españoles Cadrumo: de solo lectura frente a la AEAT, "
+    "nunca presenta declaraciones (el contribuyente presenta fuera de la "
+    "aplicación), cada cambio de estado requiere confirmación humana, los datos "
+    "financieros permanecen en el equipo en almacenamiento cifrado y solo la "
+    "conversación llega al proveedor del modelo."
+)
 _MARKETPLACE_OWNER_NAME = _PLUGIN_AUTHOR_NAME
 _MARKETPLACE_PLUGINS_SUBDIR = "plugins"
 # The relative source the marketplace manifest points at, resolved from the

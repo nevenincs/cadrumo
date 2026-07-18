@@ -47,8 +47,8 @@ def test_plugin_layout_emits_envelope_and_schema_valid_tree(tmp_path: Path) -> N
     assert payload["persona_default"] == ""
 
     assert (out / ".claude-plugin" / "plugin.json").is_file()
-    assert (out / "skills" / "preparar-modelo-130" / "SKILL.md").is_file()
-    assert (out / "agents" / "coordinator.md").is_file()
+    assert (out / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").is_file()
+    assert (out / "agents" / "cadrumo-coordinator.md").is_file()
     assert (out / ".mcp.json").is_file()
     mcp = json.loads((out / ".mcp.json").read_text(encoding="utf-8"))
     server = mcp["mcpServers"]["cadrumo"]
@@ -77,7 +77,7 @@ def test_default_layout_is_the_workspace_mirror(tmp_path: Path) -> None:
     payload = json.loads(result.output)["result"]
     # No --layout means the Claude-native workspace mirror, not the plugin.
     assert payload["layout"] == "workspace"
-    assert (out / ".claude" / "rules" / "operator-operating-rules.md").is_file()
+    assert (out / ".claude" / "rules" / "cadrumo-operator-operating-rules.md").is_file()
     assert not (out / ".claude-plugin").exists()
 
 

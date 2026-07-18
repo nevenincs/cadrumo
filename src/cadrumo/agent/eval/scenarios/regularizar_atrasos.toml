@@ -16,7 +16,7 @@ name = "regularizar-atrasos-backlog"
 modelo = "303"
 filing_year = 2024
 period = "1T"
-skill_name = "regularizar-atrasos"
+skill_name = "cadrumo-regularizar-atrasos"
 provenance_required = true
 expected_computed_casillas = ["64", "66"]
 

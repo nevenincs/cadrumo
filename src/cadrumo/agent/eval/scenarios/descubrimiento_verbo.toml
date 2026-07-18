@@ -29,7 +29,7 @@ name = "descubrimiento-verbo-long-tail"
 modelo = "130"
 filing_year = 2024
 period = "1T"
-skill_name = "preparar-modelo-130"
+skill_name = "cadrumo-preparar-modelo-130"
 provenance_required = true
 # The quarter result (07); in the revision's AEAT-grounded computed-and-verified
 # casilla set, so the verification dimension is grounded, not vacuous.
@@ -37,7 +37,7 @@ expected_computed_casillas = ["07"]
 
 # Minimal lifecycle-valid trajectory the operator drives once discovery has
 # located the long-tail verb: read the form, create the work unit, then calculate.
-# Every verb is cited by the `preparar-modelo-130` skill playbook and the
+# Every verb is cited by the `cadrumo-preparar-modelo-130` skill playbook and the
 # create -> calculate lifecycle order holds.
 expected_trajectory = [
   "modelo.describe",

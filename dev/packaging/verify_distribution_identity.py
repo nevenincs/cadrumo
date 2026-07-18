@@ -72,12 +72,146 @@ _LANGUAGE_LABEL_PATTERN: Final[re.Pattern[str]] = re.compile(
     r"(?P<label>English|EN|Ingl[eé]s|Spanish|ES|Espa[nñ]ol)"
     r"(?:\*\*)?[ \t]*:[ \t]*",
 )
-# Translation wording is not approved by the verification-only ADR. A later,
-# separately authorised migration must add the product-reviewed exact pair for
-# each client-display field; keyword similarity alone can never approve copy.
-_APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple[str, str]]]] = {}
+# Approved English text extracted from the plugin description labeled section.
+# Must exactly match what _labeled_product_description returns for the English
+# section of _workspace._PLUGIN_DESCRIPTION (i.e. the text after "English: " and
+# before the "\nEspañol: " separator, stripped). Approved in exec record S06 Revision 2.
+_PLUGIN_DESCRIPTION_EN: Final[str] = (
+    "Operate Cadrumo, the deterministic Spanish-tax CLI, from Claude: "
+    "grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided "
+    "workflows, and human-confirmed execution of every state-changing step. Cadrumo "
+    "is read-only toward AEAT and never files - live submission is impossible and "
+    "the taxpayer files outside the app. All financial data stays on-host in "
+    "encrypted storage; only what the conversation shows reaches the model "
+    "provider. The server advertises an orientation core by default (overview + "
+    "contract + search/execute); set the surface option to 'full' to advertise "
+    "every verb up front."
+)
+# Approved Spanish text extracted from the plugin description labeled section.
+_PLUGIN_DESCRIPTION_ES: Final[str] = (
+    "Opera Cadrumo, la CLI determinista de impuestos españoles, desde "
+    "Claude: búsqueda fundamentada sobre el corpus legal BOE/AEAT incluido, flujos "
+    "guiados según la situación del contribuyente y ejecución con confirmación "
+    "humana de cada paso que modifica el estado. Cadrumo es de solo lectura frente "
+    "a la AEAT y nunca presenta declaraciones - la presentación en vivo es "
+    "imposible y el contribuyente presenta fuera de la aplicación. Todos los datos "
+    "financieros permanecen en el equipo en almacenamiento cifrado; solo lo que "
+    "muestra la conversación llega al proveedor del modelo. El servidor anuncia por "
+    "defecto un núcleo de orientación (visión general + contrato + buscar/ejecutar); "
+    "configura la opción de superficie en 'full' para anunciar todos los verbos "
+    "desde el inicio."
+)
+# Per-claim keyword coverage: the plugin copy (Revision 2) covers all six required
+# claims in both English and Spanish — capability, safety, privacy, on_host_storage,
+# human_confirmation, and never_files_live. Approved in exec record S06 Revision 2.
+# Approved English text extracted from the marketplace description labeled section.
+# Must exactly match what _labeled_product_description returns for the English
+# section of _workspace._MARKETPLACE_DESCRIPTION (stripped). Approved in S06 Revision 2.
+_MARKETPLACE_DESCRIPTION_EN: Final[str] = (
+    "Neve plugin marketplace - Claude plugins including the Cadrumo "
+    "Spanish-tax assistant: read-only toward AEAT, it never files (the taxpayer "
+    "files outside the app), every state change needs human confirmation, financial "
+    "data stays on-host in encrypted storage, and only the conversation reaches the "
+    "model provider."
+)
+# Approved Spanish text extracted from the marketplace description labeled section.
+_MARKETPLACE_DESCRIPTION_ES: Final[str] = (
+    "Marketplace de plugins de Neve - plugins de Claude, incluido el "
+    "asistente de impuestos españoles Cadrumo: de solo lectura frente a la AEAT, "
+    "nunca presenta declaraciones (el contribuyente presenta fuera de la "
+    "aplicación), cada cambio de estado requiere confirmación humana, los datos "
+    "financieros permanecen en el equipo en almacenamiento cifrado y solo la "
+    "conversación llega al proveedor del modelo."
+)
+# Per-claim keyword coverage for marketplace description (Revision 2): all six
+# required claims pass in both English and Spanish.
+# Approved English text extracted from the MCPB manifest description labeled section.
+# Must exactly match what _labeled_product_description returns for the English
+# section of packaging/mcpb/manifest.json "description" (stripped). Approved in S06 Revision 2.
+_MCPB_DESCRIPTION_EN: Final[str] = (
+    "Operate Cadrumo, a deterministic Spanish-tax CLI, as an MCP tool "
+    "surface: grounded search over the bundled BOE/AEAT legal corpus, "
+    "situation-keyed guided workflows, and human-confirmed execution of every "
+    "state-changing step. Read-only toward AEAT - it never files; the taxpayer "
+    "files outside the app. Financial data stays on-host in encrypted storage, and "
+    "only the conversation reaches the model provider."
+)
+# Approved Spanish text extracted from the MCPB manifest description labeled section.
+_MCPB_DESCRIPTION_ES: Final[str] = (
+    "Opera Cadrumo, una CLI determinista de impuestos españoles, como "
+    "superficie de herramientas MCP: búsqueda fundamentada sobre el corpus legal "
+    "BOE/AEAT incluido, flujos guiados según la situación del contribuyente y "
+    "ejecución con confirmación humana de cada paso que modifica el estado. De solo "
+    "lectura frente a la AEAT - nunca presenta declaraciones; el contribuyente "
+    "presenta fuera de la aplicación. Los datos financieros permanecen en el equipo "
+    "en almacenamiento cifrado y solo la conversación llega al proveedor del "
+    "modelo."
+)
+# Per-claim keyword coverage for mcpb description (Revision 2): all six required
+# claims pass in both EN and ES.
+# Approved English text extracted from the MCPB manifest long_description labeled section.
+# Must exactly match what _labeled_product_description returns for the English section
+# of packaging/mcpb/manifest.json "long_description" (stripped). Approved in S06.
+_MCPB_LONG_DESCRIPTION_EN: Final[str] = (
+    "The Cadrumo console exposes a deterministic Spanish-tax CLI to any MCP client. "
+    "It carries the operator rules, the taxpayer-situation skills, and guided-workflow "
+    "prompts; a read-only corpus and terminology search for legal grounding; and a "
+    "human-in-the-loop confirmation gate on every state-changing verb. Live submission "
+    "to AEAT is permanently impossible - no such tool exists; the taxpayer files outside "
+    "the app. All financial data stays on-host in encrypted storage; only the "
+    "conversation and the figures the assistant sees reach the LLM client's provider. "
+    "The bundle contains the exact digest-pinned Cadrumo distribution cohort."
+)
+# Approved Spanish text extracted from the MCPB manifest long_description labeled section.
+_MCPB_LONG_DESCRIPTION_ES: Final[str] = (
+    "La consola de Cadrumo expone una CLI determinista de impuestos españoles a "
+    "cualquier cliente MCP. Incorpora las reglas del operador, las habilidades por "
+    "situación del contribuyente y los avisos de flujo guiado; una búsqueda de solo "
+    "lectura sobre el corpus legal y la terminología para la fundamentación jurídica; "
+    "y una puerta de confirmación humana en cada verbo que modifica el estado. La "
+    "presentación en vivo ante la AEAT es permanentemente imposible - no existe tal "
+    "herramienta; el contribuyente presenta fuera de la aplicación. Todos los datos "
+    "financieros permanecen en el equipo en almacenamiento cifrado; solo la conversación "
+    "y las cifras que ve el asistente llegan al proveedor del cliente LLM. El paquete "
+    "contiene exactamente la cohorte de distribución de Cadrumo, fijada por sus "
+    "resúmenes criptográficos."
+)
+# Per-claim keyword coverage for mcpb long_description: all six claims pass in both
+# EN and ES. Approved in S06 as the full-coverage product statement.
+_APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple[str, str]]]] = {
+    # plugin.json description — used by the standalone Claude plugin.
+    ("claude_plugin_client_display", "description"): frozenset(
+        {
+            (_PLUGIN_DESCRIPTION_EN, _PLUGIN_DESCRIPTION_ES),
+        }
+    ),
+    # plugin.json description inside the marketplace plugins/cadrumo subtree.
+    ("claude_marketplace_plugin_client_display", "description"): frozenset(
+        {
+            (_PLUGIN_DESCRIPTION_EN, _PLUGIN_DESCRIPTION_ES),
+        }
+    ),
+    # marketplace.json description — the Neve marketplace manifest.
+    ("claude_marketplace_client_display", "description"): frozenset(
+        {
+            (_MARKETPLACE_DESCRIPTION_EN, _MARKETPLACE_DESCRIPTION_ES),
+        }
+    ),
+    # packaging/mcpb/manifest.json description — short capability summary.
+    ("mcpb_client_display", "description"): frozenset(
+        {
+            (_MCPB_DESCRIPTION_EN, _MCPB_DESCRIPTION_ES),
+        }
+    ),
+    # packaging/mcpb/manifest.json long_description — all six claims covered.
+    ("mcpb_client_display", "long_description"): frozenset(
+        {
+            (_MCPB_LONG_DESCRIPTION_EN, _MCPB_LONG_DESCRIPTION_ES),
+        }
+    ),
+}
 _EXPECTED_MODEL_FACING_DESCRIPTION_SHA256: Final[str] = (
-    "2f58dacf1f917749e9510e7e5b706752992bd0eb997f0453fab82edda8391d6b"
+    "a025188a4da49e74657aa49b4688aabaf4237752f10c96740e94bfd346bf6379"
 )
 _PRODUCT_CLAIM_PATTERNS: Final[dict[str, dict[str, tuple[re.Pattern[str], ...]]]] = {
     "capability": {
@@ -100,11 +234,11 @@ _PRODUCT_CLAIM_PATTERNS: Final[dict[str, dict[str, tuple[re.Pattern[str], ...]]]
     },
     "privacy": {
         "english": (
-            re.compile(r"\bonly\b[^.]{0,160}\breach\b", re.I),
+            re.compile(r"\bonly\b[^.]{0,160}\breach(?:es)?\b", re.I),
             re.compile(r"\bprovider\b", re.I),
         ),
         "spanish": (
-            re.compile(r"\b(?:solo|sólo|únicamente|únicamente)\b[^.]{0,160}\bllegan\b", re.I),
+            re.compile(r"\b(?:solo|sólo|únicamente|únicamente)\b[^.]{0,160}\bllegan?\b", re.I),
             re.compile(r"\bproveedor\b", re.I),
         ),
     },
@@ -119,7 +253,7 @@ _PRODUCT_CLAIM_PATTERNS: Final[dict[str, dict[str, tuple[re.Pattern[str], ...]]]
         ),
     },
     "human_confirmation": {
-        "english": (re.compile(r"\b(?:human-in-the-loop|human confirmation|confirmation gate)\b", re.I),),
+        "english": (re.compile(r"\b(?:human-in-the-loop|human-confirmed|human confirmation|confirmation gate)\b", re.I),),
         "spanish": (re.compile(r"\b(?:confirmaci[oó]n humana|intervenci[oó]n humana|una persona confirma)\b", re.I),),
     },
     "never_files_live": {

@@ -3,7 +3,7 @@
 # Declares the expected operator tool trajectory for the modelo-130 preparation
 # workflow and the provenance the result must carry. The runner asserts the
 # trajectory resolves against the live CLI surface, follows the modelo lifecycle
-# order, is consistent with the shipped `preparar-modelo-130` skill, and that the
+# order, is consistent with the shipped `cadrumo-preparar-modelo-130` skill, and that the
 # resolved revision's casillas carry their registry legal grounding, and the
 # revision declares an AEAT-grounded verification contract whose computed-casilla
 # set contains this scenario's `expected_computed_casillas`.
@@ -22,7 +22,7 @@ name = "modelo-130-direct-estimation"
 modelo = "130"
 filing_year = 2024
 period = "1T"
-skill_name = "preparar-modelo-130"
+skill_name = "cadrumo-preparar-modelo-130"
 provenance_required = true
 # Rendimiento (03), instalment base (04), and the quarter result (07); each must
 # be in the revision's AEAT-grounded computed-and-verified casilla set.

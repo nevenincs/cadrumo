@@ -22,8 +22,8 @@ lifecycle sequencing / cross-surface contradiction handling: when one surface
 (e.g. ``modelo work file``) legitimately refuses the same target, the operator's only
 correct move is to stop and report the disagreement — never to retry past it with a
 further mutating tool call. This is the enforcement surface for the
-``operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
-a retry" section (``src/cadrumo/_data/agent/rules/operator-lifecycle-ordering.md``). This
+``cadrumo-operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
+a retry" section (``src/cadrumo/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``). This
 pair follows the standalone ``check_*_scenario`` shape used by
 :class:`ExitCodeScenario`/:class:`ExitCodeVerdict` and
 :class:`UnderDeclarationScenario`/:class:`UnderDeclarationVerdict` rather
@@ -378,7 +378,7 @@ class ContradictionScenario(BaseModel):
     Guards against wrong lifecycle sequencing / cross-surface
     contradiction: a readiness-shaped signal (``readiness_step``) and a second,
     independent, legitimately-blocking signal (``blocking_step``) may disagree — one
-    reports the target ready, the other refuses it. ``operator-lifecycle-ordering``
+    reports the target ready, the other refuses it. ``cadrumo-operator-lifecycle-ordering``
     makes the disagreement itself, not either signal alone, the trigger: the operator
     must stop and report, never retry past it. ``must_halt_after`` names the trajectory
     position the disagreement is anchored to; ``mutating_commands`` is the scenario's own
@@ -585,7 +585,7 @@ class LiveTrajectory(BaseModel):
         scenario: The golden scenario name this session ran, empty for a free
             exploration session.
         persona: The harness persona the driver played (e.g.
-            ``"modelo-preparer"``).
+            ``"cadrumo-modelo-preparer"``).
         session_id: Caller-supplied stable identifier for the session (clock-free
             identity per the project's determinism discipline; the caller decides
             the scheme).

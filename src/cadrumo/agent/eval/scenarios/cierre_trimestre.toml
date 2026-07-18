@@ -14,7 +14,7 @@ name = "cierre-trimestre-quarter-close"
 modelo = "130"
 filing_year = 2024
 period = "1T"
-skill_name = "cierre-trimestre"
+skill_name = "cadrumo-cierre-trimestre"
 provenance_required = true
 expected_computed_casillas = ["03", "04", "07"]
 

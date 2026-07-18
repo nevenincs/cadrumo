@@ -44,12 +44,15 @@ def test_auto_split_and_split_llm_are_distinct_origins() -> None:
 
 def test_request_requires_an_invocation_origin() -> None:
     # No application-layer default: omitting the origin is a validation error,
-    # not a silently-defaulted CLI spelling.
+    # not a silently-defaulted CLI spelling. Built through model_validate so the
+    # missing required field is a runtime validation error, not a static one.
     with pytest.raises(ValidationError):
-        LlmReviewRequest(
-            decision=LlmReviewDecision.REJECT,
-            bucket_id="bucket-1",
-            transaction_id="tx-1",
+        LlmReviewRequest.model_validate(
+            {
+                "decision": LlmReviewDecision.REJECT,
+                "bucket_id": "bucket-1",
+                "transaction_id": "tx-1",
+            },
         )
 
 

@@ -20,13 +20,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 _EXPECTED_RULES = frozenset(
     {
-        "operator-operating-rules.md",
-        "operator-safety-handoff.md",
-        "operator-envelope-reading.md",
-        "operator-grounding.md",
-        "operator-orientation-routing.md",
-        "operator-lifecycle-ordering.md",
-        "operator-honest-declaration.md",
+        "cadrumo-operator-operating-rules.md",
+        "cadrumo-operator-safety-handoff.md",
+        "cadrumo-operator-envelope-reading.md",
+        "cadrumo-operator-grounding.md",
+        "cadrumo-operator-orientation-routing.md",
+        "cadrumo-operator-lifecycle-ordering.md",
+        "cadrumo-operator-honest-declaration.md",
     },
 )
 

@@ -15,7 +15,7 @@ name = "inicio-actividad-first-obligations"
 modelo = "130"
 filing_year = 2024
 period = "1T"
-skill_name = "inicio-actividad"
+skill_name = "cadrumo-inicio-actividad"
 provenance_required = true
 expected_computed_casillas = ["03", "04", "07"]
 

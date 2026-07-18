@@ -1,7 +1,7 @@
 """Recurrence gate: no NEW reducible one-shot SHA-256 body lands in production.
 
 `core.hashing.sha256_hex` is the canonical one-shot bytes->hex digest. Per the
-`cli-authority-verb-conformance` ADR the existing reducible bodies are NOT
+`cli-authority-verb-conformance` decision the existing reducible bodies are NOT
 rewritten (low-value churn against a service that already exists); the durable
 value is this AST recurrence gate, which prevents a NEW reducible
 ``sha256(<data>).hexdigest()`` body from landing while allowing the
@@ -35,7 +35,7 @@ _CADRUMO_ROOT = Path(__file__).resolve().parents[2]
 _CANONICAL_HELPER = "core/hashing.py"
 
 #: Grandfathered reducible ``sha256(<data>).hexdigest()`` bodies per module,
-#: captured at gate introduction. The ADR does not rewrite these. The gate
+#: captured at gate introduction. That decision does not rewrite these. The gate
 #: ratchets in the reducing direction only: a module may carry FEWER over time
 #: (delegate a body to ``sha256_hex`` and, optionally, lower or drop its entry),
 #: but a new module or a higher count is a NEW reducible body and fails.
@@ -144,7 +144,7 @@ def test_recurrence_gate_flags_a_new_reducible_body_and_allows_legitimate_uses()
 
     Runs the gate's own ``_reducible_one_shot_sites`` detector over synthetic
     sources so a broken detector cannot let the gate pass green. Every reducible
-    shape is caught; every non-substitutable cryptographic use the ADR protects
+    shape is caught; every non-substitutable cryptographic use the gate protects
     (streaming, digest-byte, HMAC, HKDF, X509) is left untouched.
     """
     reducible_sources = (

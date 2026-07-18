@@ -36,9 +36,11 @@ def test_marketplace_manifest_is_schema_shaped_and_resolves_to_the_plugin(tmp_pa
     document = json.loads((tmp_path / ".claude-plugin" / "marketplace.json").read_text(encoding=_UTF_8))
     assert document["name"] == "neve"
     assert document["owner"] == {"name": "CADRUMO tax assistant project"}
-    assert document["description"] == (
-        "Neve plugin marketplace — Claude plugins including the Cadrumo Spanish-tax assistant."
-    )
+    # Bilingual marketplace description (EN + ES).
+    description = document["description"]
+    assert description.startswith("English: Neve plugin marketplace - Claude plugins")
+    assert "\nEspañol: " in description
+    assert "it never files" in description.lower()
     (entry,) = document["plugins"]
     assert entry["name"] == "cadrumo"
     assert entry["source"] == manifest.plugin_source == "./plugins/cadrumo"

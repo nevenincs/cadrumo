@@ -33,8 +33,8 @@ before the global HITL gate runs).
 
 Family granularity and the handoff deny rules: the manifest's own boundary is
 the mounted-command-family ``child`` token, not the individual verb, and the
-scope filter stays at that granularity (three personas - ``modelo-preparer``,
-``verifier``, and ``reconciler`` - all declare ``families={"modelo"}``).
+scope filter stays at that granularity (three personas - ``cadrumo-modelo-preparer``,
+``cadrumo-verifier``, and ``cadrumo-reconciler`` - all declare ``families={"modelo"}``).
 What IS verb-granular is the irreversible boundary:
 :data:`PERSONA_HANDOFF_DENIALS` structurally denies the filing-handoff leaves
 (``export``, the record marker ``file``) to every modelo-lifecycle persona
@@ -85,13 +85,13 @@ class AgentPersona(StrEnum):
     the same token.
     """
 
-    COORDINATOR = "coordinator"
-    ONBOARDING = "onboarding"
-    LEDGER_GROOMER = "ledger-groomer"
-    CLASSIFIER = "classifier"
-    MODELO_PREPARER = "modelo-preparer"
-    VERIFIER = "verifier"
-    RECONCILER = "reconciler"
+    COORDINATOR = "cadrumo-coordinator"
+    ONBOARDING = "cadrumo-onboarding"
+    LEDGER_GROOMER = "cadrumo-ledger-groomer"
+    CLASSIFIER = "cadrumo-classifier"
+    MODELO_PREPARER = "cadrumo-modelo-preparer"
+    VERIFIER = "cadrumo-verifier"
+    RECONCILER = "cadrumo-reconciler"
 
 
 class PersonaToolScope(BaseModel):

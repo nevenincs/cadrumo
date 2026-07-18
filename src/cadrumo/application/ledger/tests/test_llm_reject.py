@@ -41,6 +41,11 @@ from .. import (
     LLMSuggestionRejectionResult,
     reject_llm_suggestion,
 )
+from .._llm_review_workflow import (
+    LlmReviewDecision,
+    LlmReviewInvocationOrigin,
+    execute_reviewed_decision,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -182,3 +187,40 @@ def test_reject_unknown_transaction_raises(
             transaction_repository=repository,
             bucket_event_repository=events,
         )
+
+
+def test_reject_via_workflow_matches_the_direct_primitive_default(
+    repositories: tuple[TransactionCatalogueRepository, BucketEventHistoryRepository, SecureObjectRepository],
+) -> None:
+    # CLI-route parity for reject: the post-cutover workflow route (origin
+    # CLASSIFY_LLM_REJECT) persists the SAME durable source_command the
+    # pre-cutover direct reject_llm_suggestion default produced — proving the
+    # cutover did not drift the audit label. Two independent code paths, one
+    # bucket, compared against each other (not a hardcoded copy).
+    repository, events, _objects = repositories
+    tx_id = _seed_parent(repository)
+
+    reject_llm_suggestion(
+        _classification_suggestion(tx_id),
+        bucket_id=_BUCKET,
+        reason="direct primitive path",
+        transaction_repository=repository,
+        bucket_event_repository=events,
+        occurred_at=_NOW,
+    )
+    execute_reviewed_decision(
+        _classification_suggestion(tx_id),
+        origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
+        decision=LlmReviewDecision.REJECT,
+        bucket_id=_BUCKET,
+        reason="workflow-routed path",
+        transaction_repository=repository,
+        bucket_event_repository=events,
+        occurred_at=_NOW,
+    )
+
+    recorded = _rejection_events(events)
+    assert len(recorded) == 2
+    labels = {event.payload["source_command"] for event in recorded}
+    assert labels == {"aeat app ledger classify --llm --reject"}
+    assert labels == {LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT.source_command}

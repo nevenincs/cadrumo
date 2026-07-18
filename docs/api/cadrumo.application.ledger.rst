@@ -31,6 +31,7 @@ Submodules
    cadrumo.application.ledger._id_resolution
    cadrumo.application.ledger._llm_classification
    cadrumo.application.ledger._llm_diagnostics
+   cadrumo.application.ledger._llm_review_workflow
    cadrumo.application.ledger._llm_suggestions
    cadrumo.application.ledger._models
    cadrumo.application.ledger._participation_read

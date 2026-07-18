@@ -77,7 +77,7 @@ def test_orientation_prompt_embeds_the_operator_rules() -> None:
     assert "aeat console" not in document.brief_text.casefold()
     embedded_texts = [item.text for item in document.embedded]
     assert operator_rules_text() in embedded_texts
-    assert document.embedded[0].uri == "cadrumo://rule/operating-rules"
+    assert document.embedded[0].uri == "cadrumo://rule/cadrumo-operating-rules"
 
 
 def test_unknown_prompt_name_raises_prompt_not_found() -> None:
@@ -136,16 +136,16 @@ def test_server_lists_and_serves_every_prompt() -> None:
 
         request = GetPromptRequest(
             method="prompts/get",
-            params=GetPromptRequestParams(name="preparar-modelo-130"),
+            params=GetPromptRequestParams(name="cadrumo-preparar-modelo-130"),
         )
         result = (await handlers[GetPromptRequest](request)).root
         assert result.messages[0].content.type == "text"
         assert result.messages[0].content.text.strip()
         resource_message = result.messages[1]
         assert resource_message.content.type == "resource"
-        assert str(resource_message.content.resource.uri) == "cadrumo://skill/preparar-modelo-130"
+        assert str(resource_message.content.resource.uri) == "cadrumo://skill/cadrumo-preparar-modelo-130"
         assert resource_message.content.resource.mimeType == "text/markdown"
-        assert resource_message.content.resource.text == skill_texts["preparar-modelo-130"]
+        assert resource_message.content.resource.text == skill_texts["cadrumo-preparar-modelo-130"]
 
     anyio.run(_drive)
 

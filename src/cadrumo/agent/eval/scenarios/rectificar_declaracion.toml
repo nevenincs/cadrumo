@@ -13,7 +13,7 @@ name = "rectificar-declaracion-amendment"
 modelo = "303"
 filing_year = 2024
 period = "1T"
-skill_name = "rectificar-declaracion"
+skill_name = "cadrumo-rectificar-declaracion"
 provenance_required = true
 expected_computed_casillas = ["64", "66"]
 

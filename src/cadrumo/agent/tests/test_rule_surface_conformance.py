@@ -225,7 +225,7 @@ def test_operator_rules_exist() -> None:
     docs = _rule_documents()
     assert docs, "no operator rule documents are shipped under _data/agent/rules"
     names = {name for name, _ in docs}
-    assert "operator-operating-rules.md" in names
+    assert "cadrumo-operator-operating-rules.md" in names
 
 
 def test_every_cited_verb_resolves() -> None:
