@@ -162,3 +162,23 @@ def test_docs_target_languages_equal_output_language_minus_english() -> None:
         f"{sorted(all_languages)} (English is a valid build language, it is only excluded as a translation target)"
     )
     assert config["language"] == "en", "the default documentation build language must stay English"
+
+
+@pytest.mark.parametrize("language", TARGET_LANGUAGES)
+def test_no_orphan_catalogues(language: str) -> None:
+    """No committed catalogue outlives its source page.
+
+    The completeness and drift gates both iterate the current source page set, so
+    a catalogue whose source page was later deleted or renamed would linger
+    uncaught - translated (or half-translated) text for a page that no longer
+    ships. This asserts every committed ``.po`` maps to a current user-scope
+    source page, enumerating any orphan whose source is gone.
+    """
+    expected = {Path(page).with_suffix(".po").as_posix() for page in user_scope_source_pages(_DOCS)}
+    lc_messages = _LOCALES / language / "LC_MESSAGES"
+    present = {po.relative_to(lc_messages).as_posix() for po in lc_messages.rglob("*.po")}
+    orphans = sorted(present - expected)
+    assert not orphans, (
+        f"{language}: {len(orphans)} orphan catalogue(s) whose source page no longer exists "
+        f"(remove the catalogue or restore the source page):\n  " + "\n  ".join(orphans)
+    )
