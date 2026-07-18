@@ -17,7 +17,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/application/modelo/tests/test_export.py": 1585,  # SPLIT-CANDIDATE
     # SPLIT-CANDIDATE
     "src/cadrumo/domain/calculations/registry/tests/test_loader_directory_mode.py": 1380,
-    "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1279,  # SPLIT-CANDIDATE
+    "src/cadrumo/domain/calculations/registry/_workbook_parity.py": 1292,  # SPLIT-CANDIDATE (+13: call-time parity Settings deferral, 219ed57a6e)
     # Extracted the IRNR/M210 formula-op evaluator family to the sibling
     # `_formula_runtime_irnr.py` module and the shared error types + numeric
     # accessor to `_formula_runtime_ops.py` (registry-resolver-family-extraction),
@@ -74,7 +74,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/entrypoints/cli/_modelo_payloads.py": 1341,  # SPLIT-CANDIDATE
     # New peer-introduced modules discovered by the size-budget gate;
     # pinned at present size pending an owner split pass.
-    "src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py": 1259,  # SPLIT-CANDIDATE
+    "src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py": 1272,  # SPLIT-CANDIDATE (+13: call-time vault-folder Settings deferral, 1d026764cc)
     "src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py": 1316,  # SPLIT-CANDIDATE (regrew past prior pin)
     "src/cadrumo/application/modelo/_calculation_actions.py": 1438,  # SPLIT-CANDIDATE (regrew past prior pin)
     "src/cadrumo/application/aggregation/_iva_ledger.py": 1617,  # SPLIT-CANDIDATE
@@ -148,7 +148,10 @@ _CALLABLE_LINE_LIMIT_OVERRIDES = {
     # the per-capability handler-builder closures (tools/prompts/resources)
     # into factory helpers that take the shared state as arguments.
     ("src/cadrumo/entrypoints/mcp/_server.py", "build_server"): 577,  # SPLIT-CANDIDATE (regrew past prior pin)
-    ("src/cadrumo/entrypoints/mcp/_server.py", "_call_tool"): 217,  # SPLIT-CANDIDATE (regrew past prior pin)
+    (
+        "src/cadrumo/entrypoints/mcp/_server.py",
+        "_call_tool",
+    ): 218,  # SPLIT-CANDIDATE (+1: telemetry-refusal startup guard, 02b3656095)
     # New peer-introduced running-preflight recorder; pinned at present size
     # pending an owner split pass.
     ("src/cadrumo/application/workflow/_engine.py", "_stage_running_preflight"): 184,  # SPLIT-CANDIDATE

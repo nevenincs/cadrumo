@@ -266,6 +266,10 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
             ImportEdge("adapters.outbound.aeat.sede._declarations_observations", "domain.calculations.registry"),
             ImportEdge("adapters.outbound.aeat.verify", "adapters.outbound.aeat.browser"),
             ImportEdge("adapters.outbound.aeat.verify", "core.config"),
+            # calc-sheets apply defers the settings loader from module scope so an
+            # import-time Settings() refusal cannot kill the CLI config subtree / MCP
+            # schema build that imports this adapter (1d026764cc).
+            ImportEdge("adapters.outbound.google._calc_sheets_apply", "core.config"),
             ImportEdge("adapters.outbound.google._oauth_flow", "application.user_profile"),
             ImportEdge("adapters.outbound.google._oauth_flow", "application.workflow"),
             ImportEdge("adapters.outbound.llm._client", "adapters.outbound.llm._providers.anthropic"),
@@ -766,7 +770,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 176,  # +6 filing-amendment repository deferral sites
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 177,  # +1 calc-sheets apply core.config Settings deferral (1d026764cc)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
     UnsanctionedClass.APPLICATION_DEFERRAL: 529,  # +1 ledger._actions_manual->invoices cycle-break (was 528)
 }
@@ -778,7 +782,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 473  # +1 ledger._actions_manual->invoices cycle-break (was 472).
+_ALLOWLIST_EDGE_CEILING: int = 474  # +1 calc-sheets apply core.config Settings deferral, 1d026764cc (was 473).
 
 
 def _cadrumo_relative(dotted: str) -> str:
