@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-07-18 22:29+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -21,6 +21,10 @@ msgstr ""
 #: ../../index.md:118
 msgid "Getting started"
 msgstr "Primeros pasos"
+
+#: ../../index.md:118
+msgid "Get Cadrumo"
+msgstr "Obtén Cadrumo"
 
 #: ../../index.md:118
 msgid "Install Cadrumo"
@@ -46,171 +50,171 @@ msgstr "El año del IRPF"
 msgid "The IVA year"
 msgstr "El año del IVA"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Set up a profile"
 msgstr "Configurar un perfil"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Authenticate with AEAT"
 msgstr "Autenticarse con la AEAT"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Maintain census facts"
 msgstr "Mantener los datos censales"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Which modelos apply to you"
 msgstr "Qué modelos te corresponden"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Protect data access"
 msgstr "Proteger el acceso a los datos"
 
-#: ../../index.md:130
+#: ../../index.md:131
 msgid "Your profile"
 msgstr "Tu perfil"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "Filing calendar"
 msgstr "Calendario de presentaciones"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "AEAT notifications"
 msgstr "Notificaciones de la AEAT"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "Filing readiness"
 msgstr "Preparación para presentar"
 
-#: ../../index.md:141
+#: ../../index.md:142
 msgid "Your calendar"
 msgstr "Tu calendario"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Work with transactions"
 msgstr "Trabajar con transacciones"
 
-#: ../../index.md:81 ../../index.md:150
+#: ../../index.md:81 ../../index.md:151
 msgid "Classify transactions"
 msgstr "Clasificar transacciones"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Classify with an LLM"
 msgstr "Clasificar con un LLM"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Attach invoices and receipts"
 msgstr "Adjuntar facturas y recibos"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Manage business invoices"
 msgstr "Gestionar facturas de la actividad"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Correct mistakes"
 msgstr "Corregir errores"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "IVA prorrata deductions"
 msgstr "Deducciones de IVA en prorrata"
 
-#: ../../index.md:150
+#: ../../index.md:151
 msgid "Your ledger"
 msgstr "Tu ledger"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "The filing workflow"
 msgstr "El flujo de trabajo de presentación"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 036 (censo)"
 msgstr "Modelo 036 (censo)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 100 (Renta)"
 msgstr "Modelo 100 (Renta)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 130 (IRPF instalment)"
 msgstr "Modelo 130 (pago fraccionado del IRPF)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 303 (IVA)"
 msgstr "Modelo 303 (IVA)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 349 (intra-community)"
 msgstr "Modelo 349 (intracomunitario)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Modelo 390 (IVA summary)"
 msgstr "Modelo 390 (resumen anual de IVA)"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Calculation inputs"
 msgstr "Entradas del cálculo"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Google Sheets review"
 msgstr "Revisión con Google Sheets"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Verify a filing"
 msgstr "Verificar una presentación"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "File at AEAT"
 msgstr "Presentar en la AEAT"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Reconcile a filing"
 msgstr "Conciliar una presentación"
 
-#: ../../index.md:163
+#: ../../index.md:164
 msgid "Your filings"
 msgstr "Tus presentaciones"
 
-#: ../../index.md:181
+#: ../../index.md:182
 msgid "Troubleshooting"
 msgstr "Resolución de problemas"
 
-#: ../../index.md:181
+#: ../../index.md:182
 msgid "Disclaimer"
 msgstr "Aviso legal"
 
-#: ../../index.md:181
+#: ../../index.md:182
 msgid "Help"
 msgstr "Ayuda"
 
-#: ../../index.md:189
+#: ../../index.md:190
 msgid "Cadrumo reference"
 msgstr "Referencia de Cadrumo"
 
-#: ../../index.md:189
+#: ../../index.md:190
 msgid "Reference"
 msgstr "Referencia"
 
-#: ../../index.md:199
+#: ../../index.md:200
 msgid "Overview"
 msgstr "Visión general"
 
-#: ../../index.md:199
+#: ../../index.md:200
 msgid "How it works"
 msgstr "Cómo funciona"
 
-#: ../../index.md:206
+#: ../../index.md:207
 msgid "Updates and downloads"
 msgstr "Actualizaciones y descargas"
 
-#: ../../index.md:206
+#: ../../index.md:207
 msgid "Architecture"
 msgstr "Arquitectura"
 
-#: ../../index.md:206
+#: ../../index.md:207
 msgid "Authoring guide"
 msgstr "Guía de redacción"
 
-#: ../../index.md:206
+#: ../../index.md:207
 msgid "Project"
 msgstr "Proyecto"
 
@@ -236,14 +240,14 @@ msgid ""
 "on [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is pre-alpha -"
 " expect breaking changes between versions."
 msgstr ""
-"Esta es la documentación de Cadrumo y de su interfaz de línea de comandos "
-"(CLI) `aeat`. Cadrumo convierte tus registros en cifras de modelo "
+"Esta es la documentación de Cadrumo y de su interfaz de línea de comandos"
+" (CLI) `aeat`. Cadrumo convierte tus registros en cifras de modelo "
 "comprobadas y en un fichero de exportación. Tú mismo subes ese fichero a "
-"la Agencia Estatal de Administración Tributaria (AEAT). Para saber qué es "
-"Cadrumo y a quién va dirigido, consulta la [página del "
+"la Agencia Estatal de Administración Tributaria (AEAT). Para saber qué es"
+" Cadrumo y a quién va dirigido, consulta la [página del "
 "producto](https://cadrumo.neve.md); el código fuente está en "
-"[GitHub](https://github.com/nevenincs/cadrumo). Cadrumo está en fase "
-"pre-alfa: espera cambios incompatibles entre versiones."
+"[GitHub](https://github.com/nevenincs/cadrumo). Cadrumo está en fase pre-"
+"alfa: espera cambios incompatibles entre versiones."
 
 #: ../../index.md:18
 msgid ""
@@ -276,8 +280,8 @@ msgstr ""
 "Estas guías cubren todo el ciclo de preparación: configurar un perfil de "
 "contribuyente, importar y clasificar los registros bancarios, comprobar "
 "lo que hay que presentar, y preparar, verificar y exportar cada modelo. "
-"Los dos años de ejemplo (uno para el IRPF y otro para el IVA) recorren el "
-"ciclo completo con comandos reales."
+"Los dos años de ejemplo (uno para el IRPF y otro para el IVA) recorren el"
+" ciclo completo con comandos reales."
 
 #: ../../index.md:37
 msgid "Start from scratch"
@@ -351,8 +355,7 @@ msgstr "Planificar tu calendario de presentaciones"
 
 #: ../../index.md:95
 msgid "See which modelos are due and which period to prepare next."
-msgstr ""
-"Ve qué modelos hay que presentar y qué periodo preparar a continuación."
+msgstr "Ve qué modelos hay que presentar y qué periodo preparar a continuación."
 
 #: ../../index.md:98
 msgid "Prepare your filings"
@@ -392,3 +395,4 @@ msgstr ""
 "evidence.md) para distinguir los datos de origen, los resultados de "
 "revisión, los ficheros de subida a la AEAT, el justificante oficial de "
 "presentación y los paquetes de auditoría."
+
