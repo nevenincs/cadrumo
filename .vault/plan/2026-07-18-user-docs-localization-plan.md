@@ -133,25 +133,25 @@ Translate every user-scope page catalogue into Spanish, Catalan, and Hungarian u
 
 Translate all user-scope page catalogues to es with domain context, gate green
 
-- [ ] `W02.P03.S10` - Translate the how-to section catalogues to Spanish with full-page domain context; `docs/locales/es`.
-- [ ] `W02.P03.S11` - Translate the explanation and reference section catalogues to Spanish; `docs/locales/es`.
-- [ ] `W02.P03.S12` - Translate the index, architecture, top-level, and remaining catalogues to Spanish and drive the Spanish completeness gate green; `docs/locales/es`.
+- [x] `W02.P03.S10` - Translate the how-to section catalogues to Spanish with full-page domain context; `docs/locales/es`.
+- [x] `W02.P03.S11` - Translate the explanation and reference section catalogues to Spanish; `docs/locales/es`.
+- [x] `W02.P03.S12` - Translate the index, architecture, top-level, and remaining catalogues to Spanish and drive the Spanish completeness gate green; `docs/locales/es`.
 
 ### Phase `W02.P04` - Catalan translation
 
 Translate all user-scope page catalogues to ca with domain context, gate green
 
-- [ ] `W02.P04.S13` - Translate the how-to section catalogues to Catalan with full-page domain context; `docs/locales/ca`.
-- [ ] `W02.P04.S14` - Translate the explanation and reference section catalogues to Catalan; `docs/locales/ca`.
-- [ ] `W02.P04.S15` - Translate the index, architecture, top-level, and remaining catalogues to Catalan and drive the Catalan completeness gate green; `docs/locales/ca`.
+- [x] `W02.P04.S13` - Translate the how-to section catalogues to Catalan with full-page domain context; `docs/locales/ca`.
+- [x] `W02.P04.S14` - Translate the explanation and reference section catalogues to Catalan; `docs/locales/ca`.
+- [x] `W02.P04.S15` - Translate the index, architecture, top-level, and remaining catalogues to Catalan and drive the Catalan completeness gate green; `docs/locales/ca`.
 
 ### Phase `W02.P05` - Hungarian translation
 
 Translate all user-scope page catalogues to hu with domain context, gate green
 
-- [ ] `W02.P05.S16` - Translate the how-to section catalogues to Hungarian with full-page domain context; `docs/locales/hu`.
-- [ ] `W02.P05.S17` - Translate the explanation and reference section catalogues to Hungarian; `docs/locales/hu`.
-- [ ] `W02.P05.S18` - Translate the index, architecture, top-level, and remaining catalogues to Hungarian and drive the Hungarian completeness gate green; `docs/locales/hu`.
+- [x] `W02.P05.S16` - Translate the how-to section catalogues to Hungarian with full-page domain context; `docs/locales/hu`.
+- [x] `W02.P05.S17` - Translate the explanation and reference section catalogues to Hungarian; `docs/locales/hu`.
+- [x] `W02.P05.S18` - Translate the index, architecture, top-level, and remaining catalogues to Hungarian and drive the Hungarian completeness gate green; `docs/locales/hu`.
 
 ## Wave `W03` - deployment, verification, and close
 
