@@ -55,3 +55,10 @@ related:
 - Step S29 remains unchecked. It cannot pass until the trusted publisher identity
   exists and the exact signed delivery is installed and completes the tax-work
   oracle; a format-valid self-signed signature is not a substitute.
+- RESOLVED BY DECISION (2026-07-18): the accepted `mcpb-signing-publisher`
+  ADR rules the MCPB ships unsigned — an open-source, no-income project does
+  not procure a paid code-signing identity; the published release SHA-256 plus
+  the in-bundle per-wheel digest pins are the declared integrity channel, and
+  user documentation owns the unverified-publisher expectation. The signing
+  policy this step binds to IS the unsigned posture, so the row closes as
+  decided rather than as a deferral.
