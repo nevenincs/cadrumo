@@ -3,14 +3,13 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo localization team <docs@cadrumo>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/authenticate-with-aeat.md:1
 msgid "Authenticate Cadrumo with AEAT"
-msgstr ""
+msgstr "Autenticar Cadrumo ante la AEAT"
 
 #: ../../how-to/authenticate-with-aeat.md:3
 msgid ""
@@ -31,6 +30,11 @@ msgid ""
 "only access only. It never files a declaration, makes a payment, "
 "acknowledges a notification, or performs representative-write actions."
 msgstr ""
+"Autentica Cadrumo ante la Agencia Estatal de Administración Tributaria "
+"(AEAT) para que la orden `aeat` de Cadrumo pueda leer la información que tu "
+"identidad ante la AEAT autorice. La autenticación concede acceso de solo "
+"lectura. Nunca presenta una declaración, realiza un pago, acusa recibo de "
+"una notificación ni ejecuta acciones de escritura en representación."
 
 #: ../../how-to/authenticate-with-aeat.md:9
 msgid ""
@@ -39,6 +43,11 @@ msgid ""
 "guide](troubleshooting.md). If that does not restore the command, report "
 "the failure with the Cadrumo version and redacted output."
 msgstr ""
+"Ejecuta `aeat --help` antes de continuar. Si falla, detente antes de "
+"configurar la autenticación y sigue la [guía de resolución de problemas de "
+"la CLI](troubleshooting.md). Si eso no restablece la orden, informa del "
+"fallo indicando la versión de Cadrumo y la salida con los datos sensibles "
+"ocultos."
 
 #: ../../how-to/authenticate-with-aeat.md:14
 msgid ""
@@ -48,14 +57,19 @@ msgid ""
 " facts guide](censo-update.md). Cadrumo no longer retrieves these facts "
 "live."
 msgstr ""
+"Cuando tu identidad lo permita, la interfaz de línea de órdenes (CLI) puede "
+"leer declaraciones presentadas, expedientes, notificaciones y justificantes "
+"presentados. Para los datos de perfil del Modelo 036/censo, usa la [guía de "
+"datos de perfil/censo](censo-update.md). Cadrumo ya no obtiene estos datos "
+"en directo."
 
 #: ../../how-to/authenticate-with-aeat.md:19
 msgid "Before you start"
-msgstr ""
+msgstr "Antes de empezar"
 
 #: ../../how-to/authenticate-with-aeat.md:21
 msgid "You need:"
-msgstr ""
+msgstr "Necesitas:"
 
 #: ../../how-to/authenticate-with-aeat.md:23
 msgid ""
@@ -64,20 +78,26 @@ msgid ""
 " you create one. Create one non-interactively (a NIF, CIF, DNI, or NIE is"
 " a Spanish tax identifier):"
 msgstr ""
+"un [perfil activo](profile-setup.md#what-the-active-profile-means). `aeat "
+"config auth configure` se niega con `No hay un perfil activo` hasta que "
+"crees uno. Crea uno de forma no interactiva (un NIF, CIF, DNI o NIE es un "
+"identificador fiscal español):"
 
 #: ../../how-to/authenticate-with-aeat.md:32
 msgid ""
 "the master-key passphrase that protects your local store; the tool "
 "prompts for it."
 msgstr ""
+"la frase de contraseña de la clave maestra que protege tu almacén local; la "
+"herramienta te la pedirá."
 
 #: ../../how-to/authenticate-with-aeat.md:35
 msgid "See supported providers"
-msgstr ""
+msgstr "Consultar los proveedores admitidos"
 
 #: ../../how-to/authenticate-with-aeat.md:37
 msgid "List providers:"
-msgstr ""
+msgstr "Enumera los proveedores:"
 
 #: ../../how-to/authenticate-with-aeat.md:43
 msgid ""
@@ -85,66 +105,79 @@ msgid ""
 "`reservado (no disponible aún)` (reserved, not available yet). Three are "
 "available:"
 msgstr ""
+"La lista marca cada proveedor como `disponible` (disponible ahora) o "
+"`reservado (no disponible aún)` (reservado, todavía no disponible). Hay tres "
+"disponibles:"
 
 #: ../../how-to/authenticate-with-aeat.md:46
 msgid "`certificate`: your digital certificate file (certificado digital)."
-msgstr ""
+msgstr "`certificate`: tu archivo de certificado digital (certificado digital)."
 
 #: ../../how-to/authenticate-with-aeat.md:47
 msgid "`clave_movil`: mobile-based Cl@ve, confirmed on your phone."
-msgstr ""
+msgstr "`clave_movil`: Cl@ve móvil, confirmada en tu teléfono."
 
 #: ../../how-to/authenticate-with-aeat.md:48
 msgid "`clave_permanente`: Cl@ve Permanente, a DNI/NIE and password login."
-msgstr ""
+msgstr "`clave_permanente`: Cl@ve Permanente, un acceso con DNI/NIE y contraseña."
 
 #: ../../how-to/authenticate-with-aeat.md:50
 msgid "Two more are listed but reserved, so you cannot configure them yet:"
 msgstr ""
+"Aparecen dos más, pero están reservados, así que todavía no puedes "
+"configurarlos:"
 
 #: ../../how-to/authenticate-with-aeat.md:52
 msgid "`clave_pin`: Cl@ve PIN, a one-time code system from AEAT. Reserved."
 msgstr ""
+"`clave_pin`: Cl@ve PIN, un sistema de código de un solo uso de la AEAT. "
+"Reservado."
 
 #: ../../how-to/authenticate-with-aeat.md:53
 msgid "`dnie_pkcs`: the national ID card (DNI electrónico). Reserved."
 msgstr ""
+"`dnie_pkcs`: el documento nacional de identidad (DNI electrónico). Reservado."
 
 #: ../../how-to/authenticate-with-aeat.md:55
 msgid "Configure one of the available providers."
-msgstr ""
+msgstr "Configura uno de los proveedores disponibles."
 
 #: ../../how-to/authenticate-with-aeat.md:57
 msgid "Configure a provider"
-msgstr ""
+msgstr "Configurar un proveedor"
 
 #: ../../how-to/authenticate-with-aeat.md:59
 msgid "Configure the provider you use:"
-msgstr ""
+msgstr "Configura el proveedor que utilices:"
 
 #: ../../how-to/authenticate-with-aeat.md:64
 msgid ""
 "Use `--file` for providers that need a file, such as your digital "
 "certificate. Keep credential files private and do not share them."
 msgstr ""
+"Usa `--file` para los proveedores que necesitan un archivo, como tu "
+"certificado digital. Mantén privados los archivos de credenciales y no los "
+"compartas."
 
 #: ../../how-to/authenticate-with-aeat.md:67
 msgid "Check local readiness"
-msgstr ""
+msgstr "Comprobar la preparación local"
 
 #: ../../how-to/authenticate-with-aeat.md:69
 msgid "Check what is configured:"
-msgstr ""
+msgstr "Comprueba qué está configurado:"
 
 #: ../../how-to/authenticate-with-aeat.md:75
 msgid ""
 "If you want to inspect a specific provider, use `--provider` with either "
 "command."
 msgstr ""
+"Si quieres examinar un proveedor concreto, usa `--provider` con cualquiera "
+"de las dos órdenes."
 
 #: ../../how-to/authenticate-with-aeat.md:78
 msgid "Renew your certificate before it expires"
-msgstr ""
+msgstr "Renovar el certificado antes de que caduque"
 
 #: ../../how-to/authenticate-with-aeat.md:80
 msgid ""
@@ -152,38 +185,50 @@ msgid ""
 "the certificate file and warns you as it approaches. This helps you avoid"
 " a failed live read caused by an expired certificate."
 msgstr ""
+"Un certificado digital tiene una fecha de caducidad. La herramienta lee esa "
+"fecha del archivo del certificado y te avisa a medida que se acerca. Esto te "
+"ayuda a evitar una lectura en directo fallida por un certificado caducado."
 
 #: ../../how-to/authenticate-with-aeat.md:84
 msgid "Check the remaining validity:"
-msgstr ""
+msgstr "Comprueba la validez restante:"
 
 #: ../../how-to/authenticate-with-aeat.md:90
 msgid "The report tells you how the certificate stands:"
-msgstr ""
+msgstr "El informe te indica en qué situación está el certificado:"
 
 #: ../../how-to/authenticate-with-aeat.md:92
 msgid ""
 "More than 60 days left: the certificate is valid and reports the days "
 "remaining."
 msgstr ""
+"Más de 60 días restantes: el certificado es válido e informa de los días que "
+"quedan."
 
 #: ../../how-to/authenticate-with-aeat.md:94
 msgid ""
 "60 days or fewer left: a warning appears: `The certificate expires in N "
 "days. Plan the renewal.` Start the renewal now."
 msgstr ""
+"60 días o menos restantes: aparece un aviso: `The certificate expires in N "
+"days. Plan the renewal.` Inicia la renovación ahora."
 
 #: ../../how-to/authenticate-with-aeat.md:96
 msgid ""
 "14 days or fewer left: the warning is critical. Renew before your next "
 "live read."
 msgstr ""
+"14 días o menos restantes: el aviso es crítico. Renueva antes de tu próxima "
+"lectura en directo."
 
 #: ../../how-to/authenticate-with-aeat.md:98
 msgid ""
 "Already expired: `The certificate expired N days ago. Renew it before "
 "authenticating.` A live read is refused until you replace it."
 msgstr ""
+"Ya caducado: `The certificate expired N days ago. Renew it before "
+"authenticating.` Se rechaza cualquier lectura en directo hasta que lo "
+"reemplaces."
 
 #: ../../how-to/authenticate-with-aeat.md:101
 msgid ""
@@ -192,28 +237,36 @@ msgid ""
 "tool. Download the renewed certificate file (`.p12` or `.pfx`) to your "
 "machine."
 msgstr ""
+"Renueva el certificado ante el organismo que lo emitió, como la Fábrica "
+"Nacional de Moneda y Timbre (FNMT) o la AEAT. Esto ocurre fuera de la "
+"herramienta. Descarga a tu equipo el archivo del certificado renovado "
+"(`.p12` o `.pfx`)."
 
 #: ../../how-to/authenticate-with-aeat.md:105
 msgid "Point the tool at the renewed file:"
-msgstr ""
+msgstr "Apunta la herramienta al archivo renovado:"
 
 #: ../../how-to/authenticate-with-aeat.md:110
 msgid ""
 "If the renewed certificate uses a new password, rotate the stored "
 "passphrase for its source:"
 msgstr ""
+"Si el certificado renovado usa una contraseña nueva, rota la frase de "
+"contraseña almacenada para su fuente:"
 
 #: ../../how-to/authenticate-with-aeat.md:116
 msgid "Confirm the new expiry:"
-msgstr ""
+msgstr "Confirma la nueva caducidad:"
 
 #: ../../how-to/authenticate-with-aeat.md:122
 msgid "The report now shows the renewed certificate's later expiry date."
 msgstr ""
+"El informe muestra ahora la fecha de caducidad posterior del certificado "
+"renovado."
 
 #: ../../how-to/authenticate-with-aeat.md:124
 msgid "Manage several certificates"
-msgstr ""
+msgstr "Gestionar varios certificados"
 
 #: ../../how-to/authenticate-with-aeat.md:126
 msgid ""
@@ -221,74 +274,88 @@ msgid ""
 "not reconfigure `aeat config auth configure --file` every time you "
 "switch."
 msgstr ""
+"Si actúas por cuenta de varias entidades, registra un certificado por "
+"entidad. No vuelvas a configurar `aeat config auth configure --file` cada "
+"vez que cambies."
 
 #: ../../how-to/authenticate-with-aeat.md:129
 msgid "Register each certificate under a name:"
-msgstr ""
+msgstr "Registra cada certificado con un nombre:"
 
 #: ../../how-to/authenticate-with-aeat.md:134
 msgid "List every registered certificate:"
-msgstr ""
+msgstr "Enumera todos los certificados registrados:"
 
 #: ../../how-to/authenticate-with-aeat.md:140
 msgid "Select the one you want active:"
-msgstr ""
+msgstr "Selecciona el que quieras tener activo:"
 
 #: ../../how-to/authenticate-with-aeat.md:145
 msgid "Remove a registered certificate you no longer need:"
-msgstr ""
+msgstr "Elimina un certificado registrado que ya no necesites:"
 
 #: ../../how-to/authenticate-with-aeat.md:151
 msgid "Check every registered certificate's expiry"
-msgstr ""
+msgstr "Comprobar la caducidad de todos los certificados registrados"
 
 #: ../../how-to/authenticate-with-aeat.md:153
 msgid ""
 "Each registered certificate has its own expiry date. Check all registered"
 " certificates in one pass, not only the active one:"
 msgstr ""
+"Cada certificado registrado tiene su propia fecha de caducidad. Comprueba "
+"todos los certificados registrados de una sola pasada, no solo el activo:"
 
 #: ../../how-to/authenticate-with-aeat.md:160
 msgid "The report lists each registered certificate with its status:"
-msgstr ""
+msgstr "El informe enumera cada certificado registrado con su estado:"
 
 #: ../../how-to/authenticate-with-aeat.md:162
 msgid "`ok`: valid, with the days remaining."
-msgstr ""
+msgstr "`ok`: válido, con los días que quedan."
 
 #: ../../how-to/authenticate-with-aeat.md:163
 msgid ""
 "`expiring`: within the renewal window (60 days or fewer by default, or 14"
 " days or fewer for the critical window). A warning names the certificate."
 msgstr ""
+"`expiring`: dentro de la ventana de renovación (60 días o menos de forma "
+"predeterminada, o 14 días o menos para la ventana crítica). Un aviso nombra "
+"el certificado."
 
 #: ../../how-to/authenticate-with-aeat.md:165
 msgid "`expired`: already expired. A warning names the certificate."
-msgstr ""
+msgstr "`expired`: ya caducado. Un aviso nombra el certificado."
 
 #: ../../how-to/authenticate-with-aeat.md:167
 msgid ""
 "Renew an expiring or expired certificate with the body that issued it, "
 "then re-register it under its existing name:"
 msgstr ""
+"Renueva un certificado que esté por caducar o ya caducado ante el organismo "
+"que lo emitió y vuelve a registrarlo con su nombre existente:"
 
 #: ../../how-to/authenticate-with-aeat.md:173
 msgid ""
 "Re-run `aeat config auth certificate check` to confirm the new expiry "
 "date."
 msgstr ""
+"Vuelve a ejecutar `aeat config auth certificate check` para confirmar la "
+"nueva fecha de caducidad."
 
 #: ../../how-to/authenticate-with-aeat.md:175
 msgid "Acquire or verify a live session"
-msgstr ""
+msgstr "Obtener o verificar una sesión en directo"
 
 #: ../../how-to/authenticate-with-aeat.md:177
 msgid "When you are ready to use a live-read command:"
-msgstr ""
+msgstr "Cuando estés listo para usar una orden de lectura en directo:"
 
 #: ../../how-to/authenticate-with-aeat.md:182
 msgid "If you need to intentionally reauthenticate, force a fresh authentication:"
 msgstr ""
+"Si necesitas volver a autenticarte a propósito, fuerza una autenticación "
+"nueva:"
 
 #: ../../how-to/authenticate-with-aeat.md:187
 msgid ""
@@ -296,30 +363,40 @@ msgid ""
 "stuck, use `--reset-lock`. Run it when `login` reports another login is "
 "in progress but it is not."
 msgstr ""
+"Si un inicio de sesión anterior se interrumpió y dejó bloqueado el paso de "
+"autenticación, usa `--reset-lock`. Ejecútalo cuando `login` indique que hay "
+"otro inicio de sesión en curso pero no lo haya."
 
 #: ../../how-to/authenticate-with-aeat.md:191
 msgid "End sessions or reset authentication"
-msgstr ""
+msgstr "Finalizar sesiones o restablecer la autenticación"
 
 #: ../../how-to/authenticate-with-aeat.md:193
 msgid ""
 "To end the local certificate-provider session without removing its "
 "configuration:"
 msgstr ""
+"Para finalizar la sesión local del proveedor de certificado sin eliminar su "
+"configuración:"
 
 #: ../../how-to/authenticate-with-aeat.md:200
 msgid ""
 "To remove one provider's local configuration, sessions, acquisition lock,"
 " registered certificates, and stored certificate secrets:"
 msgstr ""
+"Para eliminar la configuración local, las sesiones, el bloqueo de obtención, "
+"los certificados registrados y los secretos de certificado almacenados de un "
+"proveedor:"
 
 #: ../../how-to/authenticate-with-aeat.md:207
 msgid "To remove local authentication state for every configured provider:"
 msgstr ""
+"Para eliminar el estado de autenticación local de todos los proveedores "
+"configurados:"
 
 #: ../../how-to/authenticate-with-aeat.md:213
 msgid "Act for someone else (apoderado)"
-msgstr ""
+msgstr "Actuar por cuenta de otra persona (apoderado)"
 
 #: ../../how-to/authenticate-with-aeat.md:215
 msgid ""
@@ -328,6 +405,10 @@ msgid ""
 "scopes. An apoderado is an authorized representative, such as a gestor or"
 " asesor."
 msgstr ""
+"Si actúas como representante fiscal autorizado de otro contribuyente, "
+"registra localmente a quién representas y los ámbitos de apoderamiento "
+"pertinentes ante la AEAT. Un apoderado es un representante autorizado, como "
+"un gestor o un asesor."
 
 #: ../../how-to/authenticate-with-aeat.md:219
 msgid ""
@@ -338,50 +419,60 @@ msgid ""
 "renounce an apoderamiento at AEAT. No command writes representation state"
 " to AEAT."
 msgstr ""
+"El apoderamiento en sí se concede en la AEAT. La parte representada te "
+"autoriza a través de los propios procedimientos de apoderamiento de la AEAT. "
+"Las órdenes de esta sección registran esa concesión en tu perfil local para "
+"que las órdenes de lectura sepan de quién son los datos que leen. Nunca "
+"registran, amplían, revocan ni renuncian a un apoderamiento en la AEAT. "
+"Ninguna orden escribe el estado de representación en la AEAT."
 
 #: ../../how-to/authenticate-with-aeat.md:225
 msgid "See the accepted scopes"
-msgstr ""
+msgstr "Consultar los ámbitos admitidos"
 
 #: ../../how-to/authenticate-with-aeat.md:227
 msgid "List the scope codes the tool accepts:"
-msgstr ""
+msgstr "Enumera los códigos de ámbito que la herramienta admite:"
 
 #: ../../how-to/authenticate-with-aeat.md:233
 msgid "Each scope is an AEAT apoderamiento area. Examples include:"
-msgstr ""
+msgstr "Cada ámbito es un área de apoderamiento de la AEAT. Algunos ejemplos:"
 
 #: ../../how-to/authenticate-with-aeat.md:235
 msgid "`RENT` for modelos 100 and 714."
-msgstr ""
+msgstr "`RENT` para los modelos 100 y 714."
 
 #: ../../how-to/authenticate-with-aeat.md:236
 msgid "`IVA` for modelos 303 and 390."
-msgstr ""
+msgstr "`IVA` para los modelos 303 y 390."
 
 #: ../../how-to/authenticate-with-aeat.md:237
 msgid "`PAGOSF` for modelos 130 and 131."
-msgstr ""
+msgstr "`PAGOSF` para los modelos 130 y 131."
 
 #: ../../how-to/authenticate-with-aeat.md:238
 msgid "`RETEN` for withholding modelos."
-msgstr ""
+msgstr "`RETEN` para los modelos de retenciones."
 
 #: ../../how-to/authenticate-with-aeat.md:239
 msgid ""
 "`GENERALNT`, `CENSO`, `INFORM`, `NOTIFIC`, and `EXPED` for their "
 "respective authority areas."
 msgstr ""
+"`GENERALNT`, `CENSO`, `INFORM`, `NOTIFIC` y `EXPED` para sus respectivas "
+"áreas de la autoridad."
 
 #: ../../how-to/authenticate-with-aeat.md:242
 msgid "Record who you represent"
-msgstr ""
+msgstr "Registrar a quién representas"
 
 #: ../../how-to/authenticate-with-aeat.md:244
 msgid ""
 "Set the represented party's tax identifier (NIF, CIF, DNI, NIE, or NII) "
 "and the scopes that match the grant at AEAT:"
 msgstr ""
+"Indica el identificador fiscal de la parte representada (NIF, CIF, DNI, NIE "
+"o NII) y los ámbitos que coincidan con la concesión en la AEAT:"
 
 #: ../../how-to/authenticate-with-aeat.md:251
 msgid ""
@@ -390,20 +481,26 @@ msgid ""
 "scope at once. The CLI rejects unknown codes and lists the accepted "
 "codes."
 msgstr ""
+"Repite `--scope` para cada código. La CLI rechaza una lista separada por "
+"comas. Los códigos de ámbito van en mayúsculas. Usa `--scope ALL` para "
+"registrar de una vez todos los ámbitos del catálogo. La CLI rechaza los "
+"códigos desconocidos y enumera los códigos admitidos."
 
 #: ../../how-to/authenticate-with-aeat.md:255
 msgid ""
 "The active profile holds at most one apoderado configuration; configuring"
 " again replaces it. The represented identifier is stored encrypted."
 msgstr ""
+"El perfil activo tiene como máximo una configuración de apoderado; volver a "
+"configurarla la reemplaza. El identificador representado se almacena cifrado."
 
 #: ../../how-to/authenticate-with-aeat.md:258
 msgid "Review or retire the configuration"
-msgstr ""
+msgstr "Revisar o retirar la configuración"
 
 #: ../../how-to/authenticate-with-aeat.md:260
 msgid "Show what is recorded for the active profile:"
-msgstr ""
+msgstr "Muestra lo que hay registrado para el perfil activo:"
 
 #: ../../how-to/authenticate-with-aeat.md:266
 msgid ""
@@ -412,32 +509,39 @@ msgid ""
 "unavailable\" message and points you back to `status`. Use `aeat config "
 "auth apoderado status` for the offline configuration read."
 msgstr ""
+"`aeat config auth apoderado check` es el verbo de verificación en directo, "
+"pero la vía de lectura en directo de la AEAT está sellada. Se niega con un "
+"mensaje de \"live verification unavailable\" y te remite de nuevo a "
+"`status`. Usa `aeat config auth apoderado status` para la lectura sin "
+"conexión de la configuración."
 
 #: ../../how-to/authenticate-with-aeat.md:271
 msgid "Remove the configuration when the representation ends:"
-msgstr ""
+msgstr "Elimina la configuración cuando termine la representación:"
 
 #: ../../how-to/authenticate-with-aeat.md:277
 msgid ""
 "Clearing removes only the local record. The apoderamiento at AEAT is "
 "unaffected. Revoke it through AEAT's own procedures."
 msgstr ""
+"Borrarla elimina solo el registro local. El apoderamiento en la AEAT no se "
+"ve afectado. Revócalo a través de los propios procedimientos de la AEAT."
 
 #: ../../how-to/authenticate-with-aeat.md:280
 msgid "Next steps"
-msgstr ""
+msgstr "Próximos pasos"
 
 #: ../../how-to/authenticate-with-aeat.md:282
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
-msgstr ""
+msgstr "[Mantener los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
 #: ../../how-to/authenticate-with-aeat.md:283
 msgid "[Set up your taxpayer profile](profile-setup.md)"
-msgstr ""
+msgstr "[Configurar tu perfil de contribuyente](profile-setup.md)"
 
 #: ../../how-to/authenticate-with-aeat.md:284
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
-msgstr ""
+msgstr "[Diagnosticar y reparar tu instalación local](troubleshooting.md)"
 
 #: ../../how-to/authenticate-with-aeat.md:286
 msgid ""
@@ -445,4 +549,6 @@ msgid ""
 "your certificate before it expires](#renew-your-certificate-before-it-"
 "expires) when the command reports an expiry warning."
 msgstr ""
-
+"Ejecuta `aeat config auth test` antes de cada tarea de lectura en directo. "
+"Sigue [Renovar el certificado antes de que caduque](#renew-your-certificate-"
+"before-it-expires) cuando la orden informe de un aviso de caducidad."
