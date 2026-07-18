@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,11 +20,11 @@ msgstr ""
 
 #: ../../reference/commands-and-configuration.md:1
 msgid "Commands and configuration"
-msgstr ""
+msgstr "Ordres i configuració"
 
 #: ../../reference/commands-and-configuration.md:3
 msgid "Command and workflow-stage lookup"
-msgstr ""
+msgstr "Consulta d'ordres i d'etapes del flux de treball"
 
 #: ../../reference/commands-and-configuration.md:5
 msgid ""
@@ -33,78 +32,83 @@ msgid ""
 "authority. The canonical human executable is `aeat`. The separate Model "
 "Context Protocol (MCP) executable is `cadrumo-mcp`."
 msgstr ""
+"La interfície de línia d'ordres (CLI) exposa l'ajuda en directe com a "
+"autoritat de les ordres. L'executable canònic per a humans és `aeat`. "
+"L'executable separat del Model Context Protocol (MCP) és `cadrumo-mcp`."
 
 #: ../../reference/commands-and-configuration.md
 msgid "Command family"
-msgstr ""
+msgstr "Família d'ordres"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Live authority"
-msgstr ""
+msgstr "Autoritat en directe"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Structured map"
-msgstr ""
+msgstr "Mapa estructurat"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Root behavior and global options"
-msgstr ""
+msgstr "Comportament arrel i opcions globals"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat --help`"
-msgstr ""
+msgstr "`aeat --help`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[CLI overview](../cli/index.rst)"
-msgstr ""
+msgstr "[Visió general de la CLI](../cli/index.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Profile, authentication, diagnostics, Google, and local configuration"
-msgstr ""
+msgstr "Perfil, autenticació, diagnòstics, Google i configuració local"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat config --help` and leaf help"
-msgstr ""
+msgstr "`aeat config --help` i ajuda de les fulles"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Configuration commands](../cli/config.rst)"
-msgstr ""
+msgstr "[Ordres de configuració](../cli/config.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Ledger, modelo, review, live-read, export, record, and reconciliation"
 msgstr ""
+"Ledger, model, revisió, lectura en directe, exportació, registre i "
+"conciliació"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat app --help` and leaf help"
-msgstr ""
+msgstr "`aeat app --help` i ajuda de les fulles"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Application commands](../cli/app.rst)"
-msgstr ""
+msgstr "[Ordres de l'aplicació](../cli/app.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "JSON envelopes and output schemas"
-msgstr ""
+msgstr "Sobres JSON i esquemes de sortida"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Leaf help with the selected format"
-msgstr ""
+msgstr "Ajuda de la fulla amb el format seleccionat"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Command schemas](../cli/schemas.rst)"
-msgstr ""
+msgstr "[Esquemes d'ordres](../cli/schemas.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Non-interactive conventions"
-msgstr ""
+msgstr "Convencions no interactives"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Root and leaf help"
-msgstr ""
+msgstr "Ajuda arrel i de les fulles"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Automation reference](../cli/automation.rst)"
-msgstr ""
+msgstr "[Referència d'automatització](../cli/automation.rst)"
 
 #: ../../reference/commands-and-configuration.md:17
 msgid ""
@@ -115,50 +119,62 @@ msgid ""
 " why the stages are separate and [the how-to guides](../how-to/index.md) "
 "for task sequences."
 msgstr ""
+"Les etapes de presentació es relacionen com a `calculate` → `review` → "
+"`verify` → `export` → pujada humana → registre local → conciliació. Els "
+"noms d'etapa descriuen el flux de treball local de Cadrumo. Les "
+"definicions exactes de les ordres provenen de l'ajuda en directe `aeat "
+"... --help`. Llegeix [l'explicació del flux de "
+"treball](../explanation/index.md) per saber per què les etapes són "
+"separades i [les guies pràctiques](../how-to/index.md) per a les "
+"seqüències de tasques."
 
 #: ../../reference/commands-and-configuration.md:23
 msgid "Configuration ownership"
-msgstr ""
+msgstr "Propietat de la configuració"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Prefix or field family"
-msgstr ""
+msgstr "Prefix o família de camps"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Owner"
-msgstr ""
+msgstr "Propietari"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Scope"
-msgstr ""
+msgstr "Àmbit"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`CADRUMO_*` / `cadrumo_*`"
-msgstr ""
+msgstr "`CADRUMO_*` / `cadrumo_*`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Cadrumo product"
-msgstr ""
+msgstr "Producte Cadrumo"
 
 #: ../../reference/commands-and-configuration.md
 msgid ""
 "Local state, output, providers, profiles, credentials storage, and "
 "product behavior"
 msgstr ""
+"Estat local, sortida, proveïdors, perfils, emmagatzematge de credencials "
+"i comportament del producte"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`AEAT_*` / `aeat_*`"
-msgstr ""
+msgstr "`AEAT_*` / `aeat_*`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "AEAT integration"
-msgstr ""
+msgstr "Integració amb l'AEAT"
 
 #: ../../reference/commands-and-configuration.md
 msgid ""
 "Authority endpoints, authority credentials, live-read controls, and "
 "preserved authority terminology"
 msgstr ""
+"Punts finals de l'autoritat, credencials de l'autoritat, controls de "
+"lectura en directe i terminologia de l'autoritat preservada"
 
 #: ../../reference/commands-and-configuration.md:30
 msgid ""
@@ -170,6 +186,14 @@ msgid ""
 "fields are listed in the generated Cadrumo application programming "
 "interface ([API](../api/cadrumo.rst))."
 msgstr ""
+"Alguns exemples de controls del producte són "
+"`CADRUMO_LOCAL_STORAGE_ROOT`, `CADRUMO_SECRET_STORE_BACKEND`, "
+"`CADRUMO_SECRET_STORE_DIR`, `CADRUMO_SECRET_PASSPHRASE` i "
+"`CADRUMO_OUTPUT_LANGUAGE`. L'ajuda en directe `aeat config --help` i "
+"l'ajuda de les seves fulles defineixen la configuració de cara a "
+"l'operador. El [mapa de configuració](../cli/config.rst) agrupa aquelles "
+"ordres. Els camps de Python es llisten a la interfície de programació "
+"d'aplicacions de Cadrumo generada ([API](../api/cadrumo.rst))."
 
 #: ../../reference/commands-and-configuration.md:38
 msgid ""
@@ -177,4 +201,8 @@ msgid ""
 "`CADRUMO_*`. Authority-owned `AEAT_*` integration controls remain valid "
 "only when they name the external authority boundary."
 msgstr ""
+"Els antics controls d'estat `AEAT_*` propietat del producte no són àlies "
+"de `CADRUMO_*`. Els controls d'integració `AEAT_*` propietat de "
+"l'autoritat només segueixen sent vàlids quan anomenen el límit de "
+"l'autoritat externa."
 
