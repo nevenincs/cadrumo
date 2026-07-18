@@ -308,7 +308,9 @@ def test_saturate_apply_composes_saturated_primitive_with_derived_source_command
     classified = _events_of(events, BucketEventType.LEDGER_TRANSACTION_CLASSIFIED)
     assert classified
     assert classified[0].payload["source_command"] == "aeat app ledger classify --llm --saturate --apply"
-    assert classified[0].payload["source_command"] == LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY.source_command
+    assert (
+        classified[0].payload["source_command"] == LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY.source_command
+    )
 
 
 def test_multi_child_split_apply_stamps_the_auto_split_origin_label(
@@ -408,7 +410,9 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
     # pre-cutover direct primitive call carrying the same source_command.
     origin = LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY
 
-    def _direct(repository: TransactionCatalogueRepository, events: BucketEventHistoryRepository) -> tuple[dict[str, object], str]:
+    def _direct(
+        repository: TransactionCatalogueRepository, events: BucketEventHistoryRepository
+    ) -> tuple[dict[str, object], str]:
         tx_id = _seed_parent(repository)
         result = apply_llm_classification(
             _classification_suggestion(tx_id),
@@ -424,7 +428,9 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
         )
         return _stable_dump(result.transaction), classified[0].payload["source_command"]
 
-    def _workflow(repository: TransactionCatalogueRepository, events: BucketEventHistoryRepository) -> tuple[dict[str, object], str]:
+    def _workflow(
+        repository: TransactionCatalogueRepository, events: BucketEventHistoryRepository
+    ) -> tuple[dict[str, object], str]:
         tx_id = _seed_parent(repository)
         result = execute_reviewed_decision(
             _classification_suggestion(tx_id),
