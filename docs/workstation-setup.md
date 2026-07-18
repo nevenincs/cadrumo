@@ -2,7 +2,9 @@
 
 This page covers installation only: get the package, install the `aeat`
 command, add the optional extras you want, and (if you use an AI assistant)
-install the agent surface. Configuration and first use start in the
+install the agent surface. If you do not have Cadrumo on your machine yet,
+start at [Get Cadrumo](download.md) for the acquisition paths and their
+current availability. Configuration and first use start in the
 [quickstart](how-to/quickstart.md) once the install checks pass.
 
 Cadrumo works without any optional service. Google export, on-host LLM vision,
