@@ -55,7 +55,6 @@ from .....application.workflow import (
 )
 from .....core import Period as _Period
 from .....core.config import override_settings
-from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....domain import ModeloIdentifier
 from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
@@ -155,7 +154,7 @@ from ...profile.assets import load_amortizacion_ledger, load_assets, save_amorti
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from .. import AttachmentStore, SensitivityClass, StorageValidationError
+from .. import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, AttachmentStore, SensitivityClass, StorageValidationError
 from .._namespace_registry import LLM_USAGE_NAMESPACE
 from ..master_key import BucketSession, activate_session
 from ..runtime_repository import secure_object_repository_for_active_bucket
@@ -828,7 +827,7 @@ def _save_auth_diagnostic(label: str) -> None:
         "auth_attempt": {"auth_mode": "clave", "headless": True},
     }
     secure_object_repository_for_active_bucket().save(
-        namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+        namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
         object_key=payload["diagnostic_id"],
         classification=SensitivityClass.SESSION,
         schema_version=1,

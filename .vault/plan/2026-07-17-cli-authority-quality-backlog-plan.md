@@ -15,15 +15,6 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-code-review-audit]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `cli-authority-quality-backlog` plan
 
@@ -51,7 +42,7 @@ Make the namespace registry the sole metadata authority and prove each storage b
 - [x] `P03.S08` - Remove duplicate namespace metadata from profile, calculation, aggregation, and filed-observation repositories and bind repository construction to registry definitions; `src/cadrumo/application/user_profile/`.
 - [ ] `P03.S09` - DEFERRED pending (a) protected-browser S08 closure and (b) resolution of the namespace-authority-split adjudication in P03.S27: remove duplicate namespace and custody declarations from Clave, LLM cache and usage, bundle, attachment, and secure-storage consumers without conflating certificate custody with master-key keyring custody. The auth zone is the S08 quiescence surface and in active auth-cert churn, so editing clave and certificate lifecycle now risks colliding with or reopening behavioral work; `src/cadrumo/adapters/outbound/aeat/auth/`.
 - [ ] `P03.S10` - Replace literal-membership namespace checks with a non-vacuous production-root adoption gate that recognizes cadrumo-prefixed declarations, detects local metadata declarations, and proves each storage binding consumes the registered definition; `src/cadrumo/application/tests/test_storage_namespace_adoption.py`.
-- [ ] `P03.S27` - NEEDS ADJUDICATION and prerequisite for P03.S09: resolve the split namespace authority where clave-diagnostics namespace values are duplicated across core.external_constants (CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, used by _clave_movil_support.py), a raw literal in _clave_permanente_support.py line 49 (no CLAVE_PERMANENTE core symbol, asymmetric), and the adapters storage registry (CLAVE_MOVIL and PERMANENTE_DIAGNOSTICS_NAMESPACE whose .namespace values are themselves raw literals duplicating core), plus raw classification SensitivityClass.SESSION and schema_version 1 at _clave_movil_page_flow.py lines 460-461 duplicating the registry namespace .sensitivity and .schema_version. Decide the single authority (core.external_constants versus the adapters storage registry) and whether registry values source from core, then single-source all consumers, gated on one authority with no duplicated namespace literal across core, registry, and consumer; `src/cadrumo/core/external_constants.py, src/cadrumo/adapters/persistence/storage/_namespace_registry.py, src/cadrumo/adapters/outbound/aeat/auth/`.
+- [x] `P03.S27` - NEEDS ADJUDICATION and prerequisite for P03.S09: resolve the split namespace authority where clave-diagnostics namespace values are duplicated across core.external_constants (CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, used by _clave_movil_support.py), a raw literal in _clave_permanente_support.py line 49 (no CLAVE_PERMANENTE core symbol, asymmetric), and the adapters storage registry (CLAVE_MOVIL and PERMANENTE_DIAGNOSTICS_NAMESPACE whose .namespace values are themselves raw literals duplicating core), plus raw classification SensitivityClass.SESSION and schema_version 1 at _clave_movil_page_flow.py lines 460-461 duplicating the registry namespace .sensitivity and .schema_version. Decide the single authority (core.external_constants versus the adapters storage registry) and whether registry values source from core, then single-source all consumers, gated on one authority with no duplicated namespace literal across core, registry, and consumer; `src/cadrumo/core/external_constants.py, src/cadrumo/adapters/persistence/storage/_namespace_registry.py, src/cadrumo/adapters/outbound/aeat/auth/`.
 
 ### Phase `P04` - Filed capture finalizer
 
