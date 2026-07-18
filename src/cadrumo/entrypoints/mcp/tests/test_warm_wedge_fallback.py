@@ -29,7 +29,7 @@ from ....core.config import override_settings
 from .. import _inprocess
 from .._inprocess import warm_capture_holder_age
 from .._tools import McpToolDescriptor, build_tool_descriptors
-from .._transport import _INPROCESS_MARKER, _WEDGE_FALLBACK_MARKER, _run_tool
+from .._transport import McpTransport, _attested_cli_executable, _run_tool
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -80,9 +80,11 @@ def test_wedged_warm_transport_degrades_to_subprocess_then_recovers() -> None:
             assert (warm_capture_holder_age() or 0.0) >= 0.01
             degraded = _run_tool(descriptor, {})
         # A concurrent call degraded to the proven subprocess transport, and the
-        # degradation is visible: a warning Notice names the wedge and telemetry
-        # records the fallback executable marker.
-        assert degraded.executable == _WEDGE_FALLBACK_MARKER
+        # degradation is visible: a warning Notice names the wedge and the outcome
+        # records the fallback transport while the executable stays the attested
+        # environment CLI (the installed-cohort identity, on every transport).
+        assert degraded.transport is McpTransport.SUBPROCESS_FALLBACK
+        assert degraded.executable == _attested_cli_executable()
         assert degraded.envelope["status"] == "warning"
         assert _WARM_DEGRADED_NOTICE in _notice_codes(degraded.envelope)
     finally:
@@ -92,7 +94,8 @@ def test_wedged_warm_transport_degrades_to_subprocess_then_recovers() -> None:
     # Completion cleared the wedge: the capture is free and warm serving resumes.
     assert warm_capture_holder_age() is None
     recovered = _run_tool(descriptor, {})
-    assert recovered.executable == _INPROCESS_MARKER
+    assert recovered.transport is McpTransport.INPROCESS
+    assert recovered.executable == _attested_cli_executable()
     assert _WARM_DEGRADED_NOTICE not in _notice_codes(recovered.envelope)
 
 
