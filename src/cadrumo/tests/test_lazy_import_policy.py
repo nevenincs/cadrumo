@@ -778,9 +778,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = (
-    473  # +1 ledger._actions_manual->invoices cycle-break (was 472).
-)
+_ALLOWLIST_EDGE_CEILING: int = 473  # +1 ledger._actions_manual->invoices cycle-break (was 472).
 
 
 def _cadrumo_relative(dotted: str) -> str:

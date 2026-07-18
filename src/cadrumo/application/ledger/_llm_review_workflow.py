@@ -142,10 +142,7 @@ class LlmReviewRequest(BaseModel):
 # previews (the ``*Suggestion`` models) are inputs to a later decision, not
 # terminal results, so they are deliberately excluded.
 type LlmReviewResult = (
-    ManualLedgerTransactionResult
-    | LLMSuggestionRejectionResult
-    | LLMSplitApplyResult
-    | OperatorIvaDerivationResult
+    ManualLedgerTransactionResult | LLMSuggestionRejectionResult | LLMSplitApplyResult | OperatorIvaDerivationResult
 )
 
 type ReviewedSuggestion = LLMClassificationSuggestion | LLMSaturatedSuggestion | LLMSplitSuggestion
