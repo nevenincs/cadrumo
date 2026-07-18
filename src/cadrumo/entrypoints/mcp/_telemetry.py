@@ -236,10 +236,15 @@ class SessionTelemetryWriter:
             result_sha256=content_sha256(result_text) if result_text else "",
         )
         self._sequence += 1
-        self._directory.mkdir(parents=True, exist_ok=True)
-        with self.path.open("a", encoding=_UTF_8) as sink:
-            sink.write(json.dumps(row.model_dump(mode="json"), ensure_ascii=False, sort_keys=True))
-            sink.write("\n")
+        # Best-effort write: telemetry is diagnostics, never a dependency of
+        # the tool call it observes. A telemetry directory that turned
+        # unwritable mid-session must not fail the call; the row is still
+        # returned so the caller's in-memory view stays coherent.
+        with contextlib.suppress(OSError):
+            self._directory.mkdir(parents=True, exist_ok=True)
+            with self.path.open("a", encoding=_UTF_8) as sink:
+                sink.write(json.dumps(row.model_dump(mode="json"), ensure_ascii=False, sort_keys=True))
+                sink.write("\n")
         return row
 
 

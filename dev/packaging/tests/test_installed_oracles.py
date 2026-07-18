@@ -11,13 +11,16 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
+import subprocess
 import sys
+import threading
 import tomllib
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, cast
+from typing import IO, Any, cast
 
 import pytest
 
@@ -456,3 +459,98 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
             cohort.work_dir / "drifted-cohort-marketplace",
             cohort=_as_plugin_cohort(drift_cohort),
         )
+
+
+def _retired_state_environment(base: Path) -> dict[str, str]:
+    """A per-OS platform-data root whose retired ``aeat`` state triggers the refusal.
+
+    Mirrors the ``smoke_mcpb`` hostile-platform fixture: the resolver refuses on
+    the retired directory's existence alone, and refusal fires only in INSTALLED
+    run mode - which this file's wheel-installed cohort guarantees, unlike an
+    editable checkout whose resolver never inspects the platform data dir.
+    """
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
+    hostile_root = base / "platform-data-with-retired-state"
+    if sys.platform == "win32":
+        former_product_root = hostile_root / "aeat"
+        environment["LOCALAPPDATA"] = str(hostile_root)
+    elif sys.platform == "darwin":
+        hostile_home = base / "home-with-retired-state"
+        former_product_root = hostile_home / "Library" / "Application Support" / "aeat"
+        environment["HOME"] = str(hostile_home)
+    else:
+        former_product_root = hostile_root / "aeat"
+        environment["XDG_DATA_HOME"] = str(hostile_root)
+    former_product_root.mkdir(parents=True)
+    (former_product_root / "custody-marker.bin").write_bytes(b"retired-aeat-state-must-remain")
+    return environment
+
+
+def _read_mcp_response(stdout: IO[str], target_id: int) -> dict[str, Any]:
+    while True:
+        line = stdout.readline()
+        if not line:
+            raise AssertionError(f"server closed stdout before answering request id {target_id}")
+        stripped = line.strip()
+        if not stripped:
+            continue
+        message = json.loads(stripped)
+        if isinstance(message, dict) and message.get("id") == target_id:
+            return message
+
+
+def test_installed_mcp_server_serves_when_storage_root_refuses(installed_cohort: InstalledCohort) -> None:
+    """The installed server completes initialize/tools-list on a retired-state machine.
+
+    Storage-root resolution on a machine carrying retired former-product state
+    raises the refusal; that must surface on the tool calls that need storage,
+    never kill the server pre-protocol. This drives the REAL installed
+    ``cadrumo-mcp`` console script over stdio with a fabricated retired-state
+    platform root and no ``CADRUMO_*`` overrides - the environment a real
+    client on an upgrader's machine provides. It pins the startup chain that
+    died four separate ways during the distribution campaign: import-time
+    registry settings, the schema-build config subtree, the adapter module
+    constants, and the eager telemetry-directory resolution.
+    """
+    cohort = installed_cohort
+    environment = _retired_state_environment(cohort.work_dir / "storage-root-refusal")
+    process = subprocess.Popen(  # noqa: S603 - the executable is the cohort's own installed console script
+        [str(cohort.mcp_server)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        env=environment,
+        text=True,
+        encoding="utf-8",
+    )
+    watchdog = threading.Timer(300.0, process.kill)
+    watchdog.start()
+    try:
+        assert process.stdin is not None
+        assert process.stdout is not None
+        initialize_request = {
+            "jsonrpc": "2.0",
+            "id": 1,
+            "method": "initialize",
+            "params": {
+                "protocolVersion": "2025-06-18",
+                "capabilities": {},
+                "clientInfo": {"name": "storage-root-regression", "version": "0"},
+            },
+        }
+        process.stdin.write(json.dumps(initialize_request) + "\n")
+        process.stdin.flush()
+        initialize = _read_mcp_response(process.stdout, 1)
+        process.stdin.write(json.dumps({"jsonrpc": "2.0", "method": "notifications/initialized"}) + "\n")
+        process.stdin.write(json.dumps({"jsonrpc": "2.0", "id": 2, "method": "tools/list"}) + "\n")
+        process.stdin.flush()
+        tools = _read_mcp_response(process.stdout, 2)
+    finally:
+        watchdog.cancel()
+        process.kill()
+        stderr_text = process.stderr.read() if process.stderr is not None else ""
+    assert initialize["result"]["serverInfo"]["name"] == "cadrumo"
+    assert len(tools["result"]["tools"]) > 0
+    # The degradation is visible, never silent: the startup note names the
+    # storage-root refusal on stderr, which the client's MCP log captures.
+    assert "serving without telemetry" in stderr_text
