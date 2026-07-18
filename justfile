@@ -452,6 +452,20 @@ docs-changed-strict BASE="HEAD":
 docs-changed-rag BASE="HEAD":
     uv run --no-sync python -m dev.docs.build --base {{BASE}} --rag-index
 
+# Extract gettext POT templates and refresh the es/ca/hu doc catalogues.
+docs-gettext:
+    uv run --no-sync python -m dev.docs.i18n
+
+# Build the user-scope documentation in one language (es/en/ca/hu).
+docs-lang LANG:
+    uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}}
+
+# Build the user-scope documentation for every translation language.
+docs-langs:
+    uv run --no-sync python -m dev.docs.build --scope user --language es
+    uv run --no-sync python -m dev.docs.build --scope user --language ca
+    uv run --no-sync python -m dev.docs.build --scope user --language hu
+
 # Run docstring structure and Sphinx build checks. Quiet pytest progress.
 docs-check:
     @uv run --no-sync pytest -q dev/docs/tests dev/docs/apidocs/tests src/cadrumo/tests/test_docstring_core_struct_links.py -m docs
