@@ -30,7 +30,7 @@ from ....tests.review_package_adapters import (
 from ....tests.secure_sql import isolated_runtime_profile
 from .._review_package_signing import ensure_review_package_signing_keypair
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def test_signing_key_row_carries_registry_declared_metadata(tmp_path: Path) -> None:

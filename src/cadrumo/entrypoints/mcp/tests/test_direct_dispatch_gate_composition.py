@@ -1,8 +1,8 @@
 """The direct dispatch path composes a gate refusal exactly once.
 
-P06.S18: the ``_call_tool`` direct per-verb path and the ``execute`` meta-path
+The ``_call_tool`` direct per-verb path and the ``execute`` meta-path
 share ONE persona-scope / handoff / permanent-live-write gate,
-:func:`~cadrumo.entrypoints.mcp._meta_tools.gate_refusal`. Before this step the
+:func:`~cadrumo.entrypoints.mcp._meta_tools.gate_refusal`. Previously the
 direct path re-derived that decision inline (a second ``persona_scope_refusal``
 plus ``is_handoff_denied`` composition running alongside the shared
 ``gate_refusal`` the meta-path already used), so the same refusal was composed in

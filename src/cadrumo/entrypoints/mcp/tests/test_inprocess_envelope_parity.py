@@ -20,7 +20,7 @@ The Cadrumo envelope carries no per-run fields (its ``error`` document's
 were a legitimately per-run field ever introduced, it would be excluded here by
 name with a stated reason rather than the comparison being loosened.
 
-P06.S19 adds the static counterpart: a per-verb CLI-versus-MCP *schema* parity
+This module adds the static counterpart: a per-verb CLI-versus-MCP *schema* parity
 diff. The runtime tests above prove one verb's ENVELOPE is identical across
 transports; the schema tests below prove every operator verb's advertised
 REQUEST and RESPONSE schema on the MCP surface is exactly the schema the CLI
@@ -143,7 +143,7 @@ def test_storage_touching_verb_envelope_is_byte_identical_across_transports(tmp_
     assert _canonical(subprocess_envelope) == _canonical(inprocess_envelope)
 
 
-# --- P06.S19: per-verb CLI-versus-MCP schema-parity diff -----------------------
+# --- per-verb CLI-versus-MCP schema-parity diff --------------------------------
 
 
 def _cli_exposable_verbs() -> frozenset[str]:
