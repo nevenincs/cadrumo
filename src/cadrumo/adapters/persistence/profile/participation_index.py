@@ -89,10 +89,10 @@ class TransactionParticipationIndexRepository:
         transaction when nothing has been persisted yet, rather than raising.
         """
         from ..storage import (
+            TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
-            SensitivityClass,
         )
 
         object_key = derive_participation_index_id(transaction_id)
@@ -100,7 +100,7 @@ class TransactionParticipationIndexRepository:
             record = self._objects.load(
                 PARTICIPATION_INDEX_NAMESPACE,
                 object_key,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.sensitivity,
                 max_supported_version=PARTICIPATION_INDEX_SCHEMA_VERSION,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
@@ -115,14 +115,14 @@ class TransactionParticipationIndexRepository:
         envelope = Envelope[TransactionRevisionParticipationIndex].model_validate_json(
             record.payload.decode(UTF_8_ENCODING),
         )
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        if envelope.classification is not TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.sensitivity:
             _LOGGER.error("participation-index classification mismatch")
             raise TransactionParticipationIndexPersistenceError(
                 "participation-index classification mismatch",
                 translated_message=_PARTICIPATION_PERSISTENCE_MESSAGE,
                 context={
                     "reason": "classification_mismatch",
-                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "expected_classification": TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.sensitivity.value,
                     "actual_classification": envelope.classification.value,
                 },
             )
@@ -150,18 +150,18 @@ class TransactionParticipationIndexRepository:
         can be passed to ``save_with_secure_object_writes`` as an extra write
         slot, co-emitting atomically with the revision save.
         """
-        from ..storage import Envelope, SecureObjectWrite, SensitivityClass
+        from ..storage import TRANSACTION_PARTICIPATION_INDEX_NAMESPACE, Envelope, SecureObjectWrite
 
         envelope = Envelope[TransactionRevisionParticipationIndex](
             schema_version=PARTICIPATION_INDEX_SCHEMA_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.sensitivity,
             payload=index,
         )
         return SecureObjectWrite(
             namespace=PARTICIPATION_INDEX_NAMESPACE,
             object_key=derive_participation_index_id(index.transaction_id),
-            classification=SensitivityClass.FINANCIAL,
+            classification=TRANSACTION_PARTICIPATION_INDEX_NAMESPACE.sensitivity,
             schema_version=PARTICIPATION_INDEX_SCHEMA_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
