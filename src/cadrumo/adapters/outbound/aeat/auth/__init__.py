@@ -70,7 +70,6 @@ from ._authenticator import (
 )
 from ._authenticator_types import CertificateHealthCheck
 from ._clave_movil import (
-    CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
     ClaveMovilApprovalTimeoutError,
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
@@ -127,7 +126,6 @@ __all__ = [
     "AEAT_CERTIFICATE_PROTECTED_PATH",
     "AEAT_CERTIFICATE_PROTECTED_URL",
     "AEAT_SESSION_IDLE_TTL",
-    "CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE",
     "AeatAccessGate",
     "AeatAuthenticator",
     "AeatGateEnvSnapshot",

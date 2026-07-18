@@ -26,14 +26,16 @@ from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
 
-from .....core.classification import SensitivityClass
 from .....core.config import unwrap_optional_secret
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.time import now
 from .....domain.calculations.registry import RemoteOperation, assert_remote_operation_allowed
-from ....persistence.storage import secure_object_repository_for_active_bucket
+from ....persistence.storage import (
+    CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
+    secure_object_repository_for_active_bucket,
+)
 from .._playwright import PlaywrightError, PlaywrightTimeoutError
 from ._authenticator_types import BrowserPageLike
 from ._clave_movil_support import (
@@ -457,8 +459,8 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             secure_object_repository_for_active_bucket().save(
                 namespace=_DIAGNOSTIC_NAMESPACE,
                 object_key=ts,
-                classification=SensitivityClass.SESSION,
-                schema_version=1,
+                classification=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.sensitivity,
+                schema_version=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.schema_version,
                 written_at=now(),
                 payload=json.dumps(payload, sort_keys=True, default=str).encode(UTF_8_ENCODING),
             )

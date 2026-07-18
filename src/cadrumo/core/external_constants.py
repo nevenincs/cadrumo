@@ -635,10 +635,6 @@ MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR: Final[Decimal] = Decimal("1500")
 #: bound to that registry authority by a gate test so it cannot silently drift.
 DEFAULT_IVA_GENERAL_RATE_PCT: Final[Decimal] = Decimal("21.00")
 
-#: Secure-object namespace slug for Cl@ve Móvil auth diagnostics.
-#: Used by the auth diagnostics service and the persistence namespace registry.
-CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "cadrumo.outbound.aeat.auth.clave_movil.diagnostics"
-
 #: Modelos belonging to the *retenciones* aggregation family (withholding/retention filings).
 #: Covers: M111 (labour income), M115 (leases), M123 (capital yields), M180 (lease annual),
 #: M190 (labour annual summary), M193 (capital yields annual summary).
