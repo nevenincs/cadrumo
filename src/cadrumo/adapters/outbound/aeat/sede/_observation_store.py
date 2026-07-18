@@ -40,19 +40,21 @@ from ....persistence.storage import (
     EnvelopeVersionError,
     MasterKeyProvider,
     SecureObjectRepository,
-    SensitivityClass,
     secure_object_repository_for_active_bucket,
 )
 from ._errors import ExpedienteNotFoundError, SedeValidationError
 from ._schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, IvaCompensationWalletObservation
 
 _SAFE_SEGMENT_RE = re.compile(r"[^0-9A-Za-z_.-]+")
-_ARTEFACT_CLASSIFICATION = SensitivityClass.FINANCIAL
-_OBSERVATION_CLASSIFICATION = SensitivityClass.FINANCIAL
-_OBSERVATION_ENVELOPE_VERSION = 1
 _ARTEFACT_NAMESPACE = AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.namespace
+_ARTEFACT_CLASSIFICATION = AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.sensitivity
+_ARTEFACT_ENVELOPE_VERSION = AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.schema_version
 _OBSERVATION_NAMESPACE = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.namespace
+_OBSERVATION_CLASSIFICATION = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.sensitivity
+_OBSERVATION_ENVELOPE_VERSION = AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE.schema_version
 _IVA_WALLET_OBSERVATION_NAMESPACE = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.namespace
+_IVA_WALLET_CLASSIFICATION = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.sensitivity
+_IVA_WALLET_ENVELOPE_VERSION = AEAT_IVA_WALLET_OBSERVATIONS_NAMESPACE.schema_version
 _STORAGE_REF_PREFIX = "secure-object:financial:"
 
 
@@ -111,7 +113,7 @@ class FiledDeclaracionObservationStore:
                 namespace=_ARTEFACT_NAMESPACE,
                 object_key=digest,
                 classification=_ARTEFACT_CLASSIFICATION,
-                schema_version=1,
+                schema_version=_ARTEFACT_ENVELOPE_VERSION,
                 written_at=now(),
                 payload=body,
             )
@@ -129,7 +131,7 @@ class FiledDeclaracionObservationStore:
                 _ARTEFACT_NAMESPACE,
                 digest,
                 expected_class=_ARTEFACT_CLASSIFICATION,
-                max_supported_version=1,
+                max_supported_version=_ARTEFACT_ENVELOPE_VERSION,
             )
         if record is None:
             raise ExpedienteNotFoundError(f"filed-declaration artefact not found: {digest}")
@@ -246,17 +248,17 @@ class FiledDeclaracionObservationStore:
             observation.captured_at.isoformat(),
         )
         envelope = Envelope[IvaCompensationWalletObservation](
-            schema_version=_OBSERVATION_ENVELOPE_VERSION,
+            schema_version=_IVA_WALLET_ENVELOPE_VERSION,
             written_at=now(),
-            classification=_OBSERVATION_CLASSIFICATION,
+            classification=_IVA_WALLET_CLASSIFICATION,
             payload=observation,
         )
         with self._crypto_scope():
             self._repository.save(
                 namespace=_IVA_WALLET_OBSERVATION_NAMESPACE,
                 object_key=object_key,
-                classification=_OBSERVATION_CLASSIFICATION,
-                schema_version=_OBSERVATION_ENVELOPE_VERSION,
+                classification=_IVA_WALLET_CLASSIFICATION,
+                schema_version=_IVA_WALLET_ENVELOPE_VERSION,
                 written_at=envelope.written_at,
                 payload=envelope.model_dump_json().encode(_UTF_8_ENCODING),
             )
@@ -273,23 +275,23 @@ class FiledDeclaracionObservationStore:
             record = self._repository.load(
                 _IVA_WALLET_OBSERVATION_NAMESPACE,
                 object_key,
-                expected_class=_OBSERVATION_CLASSIFICATION,
-                max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
+                expected_class=_IVA_WALLET_CLASSIFICATION,
+                max_supported_version=_IVA_WALLET_ENVELOPE_VERSION,
             )
         if record is None:
             raise ExpedienteNotFoundError(f"IVA wallet observation not found: {object_key}")
         envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(
             record.payload.decode(_UTF_8_ENCODING),
         )
-        if envelope.classification is not _OBSERVATION_CLASSIFICATION:
+        if envelope.classification is not _IVA_WALLET_CLASSIFICATION:
             raise ClassificationError(
                 f"IVA wallet observation {object_key} has classification {envelope.classification}; "
-                f"consumer expected {_OBSERVATION_CLASSIFICATION}",
+                f"consumer expected {_IVA_WALLET_CLASSIFICATION}",
             )
-        if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
+        if envelope.schema_version > _IVA_WALLET_ENVELOPE_VERSION:
             raise EnvelopeVersionError(
                 f"IVA wallet observation {object_key} is at version {envelope.schema_version}; "
-                f"consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
+                f"consumer supports up to {_IVA_WALLET_ENVELOPE_VERSION}",
             )
         return envelope.payload
 
@@ -303,22 +305,22 @@ class FiledDeclaracionObservationStore:
         with self._crypto_scope():
             records = self._repository.list_records(
                 _IVA_WALLET_OBSERVATION_NAMESPACE,
-                expected_class=_OBSERVATION_CLASSIFICATION,
-                max_supported_version=_OBSERVATION_ENVELOPE_VERSION,
+                expected_class=_IVA_WALLET_CLASSIFICATION,
+                max_supported_version=_IVA_WALLET_ENVELOPE_VERSION,
             )
         for record in records:
             envelope = Envelope[IvaCompensationWalletObservation].model_validate_json(
                 record.payload.decode(_UTF_8_ENCODING),
             )
-            if envelope.classification is not _OBSERVATION_CLASSIFICATION:
+            if envelope.classification is not _IVA_WALLET_CLASSIFICATION:
                 raise ClassificationError(
                     f"IVA wallet observation {record.object_key!r} has classification {envelope.classification}; "
-                    f"consumer expected {_OBSERVATION_CLASSIFICATION}",
+                    f"consumer expected {_IVA_WALLET_CLASSIFICATION}",
                 )
-            if envelope.schema_version > _OBSERVATION_ENVELOPE_VERSION:
+            if envelope.schema_version > _IVA_WALLET_ENVELOPE_VERSION:
                 raise EnvelopeVersionError(
                     f"IVA wallet observation {record.object_key!r} is at version {envelope.schema_version}; "
-                    f"consumer supports up to {_OBSERVATION_ENVELOPE_VERSION}",
+                    f"consumer supports up to {_IVA_WALLET_ENVELOPE_VERSION}",
                 )
             observations.append(envelope.payload)
         return tuple(

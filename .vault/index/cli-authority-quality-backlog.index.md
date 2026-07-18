@@ -13,6 +13,7 @@ related:
   - '[[2026-07-17-cli-authority-quality-backlog-P02-S05]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S06]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S07]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P03-S08]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P04-S11]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P04-S12]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P04-S13]]'
@@ -61,6 +62,7 @@ Auto-generated index of all documents tagged with `#cli-authority-quality-backlo
 - `2026-07-17-cli-authority-quality-backlog-P09-S23` - Audit the roughly forty select_revision callers and prove every production calculation, verification, filing, export, and projection path resolves through the law-determined canonical resolver and only asserts a stored revision_id equal, never injects it
 - `2026-07-17-cli-authority-quality-backlog-P09-S24` - Assert binding validator-dispatch completeness: every BindingSourceKind member has a dispatch entry in the validator registry or a documented mesh-only deferral, so a new source kind cannot ship unvalidated
 - `2026-07-17-cli-authority-quality-backlog-P11-S26` - Add a structural no-build/no-publish assertion to the publish-workflow guardrail test: denylist-scan every step run and uses in the validate job (or pin the full step allowlist) so a differently-spelled build or publish command cannot slip past the exact-substring guards, gated on the guardrail test failing if any validate-job step invokes a build or publish tool
+- `2026-07-17-cli-authority-quality-backlog-P03-S08` - Remove duplicate namespace metadata from profile, calculation, aggregation, and filed-observation repositories and bind repository construction to registry definitions
 - `2026-07-17-cli-authority-quality-backlog-P05-S16` - Route classify --auto-split and split --llm through the typed review workflow with distinct invocation origins and remove CLI-owned review branching and application source-command defaults
 - `2026-07-17-cli-authority-quality-backlog-P05-S17` - Prove suggestion, saturation, rejection, no-split, multi-child split, invocation-origin attribution, and CLI-route parity against real persistence and model subprocess boundaries
 - `2026-07-17-cli-authority-quality-backlog-P10-S25` - Triage the two low-severity entrypoints structural duplications the duplication-authority audit surfaced (repeated iterator shapes and thin synchronous wrappers): confirm each on the current tree by exact declaration, caller, and writer-path inspection, then either record a disposition note classifying it as intentionally distinct incidental similarity or consolidate it behind one shared abstraction proven substitutable against every consumer contract, so no duplicated policy, state ownership, or persistence behavior survives unclassified
