@@ -72,15 +72,15 @@ def test_plugin_emits_the_skills_tree_from_the_authored_source(tmp_path: Path) -
     manifest = materialise_plugin(tmp_path)
     assert manifest.skills_written == len(_shipped_skill_names())
 
-    assert (tmp_path / "skills" / "preparar-modelo-130" / "SKILL.md").is_file()
+    assert (tmp_path / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").is_file()
     # The progressive-disclosure reference a SKILL cites must travel with it.
-    assert (tmp_path / "skills" / "preparar-modelo-130" / "reference" / "casillas.md").is_file()
+    assert (tmp_path / "skills" / "cadrumo-preparar-modelo-130" / "reference" / "casillas.md").is_file()
 
 
 def test_plugin_skill_document_matches_the_shipped_bytes(tmp_path: Path) -> None:
     materialise_plugin(tmp_path)
-    shipped = harness_root().joinpath("skills", "preparar-modelo-130", "SKILL.md").read_text(encoding=_UTF_8)
-    written = (tmp_path / "skills" / "preparar-modelo-130" / "SKILL.md").read_text(encoding=_UTF_8)
+    shipped = harness_root().joinpath("skills", "cadrumo-preparar-modelo-130", "SKILL.md").read_text(encoding=_UTF_8)
+    written = (tmp_path / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").read_text(encoding=_UTF_8)
     assert written == shipped
 
 
