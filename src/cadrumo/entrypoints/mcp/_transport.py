@@ -19,6 +19,7 @@ import functools
 import sys
 import sysconfig
 import threading
+import traceback
 from dataclasses import dataclass, replace
 from enum import StrEnum
 from pathlib import Path
@@ -192,7 +193,25 @@ def _run_subprocess_tool(
     )
 
 
-def _inprocess_timeout_notice(*, command_key: str) -> Notice:
+def _worker_stack_summary(worker: threading.Thread) -> str:
+    """The abandoned worker's innermost frames at ceiling breach, or empty.
+
+    A soft-timed-out warm call cannot be killed, only abandoned - so the one
+    diagnostic that explains WHERE the time went is the worker's live stack at
+    the moment the ceiling fired. Innermost frame first, bounded to eight
+    frames, formatted ``file:line:function``.
+    """
+    ident = worker.ident
+    if ident is None:
+        return ""
+    frame = sys._current_frames().get(ident)
+    if frame is None:
+        return ""
+    frames = traceback.extract_stack(frame)[-8:]
+    return " <- ".join(f"{Path(entry.filename).name}:{entry.lineno}:{entry.name}" for entry in reversed(frames))
+
+
+def _inprocess_timeout_notice(*, command_key: str, worker_stack: str = "") -> Notice:
     """The idempotent-retry advisory for a soft-timed-out warm call.
 
     A warm in-process call cannot be force-terminated the way a supervised
@@ -211,12 +230,15 @@ def _inprocess_timeout_notice(*, command_key: str) -> Notice:
             "makes the retry safe and never double-writes."
         ),
     )
+    context: dict[str, str] = {"command": command_key, "idempotent_retry": "safe"}
+    if worker_stack:
+        context["worker_stack_at_timeout"] = worker_stack
     return Notice(
         severity=NoticeSeverity.WARNING,
         code="mcp.call.timeout_may_complete",
         message=message,
         suggestion=None,
-        context={"command": command_key, "idempotent_retry": "safe"},
+        context=context,
     )
 
 
@@ -326,9 +348,14 @@ def _run_inprocess_tool(
     worker.start()
     worker.join(timeout_s)
     if worker.is_alive():
+        worker_stack = _worker_stack_summary(worker)
+        if worker_stack:
+            sys.stderr.write(
+                f"cadrumo MCP in-process ceiling breach for '{descriptor.command_key}': worker at {worker_stack}\n",
+            )
         envelope = _envelope_with_notice(
             _timeout_refusal_envelope(command_key=descriptor.command_key, tier=tier, timeout_s=timeout_s),
-            _inprocess_timeout_notice(command_key=descriptor.command_key),
+            _inprocess_timeout_notice(command_key=descriptor.command_key, worker_stack=worker_stack),
         )
         return SubprocessToolOutcome(
             envelope=envelope,
