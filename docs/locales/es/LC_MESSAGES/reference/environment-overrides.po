@@ -7,14 +7,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-07-18 16:41+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
@@ -1774,6 +1774,58 @@ msgstr ""
 "advertencia"
 
 #: ../../reference/environment-overrides.md
+msgid "`CADRUMO_MCP_SERVING_CONCURRENCY`"
+msgstr "`CADRUMO_MCP_SERVING_CONCURRENCY`"
+
+#: ../../reference/environment-overrides.md
+msgid "`4`"
+msgstr "`4`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Maximum MCP tool calls dispatched off the event loop at once. Bounds the "
+"supervised subprocess spawn and the warm in-process worker pool so a "
+"burst cannot thrash the host; the previous anyio default admitted 40. A "
+"conservative small default suits the single-operator desktop client; "
+"raise it for a multi-client host."
+msgstr ""
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_MCP_WARM_CAPTURE_WAIT_SECONDS`"
+msgstr "`CADRUMO_MCP_WARM_CAPTURE_WAIT_SECONDS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`5.0`"
+msgstr "`5.0`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"How long a warm in-process MCP call waits for the stdout-capture lock "
+"before degrading to the supervised subprocess transport. Bounds the blast"
+" radius of a slow or hung in-process verb: a call never queues forever "
+"behind the capture. Comfortably covers a normal warm call's sub-second-"
+"to-low-single-digit hold."
+msgstr ""
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_MCP_WEDGE_THRESHOLD_SECONDS`"
+msgstr "`CADRUMO_MCP_WEDGE_THRESHOLD_SECONDS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`180.0`"
+msgstr "`180.0`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"When a warm in-process call has held the stdout-capture lock past this "
+"many seconds the warm transport is declared wedged and subsequent "
+"READ/MUTATE calls route straight to the supervised subprocess (a warning "
+"Notice names the wedge) until the wedged worker completes. Defaults to "
+"the MUTATE tier ceiling, the longest an in-process call may legitimately "
+"run."
+msgstr ""
+
+#: ../../reference/environment-overrides.md
 msgid "`CADRUMO_OUTPUT_LANGUAGE`"
 msgstr "`CADRUMO_OUTPUT_LANGUAGE`"
 
@@ -1916,14 +1968,9 @@ msgstr "`268435456`"
 
 #: ../../reference/environment-overrides.md
 msgid ""
-"Total on-disk size cap (bytes) for the per-run trace store; after the "
-"age-based prune, oldest run directories are removed until the store fits "
-"under this ceiling (the newest run directory is always kept)"
+"Trace-store byte cap; after age pruning, remove oldest runs but always "
+"retain the newest"
 msgstr ""
-"Límite de tamaño total en disco (bytes) para el almacén de trazas por "
-"ejecución; tras la eliminación por antigüedad, los directorios de "
-"ejecución más antiguos se retiran hasta que el almacén cabe por debajo de"
-" este techo (el directorio de ejecución más reciente siempre se conserva)"
 
 #: ../../reference/environment-overrides.md
 msgid "`CADRUMO_RUNS_RETENTION_DAYS`"
@@ -2167,6 +2214,17 @@ msgstr ""
 "usuario"
 
 #: ../../reference/environment-overrides.md
+msgid "`CADRUMO_VALIDATION_VERDICT_CACHE_DIR`"
+msgstr "`CADRUMO_VALIDATION_VERDICT_CACHE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Directory for the persistent registry-validation verdict cache (a "
+"fingerprint-keyed proof that validate_registry ran green, so a matching "
+"immutable tree skips runtime re-validation)"
+msgstr ""
+
+#: ../../reference/environment-overrides.md
 msgid "`CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`"
 msgstr "`CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`"
 
@@ -2324,7 +2382,7 @@ msgstr "`SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT`"
 msgid "Fallback Retry-After seconds when a 429/503 omits the header"
 msgstr "Segundos de Retry-After de reserva cuando un 429/503 omite la cabecera"
 
-#: ../../reference/environment-overrides.md:176
+#: ../../reference/environment-overrides.md:180
 msgid ""
 "Secrets are never printed by the application and are marked `(secret)` "
 "above. Defaults marked `(derived)` are computed from the storage root or "
@@ -2334,4 +2392,21 @@ msgstr ""
 "`(secret)`. Los valores por defecto marcados como `(derived)` se calculan"
 " a partir de la raíz de almacenamiento o de la ubicación del proyecto en "
 "tiempo de ejecución."
+
+#~ msgid ""
+#~ "Total on-disk size cap (bytes) for"
+#~ " the per-run trace store; after "
+#~ "the age-based prune, oldest run "
+#~ "directories are removed until the store"
+#~ " fits under this ceiling (the newest"
+#~ " run directory is always kept)"
+#~ msgstr ""
+#~ "Límite de tamaño total en disco "
+#~ "(bytes) para el almacén de trazas "
+#~ "por ejecución; tras la eliminación por"
+#~ " antigüedad, los directorios de ejecución"
+#~ " más antiguos se retiran hasta que"
+#~ " el almacén cabe por debajo de "
+#~ "este techo (el directorio de ejecución"
+#~ " más reciente siempre se conserva)"
 

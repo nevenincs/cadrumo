@@ -117,7 +117,7 @@ def locale_root(docs_root: Path) -> Path:
     return docs_root / "locales"
 
 
-def extract_pot(repo_root: Path) -> Path:
+def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
     """Extract user-scope POT message templates into ``docs/locales/pot``.
 
     Runs Sphinx's ``gettext`` builder over exactly the authored user-scope page
@@ -128,6 +128,9 @@ def extract_pot(repo_root: Path) -> Path:
 
     Args:
         repo_root: The repository root.
+        out_dir: The POT output directory. Defaults to the committed-tree
+            ``docs/locales/pot``; the catalogue-vs-source drift gate passes a
+            temporary directory so a freshness check never mutates the tree.
 
     Returns:
         The POT output directory.
@@ -136,7 +139,7 @@ def extract_pot(repo_root: Path) -> Path:
         SystemExit: If the gettext build fails.
     """
     docs_root = repo_root / "docs"
-    out_dir = pot_root(docs_root)
+    out_dir = pot_root(docs_root) if out_dir is None else out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     ensure_isolated_storage_root()
     pages = user_scope_source_pages(docs_root)
