@@ -92,7 +92,7 @@ msgstr "`AEAT_BASE_URL`"
 
 #: ../../reference/environment-overrides.md
 msgid "(derived)"
-msgstr "(derivado)"
+msgstr "(derived)"
 
 #: ../../reference/environment-overrides.md
 msgid "AEAT sede electrónica base URL"
@@ -626,7 +626,7 @@ msgstr "SecretStr"
 
 #: ../../reference/environment-overrides.md
 msgid "(secret)"
-msgstr "(secreto)"
+msgstr "(secret)"
 
 #: ../../reference/environment-overrides.md
 msgid "PKCS#12 passphrase (env only, never logged or persisted)"
