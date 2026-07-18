@@ -20,8 +20,7 @@ You need:
 
 ## Install the CLI
 
-Public package and plugin distribution is not available yet. Use an authorized
-source checkout:
+The beta installs from the project repository:
 
 ```bash
 git clone https://github.com/nevenincs/cadrumo.git
@@ -30,9 +29,9 @@ uv sync
 uv run aeat --version
 ```
 
-Do not install Cadrumo from PyPI, a public plugin marketplace, Scoop, Homebrew,
-or a Desktop extension bundle until the project announces those channels as
-available.
+Registry listings for the packaged channels (PyPI, Scoop, Homebrew, and the
+plugin marketplace) open with the public launch; see
+[Get Cadrumo](download.md) for each channel's current status.
 
 ## Confirm the install
 
@@ -97,8 +96,7 @@ together with an agent harness: the operator rules, taxpayer-situation
 skills, and scoped agent personas that keep the assistant inside the safety
 boundary.
 
-Public plugin, Desktop extension, and package channels are not available yet.
-Run the server from the same authorized checkout:
+In the beta, run the server from the same repository checkout:
 
 ```bash
 uv sync --extra agent

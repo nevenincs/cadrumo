@@ -17,9 +17,10 @@ The server exposes the CLI's read and prepare operations as tools, plus
 grounded search over the bundled BOE and AEAT legal corpus. It refuses live
 submission by construction, exactly like the CLI.
 
-Public plugin, Desktop extension, and PyPI acquisition are not available yet.
-For now, connect from an authorized source checkout. Generated plugin and
-extension artifacts are release candidates, not public install channels.
+In the beta, connect from the repository checkout below. Every release also
+builds the plugin and Desktop extension artifacts; their marketplace and
+registry listings open with the public launch (see
+[Get Cadrumo](../download.md) for channel status).
 
 ## Prepare the source checkout
 
