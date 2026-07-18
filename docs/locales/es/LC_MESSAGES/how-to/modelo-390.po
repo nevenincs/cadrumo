@@ -3,7 +3,6 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
@@ -21,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/modelo-390.md:1
 msgid "Prepare the annual Modelo 390 IVA summary"
-msgstr ""
+msgstr "Prepare el resumen anual de IVA con el Modelo 390"
 
 #: ../../how-to/modelo-390.md:3
 msgid ""
@@ -30,6 +29,10 @@ msgid ""
 "annual return, but part of its review depends on the same year's periodic"
 " Modelo 303 IVA self-assessments."
 msgstr ""
+"Use esta guía cuando el perfil activo deba preparar el Modelo 390, el "
+"resumen anual del Impuesto sobre el Valor Añadido (IVA). El Modelo 390 es"
+" una declaración anual, pero parte de su revisión depende de las "
+"autoliquidaciones periódicas del IVA del Modelo 303 del mismo año."
 
 #: ../../how-to/modelo-390.md:8
 msgid ""
@@ -37,44 +40,53 @@ msgid ""
 "Administración Tributaria (AEAT). Export creates a local fichero-BOE file"
 " that you upload through the official AEAT channel yourself."
 msgstr ""
+"Cadrumo no presenta el Modelo 390 ante la Agencia Estatal de "
+"Administración Tributaria (AEAT). La exportación crea un fichero-BOE "
+"local que usted mismo sube por el canal oficial de la AEAT."
 
 #: ../../how-to/modelo-390.md:12
 msgid "The filing task"
-msgstr ""
+msgstr "La tarea de presentación"
 
 #: ../../how-to/modelo-390.md:14
 msgid ""
 "Modelo 390 is the annual summary of your quarterly IVA filings. To "
 "prepare it:"
 msgstr ""
+"El Modelo 390 es el resumen anual de sus presentaciones trimestrales de "
+"IVA. Para prepararlo:"
 
 #: ../../how-to/modelo-390.md:16
 msgid "Prepare and review the four quarterly Modelo 303 periods first."
-msgstr ""
+msgstr "Prepare y revise primero los cuatro periodos trimestrales del Modelo 303."
 
 #: ../../how-to/modelo-390.md:17
 msgid "Create a Modelo 390 draft for the annual period (`--period 0A`)."
-msgstr ""
+msgstr "Cree un borrador del Modelo 390 para el periodo anual (`--period 0A`)."
 
 #: ../../how-to/modelo-390.md:18
 msgid "Calculate the annual summary from your year's ledger and the 303 values."
 msgstr ""
+"Calcule el resumen anual a partir del ledger del año y de los valores del"
+" 303."
 
 #: ../../how-to/modelo-390.md:19
 msgid "Review the calculated totals against your quarterly records."
-msgstr ""
+msgstr "Revise los totales calculados contra sus registros trimestrales."
 
 #: ../../how-to/modelo-390.md:20
 msgid "Verify the draft is complete."
-msgstr ""
+msgstr "Verifique que el borrador esté completo."
 
 #: ../../how-to/modelo-390.md:21
 msgid "Export the annual file."
-msgstr ""
+msgstr "Exporte el fichero anual."
 
 #: ../../how-to/modelo-390.md:22
 msgid "Upload the file at the AEAT portal yourself and keep the justificante."
 msgstr ""
+"Suba usted mismo el fichero en el portal de la AEAT y conserve el "
+"justificante."
 
 #: ../../how-to/modelo-390.md:24
 msgid ""
@@ -82,10 +94,14 @@ msgid ""
 " needs. To understand how the tool organises the filing work behind the "
 "commands, read [The filing workflow](filing-spine.md) after this guide."
 msgstr ""
+"El resto de esta guía recorre estos pasos con las comprobaciones que cada"
+" uno necesita. Para entender cómo organiza la herramienta el trabajo de "
+"presentación tras los comandos, lea [El flujo de presentación](filing-"
+"spine.md) después de esta guía."
 
 #: ../../how-to/modelo-390.md:30
 msgid "Create, calculate, and verify the annual draft"
-msgstr ""
+msgstr "Cree, calcule y verifique el borrador anual"
 
 #: ../../how-to/modelo-390.md:32
 msgid ""
@@ -93,6 +109,9 @@ msgid ""
 "profile create <name>`. See [Set up your taxpayer profile](profile-"
 "setup.md)."
 msgstr ""
+"**Requisito:** un perfil de contribuyente válido. Cree uno con `aeat "
+"config profile create <name>`. Consulte [Configure su perfil de "
+"contribuyente](profile-setup.md)."
 
 #: ../../how-to/modelo-390.md:35
 msgid ""
@@ -101,6 +120,11 @@ msgid ""
 "for 2025, calculates it, and verifies it. The example uses 2025 because "
 "the annual return needs the year's four quarters already filed:"
 msgstr ""
+"La preparación siguiente presenta localmente los cuatro trimestres de "
+"2025 del Modelo 303, para que el resumen anual pueda integrarlos, y luego"
+" crea el borrador del Modelo 390 para 2025, lo calcula y lo verifica. El "
+"ejemplo usa 2025 porque la declaración anual necesita los cuatro "
+"trimestres del año ya presentados:"
 
 #: ../../how-to/modelo-390.md:44
 msgid ""
@@ -119,38 +143,63 @@ msgid ""
 "only once the purchase carries linked invoice evidence. The rest of this "
 "guide explains each stage and the checks around it."
 msgstr ""
+"La verificación otorga el estado verificado-completo e informa de avisos "
+"no bloqueantes: los cuatro trimestres están presentados localmente pero "
+"aún no llevan un justificante externo de la AEAT, así que la herramienta "
+"advierte de que la conciliación anual se apoya en evidencia solo local. "
+"Esa advertencia es correcta: un trimestre presentado localmente es "
+"evidencia honesta para la integración anual, y el aviso le indica dónde "
+"un justificante oficial reforzaría el registro. En este ejemplo los "
+"cuatro trimestres repercutieron entre ellos 1470,00 de IVA (420 + 315 + "
+"210 + 525) y el año lleva 105,00 de IVA soportado deducible (una compra "
+"evidenciada, 500 de base al 21 %), de modo que la cuota devengada anual "
+"es 1470,00, el total deducible es 105,00 y el resultado del régimen "
+"general es 1365,00 (1470,00 − 105,00): la ecuación anual completa del "
+"IVA, con cada cifra coincidiendo con la suma de los trimestres (el "
+"invariante de conciliación). El IVA soportado se computa solo una vez que"
+" la compra lleva vinculada la evidencia de la factura. El resto de esta "
+"guía explica cada fase y las comprobaciones que la rodean."
 
 #: ../../how-to/modelo-390.md:58
 msgid "Setup steps before you start"
-msgstr ""
+msgstr "Pasos de preparación antes de empezar"
 
 #: ../../how-to/modelo-390.md:60
 msgid "Start with the local filing context:"
-msgstr ""
+msgstr "Empiece por el contexto de presentación local:"
 
 #: ../../how-to/modelo-390.md:62
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) and check the active "
 "profile."
 msgstr ""
+"[Configure su perfil de contribuyente](profile-setup.md) y compruebe el "
+"perfil activo."
 
 #: ../../how-to/modelo-390.md:63
 msgid ""
 "Check the census facts in your profile first with [Maintain Modelo 036 "
 "census facts in your profile](censo-update.md)."
 msgstr ""
+"Compruebe primero los datos censales de su perfil con [Mantenga los datos"
+" censales del Modelo 036 en su perfil](censo-update.md)."
 
 #: ../../how-to/modelo-390.md:65
 msgid ""
 "Use [Plan your filing calendar](filing-calendar.md) to confirm the annual"
 " filing window."
 msgstr ""
+"Use [Planifique su calendario de presentaciones](filing-calendar.md) para"
+" confirmar la ventana de presentación anual."
 
 #: ../../how-to/modelo-390.md:67
 msgid ""
 "Confirm the annual period token with [Period tokens and dates](filing-"
 "calendar.md#period-tokens-and-dates). Modelo 390 uses `--period 0A`."
 msgstr ""
+"Confirme el token de periodo anual con [Tokens de periodo y fechas"
+"](filing-calendar.md#period-tokens-and-dates). El Modelo 390 usa "
+"`--period 0A`."
 
 #: ../../how-to/modelo-390.md:70
 msgid ""
@@ -158,6 +207,9 @@ msgid ""
 "[classify them](classify-transactions.md). The annual ledger totals "
 "depend on the active profile's classified IVA rows."
 msgstr ""
+"[Importe o añada sus movimientos](import-bank-statements.md) y luego "
+"[clasifíquelos](classify-transactions.md). Los totales anuales del ledger"
+" dependen de las filas de IVA clasificadas del perfil activo."
 
 #: ../../how-to/modelo-390.md:73
 msgid ""
@@ -166,22 +218,32 @@ msgid ""
 "need extra review because the current Modelo 390 bindings are modelled "
 "against the quarterly 303 periods."
 msgstr ""
+"Prepare primero los periodos del Modelo 303 del mismo año. Los perfiles "
+"trimestrales estándar usan `1T`, `2T`, `3T` y `4T`; los casos de "
+"liquidación mensual del IVA necesitan una revisión adicional porque los "
+"bindings actuales del Modelo 390 están modelados contra los periodos "
+"trimestrales del 303."
 
 #: ../../how-to/modelo-390.md:77
 msgid ""
 "Finish the Modelo 303 review path before relying on its values. See "
 "[Prepare a Modelo 303 IVA filing](modelo-303.md)."
 msgstr ""
+"Termine el recorrido de revisión del Modelo 303 antes de fiarse de sus "
+"valores. Consulte [Prepare una presentación de IVA con el Modelo "
+"303](modelo-303.md)."
 
 #: ../../how-to/modelo-390.md:80
 msgid "Modelo 390 combines two kinds of values:"
-msgstr ""
+msgstr "El Modelo 390 combina dos tipos de valores:"
 
 #: ../../how-to/modelo-390.md:82
 msgid ""
 "annual IVA ledger aggregates for the full filing year (binding source "
 "`ledger_iva_aggregation`)"
 msgstr ""
+"agregados anuales de IVA del ledger para todo el ejercicio de "
+"presentación (binding de origen `ledger_iva_aggregation`)"
 
 #: ../../how-to/modelo-390.md:84
 msgid ""
@@ -190,6 +252,10 @@ msgid ""
 "`origin=registry_relation`), where the registry names the 303 casillas "
 "and periods that feed the annual summary"
 msgstr ""
+"valores derivados del 303 obtenidos de los trimestres del mismo año "
+"(binding de origen `relation_prefill`, reportado por los hallazgos de "
+"verificación como `origin=registry_relation`), donde el registro nombra "
+"las casillas y periodos del 303 que alimentan el resumen anual"
 
 #: ../../how-to/modelo-390.md:89
 msgid ""
@@ -198,6 +264,11 @@ msgid ""
 "Modelo 303 quarter needs before you verify\" below). The CLI does not "
 "guarantee that remote AEAT history is current, captured, or reconciled."
 msgstr ""
+"Las entradas derivadas del 303 dependen de la evidencia presentada de "
+"cada trimestre. La verificación se bloquea de forma dura hasta que esa "
+"evidencia esté presente (consulte «Qué necesita cada trimestre del Modelo"
+" 303 antes de verificar» más abajo). La CLI no garantiza que el historial"
+" remoto de la AEAT esté al día, capturado o conciliado."
 
 #: ../../how-to/modelo-390.md:94
 msgid ""
@@ -206,10 +277,14 @@ msgid ""
 "also include compensation values copied or summed from the same year's "
 "303 periods."
 msgstr ""
+"Los bindings implementados del 390 incluyen las sumas de los trimestres "
+"del 303 para la conciliación de la cuota devengada anual, la deducible y "
+"el resultado del régimen general. También incluyen valores de "
+"compensación copiados o sumados de los periodos del 303 del mismo año."
 
 #: ../../how-to/modelo-390.md:98
 msgid "What each Modelo 303 quarter needs before you verify"
-msgstr ""
+msgstr "Qué necesita cada trimestre del Modelo 303 antes de verificar"
 
 #: ../../how-to/modelo-390.md:100
 msgid ""
@@ -221,12 +296,23 @@ msgid ""
 "reports `blockers=missing_observation, missing_current_filing_record` for"
 " every quarter that lacks a filed record."
 msgstr ""
+"La verificación del Modelo 390 depende de las cuatro declaraciones "
+"trimestrales del Modelo 303. `work calculate` para el Modelo 390 produce "
+"un borrador, pero `work verify` se bloquea de forma dura con hallazgos "
+"bloqueantes `cross_period_dependency_unclean` hasta que cada trimestre "
+"del 303 (`1T`, `2T`, `3T`, `4T`) tenga guardada evidencia de "
+"*presentado*. Un borrador del 303 calculado o verificado no basta: la "
+"comprobación informa de `blockers=missing_observation, "
+"missing_current_filing_record` por cada trimestre que carezca de un "
+"registro de presentado."
 
 #: ../../how-to/modelo-390.md:108
 msgid ""
 "Establish each quarter's evidence one of two ways before you verify "
 "Modelo 390."
 msgstr ""
+"Establezca la evidencia de cada trimestre de una de dos formas antes de "
+"verificar el Modelo 390."
 
 #: ../../how-to/modelo-390.md:110
 msgid ""
@@ -237,6 +323,14 @@ msgid ""
 "`4T`. `work file` records the filing locally only; it does not submit to "
 "AEAT, and it refuses outside the obligation window:"
 msgstr ""
+"La primera forma es marcar cada trimestre del 303 como presentado "
+"localmente, mientras su ventana de obligación de presentación ante la "
+"AEAT esté abierta. Prepare y verifique cada trimestre (consulte [Prepare "
+"una presentación de IVA con el Modelo 303](modelo-303.md)) y registre "
+"después cada uno con el marcador de presentado local, repitiendo para "
+"`1T`, `2T`, `3T` y `4T`. `work file` registra la presentación solo "
+"localmente; no envía nada a la AEAT y se niega fuera de la ventana de "
+"obligación:"
 
 #: ../../how-to/modelo-390.md:120
 msgid ""
@@ -247,6 +341,13 @@ msgid ""
 "as a display frame. `reconcile file` reads a local justificante PDF and "
 "never contacts AEAT, but it needs the real receipt:"
 msgstr ""
+"La segunda forma es capturar o conciliar el justificante oficial de la "
+"AEAT de cada trimestre. `live filed pull-sources` lee las declaraciones "
+"presentadas desde la AEAT y se niega cuando la autenticación ante la AEAT"
+" no está configurada (necesita una identidad Cl@ve que coincida con el "
+"perfil activo), por lo que es una lectura en vivo mostrada como marco "
+"ilustrativo. `reconcile file` lee un PDF de justificante local y nunca "
+"contacta con la AEAT, pero necesita el resguardo real:"
 
 #: ../../how-to/modelo-390.md:130
 msgid ""
@@ -254,10 +355,13 @@ msgid ""
 "return past the block. Repair the missing 303 evidence first, or report "
 "the gap."
 msgstr ""
+"Si no puede establecer la evidencia de un trimestre, no fuerce la "
+"declaración anual más allá del bloqueo. Repare primero la evidencia del "
+"303 que falta, o informe de la carencia."
 
 #: ../../how-to/modelo-390.md:133
 msgid "Check each visible filing target"
-msgstr ""
+msgstr "Compruebe cada objetivo de presentación visible"
 
 #: ../../how-to/modelo-390.md:135
 msgid ""
@@ -268,6 +372,13 @@ msgid ""
 "sequence under \"Inspect the annual work unit\" below runs `work list` "
 "and the annual `work status`)."
 msgstr ""
+"Use el mismo perfil activo en todos los comandos. Inspeccione los cuatro "
+"objetivos de presentación del 303 antes de trabajar en el objetivo anual,"
+" repitiendo la comprobación `work status` para cada uno de `1T`, `2T`, "
+"`3T` y `4T`, y liste todo el trabajo guardado con `work list` para ver la"
+" superficie de presentación más amplia (la secuencia de inspección bajo "
+"«Inspeccione la unidad de trabajo anual» más abajo ejecuta `work list` y "
+"el `work status` anual)."
 
 #: ../../how-to/modelo-390.md:141
 msgid ""
@@ -275,10 +386,14 @@ msgid ""
 "quarter to another, change `--period`. To move from the quarterly 303 "
 "review to the annual 390 review, change both `--modelo` and `--period`."
 msgstr ""
+"Ningún comando cambia por usted un objetivo de presentación actual. Para "
+"pasar de un trimestre a otro, cambie `--period`. Para pasar de la "
+"revisión trimestral del 303 a la revisión anual del 390, cambie tanto "
+"`--modelo` como `--period`."
 
 #: ../../how-to/modelo-390.md:145
 msgid "Review the 303 values that feed Modelo 390"
-msgstr ""
+msgstr "Revise los valores del 303 que alimentan el Modelo 390"
 
 #: ../../how-to/modelo-390.md:147
 msgid ""
@@ -289,28 +404,37 @@ msgid ""
 "locally, inspect the current or verified revision instead with `--select "
 "latest-verified` or `--select current`:"
 msgstr ""
+"Para cada periodo del Modelo 303, liste sus revisiones guardadas e "
+"inspeccione la presentada. Estas lecturas resuelven los trimestres del "
+"303 presentados del año, que el entorno de pruebas de documentación de "
+"semilla única reproduce en la cadena anual de arriba, por lo que aquí se "
+"muestran como marcos ilustrativos. Si no existe localmente ninguna "
+"revisión presentada, inspeccione en su lugar la revisión actual o "
+"verificada con `--select latest-verified` o `--select current`:"
 
 #: ../../how-to/modelo-390.md:157
 msgid ""
 "Repeat that review for `2T`, `3T`, and `4T`. Pay attention to the values "
 "that Modelo 390 reconciles from Modelo 303:"
 msgstr ""
+"Repita esa revisión para `2T`, `3T` y `4T`. Preste atención a los valores"
+" que el Modelo 390 concilia a partir del Modelo 303:"
 
 #: ../../how-to/modelo-390.md:160
 msgid "`iva.cuota-devengada-total`"
-msgstr ""
+msgstr "`iva.cuota-devengada-total`"
 
 #: ../../how-to/modelo-390.md:161
 msgid "`iva.cuota-deducible-total`"
-msgstr ""
+msgstr "`iva.cuota-deducible-total`"
 
 #: ../../how-to/modelo-390.md:162
 msgid "`iva.resultado-regimen-general`"
-msgstr ""
+msgstr "`iva.resultado-regimen-general`"
 
 #: ../../how-to/modelo-390.md:163
 msgid "`iva.compensacion-generada-periodo`"
-msgstr ""
+msgstr "`iva.compensacion-generada-periodo`"
 
 #: ../../how-to/modelo-390.md:165
 msgid ""
@@ -323,6 +447,15 @@ msgid ""
 "calculation path does not make a fresh AEAT remote-state check a blanket "
 "prerequisite for calculation."
 msgstr ""
+"Si una declaración del 303 se presentó fuera de Cadrumo, capture o "
+"concilie la evidencia oficial antes de fiarse de los valores locales, con"
+" los comandos `live filed pull-sources` o `reconcile file` mostrados en "
+"[Qué necesita cada trimestre del Modelo 303](#what-each-modelo-303"
+"-quarter-needs-before-you-verify) más arriba. La captura de presentado en"
+" vivo es de solo lectura; la conciliación lee el justificante o el "
+"fichero de declaración que usted aporte. El flujo de cálculo actual del "
+"Modelo 390 no convierte una comprobación fresca del estado remoto de la "
+"AEAT en un requisito general del cálculo."
 
 #: ../../how-to/modelo-390.md:173
 msgid ""
@@ -334,6 +467,15 @@ msgid ""
 "Seeding and correcting mutate stored history, and the history reads reach"
 " AEAT, so they are shown as display frames:"
 msgstr ""
+"Para el historial de compensación de IVA, use los comandos de la cartera "
+"de IVA; admiten la revisión del arrastre de compensación, pero no son una"
+" comprobación general de conciliación del Modelo 390. Inspeccione el "
+"saldo con el marco `iva-wallet balance` de la secuencia de inspección de "
+"arriba. Cree un saldo inicial, o corrija una semilla errónea, o revise el"
+" historial del lado de la AEAT con los comandos siguientes. La creación "
+"de semilla y la corrección modifican el historial guardado, y las "
+"lecturas del historial acceden a la AEAT, por lo que se muestran como "
+"marcos ilustrativos:"
 
 #: ../../how-to/modelo-390.md:185
 msgid ""
@@ -342,10 +484,15 @@ msgid ""
 "is not configured. Use `seed` only when you have a real opening "
 "compensation balance from before the local Modelo 303 history."
 msgstr ""
+"`pull-history` requiere tanto `--from-year` como `--to-year`; lee el "
+"historial presentado del Modelo 303 desde la AEAT y se niega cuando la "
+"autenticación ante la AEAT no está configurada. Use `seed` solo cuando "
+"tenga un saldo de compensación inicial real anterior al historial local "
+"del Modelo 303."
 
 #: ../../how-to/modelo-390.md:190
 msgid "Inspect the annual work unit"
-msgstr ""
+msgstr "Inspeccione la unidad de trabajo anual"
 
 #: ../../how-to/modelo-390.md:192
 msgid ""
@@ -355,6 +502,12 @@ msgid ""
 "full-value chain that folds in the four filed quarters is the \"Create, "
 "calculate, and verify\" sequence above:"
 msgstr ""
+"Compruebe el objetivo anual guardado y sus bindings, casillas y fórmulas."
+" Añada `--missing` al listado de bindings para centrarse en los campos "
+"sin rellenar. La secuencia siguiente crea el borrador anual e inspecciona"
+" su estructura; la cadena de valores completa que integra los cuatro "
+"trimestres presentados es la secuencia «Cree, calcule y verifique» de "
+"arriba:"
 
 #: ../../how-to/modelo-390.md:202
 msgid ""
@@ -365,16 +518,26 @@ msgid ""
 "periods. Do not assume `work calculate` scans every local 303 work unit, "
 "every calculation revision, or every local filing record automatically."
 msgstr ""
+"La lista de bindings muestra los bindings de agregación de IVA del ledger"
+" (origen `ledger_iva_aggregation`) y los bindings derivados del 303 "
+"(origen `relation_prefill`, con sus ids prefijados "
+"`modelo-390-prev-303-`). Trate las filas derivadas del 303 como valores "
+"que deben revisarse contra los periodos del 303 previos. No dé por hecho "
+"que `work calculate` escanea automáticamente cada unidad de trabajo local"
+" del 303, cada revisión de cálculo o cada registro de presentación local."
 
 #: ../../how-to/modelo-390.md:209
 msgid "Supply reviewed 303-derived values if needed"
-msgstr ""
+msgstr "Aporte valores derivados del 303 revisados si es necesario"
 
 #: ../../how-to/modelo-390.md:211
 msgid ""
 "Check the annual ledger window before calculation with the `ledger "
 "preflight` and `ledger status` frames in the inspect sequence above."
 msgstr ""
+"Compruebe la ventana anual del ledger antes del cálculo con los marcos "
+"`ledger preflight` y `ledger status` de la secuencia de inspección de "
+"arriba."
 
 #: ../../how-to/modelo-390.md:214
 msgid ""
@@ -385,6 +548,13 @@ msgid ""
 "and supply reviewed values explicitly. The reviewed sums come from your "
 "own 303 review, so this override is shown as a display frame:"
 msgstr ""
+"El cálculo anual usa la ventana anual del ledger para los agregados de "
+"IVA del 390 respaldados por el ledger. Para los valores derivados del "
+"303, el registro define los IDs de los bindings y los periodos de origen."
+" Si esos valores de binding no están ya disponibles para el cálculo, "
+"inspeccione la lista de bindings que faltan y aporte valores revisados "
+"explícitamente. Las sumas revisadas proceden de su propia revisión del "
+"303, así que esta sobrescritura se muestra como marco ilustrativo:"
 
 #: ../../how-to/modelo-390.md:224
 msgid ""
@@ -393,38 +563,51 @@ msgid ""
 "continuing. For casilla-level review and binding mechanics, see [Review "
 "and supply calculation inputs](review-calculation-values.md)."
 msgstr ""
+"Use cifras revisadas, no marcadores de posición. Si el historial revisado"
+" del 303 falta o es incoherente, deténgase y repare la evidencia del 303 "
+"antes de continuar. Para la revisión a nivel de casilla y la mecánica de "
+"los bindings, consulte [Revise y aporte las entradas de cálculo](review-"
+"calculation-values.md)."
 
 #: ../../how-to/modelo-390.md:229
 msgid "Review the annual calculation"
-msgstr ""
+msgstr "Revise el cálculo anual"
 
 #: ../../how-to/modelo-390.md:231
 msgid ""
 "Inspect the saved annual revisions with the `work revisions` and `work "
 "revision` frames in the inspect sequence above."
 msgstr ""
+"Inspeccione las revisiones anuales guardadas con los marcos `work "
+"revisions` y `work revision` de la secuencia de inspección de arriba."
 
 #: ../../how-to/modelo-390.md:234
 msgid "Compare the annual totals with the 303 reconciliation values:"
-msgstr ""
+msgstr "Compare los totales anuales con los valores de conciliación del 303:"
 
 #: ../../how-to/modelo-390.md:236
 msgid ""
 "`iva.anual.cuota-devengada-total` should be reviewed against "
 "`iva.anual.reconciliacion.devengada-303`."
 msgstr ""
+"`iva.anual.cuota-devengada-total` debe revisarse contra "
+"`iva.anual.reconciliacion.devengada-303`."
 
 #: ../../how-to/modelo-390.md:238
 msgid ""
 "`iva.anual.cuota-deducible-total` should be reviewed against "
 "`iva.anual.reconciliacion.deducible-303`."
 msgstr ""
+"`iva.anual.cuota-deducible-total` debe revisarse contra "
+"`iva.anual.reconciliacion.deducible-303`."
 
 #: ../../how-to/modelo-390.md:240
 msgid ""
 "`iva.anual.resultado-regimen-general` should be reviewed against "
 "`iva.anual.reconciliacion.resultado-303`."
 msgstr ""
+"`iva.anual.resultado-regimen-general` debe revisarse contra "
+"`iva.anual.reconciliacion.resultado-303`."
 
 #: ../../how-to/modelo-390.md:243
 msgid ""
@@ -435,14 +618,23 @@ msgid ""
 "calculation surface, then `compute` and `verify` on the same target. The "
 "spreadsheet export reaches Google, so it is shown as a display frame:"
 msgstr ""
+"Si los totales anuales del ledger y los valores de conciliación derivados"
+" del 303 divergen, no fuerce primero a que el 390 pase. Revise la ventana"
+" anual del ledger, cada revisión del 303, cualquier justificante oficial "
+"y los bindings aportados del 390. Use el bucle de revisión en hoja de "
+"cálculo cuando necesite una superficie de cálculo más amplia, y luego "
+"`compute` y `verify` sobre el mismo objetivo. La exportación a la hoja de"
+" cálculo accede a Google, así que se muestra como marco ilustrativo:"
 
 #: ../../how-to/modelo-390.md:253
 msgid "The spreadsheet workflow is a review surface; it does not submit to AEAT."
 msgstr ""
+"El flujo de la hoja de cálculo es una superficie de revisión; no envía "
+"nada a la AEAT."
 
 #: ../../how-to/modelo-390.md:255
 msgid "Export and file"
-msgstr ""
+msgstr "Exporte y presente"
 
 #: ../../how-to/modelo-390.md:257
 msgid ""
@@ -455,6 +647,15 @@ msgid ""
 "has accepted the filing. Inspect the stored verification report by id "
 "when you need the detailed result:"
 msgstr ""
+"El paso de verificación de la secuencia anterior promovió el borrador "
+"anual a `verificado_completo`. Si la verificación informa en cambio de "
+"hallazgos bloqueantes `cross_period_dependency_unclean`, a cada trimestre"
+" del 303 nombrado le falta evidencia de presentado; establézcala primero "
+"(consulte [Qué necesita cada trimestre del Modelo 303](#what-each-"
+"modelo-303-quarter-needs-before-you-verify) más arriba) y verifique de "
+"nuevo. La verificación no prueba que la AEAT haya aceptado la "
+"presentación. Inspeccione el informe de verificación guardado por su id "
+"cuando necesite el resultado detallado:"
 
 #: ../../how-to/modelo-390.md:269
 msgid ""
@@ -463,6 +664,11 @@ msgid ""
 "in the annual chain above, so the export and the post-portal steps here "
 "are display frames:"
 msgstr ""
+"Exporte la revisión verificada o presentada localmente. La exportación "
+"necesita la evidencia de los cuatro trimestres del 303 presentados, que "
+"el entorno de pruebas de semilla única demuestra en la cadena anual de "
+"arriba, así que aquí la exportación y los pasos posteriores al portal son"
+" marcos ilustrativos:"
 
 #: ../../how-to/modelo-390.md:276
 msgid ""
@@ -476,10 +682,20 @@ msgid ""
 "workflow created with the audit commands. These address records and "
 "bundles by id, so they are display frames:"
 msgstr ""
+"Suba el fichero exportado por el canal oficial de la AEAT; la lista de "
+"comprobación completa está en [Suba su modelo exportado en el portal de "
+"la AEAT](file-at-aeat.md). Revise sus registros de presentación con "
+"`filing-record list` y `filing-record view`. `work file` es un marcador "
+"local interno; no envía nada a la AEAT. Si la declaración anual se "
+"presentó fuera de este flujo local, importe un registro de presentación "
+"externo solo a partir de evidencia oficial, e inspeccione cualquier "
+"paquete de evidencia que un flujo de verificación o exportación haya "
+"creado con los comandos de auditoría. Estos se refieren a los registros y"
+" paquetes por su id, así que son marcos ilustrativos:"
 
 #: ../../how-to/modelo-390.md:288
 msgid "What Modelo 390 does not check for you"
-msgstr ""
+msgstr "Qué no comprueba por usted el Modelo 390"
 
 #: ../../how-to/modelo-390.md:290
 msgid ""
@@ -487,16 +703,22 @@ msgid ""
 "reconciliation in the registry, but it does not enforce every operational"
 " policy you might want for a dependable annual filing workflow."
 msgstr ""
+"La implementación actual admite la conciliación anual del 303 del Modelo "
+"390 en el registro, pero no impone todas las políticas operativas que "
+"usted podría desear para un flujo de presentación anual fiable."
 
 #: ../../how-to/modelo-390.md:294
 msgid "Use these limits when deciding how much evidence to review:"
-msgstr ""
+msgstr "Use estos límites al decidir cuánta evidencia revisar:"
 
 #: ../../how-to/modelo-390.md:296
 msgid ""
 "Modelo 390 does not look at all local filing history regardless of state."
 " 303-derived resolution is keyed by modelo, filing year, and period."
 msgstr ""
+"El Modelo 390 no mira todo el historial de presentación local con "
+"independencia de su estado. La resolución derivada del 303 se indexa por "
+"modelo, ejercicio de presentación y periodo."
 
 #: ../../how-to/modelo-390.md:298
 msgid ""
@@ -507,6 +729,14 @@ msgid ""
 "record or a captured/reconciled AEAT justificante (see \"What each Modelo"
 " 303 quarter needs before you verify\")."
 msgstr ""
+"El resolvedor del momento del cálculo y la comprobación de la "
+"verificación tratan la evidencia del 303 de forma distinta. El resolvedor"
+" que prerrellena los valores derivados del 303 no aplica un filtro de "
+"estado del ciclo de vida, así que `work calculate` puede producir un "
+"borrador. La comprobación de la verificación es más estricta: bloquea "
+"hasta que cada trimestre del 303 tenga un registro de presentado o un "
+"justificante de la AEAT capturado/conciliado (consulte «Qué necesita cada"
+" trimestre del Modelo 303 antes de verificar»)."
 
 #: ../../how-to/modelo-390.md:304
 msgid ""
@@ -515,6 +745,10 @@ msgid ""
 "filed`, `latest-verified`, or exact revision IDs when you need a specific"
 " 303 value."
 msgstr ""
+"El flujo anual `work calculate` no debe tratarse como un selector general"
+" de la «última revisión activa del 303». Use `work revision --select "
+"filed`, `latest-verified` o los IDs de revisión exactos cuando necesite "
+"un valor concreto del 303."
 
 #: ../../how-to/modelo-390.md:307
 msgid ""
@@ -523,6 +757,10 @@ msgid ""
 "The current CLI does not require them to be in sync before every Modelo "
 "390 calculation."
 msgstr ""
+"Los registros locales de `work file`, las observaciones de presentado "
+"capturadas de la AEAT y la conciliación del justificante son superficies "
+"de evidencia relacionadas pero separadas. La CLI actual no exige que "
+"estén sincronizadas antes de cada cálculo del Modelo 390."
 
 #: ../../how-to/modelo-390.md:310
 msgid ""
@@ -530,12 +768,19 @@ msgid ""
 "force operator-supplied reviewed values. Calculation can still produce a "
 "draft, but verify blocks until the missing quarters have filed evidence."
 msgstr ""
+"La falta de historial del 303 puede dejar no disponibles los bindings del"
+" 390 derivados del 303 o forzar valores revisados aportados por el "
+"operador. El cálculo puede aun así producir un borrador, pero la "
+"verificación se bloquea hasta que los trimestres que faltan tengan "
+"evidencia de presentado."
 
 #: ../../how-to/modelo-390.md:313
 msgid ""
 "Remote AEAT state is not binding unless you explicitly capture or "
 "reconcile it in the workflow you are running."
 msgstr ""
+"El estado remoto de la AEAT no es vinculante salvo que lo capture o lo "
+"concilie explícitamente en el flujo que esté ejecutando."
 
 #: ../../how-to/modelo-390.md:316
 msgid ""
@@ -545,36 +790,41 @@ msgid ""
 "expose the check you need, report that gap instead of documenting it as "
 "enforced behavior."
 msgstr ""
+"Para un cierre anual conservador, calcule y revise cada periodo del 303, "
+"concilie la evidencia oficial donde esté disponible, inspeccione los "
+"bindings del 390 derivados del 303 y verifique el borrador anual antes de"
+" exportar. Si la CLI no expone la comprobación que necesita, informe de "
+"esa carencia en lugar de documentarla como comportamiento impuesto."
 
 #: ../../how-to/modelo-390.md:321
 msgid "Next steps"
-msgstr ""
+msgstr "Pasos siguientes"
 
 #: ../../how-to/modelo-390.md:323
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
-msgstr ""
+msgstr "[Prepare una presentación de IVA con el Modelo 303](modelo-303.md)"
 
 #: ../../how-to/modelo-390.md:324
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr ""
+msgstr "[Revise y aporte las entradas de cálculo](review-calculation-values.md)"
 
 #: ../../how-to/modelo-390.md:325
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
-msgstr ""
+msgstr "[Revise los cálculos con Google Sheets](review-with-google-sheets.md)"
 
 #: ../../how-to/modelo-390.md:326
 msgid "[How to reconcile a filed Modelo against its justificante](reconcile.md)"
-msgstr ""
+msgstr "[Cómo conciliar un modelo presentado con su justificante](reconcile.md)"
 
 #: ../../how-to/modelo-390.md:327
 msgid "[The filing workflow](filing-spine.md)"
-msgstr ""
+msgstr "[El flujo de presentación](filing-spine.md)"
 
 #: ../../how-to/modelo-390.md:328
 msgid "[Diagnose and repair your local setup](troubleshooting.md)"
-msgstr ""
+msgstr "[Diagnostique y repare su configuración local](troubleshooting.md)"
 
 #: ../../how-to/modelo-390.md:329
 msgid "[CLI reference](../cli/index.rst)"
-msgstr ""
+msgstr "[Referencia de la CLI](../cli/index.rst)"
 
