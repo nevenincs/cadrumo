@@ -162,6 +162,48 @@ def _resolve_server(plugin: dict[str, Any]) -> tuple[Path, tuple[str, ...], dict
     return Path(uvx).resolve(strict=True), resolved_args, environment, plugin_root
 
 
+def _credential_secret_values(credential_path: Path) -> tuple[str, ...]:
+    """Every secret-bearing string value inside the copied credential document."""
+    try:
+        document = json.loads(credential_path.read_text(encoding=_UTF_8))
+    except (OSError, json.JSONDecodeError):
+        return ()
+    secrets: list[str] = []
+    pending: list[Any] = [document]
+    while pending:
+        node = pending.pop()
+        if isinstance(node, dict):
+            pending.extend(node.values())
+        elif isinstance(node, list):
+            pending.extend(node)
+        elif isinstance(node, str) and len(node) >= 16:
+            secrets.append(node)
+    return tuple(secrets)
+
+
+def _assert_no_credential_leak(logs: Path, *, secrets: tuple[str, ...]) -> None:
+    """Refuse to retain session evidence that carries a credential secret.
+
+    The retained evidence tree uploads as a CI artifact; the Claude debug and
+    session logs land inside it. Scanning them for the subscription-credential
+    secret values fails closed BEFORE the run returns, so a client that ever
+    echoed a bearer token into its diagnostics can never publish it as
+    evidence bytes.
+    """
+    if not secrets:
+        return
+    for log_path in sorted(logs.rglob("*")):
+        if not log_path.is_file():
+            continue
+        text = log_path.read_text(encoding=_UTF_8, errors="replace")
+        if any(secret in text for secret in secrets):
+            log_path.unlink()
+            raise SystemExit(
+                f"credential secret leaked into session log {log_path.name}; "
+                "the leaking log was deleted and the evidence run is refused",
+            )
+
+
 def _run_optional_claude_session(
     claude: Path,
     *,
@@ -256,6 +298,7 @@ def main(argv: list[str] | None = None) -> int:
             f"({subscription_credential})",
         )
 
+    credential_secrets = _credential_secret_values(config_dir / ".credentials.json")
     try:
         return _prove_installed_plugin(
             args,
@@ -270,6 +313,10 @@ def main(argv: list[str] | None = None) -> int:
         )
     finally:
         shutil.rmtree(config_dir, ignore_errors=True)
+        # Every exit path - success, refusal, or crash - scans the retained
+        # session logs for the credential secrets before the evidence survives.
+        if logs.is_dir():
+            _assert_no_credential_leak(logs, secrets=credential_secrets)
 
 
 def _prove_installed_plugin(
