@@ -35,6 +35,7 @@ Some answers also include a scheduling note. Treat it as a pointer, not a calend
 - **Attribution pass-through** - your entity is in régimen de atribución de rentas, such as a comunidad de bienes or a sociedad civil without a commercial object (sin objeto mercantil). The entity passes its income through to its members, so it doesn't file this self-assessment form itself. The members declare the attributed income on their own returns.
 - **Incomplete** - the tool cannot decide and refuses to guess. Usually your profile is missing the facts needed; see [When the verdict is incomplete](#when-the-verdict-is-incomplete). For a few forms the tool has not yet derived an applicability rule. The rationale says so, and in that case no profile change alters the verdict.
 
+(when-the-verdict-is-incomplete)=
 ## When the verdict is incomplete
 
 An incomplete verdict usually means the decision depends on facts your profile doesn't declare yet. The main groups:

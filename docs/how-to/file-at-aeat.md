@@ -29,6 +29,7 @@ tool prompts for it. The tool's messages are in Spanish.
 If you're new to the workflow as a whole, start with the
 [quickstart](quickstart.md).
 
+(the-filing-chain)=
 ## The filing chain
 
 The sequence below runs the machine half of the filing end to end: it prepares a

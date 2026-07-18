@@ -91,6 +91,7 @@ If you have neither the passphrase nor the recovery words, the encrypted
 data is permanently unreadable. The only way forward is a reset (below),
 which deletes it.
 
+(run-without-a-passphrase-prompt)=
 ## Run without a passphrase prompt
 
 Automation cannot answer an interactive passphrase prompt. For an agent server,

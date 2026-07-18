@@ -50,6 +50,7 @@ short explanation:
 - [Persistence and the safety boundary](#persistence-and-the-safety-boundary) -
   where state lives, and why nothing leaves.
 
+(the-layers)=
 ## The layers
 
 Cadrumo separates responsibilities into five layers under `src/cadrumo/`.
@@ -122,6 +123,7 @@ all.
 | Live, portals, and auth | `portals`, `auth`, `fincas` | `live`, `portals`, `auth`, `workflow` |
 | Profile and storage | `buckets`, `user_profile`, `contribuyente`, `deadlines` | `profile`, `storage`, `bucket_maintenance`, `setup`, `wizard` |
 
+(the-registry-authority-pipeline)=
 ## The registry authority pipeline
 
 The authoritative tax-model definitions aren't hard-coded. They move through a
@@ -169,6 +171,7 @@ implementation details. Production code requests validated modelos, deadline
 windows, and snapshots through the authority, so the loader stays behind that
 line.
 
+(the-modelo-lifecycle)=
 ## The modelo lifecycle
 
 A modelo is a numbered AEAT tax form. Its data flows one way, from your records
@@ -264,6 +267,7 @@ carrying its `legal_refs`, `source_refs`, and `formula_id`. That observation
 rides inside the persisted `CalculationRevision`, then into the CLI payloads,
 then to the operator. The provenance never drops on the way out.
 
+(persistence-and-the-safety-boundary)=
 ## Persistence and the safety boundary
 
 All sensitive financial data lives in one place: an encrypted, per-profile
@@ -341,6 +345,7 @@ surfaces cannot silently drift. A strict build treats warnings as errors and
 fails on a broken cross-reference, a missing stub, or a command reference that
 no longer matches the commands.
 
+(crossing-into-the-code)=
 ## Crossing into the code
 
 Use this overview to orient, then drop into the detail:
