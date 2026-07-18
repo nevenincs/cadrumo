@@ -27,7 +27,8 @@ from ._errors import LLMCacheError
 from ._models import LLMResponse, UsageRecord, UsageSummary
 
 _USAGE_NAMESPACE = LLM_USAGE_NAMESPACE.namespace
-_USAGE_VERSION = 1
+_USAGE_VERSION = LLM_USAGE_NAMESPACE.schema_version
+_USAGE_SENSITIVITY = LLM_USAGE_NAMESPACE.sensitivity
 
 
 class UsageRecorder:
@@ -116,7 +117,7 @@ class UsageRecorder:
             secure_object_repository_for_active_bucket().save(
                 namespace=_USAGE_NAMESPACE,
                 object_key=self._object_key_for(record, object_key_uuid),
-                classification=SensitivityClass.DIAGNOSTIC,
+                classification=_USAGE_SENSITIVITY,
                 schema_version=_USAGE_VERSION,
                 written_at=record.created_at,
                 payload=canonical_json_bytes(payload),
@@ -140,7 +141,7 @@ class UsageRecorder:
         records: list[UsageRecord] = []
         for stored in secure_object_repository_for_active_bucket().list_records(
             _USAGE_NAMESPACE,
-            expected_class=SensitivityClass.DIAGNOSTIC,
+            expected_class=_USAGE_SENSITIVITY,
             max_supported_version=_USAGE_VERSION,
         ):
             decoded = self._decode_record_payload(stored.payload)
@@ -165,7 +166,7 @@ class UsageRecorder:
         rows: list[tuple[UsageRecord, str]] = []
         for stored in secure_object_repository_for_active_bucket().list_records(
             _USAGE_NAMESPACE,
-            expected_class=SensitivityClass.DIAGNOSTIC,
+            expected_class=_USAGE_SENSITIVITY,
             max_supported_version=_USAGE_VERSION,
         ):
             decoded = self._decode_record_payload(stored.payload)

@@ -53,7 +53,6 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field
 
 from ....adapters.persistence.storage import LLM_RUN_TELEMETRY_NAMESPACE, secure_object_repository_for_active_bucket
-from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import canonical_json_bytes
@@ -63,7 +62,8 @@ from ._errors import LLMCacheError
 __all__ = ["LLMRunRecord", "LLMRunTelemetryRecorder", "LLMRunTelemetrySummary"]
 
 _RUN_TELEMETRY_NAMESPACE = LLM_RUN_TELEMETRY_NAMESPACE.namespace
-_RUN_TELEMETRY_VERSION = 1
+_RUN_TELEMETRY_VERSION = LLM_RUN_TELEMETRY_NAMESPACE.schema_version
+_RUN_TELEMETRY_SENSITIVITY = LLM_RUN_TELEMETRY_NAMESPACE.sensitivity
 
 _STRICT_FROZEN = ConfigDict(strict=True, frozen=True)
 
@@ -151,7 +151,7 @@ class LLMRunTelemetryRecorder:
             secure_object_repository_for_active_bucket().save(
                 namespace=_RUN_TELEMETRY_NAMESPACE,
                 object_key=self._object_key_for(record, object_key_uuid),
-                classification=SensitivityClass.DIAGNOSTIC,
+                classification=_RUN_TELEMETRY_SENSITIVITY,
                 schema_version=_RUN_TELEMETRY_VERSION,
                 written_at=record.started_at,
                 payload=canonical_json_bytes(payload),
@@ -187,7 +187,7 @@ class LLMRunTelemetryRecorder:
         rows: list[tuple[LLMRunRecord, str]] = []
         for stored in secure_object_repository_for_active_bucket().list_records(
             _RUN_TELEMETRY_NAMESPACE,
-            expected_class=SensitivityClass.DIAGNOSTIC,
+            expected_class=_RUN_TELEMETRY_SENSITIVITY,
             max_supported_version=_RUN_TELEMETRY_VERSION,
         ):
             decoded = json.loads(stored.payload.decode(UTF_8_ENCODING))
