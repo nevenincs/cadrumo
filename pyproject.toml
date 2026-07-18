@@ -367,6 +367,12 @@ dev = [
   # with a filesystem watcher and a livereload websocket so edits to docs/ and
   # the src/cadrumo/ docstring surface refresh the browser without a manual rebuild.
   "sphinx-autobuild>=2024.10",
+  # Documentation localization (`just docs-gettext` / `docs-langs`): sphinx-intl
+  # manages the per-language `.po` catalogues under docs/locales/ from the
+  # gettext POT templates, and babel parses catalogue statistics
+  # (translated / fuzzy / untranslated) for the all-languages completeness gate.
+  "sphinx-intl>=2.3",
+  "babel>=2.16",
   # Documentation conformance enforcement: docstring presence/style,
   # signature-vs-docstring accuracy, and RST formatting.
   "pydoclint>=0.6",
