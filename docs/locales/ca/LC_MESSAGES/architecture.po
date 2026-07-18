@@ -1,16 +1,14 @@
-# SOME DESCRIPTIVE TITLE.
+# Catalan translation of the Cadrumo documentation.
 # Copyright (C) 2026, the Cadrumo authors
 # This file is distributed under the same license as the CADRUMO package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 14:00+0200\n"
+"Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,13 +19,15 @@ msgstr ""
 
 #: ../../architecture.md:5
 msgid "Architecture"
-msgstr ""
+msgstr "Arquitectura"
 
 #: ../../architecture.md:7
 msgid ""
 "The architecture guide lives at [Architecture "
 "overview](architecture/index.md)."
 msgstr ""
+"La guia d'arquitectura es troba a [Visió general de "
+"l'arquitectura](architecture/index.md)."
 
 #: ../../architecture.md:9
 msgid ""
@@ -35,4 +35,6 @@ msgid ""
 "authority pipeline, the modelo lifecycle, persistence boundaries, and the"
 " local-first safety model."
 msgstr ""
-
+"Llegeix-la per obtenir el mapa del codi base: les capes hexagonals, el "
+"pipeline de l'autoritat del registre, el cicle de vida del modelo, els "
+"límits de persistència i el model de seguretat local-first."
