@@ -161,7 +161,7 @@ Per-language deploy roots and switcher, full matrix verification, code review, h
 
 Per-language site roots and switcher, full verification, reviews, close
 
-- [ ] `W03.P06.S19` - Emit per-language site roots from the deploy publisher with a theme language switcher and per-language search index regeneration; `dev/deploy/docs_static_site.py, docs/_templates`.
+- [x] `W03.P06.S19` - Emit per-language site roots from the deploy publisher with a theme language switcher and per-language search index regeneration; `dev/deploy/docs_static_site.py, docs/_templates`.
 - [ ] `W03.P06.S20` - Run the full docs-check lane and the complete language matrix at HEAD and record the green evidence; `dev/docs/tests, docs/locales`.
 - [ ] `W03.P06.S21` - Dispatch an independent code review over the campaign commits and action every finding; `.vault/audit`.
 - [ ] `W03.P06.S22` - Run the fresh-context honesty review against the closure summary and persist the audit before declaring the campaign complete; `.vault/audit`.

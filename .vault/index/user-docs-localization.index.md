@@ -15,6 +15,7 @@ related:
   - '[[2026-07-18-user-docs-localization-W01-P02-S07]]'
   - '[[2026-07-18-user-docs-localization-W01-P02-S08]]'
   - '[[2026-07-18-user-docs-localization-W01-P02-S09]]'
+  - '[[2026-07-18-user-docs-localization-W03-P06-S19]]'
   - '[[2026-07-18-user-docs-localization-adr]]'
   - '[[2026-07-18-user-docs-localization-plan]]'
   - '[[2026-07-18-user-docs-localization-research]]'
@@ -41,6 +42,7 @@ Auto-generated index of all documents tagged with `#user-docs-localization`.
 - `2026-07-18-user-docs-localization-W01-P02-S07` - Author the language-set parity gate asserting the docs target languages equal the OutputLanguage members minus the English source exactly
 - `2026-07-18-user-docs-localization-W01-P02-S08` - Extend the build gate with per-language nitpicky warnings-as-errors user-scope builds for es, ca, and hu
 - `2026-07-18-user-docs-localization-W01-P02-S09` - Enroll the localization gates in the docs-check lane under the docs marker and confirm the lane runs them
+- `2026-07-18-user-docs-localization-W03-P06-S19` - Emit per-language site roots from the deploy publisher with a theme language switcher and per-language search index regeneration
 
 ### plan
 
