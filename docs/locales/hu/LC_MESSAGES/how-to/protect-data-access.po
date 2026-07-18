@@ -1,0 +1,283 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/protect-data-access.md:1
+msgid "Protect access to your data"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:3
+msgid ""
+"Cadrumo encrypts every profile, transaction, piece of evidence, and "
+"filing under one master key. Your passphrase opens that key. If you lose "
+"the passphrase and have no recovery key, the data cannot be decrypted by "
+"anyone, including you."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:8
+msgid ""
+"Use this guide to set up a recovery key before you need it, change your "
+"passphrase, recover access after a lost passphrase, log out safely, and "
+"reset local state only as a last resort."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:12
+msgid "Before you start"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:14
+msgid "You need:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:16
+msgid ""
+"An active profile - see [set up your taxpayer profile](profile-setup.md)."
+" The first command below refuses without one (`No se pudo determinar "
+"ningún bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:19
+msgid ""
+"Your current master-key passphrase for recovery-key creation, rotation, "
+"and passphrase changes."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:21
+msgid ""
+"Your recovery words for verification or recovery after a lost passphrase."
+" Recovery sets a new passphrase without requiring the lost one."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:24
+msgid ""
+"Use `--language en`, `es`, `ca`, or `hu` when you need a specific output "
+"language."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:27
+msgid "Create your recovery key first"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:29
+msgid "Do this once, right after setup, while your passphrase still works:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:34
+msgid ""
+"If no recovery key exists yet, the command creates one and prints a "
+"twenty-four-word recovery key. The words are shown exactly once and are "
+"never stored. Only an encrypted wrapper of the master key is written to "
+"disk. Write the words down and keep them offline, separate from your "
+"computer."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:39
+msgid ""
+"Run the same command again later to confirm enrollment: once a recovery "
+"key exists, the command reports its status and does not print the words "
+"again."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:42
+msgid "Check that your recovery key works"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:44
+msgid "Verify the words you wrote down without changing anything:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:49
+msgid ""
+"The command reports `verified yes` or `verified no` and exits with a "
+"failure code when the words do not open the recovery wrapper. Nothing is "
+"modified either way."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:53
+msgid "Replace the recovery key"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:55
+msgid ""
+"If the written words may have been seen by someone else, mint a fresh "
+"recovery key:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:61
+msgid ""
+"New words are printed exactly once. The previous recovery words stop "
+"working immediately. Store the new words as before."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:64
+msgid "Change your passphrase"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:66
+msgid "To change the passphrase while you still know the current one:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:71
+msgid ""
+"The command asks for the current passphrase if the store is not already "
+"open, then prompts twice (hidden) for the new one. The master key itself "
+"does not change, so all stored data stays readable. Only the passphrase "
+"that opens it is replaced. For non-interactive use, pass `--new-"
+"passphrase` together with `--confirm-new-passphrase`."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:77
+msgid "Recover after a forgotten passphrase"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:79
+msgid "If you forgot the passphrase but have your recovery words:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:84
+msgid ""
+"The command prompts twice (hidden) for a new passphrase, unlocks the "
+"master key from the recovery wrapper, and rewraps it under the new "
+"passphrase. All stored data stays intact. Nothing is deleted or re-"
+"encrypted. For non-interactive use, pass `--new-passphrase` together with"
+" `--confirm-new-passphrase` instead of being prompted."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:90
+msgid ""
+"If you have neither the passphrase nor the recovery words, the encrypted "
+"data is permanently unreadable. The only way forward is a reset (below), "
+"which deletes it."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:94
+msgid "Run without a passphrase prompt"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:96
+msgid ""
+"Automation cannot answer an interactive passphrase prompt. For an agent "
+"server, scheduled job, or script, set `CADRUMO_SECRET_PASSPHRASE` for "
+"that process. Treat the value like the passphrase itself. Never put it in"
+" a shared shell profile, committed script, or log."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:101
+msgid ""
+"Interactive commands prompt when they need the current passphrase. "
+"Recovery commands use the recovery words and ask for a new passphrase "
+"instead."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:104
+msgid "Log out of the active profile"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:106
+msgid ""
+"Use `aeat config profile logout` when you finish working with a profile. "
+"Logout closes the active storage session, discards in-memory key "
+"material, disposes the bucket engines, and clears the active-profile "
+"selection:"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:114
+msgid ""
+"Nothing in the profile is deleted. Select it again with `aeat config "
+"switch <name>` when you return."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:117
+msgid "Reset local state (last resort)"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:119
+msgid ""
+"Export every profile you want to keep before continuing. Reset "
+"permanently deletes every profile stored locally, related local "
+"authentication state, and the active profile selection. It doesn't delete"
+" exports stored elsewhere. You can't undo the reset."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:127
+msgid ""
+"Use `start` only when you intend to remove all local profiles. Confirm "
+"the reset explicitly. It checks retention requirements before deleting "
+"anything and refuses to start while another reset is incomplete."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:130
+msgid ""
+"Use the read-only `status` command to inspect the latest operation "
+"without changing local data. Provide an operation ID to inspect an exact "
+"operation. Status reports an incomplete, paused, or complete operation. "
+"Its output includes the operation ID and any pause reason."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:134
+msgid ""
+"Use `resume` after an interruption or pause. Confirm the reset again. It "
+"continues the same incomplete operation instead of creating another. "
+"Provide an operation ID to resume an exact operation. After deletion "
+"starts, resuming the reset doesn't restore deleted data."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:139
+msgid ""
+"If legal retention requirements pause the reset, stop if you must keep "
+"the affected records. Override the pause only after reviewing and "
+"accepting the legal retention consequence, and always provide a non-empty"
+" reason. If you provide a reason without the override, the command "
+"refuses to continue."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:144
+msgid ""
+"See [Set up your taxpayer profile](profile-setup.md) for profile export "
+"instructions."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:147
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:149
+msgid ""
+"[Import, export, and evidence](../reference/import-export-and-"
+"evidence.md) - see where encrypted custody ends and deliberate plaintext "
+"handoffs begin."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:151
+msgid ""
+"[Set up your taxpayer profile](profile-setup.md) - create, export, and "
+"import profiles."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:153
+msgid ""
+"[Diagnose and repair your local setup](troubleshooting.md) - for storage "
+"or integrity problems that do not need a reset."
+msgstr ""
+
+#: ../../how-to/protect-data-access.md:155
+msgid "[CLI reference](../cli/index.rst) - full option reference."
+msgstr ""
+

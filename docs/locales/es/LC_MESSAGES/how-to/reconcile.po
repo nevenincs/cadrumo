@@ -1,0 +1,352 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/reconcile.md:1
+msgid "Reconcile a filed modelo against its justificante"
+msgstr ""
+
+#: ../../how-to/reconcile.md:3
+#, python-brace-format
+msgid ""
+"This page covers the {term}`justificante`, the signed PDF receipt AEAT "
+"issues when you file at the portal, and reconciliation: how to pull the "
+"receipt from AEAT and keep it as encrypted evidence in your profile, and "
+"how to compare it against your local filing record so a typo at the "
+"portal, a wrong period, or a stale local value surfaces now instead of "
+"during a later review."
+msgstr ""
+
+#: ../../how-to/reconcile.md:10
+msgid "There are two ways to supply the justificante:"
+msgstr ""
+
+#: ../../how-to/reconcile.md:12
+msgid ""
+"**Pull it from AEAT** with `reconcile pull` - the tool fetches the "
+"receipt from the AEAT sede (read-only), stores an encrypted copy in your "
+"profile, and reconciles in one step."
+msgstr ""
+
+#: ../../how-to/reconcile.md:15
+msgid ""
+"**Use a local PDF** with `reconcile file --file` - you downloaded the "
+"justificante yourself; the check is local and never contacts AEAT."
+msgstr ""
+
+#: ../../how-to/reconcile.md:18
+msgid "Before you start"
+msgstr ""
+
+#: ../../how-to/reconcile.md:20
+msgid "You need:"
+msgstr ""
+
+#: ../../how-to/reconcile.md:22
+msgid "an active profile"
+msgstr ""
+
+#: ../../how-to/reconcile.md:23
+msgid ""
+"a locally filed work unit (you have run `aeat app modelo work file` for "
+"this filing) that was presented at the AEAT portal"
+msgstr ""
+
+#: ../../how-to/reconcile.md:25
+msgid ""
+"for the pull commands: working AEAT authentication - see [Authenticate "
+"with AEAT](authenticate-with-aeat.md)"
+msgstr ""
+
+#: ../../how-to/reconcile.md:27
+msgid "for `reconcile file`: the justificante PDF on disk"
+msgstr ""
+
+#: ../../how-to/reconcile.md:29
+msgid ""
+"To create a profile, see [Set up your taxpayer profile](profile-"
+"setup.md). For the filing workflow, see the [quickstart](quickstart.md). "
+"Every command on this page needs your master-key passphrase; the tool "
+"prompts for it."
+msgstr ""
+
+#: ../../how-to/reconcile.md:33
+msgid "Pull and store the justificante"
+msgstr ""
+
+#: ../../how-to/reconcile.md:35
+msgid ""
+"Keep the receipt with your records: it is the official evidence behind "
+"every filed period. Fetch the justificante for one filed period and store"
+" it in your profile without reconciling yet. This reads from the AEAT "
+"sede, so it is shown as a display frame:"
+msgstr ""
+
+#: ../../how-to/reconcile.md:43
+msgid ""
+"`pull` is live-only: it reads from AEAT (read-only) and needs the "
+"configured authentication session. `--modelo`, `--year`, and `--period` "
+"are all required. When auth is not set up, the pull refuses before "
+"contacting AEAT with a Cl@ve identity message (`La identidad de Cl@ve "
+"Móvil no coincide...`); on a first run the real cause is usually that no "
+"AEAT session is configured yet."
+msgstr ""
+
+#: ../../how-to/reconcile.md:50
+msgid ""
+"The output reports the stored capture: its snapshot id, the expediente it"
+" belongs to, the CSV verification code printed on the receipt, the PDF's "
+"content fingerprint, and when it was captured. The PDF bytes are stored "
+"encrypted inside your profile, so you do not need to keep a separate "
+"downloaded copy. Pulling again for the same modelo, year, and period "
+"stores a fresh capture and marks the earlier one as superseded, so the "
+"latest receipt is always the active one."
+msgstr ""
+
+#: ../../how-to/reconcile.md:58
+msgid ""
+"List every capture stored in the active profile, then inspect one (an "
+"unambiguous prefix of the snapshot id is enough). Both read the stored "
+"captures back through the live justificante surface, so they are shown as"
+" display frames:"
+msgstr ""
+
+#: ../../how-to/reconcile.md:65
+msgid ""
+"The view reports the expediente id, the CSV verification code, the PDF "
+"fingerprint, whether the capture is still active or superseded, and when "
+"it was captured."
+msgstr ""
+
+#: ../../how-to/reconcile.md:69
+msgid "Pull the justificante from AEAT and reconcile"
+msgstr ""
+
+#: ../../how-to/reconcile.md:71
+msgid ""
+"Fetch the receipt for the filing and reconcile in one command. The pull "
+"reads from AEAT, so it is shown as a display frame:"
+msgstr ""
+
+#: ../../how-to/reconcile.md:77
+msgid ""
+"Replace `303`, `2026`, and `1T` with the modelo, year, and period of your"
+" actual filing. You can also name the work unit directly as a positional "
+"argument instead of the `--modelo --year --period` selectors."
+msgstr ""
+
+#: ../../how-to/reconcile.md:81
+msgid ""
+"The pull is read-only at AEAT. The fetched receipt is stored as an "
+"encrypted capture in your profile, so the official evidence stays "
+"available after the command finishes. To list or inspect stored captures "
+"later, see [Pull and store the justificante](#pull-and-store-the-"
+"justificante) above."
+msgstr ""
+
+#: ../../how-to/reconcile.md:86
+msgid "Reconcile against a local PDF instead"
+msgstr ""
+
+#: ../../how-to/reconcile.md:88
+msgid ""
+"If you already downloaded the justificante from the portal, compare your "
+"local filing record against that file. This check is local and never "
+"contacts AEAT, but it needs the real receipt PDF on disk, so it is shown "
+"as a display frame:"
+msgstr ""
+
+#: ../../how-to/reconcile.md:95
+msgid "This check is local. It reads the PDF you supply and never contacts AEAT."
+msgstr ""
+
+#: ../../how-to/reconcile.md:97
+msgid "Read the result"
+msgstr ""
+
+#: ../../how-to/reconcile.md:99
+msgid "Both transports report one of three verdicts:"
+msgstr ""
+
+#: ../../how-to/reconcile.md:101
+msgid "**matches** - the justificante matches the local filing record."
+msgstr ""
+
+#: ../../how-to/reconcile.md:102
+msgid ""
+"**mismatches** - one or more fields differ. The report names each field "
+"and shows the local value next to the value found in the PDF."
+msgstr ""
+
+#: ../../how-to/reconcile.md:104
+msgid ""
+"**evidence_invalid** - the PDF could not be read. Check that the file is "
+"the AEAT justificante and not a different document."
+msgstr ""
+
+#: ../../how-to/reconcile.md:107
+msgid ""
+"Reconciliation compares four header fields only: the modelo code, the "
+"filing year, the period, and the taxpayer identifier (NIF, CIF, DNI, or "
+"NIE). It does not compare box (casilla) values. A `mismatches` verdict "
+"always names one of those four fields, never a box."
+msgstr ""
+
+#: ../../how-to/reconcile.md:112
+msgid "Handle a mismatch"
+msgstr ""
+
+#: ../../how-to/reconcile.md:114
+msgid ""
+"A `mismatches` verdict names the header field that differs and shows your"
+" local value next to the value in the justificante."
+msgstr ""
+
+#: ../../how-to/reconcile.md:117
+msgid ""
+"Confirm the justificante is the correct one for this filing, not a "
+"different period or taxpayer. A wrong receipt is the most common cause."
+msgstr ""
+
+#: ../../how-to/reconcile.md:119
+msgid ""
+"If the modelo, year, or period differs, you either reconciled against the"
+" wrong filing or filed the wrong period at the portal. Re-run "
+"reconciliation with the correct selectors, or check what you submitted."
+msgstr ""
+
+#: ../../how-to/reconcile.md:122
+msgid ""
+"If the taxpayer identifier differs, confirm the active profile matches "
+"the taxpayer the justificante was issued to."
+msgstr ""
+
+#: ../../how-to/reconcile.md:124
+msgid ""
+"If the justificante itself appears wrong, contact your asesor or AEAT "
+"directly."
+msgstr ""
+
+#: ../../how-to/reconcile.md:127
+msgid "If a box value looks wrong"
+msgstr ""
+
+#: ../../how-to/reconcile.md:129
+msgid ""
+"Reconciliation does not compare box (casilla) values, so it cannot tell "
+"you that a computed total differs from what you filed. To correct a box "
+"value, use the amendment workflow rather than reconciliation. Re-check "
+"the inputs and re-calculate. If the period was already filed, file a "
+"complementaria. See [Review and supply calculation inputs](review-"
+"calculation-values.md)."
+msgstr ""
+
+#: ../../how-to/reconcile.md:135
+msgid "What to keep as evidence"
+msgstr ""
+
+#: ../../how-to/reconcile.md:137
+msgid ""
+"The justificante is your proof of what AEAT received. Here is what each "
+"path stores:"
+msgstr ""
+
+#: ../../how-to/reconcile.md:140
+msgid ""
+"`reconcile pull` stores the fetched justificante as an encrypted copy in "
+"your profile."
+msgstr ""
+
+#: ../../how-to/reconcile.md:142
+msgid ""
+"`reconcile file` reads a PDF you supply but does not store it. If you "
+"reconcile against a downloaded PDF, also pull the receipt so an encrypted"
+" copy is kept in your profile. See [Pull and store the justificante"
+"](#pull-and-store-the-justificante)."
+msgstr ""
+
+#: ../../how-to/reconcile.md:145
+msgid ""
+"Reconciliation history is a read-back you can regenerate from the "
+"justificante, so it needs no separate backup."
+msgstr ""
+
+#: ../../how-to/reconcile.md:148
+msgid "Review past reconciliations"
+msgstr ""
+
+#: ../../how-to/reconcile.md:150
+msgid ""
+"Each reconciliation is recorded in the profile's event history. List the "
+"past reconciliations recorded for the active profile:"
+msgstr ""
+
+#: ../../how-to/reconcile.md:157
+msgid ""
+"On a fresh profile the list is empty; after you reconcile a filing a row "
+"appears for each run."
+msgstr ""
+
+#: ../../how-to/reconcile.md:160
+msgid ""
+"Add `--work-unit-id <id>` to narrow the list to a single work unit. Each "
+"row shows when the reconciliation ran, the work unit, the evidence "
+"source, the verdict, and how many fields differed. Reconciliation is "
+"repeatable on demand from the justificante, so this is a convenience "
+"read-back rather than a separate stored record."
+msgstr ""
+
+#: ../../how-to/reconcile.md:166
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/reconcile.md:168
+msgid ""
+"[Import, export, and evidence](../reference/import-export-and-"
+"evidence.md) - understand what the justificante proves and what a "
+"complete audit handoff still requires."
+msgstr ""
+
+#: ../../how-to/reconcile.md:171
+msgid ""
+"[Upload your exported modelo at the AEAT portal](file-at-aeat.md) - the "
+"filing handoff that produces the justificante."
+msgstr ""
+
+#: ../../how-to/reconcile.md:173
+msgid "[Quickstart](quickstart.md) - the end-to-end filing workflow."
+msgstr ""
+
+#: ../../how-to/reconcile.md:174
+msgid ""
+"[Review and supply calculation inputs](review-calculation-values.md) - "
+"amend a filing if reconciliation finds a mismatch."
+msgstr ""
+
+#: ../../how-to/reconcile.md:176
+msgid "[CLI reference](../cli/index.rst) - full option reference."
+msgstr ""
+
+#: ../../how-to/reconcile.md:177
+msgid ""
+"[Diagnose and repair your local setup](troubleshooting.md) - fix local "
+"readiness problems."
+msgstr ""
+

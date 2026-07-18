@@ -1,0 +1,242 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/modelo-036.md:1
+msgid "Record a Modelo 036 declaration you filed at AEAT"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:3
+msgid ""
+"Modelo 036 is the AEAT census declaration - the form you use to register,"
+" update, or deregister your tax situation. You file it yourself at AEAT's"
+" Sede Electrónica (the sede), the official online portal. The commands on"
+" this page only record that fact in your local audit trail afterwards - "
+"they never file anything at AEAT. To keep your registered census facts "
+"current in your profile, see [maintain Modelo 036 census facts in your "
+"profile](censo-update.md)."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:10
+msgid "Before you start"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:12
+msgid "You need:"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:14
+msgid ""
+"An active profile - see [set up your taxpayer profile](profile-setup.md)."
+" The commands below refuse without one (`No hay un perfil activo`)."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:16
+msgid ""
+"Your master-key passphrase. These commands open the encrypted store, so "
+"they prompt for the passphrase."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:18
+msgid "The date you filed the declaration at the sede."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:19
+msgid ""
+"Optional: the justificante - the receipt number the sede shows after you "
+"file."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:21
+msgid "The runtime emits help, prompts, and messages in Spanish."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:23
+msgid "Record the declaration"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:25
+msgid "Pick the command that matches what you filed:"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:27
+msgid "If you registered an activity, record an alta."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:28
+msgid "If you changed registered facts, record a modificacion."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:29
+msgid "If you deregistered, record a baja."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:31
+msgid "Record an alta:"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:37
+msgid ""
+"Record a modificacion (the same record-and-view flow as the alta above, "
+"with a different event kind):"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:43
+msgid "Record a baja:"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:48
+msgid ""
+"`--declared-on` is required - the ISO date (year-month-day) you filed at "
+"the sede. `--sede-justificante` is optional and accepts up to 128 "
+"characters. `--note` adds an optional note for your own records, up to "
+"512 characters."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:52
+msgid "What success looks like"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:54
+msgid "The command prints the saved record:"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:56
+msgid "A `declaration_id` - a long reference number for the record."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:57
+msgid "The event kind - alta, modificacion, or baja."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:58
+msgid "The declared-on date."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:59
+msgid "When the record was saved."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:60
+msgid "The justificante, if you gave one."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:62
+msgid "That printed output is your confirmation. Save it with your records."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:64
+msgid "List and view recorded declarations"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:66
+msgid ""
+"List the declarations you have recorded in the active profile, then open "
+"one by its id (the setup step records the same alta shown above so the "
+"list has a row):"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:73
+msgid ""
+"The list shows each declaration's id, event kind, declared-on date, "
+"recorded-at timestamp, and whether you gave a justificante. An empty list"
+" means you have recorded no declarations yet. The view shows the full "
+"record, including the justificante and your note if you gave them. An id "
+"that matches no recorded declaration is refused."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:78
+msgid "No command edits or deletes a recorded declaration."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:80
+msgid "If you typed something wrong"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:82
+msgid ""
+"Re-running the command with identical values is safe - it records no "
+"additional declaration, and you get the same declaration ID back."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:85
+msgid ""
+"Running the command with a corrected kind, date, or justificante records "
+"an additional declaration. Add a `--note` explaining the correction so "
+"your audit trail stays readable. Changing only `--note` does not create a"
+" new record. No command edits or deletes a recorded declaration."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:90
+msgid "What the record does and does not do"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:92
+msgid ""
+"The record is a local note for your own audit trail. It does not change "
+"your filing calendar, your obligations, or your profile facts."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:95
+msgid ""
+"After AEAT processes your declaration, update the census facts in your "
+"profile by hand to match what you filed - see [maintain Modelo 036 census"
+" facts in your profile](censo-update.md)."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:99
+msgid "Where to get help"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:101
+msgid "If a command fails, see [troubleshooting](troubleshooting.md)."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:102
+#, python-brace-format
+msgid "For unfamiliar terms, see the {doc}`glossary </_generated/glossary>`."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:103
+msgid ""
+"Before sharing command output with anyone, strip tax identifiers such as "
+"NIF, CIF, DNI, NIE, or NII."
+msgstr ""
+
+#: ../../how-to/modelo-036.md:106
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:108
+msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:109
+msgid "[Set up your taxpayer profile](profile-setup.md)"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:110
+msgid "[Check your filing calendar](filing-calendar.md)"
+msgstr ""
+
+#: ../../how-to/modelo-036.md:111
+msgid "[CLI reference](../cli/index.rst)"
+msgstr ""
+

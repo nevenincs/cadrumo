@@ -1,0 +1,122 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../reference/registry-legal-api.md:1
+msgid "Registry, legal sources, and Python API"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:3
+msgid ""
+"The Agencia Estatal de Administración Tributaria (AEAT) owns the official"
+" modelo structure. API means application programming interface."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:6
+msgid "Registry and legal-source lookup"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:8
+msgid ""
+"Cadrumo's calculation registry preserves the AEAT structure it "
+"represents: modelo identifiers, periods, sections, casillas, formulas, "
+"bindings, classifications, and source references remain authority-named. "
+"A resolved calculation revision records the registry revision it used so "
+"later review can identify the exact rule set."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Reference field"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Meaning"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Registry revision"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Exact bundled rule revision used for the calculation"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Formula or binding"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Deterministic route from source values to a casilla"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "`legal_refs`"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Legal provisions grounding a rule or finding"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "`source_refs`"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Official manual or source material supporting the implementation"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid "Evidence provenance"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md
+msgid ""
+"Local record, document, observation, or prior filed revision that "
+"supplied a value"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:22
+#, python-brace-format
+msgid ""
+"Use the generated [application command reference](../cli/app.rst) to look"
+" up registry inspection, modelo description, formula, verification-"
+"report, and audit surfaces. Use the {doc}`glossary "
+"</_generated/glossary>` for taxpayer-facing definitions."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:27
+msgid "Python public API lookup"
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:29
+msgid ""
+"The generated [Cadrumo package API](../api/cadrumo.rst) is the entry "
+"point for Python lookup. Public consumers import from `cadrumo` and its "
+"documented public facades. The generated package tree lists the supported"
+" adapters, application, core, domain, entrypoint, and locale surfaces."
+msgstr ""
+
+#: ../../reference/registry-legal-api.md:34
+msgid ""
+"There is no `aeat` Python import compatibility package. Names containing "
+"`aeat` inside the `cadrumo` package identify the external authority "
+"adapter or authority-owned vocabulary, not a second product API."
+msgstr ""
+

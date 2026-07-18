@@ -1,0 +1,446 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/review-calculation-values.md:1
+msgid "Review and supply calculation inputs"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:3
+msgid ""
+"Use this guide when Cadrumo says a field is missing after a calculation. "
+"Also use it when your form needs a value you enter by hand, such as a "
+"prior-year income figure or a compensation amount from an earlier period."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:7
+msgid "Before you start"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:9
+msgid "You need:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:11
+msgid "A master-key passphrase. Cadrumo prompts for it."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:12
+msgid ""
+"An active profile. Create one with `aeat config profile create` (the "
+"`--quiet` form skips the wizard); see [Set up your profile](profile-"
+"setup.md) for the full options."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:15
+msgid ""
+"A work unit for the filing you want to review. Create it with `aeat app "
+"modelo work create` before any review or calculate command (the review "
+"sequences below open the work unit in their setup steps)."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:19
+msgid "Inspect the modelo before entering values"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:21
+msgid ""
+"Describe the modelo, list its casillas (all of them, then just the "
+"required manual ones), and inspect its formulas with their legal and "
+"source references:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:28
+msgid ""
+"The `casillas` command shows the registry casilla id, printed form "
+"number, input kind, required flag, and label. Use this before providing "
+"any `--casilla` value so you know what the number means."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:32
+msgid "Review a saved calculation"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:34
+msgid ""
+"These commands read a saved calculation, so run a calculation first. On a"
+" fresh work unit with no calculation yet, they refuse with `work unit has"
+" no selectable current_calculation_revision_id`. Run `aeat app modelo "
+"work calculate` (see [Supply manual casilla values](#supply-manual-"
+"casilla-values) below) to produce a saved draft, then come back here."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:40
+msgid ""
+"List the calculation revisions for one filing, show the current "
+"revision's persisted casilla values, then verify the current draft (the "
+"setup steps create and calculate the draft the reads below inspect):"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:48
+msgid ""
+"Verification output reports whether completeness was granted, how many "
+"casillas were resolved, how many required casillas are missing, and the "
+"findings that block verification. Missing required casillas are values "
+"you must resolve before export."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:53
+msgid "Supply manual casilla values"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:55
+msgid ""
+"Use `--casilla` only for a box whose input kind is `manual`. Use the box "
+"number printed on the official Agencia Estatal de Administración "
+"Tributaria (AEAT) form. It is the same number you see on the paper or PDF"
+" version of the modelo. Run `aeat app modelo casillas 130` to see the "
+"list (the inspect sequence above shows this), and check the `input` "
+"column first."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:61
+msgid ""
+"`--casilla` works only on manual boxes. A `bound` box is filled from your"
+" ledger or another source, so `--casilla` refuses it with `cannot "
+"override bucket-derived source-bound casillas` (for example, Modelo 130 "
+"box `02` Gastos is `bound`). Fix the source instead. See [Supply a "
+"missing field value](#supply-a-missing-field-value)."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:66
+msgid ""
+"A first-period filing also needs its prior-period bindings supplied "
+"(record them as `0` when you have no prior figure). Supply the manual box"
+" and the bindings in the same calculate call. This example sets box `06` "
+"(Retenciones e ingresos a cuenta, a manual box) and seeds the three "
+"first-period bindings:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:75
+msgid ""
+"Do not enter a box value without checking the list first. Read the label "
+"so you know which field you are filling."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:78
+msgid "Supply a missing field value"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:80
+msgid ""
+"When Cadrumo cannot fill a field automatically, the missing field appears"
+" in the bindings list. Use the list to see which fields need your input, "
+"then supply the value during calculation."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:84
+msgid ""
+"List every field the modelo binds, focus on the ones with no value yet, "
+"preview what a value would produce without saving, then supply the first-"
+"period bindings during calculation:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:93
+msgid "Where a field's value comes from"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:95
+msgid ""
+"The `bindings list` output shows, for each field, a `source` and a "
+"`readiness` label. The `source` tells you who supplies the value; the "
+"`readiness` label restates that source in plain language (for example, "
+"`ledger source` or `prior filed revision`). Use the `source` to decide "
+"how to supply the value. The `source` is one of:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:101
+msgid ""
+"**Profile fact** - Cadrumo fills it from your taxpayer profile, such as "
+"residence, declaration type, or family composition. Update your profile "
+"instead of entering the value manually."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:104
+msgid ""
+"**Ledger source** - Cadrumo computes it by summing your classified "
+"transactions and invoices. You cannot override these; fix the ledger "
+"instead."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:106
+msgid ""
+"**Prior filed revision** - carried forward from an earlier period you "
+"already filed in Cadrumo."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:108
+msgid ""
+"**Relation** - folded in from another modelo's earlier figures. Supply it"
+" with `--relation KEY=VALUE` only when the modelo's help names the "
+"relation."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:110
+msgid ""
+"**Manual** - this kind always needs you to type a value, with `--binding "
+"KEY=VALUE`, or `--casilla` for a box."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:113
+msgid ""
+"A manual field always needs a value you enter by hand. A **prior filed "
+"revision** field also needs one when there is no earlier filing yet to "
+"carry it forward. See the first-time-filing note below. Profile, ledger, "
+"and relation fields are filled for you; correct those at their source "
+"rather than typing the value."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:118
+msgid ""
+"If you are filing for the first time and a field asks for a prior-period "
+"figure you do not have, record it as zero, for example `--binding <field-"
+"id>=0`. Enter a real prior figure only when you have one prepared outside"
+" Cadrumo."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:122
+msgid "Régimen de atribución de rentas (socios)"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:124
+msgid ""
+"If you are a socio, comunero, or partícipe of an entity in the régimen de"
+" atribución de rentas (a sociedad civil, comunidad de bienes, or herencia"
+" yacente), the entity files its own Modelo 184 in its own Cadrumo "
+"workspace. Your personal Modelo 100 does not read across workspaces, so "
+"enter the attributed base by hand."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:130
+msgid ""
+"Record the received share on your profile as `attribution_received` facts"
+" (entity NIF, entity name, share percentage, attributed base, and filing "
+"year), then fold the attributed base into your Modelo 100 régimen-de-"
+"atribución box with `--binding <box>=<attributed-base>` when you run "
+"`aeat app modelo work calculate`. Cadrumo warns you at verify time when "
+"the two halves disagree (facts recorded but the box left empty, or a box "
+"value with no facts behind it), so a forgotten transcription never files "
+"silently."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:138
+msgid "Handle offsets and carry-forwards"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:140
+msgid ""
+"Some modelos need prior-period values, credits, or compensation amounts. "
+"Do not guess these from the current transaction ledger."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:143
+msgid ""
+"For Modelo 303 IVA compensation, inspect the local wallet, seed a first-"
+"period opening balance, then correct it if you seeded the wrong amount:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:150
+msgid ""
+"Use `--amount 0` only for a true first Modelo 303 period with no previous"
+" IVA compensation balance. Use a positive amount only when you have the "
+"pending compensation amount from earlier Modelo 303 filings prepared "
+"outside this local history."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:155
+msgid ""
+"Seeding refuses if a record already exists for the period. The correction"
+" overwrites the seeded amount and records your `--reason` in an audit "
+"event. It refuses when no record exists for the period (seed it first) "
+"and when an already-filed Modelo 303 has consumed the seeded basis. "
+"Correcting it then would change a return you have already filed. In that "
+"case file a complementaria instead (see [Correct an already filed local "
+"record](#correct-an-already-filed-local-record))."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:161
+msgid ""
+"For registry relation values, calculation accepts repeatable `--relation "
+"KEY=VALUE` inputs. Use them only when the relevant modelo's registry/help"
+" text identifies the relation you need:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:168
+msgid "Add rows for list-based forms (184, 232, 347, 349)"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:170
+msgid ""
+"Some informational modelos report a list of records rather than one set "
+"of boxes: attribution members (Modelo 184), related-party operations "
+"(Modelo 232), declared counterparties (Modelo 347), and intra-community "
+"operators (Modelo 349). Supply each record with a repeatable `--row` "
+"input."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:175
+msgid "Each `--row` starts with the record type, followed by its fields:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:180
+msgid ""
+"Take `<work-unit-id>` from the `work_unit_id` field that `work create` "
+"prints. For these multi-record modelos, pass the work-unit id as the "
+"positional argument rather than the `--modelo / --year / --period` flags "
+"used elsewhere on this page."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:184
+msgid "Use one of these record types:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:186
+msgid "`miembro` - an attribution member (Modelo 184)."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:187
+msgid "`vinculada` - a related-party operation (Modelo 232)."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:188
+msgid "`contraparte` - a declared counterparty (Modelo 347)."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:189
+msgid "`operador` - an intra-community operator (Modelo 349)."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:191
+msgid ""
+"Cadrumo validates each row against the modelo's rules and refuses an "
+"incomplete set:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:194
+msgid "Modelo 184 - the members' `porcentaje` values must sum to 100."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:195
+msgid "Modelo 347 - a counterparty's annual total must exceed 3,005.06 euros."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:196
+msgid ""
+"Modelo 349 - the operator's intra-community NIF must match its country "
+"format."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:198
+msgid ""
+"The saved rows appear in the calculation output as `detail_row` lines. "
+"Check them to confirm what was recorded."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:201
+msgid "Special calculation tools (IRPF comparison and exemptions)"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:203
+msgid ""
+"For specialized calculations, the CLI provides evaluation and comparison "
+"commands:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:205
+msgid ""
+"**Joint vs. individual IRPF comparison (`compare-taxation`)**: Compare "
+"filing jointly as a family unit against filing individually for an active"
+" Modelo 100. Create the Modelo 100 draft first, or the command refuses "
+"with `Ninguna unidad de trabajo activa`:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:217
+msgid ""
+"This check does not save a draft. It shows the tax difference and a "
+"recommendation so you can decide which filing option costs less."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:220
+msgid ""
+"**Maritime worker exemption preview (`preview-maritime-exemption`)**: "
+"Preview the IRPF exemption for maritime workers (Art. 7.p LIRPF or REBECA"
+" 50%):"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:226
+msgid ""
+"The command shows which tax boxes are affected by the exemption and the "
+"amounts, with references to the applicable law. This applies only to "
+"maritime workers. Most filers can skip this section."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:230
+msgid "Correct an already filed local record"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:232
+msgid ""
+"If a filing was already uploaded and later needs correction, use the "
+"amendment command. Do not recalculate the same period. That would not "
+"create the correct complementaria (supplementary return) record:"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:239
+#, python-brace-format
+msgid ""
+"Before using this command, you must have imported the "
+"{term}`justificante` for the filing you are correcting. The amendment "
+"command does not submit anything to AEAT."
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:242
+msgid "Where to go next"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:244
+msgid "[Quickstart: produce a modelo file](quickstart.md)"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:245
+msgid "[The filing workflow](filing-spine.md)"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:246
+msgid "[How to prepare a Modelo 303 quarterly filing](modelo-303.md)"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:247
+msgid "[How to prepare the annual Modelo 390 summary](modelo-390.md)"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:248
+msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
+msgstr ""
+
+#: ../../how-to/review-calculation-values.md:249
+msgid "[CLI reference](../cli/index.rst)"
+msgstr ""
+

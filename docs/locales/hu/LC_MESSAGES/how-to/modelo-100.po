@@ -1,0 +1,211 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/modelo-100.md:1
+msgid "Prepare the annual Modelo 100 Renta declaration"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:3
+msgid ""
+"This page covers the annual Renta filing: creating the Modelo 100 work "
+"unit, letting the year's data flow in, supplying the manual values that "
+"apply to you, and verifying and exporting the declaration. Modelo 100 is "
+"the annual IRPF declaration; the registry's official title is \"Modelo "
+"100. Declaración del Impuesto sobre la Renta de las Personas Físicas.\""
+msgstr ""
+
+#: ../../how-to/modelo-100.md:9
+msgid ""
+"Modelo 100 is the largest form the tool prepares - the 2025 revision "
+"carries over two thousand casillas and two hundred formulas - and it is "
+"the one filing that gathers the whole year: your ledger, your profile "
+"facts, your quarterly instalments, and the withholdings others reported "
+"on your behalf. For how those values arrive and how to trace any figure "
+"to its source, read [How the Renta declaration is "
+"assembled](../explanation/how-renta-is-assembled.md)"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:15
+msgid "this page stays with the commands."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:17
+msgid ""
+"`aeat` does not submit Modelo 100 to AEAT. Export creates a local file "
+"that you upload through the official AEAT channel yourself."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:20
+msgid "Before you create the draft"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:22
+msgid ""
+"**Requirement:** a valid taxpayer profile carrying the Renta-relevant "
+"facts. Create one with `aeat config profile create <name>`. See [Set up "
+"your taxpayer profile](profile-setup.md)."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:26
+msgid ""
+"Modelo 100 is annual: the period token is always `0A`, and the filing "
+"year is the year the income belongs to (the 2025 declaration is filed in "
+"2026). Each filing year resolves to its own registry revision "
+"automatically."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:29
+msgid ""
+"[Set up your taxpayer profile](profile-setup.md) with the Renta-relevant "
+"facts: residence comunidad, marital status, spouse and descendant data, "
+"disability grades. The profile feeds dozens of Modelo 100 bindings, and "
+"an incomplete profile surfaces as missing values later. Manage "
+"descendants with `aeat config profile descendiente add/list/remove`."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:34
+msgid ""
+"Bring the year's ledger to clean and classified - Modelo 100 aggregates "
+"income and deductible expenses across the whole year. See [Import and "
+"manage transactions](import-bank-statements.md) and [Classify "
+"transactions](classify-transactions.md); confirm with:"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:42
+msgid ""
+"File and evidence the year's quarterly instalments first. Modelo 100 "
+"folds in your Modelo 130/131 payments on account and the retenciones "
+"reported on modelos 111, 123, 190, and 193 where they exist. Check what "
+"this declaration expects and what blocks it:"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:51
+msgid ""
+"`dependencies` names each source filing and whether its clean-state "
+"evidence is satisfied; an unfiled or unevidenced quarter blocks the "
+"annual verify. Record or reconcile those filings first - see [Reconcile a"
+" filing](reconcile.md)."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:56
+msgid "Create, calculate, and verify"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:58
+msgid ""
+"The example below follows an employee filer - a Madrid-resident salaried "
+"taxpayer filing an individual 2025 return, with no self-employed "
+"activity, so the Modelo 130/131 and retención-model folds are scoped out "
+"and the annual grants on the employment figures alone. If you also file "
+"quarterly Modelo 130 instalments, they fold in as payments on account - "
+"see [Prepare a Modelo 130 IRPF instalment](modelo-130.md)."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:69
+msgid ""
+"Calculation reads the year's classified ledger, the profile facts, the "
+"prior filings the registry binds in, and any carry-forward from last "
+"year's declaration (negative bases carry via a prior-filing binding), "
+"then runs the registry formulas and saves a draft revision. Here casilla "
+"`0003` carries the 24000 of salary income, casilla `0012` the rendimiento"
+" neto del trabajo, and casilla `0019` the reducción por rendimientos del "
+"trabajo (art. 20 LIRPF) of 2000. The tool never fabricates a missing "
+"prior period: what it does not have on record stays a visible blank for "
+"you to resolve, not a guessed zero."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:78
+msgid ""
+"Most of Modelo 100's casillas are optional manual inputs for situations "
+"the ledger cannot know (employment income details, capital income, "
+"deductions). Find what applies to you and what is still missing:"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:86
+msgid ""
+"Supply a manual casilla and recalculate by passing `--casilla 0003=24000`"
+" on the calculate command, alongside the bindings the declaration still "
+"needs (the main sequence above shows the full form). Recalculating "
+"replaces the current draft revision."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:91
+msgid ""
+"For the full input workflow - bound versus manual casillas, offsets, and "
+"revision selection - see [Review and supply calculation inputs](review-"
+"calculation-values.md). For a spreadsheet review of the assembled "
+"declaration, see [Review calculations with Google Sheets](review-with-"
+"google-sheets.md)."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:97
+msgid "Export and file"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:99
+msgid ""
+"The verify step in the sequence above ran the annual completeness check, "
+"including the cross-period gates: every dependency filing must be filed "
+"and evidenced, and every carried figure must still point at the revision "
+"it was filed under. A blocked report names the dependency in the way - "
+"resolve it and re-run. See [Verify a draft filing](verification-"
+"reports.md)."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:105
+msgid ""
+"Export the verified declaration. The full evidence-to-export chain runs "
+"end to end, executed, on [Prepare a Modelo 303 IVA "
+"filing](modelo-303.md); here the export and the post-portal steps are "
+"shown as display frames, since the filed marker records a portal "
+"submission and the reconcile pull is a live read from AEAT:"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:114
+msgid "See [Reconcile a filing](reconcile.md) for the reconciliation verdicts."
+msgstr ""
+
+#: ../../how-to/modelo-100.md:116
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:118
+msgid ""
+"[How the Renta declaration is assembled](../explanation/how-renta-is-"
+"assembled.md)"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:119
+msgid "[Prepare a Modelo 130 IRPF instalment](modelo-130.md)"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:120
+msgid "[Review and supply calculation inputs](review-calculation-values.md)"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:121
+msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
+msgstr ""
+
+#: ../../how-to/modelo-100.md:122
+msgid "[Reconcile a filing](reconcile.md)"
+msgstr ""
+

@@ -1,0 +1,186 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/modelo-349.md:1
+msgid "Prepare a Modelo 349 recapitulative declaration"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:3
+msgid ""
+"This page covers the Modelo 349 filing: recording the intra-community "
+"operations it lists, checking your counterparties' EU VAT numbers, and "
+"running the create-calculate-verify-export chain. Modelo 349 is the "
+"informative recapitulative declaration of intra-community operations; the"
+" registry's official title is \"Modelo 349. Declaración Informativa. "
+"Declaración recapitulativa de operaciones intracomunitarias.\""
+msgstr ""
+
+#: ../../how-to/modelo-349.md:10
+msgid ""
+"Modelo 349 declares no cuota: it is a pure listing. The declaration "
+"carries one summary block (how many intra-community operators you dealt "
+"with and for what amounts) and one detail row per operator - country "
+"code, EU VAT number, name, operation key, and base - plus rectification "
+"rows when you correct a previously declared period."
+msgstr ""
+
+#: ../../how-to/modelo-349.md:16
+msgid ""
+"`aeat` does not submit Modelo 349 to AEAT. Export creates a local file "
+"that you upload through the official AEAT channel yourself."
+msgstr ""
+
+#: ../../how-to/modelo-349.md:19
+msgid "Before you create the draft"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:21
+msgid ""
+"**Requirement:** a valid taxpayer profile with intra-community (ROI) "
+"activity, and the intra-community invoice records the declaration lists. "
+"Create a profile with `aeat config profile create <name>`. See [Set up "
+"your taxpayer profile](profile-setup.md)."
+msgstr ""
+
+#: ../../how-to/modelo-349.md:26
+msgid ""
+"Check applicability and cadence. Modelo 349 is quarterly (`1T`-`4T`) or "
+"monthly (`01`-`12`) depending on your profile and operation volumes; the "
+"calendar surfaces which applies to you:"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:33
+msgid ""
+"Record the operations as invoice records, not bare ledger rows. The 349 "
+"listing is built from your invoice catalogue: issued invoices to EU "
+"operators feed the entregas side, received invoices from EU suppliers "
+"feed the adquisiciones side. Each invoice needs its counterparty's "
+"country and EU VAT number. See [Manage invoices](manage-invoices.md) and "
+"[Attach invoices and receipts](ledger-evidence.md)."
+msgstr ""
+
+#: ../../how-to/modelo-349.md:39
+msgid ""
+"Verify each counterparty's EU VAT number against the VIES register before"
+" relying on it with `aeat app live verify nif-iva ESB12345678`. An "
+"invalid or unregistered number is the most common 349 correction later; "
+"checking now is cheaper. This is a live read-only command - see [Check "
+"AEAT notifications and live observations](check-aeat-notifications.md)."
+msgstr ""
+
+#: ../../how-to/modelo-349.md:45
+msgid "Create, calculate, and verify"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:47
+msgid ""
+"The preparation below records two intra-community issued invoices - a "
+"goods supply to a German customer and a service to a French one - then "
+"creates the draft, aggregates the invoices into the declaration, and "
+"verifies it:"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:55
+msgid ""
+"Calculation aggregates the period's invoice records into the summary "
+"casillas and builds the per-operator detail rows. With the two invoices "
+"above, the summary reports two intra-community operators (`decl.numero-"
+"operadores`) for a total of 8000 euros of operations (`decl.importe-"
+"operaciones`), and verify grants verified-complete. Inspect what was "
+"bound and what is missing, then show the built rows:"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:66
+msgid ""
+"The per-operator row fields (country code, EU VAT number, name, operation"
+" key, base) come from the invoice records; a missing counterparty fact on"
+" an invoice surfaces here as a missing row value. Fix the invoice record "
+"rather than forcing a manual value - the listing must match your invoice "
+"evidence."
+msgstr ""
+
+#: ../../how-to/modelo-349.md:71
+msgid "Rectify an earlier period"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:73
+msgid ""
+"When an already-declared operation changes (a corrected invoice, a credit"
+" note), the later 349 declares the rectification: the rectification rows "
+"name the rectified year and period, the corrected base, and the base "
+"previously declared. Record the correction on the invoice record for the "
+"original operation; the rectification rows aggregate from there."
+msgstr ""
+
+#: ../../how-to/modelo-349.md:79
+msgid "Export and file"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:81
+msgid "Export the verified declaration:"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:87
+msgid ""
+"After you file at the portal, record the local marker, then [reconcile "
+"against the justificante](reconcile.md). The marker records a filing you "
+"have already presented at the portal, so it is shown as a display frame:"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:94
+msgid ""
+"The marker is optional and only applies while the obligation window is "
+"open; export is the local finish line."
+msgstr ""
+
+#: ../../how-to/modelo-349.md:97
+msgid ""
+"Modelo 349 runs alongside your periodic Modelo 303: the same intra-"
+"community operations that appear here also feed the 303's intra-community"
+" boxes. Keep the two consistent by fixing the underlying invoice and "
+"ledger records, not the declarations. See [Prepare a Modelo 303 IVA "
+"filing](modelo-303.md)."
+msgstr ""
+
+#: ../../how-to/modelo-349.md:102
+msgid "Next steps"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:104
+msgid "[Manage invoices](manage-invoices.md)"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:105
+msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:106
+msgid "[Plan your filing calendar](filing-calendar.md)"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:107
+msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
+msgstr ""
+
+#: ../../how-to/modelo-349.md:108
+msgid "[Reconcile a filing](reconcile.md)"
+msgstr ""
+
