@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/modelo-349.md:1
 msgid "Prepare a Modelo 349 recapitulative declaration"
-msgstr "Prepare una declaración recapitulativa con el Modelo 349"
+msgstr "Prepara una declaración recapitulativa con el Modelo 349"
 
 #: ../../how-to/modelo-349.md:3
 msgid ""
@@ -60,7 +60,7 @@ msgid ""
 "that you upload through the official AEAT channel yourself."
 msgstr ""
 "`aeat` no presenta el Modelo 349 ante la AEAT. La exportación crea un "
-"fichero local que usted mismo sube por el canal oficial de la AEAT."
+"fichero local que tú mismo subes por el canal oficial de la AEAT."
 
 #: ../../how-to/modelo-349.md:19
 msgid "Before you create the draft"
@@ -75,8 +75,8 @@ msgid ""
 msgstr ""
 "**Requisito:** un perfil de contribuyente válido con actividad "
 "intracomunitaria (ROI), y los registros de factura intracomunitaria que "
-"la declaración enumera. Cree un perfil con `aeat config profile create "
-"<name>`. Consulte [Configure su perfil de contribuyente](profile-"
+"la declaración enumera. Crea un perfil con `aeat config profile create "
+"<name>`. Consulta [Configura tu perfil de contribuyente](profile-"
 "setup.md)."
 
 #: ../../how-to/modelo-349.md:26
@@ -85,8 +85,8 @@ msgid ""
 "monthly (`01`-`12`) depending on your profile and operation volumes; the "
 "calendar surfaces which applies to you:"
 msgstr ""
-"Compruebe la aplicabilidad y la periodicidad. El Modelo 349 es trimestral"
-" (`1T`-`4T`) o mensual (`01`-`12`) según su perfil y su volumen de "
+"Comprueba la aplicabilidad y la periodicidad. El Modelo 349 es trimestral"
+" (`1T`-`4T`) o mensual (`01`-`12`) según tu perfil y su volumen de "
 "operaciones; el calendario muestra cuál le corresponde:"
 
 #: ../../how-to/modelo-349.md:33
@@ -98,13 +98,13 @@ msgid ""
 "country and EU VAT number. See [Manage invoices](manage-invoices.md) and "
 "[Attach invoices and receipts](ledger-evidence.md)."
 msgstr ""
-"Registre las operaciones como registros de factura, no como simples filas"
+"Registra las operaciones como registros de factura, no como simples filas"
 " del ledger. La relación del 349 se construye a partir de su catálogo de "
 "facturas: las facturas emitidas a operadores de la UE alimentan el lado "
 "de las entregas, y las facturas recibidas de proveedores de la UE "
 "alimentan el lado de las adquisiciones. Cada factura necesita el país y "
-"el número de IVA europeo de su contraparte. Consulte [Gestione las "
-"facturas](manage-invoices.md) y [Adjunte facturas y recibos](ledger-"
+"el número de IVA europeo de su contraparte. Consulta [Gestiona las "
+"facturas](manage-invoices.md) y [Adjunta facturas y recibos](ledger-"
 "evidence.md)."
 
 #: ../../how-to/modelo-349.md:39
@@ -115,16 +115,16 @@ msgid ""
 "checking now is cheaper. This is a live read-only command - see [Check "
 "AEAT notifications and live observations](check-aeat-notifications.md)."
 msgstr ""
-"Verifique el número de IVA europeo de cada contraparte en el registro "
+"Verifica el número de IVA europeo de cada contraparte en el registro "
 "VIES antes de fiarse de él con `aeat app live verify nif-iva "
 "ESB12345678`. Un número no válido o no registrado es la corrección más "
 "frecuente del 349 más adelante; comprobarlo ahora sale más barato. Este "
-"es un comando en vivo de solo lectura; consulte [Consulte notificaciones "
+"es un comando en vivo de solo lectura; consulta [Consulta notificaciones "
 "de la AEAT y observaciones en vivo](check-aeat-notifications.md)."
 
 #: ../../how-to/modelo-349.md:45
 msgid "Create, calculate, and verify"
-msgstr "Cree, calcule y verifique"
+msgstr "Crea, calcula y verifica"
 
 #: ../../how-to/modelo-349.md:47
 msgid ""
@@ -152,7 +152,7 @@ msgstr ""
 "facturas anteriores, el resumen informa de dos operadores "
 "intracomunitarios (`decl.numero-operadores`) por un total de 8000 euros "
 "de operaciones (`decl.importe-operaciones`), y la verificación otorga el "
-"estado verificado-completo. Inspeccione qué se vinculó y qué falta, y "
+"estado verificado-completo. Inspecciona qué se vinculó y qué falta, y "
 "muestre después las filas construidas:"
 
 #: ../../how-to/modelo-349.md:66
@@ -166,13 +166,13 @@ msgstr ""
 "Los campos de la fila por operador (código de país, número de IVA "
 "europeo, nombre, clave de operación, base) proceden de los registros de "
 "factura; un dato de contraparte que falte en una factura aflora aquí como"
-" un valor de fila que falta. Corrija el registro de factura en lugar de "
+" un valor de fila que falta. Corrige el registro de factura en lugar de "
 "forzar un valor manual: la relación debe coincidir con la evidencia de "
 "sus facturas."
 
 #: ../../how-to/modelo-349.md:71
 msgid "Rectify an earlier period"
-msgstr "Rectifique un periodo anterior"
+msgstr "Rectifica un periodo anterior"
 
 #: ../../how-to/modelo-349.md:73
 msgid ""
@@ -185,17 +185,17 @@ msgstr ""
 "Cuando cambia una operación ya declarada (una factura corregida, un "
 "abono), el 349 posterior declara la rectificación: las filas de "
 "rectificación nombran el año y el periodo rectificados, la base corregida"
-" y la base declarada previamente. Registre la corrección en el registro "
+" y la base declarada previamente. Registra la corrección en el registro "
 "de factura de la operación original; las filas de rectificación se "
 "agregan a partir de ahí."
 
 #: ../../how-to/modelo-349.md:79
 msgid "Export and file"
-msgstr "Exporte y presente"
+msgstr "Exporta y presenta"
 
 #: ../../how-to/modelo-349.md:81
 msgid "Export the verified declaration:"
-msgstr "Exporte la declaración verificada:"
+msgstr "Exporta la declaración verificada:"
 
 #: ../../how-to/modelo-349.md:87
 msgid ""
@@ -203,10 +203,10 @@ msgid ""
 "against the justificante](reconcile.md). The marker records a filing you "
 "have already presented at the portal, so it is shown as a display frame:"
 msgstr ""
-"Después de presentar en el portal, registre el marcador local y luego "
-"[concilie con el justificante](reconcile.md). El marcador registra una "
-"presentación que usted ya ha presentado en el portal, por lo que se "
-"muestra como un marco ilustrativo:"
+"Después de presentar en el portal, registra el marcador local y luego "
+"[concilia con el justificante](reconcile.md). El marcador registra una "
+"presentación que ya has presentado en el portal, por lo que se muestra "
+"como un marco ilustrativo:"
 
 #: ../../how-to/modelo-349.md:94
 msgid ""
@@ -226,9 +226,9 @@ msgid ""
 msgstr ""
 "El Modelo 349 se ejecuta junto con su Modelo 303 periódico: las mismas "
 "operaciones intracomunitarias que aparecen aquí también alimentan las "
-"casillas intracomunitarias del 303. Mantenga ambos coherentes corrigiendo"
+"casillas intracomunitarias del 303. Mantén ambos coherentes corrigiendo"
 " los registros de factura y de ledger subyacentes, no las declaraciones. "
-"Consulte [Prepare una presentación de IVA con el Modelo "
+"Consulta [Prepara una presentación de IVA con el Modelo "
 "303](modelo-303.md)."
 
 #: ../../how-to/modelo-349.md:102
@@ -237,21 +237,21 @@ msgstr "Pasos siguientes"
 
 #: ../../how-to/modelo-349.md:104
 msgid "[Manage invoices](manage-invoices.md)"
-msgstr "[Gestione las facturas](manage-invoices.md)"
+msgstr "[Gestiona las facturas](manage-invoices.md)"
 
 #: ../../how-to/modelo-349.md:105
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
-msgstr "[Prepare una presentación de IVA con el Modelo 303](modelo-303.md)"
+msgstr "[Prepara una presentación de IVA con el Modelo 303](modelo-303.md)"
 
 #: ../../how-to/modelo-349.md:106
 msgid "[Plan your filing calendar](filing-calendar.md)"
-msgstr "[Planifique su calendario de presentaciones](filing-calendar.md)"
+msgstr "[Planifica tu calendario de presentaciones](filing-calendar.md)"
 
 #: ../../how-to/modelo-349.md:107
 msgid "[Upload your exported modelo at the AEAT portal](file-at-aeat.md)"
-msgstr "[Suba su modelo exportado en el portal de la AEAT](file-at-aeat.md)"
+msgstr "[Sube tu modelo exportado en el portal de la AEAT](file-at-aeat.md)"
 
 #: ../../how-to/modelo-349.md:108
 msgid "[Reconcile a filing](reconcile.md)"
-msgstr "[Concilie una presentación](reconcile.md)"
+msgstr "[Concilia una presentación](reconcile.md)"
 

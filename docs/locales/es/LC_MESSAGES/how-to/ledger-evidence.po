@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/ledger-evidence.md:1
 msgid "Attach invoices and receipts to ledger transactions"
-msgstr "Adjunte facturas y recibos a los movimientos del ledger"
+msgstr "Adjunta facturas y recibos a los movimientos del ledger"
 
 #: ../../how-to/ledger-evidence.md:3
 msgid ""
@@ -30,11 +30,11 @@ msgid ""
 "encrypted local custody. Google Drive pull commands reach your authorized"
 " account before storing the downloaded bytes locally."
 msgstr ""
-"Guarde un registro de evidencia por cada factura o recibo y vincúlelo al "
+"Guarda un registro de evidencia por cada factura o recibo y vincúlalo al "
 "movimiento que respalda. Así, las comprobaciones, las exportaciones y las"
 " revisiones de fin de año pueden apuntar al documento que hay detrás de "
 "cada cifra. La evidencia guardada permanece bajo custodia local cifrada. "
-"Los comandos de descarga desde Google Drive acceden a su cuenta "
+"Los comandos de descarga desde Google Drive acceden a tu cuenta "
 "autorizada antes de guardar localmente los bytes descargados."
 
 #: ../../how-to/ledger-evidence.md:5
@@ -53,7 +53,7 @@ msgid ""
 msgstr ""
 "Un perfil de contribuyente activo. La evidencia se guarda bajo el perfil "
 "activo; si no hay ninguno definido, el comando se niega a continuar. "
-"Consulte [Configure su perfil de contribuyente](profile-setup.md)."
+"Consulta [Configura tu perfil de contribuyente](profile-setup.md)."
 
 #: ../../how-to/ledger-evidence.md:10
 msgid ""
@@ -68,8 +68,8 @@ msgid ""
 "Transactions in your ledger. If your ledger is empty, see [Import and "
 "manage transactions](import-bank-statements.md) first."
 msgstr ""
-"Movimientos en su ledger. Si su ledger está vacío, consulte primero "
-"[Importe y gestione los movimientos](import-bank-statements.md)."
+"Movimientos en tu ledger. Si tu ledger está vacío, consulta primero "
+"[Importa y gestiona los movimientos](import-bank-statements.md)."
 
 #: ../../how-to/ledger-evidence.md:12
 msgid ""
@@ -79,14 +79,14 @@ msgid ""
 "original file is never needed again after `add`."
 msgstr ""
 "La factura o el recibo como fichero PDF o de imagen. Cadrumo copia los "
-"bytes del fichero al almacenamiento cifrado junto con los datos que usted"
-" escribe, más una huella de contenido y la ubicación original como "
+"bytes del fichero al almacenamiento cifrado junto con los datos que "
+"escribes, más una huella de contenido y la ubicación original como "
 "procedencia. Su fichero original ya no vuelve a necesitarse después de "
 "`add`."
 
 #: ../../how-to/ledger-evidence.md:14
 msgid "Add an evidence record"
-msgstr "Añada un registro de evidencia"
+msgstr "Añade un registro de evidencia"
 
 #: ../../how-to/ledger-evidence.md:16
 msgid ""
@@ -94,7 +94,7 @@ msgid ""
 " file path is the only required part; every metadata flag is optional. "
 "`--iva-rate 21` means 21 %:"
 msgstr ""
-"Registre el fichero de la factura y sus detalles, y consulte después el "
+"Registra el fichero de la factura y sus detalles, y consulta después el "
 "registro guardado. La ruta del fichero es la única parte obligatoria; "
 "todas las opciones de metadatos son opcionales. `--iva-rate 21` significa"
 " 21 %:"
@@ -104,20 +104,20 @@ msgid ""
 "The command prints the evidence ID. Note the full ID down - later "
 "commands need it. Add what you know now; update the rest later."
 msgstr ""
-"El comando imprime el ID de la evidencia. Anote el ID completo: los "
-"comandos posteriores lo necesitan. Añada lo que sepa ahora; complete el "
+"El comando imprime el ID de la evidencia. Anota el ID completo: los "
+"comandos posteriores lo necesitan. Añade lo que sepa ahora; completa el "
 "resto más tarde."
 
 #: ../../how-to/ledger-evidence.md:26
 msgid "Link an evidence record to a transaction"
-msgstr "Vincule un registro de evidencia a un movimiento"
+msgstr "Vincula un registro de evidencia a un movimiento"
 
 #: ../../how-to/ledger-evidence.md:28
 msgid ""
 "Attach the evidence record to the transaction it supports. The sequence "
 "records an evidence file and an expense, then attaches one to the other:"
 msgstr ""
-"Adjunte el registro de evidencia al movimiento que respalda. La secuencia"
+"Adjunta el registro de evidencia al movimiento que respalda. La secuencia"
 " registra un fichero de evidencia y un gasto, y luego adjunta uno al "
 "otro:"
 
@@ -164,7 +164,7 @@ msgstr ""
 
 #: ../../how-to/ledger-evidence.md:41
 msgid "Pull a document from Google Drive instead"
-msgstr "Descargue un documento desde Google Drive"
+msgstr "Descarga un documento desde Google Drive"
 
 #: ../../how-to/ledger-evidence.md:43
 msgid ""
@@ -172,9 +172,9 @@ msgid ""
 "evidence storage. This command reaches Google Drive, so it runs against "
 "your own authorized account rather than in the documentation sandbox:"
 msgstr ""
-"Cuando el documento reside en Google Drive, descárguelo directamente al "
+"Cuando el documento reside en Google Drive, descárgalo directamente al "
 "almacenamiento cifrado de evidencia. Este comando accede a Google Drive, "
-"por lo que se ejecuta contra su propia cuenta autorizada en lugar de en "
+"por lo que se ejecuta contra tu propia cuenta autorizada en lugar de en "
 "el entorno de pruebas de la documentación:"
 
 #: ../../how-to/ledger-evidence.md:48
@@ -190,13 +190,13 @@ msgstr ""
 "con el movimiento y conserva el enlace original como procedencia. La "
 "evidencia siempre lleva el documento en sí, nunca un simple enlace: los "
 "enlaces de Gmail, las URL arbitrarias y los ficheros de Drive fuera del "
-"ámbito concedido se rechazan. Ante una fuente rechazada, descargue usted "
-"mismo el documento y adjúntelo con `aeat app ledger evidence add` o `aeat"
-" app ledger attach --attachment-id`."
+"ámbito concedido se rechazan. Ante una fuente rechazada, descarga tú "
+"mismo el documento y adjúntalo con `aeat app ledger evidence add` o `aeat "
+"app ledger attach --attachment-id`."
 
 #: ../../how-to/ledger-evidence.md:50
 msgid "Bulk-fetch every invoice in a Drive folder"
-msgstr "Descargue en bloque todas las facturas de una carpeta de Drive"
+msgstr "Descarga en bloque todas las facturas de una carpeta de Drive"
 
 #: ../../how-to/ledger-evidence.md:52
 msgid ""
@@ -204,9 +204,9 @@ msgid ""
 " one document at a time. Like `doclink`, this command reaches Google "
 "Drive and runs against your own authorized account:"
 msgstr ""
-"Descargue de una vez todas las facturas en PDF e imagen de una carpeta de"
+"Descarga de una vez todas las facturas en PDF e imagen de una carpeta de"
 " Drive, en lugar de documento a documento. Al igual que `doclink`, este "
-"comando accede a Google Drive y se ejecuta contra su propia cuenta "
+"comando accede a Google Drive y se ejecuta contra tu propia cuenta "
 "autorizada:"
 
 #: ../../how-to/ledger-evidence.md:57
@@ -218,7 +218,7 @@ msgid ""
 msgstr ""
 "El comando lista el contenido de la carpeta, descarga cada PDF o imagen y"
 " guarda cada fichero como evidencia cifrada. Los ficheros descargados aún"
-" no quedan vinculados a un movimiento; vincule cada uno después con `aeat"
+" no quedan vinculados a un movimiento; vincula cada uno después con `aeat"
 " app ledger attach --attachment-id <attachment-id>`."
 
 #: ../../how-to/ledger-evidence.md:59
@@ -229,10 +229,10 @@ msgid ""
 "download it yourself and attach it with `aeat app ledger attach "
 "--attachment-id`."
 msgstr ""
-"Vuelva a ejecutar el mismo comando cuando quiera. Un fichero ya "
+"Vuelve a ejecutar el mismo comando cuando quiera. Un fichero ya "
 "descargado se reconoce por su contenido y no se guarda dos veces. Un "
 "fichero fuera del ámbito concedido de Drive se rechaza individualmente y "
-"no detiene el resto del barrido; descárguelo usted mismo y adjúntelo con "
+"no detiene el resto del barrido; descárgalo tú mismo y adjúntalo con "
 "`aeat app ledger attach --attachment-id`."
 
 #: ../../how-to/ledger-evidence.md:61
@@ -253,16 +253,16 @@ msgid ""
 "store as evidence and link to transactions."
 msgstr ""
 "Un *registro* de factura —quién debe a quién, por qué importe— no es un "
-"documento guardado. [Gestione las facturas de su negocio](manage-"
-"invoices.md) es donde se llevan los registros de factura: registrar las "
-"facturas emitidas y recibidas, el catálogo de conciliación y la "
-"vinculación de una factura del catálogo con el movimiento que la salda. "
-"Esta página trata de los documentos —PDF e imágenes— que usted guarda "
+"documento guardado. [Gestiona las facturas de tu "
+"negocio](manage-invoices.md) es donde se llevan los registros de factura: "
+"registrar las facturas emitidas y recibidas, el catálogo de conciliación "
+"y la vinculación de una factura del catálogo con el movimiento que la "
+"salda. Esta página trata de los documentos —PDF e imágenes— que guardas "
 "como evidencia y vincula a los movimientos."
 
 #: ../../how-to/ledger-evidence.md:72
 msgid "List, view, update, and remove evidence records"
-msgstr "Liste, consulte, actualice y elimine registros de evidencia"
+msgstr "Lista, consulta, actualiza y elimina registros de evidencia"
 
 #: ../../how-to/ledger-evidence.md:74
 msgid ""
@@ -270,15 +270,15 @@ msgid ""
 "remove one you no longer need. The sequence records an evidence file, "
 "lists and inspects it, changes the supplier, and confirms the change:"
 msgstr ""
-"Liste todos los registros guardados, consulte uno en detalle, actualice "
-"sus datos y elimine el que ya no necesite. La secuencia registra un "
+"Lista todos los registros guardados, consulta uno en detalle, actualiza "
+"tus datos y elimina el que ya no necesite. La secuencia registra un "
 "fichero de evidencia, lo lista e inspecciona, cambia el proveedor y "
 "confirma el cambio:"
 
 #: ../../how-to/ledger-evidence.md:82
 msgid "Remove an evidence record you no longer need, addressing it by id:"
 msgstr ""
-"Elimine un registro de evidencia que ya no necesite, indicándolo por su "
+"Elimina un registro de evidencia que ya no necesite, indicándolo por su "
 "id:"
 
 #: ../../how-to/ledger-evidence.md:87
@@ -288,8 +288,8 @@ msgid ""
 "ledger-entries.md)."
 msgstr ""
 "La eliminación se aplica a los registros de evidencia, no a los "
-"movimientos. Para corregir una fila de movimiento en sí, consulte "
-"[Corrija errores en su ledger](correct-ledger-entries.md)."
+"movimientos. Para corregir una fila de movimiento en sí, consulta "
+"[Corrige errores en tu ledger](correct-ledger-entries.md)."
 
 #: ../../how-to/ledger-evidence.md:89
 msgid "After you correct a row"
@@ -301,8 +301,8 @@ msgid ""
 "evidence where needed. [Correct mistakes in your ledger](correct-ledger-"
 "entries.md) covers row changes."
 msgstr ""
-"Si fusiona o divide movimientos, revise las filas nuevas y vuelva a "
-"adjuntar la evidencia donde sea necesario. [Corrija errores en su ledger"
+"Si fusiona o divide movimientos, revisa las filas nuevas y vuelve a "
+"adjuntar la evidencia donde sea necesario. [Corrige errores en tu ledger"
 "](correct-ledger-entries.md) trata los cambios de fila."
 
 #: ../../how-to/ledger-evidence.md:93
@@ -325,7 +325,7 @@ msgid ""
 "evidence.md) for the difference between linked ledger evidence, an AEAT "
 "upload file, official filing proof, and an audit bundle."
 msgstr ""
-"Lea [Importación, exportación y evidencia](../reference/import-export-"
+"Lee [Importación, exportación y evidencia](../reference/import-export-"
 "and-evidence.md) para conocer la diferencia entre la evidencia del ledger"
 " vinculada, un fichero de subida a la AEAT, la prueba oficial de "
 "presentación y un paquete de auditoría."
@@ -337,14 +337,14 @@ msgstr "Dónde obtener ayuda"
 #: ../../how-to/ledger-evidence.md:103
 msgid "If a command fails or refuses, see [Troubleshooting](troubleshooting.md)."
 msgstr ""
-"Si un comando falla o se niega a continuar, consulte [Resolución de "
+"Si un comando falla o se niega a continuar, consulta [Resolución de "
 "problemas](troubleshooting.md)."
 
 #: ../../how-to/ledger-evidence.md:104
 #, python-brace-format
 msgid "If a term is unfamiliar, see the {doc}`Glossary </_generated/glossary>`."
 msgstr ""
-"Si algún término le resulta desconocido, consulte el {doc}`Glosario "
+"Si algún término le resulta desconocido, consulta el {doc}`Glosario "
 "</_generated/glossary>`."
 
 #: ../../how-to/ledger-evidence.md:105
@@ -352,7 +352,7 @@ msgid ""
 "Before sharing command output with anyone, strip tax identifiers such as "
 "your NIF, CIF, DNI, NIE, or NII."
 msgstr ""
-"Antes de compartir la salida de un comando con nadie, elimine los "
+"Antes de compartir la salida de un comando con nadie, elimina los "
 "identificadores fiscales como su NIF, CIF, DNI, NIE o NII."
 
 #: ../../how-to/ledger-evidence.md:107
@@ -374,15 +374,15 @@ msgid ""
 "[Import and manage transactions](import-bank-statements.md) - bring more "
 "transactions into the ledger."
 msgstr ""
-"[Importe y gestione los movimientos](import-bank-statements.md): "
-"incorpore más movimientos al ledger."
+"[Importa y gestiona los movimientos](import-bank-statements.md): "
+"incorpora más movimientos al ledger."
 
 #: ../../how-to/ledger-evidence.md:111
 msgid ""
 "[Correct mistakes in your ledger](correct-ledger-entries.md) - fix "
 "mistakes in transaction rows."
 msgstr ""
-"[Corrija errores en su ledger](correct-ledger-entries.md): corrija "
+"[Corrige errores en tu ledger](correct-ledger-entries.md): corrige "
 "errores en las filas de movimiento."
 
 #: ../../how-to/ledger-evidence.md:112
@@ -390,8 +390,8 @@ msgid ""
 "[Classify transactions](classify-transactions.md) - assign tax categories"
 " to your transactions."
 msgstr ""
-"[Clasifique los movimientos](classify-transactions.md): asigne categorías"
-" fiscales a sus movimientos."
+"[Clasifica los movimientos](classify-transactions.md): asigna categorías"
+" fiscales a tus movimientos."
 
 #: ../../how-to/ledger-evidence.md:113
 msgid "[CLI reference](../cli/index.rst) - the full command surface."

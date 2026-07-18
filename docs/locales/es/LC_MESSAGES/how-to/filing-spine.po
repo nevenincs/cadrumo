@@ -274,7 +274,7 @@ msgid ""
 " `calculate` creates and which is separate from the work-unit-id."
 msgstr ""
 "Una revisión de cálculo es un resultado de cálculo guardado dentro de una "
-"unidad de trabajo. Tiene su propio número de referencia, el calculation-"
+"unidad de trabajo. Tiene tu propio número de referencia, el calculation-"
 "revision-id, que crea `calculate` y que es distinto del work-unit-id."
 
 #: ../../how-to/filing-spine.md:122
@@ -600,7 +600,7 @@ msgid ""
 "its justificante."
 msgstr ""
 "[Conciliar una presentación](reconcile.md): cómo comparar un modelo "
-"presentado con su justificante."
+"presentado con tu justificante."
 
 #: ../../how-to/filing-spine.md:260
 msgid "[Command reference](../cli/index.rst) - exact flags and selector options."

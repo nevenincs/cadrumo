@@ -30,9 +30,9 @@ msgid ""
 "records to a tax form you file yourself - and points you to the right "
 "guide at each stage."
 msgstr ""
-"¿Nuevo en Cadrumo? Esta guía traza todo el recorrido —de sus registros "
-"bancarios a un formulario tributario que presenta usted mismo— y le "
-"remite a la guía adecuada en cada etapa."
+"¿Nuevo en Cadrumo? Esta guía traza todo el recorrido —de tus registros "
+"bancarios a un formulario tributario que presentas tú mismo— y te remite "
+"a la guía adecuada en cada etapa."
 
 #: ../../how-to/onboarding.md:6
 msgid ""
@@ -44,12 +44,12 @@ msgid ""
 "it builds the filing, you file it."
 msgstr ""
 "Cadrumo prepara, comprueba y exporta los formularios tributarios "
-"españoles como ficheros locales en su propia máquina. Nunca envía nada a "
-"la Agencia Estatal de Administración Tributaria (AEAT). Usted revisa cada"
-" resultado y sube usted mismo el fichero final por el portal oficial de "
-"la AEAT, firmado con sus propias credenciales. Todo lo que hace la "
+"españoles como ficheros locales en tu propia máquina. Nunca envía nada a "
+"la Agencia Estatal de Administración Tributaria (AEAT). Revisas cada "
+"resultado y subes tú mismo el fichero final por el portal oficial de la "
+"AEAT, firmado con tus propias credenciales. Todo lo que hace la "
 "herramienta es local y con control humano: ella construye la "
-"presentación, usted la presenta."
+"presentación, tú la presentas."
 
 #: ../../how-to/onboarding.md:12
 msgid ""
@@ -59,7 +59,7 @@ msgid ""
 "where the commands live."
 msgstr ""
 "¿Prefiere el recorrido de comandos más corto y concreto en lugar del "
-"mapa? Siga la [Guía rápida](quickstart.md), que ejecuta un ejemplo "
+"mapa? Sigue la [Guía rápida](quickstart.md), que ejecuta un ejemplo "
 "completo de principio a fin. Esta página es la orientación; la Guía "
 "rápida y las guías enlazadas son donde están los comandos."
 
@@ -73,15 +73,15 @@ msgstr "Una primera presentación pasa por seis etapas:"
 
 #: ../../how-to/onboarding.md:21
 msgid "Set up your taxpayer profile."
-msgstr "Configure su perfil de contribuyente."
+msgstr "Configura tu perfil de contribuyente."
 
 #: ../../how-to/onboarding.md:22
 msgid "Bring in your transactions."
-msgstr "Incorpore sus movimientos."
+msgstr "Incorpora tus movimientos."
 
 #: ../../how-to/onboarding.md:23
 msgid "Classify each transaction."
-msgstr "Clasifique cada movimiento."
+msgstr "Clasifica cada movimiento."
 
 #: ../../how-to/onboarding.md:24
 msgid "Find out which modelos apply to you."
@@ -89,11 +89,11 @@ msgstr "Averigüe qué modelos le corresponden."
 
 #: ../../how-to/onboarding.md:25
 msgid "Check readiness, calculate, and verify."
-msgstr "Compruebe la preparación, calcule y verifique."
+msgstr "Comprueba la preparación, calcula y verifica."
 
 #: ../../how-to/onboarding.md:26
 msgid "Export and file at AEAT."
-msgstr "Exporte y presente ante la AEAT."
+msgstr "Exporta y presenta ante la AEAT."
 
 #: ../../how-to/onboarding.md:28
 msgid ""
@@ -112,7 +112,7 @@ msgid ""
 "Install `cadrumo` and confirm it runs. See [Install Cadrumo"
 "](../workstation-setup.md) for installation."
 msgstr ""
-"Instale `cadrumo` y confirme que funciona. Consulte [Instale Cadrumo"
+"Instala `cadrumo` y confirma que funciona. Consulta [Instala Cadrumo"
 "](../workstation-setup.md) para la instalación."
 
 #: ../../how-to/onboarding.md:36
@@ -121,7 +121,7 @@ msgid ""
 "which protects your encrypted local store. The tool prompts for it the "
 "first time in a session."
 msgstr ""
-"Todo comando que toca sus datos necesita su frase de contraseña de la "
+"Todo comando que toca tus datos necesita tu frase de contraseña de la "
 "clave maestra, que protege su almacén local cifrado. La herramienta la "
 "solicita la primera vez en una sesión."
 
@@ -136,7 +136,7 @@ msgstr ""
 
 #: ../../how-to/onboarding.md:43
 msgid "Stage 1 - Set up your taxpayer profile"
-msgstr "Etapa 1: Configure su perfil de contribuyente"
+msgstr "Etapa 1: Configura tu perfil de contribuyente"
 
 #: ../../how-to/onboarding.md:45
 msgid ""
@@ -152,11 +152,11 @@ msgstr ""
 
 #: ../../how-to/onboarding.md:50
 msgid "Start here: [Set up your taxpayer profile](profile-setup.md)."
-msgstr "Empiece aquí: [Configure su perfil de contribuyente](profile-setup.md)."
+msgstr "Empieza aquí: [Configura tu perfil de contribuyente](profile-setup.md)."
 
 #: ../../how-to/onboarding.md:52
 msgid "Stage 2 - Bring in your transactions"
-msgstr "Etapa 2: Incorpore sus movimientos"
+msgstr "Etapa 2: Incorpora tus movimientos"
 
 #: ../../how-to/onboarding.md:54
 msgid ""
@@ -165,7 +165,7 @@ msgid ""
 "you run an import command."
 msgstr ""
 "Sus cifras fiscales proceden de los registros de ingresos y gastos de su "
-"ledger. Importe un extracto bancario, o añada filas a mano. No se importa"
+"ledger. Importa un extracto bancario, o añade filas a mano. No se importa"
 " nada hasta que ejecuta un comando de importación."
 
 #: ../../how-to/onboarding.md:58
@@ -173,12 +173,12 @@ msgid ""
 "Continue with: [Import and manage transactions](import-bank-"
 "statements.md)."
 msgstr ""
-"Continúe con: [Importe y gestione los movimientos](import-bank-"
+"Continúa con: [Importa y gestiona los movimientos](import-bank-"
 "statements.md)."
 
 #: ../../how-to/onboarding.md:60
 msgid "Stage 3 - Classify each transaction"
-msgstr "Etapa 3: Clasifique cada movimiento"
+msgstr "Etapa 3: Clasifica cada movimiento"
 
 #: ../../how-to/onboarding.md:62
 msgid ""
@@ -187,13 +187,13 @@ msgid ""
 "category, so the calculation counts the right amounts."
 msgstr ""
 "Una fila importada tiene una fecha y un importe, pero aún no tiene "
-"significado fiscal. Clasifique cada una como de negocio, personal o "
+"significado fiscal. Clasifica cada una como de negocio, personal o "
 "mixta, y dé una categoría a los gastos de negocio, para que el cálculo "
 "compute los importes correctos."
 
 #: ../../how-to/onboarding.md:66
 msgid "Continue with: [Classify transactions](classify-transactions.md)."
-msgstr "Continúe con: [Clasifique los movimientos](classify-transactions.md)."
+msgstr "Continúa con: [Clasifica los movimientos](classify-transactions.md)."
 
 #: ../../how-to/onboarding.md:68
 msgid "Stage 4 - Find out which modelos apply"
@@ -206,16 +206,16 @@ msgid ""
 "its reasons before you prepare anything."
 msgstr ""
 "Un modelo es un formulario numerado de la AEAT. Cuáles debe presentar se "
-"deduce de los datos de su perfil, no de conjeturas. Pida a la herramienta"
+"deduce de los datos de tu perfil, no de conjeturas. Pida a la herramienta"
 " un veredicto y sus razones antes de preparar nada."
 
 #: ../../how-to/onboarding.md:74
 msgid "Continue with: [Find out which modelos apply to you](choose-modelo.md)."
-msgstr "Continúe con: [Averigüe qué modelos le corresponden](choose-modelo.md)."
+msgstr "Continúa con: [Averigüe qué modelos le corresponden](choose-modelo.md)."
 
 #: ../../how-to/onboarding.md:76
 msgid "Stage 5 - Check readiness, calculate, and verify"
-msgstr "Etapa 5: Compruebe la preparación, calcule y verifique"
+msgstr "Etapa 5: Comprueba la preparación, calcula y verifica"
 
 #: ../../how-to/onboarding.md:78
 msgid ""
@@ -224,9 +224,9 @@ msgid ""
 "and verify the draft against the registry rules. Verification is a local "
 "check; it does not contact AEAT."
 msgstr ""
-"Antes de calcular, confirme que los datos del perfil y los movimientos "
-"que un formulario necesita están en su sitio. Después calcule los valores"
-" del formulario a partir de su ledger, y verifique el borrador contra las"
+"Antes de calcular, confirma que los datos del perfil y los movimientos "
+"que un formulario necesita están en su sitio. Después calcula los valores"
+" del formulario a partir de tu ledger, y verifica el borrador contra las"
 " reglas del registro. La verificación es una comprobación local; no "
 "contacta con la AEAT."
 
@@ -235,13 +235,13 @@ msgid ""
 "Continue with: [Check that a filing is ready](filing-readiness.md), then "
 "[Verify a draft filing and act on the findings](verification-reports.md)."
 msgstr ""
-"Continúe con: [Compruebe que una presentación está lista](filing-"
-"readiness.md) y luego [Verifique un borrador de presentación y actúe "
+"Continúa con: [Comprueba que una presentación está lista](filing-"
+"readiness.md) y luego [Verifica un borrador de presentación y actúe "
 "sobre los hallazgos](verification-reports.md)."
 
 #: ../../how-to/onboarding.md:86
 msgid "Stage 6 - Export and file at AEAT"
-msgstr "Etapa 6: Exporte y presente ante la AEAT"
+msgstr "Etapa 6: Exporta y presenta ante la AEAT"
 
 #: ../../how-to/onboarding.md:88
 msgid ""
@@ -250,10 +250,10 @@ msgid ""
 "Cl@ve, then record the filing locally and reconcile AEAT's receipt "
 "against your record."
 msgstr ""
-"Exporte el borrador verificado al fichero `.boe` que el portal de la AEAT"
-" acepta. Súbalo usted mismo en el portal, firmado con su propio "
-"certificado o Cl@ve, y luego registre la presentación localmente y "
-"concilie el resguardo de la AEAT con su registro."
+"Exporta el borrador verificado al fichero `.boe` que el portal de la AEAT "
+"acepta. Súbelo tú mismo en el portal, firmado con tu propio certificado o "
+"Cl@ve, y luego registra la presentación localmente y concilia el "
+"resguardo de la AEAT con tu registro."
 
 #: ../../how-to/onboarding.md:92
 msgid ""
@@ -261,7 +261,7 @@ msgid ""
 "aeat.md), then [How to reconcile a filed modelo against its "
 "justificante](reconcile.md)."
 msgstr ""
-"Termine con: [Suba su modelo exportado en el portal de la AEAT](file-at-"
+"Termina con: [Sube tu modelo exportado en el portal de la AEAT](file-at-"
 "aeat.md) y luego [Cómo conciliar un modelo presentado con su "
 "justificante](reconcile.md)."
 
@@ -275,7 +275,7 @@ msgid ""
 "figures.md) - understand the transaction-to-box pipeline behind the "
 "stages above."
 msgstr ""
-"[Cómo sus registros se convierten en cifras fiscales](../explanation"
+"[Cómo tus registros se convierten en cifras fiscales](../explanation"
 "/from-records-to-figures.md): comprenda la cadena de movimiento a casilla"
 " que hay tras las etapas anteriores."
 
@@ -294,7 +294,7 @@ msgid ""
 "[Plan your filing calendar](filing-calendar.md) - see what is due and "
 "when."
 msgstr ""
-"[Planifique su calendario de presentaciones](filing-calendar.md): vea qué"
+"[Planifica tu calendario de presentaciones](filing-calendar.md): ve qué"
 " vence y cuándo."
 
 #: ../../how-to/onboarding.md:102
@@ -302,7 +302,7 @@ msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) - if a command"
 " stops or the local state looks wrong."
 msgstr ""
-"[Diagnostique y repare su configuración local](troubleshooting.md): si un"
+"[Diagnostica y repara tu configuración local](troubleshooting.md): si un"
 " comando se detiene o el estado local parece incorrecto."
 
 #: ../../how-to/onboarding.md:105
@@ -314,6 +314,6 @@ msgid ""
 msgstr ""
 "Los términos desconocidos se definen en el {doc}`glosario "
 "</_generated/glossary>`. Antes de compartir la salida de un comando para "
-"pedir ayuda, elimine los identificadores fiscales personales como su NIF,"
+"pedir ayuda, elimina los identificadores fiscales personales como su NIF,"
 " CIF, DNI, NIE o NII."
 
