@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#post-release-distribution'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-18'
 tier: L2
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -112,7 +112,7 @@ Exercise the generated Scoop, Homebrew, and MCPB artifacts in the real clean-acq
 - [ ] `P01.S01` - Install from the intended bucket in Windows Sandbox and execute CLI, MCP, update, and persistence behavior (lifted from distribution W02.P04.S19); `dev/packaging/smoke_scoop.ps1`.
 - [ ] `P01.S02` - Run the clean Scoop acquisition gate on the declared Windows release row (lifted from distribution W02.P04.S20); `.github/workflows/packaging-scoop.yml`.
 - [ ] `P01.S03` - Run the Homebrew acquisition gate on every claimed macOS and Linux row (lifted from distribution W02.P05.S24); `.github/workflows/packaging-homebrew.yml`.
-- [ ] `P01.S04` - Bind MCPB contents signing identity and bootstrap to the immutable cohort (lifted from distribution W02.P06.S29, needs a real publisher signing identity); `packaging/mcpb/build.py`.
+- [x] `P01.S04` - RESOLVED by accepted ADR 2026-07-18-mcpb-signing-publisher-adr, the MCPB ships unsigned by operator decision (no purchased certificate), integrity channel is the published SHA-256 plus in-bundle cohort digest pins already enforced by the bootstrap, no signing identity to bind; `packaging/mcpb/build.py`.
 
 ### Phase `P02` - Execute the platform and client support matrix
 
@@ -154,7 +154,7 @@ Write availability language and the support matrix only for channels with passin
 
 The distribution identity verifier honestly fails: generated harness identifiers (7 personas, 34 skills, 7 rules) carry no cadrumo- prefix and the MCP plugin, marketplace, and MCPB product descriptions are English-only rather than bilingual EN and ES. Distribution steps W02.P06.S67 and S68 are intentionally left open because bringing them green requires a brand-identifier rename plus a bilingual product-description migration that the accepted distribution-harness-identity ADR does not authorize. This phase tracks that migration; it is BLOCKED pending explicit operator authorization, parallel to the held publish approval, per the cadrumo-product-authority-names brand-identifier discipline.
 
-- [ ] `P05.S26` - BLOCKED pending explicit operator authorization (brand-identifier migration per cadrumo-product-authority-names): harness-identity migration renaming the generated harness identifiers to the cadrumo- prefix and authoring bilingual EN and ES MCP product descriptions (model-facing descriptions stay EN-only), then close distribution S67 and S68, gated on verify_distribution_identity.py exiting 0 with report.ok True; `src/cadrumo/_data/agent, src/cadrumo/agent, packaging/mcpb/manifest.json, dev/packaging/verify_distribution_identity.py`.
+- [x] `P05.S26` - UNBLOCKED by operator GO 2026-07-18 and DONE, harness-identity migration landed as the distribution-harness-identity campaign (12/12 steps, exec records under .vault/exec/2026-07-18-distribution-harness-identity), verify_distribution_identity exits 0 with report.ok true (evidence var/distribution-install-readiness/s11-migration-identity-bilingual), distribution S67 and S68 closed; `src/cadrumo/_data/agent, src/cadrumo/agent, packaging/mcpb/manifest.json, dev/packaging/verify_distribution_identity.py`.
 
 ## Description
 
