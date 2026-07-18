@@ -22,17 +22,19 @@ from pydantic import BaseModel, ValidationError
 from ...application.ledger import (
     LLMClassificationSuggestion,
     LLMProvider,
+    LlmReviewDecision,
+    LlmReviewInvocationOrigin,
     LLMSaturatedSuggestion,
+    LLMSplitApplyResult,
     LLMSplitSuggestion,
+    LLMSuggestionRejectionResult,
+    ManualLedgerTransactionResult,
     apply_evidence_classification,
-    apply_evidence_split,
-    apply_llm_classification,
-    apply_saturated_llm_classification,
     derive_operator_iva_substrate,
+    execute_reviewed_decision,
     is_llm_provider_available,
     ledger_transaction_payload,
     ledger_transaction_review_status,
-    reject_llm_suggestion,
     saturate_llm_classification,
     suggest_evidence_split,
     suggest_llm_classification,
@@ -66,6 +68,7 @@ def emit_llm_rejection(
     ctx: typer.Context,
     suggestion: _LLMSuggestion,
     *,
+    origin: LlmReviewInvocationOrigin,
     bucket_id: str,
     reason: str,
     actor: str | None,
@@ -74,20 +77,27 @@ def emit_llm_rejection(
     """Record an explicit rejection of an LLM suggestion and emit the result.
 
     The fourth decision terminal: the row is NOT classified, but the rejection is
-    captured as a ``ledger.transaction.llm_suggestion.rejected`` audit event. An
-    ``info`` :class:`Notice` confirms the log and
-    points at the manual-override next step
+    captured as a ``ledger.transaction.llm_suggestion.rejected`` audit event. The
+    write is routed through the one review workflow
+    (:func:`~application.ledger.execute_reviewed_decision`) with the caller's
+    :class:`~application.ledger.LlmReviewInvocationOrigin`, so the durable
+    ``source_command`` audit label is derived from the origin rather than a
+    CLI-owned literal. An ``info`` :class:`Notice` confirms the log and points at
+    the manual-override next step
     (``cli-notices-are-the-only-diagnostic-channel``).
     """
     from ._ledger_llm_payloads import LedgerClassifyLlmRejectResult
 
-    result = reject_llm_suggestion(
+    result = execute_reviewed_decision(
         suggestion,
+        origin=origin,
+        decision=LlmReviewDecision.REJECT,
         bucket_id=bucket_id,
         reason=reason,
         actor=actor or resolve_active_bucket_id() or "operator",
         transaction_repository=transaction_repository,
     )
+    assert isinstance(result, LLMSuggestionRejectionResult)
     payload = LedgerClassifyLlmRejectResult.model_validate(
         {
             "llm": True,
@@ -264,6 +274,7 @@ def dispatch_autosplit(
         emit_llm_rejection(
             ctx,
             suggestion,
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             bucket_id=bucket_id,
             reason=reason,
             actor=actor,
@@ -317,8 +328,10 @@ def _emit_split(
         _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
         return
     try:
-        applied = apply_evidence_split(
+        applied = execute_reviewed_decision(
             suggestion,
+            origin=LlmReviewInvocationOrigin.CLASSIFY_AUTO_SPLIT,
+            decision=LlmReviewDecision.SPLIT,
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
         )
@@ -326,6 +339,7 @@ def _emit_split(
         raise _bad(str(exc)) from exc
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    assert isinstance(applied, LLMSplitApplyResult)
     result = LedgerSplitResult.model_validate(
         {
             "bucket_id": applied.bucket_id,
@@ -429,11 +443,13 @@ def ledger_classify_llm(
     """Run the LLM suggest / apply / reject loop for ``aeat app ledger classify --llm``.
 
     Without ``--apply`` the model's suggestion is printed for review and nothing
-    is persisted. With ``--apply`` the decision is written via
-    :func:`apply_llm_classification` with
-    ``llm:<model>`` provenance. With ``--reject`` the suggestion is recorded as a
-    declined audit event and the row is left unchanged. ``--llm`` is mutually
-    exclusive with the manual ``--classification`` / ``--from-csv`` override.
+    is persisted. With ``--apply`` the reviewed decision is routed through the one
+    review workflow (:func:`~application.ledger.execute_reviewed_decision`) with
+    the ``CLASSIFY_LLM_APPLY`` origin, which delegates to the canonical
+    classification write with ``llm:<model>`` provenance. With ``--reject`` the
+    suggestion is recorded as a declined audit event and the row is left
+    unchanged. ``--llm`` is mutually exclusive with the manual
+    ``--classification`` / ``--from-csv`` override.
     """
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
     from ._ledger_payloads import LedgerClassifySingleResult
@@ -506,6 +522,7 @@ def ledger_classify_llm(
         emit_llm_rejection(
             ctx,
             suggestion,
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             bucket_id=transaction_repository.bucket_id,
             reason=reason,
             actor=actor,
@@ -545,16 +562,18 @@ def ledger_classify_llm(
         return
 
     try:
-        result = apply_llm_classification(
+        result = execute_reviewed_decision(
             suggestion,
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
+            decision=LlmReviewDecision.APPLY,
             bucket_id=transaction_repository.bucket_id,
             business_pct=_parse_decimal(business_pct, label="business-pct"),
             actor=actor or resolve_active_bucket_id() or "operator",
-            source_command="aeat app ledger classify --llm --apply",
             transaction_repository=transaction_repository,
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    assert isinstance(result, ManualLedgerTransactionResult)
 
     transaction_payload = ledger_transaction_payload(result.transaction)
     review_status = ledger_transaction_review_status(result.transaction)
@@ -600,10 +619,12 @@ def ledger_saturate_llm(
     :class:`IvaCategory` and the system DERIVES the rate, base,
     and amount from the registry — never the model. Without ``--apply`` the full
     saturated suggestion is previewed and nothing is persisted; with ``--apply``
-    it is written through the manual-command write with ``llm:<model>``
-    provenance; with ``--reject`` the suggestion is recorded as a declined audit
-    event and the row is left unchanged. Manual ``classify`` flags remain the
-    explicit per-field override.
+    the reviewed decision is routed through the one review workflow
+    (:func:`~application.ledger.execute_reviewed_decision`) with the
+    ``CLASSIFY_LLM_SATURATE_APPLY`` origin, which delegates to the manual-command
+    write with ``llm:<model>`` provenance; with ``--reject`` the suggestion is
+    recorded as a declined audit event and the row is left unchanged. Manual
+    ``classify`` flags remain the explicit per-field override.
     """
     from ._ledger_llm_payloads import LedgerClassifyLlmSaturateResult
     from ._ledger_payloads import LedgerClassifySingleResult
@@ -670,6 +691,7 @@ def ledger_saturate_llm(
         emit_llm_rejection(
             ctx,
             suggestion,
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             bucket_id=transaction_repository.bucket_id,
             reason=reason,
             actor=actor,
@@ -732,8 +754,10 @@ def ledger_saturate_llm(
         return
 
     try:
-        result = apply_saturated_llm_classification(
+        result = execute_reviewed_decision(
             suggestion,
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_SATURATE_APPLY,
+            decision=LlmReviewDecision.APPLY,
             bucket_id=transaction_repository.bucket_id,
             business_pct=_parse_decimal(business_pct, label="business-pct"),
             actor=actor or resolve_active_bucket_id() or "operator",
@@ -743,6 +767,7 @@ def ledger_saturate_llm(
         raise _bad(str(exc)) from exc
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    assert isinstance(result, ManualLedgerTransactionResult)
 
     transaction_payload = ledger_transaction_payload(result.transaction)
     review_status = ledger_transaction_review_status(result.transaction)
