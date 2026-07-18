@@ -3,25 +3,24 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../reference/import-export-and-evidence.md:1
 msgid "Import, export, and evidence"
-msgstr ""
+msgstr "Importación, exportación y evidencia"
 
 #: ../../reference/import-export-and-evidence.md:3
 msgid ""
@@ -31,64 +30,80 @@ msgid ""
 "Estatal de Administración Tributaria (AEAT),” and “evidence that AEAT "
 "actually received it.”"
 msgstr ""
+"A grandes rasgos, la arquitectura convierte los documentos de origen y las "
+"entradas del operador en una posición fiscal rastreable. Separa "
+"deliberadamente «los datos que recibimos», «los valores que calculamos», «un "
+"fichero preparado para la Agencia Estatal de Administración Tributaria "
+"(AEAT)» y «la evidencia de que la AEAT lo recibió realmente»."
 
 #: ../../reference/import-export-and-evidence.md:9
 msgid ""
 "`source documents → typed financial facts → registry-grounded calculation"
 " → AEAT upload file → official filing evidence`"
 msgstr ""
+"`documentos de origen → hechos financieros tipados → cálculo fundamentado en "
+"el registro → fichero de subida para la AEAT → evidencia de presentación "
+"oficial`"
 
 #: ../../reference/import-export-and-evidence.md:11
 msgid "What the data actually represents"
-msgstr ""
+msgstr "Qué representan realmente los datos"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Layer"
-msgstr ""
+msgstr "Capa"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Actual data"
-msgstr ""
+msgstr "Datos reales"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Meaning for you"
-msgstr ""
+msgstr "Qué significa para ti"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Source evidence"
-msgstr ""
+msgstr "Evidencia de origen"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
 "Taxpayer document bytes, provenance, and content digests; separately, "
 "official source material grounds the registry"
 msgstr ""
+"Bytes de los documentos del contribuyente, procedencia y resúmenes de "
+"contenido; por separado, el material de origen oficial fundamenta el registro"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
 "The original material supporting the tax position and the sources "
 "governing its interpretation"
 msgstr ""
+"El material original que respalda la posición fiscal y las fuentes que rigen "
+"su interpretación"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Ledger facts"
-msgstr ""
+msgstr "Hechos del ledger"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
 "Typed transactions, direction, category, amount, dates, and linked "
 "evidence"
 msgstr ""
+"Transacciones tipadas, dirección, categoría, importe, fechas y evidencia "
+"vinculada"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
 "The economic events that may participate in a return; the filing period "
 "is derived from their dates"
 msgstr ""
+"Los hechos económicos que pueden participar en una declaración; el periodo "
+"de presentación se deriva de sus fechas"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Registry"
-msgstr ""
+msgstr "Registro"
 
 #: ../../reference/import-export-and-evidence.md
 #, python-brace-format
@@ -96,40 +111,46 @@ msgid ""
 "{term}`modelo` revision, numbered {term}`casilla` fields, formulas, "
 "bindings, legal references, and export layout"
 msgstr ""
+"Revisión del {term}`modelo`, campos {term}`casilla` numerados, fórmulas, "
+"bindings, referencias legales y disposición de exportación"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "The versioned rulebook used to interpret the facts"
-msgstr ""
+msgstr "El conjunto de reglas versionado que se usa para interpretar los hechos"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Calculation revision"
-msgstr ""
+msgstr "Revisión de cálculo"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Inputs, observations, overrides, calculated casillas, and provenance"
 msgstr ""
+"Datos de entrada, observaciones, sobrescrituras, casillas calculadas y "
+"procedencia"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "A reproducible attempt at calculating one return"
-msgstr ""
+msgstr "Un intento reproducible de calcular una declaración"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Filing record"
-msgstr ""
+msgstr "Registro de presentación"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
 "Current or superseded filing state linked to a calculation revision and "
 "optionally carrying external AEAT evidence"
 msgstr ""
+"Estado de presentación actual o sustituido, vinculado a una revisión de "
+"cálculo y que opcionalmente lleva evidencia externa de la AEAT"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "What the application records as filed, and the history behind it"
-msgstr ""
+msgstr "Lo que la aplicación registra como presentado, y el historial que hay detrás"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Official evidence"
-msgstr ""
+msgstr "Evidencia oficial"
 
 #: ../../reference/import-export-and-evidence.md
 #, python-brace-format
@@ -137,10 +158,12 @@ msgid ""
 "{term}`justificante`, AEAT verification record, or captured filed "
 "declaration"
 msgstr ""
+"{term}`justificante`, registro de verificación de la AEAT o declaración "
+"presentada capturada"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Evidence originating from AEAT after submission"
-msgstr ""
+msgstr "Evidencia originada por la AEAT tras la presentación"
 
 #: ../../reference/import-export-and-evidence.md:22
 msgid ""
@@ -150,30 +173,36 @@ msgid ""
 "values.md), then follow the full revision workflow in [Prepare and manage"
 " filings](../how-to/filing-spine.md)."
 msgstr ""
+"Cada casilla calculada puede llevar procedencia de fórmula, legal y de "
+"origen. La evidencia del ledger registra qué hechos financieros "
+"contribuyeron a ella. Revisa los valores en [Revisar valores de cálculo]"
+"(../how-to/review-calculation-values.md) y luego sigue el flujo completo de "
+"revisiones en [Preparar y gestionar presentaciones](../how-to/filing-"
+"spine.md)."
 
 #: ../../reference/import-export-and-evidence.md:27
 msgid "What can be imported"
-msgstr ""
+msgstr "Qué se puede importar"
 
 #: ../../reference/import-export-and-evidence.md:29
 msgid "**Bank and financial transactions:**"
-msgstr ""
+msgstr "**Transacciones bancarias y financieras:**"
 
 #: ../../reference/import-export-and-evidence.md:31
 msgid "CSV or TXT containing supported delimited bank data"
-msgstr ""
+msgstr "CSV o TXT que contenga datos bancarios delimitados admitidos"
 
 #: ../../reference/import-export-and-evidence.md:32
 msgid "XLSX, but not legacy XLS"
-msgstr ""
+msgstr "XLSX, pero no el antiguo XLS"
 
 #: ../../reference/import-export-and-evidence.md:33
 msgid "OFX or QFX when the optional OFX dependency is installed"
-msgstr ""
+msgstr "OFX o QFX cuando la dependencia opcional de OFX está instalada"
 
 #: ../../reference/import-export-and-evidence.md:34
 msgid "Recognized German-language N26 monthly statement PDFs"
-msgstr ""
+msgstr "PDF de extractos mensuales de N26 en alemán reconocidos"
 
 #: ../../reference/import-export-and-evidence.md:36
 msgid ""
@@ -184,22 +213,29 @@ msgid ""
 "Impuesto sobre la Renta de las Personas Físicas (IRPF) treatment. See "
 "[Import and manage transactions](../how-to/import-bank-statements.md)."
 msgstr ""
+"Estos se convierten en transacciones normalizadas del ledger, no "
+"directamente en valores de la declaración. La detección de ficheros también "
+"usa firmas de contenido para no fiarse de extensiones engañosas. Importar "
+"una fila no infiere el uso empresarial, la categoría, la base imponible, ni "
+"el tratamiento a efectos del Impuesto sobre el Valor Añadido (IVA) o del "
+"Impuesto sobre la Renta de las Personas Físicas (IRPF). Consulta [Importar y "
+"gestionar transacciones](../how-to/import-bank-statements.md)."
 
 #: ../../reference/import-export-and-evidence.md:43
 msgid "**Purchase invoices and receipts:**"
-msgstr ""
+msgstr "**Facturas de compra y recibos:**"
 
 #: ../../reference/import-export-and-evidence.md:45
 msgid "PDF"
-msgstr ""
+msgstr "PDF"
 
 #: ../../reference/import-export-and-evidence.md:46
 msgid "PNG or JPEG image evidence"
-msgstr ""
+msgstr "Evidencia en imagen PNG o JPEG"
 
 #: ../../reference/import-export-and-evidence.md:47
 msgid "CSV or XLSX for structured invoice-catalogue rows"
-msgstr ""
+msgstr "CSV o XLSX para filas estructuradas de catálogo de facturas"
 
 #: ../../reference/import-export-and-evidence.md:49
 msgid ""
@@ -211,16 +247,25 @@ msgid ""
 "](../how-to/ledger-evidence.md) and [Manage business invoices](../how-to"
 "/manage-invoices.md)."
 msgstr ""
+"Los bytes del documento se guardan como evidencia y luego pueden vincularse "
+"a hechos del ledger. Las filas de facturas estructuradas, la evidencia "
+"documental y las transacciones bancarias siguen siendo registros separados "
+"hasta que los vinculas. Sustentan una transacción o un tratamiento de IVA; "
+"el mero hecho de importar una factura no la hace deducible automáticamente. "
+"Consulta [Adjuntar facturas y recibos](../how-to/ledger-evidence.md) y "
+"[Gestionar facturas de la actividad](../how-to/manage-invoices.md)."
 
 #: ../../reference/import-export-and-evidence.md:56
 msgid "**AEAT declaration copies:**"
-msgstr ""
+msgstr "**Copias de declaraciones de la AEAT:**"
 
 #: ../../reference/import-export-and-evidence.md:58
 msgid ""
 "PDF, but only where the relevant Modelo and revision have an exact "
 "extraction profile"
 msgstr ""
+"PDF, pero solo cuando el modelo y la revisión pertinentes tienen un perfil "
+"de extracción exacto"
 
 #: ../../reference/import-export-and-evidence.md:61
 msgid ""
@@ -229,18 +274,22 @@ msgid ""
 "calculation authority. Casilla reconciliation currently covers modelos "
 "100, 111, 130, 190, 303, and 390."
 msgstr ""
+"Estos producen valores de casilla observados con procedencia del resumen del "
+"documento y de la revisión del registro. Son observaciones, no una autoridad "
+"de cálculo en la que se confíe automáticamente. La conciliación de casillas "
+"cubre actualmente los modelos 100, 111, 130, 190, 303 y 390."
 
 #: ../../reference/import-export-and-evidence.md:66
 msgid "**AEAT submitted-data files:**"
-msgstr ""
+msgstr "**Ficheros de datos presentados a la AEAT:**"
 
 #: ../../reference/import-export-and-evidence.md:68
 msgid "Fixed-width “Diseño de Registros” files"
-msgstr ""
+msgstr "Ficheros de ancho fijo «Diseño de Registros»"
 
 #: ../../reference/import-export-and-evidence.md:69
 msgid "XML-dictionary layouts"
-msgstr ""
+msgstr "Disposiciones de diccionario XML"
 
 #: ../../reference/import-export-and-evidence.md:71
 msgid ""
@@ -249,14 +298,18 @@ msgid ""
 "parses AEAT archive bytes; the submitted-data importer is not a general "
 "CSV importer."
 msgstr ""
+"Estos se pueden analizar como observaciones de casillas cuando existe una "
+"disposición de registro completa. El soporte es específico de cada revisión, "
+"no universal. Esta superficie analiza los bytes de archivo de la AEAT; el "
+"importador de datos presentados no es un importador de CSV genérico."
 
 #: ../../reference/import-export-and-evidence.md:75
 msgid "**AEAT justificantes:**"
-msgstr ""
+msgstr "**Justificantes de la AEAT:**"
 
 #: ../../reference/import-export-and-evidence.md:77
 msgid "Justificante PDF or a receipt read from AEAT"
-msgstr ""
+msgstr "PDF de justificante o un resguardo leído de la AEAT"
 
 #: ../../reference/import-export-and-evidence.md:79
 msgid ""
@@ -267,22 +320,35 @@ msgid ""
 " not prove that the tax answer is correct. See [Reconcile a filing"
 "](../how-to/reconcile.md)."
 msgstr ""
+"El analizador extrae los metadatos del resguardo, como el modelo, el "
+"periodo, el contribuyente, la hora de presentación, el código de "
+"verificación y los totales. Un justificante respalda la afirmación de que la "
+"AEAT devolvió una información de resguardo concreta. No es necesariamente una "
+"representación completa de cada casilla presentada, ni prueba que la "
+"respuesta fiscal sea correcta. Consulta [Conciliar una presentación](../how-"
+"to/reconcile.md)."
 
 #: ../../reference/import-export-and-evidence.md:85
 msgid "**Google Drive and Sheets:**"
-msgstr ""
+msgstr "**Google Drive y Sheets:**"
 
 #: ../../reference/import-export-and-evidence.md:87
 msgid ""
 "Drive links and folder pulls acquire supported PDF, PNG, and JPEG bytes "
 "through the normal encrypted attachment path."
 msgstr ""
+"Los enlaces de Drive y las descargas de carpetas obtienen los bytes "
+"admitidos de PDF, PNG y JPEG a través de la vía habitual de adjuntos "
+"cifrados."
 
 #: ../../reference/import-export-and-evidence.md:89
 msgid ""
 "Sheets can provide typed operator, binding, and relation edits for "
 "calculation. Pull can also assemble row-set observations in its output."
 msgstr ""
+"Sheets puede aportar ediciones tipadas de operador, de binding y de relación "
+"para el cálculo. La descarga también puede ensamblar observaciones de "
+"conjunto de filas en su salida."
 
 #: ../../reference/import-export-and-evidence.md:91
 msgid ""
@@ -290,6 +356,9 @@ msgid ""
 "is explicitly non-persistent until another canonical workflow accepts the"
 " result."
 msgstr ""
+"El cálculo basado en hojas usa el motor de cálculo local canónico y es "
+"explícitamente no persistente hasta que otro flujo de trabajo canónico "
+"acepta el resultado."
 
 #: ../../reference/import-export-and-evidence.md:95
 msgid ""
@@ -298,26 +367,30 @@ msgid ""
 "See [Review calculations with Google Sheets](../how-to/review-with-"
 "google-sheets.md)."
 msgstr ""
+"Google es un adaptador opcional de adquisición y revisión, no la base de "
+"datos fiscal, ni la autoridad del ledger, ni la autoridad de cálculo, ni el "
+"sistema de recuperación. Consulta [Revisar cálculos con Google Sheets]"
+"(../how-to/review-with-google-sheets.md)."
 
 #: ../../reference/import-export-and-evidence.md:99
 msgid "What each export actually means"
-msgstr ""
+msgstr "Qué significa realmente cada exportación"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Export"
-msgstr ""
+msgstr "Exportación"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Purpose"
-msgstr ""
+msgstr "Finalidad"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "What it does not prove"
-msgstr ""
+msgstr "Qué no prueba"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "AEAT fichero or XML export"
-msgstr ""
+msgstr "Exportación de fichero o XML de la AEAT"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
@@ -325,54 +398,65 @@ msgid ""
 "interface where the selected Modelo revision has a complete registry "
 "export layout"
 msgstr ""
+"Produce la carga local que puedes subir a través de la interfaz oficial de "
+"la AEAT cuando la revisión del modelo seleccionada tiene una disposición "
+"completa de exportación en el registro"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "It does not prove submission or acceptance"
-msgstr ""
+msgstr "No prueba la presentación ni la aceptación"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Google Sheet export"
-msgstr ""
+msgstr "Exportación a Google Sheet"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Human review, reconciliation, parity checking, and what-if editing"
 msgstr ""
+"Revisión humana, conciliación, comprobación de paridad y edición de hipótesis"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "It is not a filing artefact or authoritative calculation record"
-msgstr ""
+msgstr "No es un artefacto de presentación ni un registro de cálculo con autoridad"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Accountant review package"
-msgstr ""
+msgstr "Paquete de revisión para el asesor"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
 "Shares the draft, calculation revision, provenance, and ledger evidence "
 "when present in a checksum-verifiable ZIP"
 msgstr ""
+"Comparte el borrador, la revisión de cálculo, la procedencia y la evidencia "
+"del ledger cuando está presente, en un ZIP verificable por suma de "
+"comprobación"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Checksums alone do not identify who created or approved it"
 msgstr ""
+"Las sumas de comprobación por sí solas no identifican quién lo creó ni lo "
+"aprobó"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Evidence bundle"
-msgstr ""
+msgstr "Paquete de evidencia"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
 "Forensic package containing referenced record bytes and a content-"
 "addressed manifest"
 msgstr ""
+"Paquete forense que contiene los bytes de los registros referenciados y un "
+"manifiesto direccionado por contenido"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "It is not itself AEAT-issued evidence"
-msgstr ""
+msgstr "En sí mismo no es evidencia emitida por la AEAT"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Portable profile export"
-msgstr ""
+msgstr "Exportación de perfil portátil"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
@@ -380,38 +464,46 @@ msgid ""
 " work units, ledger transactions, calculation revisions, and filing "
 "records — as a JSON bundle, passphrase-encrypted by default"
 msgstr ""
+"Produce una copia estructurada y portátil de un perfil —identidad y datos, "
+"unidades de trabajo, transacciones del ledger, revisiones de cálculo y "
+"registros de presentación— como un bundle JSON, cifrado por frase de "
+"contraseña de forma predeterminada"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
 "It is not a full backup: attachment evidence bytes, AEAT captures, and "
 "the audit trail are excluded"
 msgstr ""
+"No es una copia de seguridad completa: se excluyen los bytes de evidencia de "
+"los adjuntos, las capturas de la AEAT y el rastro de auditoría"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Subject-access request"
-msgstr ""
+msgstr "Solicitud de acceso del interesado"
 
 #: ../../reference/import-export-and-evidence.md
 msgid ""
 "Produces the same portable profile bundle as a data-subject right-of-"
 "access response"
 msgstr ""
+"Produce el mismo bundle de perfil portátil como respuesta al derecho de "
+"acceso del interesado"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "It is not AEAT-issued evidence and not a full backup"
-msgstr ""
+msgstr "No es evidencia emitida por la AEAT ni una copia de seguridad completa"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Sealed custody archive"
-msgstr ""
+msgstr "Archivo de custodia sellado"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Backup and full recovery of the secured profile"
-msgstr ""
+msgstr "Copia de seguridad y recuperación completa del perfil asegurado"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "It is not the same thing as an audit or accountant package"
-msgstr ""
+msgstr "No es lo mismo que un paquete de auditoría o para el asesor"
 
 #: ../../reference/import-export-and-evidence.md:111
 msgid ""
@@ -422,6 +514,13 @@ msgid ""
 "exported modelo at the AEAT portal](../how-to/file-at-aeat.md) to "
 "complete the operator-controlled filing steps."
 msgstr ""
+"El exportador de presentaciones escribe explícitamente un fichero local y "
+"nunca contacta con la AEAT. Puede volver a leer la salida y detectar "
+"desviaciones respecto del borrador aprobado para las casillas cubiertas por "
+"el analizador. Informa por separado de cualquier casilla sin comprobar. Esto "
+"sigue siendo verificación previa a la presentación. Sigue [Sube tu modelo "
+"exportado en el portal de la AEAT](../how-to/file-at-aeat.md) para completar "
+"los pasos de presentación controlados por el operador."
 
 #: ../../reference/import-export-and-evidence.md:118
 msgid ""
@@ -430,6 +529,10 @@ msgid ""
 "come back from AEAT as a justificante, filed-declaration history, "
 "verification record, or captured filed copy."
 msgstr ""
+"La aplicación etiqueta las exportaciones locales como "
+"`local_export_not_official_aeat_filing_evidence`. La prueba oficial debe "
+"volver de la AEAT como un justificante, un historial de declaración "
+"presentada, un registro de verificación o una copia presentada capturada."
 
 #: ../../reference/import-export-and-evidence.md:123
 msgid ""
@@ -440,6 +543,12 @@ msgid ""
 " encryption are distinct operations. A review-only handoff carries no "
 "filing authority."
 msgstr ""
+"El ZIP base de revisión para el asesor es texto plano y verificable por suma "
+"de comprobación. Operaciones aparte pueden añadir un sobre de firma Ed25519 "
+"o cifrar el paquete para un destinatario registrado. Verifica las firmas "
+"frente a una clave pública de confianza. Firmar, contrafirmar, verificar el "
+"resguardo y cifrar para el destinatario son operaciones distintas. Una "
+"entrega solo para revisión no confiere ninguna autoridad de presentación."
 
 #: ../../reference/import-export-and-evidence.md:129
 msgid ""
@@ -450,6 +559,12 @@ msgid ""
 "verification. After decryption, verify the recovered package and "
 "signatures separately."
 msgstr ""
+"Firmar y contrafirmar dejan el ZIP en texto plano. Crear una contrafirma no "
+"verifica la firma del operador ni el archivo; la verificación del resguardo "
+"realiza esas comprobaciones. El cifrado para el destinatario cifra los bytes "
+"que se le suministran, pero no exige primero la verificación de la suma de "
+"comprobación ni de la firma. Tras el descifrado, verifica por separado el "
+"paquete recuperado y las firmas."
 
 #: ../../reference/import-export-and-evidence.md:136
 msgid ""
@@ -468,6 +583,23 @@ msgid ""
 " subject-access handling is complete; do not email, sync, or transfer it."
 " Neither is a full backup; use the sealed custody archive for that."
 msgstr ""
+"La exportación de perfil portátil y la solicitud de acceso del interesado "
+"son la misma operación con dos finalidades. El comando `aeat config profile "
+"export` escribe por defecto un bundle cifrado por frase de contraseña, con "
+"una opción de texto claro para un JSON sin cifrar pensado solo para el "
+"tratamiento local o de acceso del interesado; el comando `aeat config "
+"profile subject-access-request` escribe ese mismo bundle como respuesta al "
+"derecho de acceso. Ambos pasan por un único servicio de exportación y un "
+"único esquema de bundle; las categorías de datos que informa la respuesta se "
+"derivan del propio bundle, no de una lista fija. La publicación es atómica: "
+"el bundle se prepara y luego se sustituye en su sitio en un solo paso, de "
+"modo que un fallo nunca deja un fichero escrito a medias. La forma en texto "
+"claro es igual de legible una vez que sale de la aplicación, sea cual sea la "
+"finalidad que la produjo, así que ambas conllevan el mismo riesgo de "
+"entrega. Borra un bundle en texto claro una vez completado el tratamiento "
+"local o de acceso del interesado; no lo envíes por correo, no lo sincronices "
+"ni lo transfieras. Ninguna de las dos es una copia de seguridad completa; "
+"usa el archivo de custodia sellado para eso."
 
 #: ../../reference/import-export-and-evidence.md:151
 msgid ""
@@ -477,40 +609,49 @@ msgid ""
 "recovery passphrase, restoration requires the matching active bucket key."
 " A recovery passphrase permits restoration into a fresh storage root."
 msgstr ""
+"El archivo de custodia sellado sirve para una finalidad distinta. Es un "
+"transporte de recuperación cifrado de custodia completa para la custodia "
+"duradera clasificada. Los derivados locales del proceso y reconstruibles se "
+"excluyen deliberadamente. Sin una frase de contraseña de recuperación, la "
+"restauración requiere la clave del bucket activo correspondiente. Una frase "
+"de contraseña de recuperación permite restaurar en una raíz de "
+"almacenamiento nueva."
 
 #: ../../reference/import-export-and-evidence.md:157
 msgid "What an audit export is for"
-msgstr ""
+msgstr "Para qué sirve una exportación de auditoría"
 
 #: ../../reference/import-export-and-evidence.md:159
 msgid ""
 "When an audit or professional review is requested, the audit evidence "
 "bundle is intended to let the recipient establish:"
 msgstr ""
+"Cuando se solicita una auditoría o una revisión profesional, el paquete de "
+"evidencia de auditoría está pensado para permitir al destinatario establecer:"
 
 #: ../../reference/import-export-and-evidence.md:162
 msgid "Which original records supported the return."
-msgstr ""
+msgstr "Qué registros originales respaldaron la declaración."
 
 #: ../../reference/import-export-and-evidence.md:163
 msgid "Whether those bytes still match their recorded SHA-256 digests."
-msgstr ""
+msgstr "Si esos bytes siguen coincidiendo con sus resúmenes SHA-256 registrados."
 
 #: ../../reference/import-export-and-evidence.md:164
 msgid "Which ledger facts contributed to which casillas."
-msgstr ""
+msgstr "Qué hechos del ledger contribuyeron a qué casillas."
 
 #: ../../reference/import-export-and-evidence.md:165
 msgid "Which registry and legal references governed the calculation."
-msgstr ""
+msgstr "Qué referencias de registro y legales rigieron el cálculo."
 
 #: ../../reference/import-export-and-evidence.md:166
 msgid "Which calculation revision and filing record were involved."
-msgstr ""
+msgstr "Qué revisión de cálculo y qué registro de presentación intervinieron."
 
 #: ../../reference/import-export-and-evidence.md:167
 msgid "Whether later revisions superseded the original position."
-msgstr ""
+msgstr "Si revisiones posteriores sustituyeron la posición original."
 
 #: ../../reference/import-export-and-evidence.md:169
 msgid ""
@@ -521,6 +662,14 @@ msgid ""
 "Through the current command-line interface, replay cannot verify "
 "referenced record bytes because no payload loader is supplied."
 msgstr ""
+"El fichero ZIP del paquete de evidencia de auditoría contiene los bytes de "
+"los registros accesibles seguidos de `manifest.json`. Una verificación "
+"fallida impide la exportación; los paquetes incompletos requieren una "
+"anulación explícita. La reproducción vuelve a ejecutar las comprobaciones "
+"del paquete, pero nunca contacta con la AEAT ni recalcula el resultado "
+"fiscal. A través de la interfaz de línea de comandos actual, la reproducción "
+"no puede verificar los bytes de los registros referenciados porque no se "
+"suministra ningún cargador de carga útil."
 
 #: ../../reference/import-export-and-evidence.md:176
 msgid ""
@@ -531,40 +680,53 @@ msgid ""
 "records and may contain only the manifest. Do not treat that output as a "
 "complete evidence package."
 msgstr ""
+"Los comandos de auditoría actuales todavía no ofrecen una entrega de "
+"auditoría completa en un solo comando. No tienen un registro de cargadores "
+"de carga útil ni un comando de construcción de bundle. Por tanto, todo "
+"paquete de evidencia de auditoría no vacío aparece como incompleto a través "
+"de la interfaz de línea de comandos. Una exportación incompleta forzada "
+"puede omitir registros y puede contener solo el manifiesto. No trates esa "
+"salida como un paquete de evidencia completo."
 
 #: ../../reference/import-export-and-evidence.md:182
 msgid "What a complete audit handoff means"
-msgstr ""
+msgstr "Qué significa una entrega de auditoría completa"
 
 #: ../../reference/import-export-and-evidence.md:184
 msgid "A genuinely complete audit handoff would normally combine:"
-msgstr ""
+msgstr "Una entrega de auditoría genuinamente completa combinaría normalmente:"
 
 #: ../../reference/import-export-and-evidence.md:186
 msgid "Official AEAT evidence proving submission."
-msgstr ""
+msgstr "Evidencia oficial de la AEAT que prueba la presentación."
 
 #: ../../reference/import-export-and-evidence.md:187
 msgid "The exact submitted-file digest or captured filed copy."
-msgstr ""
+msgstr "El resumen exacto del fichero presentado o la copia presentada capturada."
 
 #: ../../reference/import-export-and-evidence.md:188
 msgid ""
 "A verified audit evidence bundle containing every referenced supporting "
 "record."
 msgstr ""
+"Un paquete de evidencia de auditoría verificado que contenga todos los "
+"registros de respaldo referenciados."
 
 #: ../../reference/import-export-and-evidence.md:189
 msgid ""
 "The calculation or review package explaining how those records produced "
 "the declared casillas."
 msgstr ""
+"El paquete de cálculo o de revisión que explica cómo esos registros "
+"produjeron las casillas declaradas."
 
 #: ../../reference/import-export-and-evidence.md:192
 msgid ""
 "That combination supports both halves of the audit question: “Was this "
 "actually filed?” and “What facts, rules, and calculations produced it?”"
 msgstr ""
+"Esa combinación respalda las dos mitades de la pregunta de auditoría: «¿Se "
+"presentó esto realmente?» y «¿Qué hechos, reglas y cálculos lo produjeron?»"
 
 #: ../../reference/import-export-and-evidence.md:195
 msgid ""
@@ -573,26 +735,37 @@ msgid ""
 "complete only when every referenced supporting record and payload is "
 "present."
 msgstr ""
+"El paquete de evidencia de auditoría no incluye actualmente todos los "
+"elementos enumerados arriba. Ensambla y verifica por separado los elementos "
+"que faltan; un paquete solo está completo cuando están presentes todos los "
+"registros de respaldo y las cargas útiles referenciados."
 
 #: ../../reference/import-export-and-evidence.md:199
 msgid "Important limitations"
-msgstr ""
+msgstr "Limitaciones importantes"
 
 #: ../../reference/import-export-and-evidence.md:201
 msgid ""
 "Support is limited to Modelo and revision combinations backed by "
 "registered, authoritative layouts and real evidence. Consequently:"
 msgstr ""
+"El soporte se limita a las combinaciones de modelo y revisión respaldadas "
+"por disposiciones registradas y con autoridad y por evidencia real. En "
+"consecuencia:"
 
 #: ../../reference/import-export-and-evidence.md:204
 msgid ""
 "Import and export support must not be described as universal across all "
 "Modelos and periods."
 msgstr ""
+"El soporte de importación y exportación no debe describirse como universal "
+"para todos los modelos y periodos."
 
 #: ../../reference/import-export-and-evidence.md:206
 msgid "Filed declaración-PDF extraction requires an exact registered profile."
 msgstr ""
+"La extracción del PDF de una declaración presentada requiere un perfil "
+"registrado exacto."
 
 #: ../../reference/import-export-and-evidence.md:207
 msgid ""
@@ -601,6 +774,11 @@ msgid ""
 "justificante can become official evidence. Import it through the "
 "external-evidence workflow."
 msgstr ""
+"Una observación local aportada por el operador, una exportación local, una "
+"suma de comprobación, una Google Sheet o un ZIP de revisión no pueden probar "
+"la aceptación de la AEAT. Un justificante de la AEAT que tengas en local "
+"puede convertirse en evidencia oficial. Impórtalo a través del flujo de "
+"evidencia externa."
 
 #: ../../reference/import-export-and-evidence.md:211
 msgid ""
@@ -608,6 +786,10 @@ msgid ""
 "signer identity or independent legal authenticity. Use the separate "
 "review-package signing workflow when author identity matters."
 msgstr ""
+"La integridad prueba que los bytes no han cambiado; no establece la "
+"identidad del firmante ni una autenticidad legal independiente. Usa el flujo "
+"aparte de firma del paquete de revisión cuando importe la identidad del "
+"autor."
 
 #: ../../reference/import-export-and-evidence.md:214
 msgid ""
@@ -615,12 +797,17 @@ msgid ""
 "deliberate plaintext exports, so secure delivery becomes your "
 "responsibility."
 msgstr ""
+"La evidencia se cifra en custodia normal. Los ZIP base de revisión y de "
+"auditoría son exportaciones en texto plano deliberadas, así que la entrega "
+"segura pasa a ser tu responsabilidad."
 
 #: ../../reference/import-export-and-evidence.md:216
 msgid ""
 "A forced incomplete audit evidence bundle export is not a complete "
 "handoff."
 msgstr ""
+"Una exportación forzada e incompleta de un paquete de evidencia de auditoría "
+"no es una entrega completa."
 
 #: ../../reference/import-export-and-evidence.md:217
 msgid ""
@@ -628,6 +815,9 @@ msgid ""
 "it cannot verify referenced bytes, and it does not reproduce or "
 "recalculate the tax decision."
 msgstr ""
+"La reproducción vuelve a ejecutar las comprobaciones del paquete. A través "
+"de la interfaz de línea de comandos actual, no puede verificar los bytes "
+"referenciados y no reproduce ni recalcula la decisión fiscal."
 
 #: ../../reference/import-export-and-evidence.md:221
 msgid ""
@@ -635,4 +825,7 @@ msgid ""
 "access to taxpayer data](../how-to/protect-data-access.md) and "
 "[Filesystem, state, and safety](filesystem-state-and-safety.md)."
 msgstr ""
-
+"Para los límites de almacenamiento, recuperación y acceso externo, consulta "
+"[Protege el acceso a los datos del contribuyente](../how-to/protect-data-"
+"access.md) y [Sistema de archivos, estado y seguridad](filesystem-state-and-"
+"safety.md)."

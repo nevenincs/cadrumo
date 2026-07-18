@@ -3,29 +3,28 @@
 # This file is distributed under the same license as the CADRUMO package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
 "Language: es\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.18.0\n"
 
 #: ../../reference/commands-and-configuration.md:1
 msgid "Commands and configuration"
-msgstr ""
+msgstr "Comandos y configuración"
 
 #: ../../reference/commands-and-configuration.md:3
 msgid "Command and workflow-stage lookup"
-msgstr ""
+msgstr "Consulta de comandos y etapas del flujo de trabajo"
 
 #: ../../reference/commands-and-configuration.md:5
 msgid ""
@@ -33,78 +32,83 @@ msgid ""
 "authority. The canonical human executable is `aeat`. The separate Model "
 "Context Protocol (MCP) executable is `cadrumo-mcp`."
 msgstr ""
+"La interfaz de línea de comandos (CLI) expone la ayuda en vivo como "
+"autoridad de comandos. El ejecutable canónico para personas es `aeat`. El "
+"ejecutable independiente del Model Context Protocol (MCP) es `cadrumo-mcp`."
 
 #: ../../reference/commands-and-configuration.md
 msgid "Command family"
-msgstr ""
+msgstr "Familia de comandos"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Live authority"
-msgstr ""
+msgstr "Autoridad en vivo"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Structured map"
-msgstr ""
+msgstr "Mapa estructurado"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Root behavior and global options"
-msgstr ""
+msgstr "Comportamiento de la raíz y opciones globales"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat --help`"
-msgstr ""
+msgstr "`aeat --help`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[CLI overview](../cli/index.rst)"
-msgstr ""
+msgstr "[Visión general de la CLI](../cli/index.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Profile, authentication, diagnostics, Google, and local configuration"
-msgstr ""
+msgstr "Perfil, autenticación, diagnósticos, Google y configuración local"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat config --help` and leaf help"
-msgstr ""
+msgstr "`aeat config --help` y la ayuda de las hojas"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Configuration commands](../cli/config.rst)"
-msgstr ""
+msgstr "[Comandos de configuración](../cli/config.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Ledger, modelo, review, live-read, export, record, and reconciliation"
 msgstr ""
+"Ledger, modelo, revisión, lectura en vivo, exportación, registro y "
+"conciliación"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`aeat app --help` and leaf help"
-msgstr ""
+msgstr "`aeat app --help` y la ayuda de las hojas"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Application commands](../cli/app.rst)"
-msgstr ""
+msgstr "[Comandos de la aplicación](../cli/app.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "JSON envelopes and output schemas"
-msgstr ""
+msgstr "Envoltorios JSON y esquemas de salida"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Leaf help with the selected format"
-msgstr ""
+msgstr "Ayuda de la hoja con el formato seleccionado"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Command schemas](../cli/schemas.rst)"
-msgstr ""
+msgstr "[Esquemas de comandos](../cli/schemas.rst)"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Non-interactive conventions"
-msgstr ""
+msgstr "Convenciones no interactivas"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Root and leaf help"
-msgstr ""
+msgstr "Ayuda de la raíz y de las hojas"
 
 #: ../../reference/commands-and-configuration.md
 msgid "[Automation reference](../cli/automation.rst)"
-msgstr ""
+msgstr "[Referencia de automatización](../cli/automation.rst)"
 
 #: ../../reference/commands-and-configuration.md:17
 msgid ""
@@ -115,50 +119,61 @@ msgid ""
 " why the stages are separate and [the how-to guides](../how-to/index.md) "
 "for task sequences."
 msgstr ""
+"Las etapas de presentación se relacionan así: `calculate` → `review` → "
+"`verify` → `export` → subida por la persona → registro local → `reconcile`. "
+"Los nombres de las etapas describen el flujo de trabajo local de Cadrumo. "
+"Las definiciones exactas de los comandos proceden de `aeat ... --help` en "
+"vivo. Lee [la explicación del flujo de trabajo](../explanation/index.md) "
+"para saber por qué las etapas están separadas y [las guías prácticas](../how-"
+"to/index.md) para las secuencias de tareas."
 
 #: ../../reference/commands-and-configuration.md:23
 msgid "Configuration ownership"
-msgstr ""
+msgstr "Titularidad de la configuración"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Prefix or field family"
-msgstr ""
+msgstr "Familia de prefijo o de campo"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Owner"
-msgstr ""
+msgstr "Titular"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Scope"
-msgstr ""
+msgstr "Ámbito"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`CADRUMO_*` / `cadrumo_*`"
-msgstr ""
+msgstr "`CADRUMO_*` / `cadrumo_*`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "Cadrumo product"
-msgstr ""
+msgstr "Producto Cadrumo"
 
 #: ../../reference/commands-and-configuration.md
 msgid ""
 "Local state, output, providers, profiles, credentials storage, and "
 "product behavior"
 msgstr ""
+"Estado local, salida, proveedores, perfiles, almacenamiento de credenciales "
+"y comportamiento del producto"
 
 #: ../../reference/commands-and-configuration.md
 msgid "`AEAT_*` / `aeat_*`"
-msgstr ""
+msgstr "`AEAT_*` / `aeat_*`"
 
 #: ../../reference/commands-and-configuration.md
 msgid "AEAT integration"
-msgstr ""
+msgstr "Integración con la AEAT"
 
 #: ../../reference/commands-and-configuration.md
 msgid ""
 "Authority endpoints, authority credentials, live-read controls, and "
 "preserved authority terminology"
 msgstr ""
+"Endpoints de la autoridad, credenciales de la autoridad, controles de "
+"lectura en vivo y terminología conservada de la autoridad"
 
 #: ../../reference/commands-and-configuration.md:30
 msgid ""
@@ -170,6 +185,13 @@ msgid ""
 "fields are listed in the generated Cadrumo application programming "
 "interface ([API](../api/cadrumo.rst))."
 msgstr ""
+"Ejemplos de controles del producto son `CADRUMO_LOCAL_STORAGE_ROOT`, "
+"`CADRUMO_SECRET_STORE_BACKEND`, `CADRUMO_SECRET_STORE_DIR`, "
+"`CADRUMO_SECRET_PASSPHRASE` y `CADRUMO_OUTPUT_LANGUAGE`. La ayuda en vivo "
+"`aeat config --help` y la de sus hojas definen la configuración de cara al "
+"operador. El [mapa de configuración](../cli/config.rst) agrupa esos "
+"comandos. Los campos de Python se enumeran en la interfaz de programación de "
+"aplicaciones de Cadrumo generada ([API](../api/cadrumo.rst))."
 
 #: ../../reference/commands-and-configuration.md:38
 msgid ""
@@ -177,4 +199,7 @@ msgid ""
 "`CADRUMO_*`. Authority-owned `AEAT_*` integration controls remain valid "
 "only when they name the external authority boundary."
 msgstr ""
-
+"Los antiguos controles de estado `AEAT_*` propios del producto no son alias "
+"de `CADRUMO_*`. Los controles de integración `AEAT_*` propios de la "
+"autoridad siguen siendo válidos solo cuando nombran el límite con la "
+"autoridad externa."
