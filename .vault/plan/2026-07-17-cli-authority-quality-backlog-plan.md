@@ -15,6 +15,15 @@ related:
   - '[[2026-07-15-distribution-installation-readiness-code-review-audit]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
 
 # `cli-authority-quality-backlog` plan
 
@@ -65,8 +74,8 @@ Type the language-model review workflow with mandatory invocation origins after 
 
 Close two MCP-surface gaps. Both are GATED: do not start either step until the mcp-call-latency plan completes, because that plan restructures the MCP dispatch and refusal path these steps build on.
 
-- [ ] `P06.S18` - GATED (blocked until the mcp-call-latency plan completes): make the MCP server direct dispatch path call gate_refusal() once so a refused call is not composed twice into the envelope; `src/cadrumo/entrypoints/mcp/_server.py`.
-- [ ] `P06.S19` - GATED (blocked until the mcp-call-latency plan completes): add a per-verb CLI-versus-MCP schema-parity diff proving every operator verb exposes the same request and response schema across both surfaces; `src/cadrumo/entrypoints/mcp/tests/test_inprocess_envelope_parity.py`.
+- [x] `P06.S18` - GATED (blocked until the mcp-call-latency plan completes): make the MCP server direct dispatch path call gate_refusal() once so a refused call is not composed twice into the envelope; `src/cadrumo/entrypoints/mcp/_server.py`.
+- [x] `P06.S19` - GATED (blocked until the mcp-call-latency plan completes): add a per-verb CLI-versus-MCP schema-parity diff proving every operator verb exposes the same request and response schema across both surfaces; `src/cadrumo/entrypoints/mcp/tests/test_inprocess_envelope_parity.py`.
 
 ### Phase `P07` - Profile-create question-count contract
 

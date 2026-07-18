@@ -92,6 +92,7 @@ from ._meta_tools import (
     ToolRunOutcome,
     build_command_search_index,
     describe_command,
+    gate_refusal,
     manage_toolsets,
     meta_execute,
     search_commands_response,
@@ -99,7 +100,6 @@ from ._meta_tools import (
 from ._persona_scope import (
     AgentPersona,
     active_persona,
-    handoff_denial_message,
     is_handoff_denied,
     is_tool_in_persona_scope,
 )
@@ -881,14 +881,13 @@ def build_server(
         key = command_key_for_tool(name, command_keys=[d.command_key for d in descriptors])
         if key is None:
             return CallToolResult(content=[TextContent(type="text", text=f"unmapped tool: {name}")], isError=True)
-        scope_refusal = persona_scope_refusal(persona=persona, command_key=key)
-        if scope_refusal is not None:
-            return CallToolResult(content=[TextContent(type="text", text=scope_refusal)], isError=True)
-        if persona is not None and is_handoff_denied(persona=persona, command_key=key):
-            return CallToolResult(
-                content=[TextContent(type="text", text=handoff_denial_message(persona=persona, command_key=key))],
-                isError=True,
-            )
+        # The persona-scope, handoff-denial, and permanent live-write gate is
+        # composed EXACTLY ONCE, by the single shared :func:`gate_refusal` the
+        # ``execute`` meta-path also runs, so a refused call carries one refusal
+        # and the two entry points cannot compose divergent (or doubled) refusals.
+        gate = gate_refusal(persona=persona, descriptor=descriptor)
+        if gate is not None:
+            return CallToolResult(content=[TextContent(type="text", text=gate)], isError=True)
         identity_refusal = identity_gate_refusal(key, state=identity_state)
         if identity_refusal is not None:
             _record_telemetry(telemetry, tool_name=name, command_key=key, route="identity_block", is_error=True)
