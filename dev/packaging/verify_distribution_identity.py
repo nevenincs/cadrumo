@@ -253,7 +253,9 @@ _PRODUCT_CLAIM_PATTERNS: Final[dict[str, dict[str, tuple[re.Pattern[str], ...]]]
         ),
     },
     "human_confirmation": {
-        "english": (re.compile(r"\b(?:human-in-the-loop|human-confirmed|human confirmation|confirmation gate)\b", re.I),),
+        "english": (
+            re.compile(r"\b(?:human-in-the-loop|human-confirmed|human confirmation|confirmation gate)\b", re.I),
+        ),
         "spanish": (re.compile(r"\b(?:confirmaci[oó]n humana|intervenci[oó]n humana|una persona confirma)\b", re.I),),
     },
     "never_files_live": {
