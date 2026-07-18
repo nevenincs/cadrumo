@@ -68,7 +68,7 @@ msgstr "Proteger el acceso a los datos"
 
 #: ../../index.md:130
 msgid "Your profile"
-msgstr "Su perfil"
+msgstr "Tu perfil"
 
 #: ../../index.md:141
 msgid "Filing calendar"
@@ -84,7 +84,7 @@ msgstr "Preparación para presentar"
 
 #: ../../index.md:141
 msgid "Your calendar"
-msgstr "Su calendario"
+msgstr "Tu calendario"
 
 #: ../../index.md:150
 msgid "Work with transactions"
@@ -116,7 +116,7 @@ msgstr "Deducciones de IVA en prorrata"
 
 #: ../../index.md:150
 msgid "Your ledger"
-msgstr "Su ledger"
+msgstr "Tu ledger"
 
 #: ../../index.md:163
 msgid "The filing workflow"
@@ -168,7 +168,7 @@ msgstr "Conciliar una presentación"
 
 #: ../../index.md:163
 msgid "Your filings"
-msgstr "Sus presentaciones"
+msgstr "Tus presentaciones"
 
 #: ../../index.md:181
 msgid "Troubleshooting"
@@ -236,14 +236,14 @@ msgid ""
 "on [GitHub](https://github.com/nevenincs/cadrumo). Cadrumo is pre-alpha -"
 " expect breaking changes between versions."
 msgstr ""
-"Esta es la documentación de Cadrumo y de su interfaz de línea de comandos"
-" (CLI) `aeat`. Cadrumo convierte sus registros en cifras de modelo "
-"comprobadas y en un fichero de exportación. Usted mismo sube ese fichero "
-"a la Agencia Estatal de Administración Tributaria (AEAT). Para saber qué "
-"es Cadrumo y a quién va dirigido, consulte la [página del "
+"Esta es la documentación de Cadrumo y de su interfaz de línea de comandos "
+"(CLI) `aeat`. Cadrumo convierte tus registros en cifras de modelo "
+"comprobadas y en un fichero de exportación. Tú mismo subes ese fichero a "
+"la Agencia Estatal de Administración Tributaria (AEAT). Para saber qué es "
+"Cadrumo y a quién va dirigido, consulta la [página del "
 "producto](https://cadrumo.neve.md); el código fuente está en "
 "[GitHub](https://github.com/nevenincs/cadrumo). Cadrumo está en fase "
-"pre-alfa: espere cambios incompatibles entre versiones."
+"pre-alfa: espera cambios incompatibles entre versiones."
 
 #: ../../index.md:18
 msgid ""
@@ -257,8 +257,8 @@ msgstr ""
 "Cadrumo no es asesoramiento fiscal, no está afiliado a la AEAT y no "
 "sustituye a las herramientas oficiales de la AEAT ni al asesoramiento de "
 "un profesional cualificado. Construye, comprueba y exporta ficheros de "
-"forma local. Usted mismo presenta a través de los canales oficiales de la"
-" AEAT y sigue siendo responsable de cada declaración que envíe. Lea el "
+"forma local. Tú mismo presentas a través de los canales oficiales de la "
+"AEAT y sigue siendo responsable de cada declaración que envíe. Lee el "
 "[aviso legal completo](disclaimer.md) antes de confiar en Cadrumo."
 
 #: ../../index.md:25
@@ -286,7 +286,7 @@ msgstr "Empezar desde cero"
 #: ../../index.md:42
 msgid "Take the shortest path from an empty profile to an exported modelo file."
 msgstr ""
-"Tome el camino más corto desde un perfil vacío hasta un fichero de modelo"
+"Toma el camino más corto desde un perfil vacío hasta un fichero de modelo"
 " exportado."
 
 #: ../../index.md:45
@@ -298,7 +298,7 @@ msgid ""
 "Follow a worked year of Modelo 130 quarters closing into the annual "
 "Modelo 100 Renta declaration, command by command."
 msgstr ""
-"Siga un año de ejemplo de trimestres del Modelo 130 que cierran en la "
+"Sigue un año de ejemplo de trimestres del Modelo 130 que cierran en la "
 "declaración anual del Modelo 100 (Renta), comando a comando."
 
 #: ../../index.md:54
@@ -310,19 +310,19 @@ msgid ""
 "Follow a worked year of Modelo 303 quarters, the Modelo 349 branch, and "
 "the annual Modelo 390 summary, command by command."
 msgstr ""
-"Siga un año de ejemplo de trimestres del Modelo 303, la rama del Modelo "
+"Sigue un año de ejemplo de trimestres del Modelo 303, la rama del Modelo "
 "349 y el resumen anual del Modelo 390, comando a comando."
 
 #: ../../index.md:63
 msgid "Set up your taxpayer profile"
-msgstr "Configurar su perfil de contribuyente"
+msgstr "Configurar tu perfil de contribuyente"
 
 #: ../../index.md:68
 msgid ""
 "Create the taxpayer profile and record the facts that decide which "
 "modelos apply."
 msgstr ""
-"Cree el perfil de contribuyente y registre los datos que determinan qué "
+"Crea el perfil de contribuyente y registra los datos que determinan qué "
 "modelos le corresponden."
 
 #: ../../index.md:72
@@ -334,7 +334,7 @@ msgid ""
 "Import bank statements, review the rows, and attach the evidence behind "
 "them."
 msgstr ""
-"Importe extractos bancarios, revise las filas y adjunte la evidencia que "
+"Importa extractos bancarios, revisa las filas y adjunta la evidencia que "
 "las respalda."
 
 #: ../../index.md:86
@@ -342,28 +342,28 @@ msgid ""
 "Decide business, personal, or mixed use and set the category and tax "
 "fields on each row."
 msgstr ""
-"Decida el uso profesional, personal o mixto y fije la categoría y los "
+"Decide el uso profesional, personal o mixto y fija la categoría y los "
 "campos tributarios en cada fila."
 
 #: ../../index.md:90
 msgid "Plan your filing calendar"
-msgstr "Planificar su calendario de presentaciones"
+msgstr "Planificar tu calendario de presentaciones"
 
 #: ../../index.md:95
 msgid "See which modelos are due and which period to prepare next."
 msgstr ""
-"Vea qué modelos hay que presentar y qué periodo preparar a continuación."
+"Ve qué modelos hay que presentar y qué periodo preparar a continuación."
 
 #: ../../index.md:98
 msgid "Prepare your filings"
-msgstr "Preparar sus presentaciones"
+msgstr "Preparar tus presentaciones"
 
 #: ../../index.md:103
 msgid ""
 "Prepare, verify, export, file at AEAT, and reconcile - with a recipe per "
 "modelo: 036, 100 (Renta), 130, 303, 349, and 390."
 msgstr ""
-"Prepare, verifique, exporte, presente en la AEAT y concilie, con una "
+"Prepara, verifica, exporta, presenta en la AEAT y concilia, con una "
 "receta por modelo: 036, 100 (Renta), 130, 303, 349 y 390."
 
 #: ../../index.md:108
@@ -382,12 +382,12 @@ msgid ""
 "data, review outputs, AEAT upload files, official filing proof, and audit"
 " packages."
 msgstr ""
-"Pulse {kbd}`Ctrl+K` ({kbd}`Cmd+K` en macOS) en cualquier página para "
+"Pulsa {kbd}`Ctrl+K` ({kbd}`Cmd+K` en macOS) en cualquier página para "
 "buscar conceptos tributarios, casillas, comandos y guías; las "
-"coincidencias exactas de término aparecen primero. Use la [referencia de "
+"coincidencias exactas de término aparecen primero. Usa la [referencia de "
 "la línea de comandos](cli/index.rst) para los comandos y las opciones, y "
 "[cómo funciona](explanation/index.md) para saber cómo los registros se "
-"convierten en cifras de modelo y qué comprobaciones se ejecutan. Use "
+"convierten en cifras de modelo y qué comprobaciones se ejecutan. Usa "
 "[Importación, exportación y evidencias](reference/import-export-and-"
 "evidence.md) para distinguir los datos de origen, los resultados de "
 "revisión, los ficheros de subida a la AEAT, el justificante oficial de "
