@@ -704,9 +704,28 @@ def main(argv: list[str] | None = None) -> int:
             "with no paths runs a full user build."
         ),
     )
+    parser.add_argument(
+        "--language",
+        default=None,
+        help=(
+            "Build the localized documentation in one language (es/en/ca/hu). Sets CADRUMO_DOCS_LANGUAGE, "
+            "which docs/conf.py validates against the OutputLanguage set. A localized build is always the "
+            "user scope (the API autodoc tree stays English), so --language forces --scope user."
+        ),
+    )
     args = parser.parse_args(argv)
 
     repo_root = _repo_root()
+    if args.language is not None:
+        # A localized build is a user-scope build: the API autodoc tree is
+        # English-only, so only the operator surface is translated. conf.py reads
+        # CADRUMO_DOCS_LANGUAGE and validates it against the OutputLanguage set,
+        # so an unknown tag fails the build loudly rather than being re-listed here.
+        os.environ["CADRUMO_DOCS_LANGUAGE"] = args.language
+        if args.scope is None:
+            args.scope = "user"
+        elif args.scope != "user":
+            raise SystemExit(f"--language builds are user-scope only; got --scope {args.scope!r}")
     # Precedence: explicit --scope flag, then the CADRUMO_DOCS_SCOPE env, then full.
     scope = args.scope or os.environ.get("CADRUMO_DOCS_SCOPE") or "full"
     if scope not in {"full", "user"}:
