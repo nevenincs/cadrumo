@@ -1,16 +1,14 @@
-# SOME DESCRIPTIVE TITLE.
+# Catalan translation of the Cadrumo documentation.
 # Copyright (C) 2026, the Cadrumo authors
 # This file is distributed under the same license as the CADRUMO package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-07-18 13:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"PO-Revision-Date: 2026-07-18 14:00+0200\n"
+"Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
 "Language-Team: ca <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
@@ -21,7 +19,7 @@ msgstr ""
 
 #: ../../updates.md:1
 msgid "Updates and downloads"
-msgstr ""
+msgstr "Actualitzacions i baixades"
 
 #: ../../updates.md:3
 msgid ""
@@ -30,6 +28,11 @@ msgid ""
 "footer point here so important project status is available from every "
 "documentation page."
 msgstr ""
+"Utilitza aquesta pàgina com a centre del projecte per a les notes de versió, "
+"els avisos crítics, els enllaços de baixada, les notes d'esdeveniments i les "
+"vies de suport. El bàner i el peu de pàgina hi apunten perquè l'estat "
+"important del projecte estigui disponible des de cada pàgina de la "
+"documentació."
 
 #: ../../updates.md:8
 msgid ""
@@ -38,56 +41,72 @@ msgid ""
 "submission rules with the Agencia Estatal de Administración Tributaria "
 "(AEAT) before you file."
 msgstr ""
+"Cadrumo és programari en fase pre-alfa. Considera cada nota de versió com a "
+"potencialment rellevant abans d'actualitzar, i verifica els terminis de "
+"presentació, els formularis i les normes de presentació amb l'Agencia Estatal "
+"de Administración Tributaria (AEAT) abans de presentar."
 
 #: ../../updates.md:18
 msgid "Latest download"
-msgstr ""
+msgstr "Última baixada"
 
 #: ../../updates.md:23
 msgid ""
 "Start with the latest release when a packaged download is available. "
 "Record the installed version before preparing any filing records."
 msgstr ""
+"Comença amb l'última versió quan hi hagi disponible una baixada empaquetada. "
+"Anota la versió instal·lada abans de preparar cap registre de presentació."
 
 #: ../../updates.md:27 ../../updates.md:65
 msgid "Critical updates"
-msgstr ""
+msgstr "Actualitzacions crítiques"
 
 #: ../../updates.md:32
 msgid ""
 "Use release notes to check breaking changes, migration notes, supported "
 "workflows, and known limitations before changing versions."
 msgstr ""
+"Consulta les notes de versió per comprovar els canvis incompatibles, les "
+"notes de migració, els fluxos de treball admesos i les limitacions conegudes "
+"abans de canviar de versió."
 
 #: ../../updates.md:36
 msgid "Report an issue"
-msgstr ""
+msgstr "Informa d'un problema"
 
 #: ../../updates.md:41
 msgid ""
 "Open an issue for defects, confusing documentation, missing workflow "
 "coverage, or release notes that need clarification."
 msgstr ""
+"Obre una incidència per a defectes, documentació confusa, manca de cobertura "
+"d'un flux de treball o notes de versió que necessiten aclariment."
 
 #: ../../updates.md:45
 msgid "Source repository"
-msgstr ""
+msgstr "Repositori del codi font"
 
 #: ../../updates.md:50
 msgid ""
 "Use the repository for source code, development history, project "
 "metadata, and links to release and issue activity."
 msgstr ""
+"Utilitza el repositori per al codi font, l'historial de desenvolupament, les "
+"metadades del projecte i els enllaços a l'activitat de versions i "
+"incidències."
 
 #: ../../updates.md:55
 msgid "Current status"
-msgstr ""
+msgstr "Estat actual"
 
 #: ../../updates.md:57
 msgid ""
 "Cadrumo is local-first, pre-alpha software for preparing Spanish tax "
 "filing records ([read the full disclaimer](disclaimer.md))."
 msgstr ""
+"Cadrumo és programari local-first en fase pre-alfa per preparar registres de "
+"presentació d'impostos espanyols ([llegeix l'avís legal complet](disclaimer.md))."
 
 #: ../../updates.md:60
 msgid ""
@@ -96,6 +115,11 @@ msgid ""
 "Before relying on a version for a filing period, read the release notes "
 "and keep a record of the installed version used to prepare the export."
 msgstr ""
+"Espera canvis incompatibles mentre s'enforteixen encara els fluxos de treball "
+"de la interfície de línia d'ordres (CLI), la documentació generada i la "
+"cobertura de modelos. Abans de confiar en una versió per a un període de "
+"presentació, llegeix les notes de versió i guarda un registre de la versió "
+"instal·lada que has fet servir per preparar l'exportació."
 
 #: ../../updates.md:67
 msgid ""
@@ -103,34 +127,37 @@ msgid ""
 "through the site banner when the documentation needs to draw attention to"
 " a change."
 msgstr ""
+"Les actualitzacions crítiques es publiquen a través de les notes de versió i "
+"es destaquen mitjançant el bàner del lloc quan la documentació necessita "
+"cridar l'atenció sobre un canvi."
 
 #: ../../updates.md:70
 msgid "Check this section when you need to know whether a release affects:"
-msgstr ""
+msgstr "Consulta aquesta secció quan necessitis saber si una versió afecta:"
 
 #: ../../updates.md:72
 msgid "filing workflow order;"
-msgstr ""
+msgstr "l'ordre del flux de treball de presentació;"
 
 #: ../../updates.md:73
 msgid "taxpayer profile setup;"
-msgstr ""
+msgstr "la configuració del perfil de contribuent;"
 
 #: ../../updates.md:74
 msgid "ledger import or classification behavior;"
-msgstr ""
+msgstr "el comportament d'importació o de classificació del ledger;"
 
 #: ../../updates.md:75
 msgid "modelo calculation, verification, or export behavior;"
-msgstr ""
+msgstr "el comportament de càlcul, verificació o exportació de modelos;"
 
 #: ../../updates.md:76
 msgid "storage, receipts, or reconciliation steps."
-msgstr ""
+msgstr "els passos d'emmagatzematge, rebuts o conciliació."
 
 #: ../../updates.md:78
 msgid "Download guidance"
-msgstr ""
+msgstr "Orientació per a la baixada"
 
 #: ../../updates.md:80
 msgid ""
@@ -139,20 +166,27 @@ msgid ""
 "If no packaged artifact is available for your environment, open an issue "
 "so the gap is recorded."
 msgstr ""
+"Utilitza l'enllaç de l'última versió quan necessitis la versió empaquetada "
+"actual, i segueix la [guia d'instal·lació](workstation-setup.md) per "
+"instal·lar-la. Si no hi ha cap artefacte empaquetat disponible per al teu "
+"entorn, obre una incidència perquè quedi registrada la mancança."
 
 #: ../../updates.md:85
 msgid "After installing or upgrading, run:"
-msgstr ""
+msgstr "Després d'instal·lar o actualitzar, executa:"
 
 #: ../../updates.md:91
 msgid ""
 "Keep that version with the local export, AEAT submission receipt, and any"
 " reconciliation notes for the filing period."
 msgstr ""
+"Guarda aquesta versió juntament amb l'exportació local, el justificante de "
+"presentació de l'AEAT i qualsevol nota de conciliació del període de "
+"presentació."
 
 #: ../../updates.md:94
 msgid "Deadlines and project announcements"
-msgstr ""
+msgstr "Terminis i anuncis del projecte"
 
 #: ../../updates.md:96
 msgid ""
@@ -161,26 +195,31 @@ msgid ""
 "deadlines, forms, and official changes with AEAT or a qualified "
 "professional before filing."
 msgstr ""
+"Aquesta documentació pot descriure els fluxos de treball de presentació i "
+"l'ordre de preparació, però no publica cap calendari fiscal autoritzat. "
+"Confirma sempre els terminis, els formularis i els canvis oficials amb l'AEAT "
+"o un professional qualificat abans de presentar."
 
 #: ../../updates.md:100
 msgid ""
 "Project events that affect documentation readers should be announced "
 "through:"
 msgstr ""
+"Els esdeveniments del projecte que afecten els lectors de la documentació "
+"s'han d'anunciar a través de:"
 
 #: ../../updates.md:102
 msgid "the site banner for short-lived notices;"
-msgstr ""
+msgstr "el bàner del lloc per a avisos de curta durada;"
 
 #: ../../updates.md:103
 msgid "this page for durable update and download routes;"
-msgstr ""
+msgstr "aquesta pàgina per a vies d'actualització i baixada duradores;"
 
 #: ../../updates.md:104
 msgid "release notes for version-specific changes;"
-msgstr ""
+msgstr "les notes de versió per a canvis específics de cada versió;"
 
 #: ../../updates.md:105
 msgid "issues for open defects, regressions, and documentation gaps."
-msgstr ""
-
+msgstr "les incidències per a defectes oberts, regressions i mancances de la documentació."
