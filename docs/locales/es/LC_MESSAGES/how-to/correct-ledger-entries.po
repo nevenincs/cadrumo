@@ -429,7 +429,7 @@ msgstr ""
 "Un registro de evidencia adjunto -un recibo o una factura- no se borra "
 "cuando corriges una transacción. Después de una división o una fusión, "
 "comprueba las transacciones nuevas y vuelve a adjuntar la evidencia donde "
-"haga falta. La [guía de evidencia](ledger-evidence.md) trata cómo adjuntar y "
+"haz falta. La [guía de evidencia](ledger-evidence.md) trata cómo adjuntar y "
 "comprobar la evidencia."
 
 #: ../../how-to/correct-ledger-entries.md:122

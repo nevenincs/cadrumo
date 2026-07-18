@@ -28,9 +28,9 @@ msgid ""
 "local records to a file you can upload yourself through the Agencia "
 "Estatal de Administración Tributaria (AEAT) portal."
 msgstr ""
-"Use esto cuando sea nuevo en Cadrumo y quiera el camino más corto desde "
-"sus registros locales hasta un fichero que pueda subir usted mismo por el"
-" portal de la Agencia Estatal de Administración Tributaria (AEAT)."
+"Usa esto cuando sea nuevo en Cadrumo y quiera el camino más corto desde "
+"tus registros locales hasta un fichero que puedas subir tú mismo por el "
+"portal de la Agencia Estatal de Administración Tributaria (AEAT)."
 
 #: ../../how-to/quickstart.md:7
 msgid ""
@@ -41,7 +41,7 @@ msgid ""
 msgstr ""
 "Cadrumo, invocado como el comando `aeat`, prepara, comprueba y exporta "
 "ficheros locales para los formularios tributarios españoles. No presenta "
-"declaraciones ante la AEAT. Usted sigue siendo responsable de revisar y "
+"declaraciones ante la AEAT. Sigues siendo responsable de revisar y "
 "presentar por los canales oficiales de la AEAT."
 
 #: ../../how-to/quickstart.md:11
@@ -64,7 +64,7 @@ msgid ""
 "](profile-setup.md) covers every profile question in depth."
 msgstr ""
 "**Requisito:** un perfil de contribuyente válido. El paso 1 de abajo crea"
-" uno; si ya tiene un perfil, omítalo. [Configure su perfil de "
+" uno; si ya tiene un perfil, omítelo. [Configura tu perfil de "
 "contribuyente](profile-setup.md) trata en profundidad cada pregunta del "
 "perfil."
 
@@ -77,8 +77,8 @@ msgid ""
 "This page assumes the `aeat` command is installed and on your path. "
 "Confirm with:"
 msgstr ""
-"Esta página supone que el comando `aeat` está instalado y en su ruta. "
-"Confírmelo con:"
+"Esta página supone que el comando `aeat` está instalado y en tu ruta. "
+"Confírmalo con:"
 
 #: ../../how-to/quickstart.md:29
 msgid ""
@@ -86,7 +86,7 @@ msgid ""
 "setup: the package download, the optional integrations, and the AI-"
 "assistant (MCP) surface."
 msgstr ""
-"Si no lo está, [Instale Cadrumo](../workstation-setup.md) trata la "
+"Si no lo está, [Instala Cadrumo](../workstation-setup.md) trata la "
 "configuración completa: la descarga del paquete, las integraciones "
 "opcionales y la superficie del asistente de IA (MCP)."
 
@@ -102,10 +102,10 @@ msgid ""
 "unattended runs, see [Run without a passphrase prompt](protect-data-"
 "access.md#run-without-a-passphrase-prompt)."
 msgstr ""
-"`aeat` cifra sus datos locales con una clave maestra derivada de una "
+"`aeat` cifra tus datos locales con una clave maestra derivada de una "
 "frase de contraseña. El primer comando que toca el almacén pide la frase "
 "de contraseña y la herramienta la reutiliza durante el resto de la "
-"sesión. Para ejecuciones desatendidas, consulte [Ejecute sin solicitud de"
+"sesión. Para ejecuciones desatendidas, consulta [Ejecuta sin solicitud de"
 " frase de contraseña](protect-data-access.md#run-without-a-passphrase-"
 "prompt)."
 
@@ -119,15 +119,15 @@ msgstr ""
 
 #: ../../how-to/quickstart.md:43
 msgid "1. Create your taxpayer profile"
-msgstr "1. Cree su perfil de contribuyente"
+msgstr "1. Crea tu perfil de contribuyente"
 
 #: ../../how-to/quickstart.md:45
 msgid ""
 "A profile is your personal taxpayer record inside the tool. Create it "
 "with your own details:"
 msgstr ""
-"Un perfil es su registro personal de contribuyente dentro de la "
-"herramienta. Créelo con sus propios datos:"
+"Un perfil es tu registro personal de contribuyente dentro de la "
+"herramienta. Créalo con tus propios datos:"
 
 #: ../../how-to/quickstart.md:51
 msgid ""
@@ -144,7 +144,7 @@ msgstr ""
 
 #: ../../how-to/quickstart.md:56
 msgid "Confirm the active profile is configured and ready:"
-msgstr "Confirme que el perfil activo está configurado y listo:"
+msgstr "Confirma que el perfil activo está configurado y listo:"
 
 #: ../../how-to/quickstart.md:62
 msgid ""
@@ -154,13 +154,13 @@ msgid ""
 "existing profile."
 msgstr ""
 "La configuración del perfil puede hacer muchas más preguntas fiscales. "
-"Use [Configure su perfil de contribuyente](profile-setup.md) para elegir "
+"Usa [Configura tu perfil de contribuyente](profile-setup.md) para elegir "
 "las respuestas correctas, ver todos los grupos de preguntas del perfil, "
 "listar o cambiar perfiles, y exportar o importar un perfil existente."
 
 #: ../../how-to/quickstart.md:67
 msgid "2. Add your transactions"
-msgstr "2. Añada sus movimientos"
+msgstr "2. Añade tus movimientos"
 
 #: ../../how-to/quickstart.md:69
 msgid ""
@@ -185,7 +185,7 @@ msgstr ""
 
 #: ../../how-to/quickstart.md:81
 msgid "List the recognised expense categories any time:"
-msgstr "Liste las categorías de gasto reconocidas en cualquier momento:"
+msgstr "Lista las categorías de gasto reconocidas en cualquier momento:"
 
 #: ../../how-to/quickstart.md:87
 msgid ""
@@ -193,7 +193,7 @@ msgid ""
 "delimited CSV with comma decimals and a negative `Importe` for money "
 "leaving the account:"
 msgstr ""
-"Si en cambio tiene un extracto bancario exportado, impórtelo. `aeat` lee "
+"Si en cambio tiene un extracto bancario exportado, impórtalo. `aeat` lee "
 "un CSV delimitado por punto y coma, con decimales de coma y un `Importe` "
 "negativo para el dinero que sale de la cuenta:"
 
@@ -202,7 +202,7 @@ msgid ""
 "Preview the import, then run it for real (shown as a display-only "
 "example, since running it here would duplicate the two rows added above):"
 msgstr ""
-"Previsualice la importación y luego ejecútela de verdad (se muestra como "
+"Previsualiza la importación y luego ejecútala de verdad (se muestra como "
 "ejemplo ilustrativo, ya que ejecutarla aquí duplicaría las dos filas "
 "añadidas arriba):"
 
@@ -213,7 +213,7 @@ msgid ""
 "above are already classified, so you can skip straight to step 4."
 msgstr ""
 "Las filas importadas llegan sin categoría fiscal y deben clasificarse "
-"antes de que cuenten en un cálculo (consulte el paso siguiente). Las "
+"antes de que cuenten en un cálculo (consulta el paso siguiente). Las "
 "filas de `ledger add` de arriba ya están clasificadas, así que puede "
 "pasar directamente al paso 4."
 
@@ -223,13 +223,13 @@ msgid ""
 "full transaction workflow: import, add, update, remove, review, classify,"
 " allocate, and run readiness checks."
 msgstr ""
-"Use [Importe y gestione los movimientos](import-bank-statements.md) para "
+"Usa [Importa y gestiona los movimientos](import-bank-statements.md) para "
 "el flujo completo de movimientos: importar, añadir, actualizar, eliminar,"
 " revisar, clasificar, asignar y ejecutar comprobaciones de preparación."
 
 #: ../../how-to/quickstart.md:110
 msgid "3. Classify imported transactions"
-msgstr "3. Clasifique los movimientos importados"
+msgstr "3. Clasifica los movimientos importados"
 
 #: ../../how-to/quickstart.md:112
 msgid ""
@@ -240,8 +240,8 @@ msgid ""
 msgstr ""
 "Cada movimiento importado no tiene categoría fiscal hasta que lo "
 "clasifica. La clasificación le dice a `aeat` si una fila es un gasto de "
-"negocio, un gasto personal o una mezcla de ambos. Tome el id del "
-"movimiento de la salida de la fila, clasifíquelo y compruebe que el "
+"negocio, un gasto personal o una mezcla de ambos. Toma el id del "
+"movimiento de la salida de la fila, clasifícalo y comprueba que el "
 "trimestre está listo:"
 
 #: ../../how-to/quickstart.md:121
@@ -256,14 +256,14 @@ msgid ""
 "review path, including manual classification, bulk CSV classification, "
 "mixed-use allocation, tax fields, and optional LLM suggestions."
 msgstr ""
-"Use [Clasifique los movimientos](classify-transactions.md) para el "
+"Usa [Clasifica los movimientos](classify-transactions.md) para el "
 "recorrido de revisión detallado, incluida la clasificación manual, la "
 "clasificación masiva por CSV, la asignación de uso mixto, los campos "
 "fiscales y las sugerencias opcionales del LLM."
 
 #: ../../how-to/quickstart.md:127
 msgid "4. Create, calculate, and verify the draft"
-msgstr "4. Cree, calcule y verifique el borrador"
+msgstr "4. Crea, calcula y verifica el borrador"
 
 #: ../../how-to/quickstart.md:129
 msgid ""
@@ -272,14 +272,14 @@ msgid ""
 "modelo is a Spanish tax form, and the year plus period identify the "
 "filing you are preparing."
 msgstr ""
-"Con el perfil y un ledger clasificado en su sitio, prepare el borrador "
-"del Modelo 130 para el primer trimestre de 2026, calcúlelo y verifíquelo."
+"Con el perfil y un ledger clasificado en su sitio, prepara el borrador "
+"del Modelo 130 para el primer trimestre de 2026, calcúlalo y verifícalo."
 " Un modelo es un formulario tributario español, y el año más el periodo "
 "identifican la presentación que está preparando."
 
 #: ../../how-to/quickstart.md:138
 msgid "Read the frames in order:"
-msgstr "Lea los marcos en orden:"
+msgstr "Lee los marcos en orden:"
 
 #: ../../how-to/quickstart.md:140
 msgid ""
@@ -289,7 +289,7 @@ msgid ""
 "Other period codes are `2T`, `3T`, `4T` for subsequent quarters and `0A` "
 "for an annual filing."
 msgstr ""
-"Cree el borrador. El comando crea su espacio de trabajo de presentación "
+"Crea el borrador. El comando crea su espacio de trabajo de presentación "
 "para ese formulario si aún no existe uno; ejecutarlo de nuevo devuelve el"
 " espacio de trabajo existente. `--period 1T` significa el primer "
 "trimestre. Otros códigos de periodo son `2T`, `3T`, `4T` para los "
@@ -304,10 +304,10 @@ msgid ""
 "never part of your income), casilla `03` the net yield (`500.00`), and "
 "casilla `04` the instalment (`100.00`, twenty percent of the net)."
 msgstr ""
-"Calcule los valores. El Modelo 130 necesita tres cifras del periodo "
+"Calcula los valores. El Modelo 130 necesita tres cifras del periodo "
 "previo; para una primera presentación son todas cero, pasadas como "
 "bindings para que al cálculo no le falte ninguna entrada. La herramienta "
-"rellena las casillas a partir de su ledger: la casilla `01` son los "
+"rellena las casillas a partir de tu ledger: la casilla `01` son los "
 "ingresos del trimestre (`1000.00`, la base imponible, ya que el IVA nunca"
 " forma parte de sus ingresos), la casilla `03` el rendimiento neto "
 "(`500.00`) y la casilla `04` el pago fraccionado (`100.00`, el veinte por"
@@ -322,7 +322,7 @@ msgid ""
 "your activity start date; this is informational and does not block the "
 "export."
 msgstr ""
-"Verifique el borrador. La verificación es una comprobación local. No "
+"Verifica el borrador. La verificación es una comprobación local. No "
 "envía nada a la AEAT. Cuando el borrador está completo, el informe "
 "muestra `completeness_status complete` y `granted_verificado_completo "
 "true`. Una primera presentación también muestra un aviso que señala que "
@@ -331,7 +331,7 @@ msgstr ""
 
 #: ../../how-to/quickstart.md:156
 msgid "Review every saved box with:"
-msgstr "Revise cada casilla guardada con:"
+msgstr "Revisa cada casilla guardada con:"
 
 #: ../../how-to/quickstart.md:162
 msgid ""
@@ -342,16 +342,16 @@ msgid ""
 "work behind the scenes, see [The filing workflow](filing-spine.md)."
 msgstr ""
 "Si falta un valor o un modelo necesita un valor que debe introducir a "
-"mano, consulte [Revise y aporte las entradas de cálculo](review-"
+"mano, consulta [Revisa y aporta las entradas de cálculo](review-"
 "calculation-values.md). Esa página cubre la introducción de valores de "
 "casilla que faltan y el tratamiento de las cifras arrastradas de "
 "trimestres anteriores. Para saber cómo organiza la herramienta el trabajo"
-" de presentación entre bastidores, consulte [El flujo de presentación"
+" de presentación entre bastidores, consulta [El flujo de presentación"
 "](filing-spine.md)."
 
 #: ../../how-to/quickstart.md:168
 msgid "5. Export the file"
-msgstr "5. Exporte el fichero"
+msgstr "5. Exporta el fichero"
 
 #: ../../how-to/quickstart.md:170
 msgid "Export creates the `.boe` file, the format AEAT's upload portal accepts:"
@@ -366,7 +366,7 @@ msgid ""
 "you uploaded the exact file that was generated."
 msgstr ""
 "La herramienta muestra dónde se guardó el fichero, su tamaño en bytes y "
-"un código de verificación `file_sha256`. Conserve este código para poder "
+"un código de verificación `file_sha256`. Conserva este código para poder "
 "confirmar más tarde que subió exactamente el fichero que se generó."
 
 #: ../../how-to/quickstart.md:179
@@ -381,14 +381,14 @@ msgstr ""
 "Este ejemplo usa un gasto con IVA deducible, y la exportación se niega a "
 "ello hasta que la factura de compra se vincule como evidencia (el mensaje"
 " dice `Deductible IVA ledger rows require linked purchase invoice "
-"evidence`). Adjunte primero la factura y luego vuelva a ejecutar la "
-"exportación. [Adjunte facturas y recibos](ledger-evidence.md) y [Prepare "
+"evidence`). Adjunta primero la factura y luego vuelve a ejecutar la "
+"exportación. [Adjunta facturas y recibos](ledger-evidence.md) y [Prepara "
 "una presentación de IVA con el Modelo 303](modelo-303.md) recorren el "
 "flujo de evidencia de principio a fin."
 
 #: ../../how-to/quickstart.md:186
 msgid "6. Check what else is due (optional)"
-msgstr "6. Compruebe qué más vence (opcional)"
+msgstr "6. Comprueba qué más vence (opcional)"
 
 #: ../../how-to/quickstart.md:188
 msgid ""
@@ -396,8 +396,8 @@ msgid ""
 "a fresh profile, pass `--allow-incomplete` so the agenda runs before "
 "every profile fact is filled in:"
 msgstr ""
-"Use el calendario local para ver qué puede vencer para el perfil activo. "
-"En un perfil recién creado, pase `--allow-incomplete` para que la agenda "
+"Usa el calendario local para ver qué puede vencer para el perfil activo. "
+"En un perfil recién creado, pasa `--allow-incomplete` para que la agenda "
 "se ejecute antes de que todos los datos del perfil estén rellenos:"
 
 #: ../../how-to/quickstart.md:196
@@ -408,12 +408,12 @@ msgid ""
 msgstr ""
 "El calendario usa los datos del perfil y el contexto de presentación "
 "local. No sustituye al portal oficial de la AEAT. Para el flujo completo "
-"del calendario, consulte [Planifique su calendario de presentaciones"
+"del calendario, consulta [Planifica tu calendario de presentaciones"
 "](filing-calendar.md)."
 
 #: ../../how-to/quickstart.md:200
 msgid "7. File manually through AEAT"
-msgstr "7. Presente manualmente ante la AEAT"
+msgstr "7. Presenta manualmente ante la AEAT"
 
 #: ../../how-to/quickstart.md:202
 msgid "The final filing step is outside `aeat`:"
@@ -421,22 +421,22 @@ msgstr "El paso final de presentación queda fuera de `aeat`:"
 
 #: ../../how-to/quickstart.md:204
 msgid "Log in to the official AEAT electronic filing portal."
-msgstr "Inicie sesión en el portal oficial de presentación electrónica de la AEAT."
+msgstr "Inicia sesión en el portal oficial de presentación electrónica de la AEAT."
 
 #: ../../how-to/quickstart.md:205
 msgid "Choose the Modelo 130 file-upload path for the relevant year and period."
 msgstr ""
-"Elija la vía de subida de fichero del Modelo 130 para el año y el periodo"
+"Elige la vía de subida de fichero del Modelo 130 para el año y el periodo"
 " correspondientes."
 
 #: ../../how-to/quickstart.md:206
 msgid "Upload the exported `.boe` file."
-msgstr "Suba el fichero `.boe` exportado."
+msgstr "Sube el fichero `.boe` exportado."
 
 #: ../../how-to/quickstart.md:207
 msgid "Review, sign, and keep the justificante AEAT issues after filing."
 msgstr ""
-"Revise, firme y conserve el justificante que la AEAT emite tras la "
+"Revisa, firme y conserva el justificante que la AEAT emite tras la "
 "presentación."
 
 #: ../../how-to/quickstart.md:209
@@ -446,12 +446,12 @@ msgid ""
 "aeat.md)."
 msgstr ""
 "La lista de comprobación completa del traspaso, incluido qué hacer cuando"
-" la subida sale mal, está en [Suba su modelo exportado en el portal de la"
+" la subida sale mal, está en [Sube tu modelo exportado en el portal de la"
 " AEAT](file-at-aeat.md)."
 
 #: ../../how-to/quickstart.md:212
 msgid "After a real filing, record the local filing marker:"
-msgstr "Tras una presentación real, registre el marcador de presentación local:"
+msgstr "Tras una presentación real, registra el marcador de presentación local:"
 
 #: ../../how-to/quickstart.md:217
 msgid ""
@@ -463,7 +463,7 @@ msgstr ""
 "Al igual que la exportación, `work file` necesita primero que la factura "
 "del gasto con IVA deducible esté vinculada como evidencia (se niega con "
 "`Deductible IVA ledger rows require linked purchase invoice evidence`). "
-"Adjunte la factura y luego registre el marcador."
+"Adjunta la factura y luego registra el marcador."
 
 #: ../../how-to/quickstart.md:221
 msgid ""
@@ -471,9 +471,9 @@ msgid ""
 "AEAT. To compare your local record with the AEAT receipt, see [How to "
 "reconcile a filed modelo against its justificante](reconcile.md)."
 msgstr ""
-"Esto solo registra la acción en su propio ordenador. No contacta con la "
-"AEAT. Para comparar su registro local con el resguardo de la AEAT, "
-"consulte [Cómo conciliar un modelo presentado con su "
+"Esto solo registra la acción en tu propio ordenador. No contacta con la "
+"AEAT. Para comparar tu registro local con el resguardo de la AEAT, "
+"consulta [Cómo conciliar un modelo presentado con su "
 "justificante](reconcile.md)."
 
 #: ../../how-to/quickstart.md:225
@@ -485,7 +485,7 @@ msgid ""
 "[Set up your taxpayer profile](profile-setup.md) if profile facts are "
 "still incomplete."
 msgstr ""
-"[Configure su perfil de contribuyente](profile-setup.md) si los datos del"
+"[Configura tu perfil de contribuyente](profile-setup.md) si los datos del"
 " perfil aún están incompletos."
 
 #: ../../how-to/quickstart.md:229
@@ -493,7 +493,7 @@ msgid ""
 "[Import and manage transactions](import-bank-statements.md) when your "
 "ledger is not ready yet."
 msgstr ""
-"[Importe y gestione los movimientos](import-bank-statements.md) cuando su"
+"[Importa y gestiona los movimientos](import-bank-statements.md) cuando su"
 " ledger aún no esté listo."
 
 #: ../../how-to/quickstart.md:231
@@ -501,7 +501,7 @@ msgid ""
 "[Classify transactions](classify-transactions.md) before calculating from"
 " imported rows."
 msgstr ""
-"[Clasifique los movimientos](classify-transactions.md) antes de calcular "
+"[Clasifica los movimientos](classify-transactions.md) antes de calcular "
 "a partir de filas importadas."
 
 #: ../../how-to/quickstart.md:233
@@ -509,7 +509,7 @@ msgid ""
 "[How your records become tax figures](../explanation/from-records-to-"
 "figures.md) - understand the transaction-to-box pipeline."
 msgstr ""
-"[Cómo sus registros se convierten en cifras fiscales](../explanation"
+"[Cómo tus registros se convierten en cifras fiscales](../explanation"
 "/from-records-to-figures.md): comprenda la cadena de movimiento a "
 "casilla."
 
@@ -518,7 +518,7 @@ msgid ""
 "[Review and supply calculation inputs](review-calculation-values.md) when"
 " a modelo needs manual values, offsets, or binding review."
 msgstr ""
-"[Revise y aporte las entradas de cálculo](review-calculation-values.md) "
+"[Revisa y aporta las entradas de cálculo](review-calculation-values.md) "
 "cuando un modelo necesite valores manuales, compensaciones o la revisión "
 "de bindings."
 
@@ -527,6 +527,6 @@ msgid ""
 "[Diagnose and repair your local setup](troubleshooting.md) if a command "
 "stops or the local state looks wrong."
 msgstr ""
-"[Diagnostique y repare su configuración local](troubleshooting.md) si un "
+"[Diagnostica y repara tu configuración local](troubleshooting.md) si un "
 "comando se detiene o el estado local parece incorrecto."
 

@@ -20,7 +20,7 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:1
 msgid "Set up your taxpayer profile"
-msgstr "Configure su perfil de contribuyente"
+msgstr "Configura tu perfil de contribuyente"
 
 #: ../../how-to/profile-setup.md:3
 #, python-brace-format
@@ -30,7 +30,7 @@ msgid ""
 "calculate a {term}`modelo`, or export a filing."
 msgstr ""
 "Un perfil contiene los datos de un contribuyente que todo comando `aeat "
-"app` lee y actualiza. Configure uno antes de importar movimientos, "
+"app` lee y actualiza. Configura uno antes de importar movimientos, "
 "calcular un {term}`modelo` o exportar una presentación."
 
 #: ../../how-to/profile-setup.md:7
@@ -42,16 +42,16 @@ msgid ""
 msgstr ""
 "Un perfil es local. Crear, editar, mostrar, exportar o importar un perfil"
 " nunca envía nada a la Agencia Estatal de Administración Tributaria "
-"(AEAT). Cadrumo construye y verifica su presentación en su máquina; usted"
-" la sube por su cuenta."
+"(AEAT). Cadrumo construye y verifica tu presentación en tu máquina; tú la"
+" subes por tu cuenta."
 
 #: ../../how-to/profile-setup.md:12
 msgid ""
 "If you haven't installed Cadrumo and run the `aeat` command yet, start "
 "with the [quickstart](quickstart.md), then come back here."
 msgstr ""
-"Si aún no ha instalado Cadrumo ni ha ejecutado el comando `aeat`, empiece"
-" por la [guía rápida](quickstart.md) y luego vuelva aquí."
+"Si aún no ha instalado Cadrumo ni ha ejecutado el comando `aeat`, empieza"
+" por la [guía rápida](quickstart.md) y luego vuelve aquí."
 
 #: ../../how-to/profile-setup.md:15
 msgid "What the active profile means"
@@ -78,10 +78,10 @@ msgid ""
 "local-first and human-gated, see the [explanation "
 "guides](../explanation/index.md)."
 msgstr ""
-"Mantenga un perfil por contribuyente. Añada un segundo perfil cuando "
+"Mantén un perfil por contribuyente. Añade un segundo perfil cuando "
 "prepare presentaciones para otro contribuyente, separe un perfil de "
 "prueba de uno real o restaure una copia con otro nombre. Para entender "
-"por qué la herramienta es local primero y con control humano, consulte "
+"por qué la herramienta es local primero y con control humano, consulta "
 "las [guías de explicación](../explanation/index.md)."
 
 #: ../../how-to/profile-setup.md:27
@@ -91,8 +91,8 @@ msgid ""
 "whole flow: it lists the profiles, adds a second one, and switches the "
 "active context to it."
 msgstr ""
-"Liste sus perfiles con `aeat config profile list`, vea cuál está activo, "
-"añada un segundo contribuyente y cambie a él. El ejemplo ejecuta todo el "
+"Lista tus perfiles con `aeat config profile list`, ve cuál está activo, "
+"añade un segundo contribuyente y cambia a él. El ejemplo ejecuta todo el "
 "flujo: lista los perfiles, añade uno segundo y cambia el contexto activo "
 "a él."
 
@@ -108,7 +108,7 @@ msgstr ""
 
 #: ../../how-to/profile-setup.md:39
 msgid "Decide your facts before you start"
-msgstr "Decida sus datos antes de empezar"
+msgstr "Decide tus datos antes de empezar"
 
 #: ../../how-to/profile-setup.md:41
 msgid ""
@@ -118,7 +118,7 @@ msgid ""
 msgstr ""
 "La configuración del perfil hace una serie de preguntas. La mayoría son "
 "condicionales: las respuestas que da al principio deciden qué preguntas "
-"posteriores aparecen. Decida primero estos datos y el resto de la "
+"posteriores aparecen. Decide primero estos datos y el resto de la "
 "configuración se deduce:"
 
 #: ../../how-to/profile-setup.md:45
@@ -187,22 +187,22 @@ msgid ""
 msgstr ""
 "No necesita memorizar los nombres de las opciones. El asistente guiado le"
 " acompaña por estas decisiones. Para la lista completa y actual de "
-"opciones y sus valores admitidos, ejecute `aeat config profile create "
+"opciones y sus valores admitidos, ejecuta `aeat config profile create "
 "--help` y `aeat config profile edit --help`:"
 
 #: ../../how-to/profile-setup.md:68
 msgid "Create your profile"
-msgstr "Cree su perfil"
+msgstr "Crea tu perfil"
 
 #: ../../how-to/profile-setup.md:70
 msgid "Create a profile interactively, or non-interactively with flags."
 msgstr ""
-"Cree un perfil de forma interactiva, o de forma no interactiva con "
+"Crea un perfil de forma interactiva, o de forma no interactiva con "
 "opciones."
 
 #: ../../how-to/profile-setup.md:72
 msgid "Run the guided wizard when you're setting up a profile for the first time:"
-msgstr "Ejecute el asistente guiado cuando configure un perfil por primera vez:"
+msgstr "Ejecuta el asistente guiado cuando configure un perfil por primera vez:"
 
 #: ../../how-to/profile-setup.md:77
 msgid ""
@@ -221,8 +221,8 @@ msgid ""
 "anything. For unattended runs, see [Run without a passphrase prompt"
 "](protect-data-access.md#run-without-a-passphrase-prompt)."
 msgstr ""
-"El asistente solicita su frase de contraseña de la clave maestra antes de"
-" guardar nada. Para ejecuciones desatendidas, consulte [Ejecute sin "
+"El asistente solicita tu frase de contraseña de la clave maestra antes de"
+" guardar nada. Para ejecuciones desatendidas, consulta [Ejecuta sin "
 "solicitud de frase de contraseña](protect-data-access.md#run-without-a"
 "-passphrase-prompt)."
 
@@ -231,7 +231,7 @@ msgid ""
 "Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can "
 "also store its default output language."
 msgstr ""
-"Use `--language en`, `es`, `ca` o `hu` para un solo comando. Un perfil "
+"Usa `--language en`, `es`, `ca` o `hu` para un solo comando. Un perfil "
 "también puede guardar su idioma de salida predeterminado."
 
 #: ../../how-to/profile-setup.md:88
@@ -241,7 +241,7 @@ msgid ""
 "profile create`. The [worked example below](#worked-example-a-natural-"
 "person-with-an-activity) runs a complete scripted create."
 msgstr ""
-"Use opciones con `--quiet` cuando quiera una configuración repetible y "
+"Usa opciones con `--quiet` cuando quiera una configuración repetible y "
 "automatizable, pasando el tipo de entidad, el identificador fiscal, el "
 "nombre y los apellidos a `aeat config profile create`. El [ejemplo "
 "práctico de más abajo](#worked-example-a-natural-person-with-an-activity)"
@@ -265,7 +265,7 @@ msgid ""
 "Add `--accept-defaults` when you intentionally want Cadrumo to fill the "
 "questions you omit from its built-in defaults."
 msgstr ""
-"Añada `--accept-defaults` cuando quiera intencionadamente que Cadrumo "
+"Añade `--accept-defaults` cuando quiera intencionadamente que Cadrumo "
 "rellene las preguntas que omite con sus valores predeterminados "
 "integrados."
 
@@ -279,8 +279,8 @@ msgid ""
 "economic activity, then inspects and validates it before you rely on it:"
 msgstr ""
 "Este ejemplo crea un perfil de persona física para un particular con una "
-"actividad económica, y luego lo inspecciona y lo valida antes de que "
-"usted se fíe de él:"
+"actividad económica, y luego lo inspecciona y lo valida antes de que te "
+"fíes de él:"
 
 #: ../../how-to/profile-setup.md:115
 msgid "The facts setup asks for"
@@ -296,7 +296,7 @@ msgid ""
 msgstr ""
 "La configuración agrupa sus preguntas por área de decisión. Estos valores"
 " son tokens de comando estables: distinguen mayúsculas y minúsculas y no "
-"se traducen. Ejecute `aeat config profile create --help` para la lista "
+"se traducen. Ejecuta `aeat config profile create --help` para la lista "
 "exhaustiva de opciones. Incluye las preguntas condicionales sobre "
 "cónyuge, unidad familiar, no residentes e inscripciones que esta guía "
 "resume en lugar de repetir."
@@ -307,7 +307,7 @@ msgstr "Quién es el contribuyente"
 
 #: ../../how-to/profile-setup.md:125
 msgid "Choose the entity type:"
-msgstr "Elija el tipo de entidad:"
+msgstr "Elige el tipo de entidad:"
 
 #: ../../how-to/profile-setup.md:127
 msgid "`natural_person` - an individual."
@@ -318,7 +318,7 @@ msgid ""
 "`legal_entity` - a company. Record its legal form too, such as `sl`, "
 "`sa`, or `cooperativa`."
 msgstr ""
-"`legal_entity`: una empresa. Registre también su forma jurídica, como "
+"`legal_entity`: una empresa. Registra también su forma jurídica, como "
 "`sl`, `sa` o `cooperativa`."
 
 #: ../../how-to/profile-setup.md:130
@@ -334,7 +334,7 @@ msgid ""
 "For a natural person, list each kind of income that applies, repeating "
 "the flag once per category:"
 msgstr ""
-"Para una persona física, enumere cada tipo de renta que corresponda, "
+"Para una persona física, enumera cada tipo de renta que corresponda, "
 "repitiendo la opción una vez por categoría:"
 
 #: ../../how-to/profile-setup.md:136
@@ -369,7 +369,7 @@ msgid ""
 "pure landlord, a salaried-only taxpayer, or a pensioner with no activity "
 "should not select it."
 msgstr ""
-"Elija `actividad_economica` solo cuando el contribuyente ejerza una "
+"Elige `actividad_economica` solo cuando el contribuyente ejerza una "
 "actividad. Un simple arrendador, un contribuyente solo asalariado o un "
 "pensionista sin actividad no deben seleccionarlo."
 
@@ -380,8 +380,8 @@ msgid ""
 "objetiva` for the objective-estimation (módulos) regime, which files "
 "Modelo 131 instead."
 msgstr ""
-"Para una actividad, registre cómo estima el IRPF su rendimiento. La "
-"estimación directa es la predeterminada y presenta el Modelo 130. Use "
+"Para una actividad, registra cómo estima el IRPF su rendimiento. La "
+"estimación directa es la predeterminada y presenta el Modelo 130. Usa "
 "`--irpf-estimation-regime objetiva` para el régimen de estimación "
 "objetiva (módulos), que presenta el Modelo 131 en su lugar."
 
@@ -399,7 +399,7 @@ msgid ""
 msgstr ""
 "El identificador fiscal (NIF, CIF, DNI o NIE) es obligatorio. Los "
 "ciudadanos españoles usan su DNI como NIF; los particulares extranjeros "
-"usan su NIE; las empresas usan un NIF o CIF. Registre el nombre y los "
+"usan su NIE; las empresas usan un NIF o CIF. Registra el nombre y los "
 "apellidos (o el nombre visible de la entidad), la actividad económica "
 "cuando la haya y el código postal del domicilio fiscal."
 
@@ -413,7 +413,7 @@ msgid ""
 "community (`--tax-residence-ccaa`), such as `madrid` or `cataluna`."
 msgstr ""
 "Para un residente sujeto al IRPF (Impuesto sobre la Renta de las Personas"
-" Físicas) español, establezca la comunidad autónoma (`--tax-residence-"
+" Físicas) español, establece la comunidad autónoma (`--tax-residence-"
 "ccaa`), como `madrid` o `cataluna`."
 
 #: ../../how-to/profile-setup.md:163
@@ -436,8 +436,8 @@ msgid ""
 "`DE`) and, when required, a fiscal representative with `--representante-"
 "fiscal-nif` and `--representante-fiscal-nombre`."
 msgstr ""
-"Para un no residente, establezca `--fiscal-residency non_resident_irnr` "
-"(no `--tax-residence-ccaa`), y luego aporte el país de residencia con "
+"Para un no residente, establece `--fiscal-residency non_resident_irnr` "
+"(no `--tax-residence-ccaa`), y luego aporta el país de residencia con "
 "`--country-of-fiscal-residence` (un código ISO 3166-1 alfa-2, como `DE`) "
 "y, cuando sea necesario, un representante fiscal con `--representante-"
 "fiscal-nif` y `--representante-fiscal-nombre`."
@@ -448,7 +448,7 @@ msgstr "Qué régimen de IVA corresponde"
 
 #: ../../how-to/profile-setup.md:181
 msgid "Set `--iva-regime` to the taxpayer's IVA regime:"
-msgstr "Establezca `--iva-regime` con el régimen de IVA del contribuyente:"
+msgstr "Establece `--iva-regime` con el régimen de IVA del contribuyente:"
 
 #: ../../how-to/profile-setup.md:183
 msgid "`GENERAL` - the standard regime; files quarterly IVA through Modelo 303."
@@ -481,7 +481,7 @@ msgid ""
 "Record any IVA enrollments that apply, such as ROI (intra-community "
 "operators) or OSS (one-stop-shop for cross-border B2C sales)."
 msgstr ""
-"Registre cualquier inscripción de IVA que corresponda, como el ROI "
+"Registra cualquier inscripción de IVA que corresponda, como el ROI "
 "(operadores intracomunitarios) o el OSS (ventanilla única para ventas "
 "transfronterizas B2C)."
 
@@ -495,7 +495,7 @@ msgid ""
 "that are true:"
 msgstr ""
 "Estos datos deciden qué formularios debe presentar el contribuyente. "
-"Registre los que sean ciertos:"
+"Registra los que sean ciertos:"
 
 #: ../../how-to/profile-setup.md:197
 msgid ""
@@ -543,7 +543,7 @@ msgstr ""
 "`--art109-activity-income-withholding-ge-70pct`: se aplica la excepción "
 "de cobertura de renta del 70 por ciento del art. 109 del RIRPF para los "
 "rendimientos cubiertos de actividades profesionales, agrícolas, ganaderas"
-" o forestales. Para los inicios de actividad, registre el dato de "
+" o forestales. Para los inicios de actividad, registra el dato de "
 "cobertura para el periodo de pago actual."
 
 #: ../../how-to/profile-setup.md:210
@@ -556,12 +556,12 @@ msgstr ""
 "Dejar sin marcar una opción de obligación no es lo mismo que marcarla "
 "como falsa. Cuando un dato no está declarado, la comprobación de "
 "preparación informa del formulario relacionado como *incompleto* (no se "
-"puede determinar), no como *no aplicable*. Registre cada dato que "
+"puede determinar), no como *no aplicable*. Registra cada dato que "
 "conozca."
 
 #: ../../how-to/profile-setup.md:214
 msgid "Check your facts before you calculate"
-msgstr "Compruebe sus datos antes de calcular"
+msgstr "Comprueba tus datos antes de calcular"
 
 #: ../../how-to/profile-setup.md:216
 msgid ""
@@ -571,7 +571,7 @@ msgid ""
 "then checks whether the profile holds the facts a specific form needs for"
 " a specific filing context:"
 msgstr ""
-"Un dato erróneo o que falta produce una presentación errónea. Confirme el"
+"Un dato erróneo o que falta produce una presentación errónea. Confirma el"
 " perfil antes de calcular un modelo. El ejemplo muestra el resumen de "
 "preparación y los datos guardados del perfil activo, los valida contra el"
 " esquema, y luego comprueba si el perfil contiene los datos que un "
@@ -585,13 +585,13 @@ msgid ""
 "before you continue."
 msgstr ""
 "`preflight` nombra los campos que faltan para ese contexto `(modelo, "
-"ejercicio de presentación, periodo)`. Use [Elija qué modelo presentar"
+"ejercicio de presentación, periodo)`. Usa [Elige qué modelo presentar"
 "](choose-modelo.md) para encontrar los códigos de periodo que un modelo "
-"acepta. Corrija cualquier dato erróneo con `edit` antes de continuar."
+"acepta. Corrige cualquier dato erróneo con `edit` antes de continuar."
 
 #: ../../how-to/profile-setup.md:229
 msgid "How your facts decide which forms apply"
-msgstr "Cómo deciden sus datos qué formularios corresponden"
+msgstr "Cómo deciden tus datos qué formularios corresponden"
 
 #: ../../how-to/profile-setup.md:231
 msgid ""
@@ -600,8 +600,8 @@ msgid ""
 "specific form with `preflight`:"
 msgstr ""
 "Los datos del perfil que registró determinan qué modelos debe presentar "
-"el contribuyente. Use esta correspondencia para comprobar la coherencia "
-"de su perfil, y luego confirme un formulario concreto con `preflight`:"
+"el contribuyente. Usa esta correspondencia para comprobar la coherencia "
+"de tu perfil, y luego confirma un formulario concreto con `preflight`:"
 
 #: ../../how-to/profile-setup.md:221
 msgid "When this is true of the taxpayer"
@@ -711,12 +711,12 @@ msgid ""
 msgstr ""
 "Esto es una guía, no la autoridad. La herramienta decide la aplicabilidad"
 " a partir del perfil completo y las reglas del registro. Para ver qué le "
-"corresponde a su perfil, use [Elija qué modelo presentar](choose-"
+"corresponde a tu perfil, usa [Elige qué modelo presentar](choose-"
 "modelo.md)."
 
 #: ../../how-to/profile-setup.md:253
 msgid "Maintain your profile"
-msgstr "Mantenga su perfil"
+msgstr "Mantén tu perfil"
 
 #: ../../how-to/profile-setup.md:255
 msgid ""
@@ -735,8 +735,8 @@ msgid ""
 "**Edit** changes only the flags you pass. Run `show`, `status`, or "
 "`validate` again after editing."
 msgstr ""
-"**Edit** cambia solo las opciones que usted pasa. Ejecute `show`, "
-"`status` o `validate` de nuevo tras editar."
+"**Edit** cambia solo las opciones que pasas. Ejecuta `show`, `status` o "
+"`validate` de nuevo tras editar."
 
 #: ../../how-to/profile-setup.md:266
 msgid ""
@@ -770,7 +770,7 @@ msgid ""
 "**Export** writes a portable JSON file. Pass `--cleartext-local` for a "
 "local JSON file, or `--passphrase` for an encrypted transfer bundle."
 msgstr ""
-"**Export** escribe un fichero JSON portátil. Pase `--cleartext-local` "
+"**Export** escribe un fichero JSON portátil. Pasa `--cleartext-local` "
 "para un fichero JSON local, o `--passphrase` para un paquete de "
 "transferencia cifrado."
 
@@ -781,8 +781,8 @@ msgid ""
 " that still holds the same profile refuses the import on the profile's "
 "identifier, so import is for restoring into a different storage root:"
 msgstr ""
-"Importe un fichero guardado de vuelta a otra sesión u otra raíz de "
-"almacenamiento. Importe con una etiqueta nueva; el perfil importado pasa "
+"Importa un fichero guardado de vuelta a otra sesión u otra raíz de "
+"almacenamiento. Importa con una etiqueta nueva; el perfil importado pasa "
 "a ser el activo. Un almacén que aún contiene el mismo perfil rechaza la "
 "importación por el identificador del perfil, así que la importación sirve"
 " para restaurar en una raíz de almacenamiento distinta:"
@@ -796,7 +796,7 @@ msgid ""
 msgstr ""
 "Un fichero de perfil portátil contiene datos del contribuyente, incluidos"
 " el identificador fiscal, la actividad y el historial de presentaciones "
-"local. Guárdelo como datos fiscales sensibles y no lo adjunte a una "
+"local. Guárdalo como datos fiscales sensibles y no lo adjunte a una "
 "solicitud de soporte salvo que haya eliminado los datos personales."
 
 #: ../../how-to/profile-setup.md:288
@@ -805,14 +805,14 @@ msgid ""
 " Logout closes the active storage session, discards its in-memory keys, "
 "disposes the bucket engines, and clears the local active-profile pointer:"
 msgstr ""
-"Cierre la sesión sin eliminar el perfil con `aeat config profile logout`."
+"Cierra la sesión sin eliminar el perfil con `aeat config profile logout`."
 " El cierre de sesión termina la sesión de almacenamiento activa, descarta"
 " sus claves en memoria, libera los motores de bucket y borra el puntero "
 "local del perfil activo:"
 
 #: ../../how-to/profile-setup.md:296
 msgid "Choose your service capabilities"
-msgstr "Elija las capacidades de servicio"
+msgstr "Elige las capacidades de servicio"
 
 #: ../../how-to/profile-setup.md:298
 msgid ""
@@ -821,7 +821,7 @@ msgid ""
 "you can change them at any time. These steps show the current posture, "
 "turn one capability off, then show the posture again:"
 msgstr ""
-"Cada perfil lleva su propia aceptación para tres servicios opcionales. El"
+"Cada perfil lleva tu propia aceptación para tres servicios opcionales. El"
 " asistente de configuración hace estas preguntas cuando crea o edita un "
 "perfil, y puede cambiarlas en cualquier momento. Estos pasos muestran la "
 "postura actual, desactivan una capacidad y muestran de nuevo la postura:"
@@ -858,15 +858,15 @@ msgid ""
 " to enable cloud upload. Missing package extras produce the exact install"
 " command. See [Install Cadrumo](../workstation-setup.md) for the extras."
 msgstr ""
-"Active o desactive cualquier capacidad con `aeat config profile "
-"capabilities set`. El ejemplo desactiva `llm_vision`. Pase "
+"Activa o desactiva cualquier capacidad con `aeat config profile "
+"capabilities set`. El ejemplo desactiva `llm_vision`. Pasa "
 "`cloud_evidence_upload on` para habilitar la subida a la nube. Los extras"
 " de paquete que falten producen el comando de instalación exacto. "
-"Consulte [Instale Cadrumo](../workstation-setup.md) para los extras."
+"Consulta [Instala Cadrumo](../workstation-setup.md) para los extras."
 
 #: ../../how-to/profile-setup.md:319
 msgid "See what changed"
-msgstr "Vea qué cambió"
+msgstr "Ve qué cambió"
 
 #: ../../how-to/profile-setup.md:321
 msgid ""
@@ -890,7 +890,7 @@ msgid ""
 "refused with the full accepted list, so an empty value is a quick way to "
 "discover the vocabulary."
 msgstr ""
-"Repita `--event-type` para incluir varios tipos. Un tipo desconocido se "
+"Repite `--event-type` para incluir varios tipos. Un tipo desconocido se "
 "rechaza con la lista completa de admitidos, así que un valor vacío es una"
 " forma rápida de descubrir el vocabulario."
 
@@ -902,7 +902,7 @@ msgid ""
 msgstr ""
 "Un cambio de nombre aparece como dos eventos a propósito: "
 "`profile.renamed` registra que los datos cambiaron, y `bucket.renamed` "
-"registra que usted ejecutó la acción de renombrar. Uno responde a «qué "
+"registra que ejecutaste la acción de renombrar. Uno responde a «qué "
 "cambió», el otro a «qué se hizo»."
 
 #: ../../how-to/profile-setup.md:339
@@ -917,7 +917,7 @@ msgid ""
 msgstr ""
 "Si un comando informa de que no hay perfil activo, de un valor de campo "
 "no válido o de que está trabajando bajo el perfil equivocado, consulte "
-"[Diagnostique y repare su configuración local](troubleshooting.md)."
+"[Diagnostica y repara tu configuración local](troubleshooting.md)."
 
 #: ../../how-to/profile-setup.md:345
 msgid ""
@@ -927,7 +927,7 @@ msgid ""
 "to leave out before you take the issue to the project's issue tracker."
 msgstr ""
 "Cuando los pasos de resolución de problemas no lo resuelvan, siga "
-"[Prepare una solicitud de soporte respetuosa con la "
+"[Prepara una solicitud de soporte respetuosa con la "
 "privacidad](troubleshooting.md#prepare-a-privacy-safe-support-request). "
 "Nombra las salidas que incluir y los datos personales que dejar fuera "
 "antes de llevar el problema al gestor de incidencias del proyecto."
@@ -938,19 +938,19 @@ msgstr "Pasos siguientes"
 
 #: ../../how-to/profile-setup.md:353
 msgid "[Import and manage transactions](import-bank-statements.md)"
-msgstr "[Importe y gestione los movimientos](import-bank-statements.md)"
+msgstr "[Importa y gestiona los movimientos](import-bank-statements.md)"
 
 #: ../../how-to/profile-setup.md:354
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
-msgstr "[Mantenga los datos censales del Modelo 036 en su perfil](censo-update.md)"
+msgstr "[Mantén los datos censales del Modelo 036 en tu perfil](censo-update.md)"
 
 #: ../../how-to/profile-setup.md:355
 msgid "[Plan your filing calendar](filing-calendar.md)"
-msgstr "[Planifique su calendario de presentaciones](filing-calendar.md)"
+msgstr "[Planifica tu calendario de presentaciones](filing-calendar.md)"
 
 #: ../../how-to/profile-setup.md:356
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
-msgstr "[Revise y aporte las entradas de cálculo](review-calculation-values.md)"
+msgstr "[Revisa y aporta las entradas de cálculo](review-calculation-values.md)"
 
 #: ../../how-to/profile-setup.md:357
 msgid "[CLI reference](../cli/index.rst)"
