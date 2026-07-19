@@ -23,16 +23,10 @@ on:
       - ".gemini/**"
       - ".agents/**"
       - "**.md"
-  pull_request:
-    branches: [main]
-    paths-ignore:
-      - ".vault/**"
-      - ".vaultspec/**"
-      - ".claude/**"
-      - ".codex/**"
-      - ".gemini/**"
-      - ".agents/**"
-      - "**.md"
+  # NO pull_request trigger: these jobs run on self-hosted runners, and a PR
+  # trigger would execute untrusted PR-head code on the operator's machines
+  # (critical per GitHub's self-hosted hardening guidance). Push already
+  # requires write access; use workflow_dispatch for ad-hoc runs.
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

@@ -49,8 +49,8 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 6 * * 1'
-  pull_request:
-    branches: [main]
+  # NO pull_request trigger: self-hosted runners must never execute untrusted
+  # PR-head code (see ci.yml note).
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
