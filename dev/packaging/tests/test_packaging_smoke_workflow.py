@@ -51,20 +51,21 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 
 
 # The Windows and macOS legs prove the python-windows-x86-64 and
-# python-macos-arm64 distribution rows on native runners (macos-latest is
-# arm64). Each runs the host-portable `packaging-smoke` aggregate (no Docker, no
-# host package-manager lanes) and uploads per-OS artifacts so names never
-# collide with the Ubuntu leg.
-_PORTABLE_LEGS: dict[str, dict[str, str]] = {
+# python-macos-arm64 distribution rows on native SELF-HOSTED runners (operator
+# cost directive 2026-07-19: hosted minutes bill, the operator's own machines
+# are free; the label sets are the runner registration contract). Each runs the
+# host-portable `packaging-smoke` aggregate (no Docker, no host package-manager
+# lanes) and uploads per-OS artifacts so names never collide with the Ubuntu leg.
+_PORTABLE_LEGS: dict[str, dict[str, object]] = {
     "cadrumo-packaging-smoke-windows": {
         "name": "Cadrumo / Windows / Python 3.13 / wheel artifacts",
-        "runs_on": "windows-latest",
+        "runs_on": ["self-hosted", "Windows", "X64"],
         "cohort_artifact": "cadrumo-python-cohort-windows",
         "evidence_artifact": "cadrumo-packaging-smoke-evidence-windows",
     },
     "cadrumo-packaging-smoke-macos": {
         "name": "Cadrumo / macOS / Python 3.13 / wheel artifacts",
-        "runs_on": "macos-latest",
+        "runs_on": ["self-hosted", "macOS", "ARM64"],
         "cohort_artifact": "cadrumo-python-cohort-macos",
         "evidence_artifact": "cadrumo-packaging-smoke-evidence-macos",
     },
@@ -97,7 +98,7 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
 
     job = document["jobs"]["cadrumo-packaging-smoke"]
     assert job["name"] == "Cadrumo / Ubuntu / Python 3.13 / wheel artifacts"
-    assert job["runs-on"] == "ubuntu-latest"
+    assert job["runs-on"] == ["self-hosted", "Linux", "X64"]
     commands = _run_command_lines(job)
     assert {
         "just packaging-smoke-ci",

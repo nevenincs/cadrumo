@@ -39,7 +39,7 @@ permissions:
 jobs:
   cadrumo-packaging-smoke:
     name: Cadrumo / Ubuntu / Python 3.13 / wheel artifacts
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 90
 
     steps:
@@ -81,6 +81,10 @@ jobs:
       # stays a single `just packaging-smoke-ci` invocation so every lane
       # consumes the same cohort bytes built once.
       - name: Reclaim runner disk space
+        # GitHub-hosted only: on a self-hosted runner these paths belong to the
+        # operator's machine and the docker prune would wipe the shared WSL
+        # engine's images.
+        if: runner.environment == 'github-hosted'
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
           sudo docker image prune --all --force
@@ -128,7 +132,7 @@ jobs:
   # branch on os.name for Scripts/.exe layouts.
   cadrumo-packaging-smoke-windows:
     name: Cadrumo / Windows / Python 3.13 / wheel artifacts
-    runs-on: windows-latest
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 120
 
     steps:
@@ -189,7 +193,7 @@ jobs:
   # and sampler are omitted, and no host package-manager (Homebrew) lane runs.
   cadrumo-packaging-smoke-macos:
     name: Cadrumo / macOS / Python 3.13 / wheel artifacts
-    runs-on: macos-latest
+    runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 120
 
     steps:
