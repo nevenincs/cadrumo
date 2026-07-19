@@ -4499,8 +4499,7 @@ cli:
         section_review_and_registry: Revisio i registre
       config:
         auth_configure: Configurar el proveidor d'autenticacio amb l'AEAT.
-        auth_logout: Tancar les sessions locals d autenticació i conservar la configuració
-          del proveïdor.
+        auth_logout: Tancar les sessions locals d'autenticació i conservar la configuració.
         auth_providers: Llistar els proveidors d'autenticacio disponibles.
         auth_reset: Retirar la configuració local d autenticació i les credencials
           desades.
