@@ -273,7 +273,8 @@ What each step does:
 - **Delete** removes a profile for good. If the deleted profile was active,
   Cadrumo clears the active-profile pointer.
 - **Export** writes a portable JSON file. Pass `--cleartext-local` for a local
-  JSON file, or `--passphrase` for an encrypted transfer bundle.
+  JSON file, or `--encrypt` for an encrypted transfer bundle; the passphrase is
+  prompted (hidden), never given on the command line.
 
 Import a saved file back into another session or storage root. Import under a
 fresh label; the imported profile becomes the active one. A store that still
