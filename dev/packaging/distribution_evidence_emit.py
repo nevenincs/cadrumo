@@ -53,6 +53,7 @@ if TYPE_CHECKING:
 
 _CLI_EXECUTABLE_NAME: Final[str] = "aeat"
 _MCP_EXECUTABLE_NAME: Final[str] = "cadrumo-mcp"
+_UTF_8: Final[str] = "utf-8"
 
 # The client identity an acquire lane declares when it drives the published
 # artifact through the MCP SDK over ``uv``/``uvx`` rather than a real Claude
@@ -468,8 +469,8 @@ def main(argv: list[str] | None = None) -> int:
     from dev.packaging.cohort_manifest import load_release_cohort
 
     args = _parser().parse_args(argv)
-    tax_evidence = _tax_evidence_from_mapping(json.loads(args.tax_evidence.read_text(encoding="utf-8")))
-    mcp_evidence = _mcp_evidence_from_mapping(json.loads(args.mcp_evidence.read_text(encoding="utf-8")))
+    tax_evidence = _tax_evidence_from_mapping(json.loads(args.tax_evidence.read_text(encoding=_UTF_8)))
+    mcp_evidence = _mcp_evidence_from_mapping(json.loads(args.mcp_evidence.read_text(encoding=_UTF_8)))
     cohort = load_release_cohort(args.release_cohort_dir)
     path = emit_installed_oracle_evidence(
         directory=args.distribution_evidence_dir,
