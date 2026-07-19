@@ -15,6 +15,7 @@ import secrets
 import subprocess
 import time
 from dataclasses import asdict, dataclass
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final
@@ -65,13 +66,23 @@ class InstalledTaxOracleError(RuntimeError):
 
 @dataclass(frozen=True)
 class CommandEvidence:
-    """One public command invocation retained by the installed oracle."""
+    """One public command invocation retained by the installed oracle.
+
+    ``started_at`` / ``completed_at`` are timezone-aware ISO-8601 wall-clock
+    stamps bracketing the subprocess, and ``cwd`` is the execution directory.
+    They carry the fields a tamper-evident
+    :class:`~dev.packaging.evidence.DistributionEvidence` command transcript
+    requires, captured at run time rather than reconstructed afterwards.
+    """
 
     argv: tuple[str, ...]
     duration_seconds: float
     returncode: int
     stdout: str
     stderr: str
+    started_at: str
+    completed_at: str
+    cwd: str
 
 
 @dataclass(frozen=True)
@@ -206,6 +217,7 @@ def _run(
     timeout_seconds: float,
 ) -> CommandEvidence:
     started = time.monotonic()
+    started_at = datetime.now(UTC)
     completed = subprocess.run(  # noqa: S603 - fixed public executable and declarative argv
         argv,
         cwd=cwd,
@@ -217,12 +229,16 @@ def _run(
         timeout=timeout_seconds,
         check=False,
     )
+    completed_at = datetime.now(UTC)
     evidence = CommandEvidence(
         argv=argv,
         duration_seconds=round(time.monotonic() - started, 3),
         returncode=completed.returncode,
         stdout=completed.stdout,
         stderr=completed.stderr,
+        started_at=started_at.isoformat(),
+        completed_at=completed_at.isoformat(),
+        cwd=str(cwd),
     )
     if completed.returncode != 0:
         raise InstalledTaxOracleError(

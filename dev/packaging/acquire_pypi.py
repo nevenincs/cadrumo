@@ -26,10 +26,14 @@ from dev.packaging._acquire_common import (
     venv_executable,
     verify_python_cohort_download,
 )
+from dev.packaging.cohort_manifest import load_release_cohort
+from dev.packaging.distribution_evidence_emit import emit_installed_python_evidence
+from dev.packaging.evidence import AcquisitionIdentity, DestinationIdentity
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort
 
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_INDEX_URL: Final[str] = "https://pypi.org/simple"
+_DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
 
 
 def _resolve_executable(name: str, override: Path | None) -> Path:
@@ -112,6 +116,9 @@ def run_pypi_acquisition(
     python: str,
     uv_executable: Path | None,
     timeout_seconds: float,
+    release_cohort_dir: Path | None = None,
+    row_id: str | None = None,
+    distribution_evidence_dir: Path | None = None,
 ) -> Path:
     """Install from PyPI, verify cohort digests, and repeat installed oracles.
 
@@ -122,6 +129,14 @@ def run_pypi_acquisition(
         python: The interpreter version/identifier for the fresh venv.
         uv_executable: An explicit ``uv`` path, or ``None`` to resolve from PATH.
         timeout_seconds: Per-command timeout for the installed oracles.
+        release_cohort_dir: The full release-cohort directory to bind a sanctioned
+            flat :class:`~dev.packaging.evidence.DistributionEvidence` record to.
+            When omitted, only the per-run acquisition document is written.
+        row_id: The distribution row this run proves (required to emit the flat
+            record, e.g. ``python-linux-x86-64``).
+        distribution_evidence_dir: Where the flat record lands; defaults to
+            ``var/distribution-install-readiness`` (the directory both the
+            release-readiness and docs-claims gates scan).
 
     Returns:
         The path to the retained JSON evidence document.
@@ -218,6 +233,23 @@ def run_pypi_acquisition(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
     )
+
+    if release_cohort_dir is not None and row_id is not None:
+        release_cohort = load_release_cohort(release_cohort_dir)
+        emit_installed_python_evidence(
+            directory=(distribution_evidence_dir or _DEFAULT_DISTRIBUTION_EVIDENCE_DIR),
+            row_id=row_id,
+            cohort=release_cohort,
+            tax_evidence=tax_evidence,
+            mcp_evidence=mcp_evidence,
+            acquisition=AcquisitionIdentity(mechanism="pip", source=index_url),
+            destination=DestinationIdentity(
+                kind="pypi-index-install",
+                locator=str(venv),
+                version=release_cohort.manifest.version,
+            ),
+        )
+
     return evidence_path
 
 
@@ -230,6 +262,23 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--python", default="3.13", help="Interpreter version for the fresh venv.")
     parser.add_argument("--uv", type=Path, default=None, help="Explicit uv executable (defaults to PATH).")
     parser.add_argument("--timeout-seconds", type=float, default=180.0)
+    parser.add_argument(
+        "--release-cohort-dir",
+        type=Path,
+        default=None,
+        help="Full release-cohort directory to bind a sanctioned flat evidence record to.",
+    )
+    parser.add_argument(
+        "--row-id",
+        default=None,
+        help="Distribution row this run proves (required to emit the flat record).",
+    )
+    parser.add_argument(
+        "--distribution-evidence-dir",
+        type=Path,
+        default=None,
+        help="Where the flat record lands (defaults to var/distribution-install-readiness).",
+    )
     return parser
 
 
@@ -243,6 +292,9 @@ def main(argv: list[str] | None = None) -> int:
         python=args.python,
         uv_executable=args.uv,
         timeout_seconds=args.timeout_seconds,
+        release_cohort_dir=args.release_cohort_dir,
+        row_id=args.row_id,
+        distribution_evidence_dir=args.distribution_evidence_dir,
     )
     print(evidence)
     return 0
