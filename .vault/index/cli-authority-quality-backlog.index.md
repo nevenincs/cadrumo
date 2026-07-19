@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-quality-backlog'
-date: '2026-07-18'
-modified: '2026-07-18'
+date: '2026-07-19'
+modified: '2026-07-19'
 related:
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S01]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S02]]'
@@ -14,6 +14,7 @@ related:
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S06]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S07]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S08]]'
+  - '[[2026-07-17-cli-authority-quality-backlog-P03-S09]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S10]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P03-S27]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P04-S11]]'
@@ -77,6 +78,7 @@ Auto-generated index of all documents tagged with `#cli-authority-quality-backlo
 - `2026-07-17-cli-authority-quality-backlog-P06-S18` - GATED (blocked until the mcp-call-latency plan completes): make the MCP server direct dispatch path call gate_refusal() once so a refused call is not composed twice into the envelope
 - `2026-07-17-cli-authority-quality-backlog-P06-S19` - GATED (blocked until the mcp-call-latency plan completes): add a per-verb CLI-versus-MCP schema-parity diff proving every operator verb exposes the same request and response schema across both surfaces
 - `2026-07-17-cli-authority-quality-backlog-P10-S25` - Triage the two low-severity entrypoints structural duplications the duplication-authority audit surfaced (repeated iterator shapes and thin synchronous wrappers): confirm each on the current tree by exact declaration, caller, and writer-path inspection, then either record a disposition note classifying it as intentionally distinct incidental similarity or consolidate it behind one shared abstraction proven substitutable against every consumer contract, so no duplicated policy, state ownership, or persistence behavior survives unclassified
+- `2026-07-17-cli-authority-quality-backlog-P03-S09` - DEFERRED pending (a) protected-browser S08 closure and (b) resolution of the namespace-authority-split adjudication in P03.S27: remove duplicate namespace and custody declarations from Clave, LLM cache and usage, bundle, attachment, and secure-storage consumers without conflating certificate custody with master-key keyring custody. The auth zone is the S08 quiescence surface and in active auth-cert churn, so editing clave and certificate lifecycle now risks colliding with or reopening behavioral work
 
 ### plan
 
