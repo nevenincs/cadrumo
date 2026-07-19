@@ -47,16 +47,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # `os` stays the per-leg identity key (step conditionals and artifact
-        # names branch on it); `runner` carries the self-hosted label set
-        # (operator cost directive 2026-07-19 - hosted minutes bill, the
-        # workstation runners are free).
+        # Single-platform unit lane (operator cost directive 2026-07-19):
+        # lint/type/unit results are platform-independent; the cross-platform
+        # proof lives in the packaging matrix, whose per-OS legs run the real
+        # installed-behavior oracles on every release-relevant change. `os`
+        # stays the identity key the step conditionals and artifact names
+        # branch on; `runner` carries the free self-hosted label set.
         include:
           - os: ubuntu-latest
             runner: [self-hosted, Linux, X64]
-            python-version: "3.13"
-          - os: windows-latest
-            runner: [self-hosted, Windows, X64]
             python-version: "3.13"
 
     runs-on: ${{ matrix.runner }}
