@@ -388,7 +388,12 @@ def test_build_report_blocks_without_complete_distribution_evidence(tmp_path: Pa
     report = readiness.build_report(root, skip_network=True)
 
     assert report.ok is False
-    assert {check.name for check in report.blocking_failures} == {"distribution-evidence-complete"}
+    # A repo with no built cohort blocks on BOTH cohort-dependent gates: the
+    # installed-evidence set and the generated-surface version/digest check.
+    assert {check.name for check in report.blocking_failures} == {
+        "distribution-evidence-complete",
+        "generated-surface-versions",
+    }
 
 
 def test_build_report_blocks_on_a_real_version_drift(tmp_path: Path) -> None:
