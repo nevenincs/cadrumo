@@ -96,8 +96,16 @@ registered for it.
 
 The
 [release-reservation evidence issue #612](https://github.com/nevenincs/cadrumo/issues/612)
-must identify a reviewer and confirmation date for every item. Accept only records from
-the system that owns each name:
+must identify a reviewer and confirmation date for every item. By operator
+directive (2026-07-19, small-team policy), the Fable release agent is an
+acceptable named reviewer for every item below: the agent gathers the
+authoritative records, verifies them against the systems that own each name,
+and posts the dated review on the issue. Items that carry legal judgment
+(trademark clearance) are reviewed as documented searches with findings — the
+agent review records facts, not legal advice, and the operator accepts the
+residual risk by approving the publication run. The operator's `release`
+environment approval remains the one human gate. Accept only records from the
+system that owns each name:
 
 - **PyPI projects:** Record each project's **Publishing** page showing project, GitHub
   owner, repository (`nevenincs/cadrumo`), workflow filename (`publish-release.yml`),
