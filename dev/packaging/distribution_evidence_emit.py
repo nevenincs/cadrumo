@@ -227,26 +227,36 @@ def build_client_evidence(
     client: ClientIdentity,
     acquisition: AcquisitionIdentity,
     destination: DestinationIdentity,
+    real_client_session: dict[str, Any] | None = None,
     observed_at: datetime | None = None,
 ) -> DistributionEvidence:
     """Assemble one cohort-bound record for a pure-client (MCP-only) row.
 
     Client rows (``claude-*``) have no installed-CLI oracle, so option A applies:
-    the single command transcript is the lane-captured, genuinely-owned bounded
-    launch of the client's ``cadrumo-mcp`` server subprocess (real argv, cwd,
-    timestamps, exit status, and stream digests), and the full MCP protocol proof
-    rides in ``result.observations``. Nothing is synthesised.
+    the single command transcript is a genuinely-owned bounded launch of the
+    installed ``cadrumo-mcp`` server subprocess (real argv, cwd, timestamps, exit
+    status, and stream digests), and the full MCP protocol proof rides in
+    ``result.observations``. Nothing is synthesised.
+
+    For a REAL Claude client row the client itself launches the server internally
+    (a subprocess we do not own), so the owned launch here proves the exact
+    installed server starts, and the operator's real Claude client session -
+    passed as ``real_client_session`` - is retained in ``result.observations`` as
+    the real-client dimension, with ``client`` naming the real Claude client.
 
     Args:
         row_id: The client row this record proves (e.g. ``claude-desktop-mcpb``).
         cohort: The loaded release cohort the served bytes belong to.
         mcp_evidence: The installed-MCP oracle result (protocol proof + target).
-        launch_transcript: The real owned server-launch subprocess the lane
-            captured; becomes this record's sole command transcript.
+        launch_transcript: The real owned server-launch subprocess captured;
+            becomes this record's sole command transcript.
         client: The real client identity (required for a client row).
         acquisition: How and from where the served bytes were acquired.
         destination: The install/serve destination; its version must equal the
             cohort version for a passing record.
+        real_client_session: The operator's real Claude client session summary
+            (connected, tool_called, status, ...) retained as the real-client
+            proof; ``None`` for an SDK acquire artifact-serves record.
         observed_at: The capture instant; defaults to now.
 
     Returns:
@@ -254,20 +264,29 @@ def build_client_evidence(
 
     Raises:
         ValueError: If an SDK-client record is asked to satisfy a REQUIRED
-            real-client row. Those rows are real-Claude-client claims; an
-            SDK-driven proof must emit under a distinct artifact-serves id.
+            real-client row, or a REQUIRED real-client row is minted without a
+            real client session. Those rows are real-Claude-client claims.
     """
-    if client.name == SDK_CLIENT_NAME and row_id in _REQUIRED_REAL_CLIENT_ROW_IDS:
+    is_required_real_client_row = row_id in _REQUIRED_REAL_CLIENT_ROW_IDS
+    if client.name == SDK_CLIENT_NAME and is_required_real_client_row:
         raise ValueError(
             f"an SDK-client record cannot satisfy the real-client row {row_id!r}: those rows are minted "
             "only by real-client lanes (authenticated Claude Code / operator in-app captures). "
             "Emit this SDK acquire proof under a distinct artifact-serves id instead.",
+        )
+    if is_required_real_client_row and not real_client_session:
+        raise ValueError(
+            f"the real-client row {row_id!r} requires a real Claude client session as its real-client "
+            "proof; an owned launch alone cannot satisfy a real-client claim.",
         )
     isolation = ExecutionIsolation(
         checkout_imports_removed=True,
         ambient_product_executables_removed=True,
         installed_executables=(_installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),),
     )
+    observations: dict[str, Any] = {"mcp_oracle": _mcp_observations(mcp_evidence)}
+    if real_client_session is not None:
+        observations["real_client_session"] = real_client_session
     result = ResultIdentity(
         status=EvidenceStatus.PASSED,
         assertions=(
@@ -275,7 +294,7 @@ def build_client_evidence(
             f"via {mcp_evidence.formula_id}",
             "the installed client launched the cohort-pinned server and completed the protocol",
         ),
-        observations={"mcp_oracle": _mcp_observations(mcp_evidence)},
+        observations=observations,
     )
     return create_distribution_evidence(
         row_id=row_id,
@@ -301,6 +320,7 @@ def emit_client_evidence(
     client: ClientIdentity,
     acquisition: AcquisitionIdentity,
     destination: DestinationIdentity,
+    real_client_session: dict[str, Any] | None = None,
     observed_at: datetime | None = None,
 ) -> Path:
     """Build and persist one flat client-row distribution-evidence record."""
@@ -312,6 +332,7 @@ def emit_client_evidence(
         client=client,
         acquisition=acquisition,
         destination=destination,
+        real_client_session=real_client_session,
         observed_at=observed_at,
     )
     return write_distribution_evidence(directory, evidence)
