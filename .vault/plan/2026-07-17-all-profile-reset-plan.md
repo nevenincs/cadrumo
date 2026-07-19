@@ -14,6 +14,16 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
 ---
 
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the
+       related: field above.
+     - The related: field carries the AUTHORISING documents
+       (ADR, research, reference, prior plan) for every Step in
+       this plan. Steps inherit this chain; per-row reference
+       footers do not exist.
+     - NEVER use [[wiki-links]] or markdown links in the
+       document body. -->
+
 # `all-profile-reset` plan
 
 ### Phase `P01` - Deletion assessment and reset ownership
@@ -52,7 +62,7 @@ Replace scoped reset with start, status, and resume composing the established pr
 
 Cut the config reset and sandbox command grammar over to the reset orchestration authority.
 
-- [ ] `P04.S18` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names; `src/cadrumo/entrypoints/cli/_config/_custody.py`.
+- [x] `P04.S18` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names; `src/cadrumo/entrypoints/cli/_config/_custody.py`.
 - [ ] `P04.S19` - Remove the config profile sandbox use registration and execution path without an alias; `src/cadrumo/entrypoints/cli/_config/_sandbox.py`.
 - [x] `P04.S20` - Replace flat scoped reset registration with the config reset command group; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
 - [x] `P04.S21` - Register only reset start, status, and resume with operation, retention, reason, and confirmation options; `src/cadrumo/entrypoints/cli/_config/_reset_cli.py`.
