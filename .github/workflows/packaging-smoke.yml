@@ -283,6 +283,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          # The release-cohort manifest binds the exact v<version> tag. A
+          # single-commit checkout omits tags and would mint source.tag=null,
+          # which the readiness and publication gates correctly refuse.
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
