@@ -444,17 +444,23 @@ The workflow runs three sequential jobs:
 and prints a full prerequisite checklist if not. Nothing is uploaded.
 
 **Gate 2 — validate (no rebuild).** Verifies the source run identity (success,
-`packaging-smoke.yml`, `push`, `main`, same repo, matching `head_sha`). Downloads and
-re-verifies the stored release cohort and per-platform installed evidence. Runs
-`dev.release.readiness --json --skip-network --cohort-dir var/promotion/release-cohort
---evidence-dir var/promotion/evidence/rows`; the complete blocking evidence set must
-pass. Gate 2 passes only with all 12 rows present and verified.
+`packaging-smoke.yml`, `push`, `main`, same repo, matching `head_sha`). Downloads the
+**sealed** release cohort (`cadrumo-release-cohort` — the single source of every
+channel's bytes, PyPI included) plus its `cadrumo-distribution-evidence-*` rows; the
+per-OS smoke build (`cadrumo-python-cohort`) is deliberately NOT part of the
+publication chain. Re-points `promote_python_cohort --check-pypi-only` at the sealed
+cohort's `python/` bytes to guard the PyPI version against overwrite and emit the
+version. Runs `dev.release.readiness --json --skip-network --cohort-dir
+var/promotion/release-cohort --evidence-dir var/promotion/evidence/rows`; the sealed
+cohort's installed behaviour is proven per-OS by the `DistributionEvidence` rows, not
+by the smoke build. Gate 2 passes only with all 12 rows present and verified.
 
 **Gate 3 — publish** (`environment: release`, human approval required). After the
-approval click, the job re-downloads the stored cohorts (never rebuilds) and:
+approval click, the job re-downloads the sealed cohort (never rebuilds) and:
 
-- Publishes all 6 distributions to PyPI via `uv publish --trusted-publishing always`
-  (OIDC; no API token is needed once Trusted Publishing is configured).
+- Publishes all 6 distributions to PyPI from the sealed cohort's `python/` subdir (the
+  exact bytes every other channel ships and the oracle-emit legs proved) via
+  `uv publish --trusted-publishing always` (OIDC; no API token needed once configured).
 - Creates `gh release create vX.Y.Z --target <source_commit>` attaching every file
   found in the release-cohort directory (13 files). An empty asset set fails hard.
 - Clones the public Scoop bucket repo, copies `scoop/cadrumo.json` to `bucket/`, and
