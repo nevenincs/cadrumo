@@ -219,7 +219,7 @@ def test_mounted_command_families_are_backend_owned_and_service_backed() -> None
         if family.domain is MountedCommandDomain.CUSTODY
         for command in family.commands
     }
-    assert {"switch", "rekey", "recover", "show-recovery", "verify-recovery"} == custody_commands
+    assert {"switch", "change", "recover", "show-recovery", "verify-recovery"} == custody_commands
     # The append-only event-history verb merged into the `config profile` group
     # as `config profile history` (D1 family rename); the standalone
     # `config bucket` group was retired, so there is no BUCKET family.

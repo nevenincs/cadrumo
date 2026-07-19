@@ -45,7 +45,7 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         required_children=(
             "profile",
             "switch",
-            "rekey",
+            "passphrase",
             "recover",
             "show-recovery",
             "verify-recovery",
@@ -133,10 +133,10 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
-        child="rekey",
-        operator_question="rotate profile custody passphrase and recovery wrapping",
+        child="passphrase",
+        operator_question="rotate the profile custody passphrase after verifying the current one",
         service_owner="cadrumo.application.user_profile",
-        commands=("rekey",),
+        commands=("change",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(

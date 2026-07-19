@@ -40,7 +40,7 @@ re-encrypt under the recipient bucket DEK.
 
 Custody helpers exposed here are application commands over storage-owned
 secret-store primitives. :func:`mint_recovery_code`,
-:func:`verify_recovery_code`, :func:`rekey_secret_store`, and
+:func:`verify_recovery_code`, :func:`change_passphrase`, and
 :func:`recover_secret_store` resolve runtime settings, update active-bucket
 recovery metadata when needed, and return typed result records while leaving key
 wrapping and recovery envelope persistence in :mod:`adapters.persistence.storage`.
@@ -163,16 +163,16 @@ if TYPE_CHECKING:
     )
     from ._completeness import iva_regime_required
     from ._custody import (
+        CustodyPassphraseChangeResult,
         CustodyRecoverResult,
         CustodyRecoveryEnrollment,
         CustodyRecoveryStatus,
         CustodyRecoveryVerification,
-        CustodyRekeyResult,
+        change_passphrase,
         inspect_recovery_status,
         mint_recovery_code,
         recover_secret_store,
         recovery_wrap_path,
-        rekey_secret_store,
         verify_recovery_code,
     )
     from ._custody_carry import (
@@ -347,16 +347,16 @@ def __getattr__(name: str):
 
         return getattr(_bundle_encryption, name)
     if name in (
+        "CustodyPassphraseChangeResult",
         "CustodyRecoverResult",
         "CustodyRecoveryEnrollment",
         "CustodyRecoveryStatus",
         "CustodyRecoveryVerification",
-        "CustodyRekeyResult",
+        "change_passphrase",
         "inspect_recovery_status",
         "mint_recovery_code",
         "recover_secret_store",
         "recovery_wrap_path",
-        "rekey_secret_store",
         "verify_recovery_code",
     ):
         from . import _custody
@@ -455,11 +455,11 @@ __all__ = [
     "CapabilitySource",
     "CensoSyncError",
     "CensoSyncService",
+    "CustodyPassphraseChangeResult",
     "CustodyRecoverResult",
     "CustodyRecoveryEnrollment",
     "CustodyRecoveryStatus",
     "CustodyRecoveryVerification",
-    "CustodyRekeyResult",
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
@@ -505,6 +505,7 @@ __all__ = [
     "build_lifecycle_service",
     "bundle_data_categories",
     "carried_namespace_definitions",
+    "change_passphrase",
     "decrypt_profile_bundle_with_passphrase",
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
@@ -531,7 +532,6 @@ __all__ = [
     "recovery_wrap_path",
     "refuse_duplicate_label",
     "register_active_profile",
-    "rekey_secret_store",
     "remove_active_profile",
     "remove_profile_bucket_directory",
     "rename_profile",

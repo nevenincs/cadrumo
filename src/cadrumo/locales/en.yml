@@ -2807,17 +2807,18 @@ cli:
         non_interactive_passphrase_required: This command needs an interactive terminal
           to prompt for the new passphrase. Provide it non-interactively with --new-passphrase
           and --confirm-new-passphrase.
-        non_interactive_secret_required: This command needs an interactive terminal
-          to read the secret, or --secrets-stdin.
+        non_interactive_secret_required: A secret is required but no interactive terminal
+          is available; use --secrets-stdin.
         secrets_stdin_invalid_json: The --secrets-stdin payload is not a valid JSON
           object.
         secrets_stdin_missing_fields: The --secrets-stdin object is missing required
           fields or has unexpected ones.
-        secrets_stdin_too_large: The --secrets-stdin payload is too large.
+        secrets_stdin_too_large: The --secrets-stdin payload exceeds the maximum allowed
+          size.
       new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
       new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
-      secrets_stdin_help: Read secrets as one JSON object from standard input instead
-        of prompting
+      secrets_stdin_help: Read the secrets as one bounded JSON object from standard
+        input instead of prompting.
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
@@ -2987,15 +2988,16 @@ cli:
       help: List every registered profile and mark the active one
     passphrase:
       change:
-        help: Change the passphrase after verifying the current one
+        help: Rotate the file secret store passphrase after verifying the current
+          one.
       confirm_new_passphrase_prompt: 'Confirm new passphrase: '
       current_passphrase_prompt: 'Current passphrase: '
       errors:
-        current_passphrase_incorrect: The current passphrase is incorrect; the stored
-          key was not changed.
-        store_unprovisioned: The secret store is not provisioned; there is no passphrase
-          to change.
-      help: Rotate the file secret store's passphrase
+        current_passphrase_incorrect: The current passphrase is incorrect; the secret
+          store was not changed.
+        store_unprovisioned: The file secret store is not provisioned; there is no
+          passphrase to change.
+      help: Manage the file secret store passphrase.
       new_passphrase_prompt: 'New passphrase: '
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
