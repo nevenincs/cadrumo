@@ -139,8 +139,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Install just
-        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+      # taiki-e/install-action shells out to bash and mangles its own action
+      # path on a self-hosted Windows runner using Git Bash (strips the
+      # backslashes -> "C:actions-runner_work..."), so `just` never installs.
+      # Provision it natively instead: prefer the already-present binary, fall
+      # back to scoop (present on the fleet's Windows runner).
+      - name: Ensure just is available
+        shell: powershell
+        run: |
+          if (-not (Get-Command just -ErrorAction SilentlyContinue)) {
+            scoop install just
+          }
+          just --version
 
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
