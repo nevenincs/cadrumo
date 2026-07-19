@@ -63,10 +63,10 @@ Replace scoped reset with start, status, and resume composing the established pr
 Cut the config reset and sandbox command grammar over to the reset orchestration authority.
 
 - [x] `P04.S18` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names; `src/cadrumo/entrypoints/cli/_config/_custody.py`.
-- [ ] `P04.S19` - Remove the config profile sandbox use registration and execution path without an alias; `src/cadrumo/entrypoints/cli/_config/_sandbox.py`.
+- [x] `P04.S19` - Remove the config profile sandbox use registration and execution path without an alias; `src/cadrumo/entrypoints/cli/_config/_sandbox.py`.
 - [x] `P04.S20` - Replace flat scoped reset registration with the config reset command group; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
 - [x] `P04.S21` - Register only reset start, status, and resume with operation, retention, reason, and confirmation options; `src/cadrumo/entrypoints/cli/_config/_reset_cli.py`.
-- [ ] `P04.S22` - Prove exact sandbox labels work through switch while sandbox use and bare names are absent; `src/cadrumo/entrypoints/cli/tests/test_config_profile_sandbox.py`.
+- [x] `P04.S22` - Prove exact sandbox labels work through switch while sandbox use and bare names are absent; `src/cadrumo/entrypoints/cli/tests/test_config_profile_sandbox.py`.
 - [x] `P04.S23` - Prove switching and strong logout through real persisted custody state; `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`.
 - [x] `P04.S24` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
 - [x] `P04.S25` - Require yes for reset start and resume while keeping status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
