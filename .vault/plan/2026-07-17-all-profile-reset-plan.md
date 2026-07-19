@@ -80,6 +80,7 @@ Move the reset payload schemas, write-policy tokens, locales, help and risk meta
 - [x] `P05.S28` - Migrate the four locale catalogues for the reset and sandbox families through the locales CLI; `src/cadrumo/locales/en.yml`.
 - [x] `P05.S29` - Regenerate the CLI reference and operator how-to pages for the reset family from the frozen live surface; `docs/reference/commands-and-configuration.md`.
 - [x] `P05.S30` - Prove the removed reset and sandbox spellings are absent from every source and generated surface; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
+- [x] `P05.S31` - Sweep the MCP identity gate off the sandbox-use grammar onto switch-based sandbox addressing, updating its identity-changing command set and docstring; `src/cadrumo/entrypoints/mcp/_identity_gate.py`.
 
 ## Description
 
