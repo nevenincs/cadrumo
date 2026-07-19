@@ -316,6 +316,12 @@ cache/
 # Playwright MCP session capture output
 .playwright-mcp/
 
+# One-off session prompts and trademark-search screenshots are local research
+# captures, not repository sources.
+/ORIGINAL_REQUEST.md
+/euipo-*.png
+/oepm-*.png
+
 # Scratch / research artefacts under .tmp/ (xlsx downloads, raw JSON,
 # agent workspaces). Same role as scratch/ — ephemeral, never in git.
 /.tmp/
