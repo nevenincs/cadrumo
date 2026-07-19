@@ -2949,13 +2949,17 @@ cli:
         non_interactive_passphrase_required: Ez a parancs interaktív terminált igényel
           az új jelszó bekéréséhez. Add meg nem interaktív módon a --new-passphrase
           és --confirm-new-passphrase kapcsolókkal.
-        non_interactive_secret_required: cli.config.custody.errors.non_interactive_secret_required
-        secrets_stdin_invalid_json: cli.config.custody.errors.secrets_stdin_invalid_json
-        secrets_stdin_missing_fields: cli.config.custody.errors.secrets_stdin_missing_fields
-        secrets_stdin_too_large: cli.config.custody.errors.secrets_stdin_too_large
+        non_interactive_secret_required: Titok szükséges, de nincs interaktív terminál;
+          használja a --secrets-stdin kapcsolót.
+        secrets_stdin_invalid_json: A --secrets-stdin tartalma nem érvényes JSON objektum.
+        secrets_stdin_missing_fields: A --secrets-stdin objektumból hiányoznak kötelező
+          mezők, vagy váratlanokat tartalmaz.
+        secrets_stdin_too_large: A --secrets-stdin tartalma meghaladja a megengedett
+          maximális méretet.
       new_passphrase_help: Uj titkos tar passphrase. Hagyja el az interaktiv megadashoz.
       new_passphrase_prompt: 'Uj AEAT titkos tar passphrase: '
-      secrets_stdin_help: cli.config.custody.secrets_stdin_help
+      secrets_stdin_help: A titkokat egyetlen korlátozott JSON objektumként olvassa
+        a szabványos bemenetről, kérdés helyett.
     errors:
       invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
@@ -3149,14 +3153,16 @@ cli:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
     passphrase:
       change:
-        help: cli.config.passphrase.change.help
-      confirm_new_passphrase_prompt: cli.config.passphrase.confirm_new_passphrase_prompt
-      current_passphrase_prompt: cli.config.passphrase.current_passphrase_prompt
+        help: A titoktár jelszavának cseréje a jelenlegi ellenőrzése után.
+      confirm_new_passphrase_prompt: 'Új jelszó megerősítése: '
+      current_passphrase_prompt: 'Jelenlegi jelszó: '
       errors:
-        current_passphrase_incorrect: cli.config.passphrase.errors.current_passphrase_incorrect
-        store_unprovisioned: cli.config.passphrase.errors.store_unprovisioned
-      help: cli.config.passphrase.help
-      new_passphrase_prompt: cli.config.passphrase.new_passphrase_prompt
+        current_passphrase_incorrect: A jelenlegi jelszó helytelen; a titoktár nem
+          módosult.
+        store_unprovisioned: A fájl-alapú titoktár nincs előkészítve; nincs cserélhető
+          jelszó.
+      help: A fájl-alapú titoktár jelszavának kezelése.
+      new_passphrase_prompt: 'Új jelszó: '
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       archive:

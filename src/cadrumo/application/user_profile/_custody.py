@@ -1,7 +1,7 @@
 """Application-owned custody operations for the profile secret store.
 
 The config CLI calls this module for recovery-code minting,
-verification, rekey, and recovery. Storage primitives stay in
+verification, passphrase change, and recovery. Storage primitives stay in
 :mod:`cadrumo.adapters.persistence.storage`; this layer resolves
 :class:`~cadrumo.core.config.Settings`, updates the active profile manifest
 when recovery is enrolled, and returns typed application result records.
@@ -69,13 +69,17 @@ class CustodyRecoveryVerification(BaseModel):
     verified: bool
 
 
-class CustodyRekeyResult(BaseModel):
-    """Result of rewrapping the master key under a new file-backend passphrase."""
+class CustodyPassphraseChangeResult(BaseModel):
+    """Result of rotating the file secret store's passphrase.
+
+    Carries only the non-secret store location and a completion flag; neither
+    the current nor the new passphrase is ever held on this record.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     secret_store_dir: Path
-    rekeyed: bool
+    changed: bool
 
 
 class CustodyRecoverResult(BaseModel):
@@ -149,32 +153,67 @@ def verify_recovery_code(*, mnemonic: str, settings: Settings | None = None) -> 
     return CustodyRecoveryVerification(recovery_path=path, verified=verified)
 
 
-def _file_provider_for_new_passphrase(
+def _file_provider_with_passphrase(
     *,
     settings: Settings,
-    new_passphrase: str,
+    passphrase: str,
 ) -> FileFallbackMasterKeyProvider:
     return FileFallbackMasterKeyProvider(
         store_dir=Path(settings.cadrumo_secret_store_dir),
-        passphrase_callback=lambda: new_passphrase,
+        passphrase_callback=lambda: passphrase,
     )
 
 
-def rekey_secret_store(
+def _require_file_custody(settings: Settings) -> None:
+    """Refuse a passphrase-change on a non-file secret-store backend.
+
+    A passphrase change rewraps the master key under a new file passphrase, which
+    only the encrypted-file backend supports. Keyring and unsecured custody are
+    refused with a typed, remediating :class:`SecretStoreError` rather than
+    crashing later against absent ``master.key`` / ``master.kdf`` artefacts.
+    """
+    provider = get_master_key_provider(settings_override=settings)
+    if not isinstance(provider, FileFallbackMasterKeyProvider):
+        raise SecretStoreError(
+            "passphrase change requires the file secret-store backend; the resolved "
+            f"backend {type(provider).__name__} is unsupported. Set "
+            "CADRUMO_SECRET_STORE_BACKEND=file and retry.",
+        )
+
+
+def change_passphrase(
     *,
+    current_passphrase: str,
     new_passphrase: str,
     settings: Settings | None = None,
-) -> CustodyRekeyResult:
-    """Rewrap the current master key under ``new_passphrase`` and return a :class:`CustodyRekeyResult`."""
+) -> CustodyPassphraseChangeResult:
+    """Rotate the file secret store's passphrase after verifying the current one.
+
+    File custody only. The current passphrase is verified by unwrapping the master
+    key under it; a wrong current passphrase raises
+    :class:`~cadrumo.adapters.persistence.storage.MasterKeyPassphraseMismatchError`
+    and the stored key is left untouched. Only after a successful unwrap is the
+    store rewrapped under ``new_passphrase``. Neither passphrase is persisted or
+    returned.
+
+    Raises:
+        SecretStoreError: When the resolved backend is not file custody.
+        MasterKeyPassphraseMismatchError: When ``current_passphrase`` does not
+            unwrap the stored master key.
+        MasterKeyMaterialMissingError: When the store is unprovisioned or torn.
+    """
     resolved = _settings(settings)
-    current_provider = get_master_key_provider(settings_override=resolved)
-    with activate_master_key_provider(current_provider):
-        master_key = current_provider.get_master_key()
-    new_provider = _file_provider_for_new_passphrase(settings=resolved, new_passphrase=new_passphrase)
+    _require_file_custody(resolved)
+    verifying_provider = _file_provider_with_passphrase(settings=resolved, passphrase=current_passphrase)
+    master_key = verifying_provider.get_master_key()
+    new_provider = _file_provider_with_passphrase(settings=resolved, passphrase=new_passphrase)
     new_provider.complete_recovery(master_key)
     with activate_master_key_provider(new_provider):
         pass
-    return CustodyRekeyResult(secret_store_dir=Path(resolved.cadrumo_secret_store_dir), rekeyed=True)
+    return CustodyPassphraseChangeResult(
+        secret_store_dir=Path(resolved.cadrumo_secret_store_dir),
+        changed=True,
+    )
 
 
 def recover_secret_store(
@@ -188,7 +227,7 @@ def recover_secret_store(
     path = recovery_wrap_path(resolved)
     envelope = load_recovery_envelope(path)
     master_key = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
-    new_provider = _file_provider_for_new_passphrase(settings=resolved, new_passphrase=new_passphrase)
+    new_provider = _file_provider_with_passphrase(settings=resolved, passphrase=new_passphrase)
     new_provider.complete_recovery(master_key)
     with activate_master_key_provider(new_provider):
         pass
@@ -214,16 +253,16 @@ def recover_secret_store_with_callback(
 
 
 __all__ = [
+    "CustodyPassphraseChangeResult",
     "CustodyRecoverResult",
     "CustodyRecoveryEnrollment",
     "CustodyRecoveryStatus",
     "CustodyRecoveryVerification",
-    "CustodyRekeyResult",
+    "change_passphrase",
     "inspect_recovery_status",
     "mint_recovery_code",
     "recover_secret_store",
     "recover_secret_store_with_callback",
     "recovery_wrap_path",
-    "rekey_secret_store",
     "verify_recovery_code",
 ]

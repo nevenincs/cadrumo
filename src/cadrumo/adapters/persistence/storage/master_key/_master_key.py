@@ -285,7 +285,7 @@ class KeyringMasterKeyProvider:
             if stored is not None:
                 raise SecretAlreadyExistsError(
                     "OS keychain master key is already provisioned; use `aeat config recover` "
-                    "or `aeat config rekey` for custody changes.",
+                    "or `aeat config passphrase change` for custody changes.",
                 )
             new_key = self._mint_and_verify_master_key(KeyringError)
             _log.info("master key minted in OS keychain (service=%s)", self._service)
@@ -533,7 +533,7 @@ class FileFallbackMasterKeyProvider:
             if present and not force:
                 raise SecretAlreadyExistsError(
                     f"file-fallback at {self._store_dir} is already provisioned; use "
-                    "`aeat config recover` or `aeat config rekey` for custody changes.",
+                    "`aeat config recover` or `aeat config passphrase change` for custody changes.",
                 )
             if present and len(present) != len(artefacts):
                 missing = [p.name for p in artefacts if not p.exists()]

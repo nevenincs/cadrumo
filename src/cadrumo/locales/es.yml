@@ -3036,14 +3036,19 @@ cli:
         non_interactive_passphrase_required: Esta orden necesita un terminal interactivo
           para solicitar la nueva contraseña. Proporciónala de forma no interactiva
           con --new-passphrase y --confirm-new-passphrase.
-        non_interactive_secret_required: cli.config.custody.errors.non_interactive_secret_required
-        secrets_stdin_invalid_json: cli.config.custody.errors.secrets_stdin_invalid_json
-        secrets_stdin_missing_fields: cli.config.custody.errors.secrets_stdin_missing_fields
-        secrets_stdin_too_large: cli.config.custody.errors.secrets_stdin_too_large
+        non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
+          interactiva; usa --secrets-stdin.
+        secrets_stdin_invalid_json: El contenido de --secrets-stdin no es un objeto
+          JSON válido.
+        secrets_stdin_missing_fields: Al objeto de --secrets-stdin le faltan campos
+          obligatorios o tiene campos inesperados.
+        secrets_stdin_too_large: El contenido de --secrets-stdin supera el tamaño
+          máximo permitido.
       new_passphrase_help: Nueva contrasena del almacen secreto. Omitela para introducirla
         de forma interactiva.
       new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
-      secrets_stdin_help: cli.config.custody.secrets_stdin_help
+      secrets_stdin_help: Lee los secretos como un único objeto JSON acotado desde
+        la entrada estándar en lugar de solicitarlos.
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
       no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
@@ -3233,14 +3238,16 @@ cli:
       help: Listar todos los perfiles registrados y marcar el activo
     passphrase:
       change:
-        help: cli.config.passphrase.change.help
-      confirm_new_passphrase_prompt: cli.config.passphrase.confirm_new_passphrase_prompt
-      current_passphrase_prompt: cli.config.passphrase.current_passphrase_prompt
+        help: Cambia la contraseña del almacén de secretos tras verificar la actual.
+      confirm_new_passphrase_prompt: 'Confirma la nueva contraseña: '
+      current_passphrase_prompt: 'Contraseña actual: '
       errors:
-        current_passphrase_incorrect: cli.config.passphrase.errors.current_passphrase_incorrect
-        store_unprovisioned: cli.config.passphrase.errors.store_unprovisioned
-      help: cli.config.passphrase.help
-      new_passphrase_prompt: cli.config.passphrase.new_passphrase_prompt
+        current_passphrase_incorrect: La contraseña actual es incorrecta; el almacén
+          de secretos no se ha modificado.
+        store_unprovisioned: El almacén de secretos en archivo no está inicializado;
+          no hay contraseña que cambiar.
+      help: Gestiona la contraseña del almacén de secretos en archivo.
+      new_passphrase_prompt: 'Nueva contraseña: '
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       archive:

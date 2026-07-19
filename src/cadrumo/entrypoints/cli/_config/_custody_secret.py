@@ -6,12 +6,14 @@ import getpass
 import sys
 
 import typer
+from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._secure_input import prompt_secret_no_echo, read_secrets_stdin
 
 
 def _resolve_confirmed_new_passphrase(value: str | None, confirmation: str | None) -> str:
@@ -53,21 +55,60 @@ def _resolve_confirmed_new_passphrase(value: str | None, confirmation: str | Non
     return first
 
 
-def _register_rekey_command(app: typer.Typer) -> None:
-    """Register the profile rekey transport command."""
+class _PassphraseChangeSecrets(BaseModel):
+    """Strict ``--secrets-stdin`` payload for ``config passphrase change``.
 
-    @app.command("rekey", help=tr("cli.config.rekey.help"))
-    def config_rekey(
+    Read from one bounded JSON object; the three passphrases arrive as
+    :class:`~pydantic.SecretStr` so they never render in a repr, and
+    ``extra="forbid"`` refuses an unexpected field.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    current_passphrase: SecretStr
+    new_passphrase: SecretStr
+    new_passphrase_confirmation: SecretStr
+
+
+def _resolve_passphrase_change_secrets(secrets_stdin: bool) -> tuple[str, str]:
+    """Return the ``(current, new)`` passphrases from stdin JSON or no-echo prompts.
+
+    Never reads a passphrase from ``argv``. With ``--secrets-stdin`` the three
+    values arrive in one bounded strict-JSON object; otherwise each is prompted on
+    the controlling terminal with echo suppressed. A new/confirmation mismatch
+    refuses before any custody mutation.
+    """
+    if secrets_stdin:
+        secrets = read_secrets_stdin(_PassphraseChangeSecrets)
+        current = secrets.current_passphrase.get_secret_value()
+        new = secrets.new_passphrase.get_secret_value()
+        confirmation = secrets.new_passphrase_confirmation.get_secret_value()
+    else:
+        current = prompt_secret_no_echo(tr("cli.config.passphrase.current_passphrase_prompt"))
+        new = prompt_secret_no_echo(tr("cli.config.passphrase.new_passphrase_prompt"))
+        confirmation = prompt_secret_no_echo(tr("cli.config.passphrase.confirm_new_passphrase_prompt"))
+    if new != confirmation:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.new_passphrase_mismatch",
+        )
+    return current, new
+
+
+def _register_passphrase_commands(app: typer.Typer) -> None:
+    """Register the ``config passphrase change`` transport command."""
+    passphrase_app = typer.Typer(
+        name="passphrase",
+        help=tr("cli.config.passphrase.help"),
+        no_args_is_help=True,
+    )
+
+    @passphrase_app.command("change", help=tr("cli.config.passphrase.change.help"))
+    def passphrase_change(
         ctx: typer.Context,
-        new_passphrase: str | None = typer.Option(
-            None,
-            "--new-passphrase",
-            help=tr("cli.config.custody.new_passphrase_help"),
-        ),
-        confirm_new_passphrase: str | None = typer.Option(
-            None,
-            "--confirm-new-passphrase",
-            help=tr("cli.config.custody.confirm_new_passphrase_help"),
+        secrets_stdin: bool = typer.Option(
+            False,
+            "--secrets-stdin",
+            help=tr("cli.config.custody.secrets_stdin_help"),
         ),
         output_language: OutputLanguage | None = typer.Option(
             None,
@@ -76,23 +117,45 @@ def _register_rekey_command(app: typer.Typer) -> None:
             help=tr("cli.config.auth.output_language_help"),
         ),
     ) -> None:
-        """Rewrap the configured file secret store under a fresh passphrase."""
+        """Rotate the file secret store's passphrase after verifying the current one."""
         _activate_subcommand_output_language(ctx, output_language)
-        from ....application.user_profile import rekey_secret_store
-        from .._config_payloads import ConfigRekeyResult
+        from ....adapters.persistence.storage import (
+            MasterKeyMaterialMissingError,
+            MasterKeyPassphraseMismatchError,
+            SecretStoreError,
+        )
+        from ....application.user_profile import change_passphrase
+        from .._config_payloads import ConfigPassphraseChangeResult
 
-        passphrase = _resolve_confirmed_new_passphrase(new_passphrase, confirm_new_passphrase)
-        result = rekey_secret_store(new_passphrase=passphrase)
-        payload = ConfigRekeyResult(secret_store_dir=str(result.secret_store_dir), rekeyed=result.rekeyed)
+        current, new = _resolve_passphrase_change_secrets(secrets_stdin)
+        try:
+            result = change_passphrase(current_passphrase=current, new_passphrase=new)
+        except MasterKeyPassphraseMismatchError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.passphrase.errors.current_passphrase_incorrect",
+            ) from exc
+        except MasterKeyMaterialMissingError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.passphrase.errors.store_unprovisioned",
+            ) from exc
+        except SecretStoreError as exc:
+            raise _CliRefusedBoundaryError(str(exc)) from exc
+
+        payload = ConfigPassphraseChangeResult(
+            secret_store_dir=str(result.secret_store_dir),
+            changed=result.changed,
+        )
         _emit_envelope(
             ctx,
-            command="config.rekey",
+            command="config.passphrase.change",
             result=payload,
             lines=(
-                "rekeyed\tyes",
+                "changed\tyes",
                 f"secret_store_dir\t{result.secret_store_dir}",
             ),
         )
+
+    app.add_typer(passphrase_app)
 
 
 def _register_recover_command(app: typer.Typer) -> None:
@@ -242,7 +305,7 @@ def _register_verify_recovery_command(app: typer.Typer) -> None:
 
 def register_secret_custody_commands(app: typer.Typer) -> None:
     """Register secret-store custody transport commands."""
-    _register_rekey_command(app)
+    _register_passphrase_commands(app)
     _register_recover_command(app)
     _register_show_recovery_command(app)
     _register_verify_recovery_command(app)

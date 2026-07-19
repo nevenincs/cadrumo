@@ -769,8 +769,8 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             owner_domains=("secure_storage",),
         ),
         _surface(
-            "config rekey",
-            command_family="recovery",
+            "config passphrase change",
+            command_family="passphrase",
             owner_domains=("secure_storage",),
         ),
         _surface(

@@ -3006,14 +3006,19 @@ cli:
         non_interactive_passphrase_required: Aquesta ordre necessita un terminal interactiu
           per demanar la nova contrasenya. Proporciona-la de manera no interactiva
           amb --new-passphrase i --confirm-new-passphrase.
-        non_interactive_secret_required: cli.config.custody.errors.non_interactive_secret_required
-        secrets_stdin_invalid_json: cli.config.custody.errors.secrets_stdin_invalid_json
-        secrets_stdin_missing_fields: cli.config.custody.errors.secrets_stdin_missing_fields
-        secrets_stdin_too_large: cli.config.custody.errors.secrets_stdin_too_large
+        non_interactive_secret_required: Cal un secret però no hi ha cap terminal
+          interactiu; utilitza --secrets-stdin.
+        secrets_stdin_invalid_json: El contingut de --secrets-stdin no és un objecte
+          JSON vàlid.
+        secrets_stdin_missing_fields: A l'objecte de --secrets-stdin li falten camps
+          obligatoris o en té d'inesperats.
+        secrets_stdin_too_large: El contingut de --secrets-stdin supera la mida màxima
+          permesa.
       new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
         de forma interactiva.
       new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
-      secrets_stdin_help: cli.config.custody.secrets_stdin_help
+      secrets_stdin_help: Llegeix els secrets com un únic objecte JSON limitat des
+        de l'entrada estàndard en lloc de demanar-los.
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
       no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
@@ -3201,14 +3206,16 @@ cli:
       help: Llistar tots els perfils registrats i marcar l'actiu
     passphrase:
       change:
-        help: cli.config.passphrase.change.help
-      confirm_new_passphrase_prompt: cli.config.passphrase.confirm_new_passphrase_prompt
-      current_passphrase_prompt: cli.config.passphrase.current_passphrase_prompt
+        help: Canvia la contrasenya del magatzem de secrets després de verificar l'actual.
+      confirm_new_passphrase_prompt: 'Confirma la contrasenya nova: '
+      current_passphrase_prompt: 'Contrasenya actual: '
       errors:
-        current_passphrase_incorrect: cli.config.passphrase.errors.current_passphrase_incorrect
-        store_unprovisioned: cli.config.passphrase.errors.store_unprovisioned
-      help: cli.config.passphrase.help
-      new_passphrase_prompt: cli.config.passphrase.new_passphrase_prompt
+        current_passphrase_incorrect: La contrasenya actual és incorrecta; el magatzem
+          de secrets no s'ha modificat.
+        store_unprovisioned: El magatzem de secrets en fitxer no està inicialitzat;
+          no hi ha cap contrasenya per canviar.
+      help: Gestiona la contrasenya del magatzem de secrets en fitxer.
+      new_passphrase_prompt: 'Contrasenya nova: '
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
@@ -4223,8 +4230,8 @@ cli:
           evidence add'.
       help: Vincula un moviment del llibre amb una factura del catàleg de reconciliació
         en una única crida canònica. Per adjuntar evidència de factura de compra,
-        usa 'aeat app ledger attach'. Rebutja vincles entre buckets. Local; mai
-        contacta amb AEAT.
+        usa 'aeat app ledger attach'. Rebutja vincles entre buckets. Local; mai contacta
+        amb AEAT.
       id_help: Id de transaccio del llibre (SHA-256 o prefix inequivoc).
       invoice_id_help: Id del catàleg de factures enriquit, procedent d'una factura
         importada, reconciliada o creada amb 'aeat app ledger invoice catalogue create',

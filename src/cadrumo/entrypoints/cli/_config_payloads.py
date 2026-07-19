@@ -253,16 +253,17 @@ class ConfigSwitchResult(OutputSchema):
     active_profile: str
 
 
-@register_schema("config.rekey")
-class ConfigRekeyResult(OutputSchema):
-    """JSON envelope for ``aeat config rekey``.
+@register_schema("config.passphrase.change")
+class ConfigPassphraseChangeResult(OutputSchema):
+    """JSON envelope for ``aeat config passphrase change``.
 
-    Reports the secure-store directory and whether local encrypted material was
-    re-keyed. Key material and recovery phrases never enter this payload.
+    Reports the secure-store directory and whether the passphrase was rotated.
+    Neither the current nor the new passphrase, key material, nor recovery
+    phrases ever enter this payload.
     """
 
     secret_store_dir: str
-    rekeyed: bool
+    changed: bool
 
 
 @register_schema("config.recover")
