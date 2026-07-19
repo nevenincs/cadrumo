@@ -23,6 +23,7 @@ import urllib.request
 import zipfile
 from dataclasses import asdict
 from datetime import UTC, datetime
+from importlib.metadata import version as _package_version
 from pathlib import Path
 from typing import Final
 
@@ -32,17 +33,31 @@ if str(_REPO_ROOT) not in sys.path:
 
 from dev.packaging._acquire_common import (  # noqa: E402
     AcquisitionError,
+    capture_owned_server_launch,
     refuse_unavailable,
     require_command_succeeded,
     verify_artifact_digest,
 )
 from dev.packaging.cohort_manifest import LoadedReleaseCohort, load_release_cohort  # noqa: E402
-from dev.packaging.installed_mcp_oracle import run_installed_mcp_oracle  # noqa: E402
+from dev.packaging.distribution_evidence_emit import emit_client_evidence  # noqa: E402
+from dev.packaging.evidence import (  # noqa: E402
+    AcquisitionIdentity,
+    ClientIdentity,
+    CommandTranscript,
+    DestinationIdentity,
+)
+from dev.packaging.installed_mcp_oracle import (  # noqa: E402
+    InstalledMcpEvidence,
+    isolated_mcp_environment,
+    run_installed_mcp_oracle,
+)
 from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
 from dev.packaging.smoke_mcpb import _resolve_mcpb_value, _run_concurrent_launches  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_REPO: Final[str] = "nevenincs/cadrumo"
+_DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
+_SDK_CLIENT_NAME: Final[str] = "cadrumo-mcp-sdk-client"
 _EXPECTED_TARGET_VALUE: Final[str] = "23000.00"
 
 
@@ -142,7 +157,7 @@ def _exercise_bundle(
     uv: Path,
     logs: Path,
     timeout_seconds: float,
-) -> dict[str, object]:
+) -> tuple[InstalledMcpEvidence, CommandTranscript]:
     """Extract, provision, and run the MCP oracle against the downloaded bundle.
 
     Reuses the launch-ceremony helpers and the installed MCP oracle from the
@@ -194,7 +209,20 @@ def _exercise_bundle(
     )
     if evidence.target_value != _EXPECTED_TARGET_VALUE:
         raise AcquisitionError(f"published MCPB oracle target value drifted: {evidence.target_value!r}")
-    return asdict(evidence)
+    # Capture a genuinely-owned bounded launch of the exact bundle server contract
+    # AFTER the oracle completes (so the bounded initialize-then-shutdown cannot
+    # pollute the oracle's storage): the real subprocess transcript becomes the
+    # sole command of the option-A pure-client record.
+    launch_env = isolated_mcp_environment(storage_root)
+    launch_env.update(resolved_environment)
+    launch_transcript = capture_owned_server_launch(
+        server=uv,
+        server_args=server_args,
+        env=launch_env,
+        cwd=run_root,
+        timeout_seconds=timeout_seconds,
+    )
+    return evidence, launch_transcript
 
 
 def run_mcpb_acquisition(
@@ -206,6 +234,8 @@ def run_mcpb_acquisition(
     uv_executable: Path | None,
     gh_executable: Path | None,
     timeout_seconds: float,
+    row_id: str | None = None,
+    distribution_evidence_dir: Path | None = None,
 ) -> Path:
     """Download the published MCPB, verify its digest, and repeat the MCP oracle.
 
@@ -218,6 +248,10 @@ def run_mcpb_acquisition(
         uv_executable: An explicit ``uv`` path, or ``None`` to resolve from PATH.
         gh_executable: An explicit ``gh`` path, or ``None`` to resolve from PATH.
         timeout_seconds: Timeout for downloads, launches, and the MCP oracle.
+        row_id: The client row this run proves (required to emit the flat
+            client-row record, e.g. ``claude-desktop-mcpb``).
+        distribution_evidence_dir: Where the flat record lands; defaults to
+            ``var/distribution-install-readiness`` (the directory both gates scan).
 
     Returns:
         The path to the retained JSON evidence document.
@@ -252,7 +286,7 @@ def run_mcpb_acquisition(
         path=bundle,
         expected_sha256=expected_sha256,
     )
-    oracle = _exercise_bundle(
+    mcp_evidence, launch_transcript = _exercise_bundle(
         bundle=bundle,
         python_cohort_dir=cohort_dir / "python",
         run_root=run_root,
@@ -270,13 +304,30 @@ def run_mcpb_acquisition(
         "version": version,
         "bundle": str(bundle),
         "verified_mcpb_sha256": expected_sha256,
-        "mcp_oracle": oracle,
+        "mcp_oracle": asdict(mcp_evidence),
     }
     evidence_path = run_root / "acquire-mcpb-evidence.json"
     evidence_path.write_text(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
     )
+
+    if row_id is not None:
+        emit_client_evidence(
+            directory=(distribution_evidence_dir or _DEFAULT_DISTRIBUTION_EVIDENCE_DIR),
+            row_id=row_id,
+            cohort=cohort,
+            mcp_evidence=mcp_evidence,
+            launch_transcript=launch_transcript,
+            client=ClientIdentity(
+                name=_SDK_CLIENT_NAME,
+                version=_package_version("mcp"),
+                executable=str(uv),
+            ),
+            acquisition=AcquisitionIdentity(mechanism="mcpb", source=endpoint),
+            destination=DestinationIdentity(kind="mcpb-bundle", locator=str(bundle), version=cohort.manifest.version),
+        )
+
     return evidence_path
 
 
@@ -295,6 +346,17 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--uv", type=Path, default=None, help="Explicit uv executable (defaults to PATH).")
     parser.add_argument("--gh", type=Path, default=None, help="Explicit gh executable (defaults to PATH).")
     parser.add_argument("--timeout-seconds", type=float, default=600.0)
+    parser.add_argument(
+        "--row-id",
+        default=None,
+        help="Distribution row this run proves (required to emit the flat client record).",
+    )
+    parser.add_argument(
+        "--distribution-evidence-dir",
+        type=Path,
+        default=None,
+        help="Where the flat record lands (defaults to var/distribution-install-readiness).",
+    )
     return parser
 
 
@@ -309,6 +371,8 @@ def main(argv: list[str] | None = None) -> int:
         uv_executable=args.uv,
         gh_executable=args.gh,
         timeout_seconds=args.timeout_seconds,
+        row_id=args.row_id,
+        distribution_evidence_dir=args.distribution_evidence_dir,
     )
     print(evidence)
     return 0
