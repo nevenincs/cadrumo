@@ -84,11 +84,35 @@ def test_validate_promotes_without_rebuild() -> None:
     surface = _run_surface(validate)
     assert "dev.release.promote_python_cohort" in surface
     assert "dev.release.readiness" in surface
-    assert "cadrumo-python-cohort" in surface
     assert "cadrumo-release-cohort" in surface
+    # The per-OS smoke build artifact never enters the publication chain; the
+    # promotion guard is re-pointed at the sealed cohort's python bytes, and the
+    # sealed cohort's installed behaviour is proven by the DistributionEvidence
+    # rows the readiness gate reads.
+    assert "--name cadrumo-python-cohort" not in surface
+    assert "--check-pypi-only" in surface
+    assert "cadrumo-distribution-evidence-" in surface
     # No publish verb in the read-only validate gate.
     assert "uv publish" not in surface
     assert "gh release create" not in surface
+
+
+def test_pypi_ships_the_sealed_cohort_not_the_per_os_smoke_build() -> None:
+    """Every PyPI upload path resolves under the sealed release cohort's python dir."""
+    publish = _document()["jobs"]["publish"]
+    surface = _run_surface(publish)
+    # The per-OS smoke build (cadrumo-python-cohort) is out of the publish chain.
+    assert "--name cadrumo-python-cohort" not in surface
+    # Each of the six wheels/sdists is uploaded from RELEASE_COHORT_DIR/python.
+    for artifact in (
+        'cadrumo-"$VERSION"-py3-none-any.whl',
+        'cadrumo-"$VERSION".tar.gz',
+        'cadrumo_data_manuals-"$VERSION"-py3-none-any.whl',
+        'cadrumo_data_manuals-"$VERSION".tar.gz',
+        'cadrumo_data_official-"$VERSION"-py3-none-any.whl',
+        'cadrumo_data_official-"$VERSION".tar.gz',
+    ):
+        assert f'"$RELEASE_COHORT_DIR"/python/{artifact}' in surface
 
 
 def test_no_job_ever_builds_or_regenerates_an_artifact() -> None:

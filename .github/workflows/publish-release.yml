@@ -88,7 +88,6 @@ jobs:
       source_commit: ${{ steps.source-run.outputs.source_commit }}
       version: ${{ steps.validate.outputs.version }}
     env:
-      COHORT_DIR: var/promotion/cohort
       RELEASE_COHORT_DIR: var/promotion/release-cohort
       EVIDENCE_DOWNLOAD: var/promotion/evidence
       PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
@@ -117,39 +116,34 @@ jobs:
           version: "0.11.29"
           python-version: "3.13"
 
-      - name: Download the stored cohort and per-platform installed evidence (never rebuild)
+      - name: Download the sealed cohort and its distribution-evidence rows (never rebuild)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh run download "$PACKAGING_RUN_ID" --name cadrumo-python-cohort --dir "$COHORT_DIR"
+          # The SEALED cohort is the single source of published bytes for EVERY
+          # channel including PyPI (its python/ subdir). The per-OS smoke build
+          # artifact (cadrumo-python-cohort) is deliberately NOT downloaded: it is
+          # the smoke lane's own test artifact and never enters the publication
+          # chain. The immutable cohort's installed behaviour is proven by the
+          # DistributionEvidence rows the oracle-emit legs minted against it.
+          mkdir -p "$EVIDENCE_DOWNLOAD/rows"
           gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort --dir "$RELEASE_COHORT_DIR"
-          gh run download "$PACKAGING_RUN_ID" --name cadrumo-packaging-smoke-evidence --dir "$EVIDENCE_DOWNLOAD/linux"
-          gh run download "$PACKAGING_RUN_ID" --name cadrumo-packaging-smoke-evidence-windows --dir "$EVIDENCE_DOWNLOAD/windows"
-          gh run download "$PACKAGING_RUN_ID" --name cadrumo-packaging-smoke-evidence-macos --dir "$EVIDENCE_DOWNLOAD/macos"
+          gh run download "$PACKAGING_RUN_ID" --pattern 'cadrumo-distribution-evidence-*' --dir "$EVIDENCE_DOWNLOAD/rows-raw"
+          find "$EVIDENCE_DOWNLOAD/rows-raw" -name '*.json' -exec cp {} "$EVIDENCE_DOWNLOAD/rows/" \;
 
-      - name: Re-verify exact hashes and EVERY platform's installed behavior
+      - name: Guard the PyPI destination against overwrite and emit the version
         id: validate
-        env:
-          EXPECTED_SOURCE_COMMIT: ${{ steps.source-run.outputs.source_commit }}
         run: |
-          # A release ships only when EACH claimed platform retained real
-          # installed-behavior evidence (the grounded tax oracle run from the
-          # installed cohort) bound to the exact promoted source commit - a
-          # missing platform is a hard refusal, never a silent narrowing.
-          for platform in linux windows macos; do
-            evidence_file="$(find "$EVIDENCE_DOWNLOAD/$platform" -path "*/${EXPECTED_SOURCE_COMMIT}/evidence.json" -print -quit)"
-            if [[ -z "$evidence_file" ]]; then
-              echo "REFUSED: $platform installed-cohort evidence is absent for $EXPECTED_SOURCE_COMMIT" >&2
-              exit 1
-            fi
-            uv run --frozen python -m dev.release.promote_python_cohort \
-              --cohort-dir "$COHORT_DIR" \
-              --evidence-file "$evidence_file" \
-              --expected-source-commit "$EXPECTED_SOURCE_COMMIT" \
-              --check-pypi \
-              --github-output "$GITHUB_OUTPUT"
-            echo "verified $platform installed evidence: $evidence_file"
-          done
+          # Re-point the promotion guard at the SEALED cohort's python bytes (the
+          # exact wheels/sdists PyPI will ship): confirm no PyPI project already
+          # owns this version, and emit the version for the publish job. The
+          # sealed cohort's installed-behavior binding is enforced below by the
+          # readiness gate over the DistributionEvidence rows, not by the per-OS
+          # smoke-build evidence (which describes different bytes).
+          uv run --frozen python -m dev.release.promote_python_cohort \
+            --cohort-dir "$RELEASE_COHORT_DIR/python" \
+            --check-pypi-only \
+            --github-output "$GITHUB_OUTPUT"
 
       - name: Require the complete blocking distribution evidence set
         run: |
@@ -175,7 +169,6 @@ jobs:
       id-token: write
       contents: write
     env:
-      COHORT_DIR: var/promotion/cohort
       RELEASE_COHORT_DIR: var/promotion/release-cohort
       VERSION: ${{ needs.validate.outputs.version }}
       SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
@@ -191,24 +184,25 @@ jobs:
           version: "0.11.29"
           python-version: "3.13"
 
-      - name: Re-download the stored cohorts (no rebuild)
+      - name: Re-download the sealed cohort (no rebuild)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh run download "$PACKAGING_RUN_ID" --name cadrumo-python-cohort --dir "$COHORT_DIR"
           gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort --dir "$RELEASE_COHORT_DIR"
 
       - name: Publish the three distributions to PyPI via Trusted Publishing (OIDC)
         run: |
           # uv exchanges the id-token for a short-lived PyPI token (Trusted
-          # Publishing); it uploads the stored wheels/sdists and never builds.
+          # Publishing); it uploads the SEALED cohort's stored wheels/sdists (the
+          # exact bytes every other channel ships and the oracle-emit legs proved)
+          # from cadrumo-release-cohort/python and never builds.
           uv publish --trusted-publishing always \
-            "$COHORT_DIR"/cadrumo-"$VERSION"-py3-none-any.whl \
-            "$COHORT_DIR"/cadrumo-"$VERSION".tar.gz \
-            "$COHORT_DIR"/cadrumo_data_manuals-"$VERSION"-py3-none-any.whl \
-            "$COHORT_DIR"/cadrumo_data_manuals-"$VERSION".tar.gz \
-            "$COHORT_DIR"/cadrumo_data_official-"$VERSION"-py3-none-any.whl \
-            "$COHORT_DIR"/cadrumo_data_official-"$VERSION".tar.gz
+            "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION"-py3-none-any.whl \
+            "$RELEASE_COHORT_DIR"/python/cadrumo-"$VERSION".tar.gz \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION"-py3-none-any.whl \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_data_manuals-"$VERSION".tar.gz \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION"-py3-none-any.whl \
+            "$RELEASE_COHORT_DIR"/python/cadrumo_data_official-"$VERSION".tar.gz
 
       - name: Create the GitHub release with every cohort asset
         env:

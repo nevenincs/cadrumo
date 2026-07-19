@@ -142,11 +142,26 @@ def main() -> int:
     """Validate retained promotion evidence and emit exact artifact paths."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--cohort-dir", required=True, type=Path)
-    parser.add_argument("--evidence-file", required=True, type=Path)
-    parser.add_argument("--expected-source-commit", required=True)
+    parser.add_argument("--evidence-file", type=Path)
+    parser.add_argument("--expected-source-commit")
     parser.add_argument("--github-output", type=Path)
     parser.add_argument("--check-pypi", action="store_true")
+    # The immutable release cohort's installed behaviour is proven per-OS by the
+    # DistributionEvidence rows (readiness gate), not by this per-OS-smoke-build
+    # evidence, so the publish path re-points here for ONLY the pre-upload PyPI
+    # destination guard + the version/path outputs, skipping the smoke-build
+    # evidence binding that does not apply to the sealed cohort's bytes.
+    parser.add_argument("--check-pypi-only", action="store_true")
     args = parser.parse_args()
+    if args.check_pypi_only:
+        cohort = load_python_cohort(args.cohort_dir)
+        assert_pypi_destinations_absent(cohort)
+        if args.github_output is not None:
+            _write_outputs(args.github_output, cohort)
+        print(json.dumps({"version": cohort.version, "source_commit": cohort.source_commit}, sort_keys=True))
+        return 0
+    if args.evidence_file is None or args.expected_source_commit is None:
+        raise SystemExit("--evidence-file and --expected-source-commit are required unless --check-pypi-only")
     cohort = validate_promotion(
         args.cohort_dir,
         args.evidence_file,
