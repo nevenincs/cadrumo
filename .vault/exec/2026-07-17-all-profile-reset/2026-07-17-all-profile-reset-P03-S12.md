@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Invoke strong profile logout for the active reset target and reconcile dangling pointers through the core authority
 
 ## Scope

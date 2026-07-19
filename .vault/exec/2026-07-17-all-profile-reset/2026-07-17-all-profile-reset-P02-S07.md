@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Persist reset journals atomically outside target directories with restrictive permissions and corruption refusal
 
 ## Scope

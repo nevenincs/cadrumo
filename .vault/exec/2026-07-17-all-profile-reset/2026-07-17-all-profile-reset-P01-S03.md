@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Define the authoritative deletion-relevant bucket fingerprint for assessment and resume
 
 ## Scope

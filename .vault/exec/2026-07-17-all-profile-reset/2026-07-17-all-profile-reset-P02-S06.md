@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Define durable non-secret reset operation, target phase, pointer snapshot, retention, marker, and summary models
 
 ## Scope

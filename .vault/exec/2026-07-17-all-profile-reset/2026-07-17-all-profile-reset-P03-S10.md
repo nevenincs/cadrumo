@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Acquire target locks in sorted UUID order and persist every retention decision before mutation
 
 ## Scope

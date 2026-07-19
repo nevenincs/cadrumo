@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Add target deletion assessment and reset ownership fields to bucket-maintenance contracts
 
 ## Scope

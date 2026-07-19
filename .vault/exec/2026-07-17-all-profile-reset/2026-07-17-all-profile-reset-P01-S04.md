@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Prove deletion assessment reports real retention blockers without mutating the bucket
 
 ## Scope

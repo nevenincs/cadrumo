@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#all-profile-reset'
-date: '2026-07-17'
-modified: '2026-07-17'
+date: '2026-07-19'
+modified: '2026-07-19'
 related:
   - '[[2026-07-17-all-profile-reset-P01-S01]]'
   - '[[2026-07-17-all-profile-reset-P01-S02]]'
@@ -23,6 +23,11 @@ related:
   - '[[2026-07-17-all-profile-reset-P03-S15]]'
   - '[[2026-07-17-all-profile-reset-P03-S16]]'
   - '[[2026-07-17-all-profile-reset-P03-S17]]'
+  - '[[2026-07-17-all-profile-reset-P04-S20]]'
+  - '[[2026-07-17-all-profile-reset-P04-S21]]'
+  - '[[2026-07-17-all-profile-reset-P04-S24]]'
+  - '[[2026-07-17-all-profile-reset-P04-S25]]'
+  - '[[2026-07-17-all-profile-reset-P05-S26]]'
   - '[[2026-07-17-all-profile-reset-adr]]'
   - '[[2026-07-17-all-profile-reset-audit]]'
   - '[[2026-07-17-all-profile-reset-plan]]'
@@ -61,6 +66,11 @@ Auto-generated index of all documents tagged with `#all-profile-reset`.
 - `2026-07-17-all-profile-reset-P03-S15` - Prove target discovery includes live, tombstoned, and dangling-pointer buckets but excludes cold defaults
 - `2026-07-17-all-profile-reset-P03-S16` - Prove every reset phase boundary resumes honestly in a fresh child process
 - `2026-07-17-all-profile-reset-P03-S17` - Prove sorted locking, writer pauses, reset exclusion, retention recheck, and renewed confirmation with real processes
+- `2026-07-17-all-profile-reset-P04-S20` - Replace flat scoped reset registration with the config reset command group
+- `2026-07-17-all-profile-reset-P04-S21` - Register only reset start, status, and resume with operation, retention, reason, and confirmation options
+- `2026-07-17-all-profile-reset-P04-S24` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes
+- `2026-07-17-all-profile-reset-P04-S25` - Require yes for reset start and resume while keeping status non-destructive
+- `2026-07-17-all-profile-reset-P05-S26` - Migrate the reset payload schemas and write-policy tokens to the accepted reset grammar
 
 ### plan
 

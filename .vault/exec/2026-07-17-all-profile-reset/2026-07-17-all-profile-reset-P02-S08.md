@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Prove reset journal atomicity, permissions, corruption refusal, exclusion, and fresh-process reload
 
 ## Scope
