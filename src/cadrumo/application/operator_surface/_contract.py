@@ -207,9 +207,9 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         domain=MountedCommandDomain.DIAGNOSTICS,
         root=RootSurfaceName.CONFIG,
         child="reset",
-        operator_question="reset operator-entered local configuration scopes",
+        operator_question="start, inspect, or resume the durable all-profile configuration reset",
         service_owner="cadrumo.application.config_reset",
-        commands=("reset",),
+        commands=("start", "status", "resume"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -451,7 +451,7 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
     ServiceOwner(
         capability="config_reset",
         owner="cadrumo.application.config_reset",
-        notes="owns the operator-entered configuration scope reset behind config reset",
+        notes="owns the durable all-profile reset lifecycle (start, status, resume) behind config reset",
     ),
 )
 
