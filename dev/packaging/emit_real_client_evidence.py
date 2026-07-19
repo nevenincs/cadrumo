@@ -29,6 +29,7 @@ from dev.packaging.evidence import AcquisitionIdentity, ClientIdentity, Destinat
 from dev.packaging.installed_mcp_oracle import isolated_mcp_environment
 
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
+_UTF_8: Final[str] = "utf-8"
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -55,8 +56,8 @@ def main(argv: list[str] | None = None) -> int:
     """Emit one sanctioned real-client claude-* row record from a capture."""
     args = _parser().parse_args(argv)
     cohort = load_release_cohort(args.release_cohort_dir)
-    mcp_evidence = _mcp_evidence_from_mapping(json.loads(args.protocol_oracle.read_text(encoding="utf-8")))
-    real_client_session = json.loads(args.real_client_session.read_text(encoding="utf-8"))
+    mcp_evidence = _mcp_evidence_from_mapping(json.loads(args.protocol_oracle.read_text(encoding=_UTF_8)))
+    real_client_session = json.loads(args.real_client_session.read_text(encoding=_UTF_8))
 
     work = args.launch_work_dir.resolve()
     work.mkdir(parents=True, exist_ok=True)
