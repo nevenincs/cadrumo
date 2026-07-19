@@ -1,9 +1,14 @@
 # Releasing Cadrumo
 
 This runbook is for maintainers who prepare, verify, or recover a Cadrumo
-release candidate. Public publication is not implemented yet. The retained
-candidate workflow validates tested Python artifacts but has no upload
-permission, publishing environment, or package-index command.
+release candidate. The publication authority is implemented as
+[`.github/workflows/publish-release.yml`](.github/workflows/publish-release.yml)
+but remains inert: it refuses to run until the operator configures the
+`release` environment, registers the Trusted Publishers, and arms
+`CADRUMO_PUBLISH_ENABLED`, and it publishes nothing until the blockers below
+close. The retained diagnostic workflow
+[`.github/workflows/publish.yml`](.github/workflows/publish.yml) validates a
+tested Python candidate and still has no upload permission.
 
 ## Current release blockers
 
@@ -38,6 +43,15 @@ dispatch is validation-only. It cannot publish. Local builds, green tests,
 name-availability searches, and a successful readiness command do not create
 publication authority.
 
+Beyond S61, publication waits on the distribution-evidence set: every claimed
+acquisition row must carry a passing flat `DistributionEvidence` record under
+`var/distribution-install-readiness/`, minted at capture time by the
+packaging-smoke oracle+emit legs, the acquisition lanes, and — for the four
+Claude-client rows — the operator's real-client captures run through
+`python -m dev.packaging.emit_real_client_evidence`. The operator must also
+create the public Scoop bucket and Homebrew tap repositories and their push
+credentials before those channels can publish.
+
 ## Release authorities and references
 
 The accepted
@@ -56,8 +70,18 @@ release mechanics:
 - [`.github/workflows/publish.yml`](.github/workflows/publish.yml) validates a
   retained tested Python candidate and deliberately contains no publication
   job.
+- [`.github/workflows/publish-release.yml`](.github/workflows/publish-release.yml)
+  is the sole upload authority: manual dispatch, `release` environment with
+  required reviewers, OpenID Connect (OIDC) Trusted Publishing, and
+  promote-without-rebuild from the retained cohort bytes. It refuses to run
+  until the operator configures the environment and arms
+  `CADRUMO_PUBLISH_ENABLED`.
 - [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml)
-  defines the clean Linux artifact checks and retained evidence.
+  runs the three-operating-system artifact checks on the self-hosted runner
+  fleet, builds and uploads the immutable full release cohort
+  (`cadrumo-release-cohort`) once per run, and runs the per-operating-system
+  oracle+emit legs that mint the Python rows' distribution evidence against
+  that one cohort.
 - [`docs/_release_notes_template.md`](docs/_release_notes_template.md) and
   [`docs/updates.md`](docs/updates.md) are the release-note authorities. Their
   command canonicalization and current verification remain pending under S73.
@@ -75,12 +99,15 @@ Version and publish all three distributions as one immutable tested Python
 cohort. The core distribution's mandatory base dependencies pin both data
 distributions to the same exact version.
 
-A successful `Cadrumo Packaging Smoke` run builds the cohort once from a clean
-source snapshot. It retains three wheels, the root source distribution,
-`python-cohort.json`, and the installed CLI and MCP oracle evidence for 14
-days. The manifest binds the source commit, version, filenames, and SHA-256
-digest of every distribution file. A future publication authority must consume
-those retained bytes without rebuilding them.
+A successful `Cadrumo Packaging Smoke` run builds the Python cohort once from
+a clean source snapshot and, in its dedicated build job, the immutable full
+release cohort covering every channel artifact. It retains the three wheels,
+the root source distribution, `python-cohort.json`, the
+`cadrumo-release-cohort` artifact, the installed CLI and MCP oracle evidence,
+and the per-operating-system `DistributionEvidence` records for 14 days. The
+manifest binds the source commit, version, filenames, and SHA-256 digest of
+every distribution file. The publication authority consumes those retained
+bytes without rebuilding them.
 
 Every artifact must remain below PyPI's 100 megabytes (MB) per-file limit. The
 core wheel must not contain companion sources in Portable Document Format
@@ -148,11 +175,40 @@ environment, domain, executable, or trademark scope, stop.
 
 ### Publication authority
 
-No publication authority currently exists. Do not configure a workflow,
-environment, local recipe, API token, or Trusted Publisher as a substitute.
-The future implementation must be a protected, manual, retained-byte authority
-for the complete cross-channel cohort and must pass the open distribution
-readiness plan before this section gains operational commands.
+The publication authority is
+[`.github/workflows/publish-release.yml`](.github/workflows/publish-release.yml):
+a protected, manual, retained-byte authority that verifies the source
+packaging-smoke run identity, downloads the stored cohort, re-verifies the
+manifest and the complete blocking evidence set through readiness, and only
+then uploads — PyPI through OIDC Trusted Publishing, GitHub Release assets,
+and the Scoop bucket and Homebrew tap pushes. It never rebuilds. It is inert
+until the operator completes, in this order:
+
+1. Register the Trusted Publishers for `cadrumo`, `cadrumo-data-manuals`, and
+   `cadrumo-data-official` (repository `nevenincs/cadrumo`, workflow
+   `publish-release.yml`, environment `release`), recording each under S61.
+2. Create the GitHub `release` environment with required reviewers. The
+   reviewer approval on each dispatched run is the human publication gate.
+3. Create the public Scoop bucket and Homebrew tap repositories; store their
+   push tokens as `CADRUMO_SCOOP_BUCKET_TOKEN` / `CADRUMO_HOMEBREW_TAP_TOKEN`
+   and slugs as `CADRUMO_SCOOP_BUCKET_REPO` / `CADRUMO_HOMEBREW_TAP_REPO`.
+4. Set the repository variable `CADRUMO_PUBLISH_ENABLED` to `true`.
+
+Do not configure any other workflow, local recipe, or API token as a
+substitute upload path.
+
+### Self-hosted runner fleet
+
+The packaging, suite, and Claude CI lanes run on the self-hosted fleet:
+`gw-workstation-win` (Windows x64), `gw-workstation-wsl` (Linux x64,
+containerized), and `macbook-neo` (macOS arm64). Two rows still need hosted
+runners: the Scoop Windows-container gate (or enable Windows Sandbox on
+`gw-workstation-win` and add a sandbox mode to the Scoop smoke) and the
+Homebrew `macos-intel` and `linux-arm64` rows, which have no matching
+self-hosted hardware. The Linux runner container does not persist its
+registration: a restart re-registers from scratch and needs a fresh
+registration token in `RUNNER_TOKEN`, or a persistent volume for
+`/home/runner`.
 
 ### Workstation and repository
 
@@ -375,15 +431,18 @@ Emergency hotfixes may skip the soak. Use the cycle times in
 
 ## Publication is blocked
 
-Do not push a final release tag, dispatch an upload workflow, create a public
-package release, publish a marketplace entry, or attach an extension bundle.
-The current workflow may be dispatched only to validate one retained Python
-candidate. It does not authorize or perform publication.
+Do not push a final release tag, create a public package release, publish a
+marketplace entry, or attach an extension bundle. The diagnostic
+`publish.yml` may be dispatched only to validate one retained Python
+candidate. The upload authority `publish-release.yml` refuses to run until
+the operator configuration in [Publication authority](#publication-authority)
+is complete, and every dispatch still requires the `release` environment
+reviewer's approval.
 
-Publication instructions belong here only after the distribution readiness
-plan has complete cohort, client, platform, acquisition, evidence aggregation,
-protected promotion, and public reacquisition records. Until then, stop after
-candidate preparation and preserve the validation evidence.
+Operational publication proceeds only after S61 closes and the distribution
+readiness plan has complete cohort, client, platform, acquisition, evidence
+aggregation, protected promotion, and public reacquisition records. Until
+then, stop after candidate preparation and preserve the validation evidence.
 
 ## Report release problems
 
