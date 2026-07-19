@@ -39,9 +39,10 @@ re-save them through the target bucket's secure-object substrate and
 re-encrypt under the recipient bucket DEK.
 
 Custody helpers exposed here are application commands over storage-owned
-secret-store primitives. :func:`mint_recovery_code`,
-:func:`verify_recovery_code`, :func:`change_passphrase`, and
-:func:`recover_secret_store` resolve runtime settings, update active-bucket
+secret-store primitives. :func:`create_recovery_code`,
+:func:`rotate_recovery_code`, :func:`verify_recovery_code`,
+:func:`change_passphrase`, and :func:`recover_secret_store` resolve runtime
+settings, update active-bucket
 recovery metadata when needed, and return typed result records while leaving key
 wrapping and recovery envelope persistence in :mod:`adapters.persistence.storage`.
 
@@ -165,14 +166,15 @@ if TYPE_CHECKING:
     from ._custody import (
         CustodyPassphraseChangeResult,
         CustodyRecoverResult,
-        CustodyRecoveryEnrollment,
+        CustodyRecoveryEnrollmentResult,
         CustodyRecoveryStatus,
         CustodyRecoveryVerification,
         change_passphrase,
+        create_recovery_code,
         inspect_recovery_status,
-        mint_recovery_code,
         recover_secret_store,
         recovery_wrap_path,
+        rotate_recovery_code,
         verify_recovery_code,
     )
     from ._custody_carry import (
@@ -349,14 +351,15 @@ def __getattr__(name: str):
     if name in (
         "CustodyPassphraseChangeResult",
         "CustodyRecoverResult",
-        "CustodyRecoveryEnrollment",
+        "CustodyRecoveryEnrollmentResult",
         "CustodyRecoveryStatus",
         "CustodyRecoveryVerification",
         "change_passphrase",
+        "create_recovery_code",
         "inspect_recovery_status",
-        "mint_recovery_code",
         "recover_secret_store",
         "recovery_wrap_path",
+        "rotate_recovery_code",
         "verify_recovery_code",
     ):
         from . import _custody
@@ -457,7 +460,7 @@ __all__ = [
     "CensoSyncService",
     "CustodyPassphraseChangeResult",
     "CustodyRecoverResult",
-    "CustodyRecoveryEnrollment",
+    "CustodyRecoveryEnrollmentResult",
     "CustodyRecoveryStatus",
     "CustodyRecoveryVerification",
     "DuplicateProfileCommand",
@@ -506,6 +509,7 @@ __all__ = [
     "bundle_data_categories",
     "carried_namespace_definitions",
     "change_passphrase",
+    "create_recovery_code",
     "decrypt_profile_bundle_with_passphrase",
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
@@ -517,7 +521,6 @@ __all__ = [
     "iva_regime_required",
     "list_profile_key_records",
     "logout_active_profile",
-    "mint_recovery_code",
     "missing_filing_baseline_flags",
     "prepare_profile_export",
     "profile_create_storage_span",
@@ -540,6 +543,7 @@ __all__ = [
     "resolve_capability",
     "resolve_profile_output_language_hint",
     "restore_carried_objects",
+    "rotate_recovery_code",
     "select_profile",
     "select_profile_with_lifecycle_span",
     "serialize_carried_objects",

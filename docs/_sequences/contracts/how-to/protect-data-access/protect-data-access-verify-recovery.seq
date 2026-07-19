@@ -1,2 +1,0 @@
-@step Verify the recovery words without changing anything.
-@static aeat config verify-recovery --recovery-key "word1 word2 word3 ..."

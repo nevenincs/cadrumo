@@ -108,6 +108,96 @@ def test_modelo_audit_verbs_only_register_canonical_three() -> None:
         assert result.exit_code == 0, (leaf, result.output)
 
 
+def test_config_does_not_register_retired_custody_spellings() -> None:
+    """The retired custody spellings are unmounted everywhere.
+
+    ``config rekey`` became ``config passphrase change``; ``config
+    show-recovery`` / ``config verify-recovery`` became the ``config recovery``
+    subgroup (``status`` / ``create`` / ``rotate`` / ``verify``). None of the
+    old spellings may resolve."""
+
+    for verb in ("rekey", "show-recovery", "verify-recovery"):
+        result = invoke_cached_cli(["config", verb, "--help"])
+        assert result.exit_code != 0, (verb, result.output)
+
+
+def test_recovery_verbs_reject_mnemonic_argv_options() -> None:
+    """No recovery verb accepts the mnemonic (or any secret) as an argv value.
+
+    The retired ``--recovery-key`` channel put the 24 words in the process
+    table and shell history; secrets now arrive only via no-echo prompts or
+    ``--secrets-stdin``."""
+
+    for args in (
+        ["config", "recover", "--recovery-key", "a b c"],
+        ["config", "recovery", "verify", "--recovery-key", "a b c"],
+        ["config", "recover", "--new-passphrase", "x"],
+        ["config", "recover", "--confirm-new-passphrase", "x"],
+    ):
+        result = invoke_cached_cli(args)
+        assert result.exit_code != 0, (args, result.output)
+
+
+def test_recovery_grammar_registers_exactly_the_accepted_leaves() -> None:
+    """`config recovery` mounts status/create/rotate/verify and nothing else."""
+
+    for leaf in ("status", "create", "rotate", "verify"):
+        result = invoke_cached_cli(["config", "recovery", leaf, "--help"])
+        assert result.exit_code == 0, (leaf, result.output)
+
+    for leaf in ("show", "mint", "print", "export"):
+        result = invoke_cached_cli(["config", "recovery", leaf, "--help"])
+        assert result.exit_code != 0, (leaf, result.output)
+
+
+_RETIRED_CUSTODY_SPELLINGS = (
+    "config rekey",
+    "config show-recovery",
+    "config verify-recovery",
+    "--recovery-key",
+)
+
+
+def test_retired_custody_spellings_absent_from_source_and_docs() -> None:
+    """The removed spellings are gone from production source, locales, and docs.
+
+    Scans the Python source tree, the four locale catalogues, the operator
+    docs, and the CLI sequence contracts. A retired spelling in any of those
+    surfaces would hand an operator (or the agent harness) a dead instruction.
+    """
+    from ....core.paths import PROJECT_ROOT
+
+    scanned: list[Path] = []
+    src_root = PROJECT_ROOT / "src" / "cadrumo"
+    scanned.extend(src_root.rglob("*.py"))
+    scanned.extend((src_root / "locales").glob("*.yml"))
+    docs_root = PROJECT_ROOT / "docs"
+    scanned.extend(docs_root.glob("*.md"))
+    for sub in ("how-to", "explanation", "reference", "verification", "architecture"):
+        subdir = docs_root / sub
+        if subdir.is_dir():
+            scanned.extend(subdir.rglob("*.md"))
+    sequences = docs_root / "_sequences"
+    if sequences.is_dir():
+        scanned.extend(sequences.rglob("*.seq"))
+
+    # Rejection-probe tests legitimately carry a retired spelling to prove the
+    # CLI refuses it; they are the enforcement, not a citation.
+    exempt = {
+        Path(__file__).resolve(),
+        (Path(__file__).parent / "test_config_recovery_lifecycle.py").resolve(),
+    }
+    offenders: list[str] = []
+    for path in scanned:
+        if path.resolve() in exempt:
+            continue
+        text = path.read_text(encoding="utf-8", errors="replace")
+        for spelling in _RETIRED_CUSTODY_SPELLINGS:
+            if spelling in text:
+                offenders.append(f"{path}: {spelling}")
+    assert offenders == []
+
+
 def test_ledger_link_rejects_retired_evidence_id_grammar() -> None:
     """`aeat app ledger link --evidence-id` was retired: evidence assignment is
     reserved for `aeat app ledger attach`. The option must not resolve."""

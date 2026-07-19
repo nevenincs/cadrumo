@@ -80,6 +80,13 @@ def _run(args: list[str], tmp_path: Path) -> subprocess.CompletedProcess[str]:
         (["app", "--help"], "aeat app ledger import"),
         (["app", "ledger", "--help"], "import"),
         (["app", "modelo", "--help"], "work"),
+        # Custody surfaces: browsing the recovery/recover/passphrase help must
+        # never open the encrypted session or demand any secret.
+        (["config", "recovery", "--help"], "status"),
+        (["config", "recovery", "create", "--help"], "retyped"),
+        (["config", "recovery", "verify", "--help"], "--secrets-stdin"),
+        (["config", "recover", "--help"], "--secrets-stdin"),
+        (["config", "passphrase", "--help"], "change"),
     ],
 )
 def test_subgroup_help_renders_without_passphrase(

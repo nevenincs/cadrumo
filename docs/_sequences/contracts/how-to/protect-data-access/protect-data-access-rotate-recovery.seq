@@ -1,2 +1,0 @@
-@step Mint a fresh recovery key and retire the previous words.
-@static aeat config show-recovery --rotate

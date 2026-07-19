@@ -28,51 +28,59 @@ language.
 
 Do this once, right after setup, while your passphrase still works:
 
-```{cli-sequence} protect-data-access-show-recovery
+```{cli-sequence} protect-data-access-recovery-create
 ```
 
-If no recovery key exists yet, the command creates one and prints a
-twenty-four-word recovery key. The words are shown exactly once and are never
-stored. Only an encrypted wrapper of the master key is written to disk. Write
-the words down and keep them offline, separate from your computer.
+The command shows a twenty-four-word recovery key directly on your terminal,
+exactly once, and asks you to retype it (hidden) before anything is saved. The
+words are never stored, printed to a file, or included in command output. Only
+an encrypted wrapper of the master key is written to disk. Write the words
+down and keep them offline, separate from your computer.
 
-Run the same command again later to confirm enrollment: once a recovery key
-exists, the command reports its status and does not print the words again.
+Confirm enrollment later without exposing the words:
+
+```{cli-sequence} protect-data-access-recovery-status
+```
+
+The status output reports enrollment and a short fingerprint of the enrolled
+key. It never shows the words again.
 
 ## Check that your recovery key works
 
 Verify the words you wrote down without changing anything:
 
-```{cli-sequence} protect-data-access-verify-recovery
+```{cli-sequence} protect-data-access-recovery-verify
 ```
 
-The command reports `verified yes` or `verified no` and exits with a failure
-code when the words do not open the recovery wrapper. Nothing is modified
-either way.
+Type the words at the hidden prompt. The command reports `verified yes` or
+`verified no` and exits with a failure code when the words do not open the
+recovery wrapper. Nothing is modified either way. Never pass the words on the
+command line: they would land in your shell history.
 
 ## Replace the recovery key
 
 If the written words may have been seen by someone else, mint a fresh
 recovery key:
 
-```{cli-sequence} protect-data-access-rotate-recovery
+```{cli-sequence} protect-data-access-recovery-rotate
 ```
 
-New words are printed exactly once. The previous recovery words stop working
+The new words appear exactly once and must be retyped before the previous
+recovery key is replaced. The previous recovery words stop working
 immediately. Store the new words as before.
 
 ## Change your passphrase
 
 To change the passphrase while you still know the current one:
 
-```{cli-sequence} protect-data-access-rekey
+```{cli-sequence} protect-data-access-passphrase-change
 ```
 
-The command asks for the current passphrase if the store is not already
-open, then prompts twice (hidden) for the new one. The master key itself
-does not change, so all stored data stays readable. Only the passphrase
-that opens it is replaced. For non-interactive use, pass `--new-passphrase`
-together with `--confirm-new-passphrase`.
+The command prompts (hidden) for the current passphrase, then twice for the
+new one. The master key itself does not change, so all stored data stays
+readable. Only the passphrase that opens it is replaced. For non-interactive
+use, pass `--secrets-stdin` and pipe one JSON object with
+`current_passphrase`, `new_passphrase`, and `new_passphrase_confirmation`.
 
 ## Recover after a forgotten passphrase
 
@@ -81,11 +89,12 @@ If you forgot the passphrase but have your recovery words:
 ```{cli-sequence} protect-data-access-recover
 ```
 
-The command prompts twice (hidden) for a new passphrase, unlocks the master
-key from the recovery wrapper, and rewraps it under the new passphrase. All
-stored data stays intact. Nothing is deleted or re-encrypted. For
-non-interactive use, pass `--new-passphrase` together with
-`--confirm-new-passphrase` instead of being prompted.
+The command prompts (hidden) for the recovery words and twice for a new
+passphrase, unlocks the master key from the recovery wrapper, and rewraps it
+under the new passphrase. All stored data stays intact. Nothing is deleted or
+re-encrypted. For non-interactive use, pass `--secrets-stdin` and pipe one
+JSON object with `recovery_code`, `new_passphrase`, and
+`new_passphrase_confirmation`.
 
 If you have neither the passphrase nor the recovery words, the encrypted
 data is permanently unreadable. The only way forward is a reset (below),
@@ -100,7 +109,9 @@ Treat the value like the passphrase itself. Never put it in a shared shell
 profile, committed script, or log.
 
 Interactive commands prompt when they need the current passphrase. Recovery
-commands use the recovery words and ask for a new passphrase instead.
+commands use the recovery words and ask for a new passphrase instead. Creating
+or rotating a recovery key always needs an interactive terminal, because the
+words are shown once and must be retyped.
 
 ## Log out of the active profile
 

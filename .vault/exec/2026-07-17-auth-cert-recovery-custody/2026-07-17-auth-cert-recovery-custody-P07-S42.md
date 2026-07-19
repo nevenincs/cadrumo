@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-auth-cert-recovery-custody-plan]]"
 ---
 
-
-
-
 # Add an AST recurrence gate, patterned on test_wizard_prompter_singularity.py, that bans module-global _override_* factory state and public override_* setters in production, exempting only the sanctioned core.config.override_settings
 
 ## Scope

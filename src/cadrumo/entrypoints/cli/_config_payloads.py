@@ -279,24 +279,49 @@ class ConfigRecoverResult(OutputSchema):
     recovered: bool
 
 
-@register_schema("config.show_recovery")
-class ConfigShowRecoveryResult(OutputSchema):
-    """JSON envelope for ``aeat config show-recovery``.
+@register_schema("config.recovery.status")
+class ConfigRecoveryStatusResult(OutputSchema):
+    """JSON envelope for ``aeat config recovery status``.
 
-    The mnemonic is optional and appears only when the command intentionally
-    rotates or reveals recovery material. The path and enrolment flags remain
-    the stable machine-readable status fields.
+    Reports enrollment and the non-secret recovery fingerprint only; the
+    recovery words are never serialised on any envelope.
     """
 
     recovery_path: str
     recovery_enrolled: bool
-    rotated: bool = False
-    mnemonic: str | None = None
+    recovery_fingerprint: str | None = None
 
 
-@register_schema("config.verify_recovery")
-class ConfigVerifyRecoveryResult(OutputSchema):
-    """JSON envelope for ``aeat config verify-recovery``.
+@register_schema("config.recovery.create")
+class ConfigRecoveryCreateResult(OutputSchema):
+    """JSON envelope for ``aeat config recovery create``.
+
+    The candidate recovery words were written to the controlling terminal and
+    retype-confirmed before commit; only the non-secret fingerprint of the
+    installed envelope rides here.
+    """
+
+    recovery_path: str
+    recovery_fingerprint: str
+    rotated: bool
+
+
+@register_schema("config.recovery.rotate")
+class ConfigRecoveryRotateResult(OutputSchema):
+    """JSON envelope for ``aeat config recovery rotate``.
+
+    Same non-secret shape as the create envelope; ``rotated`` is true because
+    a prior enrollment was replaced.
+    """
+
+    recovery_path: str
+    recovery_fingerprint: str
+    rotated: bool
+
+
+@register_schema("config.recovery.verify")
+class ConfigRecoveryVerifyResult(OutputSchema):
+    """JSON envelope for ``aeat config recovery verify``.
 
     Confirms whether the supplied recovery material matched the encrypted local
     recovery record; the secret phrase is not echoed back.
@@ -304,6 +329,7 @@ class ConfigVerifyRecoveryResult(OutputSchema):
 
     recovery_path: str
     verified: bool
+    recovery_fingerprint: str | None = None
 
 
 @register_schema("config.profile.show")

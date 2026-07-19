@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#auth-cert-recovery-custody'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-19'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -68,15 +68,15 @@ Passphrase change and recovery remain distinct typed authorities with file custo
 Cut the passphrase and recovery command grammar over to the landed backend authorities with secure input and no mnemonic argv.
 
 - [ ] `P04.S22` - Replace config rekey with only config passphrase change and secure input handling; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
-- [ ] `P04.S23` - Replace recovery display and rotation spellings with recovery status, create, and rotate; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
-- [ ] `P04.S24` - Register only recovery verify and flat recover with secrets-stdin and no mnemonic argv; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
-- [ ] `P04.S25` - Write create and rotate candidates directly to the controlling terminal and require full no-echo retype before commit; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
+- [x] `P04.S23` - Replace recovery display and rotation spellings with recovery status, create, and rotate; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
+- [x] `P04.S24` - Register only recovery verify and flat recover with secrets-stdin and no mnemonic argv; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
+- [x] `P04.S25` - Write create and rotate candidates directly to the controlling terminal and require full no-echo retype before commit; `src/cadrumo/entrypoints/cli/_config/_custody_secret.py`.
 - [ ] `P04.S26` - Replace obsolete bootstrap exemptions with the exact accepted passphrase and recovery paths; `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`.
 - [ ] `P04.S27` - Prove passphrase change through a real encrypted vault; `src/cadrumo/entrypoints/cli/_config/tests/test_config.py`.
-- [ ] `P04.S28` - Prove recovery status, create, rotate, verify, and recover without serialized mnemonic material; `src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py`.
+- [x] `P04.S28` - Prove recovery status, create, rotate, verify, and recover without serialized mnemonic material; `src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py`.
 - [ ] `P04.S29` - Prove passphrases, mnemonics, and secret-input values are absent from help and examples; `src/cadrumo/entrypoints/cli/tests/test_help_without_secrets.py`.
-- [ ] `P04.S30` - Prove secure TTY failures and strict bounded secrets-stdin JSON through localized CLI execution; `src/cadrumo/entrypoints/cli/tests/test_tty_error_locale.py`.
-- [ ] `P04.S31` - Align bootstrap and repair-policy inventories with the recovery family and flat recover exception; `src/cadrumo/entrypoints/cli/tests/test_repair_policy_coverage.py`.
+- [x] `P04.S30` - Prove secure TTY failures and strict bounded secrets-stdin JSON through localized CLI execution; `src/cadrumo/entrypoints/cli/tests/test_tty_error_locale.py`.
+- [x] `P04.S31` - Align bootstrap and repair-policy inventories with the recovery family and flat recover exception; `src/cadrumo/entrypoints/cli/tests/test_repair_policy_coverage.py`.
 
 ### Phase `P05` - Certificate and auth CLI door
 
@@ -91,11 +91,11 @@ Cut the certificate and auth command grammar over to secure storage and remove b
 Move payload schemas, write-policy tokens, locales, MCP mirrors, help and risk metadata, and generated documentation for the auth, certificate, and recovery families.
 
 - [x] `P06.S35` - Remove certificate backend selectors from every payload and schema projection while preserving independent master-key keyring custody contracts; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
-- [ ] `P06.S36` - Migrate the auth, certificate, and recovery help and risk metadata to the accepted grammar; `src/cadrumo/application/operator_surface/_help.py`.
-- [ ] `P06.S37` - Migrate the four locale catalogues for the auth, certificate, and recovery families through the locales CLI; `src/cadrumo/locales/en.yml`.
-- [ ] `P06.S38` - Re-arm the MCP mirror for the accepted auth, certificate, and recovery verbs; `src/cadrumo/agent/`.
-- [ ] `P06.S39` - Regenerate the CLI reference and operator how-to pages for the auth, certificate, and recovery families from the frozen live surface; `docs/how-to/authenticate-with-aeat.md`.
-- [ ] `P06.S40` - Prove the removed auth, certificate, and recovery spellings are absent from every source and generated surface; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
+- [x] `P06.S36` - Migrate the auth, certificate, and recovery help and risk metadata to the accepted grammar; `src/cadrumo/application/operator_surface/_help.py`.
+- [x] `P06.S37` - Migrate the four locale catalogues for the auth, certificate, and recovery families through the locales CLI; `src/cadrumo/locales/en.yml`.
+- [x] `P06.S38` - Re-arm the MCP mirror for the accepted auth, certificate, and recovery verbs; `src/cadrumo/agent/`.
+- [x] `P06.S39` - Regenerate the CLI reference and operator how-to pages for the auth, certificate, and recovery families from the frozen live surface; `docs/how-to/authenticate-with-aeat.md`.
+- [x] `P06.S40` - Prove the removed auth, certificate, and recovery spellings are absent from every source and generated surface; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
 
 ### Phase `P07` - Secret-store DI seam removal
 
@@ -109,7 +109,7 @@ Remove the module-global test-double seam from the production secret-store facto
 
 The cert-secret door safety review returned PASS with one Low hardening item: certificate secret set accepts the PKCS12 passphrase as an argv value, which lands the secret in the process table and shell history even though the hidden-prompt and stdin default is safe. This phase removes the argv affordance, deferred until the operator P04 passphrase door commits so it reuses that door bounded-stdin no-echo secret-input infrastructure rather than building a parallel authority.
 
-- [ ] `P08.S44` - DEFERRED until the operator P04 passphrase door commits: make certificate secret set reject the passphrase as an argv value and read it only via the hidden prompt or bounded stdin, reusing the P04 door _secure_input.py bounded-stdin no-echo infrastructure rather than building a parallel secret-input authority, gated on a test proving the passphrase cannot be supplied as an argv value and is read only through hidden prompt or bounded stdin; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
+- [x] `P08.S44` - DEFERRED until the operator P04 passphrase door commits: make certificate secret set reject the passphrase as an argv value and read it only via the hidden prompt or bounded stdin, reusing the P04 door _secure_input.py bounded-stdin no-echo infrastructure rather than building a parallel secret-input authority, gated on a test proving the passphrase cannot be supplied as an argv value and is read only through hidden prompt or bounded stdin; `src/cadrumo/entrypoints/cli/_config/_certificate.py`.
 
 ## Description
 

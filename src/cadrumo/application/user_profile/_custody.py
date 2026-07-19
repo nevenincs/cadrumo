@@ -1,17 +1,18 @@
 """Application-owned custody operations for the profile secret store.
 
-The config CLI calls this module for recovery-code minting,
-verification, passphrase change, and recovery. Storage primitives stay in
-:mod:`cadrumo.adapters.persistence.storage`; this layer resolves
+The config CLI calls this module for the recovery-code lifecycle (status,
+create, rotate, verify), passphrase change, and recovery. Storage primitives
+stay in :mod:`cadrumo.adapters.persistence.storage`; this layer resolves
 :class:`~cadrumo.core.config.Settings`, updates the active profile manifest
 when recovery is enrolled, and returns typed application result records.
 
-Plaintext recovery words are returned only from
-:func:`mint_recovery_code`. They are never persisted by this module; the
-secret store keeps only wrapped recovery material. Verification failures
-from :class:`~cadrumo.adapters.persistence.storage.RecoveryVerificationError`
-and related storage errors are rendered as a false verification result
-rather than leaking backend exception details.
+Plaintext recovery words never appear on any result record: enrollment hands
+the candidate mnemonic to the caller-supplied ``confirm`` callback exactly
+once and returns only the non-secret recovery fingerprint. Verification
+failures from
+:class:`~cadrumo.adapters.persistence.storage.RecoveryVerificationError` are
+rendered as a false verification result rather than leaking backend exception
+details.
 """
 
 from __future__ import annotations
@@ -21,16 +22,17 @@ from pathlib import Path
 
 from pydantic import BaseModel
 
-from ...adapters.persistence.storage import RecoveryVerificationError, SecretStoreError, StorageValidationError
+from ...adapters.persistence.storage import RecoveryVerificationError, SecretStoreError
 from ...adapters.persistence.storage.master_key import (
     FileFallbackMasterKeyProvider,
+    RecoveryEnrollmentOutcome,
     activate_master_key_provider,
     get_master_key_provider,
-    load_recovery_envelope,
-    mint_recovery_envelope,
-    save_recovery_envelope,
-    unwrap_recovery_envelope,
-    verify_recovery_mnemonic,
+    recovery_create,
+    recovery_recover,
+    recovery_rotate,
+    recovery_status,
+    recovery_verify,
 )
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings, load_settings
@@ -41,13 +43,19 @@ _RECOVERY_WRAP_FILENAME = "master.recovery.key"
 _log = get_logger(__name__)
 
 
-class CustodyRecoveryEnrollment(BaseModel):
-    """Result of minting or rotating the persisted recovery wrapper."""
+class CustodyRecoveryEnrollmentResult(BaseModel):
+    """Result of a committed recovery ``create`` or ``rotate``.
+
+    Carries only the persisted wrapper path, the non-secret recovery
+    fingerprint, and whether a prior enrollment was replaced. The candidate
+    mnemonic is never held on this record; the ``confirm`` callback displayed
+    it during enrollment.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     recovery_path: Path
-    mnemonic: str
+    recovery_fingerprint: str
     rotated: bool
 
 
@@ -58,6 +66,7 @@ class CustodyRecoveryStatus(BaseModel):
 
     recovery_path: Path
     recovery_enrolled: bool
+    recovery_fingerprint: str | None = None
 
 
 class CustodyRecoveryVerification(BaseModel):
@@ -67,6 +76,7 @@ class CustodyRecoveryVerification(BaseModel):
 
     recovery_path: Path
     verified: bool
+    recovery_fingerprint: str | None = None
 
 
 class CustodyPassphraseChangeResult(BaseModel):
@@ -104,7 +114,12 @@ def recovery_wrap_path(settings: Settings | None = None) -> Path:
 def inspect_recovery_status(settings: Settings | None = None) -> CustodyRecoveryStatus:
     """Inspect whether the configured recovery wrapper exists and return a :class:`CustodyRecoveryStatus`."""
     path = recovery_wrap_path(settings)
-    return CustodyRecoveryStatus(recovery_path=path, recovery_enrolled=path.is_file())
+    status = recovery_status(path=path)
+    return CustodyRecoveryStatus(
+        recovery_path=path,
+        recovery_enrolled=status.enrolled,
+        recovery_fingerprint=status.recovery_fingerprint,
+    )
 
 
 def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
@@ -122,35 +137,77 @@ def _mark_active_profile_recovery_enrolled(settings: Settings) -> None:
     write_manifest(paths, manifest.model_copy(update={"recovery_enrolled": True}))
 
 
-def mint_recovery_code(settings: Settings | None = None) -> CustodyRecoveryEnrollment:
-    """Mint a new recovery mnemonic and return a :class:`CustodyRecoveryEnrollment`.
+def create_recovery_code(
+    *,
+    confirm: Callable[[str], str],
+    settings: Settings | None = None,
+) -> CustodyRecoveryEnrollmentResult:
+    """Enroll a first recovery code and return a :class:`CustodyRecoveryEnrollmentResult`.
 
-    The mnemonic is returned exactly once. The plaintext words are not
-    persisted; only the wrapped master key lands in the secret-store
-    directory.
+    ``confirm`` receives the candidate 24-word mnemonic exactly once (the
+    caller writes it to the controlling terminal), returns the operator's
+    no-echo retype, and may raise to cancel. The wrapper file is written only
+    after the retype verifies against the staged envelope; an existing
+    enrollment refuses with a typed
+    :class:`~cadrumo.adapters.persistence.storage.SecretStoreError` naming the
+    rotate path. The plaintext words are never persisted or returned.
     """
+    return _enroll_recovery_code(operation=recovery_create, confirm=confirm, settings=settings)
+
+
+def rotate_recovery_code(
+    *,
+    confirm: Callable[[str], str],
+    settings: Settings | None = None,
+) -> CustodyRecoveryEnrollmentResult:
+    """Replace the enrolled recovery code and return a :class:`CustodyRecoveryEnrollmentResult`.
+
+    Same two-phase shape as :func:`create_recovery_code`, but requires an
+    existing enrollment; the prior envelope survives untouched until the
+    operator's retype fully verifies the fresh candidate.
+    """
+    return _enroll_recovery_code(operation=recovery_rotate, confirm=confirm, settings=settings)
+
+
+def _enroll_recovery_code(
+    *,
+    operation: Callable[..., RecoveryEnrollmentOutcome],
+    confirm: Callable[[str], str],
+    settings: Settings | None,
+) -> CustodyRecoveryEnrollmentResult:
     resolved = _settings(settings)
     path = recovery_wrap_path(resolved)
-    rotated = path.exists()
     provider = get_master_key_provider(settings_override=resolved)
-    with activate_master_key_provider(provider):
-        master_key = provider.get_master_key()
-    minted = mint_recovery_envelope(dek=master_key, created_at=utc_now())
-    save_recovery_envelope(minted.envelope, path)
+    outcome = operation(provider=provider, path=path, created_at=utc_now(), confirm=confirm)
     _mark_active_profile_recovery_enrolled(resolved)
-    return CustodyRecoveryEnrollment(recovery_path=path, mnemonic=minted.mnemonic, rotated=rotated)
+    return CustodyRecoveryEnrollmentResult(
+        recovery_path=path,
+        recovery_fingerprint=outcome.recovery_fingerprint,
+        rotated=outcome.rotated,
+    )
 
 
 def verify_recovery_code(*, mnemonic: str, settings: Settings | None = None) -> CustodyRecoveryVerification:
-    """Verify ``mnemonic`` against the configured recovery wrapper and return a :class:`CustodyRecoveryVerification`."""
-    path = recovery_wrap_path(settings)
+    """Verify ``mnemonic`` against the configured recovery wrapper and return a :class:`CustodyRecoveryVerification`.
+
+    File custody only: a keyring or unsecured backend raises the facade's
+    typed :class:`~cadrumo.adapters.persistence.storage.SecretStoreError`. A
+    missing envelope, malformed envelope, or non-matching mnemonic is rendered
+    as ``verified=False`` without leaking backend detail.
+    """
+    resolved = _settings(settings)
+    path = recovery_wrap_path(resolved)
+    provider = get_master_key_provider(settings_override=resolved)
     try:
-        envelope = load_recovery_envelope(path)
-        verified = verify_recovery_mnemonic(envelope=envelope, mnemonic=mnemonic)
-    except (OSError, RecoveryVerificationError, SecretStoreError, StorageValidationError) as exc:
+        outcome = recovery_verify(provider=provider, path=path, mnemonic=mnemonic)
+    except RecoveryVerificationError as exc:
         _log.debug("recovery-code verification failed error_type=%s", type(exc).__name__, exc_info=True)
         return CustodyRecoveryVerification(recovery_path=path, verified=False)
-    return CustodyRecoveryVerification(recovery_path=path, verified=verified)
+    return CustodyRecoveryVerification(
+        recovery_path=path,
+        verified=outcome.verified,
+        recovery_fingerprint=outcome.recovery_fingerprint,
+    )
 
 
 def _file_provider_with_passphrase(
@@ -222,13 +279,18 @@ def recover_secret_store(
     new_passphrase: str,
     settings: Settings | None = None,
 ) -> CustodyRecoverResult:
-    """Recover the master key from ``mnemonic`` and return a :class:`CustodyRecoverResult`."""
+    """Recover the master key from ``mnemonic`` and return a :class:`CustodyRecoverResult`.
+
+    Routes through the storage facade's ``recovery_recover``: the master key is
+    unwrapped from the persisted envelope and re-minted under a file provider
+    bound to ``new_passphrase``. A non-matching mnemonic raises
+    :class:`~cadrumo.adapters.persistence.storage.RecoveryVerificationError`
+    and leaves the store untouched.
+    """
     resolved = _settings(settings)
     path = recovery_wrap_path(resolved)
-    envelope = load_recovery_envelope(path)
-    master_key = unwrap_recovery_envelope(envelope=envelope, mnemonic=mnemonic)
     new_provider = _file_provider_with_passphrase(settings=resolved, passphrase=new_passphrase)
-    new_provider.complete_recovery(master_key)
+    recovery_recover(provider=new_provider, path=path, mnemonic=mnemonic)
     with activate_master_key_provider(new_provider):
         pass
     return CustodyRecoverResult(
@@ -238,31 +300,17 @@ def recover_secret_store(
     )
 
 
-def recover_secret_store_with_callback(
-    *,
-    mnemonic: str,
-    passphrase_callback: Callable[[], str],
-    settings: Settings | None = None,
-) -> CustodyRecoverResult:
-    """Recover the master key using a caller-owned passphrase callback and return a :class:`CustodyRecoverResult`."""
-    return recover_secret_store(
-        mnemonic=mnemonic,
-        new_passphrase=passphrase_callback(),
-        settings=settings,
-    )
-
-
 __all__ = [
     "CustodyPassphraseChangeResult",
     "CustodyRecoverResult",
-    "CustodyRecoveryEnrollment",
+    "CustodyRecoveryEnrollmentResult",
     "CustodyRecoveryStatus",
     "CustodyRecoveryVerification",
     "change_passphrase",
+    "create_recovery_code",
     "inspect_recovery_status",
-    "mint_recovery_code",
     "recover_secret_store",
-    "recover_secret_store_with_callback",
     "recovery_wrap_path",
+    "rotate_recovery_code",
     "verify_recovery_code",
 ]

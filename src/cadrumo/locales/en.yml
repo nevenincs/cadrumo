@@ -2726,7 +2726,7 @@ cli:
           remove_help: Remove the passphrase bound to a registered certificate source
           set:
             name_help: Registered certificate source the passphrase is bound to
-            secret_help: The PKCS#12 passphrase (prompted, hidden, never echoed)
+            secret_prompt: 'PKCS#12 passphrase (input hidden): '
           set_help: Set (or rotate) the passphrase for a registered certificate source
         select:
           name_help: Registered certificate source to activate
@@ -2797,16 +2797,10 @@ cli:
         recipient_id_help: Stable operator-chosen label (e.g. 'my-accountant').
         remove_help: Remove one trusted recipient by id from the active profile.
     custody:
-      confirm_new_passphrase_help: Repeat the new secret-store passphrase.
-      confirm_new_passphrase_prompt: 'Confirm new Cadrumo secret-store passphrase: '
       data_loss_warning: Record this recovery key now. AEAT does not store the plaintext
         recovery key and cannot show it again.
       errors:
-        missing_new_passphrase_confirmation: Repeat the new passphrase with --confirm-new-passphrase.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
-        non_interactive_passphrase_required: This command needs an interactive terminal
-          to prompt for the new passphrase. Provide it non-interactively with --new-passphrase
-          and --confirm-new-passphrase.
         non_interactive_secret_required: A secret is required but no interactive terminal
           is available; use --secrets-stdin.
         secrets_stdin_invalid_json: The --secrets-stdin payload is not a valid JSON
@@ -2815,8 +2809,6 @@ cli:
           fields or has unexpected ones.
         secrets_stdin_too_large: The --secrets-stdin payload exceeds the maximum allowed
           size.
-      new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
-      new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
       secrets_stdin_help: Read the secrets as one bounded JSON object from standard
         input instead of prompting.
     errors:
@@ -3271,11 +3263,32 @@ cli:
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
     recover:
-      help: Recover the file secret store with a recovery key and bind it to a new
-        passphrase.
-      recovery_key_help: Twenty-four word recovery key.
-    rekey:
-      help: Rewrap the file secret store under a new passphrase.
+      errors:
+        recovery_code_rejected: The recovery code did not open the recovery wrapper;
+          the secret store was not changed.
+      help: Recover the file secret store with the 24-word recovery code and bind
+        it to a new passphrase.
+    recovery:
+      candidate_intro: 'Your new recovery code. Write these 24 words down now, in
+        order:'
+      create:
+        help: Enroll a recovery code; the words appear once on the terminal and must
+          be retyped.
+      errors:
+        interactive_terminal_required: 'Recovery enrollment needs an interactive terminal:
+          the code is shown once and must be retyped.'
+        retype_mismatch: The retyped recovery code does not match the one shown; nothing
+          was changed.
+      help: Manage the 24-word recovery code for the file secret store.
+      recovery_code_prompt: '24-word recovery code: '
+      retype_prompt: 'Retype the 24-word recovery code to confirm (input hidden): '
+      rotate:
+        help: Replace the enrolled recovery code; the new words appear once and must
+          be retyped.
+      status:
+        help: Show whether a recovery code is enrolled, without exposing it.
+      verify:
+        help: Verify that a recovery code opens the persisted recovery wrapper.
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       connectivity_target_help: Connectivity target to probe
@@ -3352,11 +3365,6 @@ cli:
       success:
         next_step: 'Next step: run `aeat app overview status` to review your workspace.'
         saved: Profile '%{profile_name}' saved.
-    show_recovery:
-      existing_notice: Recovery key plaintext is not stored and cannot be re-displayed.
-        Use --rotate to mint a new recovery key.
-      help: Show recovery status or mint a one-time recovery key.
-      rotate_help: Rotate the recovery wrapper and print a new one-time recovery key.
     status:
       empty_profile: No profile configured. Run `aeat config profile create NAME`
         to get started.
@@ -3368,8 +3376,6 @@ cli:
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
-    verify_recovery:
-      help: Verify that a recovery key opens the persisted recovery wrapper.
     workflow_help: Show config workflow help
   contract:
     app_help: 'Emit the operator capability manifest: roots, command families, lifecycle,
@@ -4828,8 +4834,8 @@ errors:
     auth_storage_master_key_material_missing: No master-key material exists. The secure
       store has not been provisioned yet.
     auth_storage_master_key_passphrase_mismatch: The passphrase does not unwrap the
-      master key. Re-enter it; if you have forgotten it, run aeat config recover --recovery-key
-      <WORDS>.
+      master key. Re-enter it; if you have forgotten it, run aeat config recover with
+      your 24-word recovery code.
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
   calc:

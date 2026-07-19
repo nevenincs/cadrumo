@@ -2942,8 +2942,7 @@ cli:
             registrada
           set:
             name_help: Fuente de certificado registrada a la que se vincula la contrasena
-            secret_help: La contrasena del PKCS#12 (se solicita, oculta, nunca se
-              muestra)
+            secret_prompt: 'Frase de contraseña PKCS#12 (entrada oculta): '
           set_help: Establece (o rota) la contrasena de una fuente de certificado
             registrada
         select:
@@ -3025,17 +3024,10 @@ cli:
         recipient_id_help: Etiqueta estable elegida por el operador (p. ej. 'mi-gestor').
         remove_help: Elimina un destinatario de confianza por su id del perfil activo.
     custody:
-      confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
-      confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto
-        AEAT: '
       data_loss_warning: Anota ahora esta clave de recuperacion. AEAT no almacena
         la clave de recuperacion en claro y no puede mostrarla otra vez.
       errors:
-        missing_new_passphrase_confirmation: Repite la nueva contrasena con --confirm-new-passphrase.
         new_passphrase_mismatch: La nueva contrasena y su confirmacion no coinciden.
-        non_interactive_passphrase_required: Esta orden necesita un terminal interactivo
-          para solicitar la nueva contraseña. Proporciónala de forma no interactiva
-          con --new-passphrase y --confirm-new-passphrase.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
           interactiva; usa --secrets-stdin.
         secrets_stdin_invalid_json: El contenido de --secrets-stdin no es un objeto
@@ -3044,9 +3036,6 @@ cli:
           obligatorios o tiene campos inesperados.
         secrets_stdin_too_large: El contenido de --secrets-stdin supera el tamaño
           máximo permitido.
-      new_passphrase_help: Nueva contrasena del almacen secreto. Omitela para introducirla
-        de forma interactiva.
-      new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
       secrets_stdin_help: Lee los secretos como un único objeto JSON acotado desde
         la entrada estándar en lugar de solicitarlos.
     errors:
@@ -3535,11 +3524,35 @@ cli:
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     recover:
-      help: Recuperar el almacen secreto de archivo con una clave de recuperacion
-        y vincularlo a una nueva contrasena.
-      recovery_key_help: Clave de recuperacion de veinticuatro palabras.
-    rekey:
-      help: Reenvolver el almacen secreto de archivo con una nueva contrasena.
+      errors:
+        recovery_code_rejected: El código de recuperación no abrió el envoltorio de
+          recuperación; el almacén de secretos no se ha cambiado.
+      help: Recupera el almacén de secretos de archivo con el código de recuperación
+        de 24 palabras y vincúlalo a una frase de contraseña nueva.
+    recovery:
+      candidate_intro: 'Tu nuevo código de recuperación. Anota ahora estas 24 palabras,
+        en orden:'
+      create:
+        help: Registra un código de recuperación; las palabras aparecen una sola vez
+          en el terminal y deben volver a escribirse.
+      errors:
+        interactive_terminal_required: 'El registro de recuperación necesita un terminal
+          interactivo: el código se muestra una vez y debe volver a escribirse.'
+        retype_mismatch: El código de recuperación reescrito no coincide con el mostrado;
+          no se ha cambiado nada.
+      help: Gestiona el código de recuperación de 24 palabras del almacén de secretos
+        de archivo.
+      recovery_code_prompt: 'Código de recuperación de 24 palabras: '
+      retype_prompt: 'Vuelve a escribir el código de recuperación de 24 palabras para
+        confirmar (entrada oculta): '
+      rotate:
+        help: Sustituye el código de recuperación registrado; las palabras nuevas
+          aparecen una sola vez y deben volver a escribirse.
+      status:
+        help: Muestra si hay un código de recuperación registrado, sin exponerlo.
+      verify:
+        help: Comprueba que un código de recuperación abre el envoltorio de recuperación
+          guardado.
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
@@ -3627,13 +3640,6 @@ cli:
         next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
           tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
-    show_recovery:
-      existing_notice: La clave de recuperacion en claro no se almacena y no puede
-        volver a mostrarse. Usa --rotate para generar una nueva clave de recuperacion.
-      help: Mostrar el estado de recuperacion o generar una clave de recuperacion
-        de un solo uso.
-      rotate_help: Rotar el envoltorio de recuperacion e imprimir una nueva clave
-        de recuperacion de un solo uso.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
         para empezar.
@@ -3646,9 +3652,6 @@ cli:
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
-    verify_recovery:
-      help: Verificar que una clave de recuperacion abre el envoltorio de recuperacion
-        persistido.
     workflow_help: Mostrar ayuda del flujo de configuración
   contract:
     app_help: 'Emite el manifiesto de capacidades del operador: raices, familias de
@@ -5196,9 +5199,9 @@ errors:
       la aplicación.
     auth_storage_master_key_material_missing: No existe material de clave maestra.
       El almacenamiento seguro aún no está aprovisionado.
-    auth_storage_master_key_passphrase_mismatch: La frase de contrasena no abre la
-      clave maestra. Vuelve a introducirla; si la has olvidado, ejecuta aeat config
-      recover --recovery-key <WORDS>.
+    auth_storage_master_key_passphrase_mismatch: La frase de contraseña no desenvuelve
+      la clave maestra. Vuelve a introducirla; si la has olvidado, ejecuta aeat config
+      recover con tu código de recuperación de 24 palabras.
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:

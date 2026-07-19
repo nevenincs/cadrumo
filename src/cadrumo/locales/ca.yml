@@ -2915,7 +2915,7 @@ cli:
           remove_help: Elimina la contrasenya vinculada a una font de certificat registrada
           set:
             name_help: Font de certificat registrada a la qual es vincula la contrasenya
-            secret_help: La contrasenya del PKCS#12 (es demana, oculta, mai es mostra)
+            secret_prompt: 'Frase de contrasenya PKCS#12 (entrada oculta): '
           set_help: Estableix (o rota) la contrasenya d'una font de certificat registrada
         select:
           name_help: Registered certificate source to activate
@@ -2995,17 +2995,10 @@ cli:
         recipient_id_help: Etiqueta estable triada per l'operador (p. ex. 'el-meu-gestor').
         remove_help: Elimina un destinatari de confianca pel seu id del perfil actiu.
     custody:
-      confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
-      confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
-        Cadrumo: '
       data_loss_warning: Anota ara aquesta clau de recuperacio. AEAT no desa la clau
         de recuperacio en clar i no la pot tornar a mostrar.
       errors:
-        missing_new_passphrase_confirmation: Repeteix la nova contrasenya amb --confirm-new-passphrase.
         new_passphrase_mismatch: La nova contrasenya i la confirmacio no coincideixen.
-        non_interactive_passphrase_required: Aquesta ordre necessita un terminal interactiu
-          per demanar la nova contrasenya. Proporciona-la de manera no interactiva
-          amb --new-passphrase i --confirm-new-passphrase.
         non_interactive_secret_required: Cal un secret però no hi ha cap terminal
           interactiu; utilitza --secrets-stdin.
         secrets_stdin_invalid_json: El contingut de --secrets-stdin no és un objecte
@@ -3014,9 +3007,6 @@ cli:
           obligatoris o en té d'inesperats.
         secrets_stdin_too_large: El contingut de --secrets-stdin supera la mida màxima
           permesa.
-      new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
-        de forma interactiva.
-      new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
       secrets_stdin_help: Llegeix els secrets com un únic objecte JSON limitat des
         de l'entrada estàndard en lloc de demanar-los.
     errors:
@@ -3498,11 +3488,35 @@ cli:
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
     recover:
-      help: Recuperar el magatzem secret de fitxer amb una clau de recuperacio i vincular-lo
-        a una nova contrasenya.
-      recovery_key_help: Clau de recuperacio de vint-i-quatre paraules.
-    rekey:
-      help: Reembolcallar el magatzem secret de fitxer amb una nova contrasenya.
+      errors:
+        recovery_code_rejected: El codi de recuperació no ha obert l'embolcall de
+          recuperació; el magatzem de secrets no s'ha canviat.
+      help: Recupera el magatzem de secrets de fitxer amb el codi de recuperació de
+        24 paraules i vincula'l a una frase de contrasenya nova.
+    recovery:
+      candidate_intro: 'El teu nou codi de recuperació. Anota ara aquestes 24 paraules,
+        en ordre:'
+      create:
+        help: Registra un codi de recuperació; les paraules apareixen una sola vegada
+          al terminal i s'han de tornar a escriure.
+      errors:
+        interactive_terminal_required: 'El registre de recuperació necessita un terminal
+          interactiu: el codi es mostra una vegada i s''ha de tornar a escriure.'
+        retype_mismatch: El codi de recuperació reescrit no coincideix amb el mostrat;
+          no s'ha canviat res.
+      help: Gestiona el codi de recuperació de 24 paraules del magatzem de secrets
+        de fitxer.
+      recovery_code_prompt: 'Codi de recuperació de 24 paraules: '
+      retype_prompt: 'Torna a escriure el codi de recuperació de 24 paraules per confirmar
+        (entrada oculta): '
+      rotate:
+        help: Substitueix el codi de recuperació registrat; les paraules noves apareixen
+          una sola vegada i s'han de tornar a escriure.
+      status:
+        help: Mostra si hi ha un codi de recuperació registrat, sense exposar-lo.
+      verify:
+        help: Comprova que un codi de recuperació obre l'embolcall de recuperació
+          desat.
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
@@ -3588,13 +3602,6 @@ cli:
         next_step: 'Següent pas: executa `aeat app overview status` per revisar l''espai
           de treball.'
         saved: Perfil '%{profile_name}' desat.
-    show_recovery:
-      existing_notice: La clau de recuperacio en clar no es desa i no es pot tornar
-        a mostrar. Usa --rotate per generar una nova clau de recuperacio.
-      help: Mostrar l'estat de recuperacio o generar una clau de recuperacio d'un
-        sol us.
-      rotate_help: Rotar l'embolcall de recuperacio i imprimir una nova clau de recuperacio
-        d'un sol us.
     status:
       empty_profile: Cap perfil configurat. Executa `aeat config profile create NAME`
         per començar.
@@ -3607,9 +3614,6 @@ cli:
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
-    verify_recovery:
-      help: Verificar que una clau de recuperacio obre l'embolcall de recuperacio
-        persistit.
     workflow_help: Mostrar ajuda del flux de configuració
   contract:
     app_help: 'Emet el manifest de capacitats de l''operador: arrels, families d''ordres,
@@ -5147,9 +5151,9 @@ errors:
       l'aplicació.
     auth_storage_master_key_material_missing: No existeix material de clau mestra.
       L'emmagatzematge segur encara no està aprovisionat.
-    auth_storage_master_key_passphrase_mismatch: La frase de contrasenya no obre la
-      clau mestra. Torna-la a introduir; si l'has oblidat, executa aeat config recover
-      --recovery-key <WORDS>.
+    auth_storage_master_key_passphrase_mismatch: La contrasenya no desembolcalla la
+      clau mestra. Torna a introduir-la; si l'has oblidada, executa aeat config recover
+      amb el teu codi de recuperació de 24 paraules.
     auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.
