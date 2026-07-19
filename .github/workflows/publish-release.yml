@@ -153,7 +153,12 @@ jobs:
 
       - name: Require the complete blocking distribution evidence set
         run: |
-          uv run --frozen python -m dev.release.readiness --json --skip-network
+          # Point the readiness gate at the DOWNLOADED promotion cohort and the
+          # aggregated distribution-evidence rows, not the working-tree defaults
+          # that do not exist on the CI checkout.
+          uv run --frozen python -m dev.release.readiness --json --skip-network \
+            --cohort-dir "$RELEASE_COHORT_DIR" \
+            --evidence-dir "$EVIDENCE_DOWNLOAD/rows"
 
   # ---------------------------------------------------------------------------
   # Gate 3 - promote the exact bytes. Protected by the `release` environment
@@ -259,3 +264,41 @@ jobs:
           git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
             commit -m "cadrumo $VERSION"
           git -C "$work" push
+
+      # The Claude plugin marketplace is a supported avenue (readiness row set,
+      # docs download page), so a release MUST populate it - not only attach the
+      # zip to the GitHub release. Publish the in-cohort marketplace tree (which
+      # embeds the exact digest-pinned cohort) to the public marketplace repo,
+      # refusing instructively when it is not yet configured, mirroring the Scoop
+      # and Homebrew steps.
+      - name: Push the Claude plugin marketplace to the public marketplace repo
+        env:
+          MARKETPLACE_TOKEN: ${{ secrets.CADRUMO_MARKETPLACE_TOKEN }}
+          MARKETPLACE_REPO: ${{ vars.CADRUMO_MARKETPLACE_REPO }}
+        run: |
+          if [[ -z "$MARKETPLACE_TOKEN" || -z "$MARKETPLACE_REPO" ]]; then
+            echo "REFUSED: Claude marketplace not configured. Set the CADRUMO_MARKETPLACE_REPO variable" >&2
+            echo "and the CADRUMO_MARKETPLACE_TOKEN secret to publish the plugin marketplace." >&2
+            exit 1
+          fi
+          bundle="$(find "$RELEASE_COHORT_DIR/claude" -name 'cadrumo-marketplace-*.zip' -print -quit)"
+          if [[ -z "$bundle" ]]; then
+            echo "no marketplace bundle found in the release cohort" >&2
+            exit 1
+          fi
+          work="$(mktemp -d)"
+          git clone "https://x-access-token:${MARKETPLACE_TOKEN}@github.com/${MARKETPLACE_REPO}.git" "$work"
+          staged="$(mktemp -d)"
+          unzip -q "$bundle" -d "$staged"
+          # Replace the tracked marketplace tree wholesale (preserve .git) so a
+          # removed plugin never lingers; the cohort tree is the whole truth.
+          find "$work" -mindepth 1 -maxdepth 1 ! -name '.git' -exec rm -rf {} +
+          cp -R "$staged"/. "$work"/
+          git -C "$work" add -A
+          if git -C "$work" diff --cached --quiet; then
+            echo "marketplace already at cadrumo $VERSION; nothing to push"
+          else
+            git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
+              commit -m "cadrumo $VERSION"
+            git -C "$work" push
+          fi

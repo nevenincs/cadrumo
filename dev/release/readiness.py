@@ -474,15 +474,31 @@ def check_distribution_evidence_set(
 
 
 def build_report(
-    repo_root: Path | str | None = None, *, skip_network: bool = False, gh_executable: str | None = None
+    repo_root: Path | str | None = None,
+    *,
+    skip_network: bool = False,
+    gh_executable: str | None = None,
+    cohort_directory: Path | None = None,
+    evidence_directory: Path | None = None,
 ) -> ReadinessReport:
-    """Run every readiness check and return the aggregate report."""
+    """Run every readiness check and return the aggregate report.
+
+    ``cohort_directory`` / ``evidence_directory`` relocate the distribution-
+    evidence check off its ``var/release-cohort`` / ``var/distribution-install-
+    readiness`` defaults - the publish workflow downloads the promoted cohort
+    and the aggregated rows into ``var/promotion/*`` and must point the gate at
+    them rather than at a working-tree default that does not exist in CI.
+    """
     root = Path(repo_root) if repo_root is not None else _repo_root()
     checks: list[ReadinessCheck] = [
         check_project_names_are_canonical(root),
         check_version_surfaces_agree(root),
         check_changelog_is_ready(root),
-        check_distribution_evidence_set(root),
+        check_distribution_evidence_set(
+            root,
+            cohort_directory=cohort_directory,
+            evidence_directory=evidence_directory,
+        ),
     ]
     if not skip_network:
         checks.append(check_no_open_release_blockers(gh_executable=gh_executable))
@@ -498,9 +514,25 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Skip the gh-backed open-blocker check (offline/no-gh environments).",
     )
+    parser.add_argument(
+        "--cohort-dir",
+        type=Path,
+        default=None,
+        help="Release-cohort directory to gate (default: var/release-cohort).",
+    )
+    parser.add_argument(
+        "--evidence-dir",
+        type=Path,
+        default=None,
+        help="Distribution-evidence directory to gate (default: var/distribution-install-readiness).",
+    )
     args = parser.parse_args(argv)
 
-    report = build_report(skip_network=args.skip_network)
+    report = build_report(
+        skip_network=args.skip_network,
+        cohort_directory=args.cohort_dir,
+        evidence_directory=args.evidence_dir,
+    )
     if args.json:
         print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
         return 0 if report.ok else 1
