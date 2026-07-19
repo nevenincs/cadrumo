@@ -27,7 +27,7 @@ from dev.packaging._acquire_common import (
     verify_python_cohort_download,
 )
 from dev.packaging.cohort_manifest import load_release_cohort
-from dev.packaging.distribution_evidence_emit import emit_installed_python_evidence
+from dev.packaging.distribution_evidence_emit import emit_installed_oracle_evidence
 from dev.packaging.evidence import AcquisitionIdentity, DestinationIdentity
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort
 
@@ -236,7 +236,7 @@ def run_pypi_acquisition(
 
     if release_cohort_dir is not None and row_id is not None:
         release_cohort = load_release_cohort(release_cohort_dir)
-        emit_installed_python_evidence(
+        emit_installed_oracle_evidence(
             directory=(distribution_evidence_dir or _DEFAULT_DISTRIBUTION_EVIDENCE_DIR),
             row_id=row_id,
             cohort=release_cohort,
