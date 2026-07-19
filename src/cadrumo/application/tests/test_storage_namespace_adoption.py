@@ -41,7 +41,6 @@ from pathlib import Path
 
 import pytest
 
-import cadrumo
 from cadrumo.adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -67,10 +66,13 @@ _REGISTRY_AUTHORING_MODULE = "_namespace_registry.py"
 
 
 def _package_root() -> Path:
-    """Return the on-disk root of the ``cadrumo`` package."""
-    package_file = cadrumo.__file__
-    assert package_file is not None, "cadrumo package must resolve to a file path"
-    return Path(package_file).resolve().parent
+    """Return the on-disk root of the ``cadrumo`` package.
+
+    Derived from this test module's own location (``cadrumo/application/tests/``)
+    rather than an absolute ``import cadrumo``, so the relative-imports gate stays
+    satisfied.
+    """
+    return Path(__file__).resolve().parents[2]
 
 
 def _is_test_path(path: Path, root: Path) -> bool:
