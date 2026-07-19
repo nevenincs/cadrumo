@@ -25,6 +25,37 @@ def select_profile_pointer(pointer: ProfileBucketPointer) -> None:
     select_profile_with_lifecycle_span(pointer.bucket_id)
 
 
+def _resolve_switch_target(
+    name: str,
+    *,
+    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
+) -> ProfileBucketPointer:
+    """Resolve a ``switch`` target from an unambiguous UUID or an exact label.
+
+    ``switch`` is the single accepted profile selector (ADR
+    ``cli-authority-verb-conformance``, Decision 3): it accepts the same
+    identifiers profile and sandbox listing return — the immutable bucket
+    UUID, or the exact operator label, including a sandbox's canonical
+    ``sandbox:<name>`` label. A bare sandbox short name is NOT implicitly
+    namespaced: it carries no ``sandbox:`` prefix, so it matches no sandbox
+    bucket and the label resolver refuses it as an unknown profile — the
+    sandbox namespace check the removed ``sandbox use`` door performed is
+    preserved by requiring the canonical label. A live UUID resolves
+    directly; a tombstoned UUID falls through to the label resolver, which
+    refuses it. UUID/label ambiguity or duplicate labels refuse through the
+    injected label resolver's typed selection error.
+    """
+    from ....application.workflow import read_profile_bucket_by_id
+    from ....domain.user_profile import UserProfileStatus
+
+    trimmed = name.strip()
+    if trimmed:
+        by_id = read_profile_bucket_by_id(trimmed)
+        if by_id is not None and by_id.status is not UserProfileStatus.TOMBSTONED:
+            return by_id
+    return resolve_profile_by_label(name)
+
+
 def _register_switch_command(
     app: typer.Typer,
     *,
@@ -53,7 +84,7 @@ def _register_switch_command(
                     translated_message="cli.config.errors.no_active_profile",
                 )
         else:
-            pointer = resolve_profile_by_label(name)
+            pointer = _resolve_switch_target(name, resolve_profile_by_label=resolve_profile_by_label)
         select_profile_pointer(pointer)
         from .._config_payloads import ConfigSwitchResult
 
