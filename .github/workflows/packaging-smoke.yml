@@ -112,6 +112,22 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      # Build the immutable FULL cross-channel cohort (python + Claude plugin/
+      # marketplace + Scoop + Homebrew + MCPB) once, from a clean HEAD clone, so
+      # the publish authority (publish-release.yml) has stored bytes to promote
+      # without rebuilding. Runs only after the smoke campaign above passes, so
+      # the uploaded cohort is a tested one. Pure-Python generators - no node.
+      - name: Build the immutable full release cohort
+        run: uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort
+
+      - name: Upload the immutable full release cohort
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-release-cohort
+          path: var/release-cohort/
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload Cadrumo packaging smoke evidence
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
