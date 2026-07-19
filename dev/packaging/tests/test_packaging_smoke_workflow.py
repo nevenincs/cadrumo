@@ -98,6 +98,8 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
     # One dedicated cohort build that uploads the single immutable artifact.
     build = jobs["build-release-cohort"]
     assert build["runs-on"] == ["self-hosted", "Linux", "X64"]
+    checkout = next(step for step in build["steps"] if str(step.get("uses", "")).startswith("actions/checkout@"))
+    assert checkout["with"]["fetch-depth"] == 0
     build_commands = _run_command_lines(build)
     assert "uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort" in build_commands
     uploads = [step for step in build["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@")]
