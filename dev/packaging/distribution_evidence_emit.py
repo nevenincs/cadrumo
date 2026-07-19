@@ -25,6 +25,8 @@ forbidden. Every field written here is a real captured value.
 
 from __future__ import annotations
 
+import argparse
+import json
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Final
@@ -221,7 +223,132 @@ def emit_installed_oracle_evidence(
     return write_distribution_evidence(directory, evidence)
 
 
+def _tax_evidence_from_mapping(data: dict[str, Any]) -> InstalledTaxEvidence:
+    """Reconstruct installed-CLI oracle evidence from its ``to_jsonable`` mapping.
+
+    Used by the CLI so a lane that already wrote ``tax-evidence.json`` (e.g. the
+    PowerShell Scoop smoke) can emit the flat record without re-running the
+    oracle. Tuple-typed fields arrive as JSON lists and are coerced back.
+    """
+    commands = tuple(
+        CommandEvidence(
+            argv=tuple(command["argv"]),
+            duration_seconds=command["duration_seconds"],
+            returncode=command["returncode"],
+            stdout=command["stdout"],
+            stderr=command["stderr"],
+            started_at=command["started_at"],
+            completed_at=command["completed_at"],
+            cwd=command["cwd"],
+        )
+        for command in data["commands"]
+    )
+    return InstalledTaxEvidence(
+        requested_executable=data["requested_executable"],
+        resolved_executable=data["resolved_executable"],
+        version_output=data["version_output"],
+        storage_root=data["storage_root"],
+        work_unit_id=data["work_unit_id"],
+        calculation_revision_id=data["calculation_revision_id"],
+        target_casilla=data["target_casilla"],
+        target_value=data["target_value"],
+        formula_id=data["formula_id"],
+        legal_refs=tuple(data["legal_refs"]),
+        source_refs=tuple(data["source_refs"]),
+        notice_codes=tuple(data["notice_codes"]),
+        commands=commands,
+    )
+
+
+def _mcp_evidence_from_mapping(data: dict[str, Any]) -> InstalledMcpEvidence:
+    """Reconstruct installed-MCP oracle evidence from its ``to_jsonable`` mapping.
+
+    The ``mcp`` import is deferred so this module stays importable without the
+    ``mcp`` dependency for the pure build path.
+    """
+    from dev.packaging.installed_mcp_oracle import InstalledMcpEvidence, McpCallEvidence
+
+    calls = tuple(
+        McpCallEvidence(
+            tool_name=call["tool_name"],
+            command_key=call["command_key"],
+            duration_seconds=call["duration_seconds"],
+            is_error=call["is_error"],
+            status=call["status"],
+        )
+        for call in data["calls"]
+    )
+    return InstalledMcpEvidence(
+        requested_executable=data["requested_executable"],
+        resolved_executable=data["resolved_executable"],
+        server_name=data["server_name"],
+        storage_root=data["storage_root"],
+        work_unit_id=data["work_unit_id"],
+        calculation_revision_id=data["calculation_revision_id"],
+        observations_resource=data["observations_resource"],
+        target_casilla=data["target_casilla"],
+        target_value=data["target_value"],
+        formula_id=data["formula_id"],
+        legal_refs=tuple(data["legal_refs"]),
+        source_refs=tuple(data["source_refs"]),
+        notice_codes=tuple(data["notice_codes"]),
+        advertised_tools=tuple(data["advertised_tools"]),
+        calls=calls,
+        invoked_cli_sha256=data["invoked_cli_sha256"],
+        invoked_cli_sha256_by_command=dict(data["invoked_cli_sha256_by_command"]),
+    )
+
+
+def _parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Emit one sanctioned flat distribution-evidence record.")
+    parser.add_argument("--row-id", required=True, help="Distribution row this run proves.")
+    parser.add_argument("--release-cohort-dir", required=True, type=Path, help="Full release-cohort directory.")
+    parser.add_argument("--tax-evidence", required=True, type=Path, help="installed_tax_oracle --output JSON.")
+    parser.add_argument("--mcp-evidence", required=True, type=Path, help="installed_mcp_oracle --output JSON.")
+    parser.add_argument("--acquisition-mechanism", required=True, help="Acquisition channel (scoop, brew, pip, ...).")
+    parser.add_argument("--acquisition-source", required=True, help="Public locator the bytes were acquired from.")
+    parser.add_argument("--destination-kind", required=True, help="Install/promotion destination kind.")
+    parser.add_argument("--destination-locator", required=True, help="Install/promotion destination locator.")
+    parser.add_argument(
+        "--distribution-evidence-dir",
+        type=Path,
+        default=Path("var/distribution-install-readiness"),
+        help="Where the flat record lands.",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Emit a flat record from oracle-evidence JSON a lane already produced."""
+    from dev.packaging.cohort_manifest import load_release_cohort
+
+    args = _parser().parse_args(argv)
+    tax_evidence = _tax_evidence_from_mapping(json.loads(args.tax_evidence.read_text(encoding="utf-8")))
+    mcp_evidence = _mcp_evidence_from_mapping(json.loads(args.mcp_evidence.read_text(encoding="utf-8")))
+    cohort = load_release_cohort(args.release_cohort_dir)
+    path = emit_installed_oracle_evidence(
+        directory=args.distribution_evidence_dir,
+        row_id=args.row_id,
+        cohort=cohort,
+        tax_evidence=tax_evidence,
+        mcp_evidence=mcp_evidence,
+        acquisition=AcquisitionIdentity(mechanism=args.acquisition_mechanism, source=args.acquisition_source),
+        destination=DestinationIdentity(
+            kind=args.destination_kind,
+            locator=args.destination_locator,
+            version=cohort.manifest.version,
+        ),
+    )
+    print(path)
+    return 0
+
+
 __all__ = [
     "build_installed_oracle_evidence",
     "emit_installed_oracle_evidence",
+    "main",
 ]
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

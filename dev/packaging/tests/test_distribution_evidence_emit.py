@@ -29,6 +29,7 @@ from dev.packaging.cohort_manifest import (
 from dev.packaging.distribution_evidence_emit import (
     build_installed_oracle_evidence,
     emit_installed_oracle_evidence,
+    main,
 )
 from dev.packaging.evidence import (
     AcquisitionIdentity,
@@ -228,6 +229,55 @@ def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
     reloaded = DistributionEvidence.model_validate_json(path.read_text(encoding="utf-8"))
     assert reloaded.row_id == "python-linux-x86-64"
     assert reloaded.result.status is EvidenceStatus.PASSED
+
+
+def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> None:
+    """The CLI reconstructs oracle evidence from JSON and emits the flat record.
+
+    Mirrors the PowerShell Scoop path: the lane writes tax-evidence.json /
+    mcp-evidence.json (the oracles' to_jsonable output), then the thin CLI binds
+    the cohort and emits without re-running the oracle.
+    """
+    import json
+
+    cohort_dir = tmp_path / "cohort"
+    _release_cohort(cohort_dir)
+    tax_json = tmp_path / "tax-evidence.json"
+    mcp_json = tmp_path / "mcp-evidence.json"
+    tax_json.write_text(json.dumps(_tax_evidence(tmp_path).to_jsonable()), encoding="utf-8")
+    mcp_json.write_text(json.dumps(_mcp_evidence().to_jsonable()), encoding="utf-8")
+    evidence_dir = tmp_path / "distribution-install-readiness"
+
+    exit_code = main(
+        [
+            "--row-id",
+            "scoop-windows-x86-64",
+            "--release-cohort-dir",
+            str(cohort_dir),
+            "--tax-evidence",
+            str(tax_json),
+            "--mcp-evidence",
+            str(mcp_json),
+            "--acquisition-mechanism",
+            "scoop",
+            "--acquisition-source",
+            "https://github.com/nevenincs/scoop-cadrumo",
+            "--destination-kind",
+            "scoop-install",
+            "--destination-locator",
+            "C:/scoop/apps/cadrumo",
+            "--distribution-evidence-dir",
+            str(evidence_dir),
+        ],
+    )
+
+    assert exit_code == 0
+    records = sorted(evidence_dir.glob("scoop-windows-x86-64-*.json"))
+    assert len(records) == 1
+    reloaded = DistributionEvidence.model_validate_json(records[0].read_text(encoding="utf-8"))
+    assert reloaded.row_id == "scoop-windows-x86-64"
+    assert reloaded.result.status is EvidenceStatus.PASSED
+    assert reloaded.acquisition.mechanism == "scoop"
 
 
 def test_destination_version_mismatch_is_refused(tmp_path: Path) -> None:
