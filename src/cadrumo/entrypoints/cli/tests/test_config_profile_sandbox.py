@@ -822,7 +822,13 @@ def test_sandbox_active_indicator_absent_when_no_profile_is_active() -> None:
 
 
 def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switch() -> None:
-    """Switching between two sandboxes updates the banner's named sandbox on the next command."""
+    """Switching between two sandboxes updates the banner's named sandbox on the next command.
+
+    ``switch`` is the single accepted selector: a sandbox is entered by its
+    canonical ``sandbox:<name>`` label (the removed ``sandbox use`` door had
+    no separate authority — it delegated to the same select-lifecycle-span
+    primitive ``switch`` uses).
+    """
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "zeta", "--from-profile", "main")).exit_code == 0
     assert _invoke(("config", "profile", "sandbox", "create", "eta", "--from-profile", "main")).exit_code == 0
@@ -833,10 +839,74 @@ def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switc
     assert "sandbox:eta" in shown.output
     assert "sandbox:zeta" not in shown.output
 
-    assert _invoke(("config", "profile", "sandbox", "use", "zeta")).exit_code == 0
-    shown_after_use = _invoke(("config", "profile", "show"))
-    assert shown_after_use.exit_code == 0, shown_after_use.output
-    assert "sandbox:zeta" in shown_after_use.output
+    switched = _invoke(("config", "switch", "sandbox:zeta"))
+    assert switched.exit_code == 0, switched.output
+    assert "active_profile\tsandbox:zeta" in switched.output
+    shown_after_switch = _invoke(("config", "profile", "show"))
+    assert shown_after_switch.exit_code == 0, shown_after_switch.output
+    assert "sandbox:zeta" in shown_after_switch.output
+
+
+def test_sandbox_use_command_is_absent() -> None:
+    """``sandbox use`` was removed with no alias; only ``switch`` selects a sandbox.
+
+    ADR ``cli-authority-verb-conformance`` (Decision 3) removed the second
+    ``config profile sandbox use`` selection door. Invoking it now fails as an
+    unknown sub-command, and ``switch`` remains the accepted selector — proven
+    by the sibling ``..._after_switch`` test entering the sandbox by its
+    canonical label.
+    """
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "gone", "--from-profile", "main")).exit_code == 0
+
+    used = _invoke(("config", "profile", "sandbox", "use", "gone"))
+    assert used.exit_code != 0
+    # The sandbox sub-app help lists its live verbs; `use` is not among them.
+    help_result = _invoke(("config", "profile", "sandbox", "--help"))
+    assert help_result.exit_code == 0, help_result.output
+    assert "use" not in {line.split()[0] for line in help_result.output.splitlines() if line.strip()}
+
+
+def test_switch_rejects_a_bare_sandbox_short_name() -> None:
+    """A bare sandbox short name is not implicitly namespaced by ``switch``.
+
+    ``switch`` accepts an unambiguous UUID or an exact operator label — a
+    sandbox's canonical ``sandbox:<name>`` label. A bare ``<name>`` carries no
+    ``sandbox:`` prefix, so it matches no sandbox bucket and is refused as an
+    unknown profile: this preserves the sandbox namespace check the removed
+    ``use`` door performed.
+    """
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "bare", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    # The bare short name (no `sandbox:` prefix) does not resolve to the sandbox.
+    bare = _invoke(("config", "switch", "bare"))
+    assert bare.exit_code != 0
+
+    # The canonical label does resolve.
+    canonical = _invoke(("config", "switch", "sandbox:bare"))
+    assert canonical.exit_code == 0, canonical.output
+    assert "active_profile\tsandbox:bare" in canonical.output
+
+
+def test_switch_accepts_a_sandbox_bucket_uuid() -> None:
+    """``switch`` accepts the immutable bucket UUID a sandbox listing returns.
+
+    ADR ``cli-authority-verb-conformance``: ``switch NAME`` accepts the same
+    unambiguous UUID or exact label profile/sandbox listing returns.
+    """
+    from ....application.workflow import read_profile_bucket
+
+    create_profile_via_cli("main")
+    assert _invoke(("config", "profile", "sandbox", "create", "byid", "--from-profile", "main")).exit_code == 0
+    assert _invoke(("config", "switch", "main")).exit_code == 0
+
+    pointer = read_profile_bucket("sandbox:byid")
+    assert pointer is not None
+    switched = _invoke(("config", "switch", pointer.bucket_id))
+    assert switched.exit_code == 0, switched.output
+    assert "active_profile\tsandbox:byid" in switched.output
 
 
 def test_sandbox_active_indicator_helper_degrades_silently_on_a_corrupt_active_manifest() -> None:

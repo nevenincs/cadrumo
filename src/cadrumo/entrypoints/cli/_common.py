@@ -177,8 +177,8 @@ def _active_sandbox_notice() -> Notice | None:
     is not a sandbox, so a real profile's output is never annotated and a
     corrupt/torn manifest degrades this purely-advisory indicator rather
     than breaking every command's output. The manifest is deliberately
-    re-read on every call (no caching) so a mid-process
-    ``switch``/``sandbox use`` is reflected on the very next command.
+    re-read on every call (no caching) so a mid-process ``switch`` is
+    reflected on the very next command.
     """
     from ...adapters.persistence.storage import StorageValidationError
     from ...adapters.persistence.storage.bucket import bucket_paths, manifest_path, read_manifest

@@ -35,19 +35,6 @@ class ConfigProfileSandboxListResult(OutputSchema):
     sandboxes: list[ProfilePointerPayload]
 
 
-@register_schema("config.profile.sandbox.use")
-class ConfigProfileSandboxUseResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox use``.
-
-    Same shape as :class:`ConfigSwitchResult`; registered under its own
-    command path since ``sandbox use`` delegates to the canonical
-    select-lifecycle-span primitive rather than the root ``config switch``
-    command.
-    """
-
-    active_profile: str
-
-
 class SandboxNamespacePayload(OutputSchema):
     """One secure-object namespace row in a sandbox discard preview.
 
