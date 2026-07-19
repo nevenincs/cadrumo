@@ -34,7 +34,7 @@ from dev.packaging._acquire_common import (  # noqa: E402
     require_command_succeeded,
 )
 from dev.packaging.cohort_manifest import load_release_cohort  # noqa: E402
-from dev.packaging.distribution_evidence_emit import emit_client_evidence  # noqa: E402
+from dev.packaging.distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
 from dev.packaging.evidence import (  # noqa: E402
     AcquisitionIdentity,
     ClientIdentity,
@@ -52,7 +52,6 @@ from dev.packaging.smoke_plugin_install import (  # noqa: E402
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_MARKETPLACE_SOURCE: Final[str] = "nevenincs/cadrumo"
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
-_SDK_CLIENT_NAME: Final[str] = "cadrumo-mcp-sdk-client"
 
 
 def _resolve_claude(override: Path | None) -> Path:
@@ -224,7 +223,7 @@ def run_claude_plugin_acquisition(
             mcp_evidence=mcp_evidence,
             launch_transcript=launch_transcript,
             client=ClientIdentity(
-                name=_SDK_CLIENT_NAME,
+                name=SDK_CLIENT_NAME,
                 version=_package_version("mcp"),
                 executable=str(uvx),
             ),
