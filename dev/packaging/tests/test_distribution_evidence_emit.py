@@ -306,6 +306,52 @@ def _client() -> ClientIdentity:
     return ClientIdentity(name="claude-desktop", version="1.22209", executable=sys.executable)
 
 
+def _sdk_client() -> ClientIdentity:
+    from dev.packaging.distribution_evidence_emit import SDK_CLIENT_NAME
+
+    return ClientIdentity(name=SDK_CLIENT_NAME, version="1.26.0", executable=sys.executable)
+
+
+def test_sdk_client_cannot_satisfy_a_required_claude_row(tmp_path: Path) -> None:
+    """The honesty guard refuses an SDK-client record under a real-client row id."""
+    cohort = _release_cohort(tmp_path / "cohort")
+    with pytest.raises(ValueError, match="cannot satisfy the real-client row"):
+        build_client_evidence(
+            row_id="claude-desktop-mcpb",
+            cohort=cohort,
+            mcp_evidence=_mcp_evidence(),
+            launch_transcript=_launch_transcript(tmp_path),
+            client=_sdk_client(),
+            acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
+            destination=_destination(cohort),
+        )
+
+
+def test_sdk_client_emits_under_a_distinct_artifact_serves_id(tmp_path: Path) -> None:
+    """The same SDK-client record is allowed under a distinct artifact-serves id."""
+    cohort = _release_cohort(tmp_path / "cohort")
+    evidence = build_client_evidence(
+        row_id="claude-desktop-mcpb-artifact-serves",
+        cohort=cohort,
+        mcp_evidence=_mcp_evidence(),
+        launch_transcript=_launch_transcript(tmp_path),
+        client=_sdk_client(),
+        acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
+        destination=_destination(cohort),
+    )
+    assert evidence.row_id == "claude-desktop-mcpb-artifact-serves"
+    assert evidence.result.status is EvidenceStatus.PASSED
+
+
+def test_required_real_client_rows_match_readiness() -> None:
+    """The guard's required-row set stays in lock-step with the readiness authority."""
+    from dev.packaging.distribution_evidence_emit import _REQUIRED_REAL_CLIENT_ROW_IDS
+    from dev.release.readiness import REQUIRED_DISTRIBUTION_ROWS
+
+    claude_rows = frozenset(row for row in REQUIRED_DISTRIBUTION_ROWS if row.startswith("claude-"))
+    assert claude_rows == _REQUIRED_REAL_CLIENT_ROW_IDS
+
+
 def test_client_row_uses_owned_launch_transcript_and_mcp_proof(tmp_path: Path) -> None:
     """A pure-client row carries the real launch subprocess + MCP proof, client-bound."""
     cohort = _release_cohort(tmp_path / "cohort")

@@ -39,7 +39,7 @@ from dev.packaging._acquire_common import (  # noqa: E402
     verify_artifact_digest,
 )
 from dev.packaging.cohort_manifest import LoadedReleaseCohort, load_release_cohort  # noqa: E402
-from dev.packaging.distribution_evidence_emit import emit_client_evidence  # noqa: E402
+from dev.packaging.distribution_evidence_emit import SDK_CLIENT_NAME, emit_client_evidence  # noqa: E402
 from dev.packaging.evidence import (  # noqa: E402
     AcquisitionIdentity,
     ClientIdentity,
@@ -57,7 +57,6 @@ from dev.packaging.smoke_mcpb import _resolve_mcpb_value, _run_concurrent_launch
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_REPO: Final[str] = "nevenincs/cadrumo"
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
-_SDK_CLIENT_NAME: Final[str] = "cadrumo-mcp-sdk-client"
 _EXPECTED_TARGET_VALUE: Final[str] = "23000.00"
 
 
@@ -320,7 +319,7 @@ def run_mcpb_acquisition(
             mcp_evidence=mcp_evidence,
             launch_transcript=launch_transcript,
             client=ClientIdentity(
-                name=_SDK_CLIENT_NAME,
+                name=SDK_CLIENT_NAME,
                 version=_package_version("mcp"),
                 executable=str(uv),
             ),

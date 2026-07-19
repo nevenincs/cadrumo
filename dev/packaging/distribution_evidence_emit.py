@@ -54,6 +54,26 @@ if TYPE_CHECKING:
 _CLI_EXECUTABLE_NAME: Final[str] = "aeat"
 _MCP_EXECUTABLE_NAME: Final[str] = "cadrumo-mcp"
 
+# The client identity an acquire lane declares when it drives the published
+# artifact through the MCP SDK over ``uv``/``uvx`` rather than a real Claude
+# client. Shared with the acquire lanes so the honesty guard below and the lanes
+# agree on one spelling.
+SDK_CLIENT_NAME: Final[str] = "cadrumo-mcp-sdk-client"
+
+# The REQUIRED real-client rows: these are real-Claude-client claims (the plan
+# step language is "install in Claude Desktop and execute the real tax-work tool
+# call"), satisfiable only by real-client lane evidence, never an SDK-driven run.
+# Kept in lock-step with the claude-* subset of
+# ``dev.release.readiness.REQUIRED_DISTRIBUTION_ROWS`` by a parity test.
+_REQUIRED_REAL_CLIENT_ROW_IDS: Final[frozenset[str]] = frozenset(
+    {
+        "claude-code-plugin",
+        "claude-cowork-plugin",
+        "claude-desktop-plugin",
+        "claude-desktop-mcpb",
+    },
+)
+
 
 def _command_transcript(command: CommandEvidence) -> CommandTranscript:
     """Map one captured installed-CLI invocation to a tamper-evident transcript.
@@ -231,7 +251,18 @@ def build_client_evidence(
 
     Returns:
         A validated, tamper-evident :class:`~dev.packaging.evidence.DistributionEvidence`.
+
+    Raises:
+        ValueError: If an SDK-client record is asked to satisfy a REQUIRED
+            real-client row. Those rows are real-Claude-client claims; an
+            SDK-driven proof must emit under a distinct artifact-serves id.
     """
+    if client.name == SDK_CLIENT_NAME and row_id in _REQUIRED_REAL_CLIENT_ROW_IDS:
+        raise ValueError(
+            f"an SDK-client record cannot satisfy the real-client row {row_id!r}: those rows are minted "
+            "only by real-client lanes (authenticated Claude Code / operator in-app captures). "
+            "Emit this SDK acquire proof under a distinct artifact-serves id instead.",
+        )
     isolation = ExecutionIsolation(
         checkout_imports_removed=True,
         ambient_product_executables_removed=True,
@@ -437,6 +468,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = [
+    "SDK_CLIENT_NAME",
     "build_client_evidence",
     "build_installed_oracle_evidence",
     "emit_client_evidence",
