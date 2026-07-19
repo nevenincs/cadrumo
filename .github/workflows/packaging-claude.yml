@@ -129,6 +129,15 @@ jobs:
             throw "tested Python cohort verification failed"
           }
 
+      # Runner-agnostic node: on the self-hosted Windows runner this provisions
+      # a tool-cache node whose npm global prefix lives INSIDE the runner's
+      # managed install, so the pinned Claude Code global install never touches
+      # the operator's own node/npm on the host machine.
+      - name: Provision Node.js for the pinned Claude Code client
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: "22"
+
       - name: Install pinned Claude Code client
         shell: powershell
         run: |
