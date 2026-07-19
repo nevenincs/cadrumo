@@ -209,10 +209,10 @@ def test_ledger_link_rejects_retired_evidence_id_grammar() -> None:
 def test_config_reset_registers_exactly_start_status_resume() -> None:
     """`config reset` is a group mounting exactly start / status / resume.
 
-    The pre-split flat scoped `config reset` action is gone: `config reset` is a
-    command group, and its only leaves are the crash-resumable lifecycle verbs
-    (ADR `cli-authority-verb-conformance`, Decision 3). Any other leaf — or a
-    flat action taking a positional scope — violates the ratified grammar."""
+    The retired flat scoped `config reset` action is gone: `config reset` is a
+    command group whose only leaves are the crash-resumable lifecycle verbs.
+    Any other leaf — or a flat action taking a positional scope — violates the
+    ratified grammar."""
 
     for leaf in ("start", "status", "resume"):
         result = invoke_cached_cli(["config", "reset", leaf, "--help"])

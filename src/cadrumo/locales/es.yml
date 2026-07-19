@@ -4570,8 +4570,7 @@ cli:
         profile_status: Mostrar el estado del perfil activo.
         profile_switch: Switch to a profile and make it the active one.
         reset_resume: Continúa una operación de reinicio incompleta.
-        reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles almacenados
-          localmente.
+        reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles locales.
         reset_status: Muestra el estado de una operación de reinicio sin modificar
           datos locales.
         section_authentication: Autenticacion AEAT

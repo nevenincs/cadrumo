@@ -850,11 +850,10 @@ def test_sandbox_active_indicator_names_the_currently_active_sandbox_after_switc
 def test_sandbox_use_command_is_absent() -> None:
     """``sandbox use`` was removed with no alias; only ``switch`` selects a sandbox.
 
-    ADR ``cli-authority-verb-conformance`` (Decision 3) removed the second
-    ``config profile sandbox use`` selection door. Invoking it now fails as an
-    unknown sub-command, and ``switch`` remains the accepted selector — proven
-    by the sibling ``..._after_switch`` test entering the sandbox by its
-    canonical label.
+    The grammar carries exactly one selection door: ``config profile sandbox
+    use`` no longer exists, so invoking it fails as an unknown sub-command and
+    ``switch`` remains the accepted selector — proven by the sibling
+    ``..._after_switch`` test entering the sandbox by its canonical label.
     """
     create_profile_via_cli("main")
     assert _invoke(("config", "profile", "sandbox", "create", "gone", "--from-profile", "main")).exit_code == 0
@@ -893,8 +892,8 @@ def test_switch_rejects_a_bare_sandbox_short_name() -> None:
 def test_switch_accepts_a_sandbox_bucket_uuid() -> None:
     """``switch`` accepts the immutable bucket UUID a sandbox listing returns.
 
-    ADR ``cli-authority-verb-conformance``: ``switch NAME`` accepts the same
-    unambiguous UUID or exact label profile/sandbox listing returns.
+    ``switch NAME`` accepts exactly what a profile or sandbox listing returns:
+    the unambiguous bucket UUID or the exact label.
     """
     from ....application.workflow import read_profile_bucket
 
