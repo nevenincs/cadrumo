@@ -1,0 +1,252 @@
+# Sole publication authority for the immutable, tested Cadrumo cohort.
+#
+# This workflow PROMOTES already-built, already-tested bytes; it NEVER builds,
+# regenerates, or restamps an artifact (per 2026-07-15-distribution-installation
+# -readiness-adr). It is inert until the operator opts in and configures the
+# protected `release` environment plus the channel credentials: absent those it
+# refuses instructively, exactly like the retained validate-only diagnostic
+# (publish.yml) it will supersede once the operator turns it on.
+#
+# Operator prerequisites (none of which an agent can create) are enumerated in
+# the "operator-preflight" job below and must all be satisfied before a real
+# publication can occur.
+name: Publish Cadrumo release
+
+on:
+  workflow_dispatch:
+    inputs:
+      packaging_run_id:
+        description: Successful Cadrumo Packaging Smoke run holding the tested cohort
+        required: true
+        type: string
+
+concurrency:
+  group: publish-cadrumo-release
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Gate 1 - operator opt-in. Until the operator sets the repository variable
+  # CADRUMO_PUBLISH_ENABLED=true this workflow refuses with instructions and
+  # publishes nothing, preserving the diagnostic stub's refusal semantics.
+  # ---------------------------------------------------------------------------
+  operator-preflight:
+    name: Operator opt-in and prerequisite check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require explicit operator opt-in
+        env:
+          PUBLISH_ENABLED: ${{ vars.CADRUMO_PUBLISH_ENABLED }}
+        run: |
+          if [[ "${PUBLISH_ENABLED}" != "true" ]]; then
+            cat >&2 <<'EOF'
+          REFUSED: Cadrumo publication is not enabled.
+
+          This workflow promotes the immutable tested cohort to every public
+          channel and cannot run until the operator has completed ALL of the
+          following (none can be done by an agent):
+
+            1. Register PyPI Trusted Publishing for cadrumo, cadrumo-data-manuals,
+               and cadrumo-data-official (publisher: this repo, workflow
+               publish-release.yml, environment release) at
+               https://pypi.org/manage/account/publishing/.
+            2. Create the `release` GitHub Environment with required reviewers
+               (the operator) - that approval click is the human release gate.
+            3. Create the public Scoop bucket repo and the public Homebrew tap
+               repo, and add push credentials as the secrets
+               CADRUMO_SCOOP_BUCKET_TOKEN and CADRUMO_HOMEBREW_TAP_TOKEN
+               (with the target repo slugs as vars CADRUMO_SCOOP_BUCKET_REPO
+               and CADRUMO_HOMEBREW_TAP_REPO).
+            4. Ensure the source Packaging Smoke run also uploaded the full
+               release cohort artifact `cadrumo-release-cohort` (all channel
+               artifacts), not only the Python cohort.
+            5. Set repository variable CADRUMO_PUBLISH_ENABLED=true to arm this
+               workflow.
+
+          Set CADRUMO_PUBLISH_ENABLED=true once 1-4 are done, then re-dispatch.
+          EOF
+            exit 1
+          fi
+          echo "Operator opt-in present; proceeding to cohort validation."
+
+  # ---------------------------------------------------------------------------
+  # Gate 2 - validate the retained cohort WITHOUT rebuilding. Verifies the
+  # source run identity, downloads the stored cohort + installed evidence, and
+  # re-checks manifest/hashes and the complete blocking evidence set.
+  # ---------------------------------------------------------------------------
+  validate:
+    name: Validate immutable tested cohort (no rebuild)
+    needs: operator-preflight
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      source_commit: ${{ steps.source-run.outputs.source_commit }}
+      version: ${{ steps.validate.outputs.version }}
+    env:
+      COHORT_DIR: var/promotion/cohort
+      RELEASE_COHORT_DIR: var/promotion/release-cohort
+      EVIDENCE_DOWNLOAD: var/promotion/evidence
+      PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
+    steps:
+      - name: Require one successful packaging-smoke authority run
+        id: source-run
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PACKAGING_RUN_ID}")"
+          test "$(jq -r .conclusion <<<"$run_json")" = "success"
+          test "$(jq -r .path <<<"$run_json")" = ".github/workflows/packaging-smoke.yml"
+          test "$(jq -r .event <<<"$run_json")" = "push"
+          test "$(jq -r .head_branch <<<"$run_json")" = "main"
+          test "$(jq -r .head_repository.full_name <<<"$run_json")" = "$GITHUB_REPOSITORY"
+          source_commit="$(jq -r .head_sha <<<"$run_json")"
+          echo "source_commit=$source_commit" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ steps.source-run.outputs.source_commit }}
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+
+      - name: Download the stored cohort and installed evidence (never rebuild)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-python-cohort --dir "$COHORT_DIR"
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort --dir "$RELEASE_COHORT_DIR"
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-packaging-smoke-evidence --dir "$EVIDENCE_DOWNLOAD"
+
+      - name: Re-verify exact hashes and both installed transports
+        id: validate
+        env:
+          EXPECTED_SOURCE_COMMIT: ${{ steps.source-run.outputs.source_commit }}
+        run: |
+          evidence_file="$(find "$EVIDENCE_DOWNLOAD" -path "*/${EXPECTED_SOURCE_COMMIT}/evidence.json" -print -quit)"
+          if [[ -z "$evidence_file" ]]; then
+            echo "installed cohort evidence is absent for $EXPECTED_SOURCE_COMMIT" >&2
+            exit 1
+          fi
+          uv run --frozen python -m dev.release.promote_python_cohort \
+            --cohort-dir "$COHORT_DIR" \
+            --evidence-file "$evidence_file" \
+            --expected-source-commit "$EXPECTED_SOURCE_COMMIT" \
+            --check-pypi \
+            --github-output "$GITHUB_OUTPUT"
+
+      - name: Require the complete blocking distribution evidence set
+        run: |
+          uv run --frozen python -m dev.release.readiness --json --skip-network
+
+  # ---------------------------------------------------------------------------
+  # Gate 3 - promote the exact bytes. Protected by the `release` environment
+  # (operator required-reviewers = the human approval gate). Uploads only; it
+  # never builds. Each external push is guarded on its operator-provided
+  # credential and refuses instructively when absent.
+  # ---------------------------------------------------------------------------
+  publish:
+    name: Promote immutable cohort to public channels
+    needs: validate
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+      contents: write
+    env:
+      COHORT_DIR: var/promotion/cohort
+      RELEASE_COHORT_DIR: var/promotion/release-cohort
+      VERSION: ${{ needs.validate.outputs.version }}
+      SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
+      PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ needs.validate.outputs.source_commit }}
+          persist-credentials: false
+
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+
+      - name: Re-download the stored cohorts (no rebuild)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-python-cohort --dir "$COHORT_DIR"
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort --dir "$RELEASE_COHORT_DIR"
+
+      - name: Publish the three distributions to PyPI via Trusted Publishing (OIDC)
+        run: |
+          # uv exchanges the id-token for a short-lived PyPI token (Trusted
+          # Publishing); it uploads the stored wheels/sdists and never builds.
+          uv publish --trusted-publishing always \
+            "$COHORT_DIR"/cadrumo-"$VERSION"-py3-none-any.whl \
+            "$COHORT_DIR"/cadrumo-"$VERSION".tar.gz \
+            "$COHORT_DIR"/cadrumo_data_manuals-"$VERSION"-py3-none-any.whl \
+            "$COHORT_DIR"/cadrumo_data_manuals-"$VERSION".tar.gz \
+            "$COHORT_DIR"/cadrumo_data_official-"$VERSION"-py3-none-any.whl \
+            "$COHORT_DIR"/cadrumo_data_official-"$VERSION".tar.gz
+
+      - name: Create the GitHub release with every cohort asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          assets=()
+          while IFS= read -r -d '' f; do assets+=("$f"); done \
+            < <(find "$RELEASE_COHORT_DIR" -type f -print0)
+          if [[ ${#assets[@]} -eq 0 ]]; then
+            echo "no release cohort assets found to attach" >&2
+            exit 1
+          fi
+          gh release create "v$VERSION" "${assets[@]}" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$SOURCE_COMMIT" \
+            --title "Cadrumo v$VERSION" \
+            --notes "Immutable tested cohort v$VERSION promoted without rebuild from packaging-smoke run $PACKAGING_RUN_ID."
+
+      - name: Push the Scoop bucket manifest to the public bucket
+        env:
+          SCOOP_TOKEN: ${{ secrets.CADRUMO_SCOOP_BUCKET_TOKEN }}
+          SCOOP_REPO: ${{ vars.CADRUMO_SCOOP_BUCKET_REPO }}
+        run: |
+          if [[ -z "$SCOOP_TOKEN" || -z "$SCOOP_REPO" ]]; then
+            echo "REFUSED: Scoop bucket not configured. Set the CADRUMO_SCOOP_BUCKET_REPO variable" >&2
+            echo "and the CADRUMO_SCOOP_BUCKET_TOKEN secret to publish the Scoop manifest." >&2
+            exit 1
+          fi
+          work="$(mktemp -d)"
+          git clone "https://x-access-token:${SCOOP_TOKEN}@github.com/${SCOOP_REPO}.git" "$work"
+          mkdir -p "$work/bucket"
+          cp "$RELEASE_COHORT_DIR/scoop/cadrumo.json" "$work/bucket/cadrumo.json"
+          git -C "$work" add -- bucket/cadrumo.json
+          git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
+            commit -m "cadrumo $VERSION"
+          git -C "$work" push
+
+      - name: Push the Homebrew formula to the public tap
+        env:
+          TAP_TOKEN: ${{ secrets.CADRUMO_HOMEBREW_TAP_TOKEN }}
+          TAP_REPO: ${{ vars.CADRUMO_HOMEBREW_TAP_REPO }}
+        run: |
+          if [[ -z "$TAP_TOKEN" || -z "$TAP_REPO" ]]; then
+            echo "REFUSED: Homebrew tap not configured. Set the CADRUMO_HOMEBREW_TAP_REPO variable" >&2
+            echo "and the CADRUMO_HOMEBREW_TAP_TOKEN secret to publish the Homebrew formula." >&2
+            exit 1
+          fi
+          work="$(mktemp -d)"
+          git clone "https://x-access-token:${TAP_TOKEN}@github.com/${TAP_REPO}.git" "$work"
+          mkdir -p "$work/Formula"
+          cp "$RELEASE_COHORT_DIR/homebrew/Formula/cadrumo.rb" "$work/Formula/cadrumo.rb"
+          git -C "$work" add -- Formula/cadrumo.rb
+          git -C "$work" -c user.name="cadrumo-release" -c user.email="release@cadrumo.invalid" \
+            commit -m "cadrumo $VERSION"
+          git -C "$work" push

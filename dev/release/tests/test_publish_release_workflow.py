@@ -1,0 +1,121 @@
+"""Structural proof that the real publication authority stays fail-closed.
+
+``publish-release.yml`` is the sole upload authority (unlike the retained
+diagnostic ``publish.yml``). These tests pin its safety contract: it is inert
+until the operator opts in, it never builds or regenerates an artifact, OIDC
+minting is confined to the environment-protected publish job, and every external
+channel push refuses instructively when its credential is absent.
+"""
+
+from __future__ import annotations
+
+import re
+from collections.abc import Mapping
+from pathlib import Path
+from typing import Any, Final
+
+import pytest
+import yaml
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_WORKFLOW = _REPO_ROOT / ".github" / "workflows" / "publish-release.yml"
+
+# A build/regenerate invocation is forbidden in EVERY job: publication promotes
+# stored bytes and must never rebuild. Publishing/upload verbs are deliberately
+# excluded here because the environment-protected publish job legitimately runs
+# them; their confinement is asserted separately.
+_BUILD_RUN_PATTERNS: Final[tuple[re.Pattern[str], ...]] = (
+    re.compile(r"\buv\s+build\b", re.IGNORECASE),
+    re.compile(r"\bpython[0-9.]*\s+-m\s+build\b", re.IGNORECASE),
+    re.compile(r"\bpip[0-9.]*\s+wheel\b", re.IGNORECASE),
+    re.compile(r"\b(?:poetry|flit|hatch|pdm)\s+build\b", re.IGNORECASE),
+    re.compile(r"\bsetup\.py\b[^\n]*\b(?:sdist|bdist_wheel|bdist|build)\b", re.IGNORECASE),
+    re.compile(r"\bpackaging/\S*generate\.py\b", re.IGNORECASE),
+    re.compile(r"\brelease_cohort\b", re.IGNORECASE),
+)
+
+
+def _document() -> Any:
+    return yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+
+
+def _run_surface(job: Mapping[str, object]) -> str:
+    steps = job["steps"]
+    assert isinstance(steps, list)
+    return "\n".join(str(step.get("run", "")) for step in steps if isinstance(step, Mapping) and "run" in step)
+
+
+def test_workflow_shape_and_least_privilege_top_level() -> None:
+    """One run-bound input, least-privilege top-level perms, the three staged jobs."""
+    document = _document()
+    dispatch = document[True]["workflow_dispatch"]
+    assert set(dispatch["inputs"]) == {"packaging_run_id"}
+    assert document["permissions"] == {"contents": "read"}
+    assert set(document["jobs"]) == {"operator-preflight", "validate", "publish"}
+
+
+def test_inert_until_operator_opt_in() -> None:
+    """The first gate refuses unless the operator sets CADRUMO_PUBLISH_ENABLED=true."""
+    preflight = _document()["jobs"]["operator-preflight"]
+    surface = _run_surface(preflight)
+    assert "vars.CADRUMO_PUBLISH_ENABLED" in _WORKFLOW.read_text(encoding="utf-8")
+    assert 'PUBLISH_ENABLED}" != "true"' in surface
+    assert "REFUSED: Cadrumo publication is not enabled" in surface
+
+
+def test_oidc_and_write_are_confined_to_the_protected_publish_job() -> None:
+    """id-token/contents:write live only on the environment-protected publish job."""
+    document = _document()
+    publish = document["jobs"]["publish"]
+    assert publish["environment"] == "release"
+    assert publish["permissions"] == {"id-token": "write", "contents": "write"}
+    assert publish["needs"] == "validate"
+
+    for name in ("operator-preflight", "validate"):
+        perms = document["jobs"][name].get("permissions", {})
+        assert perms.get("id-token") != "write", f"{name} must not mint an OIDC token"
+
+
+def test_validate_promotes_without_rebuild() -> None:
+    """The validate gate re-verifies retained bytes; it never builds or publishes."""
+    validate = _document()["jobs"]["validate"]
+    surface = _run_surface(validate)
+    assert "dev.release.promote_python_cohort" in surface
+    assert "dev.release.readiness" in surface
+    assert "cadrumo-python-cohort" in surface
+    assert "cadrumo-release-cohort" in surface
+    # No publish verb in the read-only validate gate.
+    assert "uv publish" not in surface
+    assert "gh release create" not in surface
+
+
+def test_no_job_ever_builds_or_regenerates_an_artifact() -> None:
+    """Promotion moves stored bytes; a build/regenerate invocation is forbidden anywhere."""
+    document = _document()
+    offenders: dict[str, list[str]] = {}
+    for job_name, job in document["jobs"].items():
+        surface = _run_surface(job)
+        hits = [" ".join(m.group(0).split()) for pattern in _BUILD_RUN_PATTERNS for m in pattern.finditer(surface)]
+        if hits:
+            offenders[job_name] = hits
+    assert offenders == {}, f"publication must never build/regenerate: {offenders}"
+
+
+def test_external_channel_pushes_refuse_instructively_when_unconfigured() -> None:
+    """Scoop and Homebrew pushes fail closed with instructions when credentials are absent."""
+    surface = _run_surface(_document()["jobs"]["publish"])
+    assert "REFUSED: Scoop bucket not configured" in surface
+    assert "REFUSED: Homebrew tap not configured" in surface
+    assert "CADRUMO_SCOOP_BUCKET_TOKEN" in surface
+    assert "CADRUMO_HOMEBREW_TAP_TOKEN" in surface
+
+
+def test_publish_uploads_the_stored_cohort_via_trusted_publishing() -> None:
+    """The publish job promotes stored wheels via OIDC Trusted Publishing and a GH release."""
+    surface = _run_surface(_document()["jobs"]["publish"])
+    assert "uv publish --trusted-publishing always" in surface
+    assert "gh release create" in surface
+    # It re-downloads the stored cohort rather than rebuilding.
+    assert "gh run download" in surface
