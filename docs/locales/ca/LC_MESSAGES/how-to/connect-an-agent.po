@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-07-18 23:20+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0000\n"
 "Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -67,25 +67,21 @@ msgstr ""
 
 #: ../../how-to/connect-an-agent.md:20
 msgid ""
-"Public plugin, Desktop extension, and PyPI acquisition are not available "
-"yet. For now, connect from an authorized source checkout. Generated "
-"plugin and extension artifacts are release candidates, not public install"
-" channels."
+"In the beta, connect from the repository checkout below. Every release "
+"also builds the plugin and Desktop extension artifacts; their marketplace"
+" and registry listings open with the public launch (see [Get "
+"Cadrumo](../download.md) for channel status)."
 msgstr ""
-"L'adquisició via connector públic, extensió d'escriptori i PyPI encara no"
-" està disponible. De moment, connecta't des d'un checkout de codi font "
-"autoritzat. Els artefactes de connector i extensió generats són candidats"
-" a llançament, no canals d'instal·lació públics."
 
-#: ../../how-to/connect-an-agent.md:24
+#: ../../how-to/connect-an-agent.md:25
 msgid "Prepare the source checkout"
 msgstr "Prepara el checkout del codi font"
 
-#: ../../how-to/connect-an-agent.md:33
+#: ../../how-to/connect-an-agent.md:34
 msgid "Register the source server"
 msgstr "Registra el servidor de codi font"
 
-#: ../../how-to/connect-an-agent.md:35
+#: ../../how-to/connect-an-agent.md:36
 msgid ""
 "Register `uv run cadrumo-mcp` as a stdio server and set the checkout as "
 "the working directory. In clients that accept a JSON server definition:"
@@ -94,7 +90,7 @@ msgstr ""
 "checkout com a directori de treball. En els clients que accepten una "
 "definició de servidor en JSON:"
 
-#: ../../how-to/connect-an-agent.md:50
+#: ../../how-to/connect-an-agent.md:51
 msgid ""
 "Replace the example path with the absolute path to your authorized "
 "checkout. Do not replace this with `uvx`, a marketplace install, or a "
@@ -104,11 +100,11 @@ msgstr ""
 "autoritzat. No ho substitueixis per `uvx`, una instal·lació de mercat o "
 "una extensió descarregada fins que s'anunciï la distribució pública."
 
-#: ../../how-to/connect-an-agent.md:54
+#: ../../how-to/connect-an-agent.md:55
 msgid "Before the first agent session"
 msgstr "Abans de la primera sessió de l'agent"
 
-#: ../../how-to/connect-an-agent.md:56
+#: ../../how-to/connect-an-agent.md:57
 msgid ""
 "The server uses the same local encrypted store and the same active "
 "profile as the CLI. A server cannot answer a passphrase prompt, so "
@@ -122,11 +118,11 @@ msgstr ""
 "execucions desateses: consulta [Executa sense sol·licitud de contrasenya"
 "](protect-data-access.md#run-without-a-passphrase-prompt)."
 
-#: ../../how-to/connect-an-agent.md:61
+#: ../../how-to/connect-an-agent.md:62
 msgid "What the agent can and cannot do"
 msgstr "Què pot i què no pot fer l'agent"
 
-#: ../../how-to/connect-an-agent.md:63
+#: ../../how-to/connect-an-agent.md:64
 msgid ""
 "The agent can import and classify records, run calculations, verify "
 "drafts, and prepare exports, because those are local operations. It "
@@ -143,4 +139,20 @@ msgstr ""
 "valor conserva les seves referències legals. Tu revises i presentes tu "
 "mateix, exactament com al [Començament ràpid](quickstart.md) i a la [guia"
 " de presentació](file-at-aeat.md)."
+
+#~ msgid ""
+#~ "Public plugin, Desktop extension, and "
+#~ "PyPI acquisition are not available yet."
+#~ " For now, connect from an authorized"
+#~ " source checkout. Generated plugin and "
+#~ "extension artifacts are release candidates,"
+#~ " not public install channels."
+#~ msgstr ""
+#~ "L'adquisició via connector públic, extensió"
+#~ " d'escriptori i PyPI encara no està"
+#~ " disponible. De moment, connecta't des "
+#~ "d'un checkout de codi font autoritzat."
+#~ " Els artefactes de connector i "
+#~ "extensió generats són candidats a "
+#~ "llançament, no canals d'instal·lació públics."
 
