@@ -3228,15 +3228,16 @@ cli:
     passphrase:
       change:
         help: Cambia la contraseña del almacén de secretos tras verificar la actual.
-      confirm_new_passphrase_prompt: 'Confirma la nueva contraseña: '
-      current_passphrase_prompt: 'Contraseña actual: '
+      confirm_new_passphrase_prompt: 'Confirma la nueva contraseña del almacén secreto
+        Cadrumo: '
+      current_passphrase_prompt: 'Contraseña actual del almacén secreto Cadrumo: '
       errors:
         current_passphrase_incorrect: La contraseña actual es incorrecta; el almacén
           de secretos no se ha modificado.
         store_unprovisioned: El almacén de secretos en archivo no está inicializado;
           no hay contraseña que cambiar.
       help: Gestiona la contraseña del almacén de secretos en archivo.
-      new_passphrase_prompt: 'Nueva contraseña: '
+      new_passphrase_prompt: 'Nueva contraseña del almacén secreto Cadrumo: '
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       archive:

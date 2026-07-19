@@ -12,7 +12,7 @@ from textwrap import dedent
 
 import pytest
 
-from ....core.config import DEV_TEST_DATABASE_PASSWORD, DEV_TEST_DATABASE_PASSWORD_ENV_VAR
+from ....core.config import load_settings
 from ....core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -236,9 +236,10 @@ def test_config_passphrase_change_round_trips_file_custody(tmp_path: Path) -> No
     )
     assert created.returncode == 0, _combined_output(created)
 
-    # Match the child harness's resolution: the dev/test password default,
-    # overridable through its environment variable (which _env() passes on).
-    provisioning_passphrase = os.environ.get(DEV_TEST_DATABASE_PASSWORD_ENV_VAR, DEV_TEST_DATABASE_PASSWORD)
+    # Match the child harness's resolution through the sanctioned settings
+    # accessor (no direct environment read): the dev/test password field's
+    # effective value, environment-overridable via its Settings source.
+    provisioning_passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
     rotated_value = "correct horse battery staple"
     changed = _run_cadrumo(
         tmp_path,

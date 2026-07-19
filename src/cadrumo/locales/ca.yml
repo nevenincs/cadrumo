@@ -3197,15 +3197,16 @@ cli:
     passphrase:
       change:
         help: Canvia la contrasenya del magatzem de secrets després de verificar l'actual.
-      confirm_new_passphrase_prompt: 'Confirma la contrasenya nova: '
-      current_passphrase_prompt: 'Contrasenya actual: '
+      confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
+        Cadrumo: '
+      current_passphrase_prompt: 'Contrasenya actual del magatzem secret Cadrumo: '
       errors:
         current_passphrase_incorrect: La contrasenya actual és incorrecta; el magatzem
           de secrets no s'ha modificat.
         store_unprovisioned: El magatzem de secrets en fitxer no està inicialitzat;
           no hi ha cap contrasenya per canviar.
       help: Gestiona la contrasenya del magatzem de secrets en fitxer.
-      new_passphrase_prompt: 'Contrasenya nova: '
+      new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
