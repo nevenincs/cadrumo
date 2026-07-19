@@ -8,8 +8,10 @@ Release, Scoop bucket, Homebrew tap, and the Claude plugin marketplace — witho
 rebuilding any artifact. The workflow is inert until the operator sets
 `CADRUMO_PUBLISH_ENABLED=true` and completes the one-time channel prerequisites below.
 
-The retained `.github/workflows/publish.yml` is a validate-only diagnostic stub that
-predates publish-release.yml; it has no upload authority.
+Dispatching publish-release.yml with `dry_run=true` runs Gate 1 (operator opt-in) and
+Gate 2 (validate) fully but skips Gate 3 (publish), so the validate-everything-publish-
+nothing diagnostic lives on the single authority. The former validate-only `publish.yml`
+stub was retired.
 
 For the full pipeline review and gap analysis see
 `.vault/reference/2026-07-19-post-release-distribution-reference.md`.
@@ -452,6 +454,14 @@ gh workflow run publish-release.yml \
   -f homebrew_run_id=<HOMEBREW_RUN_ID> \
   -f claude_evidence_release=vX.Y.Z-evidence
 ```
+
+**Dispatch ceiling.** Every source the publish workflow pulls from — the smoke run
+(sealed cohort + 3 python rows), the Scoop run, the Homebrew run, and the evidence
+release's `claude-*` assets — is bound by GitHub's 14-day artifact retention. Dispatch
+the publication within 14 days of the *oldest* source run. If any source run's artifacts
+have expired, Gate 2 fails on the missing download; re-run a fresh smoke run (and the
+affected acquisition dispatches) and dispatch again against the new run ids. Never
+promote a cohort older than its retention window.
 
 Gate 2 downloads every channel's rows from its authoritative run/release, checks each
 acquisition run's identity, and re-verifies all twelve against the sealed cohort — so

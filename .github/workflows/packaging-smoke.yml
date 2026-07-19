@@ -107,6 +107,10 @@ jobs:
       - name: Upload tested Cadrumo Python cohort
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
+          # TEST/DEBUG ARTIFACT ONLY. The per-OS smoke cohort feeds the acquisition
+          # test lanes (scoop/homebrew/claude); it NEVER enters the publication
+          # chain. publish-release.yml ships the SEALED cadrumo-release-cohort only.
+          # Enforced by test_no_workflow_consumes_per_os_cohort_for_publication.
           name: cadrumo-python-cohort
           path: var/packaging-smoke-cohort/python/
           if-no-files-found: error
@@ -181,6 +185,10 @@ jobs:
       - name: Upload tested Cadrumo Python cohort
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
+          # TEST/DEBUG ARTIFACT ONLY. The per-OS smoke cohort feeds the acquisition
+          # test lanes (scoop/homebrew/claude); it NEVER enters the publication
+          # chain. publish-release.yml ships the SEALED cadrumo-release-cohort only.
+          # Enforced by test_no_workflow_consumes_per_os_cohort_for_publication.
           name: cadrumo-python-cohort-windows
           path: var/packaging-smoke-cohort/python/
           if-no-files-found: error
@@ -242,6 +250,10 @@ jobs:
       - name: Upload tested Cadrumo Python cohort
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
+          # TEST/DEBUG ARTIFACT ONLY. The per-OS smoke cohort feeds the acquisition
+          # test lanes (scoop/homebrew/claude); it NEVER enters the publication
+          # chain. publish-release.yml ships the SEALED cadrumo-release-cohort only.
+          # Enforced by test_no_workflow_consumes_per_os_cohort_for_publication.
           name: cadrumo-python-cohort-macos
           path: var/packaging-smoke-cohort/python/
           if-no-files-found: error
