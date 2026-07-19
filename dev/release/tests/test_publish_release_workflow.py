@@ -51,7 +51,12 @@ def test_workflow_shape_and_least_privilege_top_level() -> None:
     """One run-bound input, least-privilege top-level perms, the three staged jobs."""
     document = _document()
     dispatch = document[True]["workflow_dispatch"]
-    assert set(dispatch["inputs"]) == {"packaging_run_id"}
+    assert set(dispatch["inputs"]) == {
+        "packaging_run_id",
+        "scoop_run_id",
+        "homebrew_run_id",
+        "claude_evidence_release",
+    }
     assert document["permissions"] == {"contents": "read"}
     assert set(document["jobs"]) == {"operator-preflight", "validate", "publish"}
 
@@ -95,6 +100,28 @@ def test_validate_promotes_without_rebuild() -> None:
     # No publish verb in the read-only validate gate.
     assert "uv publish" not in surface
     assert "gh release create" not in surface
+
+
+def test_validate_aggregates_all_twelve_rows_from_authoritative_sources() -> None:
+    """Gate 2 pulls every channel's rows from its own run and re-checks 12/12, no weakening."""
+    validate = _document()["jobs"]["validate"]
+    surface = _run_surface(validate)
+
+    # Each channel's rows come from its authoritative run/release.
+    assert 'gh run download "$PACKAGING_RUN_ID"' in surface
+    assert 'gh run download "$SCOOP_RUN_ID"' in surface
+    assert 'gh run download "$HOMEBREW_RUN_ID"' in surface
+    assert 'gh release download "$CLAUDE_EVIDENCE_RELEASE"' in surface
+
+    # Per-source identity checks on the acquisition runs (parity with the smoke gate).
+    assert ".github/workflows/packaging-scoop.yml" in surface
+    assert ".github/workflows/packaging-homebrew.yml" in surface
+    assert 'event <<<"$run_json")" = "workflow_dispatch"' in surface
+    assert 'head_repository.full_name <<<"$run_json")" = "$GITHUB_REPOSITORY"' in surface
+
+    # The readiness gate still enforces the complete bound row set (no weakening).
+    assert "dev.release.readiness" in surface
+    assert "--evidence-dir" in surface
 
 
 def test_pypi_ships_the_sealed_cohort_not_the_per_os_smoke_build() -> None:

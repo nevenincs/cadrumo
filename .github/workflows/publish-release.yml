@@ -16,7 +16,19 @@ on:
   workflow_dispatch:
     inputs:
       packaging_run_id:
-        description: Successful Cadrumo Packaging Smoke run holding the tested cohort
+        description: Successful Cadrumo Packaging Smoke run (sealed cohort + 3 python rows)
+        required: true
+        type: string
+      scoop_run_id:
+        description: Successful Cadrumo Scoop Acquisition run (scoop-windows-x86-64 row)
+        required: true
+        type: string
+      homebrew_run_id:
+        description: Successful Cadrumo Homebrew Acquisition run (4 homebrew rows)
+        required: true
+        type: string
+      claude_evidence_release:
+        description: Release tag holding the operator's four claude-* rows (draft is fine)
         required: true
         type: string
 
@@ -63,10 +75,19 @@ jobs:
             4. Ensure the source Packaging Smoke run also uploaded the full
                release cohort artifact `cadrumo-release-cohort` (all channel
                artifacts), not only the Python cohort.
-            5. Set repository variable CADRUMO_PUBLISH_ENABLED=true to arm this
+            5. Dispatch the Scoop and Homebrew acquisition workflows against that
+               smoke run and note their run ids (they mint the scoop + homebrew
+               distribution-evidence rows).
+            6. Mint the four claude-* rows locally
+               (`python -m dev.packaging.emit_real_client_evidence ...`) and upload
+               them to a release (`gh release create <tag> --draft <row json...>`);
+               note that tag.
+            7. Set repository variable CADRUMO_PUBLISH_ENABLED=true to arm this
                workflow.
 
-          Set CADRUMO_PUBLISH_ENABLED=true once 1-4 are done, then re-dispatch.
+          Once 1-6 are done, set CADRUMO_PUBLISH_ENABLED=true and re-dispatch with
+          the packaging_run_id, scoop_run_id, homebrew_run_id, and
+          claude_evidence_release inputs.
           EOF
             exit 1
           fi
@@ -91,6 +112,9 @@ jobs:
       RELEASE_COHORT_DIR: var/promotion/release-cohort
       EVIDENCE_DOWNLOAD: var/promotion/evidence
       PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
+      SCOOP_RUN_ID: ${{ inputs.scoop_run_id }}
+      HOMEBREW_RUN_ID: ${{ inputs.homebrew_run_id }}
+      CLAUDE_EVIDENCE_RELEASE: ${{ inputs.claude_evidence_release }}
     steps:
       - name: Require one successful packaging-smoke authority run
         id: source-run
@@ -116,7 +140,26 @@ jobs:
           version: "0.11.29"
           python-version: "3.13"
 
-      - name: Download the sealed cohort and its distribution-evidence rows (never rebuild)
+      - name: Verify the scoop and homebrew acquisition run identities
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Each acquisition run must be a genuine dispatch of its own channel's
+          # workflow in this repository (identity parity with the smoke-run gate).
+          # Deep integrity - that its rows belong to THIS release - is enforced by
+          # the readiness gate below, which refuses any row not bound to the sealed
+          # cohort; these checks establish provenance up front.
+          check_run() {
+            run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/$1")"
+            test "$(jq -r .conclusion <<<"$run_json")" = "success"
+            test "$(jq -r .path <<<"$run_json")" = "$2"
+            test "$(jq -r .event <<<"$run_json")" = "workflow_dispatch"
+            test "$(jq -r .head_repository.full_name <<<"$run_json")" = "$GITHUB_REPOSITORY"
+          }
+          check_run "$SCOOP_RUN_ID" ".github/workflows/packaging-scoop.yml"
+          check_run "$HOMEBREW_RUN_ID" ".github/workflows/packaging-homebrew.yml"
+
+      - name: Download the sealed cohort and EVERY channel's distribution-evidence rows
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -124,11 +167,15 @@ jobs:
           # channel including PyPI (its python/ subdir). The per-OS smoke build
           # artifact (cadrumo-python-cohort) is deliberately NOT downloaded: it is
           # the smoke lane's own test artifact and never enters the publication
-          # chain. The immutable cohort's installed behaviour is proven by the
-          # DistributionEvidence rows the oracle-emit legs minted against it.
-          mkdir -p "$EVIDENCE_DOWNLOAD/rows"
+          # chain. Aggregate all twelve rows under the uniform artifact name from
+          # their authoritative runs: 3 python (smoke), 1 scoop, 4 homebrew, and
+          # the operator's 4 claude-* rows from the pre-uploaded evidence release.
+          mkdir -p "$EVIDENCE_DOWNLOAD/rows" "$EVIDENCE_DOWNLOAD/rows-raw"
           gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort --dir "$RELEASE_COHORT_DIR"
-          gh run download "$PACKAGING_RUN_ID" --pattern 'cadrumo-distribution-evidence-*' --dir "$EVIDENCE_DOWNLOAD/rows-raw"
+          gh run download "$PACKAGING_RUN_ID" --pattern 'cadrumo-distribution-evidence-*' --dir "$EVIDENCE_DOWNLOAD/rows-raw/packaging"
+          gh run download "$SCOOP_RUN_ID" --pattern 'cadrumo-distribution-evidence-*' --dir "$EVIDENCE_DOWNLOAD/rows-raw/scoop"
+          gh run download "$HOMEBREW_RUN_ID" --pattern 'cadrumo-distribution-evidence-*' --dir "$EVIDENCE_DOWNLOAD/rows-raw/homebrew"
+          gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' --dir "$EVIDENCE_DOWNLOAD/rows-raw/claude"
           find "$EVIDENCE_DOWNLOAD/rows-raw" -name '*.json' -exec cp {} "$EVIDENCE_DOWNLOAD/rows/" \;
 
       - name: Guard the PyPI destination against overwrite and emit the version
