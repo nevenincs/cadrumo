@@ -424,3 +424,257 @@ basename collisions with an assertion in the attach step.
    `acquire_pypi`, `acquire_github_release`, `acquire_scoop.ps1`, `acquire_homebrew`,
    `acquire_claude_plugin`, `acquire_mcpb` — and only after they pass, land the docs
    install claims (the `test_distribution_claims.py` gate enforces this ordering).
+
+
+---
+
+# Appendix — distribution description reconciliation (2026-07-19)
+
+Applied in commit `38e7555b27` after operator decisions: canonical EN one-liner approved, status = BETA, GitHub description+homepage fixed. Pinned bilingual client-display copy (plugin/marketplace/MCPB) and EN-only MCP model-facing copy left untouched. Follow-up (open): add a lightweight gate asserting the one canonical short description is identical across pyproject/Scoop so the now-reconciled metadata tier cannot silently re-drift.
+
+# Distribution description reconciliation — proposal (discovery only, no edits made)
+
+RAG (`vaultspec-rag --type code` / `--type vault`) is up and was queried first
+(`"product description distribution identity"`, `"marketplace plugin description
+bilingual"`, `"distribution harness identity approved product description"`); all
+findings below were then confirmed by direct file reads and `rg`/`grep`.
+
+## 1. Executive summary
+
+**9 distinct description surfaces carry non-identical text**, split into two
+governance classes:
+
+- **5 client-display surfaces** (Claude plugin, marketplace, marketplace-served
+  plugin, MCPB `description`, MCPB `long_description`) already carry
+  **operator-approved bilingual EN/ES copy**, pinned byte-exact in
+  `dev/packaging/verify_distribution_identity.py` `_APPROVED_PRODUCT_DESCRIPTION_PAIRS`
+  (ADR `2026-07-16-distribution-harness-identity-adr`, exec record "S06 Revision 2").
+  These five all restate the same six required claims (capability, safety, privacy,
+  on-host storage, human confirmation, never-files-live) and are **internally
+  consistent with each other**, but they do **not** match the README's framing at all
+  — the README emphasises "turn Spanish tax records into locally verified filing
+  artifacts" and never states the six-claim safety list; the approved copy emphasises
+  the six-claim safety list and never states the README's "verified filing artifacts"
+  framing. These are two different registers for two different audiences (a landing
+  page vs. an in-chat trust disclosure) — see §3 for the recommended reconciliation
+  rather than a rewrite.
+
+- **4 one-line/metadata surfaces** are governed by nothing (no gate references them)
+  and are freely divergent: the root `pyproject.toml` description, the two companion
+  package descriptions, the Scoop manifest description, the Homebrew formula `desc`,
+  and — worst of all — the **GitHub repository description**.
+
+**Worst conflict:** the live GitHub repository description
+(`gh repo view nevenincs/cadrumo`) is literally **`"Tax burden"`** — a two-word
+placeholder with no product name, no capability statement, and no disclaimer. It is
+the single most externally visible surface (shown on every GitHub search result,
+every clone URL page, every social-preview card) and it says nothing true or useful
+about Cadrumo. It is not governed by any gate.
+
+**Second-worst conflict (not a "description" field but a description-adjacent
+maturity claim worth flagging alongside):** the README status badge says
+`status-alpha` while `docs/index.md`, `docs/download.md`, and `docs/updates.md` all
+say "Cadrumo is in beta" three separate times. One of the two is stale.
+
+## 2. Full inventory table
+
+| # | Surface | File:line | Current value (verbatim/truncated) | Language(s) | Governing gate | Client-display vs metadata |
+|---|---|---|---|---|---|---|
+| 1 | README.md tagline (H1) | `README.md:5` | "Cadrumo: turn Spanish tax records into locally verified filing artifacts" | EN only | none (docs-claims gate covers factual claims, not this exact string) | Canonical narrative source (per this task's directive) |
+| 2 | README.md lede paragraph | `README.md:10` | "Cadrumo turns local financial records into calculated, checked, and exportable artifacts for supported Spanish tax forms. It keeps the calculation path deterministic and preserves each result's sources." | EN only | none | Canonical narrative source |
+| 3 | README.md status badge | `README.md:8` | `status-alpha` (shields.io badge) | n/a | none | Metadata — **conflicts with #4/#5/#6 below** |
+| 4 | docs/index.md landing | `docs/index.md:9-15` | "This is the documentation for Cadrumo and its `aeat` command-line interface (CLI). Cadrumo turns your records into checked modelo figures and an export file. You upload that file to the Agencia Estatal de Administración Tributaria (AEAT) yourself. ... Cadrumo is in **beta** - interfaces may still change between releases." | EN only | Sphinx `-n -W` build gate (link/xref only, not string content) | Correctness reference (per this task's directive) |
+| 5 | docs/download.md | `docs/download.md:3-10` | "This page covers how to install the current Cadrumo **beta**... Cadrumo is in **beta**." | EN only | none | Correctness reference |
+| 6 | docs/updates.md | `docs/updates.md:8` | "Cadrumo is in **beta**. Treat every release note as potentially relevant" | EN only | none | Correctness reference |
+| 7 | pyproject.toml `[project].description` | `pyproject.toml:4` | "Cadrumo: a deterministic Spanish tax calculation engine and agent harness that turns your financial records into modelo data, ready for you to file with the AEAT. Independent software; not affiliated with the AEAT." | EN only | none (PyPI metadata; no gate reads it) | Metadata (PyPI listing summary) |
+| 8 | packaging/cadrumo_data_manuals/pyproject.toml `description` | `:14` | "AEAT/BOE práctico manuals (corpus source binaries) for the cadrumo distribution" | EN only, lowercase "cadrumo" | none | Metadata |
+| 9 | packaging/cadrumo_data_official/pyproject.toml `description` | `:14` | "Official AEAT diseños de registro / workbooks and normative PDFs (corpus source binaries) for the cadrumo distribution" | EN only, lowercase "cadrumo" | none | Metadata |
+| 10 | Scoop manifest `description` | `packaging/scoop/generate.py:161-164` | "Deterministic Spanish tax calculation CLI and MCP server; independent software, not affiliated with the AEAT." | EN only | none | Metadata |
+| 11 | Homebrew formula `desc` | `packaging/homebrew/generate.py:381` | "Deterministic Spanish tax calculation CLI and MCP server" | EN only | none | Metadata (Homebrew style guide caps `desc` at ~80 chars, no trailing period, no "A"/"An" prefix — this one already conforms in style) |
+| 12 | GitHub repository description | live, via `gh repo view` | **`"Tax burden"`** | EN, informal | none | Metadata — **the worst conflict** |
+| 13 | GitHub repository `homepageUrl` | live, via `gh repo view` | *(empty)* | n/a | none | Metadata — README references `https://cadrumo.neve.md` as "product page" (`docs/index.md:13`) but the repo homepage field is unset |
+| 14 | Claude plugin `plugin.json` `description` | `src/cadrumo/agent/_workspace.py:70-89`, enrolled `verify_distribution_identity.py:181-186` | EN: "Operate Cadrumo, the deterministic Spanish-tax CLI, from Claude: grounded search over the bundled BOE/AEAT legal corpus, situation-keyed guided workflows, and human-confirmed execution of every state-changing step. Cadrumo is read-only toward AEAT and never files..." / ES: "Opera Cadrumo, la CLI determinista de impuestos españoles, desde Claude: ..." | **EN/ES, operator-approved** | `verify_distribution_identity.py` `_APPROVED_PRODUCT_DESCRIPTION_PAIRS[("claude_plugin_client_display","description")]` | Client-display — **PINNED, requires re-approval to touch** |
+| 15 | Claude marketplace-served plugin `description` (same value re-emitted inside the marketplace `plugins/cadrumo` subtree) | `_workspace.py:70-89` (same constant reused) | identical to #14 | EN/ES, approved | same pinned set, key `("claude_marketplace_plugin_client_display","description")` | Client-display — PINNED |
+| 16 | `marketplace.json` `description` | `_workspace.py:142-154` | EN: "Neve plugin marketplace - Claude plugins including the Cadrumo Spanish-tax assistant: read-only toward AEAT, it never files..." / ES: "Marketplace de plugins de Neve - plugins de Claude, incluido el asistente de impuestos españoles Cadrumo: ..." | EN/ES, approved | `_APPROVED_PRODUCT_DESCRIPTION_PAIRS[("claude_marketplace_client_display","description")]` | Client-display — PINNED |
+| 17 | `packaging/mcpb/manifest.json` `description` | `packaging/mcpb/manifest.json:6` | "English: Operate Cadrumo, a deterministic Spanish-tax CLI, as an MCP tool surface: grounded search over the bundled BOE/AEAT legal corpus... \nEspañol: Opera Cadrumo, una CLI determinista de impuestos españoles, como superficie de herramientas MCP: ..." | EN/ES labelled, approved | `_APPROVED_PRODUCT_DESCRIPTION_PAIRS[("mcpb_client_display","description")]` | Client-display — PINNED. **Note: wording differs slightly from #14/#15/#16** ("as an MCP tool surface" vs "from Claude") — this is an intentional, already-approved per-surface variant, not drift. |
+| 18 | `packaging/mcpb/manifest.json` `long_description` | `manifest.json:7` | "English: The Cadrumo console exposes a deterministic Spanish-tax CLI to any MCP client... \nEspañol: La consola de Cadrumo expone una CLI determinista de impuestos españoles a cualquier cliente MCP..." | EN/ES labelled, approved | `_APPROVED_PRODUCT_DESCRIPTION_PAIRS[("mcpb_client_display","long_description")]` | Client-display — PINNED |
+| 19 | MCP tool/prompt/resource/argument descriptions (`cadrumo_harness_load`, `cadrumo_corpus_search`, `search`, `execute`, etc.) | `src/cadrumo/entrypoints/mcp/_server.py` (multiple), `packaging/mcpb/manifest.json:37-44` | Short per-verb operational strings, e.g. "Load the operator rules and active persona...", "Search the bundled BOE/AEAT legal corpus for grounding." | **EN only, deliberately** | `ModelFacingDescriptionCheck` — frozen `sha256` `_EXPECTED_MODEL_FACING_DESCRIPTION_SHA256 = "4b53a667c7e0..."` over the four `_MODEL_FACING_DESCRIPTION_SURFACES` (MCP tool/prompt/resource/argument descriptions) | Model-facing (not client-display) — **PINNED, English-only by design; out of scope for bilingual reconciliation** |
+| 20 | CHANGELOG.md header | `CHANGELOG.md:1-9` | "All notable changes to this project are documented here..." (Keep a Changelog boilerplate, no product summary sentence) | EN | none | Not a product description — no conflict, nothing to reconcile |
+| 21 | release-please-config.json / manifest | root | no `description` field present | n/a | n/a | Not applicable |
+
+## 3. The canonical source
+
+### README.md verbatim (the directed canonical source)
+
+> "**Cadrumo: turn Spanish tax records into locally verified filing artifacts**"
+> (H1, `README.md:5`)
+>
+> "Cadrumo turns local financial records into calculated, checked, and exportable
+> artifacts for supported Spanish tax forms. It keeps the calculation path
+> deterministic and preserves each result's sources."
+> (lede, `README.md:10`)
+>
+> "Cadrumo never submits a filing. Review every result, then file through official
+> Agencia Estatal de Administración Tributaria (AEAT) channels."
+> (`README.md:16`)
+
+### The user-docs sentence that anchors README's correctness
+
+`docs/index.md:9-12` (the correctness reference this task designates):
+
+> "This is the documentation for Cadrumo and its `aeat` command-line interface
+> (CLI). Cadrumo turns your records into checked modelo figures and an export
+> file. You upload that file to the Agencia Estatal de Administración Tributaria
+> (AEAT) yourself."
+
+This confirms the README's core claim shape (turns records → checked figures →
+export file → human uploads) is accurate and matches the operational reality
+documented in the how-to guides. The README is safe to treat as canonical for the
+one-line/metadata surfaces.
+
+### (a) Proposed canonical EN short description — for one-language metadata surfaces
+
+**REQUIRES OPERATOR APPROVAL** (new copy, not previously approved anywhere):
+
+> "Cadrumo is a deterministic Spanish tax calculation CLI and MCP server that turns
+> local financial records into checked, exportable modelo filing artifacts.
+> Independent software; not affiliated with AEAT."
+
+Rationale: this is the README's H1 + lede, compressed to one sentence, keeping the
+two facts every metadata surface already independently states in some form
+(deterministic CLI/MCP server; not affiliated with AEAT) and dropping the README's
+narrative flourishes ("locally verified") that don't survive compression well.
+It supersedes surfaces #7, #10, #11, #12 (see reconciliation map).
+
+### (b) Canonical bilingual EN/ES client-display copy — reconciled against the already-approved six-claim pairs
+
+**No new copy is proposed here.** The five pinned client-display surfaces (#14-#18)
+are internally consistent, operator-approved, and digest/frozenset-enrolled under
+ADR `2026-07-16-distribution-harness-identity-adr`. Per that ADR and per
+`aeat-vaultspec-centralisation`/`compatibility-lifecycle-checkpoint`-adjacent
+discipline, this task does not have authority to alter pinned, previously-approved
+copy, and the task's own brief says to flag divergence rather than overwrite.
+
+**Divergence to flag:** the README's framing ("turn Spanish tax records into
+locally verified filing artifacts") and the approved client-display framing (the
+six-claim safety/privacy/human-confirmation litany) do not overlap in emphasis.
+Concretely:
+
+- README never states the six required claims (capability, safety, privacy,
+  on-host storage, human confirmation, never-files-live) as an explicit list —
+  it states them narratively/individually across several sentences and the
+  disclaimer block.
+- The approved client-display copy never uses the README's "locally verified
+  filing artifacts" phrase.
+
+**This is very likely fine as-is** — the two surfaces serve different jobs (a
+landing page selling the product vs. an in-chat trust/safety disclosure a model
+must honor) — but because the operator explicitly asked to reconcile "ALL
+distribution descriptions... so they derive from ONE centralized source," this
+divergence is surfaced for an explicit operator ruling:
+
+**OPERATOR DECISION NEEDED:** Should the pinned client-display copy be left as
+governed by its own ADR (recommended — it passed a dedicated approval process with
+per-claim keyword coverage proof), or should a future revision re-derive it from
+the README once the README's own six claims are made explicit? Recommend: leave
+pinned copy alone; this reconciliation only touches the ungoverned metadata tier.
+
+## 4. Reconciliation map
+
+| Surface | Target string | Current state | Edit needed | Approval tier |
+|---|---|---|---|---|
+| GitHub repo description | `Cadrumo — deterministic Spanish tax calculation CLI and MCP server. Turns local financial records into checked, exportable filing artifacts. Independent software; not affiliated with AEAT.` (GitHub descriptions have a ~350-char soft limit; this fits) | `"Tax burden"` | `gh repo edit nevenincs/cadrumo --description "..."` | **Mechanical, but touches a live public-facing GitHub setting — recommend explicit go-ahead even though it's not a pinned/gated surface, since it's outward-facing infra, not a file edit** |
+| GitHub repo `homepageUrl` | `https://cadrumo.neve.md` (matches `docs/index.md:13`'s "product page" reference) | empty | `gh repo edit nevenincs/cadrumo --homepage "https://cadrumo.neve.md"` | Mechanical, same caution as above |
+| `pyproject.toml` `[project].description` | canonical EN short description (§3a) | current text is close in spirit but longer/different wording ("agent harness", "ready for you to file with the AEAT") | Replace field value | **Safe mechanical edit** — deriving metadata from README is exactly this task's directive; no gate references this string |
+| `packaging/cadrumo_data_manuals/pyproject.toml` `description` | keep as-is, but capitalize `Cadrumo` (currently lowercase `cadrumo distribution`) — minor consistency nit, not a real conflict since this is a corpus-data companion package, correctly scoped to its own purpose | "for the cadrumo distribution" | Optional casing fix only | Safe mechanical (cosmetic) |
+| `packaging/cadrumo_data_official/pyproject.toml` `description` | same cosmetic note as above | same | Optional casing fix only | Safe mechanical (cosmetic) |
+| Scoop manifest `description` (`packaging/scoop/generate.py:162-165`) | canonical EN short description (§3a), or a trimmed variant respecting Scoop's practice of shorter one-liners: `"Deterministic Spanish tax calculation CLI and MCP server; independent software, not affiliated with AEAT."` (essentially unchanged — already matches Homebrew and is already README-consistent in substance) | already close | **No edit strictly required** — already aligned; optionally sync verbatim with Homebrew's `desc` for exact parity | Safe mechanical (cosmetic/optional) |
+| Homebrew formula `desc` (`packaging/homebrew/generate.py:381`) | `"Deterministic Spanish tax calculation CLI and MCP server"` (already conforms to Homebrew's style: no period, no article prefix, ≤80 chars) | matches, minus the "not affiliated with AEAT" clause the Scoop manifest carries | **No edit required** — Homebrew's `desc` field is deliberately terse per Homebrew's own style guide; adding the disclaimer clause would break the ≤80-char convention. Leave as-is. | No action |
+| README status badge | `status-beta` (to match docs) OR update docs to `alpha` (to match README) — **operator decision required on which is factually true today** | `status-alpha` vs. three `docs/*.md` "beta" statements | Pick one, propagate | **REQUIRES OPERATOR DECISION** — this is a factual maturity claim, not a wording choice; getting it wrong misleads adopters either direction |
+| Client-display pairs (#14-#18) | leave pinned copy unchanged | internally consistent, approved | **No edit** | N/A — out of scope, protected by ADR |
+| Model-facing MCP tool/prompt/resource strings (#19) | leave EN-only, unchanged | approved, digest-pinned | **No edit** | N/A — deliberately English-only by design (per ADR, these are not client-display) |
+
+## 5. Language policy (proposed, for operator ratification)
+
+- **Client-display surfaces** (anything a human directly reads while installing or
+  browsing a marketplace/plugin listing: Claude plugin `description`, marketplace
+  `description`, marketplace-served plugin `description`, MCPB `description` and
+  `long_description`) → **bilingual EN/ES**, using the `"English: ...\nEspañol:
+  ..."` labelled-section convention already established and enforced by
+  `verify_distribution_identity.py`'s `_LANGUAGE_LABEL_PATTERN`/`_ENGLISH_LANGUAGE_LABELS`/
+  `_SPANISH_LANGUAGE_LABELS`. New client-display surfaces must follow this same
+  labelled-pair shape and get enrolled in `_APPROVED_PRODUCT_DESCRIPTION_PAIRS`
+  before shipping.
+- **Model-facing surfaces** (MCP tool/prompt/resource/argument descriptions — text
+  an LLM reads to decide how to call a tool, never rendered to the human installer)
+  → **English-only**, per the existing `ModelFacingDescriptionCheck` digest pin.
+  Do not bilingualize these; the ADR treats this as deliberate, not an oversight.
+- **Package-index / one-line metadata surfaces** (PyPI `pyproject.toml`
+  descriptions, Scoop manifest `description`, Homebrew formula `desc`, GitHub repo
+  description) → **English-only**, one sentence, no gate today. These are the
+  surfaces this reconciliation pass safely touches.
+- **User-facing Spanish prose in the app itself** (CLI help text, error messages,
+  locale catalogues) → stays governed exclusively by the `cadrumo.locales` CLI per
+  `aeat-locales-cli`; **out of scope** for this description-reconciliation pass
+  entirely — never touch `src/cadrumo/locales/*.yml` by hand for this or any work.
+- **docs/ prose** (index.md, download.md, updates.md) → English-only per current
+  Sphinx doc convention (no bilingual docs build exists); these stay the
+  correctness reference this task designates, not a target for bilingual copy.
+
+## 6. Risks / gates / landing order
+
+1. **`verify_distribution_identity.py` / `_APPROVED_PRODUCT_DESCRIPTION_PAIRS`** —
+   any edit to surfaces #14-#18 (plugin/marketplace/MCPB bilingual copy) trips this
+   gate immediately; it fails closed on any byte-level mismatch against the pinned
+   frozensets, and per-claim keyword coverage is also checked. **Do not touch these
+   surfaces in this reconciliation** — confirmed out of scope per §3(b).
+2. **`ModelFacingDescriptionCheck` sha256 pin** — any edit to MCP tool/prompt/
+   resource/argument description strings (#19) breaks the frozen digest
+   `4b53a667c7e0...`. Not touched by this reconciliation.
+3. **No gate protects** the metadata tier this reconciliation *does* propose
+   touching (pyproject descriptions, Scoop, Homebrew, GitHub repo description) —
+   confirmed by `rg` across `dev/`, `.github/workflows/`, and
+   `dev/packaging/verify_distribution_identity.py`; none of these strings appear
+   in any test assertion. This makes them **safe mechanical edits** with no gate
+   dependency, but also means nothing will catch future drift here — worth a
+   follow-up: consider adding a lightweight "one canonical short description,
+   asserted identical across pyproject.toml/Scoop/Homebrew" gate in a later step,
+   mirroring the discipline `verify_distribution_identity.py` already applies to
+   the client-display tier. (Proposal only — not requested by this task.)
+4. **Locale parity gate** (`test_parity.py`, `test_locale_translation_honesty.py`)
+   — irrelevant here; no locale catalogue keys are touched by any recommendation
+   in this document.
+5. **Docs-claims / Sphinx `-n -W` build gate** — the beta-vs-alpha status
+   discrepancy (§4, README badge row) does not trip any existing gate (badges and
+   prose maturity claims aren't cross-checked), but is a factual-honesty risk
+   independent of any CI mechanism; flagged for operator decision, not a gate
+   dependency.
+6. **Recommended landing order** (once approved):
+   1. Operator resolves the alpha/beta status question and the README-vs-approved-
+      copy framing-divergence question (§3b) — these are judgment calls, land
+      first so downstream copy is written against a settled maturity claim.
+   2. Land the canonical EN short description into `pyproject.toml` (root) —
+      lowest-risk, most-visible metadata surface.
+   3. Land the same/derived string into Scoop and Homebrew generators (cosmetic
+      parity only; neither currently conflicts materially).
+   4. `gh repo edit` for the GitHub description + homepage — no code change,
+      no PR, do this once the canonical sentence is settled so the repo
+      description doesn't need a second edit.
+   5. Optional cosmetic casing fix on the two companion-package descriptions.
+   6. Do **not** touch #14-#19 in this pass.
+
+## Summary for the coordinator
+
+- **9 distinct description surfaces found**, split 5 pinned/approved (bilingual
+  client-display) + 1 pinned/approved (English-only model-facing) + one large
+  ungoverned tier (4 metadata surfaces plus the live GitHub repo description).
+- **Worst conflict:** the live GitHub repository description is `"Tax burden"` —
+  a placeholder, ungated, highly visible, and unrelated to the product.
+- **README canonical vs. already-approved client-display copy: they do NOT
+  restate each other** (different framing, different audience) but are not
+  factually contradictory. Recommend leaving the approved client-display pairs
+  untouched (protected by their own ADR/digest) and deriving only the ungoverned
+  metadata tier from the README, per this task's directive. Flagged for an
+  explicit operator ruling: (1) keep the two registers separate as designed, and
+  (2) resolve the README-alpha vs. docs-beta status conflict, which is orthogonal
+  to the description text itself but was found in the same sweep.
