@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-authority-quality-backlog'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-19'
 step_id: 'S13'
 related:
   - "[[2026-07-17-cli-authority-quality-backlog-plan]]"
 ---
-
-
-
 
 # Prove identical latest selection and history ordering across all capture routes, their distinct failure policies, and preservation of the separate strict IVA compensation persistence path
 

@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-authority-quality-backlog'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-19'
 step_id: 'S04'
 related:
   - "[[2026-07-17-cli-authority-quality-backlog-plan]]"
 ---
-
-
-
 
 # Add an AST recurrence gate that rejects new reducible production SHA-256 constructor and one-shot hexdigest bodies while allowing streaming, HMAC, HKDF, X509, and digest-byte uses
 

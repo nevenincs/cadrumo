@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-19'
 related:
   - "[[2026-07-15-distribution-installation-readiness-plan]]"
   - "[[2026-07-16-distribution-harness-identity-adr]]"

@@ -425,7 +425,6 @@ basename collisions with an assertion in the attach step.
    `acquire_claude_plugin`, `acquire_mcpb` — and only after they pass, land the docs
    install claims (the `test_distribution_claims.py` gate enforces this ordering).
 
-
 ---
 
 # Appendix — distribution description reconciliation (2026-07-19)

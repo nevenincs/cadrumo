@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-authority-quality-backlog'
 date: '2026-07-18'
-modified: '2026-07-18'
+modified: '2026-07-19'
 step_id: 'S27'
 related:
   - "[[2026-07-17-cli-authority-quality-backlog-plan]]"
 ---
-
-
-
 
 # NEEDS ADJUDICATION and prerequisite for P03.S09: resolve the split namespace authority where clave-diagnostics namespace values are duplicated across core.external_constants (CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, used by _clave_movil_support.py), a raw literal in _clave_permanente_support.py line 49 (no CLAVE_PERMANENTE core symbol, asymmetric), and the adapters storage registry (CLAVE_MOVIL and PERMANENTE_DIAGNOSTICS_NAMESPACE whose .namespace values are themselves raw literals duplicating core), plus raw classification SensitivityClass.SESSION and schema_version 1 at _clave_movil_page_flow.py lines 460-461 duplicating the registry namespace .sensitivity and .schema_version. Decide the single authority (core.external_constants versus the adapters storage registry) and whether registry values source from core, then single-source all consumers, gated on one authority with no duplicated namespace literal across core, registry, and consumer
 

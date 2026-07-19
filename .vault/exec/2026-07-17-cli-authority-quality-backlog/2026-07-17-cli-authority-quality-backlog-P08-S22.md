@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-authority-quality-backlog'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-19'
 step_id: 'S22'
 related:
   - "[[2026-07-17-cli-authority-quality-backlog-plan]]"
 ---
-
-
-
 
 # Give the acceptance-wall meta-test a per-worker unique temp root via tmp_path_factory so concurrent pytest workers no longer share a PID-keyed directory and race
 

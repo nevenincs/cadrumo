@@ -3,14 +3,11 @@ tags:
   - '#exec'
   - '#cli-authority-quality-backlog'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-19'
 step_id: 'S11'
 related:
   - "[[2026-07-17-cli-authority-quality-backlog-plan]]"
 ---
-
-
-
 
 # Make filed observation persistence the sole owner of latest-record selection, deterministic history ordering, metadata enrollment, and calculation-observation writes and remove the duplicate selector and persistence loop from capture orchestration
 

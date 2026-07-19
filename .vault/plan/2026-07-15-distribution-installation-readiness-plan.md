@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#distribution-installation-readiness'
 date: '2026-07-15'
-modified: '2026-07-18'
+modified: '2026-07-19'
 tier: L3
 related:
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
@@ -12,16 +12,6 @@ related:
   - '[[2026-07-16-distribution-harness-identity-adr]]'
   - '[[2026-07-16-distribution-harness-identity-research]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 <!-- RETIRED: P08, P10, S19, S20, S24, S29, S34, S35, S36, S37, S38, S39, S40, S41, S45, S46, S47, S48, S49, S50, S52, S53, S54, S55, S59, S69, S70 -->
 

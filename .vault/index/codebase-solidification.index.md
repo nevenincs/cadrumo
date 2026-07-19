@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#codebase-solidification'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-17'
 related:
   - '[[2026-05-28-codebase-solidification-W01-P01-S01]]'
   - '[[2026-05-28-codebase-solidification-W01-P01-S02]]'

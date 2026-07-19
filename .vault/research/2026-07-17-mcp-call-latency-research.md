@@ -3,12 +3,10 @@ tags:
   - '#research'
   - '#mcp-call-latency'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-19'
 related:
   - '[[2026-07-17-mcp-service-robustness-research]]'
 ---
-
-
 
 # `mcp-call-latency` research: `Serving-path latency architecture`
 
