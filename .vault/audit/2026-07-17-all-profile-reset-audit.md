@@ -51,3 +51,39 @@ The 37 tests exercise real crash-resume behaviour with fresh-process re-entry, c
 ## Recommendations
 
 No action required. The P01 through P03 safety closure is independently verified clean and belongs on the campaign-close honesty trail as an externally-confirmed pass of the original dangling-pointer and retention-bypass defect.
+
+## Campaign-close honesty review (2026-07-19, fresh-context)
+
+Fresh-context review run against the 31/31 closure claim at HEAD, per the
+campaign-close honesty-review gate. The reviewer re-ran the safety suites
+independently rather than trusting exec-record pass counts.
+
+### s31-bookkeeping-race | resolved-at-head | S31 box and exec record landed concurrently with the review read
+
+The sole MEDIUM finding — `P05.S31` unchecked with no exec record — was a
+read-vs-landing race: commit `515a474acc` (enrolment box + retroactive exec
+record citing the atomic `00c3ab005d` landing) was committed while the review
+was in flight. Verified checked with record at HEAD. The underlying MCP
+identity-gate sweep itself was independently confirmed done: no
+`config.profile.sandbox.use` reference anywhere in `src/cadrumo`, MCP suite
+green.
+
+### coverage-report-staleness | resolved-at-head | S29 deferral closed by `0342e4b890`
+
+The S29 exec record's deferred terminology coverage-report staleness was
+regenerated at `0342e4b890`; zero `sandbox use` / `config rekey` rows remain.
+
+### safety-claims-reproduced | confirmed | Reviewer re-ran every safety suite
+
+Crash-resume, concurrency, retention-floor, fingerprint-guarded deletion, and
+grammar-invariant suites re-run green (30 + 75 focused tests); implementation
+read in full — sorted-tuple lock order, retention persisted before mutation,
+deleting-ownership marker persisted before delete, resume re-assesses
+fingerprints and pauses on drift. No mocks, monkeypatch, skip, or xfail in any
+safety test file.
+
+### Verdict
+
+STRUCTURALLY COMPLETE at 31/31. Every plan §Verification requirement holds at
+HEAD with independently-reproduced evidence; this section is the required
+fresh-context honesty pass on the closure trail.
