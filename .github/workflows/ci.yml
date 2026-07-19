@@ -47,10 +47,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.13"]
+        # `os` stays the per-leg identity key (step conditionals and artifact
+        # names branch on it); `runner` carries the self-hosted label set
+        # (operator cost directive 2026-07-19 - hosted minutes bill, the
+        # workstation runners are free).
+        include:
+          - os: ubuntu-latest
+            runner: [self-hosted, Linux, X64]
+            python-version: "3.13"
+          - os: windows-latest
+            runner: [self-hosted, Windows, X64]
+            python-version: "3.13"
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout repository
