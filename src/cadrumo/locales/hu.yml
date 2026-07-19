@@ -3144,15 +3144,15 @@ cli:
     passphrase:
       change:
         help: A titoktár jelszavának cseréje a jelenlegi ellenőrzése után.
-      confirm_new_passphrase_prompt: 'Új jelszó megerősítése: '
-      current_passphrase_prompt: 'Jelenlegi jelszó: '
+      confirm_new_passphrase_prompt: 'Erősítsd meg a Cadrumo titoktár új jelmondatát: '
+      current_passphrase_prompt: 'A Cadrumo titoktár jelenlegi jelmondata: '
       errors:
         current_passphrase_incorrect: A jelenlegi jelszó helytelen; a titoktár nem
           módosult.
         store_unprovisioned: A fájl-alapú titoktár nincs előkészítve; nincs cserélhető
           jelszó.
       help: A fájl-alapú titoktár jelszavának kezelése.
-      new_passphrase_prompt: 'Új jelszó: '
+      new_passphrase_prompt: 'A Cadrumo titoktár új jelmondata: '
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       archive:

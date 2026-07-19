@@ -811,7 +811,7 @@ def test_certificate_secret_cli_exposes_no_backend_or_legacy_grammar(
             assert "No such command" in result.output, result.output
 
 
-# ── certificate secret input hardening (argv passphrase retired, P08.S44) ───
+# ── certificate secret input hardening (argv passphrase retired) ───
 
 
 def test_certificate_secret_set_rejects_argv_passphrase() -> None:

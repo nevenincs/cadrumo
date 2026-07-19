@@ -77,6 +77,14 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "open",
     ): "output-language UI preference hint; writes a normalized language-code string, no user financial data",
     (
+        "src/cadrumo/entrypoints/cli/_config/_secure_input.py",
+        "write_to_controlling_terminal",
+        "open",
+    ): (
+        "controlling-terminal DEVICE write (CONOUT$ / /dev/tty) showing a recovery secret exactly once; "
+        "deliberately not a disk/persistence path, so secure-storage custody does not apply"
+    ),
+    (
         "src/cadrumo/entrypoints/mcp/_telemetry.py",
         "record",
         "self.path.open",

@@ -2982,15 +2982,15 @@ cli:
       change:
         help: Rotate the file secret store passphrase after verifying the current
           one.
-      confirm_new_passphrase_prompt: 'Confirm new passphrase: '
-      current_passphrase_prompt: 'Current passphrase: '
+      confirm_new_passphrase_prompt: 'Confirm new Cadrumo secret-store passphrase: '
+      current_passphrase_prompt: 'Current Cadrumo secret-store passphrase: '
       errors:
         current_passphrase_incorrect: The current passphrase is incorrect; the secret
           store was not changed.
         store_unprovisioned: The file secret store is not provisioned; there is no
           passphrase to change.
       help: Manage the file secret store passphrase.
-      new_passphrase_prompt: 'New passphrase: '
+      new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       archive:
