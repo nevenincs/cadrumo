@@ -4,8 +4,12 @@
 # regenerates, or restamps an artifact (per 2026-07-15-distribution-installation
 # -readiness-adr). It is inert until the operator opts in and configures the
 # protected `release` environment plus the channel credentials: absent those it
-# refuses instructively, exactly like the retained validate-only diagnostic
-# (publish.yml) it will supersede once the operator turns it on.
+# refuses instructively.
+#
+# A `dry_run` dispatch input runs Gate 1 (opt-in) and Gate 2 (validate) fully but
+# skips Gate 3 (publish), so the pre-arming validate-everything-publish-nothing
+# diagnostic lives here on the single authority — the retired publish.yml stub is
+# gone (superseded, and it carried the per-OS-cohort publication defect class).
 #
 # Operator prerequisites (none of which an agent can create) are enumerated in
 # the "operator-preflight" job below and must all be satisfied before a real
@@ -31,6 +35,11 @@ on:
         description: Release tag holding the operator's four claude-* rows (draft is fine)
         required: true
         type: string
+      dry_run:
+        description: Validate everything, publish nothing (runs Gate 1+2 fully, skips Gate 3)
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: publish-cadrumo-release
@@ -210,6 +219,9 @@ jobs:
   publish:
     name: Promote immutable cohort to public channels
     needs: validate
+    # A dry_run dispatch validates everything (Gate 1+2) and skips this publish
+    # job, so the pre-arming diagnostic value survives on the single authority.
+    if: ${{ inputs.dry_run != true }}
     runs-on: ubuntu-latest
     environment: release
     permissions:
@@ -260,6 +272,18 @@ jobs:
             < <(find "$RELEASE_COHORT_DIR" -type f -print0)
           if [[ ${#assets[@]} -eq 0 ]]; then
             echo "no release cohort assets found to attach" >&2
+            exit 1
+          fi
+          # gh release create flattens every asset to its basename, so two cohort
+          # files that share a basename across subdirs would silently clobber each
+          # other on the release. Refuse hard before uploading rather than ship a
+          # release missing a distribution file.
+          duplicate_basenames="$(
+            for f in "${assets[@]}"; do basename "$f"; done | sort | uniq -d
+          )"
+          if [[ -n "$duplicate_basenames" ]]; then
+            echo "release cohort has colliding asset basenames (gh flattens to basename):" >&2
+            echo "$duplicate_basenames" >&2
             exit 1
           fi
           gh release create "v$VERSION" "${assets[@]}" \

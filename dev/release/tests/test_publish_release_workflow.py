@@ -1,10 +1,11 @@
 """Structural proof that the real publication authority stays fail-closed.
 
-``publish-release.yml`` is the sole upload authority (unlike the retained
-diagnostic ``publish.yml``). These tests pin its safety contract: it is inert
-until the operator opts in, it never builds or regenerates an artifact, OIDC
-minting is confined to the environment-protected publish job, and every external
-channel push refuses instructively when its credential is absent.
+``publish-release.yml`` is the sole upload authority (the former validate-only
+``publish.yml`` diagnostic stub was retired; its ``dry_run`` mode now lives on
+this authority). These tests pin its safety contract: it is inert until the
+operator opts in, it never builds or regenerates an artifact, OIDC minting is
+confined to the environment-protected publish job, and every external channel
+push refuses instructively when its credential is absent.
 """
 
 from __future__ import annotations
@@ -56,9 +57,25 @@ def test_workflow_shape_and_least_privilege_top_level() -> None:
         "scoop_run_id",
         "homebrew_run_id",
         "claude_evidence_release",
+        "dry_run",
     }
     assert document["permissions"] == {"contents": "read"}
     assert set(document["jobs"]) == {"operator-preflight", "validate", "publish"}
+
+
+def test_dry_run_validates_everything_and_skips_publish() -> None:
+    """A dry_run dispatch runs Gate 1+2 fully but gates the publish job off."""
+    document = _document()
+    dry_run = document[True]["workflow_dispatch"]["inputs"]["dry_run"]
+    assert dry_run["type"] == "boolean"
+    assert dry_run["default"] is False
+    assert dry_run["required"] is False
+    # Only the publish job is conditioned on dry_run; operator-preflight and
+    # validate always run so the validate-everything-publish-nothing mode is real.
+    publish = document["jobs"]["publish"]
+    assert publish["if"] == "${{ inputs.dry_run != true }}"
+    assert "if" not in document["jobs"]["operator-preflight"]
+    assert "if" not in document["jobs"]["validate"]
 
 
 def test_inert_until_operator_opt_in() -> None:
@@ -170,3 +187,38 @@ def test_publish_uploads_the_stored_cohort_via_trusted_publishing() -> None:
     assert "gh release create" in surface
     # It re-downloads the stored cohort rather than rebuilding.
     assert "gh run download" in surface
+
+
+def test_github_release_refuses_colliding_asset_basenames() -> None:
+    """Gh flattens assets to basename, so a collision guard runs before the release create."""
+    surface = _run_surface(_document()["jobs"]["publish"])
+    assert "uniq -d" in surface
+    assert "colliding asset basenames" in surface
+    # The hard guard precedes the actual release invocation, so a clobbered asset
+    # cannot ship. Anchor on the versioned invocation, not the explanatory comment.
+    assert surface.index("colliding asset basenames") < surface.index('gh release create "v$VERSION"')
+
+
+def test_no_workflow_consumes_per_os_cohort_for_publication() -> None:
+    """The retired stub is gone and the sole publication authority never pulls a per-OS cohort."""
+    workflows = _REPO_ROOT / ".github" / "workflows"
+    # publish.yml (the validate-only stub that downloaded the per-OS cohort and
+    # carried that publication defect class) is retired outright.
+    assert not (workflows / "publish.yml").exists()
+
+    # The sole publication authority downloads ONLY the sealed cohort: no step in
+    # any job names a per-OS smoke cohort artifact, via gh run download or the
+    # download-artifact action.
+    document = _document()
+    for job_name, job in document["jobs"].items():
+        steps = job["steps"] if isinstance(job.get("steps"), list) else []
+        for step in steps:
+            if not isinstance(step, Mapping):
+                continue
+            run = str(step.get("run", ""))
+            assert "--name cadrumo-python-cohort" not in run, job_name
+            uses = str(step.get("uses", ""))
+            with_block = step.get("with", {})
+            if "download-artifact" in uses and isinstance(with_block, Mapping):
+                name = str(with_block.get("name", ""))
+                assert not name.startswith("cadrumo-python-cohort"), job_name
