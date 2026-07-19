@@ -36,6 +36,9 @@ jobs:
           run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PACKAGING_RUN_ID}")"
           conclusion="$(jq -r .conclusion <<<"$run_json")"
           workflow_path="$(jq -r .path <<<"$run_json")"
+          event="$(jq -r .event <<<"$run_json")"
+          head_branch="$(jq -r .head_branch <<<"$run_json")"
+          head_repository="$(jq -r .head_repository.full_name <<<"$run_json")"
           source_commit="$(jq -r .head_sha <<<"$run_json")"
           if [[ "$conclusion" != "success" ]]; then
             echo "packaging run did not succeed: $conclusion" >&2
@@ -43,6 +46,21 @@ jobs:
           fi
           if [[ "$workflow_path" != ".github/workflows/packaging-smoke.yml" ]]; then
             echo "run is not the packaging-smoke authority: $workflow_path" >&2
+            exit 1
+          fi
+          # Defence-in-depth (mirrors publish-release.yml): only a trusted push to
+          # main in this repository is a candidate, so a collaborator cannot validate
+          # a fork or non-main-branch run. This diagnostic has no upload capability.
+          if [[ "$event" != "push" ]]; then
+            echo "source packaging run must be one push event: $event" >&2
+            exit 1
+          fi
+          if [[ "$head_branch" != "main" ]]; then
+            echo "source packaging run must be on main: $head_branch" >&2
+            exit 1
+          fi
+          if [[ "$head_repository" != "$GITHUB_REPOSITORY" ]]; then
+            echo "source packaging run does not belong to this repository: $head_repository" >&2
             exit 1
           fi
           echo "source_commit=$source_commit" >> "$GITHUB_OUTPUT"

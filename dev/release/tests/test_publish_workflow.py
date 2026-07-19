@@ -65,6 +65,11 @@ def test_release_candidate_workflow_has_one_run_bound_validation_authority() -> 
     surface = "\n".join(str(step.get("run", "")) for step in validate["steps"] if "run" in step)
     assert ".github/workflows/packaging-smoke.yml" in surface
     assert 'conclusion" != "success' in surface
+    # Defence-in-depth identity gate (mirrors publish-release.yml): only a trusted
+    # push to main in this repository can be validated as a candidate.
+    assert 'event" != "push"' in surface
+    assert 'head_branch" != "main"' in surface
+    assert 'head_repository" != "$GITHUB_REPOSITORY"' in surface
     assert "cadrumo-python-cohort" in surface
     assert "cadrumo-packaging-smoke-evidence" in surface
     assert "dev.release.promote_python_cohort" in surface
