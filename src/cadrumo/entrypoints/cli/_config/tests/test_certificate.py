@@ -7,6 +7,7 @@ resolution and expiry/rotation awareness.
 
 from __future__ import annotations
 
+import json
 import sqlite3
 from collections.abc import Iterator
 from contextlib import contextmanager
@@ -323,7 +324,8 @@ def test_certificate_check_reports_ok_and_expiring_per_source(tmp_path: Path) ->
             )
             invoke_typer_app(
                 root_app,
-                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secret", _CERT_SECRET],
+                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secrets-stdin"],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
             invoke_typer_app(
                 root_app,
@@ -335,9 +337,9 @@ def test_certificate_check_reports_ok_and_expiring_per_source(tmp_path: Path) ->
                     "set",
                     "--name",
                     "apoderado-acme",
-                    "--secret",
-                    _CERT_SECRET,
+                    "--secrets-stdin",
                 ],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
             checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
 
@@ -376,9 +378,9 @@ def test_certificate_check_reports_expired_certificate(tmp_path: Path) -> None:
                     "set",
                     "--name",
                     "expired-cert",
-                    "--secret",
-                    _CERT_SECRET,
+                    "--secrets-stdin",
                 ],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
             checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
 
@@ -409,7 +411,8 @@ def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path) -> 
             # Invoke through the ROOT app (production path); see #211.
             result = invoke_typer_app(
                 root_app,
-                ["config", "auth", "certificate", "secret", "set", "--name", "ghost", "--secret", _CERT_SECRET],
+                ["config", "auth", "certificate", "secret", "set", "--name", "ghost", "--secrets-stdin"],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
 
         assert result.exit_code != 0, result.output
@@ -431,7 +434,8 @@ def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path) -> None:
             )
             first_set = invoke_typer_app(
                 root_app,
-                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secret", _CERT_SECRET],
+                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secrets-stdin"],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
             second_set = invoke_typer_app(
                 root_app,
@@ -443,9 +447,9 @@ def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path) -> None:
                     "set",
                     "--name",
                     "personal",
-                    "--secret",
-                    "a-rotated-passphrase",
+                    "--secrets-stdin",
                 ],
+                input=json.dumps({"secret": "a-rotated-passphrase"}),
             )
             removed = invoke_typer_app(
                 root_app,
@@ -499,9 +503,9 @@ def test_certificate_secret_set_cli_resumes_failed_event_commit_as_set_once(
                         "set",
                         "--name",
                         "personal",
-                        "--secret",
-                        _CERT_SECRET,
+                        "--secrets-stdin",
                     ],
+                    input=json.dumps({"secret": _CERT_SECRET}),
                 )
 
             assert failed.exit_code != 0, failed.output
@@ -533,9 +537,9 @@ def test_certificate_secret_set_cli_resumes_failed_event_commit_as_set_once(
                     "set",
                     "--name",
                     "personal",
-                    "--secret",
-                    _ROTATED_CERT_SECRET,
+                    "--secrets-stdin",
                 ],
+                input=json.dumps({"secret": _ROTATED_CERT_SECRET}),
             )
             resumed = invoke_typer_app(
                 root_app,
@@ -547,9 +551,9 @@ def test_certificate_secret_set_cli_resumes_failed_event_commit_as_set_once(
                     "set",
                     "--name",
                     "personal",
-                    "--secret",
-                    _CERT_SECRET,
+                    "--secrets-stdin",
                 ],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
 
             assert mismatched.exit_code != 0, mismatched.output
@@ -606,9 +610,9 @@ def test_certificate_secret_rotate_cli_resumes_failed_event_commit_as_rotation_o
                     "set",
                     "--name",
                     "personal",
-                    "--secret",
-                    _CERT_SECRET,
+                    "--secrets-stdin",
                 ],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
             assert registered.exit_code == 0, registered.output
             assert initial.exit_code == 0, initial.output
@@ -624,9 +628,9 @@ def test_certificate_secret_rotate_cli_resumes_failed_event_commit_as_rotation_o
                         "set",
                         "--name",
                         "personal",
-                        "--secret",
-                        _ROTATED_CERT_SECRET,
+                        "--secrets-stdin",
                     ],
+                    input=json.dumps({"secret": _ROTATED_CERT_SECRET}),
                 )
 
             assert failed.exit_code != 0, failed.output
@@ -648,9 +652,9 @@ def test_certificate_secret_rotate_cli_resumes_failed_event_commit_as_rotation_o
                     "set",
                     "--name",
                     "personal",
-                    "--secret",
-                    _ROTATED_CERT_SECRET,
+                    "--secrets-stdin",
                 ],
+                input=json.dumps({"secret": _ROTATED_CERT_SECRET}),
             )
             assert resumed.exit_code == 0, resumed.output
             assert "rotated\tTrue" in resumed.output
@@ -698,9 +702,9 @@ def test_certificate_secret_remove_cli_resumes_failed_event_commit_truthfully_on
                     "set",
                     "--name",
                     "personal",
-                    "--secret",
-                    _CERT_SECRET,
+                    "--secrets-stdin",
                 ],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
             assert registered.exit_code == 0, registered.output
             assert initial.exit_code == 0, initial.output
@@ -769,11 +773,11 @@ def test_certificate_secret_cli_exposes_no_backend_or_legacy_grammar(
                     "set",
                     "--name",
                     "personal",
-                    "--secret",
-                    _CERT_SECRET,
+                    "--secrets-stdin",
                     "--backend",
                     "keyring",
                 ],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
             remove_backend = invoke_typer_app(
                 root_app,
@@ -805,3 +809,50 @@ def test_certificate_secret_cli_exposes_no_backend_or_legacy_grammar(
             assert result.exit_code == 2, result.output
             assert "Traceback" not in result.output, result.output
             assert "No such command" in result.output, result.output
+
+
+# ── certificate secret input hardening (argv passphrase retired, P08.S44) ───
+
+
+def test_certificate_secret_set_rejects_argv_passphrase() -> None:
+    """``certificate secret set`` refuses the passphrase as an ``argv`` value.
+
+    An argv passphrase lands in the process table and shell history; the only
+    accepted channels are the hidden no-echo prompt and the bounded
+    ``--secrets-stdin`` JSON object, through the shared secure-input module.
+    """
+    result = invoke_typer_app(
+        root_app,
+        ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secret", "argv-secret"],
+    )
+    assert result.exit_code == 2, result.output
+    assert "No such option: --secret" in result.output, result.output
+    assert "Traceback" not in result.output, result.output
+
+
+def test_certificate_secret_set_without_terminal_or_stdin_refuses_cleanly() -> None:
+    """With no TTY and no ``--secrets-stdin``, the hidden-prompt path refuses (exit 2).
+
+    The refusal fires in the shared secure-input channel before any storage
+    access, naming the ``--secrets-stdin`` alternative; the crash class
+    (bare EOFError from getpass) stays gone.
+    """
+    result = invoke_typer_app(
+        root_app,
+        ["config", "auth", "certificate", "secret", "set", "--name", "personal"],
+    )
+    assert result.exit_code == 2, result.output
+    assert "--secrets-stdin" in result.output, result.output
+    assert "Traceback" not in result.output, result.output
+    assert not isinstance(result.exception, EOFError)
+
+
+def test_certificate_secret_set_help_names_only_secure_channels() -> None:
+    """The set help surfaces ``--secrets-stdin`` and no argv secret option."""
+    result = invoke_typer_app(
+        root_app,
+        ["config", "auth", "certificate", "secret", "set", "--help"],
+    )
+    assert result.exit_code == 0, result.output
+    assert "--secrets-stdin" in result.output
+    assert "--secret " not in result.output

@@ -497,7 +497,7 @@ class FileFallbackMasterKeyProvider:
                     f"file-fallback at {self._store_dir} is in a torn state — "
                     f"present={[p.name for p in present]} missing={missing}. "
                     "A previous mint or recovery crashed between writes. Run "
-                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key "
+                    "`aeat config recover` (it prompts for the 24-word recovery key) "
                     "to finish recovery, or move the torn secret-store directory "
                     "aside and run `aeat config profile create NAME` "
                     "only if no records were ever written under the prior key.",
@@ -540,7 +540,7 @@ class FileFallbackMasterKeyProvider:
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is in a torn state - "
                     f"present={[p.name for p in present]} missing={missing}. Run "
-                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key to "
+                    "`aeat config recover` (it prompts for the 24-word recovery key) to "
                     "finish recovery, or move the torn secret-store directory aside "
                     "only if no records were ever written under the prior key.",
                 )
@@ -585,7 +585,7 @@ class FileFallbackMasterKeyProvider:
             # material).
             raise _master_key_passphrase_mismatch_error(
                 "passphrase did not unlock the master key; verify the passphrase or run "
-                "`aeat config recover --recovery-key <WORDS>`.",
+                "`aeat config recover`.",
             ) from exc
 
     def _mint_new(self, passphrase: bytes) -> bytes:

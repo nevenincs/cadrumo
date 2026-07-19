@@ -1,2 +1,2 @@
-@step Unlock the master key from the recovery words and set a new passphrase.
-@static aeat config recover --recovery-key "word1 word2 word3 ..."
+@step Unlock the master key from the recovery words and set a new passphrase. Both are prompted with echo off.
+@static aeat config recover

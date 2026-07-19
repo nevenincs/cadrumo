@@ -2862,8 +2862,7 @@ cli:
           remove_help: Eltavolitja egy regisztralt tanusitvanyforrashoz kotott jelszot
           set:
             name_help: A regisztralt tanusitvanyforras, amelyhez a jelszo kapcsolodik
-            secret_help: A PKCS#12 jelszo (bekerdezve, elrejtve, soha nem jelenik
-              meg)
+            secret_prompt: 'PKCS#12 jelmondat (rejtett bevitel): '
           set_help: Beallitja (vagy megujitja) egy regisztralt tanusitvanyforras jelszavat
         select:
           name_help: Registered certificate source to activate
@@ -2938,17 +2937,10 @@ cli:
         recipient_id_help: Stabil, kezelo altal valasztott cimke (pl. 'a-konyvelom').
         remove_help: Egy bizalmi cimzett eltavolitasa azonosito alapjan az aktiv profilbol.
     custody:
-      confirm_new_passphrase_help: Ismetelje meg az uj titkos tar passphrase erteket.
-      confirm_new_passphrase_prompt: 'Uj AEAT titkos tar passphrase megerositese: '
       data_loss_warning: Jegyezze fel most ezt a helyreallitasi kulcsot. Az AEAT nem
         tarolja a nyilt helyreallitasi kulcsot, es nem tudja ujra megjeleniteni.
       errors:
-        missing_new_passphrase_confirmation: Ismetelje meg az uj passphrase erteket
-          a --confirm-new-passphrase kapcsoloval.
         new_passphrase_mismatch: Az uj passphrase es a megerosites nem egyezik.
-        non_interactive_passphrase_required: Ez a parancs interaktív terminált igényel
-          az új jelszó bekéréséhez. Add meg nem interaktív módon a --new-passphrase
-          és --confirm-new-passphrase kapcsolókkal.
         non_interactive_secret_required: Titok szükséges, de nincs interaktív terminál;
           használja a --secrets-stdin kapcsolót.
         secrets_stdin_invalid_json: A --secrets-stdin tartalma nem érvényes JSON objektum.
@@ -2956,8 +2948,6 @@ cli:
           mezők, vagy váratlanokat tartalmaz.
         secrets_stdin_too_large: A --secrets-stdin tartalma meghaladja a megengedett
           maximális méretet.
-      new_passphrase_help: Uj titkos tar passphrase. Hagyja el az interaktiv megadashoz.
-      new_passphrase_prompt: 'Uj AEAT titkos tar passphrase: '
       secrets_stdin_help: A titkokat egyetlen korlátozott JSON objektumként olvassa
         a szabványos bemenetről, kérdés helyett.
     errors:
@@ -3455,11 +3445,33 @@ cli:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
     recover:
-      help: A fajlalapu titkos tar helyreallitasa helyreallitasi kulccsal es uj passphrase
-        ertekhez kotese.
-      recovery_key_help: Huszonnegy szavas helyreallitasi kulcs.
-    rekey:
-      help: A fajlalapu titkos tar uj passphrase alatti ujracsomagolasa.
+      errors:
+        recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási
+          borítékot; a titoktár nem változott.
+      help: A fájlalapú titoktár helyreállítása a 24 szavas helyreállítási kóddal,
+        és új jelmondathoz kötése.
+    recovery:
+      candidate_intro: 'Az új helyreállítási kódod. Írd le most ezt a 24 szót, sorrendben:'
+      create:
+        help: Helyreállítási kód bejegyzése; a szavak egyszer jelennek meg a terminálon,
+          és újra be kell gépelni őket.
+      errors:
+        interactive_terminal_required: 'A helyreállítási kód bejegyzéséhez interaktív
+          terminál kell: a kód egyszer jelenik meg, és újra be kell gépelni.'
+        retype_mismatch: Az újra begépelt helyreállítási kód nem egyezik a megjelenítettel;
+          semmi sem változott.
+      help: A fájlalapú titoktár 24 szavas helyreállítási kódjának kezelése.
+      recovery_code_prompt: '24 szavas helyreállítási kód: '
+      retype_prompt: 'A megerősítéshez gépeld be újra a 24 szavas helyreállítási kódot
+        (rejtett bevitel): '
+      rotate:
+        help: A bejegyzett helyreállítási kód cseréje; az új szavak egyszer jelennek
+          meg, és újra be kell gépelni őket.
+      status:
+        help: Megmutatja, hogy van-e bejegyzett helyreállítási kód, anélkül hogy felfedné.
+      verify:
+        help: Ellenőrzi, hogy egy helyreállítási kód megnyitja-e a mentett helyreállítási
+          borítékot.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       connectivity_target_help: A vizsgálandó kapcsolódási cél.
@@ -3544,13 +3556,6 @@ cli:
         next_step: 'Következő lépés: futtassa: `aeat app overview status` a munkaterület
           áttekintéséhez.'
         saved: A(z) '%{profile_name}' profil mentve.
-    show_recovery:
-      existing_notice: A nyilt helyreallitasi kulcs nincs tarolva es nem jelenitheto
-        meg ujra. Hasznalja a --rotate kapcsolot uj helyreallitasi kulcs keszitesehez.
-      help: Helyreallitasi allapot megjelenitese vagy egyszer hasznalhato helyreallitasi
-        kulcs letrehozasa.
-      rotate_help: A helyreallitasi csomag forgatasa es uj egyszer hasznalhato helyreallitasi
-        kulcs kiirasa.
     status:
       empty_profile: 'Nincs beállított profil. Futtassa: `aeat config profile create
         NÉV` a kezdéshez.'
@@ -3563,9 +3568,6 @@ cli:
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
-    verify_recovery:
-      help: Ellenorzi, hogy a helyreallitasi kulcs megnyitja-e a tarolt helyreallitasi
-        csomagot.
     workflow_help: Konfiguráció-munkafolyamat súgó megjelenítése.
   contract:
     app_help: 'Kibocsatja az operator kepesseg-jegyzeket: gyokerek, parancscsaladok,
@@ -5101,8 +5103,9 @@ errors:
       használ, amelyet ez a verzió nem támogat. Frissítse az alkalmazást.
     auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
       még nincs kiosztva.
-    auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a fokulcsot.
-      Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key <WORDS>.
+    auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a mesterkulcsot.
+      Add meg újra; ha elfelejtetted, futtasd az aeat config recover parancsot a 24
+      szavas helyreállítási kódoddal.
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
   calc:

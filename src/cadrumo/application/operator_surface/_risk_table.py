@@ -170,9 +170,14 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.reset.resume": CommandRiskDeclaration(destructive=True),
     "config.reset.start": CommandRiskDeclaration(destructive=True),
     "config.reset.status": CommandRiskDeclaration(),
-    "config.show_recovery": CommandRiskDeclaration(),
+    # Recovery lifecycle: ``status`` and ``verify`` read; ``create`` enrolls a
+    # first envelope (nothing replaced); ``rotate`` invalidates the previous
+    # recovery code, so it elicits human confirmation on the MCP surface.
+    "config.recovery.create": CommandRiskDeclaration(),
+    "config.recovery.rotate": CommandRiskDeclaration(destructive=True),
+    "config.recovery.status": CommandRiskDeclaration(),
+    "config.recovery.verify": CommandRiskDeclaration(),
     "config.switch": CommandRiskDeclaration(),
-    "config.verify_recovery": CommandRiskDeclaration(),
     # Diagnostics reads run-health, latency, error, and LLM-usage telemetry and
     # flush/inspect the local telemetry store: a mutating family, none destructive
     # (a flush prunes bounded local telemetry, not taxpayer state) and no handoff

@@ -20,7 +20,6 @@ from __future__ import annotations
 import getpass
 import json
 import sys
-from typing import TypeVar
 
 from pydantic import BaseModel, ValidationError
 
@@ -34,10 +33,8 @@ A recovery-key + passphrase JSON object is a few hundred bytes; the cap keeps a
 malformed or hostile stream from being read unboundedly into memory.
 """
 
-_SecretsModelT = TypeVar("_SecretsModelT", bound=BaseModel)
 
-
-def read_secrets_stdin(model: type[_SecretsModelT]) -> _SecretsModelT:
+def read_secrets_stdin[SecretsModelT: BaseModel](model: type[SecretsModelT]) -> SecretsModelT:
     """Read one bounded strict-JSON object from stdin and validate it against ``model``.
 
     The payload must be a single JSON object carrying exactly the fields ``model``
@@ -70,6 +67,30 @@ def read_secrets_stdin(model: type[_SecretsModelT]) -> _SecretsModelT:
         ) from exc
 
 
+def write_to_controlling_terminal(text: str) -> None:
+    """Write ``text`` directly to the controlling terminal, never a redirected stream.
+
+    Used by the recovery ``create`` / ``rotate`` verbs to display a candidate
+    recovery code exactly once: the words must reach the operator's terminal
+    and MUST NOT ride stdout (a redirected stdout, a JSON envelope, or a log
+    would serialize the secret). Refuses cleanly when no interactive terminal
+    is attached, mirroring :func:`prompt_secret_no_echo`.
+    """
+    if not sys.stdin.isatty():
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.non_interactive_secret_required",
+        )
+    device = "CONOUT$" if sys.platform == "win32" else "/dev/tty"
+    try:
+        with open(device, "w", encoding=UTF_8_ENCODING) as terminal:
+            terminal.write(text)
+            terminal.flush()
+    except OSError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.custody.errors.non_interactive_secret_required",
+        ) from exc
+
+
 def prompt_secret_no_echo(prompt: str) -> str:
     """Read one secret from the controlling terminal with echo suppressed.
 
@@ -94,4 +115,5 @@ def prompt_secret_no_echo(prompt: str) -> str:
 __all__ = [
     "prompt_secret_no_echo",
     "read_secrets_stdin",
+    "write_to_controlling_terminal",
 ]

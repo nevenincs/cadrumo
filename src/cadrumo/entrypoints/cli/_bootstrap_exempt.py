@@ -69,8 +69,7 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     "config reset",
     "config passphrase change",
     "config recover",
-    "config show-recovery",
-    "config verify-recovery",
+    "config recovery",
     # Diagnostic surface: must operate without a session so the
     # operator can recover from a torn workspace.
     "config repair",
