@@ -72,7 +72,7 @@ msgstr "Instalar la CLI"
 
 #: ../../workstation-setup.md:23
 msgid "The beta installs from the project repository:"
-msgstr ""
+msgstr "La beta se instala desde el repositorio del proyecto:"
 
 #: ../../workstation-setup.md:32
 msgid ""
@@ -80,6 +80,10 @@ msgid ""
 "the plugin marketplace) open with the public launch; see [Get "
 "Cadrumo](download.md) for each channel's current status."
 msgstr ""
+"Los listados en los registros de los canales empaquetados (PyPI, Scoop, "
+"Homebrew y el marketplace de plugins) se abrirán con el lanzamiento "
+"público; consulta [Obtén Cadrumo](download.md) para ver el estado actual "
+"de cada canal."
 
 #: ../../workstation-setup.md:36
 msgid "Confirm the install"
@@ -203,7 +207,7 @@ msgstr ""
 
 #: ../../workstation-setup.md:99
 msgid "In the beta, run the server from the same repository checkout:"
-msgstr ""
+msgstr "En la beta, ejecuta el servidor desde la misma copia del repositorio:"
 
 #: ../../workstation-setup.md:106
 msgid ""
