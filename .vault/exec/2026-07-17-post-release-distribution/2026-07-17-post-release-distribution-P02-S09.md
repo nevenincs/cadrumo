@@ -1,0 +1,61 @@
+---
+tags:
+  - '#exec'
+  - '#post-release-distribution'
+date: '2026-07-19'
+modified: '2026-07-19'
+step_id: 'S09'
+related:
+  - "[[2026-07-17-post-release-distribution-plan]]"
+---
+
+<!-- FRONTMATTER RULES:
+     tags: one directory tag (hardcoded #exec) and one feature tag.
+     Replace post-release-distribution with a kebab-case feature tag, e.g. #foo-bar.
+     Additional tags may be appended below the required pair.
+
+     modified: CLI-maintained last-modified stamp; set at scaffold time,
+     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
+
+     step_id is the originating Step's canonical identifier, e.g. S01.
+     The S09 and 2026-07-17-post-release-distribution-plan placeholders are machine-filled by
+     `vaultspec-core vault add exec`; do not fill them by hand.
+
+     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
+     parent plan.
+
+     DO NOT add fields beyond those scaffolded; metadata lives
+     only in the frontmatter. -->
+
+<!-- LINK RULES:
+     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
+     - NEVER use [[wiki-links]] or markdown links in the document body.
+     - NEVER reference file paths in the body. If you must name a source file,
+       class, or function, use inline backtick code: `src/module.py`. -->
+
+<!-- STEP RECORD:
+     This file represents one Step from the originating plan. Identified
+     by its canonical leaf identifier (S##) and ancestor display path.
+     The DONE via local subscription-authed Claude Code 2.1.214 per operator ruling (no CI API key), evidence var/distribution-install-readiness/s27-plugin-68a8433c/run-20260718T164855Z/plugin-evidence.json against cohort 68a8433c at commit 02b3656095, marketplace install with byte-verified three-wheel cohort, real client session connected and called cadrumo_harness_load (status passed), protocol oracle on the same install returned DP200014:00562 = 23000.00 via modelo-200-cuota-integra with the sole permitted plazo-vencido notice and ## Scope
+
+- `.github/workflows/packaging-claude.yml` placeholders below are machine-filled
+     by `vaultspec-core vault add exec` from the originating Step row;
+     do not fill them by hand. -->
+
+# DONE via local subscription-authed Claude Code 2.1.214 per operator ruling (no CI API key), evidence var/distribution-install-readiness/s27-plugin-68a8433c/run-20260718T164855Z/plugin-evidence.json against cohort 68a8433c at commit 02b3656095, marketplace install with byte-verified three-wheel cohort, real client session connected and called cadrumo_harness_load (status passed), protocol oracle on the same install returned DP200014:00562 = 23000.00 via modelo-200-cuota-integra with the sole permitted plazo-vencido notice
+
+## Scope
+
+- `.github/workflows/packaging-claude.yml`
+
+## Description
+
+- Install the cohort plugin in a real Claude Code client and execute the real tax-work tool call, per the operator ruling accepting local subscription-authed evidence in place of a CI API key.
+
+## Outcome
+
+Done via locally subscription-authed Claude Code `2.1.214` (operator ruling: no CI API key). Evidence at `var/distribution-install-readiness/s27-plugin-68a8433c/run-20260718T164855Z/plugin-evidence.json` against cohort `68a8433c` at commit `02b3656095` (in HEAD): marketplace install with a byte-verified three-wheel cohort, a real client session that connected and called `cadrumo_harness_load` (status passed), and a protocol oracle on the same install returning `DP200014:00562 = 23000.00` via `modelo-200-cuota-integra` with the sole permitted plazo-vencido notice. Closed against retained real-client evidence.
+
+## Notes
+
+Retroactive execution record; step already checked. The local-evidence substitution is an explicit operator ruling, not a bypassed gate. Vault-only bookkeeping.
