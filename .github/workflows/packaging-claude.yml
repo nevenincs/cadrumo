@@ -154,24 +154,27 @@ jobs:
           }
           "CADRUMO_CLAUDE_EXECUTABLE=$claude" | Add-Content -LiteralPath $env:GITHUB_ENV
 
-      - name: Install plugin and perform grounded tax work through Claude
+      # The live-tool-usage gate ALWAYS runs: --run-claude-session drives a real
+      # Claude Code headless session in which the model makes the live MCP tool
+      # call, and the smoke reads the JSON output programmatically and asserts the
+      # grounded result. smoke_plugin_install resolves credentials from
+      # ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, OR the self-hosted runner's
+      # subscription-authenticated Claude login (this fleet's posture - no API key
+      # per operator ruling), and refuses instructively when none is present.
+      - name: Install plugin and perform live-tool-usage tax work through Claude
         shell: powershell
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           uv sync --frozen
-          $arguments = @(
-            "-m", "dev.packaging.smoke_plugin_install",
-            "--claude", "$env:CADRUMO_CLAUDE_EXECUTABLE",
-            "--cohort-dir", "$env:CADRUMO_CLAUDE_ROOT/cohort",
-            "--evidence-dir", "$env:CADRUMO_CLAUDE_ROOT/plugin-evidence"
-          )
-          if ($env:ANTHROPIC_API_KEY) {
-            $arguments += "--run-claude-session"
-          }
-          uv run --no-sync python @arguments
+          uv run --no-sync python `
+            -m dev.packaging.smoke_plugin_install `
+            --claude "$env:CADRUMO_CLAUDE_EXECUTABLE" `
+            --cohort-dir "$env:CADRUMO_CLAUDE_ROOT/cohort" `
+            --evidence-dir "$env:CADRUMO_CLAUDE_ROOT/plugin-evidence" `
+            --run-claude-session
           if ($LASTEXITCODE -ne 0) {
-            throw "Claude plugin installed-tax oracle failed"
+            throw "Claude plugin live-tool-usage tax oracle failed"
           }
 
       - name: Build and perform grounded tax work through MCPB runtime
