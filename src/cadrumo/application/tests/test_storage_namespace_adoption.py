@@ -41,7 +41,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
+from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
