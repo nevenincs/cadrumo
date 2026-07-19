@@ -68,6 +68,35 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     assert "uv build" not in commands
 
 
+def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
+    """Each matrix row downloads THE cohort and emits its homebrew-<os>-<arch> record."""
+    document = _workflow()
+    job = document["jobs"]["cadrumo-homebrew-acquisition"]
+    rows = job["strategy"]["matrix"]["include"]
+    assert {row["row_id"] for row in rows} == {
+        "homebrew-macos-x86-64",
+        "homebrew-macos-arm64",
+        "homebrew-linux-x86-64",
+        "homebrew-linux-arm64",
+    }
+
+    steps = job["steps"]
+    download = next(step for step in steps if step.get("name") == "Download the tested full release cohort")
+    assert download["with"]["name"] == "cadrumo-release-cohort"
+    assert download["with"]["run-id"] == "${{ inputs.source_run_id }}"
+
+    emit = next(
+        step for step in steps if step.get("name") == "Emit the sanctioned Homebrew distribution-evidence record"
+    )
+    assert "dev.packaging.distribution_evidence_emit" in emit["run"]
+    assert '--row-id "$ROW_ID"' in emit["run"]
+    assert "--release-cohort-dir " in emit["run"]
+
+    upload = next(step for step in steps if step.get("name") == "Upload the Homebrew distribution-evidence record")
+    assert upload["with"]["name"] == "cadrumo-distribution-evidence-${{ matrix.row_id }}"
+    assert upload["with"]["if-no-files-found"] == "error"
+
+
 def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     """The matrix generates channel metadata then invokes the real lifecycle harness."""
     document = _workflow()
