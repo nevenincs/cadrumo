@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-07-19 16:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -53,11 +53,11 @@ msgstr ""
 "Ha még nem telepítette a Cadrumót, és nem futtatta az `aeat` parancsot, "
 "kezdje a [gyorsindítóval](quickstart.md), majd térjen vissza ide."
 
-#: ../../how-to/profile-setup.md:15
+#: ../../how-to/profile-setup.md:16
 msgid "What the active profile means"
 msgstr "Mit jelent az aktív profil"
 
-#: ../../how-to/profile-setup.md:17
+#: ../../how-to/profile-setup.md:18
 msgid ""
 "The active profile is the taxpayer context for `aeat app` commands. While a "
 "profile is active, commands such as ledger import, transaction "
@@ -69,7 +69,7 @@ msgstr ""
 "tranzakció-osztályozás, a modelo-számítás, az export és a helyi benyújtási "
 "előzmények, annak a profilnak az adatait olvassák és frissítik."
 
-#: ../../how-to/profile-setup.md:22
+#: ../../how-to/profile-setup.md:23
 msgid ""
 "Keep one profile per taxpayer. Add a second profile when you prepare filings"
 " for another taxpayer, separate a test profile from a real one, or restore a"
@@ -82,7 +82,7 @@ msgstr ""
 "miért helyi-központú és emberi jóváhagyáshoz kötött az eszköz, lásd a "
 "[magyarázó útmutatókat](../explanation/index.md)."
 
-#: ../../how-to/profile-setup.md:27
+#: ../../how-to/profile-setup.md:28
 msgid ""
 "List your profiles with `aeat config profile list`, see which one is active,"
 " add a second taxpayer, then switch to it. The example runs the whole flow: "
@@ -94,7 +94,7 @@ msgstr ""
 "lefuttatja a teljes folyamatot: listázza a profilokat, hozzáad egy "
 "másodikat, és arra váltja az aktív környezetet."
 
-#: ../../how-to/profile-setup.md:35
+#: ../../how-to/profile-setup.md:36
 msgid ""
 "Switching changes which local ledger, modelo drafts, and filing markers "
 "`aeat app` commands use. The switch verb is `aeat config switch`, not `aeat "
@@ -104,11 +104,11 @@ msgstr ""
 "benyújtási jelölőt használják az `aeat app` parancsok. A váltó ige az `aeat "
 "config switch`, nem az `aeat config profile switch`."
 
-#: ../../how-to/profile-setup.md:39
+#: ../../how-to/profile-setup.md:40
 msgid "Decide your facts before you start"
 msgstr "Döntse el a tényeit, mielőtt hozzákezd"
 
-#: ../../how-to/profile-setup.md:41
+#: ../../how-to/profile-setup.md:42
 msgid ""
 "Profile setup asks a series of questions. Most are conditional: the answers "
 "you give early decide which later questions appear. Decide these facts "
@@ -118,7 +118,7 @@ msgstr ""
 "megadott válaszai döntik el, mely későbbi kérdések jelennek meg. Döntse el "
 "először ezeket a tényeket, és a beállítás többi része következik:"
 
-#: ../../how-to/profile-setup.md:45
+#: ../../how-to/profile-setup.md:46
 msgid ""
 "**Who the taxpayer is.** A natural person (an individual), a legal entity (a"
 " company such as an SL or SA), or an attribution entity (a co-ownership such"
@@ -128,7 +128,7 @@ msgstr ""
 "például SL vagy SA), vagy jövedelem-hozzárendelő szervezet (közös tulajdon, "
 "például egy *comunidad de bienes*, ahol a jövedelem áthárul a tagjaira)."
 
-#: ../../how-to/profile-setup.md:48
+#: ../../how-to/profile-setup.md:49
 msgid ""
 "**Which tax identifier applies.** Spanish citizens use their DNI as their "
 "tax identifier (NIF). Foreign individuals use their NIE. Companies use a NIF"
@@ -138,7 +138,7 @@ msgstr ""
 "használják adóazonosítóként (NIF). A külföldi magánszemélyek a NIE-jüket "
 "használják. A cégek NIF-et vagy CIF-et használnak."
 
-#: ../../how-to/profile-setup.md:51
+#: ../../how-to/profile-setup.md:52
 msgid ""
 "**What the taxpayer does.** The economic activity and which kinds of income "
 "apply: business or professional activity, salaried work, rental income, "
@@ -148,7 +148,7 @@ msgstr ""
 "jövedelemfajták alkalmazhatók: üzleti vagy szakmai tevékenység, béres munka,"
 " bérleti jövedelem, befektetési jövedelem, tőkenyereség vagy nyugdíj."
 
-#: ../../how-to/profile-setup.md:54
+#: ../../how-to/profile-setup.md:55
 msgid ""
 "**Which VAT regime applies.** Value Added Tax (IVA) determines whether the "
 "taxpayer charges and declares it, and how. The general regime files IVA "
@@ -158,7 +158,7 @@ msgstr ""
 "meghatározza, hogy az adózó felszámítja és bevallja-e, és hogyan. Az "
 "általános rendszer a Modelo 303-on keresztül vallja be az áfát."
 
-#: ../../how-to/profile-setup.md:57
+#: ../../how-to/profile-setup.md:58
 msgid ""
 "**Where the taxpayer is resident.** The autonomous community for a Spanish "
 "resident, or the country of residence for a non-resident."
@@ -166,7 +166,7 @@ msgstr ""
 "**Hol illetőségű az adózó.** Egy spanyol illetőségű esetén az autonóm "
 "közösség, egy nem illetőségű esetén az illetőség szerinti ország."
 
-#: ../../how-to/profile-setup.md:59
+#: ../../how-to/profile-setup.md:60
 msgid ""
 "**Which output language you want.** The language `cadrumo` uses for its "
 "output."
@@ -174,7 +174,7 @@ msgstr ""
 "**Melyik kimeneti nyelvet szeretné.** A nyelv, amelyet a `cadrumo` a "
 "kimenetéhez használ."
 
-#: ../../how-to/profile-setup.md:61
+#: ../../how-to/profile-setup.md:62
 msgid ""
 "You don't need to memorize flag names. The guided wizard walks you through "
 "these decisions. For the complete, current list of flags and their accepted "
@@ -186,19 +186,19 @@ msgstr ""
 "futtassa az `aeat config profile create --help` és az `aeat config profile "
 "edit --help` parancsot:"
 
-#: ../../how-to/profile-setup.md:68
+#: ../../how-to/profile-setup.md:69
 msgid "Create your profile"
 msgstr "Hozza létre a profilját"
 
-#: ../../how-to/profile-setup.md:70
+#: ../../how-to/profile-setup.md:71
 msgid "Create a profile interactively, or non-interactively with flags."
 msgstr "Hozzon létre egy profilt interaktívan, vagy nem interaktívan jelzőkkel."
 
-#: ../../how-to/profile-setup.md:72
+#: ../../how-to/profile-setup.md:73
 msgid "Run the guided wizard when you're setting up a profile for the first time:"
 msgstr "Futtassa a vezetett varázslót, amikor először állít be profilt:"
 
-#: ../../how-to/profile-setup.md:77
+#: ../../how-to/profile-setup.md:78
 msgid ""
 "The wizard asks the questions described in this guide. Prompt labels follow "
 "the selected output language, while official AEAT terms and stable command "
@@ -208,7 +208,7 @@ msgstr ""
 " a kiválasztott kimeneti nyelvet követik, míg a hivatalos AEAT-kifejezések "
 "és a stabil parancstokenek nyelveken átívelően felismerhetők maradnak."
 
-#: ../../how-to/profile-setup.md:81
+#: ../../how-to/profile-setup.md:82
 msgid ""
 "The wizard prompts for your master-key passphrase before it stores anything."
 " For unattended runs, see [Run without a passphrase prompt](protect-data-"
@@ -218,7 +218,7 @@ msgstr ""
 "Felügyelet nélküli futtatásokhoz lásd: [Futtatás jelmondat-bekérés nélkül"
 "](protect-data-access.md#run-without-a-passphrase-prompt)."
 
-#: ../../how-to/profile-setup.md:85
+#: ../../how-to/profile-setup.md:86
 msgid ""
 "Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can also"
 " store its default output language."
@@ -226,7 +226,7 @@ msgstr ""
 "Használja a `--language en`, `es`, `ca` vagy `hu` opciót egy parancshoz. Egy"
 " profil az alapértelmezett kimeneti nyelvét is tárolhatja."
 
-#: ../../how-to/profile-setup.md:88
+#: ../../how-to/profile-setup.md:89
 msgid ""
 "Use flags with `--quiet` when you want a repeatable, scriptable setup, "
 "passing the entity type, tax id, name, and surnames to `aeat config profile "
@@ -239,7 +239,7 @@ msgstr ""
 "parancsnak. Az [alábbi kidolgozott példa](#worked-example-a-natural-person-"
 "with-an-activity) lefuttat egy teljes, szkriptelt létrehozást."
 
-#: ../../how-to/profile-setup.md:93
+#: ../../how-to/profile-setup.md:94
 msgid ""
 "`--quiet` runs without prompts and uses only the flags you provide. A "
 "`--quiet` run refuses if a required flag is missing and tells you which ones"
@@ -252,7 +252,7 @@ msgstr ""
 "szükséges a benyújtási személyazonosság: az adóazonosító, a szervezettípus, "
 "valamint a név és a vezetéknevek:"
 
-#: ../../how-to/profile-setup.md:103
+#: ../../how-to/profile-setup.md:104
 msgid ""
 "Add `--accept-defaults` when you intentionally want Cadrumo to fill the "
 "questions you omit from its built-in defaults."
@@ -261,11 +261,11 @@ msgstr ""
 "hogy a Cadrumo a beépített alapértelmezéseiből töltse ki az elhagyott "
 "kérdéseket."
 
-#: ../../how-to/profile-setup.md:106
+#: ../../how-to/profile-setup.md:108
 msgid "Worked example: a natural person with an activity"
 msgstr "Kidolgozott példa: egy tevékenységet folytató természetes személy"
 
-#: ../../how-to/profile-setup.md:108
+#: ../../how-to/profile-setup.md:110
 msgid ""
 "This example creates a natural-person profile for an individual with an "
 "economic activity, then inspects and validates it before you rely on it:"
@@ -274,11 +274,11 @@ msgstr ""
 "tevékenységet folytató magánszemélyhez, majd megvizsgálja és érvényesíti, "
 "mielőtt rá hagyatkozna:"
 
-#: ../../how-to/profile-setup.md:115
+#: ../../how-to/profile-setup.md:117
 msgid "The facts setup asks for"
 msgstr "A tények, amelyeket a beállítás bekér"
 
-#: ../../how-to/profile-setup.md:117
+#: ../../how-to/profile-setup.md:119
 msgid ""
 "Setup groups its questions by decision area. These values are stable command"
 " tokens: they're case-sensitive and don't translate. Run `aeat config "
@@ -293,19 +293,19 @@ msgstr ""
 "illetőségű és bejelentkezési kérdéseket, amelyeket ez az útmutató "
 "összefoglal, nem pedig megismétel."
 
-#: ../../how-to/profile-setup.md:123
+#: ../../how-to/profile-setup.md:125
 msgid "Who the taxpayer is"
 msgstr "Ki az adózó"
 
-#: ../../how-to/profile-setup.md:125
+#: ../../how-to/profile-setup.md:127
 msgid "Choose the entity type:"
 msgstr "Válassza ki a szervezettípust:"
 
-#: ../../how-to/profile-setup.md:127
+#: ../../how-to/profile-setup.md:129
 msgid "`natural_person` - an individual."
 msgstr "`natural_person`: egy magánszemély."
 
-#: ../../how-to/profile-setup.md:128
+#: ../../how-to/profile-setup.md:130
 msgid ""
 "`legal_entity` - a company. Record its legal form too, such as `sl`, `sa`, "
 "or `cooperativa`."
@@ -313,7 +313,7 @@ msgstr ""
 "`legal_entity`: egy cég. Rögzítse a jogi formáját is, például `sl`, `sa` "
 "vagy `cooperativa`."
 
-#: ../../how-to/profile-setup.md:130
+#: ../../how-to/profile-setup.md:132
 msgid ""
 "`attribution_entity` - a co-ownership or community of goods whose income is "
 "attributed to its members."
@@ -321,7 +321,7 @@ msgstr ""
 "`attribution_entity`: egy közös tulajdon vagy javak közössége, amelynek "
 "jövedelme a tagjaihoz rendelődik."
 
-#: ../../how-to/profile-setup.md:133
+#: ../../how-to/profile-setup.md:135
 msgid ""
 "For a natural person, list each kind of income that applies, repeating the "
 "flag once per category:"
@@ -329,31 +329,31 @@ msgstr ""
 "Egy természetes személynél sorolja fel minden alkalmazható jövedelemfajtát, "
 "kategóriánként egyszer megismételve a jelzőt:"
 
-#: ../../how-to/profile-setup.md:136
+#: ../../how-to/profile-setup.md:138
 msgid "`actividad_economica` - business or professional activity."
 msgstr "`actividad_economica`: üzleti vagy szakmai tevékenység."
 
-#: ../../how-to/profile-setup.md:137
+#: ../../how-to/profile-setup.md:139
 msgid "`trabajo` - salaried employment."
 msgstr "`trabajo`: béres foglalkoztatás."
 
-#: ../../how-to/profile-setup.md:138
+#: ../../how-to/profile-setup.md:140
 msgid "`capital_inmobiliario` - rental income from property."
 msgstr "`capital_inmobiliario`: ingatlanból származó bérleti jövedelem."
 
-#: ../../how-to/profile-setup.md:139
+#: ../../how-to/profile-setup.md:141
 msgid "`capital_mobiliario` - investment income such as dividends or interest."
 msgstr "`capital_mobiliario`: befektetési jövedelem, például osztalék vagy kamat."
 
-#: ../../how-to/profile-setup.md:140
+#: ../../how-to/profile-setup.md:142
 msgid "`ganancias_patrimoniales` - capital gains."
 msgstr "`ganancias_patrimoniales`: tőkenyereség."
 
-#: ../../how-to/profile-setup.md:141
+#: ../../how-to/profile-setup.md:143
 msgid "`pension` - a retirement or disability pension."
 msgstr "`pension`: nyugdíj vagy rokkantsági járadék."
 
-#: ../../how-to/profile-setup.md:143
+#: ../../how-to/profile-setup.md:145
 msgid ""
 "Choose `actividad_economica` only when the taxpayer runs an activity. A pure"
 " landlord, a salaried-only taxpayer, or a pensioner with no activity should "
@@ -363,7 +363,7 @@ msgstr ""
 "tevékenységet folytat. Egy tiszta bérbeadó, egy kizárólag béres adózó vagy "
 "egy tevékenység nélküli nyugdíjas ne válassza."
 
-#: ../../how-to/profile-setup.md:147
+#: ../../how-to/profile-setup.md:149
 msgid ""
 "For an activity, record how IRPF estimates its yield. Direct estimation is "
 "the default and files Modelo 130. Use `--irpf-estimation-regime objetiva` "
@@ -375,11 +375,11 @@ msgstr ""
 "estimation-regime objetiva` opciót az átalánybecslés (módulos) rendszerhez, "
 "amely ehelyett Modelo 131-et nyújt be."
 
-#: ../../how-to/profile-setup.md:151
+#: ../../how-to/profile-setup.md:153
 msgid "Identity"
 msgstr "Személyazonosság"
 
-#: ../../how-to/profile-setup.md:153
+#: ../../how-to/profile-setup.md:155
 msgid ""
 "The tax identifier (NIF, CIF, DNI, or NIE) is required. Spanish citizens use"
 " their DNI as their NIF; foreign individuals use their NIE; companies use a "
@@ -392,11 +392,11 @@ msgstr ""
 "szervezet megjelenítendő nevét), a gazdasági tevékenységet, ha van, és az "
 "adóügyi cím irányítószámát."
 
-#: ../../how-to/profile-setup.md:158
+#: ../../how-to/profile-setup.md:160
 msgid "Where the taxpayer is resident"
 msgstr "Hol illetőségű az adózó"
 
-#: ../../how-to/profile-setup.md:160
+#: ../../how-to/profile-setup.md:162
 msgid ""
 "For a Spanish IRPF (personal income tax) resident, set the autonomous "
 "community (`--tax-residence-ccaa`), such as `madrid` or `cataluna`."
@@ -405,7 +405,7 @@ msgstr ""
 "be az autonóm közösséget (`--tax-residence-ccaa`), például `madrid` vagy "
 "`cataluna`."
 
-#: ../../how-to/profile-setup.md:163
+#: ../../how-to/profile-setup.md:165
 msgid ""
 "This tool does not model the foral regimes. Setting the community to "
 "`pais_vasco` or `navarra` is refused, because residents there file with "
@@ -416,7 +416,7 @@ msgstr ""
 "*Hacienda Foral*-jukhoz nyújtanak be a *Concierto Económico* keretében, nem "
 "az AEAT-hoz:"
 
-#: ../../how-to/profile-setup.md:173
+#: ../../how-to/profile-setup.md:175
 msgid ""
 "For a non-resident, set `--fiscal-residency non_resident_irnr` (not `--tax-"
 "residence-ccaa`), then supply the country of residence with `--country-of-"
@@ -431,41 +431,41 @@ msgstr ""
 "egy adóügyi képviselőt a `--representante-fiscal-nif` és a `--representante-"
 "fiscal-nombre` opcióval."
 
-#: ../../how-to/profile-setup.md:179
+#: ../../how-to/profile-setup.md:181
 msgid "Which IVA regime applies"
 msgstr "Melyik IVA-rendszer alkalmazható"
 
-#: ../../how-to/profile-setup.md:181
+#: ../../how-to/profile-setup.md:183
 msgid "Set `--iva-regime` to the taxpayer's IVA regime:"
 msgstr "Állítsa be az `--iva-regime` értéket az adózó IVA-rendszerére:"
 
-#: ../../how-to/profile-setup.md:183
+#: ../../how-to/profile-setup.md:185
 msgid "`GENERAL` - the standard regime; files quarterly IVA through Modelo 303."
 msgstr ""
 "`GENERAL`: a szokásos rendszer; a Modelo 303-on keresztül nyújt be "
 "negyedéves áfát."
 
-#: ../../how-to/profile-setup.md:184
+#: ../../how-to/profile-setup.md:186
 msgid "`SIMPLIFICADO` - the simplified, module-based regime."
 msgstr "`SIMPLIFICADO`: az egyszerűsített, modulokon alapuló rendszer."
 
-#: ../../how-to/profile-setup.md:185
+#: ../../how-to/profile-setup.md:187
 msgid "`RECARGO_EQUIVALENCIA` - the equivalence surcharge for qualifying retailers."
 msgstr ""
 "`RECARGO_EQUIVALENCIA`: az egyenértékűségi pótlék a jogosult "
 "kiskereskedőknek."
 
-#: ../../how-to/profile-setup.md:186
+#: ../../how-to/profile-setup.md:188
 msgid "`REAGP` - the special regime for agriculture, livestock, and fishing."
 msgstr "`REAGP`: a mezőgazdaság, állattenyésztés és halászat különleges rendszere."
 
-#: ../../how-to/profile-setup.md:187
+#: ../../how-to/profile-setup.md:189
 msgid "`EXENTO` - exempt activities, such as some education or healthcare."
 msgstr ""
 "`EXENTO`: mentesített tevékenységek, például egyes oktatási vagy "
 "egészségügyi."
 
-#: ../../how-to/profile-setup.md:189
+#: ../../how-to/profile-setup.md:191
 msgid ""
 "Record any IVA enrollments that apply, such as ROI (intra-community "
 "operators) or OSS (one-stop-shop for cross-border B2C sales)."
@@ -474,11 +474,11 @@ msgstr ""
 "(közösségen belüli szereplők) vagy az OSS-t (egyablakos rendszer a határon "
 "átnyúló B2C értékesítésekhez)."
 
-#: ../../how-to/profile-setup.md:192
+#: ../../how-to/profile-setup.md:194
 msgid "Which recurring obligations apply"
 msgstr "Melyik ismétlődő kötelezettségek alkalmazhatók"
 
-#: ../../how-to/profile-setup.md:194
+#: ../../how-to/profile-setup.md:196
 msgid ""
 "These facts decide which forms the taxpayer must file. Record the ones that "
 "are true:"
@@ -486,7 +486,7 @@ msgstr ""
 "Ezek a tények döntik el, mely űrlapokat kell az adózónak benyújtania. "
 "Rögzítse azokat, amelyek igazak:"
 
-#: ../../how-to/profile-setup.md:197
+#: ../../how-to/profile-setup.md:199
 msgid ""
 "`--has-employees` or `--pays-professionals-with-retencion` - pays salaries "
 "or professional fees with withholding."
@@ -494,15 +494,15 @@ msgstr ""
 "`--has-employees` vagy `--pays-professionals-with-retencion`: béreket vagy "
 "szakmai díjakat fizet forrásadóval."
 
-#: ../../how-to/profile-setup.md:199
+#: ../../how-to/profile-setup.md:201
 msgid "`--pays-rent-with-retencion` - pays business-premises rent with withholding."
 msgstr "`--pays-rent-with-retencion`: üzlethelyiség-bérleti díjat fizet forrásadóval."
 
-#: ../../how-to/profile-setup.md:200
+#: ../../how-to/profile-setup.md:202
 msgid "`--does-intracomunitario` - trades with businesses in other EU countries."
 msgstr "`--does-intracomunitario`: más EU-országbeli vállalkozásokkal kereskedik."
 
-#: ../../how-to/profile-setup.md:201
+#: ../../how-to/profile-setup.md:203
 msgid ""
 "`--third-party-transactions-above-347-threshold` - transactions with third "
 "parties exceed the Modelo 347 threshold."
@@ -510,7 +510,7 @@ msgstr ""
 "`--third-party-transactions-above-347-threshold`: a harmadik felekkel kötött"
 " ügyletek meghaladják a Modelo 347 küszöbét."
 
-#: ../../how-to/profile-setup.md:203
+#: ../../how-to/profile-setup.md:205
 msgid ""
 "`--bienes-extranjero-above-threshold` - foreign assets exceed the legal "
 "threshold."
@@ -518,7 +518,7 @@ msgstr ""
 "`--bienes-extranjero-above-threshold`: a külföldi vagyon meghaladja a "
 "törvényi küszöböt."
 
-#: ../../how-to/profile-setup.md:205
+#: ../../how-to/profile-setup.md:207
 msgid ""
 "`--art109-activity-income-withholding-ge-70pct` - the Art. 109 RIRPF 70 "
 "percent income-coverage exception applies for covered professional, "
@@ -531,7 +531,7 @@ msgstr ""
 "Tevékenységkezdéseknél rögzítse a fedezeti tényt az aktuális fizetési "
 "időszakra."
 
-#: ../../how-to/profile-setup.md:210
+#: ../../how-to/profile-setup.md:212
 msgid ""
 "Leaving an obligation flag unset is not the same as marking it false. When a"
 " fact is undeclared, the readiness check reports the related form as "
@@ -543,11 +543,11 @@ msgstr ""
 "kapcsolódó űrlapot *hiányosként* jelenti (nem lehet meghatározni), nem *nem "
 "alkalmazhatóként*. Rögzítsen minden ismert tényt."
 
-#: ../../how-to/profile-setup.md:214
+#: ../../how-to/profile-setup.md:216
 msgid "Check your facts before you calculate"
 msgstr "Ellenőrizze a tényeit, mielőtt számítana"
 
-#: ../../how-to/profile-setup.md:216
+#: ../../how-to/profile-setup.md:218
 msgid ""
 "A wrong or missing fact produces a wrong filing. Confirm the profile before "
 "you calculate a modelo. The example shows the active profile's readiness "
@@ -561,7 +561,7 @@ msgstr ""
 "szemben, majd ellenőrzi, hogy a profil hordozza-e azokat a tényeket, "
 "amelyekre egy adott űrlapnak egy adott benyújtási környezethez szüksége van:"
 
-#: ../../how-to/profile-setup.md:225
+#: ../../how-to/profile-setup.md:227
 msgid ""
 "`preflight` names the missing fields for that `(modelo, filing-year, "
 "period)` context. Use [Choose which modelo to file](choose-modelo.md) to "
@@ -574,11 +574,11 @@ msgstr ""
 "elfogadott időszakkódokat. Javítson ki minden hibás tényt az `edit` "
 "paranccsal, mielőtt folytatná."
 
-#: ../../how-to/profile-setup.md:229
+#: ../../how-to/profile-setup.md:231
 msgid "How your facts decide which forms apply"
 msgstr "Hogyan döntik el a tényei, mely űrlapok alkalmazhatók"
 
-#: ../../how-to/profile-setup.md:231
+#: ../../how-to/profile-setup.md:233
 msgid ""
 "The profile facts you recorded determine which modelos the taxpayer must "
 "file. Use this mapping to sanity-check your profile, then confirm a specific"
@@ -589,105 +589,105 @@ msgstr ""
 "ellenőrzéséhez, majd erősítsen meg egy adott űrlapot a `preflight` "
 "paranccsal:"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "When this is true of the taxpayer"
 msgstr "Amikor ez igaz az adózóra"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "These forms apply"
 msgstr "Ezek az űrlapok alkalmazhatók"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Is a natural person"
 msgstr "Természetes személy"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Modelo 100 (annual Renta)"
 msgstr "Modelo 100 (éves Renta)"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Is a company"
 msgstr "Cég"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid ""
 "Modelo 200 (annual IS, corporate income tax), Modelo 202 (payments on "
 "account)"
 msgstr "Modelo 200 (éves IS, társasági adó), Modelo 202 (előlegfizetések)"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Runs an activity under direct estimation"
 msgstr "Tevékenységet folytat közvetlen becslés alatt"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Modelo 130 (quarterly IRPF)"
 msgstr "Modelo 130 (negyedéves IRPF)"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Runs an activity under objective estimation (módulos)"
 msgstr "Tevékenységet folytat átalánybecslés (módulos) alatt"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Modelo 131"
 msgstr "Modelo 131"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Art. 109 activity-income coverage exception applies"
 msgstr "A 109. cikk szerinti tevékenységijövedelem-fedezeti kivétel alkalmazandó"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Removes the Modelo 130 obligation"
 msgstr "Megszünteti a Modelo 130 kötelezettséget"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Charges VAT under the general regime"
 msgstr "Áfát számít fel az általános rendszer alatt"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Modelo 303 (quarterly), Modelo 390 (annual)"
 msgstr "Modelo 303 (negyedéves), Modelo 390 (éves)"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Pays employees or professionals with withholding"
 msgstr "Alkalmazottakat vagy szakembereket fizet forrásadóval"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Modelo 111 (quarterly), Modelo 190 (annual)"
 msgstr "Modelo 111 (negyedéves), Modelo 190 (éves)"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Pays business-premises rent with withholding"
 msgstr "Üzlethelyiség-bérleti díjat fizet forrásadóval"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Modelo 115 (quarterly), Modelo 180 (annual)"
 msgstr "Modelo 115 (negyedéves), Modelo 180 (éves)"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Trades with EU businesses"
 msgstr "EU-s vállalkozásokkal kereskedik"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Modelo 349"
 msgstr "Modelo 349"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Has third-party transactions over the 347 threshold"
 msgstr "A 347-es küszöb feletti, harmadik felekkel kötött ügyletei vannak"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Modelo 347"
 msgstr "Modelo 347"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Holds foreign assets over the legal threshold"
 msgstr "A törvényi küszöb feletti külföldi vagyont birtokol"
 
-#: ../../how-to/profile-setup.md:221
+#: ../../how-to/profile-setup.md:223
 msgid "Modelo 720"
 msgstr "Modelo 720"
 
-#: ../../how-to/profile-setup.md:249
+#: ../../how-to/profile-setup.md:251
 msgid ""
 "This is a guide, not the authority. The tool decides applicability from the "
 "full profile and the registry rules. To see what applies to your profile, "
@@ -698,11 +698,11 @@ msgstr ""
 " mi alkalmazható a profiljára, használja a [Válassza ki, melyik modelót "
 "nyújtsa be](choose-modelo.md) oldalt."
 
-#: ../../how-to/profile-setup.md:253
+#: ../../how-to/profile-setup.md:255
 msgid "Maintain your profile"
 msgstr "Tartsa karban a profilját"
 
-#: ../../how-to/profile-setup.md:255
+#: ../../how-to/profile-setup.md:257
 msgid ""
 "The following steps edit a fact, rename the profile, duplicate it, delete "
 "the duplicate, and export the profile to a portable JSON file:"
@@ -711,11 +711,11 @@ msgstr ""
 "duplikálják, törlik a duplikátumot, és exportálják a profilt egy hordozható "
 "JSON-fájlba:"
 
-#: ../../how-to/profile-setup.md:262
+#: ../../how-to/profile-setup.md:264
 msgid "What each step does:"
 msgstr "Mit tesz az egyes lépések:"
 
-#: ../../how-to/profile-setup.md:264
+#: ../../how-to/profile-setup.md:266
 msgid ""
 "**Edit** changes only the flags you pass. Run `show`, `status`, or "
 "`validate` again after editing."
@@ -723,7 +723,7 @@ msgstr ""
 "A **szerkesztés** csak az átadott jelzőket módosítja. Futtassa újra a "
 "`show`, `status` vagy `validate` parancsot a szerkesztés után."
 
-#: ../../how-to/profile-setup.md:266
+#: ../../how-to/profile-setup.md:268
 msgid ""
 "**Rename** changes only the visible label; the active-profile pointer "
 "follows it."
@@ -731,7 +731,7 @@ msgstr ""
 "Az **átnevezés** csak a látható címkét módosítja; az aktív-profil mutató "
 "követi."
 
-#: ../../how-to/profile-setup.md:268
+#: ../../how-to/profile-setup.md:270
 msgid ""
 "**Duplicate** starts a second profile from the same facts. The second name "
 "you pass is the new profile's name, the name you address it by in every "
@@ -741,7 +741,7 @@ msgstr ""
 "második átadott név az új profil neve, az a név, amellyel minden későbbi "
 "parancsban hivatkozik rá. Az új profil lesz az aktív."
 
-#: ../../how-to/profile-setup.md:271
+#: ../../how-to/profile-setup.md:273
 msgid ""
 "**Delete** removes a profile for good. If the deleted profile was active, "
 "Cadrumo clears the active-profile pointer."
@@ -749,16 +749,18 @@ msgstr ""
 "A **törlés** véglegesen eltávolít egy profilt. Ha a törölt profil aktív "
 "volt, a Cadrumo törli az aktív-profil mutatót."
 
-#: ../../how-to/profile-setup.md:273
+#: ../../how-to/profile-setup.md:275
 msgid ""
 "**Export** writes a portable JSON file. Pass `--cleartext-local` for a local"
-" JSON file, or `--passphrase` for an encrypted transfer bundle."
+" JSON file, or `--encrypt` for an encrypted transfer bundle; the passphrase "
+"is prompted (hidden), never given on the command line."
 msgstr ""
-"Az **export** egy hordozható JSON-fájlt ír. Adja át a `--cleartext-local` "
-"opciót egy helyi JSON-fájlhoz, vagy a `--passphrase` opciót egy titkosított "
-"átviteli csomaghoz."
+"Az **Export** hordozható JSON-fájlt ír. Add meg a `--cleartext-local` "
+"kapcsolót helyi JSON-fájlhoz, vagy az `--encrypt` kapcsolót titkosított "
+"átviteli csomaghoz; a jelmondatot rejtett kérdés adja meg, sosem a "
+"parancssor."
 
-#: ../../how-to/profile-setup.md:276
+#: ../../how-to/profile-setup.md:279
 msgid ""
 "Import a saved file back into another session or storage root. Import under "
 "a fresh label; the imported profile becomes the active one. A store that "
@@ -771,7 +773,7 @@ msgstr ""
 "elutasítja az importot a profil azonosítója alapján, így az import egy másik"
 " tárolási gyökérbe való visszaállításra szolgál:"
 
-#: ../../how-to/profile-setup.md:284
+#: ../../how-to/profile-setup.md:287
 msgid ""
 "A portable profile file contains taxpayer data, including the tax "
 "identifier, activity, and local filing history. Store it as sensitive tax "
@@ -783,7 +785,7 @@ msgstr ""
 "érzékeny adóadatként, és ne csatolja egy támogatási kéréshez, hacsak nem "
 "távolította el a személyes adatokat."
 
-#: ../../how-to/profile-setup.md:288
+#: ../../how-to/profile-setup.md:291
 msgid ""
 "Sign out without deleting the profile using `aeat config profile logout`. "
 "Logout closes the active storage session, discards its in-memory keys, "
@@ -794,11 +796,11 @@ msgstr ""
 "a memóriában lévő kulcsait, megszünteti a bucket-motorokat, és törli a helyi"
 " aktív-profil mutatót:"
 
-#: ../../how-to/profile-setup.md:296
+#: ../../how-to/profile-setup.md:299
 msgid "Choose your service capabilities"
 msgstr "Válassza ki a szolgáltatási képességeit"
 
-#: ../../how-to/profile-setup.md:298
+#: ../../how-to/profile-setup.md:301
 msgid ""
 "Each profile carries its own opt-in for three optional services. The setup "
 "wizard asks these questions when you create or edit a profile, and you can "
@@ -811,11 +813,11 @@ msgstr ""
 "lépések megmutatják a jelenlegi beállítottságot, kikapcsolnak egy "
 "képességet, majd újra megmutatják a beállítottságot:"
 
-#: ../../how-to/profile-setup.md:307
+#: ../../how-to/profile-setup.md:310
 msgid "The three capabilities are:"
 msgstr "A három képesség:"
 
-#: ../../how-to/profile-setup.md:309
+#: ../../how-to/profile-setup.md:312
 msgid ""
 "`cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM "
 "provider. Off by default. Barred for gestor profiles."
@@ -824,19 +826,19 @@ msgstr ""
 "felhőalapú LLM-szolgáltatónak. Alapértelmezés szerint kikapcsolva. Gestor-"
 "profiloknál tiltott."
 
-#: ../../how-to/profile-setup.md:311
+#: ../../how-to/profile-setup.md:314
 msgid "`llm_vision` - read invoices with the on-host vision model. On by default."
 msgstr ""
 "`llm_vision`: számlák olvasása a gépen futó vision-modellel. Alapértelmezés "
 "szerint bekapcsolva."
 
-#: ../../how-to/profile-setup.md:312
+#: ../../how-to/profile-setup.md:315
 msgid "`google_export` - export calculations to Google Sheets. On by default."
 msgstr ""
 "`google_export`: számítások exportálása Google Táblázatokba. Alapértelmezés "
 "szerint bekapcsolva."
 
-#: ../../how-to/profile-setup.md:314
+#: ../../how-to/profile-setup.md:317
 msgid ""
 "Turn any capability on or off with `aeat config profile capabilities set`. "
 "The example turns `llm_vision` off. Pass `cloud_evidence_upload on` to "
@@ -849,11 +851,11 @@ msgstr ""
 "hiányzó csomagkiegészítők előállítják a pontos telepítési parancsot. A "
 "kiegészítőkhöz lásd: [A Cadrumo telepítése](../workstation-setup.md)."
 
-#: ../../how-to/profile-setup.md:319
+#: ../../how-to/profile-setup.md:322
 msgid "See what changed"
 msgstr "Lássa, mi változott"
 
-#: ../../how-to/profile-setup.md:321
+#: ../../how-to/profile-setup.md:324
 msgid ""
 "Every change to a profile - creation, edits, imports, classifications, "
 "calculations, and filings - is recorded as an event in that profile's "
@@ -869,7 +871,7 @@ msgstr ""
 "kijelentkezés után előbb váltson rá. A példa létrehoz, átnevez és szerkeszt "
 "egy profilt, mielőtt böngészné és szűrné az előzményeit:"
 
-#: ../../how-to/profile-setup.md:331
+#: ../../how-to/profile-setup.md:334
 msgid ""
 "Repeat `--event-type` to include several types. An unknown type is refused "
 "with the full accepted list, so an empty value is a quick way to discover "
@@ -879,7 +881,7 @@ msgstr ""
 "ismeretlen típust elutasít a teljes elfogadott listával, így egy üres érték "
 "gyors módja a szókincs felfedezésének."
 
-#: ../../how-to/profile-setup.md:335
+#: ../../how-to/profile-setup.md:338
 msgid ""
 "A rename appears as two events on purpose: `profile.renamed` records that "
 "the data changed, and `bucket.renamed` records that you ran the rename "
@@ -890,11 +892,11 @@ msgstr ""
 "Ön futtatta az átnevezés műveletet. Az egyik a „mi változott”, a másik a "
 "„mit tettek” kérdésre válaszol."
 
-#: ../../how-to/profile-setup.md:339
+#: ../../how-to/profile-setup.md:342
 msgid "If setup looks wrong"
 msgstr "Ha a beállítás hibásnak tűnik"
 
-#: ../../how-to/profile-setup.md:341
+#: ../../how-to/profile-setup.md:344
 msgid ""
 "If a command reports no active profile, an invalid field value, or that "
 "you're working under the wrong profile, see [Diagnose and repair your local "
@@ -904,7 +906,7 @@ msgstr ""
 "azt, hogy rossz profil alatt dolgozik, lásd: [Diagnosztizálja és javítsa a "
 "helyi beállítását](troubleshooting.md)."
 
-#: ../../how-to/profile-setup.md:345
+#: ../../how-to/profile-setup.md:348
 msgid ""
 "When the troubleshooting steps don't resolve it, follow [Prepare a privacy-"
 "safe support request](troubleshooting.md#prepare-a-privacy-safe-support-"
@@ -917,29 +919,29 @@ msgstr ""
 "oldalt. Megnevezi a beemelendő kimeneteket és a kihagyandó személyes "
 "adatokat, mielőtt a projekt hibakövetőjéhez viszi a problémát."
 
-#: ../../how-to/profile-setup.md:351
+#: ../../how-to/profile-setup.md:354
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/profile-setup.md:353
+#: ../../how-to/profile-setup.md:356
 msgid "[Import and manage transactions](import-bank-statements.md)"
 msgstr "[Tranzakciók importálása és kezelése](import-bank-statements.md)"
 
-#: ../../how-to/profile-setup.md:354
+#: ../../how-to/profile-setup.md:357
 msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
 msgstr "[Tartsa karban a Modelo 036 censo-adatait a profiljában](censo-update.md)"
 
-#: ../../how-to/profile-setup.md:355
+#: ../../how-to/profile-setup.md:358
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Tervezze meg a benyújtási naptárát](filing-calendar.md)"
 
-#: ../../how-to/profile-setup.md:356
+#: ../../how-to/profile-setup.md:359
 msgid "[Review and supply calculation inputs](review-calculation-values.md)"
 msgstr ""
 "[Számítási bemenetek felülvizsgálata és megadása](review-calculation-"
 "values.md)"
 
-#: ../../how-to/profile-setup.md:357
+#: ../../how-to/profile-setup.md:360
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
 

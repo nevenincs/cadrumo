@@ -3248,29 +3248,34 @@ cli:
         helyben.
       export_cleartext_local_help: Titkosítatlan JSON írása csak helyi/SAR kezelésre;
         nem biztonságos e-mailhez, szinkronizáláshoz vagy átvitelhez.
-      export_encrypted_info: 'A profilcsomag AEAD passphrase titkosítással ide íródott:
-        {out}. Importálás: ''aeat config profile import PATH --passphrase ...''. Csak
-        a strukturált profilcsomagot tartalmazza; a csatolt bizonyítékokat és az auditnaplót
-        is tartalmazó teljes mentéshez használd a titkosított helyreállítási archívumot.'
+      export_confirm_passphrase_prompt: 'Erősítsd meg a csomag jelmondatát: '
+      export_encrypt_help: A csomag AEAD-titkosítása átvitelhez; a jelmondatot rejtett
+        kérdés vagy a --secrets-stdin adja meg, soha nem argv.
+      export_encrypted_info: 'Ez a profilcsomag ide íródott: {out}, AEAD jelmondatos
+        titkosítással. Importáld az ''aeat config profile import ÚTVONAL'' paranccsal;
+        a jelmondatot rejtett kérdés vagy a --secrets-stdin adja meg. Csak a strukturált
+        profilcsomagot tartalmazza; teljes biztonsági mentéshez a titkosított helyreállítási
+        archívumot használd a csatolt bizonyítékokkal és az auditnaplóval.'
       export_help: Passphrase alatt titkosított hordozható profilcsomag írása ÚTVONALRA;
         a titkosítatlan JSON-hoz --cleartext-local kell, és csak helyi/SAR célra való.
       export_name_help: 'Az exportálandó profil; alapértelmezés: az aktív profil.'
       export_out_help: A profilcsomag célútvonala.
-      export_passphrase_help: Passphrase a serializált profilcsomag AEAD-titkosításához
-        átvitelre.
+      export_passphrase_mismatch: A csomag jelmondata és a megerősítése nem egyezik;
+        semmi sem lett kiírva.
+      export_passphrase_prompt: 'A csomag jelmondata (legalább 8 karakter): '
       export_passphrase_too_short: A profilexport passphrase legalább 8 karakter hosszú
         legyen.
-      export_requires_transport: Használd a --passphrase kapcsolót titkosított átviteli
+      export_requires_transport: Használd az --encrypt kapcsolót titkosított átviteli
         csomaghoz, vagy a --cleartext-local kapcsolót csak helyi/SAR JSON-hoz.
-      export_sensitivity_warning: 'Ez a csomag NEM titkosított, és érzékeny pénzügyi
-        adatokat tartalmaz: a nyers adóazonosítót (nem kitakarva), a nevet/vezetékneveket,
-        a teljes főkönyvet, a számítási revíziókat és a benyújtási rekordokat. A következő
-        helyre íródott: {out}. Csak helyi/SAR kezelésre használd; ne küldd e-mailben,
-        ne szinkronizáld és ne vidd át. Töröld, amikor a helyi/SAR kezelés befejeződött.
-        AEAD-titkosított strukturált átviteli csomaghoz használd a ''aeat config profile
-        export --passphrase ...'' parancsot.'
-      export_transport_conflict: A --passphrase és a --cleartext-local közül csak
-        az egyiket add meg.
+      export_sensitivity_warning: 'Ez a csomag NINCS titkosítva, és érzékeny pénzügyi
+        adatokat tartalmaz: a nyers adóazonosítót (kitakarás nélkül), nevet és vezetékneveket,
+        a teljes főkönyvet, a számítási revíziókat és a benyújtási rekordokat. Ide
+        íródott: {out}. Csak helyi/SAR kezelésre használd; ne küldd e-mailben, ne
+        szinkronizáld és ne továbbítsd. Töröld, amint a helyi/SAR kezelés befejeződött.
+        AEAD-titkosított, strukturált átviteli csomaghoz használd az ''aeat config
+        profile export --encrypt'' parancsot.'
+      export_transport_conflict: A --encrypt és a --cleartext-local közül csak az
+        egyiket add meg.
       help: Aktív profilkonfigurációs értékek kezelése.
       history:
         invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok:
@@ -3310,8 +3315,7 @@ cli:
       import_missing_filing_baseline: 'A profilcsomagból hiányoznak a bevallási azonosító
         adatok. Javítsa a csomagot, vagy exportáljon újra teljes profilt ezekkel a
         mezőkkel: %{missing_flags}.'
-      import_passphrase_help: Passphrase egy 'config profile export --passphrase'
-        paranccsal exportált csomaghoz.
+      import_passphrase_prompt: 'A csomag jelmondata: '
       import_path_help: A profilcsomag fájljának elérési útja.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       logout_help: Az aktív tárolási munkamenet bezárása, a memóriában lévő kulcsok

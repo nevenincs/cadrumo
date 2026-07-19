@@ -3078,28 +3078,35 @@ cli:
         place
       export_cleartext_local_help: Write cleartext JSON for local/SAR handling only;
         not safe for email, sync, or transfer.
+      export_confirm_passphrase_prompt: 'Confirm bundle passphrase: '
+      export_encrypt_help: AEAD-encrypt the bundle for transfer; the passphrase is
+        prompted (hidden) or read via --secrets-stdin, never argv.
       export_encrypted_info: This profile bundle was written to {out} with AEAD passphrase
-        encryption. Import it with 'aeat config profile import PATH --passphrase ...'.
-        It carries the structured profile bundle only; use the encrypted recovery
-        archive for a complete backup with attachment evidence bytes and audit trail.
+        encryption. Import it with 'aeat config profile import PATH'; the passphrase
+        is prompted (hidden) or read via --secrets-stdin. It carries the structured
+        profile bundle only; use the encrypted recovery archive for a complete backup
+        with attachment evidence bytes and audit trail.
       export_help: Write a passphrase-encrypted portable profile bundle to PATH; cleartext
         JSON requires --cleartext-local for local/SAR use only.
       export_name_help: Profile to export; defaults to the active profile
       export_out_help: Destination path for the profile bundle
-      export_passphrase_help: Passphrase to AEAD-encrypt the serialized profile bundle
-        for transfer.
+      export_passphrase_mismatch: The bundle passphrase and its confirmation do not
+        match; nothing was written.
+      export_passphrase_prompt: 'Bundle passphrase (min 8 characters): '
       export_passphrase_too_short: The profile export passphrase must be at least
         8 characters.
-      export_requires_transport: Use --passphrase for an encrypted transfer bundle,
-        or --cleartext-local for local/SAR JSON only.
+      export_requires_transport: Use --encrypt for an encrypted transfer bundle, or
+        --cleartext-local for local/SAR JSON only.
       export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive
         financial data: the raw tax id (not redacted), names/surnames, the full ledger,
         calculation revisions, and filing records. It was written to {out}. Use it
         only for local/SAR handling; do not email, sync, or transfer it. Delete it
         after that local/SAR handling is complete. Use ''aeat config profile export
-        --passphrase ...'' for an AEAD-encrypted structured transfer bundle.'
-      export_transport_conflict: Choose either --passphrase or --cleartext-local,
-        not both.
+        --encrypt'' for an AEAD-encrypted structured transfer bundle. It is NOT a
+        full backup: attachment evidence bytes, AEAT captures, and the audit trail
+        are excluded. Use the encrypted recovery archive for a complete backup.'
+      export_transport_conflict: Choose either --encrypt or --cleartext-local, not
+        both.
       help: Manage active profile configuration values
       history:
         invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
@@ -3137,8 +3144,7 @@ cli:
       import_missing_filing_baseline: 'The profile bundle is missing filing identity
         details. Fix the bundle or re-export a complete profile with these fields:
         %{missing_flags}.'
-      import_passphrase_help: Passphrase for a bundle exported with 'config profile
-        export --passphrase'.
+      import_passphrase_prompt: 'Bundle passphrase: '
       import_path_help: Path to the profile bundle file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
       logout_help: Close the active storage session, discard in-memory keys, dispose

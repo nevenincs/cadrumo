@@ -3296,28 +3296,34 @@ cli:
       edit_help: Torna a executar l'assistent sobre un perfil existent
       export_cleartext_local_help: Escriu JSON en clar només per a gestió local/SAR;
         no és segur per a correu, sincronització ni transferència.
+      export_confirm_passphrase_prompt: 'Confirma la frase de contrasenya del paquet: '
+      export_encrypt_help: Xifra el paquet amb AEAD per a la transferència; la frase
+        de contrasenya es demana (oculta) o es llegeix amb --secrets-stdin, mai per
+        argv.
       export_encrypted_info: Aquest paquet de perfil s'ha escrit a {out} amb xifratge
-        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import PATH
-        --passphrase ...'. Només conté el paquet estructurat del perfil; usa l'arxiu
-        de recuperació xifrat per a una còpia completa amb evidències adjuntes i auditoria.
+        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import RUTA';
+        la frase de contrasenya es demana (oculta) o es llegeix amb --secrets-stdin.
+        Només conté el paquet estructurat del perfil; usa l'arxiu de recuperació xifrat
+        per a una còpia completa amb evidències adjuntes i auditoria.
       export_help: Escriu un paquet portable de perfil xifrat per frase de contrasenya
         a RUTA; el JSON en clar requereix --cleartext-local i només és per a ús local/SAR.
       export_name_help: Perfil que vols exportar; per defecte, l'actiu
       export_out_help: Ruta de destinació per al paquet de perfil
-      export_passphrase_help: Frase de contrasenya per xifrar amb AEAD el paquet de
-        perfil serialitzat per a transferència.
+      export_passphrase_mismatch: La frase de contrasenya del paquet i la seva confirmació
+        no coincideixen; no s'ha escrit res.
+      export_passphrase_prompt: 'Frase de contrasenya del paquet (mínim 8 caràcters): '
       export_passphrase_too_short: La frase de contrasenya d'exportació del perfil
         ha de tenir almenys 8 caràcters.
-      export_requires_transport: Usa --passphrase per a un paquet xifrat de transferència,
+      export_requires_transport: Usa --encrypt per a un paquet xifrat de transferència,
         o --cleartext-local només per a JSON local/SAR.
       export_sensitivity_warning: 'Aquest paquet NO està xifrat i conté dades financeres
         sensibles: el NIF en clar (sense ocultar), nom i cognoms, el llibre de moviments
         complet, les revisions de càlcul i els registres de presentació. S''ha escrit
         a {out}. Usa''l només per a gestió local/SAR; no l''enviïs per correu, no
         el sincronitzis ni el transfereixis. Esborra''l quan acabi aquesta gestió
-        local/SAR. Usa ''aeat config profile export --passphrase ...'' per a un paquet
-        estructurat de transferència xifrat AEAD.'
-      export_transport_conflict: Tria --passphrase o --cleartext-local, no tots dos.
+        local/SAR. Usa ''aeat config profile export --encrypt'' per a un paquet estructurat
+        de transferència xifrat AEAD.'
+      export_transport_conflict: Tria --encrypt o --cleartext-local, no tots dos.
       help: Gestionar valors de configuració del perfil actiu
       history:
         invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
@@ -3359,8 +3365,7 @@ cli:
       import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
         per presentar models. Corregeix el paquet o torna a exportar un perfil complet
         amb aquests camps: %{missing_flags}.'
-      import_passphrase_help: Frase de contrasenya per a un paquet exportat amb 'config
-        profile export --passphrase'.
+      import_passphrase_prompt: 'Frase de contrasenya del paquet: '
       import_path_help: Ruta al fitxer del paquet de perfil
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
       logout_help: Tanca la sessió d'emmagatzematge activa, descarta les claus en
