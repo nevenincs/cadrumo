@@ -7,12 +7,32 @@
 
 name: Cadrumo CI
 
+# Cost discipline (operator directive 2026-07-19): shared-worktree campaigns
+# push vault/docs/agent-config churn to main many times an hour; none of it
+# reaches the lint/type/test surface this workflow gates, so those paths never
+# start the two-OS suite.
 on:
   workflow_dispatch:
   push:
     branches: [main]
+    paths-ignore:
+      - ".vault/**"
+      - ".vaultspec/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".gemini/**"
+      - ".agents/**"
+      - "**.md"
   pull_request:
     branches: [main]
+    paths-ignore:
+      - ".vault/**"
+      - ".vaultspec/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".gemini/**"
+      - ".agents/**"
+      - "**.md"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
