@@ -90,11 +90,52 @@ def _run_command_lines(job: dict[str, object]) -> set[str]:
     }
 
 
+def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
+    """One build-release-cohort job; three per-OS oracle+emit legs bind that cohort."""
+    document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
+    jobs = document["jobs"]
+
+    # One dedicated cohort build that uploads the single immutable artifact.
+    build = jobs["build-release-cohort"]
+    assert build["runs-on"] == ["self-hosted", "Linux", "X64"]
+    build_commands = _run_command_lines(build)
+    assert "uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort" in build_commands
+    uploads = [step for step in build["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@")]
+    assert any(step["with"]["name"] == "cadrumo-release-cohort" for step in uploads)
+
+    # Each OS leg needs the ONE build (so all rows bind one cohort id), downloads
+    # that cohort, and emits its exact python-<os> row via the emitter tool.
+    legs = {
+        "oracle-emit-linux": ("python-linux-x86-64", ["self-hosted", "Linux", "X64"]),
+        "oracle-emit-windows": ("python-windows-x86-64", ["self-hosted", "Windows", "X64"]),
+        "oracle-emit-macos": ("python-macos-arm64", ["self-hosted", "macOS", "ARM64"]),
+    }
+    for job_name, (row_id, runs_on) in legs.items():
+        leg = jobs[job_name]
+        assert leg["needs"] == "build-release-cohort"
+        assert leg["runs-on"] == runs_on
+        surface = "\n".join(str(step.get("run", "")) for step in leg["steps"] if "run" in step)
+        assert "dev.packaging.oracle_emit_cohort" in surface
+        assert f"--row-id {row_id}" in surface
+        assert "--release-cohort-dir var/release-cohort" in surface
+        downloads = [
+            step for step in leg["steps"] if str(step.get("uses", "")).startswith("actions/download-artifact@")
+        ]
+        assert any(step["with"]["name"] == "cadrumo-release-cohort" for step in downloads)
+
+
 def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
     """One Ubuntu aggregate plus native Windows/macOS host-portable legs."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     assert document["name"] == "Cadrumo Packaging Smoke"
-    assert set(document["jobs"]) == {"cadrumo-packaging-smoke", *_PORTABLE_LEGS}
+    assert set(document["jobs"]) == {
+        "cadrumo-packaging-smoke",
+        *_PORTABLE_LEGS,
+        "build-release-cohort",
+        "oracle-emit-linux",
+        "oracle-emit-windows",
+        "oracle-emit-macos",
+    }
 
     job = document["jobs"]["cadrumo-packaging-smoke"]
     assert job["name"] == "Cadrumo / Ubuntu / Python 3.13 / wheel artifacts"

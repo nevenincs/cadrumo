@@ -112,22 +112,6 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      # Build the immutable FULL cross-channel cohort (python + Claude plugin/
-      # marketplace + Scoop + Homebrew + MCPB) once, from a clean HEAD clone, so
-      # the publish authority (publish-release.yml) has stored bytes to promote
-      # without rebuilding. Runs only after the smoke campaign above passes, so
-      # the uploaded cohort is a tested one. Pure-Python generators - no node.
-      - name: Build the immutable full release cohort
-        run: uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort
-
-      - name: Upload the immutable full release cohort
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: cadrumo-release-cohort
-          path: var/release-cohort/
-          if-no-files-found: error
-          retention-days: 14
-
       - name: Upload Cadrumo packaging smoke evidence
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -262,4 +246,150 @@ jobs:
             var/packaging-smoke-evidence/*.json
             var/distribution-install-readiness/installed-cohorts/**/evidence.json
           if-no-files-found: warn
+          retention-days: 14
+
+  # Build the ONE immutable full cross-channel cohort (python + Claude plugin/
+  # marketplace + Scoop + Homebrew + MCPB) once, from a clean HEAD clone, and
+  # upload it as cadrumo-release-cohort. The per-OS oracle+emit legs below all
+  # `needs:` this single job so every python-<os> row binds the identical cohort
+  # id (a per-OS rebuild would diverge the id). Pure-Python generators - no node.
+  # This is also the stored bytes the publish authority promotes without rebuild.
+  build-release-cohort:
+    name: Cadrumo / build immutable release cohort
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Build the immutable full release cohort
+        run: uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort
+
+      - name: Upload the immutable full release cohort
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-release-cohort
+          path: var/release-cohort/
+          if-no-files-found: error
+          retention-days: 14
+
+  # Per-OS proof that THE immutable cohort installs and performs grounded tax work
+  # on each claimed platform, minting the sanctioned python-<os> row bound to the
+  # one cohort. The three legs stay parallel behind the single cheap build.
+  oracle-emit-linux:
+    name: Cadrumo / Linux / immutable-cohort oracle + emit
+    needs: build-release-cohort
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+      - name: Download the immutable release cohort
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: cadrumo-release-cohort
+          path: var/release-cohort
+      - name: Install the cohort, run installed oracles, emit the row
+        run: |
+          uv run --no-sync python -m dev.packaging.oracle_emit_cohort \
+            --release-cohort-dir var/release-cohort \
+            --row-id python-linux-x86-64 \
+            --work-dir var/oracle-emit-work \
+            --distribution-evidence-dir var/distribution-install-readiness
+      - name: Upload the distribution-evidence record
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-distribution-evidence-linux
+          path: var/distribution-install-readiness/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  oracle-emit-windows:
+    name: Cadrumo / Windows / immutable-cohort oracle + emit
+    needs: build-release-cohort
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+      - name: Download the immutable release cohort
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: cadrumo-release-cohort
+          path: var/release-cohort
+      - name: Install the cohort, run installed oracles, emit the row
+        run: |
+          uv run --no-sync python -m dev.packaging.oracle_emit_cohort `
+            --release-cohort-dir var/release-cohort `
+            --row-id python-windows-x86-64 `
+            --work-dir var/oracle-emit-work `
+            --distribution-evidence-dir var/distribution-install-readiness
+      - name: Upload the distribution-evidence record
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-distribution-evidence-windows
+          path: var/distribution-install-readiness/*.json
+          if-no-files-found: error
+          retention-days: 14
+
+  oracle-emit-macos:
+    name: Cadrumo / macOS / immutable-cohort oracle + emit
+    needs: build-release-cohort
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 90
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+      - name: Download the immutable release cohort
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: cadrumo-release-cohort
+          path: var/release-cohort
+      - name: Install the cohort, run installed oracles, emit the row
+        run: |
+          uv run --no-sync python -m dev.packaging.oracle_emit_cohort \
+            --release-cohort-dir var/release-cohort \
+            --row-id python-macos-arm64 \
+            --work-dir var/oracle-emit-work \
+            --distribution-evidence-dir var/distribution-install-readiness
+      - name: Upload the distribution-evidence record
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-distribution-evidence-macos
+          path: var/distribution-install-readiness/*.json
+          if-no-files-found: error
           retention-days: 14
