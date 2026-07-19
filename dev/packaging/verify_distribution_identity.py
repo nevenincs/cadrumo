@@ -211,7 +211,7 @@ _APPROVED_PRODUCT_DESCRIPTION_PAIRS: Final[dict[tuple[str, str], frozenset[tuple
     ),
 }
 _EXPECTED_MODEL_FACING_DESCRIPTION_SHA256: Final[str] = (
-    "d19077a22fdf3159e4de90deb43b4db2f59d76eb95ff6a3c6848bd70d13b6cda"
+    "c309b67a555b0d93bb7edb5ae62b136216f53c419d1323c5f639d85492992139"
 )
 _PRODUCT_CLAIM_PATTERNS: Final[dict[str, dict[str, tuple[re.Pattern[str], ...]]]] = {
     "capability": {
