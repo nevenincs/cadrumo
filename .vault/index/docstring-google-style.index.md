@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#docstring-google-style'
 date: '2026-07-15'
-modified: '2026-07-15'
+modified: '2026-07-17'
 related:
   - '[[2026-06-09-docstring-google-style-S01]]'
   - '[[2026-06-09-docstring-google-style-S02]]'

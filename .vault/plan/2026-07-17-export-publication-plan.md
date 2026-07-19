@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#export-publication'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-19'
 tier: L1
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -14,16 +14,6 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
   - '[[2026-07-17-export-publication-audit]]'
 ---
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
 
 # `export-publication` plan
 
