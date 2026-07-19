@@ -20,6 +20,7 @@ import subprocess
 import sys
 import tempfile
 from datetime import UTC, datetime
+from importlib.metadata import version as _package_version
 from pathlib import Path
 from typing import Final
 
@@ -29,8 +30,17 @@ if str(_REPO_ROOT) not in sys.path:
 
 from dev.packaging._acquire_common import (  # noqa: E402
     AcquisitionError,
+    capture_owned_server_launch,
     require_command_succeeded,
 )
+from dev.packaging.cohort_manifest import load_release_cohort  # noqa: E402
+from dev.packaging.distribution_evidence_emit import emit_client_evidence  # noqa: E402
+from dev.packaging.evidence import (  # noqa: E402
+    AcquisitionIdentity,
+    ClientIdentity,
+    DestinationIdentity,
+)
+from dev.packaging.installed_mcp_oracle import isolated_mcp_environment  # noqa: E402
 from dev.packaging.python_cohort import load_python_cohort  # noqa: E402
 from dev.packaging.smoke_plugin_install import (  # noqa: E402
     _PLUGIN_ID,
@@ -41,6 +51,8 @@ from dev.packaging.smoke_plugin_install import (  # noqa: E402
 
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_MARKETPLACE_SOURCE: Final[str] = "nevenincs/cadrumo"
+_DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
+_SDK_CLIENT_NAME: Final[str] = "cadrumo-mcp-sdk-client"
 
 
 def _resolve_claude(override: Path | None) -> Path:
@@ -86,6 +98,9 @@ def run_claude_plugin_acquisition(
     plugin_id: str,
     claude_executable: Path | None,
     timeout_seconds: float,
+    release_cohort_dir: Path | None = None,
+    row_id: str | None = None,
+    distribution_evidence_dir: Path | None = None,
 ) -> Path:
     """Install the public plugin, verify its cohort, and repeat the MCP oracle.
 
@@ -96,6 +111,13 @@ def run_claude_plugin_acquisition(
         plugin_id: The plugin identifier to install (``name@marketplace``).
         claude_executable: An explicit ``claude`` path, or ``None`` for PATH.
         timeout_seconds: Timeout for Claude commands and the MCP oracle.
+        release_cohort_dir: The full release-cohort directory to bind a sanctioned
+            flat client-row record to. When omitted, only the per-run acquisition
+            document is written.
+        row_id: The client row this run proves (required to emit the flat record,
+            e.g. ``claude-code-plugin``).
+        distribution_evidence_dir: Where the flat record lands; defaults to
+            ``var/distribution-install-readiness`` (the directory both gates scan).
 
     Returns:
         The path to the retained JSON evidence document.
@@ -181,6 +203,39 @@ def run_claude_plugin_acquisition(
     if mcp_evidence.target_value != "23000.00":
         raise AcquisitionError(f"public plugin MCP oracle target value drifted: {mcp_evidence.target_value!r}")
 
+    # Owned bounded launch of the exact plugin server contract, captured after the
+    # oracle (so it cannot pollute the oracle's storage) for the option-A record.
+    launch_env = isolated_mcp_environment(run_root / "storage")
+    launch_env.update(server_environment)
+    launch_transcript = capture_owned_server_launch(
+        server=uvx,
+        server_args=server_args,
+        env=launch_env,
+        cwd=run_root,
+        timeout_seconds=timeout_seconds,
+    )
+
+    if release_cohort_dir is not None and row_id is not None:
+        release_cohort = load_release_cohort(release_cohort_dir)
+        emit_client_evidence(
+            directory=(distribution_evidence_dir or _DEFAULT_DISTRIBUTION_EVIDENCE_DIR),
+            row_id=row_id,
+            cohort=release_cohort,
+            mcp_evidence=mcp_evidence,
+            launch_transcript=launch_transcript,
+            client=ClientIdentity(
+                name=_SDK_CLIENT_NAME,
+                version=_package_version("mcp"),
+                executable=str(uvx),
+            ),
+            acquisition=AcquisitionIdentity(mechanism="claude-plugin", source=f"{marketplace_source}::{plugin_id}"),
+            destination=DestinationIdentity(
+                kind="claude-plugin",
+                locator=str(plugin_root),
+                version=release_cohort.manifest.version,
+            ),
+        )
+
     evidence = {
         "schema": "cadrumo.packaging.acquire-claude-plugin.v1",
         "status": "passed",
@@ -217,6 +272,23 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--plugin-id", default=_PLUGIN_ID, help="Plugin identifier to install (name@marketplace).")
     parser.add_argument("--claude", type=Path, default=None, help="Explicit claude executable (defaults to PATH).")
     parser.add_argument("--timeout-seconds", type=float, default=600.0)
+    parser.add_argument(
+        "--release-cohort-dir",
+        type=Path,
+        default=None,
+        help="Full release-cohort directory to bind a sanctioned flat client record to.",
+    )
+    parser.add_argument(
+        "--row-id",
+        default=None,
+        help="Client row this run proves (required to emit the flat record).",
+    )
+    parser.add_argument(
+        "--distribution-evidence-dir",
+        type=Path,
+        default=None,
+        help="Where the flat record lands (defaults to var/distribution-install-readiness).",
+    )
     return parser
 
 
@@ -230,6 +302,9 @@ def main(argv: list[str] | None = None) -> int:
         plugin_id=args.plugin_id,
         claude_executable=args.claude,
         timeout_seconds=args.timeout_seconds,
+        release_cohort_dir=args.release_cohort_dir,
+        row_id=args.row_id,
+        distribution_evidence_dir=args.distribution_evidence_dir,
     )
     print(evidence)
     return 0
