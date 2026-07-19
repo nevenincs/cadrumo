@@ -24,11 +24,15 @@ from dev.packaging._acquire_common import (
     require_command_succeeded,
     run_installed_behavior_oracles,
 )
+from dev.packaging.cohort_manifest import load_release_cohort
+from dev.packaging.distribution_evidence_emit import emit_installed_oracle_evidence
+from dev.packaging.evidence import AcquisitionIdentity, DestinationIdentity
 from dev.packaging.python_cohort import PythonCohort, load_python_cohort
 
 _UTF_8: Final[str] = "utf-8"
 _DEFAULT_TAP: Final[str] = "nevenincs/cadrumo"
 _FORMULA_NAME: Final[str] = "cadrumo"
+_DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
 
 # Homebrew formula source-archive name -> promoted cohort sdist digest name.
 # The formula ships the root as its stable archive and both data distributions
@@ -125,6 +129,9 @@ def run_homebrew_acquisition(
     tap: str,
     brew_executable: Path | None,
     timeout_seconds: float,
+    release_cohort_dir: Path | None = None,
+    row_id: str | None = None,
+    distribution_evidence_dir: Path | None = None,
 ) -> Path:
     """Tap, install, verify formula digests, and repeat installed oracles.
 
@@ -134,6 +141,14 @@ def run_homebrew_acquisition(
         tap: The public ``owner/name`` Homebrew tap hosting the formula.
         brew_executable: An explicit ``brew`` path, or ``None`` to resolve PATH.
         timeout_seconds: Per-command timeout for brew and the installed oracles.
+        release_cohort_dir: The full release-cohort directory to bind a sanctioned
+            flat :class:`~dev.packaging.evidence.DistributionEvidence` record to.
+            When omitted, only the per-run acquisition document is written.
+        row_id: The distribution row this run proves (required to emit the flat
+            record, e.g. ``homebrew-macos-arm64``).
+        distribution_evidence_dir: Where the flat record lands; defaults to
+            ``var/distribution-install-readiness`` (the directory both the
+            release-readiness and docs-claims gates scan).
 
     Returns:
         The path to the retained JSON evidence document.
@@ -232,6 +247,23 @@ def run_homebrew_acquisition(
         json.dumps(evidence, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding=_UTF_8,
     )
+
+    if release_cohort_dir is not None and row_id is not None:
+        release_cohort = load_release_cohort(release_cohort_dir)
+        emit_installed_oracle_evidence(
+            directory=(distribution_evidence_dir or _DEFAULT_DISTRIBUTION_EVIDENCE_DIR),
+            row_id=row_id,
+            cohort=release_cohort,
+            tax_evidence=tax_evidence,
+            mcp_evidence=mcp_evidence,
+            acquisition=AcquisitionIdentity(mechanism="brew", source=qualified),
+            destination=DestinationIdentity(
+                kind="homebrew-cellar",
+                locator=str(installed_prefix),
+                version=release_cohort.manifest.version,
+            ),
+        )
+
     return evidence_path
 
 
@@ -243,6 +275,23 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--tap", default=_DEFAULT_TAP, help="Public owner/name Homebrew tap.")
     parser.add_argument("--brew", type=Path, default=None, help="Explicit brew executable (defaults to PATH).")
     parser.add_argument("--timeout-seconds", type=float, default=600.0)
+    parser.add_argument(
+        "--release-cohort-dir",
+        type=Path,
+        default=None,
+        help="Full release-cohort directory to bind a sanctioned flat evidence record to.",
+    )
+    parser.add_argument(
+        "--row-id",
+        default=None,
+        help="Distribution row this run proves (required to emit the flat record).",
+    )
+    parser.add_argument(
+        "--distribution-evidence-dir",
+        type=Path,
+        default=None,
+        help="Where the flat record lands (defaults to var/distribution-install-readiness).",
+    )
     return parser
 
 
@@ -255,6 +304,9 @@ def main(argv: list[str] | None = None) -> int:
         tap=args.tap,
         brew_executable=args.brew,
         timeout_seconds=args.timeout_seconds,
+        release_cohort_dir=args.release_cohort_dir,
+        row_id=args.row_id,
+        distribution_evidence_dir=args.distribution_evidence_dir,
     )
     print(evidence)
     return 0

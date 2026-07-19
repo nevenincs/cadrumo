@@ -27,8 +27,8 @@ from dev.packaging.cohort_manifest import (
     write_manifest,
 )
 from dev.packaging.distribution_evidence_emit import (
-    build_installed_python_evidence,
-    emit_installed_python_evidence,
+    build_installed_oracle_evidence,
+    emit_installed_oracle_evidence,
 )
 from dev.packaging.evidence import (
     AcquisitionIdentity,
@@ -175,7 +175,7 @@ def test_build_binds_cohort_and_retains_both_transports(tmp_path: Path) -> None:
     tax = _tax_evidence(tmp_path)
     mcp = _mcp_evidence()
 
-    evidence = build_installed_python_evidence(
+    evidence = build_installed_oracle_evidence(
         row_id="python-windows-x86-64",
         cohort=cohort,
         tax_evidence=tax,
@@ -209,7 +209,7 @@ def test_emit_writes_a_flat_record_both_gates_can_read(tmp_path: Path) -> None:
     cohort = _release_cohort(tmp_path / "cohort")
     evidence_dir = tmp_path / "distribution-install-readiness"
 
-    path = emit_installed_python_evidence(
+    path = emit_installed_oracle_evidence(
         directory=evidence_dir,
         row_id="python-linux-x86-64",
         cohort=cohort,
@@ -234,7 +234,7 @@ def test_destination_version_mismatch_is_refused(tmp_path: Path) -> None:
     """A destination version that is not the cohort version cannot pass validation."""
     cohort = _release_cohort(tmp_path / "cohort")
     with pytest.raises(ValueError, match="destination version"):
-        build_installed_python_evidence(
+        build_installed_oracle_evidence(
             row_id="python-macos-arm64",
             cohort=cohort,
             tax_evidence=_tax_evidence(tmp_path),

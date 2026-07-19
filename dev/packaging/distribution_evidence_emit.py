@@ -11,11 +11,13 @@ that turns an installed CLI/MCP behaviour-oracle run into that record; it reuses
 the canonical :func:`~dev.packaging.evidence.create_distribution_evidence`
 authority rather than re-deriving evidence identity.
 
-Design (ratified option A): a Python distribution row's record carries the real
-installed-CLI command transcripts as its ``commands`` and folds the MCP protocol
-proof - the launched server executable, its cohort-pinned tool-call sequence, and
-the grounded target value - into ``result.observations`` plus the second
-``installed_executables`` entry. No command transcript is ever synthesised: the
+Design (ratified option A): an installed-oracle distribution row's record (Python,
+Homebrew, or Scoop - every lane that installs the product and drives the real
+``aeat`` and ``cadrumo-mcp`` commands) carries the real installed-CLI command
+transcripts as its ``commands`` and folds the MCP protocol proof - the launched
+server executable, its cohort-pinned tool-call sequence, and the grounded target
+value - into ``result.observations`` plus the second ``installed_executables``
+entry. No command transcript is ever synthesised: the
 MCP server is launched inside the ``mcp`` stdio client, which does not expose a
 genuine subprocess exit status or stream digests, so fabricating one would be
 forbidden. Every field written here is a real captured value.
@@ -96,7 +98,7 @@ def _mcp_call_summary(mcp_evidence: InstalledMcpEvidence) -> list[dict[str, Any]
     ]
 
 
-def build_installed_python_evidence(
+def build_installed_oracle_evidence(
     *,
     row_id: str,
     cohort: LoadedReleaseCohort,
@@ -107,7 +109,10 @@ def build_installed_python_evidence(
     client: ClientIdentity | None = None,
     observed_at: datetime | None = None,
 ) -> DistributionEvidence:
-    """Assemble one cohort-bound record for an installed Python distribution row.
+    """Assemble one cohort-bound record for an installed-oracle distribution row.
+
+    Serves every lane that installs the product and drives the real ``aeat`` and
+    ``cadrumo-mcp`` commands (Python/PyPI, Homebrew, Scoop).
 
     Args:
         row_id: The distribution row this record proves (a
@@ -186,7 +191,7 @@ def build_installed_python_evidence(
     )
 
 
-def emit_installed_python_evidence(
+def emit_installed_oracle_evidence(
     *,
     directory: Path,
     row_id: str,
@@ -203,7 +208,7 @@ def emit_installed_python_evidence(
     Writes ``{row_id}-{evidence_id}.json`` under ``directory`` (the flat layout
     both release-readiness and the docs-claims gate scan) and returns its path.
     """
-    evidence = build_installed_python_evidence(
+    evidence = build_installed_oracle_evidence(
         row_id=row_id,
         cohort=cohort,
         tax_evidence=tax_evidence,
@@ -217,6 +222,6 @@ def emit_installed_python_evidence(
 
 
 __all__ = [
-    "build_installed_python_evidence",
-    "emit_installed_python_evidence",
+    "build_installed_oracle_evidence",
+    "emit_installed_oracle_evidence",
 ]
