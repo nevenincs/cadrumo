@@ -186,6 +186,46 @@ jobs:
             -AppName cadrumo-s20-acquisition `
             -TimeoutMinutes 60
 
+      # The container mounts the evidence dir writable, so the oracle JSONs land
+      # host-visible here. Download the tested full release cohort and mint the
+      # sanctioned flat distribution-evidence record for the scoop row from those
+      # real captured oracle JSONs (no re-run, no fabrication).
+      - name: Download the tested full release cohort
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: cadrumo-release-cohort
+          path: ${{ env.CADRUMO_S20_ROOT }}/release-cohort
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Emit the sanctioned Scoop distribution-evidence record
+        shell: powershell
+        run: |
+          $evidenceRoot = "$env:CADRUMO_S20_ROOT/evidence"
+          $tax = (Get-ChildItem -Path $evidenceRoot -Recurse -Filter tax-evidence.json | Select-Object -First 1).FullName
+          $mcp = (Get-ChildItem -Path $evidenceRoot -Recurse -Filter mcp-evidence.json | Select-Object -First 1).FullName
+          if (-not $tax -or -not $mcp) {
+            throw "scoop oracle evidence JSONs not found under $evidenceRoot"
+          }
+          $scoop = Get-Content -LiteralPath (Join-Path $evidenceRoot "scoop-evidence.json") -Raw | ConvertFrom-Json
+          $locator = if ($scoop.installed_prefix) { [string]$scoop.installed_prefix } else { "cadrumo" }
+          $source = if ($scoop.bucket_url) { [string]$scoop.bucket_url } else { "scoop-bucket" }
+          uv run --no-project --with packaging --with pydantic --with mcp `
+            python -m dev.packaging.distribution_evidence_emit `
+            --row-id scoop-windows-x86-64 `
+            --release-cohort-dir "$env:CADRUMO_S20_ROOT/release-cohort" `
+            --tax-evidence $tax `
+            --mcp-evidence $mcp `
+            --acquisition-mechanism scoop `
+            --acquisition-source $source `
+            --destination-kind scoop-install `
+            --destination-locator $locator `
+            --distribution-evidence-dir "$env:CADRUMO_S20_ROOT/distribution-install-readiness"
+          if ($LASTEXITCODE -ne 0) {
+            throw "distribution-evidence emission failed"
+          }
+
       - name: Upload Cadrumo Scoop acquisition evidence
         if: always() && steps.initialize.outputs.ready == 'true'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
