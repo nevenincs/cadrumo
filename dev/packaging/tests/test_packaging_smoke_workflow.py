@@ -65,7 +65,9 @@ _PORTABLE_LEGS: dict[str, dict[str, object]] = {
     },
     "cadrumo-packaging-smoke-macos": {
         "name": "Cadrumo / macOS / Python 3.13 / wheel artifacts",
-        "runs_on": ["self-hosted", "macOS", "ARM64"],
+        # Operator ruling 2026-07-20: the self-hosted Mac is powered off
+        # indefinitely, so the macOS legs run hosted (Apple silicon).
+        "runs_on": "macos-latest",
         "cohort_artifact": "cadrumo-python-cohort-macos",
         "evidence_artifact": "cadrumo-packaging-smoke-evidence-macos",
     },
@@ -110,7 +112,7 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
     legs = {
         "oracle-emit-linux": ("python-linux-x86-64", ["self-hosted", "Linux", "X64"]),
         "oracle-emit-windows": ("python-windows-x86-64", ["self-hosted", "Windows", "X64"]),
-        "oracle-emit-macos": ("python-macos-arm64", ["self-hosted", "macOS", "ARM64"]),
+        "oracle-emit-macos": ("python-macos-arm64", "macos-latest"),
     }
     for job_name, (row_id, runs_on) in legs.items():
         leg = jobs[job_name]

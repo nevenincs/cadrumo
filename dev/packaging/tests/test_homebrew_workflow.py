@@ -20,10 +20,11 @@ def _workflow() -> dict[str, Any]:
 def test_homebrew_workflow_declares_every_generated_target_row() -> None:
     """The matrix covers both architectures on macOS and Linux.
 
-    Self-hosting: the two rows that genuinely map to the free fleet run on it
-    (linux-x86_64 -> the WSL X64 runner, macos-arm64 -> the MacBook), while
+    Self-hosting: linux-x86_64 runs on the free WSL X64 runner, while
     macos-intel and linux-arm64 (aarch64) have no self-hosted home and honestly
-    stay hosted rather than run on a mismatched architecture.
+    stay hosted rather than run on a mismatched architecture. Operator ruling
+    2026-07-20: the self-hosted Mac is powered off indefinitely, so macos-arm64
+    also runs hosted (macos-latest is Apple silicon).
     """
     document = _workflow()
     assert document["name"] == "Cadrumo Homebrew Acquisition"
@@ -35,7 +36,7 @@ def test_homebrew_workflow_declares_every_generated_target_row() -> None:
 
     assert {(row["id"], _runner(row["runner"]), row["expected_os"], row["expected_arch"]) for row in rows} == {
         ("macos-intel", "macos-15-intel", "Darwin", "x86_64"),
-        ("macos-arm64", ("self-hosted", "macOS", "ARM64"), "Darwin", "arm64"),
+        ("macos-arm64", "macos-latest", "Darwin", "arm64"),
         ("linux-x86_64", ("self-hosted", "Linux", "X64"), "Linux", "x86_64"),
         ("linux-arm64", "ubuntu-24.04-arm", "Linux", "aarch64"),
     }

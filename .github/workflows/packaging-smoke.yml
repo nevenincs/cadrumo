@@ -209,9 +209,13 @@ jobs:
   # macos-latest runner (Apple silicon / arm64). Same host-portable
   # `packaging-smoke` aggregate as the Windows leg; the Linux-only reclamation
   # and sampler are omitted, and no host package-manager (Homebrew) lane runs.
+  # Operator ruling 2026-07-20: the self-hosted Mac is powered off indefinitely,
+  # so the macOS legs run on hosted macos-latest (Apple silicon); Windows and
+  # Linux stay on the operator's free self-hosted machines per the cost
+  # directive.
   cadrumo-packaging-smoke-macos:
     name: Cadrumo / macOS / Python 3.13 / wheel artifacts
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: macos-latest
     timeout-minutes: 120
 
     steps:
@@ -392,7 +396,7 @@ jobs:
   oracle-emit-macos:
     name: Cadrumo / macOS / immutable-cohort oracle + emit
     needs: build-release-cohort
-    runs-on: [self-hosted, macOS, ARM64]
+    runs-on: macos-latest
     timeout-minutes: 90
     steps:
       - name: Checkout repository

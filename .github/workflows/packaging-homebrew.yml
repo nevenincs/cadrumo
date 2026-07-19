@@ -38,9 +38,11 @@ jobs:
             expected_arch: x86_64
             brew: /usr/local/bin/brew
             row_id: homebrew-macos-x86-64
+          # Operator ruling 2026-07-20: self-hosted Mac is off indefinitely;
+          # the arm64 row runs on hosted macos-latest (Apple silicon).
           - id: macos-arm64
             label: macOS arm64
-            runner: [self-hosted, macOS, ARM64]
+            runner: macos-latest
             expected_os: Darwin
             expected_arch: arm64
             brew: /opt/homebrew/bin/brew
