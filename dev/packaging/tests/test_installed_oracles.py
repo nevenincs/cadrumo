@@ -461,6 +461,32 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
         )
 
 
+def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort: InstalledCohort) -> None:
+    """The A-client launch capture spawns the real server and it exits 0 on stdin EOF.
+
+    Proves the option-A pure-client command transcript is a genuinely-owned
+    subprocess: real argv, a real ``initialize`` handshake identifying the server
+    as ``cadrumo``, and a clean exit (a killed server would be non-zero and could
+    never sit in a passing distribution-evidence record).
+    """
+    from dev.packaging._acquire_common import capture_owned_server_launch
+    from dev.packaging.installed_mcp_oracle import isolated_mcp_environment
+
+    work = installed_cohort.work_dir / "owned-launch-capture"
+    work.mkdir()
+    environment = isolated_mcp_environment(work / "state")
+    transcript = capture_owned_server_launch(
+        server=installed_cohort.mcp_server,
+        env=environment,
+        cwd=work,
+        timeout_seconds=180.0,
+    )
+    assert Path(transcript.argv[0]) == installed_cohort.mcp_server
+    assert transcript.exit_status == 0
+    assert transcript.relevant_output == ("initialize serverInfo.name=cadrumo",)
+    assert transcript.completed_at >= transcript.started_at
+
+
 def _retired_state_environment(base: Path) -> dict[str, str]:
     """A per-OS platform-data root whose retired ``aeat`` state triggers the refusal.
 
