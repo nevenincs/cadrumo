@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Prove target discovery includes live, tombstoned, and dangling-pointer buckets but excludes cold defaults
 
 ## Scope

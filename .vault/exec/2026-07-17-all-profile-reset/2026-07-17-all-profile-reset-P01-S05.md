@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Prove operation-owned deletion rejects mismatches and accepts only journal-proven absence
 
 ## Scope

@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Expose target-scoped deletion assessment and verify reset operation ownership and fingerprint during deletion
 
 ## Scope

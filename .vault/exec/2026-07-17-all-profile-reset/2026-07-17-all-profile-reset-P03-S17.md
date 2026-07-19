@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Prove sorted locking, writer pauses, reset exclusion, retention recheck, and renewed confirmation with real processes
 
 ## Scope

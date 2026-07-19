@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Prove every reset phase boundary resumes honestly in a fresh child process
 
 ## Scope

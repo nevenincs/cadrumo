@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Persist deleting ownership before deletion and completion after each irreversible transition
 
 ## Scope

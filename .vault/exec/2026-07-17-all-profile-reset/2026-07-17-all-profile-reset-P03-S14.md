@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Reacquire locks and recheck fingerprints and retention during roll-forward resume without mutating on status
 
 ## Scope

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#all-profile-reset'
 date: '2026-07-17'
-modified: '2026-07-17'
+modified: '2026-07-19'
 tier: L2
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-adr]]'
@@ -13,7 +13,6 @@ related:
   - '[[2026-07-17-cli-authority-verb-conformance-audit]]'
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
 ---
-
 
 # `all-profile-reset` plan
 
@@ -55,18 +54,18 @@ Cut the config reset and sandbox command grammar over to the reset orchestration
 
 - [ ] `P04.S18` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names; `src/cadrumo/entrypoints/cli/_config/_custody.py`.
 - [ ] `P04.S19` - Remove the config profile sandbox use registration and execution path without an alias; `src/cadrumo/entrypoints/cli/_config/_sandbox.py`.
-- [ ] `P04.S20` - Replace flat scoped reset registration with the config reset command group; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
-- [ ] `P04.S21` - Register only reset start, status, and resume with operation, retention, reason, and confirmation options; `src/cadrumo/entrypoints/cli/_config/_reset_cli.py`.
+- [x] `P04.S20` - Replace flat scoped reset registration with the config reset command group; `src/cadrumo/entrypoints/cli/_config/__init__.py`.
+- [x] `P04.S21` - Register only reset start, status, and resume with operation, retention, reason, and confirmation options; `src/cadrumo/entrypoints/cli/_config/_reset_cli.py`.
 - [ ] `P04.S22` - Prove exact sandbox labels work through switch while sandbox use and bare names are absent; `src/cadrumo/entrypoints/cli/tests/test_config_profile_sandbox.py`.
 - [x] `P04.S23` - Prove switching and strong logout through real persisted custody state; `src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py`.
-- [ ] `P04.S24` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
-- [ ] `P04.S25` - Require yes for reset start and resume while keeping status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
+- [x] `P04.S24` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes; `src/cadrumo/entrypoints/cli/tests/test_config_reset_lifecycle.py`.
+- [x] `P04.S25` - Require yes for reset start and resume while keeping status non-destructive; `src/cadrumo/entrypoints/cli/tests/test_destructive_verbs_require_yes.py`.
 
 ### Phase `P05` - Contract migration for the reset family
 
 Move the reset payload schemas, write-policy tokens, locales, help and risk metadata, and generated documentation.
 
-- [ ] `P05.S26` - Migrate the reset payload schemas and write-policy tokens to the accepted reset grammar; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
+- [x] `P05.S26` - Migrate the reset payload schemas and write-policy tokens to the accepted reset grammar; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [ ] `P05.S27` - Migrate the reset family help and risk metadata to the accepted grammar; `src/cadrumo/application/operator_surface/_help.py`.
 - [ ] `P05.S28` - Migrate the four locale catalogues for the reset and sandbox families through the locales CLI; `src/cadrumo/locales/en.yml`.
 - [ ] `P05.S29` - Regenerate the CLI reference and operator how-to pages for the reset family from the frozen live surface; `docs/reference/commands-and-configuration.md`.

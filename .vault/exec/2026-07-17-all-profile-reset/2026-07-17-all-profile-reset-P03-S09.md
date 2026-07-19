@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Replace scoped reset with start, status, and resume over all live, tombstoned, and dangling-pointer targets
 
 ## Scope
