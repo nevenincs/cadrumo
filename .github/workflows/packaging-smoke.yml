@@ -4,22 +4,34 @@
 
 name: Cadrumo Packaging Smoke
 
+# Cost discipline (operator directive 2026-07-19): the 3-OS matrix is the
+# single most expensive workflow in the repo, so it runs ONLY where its result
+# is consumed - a push to main whose diff can affect the shipped artifacts, or
+# an explicit dispatch. There is deliberately NO pull_request trigger, and
+# vault/docs/agent-config churn (the bulk of shared-worktree campaign pushes,
+# none of which ships in any artifact) never starts a matrix.
 on:
   workflow_dispatch:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+    paths-ignore:
+      - ".vault/**"
+      - ".vaultspec/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".gemini/**"
+      - ".agents/**"
+      - "docs/**"
+      - "**.md"
 
-# PR iterations cancel their own stale runs, but a push to main must never
-# cancel the running matrix: the release gates consume a COMPLETED successful
-# push-to-main run, and the shared-worktree campaigns push to main more often
-# than the ~35-minute matrix takes, so cancel-on-push livelocks the gate
-# forever. With queueing, the running matrix completes and the newest push
-# waits as the single pending run.
+# A push to main must never cancel the running matrix: the release gates
+# consume a COMPLETED successful push-to-main run, and the shared-worktree
+# campaigns push to main more often than the ~35-minute matrix takes, so
+# cancel-on-push livelocks the gate forever. With queueing, the running matrix
+# completes and the newest push waits as the single pending run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
