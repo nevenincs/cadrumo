@@ -11,7 +11,7 @@ name = "cadrumo-data-official"
 # runtime wheel that resolves it. Bump both (and the sibling
 # `cadrumo-data-manuals`) together on every release.
 version = "0.2.1"
-description = "Official AEAT diseños de registro / workbooks and normative PDFs (corpus source binaries) for the cadrumo distribution"
+description = "Official AEAT diseños de registro / workbooks and normative PDFs (corpus source binaries) for the Cadrumo distribution"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"

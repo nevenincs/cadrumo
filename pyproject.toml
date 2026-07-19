@@ -1,7 +1,7 @@
 [project]
 name = "cadrumo"
 version = "0.2.1"
-description = "Cadrumo: a deterministic Spanish tax calculation engine and agent harness that turns your financial records into modelo data, ready for you to file with the AEAT. Independent software; not affiliated with the AEAT."
+description = "Cadrumo is a deterministic Spanish tax calculation CLI and MCP server that turns local financial records into checked, exportable modelo filing artifacts. Independent software; not affiliated with AEAT."
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"

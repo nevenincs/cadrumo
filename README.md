@@ -5,7 +5,7 @@
 # Cadrumo: turn Spanish tax records into locally verified filing artifacts
 
 [![Apache 2.0 license](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-![Project status: alpha](https://img.shields.io/badge/status-alpha-orange)
+![Project status: beta](https://img.shields.io/badge/status-beta-yellow)
 
 Cadrumo turns local financial records into calculated, checked, and exportable artifacts for supported Spanish tax forms. It keeps the calculation path deterministic and preserves each result's sources.
 
