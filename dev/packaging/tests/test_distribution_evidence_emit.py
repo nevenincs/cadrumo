@@ -306,6 +306,10 @@ def _client() -> ClientIdentity:
     return ClientIdentity(name="claude-desktop", version="1.22209", executable=sys.executable)
 
 
+def _real_client_session() -> dict[str, object]:
+    return {"connected": True, "status": "passed", "tool_called": "cadrumo_modelo_work_calculate", "model": "sonnet"}
+
+
 def _sdk_client() -> ClientIdentity:
     from dev.packaging.distribution_evidence_emit import SDK_CLIENT_NAME
 
@@ -343,6 +347,22 @@ def test_sdk_client_emits_under_a_distinct_artifact_serves_id(tmp_path: Path) ->
     assert evidence.result.status is EvidenceStatus.PASSED
 
 
+def test_required_real_client_row_needs_a_real_session(tmp_path: Path) -> None:
+    """A required claude-* row cannot be minted from an owned launch alone."""
+    cohort = _release_cohort(tmp_path / "cohort")
+    with pytest.raises(ValueError, match="requires a real Claude client session"):
+        build_client_evidence(
+            row_id="claude-desktop-mcpb",
+            cohort=cohort,
+            mcp_evidence=_mcp_evidence(),
+            launch_transcript=_launch_transcript(tmp_path),
+            client=_client(),
+            acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
+            destination=_destination(cohort),
+            real_client_session=None,
+        )
+
+
 def test_required_real_client_rows_match_readiness() -> None:
     """The guard's required-row set stays in lock-step with the readiness authority."""
     from dev.packaging.distribution_evidence_emit import _REQUIRED_REAL_CLIENT_ROW_IDS
@@ -363,6 +383,7 @@ def test_client_row_uses_owned_launch_transcript_and_mcp_proof(tmp_path: Path) -
         client=_client(),
         acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
         destination=_destination(cohort),
+        real_client_session=_real_client_session(),
     )
 
     assert evidence.row_id == "claude-desktop-mcpb"
@@ -377,6 +398,10 @@ def test_client_row_uses_owned_launch_transcript_and_mcp_proof(tmp_path: Path) -
     mcp_oracle = evidence.result.observations["mcp_oracle"]
     assert isinstance(mcp_oracle, dict)
     assert mcp_oracle["target_value"] == _TARGET_VALUE
+    # The operator's real Claude client session is retained as the real-client proof.
+    session = evidence.result.observations["real_client_session"]
+    assert isinstance(session, dict)
+    assert session["tool_called"] == "cadrumo_modelo_work_calculate"
 
 
 def test_emit_client_evidence_writes_flat_record(tmp_path: Path) -> None:
@@ -392,6 +417,7 @@ def test_emit_client_evidence_writes_flat_record(tmp_path: Path) -> None:
         client=_client(),
         acquisition=AcquisitionIdentity(mechanism="claude-plugin", source="marketplace"),
         destination=_destination(cohort),
+        real_client_session=_real_client_session(),
     )
     assert path.name.startswith("claude-code-plugin-")
     reloaded = DistributionEvidence.model_validate_json(path.read_text(encoding="utf-8"))
