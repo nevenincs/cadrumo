@@ -36,17 +36,16 @@ msgstr ""
 "cualquier página de la documentación."
 
 #: ../../updates.md:8
-#, fuzzy
 msgid ""
 "Cadrumo is in beta. Treat every release note as potentially relevant "
 "before upgrading, and verify filing deadlines, forms, and submission "
 "rules with the Agencia Estatal de Administración Tributaria (AEAT) before"
 " you file."
 msgstr ""
-"Cadrumo es software en fase pre-alfa. Considera cada nota de versión como"
-" potencialmente relevante antes de actualizar, y verifica los plazos de "
-"presentación, los modelos y las reglas de envío con la Agencia Estatal de"
-" Administración Tributaria (AEAT) antes de presentar."
+"Cadrumo está en beta. Considera cada nota de versión como potencialmente "
+"relevante antes de actualizar, y verifica los plazos de presentación, los"
+" modelos y las reglas de envío con la Agencia Estatal de Administración "
+"Tributaria (AEAT) antes de presentar."
 
 #: ../../updates.md:18
 msgid "Latest download"
@@ -104,13 +103,12 @@ msgid "Current status"
 msgstr "Estado actual"
 
 #: ../../updates.md:57
-#, fuzzy
 msgid ""
 "Cadrumo is local-first beta software for preparing Spanish tax filing "
 "records ([read the full disclaimer](disclaimer.md))."
 msgstr ""
-"Cadrumo es software local-first en fase pre-alfa para preparar registros "
-"de declaraciones tributarias españolas ([lee el aviso legal "
+"Cadrumo es software beta local-first para preparar registros de "
+"declaraciones tributarias españolas ([lee el aviso legal "
 "completo](disclaimer.md))."
 
 #: ../../updates.md:60
