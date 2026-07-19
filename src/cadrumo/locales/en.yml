@@ -3244,8 +3244,6 @@ cli:
         usage_help: Report the on-disk footprint of one sandbox, or every sandbox
           at once.
         usage_name_help: Sandbox name (without the prefix); omit to report every sandbox.
-        use_help: Switch the active profile to an existing sandbox.
-        use_name_help: Sandbox name (without the prefix).
       sar_catalogue_info: This archive holds every personal-data category kept for
         the profile. The exact categories are listed in the data_categories field
         of this response and its machine-readable context. Attachment evidence bytes
@@ -4235,6 +4233,9 @@ cli:
         profile_show: Show one profile's facts.
         profile_status: Show active profile readiness.
         profile_switch: Switch to a profile and make it the active one.
+        reset_resume: Continue an incomplete reset operation.
+        reset_start: Start a new irreversible reset of every locally stored profile.
+        reset_status: Show reset operation status without changing local data.
         section_authentication: Authentication
         section_diagnostics: Diagnostics
         section_first_run: First run

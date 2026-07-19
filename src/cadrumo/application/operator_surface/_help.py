@@ -369,6 +369,18 @@ def _config_help() -> HelpDocument:
                         command="aeat config repair reset-progress",
                         description=tr("cli.operator_surface.help.config.diagnostics_reset_progress"),
                     ),
+                    HelpEntry(
+                        command="aeat config reset start --yes",
+                        description=tr("cli.operator_surface.help.config.reset_start"),
+                    ),
+                    HelpEntry(
+                        command="aeat config reset status",
+                        description=tr("cli.operator_surface.help.config.reset_status"),
+                    ),
+                    HelpEntry(
+                        command="aeat config reset resume --yes",
+                        description=tr("cli.operator_surface.help.config.reset_resume"),
+                    ),
                 ),
             ),
         ),
