@@ -230,7 +230,6 @@ msgstr ""
 "disposats sobre un escriptori"
 
 #: ../../index.md:9
-#, fuzzy
 msgid ""
 "This is the documentation for Cadrumo and its `aeat` command-line "
 "interface (CLI). Cadrumo turns your records into checked modelo figures "
@@ -246,8 +245,8 @@ msgstr ""
 "fitxer a l'Agencia Estatal de Administración Tributaria (AEAT). Per saber"
 " què és Cadrumo i a qui s'adreça, consulta la [pàgina del "
 "producte](https://cadrumo.neve.md); el codi font és a "
-"[GitHub](https://github.com/nevenincs/cadrumo). Cadrumo està en fase pre-"
-"alfa: espera canvis incompatibles entre versions."
+"[GitHub](https://github.com/nevenincs/cadrumo). Cadrumo està en fase beta: "
+"les interfícies encara poden canviar entre versions."
 
 #: ../../index.md:18
 msgid ""
