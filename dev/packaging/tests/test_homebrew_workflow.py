@@ -18,16 +18,26 @@ def _workflow() -> dict[str, Any]:
 
 
 def test_homebrew_workflow_declares_every_generated_target_row() -> None:
-    """The matrix covers both architectures on macOS and Linux."""
+    """The matrix covers both architectures on macOS and Linux.
+
+    Self-hosting: the two rows that genuinely map to the free fleet run on it
+    (linux-x86_64 -> the WSL X64 runner, macos-arm64 -> the MacBook), while
+    macos-intel and linux-arm64 (aarch64) have no self-hosted home and honestly
+    stay hosted rather than run on a mismatched architecture.
+    """
     document = _workflow()
     assert document["name"] == "Cadrumo Homebrew Acquisition"
     job = document["jobs"]["cadrumo-homebrew-acquisition"]
     rows = job["strategy"]["matrix"]["include"]
-    assert {(row["runner"], row["expected_os"], row["expected_arch"]) for row in rows} == {
-        ("macos-15-intel", "Darwin", "x86_64"),
-        ("macos-15", "Darwin", "arm64"),
-        ("ubuntu-24.04", "Linux", "x86_64"),
-        ("ubuntu-24.04-arm", "Linux", "aarch64"),
+
+    def _runner(value: object) -> object:
+        return tuple(value) if isinstance(value, list) else value
+
+    assert {(row["id"], _runner(row["runner"]), row["expected_os"], row["expected_arch"]) for row in rows} == {
+        ("macos-intel", "macos-15-intel", "Darwin", "x86_64"),
+        ("macos-arm64", ("self-hosted", "macOS", "ARM64"), "Darwin", "arm64"),
+        ("linux-x86_64", ("self-hosted", "Linux", "X64"), "Linux", "x86_64"),
+        ("linux-arm64", "ubuntu-24.04-arm", "Linux", "aarch64"),
     }
     assert job["strategy"]["fail-fast"] is False
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Homebrew release row")

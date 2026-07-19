@@ -39,16 +39,20 @@ jobs:
             brew: /usr/local/bin/brew
           - id: macos-arm64
             label: macOS arm64
-            runner: macos-15
+            runner: [self-hosted, macOS, ARM64]
             expected_os: Darwin
             expected_arch: arm64
             brew: /opt/homebrew/bin/brew
           - id: linux-x86_64
             label: Linux x86_64
-            runner: ubuntu-24.04
+            runner: [self-hosted, Linux, X64]
             expected_os: Linux
             expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
+          # linux-arm64 (aarch64) has no self-hosted ARM-Linux runner in the fleet
+          # (gw-workstation-wsl is X64), so it honestly stays hosted rather than run
+          # an aarch64 row on x64 hardware; macos-intel likewise has no self-hosted
+          # Intel Mac. Both remain hosted-blocked on the operator checklist.
           - id: linux-arm64
             label: Linux arm64
             runner: ubuntu-24.04-arm
