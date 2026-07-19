@@ -45,6 +45,7 @@ import re
 import shutil
 import subprocess
 import tomllib
+import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
@@ -473,6 +474,80 @@ def check_distribution_evidence_set(
     )
 
 
+def check_generated_surface_versions(
+    repo_root: Path,
+    *,
+    cohort_directory: Path | None = None,
+) -> ReadinessCheck:
+    """Require the generated Scoop/Homebrew/marketplace surfaces to bind the cohort.
+
+    Each channel generator embeds the version (and, for Scoop/Homebrew, the exact
+    artifact SHA-256s) at build time. A stale embedded value would ship an
+    install surface pointing at the wrong release under the right tag, so this
+    parses the three real formats - the Scoop JSON manifest, the Homebrew Ruby
+    formula, and the marketplace plugin JSON inside its zip - and refuses with a
+    per-surface enumeration when any embedded value drifts from the cohort.
+    """
+    name = "generated-surface-versions"
+    cohort_root = (cohort_directory or repo_root / "var" / "release-cohort").resolve()
+    manifest_path = cohort_root / "release-cohort.json"
+    python_cohort_path = cohort_root / "python" / "python-cohort.json"
+    try:
+        version = str(json.loads(manifest_path.read_text(encoding=_UTF_8))["version"])
+        python_sha = json.loads(python_cohort_path.read_text(encoding=_UTF_8))["sha256"]
+    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        return ReadinessCheck(
+            name, "blocking", False, f"cohort version/digest surfaces unreadable under {cohort_root}: {exc}"
+        )
+
+    failures: list[str] = []
+
+    try:
+        scoop = json.loads((cohort_root / "scoop" / "cadrumo.json").read_text(encoding=_UTF_8))
+        if str(scoop.get("version")) != version:
+            failures.append(f"scoop version {scoop.get('version')!r} != cohort {version!r}")
+        expected_hashes = [
+            python_sha["cadrumo"],
+            python_sha["cadrumo-data-manuals"],
+            python_sha["cadrumo-data-official"],
+        ]
+        actual_hashes = list(scoop.get("architecture", {}).get("64bit", {}).get("hash", []))
+        if actual_hashes != expected_hashes:
+            failures.append("scoop 64bit hashes do not equal the cohort python-wheel digests")
+    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        failures.append(f"scoop manifest unreadable: {exc}")
+
+    try:
+        formula = (cohort_root / "homebrew" / "Formula" / "cadrumo.rb").read_text(encoding=_UTF_8)
+        url_match = re.search(r'url "[^"]*/cadrumo-([0-9][^"/]*)\.tar\.gz"', formula)
+        sha_match = re.search(r'sha256 "([0-9a-f]{64})"', formula)
+        embedded_version = url_match.group(1) if url_match is not None else None
+        if embedded_version != version:
+            failures.append(f"homebrew formula stable version {embedded_version!r} != cohort {version!r}")
+        if sha_match is None or sha_match.group(1) != python_sha["cadrumo-sdist"]:
+            failures.append("homebrew formula stable sha256 != cohort cadrumo sdist digest")
+    except (OSError, KeyError) as exc:
+        failures.append(f"homebrew formula unreadable: {exc}")
+
+    try:
+        market_zips = sorted(cohort_root.glob("claude/cadrumo-marketplace-*.zip"))
+        if not market_zips:
+            failures.append("marketplace zip is absent")
+        else:
+            with zipfile.ZipFile(market_zips[0]) as archive:
+                plugin = json.loads(archive.read("plugins/cadrumo/.claude-plugin/plugin.json"))
+            if str(plugin.get("version")) != version:
+                failures.append(f"marketplace plugin version {plugin.get('version')!r} != cohort {version!r}")
+    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError) as exc:
+        failures.append(f"marketplace plugin manifest unreadable: {exc}")
+
+    if failures:
+        return ReadinessCheck(name, "blocking", False, "; ".join(failures))
+    return ReadinessCheck(
+        name, "blocking", True, f"scoop, homebrew, and marketplace all bind cohort version {version} and digests"
+    )
+
+
 def build_report(
     repo_root: Path | str | None = None,
     *,
@@ -499,6 +574,7 @@ def build_report(
             cohort_directory=cohort_directory,
             evidence_directory=evidence_directory,
         ),
+        check_generated_surface_versions(root, cohort_directory=cohort_directory),
     ]
     if not skip_network:
         checks.append(check_no_open_release_blockers(gh_executable=gh_executable))
