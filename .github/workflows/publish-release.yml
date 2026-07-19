@@ -117,30 +117,39 @@ jobs:
           version: "0.11.29"
           python-version: "3.13"
 
-      - name: Download the stored cohort and installed evidence (never rebuild)
+      - name: Download the stored cohort and per-platform installed evidence (never rebuild)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh run download "$PACKAGING_RUN_ID" --name cadrumo-python-cohort --dir "$COHORT_DIR"
           gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort --dir "$RELEASE_COHORT_DIR"
-          gh run download "$PACKAGING_RUN_ID" --name cadrumo-packaging-smoke-evidence --dir "$EVIDENCE_DOWNLOAD"
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-packaging-smoke-evidence --dir "$EVIDENCE_DOWNLOAD/linux"
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-packaging-smoke-evidence-windows --dir "$EVIDENCE_DOWNLOAD/windows"
+          gh run download "$PACKAGING_RUN_ID" --name cadrumo-packaging-smoke-evidence-macos --dir "$EVIDENCE_DOWNLOAD/macos"
 
-      - name: Re-verify exact hashes and both installed transports
+      - name: Re-verify exact hashes and EVERY platform's installed behavior
         id: validate
         env:
           EXPECTED_SOURCE_COMMIT: ${{ steps.source-run.outputs.source_commit }}
         run: |
-          evidence_file="$(find "$EVIDENCE_DOWNLOAD" -path "*/${EXPECTED_SOURCE_COMMIT}/evidence.json" -print -quit)"
-          if [[ -z "$evidence_file" ]]; then
-            echo "installed cohort evidence is absent for $EXPECTED_SOURCE_COMMIT" >&2
-            exit 1
-          fi
-          uv run --frozen python -m dev.release.promote_python_cohort \
-            --cohort-dir "$COHORT_DIR" \
-            --evidence-file "$evidence_file" \
-            --expected-source-commit "$EXPECTED_SOURCE_COMMIT" \
-            --check-pypi \
-            --github-output "$GITHUB_OUTPUT"
+          # A release ships only when EACH claimed platform retained real
+          # installed-behavior evidence (the grounded tax oracle run from the
+          # installed cohort) bound to the exact promoted source commit - a
+          # missing platform is a hard refusal, never a silent narrowing.
+          for platform in linux windows macos; do
+            evidence_file="$(find "$EVIDENCE_DOWNLOAD/$platform" -path "*/${EXPECTED_SOURCE_COMMIT}/evidence.json" -print -quit)"
+            if [[ -z "$evidence_file" ]]; then
+              echo "REFUSED: $platform installed-cohort evidence is absent for $EXPECTED_SOURCE_COMMIT" >&2
+              exit 1
+            fi
+            uv run --frozen python -m dev.release.promote_python_cohort \
+              --cohort-dir "$COHORT_DIR" \
+              --evidence-file "$evidence_file" \
+              --expected-source-commit "$EXPECTED_SOURCE_COMMIT" \
+              --check-pypi \
+              --github-output "$GITHUB_OUTPUT"
+            echo "verified $platform installed evidence: $evidence_file"
+          done
 
       - name: Require the complete blocking distribution evidence set
         run: |
