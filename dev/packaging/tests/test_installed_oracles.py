@@ -461,6 +461,139 @@ def test_marketplace_plugin_embeds_and_executes_the_exact_built_cohort(
         )
 
 
+def test_real_client_emission_cli_mints_a_sanctioned_record(
+    installed_cohort: InstalledCohort,
+    tmp_path: Path,
+) -> None:
+    """The operator real-client emission hook mints a valid claude-* record.
+
+    Drives dev.packaging.emit_real_client_evidence end to end: a synthetic release
+    cohort, the operator's captured protocol_oracle + real client session, and a
+    REAL owned launch of the installed cohort server. The produced record must
+    validate through the tamper-evident schema, be client-bound to the real
+    Claude client, and retain the real client session as its real-client proof.
+    """
+    from datetime import UTC, datetime
+
+    from dev.packaging import emit_real_client_evidence
+    from dev.packaging.cohort_manifest import (
+        REQUIRED_ARTIFACT_KINDS,
+        BuildIdentity,
+        SourceIdentity,
+        create_manifest,
+        write_manifest,
+    )
+    from dev.packaging.evidence import DistributionEvidence, EvidenceStatus
+
+    cohort_dir = tmp_path / "release-cohort"
+    cohort_dir.mkdir()
+    artifacts = []
+    for index, (name, kind) in enumerate(sorted(REQUIRED_ARTIFACT_KINDS.items())):
+        artifact = cohort_dir / "artifacts" / f"{name}.bin"
+        artifact.parent.mkdir(exist_ok=True)
+        artifact.write_bytes(f"{index}:{name}\n".encode())
+        artifacts.append((name, kind, artifact))
+    manifest = create_manifest(
+        root=cohort_dir,
+        version="0.2.1",
+        source=SourceIdentity(commit="c" * 40, tag="v0.2.1"),
+        created_at=datetime(2026, 1, 1, tzinfo=UTC),
+        builder=BuildIdentity(
+            implementation="dev.packaging.release_cohort",
+            format_version=1,
+            python=sys.version.split()[0],
+            uv="0.11.29",
+            platform=sys.platform,
+            architecture="test",
+            build_constraints_sha256="d" * 64,
+        ),
+        artifacts=artifacts,
+    )
+    write_manifest(cohort_dir, manifest)
+
+    protocol_oracle = tmp_path / "protocol-oracle.json"
+    protocol_oracle.write_text(
+        json.dumps(
+            {
+                "requested_executable": str(installed_cohort.mcp_server),
+                "resolved_executable": str(installed_cohort.mcp_server),
+                "server_name": "cadrumo",
+                "storage_root": "state",
+                "work_unit_id": "f" * 64,
+                "calculation_revision_id": "a" * 64,
+                "observations_resource": f"cadrumo://observations/{'a' * 64}",
+                "target_casilla": "DP200014:00562",
+                "target_value": "23000.00",
+                "formula_id": "modelo-200-cuota-integra",
+                "legal_refs": ["ley-27-2014:art-29"],
+                "source_refs": ["aeat-modelo-200-manual-2024"],
+                "notice_codes": ["modelo.work.calculate.plazo_vencido_unassessed_preview"],
+                "advertised_tools": ["cadrumo_modelo_work_calculate"],
+                "calls": [
+                    {
+                        "tool_name": "cadrumo_modelo_work_calculate",
+                        "command_key": "modelo.work.calculate",
+                        "duration_seconds": 0.5,
+                        "is_error": False,
+                        "status": "warning",
+                    }
+                ],
+                "invoked_cli_sha256": "0" * 64,
+                "invoked_cli_sha256_by_command": {"modelo.work.calculate": "0" * 64},
+            }
+        ),
+        encoding="utf-8",
+    )
+    session = tmp_path / "session.json"
+    session.write_text(
+        json.dumps({"connected": True, "status": "passed", "tool_called": "cadrumo_modelo_work_calculate"}),
+        encoding="utf-8",
+    )
+    evidence_dir = tmp_path / "distribution-install-readiness"
+
+    exit_code = emit_real_client_evidence.main(
+        [
+            "--row-id",
+            "claude-desktop-mcpb",
+            "--release-cohort-dir",
+            str(cohort_dir),
+            "--protocol-oracle",
+            str(protocol_oracle),
+            "--real-client-session",
+            str(session),
+            "--server",
+            str(installed_cohort.mcp_server),
+            "--client-name",
+            "claude-desktop",
+            "--client-version",
+            "1.22209",
+            "--client-executable",
+            str(installed_cohort.mcp_server),
+            "--acquisition-source",
+            "operator-in-app-capture",
+            "--destination-kind",
+            "claude-desktop-mcpb",
+            "--destination-locator",
+            "claude-desktop",
+            "--launch-work-dir",
+            str(tmp_path / "launch"),
+            "--distribution-evidence-dir",
+            str(evidence_dir),
+        ],
+    )
+
+    assert exit_code == 0
+    records = sorted(evidence_dir.glob("claude-desktop-mcpb-*.json"))
+    assert len(records) == 1
+    record = DistributionEvidence.model_validate_json(records[0].read_text(encoding="utf-8"))
+    assert record.row_id == "claude-desktop-mcpb"
+    assert record.result.status is EvidenceStatus.PASSED
+    assert record.client is not None
+    assert record.client.name == "claude-desktop"
+    assert record.commands[0].exit_status == 0
+    assert "real_client_session" in record.result.observations
+
+
 def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort: InstalledCohort) -> None:
     """The A-client launch capture spawns the real server and it exits 0 on stdin EOF.
 
