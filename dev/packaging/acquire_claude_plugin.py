@@ -50,7 +50,10 @@ from dev.packaging.smoke_plugin_install import (  # noqa: E402
 )
 
 _UTF_8: Final[str] = "utf-8"
-_DEFAULT_MARKETPLACE_SOURCE: Final[str] = "nevenincs/cadrumo"
+# The public Claude plugin marketplace repository (marketplace name "neve"),
+# distinct from the product repo. Per packaging/marketplace/README.md, users add
+# it with `/plugin marketplace add nevenincs/neve-marketplace`.
+_DEFAULT_MARKETPLACE_SOURCE: Final[str] = "nevenincs/neve-marketplace"
 _DEFAULT_DISTRIBUTION_EVIDENCE_DIR: Final[Path] = Path("var/distribution-install-readiness")
 
 

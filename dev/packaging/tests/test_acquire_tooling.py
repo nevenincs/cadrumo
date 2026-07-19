@@ -395,7 +395,7 @@ def test_homebrew_parser_defaults_to_public_tap() -> None:
 def test_claude_plugin_parser_defaults() -> None:
     """The plugin script exposes the public marketplace-source parameter."""
     args = acquire_claude_plugin._parser().parse_args(["--cohort-dir", "c", "--evidence-dir", "e"])
-    assert args.marketplace_source == "nevenincs/cadrumo"
+    assert args.marketplace_source == "nevenincs/neve-marketplace"
     assert args.plugin_id == acquire_claude_plugin._PLUGIN_ID
 
 
