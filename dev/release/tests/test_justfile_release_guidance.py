@@ -51,6 +51,11 @@ def test_release_apply_names_every_version_authority_and_only_the_named_tag() ->
 
     assert "packaging/cadrumo_data_manuals/pyproject.toml" in rendered
     assert "packaging/cadrumo_data_official/pyproject.toml" in rendered
+    # G7: the .mcpb manifest is the eighth version surface readiness blocks on
+    # (check_version_surfaces_agree), so the printed checklist must name it and
+    # stage all eight authorities - otherwise an operator bump leaves readiness red.
+    assert "packaging/mcpb/manifest.json" in rendered
+    assert "eight release authorities" in rendered
     assert "mandatory base dependency pins" in rendered
     assert "cadrumo-data-manuals==X.Y.Z" in rendered
     assert "cadrumo-data-official==X.Y.Z" in rendered
@@ -61,6 +66,15 @@ def test_release_apply_names_every_version_authority_and_only_the_named_tag() ->
     assert "git push origin main" in rendered
     assert "git push origin refs/tags/vX.Y.Z" in rendered
     assert "git push origin main --tags" not in rendered
+
+
+def test_release_collect_evidence_aggregates_the_uniform_row_artifacts() -> None:
+    """The collect recipe downloads every cadrumo-distribution-evidence-* row into the dir."""
+    rendered = _render_recipe("release-collect-evidence", "123456")
+
+    assert "gh run download" in rendered
+    assert "cadrumo-distribution-evidence-*" in rendered
+    assert "var/distribution-install-readiness" in rendered
 
 
 def test_release_rollback_names_every_yank_target_and_only_the_rollback_tag() -> None:

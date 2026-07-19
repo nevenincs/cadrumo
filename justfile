@@ -730,3 +730,51 @@ release-apply:
     Write-Host "When ready (human decision only), push with:"
     Write-Host "  git push origin main"
     Write-Host "  git push origin refs/tags/vX.Y.Z"
+
+# Aggregate every distribution-evidence row artifact from the given CI run(s) into
+# var/distribution-install-readiness/ so `just release-readiness` can reach 12/12.
+# Pass the packaging-smoke run id (mints python-<os> rows + the release cohort)
+# plus any acquisition run ids (Scoop, Homebrew) - every channel uploads its row
+# under the uniform cadrumo-distribution-evidence-* artifact name. The four real
+# client rows (claude-*) are minted locally by `python -m
+# dev.packaging.emit_real_client_evidence ...` and already live in the dest.
+[unix]
+release-collect-evidence *run_ids:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ -z "{{run_ids}}" ]; then
+        echo "usage: just release-collect-evidence SMOKE_RUN_ID [SCOOP_RUN_ID HOMEBREW_RUN_ID ...]" >&2
+        exit 1
+    fi
+    dest="var/distribution-install-readiness"
+    mkdir -p "$dest"
+    tmp="$(mktemp -d)"
+    for run_id in {{run_ids}}; do
+        echo "collecting cadrumo-distribution-evidence-* from run $run_id"
+        gh run download "$run_id" --pattern 'cadrumo-distribution-evidence-*' --dir "$tmp/$run_id"
+    done
+    n=0
+    while IFS= read -r -d '' f; do cp "$f" "$dest/"; n=$((n + 1)); done < <(find "$tmp" -name '*.json' -print0)
+    rm -rf "$tmp"
+    echo "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
+
+[windows]
+release-collect-evidence *run_ids:
+    #!pwsh
+    $ErrorActionPreference = 'Stop'
+    $ids = "{{run_ids}}".Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)
+    if ($ids.Count -eq 0) {
+        Write-Error "usage: just release-collect-evidence SMOKE_RUN_ID [SCOOP_RUN_ID HOMEBREW_RUN_ID ...]"
+        exit 1
+    }
+    $dest = "var/distribution-install-readiness"
+    New-Item -ItemType Directory -Force -Path $dest | Out-Null
+    $tmp = (New-Item -ItemType Directory -Path (Join-Path $env:TEMP ("collect-" + [Guid]::NewGuid().ToString("N")))).FullName
+    foreach ($id in $ids) {
+        Write-Host "collecting cadrumo-distribution-evidence-* from run $id"
+        & gh run download $id --pattern 'cadrumo-distribution-evidence-*' --dir (Join-Path $tmp $id)
+    }
+    $n = 0
+    Get-ChildItem -Path $tmp -Recurse -Filter *.json | ForEach-Object { Copy-Item $_.FullName -Destination $dest -Force; $n++ }
+    Remove-Item -Recurse -Force $tmp
+    Write-Host "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"

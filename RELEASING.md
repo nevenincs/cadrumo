@@ -402,25 +402,26 @@ alongside a local `var/release-cohort/` at the release commit and tag.
 | `python-linux-x86-64` | `oracle-emit-linux` job in packaging-smoke | Yes |
 | `python-windows-x86-64` | `oracle-emit-windows` job in packaging-smoke | Yes |
 | `python-macos-arm64` | `oracle-emit-macos` job in packaging-smoke | Yes |
-| `scoop-windows-x86-64` | `packaging-scoop.yml` artifact | Yes, but stranded in scoop artifact (gap G6) |
-| `homebrew-macos-intel-x86-64` | Not yet wired | **No — gap G4** |
-| `homebrew-macos-arm64` | Not yet wired | **No — gap G4** |
-| `homebrew-linux-x86-64` | Not yet wired | **No — gap G4** |
-| `homebrew-linux-arm64` | Not yet wired | **No — gap G4** |
-| `claude-code-windows-x86-64` | Operator: `emit_real_client_evidence` | Manual (gap G5) |
-| `claude-code-macos-arm64` | Operator: `emit_real_client_evidence` | Manual (gap G5) |
-| `claude-desktop-windows-x86-64` | Operator: `emit_real_client_evidence` | Manual (gap G5) |
-| `claude-desktop-macos-arm64` | Operator: `emit_real_client_evidence` | Manual (gap G5) |
+| `scoop-windows-x86-64` | `packaging-scoop.yml` (predictable `cadrumo-distribution-evidence-scoop-windows-x86-64` artifact) | Yes |
+| `homebrew-macos-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
+| `homebrew-macos-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
+| `homebrew-linux-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
+| `homebrew-linux-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
+| `claude-code-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
+| `claude-cowork-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
+| `claude-desktop-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
+| `claude-desktop-mcpb` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
 
-**Remaining pre-first-publication work:** Gaps G4 (Homebrew row emission —
-`packaging-homebrew.yml` has no `distribution_evidence_emit` call, so the 4 Homebrew
-rows have no CI emission path), G5 (claude row aggregation — no
-`just release-collect-evidence` recipe yet), and G6 (scoop row stranded in the scoop
-workflow artifact with no CI download path into the smoke run identity chain) are open.
-Until G4 is fixed, readiness cannot reach 12/12 without manual Homebrew row assembly.
+**Aggregating the rows:** the eight CI-minted rows (three `python-*`, `scoop-windows-x86-64`,
+four `homebrew-*`) each upload under the uniform `cadrumo-distribution-evidence-*` artifact
+name. Collect them into `var/distribution-install-readiness/` with:
 
-Download each emitted row artifact from the respective workflow run and copy the
-`<row_id>-<evidence_id>.json` files into `var/distribution-install-readiness/`. Then:
+```console
+just release-collect-evidence <smoke-run-id> <scoop-run-id> <homebrew-run-id>
+```
+
+The four `claude-*` rows are minted locally by the operator's `emit_real_client_evidence`
+runs above and already live in that directory. Once all twelve are present, verify:
 
 ```console
 just release-readiness-json

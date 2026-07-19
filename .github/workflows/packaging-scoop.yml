@@ -226,6 +226,18 @@ jobs:
             throw "distribution-evidence emission failed"
           }
 
+      # G6: also upload the scoop row into a PREDICTABLE cadrumo-distribution-
+      # evidence-* artifact (uniform with the python and homebrew rows) so the
+      # release-collect-evidence recipe aggregates it by one pattern rather than
+      # digging into the scoop acquisition bundle.
+      - name: Upload the Scoop distribution-evidence record
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-distribution-evidence-scoop-windows-x86-64
+          path: ${{ env.CADRUMO_S20_ROOT }}/distribution-install-readiness/*.json
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload Cadrumo Scoop acquisition evidence
         if: always() && steps.initialize.outputs.ready == 'true'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
