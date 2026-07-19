@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -39,13 +40,19 @@ def _create_pip_venv(work_dir: Path, python_executable: str) -> Path:
     the cadrumo wheel is still installed by that plain ``pip`` afterwards, so
     the "installs under real pip" contract this lane proves is preserved - only
     the bootstrap of pip itself changes.
+
+    The interpreter is linked with the platform-default strategy (symlinks on
+    POSIX, copies on Windows). A COPIED python-build-standalone binary loses its
+    ``@executable_path``-relative ``libpython`` on macOS and aborts (SIGABRT) on
+    every launch; a symlink resolves through to the real interpreter's lib dir.
     """
+    use_symlinks = os.name != "nt"
     venv_path = work_dir / "pip-venv"
     try:
-        venv.EnvBuilder(with_pip=True, clear=False, symlinks=False).create(venv_path)
+        venv.EnvBuilder(with_pip=True, clear=False, symlinks=use_symlinks).create(venv_path)
     except subprocess.CalledProcessError:
         shutil.rmtree(venv_path, ignore_errors=True)
-        venv.EnvBuilder(with_pip=False, clear=False, symlinks=False).create(venv_path)
+        venv.EnvBuilder(with_pip=False, clear=False, symlinks=use_symlinks).create(venv_path)
         _run(["uv", "pip", "install", "--python", str(_venv_python(venv_path)), "pip"], cwd=work_dir)
     python = _venv_python(venv_path)
     version = _run([str(python), "--version"], cwd=work_dir)
