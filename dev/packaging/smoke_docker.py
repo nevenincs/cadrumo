@@ -260,6 +260,9 @@ env = {
     "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
     "CADRUMO_OUTPUT_LANGUAGE": "en",
     "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
+    # Headless custody: no keyring exists in the container; pin the
+    # passphrase-backed file backend like every other smoke lane.
+    "CADRUMO_SECRET_STORE_BACKEND": "file",
 }
 create = run(
     [
