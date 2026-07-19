@@ -100,6 +100,21 @@ def _mcp_call_summary(mcp_evidence: InstalledMcpEvidence) -> list[dict[str, Any]
     ]
 
 
+def _mcp_observations(mcp_evidence: InstalledMcpEvidence) -> dict[str, Any]:
+    """Return the retained MCP protocol proof (the full evidence, no command fabricated)."""
+    return {
+        "resolved_executable": mcp_evidence.resolved_executable,
+        "server_name": mcp_evidence.server_name,
+        "calculation_revision_id": mcp_evidence.calculation_revision_id,
+        "target_casilla": mcp_evidence.target_casilla,
+        "target_value": mcp_evidence.target_value,
+        "formula_id": mcp_evidence.formula_id,
+        "invoked_cli_sha256": mcp_evidence.invoked_cli_sha256,
+        "invoked_cli_sha256_by_command": dict(mcp_evidence.invoked_cli_sha256_by_command),
+        "calls": _mcp_call_summary(mcp_evidence),
+    }
+
+
 def build_installed_oracle_evidence(
     *,
     row_id: str,
@@ -166,17 +181,7 @@ def build_installed_oracle_evidence(
                 "source_refs": list(tax_evidence.source_refs),
                 "notice_codes": list(tax_evidence.notice_codes),
             },
-            "mcp_oracle": {
-                "resolved_executable": mcp_evidence.resolved_executable,
-                "server_name": mcp_evidence.server_name,
-                "calculation_revision_id": mcp_evidence.calculation_revision_id,
-                "target_casilla": mcp_evidence.target_casilla,
-                "target_value": mcp_evidence.target_value,
-                "formula_id": mcp_evidence.formula_id,
-                "invoked_cli_sha256": mcp_evidence.invoked_cli_sha256,
-                "invoked_cli_sha256_by_command": dict(mcp_evidence.invoked_cli_sha256_by_command),
-                "calls": _mcp_call_summary(mcp_evidence),
-            },
+            "mcp_oracle": _mcp_observations(mcp_evidence),
         },
     )
     return create_distribution_evidence(
@@ -191,6 +196,94 @@ def build_installed_oracle_evidence(
         observed_at=observed_at or datetime.now(UTC),
         destination=destination,
     )
+
+
+def build_client_evidence(
+    *,
+    row_id: str,
+    cohort: LoadedReleaseCohort,
+    mcp_evidence: InstalledMcpEvidence,
+    launch_transcript: CommandTranscript,
+    client: ClientIdentity,
+    acquisition: AcquisitionIdentity,
+    destination: DestinationIdentity,
+    observed_at: datetime | None = None,
+) -> DistributionEvidence:
+    """Assemble one cohort-bound record for a pure-client (MCP-only) row.
+
+    Client rows (``claude-*``) have no installed-CLI oracle, so option A applies:
+    the single command transcript is the lane-captured, genuinely-owned bounded
+    launch of the client's ``cadrumo-mcp`` server subprocess (real argv, cwd,
+    timestamps, exit status, and stream digests), and the full MCP protocol proof
+    rides in ``result.observations``. Nothing is synthesised.
+
+    Args:
+        row_id: The client row this record proves (e.g. ``claude-desktop-mcpb``).
+        cohort: The loaded release cohort the served bytes belong to.
+        mcp_evidence: The installed-MCP oracle result (protocol proof + target).
+        launch_transcript: The real owned server-launch subprocess the lane
+            captured; becomes this record's sole command transcript.
+        client: The real client identity (required for a client row).
+        acquisition: How and from where the served bytes were acquired.
+        destination: The install/serve destination; its version must equal the
+            cohort version for a passing record.
+        observed_at: The capture instant; defaults to now.
+
+    Returns:
+        A validated, tamper-evident :class:`~dev.packaging.evidence.DistributionEvidence`.
+    """
+    isolation = ExecutionIsolation(
+        checkout_imports_removed=True,
+        ambient_product_executables_removed=True,
+        installed_executables=(_installed_executable(_MCP_EXECUTABLE_NAME, mcp_evidence.resolved_executable),),
+    )
+    result = ResultIdentity(
+        status=EvidenceStatus.PASSED,
+        assertions=(
+            f"client MCP computed {mcp_evidence.target_casilla}={mcp_evidence.target_value} "
+            f"via {mcp_evidence.formula_id}",
+            "the installed client launched the cohort-pinned server and completed the protocol",
+        ),
+        observations={"mcp_oracle": _mcp_observations(mcp_evidence)},
+    )
+    return create_distribution_evidence(
+        row_id=row_id,
+        cohort=cohort,
+        runtime=current_runtime_identity(),
+        client=client,
+        isolation=isolation,
+        acquisition=acquisition,
+        commands=(launch_transcript,),
+        result=result,
+        observed_at=observed_at or datetime.now(UTC),
+        destination=destination,
+    )
+
+
+def emit_client_evidence(
+    *,
+    directory: Path,
+    row_id: str,
+    cohort: LoadedReleaseCohort,
+    mcp_evidence: InstalledMcpEvidence,
+    launch_transcript: CommandTranscript,
+    client: ClientIdentity,
+    acquisition: AcquisitionIdentity,
+    destination: DestinationIdentity,
+    observed_at: datetime | None = None,
+) -> Path:
+    """Build and persist one flat client-row distribution-evidence record."""
+    evidence = build_client_evidence(
+        row_id=row_id,
+        cohort=cohort,
+        mcp_evidence=mcp_evidence,
+        launch_transcript=launch_transcript,
+        client=client,
+        acquisition=acquisition,
+        destination=destination,
+        observed_at=observed_at,
+    )
+    return write_distribution_evidence(directory, evidence)
 
 
 def emit_installed_oracle_evidence(
@@ -344,7 +437,9 @@ def main(argv: list[str] | None = None) -> int:
 
 
 __all__ = [
+    "build_client_evidence",
     "build_installed_oracle_evidence",
+    "emit_client_evidence",
     "emit_installed_oracle_evidence",
     "main",
 ]

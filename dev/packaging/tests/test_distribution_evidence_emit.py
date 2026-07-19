@@ -27,12 +27,16 @@ from dev.packaging.cohort_manifest import (
     write_manifest,
 )
 from dev.packaging.distribution_evidence_emit import (
+    build_client_evidence,
     build_installed_oracle_evidence,
+    emit_client_evidence,
     emit_installed_oracle_evidence,
     main,
 )
 from dev.packaging.evidence import (
     AcquisitionIdentity,
+    ClientIdentity,
+    CommandTranscript,
     DestinationIdentity,
     DistributionEvidence,
     EvidenceStatus,
@@ -278,6 +282,75 @@ def test_cli_emits_from_oracle_json_a_lane_already_produced(tmp_path: Path) -> N
     assert reloaded.row_id == "scoop-windows-x86-64"
     assert reloaded.result.status is EvidenceStatus.PASSED
     assert reloaded.acquisition.mechanism == "scoop"
+
+
+def _launch_transcript(cwd: Path) -> CommandTranscript:
+    """Capture a real owned subprocess as a client server-launch transcript."""
+    started_at = datetime.now(UTC)
+    argv = (sys.executable, "-c", "print('cadrumo-mcp launched')")
+    completed = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, check=False)  # noqa: S603
+    completed_at = datetime.now(UTC)
+    return CommandTranscript.from_output(
+        argv=argv,
+        cwd=str(cwd),
+        started_at=started_at,
+        completed_at=completed_at,
+        exit_status=completed.returncode,
+        stdout=completed.stdout,
+        stderr=completed.stderr,
+        relevant_output=(completed.stdout.strip() or "launched",),
+    )
+
+
+def _client() -> ClientIdentity:
+    return ClientIdentity(name="claude-desktop", version="1.22209", executable=sys.executable)
+
+
+def test_client_row_uses_owned_launch_transcript_and_mcp_proof(tmp_path: Path) -> None:
+    """A pure-client row carries the real launch subprocess + MCP proof, client-bound."""
+    cohort = _release_cohort(tmp_path / "cohort")
+    evidence = build_client_evidence(
+        row_id="claude-desktop-mcpb",
+        cohort=cohort,
+        mcp_evidence=_mcp_evidence(),
+        launch_transcript=_launch_transcript(tmp_path),
+        client=_client(),
+        acquisition=AcquisitionIdentity(mechanism="mcpb", source="github-release"),
+        destination=_destination(cohort),
+    )
+
+    assert evidence.row_id == "claude-desktop-mcpb"
+    assert evidence.result.status is EvidenceStatus.PASSED
+    assert evidence.client is not None
+    assert evidence.client.name == "claude-desktop"
+    # Exactly one command: the real owned server-launch subprocess.
+    assert len(evidence.commands) == 1
+    assert evidence.commands[0].exit_status == 0
+    # One installed executable (the client server); MCP proof in observations.
+    assert [exe.name for exe in evidence.isolation.installed_executables] == ["cadrumo-mcp"]
+    mcp_oracle = evidence.result.observations["mcp_oracle"]
+    assert isinstance(mcp_oracle, dict)
+    assert mcp_oracle["target_value"] == _TARGET_VALUE
+
+
+def test_emit_client_evidence_writes_flat_record(tmp_path: Path) -> None:
+    """The client-row record lands flat where both gates read and re-validates."""
+    cohort = _release_cohort(tmp_path / "cohort")
+    evidence_dir = tmp_path / "distribution-install-readiness"
+    path = emit_client_evidence(
+        directory=evidence_dir,
+        row_id="claude-code-plugin",
+        cohort=cohort,
+        mcp_evidence=_mcp_evidence(),
+        launch_transcript=_launch_transcript(tmp_path),
+        client=_client(),
+        acquisition=AcquisitionIdentity(mechanism="claude-plugin", source="marketplace"),
+        destination=_destination(cohort),
+    )
+    assert path.name.startswith("claude-code-plugin-")
+    reloaded = DistributionEvidence.model_validate_json(path.read_text(encoding="utf-8"))
+    assert reloaded.row_id == "claude-code-plugin"
+    assert reloaded.client is not None
 
 
 def test_destination_version_mismatch_is_refused(tmp_path: Path) -> None:
