@@ -72,6 +72,11 @@ msgid ""
 " and registry listings open with the public launch (see [Get "
 "Cadrumo](../download.md) for channel status)."
 msgstr ""
+"En la beta, connecta des de la còpia del repositori de sota. Cada versió "
+"també construeix els artefactes del connector i de l'extensió d'escriptori; "
+"les seves llistes al mercat i als registres s'obriran amb el llançament "
+"públic (consulta [Obtén Cadrumo](../download.md) per a l'estat de cada "
+"canal)."
 
 #: ../../how-to/connect-an-agent.md:25
 msgid "Prepare the source checkout"
