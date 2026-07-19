@@ -37,18 +37,21 @@ jobs:
             expected_os: Darwin
             expected_arch: x86_64
             brew: /usr/local/bin/brew
+            row_id: homebrew-macos-x86-64
           - id: macos-arm64
             label: macOS arm64
             runner: [self-hosted, macOS, ARM64]
             expected_os: Darwin
             expected_arch: arm64
             brew: /opt/homebrew/bin/brew
+            row_id: homebrew-macos-arm64
           - id: linux-x86_64
             label: Linux x86_64
             runner: [self-hosted, Linux, X64]
             expected_os: Linux
             expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
+            row_id: homebrew-linux-x86-64
           # linux-arm64 (aarch64) has no self-hosted ARM-Linux runner in the fleet
           # (gw-workstation-wsl is X64), so it honestly stays hosted rather than run
           # an aarch64 row on x64 hardware; macos-intel likewise has no self-hosted
@@ -56,6 +59,7 @@ jobs:
           - id: linux-arm64
             label: Linux arm64
             runner: ubuntu-24.04-arm
+            row_id: homebrew-linux-arm64
             expected_os: Linux
             expected_arch: aarch64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
@@ -168,11 +172,53 @@ jobs:
             --brew "$BREW_PATH" \
             --repo-root "$GITHUB_WORKSPACE"
 
+      # Mint the sanctioned homebrew-<os>-<arch> row from the real captured oracle
+      # JSONs (the smoke wrote tax/mcp-evidence.json host-visible), bound to THE
+      # immutable release cohort - mirrors the Scoop host-side emit. No re-run.
+      - name: Download the tested full release cohort
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+        with:
+          name: cadrumo-release-cohort
+          path: ${{ env.CADRUMO_S24_ROOT }}/release-cohort
+          github-token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          run-id: ${{ inputs.source_run_id }}
+
+      - name: Emit the sanctioned Homebrew distribution-evidence record
+        env:
+          ROW_ID: ${{ matrix.row_id }}
+        run: |
+          tax="$(find "$CADRUMO_S24_ROOT/evidence" -name tax-evidence.json -print -quit)"
+          mcp="$(find "$CADRUMO_S24_ROOT/evidence" -name mcp-evidence.json -print -quit)"
+          if [[ -z "$tax" || -z "$mcp" ]]; then
+            echo "homebrew oracle evidence JSONs not found under $CADRUMO_S24_ROOT/evidence" >&2
+            exit 1
+          fi
+          uv run --no-project --with packaging --with pydantic --with mcp \
+            python -m dev.packaging.distribution_evidence_emit \
+            --row-id "$ROW_ID" \
+            --release-cohort-dir "$CADRUMO_S24_ROOT/release-cohort" \
+            --tax-evidence "$tax" \
+            --mcp-evidence "$mcp" \
+            --acquisition-mechanism brew \
+            --acquisition-source "nevenincs/cadrumo" \
+            --destination-kind homebrew-cellar \
+            --destination-locator "${{ matrix.id }}" \
+            --distribution-evidence-dir "$CADRUMO_S24_ROOT/distribution-install-readiness"
+
       - name: Upload Cadrumo Homebrew acquisition evidence
         if: always() && steps.initialize.outputs.ready == 'true'
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: cadrumo-homebrew-acquisition-${{ matrix.id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/cadrumo-s24-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.id }}/
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload the Homebrew distribution-evidence record
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cadrumo-distribution-evidence-${{ matrix.row_id }}
+          path: ${{ env.CADRUMO_S24_ROOT }}/distribution-install-readiness/*.json
           if-no-files-found: error
           retention-days: 14
