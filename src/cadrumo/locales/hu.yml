@@ -3422,8 +3422,6 @@ cli:
           az összesé egyszerre.
         usage_name_help: A homokozó neve (előtag nélkül); hagyja üresen az összes
           jelentéséhez.
-        use_help: Az aktív profil váltása egy meglévő sandboxra.
-        use_name_help: A sandbox neve (előtag nélkül).
       sar_catalogue_info: Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
         tartalmazza. A pontos kategóriák e válasz data_categories mezőjében és annak
         géppel olvasható kontextusában szerepelnek. A csatolt bizonyítékok bájtjai
@@ -4489,6 +4487,11 @@ cli:
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
         profile_switch: Switch to a profile and make it the active one.
+        reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
+        reset_start: Új, minden helyben tárolt profilra kiterjedő visszafordíthatatlan
+          visszaállítást indít.
+        reset_status: A helyi adatok módosítása nélkül megjeleníti a visszaállítási
+          művelet állapotát.
         section_authentication: Hitelesítés
         section_diagnostics: Diagnosztika
         section_first_run: Első futtatás

@@ -3503,8 +3503,6 @@ cli:
         usage_help: Informar del espacio en disco de un sandbox, o de todos a la vez.
         usage_name_help: Nombre del sandbox (sin el prefijo); omitir para informar
           de todos.
-        use_help: Cambia el perfil activo a un sandbox existente.
-        use_name_help: Nombre del sandbox (sin el prefijo).
       sar_catalogue_info: Este archivo contiene todas las categorías de datos personales
         del perfil. Las categorías exactas figuran en el campo data_categories de
         esta respuesta y en su contexto legible por máquina. Los bytes de las pruebas
@@ -4571,6 +4569,11 @@ cli:
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
         profile_switch: Switch to a profile and make it the active one.
+        reset_resume: Continúa una operación de reinicio incompleta.
+        reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles almacenados
+          localmente.
+        reset_status: Muestra el estado de una operación de reinicio sin modificar
+          datos locales.
         section_authentication: Autenticacion AEAT
         section_diagnostics: Diagnostico
         section_first_run: Primera ejecucion
