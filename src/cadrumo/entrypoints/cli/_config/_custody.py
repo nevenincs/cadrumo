@@ -39,8 +39,8 @@ def _resolve_switch_target(
     ``sandbox:<name>`` label. A bare sandbox short name is NOT implicitly
     namespaced: it carries no ``sandbox:`` prefix, so it matches no sandbox
     bucket and the label resolver refuses it as an unknown profile — the
-    sandbox namespace check the removed ``sandbox use`` door performed is
-    preserved by requiring the canonical label. A live UUID resolves
+    sandbox namespace check the removed second sandbox-selection door
+    performed is preserved by requiring the canonical label. A live UUID resolves
     directly; a tombstoned UUID falls through to the label resolver, which
     refuses it. UUID/label ambiguity or duplicate labels refuse through the
     injected label resolver's typed selection error.

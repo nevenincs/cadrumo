@@ -78,8 +78,8 @@ Move the reset payload schemas, write-policy tokens, locales, help and risk meta
 - [x] `P05.S26` - Migrate the reset payload schemas and write-policy tokens to the accepted reset grammar; `src/cadrumo/entrypoints/cli/_config_payloads.py`.
 - [x] `P05.S27` - Migrate the reset family help and risk metadata to the accepted grammar; `src/cadrumo/application/operator_surface/_help.py`.
 - [x] `P05.S28` - Migrate the four locale catalogues for the reset and sandbox families through the locales CLI; `src/cadrumo/locales/en.yml`.
-- [ ] `P05.S29` - Regenerate the CLI reference and operator how-to pages for the reset family from the frozen live surface; `docs/reference/commands-and-configuration.md`.
-- [ ] `P05.S30` - Prove the removed reset and sandbox spellings are absent from every source and generated surface; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
+- [x] `P05.S29` - Regenerate the CLI reference and operator how-to pages for the reset family from the frozen live surface; `docs/reference/commands-and-configuration.md`.
+- [x] `P05.S30` - Prove the removed reset and sandbox spellings are absent from every source and generated surface; `src/cadrumo/entrypoints/cli/tests/test_root_grammar_invariants.py`.
 
 ## Description
 
