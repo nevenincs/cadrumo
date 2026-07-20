@@ -44,7 +44,7 @@ Grounding pass (2026-07-20) behind the accepted release-asset-transport ADR: how
 
 ## Workflow conversion fragments
 
-Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence_release.py` with subcommands `emit-manifest` (hash assets, stamp `workflow_path`/`run_id`/`run_attempt`/`head_sha`/`head_branch`/`event`, upload `evidence-manifest.json`), `verify` (download manifest plus assets by derived tag, cross-check the Actions API run record, assert exactly one draft per tag and `target_commitish == head_sha`, re-hash every asset, bounded retry on download; exit 1 naming any mismatch), `scrub` (rewrite verified rows/manifests into a publication directory redacting hostnames, usernames including username-bearing absolute paths in transcripts, and machine identifiers, replacing each with a stable placeholder), and `gc` (keep-window plus reserved-namespace refusal, tested in Python, not inline shell).
+Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence_release.py` with subcommands `emit-manifest` (hash assets, stamp `workflow_path`/`run_id`/`run_attempt`/`head_sha`/`head_branch`/`event`, upload `evidence-manifest.json`), `verify` (download manifest plus assets by derived tag, cross-check the Actions API run record, assert exactly one draft per tag and `target_commitish == head_sha`, re-hash every asset, bounded retry on download; exit 1 naming any mismatch), `leak-sweep` (run the field-agnostic runner-metadata leak detector over a directory of assets about to be published — hostnames, usernames including username-bearing absolute paths in transcripts, machine identifiers, UNC and cohort-embedded forms — exit 1 naming the leaking asset and pattern; no rewriting: rows are scrubbed at mint time inside the evidence builders per the reconciled D9, commit `be4eca4708`), and `gc` (keep-window plus reserved-namespace refusal, tested in Python, not inline shell).
 
 ### `packaging-smoke.yml`
 
@@ -62,7 +62,7 @@ Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence
 ### `publish-release.yml`
 
 - Gate 2: derive tags from the run-id inputs; `evidence_release verify` each of smoke/scoop/homebrew into `rows-raw/` subdirectories; `gh release download` the operator's `claude_evidence_release` tag as today; extract the cohort archive; aggregate `distribution-evidence-*.json` plus `claude-*.json` into the flat rows directory; then the unchanged `promote_python_cohort --check-pypi-only` and `readiness --json --skip-network --cohort-dir ... --evidence-dir ...` invocations. Job permissions: keep `actions: read`; `contents: read` suffices for draft download with the workflow token.
-- Gate 3: re-download and re-verify the cohort by the same derived tag (no rebuild), then `evidence_release scrub` the verified rows and manifests into a publication directory, and attach the scrubbed twelve rows plus per-lane manifests to the `v<version>` release (self-evidencing; the existing duplicate-basename refusal guards collisions). Gate 3 uploads only from the scrubbed output directory — conformance-pinned.
+- Gate 3: re-download and re-verify the cohort by the same derived tag (no rebuild), then `evidence_release leak-sweep` over every asset about to be attached (rows, per-lane manifests, transcript/bundle assets) — hard fail on any residual runner metadata, no rewriting — and attach the swept twelve rows plus manifests to the `v<version>` release (self-evidencing; bytes are identical to the Gate-2-verified draft assets because rows are clean at birth, so the draft manifests' digests remain valid; the existing duplicate-basename refusal guards collisions). Gate 3 attaches nothing that has not passed the sweep — conformance-pinned.
 - Operator-preflight text: item 4 becomes "Ensure the packaging-smoke run sealed its evidence draft (evidence-smoke-<run id> with cadrumo-release-cohort.tar.gz and evidence-manifest.json)"; items 5 and 6 unchanged.
 
 ### New `evidence-gc.yml`
@@ -74,12 +74,12 @@ Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence
 - No packaging workflow uses `actions/upload-artifact` / `actions/download-artifact` for cohort or distribution-evidence payloads.
 - Every packaging `gh release create` carries `--draft` and an `evidence-` tag; exactly one creator job per workflow; only publish-release Gate 3 creates a non-draft release.
 - publish-release derives evidence tags from run-id inputs (no free-form evidence-tag input except `claude_evidence_release`).
-- The GC tag regex excludes `v*`; oracle-leg asset names pairwise disjoint; Gate 3 attaches only scrubbed evidence.
+- The GC tag regex excludes `v*`; oracle-leg asset names pairwise disjoint; Gate 3 attaches only sweep-passed evidence.
 - Existing per-OS-cohort-not-for-publication test updated to the release-asset spellings.
 
 ## Migration order
 
-1. Land `dev/packaging/evidence_release.py` (emit-manifest, verify, scrub, gc) with tests.
+1. Land `dev/packaging/evidence_release.py` (emit-manifest, verify, leak-sweep, gc) with tests. (Row scrubbing itself already lives in the evidence builders — scrub-at-birth with a fail-closed mint refusal, landed at `be4eca4708`.)
 2. Convert `packaging-smoke.yml` (biggest storage win); verify one green end-to-end run: draft exists and is unique, assets plus manifest present, oracle legs consumed the release cohort.
 3. Convert scoop/homebrew/claude producers and consumers.
 4. Rework publish-release Gates 2 and 3; acceptance gate is a full `dry_run: true` dispatch (validates everything, publishes nothing).
