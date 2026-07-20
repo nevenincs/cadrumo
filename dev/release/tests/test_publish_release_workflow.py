@@ -113,7 +113,8 @@ def test_validate_promotes_without_rebuild() -> None:
     # rows the readiness gate reads.
     assert "--name cadrumo-python-cohort" not in surface
     assert "--check-pypi-only" in surface
-    assert "cadrumo-distribution-evidence-" in surface
+    # Every channel's rows arrive hash-verified from its evidence draft.
+    assert "dev.packaging.evidence_release verify" in surface
     # No publish verb in the read-only validate gate.
     assert "uv publish" not in surface
     assert "gh release create" not in surface
@@ -124,10 +125,12 @@ def test_validate_aggregates_all_twelve_rows_from_authoritative_sources() -> Non
     validate = _document()["jobs"]["validate"]
     surface = _run_surface(validate)
 
-    # Each channel's rows come from its authoritative run/release.
-    assert 'gh run download "$PACKAGING_RUN_ID"' in surface
-    assert 'gh run download "$SCOOP_RUN_ID"' in surface
-    assert 'gh run download "$HOMEBREW_RUN_ID"' in surface
+    # Each channel's rows come verified from its authoritative run's evidence
+    # draft; the tags are DERIVED from the run-id inputs (no free-form evidence
+    # tag input except the operator's claude release, which has no backing run).
+    assert 'verify "evidence-smoke-$PACKAGING_RUN_ID"    "$PACKAGING_RUN_ID"' in surface
+    assert 'verify "evidence-scoop-$SCOOP_RUN_ID"        "$SCOOP_RUN_ID"' in surface
+    assert 'verify "evidence-homebrew-$HOMEBREW_RUN_ID"  "$HOMEBREW_RUN_ID"' in surface
     assert 'gh release download "$CLAUDE_EVIDENCE_RELEASE"' in surface
 
     # Per-source identity checks on the acquisition runs (parity with the smoke gate).
@@ -185,8 +188,13 @@ def test_publish_uploads_the_stored_cohort_via_trusted_publishing() -> None:
     surface = _run_surface(_document()["jobs"]["publish"])
     assert "uv publish --trusted-publishing always" in surface
     assert "gh release create" in surface
-    # It re-downloads the stored cohort rather than rebuilding.
-    assert "gh run download" in surface
+    # It re-downloads and re-verifies the stored cohort rather than rebuilding.
+    assert "dev.packaging.evidence_release verify" in surface
+    assert '--pattern "cadrumo-release-cohort.tar.gz"' in surface
+    # D8: the published release also carries the verified rows and the three
+    # per-lane manifests, so draft GC can never orphan a shipped audit trail.
+    assert "evidence-manifest-$4.json" in surface
+    assert '"$EVIDENCE_FINAL_DIR/attach"' in surface
 
 
 def test_github_release_refuses_colliding_asset_basenames() -> None:

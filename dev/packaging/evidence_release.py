@@ -327,7 +327,7 @@ def _resolve_gh(explicit: str | None) -> str:
 def _download_release_assets(gh: str, *, repository: str, tag: str, patterns: list[str], directory: Path) -> None:
     """Download the tag's assets (all, or per pattern) into ``directory``."""
     directory.mkdir(parents=True, exist_ok=True)
-    base = ["release", "download", tag, "--repo", repository, "--dir", str(directory)]
+    base = ["release", "download", tag, "--repo", repository, "--dir", str(directory), "--clobber"]
     if patterns:
         for pattern in patterns:
             _run_gh(gh, [*base, "--pattern", pattern])
@@ -393,9 +393,10 @@ def _verify(args: argparse.Namespace) -> int:
         ),
     )
     download_dir: Path = args.download_dir
+    requested_patterns: list[str] = args.pattern or []
     # A narrowing --pattern still always downloads the manifest; no pattern
     # downloads (and later requires) the complete sealed asset set.
-    patterns = [MANIFEST_ASSET_NAME, *args.pattern] if args.pattern else []
+    patterns = [MANIFEST_ASSET_NAME, *requested_patterns] if requested_patterns else []
     _download_release_assets(gh, repository=repository, tag=args.tag, patterns=patterns, directory=download_dir)
     manifest_path = download_dir / MANIFEST_ASSET_NAME
     if not manifest_path.is_file():
@@ -410,7 +411,7 @@ def _verify(args: argparse.Namespace) -> int:
         expect_run_id=args.expect_run_id,
         expect_workflow=args.expect_workflow,
         repository=repository,
-        require_complete=not args.pattern,
+        require_complete=not requested_patterns,
     )
     if mismatches:
         raise EvidenceReleaseError(
@@ -437,7 +438,7 @@ def _gc(args: argparse.Namespace) -> int:
     plan = plan_evidence_gc(
         releases,
         keep_per_lane=args.keep,
-        protected_tags=frozenset(args.keep_tag),
+        protected_tags=frozenset(args.keep_tag or ()),
     )
     for tag in plan.kept:
         print(f"keep {tag}")
@@ -483,7 +484,7 @@ def _parser() -> argparse.ArgumentParser:
     verify.add_argument(
         "--pattern",
         action="append",
-        default=[],
+        default=None,
         help="Verify only assets matching this pattern (repeatable; default: the complete sealed set).",
     )
     common(verify)
@@ -494,7 +495,7 @@ def _parser() -> argparse.ArgumentParser:
     gc.add_argument(
         "--keep-tag",
         action="append",
-        default=[],
+        default=None,
         help="Evidence tag protected from deletion regardless of age (repeatable).",
     )
     gc.add_argument("--apply", action="store_true", help="Actually delete; the default is a dry run.")

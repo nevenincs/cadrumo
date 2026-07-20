@@ -49,10 +49,13 @@ def test_homebrew_workflow_declares_every_generated_target_row() -> None:
 def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     """Every row downloads the same stored bytes from one trusted source run."""
     document = _workflow()
-    steps = document["jobs"]["cadrumo-homebrew-acquisition"]["steps"]
+    job = document["jobs"]["cadrumo-homebrew-acquisition"]
+    steps = job["steps"]
     source_gate = next(step for step in steps if step["name"] == "Verify source workflow identity")
     checkout = next(step for step in steps if step["name"] == "Checkout tested source commit")
-    download = next(step for step in steps if step["name"] == "Download tested Cadrumo Python cohort")
+    download = next(
+        step for step in steps if step["name"] == "Download and verify the tested cohorts from the smoke evidence draft"
+    )
     commands = "\n".join(str(step.get("run", "")) for step in steps)
 
     assert 'test "$(jq -r .name <<<"$run_json")" = "Cadrumo Packaging Smoke"' in source_gate["run"]
@@ -62,9 +65,19 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     assert 'test "$(jq -r .head_branch <<<"$run_json")" = "main"' in source_gate["run"]
     assert checkout["with"]["ref"] == "${{ inputs.source_commit }}"
     assert checkout["with"]["persist-credentials"] is False
-    assert download["with"]["name"] == "cadrumo-python-cohort"
-    assert download["with"]["run-id"] == "${{ inputs.source_run_id }}"
+    # The cohorts come hash-verified from the smoke run's evidence draft, with
+    # the tag DERIVED from the run-id input; every leg consumes the LINUX-built
+    # python cohort (wheels are py3-none-any; parity with the pre-transport
+    # unsuffixed artifact) plus the sealed full release cohort.
+    assert "dev.packaging.evidence_release verify" in download["run"]
+    assert '--tag "evidence-smoke-${SOURCE_RUN_ID}"' in download["run"]
+    assert '--expect-workflow ".github/workflows/packaging-smoke.yml"' in download["run"]
+    assert '--pattern "cadrumo-python-cohort-linux.tar.gz"' in download["run"]
+    assert '--pattern "cadrumo-release-cohort.tar.gz"' in download["run"]
+    # Least privilege: workflow-level stays read; only the uploader jobs hold
+    # contents:write for the draft-release transport.
     assert document["permissions"] == {"actions": "read", "contents": "read"}
+    assert job["permissions"] == {"actions": "read", "contents": "write"}
     assert "uv build" not in commands
 
 
@@ -81,10 +94,6 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     }
 
     steps = job["steps"]
-    download = next(step for step in steps if step.get("name") == "Download the tested full release cohort")
-    assert download["with"]["name"] == "cadrumo-release-cohort"
-    assert download["with"]["run-id"] == "${{ inputs.source_run_id }}"
-
     emit = next(
         step for step in steps if step.get("name") == "Emit the sanctioned Homebrew distribution-evidence record"
     )
@@ -92,9 +101,23 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     assert '--row-id "$ROW_ID"' in emit["run"]
     assert "--release-cohort-dir " in emit["run"]
 
-    upload = next(step for step in steps if step.get("name") == "Upload the Homebrew distribution-evidence record")
-    assert upload["with"]["name"] == "cadrumo-distribution-evidence-${{ matrix.row_id }}"
-    assert upload["with"]["if-no-files-found"] == "error"
+    # All four legs publish their rows (distinct {row_id}-{evidence_id}.json
+    # basenames) and per-leg bundles to the ONE run draft; the terminal seal
+    # job mints the manifest only on full matrix success.
+    publish = next(
+        step for step in steps if step.get("name") == "Publish Homebrew evidence to the run's evidence draft"
+    )
+    assert publish["env"]["EVIDENCE_TAG"] == "evidence-homebrew-${{ github.run_id }}"
+    assert "gh release create" in publish["run"]
+    assert "--draft" in publish["run"]
+    assert "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" in publish["run"]
+
+    seal = document["jobs"]["seal-evidence-manifest"]
+    assert seal["needs"] == "cadrumo-homebrew-acquisition"
+    assert "if" not in seal  # manifest only on full success
+    seal_surface = "\n".join(str(step.get("run", "")) for step in seal["steps"] if "run" in step)
+    assert "dev.packaging.evidence_release emit-manifest" in seal_surface
+    assert 'gh release upload "$EVIDENCE_TAG" evidence-manifest.json --clobber' in seal_surface
 
 
 def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
@@ -104,7 +127,7 @@ def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     initialize = next(step for step in steps if step["name"] == "Initialize current-run evidence root")
     generate = next(step for step in steps if step["name"] == "Verify and generate the cohort-bound tap snapshot")
     smoke = next(step for step in steps if step["name"] == "Audit install and exercise Cadrumo through Homebrew")
-    upload = next(step for step in steps if step["name"] == "Upload Cadrumo Homebrew acquisition evidence")
+    publish = next(step for step in steps if step["name"] == "Publish Homebrew evidence to the run's evidence draft")
 
     assert initialize["id"] == "initialize"
     assert "GITHUB_RUN_ATTEMPT" in initialize["run"]
@@ -113,6 +136,5 @@ def test_homebrew_workflow_runs_the_real_source_install_and_oracles() -> None:
     assert "packaging/homebrew/generate.py" in generate["run"]
     assert "dev/packaging/smoke_homebrew.py" in smoke["run"]
     assert '--tap-name "cadrumo-smoke/${MATRIX_ID}"' in smoke["run"]
-    assert upload["if"] == "always() && steps.initialize.outputs.ready == 'true'"
-    assert upload["with"]["if-no-files-found"] == "error"
-    assert upload["with"]["name"] == ("cadrumo-homebrew-acquisition-${{ matrix.id }}-${{ github.run_attempt }}")
+    assert publish["if"] == "always() && steps.initialize.outputs.ready == 'true'"
+    assert "gh release upload" in publish["run"]

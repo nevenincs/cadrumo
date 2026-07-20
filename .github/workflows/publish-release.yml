@@ -81,9 +81,9 @@ jobs:
                CADRUMO_SCOOP_BUCKET_TOKEN and CADRUMO_HOMEBREW_TAP_TOKEN
                (with the target repo slugs as vars CADRUMO_SCOOP_BUCKET_REPO
                and CADRUMO_HOMEBREW_TAP_REPO).
-            4. Ensure the source Packaging Smoke run also uploaded the full
-               release cohort artifact `cadrumo-release-cohort` (all channel
-               artifacts), not only the Python cohort.
+            4. Ensure the source Packaging Smoke run sealed its evidence draft
+               (release tag evidence-smoke-<run id> carrying
+               cadrumo-release-cohort.tar.gz and evidence-manifest.json).
             5. Dispatch the Scoop and Homebrew acquisition workflows against that
                smoke run and note their run ids (they mint the scoop + homebrew
                distribution-evidence rows).
@@ -168,24 +168,37 @@ jobs:
           check_run "$SCOOP_RUN_ID" ".github/workflows/packaging-scoop.yml"
           check_run "$HOMEBREW_RUN_ID" ".github/workflows/packaging-homebrew.yml"
 
-      - name: Download the sealed cohort and EVERY channel's distribution-evidence rows
+      - name: Download and verify every evidence draft, then aggregate the rows
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           # The SEALED cohort is the single source of published bytes for EVERY
-          # channel including PyPI (its python/ subdir). The per-OS smoke build
-          # artifact (cadrumo-python-cohort) is deliberately NOT downloaded: it is
-          # the smoke lane's own test artifact and never enters the publication
-          # chain. Aggregate all twelve rows under the uniform artifact name from
-          # their authoritative runs: 3 python (smoke), 1 scoop, 4 homebrew, and
-          # the operator's 4 claude-* rows from the pre-uploaded evidence release.
+          # channel including PyPI (its python/ subdir). Evidence tags are
+          # DERIVED from the run-id inputs (the run is the identity anchor);
+          # verify layers run identity (Actions API), release<->run binding
+          # (target_commitish + sealed manifest claims), and per-asset sha256
+          # over every downloaded byte. Aggregate all twelve rows: 3 python
+          # (smoke draft), 1 scoop, 4 homebrew, and the operator's 4 claude-*
+          # rows from the pre-uploaded evidence release (no backing run).
           mkdir -p "$EVIDENCE_DOWNLOAD/rows" "$EVIDENCE_DOWNLOAD/rows-raw"
-          gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort --dir "$RELEASE_COHORT_DIR"
-          gh run download "$PACKAGING_RUN_ID" --pattern 'cadrumo-distribution-evidence-*' --dir "$EVIDENCE_DOWNLOAD/rows-raw/packaging"
-          gh run download "$SCOOP_RUN_ID" --pattern 'cadrumo-distribution-evidence-*' --dir "$EVIDENCE_DOWNLOAD/rows-raw/scoop"
-          gh run download "$HOMEBREW_RUN_ID" --pattern 'cadrumo-distribution-evidence-*' --dir "$EVIDENCE_DOWNLOAD/rows-raw/homebrew"
-          gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' --dir "$EVIDENCE_DOWNLOAD/rows-raw/claude"
-          find "$EVIDENCE_DOWNLOAD/rows-raw" -name '*.json' -exec cp {} "$EVIDENCE_DOWNLOAD/rows/" \;
+          verify() {  # tag, run-id, workflow-path, dest
+            uv run --frozen python -m dev.packaging.evidence_release verify \
+              --tag "$1" --expect-run-id "$2" --expect-workflow "$3" \
+              --download-dir "$4"
+          }
+          verify "evidence-smoke-$PACKAGING_RUN_ID"    "$PACKAGING_RUN_ID" \
+            ".github/workflows/packaging-smoke.yml"    "$EVIDENCE_DOWNLOAD/rows-raw/packaging"
+          verify "evidence-scoop-$SCOOP_RUN_ID"        "$SCOOP_RUN_ID" \
+            ".github/workflows/packaging-scoop.yml"    "$EVIDENCE_DOWNLOAD/rows-raw/scoop"
+          verify "evidence-homebrew-$HOMEBREW_RUN_ID"  "$HOMEBREW_RUN_ID" \
+            ".github/workflows/packaging-homebrew.yml" "$EVIDENCE_DOWNLOAD/rows-raw/homebrew"
+          gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
+            --dir "$EVIDENCE_DOWNLOAD/rows-raw/claude"
+          mkdir -p "$RELEASE_COHORT_DIR"
+          tar -xzf "$EVIDENCE_DOWNLOAD/rows-raw/packaging/cadrumo-release-cohort.tar.gz" \
+            -C "$RELEASE_COHORT_DIR"
+          find "$EVIDENCE_DOWNLOAD/rows-raw" -name '*.json' ! -name 'evidence-manifest.json' \
+            -exec cp {} "$EVIDENCE_DOWNLOAD/rows/" \;
 
       - name: Guard the PyPI destination against overwrite and emit the version
         id: validate
@@ -229,9 +242,13 @@ jobs:
       contents: write
     env:
       RELEASE_COHORT_DIR: var/promotion/release-cohort
+      EVIDENCE_FINAL_DIR: var/promotion/evidence-final
       VERSION: ${{ needs.validate.outputs.version }}
       SOURCE_COMMIT: ${{ needs.validate.outputs.source_commit }}
       PACKAGING_RUN_ID: ${{ inputs.packaging_run_id }}
+      SCOOP_RUN_ID: ${{ inputs.scoop_run_id }}
+      HOMEBREW_RUN_ID: ${{ inputs.homebrew_run_id }}
+      CLAUDE_EVIDENCE_RELEASE: ${{ inputs.claude_evidence_release }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
@@ -243,11 +260,47 @@ jobs:
           version: "0.11.29"
           python-version: "3.13"
 
-      - name: Re-download the sealed cohort (no rebuild)
+      - name: Re-download and verify the sealed cohort (no rebuild)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort --dir "$RELEASE_COHORT_DIR"
+          uv run --frozen python -m dev.packaging.evidence_release verify \
+            --tag "evidence-smoke-$PACKAGING_RUN_ID" \
+            --expect-run-id "$PACKAGING_RUN_ID" \
+            --expect-workflow ".github/workflows/packaging-smoke.yml" \
+            --pattern "cadrumo-release-cohort.tar.gz" \
+            --download-dir var/promotion/download
+          mkdir -p "$RELEASE_COHORT_DIR"
+          tar -xzf var/promotion/download/cadrumo-release-cohort.tar.gz -C "$RELEASE_COHORT_DIR"
+
+      # D8: the published release is self-evidencing — it also carries the
+      # twelve verified rows and the three sealed evidence manifests, so draft
+      # GC can never orphan a shipped version's audit trail. Rows re-download
+      # through the same verify (hash-checked); manifests are renamed per lane
+      # to keep the duplicate-basename guard honest.
+      - name: Re-download and verify the evidence rows for the self-evidencing release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p "$EVIDENCE_FINAL_DIR/attach"
+          verify_rows() {  # tag, run-id, workflow-path, lane
+            uv run --frozen python -m dev.packaging.evidence_release verify \
+              --tag "$1" --expect-run-id "$2" --expect-workflow "$3" \
+              --pattern '*.json' \
+              --download-dir "$EVIDENCE_FINAL_DIR/$4"
+            find "$EVIDENCE_FINAL_DIR/$4" -name '*.json' ! -name 'evidence-manifest.json' \
+              -exec cp {} "$EVIDENCE_FINAL_DIR/attach/" \;
+            cp "$EVIDENCE_FINAL_DIR/$4/evidence-manifest.json" \
+              "$EVIDENCE_FINAL_DIR/attach/evidence-manifest-$4.json"
+          }
+          verify_rows "evidence-smoke-$PACKAGING_RUN_ID"   "$PACKAGING_RUN_ID" \
+            ".github/workflows/packaging-smoke.yml"    packaging
+          verify_rows "evidence-scoop-$SCOOP_RUN_ID"       "$SCOOP_RUN_ID" \
+            ".github/workflows/packaging-scoop.yml"    scoop
+          verify_rows "evidence-homebrew-$HOMEBREW_RUN_ID" "$HOMEBREW_RUN_ID" \
+            ".github/workflows/packaging-homebrew.yml" homebrew
+          gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
+            --dir "$EVIDENCE_FINAL_DIR/attach"
 
       - name: Publish the three distributions to PyPI via Trusted Publishing (OIDC)
         run: |
@@ -269,7 +322,7 @@ jobs:
         run: |
           assets=()
           while IFS= read -r -d '' f; do assets+=("$f"); done \
-            < <(find "$RELEASE_COHORT_DIR" -type f -print0)
+            < <(find "$RELEASE_COHORT_DIR" "$EVIDENCE_FINAL_DIR/attach" -type f -print0)
           if [[ ${#assets[@]} -eq 0 ]]; then
             echo "no release cohort assets found to attach" >&2
             exit 1
