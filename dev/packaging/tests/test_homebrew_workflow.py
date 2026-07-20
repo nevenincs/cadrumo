@@ -18,13 +18,12 @@ def _workflow() -> dict[str, Any]:
 
 
 def test_homebrew_workflow_declares_every_generated_target_row() -> None:
-    """The matrix claims exactly what the self-hosted fleet proves.
+    """The matrix covers both architectures on macOS and Linux.
 
-    Operator ruling 2026-07-20: the release fleet is self-hosted only (no
-    hosted-runner spend) and the self-hosted Mac is powered off indefinitely,
-    so the sole Homebrew row is linux-x86_64 on the free WSL X64 runner. The
-    macOS rows and the hosted-only linux-arm64 (aarch64) row return in a later
-    release when their runners exist.
+    Self-hosting: the two rows that genuinely map to the free fleet run on it
+    (linux-x86_64 -> the WSL X64 runner, macos-arm64 -> the MacBook), while
+    macos-intel and linux-arm64 (aarch64) have no self-hosted home and honestly
+    stay hosted rather than run on a mismatched architecture.
     """
     document = _workflow()
     assert document["name"] == "Cadrumo Homebrew Acquisition"
@@ -35,7 +34,10 @@ def test_homebrew_workflow_declares_every_generated_target_row() -> None:
         return tuple(value) if isinstance(value, list) else value
 
     assert {(row["id"], _runner(row["runner"]), row["expected_os"], row["expected_arch"]) for row in rows} == {
+        ("macos-intel", "macos-15-intel", "Darwin", "x86_64"),
+        ("macos-arm64", ("self-hosted", "macOS", "ARM64"), "Darwin", "arm64"),
         ("linux-x86_64", ("self-hosted", "Linux", "X64"), "Linux", "x86_64"),
+        ("linux-arm64", "ubuntu-24.04-arm", "Linux", "aarch64"),
     }
     assert job["strategy"]["fail-fast"] is False
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Homebrew release row")
@@ -72,7 +74,10 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     job = document["jobs"]["cadrumo-homebrew-acquisition"]
     rows = job["strategy"]["matrix"]["include"]
     assert {row["row_id"] for row in rows} == {
+        "homebrew-macos-x86-64",
+        "homebrew-macos-arm64",
         "homebrew-linux-x86-64",
+        "homebrew-linux-arm64",
     }
 
     steps = job["steps"]
