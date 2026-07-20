@@ -7,6 +7,7 @@ date: '2026-07-20'
 modified: '2026-07-20'
 related:
   - '[[2026-07-20-release-asset-transport-adr]]'
+  - '[[2026-07-20-release-asset-transport-audit]]'
   - '[[2026-07-20-release-asset-transport-reference]]'
 ---
 
@@ -19,6 +20,10 @@ Auto-generated index of all documents tagged with `#release-asset-transport`.
 ### adr
 
 - `2026-07-20-release-asset-transport-adr` - `release-asset-transport` adr: `evidence and cohort transport moves from Actions artifacts to GitHub Release assets` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-20-release-asset-transport-audit` - `release-asset-transport` audit: `release corpus curation`
 
 ### reference
 
