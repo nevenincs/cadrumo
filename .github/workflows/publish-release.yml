@@ -20,7 +20,7 @@ on:
   workflow_dispatch:
     inputs:
       packaging_run_id:
-        description: Successful Cadrumo Packaging Smoke run (sealed cohort + 2 python rows)
+        description: Successful Cadrumo Packaging Smoke run (sealed cohort + 3 python rows)
         required: true
         type: string
       scoop_run_id:
@@ -28,7 +28,7 @@ on:
         required: true
         type: string
       homebrew_run_id:
-        description: Successful Cadrumo Homebrew Acquisition run (homebrew-linux-x86-64 row)
+        description: Successful Cadrumo Homebrew Acquisition run (4 homebrew rows)
         required: true
         type: string
       claude_evidence_release:
@@ -177,7 +177,7 @@ jobs:
           # artifact (cadrumo-python-cohort) is deliberately NOT downloaded: it is
           # the smoke lane's own test artifact and never enters the publication
           # chain. Aggregate all twelve rows under the uniform artifact name from
-          # their authoritative runs: 2 python (smoke), 1 scoop, 1 homebrew, and
+          # their authoritative runs: 3 python (smoke), 1 scoop, 4 homebrew, and
           # the operator's 4 claude-* rows from the pre-uploaded evidence release.
           mkdir -p "$EVIDENCE_DOWNLOAD/rows" "$EVIDENCE_DOWNLOAD/rows-raw"
           gh run download "$PACKAGING_RUN_ID" --name cadrumo-release-cohort --dir "$RELEASE_COHORT_DIR"
