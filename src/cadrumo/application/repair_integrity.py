@@ -769,17 +769,27 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             owner_domains=("secure_storage",),
         ),
         _surface(
-            "config rekey",
+            "config passphrase change",
+            command_family="passphrase",
+            owner_domains=("secure_storage",),
+        ),
+        _surface(
+            "config recovery status",
             command_family="recovery",
             owner_domains=("secure_storage",),
         ),
         _surface(
-            "config show-recovery",
+            "config recovery create",
             command_family="recovery",
             owner_domains=("secure_storage",),
         ),
         _surface(
-            "config verify-recovery",
+            "config recovery rotate",
+            command_family="recovery",
+            owner_domains=("secure_storage",),
+        ),
+        _surface(
+            "config recovery verify",
             command_family="recovery",
             owner_domains=("secure_storage",),
         ),

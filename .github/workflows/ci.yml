@@ -7,12 +7,26 @@
 
 name: Cadrumo CI
 
+# Cost discipline (operator directive 2026-07-19): shared-worktree campaigns
+# push vault/docs/agent-config churn to main many times an hour; none of it
+# reaches the lint/type/test surface this workflow gates, so those paths never
+# start the two-OS suite.
 on:
   workflow_dispatch:
   push:
     branches: [main]
-  pull_request:
-    branches: [main]
+    paths-ignore:
+      - ".vault/**"
+      - ".vaultspec/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".gemini/**"
+      - ".agents/**"
+      - "**.md"
+  # NO pull_request trigger: these jobs run on self-hosted runners, and a PR
+  # trigger would execute untrusted PR-head code on the operator's machines
+  # (critical per GitHub's self-hosted hardening guidance). Push already
+  # requires write access; use workflow_dispatch for ad-hoc runs.
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -27,10 +41,18 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
-        python-version: ["3.13"]
+        # Single-platform unit lane (operator cost directive 2026-07-19):
+        # lint/type/unit results are platform-independent; the cross-platform
+        # proof lives in the packaging matrix, whose per-OS legs run the real
+        # installed-behavior oracles on every release-relevant change. `os`
+        # stays the identity key the step conditionals and artifact names
+        # branch on; `runner` carries the free self-hosted label set.
+        include:
+          - os: ubuntu-latest
+            runner: [self-hosted, Linux, X64]
+            python-version: "3.13"
 
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout repository

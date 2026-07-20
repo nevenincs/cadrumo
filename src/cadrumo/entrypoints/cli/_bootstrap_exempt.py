@@ -67,10 +67,9 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # an active bucket session or manufacture an active-profile override before
     # start/resume; status reads only the external journal.
     "config reset",
-    "config rekey",
+    "config passphrase change",
     "config recover",
-    "config show-recovery",
-    "config verify-recovery",
+    "config recovery",
     # Diagnostic surface: must operate without a session so the
     # operator can recover from a torn workspace.
     "config repair",

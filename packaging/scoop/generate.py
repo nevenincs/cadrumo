@@ -160,8 +160,9 @@ def generate_manifest(
     return {
         "version": version,
         "description": (
-            "Deterministic Spanish tax calculation CLI and MCP server; "
-            "independent software, not affiliated with the AEAT."
+            "Cadrumo is a deterministic Spanish tax calculation CLI and MCP server "
+            "that turns local financial records into checked, exportable modelo filing "
+            "artifacts. Independent software; not affiliated with AEAT."
         ),
         "homepage": "https://github.com/nevenincs/cadrumo",
         "license": "Apache-2.0",

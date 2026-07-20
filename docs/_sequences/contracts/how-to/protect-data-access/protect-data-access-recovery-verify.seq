@@ -1,0 +1,2 @@
+@step Verify the recovery words without changing anything. The command prompts for them with echo off.
+@static aeat config recovery verify

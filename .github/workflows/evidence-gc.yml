@@ -1,0 +1,68 @@
+# Bounded retention for the evidence-draft transport (D6 of the
+# release-asset-transport ADR): keep the newest K drafts per producing lane
+# plus any promotion-referenced tags, delete the rest. Only DRAFT releases
+# whose tag matches the reserved ^evidence-(smoke|scoop|homebrew|claude)-\d+$
+# namespace are ever candidates — the real v* releases are structurally out of
+# the GC's reach (enforced in dev.packaging.evidence_release and its tests).
+# Dispatch-only, dry-run by default; zero hosted cost on the self-hosted
+# Linux runner.
+
+name: Cadrumo evidence GC
+
+on:
+  workflow_dispatch:
+    inputs:
+      keep_per_workflow:
+        description: Newest evidence drafts to keep per producing workflow
+        required: false
+        default: "3"
+        type: string
+      keep_tags:
+        description: Space-separated evidence tags to protect (e.g. the last promoted set)
+        required: false
+        default: ""
+        type: string
+      dry_run:
+        description: List deletions without performing them
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  gc:
+    name: Cadrumo / evidence draft GC
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      - name: Delete stale evidence drafts (never touches real releases)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          KEEP: ${{ inputs.keep_per_workflow }}
+          KEEP_TAGS: ${{ inputs.keep_tags }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          arguments=(gc --keep "$KEEP")
+          for tag in $KEEP_TAGS; do
+            arguments+=(--keep-tag "$tag")
+          done
+          if [[ "$DRY_RUN" != "true" ]]; then
+            arguments+=(--apply)
+          fi
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release "${arguments[@]}"

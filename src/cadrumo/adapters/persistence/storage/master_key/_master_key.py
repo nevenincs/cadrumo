@@ -285,7 +285,7 @@ class KeyringMasterKeyProvider:
             if stored is not None:
                 raise SecretAlreadyExistsError(
                     "OS keychain master key is already provisioned; use `aeat config recover` "
-                    "or `aeat config rekey` for custody changes.",
+                    "or `aeat config passphrase change` for custody changes.",
                 )
             new_key = self._mint_and_verify_master_key(KeyringError)
             _log.info("master key minted in OS keychain (service=%s)", self._service)
@@ -497,7 +497,7 @@ class FileFallbackMasterKeyProvider:
                     f"file-fallback at {self._store_dir} is in a torn state — "
                     f"present={[p.name for p in present]} missing={missing}. "
                     "A previous mint or recovery crashed between writes. Run "
-                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key "
+                    "`aeat config recover` (it prompts for the 24-word recovery key) "
                     "to finish recovery, or move the torn secret-store directory "
                     "aside and run `aeat config profile create NAME` "
                     "only if no records were ever written under the prior key.",
@@ -533,14 +533,14 @@ class FileFallbackMasterKeyProvider:
             if present and not force:
                 raise SecretAlreadyExistsError(
                     f"file-fallback at {self._store_dir} is already provisioned; use "
-                    "`aeat config recover` or `aeat config rekey` for custody changes.",
+                    "`aeat config recover` or `aeat config passphrase change` for custody changes.",
                 )
             if present and len(present) != len(artefacts):
                 missing = [p.name for p in artefacts if not p.exists()]
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is in a torn state - "
                     f"present={[p.name for p in present]} missing={missing}. Run "
-                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key to "
+                    "`aeat config recover` (it prompts for the 24-word recovery key) to "
                     "finish recovery, or move the torn secret-store directory aside "
                     "only if no records were ever written under the prior key.",
                 )
@@ -585,7 +585,7 @@ class FileFallbackMasterKeyProvider:
             # material).
             raise _master_key_passphrase_mismatch_error(
                 "passphrase did not unlock the master key; verify the passphrase or run "
-                "`aeat config recover --recovery-key <WORDS>`.",
+                "`aeat config recover`.",
             ) from exc
 
     def _mint_new(self, passphrase: bytes) -> bytes:

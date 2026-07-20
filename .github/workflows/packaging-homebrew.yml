@@ -25,7 +25,31 @@ permissions:
   contents: read
 
 jobs:
+  # Single-creator topology: exactly ONE job creates the run's evidence draft
+  # (drafts reserve no tag ref, so concurrent creates across the matrix would
+  # mint duplicates — cli/cli#4270); the matrix legs are upload-only.
+  create-evidence-draft:
+    name: Cadrumo / create evidence draft
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Create the run's evidence draft (create-if-absent)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+        run: |
+          # --target is THIS run's commit (the run<->release binding verify
+          # re-checks); the consumed smoke commit is recorded in run-context.
+          if ! gh release view "$EVIDENCE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft >/dev/null 2>&1; then
+            gh release create "$EVIDENCE_TAG" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
+              --title "EVIDENCE (non-release): homebrew run ${GITHUB_RUN_ID}" \
+              --notes "Machine evidence transport. Not a Cadrumo release."
+          fi
+
   cadrumo-homebrew-acquisition:
+    needs: create-evidence-draft
     name: Cadrumo / ${{ matrix.label }} / Homebrew source install
     strategy:
       fail-fast: false
@@ -37,26 +61,39 @@ jobs:
             expected_os: Darwin
             expected_arch: x86_64
             brew: /usr/local/bin/brew
+            row_id: homebrew-macos-x86-64
           - id: macos-arm64
             label: macOS arm64
-            runner: macos-15
+            runner: [self-hosted, macOS, ARM64]
             expected_os: Darwin
             expected_arch: arm64
             brew: /opt/homebrew/bin/brew
+            row_id: homebrew-macos-arm64
           - id: linux-x86_64
             label: Linux x86_64
-            runner: ubuntu-24.04
+            runner: [self-hosted, Linux, X64]
             expected_os: Linux
             expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
+            row_id: homebrew-linux-x86-64
+          # linux-arm64 (aarch64) has no self-hosted ARM-Linux runner in the fleet
+          # (gw-workstation-wsl is X64), so it honestly stays hosted rather than run
+          # an aarch64 row on x64 hardware; macos-intel likewise has no self-hosted
+          # Intel Mac. Both remain hosted-blocked on the operator checklist.
           - id: linux-arm64
             label: Linux arm64
             runner: ubuntu-24.04-arm
+            row_id: homebrew-linux-arm64
             expected_os: Linux
             expected_arch: aarch64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
+    # Release-asset transport: evidence rides the run's own draft release, so
+    # the uploader matrix job needs contents:write (job-level only).
+    permissions:
+      actions: read
+      contents: write
 
     steps:
       - name: Initialize current-run evidence root
@@ -129,14 +166,27 @@ jobs:
           python-version: "3.13"
           enable-cache: true
 
-      - name: Download tested Cadrumo Python cohort
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
-        with:
-          name: cadrumo-python-cohort
-          path: ${{ env.CADRUMO_S24_ROOT }}/cohort
-          github-token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          run-id: ${{ inputs.source_run_id }}
+      # The acquisition lanes consume the LINUX-built python cohort (wheels are
+      # py3-none-any; parity with the pre-transport unsuffixed artifact) plus
+      # the sealed full release cohort, both hash-verified against the smoke
+      # run's sealed evidence manifest and the Actions API run record.
+      - name: Download and verify the tested cohorts from the smoke evidence draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release verify \
+            --tag "evidence-smoke-${SOURCE_RUN_ID}" \
+            --expect-run-id "$SOURCE_RUN_ID" \
+            --expect-workflow ".github/workflows/packaging-smoke.yml" \
+            --pattern "cadrumo-python-cohort-linux.tar.gz" \
+            --pattern "cadrumo-release-cohort.tar.gz" \
+            --download-dir "$CADRUMO_S24_ROOT/download"
+          mkdir -p "$CADRUMO_S24_ROOT/cohort" "$CADRUMO_S24_ROOT/release-cohort"
+          tar -xzf "$CADRUMO_S24_ROOT/download/cadrumo-python-cohort-linux.tar.gz" \
+            -C "$CADRUMO_S24_ROOT/cohort"
+          tar -xzf "$CADRUMO_S24_ROOT/download/cadrumo-release-cohort.tar.gz" \
+            -C "$CADRUMO_S24_ROOT/release-cohort"
 
       - name: Verify and generate the cohort-bound tap snapshot
         run: |
@@ -164,11 +214,77 @@ jobs:
             --brew "$BREW_PATH" \
             --repo-root "$GITHUB_WORKSPACE"
 
-      - name: Upload Cadrumo Homebrew acquisition evidence
+      # Mint the sanctioned homebrew-<os>-<arch> row from the real captured oracle
+      # JSONs (the smoke wrote tax/mcp-evidence.json host-visible), bound to THE
+      # immutable release cohort verified and extracted above. No re-run.
+      - name: Emit the sanctioned Homebrew distribution-evidence record
+        env:
+          ROW_ID: ${{ matrix.row_id }}
+        run: |
+          tax="$(find "$CADRUMO_S24_ROOT/evidence" -name tax-evidence.json -print -quit)"
+          mcp="$(find "$CADRUMO_S24_ROOT/evidence" -name mcp-evidence.json -print -quit)"
+          if [[ -z "$tax" || -z "$mcp" ]]; then
+            echo "homebrew oracle evidence JSONs not found under $CADRUMO_S24_ROOT/evidence" >&2
+            exit 1
+          fi
+          uv run --no-project --with packaging --with pydantic --with mcp \
+            python -m dev.packaging.distribution_evidence_emit \
+            --row-id "$ROW_ID" \
+            --release-cohort-dir "$CADRUMO_S24_ROOT/release-cohort" \
+            --tax-evidence "$tax" \
+            --mcp-evidence "$mcp" \
+            --acquisition-mechanism brew \
+            --acquisition-source "nevenincs/cadrumo" \
+            --destination-kind homebrew-cellar \
+            --destination-locator "${{ matrix.id }}" \
+            --distribution-evidence-dir "$CADRUMO_S24_ROOT/distribution-install-readiness"
+
+      # All four matrix legs publish distinct asset names to the ONE draft
+      # evidence-homebrew-<run_id> created by the create-evidence-draft job;
+      # the legs are upload-only (single-creator topology).
+      - name: Publish Homebrew evidence to the run's evidence draft
         if: always() && steps.initialize.outputs.ready == 'true'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          rows=("$CADRUMO_S24_ROOT"/distribution-install-readiness/*.json)
+          if [ -e "${rows[0]}" ]; then
+            gh release upload "$EVIDENCE_TAG" "${rows[@]}" --clobber
+          fi
+          # The downloaded cohorts already live on the smoke draft; exclude
+          # them from the per-leg bundle to avoid duplicate hundred-MB uploads.
+          tar --exclude=./cohort --exclude=./release-cohort --exclude=./download \
+            -czf "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" -C "$CADRUMO_S24_ROOT" .
+          gh release upload "$EVIDENCE_TAG" "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" --clobber
+
+  # Terminal seal for the ONE homebrew draft: runs only when every matrix leg
+  # succeeded, so a sealed manifest always covers a fully green acquisition.
+  seal-evidence-manifest:
+    name: Cadrumo / seal evidence manifest
+    needs: cadrumo-homebrew-acquisition
+    runs-on: [self-hosted, Linux, X64]
+    permissions:
+      contents: write
+    steps:
+      # The seal only needs the helper at the workflow's own ref (the helper
+      # and workflow version move together), not the tested source commit.
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
-          name: cadrumo-homebrew-acquisition-${{ matrix.id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/cadrumo-s24-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.id }}/
-          if-no-files-found: error
-          retention-days: 14
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+      - name: Emit and upload the sealed evidence manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+        run: |
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release emit-manifest \
+            --tag "$EVIDENCE_TAG" --output evidence-manifest.json
+          gh release upload "$EVIDENCE_TAG" evidence-manifest.json --clobber

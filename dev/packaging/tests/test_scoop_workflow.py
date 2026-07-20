@@ -38,7 +38,9 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     steps = job["steps"]
     source_gate = next(step for step in steps if step["name"] == "Verify source workflow identity")
     checkout = next(step for step in steps if step["name"] == "Checkout tested source commit")
-    download = next(step for step in steps if step["name"] == "Download tested Cadrumo Python cohort")
+    download = next(
+        step for step in steps if step["name"] == "Download and verify the tested cohorts from the smoke evidence draft"
+    )
 
     assert source_gate["env"]["SOURCE_COMMIT"] == "${{ inputs.source_commit }}"
     assert source_gate["env"]["SOURCE_RUN_ID"] == "${{ inputs.source_run_id }}"
@@ -50,14 +52,19 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     assert "$run.head_sha -ne $env:SOURCE_COMMIT.ToLowerInvariant()" in source_gate["run"]
     assert checkout["with"]["ref"] == "${{ inputs.source_commit }}"
     assert checkout["with"]["persist-credentials"] is False
-    assert download["with"] == {
-        "name": "cadrumo-python-cohort",
-        "path": "${{ env.CADRUMO_S20_ROOT }}/cohort",
-        "github-token": "${{ github.token }}",
-        "repository": "${{ github.repository }}",
-        "run-id": "${{ inputs.source_run_id }}",
-    }
+    # The cohorts come hash-verified from the smoke run's evidence draft, with
+    # the tag DERIVED from the run-id input; the lane consumes the LINUX-built
+    # python cohort (wheels are py3-none-any; parity with the pre-transport
+    # unsuffixed artifact) plus the sealed full release cohort.
+    assert "dev.packaging.evidence_release verify" in download["run"]
+    assert '--tag "evidence-smoke-$env:SOURCE_RUN_ID"' in download["run"]
+    assert '--expect-workflow ".github/workflows/packaging-smoke.yml"' in download["run"]
+    assert '--pattern "cadrumo-python-cohort-linux.tar.gz"' in download["run"]
+    assert '--pattern "cadrumo-release-cohort.tar.gz"' in download["run"]
+    # Least privilege: workflow-level stays read; only the uploader job holds
+    # contents:write for the draft-release transport.
     assert document["permissions"] == {"actions": "read", "contents": "read"}
+    assert job["permissions"] == {"actions": "read", "contents": "write"}
 
 
 def test_scoop_workflow_runs_the_real_container_lifecycle_without_rebuilding() -> None:
@@ -68,7 +75,9 @@ def test_scoop_workflow_runs_the_real_container_lifecycle_without_rebuilding() -
     initialize = next(step for step in steps if step["name"] == "Initialize current-run evidence root")
     stage = next(step for step in steps if step["name"] == "Stage token-free container harness")
     smoke = next(step for step in steps if step["name"] == "Install and exercise Cadrumo inside a Windows container")
-    upload = next(step for step in steps if step["name"] == "Upload Cadrumo Scoop acquisition evidence")
+    publish = next(
+        step for step in steps if step["name"] == "Publish Scoop evidence to the run's evidence draft and seal it"
+    )
     commands = "\n".join(str(step.get("run", "")) for step in steps)
 
     assert "packaging/scoop/generate.py" in generate["run"]
@@ -84,10 +93,14 @@ def test_scoop_workflow_runs_the_real_container_lifecycle_without_rebuilding() -
     assert "-Mode Container" in smoke["run"]
     assert "mcr.microsoft.com/windows/servercore:ltsc2022" in smoke["run"]
     assert "-TimeoutMinutes 60" in smoke["run"]
-    assert upload["if"] == "always() && steps.initialize.outputs.ready == 'true'"
-    assert upload["with"]["if-no-files-found"] == "error"
-    assert upload["with"]["name"] == "cadrumo-scoop-acquisition-evidence-${{ github.run_attempt }}"
-    assert upload["with"]["path"] == ("${{ runner.temp }}/cadrumo-s20-${{ github.run_id }}-${{ github.run_attempt }}/")
+    assert publish["if"] == "always() && steps.initialize.outputs.ready == 'true'"
+    # Evidence rides this run's OWN draft (rows + bundle + sealed manifest).
+    assert publish["env"]["EVIDENCE_TAG"] == "evidence-scoop-${{ github.run_id }}"
+    assert "gh release create $env:EVIDENCE_TAG --draft" in publish["run"]
+    assert "distribution-install-readiness" in publish["run"]
+    assert "cadrumo-scoop-acquisition-evidence.tar.gz" in publish["run"]
+    assert "dev.packaging.evidence_release emit-manifest" in publish["run"]
+    assert "gh release upload $env:EVIDENCE_TAG evidence-manifest.json --clobber" in publish["run"]
     assert "uv build" not in commands
     assert "python -m build" not in commands
     assert "hatch build" not in commands

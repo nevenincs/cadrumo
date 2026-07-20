@@ -97,10 +97,15 @@ def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "Google Drive vault folder {vault_folder_name} belongs to the former product and cannot be used; "
         "use the Cadrumo vault instead."
     )
-    assert _leaf(data, "cli", "config", "custody", "confirm_new_passphrase_prompt") == (
+    assert _leaf(data, "cli", "config", "passphrase", "current_passphrase_prompt") == (
+        "Current Cadrumo secret-store passphrase: "
+    )
+    assert _leaf(data, "cli", "config", "passphrase", "confirm_new_passphrase_prompt") == (
         "Confirm new Cadrumo secret-store passphrase: "
     )
-    assert _leaf(data, "cli", "config", "custody", "new_passphrase_prompt") == ("New Cadrumo secret-store passphrase: ")
+    assert _leaf(data, "cli", "config", "passphrase", "new_passphrase_prompt") == (
+        "New Cadrumo secret-store passphrase: "
+    )
     assert _leaf(data, "cli", "config", "google", "profile_help") == (
         "Cadrumo profile name override (default = active profile on workflow state)"
     )
@@ -169,10 +174,13 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "La carpeta vault de Google Drive {vault_folder_name} pertany al producte anterior i no es pot utilitzar; "
         "usa la carpeta vault de Cadrumo."
     )
-    assert _leaf(data, "cli", "config", "custody", "confirm_new_passphrase_prompt") == (
+    assert _leaf(data, "cli", "config", "passphrase", "current_passphrase_prompt") == (
+        "Contrasenya actual del magatzem secret Cadrumo: "
+    )
+    assert _leaf(data, "cli", "config", "passphrase", "confirm_new_passphrase_prompt") == (
         "Confirma la nova contrasenya del magatzem secret Cadrumo: "
     )
-    assert _leaf(data, "cli", "config", "custody", "new_passphrase_prompt") == (
+    assert _leaf(data, "cli", "config", "passphrase", "new_passphrase_prompt") == (
         "Nova contrasenya del magatzem secret Cadrumo: "
     )
     assert _leaf(data, "cli", "config", "google", "profile_help") == (

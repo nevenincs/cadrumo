@@ -142,7 +142,7 @@
             "context": {
               "out": "bruno-real-profile.json"
             },
-            "message": "This bundle is UNENCRYPTED and contains sensitive financial data: the raw tax id (not redacted), names/surnames, the full ledger, calculation revisions, and filing records. It was written to bruno-real-profile.json. Use it only for local/SAR handling; do not email, sync, or transfer it. Delete it after that local/SAR handling is complete. Use 'aeat config profile export --passphrase ...' for an AEAD-encrypted structured transfer bundle.",
+            "message": "This bundle is UNENCRYPTED and contains sensitive financial data: the raw tax id (not redacted), names/surnames, the full ledger, calculation revisions, and filing records. It was written to bruno-real-profile.json. Use it only for local/SAR handling; do not email, sync, or transfer it. Delete it after that local/SAR handling is complete. Use 'aeat config profile export --encrypt' for an AEAD-encrypted structured transfer bundle. It is NOT a full backup: attachment evidence bytes, AEAT captures, and the audit trail are excluded. Use the encrypted recovery archive for a complete backup.",
             "severity": "warning",
             "suggestion": null
           }

@@ -11,7 +11,7 @@ name = "cadrumo-data-manuals"
 # runtime wheel that resolves it. Bump both (and the sibling
 # `cadrumo-data-official`) together on every release.
 version = "0.2.1"
-description = "AEAT/BOE práctico manuals (corpus source binaries) for the cadrumo distribution"
+description = "AEAT/BOE práctico manuals (corpus source binaries) for the Cadrumo distribution"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"

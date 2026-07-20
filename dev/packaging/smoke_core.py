@@ -939,6 +939,13 @@ def _assert_cli_smoke(work_dir: Path, venv: Path) -> None:
         "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
+        # Headless custody: the AUTO backend writes to the OS keychain, which
+        # a self-hosted runner's service session refuses (macOS launchd has no
+        # unlocked login keychain - AUTH_STORAGE_KEYRING_UNAVAILABLE on the
+        # first macbook-neo run). The passphrase-backed file backend is the
+        # smoke's posture everywhere, and keeps smoke runs from writing real
+        # keys into any host keychain.
+        "CADRUMO_SECRET_STORE_BACKEND": "file",
     }
     create = _run(
         [

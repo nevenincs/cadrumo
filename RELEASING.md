@@ -1,174 +1,180 @@
 # Releasing Cadrumo
 
-This runbook is for maintainers who prepare, verify, or recover a Cadrumo
-release candidate. Public publication is not implemented yet. The retained
-candidate workflow validates tested Python artifacts but has no upload
-permission, publishing environment, or package-index command.
+This runbook covers the complete release lifecycle for Cadrumo maintainers.
 
-## Current release blockers
+**`.github/workflows/publish-release.yml` is the sole publication authority.** It
+promotes an immutable, CI-tested release cohort to every public channel — PyPI, GitHub
+Release, Scoop bucket, Homebrew tap, and the Claude plugin marketplace — without
+rebuilding any artifact. The workflow is inert until the operator sets
+`CADRUMO_PUBLISH_ENABLED=true` and completes the one-time channel prerequisites below.
 
-The canonical repository slug is **`nevenincs/cadrumo`**, as declared by the
-local release authorities and tooling. The `cadrumo/cadrumo` organization move
-is deferred. If it ever happens, re-register every Trusted Publisher first,
-because PyPI matches the exact owner and repository claim in the OIDC token.
+Dispatching publish-release.yml with `dry_run=true` runs Gate 1 (operator opt-in) and
+Gate 2 (validate) fully but skips Gate 3 (publish), so the validate-everything-publish-
+nothing diagnostic lives on the single authority. The former validate-only `publish.yml`
+stub was retired.
 
-Every PyPI publication remains blocked while the
-[`S61 external reservation gate (W05.P11.S61)`](.vault/plan/2026-07-12-cadrumo-product-rename-plan.md)
-is open. S61 closes only after a named reviewer
-confirms the required records in the release-reservation evidence issue.
+For the full pipeline review and gap analysis see
+`.vault/reference/2026-07-19-post-release-distribution-reference.md`.
 
-- The
-  [release-reservation evidence issue #612](https://github.com/nevenincs/cadrumo/issues/612)
-  must identify the evidence and reviewer. It must cover the `cadrumo`,
-  `cadrumo-data-manuals`, and `cadrumo-data-official` Trusted Publishers,
-  marketplace identifiers, executable expectations, domains, and trademark
-  review.
-- Former-name PyPI cleanup is complete. Deletion is the accepted stronger
-  state, not pending yank or tombstone work. Follow
-  [Former-name package cleanup](#former-name-package-cleanup) for the recorded
-  completion evidence and monitor both names for reappearance.
-- The
-  [`S73 release-note gate (W05.P13.S73)`](.vault/plan/2026-07-12-cadrumo-product-rename-plan.md)
-  remains open. It updates and verifies the release template, checklist, and
-  current release evidence. It does not block PyPI publication; after all three
-  PyPI distributions are published, it blocks only GitHub Release creation.
+## Release at a glance (5 stages)
 
-The manual [`.github/workflows/publish.yml`](.github/workflows/publish.yml)
-dispatch is validation-only. It cannot publish. Local builds, green tests,
-name-availability searches, and a successful readiness command do not create
-publication authority.
+| Stage | Where | What |
+| --- | --- | --- |
+| 0. Version + tag | Local, human | Bump 8 surfaces, `uv lock`, commit, tag, push main + tag |
+| 1. Build + prove | CI (`packaging-smoke.yml`, auto-triggered by push) | 3-OS smoke, build immutable release cohort, 3 oracle-emit rows |
+| 2. Channel proofs | CI (3 manual dispatches) + operator real-client captures | Scoop, Homebrew, Claude acquisition; mint 4 claude rows |
+| 3. Readiness gate | Local, human | Aggregate 12 rows; `just release-readiness-json` must report `"ok": true` |
+| 4. Publish | CI (`publish-release.yml`, human approval required) | Gate 1 opt-in → Gate 2 validate → Gate 3 publish → reacquire |
+
+## Repository identity
+
+The canonical repository slug is **`nevenincs/cadrumo`**, as declared by the local
+release authorities and tooling. The `cadrumo/cadrumo` organization move is deferred.
+If it ever happens, re-register every Trusted Publisher first, because PyPI matches the
+exact owner and repository claim in the OIDC token.
 
 ## Release authorities and references
 
 The accepted
 [`cadrumo-cli-executable` architecture decision record (ADR)](.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md)
-governs product casing, imports, the `aeat` human command, and `cadrumo-mcp`.
-The accepted
+governs product casing, imports, the `aeat` human command, and `cadrumo-mcp`. The
+accepted
 [`product-rename` Stage-A ADR](.vault/adr/2026-07-13-product-rename-adr.md)
-governs distributions, repository, marketplace, marketing, and publication.
-The superseded
+governs distributions, repository, marketplace, marketing, and publication. The
+superseded
 [`cadrumo-product-rename` ADR](.vault/adr/2026-07-12-cadrumo-product-rename-adr.md)
-does not govern active naming. The following sources define the remaining
-release mechanics:
+does not govern active naming. The following sources define the release mechanics:
 
-- [`docs/_release_checklist.yaml`](docs/_release_checklist.yaml) defines soak,
-  versioning, hotfix timing, rollback triggers, and readiness checks.
-- [`.github/workflows/publish.yml`](.github/workflows/publish.yml) validates a
-  retained tested Python candidate and deliberately contains no publication
-  job.
-- [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml)
-  defines the clean Linux artifact checks and retained evidence.
+- [`.github/workflows/publish-release.yml`](.github/workflows/publish-release.yml) —
+  the sole upload authority: manual dispatch, protected `release` environment with
+  required reviewers, OIDC Trusted Publishing, promote-without-rebuild from the
+  retained cohort bytes. Refuses to run until `CADRUMO_PUBLISH_ENABLED=true` is set.
+- [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml) —
+  runs the three-OS artifact checks, builds the immutable full release cohort once per
+  run and publishes it (`cadrumo-release-cohort.tar.gz`) to the run's draft evidence
+  release `evidence-smoke-<run id>`, mints the per-OS oracle `DistributionEvidence`
+  rows onto the same draft, and seals an `evidence-manifest.json` binding the run
+  identity to every asset's SHA-256. Its run id is the identity anchor for every
+  downstream dispatch.
+- [`docs/_release_checklist.yaml`](docs/_release_checklist.yaml) — soak timing,
+  versioning scheme, hotfix cycle times, and rollback triggers.
 - [`docs/_release_notes_template.md`](docs/_release_notes_template.md) and
-  [`docs/updates.md`](docs/updates.md) are the release-note authorities. Their
-  command canonicalization and current verification remain pending under S73.
-- [`SECURITY.md`](SECURITY.md) defines private vulnerability reporting.
+  [`docs/updates.md`](docs/updates.md) — release-note authorities.
+- [`SECURITY.md`](SECURITY.md) — private vulnerability reporting.
 
 The release comprises three version-locked PyPI distributions:
 
-| Distribution | Current version | Contents | Installed command |
-| --- | --- | --- | --- |
-| `cadrumo` | 0.2.1 | Core distribution | `aeat` and `cadrumo-mcp`; running `cadrumo-mcp` requires the `agent` extra |
-| `cadrumo-data-manuals` | 0.2.1 | Reviewed manual corpus | None |
-| `cadrumo-data-official` | 0.2.1 | Reviewed official and normative corpus | None |
+| Distribution | Contents | Installed commands |
+| --- | --- | --- |
+| `cadrumo` | Core distribution | `aeat` and `cadrumo-mcp` (the `agent` extra enables `cadrumo-mcp`) |
+| `cadrumo-data-manuals` | Reviewed manual corpus | None |
+| `cadrumo-data-official` | Reviewed official and normative corpus | None |
 
-Version and publish all three distributions as one immutable tested Python
-cohort. The core distribution's mandatory base dependencies pin both data
-distributions to the same exact version.
-
-A successful `Cadrumo Packaging Smoke` run builds the cohort once from a clean
-source snapshot. It retains three wheels, the root source distribution,
-`python-cohort.json`, and the installed CLI and MCP oracle evidence for 14
-days. The manifest binds the source commit, version, filenames, and SHA-256
-digest of every distribution file. A future publication authority must consume
-those retained bytes without rebuilding them.
-
-Every artifact must remain below PyPI's 100 megabytes (MB) per-file limit. The
-core wheel must not contain companion sources in Portable Document Format
-(PDF), legacy Microsoft Excel Spreadsheet (XLS), or Microsoft Excel Open XML
-Spreadsheet (XLSX) formats.
-The companion parity gate
+Version and publish all three distributions as one immutable tested cohort. The core
+distribution's mandatory base dependencies pin both companions to the same exact
+version. Every artifact must remain below PyPI's 100 MB per-file limit. The core wheel
+must not contain companion sources in PDF, XLS, or XLSX formats. The companion parity
+gate
 `dev/packaging/tests/test_cadrumo_data_distribution.py::test_companion_version_matches_root_distribution`
 must prove that both companion versions match the core distribution.
 
-This workflow covers Python candidate validation only. Publication remains
-blocked until the plugin, MCPB, Scoop, Homebrew, marketplace, GitHub Release,
-Python, client, platform, and public-reacquisition evidence form one complete
-release authority.
+A successful `Cadrumo Packaging Smoke` run builds the cohort once from a clean source
+snapshot. It retains the three wheels, the root source distribution,
+`python-cohort.json`, the full release-cohort archive, the installed CLI and MCP
+oracle evidence, and the per-OS `DistributionEvidence` records as assets on the run's
+draft evidence release (`evidence-smoke-<run id>`), sealed by its
+`evidence-manifest.json`. Draft releases carry no Actions-storage retention window;
+they persist until the evidence GC (`evidence-gc.yml`, keep-3-per-lane) collects
+them. The cohort manifest binds the source commit, version, filenames, and SHA-256
+digest of every distribution file. The publication authority consumes those retained
+bytes without rebuilding them.
 
 ## Publication prerequisites
 
 ### Former-name package cleanup
 
-The pre-rename companion projects `aeat-data-manuals` and `aeat-data-official`
-were removed from PyPI on 2026-07-14: the operator deleted both projects and
-their 0.1.0 and 0.1.1 releases outright and removed their Trusted Publishers,
-so nothing can publish under the former identity. Both project endpoints now
-return not-found.
-
-This runbook originally prescribed the weaker action: yank every release and
-preserve both project pages as tombstones. The operator chose deletion instead
-and recorded the deviation on the reservation evidence issue as strictly
-stronger for the cleanup goal. Accept that record as the completed state; the
-one property tombstones would have added, holding the former names against
-third-party re-registration, is covered instead by monitoring the former-name
-endpoints for reappearance during the publication window.
-
-If a former `aeat*` name resurfaces anywhere else, remove any account-level
-pending publisher registered for it and record the action and evidence under
-S61.
+The pre-rename companion projects `aeat-data-manuals` and `aeat-data-official` were
+deleted from PyPI on 2026-07-14; both project endpoints return not-found. Monitor both
+former-name endpoints for reappearance during the publication window. If a former
+`aeat*` name resurfaces anywhere else, remove any account-level pending publisher
+registered for it.
 
 ### External reservation evidence
 
 The
 [release-reservation evidence issue #612](https://github.com/nevenincs/cadrumo/issues/612)
-must identify a reviewer and confirmation date for every item. Accept only
-records from the system that owns each name:
+must identify a reviewer and confirmation date for every item. By operator
+directive (2026-07-19, small-team policy), the Fable release agent is an
+acceptable named reviewer for every item below: the agent gathers the
+authoritative records, verifies them against the systems that own each name,
+and posts the dated review on the issue. Items that carry legal judgment
+(trademark clearance) are reviewed as documented searches with findings — the
+agent review records facts, not legal advice, and the operator accepts the
+residual risk by approving the publication run. The operator's `release`
+environment approval remains the one human gate. Accept only records from the
+system that owns each name:
 
-- **PyPI projects:** Record each project's **Publishing** page. The record must
-  show the project, GitHub owner, repository, workflow filename, and environment.
+- **PyPI projects:** Record each project's **Publishing** page showing project, GitHub
+  owner, repository (`nevenincs/cadrumo`), workflow filename (`publish-release.yml`),
+  and environment (`release`).
 - **Repository:** Record `gh repo view nevenincs/cadrumo --json nameWithOwner,url`.
-  The result must report `nevenincs/cadrumo` and its GitHub Uniform Resource
-  Locator (URL). A future
-  transfer to another owner changes the repository slug and requires all three
-  Trusted Publishers to be registered again before publication.
-- **Marketplace:** Record the provider-owned listing or reservation for the
-  exact marketplace and plugin identifiers. Compare those identifiers with the
-  generated marketplace and plugin manifests.
+  The result must report `nevenincs/cadrumo` and its GitHub URL. A future transfer to
+  another owner requires all three Trusted Publishers to be re-registered.
+- **Marketplace:** Record the provider-owned listing or reservation for the exact
+  marketplace and plugin identifiers; compare with the generated manifests.
 - **Executables:** Record installed-wheel probes for `aeat --version` and the
   `cadrumo-mcp` launcher supplied by `cadrumo[agent]`.
-- **Domains:** Record registrar or registry evidence that identifies the exact
-  domain and the account that controls it.
-- **Trademarks:** Record the dated Spanish Patent and Trademark Office and
-  European Union Intellectual Property Office search or clearance review. Name
-  the reviewer and the classes reviewed.
+- **Domains:** Record registrar or registry evidence identifying the exact domain and
+  controlling account.
+- **Trademarks:** Record the dated Spanish Patent and Trademark Office and European
+  Union Intellectual Property Office search or clearance review. Name the reviewer and
+  the classes reviewed.
 
-An availability search isn't reservation evidence. If an authoritative record
-is absent, expired, or names a different owner, repository, identifier,
-environment, domain, executable, or trademark scope, stop.
+An availability search is not reservation evidence. If an authoritative record is
+absent, expired, or names a different owner, repository, identifier, environment,
+domain, executable, or trademark scope, stop.
 
-### Publication authority
+### Arm the publication workflow (one-time)
 
-No publication authority currently exists. Do not configure a workflow,
-environment, local recipe, API token, or Trusted Publisher as a substitute.
-The future implementation must be a protected, manual, retained-byte authority
-for the complete cross-channel cohort and must pass the open distribution
-readiness plan before this section gains operational commands.
+Arm `publish-release.yml` before the first publication, in this order:
+
+1. Register PyPI Trusted Publishing for `cadrumo`, `cadrumo-data-manuals`, and
+   `cadrumo-data-official` at `https://pypi.org/manage/account/publishing/`. For each
+   project: publisher = GitHub Actions, owner/repository = `nevenincs/cadrumo`,
+   workflow filename = `publish-release.yml`, environment = `release`.
+
+2. Create the `release` GitHub Environment with yourself as a required reviewer. The
+   approval click on each dispatched run is the human publication gate.
+
+3. Create the public Scoop bucket repository and set:
+   - Repository variable `CADRUMO_SCOOP_BUCKET_REPO` to its slug (`<owner>/<repo>`)
+   - Repository secret `CADRUMO_SCOOP_BUCKET_TOKEN` to a PAT with write access
+
+4. Create the public Homebrew tap repository and set:
+   - Repository variable `CADRUMO_HOMEBREW_TAP_REPO` to its slug
+   - Repository secret `CADRUMO_HOMEBREW_TAP_TOKEN` to a PAT with write access
+
+5. Create the public Claude plugin marketplace repository and set:
+   - Repository variable `CADRUMO_MARKETPLACE_REPO` to its slug
+   - Repository secret `CADRUMO_MARKETPLACE_TOKEN` to a PAT with write access
+
+6. Set repository variable `CADRUMO_PUBLISH_ENABLED=true` to arm the workflow.
+
+Without `CADRUMO_PUBLISH_ENABLED=true` the workflow refuses with a detailed prerequisite
+list and uploads nothing.
+
+### Self-hosted runner fleet
+
+The packaging, suite, and Claude CI lanes run on the self-hosted fleet:
+`gw-workstation-win` (Windows x64), `gw-workstation-wsl` (Linux x64, containerized),
+and `macbook-neo` (macOS arm64). The Scoop Windows-container gate runs on hosted
+`windows-2022`; the Homebrew `macos-intel` and `linux-arm64` rows use hosted runners
+because the fleet has no matching hardware.
 
 ### Workstation and repository
 
-Use a clean `main` checkout with:
-
-- Python 3.13
-- `uv`
-- `just`
-- Git
-- Node.js and `npx`
-- GitHub Command Line Interface (GitHub CLI or `gh`), authenticated to
-  `nevenincs/cadrumo`
-- Permission to push the release tag, dispatch Actions, and inspect all three
-  publishing environments
-
-Run these checks before release work:
+Use a clean `main` checkout with Python 3.13, `uv`, `just`, Git, Node.js and `npx`,
+and the GitHub CLI (`gh`) authenticated to `nevenincs/cadrumo`:
 
 ```console
 python --version
@@ -181,44 +187,34 @@ git remote get-url origin
 git status --short
 ```
 
-If `python --version` doesn't report Python 3.13 or any version command exits
-nonzero, stop. If `gh auth status` doesn't name an authenticated account that
-can read `nevenincs/cadrumo`, stop.
-
-If the normalized output of `git remote get-url origin` doesn't identify owner
-and repository `nevenincs/cadrumo`, stop. If `git status --short` prints any
-output, stop.
-
-Don't work around a repository mismatch with a different remote or an ad hoc
-release-please command.
+If `python --version` does not report Python 3.13, any command exits nonzero,
+`gh auth status` does not name an account that can read `nevenincs/cadrumo`, or
+`git status --short` prints output, stop. Do not work around a repository mismatch.
 
 ## Hard-cut release state
 
 Cadrumo is a hard cut, not a compatibility release:
 
-- `aeat` is the sole human command-line interface (CLI) executable; it names
-  the Cadrumo command contract (`cadrumo-cli-executable` ADR). Don't expose
-  `cadrumo` as a second human executable.
-- `cadrumo-mcp` is the sole Model Context Protocol (MCP) command.
-- Product imports, environment variables, plugin identifiers, resource schemes,
-  and local state use the Cadrumo identity.
-- Agencia Estatal de Administración Tributaria (AEAT) remains the authority
-  name in official endpoints, credentials, legal evidence, and registry
-  classification.
-- Cadrumo doesn't read, move, re-key, or delete former-product state. It starts
-  with fresh Cadrumo state or refuses detected former-product state.
+- `aeat` is the sole human CLI executable; it names the Cadrumo command contract. Do
+  not expose `cadrumo` as a second human executable.
+- `cadrumo-mcp` is the sole MCP command.
+- Product imports, environment variables, plugin identifiers, resource schemes, and
+  local state use the Cadrumo identity.
+- AEAT remains the authority name in official endpoints, credentials, legal evidence,
+  and registry classification.
+- Cadrumo does not read, move, re-key, or delete former-product state. It starts with
+  fresh Cadrumo state or refuses detected former-product state.
 
-Call this cut out in the release notes. Test the published release against a
-fresh local root. Never use a maintainer's real taxpayer profile for release
-verification.
+Call this cut out in the release notes. Test the published release against a fresh local
+root. Never use a maintainer's real taxpayer profile for release verification.
 
-## Prepare and version the release
+## Operate a release
 
-Run every command from the repository root. The following steps define the
-required result for each command. If the observed result differs, stop.
+### Stage 0: version + tag
 
-1. Update `main`, then run the machine-readable JavaScript Object Notation
-   (JSON) readiness gate:
+Run every command from the repository root on a clean `main` branch.
+
+1. Update `main` and run the readiness gate:
 
    ```console
    git switch main
@@ -226,110 +222,74 @@ required result for each command. If the observed result differs, stop.
    just release-readiness-json
    ```
 
-   If the JSON doesn't report `"ok": true`, stop. If any blocking check doesn't
-   report `"passed": true`, stop.
-
-   The packaging-smoke check must identify the current manifest and report
-   `"passed": true`. The GitHub-backed blocker check must report no open
-   `priority:P0-blocker` issue. An unavailable GitHub check or missing packaging
-   evidence is an advisory in the program, but it blocks this release procedure.
-   The release-reservation evidence issue must also record S61 as reviewed and
-   closed.
+   If the JSON does not report `"ok": true`, or any blocking check does not report
+   `"passed": true`, stop. The GitHub-backed blocker check must report no open
+   `priority:P0-blocker` issue.
 
 2. Run the release and packaging checks:
 
    ```console
    uv sync --frozen
    just packaging-smoke-dependencies
-   just check-dependencies
    just packaging-smoke
    just packaging-smoke-docker
-   uv run --no-sync python dev/packaging/smoke_plugin_validate.py --json
    uv run --no-sync pytest src/cadrumo/tests/test_release_config.py dev/release/tests -q
    ```
 
-   Every command must exit zero. Each exercised lane's newest
-   `packaging-smoke-manifest.json` must contain `"ok": true` and its expected
-   `lane` name. The plugin JSON must contain `"status": "validated"`.
-   `"status": "skipped"`, a missing Claude executable, absent output, or a
-   nonzero test result blocks the release.
+   Every command must exit zero.
 
-3. If the `just release` target and the cleared S61 evidence both name
-   `nevenincs/cadrumo`, preview the release-please proposal:
+3. Preview the release-please proposal:
 
    ```console
    just release
    ```
 
-   The command must exit zero and create a nonempty
-   `var/release/release-please.log`. The log must describe a dry-run proposal
-   for `nevenincs/cadrumo` on `main` and no applied change.
+   The command must exit zero and create a non-empty `var/release/release-please.log`.
+   Compare the proposal with every commit since the preceding tag.
 
-   Compare the proposal with every commit since the preceding tag. When S73 is
-   closed, also compare it with the release-notes template. If any expected
-   state is absent, stop.
-
-4. Set one `X.Y.Z` version in all six version-source files:
+4. Set one `X.Y.Z` version across all **eight** release surfaces. Run `just
+   release-apply` to see the printed checklist, then apply each item by hand:
 
    - `.release-please-manifest.json`
-   - `pyproject.toml`
-   - `packaging/cadrumo_data_manuals/pyproject.toml`
-   - `packaging/cadrumo_data_official/pyproject.toml`
-   - `src/cadrumo/__init__.py`
-   - `CHANGELOG.md`
+   - `pyproject.toml` — `[project].version`
+   - `packaging/cadrumo_data_manuals/pyproject.toml` — `[project].version`
+   - `packaging/cadrumo_data_official/pyproject.toml` — `[project].version`
+   - `src/cadrumo/__init__.py` — `__version__`
+   - `packaging/mcpb/manifest.json` — `"version"` (enforced by
+     `check_version_surfaces_agree` in `dev/release/readiness.py`)
+   - `CHANGELOG.md` — prepend the release block using the dry-run log as source
+   - `uv.lock` — regenerate with `uv lock && uv lock --check`
 
-   Update the two mandatory exact companion dependency pins in the root
-   `[project].dependencies` array at the same time. Then rerun:
+   Also update both exact companion dependency pins in `pyproject.toml`:
+   `cadrumo-data-manuals==X.Y.Z` and `cadrumo-data-official==X.Y.Z`.
+
+5. Rerun the readiness gate and companion parity test; both must pass:
 
    ```console
    just release-readiness
-   uv lock
    uv lock --check
    uv run --no-sync pytest src/cadrumo/tests/test_release_config.py dev/release/tests -q
    uv run --no-sync pytest dev/packaging/tests/test_cadrumo_data_distribution.py::test_companion_version_matches_root_distribution -q
    ```
 
-   `just release-readiness` must report `PASS` for project names, version
-   surfaces, and changelog. `uv lock --check` and both test commands must exit
-   zero. The core distribution, companions, manifest, import package, exact
-   base dependency pins, lockfile, and changelog must all name `X.Y.Z`. If any surface
-   names another version, stop.
-
-5. Stage and commit all seven release surfaces together. The seventh is the
-   regenerated `uv.lock`:
+6. Stage and commit all eight release surfaces together:
 
    ```console
-   git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py CHANGELOG.md uv.lock
+   git add \
+     .release-please-manifest.json pyproject.toml \
+     packaging/cadrumo_data_manuals/pyproject.toml \
+     packaging/cadrumo_data_official/pyproject.toml \
+     src/cadrumo/__init__.py packaging/mcpb/manifest.json \
+     CHANGELOG.md uv.lock
    git commit -m "chore(release): vX.Y.Z"
    ```
 
-   `uv.lock` is a mandatory release surface. Always regenerate, validate, and
-   stage it. Confirm it resolves the core distribution and both companions at
-   `X.Y.Z`, even if regeneration produces no textual change.
+   If the staged diff contains any path outside those eight, stop.
 
-   Inspect the staged diff before committing. If it contains a path outside the
-   seven paths in the staging command, stop.
+### Stage 0b: release-candidate soak (non-hotfix releases)
 
-### Optional diagnostic: release-apply helper
-
-Run `just release-apply` as an additional readiness probe. Its printed
-checklist lists all seven release surfaces, including both companion versions
-and their exact pins, the mandatory `uv lock` / `uv lock --check`
-regeneration, and separate `git push origin main` /
-`git push origin refs/tags/vX.Y.Z` push instructions. It never prints a
-broad tag push.
-
-The helper doesn't edit, commit, tag, or push. Its success isn't release
-approval.
-
-```console
-just release-apply
-```
-
-## Release-candidate soak
-
-Every non-hotfix release soaks locally for 48 to 72 hours. Release-candidate
-(RC) tags remain local. Never push an RC tag.
+Before pushing the final tag, run a local soak against a pre-release build. RC tags are
+local only — never push an RC tag.
 
 1. Create an annotated local tag:
 
@@ -337,58 +297,268 @@ Every non-hotfix release soaks locally for 48 to 72 hours. Release-candidate
    git tag -a vX.Y.Z-rc.1 -m "Cadrumo vX.Y.Z-rc.1"
    ```
 
-2. Run `just packaging-smoke` and `just packaging-smoke-docker` against the
-   tagged commit. Both commands must exit zero. Every manifest they create must
-   contain `"ok": true`.
+2. Run `just packaging-smoke` and `just packaging-smoke-docker` against the tagged
+   commit. Both commands must exit zero. Every manifest they create must contain
+   `"ok": true`.
 
-3. Install the built core wheel into a clean scratch environment. Configure a
-   new local storage root so the probe starts with fresh Cadrumo state. Use only
-   fictional taxpayer data. If Cadrumo detects former-product state or any
-   existing taxpayer profile, stop.
+3. Install the built core wheel into a clean scratch environment. Configure a new local
+   storage root so the probe starts with fresh Cadrumo state. Use only fictional
+   taxpayer data. If Cadrumo detects former-product state or any existing taxpayer
+   profile, stop.
 
 4. Run the installed probes in this order:
+   - `aeat --version` must print `CADRUMO X.Y.Z`.
+   - `aeat --help` must exit zero and display the `config` and `app` roots.
+   - A representative human workflow must run through `aeat` and report its output
+     path, byte size, and SHA-256 digest.
+   - When the `agent` extra is installed, the plugin launcher must invoke `cadrumo-mcp`
+     without a missing-extra refusal.
 
-   1. `aeat --version` must print `CADRUMO X.Y.Z`.
-   2. `aeat --help` must exit zero and display the `config` and `app` roots.
-   3. A representative human workflow must run through `aeat` and report its
-      local output path, byte size, and 256-bit Secure Hash Algorithm (SHA-256)
-      digest.
-   4. When the `agent` extra is installed, the plugin launcher must invoke
-      `cadrumo-mcp` without a missing-extra refusal.
+5. Record every probe command, exit status, and visible result. Missing output, real
+   taxpayer data, or former-product state fails the candidate.
 
-5. Record every probe command, exit status, and visible result. Missing output,
-   real taxpayer data, or former-product state fails the candidate.
+6. Hold for at least 48 hours. If any packaging lane turns red, a `priority:P0-blocker`
+   issue opens, or the changelog omits a user-visible change since the preceding tag,
+   stop. Fix forward, delete only the local RC tag, and restart as `vX.Y.Z-rc.2`.
 
-6. Hold the candidate for at least 48 hours. If any packaging lane turns red, a
-   `priority:P0-blocker` issue opens, or the changelog omits a user-visible
-   change since the preceding tag, stop.
-
-7. If any soak condition fails, fix forward, delete only the local RC tag, and
-   restart as `vX.Y.Z-rc.2`. If every condition passes, create the final tag:
+7. When every condition passes, create the final tag and push:
 
    ```console
    git tag -a vX.Y.Z -m "Cadrumo vX.Y.Z"
+   git push origin main
+   git push origin refs/tags/vX.Y.Z
    ```
 
 Emergency hotfixes may skip the soak. Use the cycle times in
-`docs/_release_checklist.yaml` and record why the exception was necessary.
+`docs/_release_checklist.yaml` and record the exception.
 
-## Publication is blocked
+### Stage 1: build + prove
 
-Do not push a final release tag, dispatch an upload workflow, create a public
-package release, publish a marketplace entry, or attach an extension bundle.
-The current workflow may be dispatched only to validate one retained Python
-candidate. It does not authorize or perform publication.
+The push to `main` automatically triggers the `Cadrumo Packaging Smoke` workflow
+(`.github/workflows/packaging-smoke.yml`). Wait for the run to go fully green. It runs:
 
-Publication instructions belong here only after the distribution readiness
-plan has complete cohort, client, platform, acquisition, evidence aggregation,
-protected promotion, and public reacquisition records. Until then, stop after
-candidate preparation and preserve the validation evidence.
+- Three per-OS smoke legs (Linux X64, Windows X64, macOS ARM64) proving wheel
+  installation, bundled data, extras, split, and browser lanes.
+- `build-release-cohort`: builds the **one immutable release cohort** on exactly
+  CPython 3.13 / uv 0.11.29 from a fresh clean clone with `SOURCE_DATE_EPOCH` and
+  `PYTHONHASHSEED=0`. The cohort holds 13 files: 6 Python dist files,
+  `python-cohort.json`, 2 Claude plugin zips, `cadrumo.json` (Scoop manifest),
+  `cadrumo.rb` (Homebrew formula), `cadrumo-X.Y.Z.mcpb`, and `release-cohort.json`.
+  The cohort id is a SHA-256 over the complete artifact set; CI never rebuilds these
+  bytes. The job creates the run's draft evidence release `evidence-smoke-<run id>`
+  (the sole creator) and publishes the cohort as `cadrumo-release-cohort.tar.gz`.
+- Three `oracle-emit-*` legs: each downloads that single cohort archive from the
+  run's evidence draft, installs its wheels into a fresh venv, runs the grounded CLI
+  and MCP tax oracles (Modelo 200 `DP200014:00562 == 23000.00` per the readiness
+  ADR), and mints one sanctioned `DistributionEvidence` row (`python-linux-x86-64`,
+  `python-windows-x86-64`, `python-macos-arm64`) onto the same draft.
+- `seal-evidence-manifest`: hashes the draft's complete asset set and seals
+  `evidence-manifest.json` binding the run identity to every asset digest.
+
+**Note the run id** of the successful smoke run. It is the identity anchor for every
+subsequent dispatch and for the final publish dispatch. Evidence drafts have no
+Actions-storage retention window, but the evidence GC keeps only the newest three per
+lane — promote (or protect the draft via the GC's keep-tags input) before it ages out
+of the keep window.
+
+### Stage 2: channel acquisition proofs
+
+Dispatch the three acquisition workflows with the smoke run id and head commit SHA. In
+the GitHub Actions UI, or via the CLI:
+
+```console
+gh workflow run packaging-scoop.yml \
+  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<HEAD_SHA>
+
+gh workflow run packaging-homebrew.yml \
+  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<HEAD_SHA>
+
+gh workflow run packaging-claude.yml \
+  -f source_run_id=<SMOKE_RUN_ID> -f source_commit=<HEAD_SHA>
+```
+
+Each workflow verifies source-run identity (success, `packaging-smoke.yml`, `push`,
+`main`, same repo, matching `head_sha`) before proceeding.
+
+- `packaging-scoop.yml` (hosted `windows-2022` container): hash-verifies and installs
+  the smoke draft's cohorts, generates the Scoop manifest, runs the oracles, and
+  publishes the `scoop-windows-x86-64` `DistributionEvidence` row onto its own sealed
+  draft `evidence-scoop-<run id>`.
+- `packaging-homebrew.yml` (matrix: hosted macOS Intel + Linux ARM64; self-hosted
+  macOS ARM64 + Linux X64): installs from the tap snapshot on each platform, runs the
+  oracles, and publishes its `homebrew-<os>-<arch>` `DistributionEvidence` row per
+  matrix row onto the single sealed draft `evidence-homebrew-<run id>`.
+- `packaging-claude.yml` (self-hosted Windows): runs a live Claude Code session and
+  the MCPB runtime oracle; produces lane evidence, not `DistributionEvidence` rows.
+
+**Operator real-client captures (4 claude rows):** The four `claude-*` evidence rows
+require real client installations performed by a human. The honesty guard in
+`dev/packaging/distribution_evidence_emit.py` refuses SDK-driven runs. Run one capture
+per row using:
+
+```console
+uv run --no-sync python -m dev.packaging.emit_real_client_evidence <args>
+```
+
+Refer to the module's docstring for per-row arguments and the required isolation proof.
+
+The 48-72 hour soak window covers the time needed for the channel proof runs and
+real-client captures.
+
+### Stage 3: readiness aggregation
+
+The readiness gate (`just release-readiness-json`, backed by `dev/release/readiness.py`)
+requires all 12 `DistributionEvidence` rows in `var/distribution-install-readiness/`
+alongside a local `var/release-cohort/` at the release commit and tag.
+
+| Row | Emission path | CI automated? |
+| --- | --- | --- |
+| `python-linux-x86-64` | `oracle-emit-linux` job in packaging-smoke | Yes |
+| `python-windows-x86-64` | `oracle-emit-windows` job in packaging-smoke | Yes |
+| `python-macos-arm64` | `oracle-emit-macos` job in packaging-smoke | Yes |
+| `scoop-windows-x86-64` | `packaging-scoop.yml` (row asset on `evidence-scoop-<run id>`) | Yes |
+| `homebrew-macos-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
+| `homebrew-macos-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
+| `homebrew-linux-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
+| `homebrew-linux-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
+| `claude-code-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
+| `claude-cowork-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
+| `claude-desktop-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
+| `claude-desktop-mcpb` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
+
+**Aggregating the rows:** the eight CI-minted rows (three `python-*`, `scoop-windows-x86-64`,
+four `homebrew-*`) ride their runs' draft evidence releases
+(`evidence-<lane>-<run id>`) as flat `{row_id}-{evidence_id}.json` assets. Collect
+them into `var/distribution-install-readiness/` with:
+
+```console
+just release-collect-evidence <smoke-run-id> <scoop-run-id> <homebrew-run-id>
+```
+
+The four `claude-*` rows are minted locally by the operator's `emit_real_client_evidence`
+runs above and already live in that directory. Once all twelve are present, verify:
+
+```console
+just release-readiness-json
+```
+
+The JSON must report `"ok": true` with `distribution-evidence-complete` PASS before
+proceeding to Stage 4.
+
+### Stage 4: dispatch the publication workflow
+
+First transport the four operator-minted `claude-*` rows into CI: upload the local
+records to a release the publish workflow can pull (a draft is fine), for example
+
+```console
+gh release create vX.Y.Z-evidence --draft --notes "claude-* rows" \
+  var/distribution-install-readiness/claude-*.json
+```
+
+Then dispatch `Publish Cadrumo release` with the four run/release inputs — the smoke
+run (3 python rows + sealed cohort), the Scoop and Homebrew acquisition runs from
+Stage 2 (their rows), and the evidence release tag above:
+
+```console
+gh workflow run publish-release.yml \
+  -f packaging_run_id=<SMOKE_RUN_ID> \
+  -f scoop_run_id=<SCOOP_RUN_ID> \
+  -f homebrew_run_id=<HOMEBREW_RUN_ID> \
+  -f claude_evidence_release=vX.Y.Z-evidence
+```
+
+**Dispatch ceiling.** Every source the publish workflow pulls from is a draft
+evidence release (`evidence-<lane>-<run id>`, plus the operator's `claude-*` evidence
+release). Drafts have no Actions-storage retention window, but the evidence GC
+(`evidence-gc.yml`) keeps only the newest three drafts per lane; a superseded draft
+that has been collected is gone. Dispatch the publication while every source draft
+still exists (protect a slow promotion's drafts via the GC's keep-tags input); if a
+source draft was collected, Gate 2 fails on the missing draft — re-run a fresh smoke
+run (and the affected acquisition dispatches) and dispatch again against the new run
+ids.
+
+Gate 2 derives each lane's evidence tag from its run-id input, downloads and
+hash-verifies every draft's assets against its sealed `evidence-manifest.json` and
+the Actions API run record, checks each acquisition run's identity, and re-verifies
+all twelve rows against the sealed cohort — so the local
+`just release-collect-evidence` 12/12 is reproduced hard in CI, never trusted.
+
+The workflow runs three sequential jobs:
+
+**Gate 1 — operator opt-in.** Refuses unless `CADRUMO_PUBLISH_ENABLED=true` is set,
+and prints a full prerequisite checklist if not. Nothing is uploaded.
+
+**Gate 2 — validate (no rebuild).** Verifies the source run identity (success,
+`packaging-smoke.yml`, `push`, `main`, same repo, matching `head_sha`) and, with parity
+checks, each acquisition run (`packaging-scoop.yml` / `packaging-homebrew.yml`,
+`workflow_dispatch`, same repo, success). Downloads and hash-verifies the **sealed**
+release cohort archive (`cadrumo-release-cohort.tar.gz` from the smoke evidence draft
+— the single source of every channel's bytes, PyPI included) and aggregates all
+twelve `DistributionEvidence` rows from their authoritative drafts: 3 python from the
+smoke draft, 1 scoop, 4 homebrew, and the 4 operator `claude-*` rows from the
+evidence release. The per-OS smoke build cohorts are deliberately NOT part of the
+publication chain. Re-points `promote_python_cohort --check-pypi-only` at the sealed
+cohort's `python/` bytes to guard the PyPI version against overwrite and emit the
+version. Runs `dev.release.readiness --json --skip-network --cohort-dir
+var/promotion/release-cohort --evidence-dir var/promotion/evidence/rows`; the sealed
+cohort's installed behaviour is proven per-OS by the `DistributionEvidence` rows, not
+by the smoke build. Gate 2 passes only with all 12 rows present and verified.
+
+**Gate 3 — publish** (`environment: release`, human approval required). After the
+approval click, the job re-downloads and re-verifies the sealed cohort archive and
+every evidence row/manifest from the same drafts (never rebuilds), runs the
+fail-closed `evidence_release leak-sweep` over everything about to be attached
+(residual runner metadata hard-fails the promotion), and:
+
+- Publishes all 6 distributions to PyPI from the sealed cohort's `python/` subdir (the
+  exact bytes every other channel ships and the oracle-emit legs proved) via
+  `uv publish --trusted-publishing always` (OIDC; no API token needed once configured).
+- Creates `gh release create vX.Y.Z --target <source_commit>` attaching every file
+  found in the release-cohort directory (13 files) plus the twelve verified evidence
+  rows and the three per-lane evidence manifests, so the published release is
+  self-evidencing and draft GC can never orphan a shipped audit trail. An empty asset
+  set fails hard.
+- Clones the public Scoop bucket repo, copies `scoop/cadrumo.json` to `bucket/`, and
+  pushes (requires `CADRUMO_SCOOP_BUCKET_REPO` and `CADRUMO_SCOOP_BUCKET_TOKEN`).
+- Clones the public Homebrew tap repo, copies `homebrew/Formula/cadrumo.rb` to
+  `Formula/`, and pushes (requires `CADRUMO_HOMEBREW_TAP_REPO` and
+  `CADRUMO_HOMEBREW_TAP_TOKEN`).
+- Clones the public marketplace repo, replaces its tracked tree wholesale with the
+  unzipped `cadrumo-marketplace-X.Y.Z.zip` from the cohort, and pushes (requires
+  `CADRUMO_MARKETPLACE_REPO` and `CADRUMO_MARKETPLACE_TOKEN`; added in commit
+  `17abf9c021`). Each channel push refuses instructively when its credentials are
+  absent.
+
+### Stage 5: reacquisition and docs unlock
+
+After publication, run the reacquisition lanes to prove each channel serves the correct
+cohort and to unlock the docs-claims gate
+(`dev/docs/tests/test_distribution_claims.py`):
+
+```console
+uv run --no-sync python -m dev.packaging.acquire_pypi
+uv run --no-sync python -m dev.packaging.acquire_github_release
+uv run --no-sync python -m dev.packaging.acquire_mcpb
+uv run --no-sync python -m dev.packaging.acquire_homebrew
+uv run --no-sync python -m dev.packaging.acquire_claude_plugin
+```
+
+On Windows, also run:
+
+```console
+uv run --no-sync powershell dev/packaging/acquire_scoop.ps1
+```
+
+Each lane downloads the published artifact, verifies its digest against the cohort,
+runs the installed behavior oracles, and emits a reacquisition evidence row. The
+docs-claims gate fails any README or docs page that advertises a channel without a
+passing reacquisition row for that channel. Land install-claim docs updates only after
+all applicable reacquisition lanes pass.
 
 ## Report release problems
 
-Use a public GitHub issue for packaging failures, command regressions, index
-resolution failures, and documentation defects. Include this evidence:
+Use a public GitHub issue for packaging failures, command regressions, index resolution
+failures, and documentation defects. Include:
 
 - Cadrumo version
 - Operating system and version
@@ -397,16 +567,16 @@ resolution failures, and documentation defects. Include this evidence:
 - Exact failing command
 - Exit status
 - Redacted standard output and standard error
-- Workflow-run URL, when applicable
+- Workflow-run URL when applicable
 - Expected result and observed result
 
-Use fictional data. Remove taxpayer identifiers, credentials, tokens, local
-paths that identify a person, and session state.
+Use fictional data. Remove taxpayer identifiers, credentials, tokens, local paths that
+identify a person, and session state.
 
-If the problem involves a suspected vulnerability, secret exposure, or taxpayer
-data, treat it as a private security incident. Follow `SECURITY.md` and don't
-disclose technical details in a public issue. If private vulnerability reporting
-is unavailable, open only a detail-free request for private contact.
+If the problem involves a suspected vulnerability, secret exposure, or taxpayer data,
+treat it as a private security incident. Follow `SECURITY.md` and do not disclose
+technical details in a public issue. If private vulnerability reporting is unavailable,
+open only a detail-free request for private contact.
 
 ## Rollback procedure
 
@@ -414,51 +584,46 @@ Use rollback for data loss or corruption, a security vulnerability, a widespread
 regression, or a supported-environment miscalculation.
 
 > **The rollback helper is a printed checklist, not an executor.**
-> `just release-rollback X.Y.Z` prints separate `main` and named-rollback-tag
-> pushes and all three PyPI yank locations (`cadrumo`, `cadrumo-data-manuals`,
-> `cadrumo-data-official`). It stages, commits, tags, and pushes nothing
-> itself. Use the reviewed manual sequence that follows; a human still runs
-> and confirms each command.
+> `just release-rollback X.Y.Z` prints the full sequence — `main` and rollback-tag
+> pushes plus all three PyPI yank URLs — for a human to review and run deliberately.
+> It stages, commits, tags, and pushes nothing itself.
 
 1. Stop announcements and marketplace promotion.
 
-2. Preserve the workflow logs, wheel hashes, and redacted reproducer.
+2. Preserve the workflow logs, cohort hashes, and redacted reproducer.
 
-3. If the defect is public, open or update the public incident issue. If it is
-   a security defect, coordinate through the private channel in `SECURITY.md`.
+3. If the defect is public, open or update the public incident issue. For a security
+   defect, coordinate through the private channel in `SECURITY.md`.
 
-4. Review and record the disposition of each affected distribution:
-   `cadrumo`, `cadrumo-data-manuals`, and `cadrumo-data-official`.
+4. Review and record the disposition of each affected distribution: `cadrumo`,
+   `cadrumo-data-manuals`, and `cadrumo-data-official`.
 
-5. Yank `X.Y.Z` for every affected distribution. A yank prevents default
-   resolution but preserves the artifact for explicit pins and investigation.
-   Don't delete releases or project-page tombstones.
+5. Yank `X.Y.Z` for every affected distribution. A yank prevents default resolution
+   but preserves the artifact for explicit pins and investigation. Do not delete
+   releases or project-page tombstones.
 
-6. If source rollback is required, revert the release with a new commit. Then
-   create and push only the explicit rollback marker:
+6. If source rollback is required, revert the release with a new commit and create the
+   rollback marker tag:
 
    ```console
    git revert <release-commit-sha>
+   git commit -m "revert: roll back vX.Y.Z"
    git tag -a vX.Y.Z-rollback -m "Rollback Cadrumo vX.Y.Z"
    git push origin main
    git push origin refs/tags/vX.Y.Z-rollback
    ```
 
-7. Never rewrite published Git history, delete the public final tag, use
+7. For published channels: remove or retract the Scoop manifest, Homebrew formula, and
+   marketplace content manually. The rollback helper prints the PyPI yank URLs; channel
+   retraction is a separate manual step on each channel repo.
+
+8. Never rewrite published Git history, delete the public final tag, use
    `git push --tags`, or push an RC tag.
 
-8. Prepare a new patch version across all three distributions. Never overwrite
-   or reuse `X.Y.Z`. Apply the hotfix timing from
-   `docs/_release_checklist.yaml`, then repeat readiness, packaging, publishing,
-   and index verification.
+9. Prepare a new patch version across all three distributions. Never overwrite or reuse
+   `X.Y.Z`. Apply the hotfix cycle time from `docs/_release_checklist.yaml`, then
+   repeat all five stages of the release pipeline.
 
-9. Update the GitHub Release and `docs/updates.md` with the yank, affected scope,
-   mitigation, and corrected version. Until coordinated disclosure is approved,
-   keep embargoed security details private.
-
-The successful packaging-smoke run is the build authority for the retained
-Python candidate. Readiness and rollback helpers perform no outward action,
-and there is no local or CI package upload path. The release tooling never
-files with AEAT, automatically executes a rollback, yanks a release, or
-migrates former-product state. Public promotion remains unimplemented until
-all release channels share one complete evidence-backed authority.
+10. Update the GitHub Release and `docs/updates.md` with the yank, affected scope,
+    mitigation, and corrected version. Keep embargoed security details private until
+    coordinated disclosure is approved.

@@ -42,8 +42,16 @@ _ALLOWED_DIRECT_OUTPUTS = {
     # Group help fallback: renders the click-generated help text verbatim,
     # not operator data subject to redaction.
     ("entrypoints/cli/_app_diagnostics.py", "typer.echo"),
-    # Operator-facing wizard help line, not a debug print.
-    ("entrypoints/cli/_modelo_work_wizard_cli.py", "print"),
+    # Wizard progress rides the prompter's injectable prompt_toolkit output
+    # device (headless-testable), not stdout; it renders operator-facing
+    # progress text, never taxpayer data subject to redaction.
+    ("application/wizard/_prompter.py", "write"),
+    # Recovery-code display writes directly to the controlling terminal
+    # device (CONOUT$ / /dev/tty), deliberately BYPASSING stdout so the
+    # candidate mnemonic can never land in a redirected stream, JSON
+    # envelope, or log. Routing it through the envelope renderer would be
+    # the secret-serialization defect the channel exists to prevent.
+    ("entrypoints/cli/_config/_secure_input.py", "write"),
 }
 
 

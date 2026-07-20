@@ -41,12 +41,16 @@
 
 name: Durable maintenance gates
 
+# Cost discipline (operator directive 2026-07-19): the former push trigger on
+# every chore/** branch fired these gates dozens of times a day from shared-
+# worktree campaign churn. The durable gates now run on a weekly beat, on PRs
+# to main, or on demand - and on the free self-hosted Linux runner.
 on:
   workflow_dispatch:
-  push:
-    branches: ['chore/**']
-  pull_request:
-    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'
+  # NO pull_request trigger: self-hosted runners must never execute untrusted
+  # PR-head code (see ci.yml note).
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -58,7 +62,7 @@ permissions:
 jobs:
   vault-drift-gate:
     name: Vault structural-drift gate (S335)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20
 
     steps:
@@ -82,7 +86,7 @@ jobs:
 
   roundtrip-suite-gate:
     name: Ledger + storage roundtrip suite gate (S336)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
 
     steps:

@@ -89,6 +89,12 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         text=_text(r"(?:fixtures|justificantes|\.pdf)"),
     ),
     AllowlistRule(
+        path=_path(r"^src/cadrumo/adapters/persistence/profile/tests/test_secure_bound_namespace_binding\.py$"),
+        reason="namespace-binding roundtrip fixture uses a representative justificante PDF filename",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"justificantes/.*\.pdf"),
+    ),
+    AllowlistRule(
         path=_path(
             r"^src/cadrumo/adapters/inbound/declaracion/tests/(?:"
             r"_parser_boundary_support|_verification_chain_support|"

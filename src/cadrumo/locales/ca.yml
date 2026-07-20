@@ -2915,7 +2915,7 @@ cli:
           remove_help: Elimina la contrasenya vinculada a una font de certificat registrada
           set:
             name_help: Font de certificat registrada a la qual es vincula la contrasenya
-            secret_help: La contrasenya del PKCS#12 (es demana, oculta, mai es mostra)
+            secret_prompt: 'Frase de contrasenya PKCS#12 (entrada oculta): '
           set_help: Estableix (o rota) la contrasenya d'una font de certificat registrada
         select:
           name_help: Registered certificate source to activate
@@ -2995,25 +2995,20 @@ cli:
         recipient_id_help: Etiqueta estable triada per l'operador (p. ex. 'el-meu-gestor').
         remove_help: Elimina un destinatari de confianca pel seu id del perfil actiu.
     custody:
-      confirm_new_passphrase_help: Repeteix la nova contrasenya del magatzem secret.
-      confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
-        Cadrumo: '
       data_loss_warning: Anota ara aquesta clau de recuperacio. AEAT no desa la clau
         de recuperacio en clar i no la pot tornar a mostrar.
       errors:
-        missing_new_passphrase_confirmation: Repeteix la nova contrasenya amb --confirm-new-passphrase.
         new_passphrase_mismatch: La nova contrasenya i la confirmacio no coincideixen.
-        non_interactive_passphrase_required: Aquesta ordre necessita un terminal interactiu
-          per demanar la nova contrasenya. Proporciona-la de manera no interactiva
-          amb --new-passphrase i --confirm-new-passphrase.
-        non_interactive_secret_required: cli.config.custody.errors.non_interactive_secret_required
-        secrets_stdin_invalid_json: cli.config.custody.errors.secrets_stdin_invalid_json
-        secrets_stdin_missing_fields: cli.config.custody.errors.secrets_stdin_missing_fields
-        secrets_stdin_too_large: cli.config.custody.errors.secrets_stdin_too_large
-      new_passphrase_help: Nova contrasenya del magatzem secret. Omet-la per introduir-la
-        de forma interactiva.
-      new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
-      secrets_stdin_help: cli.config.custody.secrets_stdin_help
+        non_interactive_secret_required: Cal un secret però no hi ha cap terminal
+          interactiu; utilitza --secrets-stdin.
+        secrets_stdin_invalid_json: El contingut de --secrets-stdin no és un objecte
+          JSON vàlid.
+        secrets_stdin_missing_fields: A l'objecte de --secrets-stdin li falten camps
+          obligatoris o en té d'inesperats.
+        secrets_stdin_too_large: El contingut de --secrets-stdin supera la mida màxima
+          permesa.
+      secrets_stdin_help: Llegeix els secrets com un únic objecte JSON limitat des
+        de l'entrada estàndard en lloc de demanar-los.
     errors:
       invalid_value: 'Valor no vàlid per a %{name}: %{value}'
       no_active_profile: No hi ha cap perfil actiu. Executa 'aeat config profile create
@@ -3201,14 +3196,17 @@ cli:
       help: Llistar tots els perfils registrats i marcar l'actiu
     passphrase:
       change:
-        help: cli.config.passphrase.change.help
-      confirm_new_passphrase_prompt: cli.config.passphrase.confirm_new_passphrase_prompt
-      current_passphrase_prompt: cli.config.passphrase.current_passphrase_prompt
+        help: Canvia la contrasenya del magatzem de secrets després de verificar l'actual.
+      confirm_new_passphrase_prompt: 'Confirma la nova contrasenya del magatzem secret
+        Cadrumo: '
+      current_passphrase_prompt: 'Contrasenya actual del magatzem secret Cadrumo: '
       errors:
-        current_passphrase_incorrect: cli.config.passphrase.errors.current_passphrase_incorrect
-        store_unprovisioned: cli.config.passphrase.errors.store_unprovisioned
-      help: cli.config.passphrase.help
-      new_passphrase_prompt: cli.config.passphrase.new_passphrase_prompt
+        current_passphrase_incorrect: La contrasenya actual és incorrecta; el magatzem
+          de secrets no s'ha modificat.
+        store_unprovisioned: El magatzem de secrets en fitxer no està inicialitzat;
+          no hi ha cap contrasenya per canviar.
+      help: Gestiona la contrasenya del magatzem de secrets en fitxer.
+      new_passphrase_prompt: 'Nova contrasenya del magatzem secret Cadrumo: '
     profile:
       already_exists: El perfil %{name} ja existeix. Tria un altre identificador de
         destinació.
@@ -3299,28 +3297,34 @@ cli:
       edit_help: Torna a executar l'assistent sobre un perfil existent
       export_cleartext_local_help: Escriu JSON en clar només per a gestió local/SAR;
         no és segur per a correu, sincronització ni transferència.
+      export_confirm_passphrase_prompt: 'Confirma la frase de contrasenya del paquet: '
+      export_encrypt_help: Xifra el paquet amb AEAD per a la transferència; la frase
+        de contrasenya es demana (oculta) o es llegeix amb --secrets-stdin, mai per
+        argv.
       export_encrypted_info: Aquest paquet de perfil s'ha escrit a {out} amb xifratge
-        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import PATH
-        --passphrase ...'. Només conté el paquet estructurat del perfil; usa l'arxiu
-        de recuperació xifrat per a una còpia completa amb evidències adjuntes i auditoria.
+        AEAD per frase de contrasenya. Importa'l amb 'aeat config profile import RUTA';
+        la frase de contrasenya es demana (oculta) o es llegeix amb --secrets-stdin.
+        Només conté el paquet estructurat del perfil; usa l'arxiu de recuperació xifrat
+        per a una còpia completa amb evidències adjuntes i auditoria.
       export_help: Escriu un paquet portable de perfil xifrat per frase de contrasenya
         a RUTA; el JSON en clar requereix --cleartext-local i només és per a ús local/SAR.
       export_name_help: Perfil que vols exportar; per defecte, l'actiu
       export_out_help: Ruta de destinació per al paquet de perfil
-      export_passphrase_help: Frase de contrasenya per xifrar amb AEAD el paquet de
-        perfil serialitzat per a transferència.
+      export_passphrase_mismatch: La frase de contrasenya del paquet i la seva confirmació
+        no coincideixen; no s'ha escrit res.
+      export_passphrase_prompt: 'Frase de contrasenya del paquet (mínim 8 caràcters): '
       export_passphrase_too_short: La frase de contrasenya d'exportació del perfil
         ha de tenir almenys 8 caràcters.
-      export_requires_transport: Usa --passphrase per a un paquet xifrat de transferència,
+      export_requires_transport: Usa --encrypt per a un paquet xifrat de transferència,
         o --cleartext-local només per a JSON local/SAR.
       export_sensitivity_warning: 'Aquest paquet NO està xifrat i conté dades financeres
         sensibles: el NIF en clar (sense ocultar), nom i cognoms, el llibre de moviments
         complet, les revisions de càlcul i els registres de presentació. S''ha escrit
         a {out}. Usa''l només per a gestió local/SAR; no l''enviïs per correu, no
         el sincronitzis ni el transfereixis. Esborra''l quan acabi aquesta gestió
-        local/SAR. Usa ''aeat config profile export --passphrase ...'' per a un paquet
-        estructurat de transferència xifrat AEAD.'
-      export_transport_conflict: Tria --passphrase o --cleartext-local, no tots dos.
+        local/SAR. Usa ''aeat config profile export --encrypt'' per a un paquet estructurat
+        de transferència xifrat AEAD.'
+      export_transport_conflict: Tria --encrypt o --cleartext-local, no tots dos.
       help: Gestionar valors de configuració del perfil actiu
       history:
         invalid_event_type: 'Tipus d''esdeveniment desconegut: {value}. Tipus d''esdeveniment
@@ -3362,8 +3366,7 @@ cli:
       import_missing_filing_baseline: 'Al paquet de perfil li falten dades d''identitat
         per presentar models. Corregeix el paquet o torna a exportar un perfil complet
         amb aquests camps: %{missing_flags}.'
-      import_passphrase_help: Frase de contrasenya per a un paquet exportat amb 'config
-        profile export --passphrase'.
+      import_passphrase_prompt: 'Frase de contrasenya del paquet: '
       import_path_help: Ruta al fitxer del paquet de perfil
       import_uuid_collision: El UUID del paquet entra en conflicte amb un perfil existent.
       logout_help: Tanca la sessió d'emmagatzematge activa, descarta les claus en
@@ -3465,8 +3468,6 @@ cli:
         usage_help: Informar de l'espai en disc d'un sandbox, o de tots alhora.
         usage_name_help: Nom del sandbox (sense el prefix); ometre per informar de
           tots.
-        use_help: Canvia el perfil actiu a un sandbox existent.
-        use_name_help: Nom del sandbox (sense el prefix).
       sar_catalogue_info: Aquest arxiu conté totes les categories de dades personals
         del perfil. Les categories exactes figuren al camp data_categories d'aquesta
         resposta i al seu context llegible per màquina. Els bytes de les proves adjuntes
@@ -3491,11 +3492,35 @@ cli:
         actiu.
       view_help: Mostrar els fets d''un perfil (per defecte el perfil actiu)
     recover:
-      help: Recuperar el magatzem secret de fitxer amb una clau de recuperacio i vincular-lo
-        a una nova contrasenya.
-      recovery_key_help: Clau de recuperacio de vint-i-quatre paraules.
-    rekey:
-      help: Reembolcallar el magatzem secret de fitxer amb una nova contrasenya.
+      errors:
+        recovery_code_rejected: El codi de recuperació no ha obert l'embolcall de
+          recuperació; el magatzem de secrets no s'ha canviat.
+      help: Recupera el magatzem de secrets de fitxer amb el codi de recuperació de
+        24 paraules i vincula'l a una frase de contrasenya nova.
+    recovery:
+      candidate_intro: 'El teu nou codi de recuperació. Anota ara aquestes 24 paraules,
+        en ordre:'
+      create:
+        help: Registra un codi de recuperació; les paraules apareixen una sola vegada
+          al terminal i s'han de tornar a escriure.
+      errors:
+        interactive_terminal_required: 'El registre de recuperació necessita un terminal
+          interactiu: el codi es mostra una vegada i s''ha de tornar a escriure.'
+        retype_mismatch: El codi de recuperació reescrit no coincideix amb el mostrat;
+          no s'ha canviat res.
+      help: Gestiona el codi de recuperació de 24 paraules del magatzem de secrets
+        de fitxer.
+      recovery_code_prompt: 'Codi de recuperació de 24 paraules: '
+      retype_prompt: 'Torna a escriure el codi de recuperació de 24 paraules per confirmar
+        (entrada oculta): '
+      rotate:
+        help: Substitueix el codi de recuperació registrat; les paraules noves apareixen
+          una sola vegada i s'han de tornar a escriure.
+      status:
+        help: Mostra si hi ha un codi de recuperació registrat, sense exposar-lo.
+      verify:
+        help: Comprova que un codi de recuperació obre l'embolcall de recuperació
+          desat.
     repair:
       connectivity_help: Comprovar connectivitat del navegador i la Seu AEAT
       connectivity_target_help: Objectiu de connectivitat que cal comprovar
@@ -3581,13 +3606,6 @@ cli:
         next_step: 'Següent pas: executa `aeat app overview status` per revisar l''espai
           de treball.'
         saved: Perfil '%{profile_name}' desat.
-    show_recovery:
-      existing_notice: La clau de recuperacio en clar no es desa i no es pot tornar
-        a mostrar. Usa --rotate per generar una nova clau de recuperacio.
-      help: Mostrar l'estat de recuperacio o generar una clau de recuperacio d'un
-        sol us.
-      rotate_help: Rotar l'embolcall de recuperacio i imprimir una nova clau de recuperacio
-        d'un sol us.
     status:
       empty_profile: Cap perfil configurat. Executa `aeat config profile create NAME`
         per començar.
@@ -3600,9 +3618,6 @@ cli:
     unset:
       help: Eliminar el valor assignat a una clau de configuració
       key_help: Clau a netejar
-    verify_recovery:
-      help: Verificar que una clau de recuperacio obre l'embolcall de recuperacio
-        persistit.
     workflow_help: Mostrar ajuda del flux de configuració
   contract:
     app_help: 'Emet el manifest de capacitats de l''operador: arrels, families d''ordres,
@@ -4223,8 +4238,8 @@ cli:
           evidence add'.
       help: Vincula un moviment del llibre amb una factura del catàleg de reconciliació
         en una única crida canònica. Per adjuntar evidència de factura de compra,
-        usa 'aeat app ledger attach'. Rebutja vincles entre buckets. Local; mai
-        contacta amb AEAT.
+        usa 'aeat app ledger attach'. Rebutja vincles entre buckets. Local; mai contacta
+        amb AEAT.
       id_help: Id de transaccio del llibre (SHA-256 o prefix inequivoc).
       invoice_id_help: Id del catàleg de factures enriquit, procedent d'una factura
         importada, reconciliada o creada amb 'aeat app ledger invoice catalogue create',
@@ -4484,8 +4499,7 @@ cli:
         section_review_and_registry: Revisio i registre
       config:
         auth_configure: Configurar el proveidor d'autenticacio amb l'AEAT.
-        auth_logout: Tancar les sessions locals d autenticació i conservar la configuració
-          del proveïdor.
+        auth_logout: Tancar les sessions locals d'autenticació i conservar la configuració.
         auth_providers: Llistar els proveidors d'autenticacio disponibles.
         auth_reset: Retirar la configuració local d autenticació i les credencials
           desades.
@@ -4514,6 +4528,11 @@ cli:
         profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
         profile_switch: Switch to a profile and make it the active one.
+        reset_resume: Reprèn una operació de reinici incompleta.
+        reset_start: Inicia un reinici irreversible nou de tots els perfils emmagatzemats
+          localment.
+        reset_status: Mostra l'estat d'una operació de reinici sense modificar dades
+          locals.
         section_authentication: Autenticacio AEAT
         section_diagnostics: Diagnostic
         section_first_run: Primera execucio
@@ -5140,9 +5159,9 @@ errors:
       l'aplicació.
     auth_storage_master_key_material_missing: No existeix material de clau mestra.
       L'emmagatzematge segur encara no està aprovisionat.
-    auth_storage_master_key_passphrase_mismatch: La frase de contrasenya no obre la
-      clau mestra. Torna-la a introduir; si l'has oblidat, executa aeat config recover
-      --recovery-key <WORDS>.
+    auth_storage_master_key_passphrase_mismatch: La contrasenya no desembolcalla la
+      clau mestra. Torna a introduir-la; si l'has oblidada, executa aeat config recover
+      amb el teu codi de recuperació de 24 paraules.
     auth_storage_master_key_unavailable: No s'ha pogut obtenir la clau mestra de cap
       proveïdor. Comprova l'anell de claus o la frase de contrasenya de la còpia de
       seguretat.

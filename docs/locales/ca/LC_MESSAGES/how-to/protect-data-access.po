@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"POT-Creation-Date: 2026-07-19 14:45+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -24,10 +24,10 @@ msgstr "Protegeix l'accés a les teves dades"
 
 #: ../../how-to/protect-data-access.md:3
 msgid ""
-"Cadrumo encrypts every profile, transaction, piece of evidence, and "
-"filing under one master key. Your passphrase opens that key. If you lose "
-"the passphrase and have no recovery key, the data cannot be decrypted by "
-"anyone, including you."
+"Cadrumo encrypts every profile, transaction, piece of evidence, and filing "
+"under one master key. Your passphrase opens that key. If you lose the "
+"passphrase and have no recovery key, the data cannot be decrypted by anyone,"
+" including you."
 msgstr ""
 "Cadrumo xifra cada perfil, transacció, peça d'evidència i presentació sota "
 "una única clau mestra. La teva contrasenya obre aquesta clau. Si perds la "
@@ -55,9 +55,9 @@ msgstr "Necessites:"
 
 #: ../../how-to/protect-data-access.md:16
 msgid ""
-"An active profile - see [set up your taxpayer profile](profile-setup.md)."
-" The first command below refuses without one (`No se pudo determinar "
-"ningún bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
+"An active profile - see [set up your taxpayer profile](profile-setup.md). "
+"The first command below refuses without one (`No se pudo determinar ningún "
+"bucket activo. Selecciona un perfil y vuelve a intentarlo.`)."
 msgstr ""
 "Un perfil actiu: consulta [configura el teu perfil de contribuent](profile-"
 "setup.md). La primera ordre de més avall es nega a continuar si no n'hi ha "
@@ -66,16 +66,16 @@ msgstr ""
 
 #: ../../how-to/protect-data-access.md:19
 msgid ""
-"Your current master-key passphrase for recovery-key creation, rotation, "
-"and passphrase changes."
+"Your current master-key passphrase for recovery-key creation, rotation, and "
+"passphrase changes."
 msgstr ""
 "La teva contrasenya de clau mestra actual per crear la clau de recuperació, "
 "rotar-la i canviar la contrasenya."
 
 #: ../../how-to/protect-data-access.md:21
 msgid ""
-"Your recovery words for verification or recovery after a lost passphrase."
-" Recovery sets a new passphrase without requiring the lost one."
+"Your recovery words for verification or recovery after a lost passphrase. "
+"Recovery sets a new passphrase without requiring the lost one."
 msgstr ""
 "Les teves paraules de recuperació per verificar o recuperar l'accés després "
 "de perdre la contrasenya. La recuperació estableix una contrasenya nova "
@@ -101,51 +101,57 @@ msgstr ""
 
 #: ../../how-to/protect-data-access.md:34
 msgid ""
-"If no recovery key exists yet, the command creates one and prints a "
-"twenty-four-word recovery key. The words are shown exactly once and are "
-"never stored. Only an encrypted wrapper of the master key is written to "
-"disk. Write the words down and keep them offline, separate from your "
-"computer."
+"The command shows a twenty-four-word recovery key directly on your terminal,"
+" exactly once, and asks you to retype it (hidden) before anything is saved. "
+"The words are never stored, printed to a file, or included in command "
+"output. Only an encrypted wrapper of the master key is written to disk. "
+"Write the words down and keep them offline, separate from your computer."
 msgstr ""
-"Si encara no existeix cap clau de recuperació, l'ordre en crea una i "
-"imprimeix una clau de recuperació de vint-i-quatre paraules. Les paraules "
-"es mostren exactament una vegada i no es desen mai. Al disc només s'escriu "
+"L'ordre mostra una clau de recuperació de vint-i-quatre paraules directament"
+" al teu terminal, exactament una vegada, i et demana tornar-la a escriure "
+"(oculta) abans de desar res. Les paraules no es desen mai, no s'imprimeixen "
+"en cap fitxer ni s'inclouen a la sortida de l'ordre. Al disc només s'escriu "
 "un embolcall xifrat de la clau mestra. Apunta les paraules i conserva-les "
 "fora de línia, separades del teu ordinador."
 
-#: ../../how-to/protect-data-access.md:39
-msgid ""
-"Run the same command again later to confirm enrollment: once a recovery "
-"key exists, the command reports its status and does not print the words "
-"again."
-msgstr ""
-"Torna a executar la mateixa ordre més endavant per confirmar l'alta: un cop "
-"existeix una clau de recuperació, l'ordre n'informa l'estat i no torna a "
-"imprimir les paraules."
+#: ../../how-to/protect-data-access.md:40
+msgid "Confirm enrollment later without exposing the words:"
+msgstr "Confirma més tard el registre sense exposar les paraules:"
 
-#: ../../how-to/protect-data-access.md:42
+#: ../../how-to/protect-data-access.md:45
+msgid ""
+"The status output reports enrollment and a short fingerprint of the enrolled"
+" key. It never shows the words again."
+msgstr ""
+"La sortida d'estat informa del registre i d'una empremta curta de la clau "
+"registrada. No torna a mostrar mai les paraules."
+
+#: ../../how-to/protect-data-access.md:48
 msgid "Check that your recovery key works"
 msgstr "Comprova que la teva clau de recuperació funciona"
 
-#: ../../how-to/protect-data-access.md:44
+#: ../../how-to/protect-data-access.md:50
 msgid "Verify the words you wrote down without changing anything:"
 msgstr "Verifica les paraules que has apuntat sense canviar res:"
 
-#: ../../how-to/protect-data-access.md:49
+#: ../../how-to/protect-data-access.md:55
 msgid ""
-"The command reports `verified yes` or `verified no` and exits with a "
-"failure code when the words do not open the recovery wrapper. Nothing is "
-"modified either way."
+"Type the words at the hidden prompt. The command reports `verified yes` or "
+"`verified no` and exits with a failure code when the words do not open the "
+"recovery wrapper. Nothing is modified either way. Never pass the words on "
+"the command line: they would land in your shell history."
 msgstr ""
-"L'ordre informa de `verified yes` o `verified no` i surt amb un codi de "
-"fallada quan les paraules no obren l'embolcall de recuperació. En cap dels "
-"dos casos no es modifica res."
+"Escriu les paraules a la sol·licitud oculta. L'ordre informa de `verified "
+"yes` o `verified no` i surt amb un codi de fallada quan les paraules no "
+"obren l'embolcall de recuperació. En cap dels dos casos no es modifica res. "
+"No passis mai les paraules a la línia d'ordres: quedarien a l'historial del "
+"teu shell."
 
-#: ../../how-to/protect-data-access.md:53
+#: ../../how-to/protect-data-access.md:60
 msgid "Replace the recovery key"
 msgstr "Reemplaça la clau de recuperació"
 
-#: ../../how-to/protect-data-access.md:55
+#: ../../how-to/protect-data-access.md:62
 msgid ""
 "If the written words may have been seen by someone else, mint a fresh "
 "recovery key:"
@@ -153,61 +159,65 @@ msgstr ""
 "Si algú altre pot haver vist les paraules apuntades, encunya una clau de "
 "recuperació nova:"
 
-#: ../../how-to/protect-data-access.md:61
+#: ../../how-to/protect-data-access.md:68
 msgid ""
-"New words are printed exactly once. The previous recovery words stop "
-"working immediately. Store the new words as before."
+"The new words appear exactly once and must be retyped before the previous "
+"recovery key is replaced. The previous recovery words stop working "
+"immediately. Store the new words as before."
 msgstr ""
-"Les paraules noves s'imprimeixen exactament una vegada. Les paraules de "
-"recuperació anteriors deixen de funcionar immediatament. Desa les paraules "
-"noves com abans."
+"Les paraules noves apareixen exactament una vegada i s'han de tornar a "
+"escriure abans de reemplaçar la clau de recuperació anterior. Les paraules "
+"de recuperació anteriors deixen de funcionar immediatament. Desa les "
+"paraules noves com abans."
 
-#: ../../how-to/protect-data-access.md:64
+#: ../../how-to/protect-data-access.md:72
 msgid "Change your passphrase"
 msgstr "Canvia la teva contrasenya"
 
-#: ../../how-to/protect-data-access.md:66
+#: ../../how-to/protect-data-access.md:74
 msgid "To change the passphrase while you still know the current one:"
 msgstr "Per canviar la contrasenya mentre encara coneixes l'actual:"
 
-#: ../../how-to/protect-data-access.md:71
+#: ../../how-to/protect-data-access.md:79
 msgid ""
-"The command asks for the current passphrase if the store is not already "
-"open, then prompts twice (hidden) for the new one. The master key itself "
-"does not change, so all stored data stays readable. Only the passphrase "
-"that opens it is replaced. For non-interactive use, pass `--new-"
-"passphrase` together with `--confirm-new-passphrase`."
+"The command prompts (hidden) for the current passphrase, then twice for the "
+"new one. The master key itself does not change, so all stored data stays "
+"readable. Only the passphrase that opens it is replaced. For non-interactive"
+" use, pass `--secrets-stdin` and pipe one JSON object with "
+"`current_passphrase`, `new_passphrase`, and `new_passphrase_confirmation`."
 msgstr ""
-"L'ordre demana la contrasenya actual si el magatzem no està ja obert i, tot "
-"seguit, la demana dues vegades (oculta) per a la nova. La clau mestra en si "
-"no canvia, de manera que totes les dades desades continuen sent llegibles. "
-"Només es reemplaça la contrasenya que l'obre. Per a un ús no interactiu, "
-"passa `--new-passphrase` juntament amb `--confirm-new-passphrase`."
+"L'ordre demana (oculta) la contrasenya actual i, després, dues vegades la "
+"nova. La clau mestra en si no canvia, de manera que totes les dades desades "
+"continuen sent llegibles. Només es reemplaça la contrasenya que l'obre. Per "
+"a un ús no interactiu, passa `--secrets-stdin` i canalitza un únic objecte "
+"JSON amb `current_passphrase`, `new_passphrase` i "
+"`new_passphrase_confirmation`."
 
-#: ../../how-to/protect-data-access.md:77
+#: ../../how-to/protect-data-access.md:85
 msgid "Recover after a forgotten passphrase"
 msgstr "Recupera l'accés després d'oblidar la contrasenya"
 
-#: ../../how-to/protect-data-access.md:79
+#: ../../how-to/protect-data-access.md:87
 msgid "If you forgot the passphrase but have your recovery words:"
 msgstr "Si has oblidat la contrasenya però tens les teves paraules de recuperació:"
 
-#: ../../how-to/protect-data-access.md:84
+#: ../../how-to/protect-data-access.md:92
 msgid ""
-"The command prompts twice (hidden) for a new passphrase, unlocks the "
-"master key from the recovery wrapper, and rewraps it under the new "
-"passphrase. All stored data stays intact. Nothing is deleted or re-"
-"encrypted. For non-interactive use, pass `--new-passphrase` together with"
-" `--confirm-new-passphrase` instead of being prompted."
+"The command prompts (hidden) for the recovery words and twice for a new "
+"passphrase, unlocks the master key from the recovery wrapper, and rewraps it"
+" under the new passphrase. All stored data stays intact. Nothing is deleted "
+"or re-encrypted. For non-interactive use, pass `--secrets-stdin` and pipe "
+"one JSON object with `recovery_code`, `new_passphrase`, and "
+"`new_passphrase_confirmation`."
 msgstr ""
-"L'ordre demana dues vegades (oculta) una contrasenya nova, desbloqueja la "
-"clau mestra a partir de l'embolcall de recuperació i la torna a embolcallar "
-"sota la contrasenya nova. Totes les dades desades queden intactes. No se "
-"suprimeix ni es torna a xifrar res. Per a un ús no interactiu, passa "
-"`--new-passphrase` juntament amb `--confirm-new-passphrase` en lloc que "
-"t'ho demani."
+"L'ordre demana (oculta) les paraules de recuperació i dues vegades una "
+"contrasenya nova, desbloqueja la clau mestra a partir de l'embolcall de "
+"recuperació i la torna a embolcallar sota la contrasenya nova. Totes les "
+"dades desades queden intactes. No se suprimeix ni es torna a xifrar res. Per"
+" a un ús no interactiu, passa `--secrets-stdin` i canalitza un únic objecte "
+"JSON amb `recovery_code`, `new_passphrase` i `new_passphrase_confirmation`."
 
-#: ../../how-to/protect-data-access.md:90
+#: ../../how-to/protect-data-access.md:99
 msgid ""
 "If you have neither the passphrase nor the recovery words, the encrypted "
 "data is permanently unreadable. The only way forward is a reset (below), "
@@ -217,16 +227,16 @@ msgstr ""
 "xifrades són permanentment il·legibles. L'única manera d'avançar és un "
 "restabliment (a sota), que les suprimeix."
 
-#: ../../how-to/protect-data-access.md:94
+#: ../../how-to/protect-data-access.md:104
 msgid "Run without a passphrase prompt"
 msgstr "Executa sense demanar la contrasenya"
 
-#: ../../how-to/protect-data-access.md:96
+#: ../../how-to/protect-data-access.md:106
 msgid ""
 "Automation cannot answer an interactive passphrase prompt. For an agent "
-"server, scheduled job, or script, set `CADRUMO_SECRET_PASSPHRASE` for "
-"that process. Treat the value like the passphrase itself. Never put it in"
-" a shared shell profile, committed script, or log."
+"server, scheduled job, or script, set `CADRUMO_SECRET_PASSPHRASE` for that "
+"process. Treat the value like the passphrase itself. Never put it in a "
+"shared shell profile, committed script, or log."
 msgstr ""
 "L'automatització no pot respondre una petició interactiva de contrasenya. "
 "Per a un servidor d'agent, una tasca programada o un script, estableix "
@@ -234,86 +244,88 @@ msgstr ""
 "contrasenya mateixa. No el posis mai en un perfil d'intèrpret d'ordres "
 "compartit, en un script versionat ni en un registre."
 
-#: ../../how-to/protect-data-access.md:101
+#: ../../how-to/protect-data-access.md:111
 msgid ""
-"Interactive commands prompt when they need the current passphrase. "
-"Recovery commands use the recovery words and ask for a new passphrase "
-"instead."
+"Interactive commands prompt when they need the current passphrase. Recovery "
+"commands use the recovery words and ask for a new passphrase instead. "
+"Creating or rotating a recovery key always needs an interactive terminal, "
+"because the words are shown once and must be retyped."
 msgstr ""
-"Les ordres interactives demanen la contrasenya quan necessiten l'actual. "
-"Les ordres de recuperació utilitzen les paraules de recuperació i, en el "
-"seu lloc, demanen una contrasenya nova."
+"Les ordres interactives demanen la contrasenya quan necessiten l'actual. Les"
+" ordres de recuperació utilitzen les paraules de recuperació i, en el seu "
+"lloc, demanen una contrasenya nova. Crear o rotar una clau de recuperació "
+"necessita sempre un terminal interactiu, perquè les paraules es mostren una "
+"vegada i s'han de tornar a escriure."
 
-#: ../../how-to/protect-data-access.md:104
+#: ../../how-to/protect-data-access.md:116
 msgid "Log out of the active profile"
 msgstr "Tanca la sessió del perfil actiu"
 
-#: ../../how-to/protect-data-access.md:106
+#: ../../how-to/protect-data-access.md:118
 msgid ""
 "Use `aeat config profile logout` when you finish working with a profile. "
-"Logout closes the active storage session, discards in-memory key "
-"material, disposes the bucket engines, and clears the active-profile "
-"selection:"
+"Logout closes the active storage session, discards in-memory key material, "
+"disposes the bucket engines, and clears the active-profile selection:"
 msgstr ""
 "Fes servir `aeat config profile logout` quan acabis de treballar amb un "
 "perfil. El tancament de sessió tanca la sessió d'emmagatzematge activa, "
 "descarta el material de claus en memòria, elimina els motors de bucket i "
 "esborra la selecció del perfil actiu:"
 
-#: ../../how-to/protect-data-access.md:114
+#: ../../how-to/protect-data-access.md:126
 msgid ""
-"Nothing in the profile is deleted. Select it again with `aeat config "
-"switch <name>` when you return."
+"Nothing in the profile is deleted. Select it again with `aeat config switch "
+"<name>` when you return."
 msgstr ""
 "No se suprimeix res del perfil. Torna a seleccionar-lo amb `aeat config "
 "switch <name>` quan tornis."
 
-#: ../../how-to/protect-data-access.md:117
+#: ../../how-to/protect-data-access.md:129
 msgid "Reset local state (last resort)"
 msgstr "Restableix l'estat local (últim recurs)"
 
-#: ../../how-to/protect-data-access.md:119
+#: ../../how-to/protect-data-access.md:131
 msgid ""
-"Export every profile you want to keep before continuing. Reset "
-"permanently deletes every profile stored locally, related local "
-"authentication state, and the active profile selection. It doesn't delete"
-" exports stored elsewhere. You can't undo the reset."
+"Export every profile you want to keep before continuing. Reset permanently "
+"deletes every profile stored locally, related local authentication state, "
+"and the active profile selection. It doesn't delete exports stored "
+"elsewhere. You can't undo the reset."
 msgstr ""
 "Exporta cada perfil que vulguis conservar abans de continuar. El "
 "restabliment suprimeix permanentment cada perfil desat localment, l'estat "
-"d'autenticació local relacionat i la selecció del perfil actiu. No suprimeix "
-"les exportacions desades en un altre lloc. No pots desfer el restabliment."
+"d'autenticació local relacionat i la selecció del perfil actiu. No suprimeix"
+" les exportacions desades en un altre lloc. No pots desfer el restabliment."
 
-#: ../../how-to/protect-data-access.md:127
+#: ../../how-to/protect-data-access.md:139
 msgid ""
-"Use `start` only when you intend to remove all local profiles. Confirm "
-"the reset explicitly. It checks retention requirements before deleting "
-"anything and refuses to start while another reset is incomplete."
+"Use `start` only when you intend to remove all local profiles. Confirm the "
+"reset explicitly. It checks retention requirements before deleting anything "
+"and refuses to start while another reset is incomplete."
 msgstr ""
 "Fes servir `start` només quan tinguis la intenció d'eliminar tots els "
 "perfils locals. Confirma el restabliment explícitament. Comprova els "
 "requisits de retenció abans de suprimir res i es nega a començar mentre un "
 "altre restabliment sigui incomplet."
 
-#: ../../how-to/protect-data-access.md:130
+#: ../../how-to/protect-data-access.md:142
 msgid ""
-"Use the read-only `status` command to inspect the latest operation "
-"without changing local data. Provide an operation ID to inspect an exact "
-"operation. Status reports an incomplete, paused, or complete operation. "
-"Its output includes the operation ID and any pause reason."
+"Use the read-only `status` command to inspect the latest operation without "
+"changing local data. Provide an operation ID to inspect an exact operation. "
+"Status reports an incomplete, paused, or complete operation. Its output "
+"includes the operation ID and any pause reason."
 msgstr ""
 "Fes servir l'ordre de només lectura `status` per inspeccionar l'última "
 "operació sense canviar les dades locals. Proporciona un ID d'operació per "
-"inspeccionar una operació exacta. L'estat informa d'una operació incompleta, "
-"en pausa o completa. La seva sortida inclou l'ID de l'operació i qualsevol "
+"inspeccionar una operació exacta. L'estat informa d'una operació incompleta,"
+" en pausa o completa. La seva sortida inclou l'ID de l'operació i qualsevol "
 "motiu de pausa."
 
-#: ../../how-to/protect-data-access.md:134
+#: ../../how-to/protect-data-access.md:146
 msgid ""
 "Use `resume` after an interruption or pause. Confirm the reset again. It "
-"continues the same incomplete operation instead of creating another. "
-"Provide an operation ID to resume an exact operation. After deletion "
-"starts, resuming the reset doesn't restore deleted data."
+"continues the same incomplete operation instead of creating another. Provide"
+" an operation ID to resume an exact operation. After deletion starts, "
+"resuming the reset doesn't restore deleted data."
 msgstr ""
 "Fes servir `resume` després d'una interrupció o una pausa. Confirma el "
 "restabliment de nou. Continua la mateixa operació incompleta en lloc de "
@@ -321,13 +333,12 @@ msgstr ""
 "exacta. Un cop comença la supressió, reprendre el restabliment no restaura "
 "les dades suprimides."
 
-#: ../../how-to/protect-data-access.md:139
+#: ../../how-to/protect-data-access.md:151
 msgid ""
-"If legal retention requirements pause the reset, stop if you must keep "
-"the affected records. Override the pause only after reviewing and "
-"accepting the legal retention consequence, and always provide a non-empty"
-" reason. If you provide a reason without the override, the command "
-"refuses to continue."
+"If legal retention requirements pause the reset, stop if you must keep the "
+"affected records. Override the pause only after reviewing and accepting the "
+"legal retention consequence, and always provide a non-empty reason. If you "
+"provide a reason without the override, the command refuses to continue."
 msgstr ""
 "Si els requisits legals de retenció posen en pausa el restabliment, atura't "
 "si has de conservar els registres afectats. Anul·la la pausa només després "
@@ -335,7 +346,7 @@ msgstr ""
 "sempre un motiu no buit. Si proporciones un motiu sense l'anul·lació, "
 "l'ordre es nega a continuar."
 
-#: ../../how-to/protect-data-access.md:144
+#: ../../how-to/protect-data-access.md:156
 msgid ""
 "See [Set up your taxpayer profile](profile-setup.md) for profile export "
 "instructions."
@@ -343,37 +354,50 @@ msgstr ""
 "Consulta [Configura el teu perfil de contribuent](profile-setup.md) per a "
 "les instruccions d'exportació de perfils."
 
-#: ../../how-to/protect-data-access.md:147
+#: ../../how-to/protect-data-access.md:159
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/protect-data-access.md:149
+#: ../../how-to/protect-data-access.md:161
 msgid ""
-"[Import, export, and evidence](../reference/import-export-and-"
-"evidence.md) - see where encrypted custody ends and deliberate plaintext "
-"handoffs begin."
+"[Import, export, and evidence](../reference/import-export-and-evidence.md) -"
+" see where encrypted custody ends and deliberate plaintext handoffs begin."
 msgstr ""
 "[Importació, exportació i evidència](../reference/import-export-and-"
 "evidence.md) - mira on acaba la custòdia xifrada i on comencen els "
 "traspassos deliberats en text clar."
 
-#: ../../how-to/protect-data-access.md:151
+#: ../../how-to/protect-data-access.md:163
 msgid ""
 "[Set up your taxpayer profile](profile-setup.md) - create, export, and "
 "import profiles."
 msgstr ""
-"[Configura el teu perfil de contribuent](profile-setup.md) - crea, exporta "
-"i importa perfils."
+"[Configura el teu perfil de contribuent](profile-setup.md) - crea, exporta i"
+" importa perfils."
 
-#: ../../how-to/protect-data-access.md:153
+#: ../../how-to/protect-data-access.md:165
 msgid ""
-"[Diagnose and repair your local setup](troubleshooting.md) - for storage "
-"or integrity problems that do not need a reset."
+"[Diagnose and repair your local setup](troubleshooting.md) - for storage or "
+"integrity problems that do not need a reset."
 msgstr ""
 "[Diagnostica i repara la teva configuració local](troubleshooting.md) - per "
 "a problemes d'emmagatzematge o d'integritat que no necessiten un "
 "restabliment."
 
-#: ../../how-to/protect-data-access.md:155
+#: ../../how-to/protect-data-access.md:167
 msgid "[CLI reference](../cli/index.rst) - full option reference."
 msgstr "[Referència de la CLI](../cli/index.rst) - referència completa d'opcions."
+
+#~ msgid ""
+#~ "Run the same command again later to"
+#~ " confirm enrollment: once a recovery key"
+#~ " exists, the command reports its status"
+#~ " and does not print the words "
+#~ "again."
+#~ msgstr ""
+#~ "Torna a executar la mateixa ordre més"
+#~ " endavant per confirmar l'alta: un cop"
+#~ " existeix una clau de recuperació, "
+#~ "l'ordre n'informa l'estat i no torna "
+#~ "a imprimir les paraules."
+

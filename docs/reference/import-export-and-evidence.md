@@ -168,9 +168,9 @@ intended to let the recipient establish:
 
 The audit evidence bundle ZIP file contains reachable record bytes followed by `manifest.json`.
 Failed verification prevents export; incomplete packages require an explicit
-override. Replay reruns the bundle checks but never contacts AEAT or
+override. `audit check` reruns the bundle checks but never contacts AEAT or
 recalculates the tax result. Through the current command-line interface,
-replay cannot verify referenced record bytes because no payload loader is
+`check` cannot verify referenced record bytes because no payload loader is
 supplied.
 
 The current audit commands do not yet provide a complete one-command audit
@@ -214,9 +214,9 @@ authoritative layouts and real evidence. Consequently:
 - Evidence is encrypted in normal custody. Base review and audit ZIPs are
   deliberate plaintext exports, so secure delivery becomes your responsibility.
 - A forced incomplete audit evidence bundle export is not a complete handoff.
-- Replay reruns bundle checks. Through the current command-line interface, it
-  cannot verify referenced bytes, and it does not reproduce or recalculate the
-  tax decision.
+- `audit check` reruns bundle checks. Through the current command-line
+  interface, it cannot verify referenced bytes, and it does not reproduce or
+  recalculate the tax decision.
 
 For storage, recovery, and external-access boundaries, see
 [Protect access to taxpayer data](../how-to/protect-data-access.md) and

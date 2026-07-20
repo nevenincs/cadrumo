@@ -260,6 +260,9 @@ env = {
     "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
     "CADRUMO_OUTPUT_LANGUAGE": "en",
     "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
+    # Headless custody: no keyring exists in the container; pin the
+    # passphrase-backed file backend like every other smoke lane.
+    "CADRUMO_SECRET_STORE_BACKEND": "file",
 }
 create = run(
     [
@@ -516,15 +519,20 @@ def _run_probe(
     probe: Path,
     timeout: int,
 ) -> None:
-    """Run one mounted probe script in the requested Docker image."""
-    command = [
+    """Run one probe script in the requested Docker image.
+
+    The probe inputs are COPIED into the container (``docker create`` +
+    ``docker cp`` + ``docker start --attach``) rather than bind-mounted. A bind
+    mount resolves against the DAEMON host's filesystem, so when this smoke
+    itself executes inside a containerized runner (the self-hosted fleet's
+    Linux runner is a container speaking to Docker Desktop's daemon) the
+    daemon cannot see the runner's paths and silently mounts empty
+    directories. Copying works identically for native daemons and
+    docker-outside-of-docker runners.
+    """
+    create_command = [
         *docker.argv_prefix,
-        "run",
-        "--rm",
-        "-v",
-        f"{_wsl_mount(docker, cohort_dir)}:/cohort:ro",
-        "-v",
-        f"{_wsl_mount(docker, work_dir)}:/work",
+        "create",
         "--workdir",
         "/work",
         image,
@@ -533,8 +541,36 @@ def _run_probe(
         f"/cohort/{wheel.name}",
         *(f"/cohort/{companion.name}" for companion in companion_wheels),
     ]
-    print("running Docker packaging smoke", flush=True)
-    _run_docker(command, timeout=timeout)
+    created = subprocess.run(create_command, capture_output=True, text=True, check=False, timeout=timeout)
+    if created.returncode != 0:
+        sys.stderr.write(f"docker packaging smoke failed to create the probe container ({created.returncode})\n")
+        sys.stdout.write(created.stdout)
+        sys.stderr.write(created.stderr)
+        raise SystemExit(created.returncode or 1)
+    container_id = created.stdout.strip()
+    try:
+        # docker cp semantics differ by destination existence: `--workdir`
+        # pre-creates /work, so the `SRC/.` contents form targets it (a plain
+        # SRC_DIR would nest as /work/<basename>); /cohort does not exist yet,
+        # so the plain SRC_DIR form creates it with the source's contents.
+        _run_docker(
+            [*docker.argv_prefix, "cp", f"{_wsl_mount(docker, work_dir)}/.", f"{container_id}:/work"],
+            timeout=timeout,
+        )
+        _run_docker(
+            [*docker.argv_prefix, "cp", _wsl_mount(docker, cohort_dir), f"{container_id}:/cohort"],
+            timeout=timeout,
+        )
+        print("running Docker packaging smoke", flush=True)
+        _run_docker([*docker.argv_prefix, "start", "--attach", container_id], timeout=timeout)
+    finally:
+        subprocess.run(
+            [*docker.argv_prefix, "rm", "--force", container_id],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=_DOCKER_COMMAND_TIMEOUT_SECONDS,
+        )
 
 
 def main(argv: list[str] | None = None) -> int:

@@ -3,6 +3,12 @@
 Profile import emits a lifecycle event after restoring a portable bundle.
 Profile export delegates resolution, serialization, publication, and event
 recording to the application-layer export authority.
+
+The bundle passphrase is never an ``argv`` value (the process table and shell
+history must not see it): export under ``--encrypt`` collects it via a hidden
+confirm-retype prompt or one bounded strict-JSON ``--secrets-stdin`` object,
+and import auto-detects an encrypted envelope and collects the passphrase the
+same way, through the shared :mod:`._secure_input` channel.
 """
 
 from __future__ import annotations
@@ -12,6 +18,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import typer
+from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ....core.errors import CadrumoError as _CadrumoError
 from ....core.external_constants import OutputLanguage
@@ -21,8 +28,62 @@ from ....core.time import now as _now
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._secure_input import prompt_secret_no_echo, read_secrets_stdin
 
 _PROFILE_TAX_ID_PATH = "identity.tax_id"
+
+
+class _BundleExportSecrets(BaseModel):
+    """Strict ``--secrets-stdin`` payload for ``config profile export --encrypt``.
+
+    Export SETS the bundle passphrase, so the payload carries the value and its
+    confirmation as :class:`~pydantic.SecretStr`; ``extra="forbid"`` refuses an
+    unexpected field.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    passphrase: SecretStr
+    passphrase_confirmation: SecretStr
+
+
+class _BundleImportSecrets(BaseModel):
+    """Strict ``--secrets-stdin`` payload for ``config profile import``.
+
+    Import USES an existing bundle passphrase, so one field suffices.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    passphrase: SecretStr
+
+
+def _resolve_export_passphrase(secrets_stdin: bool) -> str:
+    """Return the confirmed bundle passphrase from stdin JSON or no-echo prompts.
+
+    A value/confirmation mismatch refuses before any bundle is serialized;
+    nothing is ever read from ``argv``.
+    """
+    if secrets_stdin:
+        secrets = read_secrets_stdin(_BundleExportSecrets)
+        value = secrets.passphrase.get_secret_value()
+        confirmation = secrets.passphrase_confirmation.get_secret_value()
+    else:
+        value = prompt_secret_no_echo(tr("cli.config.profile.export_passphrase_prompt"))
+        confirmation = prompt_secret_no_echo(tr("cli.config.profile.export_confirm_passphrase_prompt"))
+    if value != confirmation:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.export_passphrase_mismatch",
+        )
+    return value
+
+
+def _resolve_import_passphrase(secrets_stdin: bool) -> str:
+    """Return the bundle passphrase for an encrypted import, never from ``argv``."""
+    if secrets_stdin:
+        return read_secrets_stdin(_BundleImportSecrets).passphrase.get_secret_value()
+    return prompt_secret_no_echo(tr("cli.config.profile.import_passphrase_prompt"))
+
 
 if TYPE_CHECKING:
     from ....domain.buckets import BucketEventType
@@ -180,13 +241,21 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
             "--to",
             help=tr("cli.config.profile.export_out_help", default="Destination path for the profile bundle."),
         ),
-        passphrase: str | None = typer.Option(
-            None,
-            "--passphrase",
+        encrypt: bool = typer.Option(
+            False,
+            "--encrypt",
             help=tr(
-                "cli.config.profile.export_passphrase_help",
-                default="Passphrase to AEAD-encrypt the serialized profile bundle for transfer.",
+                "cli.config.profile.export_encrypt_help",
+                default=(
+                    "AEAD-encrypt the bundle for transfer; the passphrase is "
+                    "prompted (hidden) or read via --secrets-stdin, never argv."
+                ),
             ),
+        ),
+        secrets_stdin: bool = typer.Option(
+            False,
+            "--secrets-stdin",
+            help=tr("cli.config.custody.secrets_stdin_help"),
         ),
         cleartext_local: bool = typer.Option(
             False,
@@ -204,8 +273,6 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
         ),
     ) -> None:
         """Serialize a profile bundle to a JSON file."""
-        from pydantic import SecretStr
-
         from ....application.user_profile import (
             ProfileBundleExportPurpose,
             ProfileBundleExportRequest,
@@ -217,7 +284,17 @@ def _register_profile_export_command(profile_app: typer.Typer) -> None:
         from .._config_payloads import ConfigProfileExportResult
 
         _activate_subcommand_output_language(ctx, output_language)
-        _validate_export_transport_options(passphrase=passphrase, cleartext_local=cleartext_local)
+        # ``--secrets-stdin`` only carries the encryption passphrase, so it
+        # implies the encrypted transport.
+        encrypted_mode = encrypt or secrets_stdin
+        _validate_export_transport_options(encrypt=encrypted_mode, cleartext_local=cleartext_local)
+        passphrase: str | None = None
+        if encrypted_mode:
+            passphrase = _resolve_export_passphrase(secrets_stdin)
+            if len(passphrase) < 8:
+                raise _CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.export_passphrase_too_short",
+                )
         try:
             export = export_profile_bundle(
                 ProfileBundleExportRequest(
@@ -300,7 +377,7 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
                 "calculation revisions, and filing records. It was written to {out}. "
                 "Use it only for local/SAR handling; do not email, sync, or transfer it. "
                 "Delete it after that local/SAR handling is complete. "
-                "Use 'aeat config profile export --passphrase ...' for an AEAD-encrypted "
+                "Use 'aeat config profile export --encrypt' for an AEAD-encrypted "
                 "structured transfer bundle. It is NOT a full backup: "
                 "attachment evidence bytes, AEAT captures, and the audit trail are "
                 "excluded. Use the encrypted recovery archive for a complete backup."
@@ -320,31 +397,28 @@ def _build_encrypted_export_notice(out: Path) -> Notice:
             "cli.config.profile.export_encrypted_info",
             default=(
                 "This profile bundle was written to {out} with AEAD passphrase encryption. "
-                "Import it with 'aeat config profile import PATH --passphrase ...'. "
+                "Import it with 'aeat config profile import PATH'; the passphrase is "
+                "prompted (hidden) or read via --secrets-stdin. "
                 "It carries the structured profile bundle only; use the encrypted recovery "
                 "archive for a complete backup with attachment evidence bytes and audit trail."
             ),
             out=str(out),
         ),
-        suggestion="aeat config profile import PATH --passphrase ...",
+        suggestion="aeat config profile import PATH",
         context={"out": str(out), "transport": "passphrase-encrypted"},
     )
 
 
-def _validate_export_transport_options(*, passphrase: str | None, cleartext_local: bool) -> None:
+def _validate_export_transport_options(*, encrypt: bool, cleartext_local: bool) -> None:
     """Require an explicit encrypted or local-cleartext export mode."""
-    if passphrase is not None and cleartext_local:
+    if encrypt and cleartext_local:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.export_transport_conflict",
         )
-    if passphrase is None and not cleartext_local:
+    if not encrypt and not cleartext_local:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.export_requires_transport",
-            suggestion="aeat config profile export NAME --to bundle.json --passphrase <passphrase>",
-        )
-    if passphrase is not None and len(passphrase) < 8:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.export_passphrase_too_short",
+            suggestion="aeat config profile export NAME --to bundle.json --encrypt",
         )
 
 
@@ -366,13 +440,10 @@ def _register_profile_import_command(
             ...,
             help=tr("cli.config.profile.import_path_help", default="Path to the profile bundle."),
         ),
-        passphrase: str | None = typer.Option(
-            None,
-            "--passphrase",
-            help=tr(
-                "cli.config.profile.import_passphrase_help",
-                default="Passphrase for a bundle exported with 'config profile export --passphrase'.",
-            ),
+        secrets_stdin: bool = typer.Option(
+            False,
+            "--secrets-stdin",
+            help=tr("cli.config.custody.secrets_stdin_help"),
         ),
         label: str | None = typer.Option(
             None,
@@ -412,10 +483,27 @@ def _register_profile_import_command(
             )
         try:
             raw_bundle_text = path.read_text(encoding="utf-8")
-            if passphrase is None:
+        except OSError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.import_invalid_bundle",
+                context={"error": str(exc)},
+            ) from exc
+        # Auto-detect the transport: the strict encrypted envelope
+        # (extra="forbid", required KDF fields) cannot validate a cleartext
+        # bundle, so a successful parse means an encrypted export. Only then is
+        # the passphrase collected — via the secure-input channel, never argv.
+        from pydantic import ValidationError
+
+        encrypted: EncryptedProfileBundleExport | None
+        try:
+            encrypted = EncryptedProfileBundleExport.model_validate_json(raw_bundle_text)
+        except (ValueError, ValidationError):
+            encrypted = None
+        try:
+            if encrypted is None:
                 bundle = validate_bundle_payload(raw_bundle_text)
             else:
-                encrypted = EncryptedProfileBundleExport.model_validate_json(raw_bundle_text)
+                passphrase = _resolve_import_passphrase(secrets_stdin)
                 bundle = decrypt_profile_bundle_with_passphrase(encrypted, passphrase=passphrase)
         except UnsupportedBundleSchemaVersionError as exc:
             raise _CliRefusedBoundaryError(str(exc)) from exc

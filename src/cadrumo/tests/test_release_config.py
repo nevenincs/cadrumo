@@ -309,7 +309,7 @@ def test_releasing_doc_documents_rc_soak_and_rollback() -> None:
     gate and `just release-rollback` recipe that implement it.
     """
     text = RELEASING_PATH.read_text(encoding="utf-8")
-    assert "## Release-candidate soak" in text
+    assert "release-candidate soak" in text
     assert "## Rollback procedure" in text
     assert "just release-readiness" in text
     assert "just release-rollback" in text

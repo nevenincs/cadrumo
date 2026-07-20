@@ -2862,8 +2862,7 @@ cli:
           remove_help: Eltavolitja egy regisztralt tanusitvanyforrashoz kotott jelszot
           set:
             name_help: A regisztralt tanusitvanyforras, amelyhez a jelszo kapcsolodik
-            secret_help: A PKCS#12 jelszo (bekerdezve, elrejtve, soha nem jelenik
-              meg)
+            secret_prompt: 'PKCS#12 jelmondat (rejtett bevitel): '
           set_help: Beallitja (vagy megujitja) egy regisztralt tanusitvanyforras jelszavat
         select:
           name_help: Registered certificate source to activate
@@ -2938,24 +2937,19 @@ cli:
         recipient_id_help: Stabil, kezelo altal valasztott cimke (pl. 'a-konyvelom').
         remove_help: Egy bizalmi cimzett eltavolitasa azonosito alapjan az aktiv profilbol.
     custody:
-      confirm_new_passphrase_help: Ismetelje meg az uj titkos tar passphrase erteket.
-      confirm_new_passphrase_prompt: 'Uj AEAT titkos tar passphrase megerositese: '
       data_loss_warning: Jegyezze fel most ezt a helyreallitasi kulcsot. Az AEAT nem
         tarolja a nyilt helyreallitasi kulcsot, es nem tudja ujra megjeleniteni.
       errors:
-        missing_new_passphrase_confirmation: Ismetelje meg az uj passphrase erteket
-          a --confirm-new-passphrase kapcsoloval.
         new_passphrase_mismatch: Az uj passphrase es a megerosites nem egyezik.
-        non_interactive_passphrase_required: Ez a parancs interaktív terminált igényel
-          az új jelszó bekéréséhez. Add meg nem interaktív módon a --new-passphrase
-          és --confirm-new-passphrase kapcsolókkal.
-        non_interactive_secret_required: cli.config.custody.errors.non_interactive_secret_required
-        secrets_stdin_invalid_json: cli.config.custody.errors.secrets_stdin_invalid_json
-        secrets_stdin_missing_fields: cli.config.custody.errors.secrets_stdin_missing_fields
-        secrets_stdin_too_large: cli.config.custody.errors.secrets_stdin_too_large
-      new_passphrase_help: Uj titkos tar passphrase. Hagyja el az interaktiv megadashoz.
-      new_passphrase_prompt: 'Uj AEAT titkos tar passphrase: '
-      secrets_stdin_help: cli.config.custody.secrets_stdin_help
+        non_interactive_secret_required: Titok szükséges, de nincs interaktív terminál;
+          használja a --secrets-stdin kapcsolót.
+        secrets_stdin_invalid_json: A --secrets-stdin tartalma nem érvényes JSON objektum.
+        secrets_stdin_missing_fields: A --secrets-stdin objektumból hiányoznak kötelező
+          mezők, vagy váratlanokat tartalmaz.
+        secrets_stdin_too_large: A --secrets-stdin tartalma meghaladja a megengedett
+          maximális méretet.
+      secrets_stdin_help: A titkokat egyetlen korlátozott JSON objektumként olvassa
+        a szabványos bemenetről, kérdés helyett.
     errors:
       invalid_value: 'Érvénytelen érték a(z) %{name} mezőhöz: %{value}'
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
@@ -3149,14 +3143,16 @@ cli:
       help: Minden regisztrált profil listázása és az aktív megjelölése.
     passphrase:
       change:
-        help: cli.config.passphrase.change.help
-      confirm_new_passphrase_prompt: cli.config.passphrase.confirm_new_passphrase_prompt
-      current_passphrase_prompt: cli.config.passphrase.current_passphrase_prompt
+        help: A titoktár jelszavának cseréje a jelenlegi ellenőrzése után.
+      confirm_new_passphrase_prompt: 'Erősítsd meg a Cadrumo titoktár új jelmondatát: '
+      current_passphrase_prompt: 'A Cadrumo titoktár jelenlegi jelmondata: '
       errors:
-        current_passphrase_incorrect: cli.config.passphrase.errors.current_passphrase_incorrect
-        store_unprovisioned: cli.config.passphrase.errors.store_unprovisioned
-      help: cli.config.passphrase.help
-      new_passphrase_prompt: cli.config.passphrase.new_passphrase_prompt
+        current_passphrase_incorrect: A jelenlegi jelszó helytelen; a titoktár nem
+          módosult.
+        store_unprovisioned: A fájl-alapú titoktár nincs előkészítve; nincs cserélhető
+          jelszó.
+      help: A fájl-alapú titoktár jelszavának kezelése.
+      new_passphrase_prompt: 'A Cadrumo titoktár új jelmondata: '
     profile:
       already_exists: A(z) %{name} profil már létezik. Válasszon másik célazonosítót.
       archive:
@@ -3252,29 +3248,34 @@ cli:
         helyben.
       export_cleartext_local_help: Titkosítatlan JSON írása csak helyi/SAR kezelésre;
         nem biztonságos e-mailhez, szinkronizáláshoz vagy átvitelhez.
-      export_encrypted_info: 'A profilcsomag AEAD passphrase titkosítással ide íródott:
-        {out}. Importálás: ''aeat config profile import PATH --passphrase ...''. Csak
-        a strukturált profilcsomagot tartalmazza; a csatolt bizonyítékokat és az auditnaplót
-        is tartalmazó teljes mentéshez használd a titkosított helyreállítási archívumot.'
+      export_confirm_passphrase_prompt: 'Erősítsd meg a csomag jelmondatát: '
+      export_encrypt_help: A csomag AEAD-titkosítása átvitelhez; a jelmondatot rejtett
+        kérdés vagy a --secrets-stdin adja meg, soha nem argv.
+      export_encrypted_info: 'Ez a profilcsomag ide íródott: {out}, AEAD jelmondatos
+        titkosítással. Importáld az ''aeat config profile import ÚTVONAL'' paranccsal;
+        a jelmondatot rejtett kérdés vagy a --secrets-stdin adja meg. Csak a strukturált
+        profilcsomagot tartalmazza; teljes biztonsági mentéshez a titkosított helyreállítási
+        archívumot használd a csatolt bizonyítékokkal és az auditnaplóval.'
       export_help: Passphrase alatt titkosított hordozható profilcsomag írása ÚTVONALRA;
         a titkosítatlan JSON-hoz --cleartext-local kell, és csak helyi/SAR célra való.
       export_name_help: 'Az exportálandó profil; alapértelmezés: az aktív profil.'
       export_out_help: A profilcsomag célútvonala.
-      export_passphrase_help: Passphrase a serializált profilcsomag AEAD-titkosításához
-        átvitelre.
+      export_passphrase_mismatch: A csomag jelmondata és a megerősítése nem egyezik;
+        semmi sem lett kiírva.
+      export_passphrase_prompt: 'A csomag jelmondata (legalább 8 karakter): '
       export_passphrase_too_short: A profilexport passphrase legalább 8 karakter hosszú
         legyen.
-      export_requires_transport: Használd a --passphrase kapcsolót titkosított átviteli
+      export_requires_transport: Használd az --encrypt kapcsolót titkosított átviteli
         csomaghoz, vagy a --cleartext-local kapcsolót csak helyi/SAR JSON-hoz.
-      export_sensitivity_warning: 'Ez a csomag NEM titkosított, és érzékeny pénzügyi
-        adatokat tartalmaz: a nyers adóazonosítót (nem kitakarva), a nevet/vezetékneveket,
-        a teljes főkönyvet, a számítási revíziókat és a benyújtási rekordokat. A következő
-        helyre íródott: {out}. Csak helyi/SAR kezelésre használd; ne küldd e-mailben,
-        ne szinkronizáld és ne vidd át. Töröld, amikor a helyi/SAR kezelés befejeződött.
-        AEAD-titkosított strukturált átviteli csomaghoz használd a ''aeat config profile
-        export --passphrase ...'' parancsot.'
-      export_transport_conflict: A --passphrase és a --cleartext-local közül csak
-        az egyiket add meg.
+      export_sensitivity_warning: 'Ez a csomag NINCS titkosítva, és érzékeny pénzügyi
+        adatokat tartalmaz: a nyers adóazonosítót (kitakarás nélkül), nevet és vezetékneveket,
+        a teljes főkönyvet, a számítási revíziókat és a benyújtási rekordokat. Ide
+        íródott: {out}. Csak helyi/SAR kezelésre használd; ne küldd e-mailben, ne
+        szinkronizáld és ne továbbítsd. Töröld, amint a helyi/SAR kezelés befejeződött.
+        AEAD-titkosított, strukturált átviteli csomaghoz használd az ''aeat config
+        profile export --encrypt'' parancsot.'
+      export_transport_conflict: A --encrypt és a --cleartext-local közül csak az
+        egyiket add meg.
       help: Aktív profilkonfigurációs értékek kezelése.
       history:
         invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok:
@@ -3314,8 +3315,7 @@ cli:
       import_missing_filing_baseline: 'A profilcsomagból hiányoznak a bevallási azonosító
         adatok. Javítsa a csomagot, vagy exportáljon újra teljes profilt ezekkel a
         mezőkkel: %{missing_flags}.'
-      import_passphrase_help: Passphrase egy 'config profile export --passphrase'
-        paranccsal exportált csomaghoz.
+      import_passphrase_prompt: 'A csomag jelmondata: '
       import_path_help: A profilcsomag fájljának elérési útja.
       import_uuid_collision: A csomagban lévő UUID ütközik egy meglévő profillal.
       logout_help: Az aktív tárolási munkamenet bezárása, a memóriában lévő kulcsok
@@ -3422,8 +3422,6 @@ cli:
           az összesé egyszerre.
         usage_name_help: A homokozó neve (előtag nélkül); hagyja üresen az összes
           jelentéséhez.
-        use_help: Az aktív profil váltása egy meglévő sandboxra.
-        use_name_help: A sandbox neve (előtag nélkül).
       sar_catalogue_info: Ez az archívum a profilhoz tárolt összes személyesadat-kategóriát
         tartalmazza. A pontos kategóriák e válasz data_categories mezőjében és annak
         géppel olvasható kontextusában szerepelnek. A csatolt bizonyítékok bájtjai
@@ -3449,11 +3447,33 @@ cli:
         aktív profil.'
       view_help: 'Egy profil adatainak megjelenítése (alapértelmezés: az aktív profil).'
     recover:
-      help: A fajlalapu titkos tar helyreallitasa helyreallitasi kulccsal es uj passphrase
-        ertekhez kotese.
-      recovery_key_help: Huszonnegy szavas helyreallitasi kulcs.
-    rekey:
-      help: A fajlalapu titkos tar uj passphrase alatti ujracsomagolasa.
+      errors:
+        recovery_code_rejected: A helyreállítási kód nem nyitotta meg a helyreállítási
+          borítékot; a titoktár nem változott.
+      help: A fájlalapú titoktár helyreállítása a 24 szavas helyreállítási kóddal,
+        és új jelmondathoz kötése.
+    recovery:
+      candidate_intro: 'Az új helyreállítási kódod. Írd le most ezt a 24 szót, sorrendben:'
+      create:
+        help: Helyreállítási kód bejegyzése; a szavak egyszer jelennek meg a terminálon,
+          és újra be kell gépelni őket.
+      errors:
+        interactive_terminal_required: 'A helyreállítási kód bejegyzéséhez interaktív
+          terminál kell: a kód egyszer jelenik meg, és újra be kell gépelni.'
+        retype_mismatch: Az újra begépelt helyreállítási kód nem egyezik a megjelenítettel;
+          semmi sem változott.
+      help: A fájlalapú titoktár 24 szavas helyreállítási kódjának kezelése.
+      recovery_code_prompt: '24 szavas helyreállítási kód: '
+      retype_prompt: 'A megerősítéshez gépeld be újra a 24 szavas helyreállítási kódot
+        (rejtett bevitel): '
+      rotate:
+        help: A bejegyzett helyreállítási kód cseréje; az új szavak egyszer jelennek
+          meg, és újra be kell gépelni őket.
+      status:
+        help: Megmutatja, hogy van-e bejegyzett helyreállítási kód, anélkül hogy felfedné.
+      verify:
+        help: Ellenőrzi, hogy egy helyreállítási kód megnyitja-e a mentett helyreállítási
+          borítékot.
     repair:
       connectivity_help: Böngésző és AEAT Sede kapcsolhatóság ellenőrzése.
       connectivity_target_help: A vizsgálandó kapcsolódási cél.
@@ -3538,13 +3558,6 @@ cli:
         next_step: 'Következő lépés: futtassa: `aeat app overview status` a munkaterület
           áttekintéséhez.'
         saved: A(z) '%{profile_name}' profil mentve.
-    show_recovery:
-      existing_notice: A nyilt helyreallitasi kulcs nincs tarolva es nem jelenitheto
-        meg ujra. Hasznalja a --rotate kapcsolot uj helyreallitasi kulcs keszitesehez.
-      help: Helyreallitasi allapot megjelenitese vagy egyszer hasznalhato helyreallitasi
-        kulcs letrehozasa.
-      rotate_help: A helyreallitasi csomag forgatasa es uj egyszer hasznalhato helyreallitasi
-        kulcs kiirasa.
     status:
       empty_profile: 'Nincs beállított profil. Futtassa: `aeat config profile create
         NÉV` a kezdéshez.'
@@ -3557,9 +3570,6 @@ cli:
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
-    verify_recovery:
-      help: Ellenorzi, hogy a helyreallitasi kulcs megnyitja-e a tarolt helyreallitasi
-        csomagot.
     workflow_help: Konfiguráció-munkafolyamat súgó megjelenítése.
   contract:
     app_help: 'Kibocsatja az operator kepesseg-jegyzeket: gyokerek, parancscsaladok,
@@ -4450,8 +4460,7 @@ cli:
         section_review_and_registry: Felülvizsgálat és nyilvántartás
       config:
         auth_configure: Hitelesítési szolgáltató konfigurálása.
-        auth_logout: A helyi hitelesítési munkamenetek lezárása a szolgáltató beállításainak
-          megőrzésével.
+        auth_logout: A helyi hitelesítési munkamenetek lezárása a beállítások megőrzésével.
         auth_providers: Támogatott hitelesítési szolgáltatók listázása.
         auth_reset: A helyi hitelesítési beállítások és tárolt hitelesítő adatok eltávolítása.
         auth_status: Beállított hitelesítési állapot megjelenítése.
@@ -4477,6 +4486,11 @@ cli:
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
         profile_switch: Switch to a profile and make it the active one.
+        reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
+        reset_start: Visszafordíthatatlan visszaállítást indít minden helyben tárolt
+          profilra.
+        reset_status: A helyi adatok módosítása nélkül megjeleníti a visszaállítási
+          művelet állapotát.
         section_authentication: Hitelesítés
         section_diagnostics: Diagnosztika
         section_first_run: Első futtatás
@@ -5095,8 +5109,9 @@ errors:
       használ, amelyet ez a verzió nem támogat. Frissítse az alkalmazást.
     auth_storage_master_key_material_missing: Nincs főkulcs-anyag. A biztonságos tároló
       még nincs kiosztva.
-    auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a fokulcsot.
-      Add meg ujra; ha elfelejtetted, futtasd aeat config recover --recovery-key <WORDS>.
+    auth_storage_master_key_passphrase_mismatch: A jelmondat nem oldja fel a mesterkulcsot.
+      Add meg újra; ha elfelejtetted, futtasd az aeat config recover parancsot a 24
+      szavas helyreállítási kódoddal.
     auth_storage_master_key_unavailable: A főkulcsot egyetlen szolgáltatótól sem sikerült
       beszerezni. Ellenőrizze a kulcstárat vagy a fájl-tartalék jelmondat.
   calc:

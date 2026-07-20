@@ -222,9 +222,8 @@ def _parameter_from_click(parameter: ClickParameter) -> VerbParameter | None:
         # the MCP input schema (``aeat-architecture-boundaries``: a closed value
         # set must surface its accepted values). Typing the option as an enum is
         # the preferred form, but for options whose enum values differ in case
-        # from the CLI tokens (e.g. ``config reset --scope``) the ``click_type``
-        # Choice is the only way to keep the lowercase tokens, so the schema must
-        # read through the wrapper.
+        # from the CLI tokens the ``click_type`` Choice is the only way to keep
+        # the lowercase tokens, so the schema must read through the wrapper.
         raw_choices = getattr(getattr(parameter.type, "func", None), "choices", None)
     choices = tuple(str(choice) for choice in raw_choices) if raw_choices else ()
     return VerbParameter(

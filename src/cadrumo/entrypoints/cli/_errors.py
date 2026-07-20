@@ -420,8 +420,9 @@ def _command_identifier_from_path(command_path: str) -> str | None:
     """Map a click ``command_path`` to the dotted envelope command identifier.
 
     The click command *path* uses the root prog token plus hyphenated CLI
-    tokens (``aeat config show-recovery``); the envelope ``command`` identifier
-    uses dotted, underscored tokens (``config.show_recovery``). Drop the root
+    tokens (``aeat config repair reset-progress``); the envelope ``command``
+    identifier uses dotted, underscored tokens (``config.repair.reset_progress``).
+    Drop the root
     prog token, join the rest with ``.``, map ``-`` to ``_`` per token — the
     inverse of that convention, so a command's error envelope names it
     identically to the ``command=`` its success envelope emits, and the two can

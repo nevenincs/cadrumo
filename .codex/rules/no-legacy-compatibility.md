@@ -57,3 +57,17 @@ Keep/delete distinctions (each normative):
 
 Operator directive 2026-06-10 (`chore/eliminate-shims`); inventory
 `2026-06-10-zero-legacy-purge-research`. Companion: `aeat-architecture-boundaries`.
+
+## Status
+
+Active and unchanged for the pre-release regime, governing in full while
+`cadrumo.core.COMPATIBILITY_REGIME` is `PRE_RELEASE`: delete-not-migrate, floors
+chase current, no read-tolerance of pre-current shapes. The transition to the
+post-release regime is governed by `compatibility-lifecycle-checkpoint` (ADR
+`2026-07-09-compatibility-lifecycle-adr`), switched on the one-way
+`COMPATIBILITY_REGIME` constant. At the flip this rule narrows to "no legacy beyond
+the released durability floor": read-tolerance of shapes nothing released wrote, and
+shims/aliases, stay forbidden in both regimes. Installing the dormant regime
+constant, empty upgrader registries, and the regime-aware gates does not violate
+this rule — they read no old shapes and migrate nothing (same blessed category as
+the `max_supported_version` forward-ceiling this rule keeps).

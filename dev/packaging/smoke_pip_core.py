@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import argparse
+import os
+import shutil
+import subprocess
 import sys
 import venv
 from pathlib import Path
@@ -28,10 +31,29 @@ from .smoke_core import (
 
 
 def _create_pip_venv(work_dir: Path, python_executable: str) -> Path:
-    """Create a clean virtualenv with stdlib venv and install pip."""
+    """Create a clean virtualenv and ensure a real ``pip`` is present.
+
+    ``venv --with-pip`` runs ``ensurepip``, whose bundled-wheel install is
+    unreliable on the uv-managed python-build-standalone interpreter this smoke
+    runs under (it fails outright on the self-hosted macOS runner). When
+    ensurepip fails the venv is created WITHOUT pip and pip is seeded with uv;
+    the cadrumo wheel is still installed by that plain ``pip`` afterwards, so
+    the "installs under real pip" contract this lane proves is preserved - only
+    the bootstrap of pip itself changes.
+
+    The interpreter is linked with the platform-default strategy (symlinks on
+    POSIX, copies on Windows). A COPIED python-build-standalone binary loses its
+    ``@executable_path``-relative ``libpython`` on macOS and aborts (SIGABRT) on
+    every launch; a symlink resolves through to the real interpreter's lib dir.
+    """
+    use_symlinks = os.name != "nt"
     venv_path = work_dir / "pip-venv"
-    builder = venv.EnvBuilder(with_pip=True, clear=False, symlinks=False)
-    builder.create(venv_path)
+    try:
+        venv.EnvBuilder(with_pip=True, clear=False, symlinks=use_symlinks).create(venv_path)
+    except subprocess.CalledProcessError:
+        shutil.rmtree(venv_path, ignore_errors=True)
+        venv.EnvBuilder(with_pip=False, clear=False, symlinks=use_symlinks).create(venv_path)
+        _run(["uv", "pip", "install", "--python", str(_venv_python(venv_path)), "pip"], cwd=work_dir)
     python = _venv_python(venv_path)
     version = _run([str(python), "--version"], cwd=work_dir)
     requested_major_minor = ".".join(python_executable.split(".")[:2])

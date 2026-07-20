@@ -662,7 +662,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION",
             category=ErrorCategory.AUTH,
             message_key="errors.auth.auth_storage_bucket_recovery_verification",
-            default_suggestion="aeat config recover --recovery-key <WORDS>",
+            default_suggestion="aeat config recover",
             retryable=False,
             runbook_id=None,
         ),

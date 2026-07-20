@@ -1,7 +1,7 @@
 [project]
 name = "cadrumo"
 version = "0.2.1"
-description = "Cadrumo: a deterministic Spanish tax calculation engine and agent harness that turns your financial records into modelo data, ready for you to file with the AEAT. Independent software; not affiliated with the AEAT."
+description = "Cadrumo is a deterministic Spanish tax calculation CLI and MCP server that turns local financial records into checked, exportable modelo filing artifacts. Independent software; not affiliated with AEAT."
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
@@ -498,6 +498,11 @@ convention = "google"
 # explicit resolved path for tests) before invoking it with a fixed argv;
 # ruff's S603 heuristic cannot see the resolved-executable contract.
 "dev/release/readiness.py" = ["S603"]
+# The evidence-release transport helper resolves `gh` the same way as
+# readiness.py (shutil.which or an explicit test-stub path) and builds a fixed
+# argv; its tests drive a real explicit-path stub executable.
+"dev/packaging/evidence_release.py" = ["S603"]
+"dev/packaging/tests/test_evidence_release.py" = ["S603"]
 # The gate's own tests invoke a real explicit-path stub executable plus
 # `sys.executable` against a controlled, in-test-authored driver script; no
 # untrusted input reaches subprocess. Long CHANGELOG.md/merge-marker fixture
@@ -729,6 +734,7 @@ convention = "google"
 "src/cadrumo/entrypoints/cli/tests/test_help_without_secrets.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py" = ["S603"]
+"src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_live_read_subgroups.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py" = ["S603"]

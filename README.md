@@ -5,7 +5,7 @@
 # Cadrumo: turn Spanish tax records into locally verified filing artifacts
 
 [![Apache 2.0 license](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-![Project status: alpha](https://img.shields.io/badge/status-alpha-orange)
+![Project status: beta](https://img.shields.io/badge/status-beta-yellow)
 
 Cadrumo turns local financial records into calculated, checked, and exportable artifacts for supported Spanish tax forms. It keeps the calculation path deterministic and preserves each result's sources.
 
@@ -39,7 +39,7 @@ uv run aeat --version
 uv run aeat --help
 ```
 
-The `aeat --version` command verifies that `aeat` launches the Cadrumo CLI and reports `CADRUMO 0.2.0`. The `aeat --help` command displays the Cadrumo command tree and options.
+The `aeat --version` command verifies that `aeat` launches the Cadrumo CLI and reports `CADRUMO` followed by the installed version. The `aeat --help` command displays the Cadrumo command tree and options.
 
 If you choose encrypted file storage, or Cadrumo falls back to it, the first command that opens local storage asks for a master-key passphrase. That passphrase unlocks the locally encrypted records. Operating-system-backed secret stores use their own unlock flow.
 
@@ -165,7 +165,7 @@ Before using real data, read the [filing boundary](docs/explanation/recording-a-
 
 ## Get help or contribute
 
-The repository remains private during alpha development. If you have access, use these routes to report defects, handle security concerns, set up a workstation, and review changes:
+The repository remains private during the beta. If you have access, use these routes to report defects, handle security concerns, set up a workstation, and review changes:
 
 - [Open an issue](https://github.com/nevenincs/cadrumo/issues) for bugs and documentation problems
 - Follow [`SECURITY.md`](SECURITY.md) for vulnerability reporting
@@ -176,7 +176,7 @@ Don't publish vulnerability details in an issue. A public support channel and gu
 
 ## Status, license, and disclaimer
 
-Cadrumo is alpha software. Behavior, schemas, commands, and persisted state may change without compatibility support before 1.0.
+Cadrumo is beta software. Behavior, schemas, commands, and persisted state may change without compatibility support before 1.0.
 
 Cadrumo is available under the [Apache License 2.0](LICENSE). It's provided as-is, without warranties or guarantees.
 
