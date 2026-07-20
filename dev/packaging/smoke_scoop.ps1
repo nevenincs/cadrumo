@@ -51,24 +51,40 @@ function Invoke-Native {
         [string]$OutputPath
     )
 
-    if ($OutputPath) {
-        $output = @(& $FilePath @ArgumentList 2>&1)
-        $exitCode = $LASTEXITCODE
-        $output | Set-Content -LiteralPath $OutputPath -Encoding UTF8
-        if ($exitCode -ne 0) {
-            $output | Select-Object -Last 200 | ForEach-Object {
-                [Console]::Error.WriteLine([string]$_)
+    # Native stderr is DATA here: uv (invoked by the Scoop manifest's
+    # installer) writes informational lines like "Using CPython ...
+    # interpreter at" to stderr while exiting 0. Under the script-wide
+    # $ErrorActionPreference = "Stop", Windows PowerShell 5.1 turns the FIRST
+    # merged (2>&1) stderr line into a terminating NativeCommandError even
+    # though the command succeeded. Scope Continue around the invocation and
+    # gate success on the exit code alone; the merged output — stderr
+    # included — stays captured for the failure detail, never silenced.
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        if ($OutputPath) {
+            $output = @(& $FilePath @ArgumentList 2>&1)
+            $exitCode = $LASTEXITCODE
+            $output | ForEach-Object { [string]$_ } |
+                Set-Content -LiteralPath $OutputPath -Encoding UTF8
+            if ($exitCode -ne 0) {
+                $output | Select-Object -Last 200 | ForEach-Object {
+                    [Console]::Error.WriteLine([string]$_)
+                }
+                throw "command failed with exit code ${exitCode}: $FilePath $($ArgumentList -join ' ')"
             }
-            throw "command failed with exit code ${exitCode}: $FilePath $($ArgumentList -join ' ')"
+            return
         }
-        return
-    }
 
-    & $FilePath @ArgumentList 2>&1 | ForEach-Object {
-        [Console]::Out.WriteLine([string]$_)
+        & $FilePath @ArgumentList 2>&1 | ForEach-Object {
+            [Console]::Out.WriteLine([string]$_)
+        }
+        if ($LASTEXITCODE -ne 0) {
+            throw "command failed with exit code ${LASTEXITCODE}: $FilePath $($ArgumentList -join ' ')"
+        }
     }
-    if ($LASTEXITCODE -ne 0) {
-        throw "command failed with exit code ${LASTEXITCODE}: $FilePath $($ArgumentList -join ' ')"
+    finally {
+        $ErrorActionPreference = $previousPreference
     }
 }
 
