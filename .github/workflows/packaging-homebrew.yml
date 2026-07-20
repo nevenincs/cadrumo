@@ -201,6 +201,10 @@ jobs:
               "https://github.com/nevenincs/cadrumo/releases/download/v${version}" \
             --output-dir "$CADRUMO_S24_ROOT/tap-snapshot"
 
+      # --retain-install defers the smoke's uninstall/untap: the emit step
+      # below hashes the INSTALLED executables (the mint-time isolation
+      # proof), so the keg must still exist when the row is minted. The
+      # deferred cleanup runs right after the emit, from the recorded state.
       - name: Audit install and exercise Cadrumo through Homebrew
         env:
           BREW_PATH: ${{ matrix.brew }}
@@ -212,7 +216,8 @@ jobs:
             --evidence-dir "$CADRUMO_S24_ROOT/evidence" \
             --tap-name "cadrumo-smoke/${MATRIX_ID}" \
             --brew "$BREW_PATH" \
-            --repo-root "$GITHUB_WORKSPACE"
+            --repo-root "$GITHUB_WORKSPACE" \
+            --retain-install
 
       # Mint the sanctioned homebrew-<os>-<arch> row from the real captured oracle
       # JSONs (the smoke wrote tax/mcp-evidence.json host-visible), bound to THE
@@ -238,6 +243,19 @@ jobs:
             --destination-kind homebrew-cellar \
             --destination-locator "${{ matrix.id }}" \
             --distribution-evidence-dir "$CADRUMO_S24_ROOT/distribution-install-readiness"
+
+      # Deferred cleanup from --retain-install: runs after the emit (which
+      # needed the live keg) and even when earlier steps failed, so the
+      # self-hosted runner never accumulates smoke formulae/taps.
+      - name: Clean up the retained Homebrew install
+        if: always() && steps.initialize.outputs.ready == 'true'
+        run: |
+          state="$(find "$CADRUMO_S24_ROOT/evidence" -name homebrew-cleanup-state.json -print -quit 2>/dev/null || true)"
+          if [[ -n "$state" ]]; then
+            uv run --no-project python dev/packaging/smoke_homebrew.py --cleanup-state "$state"
+          else
+            echo "no retained Homebrew install to clean up"
+          fi
 
       # All four matrix legs publish distinct asset names to the ONE draft
       # evidence-homebrew-<run_id> created by the create-evidence-draft job;
