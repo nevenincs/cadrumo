@@ -549,13 +549,18 @@ def _run_probe(
         raise SystemExit(created.returncode or 1)
     container_id = created.stdout.strip()
     try:
-        # `docker cp SRC_DIR CID:/dest` with a nonexistent /dest creates the
-        # destination directory and copies SRC_DIR's contents into it.
-        for source, destination in ((work_dir, "/work"), (cohort_dir, "/cohort")):
-            _run_docker(
-                [*docker.argv_prefix, "cp", _wsl_mount(docker, source), f"{container_id}:{destination}"],
-                timeout=timeout,
-            )
+        # docker cp semantics differ by destination existence: `--workdir`
+        # pre-creates /work, so the `SRC/.` contents form targets it (a plain
+        # SRC_DIR would nest as /work/<basename>); /cohort does not exist yet,
+        # so the plain SRC_DIR form creates it with the source's contents.
+        _run_docker(
+            [*docker.argv_prefix, "cp", f"{_wsl_mount(docker, work_dir)}/.", f"{container_id}:/work"],
+            timeout=timeout,
+        )
+        _run_docker(
+            [*docker.argv_prefix, "cp", _wsl_mount(docker, cohort_dir), f"{container_id}:/cohort"],
+            timeout=timeout,
+        )
         print("running Docker packaging smoke", flush=True)
         _run_docker([*docker.argv_prefix, "start", "--attach", container_id], timeout=timeout)
     finally:
