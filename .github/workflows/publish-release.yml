@@ -302,6 +302,16 @@ jobs:
           gh release download "$CLAUDE_EVIDENCE_RELEASE" --pattern 'claude-*.json' \
             --dir "$EVIDENCE_FINAL_DIR/attach"
 
+      # Fail-closed publication tripwire (reconciled D9): rows are scrubbed at
+      # mint time, so this SWEEPS and never rewrites — any residual runner
+      # metadata in ANY asset about to be attached (rows, manifests, claude
+      # rows) hard-fails the promotion naming the asset and pattern. Gate 3
+      # attaches nothing that has not passed this sweep.
+      - name: Leak-sweep every evidence asset before it can be attached
+        run: |
+          uv run --frozen python -m dev.packaging.evidence_release leak-sweep \
+            --directory "$EVIDENCE_FINAL_DIR/attach"
+
       - name: Publish the three distributions to PyPI via Trusted Publishing (OIDC)
         run: |
           # uv exchanges the id-token for a short-lived PyPI token (Trusted

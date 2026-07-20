@@ -12,12 +12,21 @@ other asset. Consumers re-establish that binding with ``verify``: the Actions
 API run record, the draft's ``target_commitish``, the manifest claims, and the
 re-hashed downloaded bytes must all agree before a single byte is trusted.
 
-Three subcommands:
+Four subcommands:
 
 * ``emit-manifest`` — download the draft's assets, hash them, and write the
   sealed manifest (uploaded by the workflow as the final asset).
 * ``verify`` — download manifest + assets into a directory and fail loudly,
-  naming every mismatching value, unless all layered checks pass.
+  naming every mismatching value, unless all layered checks pass. Because a
+  draft reserves no tag ref, a concurrency bug can mint DUPLICATE drafts for
+  one tag (cli/cli#4270 and siblings), so verify first asserts exactly one
+  draft exists for the tag; transient download failures get a short bounded
+  retry (the GoReleaser 422-retry precedent).
+* ``leak-sweep`` — run the field-agnostic runner-metadata leak detector
+  (:mod:`dev.packaging.evidence_scrub`) over a directory of assets about to
+  be published and refuse on any hit, naming the asset and pattern. It never
+  rewrites: rows are scrubbed at mint time inside the evidence builders (the
+  reconciled D9); this is the fail-closed publication tripwire above them.
 * ``gc`` — delete stale evidence drafts, keeping the newest K per producing
   lane plus explicitly protected tags. Only drafts whose tag matches the
   reserved ``evidence-*`` namespace are ever candidates, so real ``v*``
@@ -40,6 +49,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from enum import StrEnum
 from pathlib import Path
 from typing import Final, Literal
@@ -62,6 +72,8 @@ MANIFEST_ASSET_NAME: Final[str] = "evidence-manifest.json"
 EVIDENCE_TAG_RE: Final[re.Pattern[str]] = re.compile(r"^evidence-(smoke|scoop|homebrew|claude)-([0-9]+)$")
 
 _GH_TIMEOUT_SECONDS: Final[int] = 600
+_DOWNLOAD_ATTEMPTS: Final[int] = 3
+_DOWNLOAD_RETRY_SECONDS: Final[float] = 5.0
 
 
 class EvidenceLane(StrEnum):
@@ -324,15 +336,63 @@ def _resolve_gh(explicit: str | None) -> str:
     return resolved
 
 
+def _run_gh_with_retry(gh: str, arguments: list[str]) -> str:
+    """Run ``gh`` with a short bounded retry for transient API failures."""
+    last_error: EvidenceReleaseError | None = None
+    for attempt in range(1, _DOWNLOAD_ATTEMPTS + 1):
+        try:
+            return _run_gh(gh, arguments)
+        except EvidenceReleaseError as error:
+            last_error = error
+            if attempt < _DOWNLOAD_ATTEMPTS:
+                time.sleep(_DOWNLOAD_RETRY_SECONDS * attempt)
+    raise EvidenceReleaseError(f"gh failed after {_DOWNLOAD_ATTEMPTS} attempts: {last_error}")
+
+
 def _download_release_assets(gh: str, *, repository: str, tag: str, patterns: list[str], directory: Path) -> None:
     """Download the tag's assets (all, or per pattern) into ``directory``."""
     directory.mkdir(parents=True, exist_ok=True)
     base = ["release", "download", tag, "--repo", repository, "--dir", str(directory), "--clobber"]
     if patterns:
         for pattern in patterns:
-            _run_gh(gh, [*base, "--pattern", pattern])
+            _run_gh_with_retry(gh, [*base, "--pattern", pattern])
     else:
-        _run_gh(gh, base)
+        _run_gh_with_retry(gh, base)
+
+
+def _list_releases(gh: str, repository: str) -> list[dict[str, object]]:
+    """Return every release record (drafts included), paginated past 100.
+
+    Pagination matters: softprops/action-gh-release#602 documents duplicate
+    draft creation precisely because a lookup stopped at the first page.
+    """
+    raw = _run_gh(
+        gh,
+        [
+            "api",
+            f"repos/{repository}/releases?per_page=100",
+            "--paginate",
+            "--jq",
+            ".[] | {tag_name, draft, created_at}",
+        ],
+    )
+    return [json.loads(line) for line in raw.splitlines() if line.strip()]
+
+
+def _assert_exactly_one_draft(gh: str, repository: str, tag: str) -> None:
+    """Refuse unless exactly one DRAFT release carries the tag.
+
+    Drafts reserve no tag ref, so concurrent creators can mint duplicates for
+    one tag (cli/cli#4270 et al.); with two drafts, which assets ``gh release
+    download`` resolves is undefined — never trust bytes from that state.
+    """
+    matches = [record for record in _list_releases(gh, repository) if record.get("tag_name") == tag]
+    drafts = [record for record in matches if record.get("draft") is True]
+    if len(drafts) != 1 or len(matches) != len(drafts):
+        raise EvidenceReleaseError(
+            f"expected exactly one draft release for {tag!r}, found "
+            f"{len(drafts)} draft(s) / {len(matches)} release(s) — refusing to trust any asset",
+        )
 
 
 def _downloaded_files(directory: Path) -> dict[str, Path]:
@@ -385,6 +445,7 @@ def _verify(args: argparse.Namespace) -> int:
     gh = _resolve_gh(args.gh)
     repository = _required(args.repo or os.environ.get("GITHUB_REPOSITORY"), "--repo")
     parse_evidence_tag(args.tag)
+    _assert_exactly_one_draft(gh, repository, args.tag)
     run_record = json.loads(_run_gh(gh, ["api", f"repos/{repository}/actions/runs/{args.expect_run_id}"]))
     release_record = json.loads(
         _run_gh(
@@ -421,20 +482,56 @@ def _verify(args: argparse.Namespace) -> int:
     return 0
 
 
+def sweep_directory_for_leaks(directory: Path, *, tokens: tuple[str, ...] = ()) -> list[str]:
+    """Return every runner-metadata leak signature across a publication directory.
+
+    JSON files are walked structurally (field-agnostic, exactly the mint-time
+    detector); every other file is scanned as text — latin-1 decoded when not
+    UTF-8, so plain strings inside uncompressed binaries are still seen. This
+    NEVER rewrites anything: rows are scrubbed at mint time inside the
+    evidence builders; this sweep is the fail-closed tripwire for payloads the
+    builders did not mint (manifests, archived transcripts) and for any new
+    leak class that slips past them.
+    """
+    from dev.packaging.evidence_scrub import find_residual_leaks
+
+    if not directory.is_dir():
+        raise EvidenceReleaseError(f"leak-sweep directory does not exist: {directory}")
+    leaks: list[str] = []
+    for path in sorted(p for p in directory.rglob("*") if p.is_file()):
+        label = path.relative_to(directory).as_posix()
+        document: dict[str, object]
+        if path.suffix == ".json":
+            try:
+                document = {"document": json.loads(path.read_text(encoding=_UTF_8))}
+            except (UnicodeDecodeError, json.JSONDecodeError) as error:
+                leaks.append(f"{label}: unparseable JSON refused ({error})")
+                continue
+        else:
+            try:
+                text = path.read_text(encoding=_UTF_8)
+            except UnicodeDecodeError:
+                text = path.read_bytes().decode("latin-1")
+            document = {"lines": text.splitlines()}
+        leaks.extend(f"{label}{leak}" for leak in find_residual_leaks(document, tokens))
+    return leaks
+
+
+def _leak_sweep(args: argparse.Namespace) -> int:
+    leaks = sweep_directory_for_leaks(args.directory, tokens=tuple(args.token or ()))
+    if leaks:
+        raise EvidenceReleaseError(
+            f"publication leak sweep failed for {args.directory}:\n" + "\n".join(f"  - {leak}" for leak in leaks),
+        )
+    files = sum(1 for path in args.directory.rglob("*") if path.is_file())
+    print(f"leak sweep clean: {files} file(s) under {args.directory}")
+    return 0
+
+
 def _gc(args: argparse.Namespace) -> int:
     gh = _resolve_gh(args.gh)
     repository = _required(args.repo or os.environ.get("GITHUB_REPOSITORY"), "--repo")
-    raw = _run_gh(
-        gh,
-        [
-            "api",
-            f"repos/{repository}/releases?per_page=100",
-            "--paginate",
-            "--jq",
-            ".[] | {tag_name, draft, created_at}",
-        ],
-    )
-    releases = [json.loads(line) for line in raw.splitlines() if line.strip()]
+    releases = _list_releases(gh, repository)
     plan = plan_evidence_gc(
         releases,
         keep_per_lane=args.keep,
@@ -490,6 +587,19 @@ def _parser() -> argparse.ArgumentParser:
     common(verify)
     verify.set_defaults(handler=_verify)
 
+    sweep = subparsers.add_parser(
+        "leak-sweep",
+        help="Refuse publication when any asset in a directory carries runner metadata.",
+    )
+    sweep.add_argument("--directory", required=True, type=Path, help="Directory of assets about to be published.")
+    sweep.add_argument(
+        "--token",
+        action="append",
+        default=None,
+        help="Additional machine-identifying token to refuse (repeatable).",
+    )
+    sweep.set_defaults(handler=_leak_sweep)
+
     gc = subparsers.add_parser("gc", help="Delete stale evidence drafts (dry run unless --apply).")
     gc.add_argument("--keep", type=int, default=3, help="Newest drafts kept per producing lane (default 3).")
     gc.add_argument(
@@ -530,6 +640,7 @@ __all__ = [
     "parse_evidence_tag",
     "plan_evidence_gc",
     "sha256_path",
+    "sweep_directory_for_leaks",
     "verify_downloaded_assets",
     "write_manifest",
 ]

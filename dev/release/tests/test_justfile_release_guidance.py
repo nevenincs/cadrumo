@@ -68,12 +68,19 @@ def test_release_apply_names_every_version_authority_and_only_the_named_tag() ->
     assert "git push origin main --tags" not in rendered
 
 
-def test_release_collect_evidence_aggregates_the_uniform_row_artifacts() -> None:
-    """The collect recipe downloads every cadrumo-distribution-evidence-* row into the dir."""
+def test_release_collect_evidence_aggregates_rows_from_evidence_drafts() -> None:
+    """The collect recipe downloads every row from the runs' evidence drafts.
+
+    Release-asset transport: rows ride draft releases tagged
+    evidence-<lane>-<run_id>, never Actions artifacts, and the sealed
+    evidence-manifest.json asset is not a row.
+    """
     rendered = _render_recipe("release-collect-evidence", "123456")
 
-    assert "gh run download" in rendered
-    assert "cadrumo-distribution-evidence-*" in rendered
+    assert "gh run download" not in rendered
+    assert "gh release download" in rendered
+    assert "evidence-$lane-" in rendered or "evidence-$lane-$run_id" in rendered
+    assert "evidence-manifest.json" in rendered
     assert "var/distribution-install-readiness" in rendered
 
 
