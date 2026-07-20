@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Final
 
 import pytest
 import yaml
@@ -55,21 +56,24 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
 # cost directive 2026-07-19: hosted minutes bill, the operator's own machines
 # are free; the label sets are the runner registration contract). Each runs the
 # host-portable `packaging-smoke` aggregate (no Docker, no host package-manager
-# lanes) and uploads per-OS artifacts so names never collide with the Ubuntu leg.
+# lanes) and publishes per-OS evidence-draft assets so names never collide with
+# the Ubuntu leg (release-asset transport per the release-asset-transport ADR).
 _PORTABLE_LEGS: dict[str, dict[str, object]] = {
     "cadrumo-packaging-smoke-windows": {
         "name": "Cadrumo / Windows / Python 3.13 / wheel artifacts",
         "runs_on": ["self-hosted", "Windows", "X64"],
-        "cohort_artifact": "cadrumo-python-cohort-windows",
-        "evidence_artifact": "cadrumo-packaging-smoke-evidence-windows",
+        "cohort_asset": "cadrumo-python-cohort-windows.tar.gz",
+        "evidence_asset": "packaging-smoke-evidence-windows.tar.gz",
     },
     "cadrumo-packaging-smoke-macos": {
         "name": "Cadrumo / macOS / Python 3.13 / wheel artifacts",
         "runs_on": ["self-hosted", "macOS", "ARM64"],
-        "cohort_artifact": "cadrumo-python-cohort-macos",
-        "evidence_artifact": "cadrumo-packaging-smoke-evidence-macos",
+        "cohort_asset": "cadrumo-python-cohort-macos.tar.gz",
+        "evidence_asset": "packaging-smoke-evidence-macos.tar.gz",
     },
 }
+_COHORT_PUBLISH_STEP: Final = "Publish tested Cadrumo Python cohort to the run's evidence draft"
+_EVIDENCE_PUBLISH_STEP: Final = "Publish Cadrumo packaging smoke evidence to the run's evidence draft"
 
 
 def _run_command_lines(job: dict[str, object]) -> set[str]:
@@ -95,18 +99,23 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     jobs = document["jobs"]
 
-    # One dedicated cohort build that uploads the single immutable artifact.
+    # One dedicated cohort build that publishes the single immutable archive to
+    # the run's evidence draft (release-asset transport, not Actions storage).
     build = jobs["build-release-cohort"]
     assert build["runs-on"] == ["self-hosted", "Linux", "X64"]
     checkout = next(step for step in build["steps"] if str(step.get("uses", "")).startswith("actions/checkout@"))
     assert checkout["with"]["fetch-depth"] == 0
     build_commands = _run_command_lines(build)
     assert "uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort" in build_commands
-    uploads = [step for step in build["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@")]
-    assert any(step["with"]["name"] == "cadrumo-release-cohort" for step in uploads)
+    build_surface = "\n".join(str(step.get("run", "")) for step in build["steps"] if "run" in step)
+    assert "cadrumo-release-cohort.tar.gz" in build_surface
+    assert 'gh release upload "$EVIDENCE_TAG" cadrumo-release-cohort.tar.gz --clobber' in build_commands
+    # Deterministic archive per D5 of the ADR.
+    assert "--sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner" in build_surface
 
-    # Each OS leg needs the ONE build (so all rows bind one cohort id), downloads
-    # that cohort, and emits its exact python-<os> row via the emitter tool.
+    # Each OS leg needs the ONE build (so all rows bind one cohort id),
+    # downloads that cohort archive from the run's evidence draft, and emits
+    # its exact python-<os> row via the emitter tool onto the same draft.
     legs = {
         "oracle-emit-linux": ("python-linux-x86-64", ["self-hosted", "Linux", "X64"]),
         "oracle-emit-windows": ("python-windows-x86-64", ["self-hosted", "Windows", "X64"]),
@@ -120,10 +129,26 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
         assert "dev.packaging.oracle_emit_cohort" in surface
         assert f"--row-id {row_id}" in surface
         assert "--release-cohort-dir var/release-cohort" in surface
-        downloads = [
-            step for step in leg["steps"] if str(step.get("uses", "")).startswith("actions/download-artifact@")
-        ]
-        assert any(step["with"]["name"] == "cadrumo-release-cohort" for step in downloads)
+        assert "gh release download" in surface
+        assert "cadrumo-release-cohort.tar.gz" in surface
+        assert "gh release upload" in surface
+        for step in leg["steps"]:
+            env = step.get("env", {})
+            if "EVIDENCE_TAG" in env:
+                assert env["EVIDENCE_TAG"] == "evidence-smoke-${{ github.run_id }}"
+
+    # The terminal seal job covers every uploader and mints the manifest last.
+    seal = jobs["seal-evidence-manifest"]
+    assert set(seal["needs"]) == {
+        "cadrumo-packaging-smoke",
+        *_PORTABLE_LEGS,
+        "oracle-emit-linux",
+        "oracle-emit-windows",
+        "oracle-emit-macos",
+    }
+    seal_surface = "\n".join(str(step.get("run", "")) for step in seal["steps"] if "run" in step)
+    assert "dev.packaging.evidence_release emit-manifest" in seal_surface
+    assert 'gh release upload "$EVIDENCE_TAG" evidence-manifest.json --clobber' in seal_surface
 
 
 def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
@@ -137,6 +162,7 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
         "oracle-emit-linux",
         "oracle-emit-windows",
         "oracle-emit-macos",
+        "seal-evidence-manifest",
     }
 
     job = document["jobs"]["cadrumo-packaging-smoke"]
@@ -174,64 +200,54 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
 
 
 def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> None:
-    """Labels use Cadrumo, artifacts use cadrumo, and commands keep the aeat boundary."""
+    """Labels use Cadrumo, assets use cadrumo, and commands keep the aeat boundary."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     job = document["jobs"]["cadrumo-packaging-smoke"]
-    uploads = [step for step in job["steps"] if str(step.get("uses", "")).startswith("actions/upload-artifact@")]
-    upload = next(step for step in uploads if step["with"]["name"] == "cadrumo-packaging-smoke-evidence")
-    cohort_upload = next(step for step in uploads if step["with"]["name"] == "cadrumo-python-cohort")
+    cohort_publish = next(step for step in job["steps"] if step.get("name") == _COHORT_PUBLISH_STEP)
+    evidence_publish = next(step for step in job["steps"] if step.get("name") == _EVIDENCE_PUBLISH_STEP)
     campaign = next(step for step in job["steps"] if "just packaging-smoke-ci" in str(step.get("run", "")))
     checkpoint = next(
         step for step in job["steps"] if step.get("run") == "uv run --no-sync python -m dev.packaging.evidence"
     )
 
-    assert upload["name"] == "Upload Cadrumo packaging smoke evidence"
-    assert upload["with"]["name"] == "cadrumo-packaging-smoke-evidence"
-    assert upload["with"]["path"].splitlines() == [
-        "var/packaging-smoke-evidence/*.json",
-        "var/distribution-install-readiness/installed-cohorts/**/evidence.json",
-    ]
-    assert cohort_upload["with"]["path"] == "var/packaging-smoke-cohort/python/"
-    assert cohort_upload["with"]["if-no-files-found"] == "error"
+    assert "cadrumo-python-cohort-linux.tar.gz" in cohort_publish["run"]
+    assert "var/packaging-smoke-cohort/python" in cohort_publish["run"]
+    assert "packaging-smoke-evidence-linux.tar.gz" in evidence_publish["run"]
+    assert "var/packaging-smoke-evidence" in evidence_publish["run"]
+    assert "installed-cohorts" in evidence_publish["run"]
     assert checkpoint["if"] == "always()"
-    assert upload["if"] == "always()"
+    assert evidence_publish["if"] == "always()"
     assert job["steps"].index(campaign) < job["steps"].index(checkpoint)
-    assert job["steps"].index(checkpoint) < job["steps"].index(cohort_upload)
-    assert job["steps"].index(cohort_upload) < job["steps"].index(upload)
+    assert job["steps"].index(checkpoint) < job["steps"].index(cohort_publish)
+    assert job["steps"].index(cohort_publish) < job["steps"].index(evidence_publish)
 
     # Each portable leg carries its own campaign, evidence checkpoint, and
-    # per-OS uploads in the same campaign -> checkpoint -> cohort -> evidence
-    # order, with the exact same evidence path shape as the Ubuntu leg.
+    # per-OS draft publishes in the same campaign -> checkpoint -> cohort ->
+    # evidence order, with per-OS asset names that never collide.
     for key, spec in _PORTABLE_LEGS.items():
         leg = document["jobs"][key]
-        leg_uploads = [s for s in leg["steps"] if str(s.get("uses", "")).startswith("actions/upload-artifact@")]
-        leg_cohort = next(s for s in leg_uploads if s["with"]["name"] == spec["cohort_artifact"])
-        leg_evidence = next(s for s in leg_uploads if s["with"]["name"] == spec["evidence_artifact"])
+        leg_cohort = next(s for s in leg["steps"] if s.get("name") == _COHORT_PUBLISH_STEP)
+        leg_evidence = next(s for s in leg["steps"] if s.get("name") == _EVIDENCE_PUBLISH_STEP)
         leg_campaign = next(s for s in leg["steps"] if s.get("run") == "just packaging-smoke")
         leg_checkpoint = next(
             s for s in leg["steps"] if s.get("run") == "uv run --no-sync python -m dev.packaging.evidence"
         )
-        assert leg_cohort["with"]["path"] == "var/packaging-smoke-cohort/python/"
-        assert leg_cohort["with"]["if-no-files-found"] == "error"
-        assert leg_evidence["with"]["path"].splitlines() == [
-            "var/packaging-smoke-evidence/*.json",
-            "var/distribution-install-readiness/installed-cohorts/**/evidence.json",
-        ]
+        assert str(spec["cohort_asset"]) in leg_cohort["run"]
+        assert str(spec["evidence_asset"]) in leg_evidence["run"]
         assert leg_checkpoint["if"] == "always()"
         assert leg_evidence["if"] == "always()"
         assert leg["steps"].index(leg_campaign) < leg["steps"].index(leg_checkpoint)
         assert leg["steps"].index(leg_checkpoint) < leg["steps"].index(leg_cohort)
         assert leg["steps"].index(leg_cohort) < leg["steps"].index(leg_evidence)
 
-    # Every upload-artifact name across all jobs is unique: parallel legs would
-    # otherwise clobber each other's cohort/evidence artifacts.
-    all_upload_names = [
-        one_job_step["with"]["name"]
-        for one_job in document["jobs"].values()
-        for one_job_step in one_job["steps"]
-        if str(one_job_step.get("uses", "")).startswith("actions/upload-artifact@")
-    ]
-    assert len(all_upload_names) == len(set(all_upload_names)), all_upload_names
+    # Every published asset name across the parallel jobs is unique on the ONE
+    # shared draft: a collision would silently --clobber a sibling's asset.
+    asset_names = re.findall(
+        r"(?:cadrumo-python-cohort|packaging-smoke-evidence)-(?:linux|windows|macos)\.tar\.gz",
+        _WORKFLOW.read_text(encoding="utf-8"),
+    )
+    per_leg_assets = {name for name in asset_names}
+    assert len(per_leg_assets) == 6, sorted(per_leg_assets)
 
     # The identity boundary holds across every job: labels use Cadrumo/cadrumo
     # and no command turns cadrumo into a human executable or revives an aeat
@@ -242,8 +258,6 @@ def test_workflow_evidence_and_product_identity_follow_the_binding_tuple() -> No
         label_lines.append(str(one_job["name"]))
         for step in one_job["steps"]:
             label_lines.append(str(step.get("name", "")))
-            if str(step.get("uses", "")).startswith("actions/upload-artifact@"):
-                label_lines.append(str(step["with"]["name"]))
             if "run" in step:
                 command_lines.append(str(step["run"]))
     assert "aeat" not in "\n".join(label_lines).casefold()

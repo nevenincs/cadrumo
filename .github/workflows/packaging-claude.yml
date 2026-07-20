@@ -28,6 +28,11 @@ jobs:
     name: Cadrumo / Windows / Claude plugin and MCPB
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 60
+    # Release-asset transport: evidence rides the run's own draft release, so
+    # this uploader job (and only this job) needs contents:write.
+    permissions:
+      actions: read
+      contents: write
 
     steps:
       - name: Initialize current-run evidence root
@@ -111,14 +116,27 @@ jobs:
           python-version: "3.13"
           enable-cache: true
 
-      - name: Download tested Cadrumo Python cohort
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
-        with:
-          name: cadrumo-python-cohort
-          path: ${{ env.CADRUMO_CLAUDE_ROOT }}/cohort
-          github-token: ${{ github.token }}
-          repository: ${{ github.repository }}
-          run-id: ${{ inputs.source_run_id }}
+      # The acquisition lanes consume the LINUX-built python cohort (wheels are
+      # py3-none-any; parity with the pre-transport unsuffixed artifact),
+      # hash-verified against the smoke run's sealed evidence manifest and the
+      # Actions API run record.
+      - name: Download and verify the tested Cadrumo Python cohort from the smoke evidence draft
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release verify `
+            --tag "evidence-smoke-$env:SOURCE_RUN_ID" `
+            --expect-run-id "$env:SOURCE_RUN_ID" `
+            --expect-workflow ".github/workflows/packaging-smoke.yml" `
+            --pattern "cadrumo-python-cohort-linux.tar.gz" `
+            --download-dir "$env:CADRUMO_CLAUDE_ROOT/download"
+          if ($LASTEXITCODE -ne 0) { throw "evidence draft verification failed" }
+          New-Item -ItemType Directory -Force "$env:CADRUMO_CLAUDE_ROOT/cohort" | Out-Null
+          tar -xzf "$env:CADRUMO_CLAUDE_ROOT/download/cadrumo-python-cohort-linux.tar.gz" `
+            -C "$env:CADRUMO_CLAUDE_ROOT/cohort"
+          if ($LASTEXITCODE -ne 0) { throw "cohort extraction failed" }
 
       - name: Verify tested Python cohort
         shell: powershell
@@ -231,11 +249,32 @@ jobs:
               -Destination (Join-Path $curated "mcpb-assembly-runtime-evidence.json")
           }
 
-      - name: Upload Cadrumo Claude acquisition evidence
+      # The curated acquisition bundle rides this run's own evidence draft for
+      # transport symmetry. The four REQUIRED claude-* readiness rows remain
+      # the operator's locally-minted release, unchanged.
+      - name: Publish Claude acquisition evidence to the run's evidence draft and seal it
         if: always() && steps.initialize.outputs.ready == 'true'
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: cadrumo-claude-acquisition-evidence-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/cadrumo-claude-${{ github.run_id }}-${{ github.run_attempt }}/curated-evidence/
-          if-no-files-found: error
-          retention-days: 14
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-claude-${{ github.run_id }}
+        run: |
+          $curated = Join-Path $env:CADRUMO_CLAUDE_ROOT "curated-evidence"
+          if (-not (Get-ChildItem $curated -ErrorAction SilentlyContinue)) {
+            throw "no curated acquisition evidence to publish"
+          }
+          # --target is THIS run's commit (the run<->release binding verify
+          # re-checks); the consumed smoke commit is recorded in run-context.
+          gh release create $env:EVIDENCE_TAG --draft --target $env:GITHUB_SHA `
+            --title "EVIDENCE (non-release): claude run $env:GITHUB_RUN_ID" `
+            --notes "Machine evidence transport. Not a Cadrumo release."
+          # ignore already-exists; the checked uploads surface real failures
+          tar -czf cadrumo-claude-acquisition-evidence.tar.gz -C $curated .
+          if ($LASTEXITCODE -ne 0) { throw "curated bundle archiving failed" }
+          gh release upload $env:EVIDENCE_TAG cadrumo-claude-acquisition-evidence.tar.gz --clobber
+          if ($LASTEXITCODE -ne 0) { throw "curated bundle upload failed" }
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release emit-manifest `
+            --tag $env:EVIDENCE_TAG --output evidence-manifest.json
+          if ($LASTEXITCODE -ne 0) { throw "evidence manifest emission failed" }
+          gh release upload $env:EVIDENCE_TAG evidence-manifest.json --clobber
+          if ($LASTEXITCODE -ne 0) { throw "evidence manifest upload failed" }
