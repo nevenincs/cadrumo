@@ -50,10 +50,12 @@ does not govern active naming. The following sources define the release mechanic
   required reviewers, OIDC Trusted Publishing, promote-without-rebuild from the
   retained cohort bytes. Refuses to run until `CADRUMO_PUBLISH_ENABLED=true` is set.
 - [`.github/workflows/packaging-smoke.yml`](.github/workflows/packaging-smoke.yml) —
-  runs the three-OS artifact checks, builds and uploads the immutable full release
-  cohort (`cadrumo-release-cohort`) once per run, and mints the per-OS oracle
-  `DistributionEvidence` rows. Its run id is the identity anchor for every downstream
-  dispatch.
+  runs the three-OS artifact checks, builds the immutable full release cohort once per
+  run and publishes it (`cadrumo-release-cohort.tar.gz`) to the run's draft evidence
+  release `evidence-smoke-<run id>`, mints the per-OS oracle `DistributionEvidence`
+  rows onto the same draft, and seals an `evidence-manifest.json` binding the run
+  identity to every asset's SHA-256. Its run id is the identity anchor for every
+  downstream dispatch.
 - [`docs/_release_checklist.yaml`](docs/_release_checklist.yaml) — soak timing,
   versioning scheme, hotfix cycle times, and rollback triggers.
 - [`docs/_release_notes_template.md`](docs/_release_notes_template.md) and
@@ -78,11 +80,14 @@ must prove that both companion versions match the core distribution.
 
 A successful `Cadrumo Packaging Smoke` run builds the cohort once from a clean source
 snapshot. It retains the three wheels, the root source distribution,
-`python-cohort.json`, the full `cadrumo-release-cohort` artifact, the installed CLI and
-MCP oracle evidence, and the per-OS `DistributionEvidence` records for 14 days. The
-manifest binds the source commit, version, filenames, and SHA-256 digest of every
-distribution file. The publication authority consumes those retained bytes without
-rebuilding them.
+`python-cohort.json`, the full release-cohort archive, the installed CLI and MCP
+oracle evidence, and the per-OS `DistributionEvidence` records as assets on the run's
+draft evidence release (`evidence-smoke-<run id>`), sealed by its
+`evidence-manifest.json`. Draft releases carry no Actions-storage retention window;
+they persist until the evidence GC (`evidence-gc.yml`, keep-3-per-lane) collects
+them. The cohort manifest binds the source commit, version, filenames, and SHA-256
+digest of every distribution file. The publication authority consumes those retained
+bytes without rebuilding them.
 
 ## Publication prerequisites
 
@@ -336,20 +341,25 @@ The push to `main` automatically triggers the `Cadrumo Packaging Smoke` workflow
   installation, bundled data, extras, split, and browser lanes.
 - `build-release-cohort`: builds the **one immutable release cohort** on exactly
   CPython 3.13 / uv 0.11.29 from a fresh clean clone with `SOURCE_DATE_EPOCH` and
-  `PYTHONHASHSEED=0`. The `cadrumo-release-cohort` artifact holds 13 files: 6 Python
-  dist files, `python-cohort.json`, 2 Claude plugin zips, `cadrumo.json` (Scoop
-  manifest), `cadrumo.rb` (Homebrew formula), `cadrumo-X.Y.Z.mcpb`, and
-  `release-cohort.json`. The cohort id is a SHA-256 over the complete artifact set; CI
-  never rebuilds these bytes.
-- Three `oracle-emit-*` legs: each downloads that single cohort, installs its wheels
-  into a fresh venv, runs the grounded CLI and MCP tax oracles (Modelo 200
-  `DP200014:00562 == 23000.00` per the readiness ADR), and mints one sanctioned
-  `DistributionEvidence` row (`python-linux-x86-64`, `python-windows-x86-64`,
-  `python-macos-arm64`).
+  `PYTHONHASHSEED=0`. The cohort holds 13 files: 6 Python dist files,
+  `python-cohort.json`, 2 Claude plugin zips, `cadrumo.json` (Scoop manifest),
+  `cadrumo.rb` (Homebrew formula), `cadrumo-X.Y.Z.mcpb`, and `release-cohort.json`.
+  The cohort id is a SHA-256 over the complete artifact set; CI never rebuilds these
+  bytes. The job creates the run's draft evidence release `evidence-smoke-<run id>`
+  (the sole creator) and publishes the cohort as `cadrumo-release-cohort.tar.gz`.
+- Three `oracle-emit-*` legs: each downloads that single cohort archive from the
+  run's evidence draft, installs its wheels into a fresh venv, runs the grounded CLI
+  and MCP tax oracles (Modelo 200 `DP200014:00562 == 23000.00` per the readiness
+  ADR), and mints one sanctioned `DistributionEvidence` row (`python-linux-x86-64`,
+  `python-windows-x86-64`, `python-macos-arm64`) onto the same draft.
+- `seal-evidence-manifest`: hashes the draft's complete asset set and seals
+  `evidence-manifest.json` binding the run identity to every asset digest.
 
 **Note the run id** of the successful smoke run. It is the identity anchor for every
-subsequent dispatch and for the final publish dispatch. Artifact retention is 14 days;
-a cohort older than 14 days cannot be promoted and requires a fresh smoke run.
+subsequent dispatch and for the final publish dispatch. Evidence drafts have no
+Actions-storage retention window, but the evidence GC keeps only the newest three per
+lane — promote (or protect the draft via the GC's keep-tags input) before it ages out
+of the keep window.
 
 ### Stage 2: channel acquisition proofs
 
@@ -370,13 +380,14 @@ gh workflow run packaging-claude.yml \
 Each workflow verifies source-run identity (success, `packaging-smoke.yml`, `push`,
 `main`, same repo, matching `head_sha`) before proceeding.
 
-- `packaging-scoop.yml` (hosted `windows-2022` container): generates and installs the
-  Scoop manifest, runs the oracles, and emits the `scoop-windows-x86-64`
-  `DistributionEvidence` row into its own workflow artifact.
+- `packaging-scoop.yml` (hosted `windows-2022` container): hash-verifies and installs
+  the smoke draft's cohorts, generates the Scoop manifest, runs the oracles, and
+  publishes the `scoop-windows-x86-64` `DistributionEvidence` row onto its own sealed
+  draft `evidence-scoop-<run id>`.
 - `packaging-homebrew.yml` (matrix: hosted macOS Intel + Linux ARM64; self-hosted
   macOS ARM64 + Linux X64): installs from the tap snapshot on each platform, runs the
-  oracles, and emits its `homebrew-<os>-<arch>` `DistributionEvidence` row per matrix
-  row into a uniform `cadrumo-distribution-evidence-*` artifact.
+  oracles, and publishes its `homebrew-<os>-<arch>` `DistributionEvidence` row per
+  matrix row onto the single sealed draft `evidence-homebrew-<run id>`.
 - `packaging-claude.yml` (self-hosted Windows): runs a live Claude Code session and
   the MCPB runtime oracle; produces lane evidence, not `DistributionEvidence` rows.
 
@@ -405,7 +416,7 @@ alongside a local `var/release-cohort/` at the release commit and tag.
 | `python-linux-x86-64` | `oracle-emit-linux` job in packaging-smoke | Yes |
 | `python-windows-x86-64` | `oracle-emit-windows` job in packaging-smoke | Yes |
 | `python-macos-arm64` | `oracle-emit-macos` job in packaging-smoke | Yes |
-| `scoop-windows-x86-64` | `packaging-scoop.yml` (predictable `cadrumo-distribution-evidence-scoop-windows-x86-64` artifact) | Yes |
+| `scoop-windows-x86-64` | `packaging-scoop.yml` (row asset on `evidence-scoop-<run id>`) | Yes |
 | `homebrew-macos-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
 | `homebrew-macos-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
 | `homebrew-linux-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
@@ -416,8 +427,9 @@ alongside a local `var/release-cohort/` at the release commit and tag.
 | `claude-desktop-mcpb` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
 
 **Aggregating the rows:** the eight CI-minted rows (three `python-*`, `scoop-windows-x86-64`,
-four `homebrew-*`) each upload under the uniform `cadrumo-distribution-evidence-*` artifact
-name. Collect them into `var/distribution-install-readiness/` with:
+four `homebrew-*`) ride their runs' draft evidence releases
+(`evidence-<lane>-<run id>`) as flat `{row_id}-{evidence_id}.json` assets. Collect
+them into `var/distribution-install-readiness/` with:
 
 ```console
 just release-collect-evidence <smoke-run-id> <scoop-run-id> <homebrew-run-id>
@@ -455,17 +467,21 @@ gh workflow run publish-release.yml \
   -f claude_evidence_release=vX.Y.Z-evidence
 ```
 
-**Dispatch ceiling.** Every source the publish workflow pulls from — the smoke run
-(sealed cohort + 3 python rows), the Scoop run, the Homebrew run, and the evidence
-release's `claude-*` assets — is bound by GitHub's 14-day artifact retention. Dispatch
-the publication within 14 days of the *oldest* source run. If any source run's artifacts
-have expired, Gate 2 fails on the missing download; re-run a fresh smoke run (and the
-affected acquisition dispatches) and dispatch again against the new run ids. Never
-promote a cohort older than its retention window.
+**Dispatch ceiling.** Every source the publish workflow pulls from is a draft
+evidence release (`evidence-<lane>-<run id>`, plus the operator's `claude-*` evidence
+release). Drafts have no Actions-storage retention window, but the evidence GC
+(`evidence-gc.yml`) keeps only the newest three drafts per lane; a superseded draft
+that has been collected is gone. Dispatch the publication while every source draft
+still exists (protect a slow promotion's drafts via the GC's keep-tags input); if a
+source draft was collected, Gate 2 fails on the missing draft — re-run a fresh smoke
+run (and the affected acquisition dispatches) and dispatch again against the new run
+ids.
 
-Gate 2 downloads every channel's rows from its authoritative run/release, checks each
-acquisition run's identity, and re-verifies all twelve against the sealed cohort — so
-the local `just release-collect-evidence` 12/12 is reproduced hard in CI, never trusted.
+Gate 2 derives each lane's evidence tag from its run-id input, downloads and
+hash-verifies every draft's assets against its sealed `evidence-manifest.json` and
+the Actions API run record, checks each acquisition run's identity, and re-verifies
+all twelve rows against the sealed cohort — so the local
+`just release-collect-evidence` 12/12 is reproduced hard in CI, never trusted.
 
 The workflow runs three sequential jobs:
 
@@ -475,12 +491,13 @@ and prints a full prerequisite checklist if not. Nothing is uploaded.
 **Gate 2 — validate (no rebuild).** Verifies the source run identity (success,
 `packaging-smoke.yml`, `push`, `main`, same repo, matching `head_sha`) and, with parity
 checks, each acquisition run (`packaging-scoop.yml` / `packaging-homebrew.yml`,
-`workflow_dispatch`, same repo, success). Downloads the **sealed** release cohort
-(`cadrumo-release-cohort` — the single source of every channel's bytes, PyPI included)
-and aggregates all twelve `cadrumo-distribution-evidence-*` rows from their
-authoritative sources: 3 python from the smoke run, 1 scoop, 4 homebrew, and the 4
-operator `claude-*` rows from the evidence release. The per-OS smoke build
-(`cadrumo-python-cohort`) is deliberately NOT part of the publication chain. Re-points `promote_python_cohort --check-pypi-only` at the sealed
+`workflow_dispatch`, same repo, success). Downloads and hash-verifies the **sealed**
+release cohort archive (`cadrumo-release-cohort.tar.gz` from the smoke evidence draft
+— the single source of every channel's bytes, PyPI included) and aggregates all
+twelve `DistributionEvidence` rows from their authoritative drafts: 3 python from the
+smoke draft, 1 scoop, 4 homebrew, and the 4 operator `claude-*` rows from the
+evidence release. The per-OS smoke build cohorts are deliberately NOT part of the
+publication chain. Re-points `promote_python_cohort --check-pypi-only` at the sealed
 cohort's `python/` bytes to guard the PyPI version against overwrite and emit the
 version. Runs `dev.release.readiness --json --skip-network --cohort-dir
 var/promotion/release-cohort --evidence-dir var/promotion/evidence/rows`; the sealed
@@ -488,13 +505,19 @@ cohort's installed behaviour is proven per-OS by the `DistributionEvidence` rows
 by the smoke build. Gate 2 passes only with all 12 rows present and verified.
 
 **Gate 3 — publish** (`environment: release`, human approval required). After the
-approval click, the job re-downloads the sealed cohort (never rebuilds) and:
+approval click, the job re-downloads and re-verifies the sealed cohort archive and
+every evidence row/manifest from the same drafts (never rebuilds), runs the
+fail-closed `evidence_release leak-sweep` over everything about to be attached
+(residual runner metadata hard-fails the promotion), and:
 
 - Publishes all 6 distributions to PyPI from the sealed cohort's `python/` subdir (the
   exact bytes every other channel ships and the oracle-emit legs proved) via
   `uv publish --trusted-publishing always` (OIDC; no API token needed once configured).
 - Creates `gh release create vX.Y.Z --target <source_commit>` attaching every file
-  found in the release-cohort directory (13 files). An empty asset set fails hard.
+  found in the release-cohort directory (13 files) plus the twelve verified evidence
+  rows and the three per-lane evidence manifests, so the published release is
+  self-evidencing and draft GC can never orphan a shipped audit trail. An empty asset
+  set fails hard.
 - Clones the public Scoop bucket repo, copies `scoop/cadrumo.json` to `bucket/`, and
   pushes (requires `CADRUMO_SCOOP_BUCKET_REPO` and `CADRUMO_SCOOP_BUCKET_TOKEN`).
 - Clones the public Homebrew tap repo, copies `homebrew/Formula/cadrumo.rb` to

@@ -731,13 +731,15 @@ release-apply:
     Write-Host "  git push origin main"
     Write-Host "  git push origin refs/tags/vX.Y.Z"
 
-# Aggregate every distribution-evidence row artifact from the given CI run(s) into
-# var/distribution-install-readiness/ so `just release-readiness` can reach 12/12.
-# Pass the packaging-smoke run id (mints python-<os> rows + the release cohort)
-# plus any acquisition run ids (Scoop, Homebrew) - every channel uploads its row
-# under the uniform cadrumo-distribution-evidence-* artifact name. The four real
-# client rows (claude-*) are minted locally by `python -m
-# dev.packaging.emit_real_client_evidence ...` and already live in the dest.
+# Aggregate every distribution-evidence row from the given CI run(s)' evidence
+# drafts into var/distribution-install-readiness/ so `just release-readiness`
+# can reach 12/12. Pass the packaging-smoke run id (mints python-<os> rows +
+# the release cohort) plus any acquisition run ids (Scoop, Homebrew) - every
+# run publishes its rows as assets on a draft release tagged
+# evidence-<lane>-<run_id> (release-asset transport; Actions artifacts are
+# retired). The four real client rows (claude-*) are minted locally by
+# `python -m dev.packaging.emit_real_client_evidence ...` and already live in
+# the dest.
 [unix]
 release-collect-evidence *run_ids:
     #!/usr/bin/env bash
@@ -750,11 +752,24 @@ release-collect-evidence *run_ids:
     mkdir -p "$dest"
     tmp="$(mktemp -d)"
     for run_id in {{run_ids}}; do
-        echo "collecting cadrumo-distribution-evidence-* from run $run_id"
-        gh run download "$run_id" --pattern 'cadrumo-distribution-evidence-*' --dir "$tmp/$run_id"
+        tag=""
+        for lane in smoke scoop homebrew claude; do
+            candidate="evidence-$lane-$run_id"
+            if gh release view "$candidate" --json tagName >/dev/null 2>&1; then
+                tag="$candidate"
+                break
+            fi
+        done
+        if [ -z "$tag" ]; then
+            echo "no evidence draft found for run $run_id (expected evidence-<lane>-$run_id)" >&2
+            exit 1
+        fi
+        echo "collecting evidence rows from draft $tag"
+        gh release download "$tag" --pattern '*.json' --dir "$tmp/$run_id" --clobber
     done
     n=0
-    while IFS= read -r -d '' f; do cp "$f" "$dest/"; n=$((n + 1)); done < <(find "$tmp" -name '*.json' -print0)
+    while IFS= read -r -d '' f; do cp "$f" "$dest/"; n=$((n + 1)); done \
+        < <(find "$tmp" -name '*.json' ! -name 'evidence-manifest.json' -print0)
     rm -rf "$tmp"
     echo "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
 
@@ -771,10 +786,23 @@ release-collect-evidence *run_ids:
     New-Item -ItemType Directory -Force -Path $dest | Out-Null
     $tmp = (New-Item -ItemType Directory -Path (Join-Path $env:TEMP ("collect-" + [Guid]::NewGuid().ToString("N")))).FullName
     foreach ($id in $ids) {
-        Write-Host "collecting cadrumo-distribution-evidence-* from run $id"
-        & gh run download $id --pattern 'cadrumo-distribution-evidence-*' --dir (Join-Path $tmp $id)
+        $tag = $null
+        foreach ($lane in @("smoke", "scoop", "homebrew", "claude")) {
+            $candidate = "evidence-$lane-$id"
+            & gh release view $candidate --json tagName *> $null
+            if ($LASTEXITCODE -eq 0) { $tag = $candidate; break }
+        }
+        if (-not $tag) {
+            Write-Error "no evidence draft found for run $id (expected evidence-<lane>-$id)"
+            exit 1
+        }
+        Write-Host "collecting evidence rows from draft $tag"
+        & gh release download $tag --pattern '*.json' --dir (Join-Path $tmp $id) --clobber
+        if ($LASTEXITCODE -ne 0) { Write-Error "download failed for $tag"; exit 1 }
     }
     $n = 0
-    Get-ChildItem -Path $tmp -Recurse -Filter *.json | ForEach-Object { Copy-Item $_.FullName -Destination $dest -Force; $n++ }
+    Get-ChildItem -Path $tmp -Recurse -Filter *.json |
+        Where-Object { $_.Name -ne "evidence-manifest.json" } |
+        ForEach-Object { Copy-Item $_.FullName -Destination $dest -Force; $n++ }
     Remove-Item -Recurse -Force $tmp
     Write-Host "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"

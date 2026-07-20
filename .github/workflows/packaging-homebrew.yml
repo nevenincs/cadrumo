@@ -25,7 +25,31 @@ permissions:
   contents: read
 
 jobs:
+  # Single-creator topology: exactly ONE job creates the run's evidence draft
+  # (drafts reserve no tag ref, so concurrent creates across the matrix would
+  # mint duplicates — cli/cli#4270); the matrix legs are upload-only.
+  create-evidence-draft:
+    name: Cadrumo / create evidence draft
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Create the run's evidence draft (create-if-absent)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+        run: |
+          # --target is THIS run's commit (the run<->release binding verify
+          # re-checks); the consumed smoke commit is recorded in run-context.
+          if ! gh release view "$EVIDENCE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft >/dev/null 2>&1; then
+            gh release create "$EVIDENCE_TAG" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
+              --title "EVIDENCE (non-release): homebrew run ${GITHUB_RUN_ID}" \
+              --notes "Machine evidence transport. Not a Cadrumo release."
+          fi
+
   cadrumo-homebrew-acquisition:
+    needs: create-evidence-draft
     name: Cadrumo / ${{ matrix.label }} / Homebrew source install
     strategy:
       fail-fast: false
@@ -216,8 +240,8 @@ jobs:
             --distribution-evidence-dir "$CADRUMO_S24_ROOT/distribution-install-readiness"
 
       # All four matrix legs publish distinct asset names to the ONE draft
-      # evidence-homebrew-<run_id>; draft creation is idempotent-raced (first
-      # creator wins, real failures surface at the un-suppressed uploads).
+      # evidence-homebrew-<run_id> created by the create-evidence-draft job;
+      # the legs are upload-only (single-creator topology).
       - name: Publish Homebrew evidence to the run's evidence draft
         if: always() && steps.initialize.outputs.ready == 'true'
         env:
@@ -225,11 +249,6 @@ jobs:
           EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
           MATRIX_ID: ${{ matrix.id }}
         run: |
-          # --target is THIS run's commit (the run<->release binding verify
-          # re-checks); the consumed smoke commit is recorded in run-context.
-          gh release create "$EVIDENCE_TAG" --draft --target "$GITHUB_SHA" \
-            --title "EVIDENCE (non-release): homebrew run ${GITHUB_RUN_ID}" \
-            --notes "Machine evidence transport. Not a Cadrumo release." || true
           rows=("$CADRUMO_S24_ROOT"/distribution-install-readiness/*.json)
           if [ -e "${rows[0]}" ]; then
             gh release upload "$EVIDENCE_TAG" "${rows[@]}" --clobber

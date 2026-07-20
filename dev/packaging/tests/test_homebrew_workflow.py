@@ -102,15 +102,23 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     assert "--release-cohort-dir " in emit["run"]
 
     # All four legs publish their rows (distinct {row_id}-{evidence_id}.json
-    # basenames) and per-leg bundles to the ONE run draft; the terminal seal
-    # job mints the manifest only on full matrix success.
+    # basenames) and per-leg bundles to the ONE run draft created by the
+    # dedicated create-evidence-draft job (single-creator topology: concurrent
+    # matrix creates would mint duplicate drafts); the terminal seal job mints
+    # the manifest only on full matrix success.
     publish = next(
         step for step in steps if step.get("name") == "Publish Homebrew evidence to the run's evidence draft"
     )
     assert publish["env"]["EVIDENCE_TAG"] == "evidence-homebrew-${{ github.run_id }}"
-    assert "gh release create" in publish["run"]
-    assert "--draft" in publish["run"]
+    assert "gh release create" not in publish["run"]  # upload-only leg
     assert "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" in publish["run"]
+
+    creator = document["jobs"]["create-evidence-draft"]
+    creator_surface = "\n".join(str(step.get("run", "")) for step in creator["steps"])
+    assert "gh release create" in creator_surface
+    assert "--draft" in creator_surface
+    assert "gh release view" in creator_surface  # create-if-absent probe
+    assert job["needs"] == "create-evidence-draft"
 
     seal = document["jobs"]["seal-evidence-manifest"]
     assert seal["needs"] == "cadrumo-homebrew-acquisition"

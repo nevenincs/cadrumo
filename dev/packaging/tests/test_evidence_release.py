@@ -368,6 +368,14 @@ class TestCliEndToEnd:
         write_manifest(manifest, assets_dir / MANIFEST_ASSET_NAME)
         (fixture / "run.json").write_text(json.dumps(_run_record()), encoding="utf-8")
         (fixture / "release.json").write_text(json.dumps(_release_record()), encoding="utf-8")
+        # The release listing verify consults for the exactly-one-draft check.
+        (fixture / "releases.jsonl").write_text(
+            json.dumps(
+                {"tag_name": f"evidence-smoke-{_RUN_ID}", "draft": True, "created_at": "2026-07-20T00:00:00Z"},
+            )
+            + "\n",
+            encoding="utf-8",
+        )
         gh = _write_stub_gh(tmp_path / "bin", fixture)
         return fixture, gh
 
@@ -478,6 +486,34 @@ class TestCliEndToEnd:
         for name, digest in sealed.assets.items():
             assert digest.sha256 == sha256_path(fixture / "assets" / name)
 
+    def test_verify_refuses_duplicate_drafts_for_one_tag(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Two drafts on one tag (the cli/cli#4270 race) refuse before any trust."""
+        fixture, gh = self._seed_fixture(tmp_path)
+        duplicate = {"tag_name": f"evidence-smoke-{_RUN_ID}", "draft": True, "created_at": "2026-07-20T01:00:00Z"}
+        with (fixture / "releases.jsonl").open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(duplicate) + "\n")
+        exit_code = main(
+            [
+                "verify",
+                "--tag",
+                f"evidence-smoke-{_RUN_ID}",
+                "--expect-run-id",
+                _RUN_ID,
+                "--expect-workflow",
+                _WORKFLOW,
+                "--download-dir",
+                str(tmp_path / "download"),
+                "--repo",
+                _REPO,
+                "--gh",
+                str(gh),
+            ],
+        )
+        assert exit_code == 1
+        assert "exactly one draft" in capsys.readouterr().err
+
     def test_gc_dry_run_deletes_nothing_and_apply_deletes_only_stale_drafts(self, tmp_path: Path) -> None:
         """Dry run deletes nothing; --apply deletes exactly the unprotected stale draft."""
         fixture, gh = self._seed_fixture(tmp_path)
@@ -494,3 +530,57 @@ class TestCliEndToEnd:
         assert main([*base, "--apply", "--keep-tag", "evidence-smoke-101"]) == 0
         deleted = (fixture / "deleted.log").read_text(encoding="utf-8").split()
         assert deleted == ["evidence-smoke-102"]
+
+
+class TestLeakSweep:
+    """The fail-closed publication tripwire above the mint-time scrub."""
+
+    def _attach_dir(self, tmp_path: Path) -> Path:
+        directory = tmp_path / "attach"
+        directory.mkdir()
+        (directory / "python-linux-x86-64-row.json").write_text(
+            json.dumps({"cwd": "C:\\Users\\scrubbed-user\\work", "status": "passed"}),
+            encoding="utf-8",
+        )
+        (directory / "evidence-manifest-packaging.json").write_text(
+            json.dumps({"workflow_path": ".github/workflows/packaging-smoke.yml"}),
+            encoding="utf-8",
+        )
+        return directory
+
+    def test_clean_publication_directory_passes(self, tmp_path: Path) -> None:
+        """Scrubbed rows and manifests sweep clean and exit 0."""
+        directory = self._attach_dir(tmp_path)
+        assert main(["leak-sweep", "--directory", str(directory)]) == 0
+
+    def test_leaking_json_field_refuses_naming_the_asset(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """A home-dir username anywhere in a JSON asset refuses the publication."""
+        directory = self._attach_dir(tmp_path)
+        (directory / "rogue-row.json").write_text(
+            json.dumps({"novel_field": {"deep": ["/home/gwuser/.local/state"]}}),
+            encoding="utf-8",
+        )
+        assert main(["leak-sweep", "--directory", str(directory)]) == 1
+        err = capsys.readouterr().err
+        assert "rogue-row.json" in err
+        assert "gwuser" in err
+
+    def test_leaking_plain_text_asset_is_caught_too(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        """Non-JSON text assets (archived transcripts) are scanned line-wise."""
+        directory = self._attach_dir(tmp_path)
+        (directory / "transcript.log").write_text("ran under C:\\Users\\hiddenop\\workdir\n", encoding="utf-8")
+        assert main(["leak-sweep", "--directory", str(directory)]) == 1
+        assert "transcript.log" in capsys.readouterr().err
+
+    def test_explicit_machine_token_is_refused(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+        """A named hostname token anywhere in the payload refuses publication."""
+        directory = self._attach_dir(tmp_path)
+        (directory / "notes.txt").write_text("built on gw-workstation runner\n", encoding="utf-8")
+        assert main(["leak-sweep", "--directory", str(directory), "--token", "gw-workstation"]) == 1
+        assert "notes.txt" in capsys.readouterr().err
+
+    def test_missing_directory_is_a_hard_error(self, tmp_path: Path) -> None:
+        """Sweeping nothing is never success — an absent directory refuses."""
+        assert main(["leak-sweep", "--directory", str(tmp_path / "absent")]) == 1

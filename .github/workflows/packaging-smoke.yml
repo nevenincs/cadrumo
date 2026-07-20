@@ -41,6 +41,10 @@ jobs:
     name: Cadrumo / Ubuntu / Python 3.13 / wheel artifacts
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 90
+    # Single-creator topology: build-release-cohort is the SOLE draft creator
+    # (drafts reserve no tag ref, so concurrent creates mint duplicates —
+    # cli/cli#4270); every other job waits on it and is upload-only.
+    needs: build-release-cohort
     # Release-asset transport: this job uploads its outputs to the run's
     # evidence draft, which needs contents:write at job level only.
     permissions:
@@ -122,12 +126,7 @@ jobs:
           test -n "$(ls -A var/packaging-smoke-cohort/python)"
           tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
             -czf cadrumo-python-cohort-linux.tar.gz -C var/packaging-smoke-cohort/python .
-          # Idempotent create: uploader jobs race, first creator wins; a failed
-          # create for any OTHER reason surfaces at the un-suppressed upload.
-          gh release create "$EVIDENCE_TAG" --draft --target "$GITHUB_SHA" \
-            --title "EVIDENCE (non-release): smoke run ${GITHUB_RUN_ID}" \
-            --notes "Machine evidence transport for packaging-smoke run ${GITHUB_RUN_ID} attempt ${GITHUB_RUN_ATTEMPT} at ${GITHUB_SHA}. Not a Cadrumo release." \
-            || true
+          # Upload-only: build-release-cohort already created the run's draft.
           gh release upload "$EVIDENCE_TAG" cadrumo-python-cohort-linux.tar.gz --clobber
 
       - name: Publish Cadrumo packaging smoke evidence to the run's evidence draft
@@ -142,9 +141,6 @@ jobs:
             -exec sh -c 'cp "$1" "$0/installed-$(echo "$1" | sha256sum | cut -c1-8).json"' "$staging" {} \; 2>/dev/null || true
           if [ -n "$(ls -A "$staging")" ]; then
             tar -czf packaging-smoke-evidence-linux.tar.gz -C "$staging" .
-            gh release create "$EVIDENCE_TAG" --draft --target "$GITHUB_SHA" \
-              --title "EVIDENCE (non-release): smoke run ${GITHUB_RUN_ID}" \
-              --notes "Machine evidence transport. Not a Cadrumo release." || true
             gh release upload "$EVIDENCE_TAG" packaging-smoke-evidence-linux.tar.gz --clobber
           fi
 
@@ -159,6 +155,8 @@ jobs:
     name: Cadrumo / Windows / Python 3.13 / wheel artifacts
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 120
+    # Upload-only leg; the sole creator is build-release-cohort (see above).
+    needs: build-release-cohort
     permissions:
       contents: write
 
@@ -217,10 +215,7 @@ jobs:
           if (-not (Get-ChildItem var/packaging-smoke-cohort/python)) { throw "python cohort is empty" }
           tar -czf cadrumo-python-cohort-windows.tar.gz -C var/packaging-smoke-cohort/python .
           if ($LASTEXITCODE -ne 0) { throw "cohort archiving failed" }
-          gh release create $env:EVIDENCE_TAG --draft --target $env:GITHUB_SHA `
-            --title "EVIDENCE (non-release): smoke run $env:GITHUB_RUN_ID" `
-            --notes "Machine evidence transport. Not a Cadrumo release."
-          # ignore already-exists; the un-suppressed upload surfaces real failures
+          # Upload-only: build-release-cohort already created the run's draft.
           gh release upload $env:EVIDENCE_TAG cadrumo-python-cohort-windows.tar.gz --clobber
           if ($LASTEXITCODE -ne 0) { throw "cohort asset upload failed" }
 
@@ -242,9 +237,6 @@ jobs:
           if (Get-ChildItem $staging) {
             tar -czf packaging-smoke-evidence-windows.tar.gz -C $staging .
             if ($LASTEXITCODE -ne 0) { throw "evidence archiving failed" }
-            gh release create $env:EVIDENCE_TAG --draft --target $env:GITHUB_SHA `
-              --title "EVIDENCE (non-release): smoke run $env:GITHUB_RUN_ID" `
-              --notes "Machine evidence transport. Not a Cadrumo release."
             gh release upload $env:EVIDENCE_TAG packaging-smoke-evidence-windows.tar.gz --clobber
             if ($LASTEXITCODE -ne 0) { throw "evidence asset upload failed" }
           }
@@ -257,6 +249,8 @@ jobs:
     name: Cadrumo / macOS / Python 3.13 / wheel artifacts
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 120
+    # Upload-only leg; the sole creator is build-release-cohort (see above).
+    needs: build-release-cohort
     permissions:
       contents: write
 
@@ -305,9 +299,7 @@ jobs:
         run: |
           test -n "$(ls -A var/packaging-smoke-cohort/python)"
           tar -czf cadrumo-python-cohort-macos.tar.gz -C var/packaging-smoke-cohort/python .
-          gh release create "$EVIDENCE_TAG" --draft --target "$GITHUB_SHA" \
-            --title "EVIDENCE (non-release): smoke run ${GITHUB_RUN_ID}" \
-            --notes "Machine evidence transport. Not a Cadrumo release." || true
+          # Upload-only: build-release-cohort already created the run's draft.
           gh release upload "$EVIDENCE_TAG" cadrumo-python-cohort-macos.tar.gz --clobber
 
       - name: Publish Cadrumo packaging smoke evidence to the run's evidence draft
@@ -322,9 +314,6 @@ jobs:
             -exec sh -c 'cp "$1" "$0/installed-$(echo "$1" | shasum -a 256 | cut -c1-8).json"' "$staging" {} \; 2>/dev/null || true
           if [ -n "$(ls -A "$staging")" ]; then
             tar -czf packaging-smoke-evidence-macos.tar.gz -C "$staging" .
-            gh release create "$EVIDENCE_TAG" --draft --target "$GITHUB_SHA" \
-              --title "EVIDENCE (non-release): smoke run ${GITHUB_RUN_ID}" \
-              --notes "Machine evidence transport. Not a Cadrumo release." || true
             gh release upload "$EVIDENCE_TAG" packaging-smoke-evidence-macos.tar.gz --clobber
           fi
 
@@ -375,12 +364,15 @@ jobs:
           test -n "$(ls -A var/release-cohort)"
           tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
             -czf cadrumo-release-cohort.tar.gz -C var/release-cohort .
-          # Idempotent create: a re-run attempt finds the draft already present.
-          gh release create "$EVIDENCE_TAG" --draft \
-            --target "$GITHUB_SHA" \
-            --title "EVIDENCE (non-release): smoke run ${GITHUB_RUN_ID}" \
-            --notes "Machine evidence transport for packaging-smoke run ${GITHUB_RUN_ID} attempt ${GITHUB_RUN_ATTEMPT} at ${GITHUB_SHA}. Not a Cadrumo release." \
-            || true
+          # SOLE creator, create-if-absent: a draft reserves no tag ref, so an
+          # unconditional create on a re-run attempt would mint a DUPLICATE
+          # draft (cli/cli#4270) — probe with `release view` first.
+          if ! gh release view "$EVIDENCE_TAG" --json isDraft >/dev/null 2>&1; then
+            gh release create "$EVIDENCE_TAG" --draft \
+              --target "$GITHUB_SHA" \
+              --title "EVIDENCE (non-release): smoke run ${GITHUB_RUN_ID}" \
+              --notes "Machine evidence transport for packaging-smoke run ${GITHUB_RUN_ID} attempt ${GITHUB_RUN_ATTEMPT} at ${GITHUB_SHA}. Not a Cadrumo release."
+          fi
           gh release upload "$EVIDENCE_TAG" cadrumo-release-cohort.tar.gz --clobber
 
   # Per-OS proof that THE immutable cohort installs and performs grounded tax work

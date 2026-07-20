@@ -263,12 +263,17 @@ jobs:
           if (-not (Get-ChildItem $curated -ErrorAction SilentlyContinue)) {
             throw "no curated acquisition evidence to publish"
           }
+          # Single creator, create-if-absent (an unconditional create on a
+          # re-run attempt would mint a DUPLICATE draft — cli/cli#4270).
           # --target is THIS run's commit (the run<->release binding verify
           # re-checks); the consumed smoke commit is recorded in run-context.
-          gh release create $env:EVIDENCE_TAG --draft --target $env:GITHUB_SHA `
-            --title "EVIDENCE (non-release): claude run $env:GITHUB_RUN_ID" `
-            --notes "Machine evidence transport. Not a Cadrumo release."
-          # ignore already-exists; the checked uploads surface real failures
+          gh release view $env:EVIDENCE_TAG --json isDraft *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:EVIDENCE_TAG --draft --target $env:GITHUB_SHA `
+              --title "EVIDENCE (non-release): claude run $env:GITHUB_RUN_ID" `
+              --notes "Machine evidence transport. Not a Cadrumo release."
+            if ($LASTEXITCODE -ne 0) { throw "evidence draft creation failed" }
+          }
           tar -czf cadrumo-claude-acquisition-evidence.tar.gz -C $curated .
           if ($LASTEXITCODE -ne 0) { throw "curated bundle archiving failed" }
           gh release upload $env:EVIDENCE_TAG cadrumo-claude-acquisition-evidence.tar.gz --clobber

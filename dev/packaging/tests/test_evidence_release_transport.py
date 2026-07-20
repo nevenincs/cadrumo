@@ -55,6 +55,14 @@ def test_no_packaging_workflow_uses_actions_artifact_storage(workflow: str) -> N
     assert "gh run download" not in _run_surface(document), workflow
 
 
+_EXPECTED_CREATOR_JOB: Final = {
+    "packaging-smoke.yml": "build-release-cohort",
+    "packaging-scoop.yml": "cadrumo-scoop-acquisition",
+    "packaging-homebrew.yml": "create-evidence-draft",
+    "packaging-claude.yml": "cadrumo-claude-acquisition",
+}
+
+
 @pytest.mark.parametrize("workflow", _PACKAGING_WORKFLOWS)
 def test_every_packaging_release_create_is_an_evidence_draft(workflow: str) -> None:
     """Packaging workflows only ever create DRAFT releases in the reserved namespace."""
@@ -64,16 +72,53 @@ def test_every_packaging_release_create_is_an_evidence_draft(workflow: str) -> N
     for line in creates:
         assert "--draft" in line, line
         assert "EVIDENCE_TAG" in line, line
-    # Every declared evidence tag lives in the reserved namespace, derived from
-    # THIS run's id (a re-run of the same SHA mints a new, non-colliding draft).
-    tags = {
+        # A draft reserves no tag ref, so a suppressed create can still mint a
+        # duplicate — creators must probe-then-create, never create-or-ignore.
+        assert "|| true" not in line, line
+    # Tags for the SMOKE draft (consumed by acquisition lanes) may coexist with
+    # the workflow's own lane tag; the workflow's own creates all target its
+    # own lane tag derived from THIS run's id.
+    lane = workflow.removeprefix("packaging-").removesuffix(".yml")
+    own_tag = f"evidence-{lane}-${{{{ github.run_id }}}}"
+    create_step_tags = {
         str(step["env"]["EVIDENCE_TAG"])
         for step in _steps(document)
-        if isinstance(step.get("env"), dict) and "EVIDENCE_TAG" in step["env"]
+        if isinstance(step.get("env"), dict)
+        and "EVIDENCE_TAG" in step["env"]
+        and "gh release create" in str(step.get("run", ""))
     }
-    assert tags, workflow
-    lane = workflow.removeprefix("packaging-").removesuffix(".yml")
-    assert tags == {f"evidence-{lane}-${{{{ github.run_id }}}}"}, tags
+    assert create_step_tags == {own_tag}, create_step_tags
+
+
+@pytest.mark.parametrize("workflow", _PACKAGING_WORKFLOWS)
+def test_exactly_one_creator_job_per_workflow(workflow: str) -> None:
+    """Single-creator topology: concurrent creates would mint duplicate drafts.
+
+    Drafts reserve no tag ref (cli/cli#4270 and siblings), so exactly one job
+    per workflow creates the run's draft; every other uploader is upload-only
+    and waits on the creator through the ``needs:`` graph.
+    """
+    document = _document(workflow)
+    creator_jobs = [
+        job_name
+        for job_name, job in document["jobs"].items()
+        if "gh release create" in "\n".join(str(step.get("run", "")) for step in (job.get("steps") or []))
+    ]
+    assert creator_jobs == [_EXPECTED_CREATOR_JOB[workflow]], (workflow, creator_jobs)
+
+
+def test_smoke_uploaders_wait_on_the_sole_creator() -> None:
+    """Every smoke uploader job needs: build-release-cohort before it uploads."""
+    document = _document("packaging-smoke.yml")
+    for job_name, job in document["jobs"].items():
+        if job_name in {"build-release-cohort", "seal-evidence-manifest"}:
+            continue
+        needs = job.get("needs")
+        needs_list = [needs] if isinstance(needs, str) else list(needs or [])
+        assert "build-release-cohort" in needs_list, job_name
+    homebrew = _document("packaging-homebrew.yml")
+    matrix_needs = homebrew["jobs"]["cadrumo-homebrew-acquisition"]["needs"]
+    assert matrix_needs == "create-evidence-draft"
 
 
 def test_only_publish_release_gate3_creates_a_non_draft_release() -> None:
@@ -89,6 +134,22 @@ def test_only_publish_release_gate3_creates_a_non_draft_release() -> None:
         # legitimately DESCRIBES the operator's draft-create command.
         invocations = [line for line in job_surface.splitlines() if line.strip().startswith("gh release create")]
         assert invocations == [], (job_name, invocations)
+
+
+def test_gate3_attaches_only_sweep_passed_evidence() -> None:
+    """Gate 3 leak-sweeps every evidence asset BEFORE anything can be attached.
+
+    Reconciled D9: rows are scrubbed at mint time; the sweep is the fail-closed
+    publication tripwire (verify-then-refuse, no rewriting) over the attach
+    directory, and the v-release create comes only after it.
+    """
+    document = _document("publish-release.yml")
+    surface = "\n".join(str(step.get("run", "")) for step in (document["jobs"]["publish"].get("steps") or []))
+    assert "dev.packaging.evidence_release leak-sweep" in surface
+    assert '--directory "$EVIDENCE_FINAL_DIR/attach"' in surface
+    assert surface.index("leak-sweep") < surface.index('gh release create "v$VERSION"')
+    # The final release's extra assets come exclusively from the swept dir.
+    assert '"$EVIDENCE_FINAL_DIR/attach" -type f' in surface
 
 
 def test_publish_release_derives_evidence_tags_from_run_id_inputs() -> None:
