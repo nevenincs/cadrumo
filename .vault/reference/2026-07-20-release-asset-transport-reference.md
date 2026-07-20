@@ -62,14 +62,14 @@ Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence
 ### `publish-release.yml`
 
 - Gate 2: derive tags from the run-id inputs; `evidence_release verify` each of smoke/scoop/homebrew into `rows-raw/` subdirectories; `gh release download` the operator's `claude_evidence_release` tag as today; extract the cohort archive; aggregate `distribution-evidence-*.json` plus `claude-*.json` into the flat rows directory; then the unchanged `promote_python_cohort --check-pypi-only` and `readiness --json --skip-network --cohort-dir ... --evidence-dir ...` invocations. Job permissions: keep `actions: read`; `contents: read` suffices for draft download with the workflow token.
-- Gate 3: re-download and re-verify the cohort by the same derived tag (no rebuild), then `evidence_release leak-sweep` over every asset about to be attached (rows, per-lane manifests, transcript/bundle assets) — hard fail on any residual runner metadata, no rewriting — and attach the swept twelve rows plus manifests to the `v<version>` release (self-evidencing; bytes are identical to the Gate-2-verified draft assets because rows are clean at birth, so the draft manifests' digests remain valid; the existing duplicate-basename refusal guards collisions). Gate 3 attaches nothing that has not passed the sweep — conformance-pinned.
+- Gate 3: re-download and re-verify the cohort by the same derived tag (no rebuild), then `evidence_release leak-sweep` over every asset about to be attached — the union of both attach roots: rows, per-lane manifests, transcript/bundle assets, and the extracted cohort's product files (JSON walked structurally, everything else scanned as text) — hard fail on any residual runner metadata, no rewriting — and attach the swept twelve rows plus manifests to the `v<version>` release (self-evidencing; bytes are identical to the Gate-2-verified draft assets because rows are clean at birth, so the draft manifests' digests remain valid; the existing duplicate-basename refusal guards collisions). Gate 3 attaches nothing that has not passed the sweep — conformance-pinned.
 - Operator-preflight text: item 4 becomes "Ensure the packaging-smoke run sealed its evidence draft (evidence-smoke-<run id> with cadrumo-release-cohort.tar.gz and evidence-manifest.json)"; items 5 and 6 unchanged.
 
 ### New `evidence-gc.yml`
 
 - `workflow_dispatch`-only (operator ruling: no schedule), inputs `keep_per_workflow` (default 3) and `dry_run` (default true), self-hosted Linux, `permissions: contents: write`. Delegates to `evidence_release gc`: candidates are drafts matching `^evidence-(smoke|scoop|homebrew|claude)-[0-9]+$` only; keeps the newest K per lane plus every draft referenced by the most recent successful promotion; refuses any non-matching tag; never touches non-draft releases.
 
-### Conformance-test deltas (`dev/packaging/tests/test_ci_workflow.py` family)
+### Conformance-test deltas (`dev/packaging/tests/test_evidence_release_transport.py`)
 
 - No packaging workflow uses `actions/upload-artifact` / `actions/download-artifact` for cohort or distribution-evidence payloads.
 - Every packaging `gh release create` carries `--draft` and an `evidence-` tag; exactly one creator job per workflow; no error-suppressed (`|| true`) create lines; only publish-release Gate 3 creates a non-draft release.
