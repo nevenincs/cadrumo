@@ -35,9 +35,11 @@ jobs:
       contents: write
 
     steps:
+      # shell pinned to pwsh 7 (Utility-module cmdlets): the self-hosted
+      # runner's rewritten PSModulePath breaks 5.1 module auto-loading.
       - name: Initialize current-run evidence root
         id: initialize
-        shell: powershell
+        shell: pwsh
         env:
           SOURCE_COMMIT: ${{ inputs.source_commit }}
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
@@ -64,7 +66,7 @@ jobs:
           "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
 
       - name: Verify source workflow identity
-        shell: powershell
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_COMMIT: ${{ inputs.source_commit }}
@@ -209,7 +211,7 @@ jobs:
 
       - name: Curate non-sensitive acquisition evidence
         if: always() && steps.initialize.outputs.ready == 'true'
-        shell: powershell
+        shell: pwsh
         run: |
           $curated = Join-Path $env:CADRUMO_CLAUDE_ROOT "curated-evidence"
           New-Item -ItemType Directory -Force -Path $curated | Out-Null
