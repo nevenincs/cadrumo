@@ -11,6 +11,18 @@ related:
 
 # `release-readiness-gate` adr: `Immutable-candidate soak and rollback policy` | (**status:** `accepted`)
 
+## Current authority amendment (2026-07-20)
+
+The accepted `[[2026-07-20-release-asset-transport-adr]]` now governs the
+storage substrate for the cohort and evidence records this policy consumes:
+they ride draft GitHub Release assets with per-run provenance manifests
+instead of GitHub Actions artifact storage. The soak and rollback policy is
+unchanged — soak reruns, readiness, publication, and rollback continue to
+bind the same cohort manifest and SHA-256 values; only where those bytes are
+stored between workflows moved. The 12-row evidence contract and the
+self-hosted macOS queue/skip doctrine are recorded in the 2026-07-20
+amendment of `[[2026-07-15-distribution-installation-readiness-adr]]`.
+
 ## Problem Statement
 
 A release needs an observation window and a rollback response in addition to

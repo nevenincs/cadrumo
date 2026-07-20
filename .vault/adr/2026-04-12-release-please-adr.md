@@ -14,6 +14,35 @@ status: accepted
 
 # adr: release-please local-only autorelease | (**status:** `accepted`)
 
+## Current authority amendment (2026-07-20)
+
+The publication half of this decision no longer governs. The accepted
+`[[2026-07-15-distribution-installation-readiness-adr]]` made a manually
+dispatched GitHub Actions workflow with OIDC Trusted Publishing
+(`publish-release.yml`, protected `release` environment, human required
+reviewer, `CADRUMO_PUBLISH_ENABLED` opt-in) the sole release publication
+authority, and `[[2026-07-20-release-asset-transport-adr]]` moved evidence
+and cohort transport onto GitHub Release assets. The following rulings of
+this ADR are therefore superseded:
+
+- the "no GitHub Actions workflow ever" absolute (decision 2) and the
+  "No Actions footprint; the ban holds" consequence — GitHub Actions
+  workflows exist and one of them is the sole publication authority;
+- the non-goals "GitHub Actions workflows of any kind" and
+  "PyPI publishing" — PyPI publishing is delivered through OIDC Trusted
+  Publishing in the successor authority.
+
+What survives, and remains governing, is the local versioning surface:
+release-please-driven version/CHANGELOG/tag hygiene via `just release` /
+`just release-apply`, the human-review checklist, the
+`pyproject.toml`-canonical version with the `__init__.py` mirror and the
+release-config parity test, the conventional-commits mandate, and the rule
+that nothing is pushed as a side effect of a release recipe. The human-gated
+invariant this ADR pioneered did not die — it moved: publication is still
+never automatic, gated now by the `CADRUMO_PUBLISH_ENABLED` variable and the
+protected `release` environment's human approval instead of by the absence
+of workflows.
+
 ## context
 
 Per `[[2026-04-12-release-please-research]]`: the project needs release

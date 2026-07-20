@@ -10,6 +10,16 @@ related:
 
 > Persisted from the 2026-07-19 Fable holistic pipeline review. Gaps G2 (marketplace publication), G1(a) (readiness --cohort-dir/--evidence-dir wiring), and G7 (mcpb version surface) were actioned in commit `17abf9c021`. Gaps G3 (RELEASING.md rewrite), G4/G6 (homebrew/scoop row emission), G5 (claude-row aggregation + `just release-collect-evidence`), and G8 (housekeeping) remain open and are tracked below.
 
+> **Transport supersession (2026-07-20).** The Actions-artifact transport this review
+> describes, and every fix it prescribes in artifact terms — the G4 "uploading into a
+> predictable artifact" step, the G5/G6 `just release-collect-evidence RUN_ID` recipe
+> built on `gh run download` — are superseded by
+> `[[2026-07-20-release-asset-transport-adr]]`: cohort and evidence payloads now ride
+> per-run draft GitHub Release assets with provenance manifests, and Gate 2 aggregates
+> rows from verified release assets, not run artifacts. The gap *diagnoses* (missing
+> Homebrew row emission, undocumented claude-row aggregation) remain valid; their
+> remedies must follow the transport ADR's mechanism.
+
 # Cadrumo release & orchestration pipeline — holistic review
 
 Reviewed 2026-07-19 on branch `chore/eliminate-shims` (== main), repo `nevenincs/cadrumo`,

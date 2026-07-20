@@ -21,9 +21,11 @@ in isolation: PyPI file-size limits require the large reviewed corpus binaries
 to ship in two data companions while the command-bearing distribution keeps
 the runtime code, registry, derived data, terminology, and agent assets.
 
-This ADR remains proposed. The repository contains substantial implementation
-and proof, but implementation evidence does not ratify an architecture decision
-or change its status automatically.
+This ADR was authored as proposed and later ratified as accepted (status
+flip recorded 2026-07-17): the exact-version three-distribution cohort it
+proposes is the contract the accepted
+`[[2026-07-15-distribution-installation-readiness-adr]]` builds on and the
+implemented packaging surface enforces.
 
 ## Decision
 
@@ -72,9 +74,9 @@ two `packaging/cadrumo_data_*` projects, and `dev/packaging/python_cohort.py`.
 product; the `packaging-smoke-*` recipes exercise wheel, sdist, extras, browser,
 Docker, split-install, and installed-oracle lanes.
 
-These files are evidence for review, not a substitute for ratification. Until
-the proposal is accepted, later accepted distribution decisions may depend on
-the implemented cohort contract but must not cite this status as accepted.
+These files were the review evidence on which the ratification rested; the
+cohort contract they implement is now the accepted authority later
+distribution decisions cite.
 
 ## Rationale
 
