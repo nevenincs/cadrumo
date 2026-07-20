@@ -14,6 +14,34 @@ related:
 
 # `distribution-installation-readiness` adr: `Immutable tested-cohort promotion and executable acquisition proof` | (**status:** `accepted`)
 
+## Current authority amendments (2026-07-20)
+
+Two later rulings refine this decision without changing its substance.
+
+**Transport layer.** The accepted
+`[[2026-07-20-release-asset-transport-adr]]` moved all inter-workflow cohort
+and evidence transport from GitHub Actions artifact storage to draft GitHub
+Release assets with per-run provenance manifests and layered Gate 2
+verification. The evidence-row schema, the readiness reader, the cohort
+manifest binding, and every constraint in this ADR are unchanged; only the
+storage substrate the publish workflow fetches from moved. Any earlier
+implementation note or reference that assumes `actions/upload-artifact` /
+`gh run download` transport for cohort or evidence payloads is superseded on
+that point.
+
+**Evidence-row contract restored by operator ruling.** On 2026-07-20 the
+required evidence contract was briefly descoped to the
+self-hosted-provable rows (commit `7c7631fca7`, with a hosted-macOS flip in
+`d0fb466db5`) and then restored by operator ruling in revert commit
+`22b642533d`: the full 12-row `REQUIRED_DISTRIBUTION_ROWS` contract in
+`dev/release/readiness.py` — including the four `claude-*` real-client rows
+and the macOS rows — governs, and the macOS legs run on the self-hosted
+macOS ARM64 runner (`macbook-neo`). When that runner is offline its legs
+queue (or are skipped at dispatch time) until it returns; an offline runner
+is not a reason to rewrite the workflow, does not authorize hosted-runner
+spend, and never converts a required row into a passing readiness skip —
+the unavailable-row-blocks constraint below stands unchanged.
+
 ## Problem Statement
 
 An installable artifact performing its advertised work is a binding product invariant,
