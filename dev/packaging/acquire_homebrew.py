@@ -145,7 +145,7 @@ def run_homebrew_acquisition(
             flat :class:`~dev.packaging.evidence.DistributionEvidence` record to.
             When omitted, only the per-run acquisition document is written.
         row_id: The distribution row this run proves (required to emit the flat
-            record, e.g. ``homebrew-macos-arm64``).
+            record, e.g. ``homebrew-linux-x86-64``).
         distribution_evidence_dir: Where the flat record lands; defaults to
             ``var/distribution-install-readiness`` (the directory both the
             release-readiness and docs-claims gates scan).

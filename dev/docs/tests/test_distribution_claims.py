@@ -54,15 +54,18 @@ _DOCS_ROOT: Final[Path] = _REPO_ROOT / "docs"
 # ---------------------------------------------------------------------------
 
 _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]] = (
+    # Operator ruling 2026-07-20: v0.2.1 claims only the rows the self-hosted
+    # fleet proves — the macOS and hosted-only linux-arm64 rows are descoped
+    # and return in a later release when their runners exist.
     (
         "pip install cadrumo (PyPI)",
         re.compile(r"pip\s+install\s+cadrumo", re.IGNORECASE),
-        ("python-linux-x86-64", "python-macos-arm64", "python-windows-x86-64"),
+        ("python-linux-x86-64", "python-windows-x86-64"),
     ),
     (
         "uvx cadrumo (PyPI via uvx)",
         re.compile(r"uvx\s+cadrumo", re.IGNORECASE),
-        ("python-linux-x86-64", "python-macos-arm64", "python-windows-x86-64"),
+        ("python-linux-x86-64", "python-windows-x86-64"),
     ),
     (
         "scoop install cadrumo (Scoop)",
@@ -72,22 +75,12 @@ _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]]
     (
         "brew install cadrumo (Homebrew)",
         re.compile(r"brew\s+install\s+(?:\S+/)?cadrumo\b", re.IGNORECASE),
-        (
-            "homebrew-linux-arm64",
-            "homebrew-linux-x86-64",
-            "homebrew-macos-arm64",
-            "homebrew-macos-x86-64",
-        ),
+        ("homebrew-linux-x86-64",),
     ),
     (
         "brew tap cadrumo (Homebrew tap)",
         re.compile(r"brew\s+tap\s+\S+/cadrumo\b", re.IGNORECASE),
-        (
-            "homebrew-linux-arm64",
-            "homebrew-linux-x86-64",
-            "homebrew-macos-arm64",
-            "homebrew-macos-x86-64",
-        ),
+        ("homebrew-linux-x86-64",),
     ),
     (
         "Claude plugin marketplace install",

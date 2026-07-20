@@ -430,7 +430,7 @@ def test_destination_version_mismatch_is_refused(tmp_path: Path) -> None:
     cohort = _release_cohort(tmp_path / "cohort")
     with pytest.raises(ValueError, match="destination version"):
         build_installed_oracle_evidence(
-            row_id="python-macos-arm64",
+            row_id="python-linux-x86-64",
             cohort=cohort,
             tax_evidence=_tax_evidence(tmp_path),
             mcp_evidence=_mcp_evidence(),

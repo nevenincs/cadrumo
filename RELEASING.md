@@ -21,9 +21,9 @@ For the full pipeline review and gap analysis see
 | Stage | Where | What |
 | --- | --- | --- |
 | 0. Version + tag | Local, human | Bump 8 surfaces, `uv lock`, commit, tag, push main + tag |
-| 1. Build + prove | CI (`packaging-smoke.yml`, auto-triggered by push) | 3-OS smoke, build immutable release cohort, 3 oracle-emit rows |
+| 1. Build + prove | CI (`packaging-smoke.yml`, auto-triggered by push) | 2-OS smoke (self-hosted Win/Linux), build immutable release cohort, 2 oracle-emit rows |
 | 2. Channel proofs | CI (3 manual dispatches) + operator real-client captures | Scoop, Homebrew, Claude acquisition; mint 4 claude rows |
-| 3. Readiness gate | Local, human | Aggregate 12 rows; `just release-readiness-json` must report `"ok": true` |
+| 3. Readiness gate | Local, human | Aggregate 8 rows; `just release-readiness-json` must report `"ok": true` |
 | 4. Publish | CI (`publish-release.yml`, human approval required) | Gate 1 opt-in → Gate 2 validate → Gate 3 publish → reacquire |
 
 ## Repository identity
@@ -162,9 +162,9 @@ list and uploads nothing.
 
 The packaging, suite, and Claude CI lanes run on the self-hosted fleet:
 `gw-workstation-win` (Windows x64), `gw-workstation-wsl` (Linux x64, containerized),
-and `macbook-neo` (macOS arm64). The Scoop Windows-container gate runs on hosted
-`windows-2022`; the Homebrew `macos-intel` and `linux-arm64` rows use hosted runners
-because the fleet has no matching hardware.
+and (when powered on) `macbook-neo` (macOS arm64; off indefinitely per the
+2026-07-20 operator ruling, so every macOS row is descoped from v0.2.1). The
+fleet is self-hosted only: no hosted-runner rows are claimed.
 
 ### Workstation and repository
 
@@ -341,11 +341,10 @@ The push to `main` automatically triggers the `Cadrumo Packaging Smoke` workflow
   manifest), `cadrumo.rb` (Homebrew formula), `cadrumo-X.Y.Z.mcpb`, and
   `release-cohort.json`. The cohort id is a SHA-256 over the complete artifact set; CI
   never rebuilds these bytes.
-- Three `oracle-emit-*` legs: each downloads that single cohort, installs its wheels
+- Two `oracle-emit-*` legs: each downloads that single cohort, installs its wheels
   into a fresh venv, runs the grounded CLI and MCP tax oracles (Modelo 200
   `DP200014:00562 == 23000.00` per the readiness ADR), and mints one sanctioned
-  `DistributionEvidence` row (`python-linux-x86-64`, `python-windows-x86-64`,
-  `python-macos-arm64`).
+  `DistributionEvidence` row (`python-linux-x86-64`, `python-windows-x86-64`).
 
 **Note the run id** of the successful smoke run. It is the identity anchor for every
 subsequent dispatch and for the final publish dispatch. Artifact retention is 14 days;
@@ -397,19 +396,21 @@ real-client captures.
 ### Stage 3: readiness aggregation
 
 The readiness gate (`just release-readiness-json`, backed by `dev/release/readiness.py`)
-requires all 12 `DistributionEvidence` rows in `var/distribution-install-readiness/`
+requires all 8 `DistributionEvidence` rows in `var/distribution-install-readiness/`
 alongside a local `var/release-cohort/` at the release commit and tag.
+
+Operator ruling 2026-07-20: the release fleet is self-hosted only and the
+self-hosted Mac is powered off indefinitely, so v0.2.1 claims exactly the rows
+below. The macOS rows (`python-macos-arm64`, `homebrew-macos-arm64`,
+`homebrew-macos-x86-64`) and the hosted-only `homebrew-linux-arm64` row are
+descoped and return in a later release when their runners exist.
 
 | Row | Emission path | CI automated? |
 | --- | --- | --- |
 | `python-linux-x86-64` | `oracle-emit-linux` job in packaging-smoke | Yes |
 | `python-windows-x86-64` | `oracle-emit-windows` job in packaging-smoke | Yes |
-| `python-macos-arm64` | `oracle-emit-macos` job in packaging-smoke | Yes |
 | `scoop-windows-x86-64` | `packaging-scoop.yml` (predictable `cadrumo-distribution-evidence-scoop-windows-x86-64` artifact) | Yes |
-| `homebrew-macos-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
-| `homebrew-macos-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
 | `homebrew-linux-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
-| `homebrew-linux-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
 | `claude-code-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
 | `claude-cowork-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
 | `claude-desktop-plugin` | Operator: `emit_real_client_evidence` | Manual (operator real-client capture) |
@@ -424,7 +425,7 @@ just release-collect-evidence <smoke-run-id> <scoop-run-id> <homebrew-run-id>
 ```
 
 The four `claude-*` rows are minted locally by the operator's `emit_real_client_evidence`
-runs above and already live in that directory. Once all twelve are present, verify:
+runs above and already live in that directory. Once all eight are present, verify:
 
 ```console
 just release-readiness-json
@@ -444,7 +445,7 @@ gh release create vX.Y.Z-evidence --draft --notes "claude-* rows" \
 ```
 
 Then dispatch `Publish Cadrumo release` with the four run/release inputs — the smoke
-run (3 python rows + sealed cohort), the Scoop and Homebrew acquisition runs from
+run (2 python rows + sealed cohort), the Scoop and Homebrew acquisition runs from
 Stage 2 (their rows), and the evidence release tag above:
 
 ```console
@@ -456,7 +457,7 @@ gh workflow run publish-release.yml \
 ```
 
 **Dispatch ceiling.** Every source the publish workflow pulls from — the smoke run
-(sealed cohort + 3 python rows), the Scoop run, the Homebrew run, and the evidence
+(sealed cohort + 2 python rows), the Scoop run, the Homebrew run, and the evidence
 release's `claude-*` assets — is bound by GitHub's 14-day artifact retention. Dispatch
 the publication within 14 days of the *oldest* source run. If any source run's artifacts
 have expired, Gate 2 fails on the missing download; re-run a fresh smoke run (and the
@@ -464,7 +465,7 @@ affected acquisition dispatches) and dispatch again against the new run ids. Nev
 promote a cohort older than its retention window.
 
 Gate 2 downloads every channel's rows from its authoritative run/release, checks each
-acquisition run's identity, and re-verifies all twelve against the sealed cohort — so
+acquisition run's identity, and re-verifies all eight against the sealed cohort — so
 the local `just release-collect-evidence` 12/12 is reproduced hard in CI, never trusted.
 
 The workflow runs three sequential jobs:
@@ -477,15 +478,15 @@ and prints a full prerequisite checklist if not. Nothing is uploaded.
 checks, each acquisition run (`packaging-scoop.yml` / `packaging-homebrew.yml`,
 `workflow_dispatch`, same repo, success). Downloads the **sealed** release cohort
 (`cadrumo-release-cohort` — the single source of every channel's bytes, PyPI included)
-and aggregates all twelve `cadrumo-distribution-evidence-*` rows from their
-authoritative sources: 3 python from the smoke run, 1 scoop, 4 homebrew, and the 4
+and aggregates all eight `cadrumo-distribution-evidence-*` rows from their
+authoritative sources: 2 python from the smoke run, 1 scoop, 1 homebrew, and the 4
 operator `claude-*` rows from the evidence release. The per-OS smoke build
 (`cadrumo-python-cohort`) is deliberately NOT part of the publication chain. Re-points `promote_python_cohort --check-pypi-only` at the sealed
 cohort's `python/` bytes to guard the PyPI version against overwrite and emit the
 version. Runs `dev.release.readiness --json --skip-network --cohort-dir
 var/promotion/release-cohort --evidence-dir var/promotion/evidence/rows`; the sealed
 cohort's installed behaviour is proven per-OS by the `DistributionEvidence` rows, not
-by the smoke build. Gate 2 passes only with all 12 rows present and verified.
+by the smoke build. Gate 2 passes only with all 8 rows present and verified.
 
 **Gate 3 — publish** (`environment: release`, human approval required). After the
 approval click, the job re-downloads the sealed cohort (never rebuilds) and:

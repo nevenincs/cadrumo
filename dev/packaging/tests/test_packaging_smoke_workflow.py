@@ -63,14 +63,9 @@ _PORTABLE_LEGS: dict[str, dict[str, object]] = {
         "cohort_artifact": "cadrumo-python-cohort-windows",
         "evidence_artifact": "cadrumo-packaging-smoke-evidence-windows",
     },
-    "cadrumo-packaging-smoke-macos": {
-        "name": "Cadrumo / macOS / Python 3.13 / wheel artifacts",
-        # Operator ruling 2026-07-20: the self-hosted Mac is powered off
-        # indefinitely, so the macOS legs run hosted (Apple silicon).
-        "runs_on": "macos-latest",
-        "cohort_artifact": "cadrumo-python-cohort-macos",
-        "evidence_artifact": "cadrumo-packaging-smoke-evidence-macos",
-    },
+    # Operator ruling 2026-07-20: the self-hosted Mac is powered off
+    # indefinitely and the fleet is self-hosted only, so the macOS leg is
+    # descoped from v0.2.1 alongside its python-macos-arm64 row.
 }
 
 
@@ -112,7 +107,6 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
     legs = {
         "oracle-emit-linux": ("python-linux-x86-64", ["self-hosted", "Linux", "X64"]),
         "oracle-emit-windows": ("python-windows-x86-64", ["self-hosted", "Windows", "X64"]),
-        "oracle-emit-macos": ("python-macos-arm64", "macos-latest"),
     }
     for job_name, (row_id, runs_on) in legs.items():
         leg = jobs[job_name]
@@ -129,7 +123,7 @@ def test_immutable_cohort_is_built_once_and_every_python_row_binds_it() -> None:
 
 
 def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
-    """One Ubuntu aggregate plus native Windows/macOS host-portable legs."""
+    """One Ubuntu aggregate plus the native Windows host-portable leg."""
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     assert document["name"] == "Cadrumo Packaging Smoke"
     assert set(document["jobs"]) == {
@@ -138,7 +132,6 @@ def test_workflow_runs_canonical_cadrumo_packaging_gates() -> None:
         "build-release-cohort",
         "oracle-emit-linux",
         "oracle-emit-windows",
-        "oracle-emit-macos",
     }
 
     job = document["jobs"]["cadrumo-packaging-smoke"]
