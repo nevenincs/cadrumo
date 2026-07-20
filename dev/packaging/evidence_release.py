@@ -518,13 +518,19 @@ def sweep_directory_for_leaks(directory: Path, *, tokens: tuple[str, ...] = ()) 
 
 
 def _leak_sweep(args: argparse.Namespace) -> int:
-    leaks = sweep_directory_for_leaks(args.directory, tokens=tuple(args.token or ()))
+    directories: list[Path] = args.directory
+    tokens = tuple(args.token or ())
+    leaks = [
+        f"{directory}: {leak}"
+        for directory in directories
+        for leak in sweep_directory_for_leaks(directory, tokens=tokens)
+    ]
     if leaks:
         raise EvidenceReleaseError(
-            f"publication leak sweep failed for {args.directory}:\n" + "\n".join(f"  - {leak}" for leak in leaks),
+            "publication leak sweep failed:\n" + "\n".join(f"  - {leak}" for leak in leaks),
         )
-    files = sum(1 for path in args.directory.rglob("*") if path.is_file())
-    print(f"leak sweep clean: {files} file(s) under {args.directory}")
+    files = sum(1 for directory in directories for path in directory.rglob("*") if path.is_file())
+    print(f"leak sweep clean: {files} file(s) under {len(directories)} directory(ies)")
     return 0
 
 
@@ -591,7 +597,13 @@ def _parser() -> argparse.ArgumentParser:
         "leak-sweep",
         help="Refuse publication when any asset in a directory carries runner metadata.",
     )
-    sweep.add_argument("--directory", required=True, type=Path, help="Directory of assets about to be published.")
+    sweep.add_argument(
+        "--directory",
+        required=True,
+        action="append",
+        type=Path,
+        help="Directory of assets about to be published (repeatable; every root must sweep clean).",
+    )
     sweep.add_argument(
         "--token",
         action="append",

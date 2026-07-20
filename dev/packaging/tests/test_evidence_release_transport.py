@@ -146,10 +146,13 @@ def test_gate3_attaches_only_sweep_passed_evidence() -> None:
     document = _document("publish-release.yml")
     surface = "\n".join(str(step.get("run", "")) for step in (document["jobs"]["publish"].get("steps") or []))
     assert "dev.packaging.evidence_release leak-sweep" in surface
+    # The sweep covers the UNION of everything Gate 3 attaches: the evidence
+    # attach dir AND the cohort files themselves.
     assert '--directory "$EVIDENCE_FINAL_DIR/attach"' in surface
+    assert '--directory "$RELEASE_COHORT_DIR"' in surface
     assert surface.index("leak-sweep") < surface.index('gh release create "v$VERSION"')
-    # The final release's extra assets come exclusively from the swept dir.
-    assert '"$EVIDENCE_FINAL_DIR/attach" -type f' in surface
+    # The final release's assets come exclusively from the two swept roots.
+    assert '"$RELEASE_COHORT_DIR" "$EVIDENCE_FINAL_DIR/attach" -type f' in surface
 
 
 def test_publish_release_derives_evidence_tags_from_run_id_inputs() -> None:
