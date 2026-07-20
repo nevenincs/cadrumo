@@ -48,7 +48,7 @@ Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence
 
 ### `packaging-smoke.yml`
 
-- `build-release-cohort` (sole creator): tar the cohort deterministically (`tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner`), `gh release create evidence-smoke-$GITHUB_RUN_ID --draft --target $GITHUB_SHA --title "EVIDENCE (non-release): smoke run ..."`, upload the archive with `--clobber`. Job-level `permissions: contents: write`.
+- `build-release-cohort` (sole creator): tar the cohort deterministically (`tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner`), then create-if-absent — probe with `gh release view evidence-smoke-$GITHUB_RUN_ID` and only on absence run `gh release create ... --draft --target $GITHUB_SHA --title "EVIDENCE (non-release): smoke run ..."` (never `create || true`: a re-run attempt's create succeeds against a draft-only tag and mints a duplicate) — then upload the archive with `--clobber`. Job-level `permissions: contents: write`.
 - `oracle-emit-{linux,windows,macos}`: replace artifact download with `gh release download evidence-smoke-$GITHUB_RUN_ID --pattern cadrumo-release-cohort.tar.gz` and extract (Windows uses OS-bundled bsdtar `tar.exe`); within-run integrity is the cohort's own manifest (the loader refuses a corrupt cohort). Replace evidence artifact upload with `gh release upload ... --clobber` of the row JSONs. Upload-only — no create fallback.
 - Per-OS smoke jobs: python cohort and smoke-evidence bundles tar to per-OS asset names (`cadrumo-python-cohort-<os>.tar.gz`, `packaging-smoke-evidence-<os>.tar.gz`) and upload to the same draft, upload-only.
 - New terminal `seal-evidence-manifest` job (`needs:` every uploader, self-hosted Linux): `emit-manifest` then upload. The manifest must be last so it covers all assets.
@@ -57,7 +57,7 @@ Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence
 ### `packaging-scoop.yml` / `packaging-homebrew.yml` / `packaging-claude.yml`
 
 - Source-cohort download becomes `evidence_release verify --tag evidence-smoke-<source_run_id> --expect-run-id ... --expect-workflow .github/workflows/packaging-smoke.yml --pattern cadrumo-python-cohort[-<os>].tar.gz`, then extract — the acquisition lanes gain integrity checking they never had. The existing source-workflow identity step stays (defense in depth).
-- Evidence upload: single-job workflows create their own draft (`evidence-scoop-<run_id>`, `evidence-claude-<run_id>`) then upload rows and `emit-manifest`. Homebrew's four matrix legs are upload-only against `evidence-homebrew-<run_id>` created by a dedicated setup job the matrix `needs:` (single-creator; no create-or-ignore), with a terminal seal job manifesting only on full matrix success.
+- Evidence upload: single-job workflows create their own draft (`evidence-scoop-<run_id>`, `evidence-claude-<run_id>`) then upload rows and `emit-manifest`. Homebrew's four matrix legs are upload-only against `evidence-homebrew-<run_id>` created by a dedicated setup job the matrix `needs:` (single-creator; create-if-absent probe, no error-suppressed create), with a terminal seal job manifesting only on full matrix success. Acquisition-lane drafts use `--target $GITHUB_SHA` — their own dispatch run's commit, not the smoke `source_commit` — so the verify helper's `target_commitish == run.head_sha` check holds; the consumed smoke commit is recorded in the run-context payload and enforced by the existing source-identity steps.
 
 ### `publish-release.yml`
 
@@ -72,7 +72,7 @@ Baseline: origin/main `22b642533d`. Helper module (new): `dev/packaging/evidence
 ### Conformance-test deltas (`dev/packaging/tests/test_ci_workflow.py` family)
 
 - No packaging workflow uses `actions/upload-artifact` / `actions/download-artifact` for cohort or distribution-evidence payloads.
-- Every packaging `gh release create` carries `--draft` and an `evidence-` tag; exactly one creator job per workflow; only publish-release Gate 3 creates a non-draft release.
+- Every packaging `gh release create` carries `--draft` and an `evidence-` tag; exactly one creator job per workflow; no error-suppressed (`|| true`) create lines; only publish-release Gate 3 creates a non-draft release.
 - publish-release derives evidence tags from run-id inputs (no free-form evidence-tag input except `claude_evidence_release`).
 - The GC tag regex excludes `v*`; oracle-leg asset names pairwise disjoint; Gate 3 attaches only sweep-passed evidence.
 - Existing per-OS-cohort-not-for-publication test updated to the release-asset spellings.
