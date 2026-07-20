@@ -46,6 +46,7 @@ from dev.packaging.evidence import (
     current_runtime_identity,
     write_distribution_evidence,
 )
+from dev.packaging.evidence_scrub import scrub_distribution_evidence
 from dev.packaging.installed_tax_oracle import CommandEvidence, InstalledTaxEvidence
 
 if TYPE_CHECKING:
@@ -205,7 +206,7 @@ def build_installed_oracle_evidence(
             "mcp_oracle": _mcp_observations(mcp_evidence),
         },
     )
-    return create_distribution_evidence(
+    evidence = create_distribution_evidence(
         row_id=row_id,
         cohort=cohort,
         runtime=current_runtime_identity(),
@@ -217,6 +218,9 @@ def build_installed_oracle_evidence(
         observed_at=observed_at or datetime.now(UTC),
         destination=destination,
     )
+    # Rows are published (draft transport, then the final release), so runner
+    # metadata is scrubbed at birth: one identity, no unscrubbed copy exists.
+    return scrub_distribution_evidence(evidence)
 
 
 def build_client_evidence(
@@ -297,7 +301,7 @@ def build_client_evidence(
         ),
         observations=observations,
     )
-    return create_distribution_evidence(
+    evidence = create_distribution_evidence(
         row_id=row_id,
         cohort=cohort,
         runtime=current_runtime_identity(),
@@ -309,6 +313,8 @@ def build_client_evidence(
         observed_at=observed_at or datetime.now(UTC),
         destination=destination,
     )
+    # Client rows publish identically; scrub at birth (see build_installed_oracle_evidence).
+    return scrub_distribution_evidence(evidence)
 
 
 def emit_client_evidence(
