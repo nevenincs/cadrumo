@@ -157,17 +157,19 @@ def _read_manifest_version(repo_root: Path) -> str:
 
 _MCPB_MANIFEST_PATH: Final = Path("packaging/mcpb/manifest.json")
 
+# Operator ruling 2026-07-20: the release fleet is self-hosted only (no hosted
+# runner spend) and the self-hosted Mac is powered off indefinitely, so v0.2.1
+# claims exactly the rows the free local fleet plus this workstation's Claude
+# clients can prove. The macOS rows (python-macos-arm64, homebrew-macos-arm64,
+# homebrew-macos-x86-64) and the hosted-only homebrew-linux-arm64 row return in
+# a later release when their runners exist.
 REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = (
     "claude-code-plugin",
     "claude-cowork-plugin",
     "claude-desktop-mcpb",
     "claude-desktop-plugin",
-    "homebrew-linux-arm64",
     "homebrew-linux-x86-64",
-    "homebrew-macos-arm64",
-    "homebrew-macos-x86-64",
     "python-linux-x86-64",
-    "python-macos-arm64",
     "python-windows-x86-64",
     "scoop-windows-x86-64",
 )

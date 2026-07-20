@@ -205,75 +205,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-  # macOS leg: proves the python-macos-arm64 distribution row on a native
-  # macos-latest runner (Apple silicon / arm64). Same host-portable
-  # `packaging-smoke` aggregate as the Windows leg; the Linux-only reclamation
-  # and sampler are omitted, and no host package-manager (Homebrew) lane runs.
-  # Operator ruling 2026-07-20: the self-hosted Mac is powered off indefinitely,
-  # so the macOS legs run on hosted macos-latest (Apple silicon); Windows and
-  # Linux stay on the operator's free self-hosted machines per the cost
-  # directive.
-  cadrumo-packaging-smoke-macos:
-    name: Cadrumo / macOS / Python 3.13 / wheel artifacts
-    runs-on: macos-latest
-    timeout-minutes: 120
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: Install just
-        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
-        with:
-          version: "0.11.29"
-          python-version: "3.13"
-          enable-cache: true
-
-      - name: Sync frozen development environment
-        run: uv sync --frozen
-
-      - name: Dependency surface preflight
-        run: uv run --no-sync python -m dev.packaging.dependency_surface
-
-      - name: Shipped data source preflight
-        run: uv run --no-sync python -m dev.packaging.source_preflight
-
-      - name: Cadrumo packaging preflight command tests
-        run: just packaging-smoke-preflight-tests
-
-      - name: Cadrumo host-portable packaging campaign
-        run: just packaging-smoke
-
-      - name: Checkpoint packaging evidence
-        if: always()
-        run: uv run --no-sync python -m dev.packaging.evidence
-
-      - name: Upload tested Cadrumo Python cohort
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          # TEST/DEBUG ARTIFACT ONLY. The per-OS smoke cohort feeds the acquisition
-          # test lanes (scoop/homebrew/claude); it NEVER enters the publication
-          # chain. publish-release.yml ships the SEALED cadrumo-release-cohort only.
-          # Enforced by test_no_workflow_consumes_per_os_cohort_for_publication.
-          name: cadrumo-python-cohort-macos
-          path: var/packaging-smoke-cohort/python/
-          if-no-files-found: error
-          retention-days: 14
-
-      - name: Upload Cadrumo packaging smoke evidence
-        if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: cadrumo-packaging-smoke-evidence-macos
-          path: |
-            var/packaging-smoke-evidence/*.json
-            var/distribution-install-readiness/installed-cohorts/**/evidence.json
-          if-no-files-found: warn
-          retention-days: 14
-
   # Build the ONE immutable full cross-channel cohort (python + Claude plugin/
   # marketplace + Scoop + Homebrew + MCPB) once, from a clean HEAD clone, and
   # upload it as cadrumo-release-cohort. The per-OS oracle+emit legs below all
@@ -389,42 +320,6 @@ jobs:
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
           name: cadrumo-distribution-evidence-windows
-          path: var/distribution-install-readiness/*.json
-          if-no-files-found: error
-          retention-days: 14
-
-  oracle-emit-macos:
-    name: Cadrumo / macOS / immutable-cohort oracle + emit
-    needs: build-release-cohort
-    runs-on: macos-latest
-    timeout-minutes: 90
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - name: Install uv
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
-        with:
-          version: "0.11.29"
-          python-version: "3.13"
-          enable-cache: true
-      - name: Sync frozen development environment
-        run: uv sync --frozen
-      - name: Download the immutable release cohort
-        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
-        with:
-          name: cadrumo-release-cohort
-          path: var/release-cohort
-      - name: Install the cohort, run installed oracles, emit the row
-        run: |
-          uv run --no-sync python -m dev.packaging.oracle_emit_cohort \
-            --release-cohort-dir var/release-cohort \
-            --row-id python-macos-arm64 \
-            --work-dir var/oracle-emit-work \
-            --distribution-evidence-dir var/distribution-install-readiness
-      - name: Upload the distribution-evidence record
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
-        with:
-          name: cadrumo-distribution-evidence-macos
           path: var/distribution-install-readiness/*.json
           if-no-files-found: error
           retention-days: 14
