@@ -304,13 +304,17 @@ jobs:
 
       # Fail-closed publication tripwire (reconciled D9): rows are scrubbed at
       # mint time, so this SWEEPS and never rewrites — any residual runner
-      # metadata in ANY asset about to be attached (rows, manifests, claude
-      # rows) hard-fails the promotion naming the asset and pattern. Gate 3
+      # metadata in ANY asset about to be attached hard-fails the promotion
+      # naming the asset and pattern. The sweep covers the UNION of both
+      # attach roots: the evidence rows/manifests AND the cohort files
+      # (a cohort artifact embedding a build path trips the wire too; JSON is
+      # walked structurally, everything else is scanned as text). Gate 3
       # attaches nothing that has not passed this sweep.
-      - name: Leak-sweep every evidence asset before it can be attached
+      - name: Leak-sweep every asset before it can be attached
         run: |
           uv run --frozen python -m dev.packaging.evidence_release leak-sweep \
-            --directory "$EVIDENCE_FINAL_DIR/attach"
+            --directory "$EVIDENCE_FINAL_DIR/attach" \
+            --directory "$RELEASE_COHORT_DIR"
 
       - name: Publish the three distributions to PyPI via Trusted Publishing (OIDC)
         run: |

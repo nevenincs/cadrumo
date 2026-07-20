@@ -584,3 +584,18 @@ class TestLeakSweep:
     def test_missing_directory_is_a_hard_error(self, tmp_path: Path) -> None:
         """Sweeping nothing is never success — an absent directory refuses."""
         assert main(["leak-sweep", "--directory", str(tmp_path / "absent")]) == 1
+
+    def test_union_sweep_catches_a_leak_in_the_second_root(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """A clean attach dir cannot launder a leaking cohort dir (union sweep)."""
+        attach = self._attach_dir(tmp_path)
+        cohort = tmp_path / "cohort"
+        cohort.mkdir()
+        (cohort / "release-cohort.json").write_text(json.dumps({"version": "0.2.1"}), encoding="utf-8")
+        (cohort / "build-log.txt").write_text("built from C:\\Users\\builderop\\src\n", encoding="utf-8")
+        assert main(["leak-sweep", "--directory", str(attach), "--directory", str(cohort)]) == 1
+        err = capsys.readouterr().err
+        assert "build-log.txt" in err
+        (cohort / "build-log.txt").write_text("built from a clean checkout\n", encoding="utf-8")
+        assert main(["leak-sweep", "--directory", str(attach), "--directory", str(cohort)]) == 0
