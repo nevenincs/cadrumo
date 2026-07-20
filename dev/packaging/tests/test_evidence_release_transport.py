@@ -181,6 +181,24 @@ def test_contents_write_is_job_scoped_and_checkouts_drop_credentials(workflow: s
                 assert with_block.get("persist-credentials") is False, (workflow, job_name)
 
 
+def test_windows_transport_steps_pin_shell_pwsh() -> None:
+    """Every Windows transport step declares ``shell: pwsh``, never 5.1.
+
+    The setup actions rewrite PSModulePath for pwsh, which breaks Windows
+    PowerShell 5.1 module auto-loading on the self-hosted runner (observed
+    live: ``Get-FileHash is not recognized``). Transport steps (anything
+    touching ``gh release`` or the evidence_release helper) must therefore
+    pin pwsh explicitly rather than rely on default shell resolution.
+    """
+    for workflow in _PACKAGING_WORKFLOWS:
+        for step in _steps(_document(workflow)):
+            run = str(step.get("run", ""))
+            if "gh release" not in run and "evidence_release" not in run:
+                continue
+            shell = step.get("shell")
+            assert shell in (None, "pwsh"), (workflow, step.get("name"), shell)
+
+
 def test_uploader_jobs_hold_job_level_contents_write() -> None:
     """Every job that uploads to a draft carries its own contents:write grant."""
     for workflow in _PACKAGING_WORKFLOWS:

@@ -206,8 +206,10 @@ jobs:
         run: uv run --no-sync python -m dev.packaging.evidence
 
       # TEST/DEBUG ASSET ONLY (see the Ubuntu leg's cohort-publish note).
+      # shell pinned to pwsh 7: the self-hosted runner's rewritten PSModulePath
+      # breaks Windows PowerShell 5.1 module auto-loading (Get-FileHash etc.).
       - name: Publish tested Cadrumo Python cohort to the run's evidence draft
-        shell: powershell
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
@@ -221,7 +223,7 @@ jobs:
 
       - name: Publish Cadrumo packaging smoke evidence to the run's evidence draft
         if: always()
-        shell: powershell
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
@@ -447,7 +449,7 @@ jobs:
       - name: Sync frozen development environment
         run: uv sync --frozen
       - name: Download the immutable release cohort from the run's evidence draft
-        shell: powershell
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
@@ -465,7 +467,7 @@ jobs:
             --work-dir var/oracle-emit-work `
             --distribution-evidence-dir var/distribution-install-readiness
       - name: Upload the distribution-evidence record to the run's evidence draft
-        shell: powershell
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}

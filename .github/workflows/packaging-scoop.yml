@@ -136,8 +136,10 @@ jobs:
       # py3-none-any; parity with the pre-transport unsuffixed artifact) plus
       # the sealed full release cohort, both hash-verified against the smoke
       # run's sealed evidence manifest and the Actions API run record.
+      # shell pinned to pwsh 7: setup actions rewrite PSModulePath for pwsh,
+      # which breaks Windows PowerShell 5.1 module auto-loading.
       - name: Download and verify the tested cohorts from the smoke evidence draft
-        shell: powershell
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_RUN_ID: ${{ inputs.source_run_id }}
@@ -247,7 +249,7 @@ jobs:
       # evidence manifest covering every uploaded asset.
       - name: Publish Scoop evidence to the run's evidence draft and seal it
         if: always() && steps.initialize.outputs.ready == 'true'
-        shell: powershell
+        shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
           EVIDENCE_TAG: evidence-scoop-${{ github.run_id }}
