@@ -10,16 +10,6 @@ related:
   - '[[2026-07-10-censo-g313-launcher-fix-research]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `censo-g313-launcher-fix` plan
 
 ### Phase `P01` - capture the authenticated censal page

@@ -8,10 +8,7 @@ related:
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
 ---
 
-
-
 # `m210-irnr-phase-2-engine` research: `M210 grouped-rentas and ledger aggregation contract`
-
 
 ## Findings
 

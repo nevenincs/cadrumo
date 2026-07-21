@@ -7,8 +7,6 @@ modified: '2026-07-12'
 related: []
 ---
 
-
-
 # `frontend-legal-compliance` research: `frontend legal, licence, and GDPR compliance review`
 
 A legal pass over the user-facing landing page (`frontend/`, deployed to
