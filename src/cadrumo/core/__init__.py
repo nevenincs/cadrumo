@@ -74,6 +74,7 @@ from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._config_state_root import FormerProductStateError
 from ._google_credential_source import GoogleCredentialSourceKind
+from ._hex import HEX_PATTERN_64, HEX_PATTERN_128
 from ._iban import IBAN_SHAPE_RE, iban_mod_97
 from ._irnr import (
     FETCH_GATED_M210_TIPO_RENTA_CODES,
@@ -189,6 +190,8 @@ __all__: list[str] = [
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
     "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
     "GOOGLE_EXTRA",
+    "HEX_PATTERN_64",
+    "HEX_PATTERN_128",
     "IBAN_SHAPE_RE",
     "M210_TIPO_RENTA_CODE_PROJECTION",
     "M347_THRESHOLD_EUR",

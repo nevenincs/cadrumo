@@ -64,6 +64,8 @@ from cryptography.hazmat.primitives.serialization import (
 )
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
+from .. import HEX_PATTERN_64 as _HEX_PATTERN_64
+from .. import HEX_PATTERN_128 as _HEX_PATTERN_128
 from .. import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..errors import CadrumoError
 from ..external_constants import UTF_8_ENCODING
@@ -74,13 +76,6 @@ from ..time import validate_utc_aware as _validate_utc_aware
 #: Wire-format version of the signature envelope. Bumped when the envelope
 #: schema changes shape.
 _SIGNATURE_ENVELOPE_VERSION = 1
-
-#: Raw Ed25519 signature size, per RFC 8032. Used to validate hex-encoded
-#: signature material at the pydantic boundary rather than trusting the caller.
-_ED25519_SIGNATURE_BYTES = 64
-
-_HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
-_HEX_PATTERN_128 = r"^[0-9a-f]{128}$"
 
 
 class CorpusBundleSigningError(CadrumoError):
@@ -175,13 +170,6 @@ class SignedCorpusBundle(BaseModel):
     @classmethod
     def _require_aware(cls, value: datetime) -> datetime:
         return _validate_utc_aware(value)
-
-    @field_validator("signature_hex")
-    @classmethod
-    def _signature_is_ed25519_length(cls, value: str) -> str:
-        if len(bytes.fromhex(value)) != _ED25519_SIGNATURE_BYTES:
-            raise ValueError(f"Ed25519 signature must be {_ED25519_SIGNATURE_BYTES} bytes")
-        return value
 
 
 def generate_corpus_signing_keypair(
