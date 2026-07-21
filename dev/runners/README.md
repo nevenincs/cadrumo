@@ -77,29 +77,36 @@ Copy-Item dev\runners\cleanup-windows.ps1 C:\actions-runner\cleanup-windows.ps1 
 
 # add the hook var to the runner .env (create if absent)
 Add-Content C:\actions-runner\.env "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=C:\actions-runner\cleanup-windows.ps1"
-
-# restart the runner service (only when busy=false — never mid-job)
-Get-Service 'actions.runner.*' | Restart-Service
 ```
+
+The Windows runner here runs **interactively** (`Runner.Listener` in a console
+session), not as a Windows service — there is no `.service` marker and no
+`actions.runner.*` service to `Restart-Service`. The `.env` hook takes effect on
+the next listener start, so the runner must be stopped and relaunched in its own
+console session (Ctrl-C the `run.cmd` window, then re-run `run.cmd`) when
+`busy=false`. Killing the listener process does **not** auto-resume it. If the
+runner is later reconfigured as a service (`svc.sh install` / `Install-Service`),
+switch to `Get-Service 'actions.runner.*' | Restart-Service`.
 
 ### Linux docker runners (`cadrumo-runner-linux`, `-2`)
 
-Copy the script into each container's runner root and append the hook var to its
-`.env`, then restart the container (the runner auto-resumes on restart):
+The in-container runner root is `/home/runner` (that is where `config.sh`,
+`.runner`, `.env`, and `_work` live). Copy the script there and append the hook
+var to `.env`, then restart the container **one at a time** — never both down
+simultaneously, CI/smoke depend on the pair (the runner auto-resumes on
+restart, which re-reads `.env`):
 
 ```bash
 for c in cadrumo-runner-linux cadrumo-runner-linux-2; do
-  docker cp dev/runners/cleanup-linux.sh "$c":/home/runner/actions-runner/cleanup-linux.sh
-  docker exec "$c" bash -lc 'chmod +x ~/actions-runner/cleanup-linux.sh && \
-    grep -q ACTIONS_RUNNER_HOOK_JOB_COMPLETED ~/actions-runner/.env 2>/dev/null || \
-    echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/home/runner/actions-runner/cleanup-linux.sh" >> ~/actions-runner/.env'
-  # restart only when the runner is idle (busy=false)
+  docker cp dev/runners/cleanup-linux.sh "$c":/home/runner/cleanup-linux.sh
+  docker exec "$c" bash -lc 'chmod +x /home/runner/cleanup-linux.sh 2>/dev/null; \
+    grep -q ACTIONS_RUNNER_HOOK_JOB_COMPLETED /home/runner/.env 2>/dev/null || \
+    echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/home/runner/cleanup-linux.sh" >> /home/runner/.env'
+  # restart ONLY when this container's runner is idle (busy=false); wait for the
+  # other to be online before restarting the second.
   docker restart "$c"
 done
 ```
-
-Adjust the in-container runner root path (`/home/runner/actions-runner`) to the
-container's actual runner home if different.
 
 ### macOS (`macbook-neo`)
 
@@ -134,5 +141,5 @@ After wiring, the next completed job appends a line to
 `<work-root>/runner-hygiene.log`. Confirm the hook fired:
 
 - Windows: `Get-Content C:\actions-runner\_work\runner-hygiene.log -Tail 5`
-- Linux: `docker exec cadrumo-runner-linux tail -5 ~/actions-runner/_work/runner-hygiene.log`
+- Linux: `docker exec cadrumo-runner-linux tail -5 /home/runner/_work/runner-hygiene.log`
 - macOS: `ssh … tail -5 ~/actions-runner/_work/runner-hygiene.log`
