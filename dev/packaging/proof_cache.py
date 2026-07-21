@@ -48,10 +48,20 @@ _MAX_RECORDS_ENV: Final[str] = "CADRUMO_PROOF_CACHE_MAX_RECORDS"
 # pruned or truncated record is simply a cache miss, never an error.
 _DEFAULT_MAX_RECORDS: Final[int] = 512
 _SCHEMA: Final[str] = "cadrumo.packaging.proof-record.v1"
-# The committed inputs the wheel cohort is a function of. Anything outside
-# this scope (docs, vault, workflows, dev tooling) cannot change the cohort
-# bytes, so it does not invalidate an installability proof.
-PROOF_SCOPE_PATHS: Final[tuple[str, ...]] = ("src", "packaging", "pyproject.toml", "uv.lock")
+# The committed inputs a proof is a function of: everything the wheel cohort
+# is built from, PLUS the prober itself (`dev/packaging` carries the smoke
+# modules, the cohort builder, the campaign driver, and this cache) — a
+# strengthened probe must invalidate every carried proof, or a proof minted
+# by the weaker prober would keep satisfying pushes the new probe would fail.
+# Anything outside this scope (docs, vault, workflows, other dev tooling)
+# cannot change the cohort bytes or the probe, so it never invalidates.
+PROOF_SCOPE_PATHS: Final[tuple[str, ...]] = (
+    "src",
+    "packaging",
+    "dev/packaging",
+    "pyproject.toml",
+    "uv.lock",
+)
 
 
 class ProofOrigin(BaseModel):
