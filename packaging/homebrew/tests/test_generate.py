@@ -139,15 +139,19 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert "tzdata" not in resources
     assert len(resources) == 69
     assert all(url.startswith("https://") for url, _digest in resources.values())
-    assert formula.count("  on_macos do\n") == 1
+    # macOS is ARM-only (Intel dropped 2026-07-21), so no resource is macOS
+    # conditional any more and the on_macos block disappears entirely; Linux
+    # still spans two architectures and keeps its block.
+    assert formula.count("  on_macos do\n") == 0
     assert formula.count("  on_linux do\n") == 1
     assert '    resource "secretstorage" do' in formula
     assert '    resource "jeepney" do' in formula
-    # macOS Intel is unsupported (ARM-only macOS): greenlet is Linux-common
-    # and no architecture-conditional block remains on the macOS side.
+    # greenlet's marker excludes macOS arm64, so it is now Linux-common:
+    # emitted once inside on_linux, with no architecture split on either side.
+    assert formula.count('resource "greenlet" do') == 1
     assert '    resource "greenlet" do' in formula
     assert "on_intel do" not in formula
-    assert '    on_arm do\n      resource "greenlet" do' not in formula
+    assert "on_arm do" not in formula
 
 
 def test_formula_resources_match_the_locked_pypi_sdists(

@@ -24,7 +24,7 @@ standing invariants, each enforced by a conformance gate in the test tree:
 
 ## Fleet topology and load sizing
 
-Six runners, but only **two physical machines** — a runner label is NOT a
+Five runners, but only **two physical machines** — a runner label is NOT a
 machine, and up to three jobs can co-reside on one box:
 
 | Machine | Cores | Runners on it |
@@ -33,9 +33,11 @@ machine, and up to three jobs can co-reside on one box:
 | macOS build host (Apple silicon) | 6 | the macOS ARM64 runner and a Linux ARM64 runner (via colima, VM capped at 4 CPUs) |
 
 **Sizing rule:** the sum of co-resident workers must fit the machine's CPUs —
-size every parallel knob for worst-case co-residency (3 jobs/machine), never
-for the whole box. Concretely: workstation lanes get explicit `-n 8`
-(24 / 3); MacBook lanes get `-n 2` (6 / 3); `pytest -n auto` is banned in any
+size every parallel knob for worst-case co-residency (3 jobs on the
+workstation, 2 on the MacBook), never for the whole box. Concretely:
+workstation lanes get explicit `-n 8` (24 / 3); MacBook lanes get `-n 2` (the
+colima Linux ARM VM is capped at 4 of the 6 cores, leaving 2 for the macOS
+lane); `pytest -n auto` is banned in any
 CI invocation (it grabs every logical CPU); the packaging campaign's lane
 pool and preflight pytest are sized per leg via
 `CADRUMO_PACKAGING_LANE_CONCURRENCY` / `CADRUMO_TEST_WORKERS`; the Homebrew
