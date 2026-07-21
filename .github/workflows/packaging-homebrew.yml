@@ -55,13 +55,13 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - id: macos-intel
-            label: macOS Intel
-            runner: macos-15-intel
-            expected_os: Darwin
-            expected_arch: x86_64
-            brew: /usr/local/bin/brew
-            row_id: homebrew-macos-x86-64
+          # macos-intel and linux-arm64 are EXCISED pending self-hosted MacBook
+          # avenues per operator ruling 2026-07-21 (no hosted/cloud runners,
+          # ever): a Rosetta /usr/local-prefix runner will carry the Intel row
+          # and a docker arm64 runner the linux-arm64 row — the matrix legs
+          # return when those runners register. Removing (not label-queuing)
+          # keeps lane runs completing instead of hanging on absent labels;
+          # their homebrew-* readiness rows stay honestly red meanwhile.
           - id: macos-arm64
             label: macOS arm64
             runner: [self-hosted, macOS, ARM64]
@@ -76,17 +76,6 @@ jobs:
             expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             row_id: homebrew-linux-x86-64
-          # linux-arm64 (aarch64) has no self-hosted ARM-Linux runner in the fleet
-          # (gw-workstation-wsl is X64), so it honestly stays hosted rather than run
-          # an aarch64 row on x64 hardware; macos-intel likewise has no self-hosted
-          # Intel Mac. Both remain hosted-blocked on the operator checklist.
-          - id: linux-arm64
-            label: Linux arm64
-            runner: ubuntu-24.04-arm
-            row_id: homebrew-linux-arm64
-            expected_os: Linux
-            expected_arch: aarch64
-            brew: /home/linuxbrew/.linuxbrew/bin/brew
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
     # Release-asset transport: evidence rides the run's own draft release, so
@@ -211,6 +200,10 @@ jobs:
               "https://github.com/nevenincs/cadrumo/releases/download/v${version}" \
             --output-dir "$CADRUMO_S24_ROOT/tap-snapshot"
 
+      # --retain-install defers the smoke's uninstall/untap: the emit step
+      # below hashes the INSTALLED executables (the mint-time isolation
+      # proof), so the keg must still exist when the row is minted. The
+      # deferred cleanup runs right after the emit, from the recorded state.
       - name: Audit install and exercise Cadrumo through Homebrew
         env:
           BREW_PATH: ${{ matrix.brew }}
@@ -222,7 +215,8 @@ jobs:
             --evidence-dir "$CADRUMO_S24_ROOT/evidence" \
             --tap-name "cadrumo-smoke/${MATRIX_ID}" \
             --brew "$BREW_PATH" \
-            --repo-root "$GITHUB_WORKSPACE"
+            --repo-root "$GITHUB_WORKSPACE" \
+            --retain-install
 
       # Mint the sanctioned homebrew-<os>-<arch> row from the real captured oracle
       # JSONs (the smoke wrote tax/mcp-evidence.json host-visible), bound to THE
@@ -248,6 +242,48 @@ jobs:
             --destination-kind homebrew-cellar \
             --destination-locator "${{ matrix.id }}" \
             --distribution-evidence-dir "$CADRUMO_S24_ROOT/distribution-install-readiness"
+
+      # Diagnostics must survive the runner workspace: on failure,
+      # push the brew-install log and the harness failure detail to the lane's
+      # own draft under debug-* asset names. Upload-only: the draft is
+      # guaranteed by needs: create-evidence-draft (a create here would race
+      # the other legs into duplicate drafts). debug-* assets are outside the
+      # promotable row namespace: none are .json row files, and the publish
+      # gates additionally exclude debug-* from row aggregation.
+      - name: Upload build-failure diagnostics to the run's evidence draft
+        if: failure() && steps.initialize.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          staging=$(mktemp -d)
+          install_log="$(find "$CADRUMO_S24_ROOT/evidence" -path '*/logs/brew-install.log' -print -quit 2>/dev/null || true)"
+          if [ -n "$install_log" ]; then
+            cp "$install_log" "$staging/debug-brew-install-${MATRIX_ID}-${GITHUB_RUN_ID}.log"
+          fi
+          if [ -d "$CADRUMO_S24_ROOT/evidence" ]; then
+            tar -czf "$staging/debug-homebrew-diagnostics-${MATRIX_ID}-${GITHUB_RUN_ID}.tar.gz" \
+              -C "$CADRUMO_S24_ROOT" evidence
+          fi
+          if [ -z "$(ls -A "$staging")" ]; then
+            echo "no diagnostics found to upload"
+            exit 0
+          fi
+          gh release upload "$EVIDENCE_TAG" "$staging"/* --clobber
+
+      # Deferred cleanup from --retain-install: runs after the emit (which
+      # needed the live keg) and even when earlier steps failed, so the
+      # self-hosted runner never accumulates smoke formulae/taps.
+      - name: Clean up the retained Homebrew install
+        if: always() && steps.initialize.outputs.ready == 'true'
+        run: |
+          state="$(find "$CADRUMO_S24_ROOT/evidence" -name homebrew-cleanup-state.json -print -quit 2>/dev/null || true)"
+          if [[ -n "$state" ]]; then
+            uv run --no-project python dev/packaging/smoke_homebrew.py --cleanup-state "$state"
+          else
+            echo "no retained Homebrew install to clean up"
+          fi
 
       # All four matrix legs publish distinct asset names to the ONE draft
       # evidence-homebrew-<run_id> created by the create-evidence-draft job;

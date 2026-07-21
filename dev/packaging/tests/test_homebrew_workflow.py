@@ -18,12 +18,12 @@ def _workflow() -> dict[str, Any]:
 
 
 def test_homebrew_workflow_declares_every_generated_target_row() -> None:
-    """The matrix covers both architectures on macOS and Linux.
+    """The matrix carries exactly the rows the self-hosted fleet can mint.
 
-    Self-hosting: the two rows that genuinely map to the free fleet run on it
-    (linux-x86_64 -> the WSL X64 runner, macos-arm64 -> the MacBook), while
-    macos-intel and linux-arm64 (aarch64) have no self-hosted home and honestly
-    stay hosted rather than run on a mismatched architecture.
+    Operator ruling 2026-07-21: no hosted/cloud runners, ever. macos-intel and
+    linux-arm64 are excised until self-hosted MacBook avenues register (a
+    Rosetta /usr/local-prefix runner for Intel; a docker arm64 runner for
+    linux-arm64); their readiness rows stay honestly red meanwhile.
     """
     document = _workflow()
     assert document["name"] == "Cadrumo Homebrew Acquisition"
@@ -34,10 +34,8 @@ def test_homebrew_workflow_declares_every_generated_target_row() -> None:
         return tuple(value) if isinstance(value, list) else value
 
     assert {(row["id"], _runner(row["runner"]), row["expected_os"], row["expected_arch"]) for row in rows} == {
-        ("macos-intel", "macos-15-intel", "Darwin", "x86_64"),
         ("macos-arm64", ("self-hosted", "macOS", "ARM64"), "Darwin", "arm64"),
         ("linux-x86_64", ("self-hosted", "Linux", "X64"), "Linux", "x86_64"),
-        ("linux-arm64", "ubuntu-24.04-arm", "Linux", "aarch64"),
     }
     assert job["strategy"]["fail-fast"] is False
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Homebrew release row")
@@ -91,11 +89,12 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     document = _workflow()
     job = document["jobs"]["cadrumo-homebrew-acquisition"]
     rows = job["strategy"]["matrix"]["include"]
+    # macos-intel / linux-arm64 rows return with their self-hosted runners
+    # (operator ruling 2026-07-21); REQUIRED_DISTRIBUTION_ROWS is untouched,
+    # so readiness stays honestly red on the two unmintable rows meanwhile.
     assert {row["row_id"] for row in rows} == {
-        "homebrew-macos-x86-64",
         "homebrew-macos-arm64",
         "homebrew-linux-x86-64",
-        "homebrew-linux-arm64",
     }
 
     steps = job["steps"]
@@ -124,6 +123,24 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     assert "--draft" in creator_surface
     assert "gh release view" in creator_surface  # create-if-absent probe
     assert job["needs"] == "create-evidence-draft"
+
+    # Failure diagnostics survive the ephemeral hosted runner via debug-*
+    # assets on the same draft: upload-only (the draft is guaranteed by
+    # needs: create-evidence-draft — a create here would race the legs into
+    # duplicate drafts), and never a .json row-namespace name.
+    diagnostics = next(
+        step for step in steps if step.get("name") == "Upload build-failure diagnostics to the run's evidence draft"
+    )
+    assert diagnostics["if"] == "failure() && steps.initialize.outputs.ready == 'true'"
+    assert diagnostics["env"]["EVIDENCE_TAG"] == "evidence-homebrew-${{ github.run_id }}"
+    assert "brew-install.log" in diagnostics["run"]
+    assert "debug-brew-install-${MATRIX_ID}-${GITHUB_RUN_ID}.log" in diagnostics["run"]
+    assert "debug-homebrew-diagnostics-${MATRIX_ID}-${GITHUB_RUN_ID}.tar.gz" in diagnostics["run"]
+    assert "gh release upload" in diagnostics["run"]
+    assert "gh release create" not in diagnostics["run"]
+    assert steps.index(diagnostics) < steps.index(
+        next(step for step in steps if step.get("name") == "Clean up the retained Homebrew install"),
+    )
 
     seal = document["jobs"]["seal-evidence-manifest"]
     assert seal["needs"] == "cadrumo-homebrew-acquisition"
