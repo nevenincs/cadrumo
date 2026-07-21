@@ -1039,7 +1039,16 @@ def _collect_registry_tree_fingerprints_for_cache(
             "retry after concurrent registry writes settle",
         )
     res = tuple(fingerprints)
-    _registry_fingerprint_cache[resolved] = (now, refreshed_directory_fingerprints, res)
+    # The bundled tree is read-only package data, so its TTL bounds how often we
+    # redo the expensive walk rather than how stale the observation may be: stamp
+    # it at walk COMPLETION so the full window is available to callers. Stamping
+    # at walk start instead charges the walk's own cost (~1s idle, several times
+    # that on a loaded machine) against the window, which on a busy host can
+    # consume it entirely and defeat the cache exactly when it is worth most. A
+    # mutable authoring tree keeps the conservative start stamp: there the TTL is
+    # a staleness bound on a tree that can change under us.
+    stamped = time.time() if bundled else now
+    _registry_fingerprint_cache[resolved] = (stamped, refreshed_directory_fingerprints, res)
     return res
 
 
