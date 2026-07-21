@@ -56,7 +56,7 @@ jobs:
   # ---------------------------------------------------------------------------
   operator-preflight:
     name: Operator opt-in and prerequisite check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Require explicit operator opt-in
         env:
@@ -110,7 +110,7 @@ jobs:
   validate:
     name: Validate immutable tested cohort (no rebuild)
     needs: operator-preflight
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     permissions:
       actions: read
       contents: read
@@ -237,7 +237,7 @@ jobs:
     # A dry_run dispatch validates everything (Gate 1+2) and skips this publish
     # job, so the pre-arming diagnostic value survives on the single authority.
     if: ${{ inputs.dry_run != true }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     environment: release
     permissions:
       id-token: write

@@ -1,7 +1,10 @@
 # Clean Scoop acquisition gate for the immutable Cadrumo Python cohort.
-# The clean acquisition runs inside a disposable Windows container (Windows
-# containers ship on GitHub-hosted windows-2022 with the daemon in
-# Windows-container mode by default), so no self-hosted runner is required.
+# The clean acquisition runs inside a disposable Windows container. Runs on
+# the self-hosted fleet ONLY (operator mandate 2026-07-21: no hosted/cloud
+# runners, ever — expense control is absolute). The self-hosted Windows host
+# does not currently run docker in Windows-container mode, so this leg fails
+# fast and free at its docker-mode preflight until a container-mode window is
+# scheduled or the harness is adapted; the preflight must not be weakened.
 
 name: Cadrumo Scoop Acquisition
 
@@ -28,7 +31,7 @@ permissions:
 jobs:
   cadrumo-scoop-acquisition:
     name: Cadrumo / Windows / x64 / Scoop Container
-    runs-on: windows-2022
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
     # Release-asset transport: evidence rides the run's own draft release, so
     # this uploader job (and only this job) needs contents:write.
