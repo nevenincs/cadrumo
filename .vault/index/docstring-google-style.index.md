@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docstring-google-style'
-date: '2026-07-15'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-09-docstring-google-style-S01]]'
   - '[[2026-06-09-docstring-google-style-S02]]'
@@ -1014,7 +1014,7 @@ Auto-generated index of all documents tagged with `#docstring-google-style`.
 
 ### adr
 
-- `2026-06-09-docstring-google-style-adr` - `docstring-google-style` adr: `Enforce Google-style docstrings across src/aeat` | (**status:** `accepted`)
+- `2026-06-09-docstring-google-style-adr` - `docstring-google-style` adr: `Enforce Google-style docstrings across src/cadrumo` | (**status:** `accepted`)
 
 ### audit
 

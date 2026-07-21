@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schema-hardening'
-date: '2026-07-15'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-18-schema-hardening-adr]]'
   - '[[2026-05-18-schema-hardening-nif-coverage-m100-audit]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#n26-data-source'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-14-n26-data-source-adr]]'
   - '[[2026-04-14-n26-data-source-research]]'

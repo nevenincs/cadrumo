@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-product-rename'
-date: '2026-07-16'
-modified: '2026-07-16'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-12-cadrumo-product-rename-W01-P01-S01]]'
   - '[[2026-07-12-cadrumo-product-rename-W01-P01-S02]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#resource-management-api'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-16-resource-management-api-adr]]'
   - '[[2026-05-16-resource-management-api-audit]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#resource-management-api`.
 
 ### adr
 
-- `2026-05-16-resource-management-api-adr` - `resource-management-api` adr: Centralised typed Repository-per-type resource registry | (**status:** `accepted`)
+- `2026-05-16-resource-management-api-adr` - Resource management API | (**status:** `accepted`)
 
 ### audit
 

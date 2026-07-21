@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-autoconsumo-promotor'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-27-iva-autoconsumo-promotor-adr]]'
   - '[[2026-05-27-iva-autoconsumo-promotor-task-222-exec]]'

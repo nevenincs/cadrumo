@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#vault-health-baseline'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-19-vault-health-baseline-audit]]'
 ---

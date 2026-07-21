@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#session-persistence'
-date: '2026-07-16'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-17-session-persistence-adr]]'
 ---

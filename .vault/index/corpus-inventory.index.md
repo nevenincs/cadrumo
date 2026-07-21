@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#corpus-inventory'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-15-corpus-inventory-audit]]'
 ---

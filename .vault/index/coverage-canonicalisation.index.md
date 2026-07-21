@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#coverage-canonicalisation'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-31-coverage-canonicalisation-audit]]'
 ---

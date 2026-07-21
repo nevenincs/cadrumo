@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-verb-conformance'
-date: '2026-07-17'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S01]]'
   - '[[2026-07-15-cli-authority-verb-conformance-W01-P01-S02]]'

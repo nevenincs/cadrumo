@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#secure-persistence-enforcement'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'
   - '[[2026-05-06-secure-persistence-enforcement-plan]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#secure-persistence-enforceme
 
 ### adr
 
-- `2026-05-06-secure-persistence-enforcement-adr` - `secure-persistence-enforcement` adr: `secure persistence enforcement` | (**status:** `accepted`)
+- `2026-05-06-secure-persistence-enforcement-adr` - Secure persistence enforcement | (**status:** `accepted`)
 
 ### plan
 

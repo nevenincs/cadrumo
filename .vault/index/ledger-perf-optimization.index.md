@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-perf-optimization'
-date: '2026-07-17'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-06-ledger-perf-optimization-adr]]'
 ---

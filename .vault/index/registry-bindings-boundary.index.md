@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-bindings-boundary'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-02-registry-bindings-boundary-audit]]'
   - '[[2026-06-02-registry-bindings-boundary-code-review-audit]]'

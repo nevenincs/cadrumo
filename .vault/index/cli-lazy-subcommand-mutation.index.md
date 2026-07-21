@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-lazy-subcommand-mutation'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-09-cli-lazy-subcommand-mutation-adr]]'
   - '[[2026-07-10-cli-lazy-subcommand-mutation-research]]'

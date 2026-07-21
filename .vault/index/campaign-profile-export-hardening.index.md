@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#campaign-profile-export-hardening'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-27-campaign-profile-export-hardening-audit]]'
   - '[[2026-06-28-campaign-profile-export-hardening-audit]]'

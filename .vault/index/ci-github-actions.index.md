@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ci-github-actions'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-12-ci-github-actions-adr]]'
   - '[[2026-04-12-ci-github-actions-plan]]'

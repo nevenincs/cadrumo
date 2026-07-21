@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#redeme-company-refund'
-date: '2026-07-17'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-21-redeme-company-refund-adr]]'
   - '[[2026-06-21-redeme-company-refund-research]]'

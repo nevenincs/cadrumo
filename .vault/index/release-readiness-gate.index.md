@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#release-readiness-gate'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-04-release-readiness-gate-S01]]'
   - '[[2026-07-04-release-readiness-gate-adr]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#release-readiness-gate`.
 
 ### adr
 
-- `2026-07-04-release-readiness-gate-adr` - `release-readiness-gate` adr: `release readiness gate: audit-state gate, RC soak, rollback` | (**status:** `accepted`)
+- `2026-07-04-release-readiness-gate-adr` - `release-readiness-gate` adr: `Immutable-candidate soak and rollback policy` | (**status:** `accepted`)
 
 ### exec
 

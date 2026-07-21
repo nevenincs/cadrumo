@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#wizard-registration-bootstrap'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-02-wizard-registration-bootstrap-adr]]'
   - '[[2026-06-02-wizard-registration-bootstrap-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#wizard-registration-bootstra
 
 ### adr
 
-- `2026-06-02-wizard-registration-bootstrap-adr` - `wizard-registration-bootstrap` adr: `Central wizard + profile-key registration bootstrap (DB-17)` | (**status:** `accepted`)
+- `2026-06-02-wizard-registration-bootstrap-adr` - `wizard-registration-bootstrap` adr: `Contribuyente profile-key registration through the composition root` | (**status:** `accepted`)
 
 ### research
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-verb-conformance-s09-review'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-15-cli-authority-verb-conformance-s09-review-audit]]'
 ---

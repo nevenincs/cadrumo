@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#rental-income-hardening'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-29-rental-income-hardening-adr]]'
   - '[[2026-04-29-rental-income-hardening-audit]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-quality-backlog'
-date: '2026-07-19'
-modified: '2026-07-19'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S01]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S02]]'

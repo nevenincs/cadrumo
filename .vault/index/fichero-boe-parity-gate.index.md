@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#fichero-boe-parity-gate'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-01-fichero-boe-parity-gate-P01-S01]]'
   - '[[2026-07-01-fichero-boe-parity-gate-P01-S02]]'

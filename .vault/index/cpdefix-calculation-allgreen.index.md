@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cpdefix-calculation-allgreen'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-30-cpdefix-calculation-allgreen-audit]]'
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#verification-power'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-01-verification-power-adr]]'
   - '[[2026-07-01-verification-power-research]]'

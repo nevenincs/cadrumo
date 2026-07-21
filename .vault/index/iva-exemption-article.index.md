@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-exemption-article'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-03-iva-exemption-article-adr]]'
   - '[[2026-06-03-iva-exemption-article-research]]'

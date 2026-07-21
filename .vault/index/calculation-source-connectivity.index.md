@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-source-connectivity'
-date: '2026-07-15'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-20-calculation-source-connectivity-W01-P01-S01]]'
   - '[[2026-05-20-calculation-source-connectivity-W01-P01-S02]]'
@@ -114,16 +114,16 @@ Auto-generated index of all documents tagged with `#calculation-source-connectiv
 - `2026-05-20-calculation-source-connectivity-W02-P05-S26` - Adapt purchase invoice evidence records into source mesh resolution
 - `2026-05-20-calculation-source-connectivity-W02-P05-S27` - Adapt payable invoice records into source mesh resolution
 - `2026-05-20-calculation-source-connectivity-W02-P05-S28` - Adapt collectible invoice records into source mesh resolution
-- `2026-05-20-calculation-source-connectivity-W02-P05-S29` - Retire the unimplemented counterpart-provider design per `2026-07-05-cpdefix-followup-allgreen-adr`; retain the two source kinds as RESERVED and non-enrolled until a separately accepted declaring binding and correctness gate co-land
+- `2026-05-20-calculation-source-connectivity-W02-P05-S29` - Adjudicate counterpart source provider against accepted 2026-07-05-cpdefix-followup-allgreen-adr (Option D): repository-backed provider in the counterpart family module, owned_sources narrowed to the two reserved kinds, RESERVED and non-enrolled until the first M347 declaring binding co-lands enrollment plus the S21 correctness gate
 - `2026-05-20-calculation-source-connectivity-W02-P05-S30` - Enroll retenciones aggregation through repository backed source resolution
 - `2026-05-20-calculation-source-connectivity-W02-P05-S31` - Test invoice ledger cross references produce stable source refs
 - `2026-05-20-calculation-source-connectivity-W02-P05-S32` - Test retenciones source observations are period and source kind filtered
-- `2026-05-20-calculation-source-connectivity-W03-P06-S33` - Add region field to Renta deductibility context when category profiles require it
-- `2026-05-20-calculation-source-connectivity-W03-P06-S34` - Extend category profile lookup to accept filing year and CCAA key
-- `2026-05-20-calculation-source-connectivity-W03-P06-S35` - Represent region scoped category profiles in registry resources
-- `2026-05-20-calculation-source-connectivity-W03-P06-S36` - Derive Renta source region from TaxResidenceProfile CCAA
-- `2026-05-20-calculation-source-connectivity-W03-P06-S37` - Test non regional category profiles preserve existing Renta results
-- `2026-05-20-calculation-source-connectivity-W03-P06-S38` - Test region scoped category profiles select by profile CCAA
+- `2026-05-20-calculation-source-connectivity-W03-P06-S33` - [RETIRED] Add region field to Renta deductibility context when category profiles require it
+- `2026-05-20-calculation-source-connectivity-W03-P06-S34` - [RETIRED] Extend category profile lookup to accept filing year and CCAA key
+- `2026-05-20-calculation-source-connectivity-W03-P06-S35` - [RETIRED] Represent region scoped category profiles in registry resources
+- `2026-05-20-calculation-source-connectivity-W03-P06-S36` - [RETIRED] Derive Renta source region from TaxResidenceProfile CCAA
+- `2026-05-20-calculation-source-connectivity-W03-P06-S37` - [RETIRED] Test non regional category profiles preserve existing Renta results
+- `2026-05-20-calculation-source-connectivity-W03-P06-S38` - [RETIRED] Test region scoped category profiles select by profile CCAA
 - `2026-05-20-calculation-source-connectivity-W03-P07-S39` - Define fincas calculation source readiness diagnostics
 - `2026-05-20-calculation-source-connectivity-W03-P07-S40` - Define fincas resolver adapter boundaries without enrolling calculations
 - `2026-05-20-calculation-source-connectivity-W03-P07-S41` - Define inventory calculation source readiness diagnostics

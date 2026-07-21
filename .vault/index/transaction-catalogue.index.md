@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#transaction-catalogue'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-14-transaction-catalogue-adr]]'
   - '[[2026-04-14-transaction-catalogue-phase1-step1-exec]]'

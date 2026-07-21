@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-period-prorrata'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-07-06-cross-period-prorrata-W01-P01-S01]]'
