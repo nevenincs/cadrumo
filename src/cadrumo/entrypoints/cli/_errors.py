@@ -253,85 +253,19 @@ def command_error_boundary[**P, R](callback: Callable[P, R]) -> Callable[P, R]:
 
     @functools.wraps(callback)
     def _wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
-        # Name the executing command on the error spine: Typer injects the
-        # Context as a callback parameter, so capture its command_path here (the
-        # global click context stack is not populated under this invocation).
-        # Duck-type on ``command_path`` rather than ``isinstance(click.Context)``
-        # — the vendored Typer Context is not a guaranteed upstream subclass.
-        command_path = next(
-            (
-                path
-                for value in (*args, *kwargs.values())
-                if isinstance(path := getattr(value, "command_path", None), str)
-            ),
-            None,
-        )
-        token = _ACTIVE_COMMAND_ID.set(
-            _command_identifier_from_path(command_path) if command_path is not None else None,
-        )
+        token = _ACTIVE_COMMAND_ID.set(_resolve_active_command_id(*args, *kwargs.values()))
         try:
             return callback(*args, **kwargs)
-        except StoredProfileDriftError as error:
-            # Discriminate stored-data drift (schema mismatch on a persisted
-            # profile record) from input-time validation failures.  Both
-            # originate from pydantic ValidationError but the operator-facing
-            # messages and recovery paths differ.  Checked before the broad
-            # CadrumoError arm so the typed CLI wrapper is emitted, not the raw
-            # domain error code.
-            if _UNDER_TEST.get():
-                raise
-            _emit_error_and_exit(CliStoredDataValidationBoundaryError(error.original_exception))
-        except FormerProductStateError as error:
-            if _UNDER_TEST.get():
-                raise
-            _emit_error_and_exit(
-                CliRefusedBoundaryError(
-                    str(error),
-                    suggestion="aeat config repair --help",
-                )
-            )
-        except CadrumoError as error:
-            if _UNDER_TEST.get():
-                raise
-            _emit_error_and_exit(error)
-        except ValidationError as error:
-            if _UNDER_TEST.get():
-                raise
-            # Log the underlying pydantic detail before wrapping. The wrapped
-            # CliValidationBoundaryError surfaces an operator-friendly refusal
-            # without the per-field error list, which is too noisy for an
-            # end-user but is exactly the diagnostic engineers need to
-            # triage a failing CLI surface or test fixture.
-            _log.error(
-                "command_error_boundary: pydantic ValidationError in %s: %s",
-                getattr(callback, "__name__", repr(callback)),
-                error.errors(),
-            )
-            _emit_error_and_exit(CliValidationBoundaryError(error))
         except Exception as error:
+            # Typer/Click control flow (Exit, Abort, BadParameter) propagates
+            # untouched so the framework can render it; the under-test override
+            # re-raises the original so tests can assert on the typed exception.
+            # Everything else routes through the ordered specificity dispatch.
             if _is_click_control_flow(error):
                 raise
             if _UNDER_TEST.get():
                 raise
-            # SQLAlchemy wraps an exception raised inside bind-param
-            # processing (e.g. NoActiveBucketSessionError raised by an
-            # encrypted-column codec when no session is unlocked) into
-            # a StatementError. The wrapped cause is a typed CadrumoError
-            # carrying a clean operator refusal. Unwrap it and forward
-            # the refusal verbatim — otherwise the no-session refusal
-            # is mis-classified as an unexpected internal error and a
-            # full traceback is written to the log file, where
-            # `aeat config repair logs` later echoes it back at the
-            # operator as if it were a live crash.
-            wrapped = _unwrap_cadrumo_error(error)
-            if wrapped is not None:
-                _emit_error_and_exit(wrapped)
-            _log.error(
-                "command_error_boundary: unexpected exception in %s",
-                getattr(callback, "__name__", repr(callback)),
-                exc_info=True,
-            )
-            _emit_error_and_exit(CliUnexpectedBoundaryError(error))
+            _emit_error_and_exit(_project_boundary_error(error, callback))
         finally:
             _ACTIVE_COMMAND_ID.reset(token)
 
@@ -445,6 +379,25 @@ def _active_command_identifier() -> str | None:
     an argv parse failure raised before any command callback runs.
     """
     return _ACTIVE_COMMAND_ID.get()
+
+
+def _resolve_active_command_id(*values: object) -> str | None:
+    """Return the dotted command identifier from the callback's injected Context.
+
+    Name the executing command on the error spine: Typer injects the Context as
+    a callback parameter, so scan the positional and keyword argument ``values``
+    for the first with a string ``command_path`` and map it to the dotted
+    envelope identifier (the global click context stack is not populated under
+    this invocation). Duck-type on ``command_path`` rather than
+    ``isinstance(click.Context)`` — the vendored Typer Context is not a
+    guaranteed upstream subclass. ``None`` before any command resolves (an argv
+    parse failure), so the spine's ``command`` field is honestly null there.
+    """
+    command_path = next(
+        (path for value in values if isinstance(path := getattr(value, "command_path", None), str)),
+        None,
+    )
+    return _command_identifier_from_path(command_path) if command_path is not None else None
 
 
 def _emit_error_and_exit(error: CadrumoError) -> Never:
@@ -613,6 +566,99 @@ def _is_click_control_flow(error: Exception) -> bool:
     rather than mis-classified as an unexpected internal error.
     """
     return isinstance(error, _CONTROL_FLOW_EXCEPTIONS)
+
+
+_BoundaryProjection = Callable[[Exception, Callable[..., object]], CadrumoError]
+
+
+def _project_stored_data_drift(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+    """Discriminate stored-data drift from input-time validation failures.
+
+    A schema mismatch on a persisted profile record and an invalid CLI argument
+    both originate from a pydantic ``ValidationError`` but the operator-facing
+    messages and recovery paths differ, so the drift is wrapped in the typed CLI
+    boundary rather than emitted as the raw domain error code.
+    """
+    assert isinstance(error, StoredProfileDriftError)
+    return CliStoredDataValidationBoundaryError(error.original_exception)
+
+
+def _project_former_product_state(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+    """Emit a former-product-state refusal as stderr-only output."""
+    return CliRefusedBoundaryError(str(error), suggestion="aeat config repair --help")
+
+
+def _project_cadrumo_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+    """Forward a typed :class:`CadrumoError` verbatim."""
+    assert isinstance(error, CadrumoError)
+    return error
+
+
+def _project_validation_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+    """Log the pydantic detail, then wrap the input-time validation failure.
+
+    The wrapped :class:`CliValidationBoundaryError` surfaces an operator-friendly
+    refusal without the per-field error list, which is too noisy for an end-user
+    but is exactly the diagnostic engineers need to triage a failing CLI surface
+    or test fixture.
+    """
+    assert isinstance(error, ValidationError)
+    _log.error(
+        "command_error_boundary: pydantic ValidationError in %s: %s",
+        getattr(callback, "__name__", repr(callback)),
+        error.errors(),
+    )
+    return CliValidationBoundaryError(error)
+
+
+#: Exception-family projections walked in DECLARATION ORDER by
+#: :func:`_project_boundary_error` — order IS specificity, mirroring the former
+#: ``except`` ladder exactly: the stored-drift and former-product refusals are
+#: matched before the broad :class:`CadrumoError` arm, and
+#: :exc:`~pydantic.ValidationError` before the unexpected fallback.
+_ERROR_PROJECTIONS: tuple[tuple[type[Exception], _BoundaryProjection], ...] = (
+    (StoredProfileDriftError, _project_stored_data_drift),
+    (FormerProductStateError, _project_former_product_state),
+    (CadrumoError, _project_cadrumo_error),
+    (ValidationError, _project_validation_error),
+)
+
+
+def _project_unexpected(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+    """Project an unexpected exception: unwrap a wrapped refusal, else internal error.
+
+    SQLAlchemy wraps an exception raised inside bind-param processing (e.g.
+    ``NoActiveBucketSessionError`` raised by an encrypted-column codec when no
+    session is unlocked) into a ``StatementError``. The wrapped cause is a typed
+    :class:`CadrumoError` carrying a clean operator refusal. Unwrap it and forward
+    the refusal verbatim — otherwise the no-session refusal is mis-classified as
+    an unexpected internal error and a full traceback is written to the log file,
+    where ``aeat config repair logs`` later echoes it back at the operator as if
+    it were a live crash.
+    """
+    wrapped = _unwrap_cadrumo_error(error)
+    if wrapped is not None:
+        return wrapped
+    _log.error(
+        "command_error_boundary: unexpected exception in %s",
+        getattr(callback, "__name__", repr(callback)),
+        exc_info=True,
+    )
+    return CliUnexpectedBoundaryError(error)
+
+
+def _project_boundary_error(error: Exception, callback: Callable[..., object]) -> CadrumoError:
+    """Map a boundary exception to the :class:`CadrumoError` to emit.
+
+    Walks :data:`_ERROR_PROJECTIONS` in declaration order (order = specificity),
+    falling back to :func:`_project_unexpected`. Control-flow re-raise and the
+    under-test re-raise are applied by the caller before this runs, so neither
+    reaches the table.
+    """
+    for exc_type, project in _ERROR_PROJECTIONS:
+        if isinstance(error, exc_type):
+            return project(error, callback)
+    return _project_unexpected(error, callback)
 
 
 __all__ = [

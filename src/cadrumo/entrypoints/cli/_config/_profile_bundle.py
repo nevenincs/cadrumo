@@ -87,6 +87,7 @@ def _resolve_import_passphrase(secrets_stdin: bool) -> str:
 
 if TYPE_CHECKING:
     from ....domain.buckets import BucketEventType
+    from ....domain.user_profile import UserProfilePortableExport, UserProfileRecord
 
 
 def register_profile_bundle_commands(
@@ -460,101 +461,27 @@ def _register_profile_import_command(
         """Read a portable profile bundle from a JSON file and register it."""
         _activate_subcommand_output_language(ctx, output_language)
         from ....application.user_profile import (
-            EncryptedProfileBundleError,
-            EncryptedProfileBundleExport,
-            ProfileAlreadyRegisteredError,
-            UnsupportedBundleSchemaVersionError,
-            decrypt_profile_bundle_with_passphrase,
             deserialize_profile_bundle,
             missing_filing_baseline_flags,
             profile_storage_session,
             record_to_path_values,
-            validate_bundle_payload,
         )
-        from ....application.workflow import read_profile_bucket as _read_profile_bucket
-        from ....application.workflow import read_profile_bucket_by_id
         from ....domain.buckets import BucketEventType
         from .._config_payloads import ConfigProfileImportResult
 
-        if not path.is_file():
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.import_missing_bundle",
-                context={"path": str(path)},
-            )
-        try:
-            raw_bundle_text = path.read_text(encoding="utf-8")
-        except OSError as exc:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.import_invalid_bundle",
-                context={"error": str(exc)},
-            ) from exc
-        # Auto-detect the transport: the strict encrypted envelope
-        # (extra="forbid", required KDF fields) cannot validate a cleartext
-        # bundle, so a successful parse means an encrypted export. Only then is
-        # the passphrase collected — via the secure-input channel, never argv.
-        from pydantic import ValidationError
-
-        encrypted: EncryptedProfileBundleExport | None
-        try:
-            encrypted = EncryptedProfileBundleExport.model_validate_json(raw_bundle_text)
-        except (ValueError, ValidationError):
-            encrypted = None
-        try:
-            if encrypted is None:
-                bundle = validate_bundle_payload(raw_bundle_text)
-            else:
-                passphrase = _resolve_import_passphrase(secrets_stdin)
-                bundle = decrypt_profile_bundle_with_passphrase(encrypted, passphrase=passphrase)
-        except UnsupportedBundleSchemaVersionError as exc:
-            raise _CliRefusedBoundaryError(str(exc)) from exc
-        except EncryptedProfileBundleError as exc:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.import_encrypted_bundle_invalid",
-                context={"path": str(path)},
-            ) from exc
-        except _CadrumoError:
-            raise
-        except Exception as exc:
-            from ....core.logging import get_logger
-
-            get_logger(__name__).debug("config profile import rejected invalid portable bundle", exc_info=True)
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.import_invalid_bundle",
-                context={"error": str(exc)},
-            ) from exc
+        raw_bundle_text = _load_import_bundle_text(path)
+        bundle = _decode_import_bundle(raw_bundle_text, path, secrets_stdin=secrets_stdin)
         record = bundle.profile
         _validate_imported_profile_tax_id(record)
         _validate_imported_profile_filing_baseline(
             missing_filing_baseline_flags(record_to_path_values(record)),
         )
-        bundle_profile_id = record.profile_id
-
-        explicit_label = label.strip() if label is not None and label.strip() else None
-
-        if read_profile_bucket_by_id(bundle_profile_id) is not None:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.import_uuid_collision",
-                context={"profile_id": bundle_profile_id},
-            )
-
-        target_label = explicit_label if explicit_label is not None else record.display_name
-        existing = _read_profile_bucket(target_label)
-        if existing is not None:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.import_label_taken_different_id",
-                context={"name": target_label},
-            )
-        try:
-            target_id = atomic_create_profile(
-                display_name=target_label,
-                facts=record.facts,
-                profile_id=bundle_profile_id,
-            )
-        except ProfileAlreadyRegisteredError as exc:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.already_exists",
-                context={"name": target_label},
-            ) from exc
+        target_label = _resolve_import_target_label(record, label)
+        target_id = _create_imported_profile(
+            record,
+            target_label,
+            atomic_create_profile=atomic_create_profile,
+        )
 
         with profile_storage_session(target_id):
             deserialize_profile_bundle(bundle, target_bucket_id=target_id)
@@ -587,6 +514,118 @@ def _register_profile_import_command(
             ),
             notices=(switch_notice,),
         )
+
+
+def _load_import_bundle_text(path: Path) -> str:
+    """Read the portable bundle file as UTF-8 text, refusing a missing/unreadable path."""
+    if not path.is_file():
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.import_missing_bundle",
+            context={"path": str(path)},
+        )
+    try:
+        return path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.import_invalid_bundle",
+            context={"error": str(exc)},
+        ) from exc
+
+
+def _decode_import_bundle(
+    raw_bundle_text: str,
+    path: Path,
+    *,
+    secrets_stdin: bool,
+) -> UserProfilePortableExport:
+    """Auto-detect the transport and decode the portable bundle.
+
+    The strict encrypted envelope (``extra="forbid"``, required KDF fields)
+    cannot validate a cleartext bundle, so a successful parse means an encrypted
+    export. Only then is the passphrase collected — via the secure-input channel,
+    never argv.
+    """
+    from pydantic import ValidationError
+
+    from ....application.user_profile import (
+        EncryptedProfileBundleError,
+        EncryptedProfileBundleExport,
+        UnsupportedBundleSchemaVersionError,
+        decrypt_profile_bundle_with_passphrase,
+        validate_bundle_payload,
+    )
+
+    encrypted: EncryptedProfileBundleExport | None
+    try:
+        encrypted = EncryptedProfileBundleExport.model_validate_json(raw_bundle_text)
+    except (ValueError, ValidationError):
+        encrypted = None
+    try:
+        if encrypted is None:
+            return validate_bundle_payload(raw_bundle_text)
+        passphrase = _resolve_import_passphrase(secrets_stdin)
+        return decrypt_profile_bundle_with_passphrase(encrypted, passphrase=passphrase)
+    except UnsupportedBundleSchemaVersionError as exc:
+        raise _CliRefusedBoundaryError(str(exc)) from exc
+    except EncryptedProfileBundleError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.import_encrypted_bundle_invalid",
+            context={"path": str(path)},
+        ) from exc
+    except _CadrumoError:
+        raise
+    except Exception as exc:
+        from ....core.logging import get_logger
+
+        get_logger(__name__).debug("config profile import rejected invalid portable bundle", exc_info=True)
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.import_invalid_bundle",
+            context={"error": str(exc)},
+        ) from exc
+
+
+def _resolve_import_target_label(record: UserProfileRecord, label: str | None) -> str:
+    """Resolve the target profile label, refusing UUID collisions and taken labels."""
+    from ....application.workflow import read_profile_bucket as _read_profile_bucket
+    from ....application.workflow import read_profile_bucket_by_id
+
+    bundle_profile_id = record.profile_id
+    explicit_label = label.strip() if label is not None and label.strip() else None
+    if read_profile_bucket_by_id(bundle_profile_id) is not None:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.import_uuid_collision",
+            context={"profile_id": bundle_profile_id},
+        )
+    target_label = explicit_label if explicit_label is not None else record.display_name
+    existing = _read_profile_bucket(target_label)
+    if existing is not None:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.import_label_taken_different_id",
+            context={"name": target_label},
+        )
+    return target_label
+
+
+def _create_imported_profile(
+    record: UserProfileRecord,
+    target_label: str,
+    *,
+    atomic_create_profile: Callable[..., str],
+) -> str:
+    """Create the imported profile under ``target_label``, keeping the bundle UUID."""
+    from ....application.user_profile import ProfileAlreadyRegisteredError
+
+    try:
+        return atomic_create_profile(
+            display_name=target_label,
+            facts=record.facts,
+            profile_id=record.profile_id,
+        )
+    except ProfileAlreadyRegisteredError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.already_exists",
+            context={"name": target_label},
+        ) from exc
 
 
 def _build_import_active_switch_notice(target_label: str) -> Notice:

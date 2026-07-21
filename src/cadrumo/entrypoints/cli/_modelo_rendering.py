@@ -632,42 +632,49 @@ def casilla_inline_trace(obs) -> str | None:
     return f"{operation} = {value}"
 
 
+#: Comparison operations render as their bare relational symbol (never a
+#: localised word), so they are resolved before the localised label table.
+_FORMULA_COMPARISON_SYMBOLS: dict[str, str] = {
+    "less_than": "<",
+    "less_equal": "≤",
+    "greater_than": ">",
+    "greater_equal": "≥",
+    "equal": "=",
+}
+
+#: Formula operation code -> (translation key, English default) for the
+#: localised operation labels. Every ``add``/``sum`` family member shares the
+#: single sum label; each remaining operation maps to its own leaf.
+_FORMULA_OPERATION_LABELS: dict[str, tuple[str, str]] = {
+    "add": ("cli.app.modelo.work.formula_operation_sum", "sum"),
+    "sum": ("cli.app.modelo.work.formula_operation_sum", "sum"),
+    "previous_period_sum": ("cli.app.modelo.work.formula_operation_sum", "sum"),
+    "cross_model_sum": ("cli.app.modelo.work.formula_operation_sum", "sum"),
+    "subtract": ("cli.app.modelo.work.formula_operation_subtract", "subtract"),
+    "multiply": ("cli.app.modelo.work.formula_operation_multiply", "multiply"),
+    "divide": ("cli.app.modelo.work.formula_operation_divide", "divide"),
+    "percent": ("cli.app.modelo.work.formula_operation_percent", "percentage"),
+    "min": ("cli.app.modelo.work.formula_operation_minimum", "minimum"),
+    "max": ("cli.app.modelo.work.formula_operation_maximum", "maximum"),
+    "if_then_else": ("cli.app.modelo.work.formula_operation_conditional", "conditional"),
+    "copy": ("cli.app.modelo.work.formula_operation_copy", "copy"),
+    "negate": ("cli.app.modelo.work.formula_operation_negate", "negation"),
+    "clamp": ("cli.app.modelo.work.formula_operation_clamp", "limit"),
+    "previous_period_value": ("cli.app.modelo.work.formula_operation_previous_period", "previous period"),
+}
+
+
 def _formula_operation_label(operation: str) -> str:
-    if operation in {"add", "sum", "previous_period_sum", "cross_model_sum"}:
-        return tr("cli.app.modelo.work.formula_operation_sum", default="sum")
-    if operation == "subtract":
-        return tr("cli.app.modelo.work.formula_operation_subtract", default="subtract")
-    if operation == "multiply":
-        return tr("cli.app.modelo.work.formula_operation_multiply", default="multiply")
-    if operation == "divide":
-        return tr("cli.app.modelo.work.formula_operation_divide", default="divide")
-    if operation == "percent":
-        return tr("cli.app.modelo.work.formula_operation_percent", default="percentage")
-    if operation == "min":
-        return tr("cli.app.modelo.work.formula_operation_minimum", default="minimum")
-    if operation == "max":
-        return tr("cli.app.modelo.work.formula_operation_maximum", default="maximum")
-    if operation == "if_then_else":
-        return tr("cli.app.modelo.work.formula_operation_conditional", default="conditional")
-    if operation == "copy":
-        return tr("cli.app.modelo.work.formula_operation_copy", default="copy")
-    if operation == "negate":
-        return tr("cli.app.modelo.work.formula_operation_negate", default="negation")
-    if operation == "clamp":
-        return tr("cli.app.modelo.work.formula_operation_clamp", default="limit")
-    if operation == "previous_period_value":
-        return tr("cli.app.modelo.work.formula_operation_previous_period", default="previous period")
+    symbol = _FORMULA_COMPARISON_SYMBOLS.get(operation)
+    if symbol is not None:
+        return symbol
     if operation.startswith("lookup_"):
         return tr("cli.app.modelo.work.formula_operation_lookup", default="lookup")
-    if operation in {"less_than", "less_equal", "greater_than", "greater_equal", "equal"}:
-        return {
-            "less_than": "<",
-            "less_equal": "≤",
-            "greater_than": ">",
-            "greater_equal": "≥",
-            "equal": "=",
-        }[operation]
-    return tr("cli.app.modelo.work.formula_operation_calculation", default="calculation")
+    entry = _FORMULA_OPERATION_LABELS.get(operation)
+    if entry is None:
+        return tr("cli.app.modelo.work.formula_operation_calculation", default="calculation")
+    key, default = entry
+    return tr(key, default=default)
 
 
 def casilla_trace_verbose_line(obs) -> str:
