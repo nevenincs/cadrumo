@@ -295,6 +295,20 @@ class Modelo349CountryPrefixContextError(CadrumoError, ValueError):
         )
 
 
+def _validate_m349_codigo_pais(value: str) -> str:
+    """Require an uppercase two-letter ISO 3166-1 country code for an M349 row."""
+    if value != value.upper() or not value.replace(" ", "").isalpha():
+        raise ValueError("codigo_pais must be an uppercase two-letter ISO 3166-1 country code (e.g. DE, FR, IT)")
+    return value
+
+
+def _validate_m349_nif_comunitario(value: str) -> str:
+    """Require a non-blank comunitario NIF for an M349 row, normalised to upper case."""
+    if not value.strip():
+        raise ValueError("nif_comunitario cannot be blank")
+    return value.upper()
+
+
 class Modelo349OperadorRow(BaseModel):
     """One operador intracomunitario row for Modelo 349 (manual-entry path).
 
@@ -324,16 +338,12 @@ class Modelo349OperadorRow(BaseModel):
     @field_validator("codigo_pais")
     @classmethod
     def _codigo_pais_uppercase_alpha(cls, value: str) -> str:
-        if value != value.upper() or not value.replace(" ", "").isalpha():
-            raise ValueError("codigo_pais must be an uppercase two-letter ISO 3166-1 country code (e.g. DE, FR, IT)")
-        return value
+        return _validate_m349_codigo_pais(value)
 
     @field_validator("nif_comunitario")
     @classmethod
     def _nif_comunitario_not_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("nif_comunitario cannot be blank")
-        return value.upper()
+        return _validate_m349_nif_comunitario(value)
 
     @field_validator("importe")
     @classmethod
@@ -375,16 +385,12 @@ class Modelo349RectificacionRow(BaseModel):
     @field_validator("codigo_pais")
     @classmethod
     def _codigo_pais_uppercase_alpha(cls, value: str) -> str:
-        if value != value.upper() or not value.replace(" ", "").isalpha():
-            raise ValueError("codigo_pais must be an uppercase two-letter ISO 3166-1 country code (e.g. DE, FR, IT)")
-        return value
+        return _validate_m349_codigo_pais(value)
 
     @field_validator("nif_comunitario")
     @classmethod
     def _nif_comunitario_not_blank(cls, value: str) -> str:
-        if not value.strip():
-            raise ValueError("nif_comunitario cannot be blank")
-        return value.upper()
+        return _validate_m349_nif_comunitario(value)
 
     @field_validator("periodo", mode="before")
     @classmethod
