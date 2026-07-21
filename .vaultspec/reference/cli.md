@@ -6,6 +6,12 @@ locally-resident lookup for AI agents: command inventory, options, argument
 enumerations, exit codes, and environment variables. The human-facing prose reference is
 `docs/CLI.md` in the source repository.
 
+This reference serves two roles. It is the CLI-fallback command lookup for agents and
+sessions where the vaultspec MCP server is not connected, resolving verbs, options, and
+argument shapes from one local read. It is also the authoritative verb-existence source
+the MCP `discover` and `invoke` gateway parses: the `vaultspec:generated`
+command-inventory block below enumerates every leaf command the gateway will accept.
+
 This file is a reference document, not a rule. It is not assembled into any provider
 configuration.
 
@@ -80,7 +86,7 @@ hand-edit between the markers.
 - `vaultspec-core vault check annotations` - Find generated template annotations in
   vault documents.
 - `vaultspec-core vault check markdown` - Check and optionally fix markdown hygiene
-  (trailing whitespace, blank
+  (whitespace, blank runs, newline).
 - `vaultspec-core vault check placeholders` - Find unreplaced {...} template
   placeholders in document body prose.
 - `vaultspec-core vault check dangling` - Find wiki-links in related: frontmatter that
@@ -294,7 +300,10 @@ Deploy the framework into the target directory.
 ---------------------------------------- | | `--upgrade` | off | Re-sync builtins
 without re-scaffolding. | | `--dry-run` | off | Preview without writing. | | `--force` |
 off | Overwrite an existing installation. | | `--skip` | `[]` | Skip a component
-(repeatable). | | `--json` | off | Emit machine-readable output. |
+(repeatable). | | `--mode` | auto | Provisioning mode: `tool` (uvx), `dependency`
+(project venv, ships in built distributions), or `dev` (default dev group, renders like
+dependency but does not ship); auto-detected from pyproject.toml. | | `--json` | off |
+Emit machine-readable output. |
 
 ### vaultspec-core uninstall
 
@@ -541,6 +550,13 @@ command takes `--text`.
 Tier commands: `tier show`, `tier promote`, `tier demote`. The `promote` command takes
 `--phase-title`, `--phase-intent`, `--wave-title`, `--wave-intent`, `--epic-intent` for
 synthesized containers. The `demote` command takes `--force`.
+
+Trailer commands: `trailer emit` (takes exactly one of `--step` or `--feature`; prints a
+well-formed `Vaultspec-Step` or `Vaultspec-Feature` commit-linkage trailer line),
+`trailer validate MESSAGE_FILE` (reports malformed trailers in a commit-message file and
+always exits `0`, so it is safe as an opt-in `commit-msg`-stage pre-commit hook). The
+trailer convention is advisory enrichment only: absence or malformation never blocks a
+commit or fails a core command.
 
 ## Spec commands
 

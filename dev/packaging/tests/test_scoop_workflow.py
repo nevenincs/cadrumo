@@ -17,14 +17,20 @@ def _workflow() -> dict[str, object]:
 
 
 def test_scoop_workflow_declares_the_container_release_row() -> None:
-    """The acquisition job runs on a GitHub-hosted Windows-container host."""
+    """The acquisition job runs on the self-hosted Windows host, never hosted.
+
+    Operator mandate 2026-07-21: no hosted/cloud runners. The self-hosted host
+    does not currently run Windows-container docker mode, so the leg fails
+    fast and free at the (unweakened) docker-mode preflight below until a
+    container-mode window is scheduled.
+    """
     document = _workflow()
     assert document["name"] == "Cadrumo Scoop Acquisition"
     assert set(document["jobs"]) == {"cadrumo-scoop-acquisition"}
 
     job = document["jobs"]["cadrumo-scoop-acquisition"]
     assert job["name"] == "Cadrumo / Windows / x64 / Scoop Container"
-    assert job["runs-on"] == "windows-2022"
+    assert job["runs-on"] == ["self-hosted", "Windows", "X64"]
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Windows container release row")
     assert 'PROCESSOR_ARCHITECTURE -ne "AMD64"' in preflight["run"]
     assert "docker version --format" in preflight["run"]
@@ -47,7 +53,13 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     assert '$run.name -ne "Cadrumo Packaging Smoke"' in source_gate["run"]
     assert '$run.path -ne ".github/workflows/packaging-smoke.yml"' in source_gate["run"]
     assert '$run.conclusion -ne "success"' in source_gate["run"]
-    assert '$run.event -ne "push" -or $run.head_branch -ne "main"' in source_gate["run"]
+    # Trusted-source predicate (ci-speed redesign): main-branch runs, either
+    # push (historical) or dispatch verified on main history via compare API.
+    assert '$run.head_branch -ne "main"' in source_gate["run"]
+    assert '$run.event -eq "workflow_dispatch"' in source_gate["run"]
+    assert "/compare/main..." in source_gate["run"]
+    assert '$ancestry.status -ne "identical" -and $ancestry.status -ne "behind"' in source_gate["run"]
+    assert '$run.event -ne "push"' in source_gate["run"]
     assert "$run.head_repository.full_name -ne $env:GITHUB_REPOSITORY" in source_gate["run"]
     assert "$run.head_sha -ne $env:SOURCE_COMMIT.ToLowerInvariant()" in source_gate["run"]
     assert checkout["with"]["ref"] == "${{ inputs.source_commit }}"

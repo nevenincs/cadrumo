@@ -104,21 +104,26 @@ def test_doctor_invokes_the_aeat_human_cli() -> None:
 
 
 def test_packaging_smoke_builds_one_cohort_before_every_consumer() -> None:
-    """A fresh aggregate cannot reach a smoke lane before cohort construction."""
+    """A fresh aggregate cannot reach a smoke lane before cohort construction.
+
+    The aggregate routes through the campaign driver (ci-speed redesign), so
+    the build-once-before-lanes invariant now lives in the driver: its serial
+    pipeline builds the cohort exactly once, and only then fans the lanes out
+    over the worker pool. The rendered recipe pins the routing; the driver
+    source pins the ordering; every portable lane consumes the shared cohort
+    directory by construction (`takes_cohort`).
+    """
     rendered = _render_recipe("packaging-smoke")
-    build = "python -m dev.packaging.python_cohort build"
-    assert rendered.count(build) == 1
-    build_position = rendered.index(build)
-    for module in (
-        "dev.packaging.smoke_core",
-        "dev.packaging.smoke_pip_core",
-        "dev.packaging.smoke_sdist_core",
-        "dev.packaging.smoke_extras",
-        "dev.packaging.smoke_split_install",
-        "dev.packaging.smoke_browser",
-    ):
-        assert build_position < rendered.index(module)
-    assert "--cohort-dir var/packaging-smoke-cohort/python" in rendered
+    assert "dev.packaging.campaign --profile portable" in rendered
+
+    from dev.packaging.campaign import _COHORT_DIR, _LANES, _PROFILES
+
+    assert _COHORT_DIR == "var/packaging-smoke-cohort/python"
+    assert all(_LANES[name].takes_cohort for name in _PROFILES["portable"])
+
+    driver_source = (_REPO_ROOT / "dev" / "packaging" / "campaign.py").read_text(encoding="utf-8")
+    assert driver_source.count('"build-cohort"') == 1
+    assert driver_source.index('"build-cohort"') < driver_source.index("ThreadPoolExecutor(")
 
 
 def test_local_upload_authority_is_absent_from_just() -> None:

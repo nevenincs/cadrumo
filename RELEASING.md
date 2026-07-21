@@ -165,11 +165,16 @@ list and uploads nothing.
 
 ### Self-hosted runner fleet
 
-The packaging, suite, and Claude CI lanes run on the self-hosted fleet:
-`gw-workstation-win` (Windows x64), `gw-workstation-wsl` (Linux x64, containerized),
-and `macbook-neo` (macOS arm64). The Scoop Windows-container gate runs on hosted
-`windows-2022`; the Homebrew `macos-intel` and `linux-arm64` rows use hosted runners
-because the fleet has no matching hardware.
+EVERY workflow job runs on the self-hosted fleet — no hosted/cloud runners, ever
+(operator mandate 2026-07-21; gated by
+`dev/packaging/tests/test_self_hosted_fleet.py`): `gw-workstation-win` (Windows
+x64), `gw-workstation-wsl` (Linux x64, containerized), and `macbook-neo` (macOS
+arm64). The Scoop Windows-container gate runs on the self-hosted Windows host and
+fails fast at its docker-mode preflight until that host runs Windows-container
+mode. The Homebrew `macos-intel` and `linux-arm64` matrix rows are excised until
+self-hosted MacBook avenues register (Rosetta `/usr/local`-prefix runner for
+Intel; docker arm64 runner for linux-arm64); their readiness rows stay honestly
+red meanwhile.
 
 ### Workstation and repository
 
@@ -380,14 +385,16 @@ gh workflow run packaging-claude.yml \
 Each workflow verifies source-run identity (success, `packaging-smoke.yml`, `push`,
 `main`, same repo, matching `head_sha`) before proceeding.
 
-- `packaging-scoop.yml` (hosted `windows-2022` container): hash-verifies and installs
+- `packaging-scoop.yml` (self-hosted Windows, disposable Windows container):
+  hash-verifies and installs
   the smoke draft's cohorts, generates the Scoop manifest, runs the oracles, and
   publishes the `scoop-windows-x86-64` `DistributionEvidence` row onto its own sealed
   draft `evidence-scoop-<run id>`.
-- `packaging-homebrew.yml` (matrix: hosted macOS Intel + Linux ARM64; self-hosted
-  macOS ARM64 + Linux X64): installs from the tap snapshot on each platform, runs the
-  oracles, and publishes its `homebrew-<os>-<arch>` `DistributionEvidence` row per
-  matrix row onto the single sealed draft `evidence-homebrew-<run id>`.
+- `packaging-homebrew.yml` (matrix: self-hosted macOS ARM64 + Linux X64; the
+  macos-intel and linux-arm64 rows are excised until self-hosted MacBook avenues
+  register): installs from the tap snapshot on each platform, runs the oracles,
+  and publishes its `homebrew-<os>-<arch>` `DistributionEvidence` row per matrix
+  row onto the single sealed draft `evidence-homebrew-<run id>`.
 - `packaging-claude.yml` (self-hosted Windows): runs a live Claude Code session and
   the MCPB runtime oracle; produces lane evidence, not `DistributionEvidence` rows.
 

@@ -167,7 +167,7 @@ mnemonic minted at setup; the mnemonic itself is never persisted to disk.
 
 ## Handling bundled data
 
-The tree under `src/aeat/_data` holds bundled reference data (official-source
+The tree under `src/cadrumo/_data` holds bundled reference data (official-source
 corpus captures and curated registry data), not user data. Its handling rules,
 including the prohibition on committing credentials or taxpayer data, are
-documented in `src/aeat/_data/SECURITY.md`.
+documented in `src/cadrumo/_data/SECURITY.md`.

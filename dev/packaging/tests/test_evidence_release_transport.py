@@ -136,6 +136,24 @@ def test_only_publish_release_gate3_creates_a_non_draft_release() -> None:
         assert invocations == [], (job_name, invocations)
 
 
+def test_debug_diagnostics_never_enter_the_row_aggregation() -> None:
+    """debug-* draft assets are diagnostics, never promotable evidence rows.
+
+    A promoted run is green, but a re-run attempt's draft can retain
+    attempt-1 debug debris; both publish gates therefore exclude debug-*
+    from the flat row aggregation the readiness gate validates.
+    """
+    document = _document("publish-release.yml")
+    for job_name in ("validate", "publish"):
+        surface = "\n".join(str(step.get("run", "")) for step in (document["jobs"][job_name].get("steps") or []))
+        manifest_excludes = surface.count("! -name 'evidence-manifest.json'")
+        debug_excludes = surface.count("! -name 'debug-*'")
+        assert manifest_excludes > 0, job_name
+        # Every row aggregation that filters out the manifest filters out
+        # debug-* alongside it.
+        assert debug_excludes == manifest_excludes, (job_name, manifest_excludes, debug_excludes)
+
+
 def test_gate3_attaches_only_sweep_passed_evidence() -> None:
     """Gate 3 leak-sweeps every evidence asset BEFORE anything can be attached.
 

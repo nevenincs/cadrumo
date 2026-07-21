@@ -11,4 +11,4 @@ Balance active work across Track A for AEAT remote synchronisation and Track B f
 
 Bind financial-input work to the Transaction Data Pipeline step it serves. Preserve provenance from ingest through handoff. Treat Google Sheets as a one-way export mirror, never an authority.
 
-Keep project board In Progress limited to actively worked items with a worktree and delegation. Do not mark charters, placeholders, or intent as active execution.
+There is no GitHub project board; the AEAT board was retired on 2026-07-21 as dead weight. Track work through GitHub issues, live git worktrees, and the vault pipeline only. Treat an issue as actively worked only when a worktree and a delegation exist for it. Do not reintroduce a project board, and do not mark charters, placeholders, or intent as active execution.

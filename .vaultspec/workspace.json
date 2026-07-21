@@ -1,0 +1,8 @@
+{
+  "packages": {
+    "vaultspec-core": {
+      "install_mode": "dev"
+    }
+  },
+  "schema_version": "2.0"
+}

@@ -1,7 +1,10 @@
 # Clean Scoop acquisition gate for the immutable Cadrumo Python cohort.
-# The clean acquisition runs inside a disposable Windows container (Windows
-# containers ship on GitHub-hosted windows-2022 with the daemon in
-# Windows-container mode by default), so no self-hosted runner is required.
+# The clean acquisition runs inside a disposable Windows container. Runs on
+# the self-hosted fleet ONLY (operator mandate 2026-07-21: no hosted/cloud
+# runners, ever — expense control is absolute). The self-hosted Windows host
+# does not currently run docker in Windows-container mode, so this leg fails
+# fast and free at its docker-mode preflight until a container-mode window is
+# scheduled or the harness is adapted; the preflight must not be weakened.
 
 name: Cadrumo Scoop Acquisition
 
@@ -28,7 +31,7 @@ permissions:
 jobs:
   cadrumo-scoop-acquisition:
     name: Cadrumo / Windows / x64 / Scoop Container
-    runs-on: windows-2022
+    runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 90
     # Release-asset transport: evidence rides the run's own draft release, so
     # this uploader job (and only this job) needs contents:write.
@@ -109,8 +112,23 @@ jobs:
           if ($run.conclusion -ne "success") {
             throw "source packaging run did not succeed"
           }
-          if ($run.event -ne "push" -or $run.head_branch -ne "main") {
-            throw "source packaging run must be one trusted push to main"
+          if ($run.head_branch -ne "main") {
+            throw "source packaging run must target main"
+          }
+          if ($run.event -eq "workflow_dispatch") {
+            # The full campaign is dispatch-only (ci-speed redesign,
+            # 2026-07-20): a dispatch run is trusted only when its commit is
+            # verified on main history via the compare API - equal-or-stronger
+            # than the former push-event pin, which trusted the push router.
+            $ancestry = Invoke-RestMethod `
+              -Headers $headers `
+              -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/compare/main...$($run.head_sha)"
+            if ($ancestry.status -ne "identical" -and $ancestry.status -ne "behind") {
+              throw "dispatch-event source run commit is not on main history"
+            }
+          }
+          elseif ($run.event -ne "push") {
+            throw "source packaging run must be a push or dispatch run on main"
           }
           if ($run.head_repository.full_name -ne $env:GITHUB_REPOSITORY) {
             throw "source packaging run does not belong to this repository"

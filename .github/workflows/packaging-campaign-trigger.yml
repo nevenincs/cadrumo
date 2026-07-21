@@ -1,0 +1,59 @@
+# T2 change-class trigger: a push that touches the release-artifact surface
+# auto-dispatches the FULL packaging campaign (packaging-smoke.yml).
+#
+# The ci-speed-redesign ADR accepted one blind spot: flavor-lane regressions
+# (an extras dependency break, an sdist packaging slip, a cohort-manifest
+# drift) surface only at the next dispatched campaign, because the per-push
+# quick probe proves exactly one core install per OS. This workflow closes
+# that blind spot structurally: the paths filter below IS the change-class
+# detector — a push is "T2: release-artifact-shaping" exactly when it touches
+# the files that define the shipped artifact set, and such pushes are rare
+# (packaging metadata, the lock, the campaign driver), so the fleet cost is
+# negligible while the campaign evidence stays fresh.
+#
+# EVIDENCE HONESTY: the dispatched run is an ordinary workflow_dispatch run
+# of packaging-smoke.yml on main, so it is promotable under publish-release
+# Gate 2's dispatch rule (head_sha verified on main history) — this trigger
+# adds no new trust path; it only presses the same button an operator would.
+# The smoke workflow's own no-cancel queueing concurrency guarantees a
+# running campaign is never interrupted by a newer dispatch.
+#
+# The paths list is pinned by dev/packaging/tests/test_change_class_tiers.py
+# so the tier boundary cannot drift silently.
+
+name: Cadrumo Packaging Campaign Trigger
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "pyproject.toml"
+      - "uv.lock"
+      - "packaging/**"
+      - "dev/packaging/**"
+      - ".github/workflows/packaging-smoke.yml"
+
+# A superseded trigger for an older push may cancel: the newest push runs its
+# own trigger and the dispatched campaign covers the newest main tip anyway.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch-full-campaign:
+    name: Cadrumo / dispatch full packaging campaign
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 5
+    steps:
+      - name: Dispatch packaging-smoke on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow run packaging-smoke.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref main
+          echo "Dispatched the full packaging campaign for ${GITHUB_SHA} (T2 release-artifact-surface push)."
