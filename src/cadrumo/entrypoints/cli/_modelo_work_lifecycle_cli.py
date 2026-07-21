@@ -49,15 +49,10 @@ from ._modelo_rendering import (
     work_unit_list_lines,
     work_unit_payload,
 )
+from ._modelo_work_options import _ModeloOpt, _PeriodOpt, _RevisionOpt, _WorkUnitIdArg, _YearOpt
 
 _FILING_YEAR_MIN = 2000
 _FILING_YEAR_MAX = 2099
-
-_WorkUnitIdArg = Annotated[str | None, typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help"))]
-_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
-_YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
-_PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
-_RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
 
 
 @dataclass(frozen=True, slots=True)
