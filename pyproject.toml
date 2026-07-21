@@ -846,6 +846,7 @@ markers = [
   "hex_core: exercises core.* foundational cross-cutting utilities",
   "docs: documentation build, stubs, and docstring structure verification",
   "serial: isolation-sensitive tests that must run without xdist workers (-n0); they mutate or read process-global state (e.g. the active master-key-provider singleton) and flake under -n auto worker interleaving. Run via the serial pass of `just test-integration`.",
+  "perf: performance acceptance gates (CPU-time asserts, wall-clock advisory); excluded from every per-push lane and enrolled explicitly in the dispatch-only ci-full lane, where a quiet machine makes the advisory wall numbers meaningful too.",
 ]
 
 # ── Coverage (pytest-cov) ────────────────────────────────────────────────────

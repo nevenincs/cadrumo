@@ -96,6 +96,15 @@ jobs:
         # harness tests legitimately run 300-900 s (see ci.yml).
         run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
 
+      - name: Serving-path performance gate
+        # perf-marked, excluded from every per-push lane (a shared machine
+        # steals wall-clock from co-resident jobs): the hard assert is PROCESS
+        # CPU-TIME (load-immune either way); the wall numbers this prints (-s)
+        # are advisory and meaningful because this lane runs on manual
+        # dispatch, typically on a quiet machine. Serial (-n0): the benchmark
+        # measures a warm in-process runtime.
+        run: uv run --no-sync pytest -q -s -n0 -m perf dev/packaging/tests/test_serving_path_benchmark.py
+
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
         # module-to-stub correspondence, and CLI reference drift/conformance)
