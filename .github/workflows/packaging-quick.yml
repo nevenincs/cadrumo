@@ -1,0 +1,137 @@
+# Per-push packaging quick probe for Cadrumo.
+#
+# Speed-budget profile (operator directive 2026-07-20: "we cannot have a test
+# or build infrastructure that takes 50 mins per step"): on every artifact-
+# relevant push to main, each OS builds the python wheel cohort once and runs
+# exactly ONE installed core smoke (fresh venv, wheel install, installed
+# grounded tax-work oracle). Every other flavor lane (pip/sdist/extras/split/
+# browser/docker/dev) is a release-artifact proof and runs only in the FULL
+# campaign (packaging-smoke.yml, workflow_dispatch).
+#
+# EVIDENCE HONESTY: this workflow mints NO promotable evidence. It creates no
+# draft release, uploads no assets, and emits no DistributionEvidence rows.
+# publish-release.yml Gate 2 pins the source workflow path to
+# .github/workflows/packaging-smoke.yml, so a quick run is structurally
+# non-promotable; test_packaging_quick_workflow.py pins the no-evidence and
+# no-release-surface invariants.
+
+name: Cadrumo Packaging Quick
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - ".vault/**"
+      - ".vaultspec/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".gemini/**"
+      - ".agents/**"
+      - "docs/**"
+      - "**.md"
+
+# Quick runs are disposable signals for the newest push; unlike the full
+# campaign (whose completed runs feed promotion and must never be cancelled),
+# an in-flight quick run is superseded by the next push.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  quick-linux:
+    name: Cadrumo quick / Linux / cohort + core probe
+    runs-on: [self-hosted, Linux, X64]
+    # Budget: ~7-9 min measured-baseline projection; the ceiling allows cold
+    # uv caches without flaking, and a wedge still dies inside one queue slot.
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Cadrumo quick packaging probe
+        run: just packaging-quick
+
+  quick-windows:
+    name: Cadrumo quick / Windows / cohort + core probe
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 25
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      # taiki-e/install-action mangles its own path under Git Bash on the
+      # self-hosted Windows runner; provision just natively (see the full
+      # campaign workflow for the incident note).
+      - name: Ensure just is available
+        shell: powershell
+        run: |
+          if (-not (Get-Command just -ErrorAction SilentlyContinue)) {
+            scoop install just
+          }
+          just --version
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Cadrumo quick packaging probe
+        run: just packaging-quick
+
+  quick-macos:
+    name: Cadrumo quick / macOS / cohort + core probe
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Cadrumo quick packaging probe
+        run: just packaging-quick

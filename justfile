@@ -252,10 +252,22 @@ packaging-smoke-installed-oracles: packaging-build-python-cohort
     @uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
 
 # Local release-artifact smoke gates that do not need host package-manager access.
-packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-split packaging-smoke-browser packaging-smoke-installed-oracles
+# The campaign driver builds the cohort once and runs the flavor lanes
+# concurrently (bounded pool; lanes are disk-disjoint), then the serial
+# installed-oracles pass — same proofs as the former serial aggregate at a
+# fraction of the wall time (the Windows leg measured 26.3 min serial).
+packaging-smoke:
+    @uv run --no-sync python -m dev.packaging.campaign --profile portable
 
 # One CI invocation keeps every artifact and oracle lane on the same cohort bytes.
-packaging-smoke-ci: packaging-smoke-dev packaging-smoke-linux packaging-smoke-split packaging-smoke-installed-oracles packaging-smoke-docker
+packaging-smoke-ci:
+    @uv run --no-sync python -m dev.packaging.campaign --profile ci
+
+# Per-push quick probe: cohort built once plus the single installed core smoke.
+# Deliberately minimal (ten-minute per-push budget); every other flavor lane is
+# a release-campaign proof carried by `packaging-smoke` / `packaging-smoke-ci`.
+packaging-quick:
+    @uv run --no-sync python -m dev.packaging.campaign --profile quick --skip-preflight
 
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
