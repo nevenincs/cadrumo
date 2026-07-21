@@ -28,10 +28,23 @@ on:
       - ".gemini/**"
       - ".agents/**"
       - "**.md"
-  # NO pull_request trigger: these jobs run on self-hosted runners, and a PR
-  # trigger would execute untrusted PR-head code on the operator's machines
-  # (critical per GitHub's self-hosted hardening guidance). Push already
-  # requires write access; use workflow_dispatch for ad-hoc runs.
+  # SAME-REPO pull_request only: these jobs run on self-hosted runners, and a
+  # fork PR would execute untrusted PR-head code on the operator's machines
+  # (critical per GitHub's self-hosted hardening guidance). Development today
+  # is direct-push-to-main; this trigger exists so a future PR flow inherits
+  # the T1 discipline (static + unit) automatically. Every job carries the
+  # same-repo guard below, so a fork PR's jobs skip instead of running —
+  # same-repo branches already require write access to exist.
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - ".vault/**"
+      - ".vaultspec/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".gemini/**"
+      - ".agents/**"
+      - "**.md"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -43,6 +56,7 @@ permissions:
 jobs:
   cadrumo-static:
     name: Cadrumo / static checks / Python 3.13
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64]
     # Budget: ~6-8 min projected; the ceiling kills a wedge fast.
     timeout-minutes: 25
@@ -109,6 +123,7 @@ jobs:
 
   cadrumo-unit:
     name: Cadrumo / unit suite / Python 3.13
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64]
     # Budget: the suite must fit the per-push wall; pytest-timeout's 300 s
     # per-test ceiling turns the historical multi-hour worker wedge into a

@@ -1,0 +1,20 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#ci-discipline'
+date: '2026-07-21'
+modified: '2026-07-21'
+related:
+  - '[[2026-07-21-ci-discipline-adr]]'
+---
+
+# `ci-discipline` feature index
+
+Auto-generated index of all documents tagged with `#ci-discipline`.
+
+## Documents
+
+### adr
+
+- `2026-07-21-ci-discipline-adr` - `ci-discipline` adr: `tiered push/PR discipline by change class` | (**status:** `accepted`)
