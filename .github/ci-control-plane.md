@@ -17,6 +17,10 @@ standing invariants, each enforced by a conformance gate in the test tree:
    path, so no other lane can enter promotion.
 5. **Machine-aware load.** No lane sizes itself as if it owns the machine
    (`dev/packaging/tests/test_machine_aware_load.py`); see the topology below.
+6. **Honest perf gates.** Performance benchmarks assert PROCESS CPU-TIME
+   (load-immune on the shared machines) with wall-clock printed as advisory
+   only, and run solely in the dispatch-only `ci-full.yml` lane
+   (`dev/packaging/tests/test_perf_gate_policy.py`).
 
 ## Fleet topology and load sizing
 
