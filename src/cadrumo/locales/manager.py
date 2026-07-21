@@ -6,6 +6,7 @@ rejection, while :data:`LocaleNode` documents the recursive locale-tree shape
 shared by the manager and parity tests.
 """
 
+import json
 import re
 from collections.abc import Hashable, Iterator
 from dataclasses import dataclass
@@ -26,6 +27,20 @@ type LocaleNode = str | dict[str, "LocaleNode"]
 
 _log = get_logger(__name__)
 _YAML_KEY_PATTERN = re.compile(r"^(?P<indent> *)(?P<key>[\w-]+):(?P<rest>.*)$")
+_INTENTIONAL_IDENTICAL_FILENAME = "_intentional_identical.json"
+
+
+def _load_intentional_identical(path: Path) -> dict[str, dict[str, object]]:
+    """Load the translation-honesty allowlist, tolerating its absence."""
+    if not path.is_file():
+        return {}
+    try:
+        loaded = json.loads(path.read_text(encoding=UTF_8_ENCODING))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise LocaleError(f"Cannot read {path.name}: {exc}") from exc
+    if not isinstance(loaded, dict):
+        raise LocaleError(f"{path.name} must contain a JSON object")
+    return {locale: dict(entries) for locale, entries in loaded.items() if isinstance(entries, dict)}
 
 
 class LocaleError(CadrumoError):
@@ -364,6 +379,48 @@ class LocaleManager:
         else:
             _append_yaml_leaf(locale_path, parts, value)
         return locale_path
+
+    def allow_identical(self, locale: str, dotted_key: str, reason: str) -> Path:
+        """Record one key as deliberately identical to English, with a reason.
+
+        The allowlist exempts a string from the translation-honesty ratchet.
+        It is for strings that are legitimately the same in both languages —
+        a brand name, a bare modelo code — never a mute button for a string
+        nobody has translated yet, so the reason is mandatory.
+
+        Args:
+            locale: Locale code owning the exemption.
+            dotted_key: Dotted locale key to exempt.
+            reason: Why this string is legitimately identical to English.
+
+        Returns:
+            The allowlist path that was rewritten.
+
+        Raises:
+            LocaleError: When the reason is blank, the key is metadata, or
+                the key is absent from the locale's catalogue.
+        """
+        if not reason.strip():
+            raise LocaleError(f"Cannot allow {dotted_key!r}: a non-empty reason is required")
+        parts = dotted_key.split(".")
+        if not dotted_key or any(not part for part in parts):
+            raise LocaleError(f"Invalid locale key: {dotted_key!r}")
+        if parts[0].startswith("_"):
+            raise LocaleError(f"Cannot allow {dotted_key!r}: keys prefixed with '_' are allowlist metadata")
+
+        locale_path = self._locale_path(locale)
+        if dotted_key not in self.get_yaml_keys(self.load_locale(locale_path)):
+            raise LocaleError(f"Locale key not found in {locale_path.name}: {dotted_key!r}; run locale scaffold first")
+
+        allowlist_path = self.locales_dir / _INTENTIONAL_IDENTICAL_FILENAME
+        allowlist = _load_intentional_identical(allowlist_path)
+        allowlist.setdefault(locale, {})[dotted_key] = reason.strip()
+        atomic_write_text(
+            allowlist_path,
+            json.dumps(allowlist, indent=2, ensure_ascii=False, sort_keys=True) + "\n",
+            encoding=UTF_8_ENCODING,
+        )
+        return allowlist_path
 
     def remove_locale_value(self, locale: str, dotted_key: str) -> Path:
         """Remove one existing locale leaf while preserving the YAML layout."""
