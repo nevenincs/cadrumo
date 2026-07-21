@@ -80,12 +80,15 @@ def test_quick_workflow_triggers_on_artifact_relevant_pushes() -> None:
     """Quick is the per-push signal; superseded runs are cancelled, not queued."""
     document = _quick_document()
     triggers = document[True] if True in document else document["on"]
-    assert set(triggers) == {"workflow_dispatch", "push"}
+    assert set(triggers) == {"workflow_dispatch", "push", "pull_request"}
     push = triggers["push"]
     assert push["branches"] == ["main"]
     assert ".vault/**" in push["paths-ignore"]
     assert "**.md" in push["paths-ignore"]
     assert document["concurrency"]["cancel-in-progress"] is True
+    # Future PR flow: same T1 probe, but never fork-PR code on the fleet —
+    # every job must carry the same-repo guard (see test_change_class_tiers).
+    assert triggers["pull_request"]["branches"] == ["main"]
 
 
 def test_full_campaign_is_dispatch_only() -> None:

@@ -30,6 +30,21 @@ on:
       - ".agents/**"
       - "docs/**"
       - "**.md"
+  # SAME-REPO pull_request only: fork PRs must never reach the self-hosted
+  # fleet (see ci.yml). Today's flow is direct-push; this trigger gives a
+  # future PR flow the T1 install-probe signal automatically. Every job
+  # carries the same-repo guard, so fork-PR jobs skip.
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - ".vault/**"
+      - ".vaultspec/**"
+      - ".claude/**"
+      - ".codex/**"
+      - ".gemini/**"
+      - ".agents/**"
+      - "docs/**"
+      - "**.md"
 
 # Quick runs are disposable signals for the newest push; unlike the full
 # campaign (whose completed runs feed promotion and must never be cancelled),
@@ -44,6 +59,7 @@ permissions:
 jobs:
   quick-linux:
     name: Cadrumo quick / Linux / cohort + core probe
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64]
     # Budget: ~7-9 min measured-baseline projection; the ceiling allows cold
     # uv caches without flaking, and a wedge still dies inside one queue slot.
@@ -74,6 +90,7 @@ jobs:
 
   quick-windows:
     name: Cadrumo quick / Windows / cohort + core probe
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Windows, X64]
     timeout-minutes: 25
     steps:
@@ -110,6 +127,7 @@ jobs:
 
   quick-macos:
     name: Cadrumo quick / macOS / cohort + core probe
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 20
     steps:
