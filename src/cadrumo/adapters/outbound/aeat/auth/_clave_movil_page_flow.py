@@ -159,6 +159,11 @@ class _ClaveMovilPageFlowMixin(abc.ABC):
             )
         surface = self._clave_surface()
         await click(surface.authorize_button_selector)
+        # AEAT can return the 'petición pendiente' refusal in place of the non-QR
+        # link page. Detect it here — as the QR route already does right after its
+        # entry click — so a pending refusal fails fast with PENDING_PETITION_BLOCKED
+        # instead of blocking the full navigation timeout on a link that never renders.
+        await self._raise_if_pending_request_error(page)
         await wait_for(
             surface.non_qr_link_selector,
             timeout=self._navigation_timeout_ms,
