@@ -77,8 +77,8 @@ jobs:
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             row_id: homebrew-linux-x86-64
           # Restored per operator MacBook-avenue provisioning 2026-07-21:
-          # gw-macbook-linux-arm (colima arm64 container on the ARM MacBook)
-          # and macbook-neo-intel (Rosetta x64 runner + /usr/local Intel brew).
+          # the macOS Linux-ARM container host (colima arm64 container on the ARM MacBook)
+          # and the macOS Intel host (Rosetta x64 runner + /usr/local Intel brew).
           - id: macos-intel
             label: macOS Intel
             runner: [self-hosted, macOS, X64]
