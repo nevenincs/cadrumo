@@ -31,6 +31,7 @@ from ...core.i18n import tr
 from ...domain.calculations.registry import CasillaId, ModeloRevision, validated_casilla_id
 from ...domain.transactions import (
     BusinessClassification,
+    M210IncomeClassification,
     OutOfWindowTransactionSummary,
     Transaction,
     TransactionCatalogue,
@@ -270,21 +271,11 @@ def _declared_m210_tipo_renta_codes(revision: ModeloRevision, period: Period) ->
     )
 
 
-def _classify_irnr_income_transaction(
-    transaction: Transaction,
-    *,
-    period: Period,
-    selected_official_tipo_renta_code: str,
-    declared_codes: frozenset[str],
-) -> IrnrIncomeObservation | IrnrIncomeLedgerAggregationIssue | None:
-    """Classify one incoming transaction for the selected M210 source projection."""
-    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
-        return None
-    if transaction.direction is not TransactionDirection.INCOMING:
-        return None
-
-    transaction_id = transaction.transaction_id
-    declared_jurisdiction = transaction.source_jurisdiction
+def _irnr_source_jurisdiction_issue(
+    transaction_id: str,
+    declared_jurisdiction: str | None,
+) -> IrnrIncomeLedgerAggregationIssue | None:
+    """Reject an unresolved or foreign source jurisdiction (TRLIRNR art. 13), else ``None``."""
     if declared_jurisdiction is None:
         return IrnrIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -312,8 +303,17 @@ def _classify_irnr_income_transaction(
             ),
             rejected_source_jurisdiction=declared_jurisdiction,
         )
+    return None
 
-    classification = transaction.m210_income_classification
+
+def _irnr_classification_issue(
+    transaction_id: str,
+    classification: M210IncomeClassification | None,
+    *,
+    declared_codes: frozenset[str],
+    period: Period,
+) -> IrnrIncomeLedgerAggregationIssue | None:
+    """Reject a missing or undeclared M210 income classification, else ``None``."""
     if classification is None:
         return IrnrIncomeLedgerAggregationIssue(
             transaction_id=transaction_id,
@@ -340,6 +340,38 @@ def _classify_irnr_income_transaction(
                 ),
             ),
         )
+    return None
+
+
+def _classify_irnr_income_transaction(
+    transaction: Transaction,
+    *,
+    period: Period,
+    selected_official_tipo_renta_code: str,
+    declared_codes: frozenset[str],
+) -> IrnrIncomeObservation | IrnrIncomeLedgerAggregationIssue | None:
+    """Classify one incoming transaction for the selected M210 source projection."""
+    if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
+        return None
+    if transaction.direction is not TransactionDirection.INCOMING:
+        return None
+
+    transaction_id = transaction.transaction_id
+    jurisdiction_issue = _irnr_source_jurisdiction_issue(transaction_id, transaction.source_jurisdiction)
+    if jurisdiction_issue is not None:
+        return jurisdiction_issue
+
+    classification = transaction.m210_income_classification
+    classification_issue = _irnr_classification_issue(
+        transaction_id,
+        classification,
+        declared_codes=declared_codes,
+        period=period,
+    )
+    if classification_issue is not None:
+        return classification_issue
+    # The classification helper returns None only for a present, declared classification.
+    assert classification is not None
     if classification.official_tipo_renta_code != selected_official_tipo_renta_code:
         return None
 

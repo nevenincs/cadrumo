@@ -76,6 +76,7 @@ from ._records import (
     OperatorInputs,
     RelationValue,
     RelationValues,
+    SheetCellAddress,
     SheetExportPlan,
 )
 
@@ -266,22 +267,11 @@ def _seed_inputs_into_sheet(
     data: list[ValueRange] = []
 
     for casilla_id, value in scenario.inputs_by_casilla_id.items():
-        address = address_by_casilla_id.get(casilla_id)
-        if address is None:
-            raise _missing_seed_anchor("casilla")
-        data.append({"range": address.qualified(), "values": [[format(value, "f")]]})
-
+        data.append(_seed_value_range(address_by_casilla_id.get(casilla_id), format(value, "f"), input_kind="casilla"))
     for binding_id, value in scenario.bindings.items():
-        address = layout.binding_cells.get(binding_id)
-        if address is None:
-            raise _missing_seed_anchor("binding")
-        data.append({"range": address.qualified(), "values": [[format(value, "f")]]})
-
+        data.append(_seed_value_range(layout.binding_cells.get(binding_id), format(value, "f"), input_kind="binding"))
     for binding_id, text in scenario.enum_bindings.items():
-        address = layout.binding_cells.get(binding_id)
-        if address is None:
-            raise _missing_seed_anchor("enum_binding")
-        data.append({"range": address.qualified(), "values": [[text]]})
+        data.append(_seed_value_range(layout.binding_cells.get(binding_id), text, input_kind="enum_binding"))
 
     if data:
         batch_body: BatchUpdateValuesRequest = {"valueInputOption": "USER_ENTERED", "data": data}
@@ -289,6 +279,13 @@ def _seed_inputs_into_sheet(
             spreadsheetId=spreadsheet_id,
             body=batch_body,
         ).execute()
+
+
+def _seed_value_range(address: SheetCellAddress | None, value_text: str, *, input_kind: str) -> ValueRange:
+    """Build the ``valueRange`` for one seed cell, refusing a missing seed anchor."""
+    if address is None:
+        raise _missing_seed_anchor(input_kind)
+    return {"range": address.qualified(), "values": [[value_text]]}
 
 
 def _missing_seed_anchor(input_kind: str) -> CalcSheetsParityError:
