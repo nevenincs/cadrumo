@@ -10,6 +10,9 @@ related:
   - '[[2026-07-16-distribution-harness-identity-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-plan]]'
   - '[[2026-07-17-distribution-installation-readiness-audit]]'
+  - '[[2026-07-16-distribution-harness-identity-research]]'
+  - '[[2026-07-19-post-release-distribution-reference]]'
+  - '[[2026-07-17-post-release-distribution-audit]]'
 ---
 
 # `post-release-distribution` plan
