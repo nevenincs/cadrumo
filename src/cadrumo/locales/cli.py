@@ -164,6 +164,34 @@ def set_value(
     typer.echo(tr("locales.cli.set.updated", locale_file=path.name, key=key))
 
 
+@app.command("allow-identical")
+def allow_identical(
+    locale: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.allow_identical_locale_help", default="Locale code to update.")),
+    ],
+    key: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.allow_identical_key_help", default="Dotted locale key to exempt.")),
+    ],
+    reason: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.locales.allow_identical_reason_help",
+                default="Why this string is legitimately identical to English.",
+            )
+        ),
+    ],
+) -> None:
+    """Record one key as deliberately identical to English."""
+    try:
+        path = _default_manager().allow_identical(locale, key, reason)
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(tr("locales.cli.allow_identical.recorded", allowlist_file=path.name, locale=locale, key=key))
+
+
 @app.command("canonicalize-product-identity")
 def canonicalize_product_identity(
     ctx: typer.Context,
