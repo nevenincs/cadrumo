@@ -35,15 +35,15 @@ adapters:
           hitelesített munkamenetet igényli.
         capture_requires_certificate: A capture_storage_state() aktív tanúsítványalapú
           munkamenetet és védett erőforrás-metaadatokat igényel.
-        metadata_parse_failed: A mentett metaadatok nem eredmenyeztek elemzett modellt.
+        metadata_parse_failed: A mentett metaadatok nem eredményeztek elemzett modellt.
         no_active_context: Nincs aktív böngészőkontextus; először hívja meg az authenticate()
           metódust.
         no_context_capture_storage: Nincs aktív böngészőkontextus; nem lehet rögzíteni
           a tárolási állapotot.
         persisted_session_verification_failed: A tárolt AEAT böngészőmunkamenet nem
           ment át az élő ellenőrzésen.
-        resume_failed: A mentett AEAT munkamenet folytatasa nem eredmenyezett hasznalhato
-          kornyezetet.
+        resume_failed: A mentett AEAT munkamenet folytatása nem eredményezett használható
+          környezetet.
         session_stale: Az AEAT munkamenet lejárt; az inaktivitási határidő eltelt.
     clave_movil:
       errors:
@@ -192,7 +192,7 @@ adapters:
             termékhez tartozik és nem használható; használja a Cadrumo vault mappát.
           googleapiclient_import_failed: 'A google-api-python-client függőség nem
             importálható; futtassa: `uv sync`, majd próbálja újra.'
-          media_non_bytes: A Google Drive medialetoltes {payload_type} tipust adott
+          media_non_bytes: A Google Drive medialetöltés {payload_type} típust adott
             vissza bytes helyett.
           namespace_blank: A Google Drive tárhely névtere nem lehet üres.
           namespace_forbidden_characters: A Google Drive névtér {namespace} tiltott
@@ -203,7 +203,7 @@ adapters:
             ebben a névtérben: {namespace}.'
           request_failed: A Google Drive {action} kérés {status} állapottal sikertelen.
           root_folder_id_blank: A Google Drive gyökérmappa azonosító nem lehet üres.
-          vault_entry_not_folder: 'A beallitott Drive gyoker tartalmazza ezt: {vault_folder_name},
+          vault_entry_not_folder: 'A beállított Drive gyökér tartalmazza ezt: {vault_folder_name},
             de ez nem mappa.'
           vault_folder_name_blank: A Google Drive vault mappa neve nem lehet üres.
           write_non_dict_response: A Google Drive {action} írási válasza váratlan
@@ -213,7 +213,7 @@ adapters:
           byte_length_invalid: 'A helyi sidecar byte_length mezőjének típusa érvénytelen:
             {actual_type}.'
           content_hash_blank: A helyi tartalom hash nem lehet üres.
-          content_hash_mismatch: A helyi tartalom hash nem egyezik; a payload integritasellenorzese
+          content_hash_mismatch: A helyi tartalom hash nem egyezik; a payload integritásellenőrzése
             sikertelen.
           namespace_blank: A helyi tárhely névtere nem lehet üres.
           namespace_create_path_too_long: 'A helyi tárhely nem tudta létrehozni a(z)
@@ -233,9 +233,9 @@ adapters:
             tiltott karaktereket tartalmaz.
           object_not_found: 'A helyi objektum {object_key_hmac} nem található ebben
             a névtérben: {namespace}.'
-          payload_commit_failed: A helyi tarhely nem tudta atomikusan veglegesiteni
+          payload_commit_failed: A helyi tárhely nem tudta atomikusan véglegesíteni
             az objektum payloadjat.
-          payload_read_permission: A helyi tarhely nem tudta olvasni az objektum payloadjat.
+          payload_read_permission: A helyi tárhely nem tudta olvasni az objektum payloadjat.
           payload_write_path_too_long: 'A helyi tárhely nem tudta kiírni az objektum
             tartalmát: az elérési út meghaladja a Windows elérésiút-hossz korlátját.
             Helyezze át az CADRUMO_LOCAL_STORAGE_ROOT beállítást egy rövidebb útvonalra,
@@ -607,7 +607,7 @@ application:
     review:
       errors:
         approved_by_blank: A jóváhagyó azonosítója nem lehet üres.
-        draft_not_ready: Csak benyujtasra kesz tervezetek hagyhatoak jova.
+        draft_not_ready: Csak benyújtásra kész tervezetek hagyhatóak jóvá.
         registry_review_mismatch: 'A tervezet nem egyezik a nyilvántartási ellenőrzési
           felülettel: %{codes}.'
       stale_reasons:
@@ -731,8 +731,8 @@ application:
     verify:
       errors:
         bucket_id_blank: A verify bucket azonosítója nem lehet üres.
-        observation_bucket_mismatch: A verify megfigyeles bucketje nem egyezik a tarolo
-          bucketjevel.
+        observation_bucket_mismatch: A verify megfigyelés bucketje nem egyezik a tároló
+          bucketjével.
         observation_id_blank: A verify megfigyelés azonosítója nem lehet üres.
         observation_id_mismatch: A verify megfigyelés azonosítója nem egyezik a kért
           megfigyeléssel.
@@ -1021,10 +1021,10 @@ application:
       workflow_input_mismatch: A munkafolyamat bemeneti kérelme nem egyezik a számítási
         revízióval.
     findings:
-      art20_reduccion_next_action: Ellenorizze, hogy a nem munkabol szarmazo egyeb
-        jovedelme a mentes jovedelem nelkul az adoevben nem haladja-e meg a 6500 EUR-t;
-        ha nem, akkor a 20. cikk LIRPF szerinti munkajovedelem-csokkentest tuntesse
-        fel az altalanos csokkentesi rovatban (ley-35-2006:art-20).
+      art20_reduccion_next_action: Ellenőrizze, hogy a nem munkából származó egyéb
+        jövedelme a mentes jövedelem nélkül az adóévben nem haladja-e meg a 6500 EUR-t;
+        ha nem, akkor a 20. cikk LIRPF szerinti munkajövedelem-csökkentést tüntesse
+        fel az általános csökkentési rovatban (ley-35-2006:art-20).
       art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: a(z) %{rnt_id} rovat (munkából
         származó nettó jövedelem) = %{rnt_value} a 20. cikk szerinti csökkentési sávon
         belül van (19747,50 alatt), de a(z) %{reduccion_id} rovat (általános munkajövedelem-csökkentés)
@@ -1567,7 +1567,7 @@ cli:
         confirm_counterparty_name_help: A partner megjelenített neve (még nincs kinyerést
           segítő heurisztika; általában kötelező).
         confirm_counterparty_nif_help: Felülírja a kinyert szállítói adóazonosítót.
-        confirm_currency_help: ISO-4217 penznemkod.
+        confirm_currency_help: ISO-4217 pénznemkód.
         confirm_help: Újra kinyeri a bizonylatot helyben, és megerősíti valódi katalógus-számlaként.
         confirm_invoice_date_help: Felülírja a kinyert számla dátumát (ÉÉÉÉ-HH-NN).
         confirm_invoice_number_help: Felülírja a kinyert számlaszámot.
@@ -2855,7 +2855,7 @@ cli:
           name_help: Registered certificate source to remove
         remove_help: Remove a registered certificate source
         secret:
-          help: A nevesitett tanusitvanyforrashoz kotott jelszo kezelese
+          help: A nevesített tanúsítványforráshoz kötött jelszó kezelése
           remove:
             name_help: A regisztrált tanúsítványforrás, amelynek jelszavát el kell
               távolítani
@@ -2984,7 +2984,7 @@ cli:
         scope_help: A megszemélyesített tokenhez kért OAuth hatókör (ismételhető;
           alapértelmezetten a Sheets/Drive adathozzáférési hatókörök)
         set_help: Mentése az aktív profil Google hitelesítőadat-forrás kiválasztásának
-        show_help: Az aktív profil mentétt Google hitelesítőadat-forrás kiválasztásának
+        show_help: Az aktív profil mentett Google hitelesítőadat-forrás kiválasztásának
           megjelenítése
         subject_help: A domainre kiterjedő delegalással megszemélyesítendő Workspace
           felhasználói e-mail cím (nem kötelező)
@@ -3579,10 +3579,10 @@ cli:
       a jegyzékből. Ezt általában egy nem kapcsolódó, folyamatban lévő kódmódosítás
       okozza, nem adathiba.'
     summary_commands: 'Regisztrált parancsok: {count}'
-    summary_families: 'Parancscsaladok: {count}'
+    summary_families: 'Parancscsaládok: {count}'
     summary_heading: Operátorfelület-jegyzék
     summary_lifecycle: 'Modelo életciklus: {steps}'
-    summary_roots: 'Gyokerek: {roots}'
+    summary_roots: 'Gyökerek: {roots}'
   diagnostics:
     app_help: Helyi futásállapot- és munkamenet-diagnosztika.
     browser:
@@ -4174,7 +4174,7 @@ cli:
           profil.
         invoice_not_found: Ez az azonosító nem szerepel a reconciliációs számlakatalógusban,
           amelyet a számlaimportálási és -reconciliációs folyamatok töltenek fel.
-          A 'aeat app ledger invoice add' által létrehozott azonosítók operatori számlarekordok,
+          A 'aeat app ledger invoice add' által létrehozott azonosítók operátori számlarekordok,
           és itt nem kapcsolhatók össze. Kézzel linkelhető katalógusszámla létrehozásához
           futtassa a 'aeat app ledger invoice catalogue create' parancsot, majd adja
           át az invoice_id értéket a --invoice-id kapcsolónak. Vásárlásiszámla-bizonyíték
@@ -4385,7 +4385,7 @@ cli:
       locale_help: Csak ezt a támogatott nyelvi katalógust frissítse.
     modelo:
       app_help: Modellséma helyi fordítások kezelése.
-      audit_help: Modellsema forditasok auditja.
+      audit_help: Modellséma fordítások auditja.
       coverage_help: Modellséma lefedettség kiírása.
       field_help: Fordítási mező.
       key_help: Semakulcs.
@@ -4439,7 +4439,7 @@ cli:
         ledger_update: Főkönyvi tranzakció frissítése.
         ledger_view: Egyetlen tranzakció megtekintése.
         live_filed_capture: Csak olvasható megfigyelés letöltése az AEAT-ből.
-        live_filed_capture_sources: Letoltesi forraslehetosegek listazasa.
+        live_filed_capture_sources: Letöltési forráslehetőségek listázása.
         live_filed_list: Helyileg rögzített benyújtott bevallás-megfigyelések listázása.
         modelo_bindings: Nyilvántartási kötésfedettség vizsgálata.
         modelo_describe: Egy nyomtatvány-revízió leírása.
@@ -6339,7 +6339,7 @@ wizard:
     simplificado: Egyszerűsített
   commands:
     status:
-      created: letrehozva
+      created: létrehozva
       updated: frissitett
   demo:
     description: Bemutató szekció a varázslófunkció teszteléséhez
