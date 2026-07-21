@@ -1,0 +1,61 @@
+# One-purpose PyPI promotion: upload the published v-release's Python
+# distributions to PyPI via OIDC Trusted Publishing. No secrets, no builds —
+# downloads the already-verified release assets and publishes them.
+# Operator-ordered fast-follow to the v0.2.1 direct promotion (2026-07-21).
+
+name: Cadrumo PyPI Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Published release tag holding the distributions
+        required: true
+        default: v0.2.1
+        type: string
+      package:
+        description: Which package to upload
+        required: true
+        type: choice
+        options: [cadrumo, cadrumo-data-manuals, cadrumo-data-official]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.package }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  pypi-upload:
+    name: Cadrumo / PyPI upload / ${{ inputs.package }}
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 15
+    environment: ${{ inputs.package == 'cadrumo' && 'pypi' || inputs.package == 'cadrumo-data-manuals' && 'pypi-data-manuals' || 'pypi-data-official' }}
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86
+        with:
+          version: "0.11.29"
+          enable-cache: false
+
+      - name: Download release distributions for the package
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          PACKAGE: ${{ inputs.package }}
+        run: |
+          stem="${PACKAGE//-/_}"
+          mkdir -p dist
+          gh release download "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" \
+            --pattern "${stem}-*.whl" --pattern "${stem}-*.tar.gz" \
+            --pattern "${PACKAGE}-*.whl" --pattern "${PACKAGE}-*.tar.gz" \
+            --dir dist || true
+          ls -la dist
+          test -n "$(ls dist 2>/dev/null)"
+
+      - name: Publish to PyPI via Trusted Publishing
+        run: uv publish --trusted-publishing always dist/*
