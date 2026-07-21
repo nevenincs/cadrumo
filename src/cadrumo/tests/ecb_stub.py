@@ -16,10 +16,13 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
+from typing import TYPE_CHECKING
 from urllib.parse import parse_qs, urlparse
 
-from ..adapters.outbound.fx import RateFetch
 from ..core.parsing import parse_iso8601_date
+
+if TYPE_CHECKING:
+    from ..adapters.outbound.fx import RateFetch
 
 _CSV_HEADER = "KEY,FREQ,CURRENCY,CURRENCY_DENOM,EXR_TYPE,EXR_SUFFIX,TIME_PERIOD,OBS_VALUE"
 
