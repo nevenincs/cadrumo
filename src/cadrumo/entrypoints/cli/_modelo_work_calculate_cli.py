@@ -49,6 +49,15 @@ from ._modelo_rendering import (
     work_unit_deadline_output,
     work_unit_plazo_lines,
 )
+from ._modelo_work_options import (
+    _ActorOpt,
+    _BucketIdOpt,
+    _ModeloOpt,
+    _PeriodOpt,
+    _RevisionOpt,
+    _WorkUnitIdArg,
+    _YearOpt,
+)
 
 if TYPE_CHECKING:
     # Annotation-only imports: ``from __future__ import annotations`` keeps these
@@ -70,12 +79,6 @@ class _CalculateDeps:
     missing_binding_guidance: Callable[[RegistryValidationError, str], str]
 
 
-_WorkUnitIdArg = Annotated[str | None, typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help"))]
-_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
-_YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
-_PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
-_RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
-_BucketIdOpt = Annotated[str | None, typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help"))]
 _CasillaOpt = Annotated[
     list[str] | None,
     typer.Option("--casilla", help=tr("cli.app.modelo.work.casilla_help")),
@@ -105,7 +108,6 @@ _M210GrossIncomeSourceOpt = Annotated[
         help=tr("cli.app.modelo.work.m210_gross_income_source_help"),
     ),
 ]
-_ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
 _RelationOpt = Annotated[
     list[str] | None,
     typer.Option(

@@ -68,11 +68,7 @@ from ._modelo_rendering import (
     verification_report_notices,
     verification_report_payload,
 )
-
-_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
-_YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
-_PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
-_RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
+from ._modelo_work_options import _ModeloOpt, _PeriodOpt, _RevisionOpt, _YearOpt
 
 
 # KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected

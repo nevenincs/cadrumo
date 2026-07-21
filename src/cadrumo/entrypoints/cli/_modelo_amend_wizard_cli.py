@@ -59,6 +59,15 @@ from ...domain.calculations.registry import RegistrySnapshotError, validated_cas
 from ...domain.modelos import CalculationRevisionAmendmentKind
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
 from ._modelo_rendering import filing_record_lines
+from ._modelo_work_options import (
+    _ActorOpt,
+    _BucketIdOpt,
+    _ModeloOpt,
+    _PeriodOpt,
+    _RevisionOpt,
+    _WorkUnitIdArg,
+    _YearOpt,
+)
 from ._modelo_work_wizard_cli import _ask_wizard_text
 
 if TYPE_CHECKING:
@@ -74,15 +83,6 @@ class _AmendWizardDeps:
     resolve_work_unit_for_cli: Callable[..., Any]
     resolve_default_actor: Callable[[], str]
     bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
-
-
-_WorkUnitIdArg = Annotated[str | None, typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help"))]
-_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
-_YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
-_PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
-_RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
-_BucketIdOpt = Annotated[str | None, typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help"))]
-_ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
 
 
 # KWARGS-ANY-RATIONALE-cli: resolve_work_unit_for_cli is a CLI resolver callback injected by the command registrar
