@@ -76,6 +76,18 @@ jobs:
             expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             row_id: homebrew-linux-x86-64
+          # Restored per operator MacBook-avenue provisioning 2026-07-21:
+          # gw-macbook-linux-arm (colima arm64 container on the ARM MacBook).
+          # The macos-intel leg (homebrew-macos-x86-64) returns once the
+          # operator's one-time Intel-brew install lands at /usr/local
+          # (runner macbook-neo-intel is already online awaiting it).
+          - id: linux-arm64
+            label: Linux arm64
+            runner: [self-hosted, Linux, ARM64]
+            expected_os: Linux
+            expected_arch: aarch64
+            brew: /home/linuxbrew/.linuxbrew/bin/brew
+            row_id: homebrew-linux-arm64
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
     # Release-asset transport: evidence rides the run's own draft release, so
