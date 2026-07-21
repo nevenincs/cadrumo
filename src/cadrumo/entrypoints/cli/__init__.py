@@ -152,32 +152,9 @@ def _root(
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
     if version:
-        # Fast-path: bare `aeat --version` skips the registry load —
-        # registry validation must not run
-        # on the version surface. The `--detail` variant re-invokes
-        # with the registry summary populated. The diagnostics import
-        # is deferred here so it never loads on a non-version surface.
-        from ...application.diagnostics import build_cli_version_report, render_cli_version_text
-
-        report = build_cli_version_report(with_registry=detail)
-        if detail:
-            typer.echo(render_cli_version_text(report))
-        else:
-            # The short `aeat --version` line is machine-format semver
-            # (e.g. "Cadrumo 1.2.3") consumed by CI tooling and package
-            # managers. Cadrumo policy treats semver output as machine-format,
-            # not operator text, so tr() wrapping is intentionally omitted.
-            typer.echo(f"{_PRODUCT_IDENTITY.display_name} {report.package_version}")
-        raise typer.Exit()
+        _emit_version_report_and_exit(detail=detail)
     if help_:
-        # The operator-surface import is deferred so the help-document
-        # builder loads only on a help surface, not on every dispatch.
-        from ...application.operator_surface import build_help_document, render_help_text
-
-        document = build_help_document("root")
-        typed_help = RootStatusResult.model_validate(document.model_dump(mode="json"))
-        _emit_envelope(ctx, command="root.status", result=typed_help, lines=render_help_text(document).splitlines())
-        raise typer.Exit()
+        _emit_root_help_and_exit(ctx)
     if ctx.invoked_subcommand is not None and _is_introspection_only_invocation(ctx):
         return
     # Defer profile override and bucket-session activation to after the
@@ -188,70 +165,9 @@ def _root(
     if profile is not None:
         _activate_profile_override(ctx, profile)
     else:
-        # No explicit --profile: the active profile comes from the
-        # CADRUMO_ACTIVE_PROFILE env override / pointer. Normalize a display-name
-        # value to its UUID so the core storage-route resolver (UUID-only)
-        # resolves it — an operator only knows the label, never the UUID.
-        # Bootstrap-exempt recovery verbs must not read bucket manifests here:
-        # they are the surfaces operators use when those manifests are torn.
-        from ._bootstrap_exempt import is_bootstrap_exempt
-
-        verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
-        explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
-        if not is_bootstrap_exempt(verb_path) and not explicit_profile_show:
-            from ...core import FormerProductStateError
-            from ._errors import CliRefusedBoundaryError
-
-            try:
-                _normalize_active_profile_label_to_uuid(ctx)
-            except FormerProductStateError as exc:
-                raise CliRefusedBoundaryError(
-                    str(exc),
-                    suggestion="aeat config repair --help",
-                ) from exc
+        _normalize_root_active_profile(ctx)
     if ctx.invoked_subcommand is None:
-        # The landing surface needs the application operator_surface
-        # layer; deferring the import keeps it off the ``--version`` /
-        # ``--help`` fast-paths above. Bare invocation without an active
-        # profile does NOT import workflow or overview (which pull the
-        # registry) — it only renders the profile-creation prompt.
-        # Use the lightweight core resolver to avoid importing workflow.
-        from ...adapters.persistence.storage import has_active_bucket_session
-        from ...application.operator_surface import build_root_landing_report
-        from ...core import resolve_active_bucket_id
-        from ._root_landing import render_cli_root_landing_lines
-
-        active = resolve_active_bucket_id()
-        landing = build_root_landing_report(active)
-        if active is None or not has_active_bucket_session():
-            # Bare invocation with no active profile OR no open
-            # session: render the landing card and exit. Bare
-            # invocation is a metadata-emitting introspection
-            # surface analogous to --help/--version and MUST NOT
-            # require an active bucket session. Reading
-            # workflow_state would force session-open against the
-            # encrypted bucket, breaking the cold-start /
-            # session-closed-but-profile-exists path.
-            typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
-            _emit_envelope(
-                ctx,
-                command="root.status",
-                result=typed_landing,
-                lines=render_cli_root_landing_lines(landing),
-            )
-            raise typer.Exit()
-        # An active profile resolves AND a session is already open:
-        # render the full overview. These imports pull the registry,
-        # but are deferred until a verb that actually needs them is
-        # invoked.
-        from ...application.overview import build_overview_status_report
-        from ...application.workflow import workflow_state_repository
-
-        workflow_state = workflow_state_repository().load()
-        overview_report = build_overview_status_report(state=workflow_state)
-        typed_overview = RootStatusResult.model_validate(overview_report.model_dump(mode="json"))
-        _emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
-        raise typer.Exit()
+        _emit_bare_invocation_and_exit(ctx)
     # A subcommand is being invoked. Activate the bucket session here
     # so verbs that need it have access to the active profile's
     # encrypted records. This is deferred after the bare-invocation
@@ -262,6 +178,116 @@ def _root(
     # the command tree and an unknown-command typo is masked by a
     # master-key refusal instead of the usage error.
     _activate_active_bucket_session(ctx)
+
+
+def _emit_version_report_and_exit(*, detail: bool) -> None:
+    """Render the ``--version`` surface and exit, skipping the registry load.
+
+    Fast-path: bare ``aeat --version`` skips the registry load — registry
+    validation must not run on the version surface. The ``--detail`` variant
+    re-invokes with the registry summary populated. The diagnostics import is
+    deferred here so it never loads on a non-version surface.
+    """
+    from ...application.diagnostics import build_cli_version_report, render_cli_version_text
+
+    report = build_cli_version_report(with_registry=detail)
+    if detail:
+        typer.echo(render_cli_version_text(report))
+    else:
+        # The short `aeat --version` line is machine-format semver
+        # (e.g. "Cadrumo 1.2.3") consumed by CI tooling and package
+        # managers. Cadrumo policy treats semver output as machine-format,
+        # not operator text, so tr() wrapping is intentionally omitted.
+        typer.echo(f"{_PRODUCT_IDENTITY.display_name} {report.package_version}")
+    raise typer.Exit()
+
+
+def _emit_root_help_and_exit(ctx: typer.Context) -> None:
+    """Render the root help document and exit.
+
+    The operator-surface import is deferred so the help-document builder loads
+    only on a help surface, not on every dispatch.
+    """
+    from ...application.operator_surface import build_help_document, render_help_text
+
+    document = build_help_document("root")
+    typed_help = RootStatusResult.model_validate(document.model_dump(mode="json"))
+    _emit_envelope(ctx, command="root.status", result=typed_help, lines=render_help_text(document).splitlines())
+    raise typer.Exit()
+
+
+def _normalize_root_active_profile(ctx: typer.Context) -> None:
+    """Normalize the ambient active-profile label to its UUID for storage routing.
+
+    No explicit ``--profile``: the active profile comes from the
+    ``CADRUMO_ACTIVE_PROFILE`` env override / pointer. Normalize a display-name
+    value to its UUID so the core storage-route resolver (UUID-only) resolves it
+    — an operator only knows the label, never the UUID. Bootstrap-exempt recovery
+    verbs must not read bucket manifests here: they are the surfaces operators use
+    when those manifests are torn.
+    """
+    from ._bootstrap_exempt import is_bootstrap_exempt
+
+    verb_path = _full_invocation_verb_path() or _verb_path_from_context(ctx)
+    explicit_profile_show = _is_explicit_profile_show_invocation(ctx, verb_path)
+    if not is_bootstrap_exempt(verb_path) and not explicit_profile_show:
+        from ...core import FormerProductStateError
+        from ._errors import CliRefusedBoundaryError
+
+        try:
+            _normalize_active_profile_label_to_uuid(ctx)
+        except FormerProductStateError as exc:
+            raise CliRefusedBoundaryError(
+                str(exc),
+                suggestion="aeat config repair --help",
+            ) from exc
+
+
+def _emit_bare_invocation_and_exit(ctx: typer.Context) -> None:
+    """Render the bare-invocation landing or overview surface, then exit.
+
+    The landing surface needs the application operator_surface layer; deferring
+    the import keeps it off the ``--version`` / ``--help`` fast-paths. Bare
+    invocation without an active profile does NOT import workflow or overview
+    (which pull the registry) — it only renders the profile-creation prompt. Use
+    the lightweight core resolver to avoid importing workflow.
+    """
+    from ...adapters.persistence.storage import has_active_bucket_session
+    from ...application.operator_surface import build_root_landing_report
+    from ...core import resolve_active_bucket_id
+    from ._root_landing import render_cli_root_landing_lines
+
+    active = resolve_active_bucket_id()
+    landing = build_root_landing_report(active)
+    if active is None or not has_active_bucket_session():
+        # Bare invocation with no active profile OR no open
+        # session: render the landing card and exit. Bare
+        # invocation is a metadata-emitting introspection
+        # surface analogous to --help/--version and MUST NOT
+        # require an active bucket session. Reading
+        # workflow_state would force session-open against the
+        # encrypted bucket, breaking the cold-start /
+        # session-closed-but-profile-exists path.
+        typed_landing = RootStatusResult.model_validate(landing.model_dump(mode="json"))
+        _emit_envelope(
+            ctx,
+            command="root.status",
+            result=typed_landing,
+            lines=render_cli_root_landing_lines(landing),
+        )
+        raise typer.Exit()
+    # An active profile resolves AND a session is already open:
+    # render the full overview. These imports pull the registry,
+    # but are deferred until a verb that actually needs them is
+    # invoked.
+    from ...application.overview import build_overview_status_report
+    from ...application.workflow import workflow_state_repository
+
+    workflow_state = workflow_state_repository().load()
+    overview_report = build_overview_status_report(state=workflow_state)
+    typed_overview = RootStatusResult.model_validate(overview_report.model_dump(mode="json"))
+    _emit_envelope(ctx, command="root.status", result=typed_overview, lines=render_cli_root_landing_lines(landing))
+    raise typer.Exit()
 
 
 def _activate_profile_override(ctx: typer.Context, profile: str) -> None:
