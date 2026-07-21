@@ -27,7 +27,7 @@ from ._common import (
     parse_decimal_amount,
     parse_optional_decimal_amount,
 )
-from ._ledger_business_invoice_cli import InvoiceKindOption
+from ._ledger_business_invoice_cli import InvoiceKindOption, _catalogue_invoice_shared_fields
 from ._ledger_payloads import (
     EvidenceAddResult,
     EvidenceConfirmResult,
@@ -567,20 +567,7 @@ def _run_evidence_confirm(
         "evidence_id": evidence_id,
         "attachment_id": attachment_id,
         "created": result.created,
-        "invoice_id": invoice.invoice_id,
-        "kind": invoice.kind.value,
-        "invoice_number": invoice.invoice_number,
-        "issued_at": invoice.issued_at.isoformat(),
-        "counterparty_name": invoice.counterparty_name,
-        "counterparty_tax_id": invoice.counterparty_tax_id,
-        "counterparty_country": invoice.counterparty_country,
-        "base_total": format(invoice.base_total, "f"),
-        "iva_total": format(invoice.iva_total, "f"),
-        "grand_total": format(invoice.grand_total, "f"),
-        "currency": invoice.currency,
-        "payment_status": invoice.payment_status.value,
-        "linked_transaction_ids": list(invoice.linked_transaction_ids),
-        "notes": invoice.notes,
+        **_catalogue_invoice_shared_fields(invoice),
     }
     lines = [
         f"bucket_id\t{bucket_id}",
