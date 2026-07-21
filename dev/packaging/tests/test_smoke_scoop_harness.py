@@ -19,6 +19,7 @@ manually via ``smoke_scoop.ps1 -Mode Container`` on a Windows-container host
 from __future__ import annotations
 
 import base64
+import os
 import shutil
 import stat
 import subprocess
@@ -202,6 +203,69 @@ raise SystemExit(1)
         launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n', encoding="utf-8")
         launcher.chmod(launcher.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
     return launcher
+
+
+def test_process_reap_is_separator_anchored_to_the_app_root(tmp_path: Path) -> None:
+    """A sibling dir sharing the root's name prefix never gets its process reaped.
+
+    Two REAL processes run from copied interpreters: one under the app root
+    (must be reaped) and one under ``<root>-foo`` (must survive — an
+    unanchored StartsWith would match it and kill an unrelated app on the
+    shared runner).
+    """
+    interpreter = _interpreter()
+    if interpreter is None:
+        return  # structural contract asserted above; no interpreter on this host
+    root = tmp_path / "apps" / "python"
+    sibling = tmp_path / "apps" / "python-foo"
+    if sys.platform.startswith("win"):
+        source = Path(os.environ["COMSPEC"])
+        holder_name = "hold.exe"
+        hold_arguments = "@('/c', 'ping', '-n', '60', '127.0.0.1')"
+    else:
+        source = Path("/bin/sleep")
+        holder_name = "hold"
+        hold_arguments = "@('60')"
+    under_exe = root / holder_name
+    sibling_exe = sibling / holder_name
+    for target in (under_exe, sibling_exe):
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+        if not sys.platform.startswith("win"):
+            target.chmod(target.stat().st_mode | stat.S_IEXEC)
+    driver = f"""
+$source = Get-Content -Raw -LiteralPath '{_SCRIPT}'
+$tokens = $null; $errors = $null
+$ast = [System.Management.Automation.Language.Parser]::ParseInput($source, [ref]$tokens, [ref]$errors)
+$fn = $ast.FindAll({{ param($node)
+    $node -is [System.Management.Automation.Language.FunctionDefinitionAst] -and
+        $node.Name -eq 'Stop-ProcessesUnderPath'
+}}, $true)[0]
+Invoke-Expression $fn.Extent.Text
+$underProcess = Start-Process -FilePath '{under_exe}' -ArgumentList {hold_arguments} -PassThru
+$siblingProcess = Start-Process -FilePath '{sibling_exe}' -ArgumentList {hold_arguments} -PassThru
+try {{
+    Stop-ProcessesUnderPath -Root '{root}'
+    Start-Sleep -Milliseconds 500
+    Write-Output "UNDER_EXITED=$($underProcess.HasExited)"
+    Write-Output "SIBLING_EXITED=$($siblingProcess.HasExited)"
+}}
+finally {{
+    foreach ($held in @($underProcess, $siblingProcess)) {{
+        try {{ Stop-Process -Id $held.Id -Force -ErrorAction Stop }} catch {{ }}
+    }}
+}}
+"""
+    completed = subprocess.run(  # noqa: S603 - explicit resolved interpreter, literal in-test driver
+        [interpreter, "-NoProfile", "-Command", driver],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=180,
+    )
+    assert completed.returncode == 0, completed.stderr
+    assert "UNDER_EXITED=True" in completed.stdout
+    assert "SIBLING_EXITED=False" in completed.stdout
 
 
 def test_uninstall_retry_reruns_until_windows_releases_the_handle(tmp_path: Path) -> None:

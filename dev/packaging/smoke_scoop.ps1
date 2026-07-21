@@ -98,7 +98,13 @@ function Stop-ProcessesUnderPath {
     # scanner holding an open handle through it) can outlive the oracle and
     # block `scoop uninstall` with "it may be in use". Reap every process
     # whose image path is rooted under the staged app before uninstalling.
-    $normalizedRoot = [System.IO.Path]::GetFullPath($Root)
+    # Separator-anchored prefix: a bare StartsWith would also match a SIBLING
+    # directory sharing the name prefix (scoop\apps\python vs python-foo) and
+    # reap an unrelated process on the shared runner.
+    $normalizedRoot = [System.IO.Path]::GetFullPath($Root).TrimEnd(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+    ) + [System.IO.Path]::DirectorySeparatorChar
     $reaped = @()
     foreach ($process in @(Get-Process -ErrorAction SilentlyContinue)) {
         $imagePath = $null
