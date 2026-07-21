@@ -282,6 +282,8 @@ src/cadrumo/_data/corpus/manuals/**/source.html/
 # unaffected — no leading dot.
 /.*.lock
 /.vaultspec/*.lock
+/.codex/*.lock
+/.agents/*.lock
 /.pre-commit-config.yaml
 
 # Scratch / ad-hoc workspace / temp
@@ -387,6 +389,7 @@ cache/
 .vault/logs/
 .vaultspec/*.lock
 .vaultspec/_snapshots/
+.vaultspec/mcp-ownership.json
 .vaultspec/providers.json
 /.gitignore.lock
 /.mcp.json.lock

@@ -16,7 +16,7 @@ Balance active work across Track A for AEAT remote synchronisation and Track B f
 
 Bind financial-input work to the Transaction Data Pipeline step it serves. Preserve provenance from ingest through handoff. Treat Google Sheets as a one-way export mirror, never an authority.
 
-Keep project board In Progress limited to actively worked items with a worktree and delegation. Do not mark charters, placeholders, or intent as active execution.
+There is no GitHub project board; the AEAT board was retired on 2026-07-21 as dead weight. Track work through GitHub issues, live git worktrees, and the vault pipeline only. Treat an issue as actively worked only when a worktree and a delegation exist for it. Do not reintroduce a project board, and do not mark charters, placeholders, or intent as active execution.
 
 ---
 name: aeat-architecture-boundaries
@@ -3594,8 +3594,10 @@ The workflow persists the following documents, bound by a single feature tag:
 - `.vault/exec/yyyy-mm-dd-<feature>/...-summary.md`: The `<Phase Summary>`.
 
 - `.vault/audit/yyyy-mm-dd-<feature>-audit.md`: The `<Audit>` report. A feature with
-  multiple audits disambiguates each with an optional narrative infix:
-  `yyyy-mm-dd-<feature>-<topic>-audit.md`.
+  multiple audits, references, or research documents disambiguates each with an optional
+  narrative infix - `yyyy-mm-dd-<feature>-<topic>-<type>.md` - scaffolded through the
+  owning verb's `--topic` flag (`vault add` for audit, reference, and research only),
+  never by hand-picking a filename.
 
 - `.vault/index/<feature>.index.md`: The auto-generated `<Feature Index>` linking every
   document for a feature. The index regenerates as a side effect of the `create` and
@@ -3621,7 +3623,10 @@ The following helper skills are available:
 ## Documentation Hierarchy
 
 The documentation trail follows a strict dependency graph. Artifacts lower in the
-hierarchy should reference those above them.
+hierarchy should reference those above them. Source code sits outside this hierarchy
+entirely: vault documents cite code by `path:line` locator, and tracked source-file
+content never references `.vault/` documents, identifiers, or harness contents (opt-in
+git commit trailers are the sanctioned linkage channel).
 
 - **Brainstorm** / **Research** / **Reference** (`.vault/research/`,
   `.vault/reference/`)
@@ -3837,6 +3842,11 @@ instead.
 
   - Top-level docs: `yyyy-mm-dd-{feature}-{type}.md` (e.g.,
     `2026-02-04-editor-demo-plan.md`)
+
+  - Narrative infix (audit, reference, research only):
+    `yyyy-mm-dd-{feature}-{topic}-{type}.md` (e.g.,
+    `2026-02-04-editor-demo-engine-wire-reference.md`), scaffolded with the owning
+    verb's `--topic` flag
 
   - Exec Steps (L1): `yyyy-mm-dd-{feature}-{step}.md` (e.g.,
     `2026-02-04-editor-demo-S01.md`)

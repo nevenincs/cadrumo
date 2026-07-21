@@ -249,6 +249,12 @@ macroscopic awareness of an architect.
 
 - **Drift Detection:** Flag any "extra" features or logic not requested in the Plan.
 
+- **Boundary Integrity:** Flag any reference to the project's own development records -
+  `.vault/` document stems, plan/ADR/audit identifiers, Step ids, wiki-links, or
+  `.vaultspec/` harness paths - in delivered source, tests, configuration, or
+  user-facing docs. Dev metadata embedded in the codebase is an architectural violation
+  (HIGH); opt-in git commit trailers are the only sanctioned linkage channel.
+
 ## Quality & Performance Domain
 
 - **Language Idioms**: Assess adherence to the project's established idioms and the
@@ -632,6 +638,11 @@ Use:
 - **Autonomous decisions**: Make technically sound implementation choices based on
   existing project conventions and established reference patterns.
 
+- **Code stands alone**: Deliverable code, comments, docstrings, tests, and
+  configuration never reference the plan, Step ids, `.vault/` documents, or
+  `.vaultspec/` harness paths; traceability lives in the Step Record, which cites the
+  code, never the reverse.
+
 - **Concise documentation**: The executor reads the originating Step row from the plan
   document, executes that Step (one prompt-run plus one commit per the Step row
   contract), and writes one `<Step Record>` per Step at
@@ -756,6 +767,11 @@ Use:
 
 - **Autonomous decisions**: Make technically sound implementation choices based on
   existing project conventions and established reference patterns.
+
+- **Code stands alone**: Deliverable code, comments, docstrings, tests, and
+  configuration never reference the plan, Step ids, `.vault/` documents, or
+  `.vaultspec/` harness paths; traceability lives in the Step Record, which cites the
+  code, never the reverse.
 
 - **Concise documentation**: The executor reads the originating Step row from the plan
   document, executes that Step (one prompt-run plus one commit per the Step row
@@ -1181,6 +1197,11 @@ Use:
 - **Autonomous decisions**: Make technically sound implementation choices based on
   existing project conventions and established reference patterns.
 
+- **Code stands alone**: Deliverable code, comments, docstrings, tests, and
+  configuration never reference the plan, Step ids, `.vault/` documents, or
+  `.vaultspec/` harness paths; traceability lives in the Step Record, which cites the
+  code, never the reverse.
+
 - **Concise documentation**: The executor reads the originating Step row from the plan
   document, executes that Step (one prompt-run plus one commit per the Step row
   contract), and writes one `<Step Record>` per Step at
@@ -1455,4 +1476,10 @@ persona reaches those verbs through the `vaultspec-core vault plan` CLI -
 and `tier promote/demote` for tier transitions. Run `vaultspec-core vault plan --help`
 for the full subcommand surface.
 '''
+# </vaultspec>
+
+# <vaultspec type="mcps">
+[mcp_servers."vaultspec-core"]
+args = ["run", "--no-sync", "python", "-m", "vaultspec_core.mcp_server.app"]
+command = "uv"
 # </vaultspec>
