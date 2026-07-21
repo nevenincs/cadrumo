@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
-modified: '2026-07-10'
+modified: '2026-07-08'
 tier: L3
 related:
   - '[[2026-06-30-modelo-verify-nonzero-guards-adr]]'

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-131-eo-modulos-engine'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-07-01-modelo-131-eo-modulos-engine-adr]]'
 ---

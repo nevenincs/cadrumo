@@ -3,7 +3,7 @@ tags:
   - "#reference"
   - "#base-module-structure"
 date: 2026-04-12
-modified: '2026-07-10'
+modified: '2026-07-08'
 superseded_by: "[[2026-04-30-aeat-restructure-adr]]"
 related:
   - "[[2026-04-30-aeat-restructure-adr]]"

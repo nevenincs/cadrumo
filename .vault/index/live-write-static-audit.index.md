@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#live-write-static-audit'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-16-live-write-static-audit-reference]]'
   - '[[2026-04-16-live-write-static-audit-review-audit]]'

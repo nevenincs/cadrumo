@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#secure-persistence-foundation'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-27-secure-persistence-foundation-adr]]'
   - '[[2026-04-27-secure-persistence-foundation-exec]]'

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#non-resident-irnr-axis'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-05-07-user-profile-backend-schema-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"

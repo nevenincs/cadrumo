@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#live-pull-verification-sweep'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S01]]'
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S02]]'

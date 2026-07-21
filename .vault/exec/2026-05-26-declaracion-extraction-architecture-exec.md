@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#declaracion-extraction-architecture'
 date: '2026-05-26'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related: []
 ---
 

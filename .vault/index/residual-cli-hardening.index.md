@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#residual-cli-hardening'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-12-residual-cli-hardening-code-review-audit]]'
   - '[[2026-06-12-residual-cli-hardening-triage-audit]]'

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#bindings-interface-hardening'
 date: '2026-06-14'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-14-bindings-interface-hardening-research]]"
   - "[[2026-05-20-calculation-source-connectivity-adr]]"

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#claude-ecosystem-packaging'
 date: '2026-07-03'
-modified: '2026-07-04'
+modified: '2026-07-03'
 tier: L3
 related:
   - '[[2026-07-03-claude-ecosystem-packaging-adr]]'

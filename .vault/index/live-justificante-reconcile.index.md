@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#live-justificante-reconcile'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-10-live-justificante-reconcile-P01-S01]]'
   - '[[2026-06-10-live-justificante-reconcile-P01-S02]]'

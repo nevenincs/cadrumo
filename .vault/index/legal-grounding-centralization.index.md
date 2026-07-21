@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#legal-grounding-centralization'
 date: '2026-06-15'
-modified: '2026-07-03'
+modified: '2026-06-29'
 related:
   - '[[2026-06-14-legal-grounding-centralization-P01-S01]]'
   - '[[2026-06-14-legal-grounding-centralization-P01-S02]]'

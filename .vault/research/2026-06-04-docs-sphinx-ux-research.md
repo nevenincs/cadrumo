@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#docs-sphinx-ux'
 date: '2026-06-04'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-05-30-docs-architecture-adr]]'
   - '[[2026-05-30-docs-sphinx-build-adr]]'

@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#schema-hardening'
 date: '2026-05-22'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-05-21-schema-hardening-plan]]"
 ---

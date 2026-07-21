@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#justfile-redesign'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-09-justfile-redesign-S01]]'
   - '[[2026-06-09-justfile-redesign-S02]]'

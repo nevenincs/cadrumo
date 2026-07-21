@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#aeat-filing-detail-fetch"
 date: 2026-04-18
-modified: '2026-07-10'
+modified: '2026-07-08'
 title: exec — phase 5 summary — code review
 issue: wgergely/aeat#227
 related:

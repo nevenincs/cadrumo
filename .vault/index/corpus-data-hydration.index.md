@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#corpus-data-hydration'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-01-corpus-data-hydration-adr]]'
   - '[[2026-05-01-corpus-data-hydration-exec]]'

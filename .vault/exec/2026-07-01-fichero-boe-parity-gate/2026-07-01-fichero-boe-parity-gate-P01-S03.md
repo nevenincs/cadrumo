@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#fichero-boe-parity-gate'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 step_id: 'S03'
 related:
   - "[[2026-07-01-fichero-boe-parity-gate-plan]]"

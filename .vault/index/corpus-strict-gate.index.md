@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#corpus-strict-gate'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-corpus-strict-gate-S01]]'
   - '[[2026-06-04-corpus-strict-gate-adr]]'

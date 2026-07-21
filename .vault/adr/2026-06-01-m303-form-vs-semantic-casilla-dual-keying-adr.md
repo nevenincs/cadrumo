@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-01'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
   - "[[2026-05-22-schema-hardening-adr]]"

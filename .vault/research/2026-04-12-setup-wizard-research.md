@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#setup-wizard"
 date: 2026-04-12
-modified: '2026-07-10'
+modified: '2026-07-08'
 title: First-run setup wizard — research
 related:
   - "[[2026-04-12-deadline-engine-research]]"

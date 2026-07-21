@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#profile-lifecycle-cli'
 date: '2026-06-15'
-modified: '2026-07-10'
+modified: '2026-06-15'
 related:
   - '[[2026-05-16-profile-lifecycle-cli-P02-S18]]'
   - '[[2026-05-16-profile-lifecycle-cli-P02-S19]]'

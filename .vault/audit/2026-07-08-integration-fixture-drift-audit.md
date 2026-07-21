@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#integration-fixture-drift'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-09'
 related:
   - "[[2026-07-08-integration-fixture-drift-plan]]"
   - "[[2026-07-08-gate-drift-reconciliation-audit]]"

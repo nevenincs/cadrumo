@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#counterpart-source-provider'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-04'
 related:
   - '[[2026-07-04-counterpart-source-provider-adr]]'
 ---

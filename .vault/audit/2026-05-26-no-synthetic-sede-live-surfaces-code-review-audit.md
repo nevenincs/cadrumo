@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#no-synthetic-sede-live-surfaces'
 date: '2026-05-26'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-plan]]'
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-adr]]'

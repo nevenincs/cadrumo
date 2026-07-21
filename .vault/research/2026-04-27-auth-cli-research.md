@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#auth-cli'
 date: '2026-04-27'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-04-18-auth-protocol-research]]"
   - "[[2026-04-18-aeat-auth-providers-research]]"

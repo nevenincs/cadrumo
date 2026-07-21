@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#m100-marriage-date-axis'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-m100-marriage-date-axis-S213]]'
   - '[[2026-06-04-m100-marriage-date-axis-adr]]'

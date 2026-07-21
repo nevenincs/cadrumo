@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#calculation-truth-registry'
 date: '2026-05-04'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - '[[2026-05-04-live-filing-data-capture-research]]'
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'

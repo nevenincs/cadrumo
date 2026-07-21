@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#aeat-grounding-completion'
 date: '2026-06-14'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-14-aeat-grounding-completion-adr]]'
 ---

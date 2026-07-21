@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#prorrata-art104-tres-exclusions'
 date: '2026-07-07'
-modified: '2026-07-10'
+modified: '2026-07-07'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"

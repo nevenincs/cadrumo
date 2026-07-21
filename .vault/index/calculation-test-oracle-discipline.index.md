@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#calculation-test-oracle-discipline'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
   - '[[2026-06-01-calculation-test-oracle-discipline-research]]'

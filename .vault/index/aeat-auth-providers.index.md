@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#aeat-auth-providers'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-18-aeat-auth-providers-research]]'
   - '[[2026-04-18-auth-provider-abstraction-adr]]'

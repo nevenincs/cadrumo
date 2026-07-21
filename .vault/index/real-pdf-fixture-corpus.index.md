@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#real-pdf-fixture-corpus'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-21-real-pdf-fixture-corpus-adr]]'
   - '[[2026-04-21-real-pdf-fixture-corpus-plan]]'

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-13'
-modified: '2026-06-28'
+modified: '2026-06-13'
 related:
   - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-09-modelo-iva-routing-carry-adr]]"

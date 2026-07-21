@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#registry-casilla-identity'
 date: '2026-05-21'
-modified: '2026-07-03'
+modified: '2026-06-30'
 step_id: 'S23'
 related:
   - "[[2026-05-20-registry-casilla-identity-summary-exec]]"

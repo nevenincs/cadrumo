@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#locale-scaffold-fstring'
 date: '2026-05-31'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-05-31-locale-scaffold-fstring-research]]"
 ---

@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#session-persistence"
 date: "2026-04-16"
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-17-aeat-access-gate-adr]]"
   - "[[2026-04-17-session-persistence-review-audit]]"

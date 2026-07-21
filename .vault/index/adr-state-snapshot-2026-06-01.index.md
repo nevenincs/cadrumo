@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#adr-state-snapshot-2026-06-01'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-01-adr-state-snapshot-2026-06-01-research]]'
 ---

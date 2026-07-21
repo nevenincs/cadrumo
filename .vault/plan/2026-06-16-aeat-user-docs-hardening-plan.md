@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#aeat-user-docs-hardening'
 date: '2026-06-16'
-modified: '2026-07-10'
+modified: '2026-07-08'
 tier: L1
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-adr]]'

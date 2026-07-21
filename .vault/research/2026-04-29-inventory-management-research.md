@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#inventory-management'
 date: '2026-04-29'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-04-27-modelo-100-renta-full-calc-adr]]'
   - '[[2026-04-27-secure-persistence-foundation-research]]'

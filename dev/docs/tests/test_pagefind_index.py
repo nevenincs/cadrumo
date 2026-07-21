@@ -15,12 +15,15 @@ offline.
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
 from ..pagefind_index import (
-    PagefindUnavailableError,
+    PagefindConfigurationError,
     SearchIndexResult,
     build_search_index,
 )
@@ -59,6 +62,24 @@ def _write_fixture_site(root: Path) -> None:
         ),
         encoding="utf-8",
     )
+    modules_page = root / "_modules" / "aeat" / "engine.html"
+    modules_page.parent.mkdir(parents=True)
+    modules_page.write_text(
+        _FIXTURE_PAGE.format(
+            title="Private source listing",
+            body="This generated source listing must remain online but never enter search.",
+        ),
+        encoding="utf-8",
+    )
+    api_page = root / "api" / "engine.html"
+    api_page.parent.mkdir(parents=True)
+    api_page.write_text(
+        _FIXTURE_PAGE.format(
+            title="Generated API reference",
+            body="This developer reference must remain online but never enter search.",
+        ),
+        encoding="utf-8",
+    )
     # Use the real shipped pagefind.yml so the test covers the actual config.
     (root / "pagefind.yml").write_text(
         (_DOCS / "pagefind.yml").read_text(encoding="utf-8"),
@@ -87,6 +108,11 @@ def test_index_pass_indexes_built_html(tmp_path: Path) -> None:
     assert "pagefind-ui.js" in files
     assert "pagefind-ui.css" in files
     assert "pagefind.js" in files
+    # Generated source and API pages stay deployable but are absent from the
+    # ephemeral Pagefind input tree, so only human documentation pages count.
+    assert result.page_count == 2
+    assert (tmp_path / "_modules" / "aeat" / "engine.html").is_file()
+    assert (tmp_path / "api" / "engine.html").is_file()
 
 
 @pytest.mark.integration
@@ -135,6 +161,22 @@ def test_pagefind_yml_scopes_to_article_body() -> None:
     assert ".sidebar-tree" in text  # navigation chrome is excluded
 
 
+@pytest.mark.integration
+@pytest.mark.hex_core
+def test_index_requires_a_valid_selector_config(tmp_path: Path) -> None:
+    """The real indexer rejects a missing or malformed shipped config clearly."""
+    _write_fixture_site(tmp_path)
+
+    missing = tmp_path / "missing.yml"
+    with pytest.raises(PagefindConfigurationError, match="config not found"):
+        build_search_index(tmp_path, config_path=missing)
+
+    invalid = tmp_path / "invalid.yml"
+    invalid.write_text("root_selector: []\nexclude_selectors: [nav]\n", encoding="utf-8")
+    with pytest.raises(PagefindConfigurationError, match="root_selector"):
+        build_search_index(tmp_path, config_path=invalid)
+
+
 @pytest.mark.unit
 @pytest.mark.hex_core
 def test_search_template_references_pagefind_bundle() -> None:
@@ -148,5 +190,25 @@ def test_search_template_references_pagefind_bundle() -> None:
 @pytest.mark.unit
 @pytest.mark.hex_core
 def test_unavailable_pagefind_is_a_named_error() -> None:
-    """The vendor-absent boundary is a named, actionable error type."""
-    assert issubclass(PagefindUnavailableError, RuntimeError)
+    """A real no-site process reports the vendor-absent boundary clearly."""
+    script = (
+        "import sys\n"
+        f"sys.path.insert(0, {str(_REPO_ROOT)!r})\n"
+        "from dev.docs.pagefind_index import PagefindUnavailableError, _require_pagefind\n"
+        "try:\n"
+        "    _require_pagefind()\n"
+        "except PagefindUnavailableError:\n"
+        "    raise SystemExit(0)\n"
+        "raise SystemExit('Pagefind unexpectedly imported without site-packages')\n"
+    )
+    environment = {key: value for key, value in os.environ.items() if key != "PYTHONPATH"}
+    result = subprocess.run(  # noqa: S603
+        [sys.executable, "-S", "-c", script],
+        cwd=_REPO_ROOT,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr or result.stdout

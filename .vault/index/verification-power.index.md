@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#verification-power'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-07-01-verification-power-adr]]'
   - '[[2026-07-01-verification-power-research]]'

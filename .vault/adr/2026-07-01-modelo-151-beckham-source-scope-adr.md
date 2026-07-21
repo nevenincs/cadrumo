@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-adr]]'
   - '[[2026-05-27-source-jurisdiction-axis-adr]]'

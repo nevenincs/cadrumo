@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#silent-zero-base-aggregation'
 date: '2026-06-19'
-modified: '2026-06-28'
+modified: '2026-06-19'
 related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
 ---

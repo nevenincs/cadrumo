@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#schema-hardening'
 date: '2026-05-26'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-05-26-schema-hardening-m131-fragmentation-plan]]'
   - '[[2026-05-26-schema-hardening-open-edge-closeout-audit]]'

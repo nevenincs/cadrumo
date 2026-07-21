@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#ledger-add-idempotency'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-30-ledger-add-idempotency-research]]"
   - "[[2026-06-10-ledger-interface-contract-adr]]"

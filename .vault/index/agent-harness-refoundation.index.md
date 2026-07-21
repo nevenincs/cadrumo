@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-02'
 related:
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S01]]'
   - '[[2026-07-02-agent-harness-refoundation-W01-P01-S02]]'

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#m303-form-vs-semantic-casilla-dual-keying'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]'
   - '[[2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research]]'

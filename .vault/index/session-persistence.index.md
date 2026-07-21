@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#session-persistence'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-16-session-persistence-research]]'
   - '[[2026-04-17-session-persistence-adr]]'

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#profile-lifecycle-cli'
 date: '2026-05-16'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-03-profile-lifecycle-cli-cascade-supersession-adr]]'

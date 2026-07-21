@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#first-filer-attestation'
 date: '2026-06-12'
-modified: '2026-07-03'
+modified: '2026-06-29'
 related:
   - "[[2026-06-12-first-filer-attestation-research]]"
 ---

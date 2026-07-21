@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#cli-persona-testimonials'
 date: '2026-05-21'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-05-21-cli-persona-testimonials-plan]]"
 ---

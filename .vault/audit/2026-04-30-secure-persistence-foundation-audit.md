@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-persistence-foundation'
 date: '2026-04-30'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-04-30-secure-persistence-foundation-adr]]"
   - "[[2026-04-30-secure-persistence-foundation-research]]"

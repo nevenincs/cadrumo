@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#bindings-architecture-unification'
 date: '2026-06-26'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
   - '[[2026-06-26-binding-source-kind-taxonomy-unification-adr]]'

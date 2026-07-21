@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'

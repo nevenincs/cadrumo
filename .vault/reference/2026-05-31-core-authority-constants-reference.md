@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#core-authority-constants'
 date: '2026-05-31'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related: []
 ---
 

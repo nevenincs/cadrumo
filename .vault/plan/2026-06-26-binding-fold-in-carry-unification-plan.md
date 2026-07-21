@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'

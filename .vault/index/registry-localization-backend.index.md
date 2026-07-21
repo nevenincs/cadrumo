@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#registry-localization-backend'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-08-registry-localization-backend-P01-S01]]'
   - '[[2026-06-08-registry-localization-backend-P01-S02]]'

@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#declaracion-extraction-architecture"
 date: "2026-05-27"
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: "S194"
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-plan]]"

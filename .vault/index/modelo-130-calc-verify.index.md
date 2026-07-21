@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-130-calc-verify'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-27-modelo-130-calc-verify-adr]]'
   - '[[2026-04-27-modelo-130-calc-verify-phase1-step1-exec]]'

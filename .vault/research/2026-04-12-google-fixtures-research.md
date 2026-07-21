@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#google-fixtures"
 date: 2026-04-12
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-12-gsuite-bootstrap-adr]]"
   - "[[2026-04-12-base-module-structure-adr]]"

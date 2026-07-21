@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-filing-ledger-snapshot'
 date: '2026-06-02'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
   - "[[2026-05-08-ledger-renta-pipeline-adr]]"

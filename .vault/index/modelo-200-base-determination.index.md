@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-200-base-determination'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-02-modelo-200-base-determination-adr]]'
   - '[[2026-06-02-modelo-200-base-determination-reference]]'

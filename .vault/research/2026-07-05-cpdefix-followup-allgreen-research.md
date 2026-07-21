@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#cpdefix-followup-allgreen'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-06-30-cpdefix-calculation-allgreen-audit]]"
   - "[[2026-07-04-counterpart-source-provider-adr]]"

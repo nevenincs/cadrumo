@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#reconcile-value-comparison'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - "[[2026-07-01-reconcile-value-comparison-research]]"
 ---

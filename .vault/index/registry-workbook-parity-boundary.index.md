@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#registry-workbook-parity-boundary'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-02-registry-workbook-parity-boundary-audit]]'
   - '[[2026-06-02-registry-workbook-parity-boundary-code-review-audit]]'

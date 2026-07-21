@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#restructure-execution'
 date: '2026-07-01'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2025-05-22-restructure-execution-P01-S01]]'
   - '[[2025-05-22-restructure-execution-W02-P11-S46]]'

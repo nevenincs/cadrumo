@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-04'
 related:
   - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"
 ---

@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-persona-testimonials'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-06-30'
 step_id: 'S38'
 related:
   - "[[2026-06-30-cli-persona-testimonials-plan]]"

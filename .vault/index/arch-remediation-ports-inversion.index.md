@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#arch-remediation-ports-inversion'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-06'
 related:
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P01-S01]]'
   - '[[2026-07-02-arch-remediation-ports-inversion-W01-P02-S02]]'

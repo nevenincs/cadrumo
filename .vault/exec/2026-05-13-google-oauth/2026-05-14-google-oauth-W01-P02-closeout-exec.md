@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#google-oauth'
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: 'S09+S14+S15+S16+S17'
 related:
   - "[[2026-05-13-google-oauth-plan]]"

@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#ledger-latency-budget'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-06'
 related:
   - "[[2026-07-05-ledger-latency-budget-adr]]"
   - "[[2026-07-06-ledger-perf-optimization-reference]]"

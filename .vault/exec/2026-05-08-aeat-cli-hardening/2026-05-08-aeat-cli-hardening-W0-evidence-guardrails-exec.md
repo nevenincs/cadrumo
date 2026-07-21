@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#aeat-cli-hardening'
 date: '2026-05-08'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - '[[2026-05-08-aeat-cli-hardening-plan]]'
   - '[[2026-05-08-aeat-cli-gap-discovery-audit]]'

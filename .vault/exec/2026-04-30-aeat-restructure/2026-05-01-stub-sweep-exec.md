@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#aeat-restructure'
 date: '2026-05-01'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-30-aeat-restructure-plan]]"
   - "[[2026-04-30-aeat-restructure-step-13-missing-impl-audit-exec]]"

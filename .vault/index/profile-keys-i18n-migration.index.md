@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#profile-keys-i18n-migration'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2025-02-13-profile-keys-i18n-migration-adr]]'
   - '[[2025-02-13-profile-keys-i18n-migration-exec]]'

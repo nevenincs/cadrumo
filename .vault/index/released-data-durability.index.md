@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#released-data-durability'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-07-08-released-data-durability-adr]]'
   - '[[2026-07-08-released-data-durability-research]]'

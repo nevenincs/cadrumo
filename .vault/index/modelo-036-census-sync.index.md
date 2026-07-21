@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-036-census-sync'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-modelo-036-census-sync-adr]]'
   - '[[2026-06-04-modelo-036-census-sync-research]]'

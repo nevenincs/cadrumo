@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#phase-two-plan-state-review'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-04-phase-two-plan-state-review-audit]]'
 ---

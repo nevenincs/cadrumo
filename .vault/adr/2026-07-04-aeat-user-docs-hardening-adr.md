@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#aeat-user-docs-hardening'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-16-aeat-user-docs-hardening-plan]]'
   - '[[2026-06-18-aeat-user-docs-hardening-audit]]'

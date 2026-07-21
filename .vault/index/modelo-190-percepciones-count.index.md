@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-190-percepciones-count'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - '[[2026-06-25-modelo-190-percepciones-count-P01-S01]]'
   - '[[2026-06-25-modelo-190-percepciones-count-P01-S02]]'

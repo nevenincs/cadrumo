@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cross-period-prorrata'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: 'S47'
 related:
   - "[[2026-07-06-cross-period-prorrata-plan]]"

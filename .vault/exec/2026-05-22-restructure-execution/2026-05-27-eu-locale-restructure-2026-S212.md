@@ -4,7 +4,7 @@ tags:
   - '#exec'
   - '#restructure-execution'
 date: 2026-05-27
-modified: '2026-07-10'
+modified: '2026-07-08'
 commit: 61e29af2a
 related:
   - '[[2025-05-22-restructure-execution-P01-S01]]'

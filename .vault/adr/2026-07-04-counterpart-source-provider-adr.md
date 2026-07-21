@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#counterpart-source-provider'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-04'
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'

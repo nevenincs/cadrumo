@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
   - '[[2026-07-08-mcp-progressive-discovery-audit]]'

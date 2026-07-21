@@ -4,7 +4,7 @@ tags:
   - '#core-authority'
 step_id: S17
 date: '2026-05-31'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-05-31-core-authority-plan]]'
   - '[[2026-05-31-core-authority-adr]]'

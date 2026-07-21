@@ -3,7 +3,7 @@ tags:
   - "#plan"
   - "#cert-pre-expiry-gate"
 date: 2026-04-13
-modified: '2026-07-10'
+modified: '2026-07-08'
 title: "Certificate Pre-Expiry Health Check + Workflow Gate — Implementation Plan"
 related:
   - "[[2026-04-13-cert-pre-expiry-gate-research]]"

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#obligation-coverage-completeness'
 date: '2026-06-30'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-06-30-obligation-coverage-completeness-research]]"
   - "[[2026-04-12-deadline-engine-adr]]"

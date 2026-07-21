@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#google-oauth'
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-05-13-google-oauth-plan]]"
   - "[[2026-05-08-google-oauth-adr]]"

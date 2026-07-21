@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cpdefix-followup-allgreen'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-07-05-cpdefix-followup-allgreen-research]]"
   - "[[2026-07-05-cpdefix-followup-allgreen-audit]]"

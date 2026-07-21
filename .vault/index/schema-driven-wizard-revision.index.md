@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#schema-driven-wizard-revision'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-12-schema-driven-wizard-revision-adr]]'
   - '[[2026-05-12-schema-driven-wizard-revision-phase1-step1-exec]]'

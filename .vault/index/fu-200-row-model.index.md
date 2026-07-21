@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#fu-200-row-model'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-fu-200-row-model-m349-m347-task-224-exec]]'
   - '[[2026-06-04-fu-200-row-model-adr]]'

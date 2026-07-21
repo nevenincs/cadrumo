@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#p2a-financial-provider"
 date: "2026-04-13"
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-13-p2a-financial-provider-research]]"
   - "[[2026-04-12-base-module-structure-adr]]"

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#pension-rescate-dt12-classification'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-07-01-pension-rescate-dt12-classification-research]]'
   - '[[2026-05-27-dt-12-rescate-plan-pensiones-adr]]'

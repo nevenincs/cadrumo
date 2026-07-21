@@ -4,7 +4,7 @@ tags:
   - '#exec'
   - '#modelo-303-390'
 date: 2026-05-26
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-12-modelo-303-390-phase1-task1-exec]]"
 ---

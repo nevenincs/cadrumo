@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#workbook-parity-charter'
 date: '2026-05-15'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-05-04-calculation-truth-registry-legal-grounding-review-audit]]"
   - "[[2026-05-14-legal-grounding-audit-reference]]"

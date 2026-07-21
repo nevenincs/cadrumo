@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-verify-nonzero-guards'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-research]]"
   - "[[2026-06-02-modelo-200-base-determination-adr]]"

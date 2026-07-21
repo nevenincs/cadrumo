@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#registry-m123-fragmentation'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-02-registry-m123-fragmentation-audit]]'
   - '[[2026-06-02-registry-m123-fragmentation-code-review-audit]]'

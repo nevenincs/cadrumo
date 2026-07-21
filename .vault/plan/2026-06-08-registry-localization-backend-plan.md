@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#registry-localization-backend'
 date: '2026-06-08'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'

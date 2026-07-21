@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#verifactu-sii-scope-stance'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-02'
 related:
   - '[[2026-07-02-verifactu-sii-scope-stance-adr]]'
 ---

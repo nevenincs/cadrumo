@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m210-categorical-conditional-predicate'
 date: '2026-06-30'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-06-30-modelo-verify-nonzero-guards-adr]]"
   - "[[2026-06-30-modelo-verify-nonzero-guards-plan]]"

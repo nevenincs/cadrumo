@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#arch-remediation-modelo-surface'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-arch-remediation-modelo-surface-plan]]"
   - "[[2026-07-02-arch-remediation-modelo-surface-adr]]"

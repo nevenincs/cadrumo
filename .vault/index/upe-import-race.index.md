@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#upe-import-race'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-upe-import-race-S01]]'
   - '[[2026-06-04-upe-import-race-adr]]'

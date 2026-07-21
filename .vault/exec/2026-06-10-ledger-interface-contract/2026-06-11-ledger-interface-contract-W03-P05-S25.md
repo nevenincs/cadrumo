@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#ledger-interface-contract']
 date: '2026-06-11'
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: 'S25'
 related:
   - '[[2026-06-10-ledger-interface-contract-plan]]'

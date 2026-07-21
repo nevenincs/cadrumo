@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#docs-educational-surface'
 date: '2026-06-01'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-05-30-docs-architecture-adr]]'
   - '[[2026-05-30-docs-architecture-research]]'

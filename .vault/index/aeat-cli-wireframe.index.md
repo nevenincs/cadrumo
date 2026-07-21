@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#aeat-cli-wireframe'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-24-aeat-cli-wireframe-adr]]'
   - '[[2026-04-24-aeat-cli-wireframe-reference]]'

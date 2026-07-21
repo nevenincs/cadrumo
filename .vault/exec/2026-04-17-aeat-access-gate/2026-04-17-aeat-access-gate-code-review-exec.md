@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#aeat-access-gate"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-08'
 title: "Code Review Record: Live AEAT Access Blocker & Verification Gate (#167)"
 related:
   - "[[2026-04-17-aeat-access-gate-plan]]"

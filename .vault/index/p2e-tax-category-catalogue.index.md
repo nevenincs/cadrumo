@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#p2e-tax-category-catalogue'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-13-p2e-tax-category-catalogue-adr]]'
   - '[[2026-04-13-p2e-tax-category-catalogue-phase1-summary-exec]]'

@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#trilingual-i18n"
 date: 2026-05-04
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-12-trilingual-i18n-plan]]"
 ---

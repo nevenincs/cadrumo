@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#domain-profile-rename'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-06-01-domain-boundary-audit-adr]]"
   - "[[2026-06-01-domain-boundary-audit-plan]]"

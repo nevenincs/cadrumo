@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-07-10'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-adr]]'

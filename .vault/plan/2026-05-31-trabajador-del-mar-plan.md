@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#trabajador-del-mar'
 date: '2026-05-31'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-05-31-trabajador-del-mar-adr]]'

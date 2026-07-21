@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#codebase-health'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-21-calculation-grounding-swarm-audit]]'
   - '[[2026-05-21-calculation-grounding-swarm-r2-audit]]'

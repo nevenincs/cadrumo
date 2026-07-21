@@ -1,7 +1,7 @@
 ---
 step_id: "W08.P35.S186"
 date: 2026-05-27
-modified: '2026-07-10'
+modified: '2026-07-08'
 tags:
   - "#exec"
   - "#declaracion-extraction-architecture"

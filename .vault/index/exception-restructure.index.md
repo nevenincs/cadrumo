@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#exception-restructure'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-09-exception-restructure-adr]]'
   - '[[2026-05-09-exception-restructure-phase-1-plan]]'

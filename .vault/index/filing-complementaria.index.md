@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#filing-complementaria'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-13-filing-complementaria-adr]]'
   - '[[2026-04-13-filing-complementaria-plan]]'

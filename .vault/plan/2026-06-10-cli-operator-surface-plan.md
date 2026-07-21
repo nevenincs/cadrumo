@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-10-cli-operator-surface-adr]]'

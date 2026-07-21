@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-work-revision-cli-decomposition'
 date: '2026-06-05'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-adr]]'

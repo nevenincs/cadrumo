@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#config-cli-profile-surface'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-07-config-cli-profile-surface-adr]]'
   - '[[2026-06-04-config-cli-profile-surface-research]]'

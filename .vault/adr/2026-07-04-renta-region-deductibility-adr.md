@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#renta-region-deductibility'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-04'
 related:
   - '[[2026-05-20-calculation-source-connectivity-plan]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'

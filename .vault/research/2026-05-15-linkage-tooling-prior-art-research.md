@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#linkage-tooling-prior-art'
 date: '2026-05-15'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-05-15-linkage-design-audit-research]]"
   - "[[2026-05-15-linkage-design-audit-reference]]"

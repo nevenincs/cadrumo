@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#registry-disk-cache-pytest'
 date: '2026-07-07'
-modified: '2026-07-10'
+modified: '2026-07-07'
 related:
   - '[[2026-07-07-registry-disk-cache-pytest-adr]]'
 ---

@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#google-oauth'
 date: '2026-05-06'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-05-06-google-oauth-audit]]"
   - "[[2026-04-21-google-auth-ux-adr]]"

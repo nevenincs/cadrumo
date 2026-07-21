@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"

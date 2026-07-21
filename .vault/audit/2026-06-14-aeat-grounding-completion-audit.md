@@ -7,7 +7,7 @@ related:
   - "[[2026-06-14-aeat-grounding-completion-plan]]"
 promoted_to:
   - 'rule:legal-grounding-verifies-bundled-authoritative-corpus'
-modified: '2026-07-03'
+modified: '2026-06-29'
 ---
 
 # `aeat-grounding-completion` audit: `Campaign-Close Honesty Review — Centralization + Grounding`

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-100-trabajo-casilla-compute'
 date: '2026-07-01'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-research]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'

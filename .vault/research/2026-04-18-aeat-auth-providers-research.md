@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#aeat-auth-providers"
 date: 2026-04-18
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-12-cert-auth-research]]"
   - "[[2026-04-12-cert-auth-adr]]"

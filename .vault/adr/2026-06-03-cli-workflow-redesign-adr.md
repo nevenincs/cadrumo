@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-06-03-cli-workflow-redesign-research]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"

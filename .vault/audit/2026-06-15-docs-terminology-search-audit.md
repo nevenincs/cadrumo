@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#docs-terminology-search'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-10-docs-terminology-search-adr]]'
   - '[[2026-06-10-docs-terminology-search-plan]]'

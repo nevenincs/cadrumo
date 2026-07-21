@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#calculation-correctness-campaign'
 date: '2026-06-13'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-adr]]"
   - "[[2026-06-13-modelo-130-pagos-fraccionados-carry-plan]]"

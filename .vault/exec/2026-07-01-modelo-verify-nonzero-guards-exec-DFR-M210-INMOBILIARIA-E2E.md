@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#modelo-verify-nonzero-guards'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 step_id: 'DFR-M210-INMOBILIARIA-E2E'
 related:
   - '[[2026-06-30-modelo-verify-nonzero-guards-plan]]'

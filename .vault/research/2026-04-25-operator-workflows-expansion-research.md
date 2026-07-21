@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#operator-workflows-expansion'
 date: '2026-04-25'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-25-operator-workflows-expansion-adr]]"
   - "[[2026-04-25-operator-workflows-expansion-plan]]"

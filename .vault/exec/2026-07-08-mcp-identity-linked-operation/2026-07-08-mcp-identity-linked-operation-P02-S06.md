@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-09'
 step_id: 'S06'
 related:
   - "[[2026-07-08-mcp-identity-linked-operation-plan]]"

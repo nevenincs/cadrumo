@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#auth-cli'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-21-auth-cli-adr]]'
   - '[[2026-04-21-auth-cli-plan]]'

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#registry-m100-2025-row-width'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-04-registry-m100-2025-row-width-S01]]'
   - '[[2026-06-04-registry-m100-2025-row-width-S02]]'

@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#auth-cli"
 date: "2026-04-21"
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-18-auth-protocol-adr]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"

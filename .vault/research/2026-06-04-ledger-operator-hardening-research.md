@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#ledger-operator-hardening'
 date: '2026-06-04'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-ledger-operator-hardening-adr]]"
 ---

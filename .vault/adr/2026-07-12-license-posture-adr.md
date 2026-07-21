@@ -8,8 +8,6 @@ related:
   - "[[2026-07-12-license-posture-research]]"
 ---
 
-
-
 # `license-posture` adr: `licence posture: retain Apache-2.0 with copyleft and corpus-reuse containment` | (**status:** `accepted`)
 
 ## Problem Statement

@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#arch-remediation-lazy-import-policy'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-arch-remediation-lazy-import-policy-adr]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"

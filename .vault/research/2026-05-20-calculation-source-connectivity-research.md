@@ -1,7 +1,7 @@
 ---
 tags: ["#research", "#calculation-source-connectivity"]
 date: "2026-05-20"
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-05-20-cli-testimonial-findings-inventory-audit]]"
 ---

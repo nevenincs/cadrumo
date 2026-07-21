@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m202-first-period-attestation'
 date: '2026-06-19'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-13-first-filer-attestation-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'

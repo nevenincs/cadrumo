@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#google-workspace-mcp-auth"
 date: "2026-04-16"
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-16-google-workspace-mcp-auth-plan]]"
   - "[[2026-04-16-google-workspace-mcp-auth-adr]]"

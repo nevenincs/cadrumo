@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#pm-integration-closeout'
 date: '2026-06-12'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - '[[2026-06-10-ledger-amount-direction-plan]]'
   - '[[2026-06-11-period-grammar-standardisation-plan]]'

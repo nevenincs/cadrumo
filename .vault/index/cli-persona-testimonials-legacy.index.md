@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#cli-persona-testimonials-legacy'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-06'
 related:
   - '[[2026-05-21-cli-persona-testimonials-plan]]'
   - '[[2026-05-22-cli-persona-testimonials-P04-S01]]'

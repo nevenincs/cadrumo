@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-05-cross-period-calculation-guards-adr]]'
   - '[[2026-06-05-cross-period-filing-clean-state-research]]'

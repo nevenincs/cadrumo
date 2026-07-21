@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#justificante-parser'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-12-justificante-parser-adr]]'
   - '[[2026-04-12-justificante-parser-plan]]'

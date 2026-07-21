@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#pdf-import'
 date: '2026-04-22'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-04-20-pdf-import-plan]]'
   - '[[2026-04-22-ruleset-architecture-adr]]'

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#ledger-evidence-enforcement'
 date: '2026-06-12'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-10-ledger-evidence-enforcement-plan]]'
   - '[[2026-06-10-ledger-evidence-enforcement-adr]]'

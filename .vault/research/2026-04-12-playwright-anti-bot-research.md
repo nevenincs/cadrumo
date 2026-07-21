@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#playwright-anti-bot"
 date: 2026-04-12
-modified: '2026-07-10'
+modified: '2026-07-08'
 title: "Playwright Anti-Bot Evasion Research"
 ---
 

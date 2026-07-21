@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#registry-schema-localization'
 date: '2026-06-11'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-08-registry-localization-backend-adr]]'
 ---

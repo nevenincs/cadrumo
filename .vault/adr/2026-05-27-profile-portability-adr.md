@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cross-domain-continuity'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-05-19-profile-lifecycle-disaster-adr]]"
   - "[[2026-05-29-cross-domain-continuity-audit]]"

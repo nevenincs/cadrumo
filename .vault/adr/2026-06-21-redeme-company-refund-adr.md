@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#redeme-company-refund'
 date: '2026-06-21'
-modified: '2026-06-28'
+modified: '2026-06-21'
 related:
   - '[[2026-06-21-redeme-company-refund-research]]'
   - '[[2026-06-19-iva-compensation-override-cli-adr]]'

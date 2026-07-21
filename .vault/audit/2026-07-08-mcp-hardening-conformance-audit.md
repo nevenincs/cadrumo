@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#mcp-hardening-conformance'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-09'
 related:
   - "[[2026-07-08-mcp-hardening-conformance-plan]]"
 ---

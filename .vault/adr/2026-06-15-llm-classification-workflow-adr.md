@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#llm-classification-workflow'
 date: '2026-06-15'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-14-llm-classification-workflow-audit]]"
   - '[[2026-06-14-llm-classification-workflow-research]]'

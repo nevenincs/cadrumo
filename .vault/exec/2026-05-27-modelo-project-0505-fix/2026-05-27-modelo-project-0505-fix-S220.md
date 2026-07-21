@@ -2,7 +2,7 @@
 step_id: "S220"
 feature: "modelo-project-0505-fix"
 date: 2026-05-27
-modified: '2026-07-10'
+modified: '2026-07-08'
 tags:
   - "#exec"
   - "#modelo-project-0505-fix"

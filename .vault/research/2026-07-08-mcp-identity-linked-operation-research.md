@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#mcp-identity-linked-operation'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-07-08-mcp-console-review-audit]]'
   - '[[2026-07-08-mcp-identity-linked-operation-adr]]'

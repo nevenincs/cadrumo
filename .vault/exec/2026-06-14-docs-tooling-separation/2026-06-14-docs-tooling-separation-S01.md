@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#docs-tooling-separation'
 date: '2026-06-15'
-modified: '2026-07-03'
+modified: '2026-06-30'
 step_id: 'S01'
 related:
   - "[[2026-06-14-docs-tooling-separation-plan]]"

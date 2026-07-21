@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#codebase-monolith-decomposition'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-05-codebase-monolith-decomposition-W01-P01-S01]]'
   - '[[2026-06-05-codebase-monolith-decomposition-W01-P01-S02]]'

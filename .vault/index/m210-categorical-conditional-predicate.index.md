@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#m210-categorical-conditional-predicate'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-06'
 related:
   - '[[2026-06-30-m210-categorical-conditional-predicate-adr]]'
   - '[[2026-07-06-m210-categorical-conditional-predicate-research]]'

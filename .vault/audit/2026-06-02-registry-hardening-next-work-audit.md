@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#registry-hardening-next-work'
 date: '2026-06-02'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
 ---

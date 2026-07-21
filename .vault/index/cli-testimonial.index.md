@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#cli-testimonial'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-20-cli-persona-task-catalogue-reference]]'
   - '[[2026-05-20-cli-state-architecture-research]]'

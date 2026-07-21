@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#cli-ledger-testimonials'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-cli-ledger-testimonials-adr]]'
   - '[[2026-06-03-cli-ledger-testimonials-audit]]'

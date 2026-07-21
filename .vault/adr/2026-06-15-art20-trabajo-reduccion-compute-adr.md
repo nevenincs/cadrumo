@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#art20-trabajo-reduccion-compute'
 date: '2026-06-15'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - '[[2026-06-15-art20-trabajo-reduccion-compute-research]]'
 ---

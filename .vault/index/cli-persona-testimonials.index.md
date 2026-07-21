@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#cli-persona-testimonials'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-06'
 related:
   - '[[2026-05-20-cli-persona-testimonials-audit]]'
   - '[[2026-05-20-cli-persona-testimonials-research]]'

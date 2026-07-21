@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#playwright-anti-bot'
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-08'
 title: Playwright Anti-Bot Evasion Phase 1 Summary
 related:
   - '[[2026-04-12-playwright-anti-bot-plan]]'

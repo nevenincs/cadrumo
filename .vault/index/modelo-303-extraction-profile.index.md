@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-303-extraction-profile'
 date: '2026-07-01'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-04-modelo-303-extraction-profile-adr]]'
   - '[[2026-06-04-modelo-303-extraction-profile-research]]'

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#settings-di-deferral'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-settings-di-deferral-adr]]'
   - '[[2026-06-04-settings-di-deferral-research]]'

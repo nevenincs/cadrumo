@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-131-eo-modulos-engine'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - "[[2026-04-27-modelo-131-calc-verify-adr]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"

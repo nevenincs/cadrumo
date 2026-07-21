@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#ledger-input-localization'
 date: '2026-06-12'
-modified: '2026-07-03'
+modified: '2026-06-30'
 step_id: 'S13'
 related:
   - "[[2026-06-10-ledger-input-localization-plan]]"

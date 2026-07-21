@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#obligation-coverage-completeness'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 step_id: 'S05'
 related:
   - "[[2026-06-30-obligation-coverage-completeness-plan]]"

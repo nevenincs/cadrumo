@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-prorrata-complexity'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-07-08-iva-prorrata-complexity-audit]]'
   - '[[2026-07-07-prorrata-especial-adr]]'

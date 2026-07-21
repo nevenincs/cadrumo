@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#session-honest-followups'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-02-session-honest-followups-P01-S01]]'
   - '[[2026-06-02-session-honest-followups-P01-S02]]'

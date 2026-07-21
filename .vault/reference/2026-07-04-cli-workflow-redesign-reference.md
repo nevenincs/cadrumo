@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#cli-workflow-redesign'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-04'
 related:
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]"
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-adr]]"

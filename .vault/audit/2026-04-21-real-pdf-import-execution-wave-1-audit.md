@@ -3,7 +3,7 @@ tags:
   - "#audit"
   - "#real-pdf-import"
 date: "2026-04-21"
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-21-pdf-taxonomy-plan]]"
   - "[[2026-04-21-justificante-reframing-plan]]"

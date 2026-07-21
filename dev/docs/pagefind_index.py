@@ -45,7 +45,11 @@ loading instead of lazy chunking.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+import os
+import shutil
+import tempfile
+from collections.abc import Awaitable, Callable, Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -67,6 +71,10 @@ class PagefindUnavailableError(RuntimeError):
     """
 
 
+class PagefindConfigurationError(RuntimeError):
+    """Raised when the shipped Pagefind configuration is absent or invalid."""
+
+
 @dataclass(frozen=True)
 class SearchIndexResult:
     """Outcome of a Pagefind index pass."""
@@ -74,6 +82,80 @@ class SearchIndexResult:
     html_root: Path
     page_count: int
     output_subdir: str
+
+
+def _default_config_path() -> Path:
+    """Return the shipped Pagefind configuration path."""
+    return Path(__file__).resolve().parents[2] / "docs" / "pagefind.yml"
+
+
+def _load_index_config(config_path: Path, output_path: Path):
+    """Read validated selectors from the shipped YAML configuration.
+
+    The Python Pagefind API does not discover ``pagefind.yml`` itself. Keep
+    the CLI configuration authoritative by loading its two selector settings
+    and passing them through as ``IndexConfig``.
+    """
+    import yaml
+    from pagefind.index import IndexConfig
+
+    try:
+        raw_config = yaml.safe_load(config_path.read_text(encoding="utf-8"))
+    except FileNotFoundError as exc:
+        raise PagefindConfigurationError(f"Pagefind config not found: {config_path}") from exc
+    except OSError as exc:
+        raise PagefindConfigurationError(f"Pagefind config could not be read: {config_path}: {exc}") from exc
+    except yaml.YAMLError as exc:
+        raise PagefindConfigurationError(f"Pagefind config is not valid YAML: {config_path}: {exc}") from exc
+
+    if not isinstance(raw_config, dict):
+        raise PagefindConfigurationError(f"Pagefind config must be a mapping: {config_path}")
+
+    root_selector = raw_config.get("root_selector")
+    if not isinstance(root_selector, str) or not root_selector.strip():
+        raise PagefindConfigurationError(
+            f"Pagefind config requires a non-empty string root_selector: {config_path}",
+        )
+
+    exclude_selectors = raw_config.get("exclude_selectors")
+    if not isinstance(exclude_selectors, list) or any(
+        not isinstance(selector, str) or not selector.strip() for selector in exclude_selectors
+    ):
+        raise PagefindConfigurationError(
+            f"Pagefind config requires exclude_selectors as a list of non-empty strings: {config_path}",
+        )
+
+    return IndexConfig(
+        root_selector=root_selector,
+        exclude_selectors=exclude_selectors,
+        output_path=str(output_path),
+    )
+
+
+@contextmanager
+def _indexable_html_tree(html_root: Path) -> Iterator[Path]:
+    """Yield an ephemeral input tree without generated source-code pages.
+
+    Pagefind should search human docs and CLI pages, not Sphinx's generated
+    API or ``_modules`` source listings. Those files remain in the built site
+    for direct links. Mirror only indexable HTML pages at their original
+    relative paths. Prefer hard links; copy when the temporary directory is
+    on another volume.
+    """
+    with tempfile.TemporaryDirectory(prefix="aeat-pagefind-input-", dir=html_root.parent) as temp_dir:
+        input_root = Path(temp_dir) / "html"
+        input_root.mkdir()
+        for source in html_root.rglob("*.html"):
+            relative = source.relative_to(html_root)
+            if relative.parts and relative.parts[0] in {"_modules", "api"}:
+                continue
+            target = input_root / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                os.link(source, target)
+            except OSError:
+                shutil.copy2(source, target)
+        yield input_root
 
 
 def _require_pagefind() -> None:
@@ -95,6 +177,7 @@ def _require_pagefind() -> None:
 async def _run_index(
     html_root: Path,
     *,
+    config_path: Path,
     inject: InjectCallback | None,
 ) -> int:
     """Index ``html_root`` with Pagefind and write the per-language index.
@@ -103,16 +186,14 @@ async def _run_index(
     """
     from pagefind.index import PagefindIndex
 
-    output_path = html_root / "pagefind"
-    async with PagefindIndex() as index:
-        response = await index.add_directory(str(html_root))
-        if inject is not None:
-            # Injection seam: the custom-record step adds the unified search
-            # records and relevance weights here, before the index is written.
-            await inject(index)
-        # Write the chunked, per-language index into <html_root>/pagefind/ so
-        # the built site serves it alongside its pages (an uncommitted artifact).
-        await index.write_files(output_path=str(output_path))
+    config = _load_index_config(config_path, html_root / "pagefind")
+    with _indexable_html_tree(html_root) as input_root:
+        async with PagefindIndex(config=config) as index:
+            response = await index.add_directory(str(input_root))
+            if inject is not None:
+                # Injection seam: the custom-record step adds the unified search
+                # records and relevance weights here, before the index is written.
+                await inject(index)
     # The directory-pass response is a dict carrying the indexed page count.
     if isinstance(response, dict):
         return int(response.get("page_count", 0) or 0)
@@ -122,15 +203,17 @@ async def _run_index(
 def build_search_index(
     html_root: Path,
     *,
+    config_path: Path | None = None,
     inject: InjectCallback | None = None,
 ) -> SearchIndexResult:
     """Run the post-build Pagefind index pass over the built HTML.
 
     Args:
         html_root: The Sphinx HTML output directory (``docs/_build/html``).
-            Pagefind reads ``pagefind.yml`` from this root for the
-            root/exclude selectors and writes the chunked index into
-            ``<html_root>/pagefind/``.
+            Pagefind reads a temporary mirror of this tree and writes the
+            chunked index into ``<html_root>/pagefind/``.
+        config_path: The shipped ``docs/pagefind.yml`` selector configuration.
+            Defaults to that source-controlled file.
         inject: Optional custom-record injection callback (the custom-record
             step supplies it). Called with the open index after the directory
             pass and before the index is written.
@@ -140,12 +223,15 @@ def build_search_index(
 
     Raises:
         PagefindUnavailableError: If the vendored Pagefind package is absent.
+        PagefindConfigurationError: If the selector configuration is absent or
+            invalid.
         FileNotFoundError: If ``html_root`` does not exist.
     """
     _require_pagefind()
     if not html_root.is_dir():
         raise FileNotFoundError(f"built HTML root not found: {html_root}")
-    page_count = asyncio.run(_run_index(html_root, inject=inject))
+    resolved_config_path = _default_config_path() if config_path is None else config_path
+    page_count = asyncio.run(_run_index(html_root, config_path=resolved_config_path, inject=inject))
     return SearchIndexResult(
         html_root=html_root,
         page_count=page_count,

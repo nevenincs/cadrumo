@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-registry-fragments'
 date: '2026-05-19'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - '[[2026-05-19-modelo-registry-fragment-architecture-research]]'
 ---

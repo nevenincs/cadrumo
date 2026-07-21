@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-02'
 tier: L3
 related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'

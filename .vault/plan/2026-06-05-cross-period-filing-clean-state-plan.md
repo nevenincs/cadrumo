@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-adr]]'

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-locales-cli'
 date: '2026-06-11'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-11-modelo-locales-cli-research]]'

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#vault-health-baseline'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-19-vault-health-baseline-audit]]'
 ---

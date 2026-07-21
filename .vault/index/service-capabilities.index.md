@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-15-service-capabilities-W01-P01-S01]]'
   - '[[2026-06-15-service-capabilities-W01-P01-S02]]'

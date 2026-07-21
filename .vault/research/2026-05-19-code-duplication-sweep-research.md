@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#code-duplication-sweep'
 date: '2026-05-19'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related: []
 title: "Accidental Redefinition and Overlapping Module Definitions Audit"
 source: "Manual Codebase Sweep and AST Analysis"

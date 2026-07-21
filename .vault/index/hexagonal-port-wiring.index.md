@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#hexagonal-port-wiring'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-01-hexagonal-port-wiring-plan]]'
   - '[[2026-06-04-hexagonal-port-wiring-adr]]'

@@ -3,7 +3,7 @@ tags:
   - "#audit"
   - "#aeat-restructure"
 date: 2026-05-01
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-04-30-aeat-restructure-adr]]"
   - "[[2026-04-30-aeat-restructure-summary-exec]]"

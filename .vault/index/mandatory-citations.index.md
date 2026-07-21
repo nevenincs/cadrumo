@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#mandatory-citations'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-25-mandatory-citations-adr]]'
   - '[[2026-04-25-mandatory-citations-phase1-step1-exec]]'

@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#binding-fold-in-carry-unification'
 date: '2026-06-26'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-26-binding-fold-in-carry-unification-adr]]"
   - "[[2026-06-26-binding-fold-in-carry-unification-plan]]"

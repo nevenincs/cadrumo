@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#binding-adr-corpus-reconciliation'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-05'
 related:
   - '[[2026-06-26-binding-adr-corpus-reconciliation-S01]]'
   - '[[2026-06-26-binding-adr-corpus-reconciliation-S02]]'

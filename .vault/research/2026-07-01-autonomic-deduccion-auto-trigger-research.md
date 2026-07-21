@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-06-04-m100-marriage-date-axis-adr]]'
   - '[[2026-06-19-m100-dependent-modelo-applicability-adr]]'

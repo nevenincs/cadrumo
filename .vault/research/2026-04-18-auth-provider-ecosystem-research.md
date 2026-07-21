@@ -3,7 +3,7 @@ tags:
   - "#research"
   - "#cert-provider"
 date: "2026-04-18"
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"

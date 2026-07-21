@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#release-readiness-gate'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-07-06-release-readiness-gate-research]]'
 status: accepted

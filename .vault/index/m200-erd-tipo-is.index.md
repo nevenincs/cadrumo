@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#m200-erd-tipo-is'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-m200-erd-tipo-is-S01]]'
   - '[[2026-06-04-m200-erd-tipo-is-adr]]'

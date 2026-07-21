@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#arch-remediation-engine-lifecycle'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-arch-remediation-engine-lifecycle-plan]]"
   - "[[2026-07-02-arch-remediation-engine-lifecycle-adr]]"

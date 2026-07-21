@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#docs-architecture'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-30-docs-architecture-W01-P02-S06]]'
   - '[[2026-05-30-docs-architecture-W01-P04-S15]]'

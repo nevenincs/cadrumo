@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#binding-adr-corpus-reconciliation'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: 'S07'
 related:
   - "[[2026-06-26-binding-adr-corpus-reconciliation-plan]]"

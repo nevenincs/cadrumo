@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#aeat-architecture-review'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-02'
 related:
   - '[[2026-06-04-full-repo-health-diagnostics-audit]]'
   - '[[2026-05-16-corpus-registry-packaging-audit]]'

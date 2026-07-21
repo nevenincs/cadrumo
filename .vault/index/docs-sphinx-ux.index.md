@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#docs-sphinx-ux'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-04-docs-sphinx-ux-W01-P01-S01]]'
   - '[[2026-06-04-docs-sphinx-ux-W01-P01-S02]]'

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-130-relation-regression'
 date: '2026-05-26'
-modified: '2026-07-03'
+modified: '2026-06-29'
 related:
   - "[[2026-05-19-modelo-130-relation-regression-research]]"
   - "[[2026-05-26-modelo-130-relation-regression-audit]]"

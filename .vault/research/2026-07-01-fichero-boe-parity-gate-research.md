@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#fichero-boe-parity-gate'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related: []
 ---
 

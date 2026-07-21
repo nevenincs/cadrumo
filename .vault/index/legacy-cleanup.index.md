@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#legacy-cleanup'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-18-legacy-cleanup-audit]]'
 ---

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#justificante-reframing'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-21-justificante-reframing-adr]]'
   - '[[2026-04-21-justificante-reframing-plan]]'

@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#live-pull-verification-sweep'
 date: '2026-06-12'
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: W02.P04.S10,W03.P05.S19,W03.P06.S27,W04.P07.S29
 related:
   - '[[2026-06-12-live-pull-verification-sweep-plan]]'

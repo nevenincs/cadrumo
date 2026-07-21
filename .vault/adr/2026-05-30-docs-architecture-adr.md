@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#docs-architecture'
 date: '2026-05-30'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-04-12-docs-rewrite-adr]]"

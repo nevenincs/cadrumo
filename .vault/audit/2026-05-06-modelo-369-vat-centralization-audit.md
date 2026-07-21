@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#modelo-369-vat-centralization'
 date: '2026-05-06'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'

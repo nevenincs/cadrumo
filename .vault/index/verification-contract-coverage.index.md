@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#verification-contract-coverage'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-07-01-verification-contract-coverage-audit]]'
 ---

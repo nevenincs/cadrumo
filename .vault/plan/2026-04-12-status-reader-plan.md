@@ -5,7 +5,7 @@ tags:
 id: 2026-04-12-status-reader-plan
 title: Plan — AEAT status reader (#43)
 date: 2026-04-12
-modified: '2026-07-10'
+modified: '2026-07-08'
 status: approved
 type: plan
 related:

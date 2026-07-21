@@ -8,9 +8,11 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING
+from xml.etree import ElementTree
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
@@ -24,6 +26,13 @@ if TYPE_CHECKING:
 
 DOC_SUFFIXES = {".md", ".rst"}
 PY_SUFFIX = ".py"
+_DOCS_JOBS_ENV = "AEAT_DOCS_JOBS"
+_DEFAULT_DOCS_JOBS = "auto"
+_PAGEFIND_MODE_ENV = "AEAT_DOCS_PAGEFIND_MODE"
+_DEFAULT_PAGEFIND_MODE = "full"
+_PAGEFIND_MODES = frozenset(("full", "pages"))
+_SITEMAP_EXCLUDED_ROOTS = frozenset(("_images", "_modules", "_sources", "_static", "api", "pagefind"))
+_SITEMAP_EXCLUDED_FILES = frozenset(("404.html", "genindex.html", "py-modindex.html", "search.html"))
 
 
 @dataclass(frozen=True)
@@ -47,6 +56,65 @@ def _executable(name: str) -> str:
     if resolved is None:
         raise SystemExit(f"Required executable not found on PATH: {name}")
     return resolved
+
+
+def docs_build_jobs(environ: Mapping[str, str] | None = None) -> str:
+    """Return the validated Sphinx worker setting for a docs build.
+
+    ``auto`` retains the default parallel build. Deployments can set one
+    worker when an extension requires serialized output generation.
+    """
+    source = os.environ if environ is None else environ
+    value = source.get(_DOCS_JOBS_ENV, _DEFAULT_DOCS_JOBS)
+    if value == _DEFAULT_DOCS_JOBS:
+        return value
+    if value.isascii() and value.isdecimal() and int(value) > 0:
+        return value
+    raise SystemExit(f"{_DOCS_JOBS_ENV} must be 'auto' or a positive integer; received {value!r}")
+
+
+def pagefind_index_mode(environ: Mapping[str, str] | None = None) -> str:
+    """Return the validated Pagefind indexing mode for a full docs build.
+
+    ``full`` retains the local build's custom term, casilla, and CLI records.
+    ``pages`` indexes rendered documentation pages only.
+    """
+    source = os.environ if environ is None else environ
+    value = source.get(_PAGEFIND_MODE_ENV, _DEFAULT_PAGEFIND_MODE)
+    if value in _PAGEFIND_MODES:
+        return value
+    allowed = ", ".join(sorted(_PAGEFIND_MODES))
+    raise SystemExit(f"{_PAGEFIND_MODE_ENV} must be one of {allowed}; received {value!r}")
+
+
+def write_deployment_sitemap(html_root: Path, base_url: str) -> None:
+    """Write canonical sitemap entries for rendered human docs and CLI pages."""
+    canonical_base = base_url.rstrip("/")
+    if not canonical_base:
+        return
+    root = ElementTree.Element("urlset", xmlns="http://www.sitemaps.org/schemas/sitemap/0.9")
+    for page in sorted(
+        html_root.rglob("*.html"),
+        key=lambda candidate: (
+            candidate.relative_to(html_root).as_posix() != "index.html",
+            candidate.relative_to(html_root).as_posix(),
+        ),
+    ):
+        relative = page.relative_to(html_root)
+        if relative.parts[0] in _SITEMAP_EXCLUDED_ROOTS or relative.name in _SITEMAP_EXCLUDED_FILES:
+            continue
+        if relative.name == "index.html":
+            suffix = relative.parent.as_posix()
+            location = f"{canonical_base}/" if suffix == "." else f"{canonical_base}/{suffix}/"
+        else:
+            location = f"{canonical_base}/{relative.as_posix()}"
+        url = ElementTree.SubElement(root, "url")
+        ElementTree.SubElement(url, "loc").text = location
+    ElementTree.ElementTree(root).write(
+        html_root / "sitemap.xml",
+        encoding="utf-8",
+        xml_declaration=True,
+    )
 
 
 def _run_git(args: list[str], repo_root: Path) -> list[Path]:
@@ -303,7 +371,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     """
     docs_root = repo_root / "docs"
     targets = plan.targets
-    command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", "auto"]
+    command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", docs_build_jobs()]
     env = {**os.environ, "AEAT_DOCS_PROJECT_ROOT": str(repo_root)}
     if strict:
         command.extend(["-n", "-W"])
@@ -369,7 +437,9 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     # build: the changed-page and single-page modes write previews (temp trees
     # or a lone page) that must not regenerate the whole search index.
     if plan.full_build_required:
-        compile_search_index(docs_root / "_build" / "html", repo_root)
+        html_root = docs_root / "_build" / "html"
+        write_deployment_sitemap(html_root, env.get("AEAT_DOCS_BASE_URL", ""))
+        compile_search_index(html_root, repo_root)
 
 
 def compile_search_index(
@@ -385,9 +455,8 @@ def compile_search_index(
     boosted by the committed build-time RAG sweep (ADR D4/D6). The resulting
     per-language index is an uncommitted build artifact, regenerated on every
     full build exactly like the generated CLI/API surfaces. A missing vendored
-    Pagefind wheel is reported and skipped rather than failing the
-    otherwise-successful docs build (the documented Orama fallback applies only
-    if the wheel is unvendorable for a platform).
+    Pagefind wheel fails the full build because a deployed documentation site
+    must include its declared Ctrl-K search surface.
 
     Args:
         html_root: The built Sphinx HTML output directory to index.
@@ -397,22 +466,31 @@ def compile_search_index(
             can drive a small real injector without paying the full
             materialisation cost; production always uses the default.
     """
-    from dev.docs.pagefind_index import PagefindUnavailableError, build_search_index
-    from dev.docs.pagefind_inject import InjectionStats, build_record_injector
+    from dev.docs.pagefind_index import build_search_index
 
-    captured: list[InjectionStats] = []
-    resolved_injector = build_record_injector(repo_root, on_complete=captured.append) if injector is None else injector
-    try:
-        outcome = build_search_index(html_root, inject=resolved_injector)
-    except PagefindUnavailableError as exc:
-        print(f"Search index skipped (vendored Pagefind unavailable): {exc}", flush=True)
+    mode = pagefind_index_mode()
+    captured = []
+    resolved_injector = injector
+    if injector is None and mode == "full":
+        from dev.docs.pagefind_inject import build_record_injector
+
+        resolved_injector = build_record_injector(repo_root, on_complete=captured.append)
+    outcome = build_search_index(
+        html_root,
+        config_path=repo_root / "docs" / "pagefind.yml",
+        inject=resolved_injector,
+    )
+    if captured:
+        stats = captured[0]
+        print(
+            f"Search index compiled: {outcome.page_count} pages + {stats.custom_records_written} "
+            f"term/casilla/CLI records ({stats.relevance_boosts_applied} relevance-boosted) -> "
+            f"{outcome.html_root / outcome.output_subdir}",
+            flush=True,
+        )
         return
-    stats = captured[0] if captured else None
-    written = stats.custom_records_written if stats is not None else 0
-    boosts = stats.relevance_boosts_applied if stats is not None else 0
     print(
-        f"Search index compiled: {outcome.page_count} pages + {written} term/casilla/CLI records "
-        f"({boosts} relevance-boosted) -> {outcome.html_root / outcome.output_subdir}",
+        f"Search index compiled: {outcome.page_count} pages -> {outcome.html_root / outcome.output_subdir}",
         flush=True,
     )
 

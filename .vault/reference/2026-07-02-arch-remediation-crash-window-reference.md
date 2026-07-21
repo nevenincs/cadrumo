@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#arch-remediation-crash-window'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-02'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"

@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#just-tooling-bootstrap'
 date: '2026-06-04'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-04-just-tooling-bootstrap-plan]]'
   - '[[2026-06-04-just-tooling-bootstrap-adr]]'

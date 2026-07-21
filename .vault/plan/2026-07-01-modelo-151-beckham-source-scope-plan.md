@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-01'
-modified: '2026-07-10'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-07-01-modelo-151-beckham-source-scope-adr]]'

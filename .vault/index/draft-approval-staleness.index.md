@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#draft-approval-staleness'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-18-draft-approval-staleness-adr-audit]]'
   - '[[2026-04-18-draft-approval-staleness-adr]]'

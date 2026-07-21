@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#autonomic-deduccion-framework'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-05'
 related:
   - '[[2026-07-04-autonomic-deduccion-framework-adr]]'
 ---

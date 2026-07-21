@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#eu-locale'
 date: '2026-07-01'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-04-eu-locale-adr]]'
   - '[[2026-06-04-eu-locale-research]]'

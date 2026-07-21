@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-11-period-grammar-standardisation-research]]'

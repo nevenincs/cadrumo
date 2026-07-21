@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-190-percepciones-count'
 date: '2026-06-25'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-25-modelo-190-percepciones-count-adr]]'

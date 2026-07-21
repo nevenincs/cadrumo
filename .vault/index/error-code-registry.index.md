@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#error-code-registry'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-25-error-code-registry-adr]]'
   - '[[2026-04-25-error-code-registry-code-review-exec]]'

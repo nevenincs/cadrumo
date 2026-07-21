@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#agent-harness'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related: []
 ---
 

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#ledger-perf-optimization'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-06'
 related:
   - "[[2026-07-06-ledger-perf-optimization-reference]]"
   - "[[2026-07-06-ledger-perf-optimization-research]]"

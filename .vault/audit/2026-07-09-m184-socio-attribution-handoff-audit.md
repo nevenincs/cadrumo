@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#m184-socio-attribution-handoff'
 date: '2026-07-09'
-modified: '2026-07-10'
+modified: '2026-07-09'
 related:
   - '[[2026-07-09-m184-socio-attribution-handoff-adr]]'
   - '[[2026-05-26-cross-domain-continuity-plan]]'

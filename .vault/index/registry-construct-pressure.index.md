@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#registry-construct-pressure'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-registry-construct-pressure-P01-S01]]'
   - '[[2026-06-03-registry-construct-pressure-P02-S02]]'

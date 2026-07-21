@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#llm-evidence-classification'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-llm-evidence-classification-plan]]"
   - "[[2026-06-10-llm-evidence-classification-adr]]"

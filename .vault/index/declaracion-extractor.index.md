@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#declaracion-extractor'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-21-declaracion-extractor-adr]]'
   - '[[2026-04-21-declaracion-extractor-plan]]'

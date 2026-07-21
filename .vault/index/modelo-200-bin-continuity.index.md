@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-200-bin-continuity'
 date: '2026-06-24'
-modified: '2026-06-28'
+modified: '2026-06-24'
 related:
   - '[[2026-06-24-modelo-200-bin-continuity-adr]]'
 ---

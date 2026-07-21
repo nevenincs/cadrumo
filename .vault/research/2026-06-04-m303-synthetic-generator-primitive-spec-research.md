@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#m303-synthetic-generator-primitive-spec'
 date: '2026-06-04'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-m303-synthetic-generator-primitive-spec-adr]]"
 ---

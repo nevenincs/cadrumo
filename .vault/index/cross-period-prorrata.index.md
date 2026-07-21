@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#cross-period-prorrata'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-06'
 related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-07-06-cross-period-prorrata-W01-P01-S01]]'

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#agent-harness-refoundation'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-agent-harness-refoundation-research]]"
   - "[[2026-07-03-claude-ecosystem-packaging-adr]]"

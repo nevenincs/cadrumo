@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#quadlingual-i18n'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-01-quadlingual-i18n-adr]]'
   - '[[2026-05-01-quadlingual-i18n-reference]]'

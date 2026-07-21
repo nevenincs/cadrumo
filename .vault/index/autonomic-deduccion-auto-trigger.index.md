@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#autonomic-deduccion-auto-trigger'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-07-01-autonomic-deduccion-auto-trigger-adr]]'
   - '[[2026-07-01-autonomic-deduccion-auto-trigger-research]]'

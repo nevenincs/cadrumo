@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#core-authority-duplicates-v2'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-31-core-authority-duplicates-v2-reference]]'
 ---

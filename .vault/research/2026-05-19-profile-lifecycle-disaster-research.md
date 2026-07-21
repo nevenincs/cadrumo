@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#profile-lifecycle-disaster'
 date: '2026-05-19'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-05-19-operator-blind-dual-testimony-audit]]"
   - "[[2026-05-14-profile-bucket-lifecycle-adr]]"

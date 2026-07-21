@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#cli-typed-arg-hint'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-01-cli-typed-arg-hint-audit]]'
 ---

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-721-cripto-data-fidelity'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-02-modelo-721-cripto-data-fidelity-adr]]'
   - '[[2026-06-02-modelo-721-cripto-data-fidelity-research]]'

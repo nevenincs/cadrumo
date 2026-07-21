@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#determinism-replay-residual'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-06-30-deterministic-output-replay-substrate-adr]]'
   - '[[2026-06-30-deterministic-output-replay-substrate-research]]'

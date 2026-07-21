@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-100-minimo-descendientes-engine'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-02'
 related:
   - '[[2026-07-01-modelo-100-trabajo-casilla-compute-adr]]'
   - '[[2026-06-15-art20-trabajo-reduccion-compute-adr]]'

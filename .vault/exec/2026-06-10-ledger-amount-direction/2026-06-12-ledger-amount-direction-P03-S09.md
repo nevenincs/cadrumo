@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#ledger-amount-direction']
 date: '2026-06-12'
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: 'S09'
 related:
   - '[[2026-06-10-ledger-amount-direction-plan]]'

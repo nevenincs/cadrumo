@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#campaign-profile-export-hardening'
 date: '2026-06-28'
-modified: '2026-07-03'
+modified: '2026-06-28'
 related:
   - "[[2026-06-27-campaign-profile-export-hardening-audit]]"
 ---

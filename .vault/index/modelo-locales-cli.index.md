@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-locales-cli'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-11-modelo-locales-cli-P01-S01]]'
   - '[[2026-06-11-modelo-locales-cli-P01-S02]]'

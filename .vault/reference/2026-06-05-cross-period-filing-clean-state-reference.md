@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#cross-period-filing-clean-state'
 date: '2026-06-05'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-06-05-cross-period-filing-clean-state-research]]'
   - '[[2026-06-02-modelo-filing-ledger-snapshot-adr]]'

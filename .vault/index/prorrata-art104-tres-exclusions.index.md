@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#prorrata-art104-tres-exclusions'
 date: '2026-07-07'
-modified: '2026-07-10'
+modified: '2026-07-07'
 related:
   - '[[2026-07-07-prorrata-art104-tres-exclusions-adr]]'
 ---

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#cpdefix-invariant-closeout'
 date: '2026-06-29'
-modified: '2026-07-03'
+modified: '2026-06-29'
 related:
   - '[[2026-06-29-cpdefix-invariant-closeout-audit]]'
 ---

@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#m349-legal-grounding-debt'
 date: '2026-06-03'
-modified: '2026-07-03'
+modified: '2026-06-29'
 related:
   - "[[2026-06-03-m349-payable-invoice-authoring-research]]"
 ---

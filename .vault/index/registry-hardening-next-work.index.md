@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#registry-hardening-next-work'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-02-registry-hardening-next-work-W05-P09-S41]]'
   - '[[2026-06-02-registry-hardening-next-work-W05-P09-S42]]'

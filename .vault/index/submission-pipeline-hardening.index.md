@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#submission-pipeline-hardening'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-04-22-submission-pipeline-hardening-reference]]'
 ---

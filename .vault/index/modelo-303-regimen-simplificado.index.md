@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#modelo-303-regimen-simplificado'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-01'
 related:
   - '[[2026-07-01-modelo-303-regimen-simplificado-adr]]'
 ---

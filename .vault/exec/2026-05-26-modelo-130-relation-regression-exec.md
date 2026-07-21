@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#modelo-130-relation-regression'
 date: '2026-05-26'
-modified: '2026-07-03'
+modified: '2026-06-29'
 step_id: 'S01'
 related:
   - "[[2026-05-26-modelo-130-relation-regression-plan]]"

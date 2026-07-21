@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#calculation-aggregation-taxonomy'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-10-calculation-aggregation-taxonomy-adr]]'
   - '[[2026-06-10-calculation-aggregation-taxonomy-research]]'

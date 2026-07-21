@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#portal-catalogue'
 date: '2026-04-17'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-04-17-portal-catalogue-adr]]'
   - '[[2026-04-17-portal-catalogue-research]]'

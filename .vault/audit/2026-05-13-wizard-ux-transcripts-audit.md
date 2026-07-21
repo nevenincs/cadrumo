@@ -1,7 +1,7 @@
 ---
 tags: ["#audit", "#schema-driven-wizard-ux"]
 date: 2026-05-13
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-05-12-schema-driven-wizard-adr]]"
 ---

@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#m210-irnr-full-engine'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-27-m210-irnr-full-engine-adr]]'
   - '[[2026-06-04-m210-irnr-full-engine-research]]'

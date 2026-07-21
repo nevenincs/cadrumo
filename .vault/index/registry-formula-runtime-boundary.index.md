@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#registry-formula-runtime-boundary'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-02-registry-formula-runtime-boundary-audit]]'
   - '[[2026-06-02-registry-formula-runtime-boundary-code-review-audit]]'

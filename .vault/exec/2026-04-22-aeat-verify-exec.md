@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#aeat-verify'
 date: '2026-04-22'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-04-24-aeat-verify-plan]]"
   - "[[2026-04-25-aeat-verify-exec]]"

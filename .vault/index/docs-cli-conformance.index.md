@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#docs-cli-conformance'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-30-docs-cli-conformance-adr]]'
   - '[[2026-06-04-docs-cli-conformance-research]]'

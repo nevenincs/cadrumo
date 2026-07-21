@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#ledger-evidence-enforcement'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-10-ledger-evidence-enforcement-research]]"
 ---

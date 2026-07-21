@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#service-capabilities'
 date: '2026-06-15'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L3
 related:
   - '[[2026-06-15-service-capabilities-research]]'

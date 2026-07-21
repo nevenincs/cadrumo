@@ -1,7 +1,7 @@
 ---
 tags: ["#exec", "#registry-authority-flow"]
 date: '2026-05-21'
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: 'S23'
 related:
   - '[[2026-05-20-registry-authority-flow-plan]]'

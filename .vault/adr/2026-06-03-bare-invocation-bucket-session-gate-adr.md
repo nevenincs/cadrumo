@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#bare-invocation-bucket-session-gate'
 date: '2026-06-03'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-wizard-catalogue-startup-ordering-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"

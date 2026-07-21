@@ -3,7 +3,7 @@ tags:
   - "#plan"
   - "#inventory-management"
 date: 2026-04-30
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-04-30-inventory-management-cli-design-research]]"
   - "[[2026-04-30-inventory-management-cli-design-adr]]"

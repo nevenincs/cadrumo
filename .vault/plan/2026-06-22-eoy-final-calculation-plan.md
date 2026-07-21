@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#eoy-final-calculation'
 date: '2026-06-22'
-modified: '2026-07-03'
+modified: '2026-06-30'
 tier: L2
 related:
   - '[[2026-06-22-eoy-final-calculation-adr]]'

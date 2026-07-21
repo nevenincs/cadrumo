@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-compensation-override-cli'
 date: '2026-06-19'
-modified: '2026-06-28'
+modified: '2026-06-19'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-adr]]'
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'

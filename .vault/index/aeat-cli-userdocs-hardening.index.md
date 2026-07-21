@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#aeat-cli-userdocs-hardening'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S01]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S02]]'

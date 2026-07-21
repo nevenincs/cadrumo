@@ -1,7 +1,7 @@
 ---
 tags: ['#exec', '#modelo-work-revision-cli-decomposition']
 date: '2026-06-05'
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: 'S20'
 related:
   - '[[2026-06-05-modelo-work-revision-cli-decomposition-plan]]'

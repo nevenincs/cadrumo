@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#m303-refund-election'
 date: '2026-06-24'
-modified: '2026-06-28'
+modified: '2026-06-24'
 related:
   - '[[2026-06-21-m303-carry-reconciliation-adr]]'
 ---

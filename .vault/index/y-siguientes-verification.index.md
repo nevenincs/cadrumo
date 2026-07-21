@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#y-siguientes-verification'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-05'
 related:
   - '[[2026-07-03-y-siguientes-verification-audit]]'
 ---

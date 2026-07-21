@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#justificante-parser'
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-04-12-justificante-parser-research]]'
   - '[[2026-04-12-justificante-parser-adr]]'

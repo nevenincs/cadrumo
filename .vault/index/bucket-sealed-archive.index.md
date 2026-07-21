@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#bucket-sealed-archive'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-03-bucket-sealed-archive-adr]]'
   - '[[2026-06-04-bucket-sealed-archive-research]]'

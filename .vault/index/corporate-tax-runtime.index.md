@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#corporate-tax-runtime'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-26-corporate-tax-runtime-P01-S01]]'
   - '[[2026-05-26-corporate-tax-runtime-plan]]'

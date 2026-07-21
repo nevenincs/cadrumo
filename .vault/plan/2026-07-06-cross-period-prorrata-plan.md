@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cross-period-prorrata'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-08'
 tier: L3
 related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'

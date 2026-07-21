@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#ccaa-in-profile'
 date: '2026-04-28'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-04-28-ccaa-in-profile-research]]'
   - '[[2026-04-28-ccaa-in-profile-adr]]'

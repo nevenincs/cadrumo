@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#casilla-reference-ambiguity-hardening'
 date: '2026-06-24'
-modified: '2026-06-28'
+modified: '2026-06-24'
 related:
   - '[[2026-06-24-casilla-reference-ambiguity-hardening-audit]]'
 ---

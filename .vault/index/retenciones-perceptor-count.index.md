@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#retenciones-perceptor-count'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - '[[2026-06-24-retenciones-perceptor-count-P01-S01]]'
   - '[[2026-06-24-retenciones-perceptor-count-P01-S02]]'

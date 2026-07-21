@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#arch-remediation-lazy-import-policy'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-08'
 tier: L2
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'

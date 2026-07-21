@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#agent-harness-content-review'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-02'
 related:
   - "[[2026-07-01-agent-harness-adr]]"
   - "[[2026-07-01-agent-harness-research]]"

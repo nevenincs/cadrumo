@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#m202-first-period-attestation'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-06'
 related:
   - '[[2026-06-19-m202-first-period-attestation-adr]]'
   - '[[2026-07-06-m202-first-period-attestation-research]]'

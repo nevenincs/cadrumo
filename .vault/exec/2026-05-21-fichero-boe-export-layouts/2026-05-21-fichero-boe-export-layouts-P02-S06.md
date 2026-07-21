@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#fichero-boe-export-layouts'
 date: '2026-05-21'
-modified: '2026-07-10'
+modified: '2026-07-08'
 step_id: 'S06'
 related:
   - '[[2026-05-21-fichero-boe-export-layouts-plan]]'

@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#arch-remediation-crash-window'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - "[[2026-07-02-arch-remediation-crash-window-adr]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"

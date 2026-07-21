@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#secure-storage'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-05-26-secure-storage-migration-review-audit]]'
 ---

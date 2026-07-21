@@ -4,7 +4,7 @@ tags:
   - '#index'
   - '#calculation-correctness-campaign'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-06-15'
 related:
   - '[[2026-06-13-calculation-correctness-campaign-audit]]'
 ---

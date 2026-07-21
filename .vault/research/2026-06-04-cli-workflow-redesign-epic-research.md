@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#cli-workflow-redesign-epic'
 date: '2026-06-04'
-modified: '2026-07-03'
+modified: '2026-06-30'
 related:
   - "[[2026-06-03-cli-workflow-redesign-epic-adr]]"
 ---

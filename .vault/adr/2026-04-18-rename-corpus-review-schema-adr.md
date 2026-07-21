@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#rename-corpus-review'
 date: '2026-04-18'
-modified: '2026-07-10'
+modified: '2026-07-08'
 related:
   - '[[2026-04-18-rename-corpus-review-research]]'
 ---
