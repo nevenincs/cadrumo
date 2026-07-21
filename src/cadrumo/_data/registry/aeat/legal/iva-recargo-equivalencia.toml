@@ -10,7 +10,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 161: tipos del recargo de equivalencia aplicables por los proveedores en sus entregas a comerciantes minoristas acogidos al regimen especial. Tipo general 5,2 por ciento; tipo reducido 1,4 por ciento (aplicable a las entregas del articulo 91 uno); tipo super-reducido 0,5 por ciento (aplicable a las entregas del articulo 91 dos); tipo aplicable a las labores del tabaco 1,75 por ciento."
 required_text = [
     "Tipos",
@@ -28,7 +28,7 @@ applies_to = "iva-recargo-equivalencia"
 legal_refs = ["ley-37-1992:art-161"]
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 161 1o: tipo general 5,2 por ciento del recargo de equivalencia, aplicable a las entregas a comerciantes minoristas de bienes gravados al tipo general del IVA (21 por ciento)."
 
 [parameters."liva-art-161:recargo-rate-reducido"]
@@ -39,7 +39,7 @@ applies_to = "iva-recargo-equivalencia"
 legal_refs = ["ley-37-1992:art-161"]
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 161 2o: tipo reducido 1,4 por ciento del recargo de equivalencia, aplicable a las entregas a las que se aplica el tipo reducido del IVA (10 por ciento) conforme al articulo 91 uno."
 
 [parameters."liva-art-161:recargo-rate-super-reducido"]
@@ -50,7 +50,7 @@ applies_to = "iva-recargo-equivalencia"
 legal_refs = ["ley-37-1992:art-161"]
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 161 3o: tipo super-reducido 0,5 por ciento del recargo de equivalencia, aplicable a las entregas a las que se aplica el tipo super-reducido del IVA (4 por ciento) conforme al articulo 91 dos."
 
 [parameters."liva-art-161:recargo-rate-tabaco"]
@@ -61,5 +61,5 @@ applies_to = "iva-recargo-equivalencia"
 legal_refs = ["ley-37-1992:art-161"]
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 161 4o: tipo del 1,75 por ciento del recargo de equivalencia para las entregas de bienes objeto del Impuesto Especial sobre las Labores del Tabaco."

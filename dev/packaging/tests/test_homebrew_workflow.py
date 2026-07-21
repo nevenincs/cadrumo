@@ -93,9 +93,9 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     rows = job["strategy"]["matrix"]["include"]
     # macos-intel / linux-arm64 rows return with their self-hosted runners
     # All four homebrew rows run on the self-hosted fleet (operator MacBook
-    # avenues completed 2026-07-21): gw-macbook-linux-arm carries linux-arm64,
-    # macbook-neo-intel (Rosetta x64 + /usr/local Intel brew) carries
-    # macos-intel. Zero hosted runners, per the absolute spend mandate.
+    # avenues completed 2026-07-21): the macOS Linux-ARM container host carries
+    # linux-arm64, and the macOS Intel host (Rosetta x64 + /usr/local Intel brew)
+    # carries macos-intel. Zero hosted runners, per the absolute spend mandate.
     assert {row["row_id"] for row in rows} == {
         "homebrew-macos-arm64",
         "homebrew-linux-x86-64",

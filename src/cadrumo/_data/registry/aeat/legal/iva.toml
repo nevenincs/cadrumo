@@ -10,7 +10,7 @@ published_at = 2010-03-31
 effective_from = 2010-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 1 de la Orden EHA/789/2010: aprobacion del formulario 360 de solicitud de devolucion del IVA soportado por empresarios o profesionales establecidos en el TAI por operaciones efectuadas en otros Estados miembros (procedimiento Octava Directiva 2008/9/CE)."
 required_text = [
     "Aprobación del formulario 360",
@@ -30,7 +30,7 @@ published_at = 2010-03-31
 effective_from = 2010-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 4 de la Orden EHA/789/2010: plazo de presentacion del formulario 360. El plazo se inicia el dia siguiente al final del periodo de devolucion y concluye el 30 de septiembre siguiente al ano natural en el que se hayan soportado las cuotas a que se refiera."
 required_text = [
     "Plazo de presentación del formulario 360",
@@ -87,7 +87,7 @@ published_at = 2003-12-30
 effective_from = 2003-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Apartado primero de la Orden HAC/3625/2003: aprobacion del modelo 309 'Declaracion-liquidacion no periodica del Impuesto sobre el Valor Anadido'. Filed by sujetos pasivos sin obligacion ordinaria de declaracion-liquidacion (adquisiciones de medios de transporte nuevos, ejecuciones forzosas, regimen agricola/ganadero/pesquero, recargo de equivalencia)."
 required_text = [
     "Aprobación del modelo 309",
@@ -107,7 +107,7 @@ published_at = 2003-12-30
 effective_from = 2003-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Apartado tercero de la Orden HAC/3625/2003: plazo de presentacion del Modelo 309. Veinte primeros dias naturales de abril, julio y octubre; ultimo periodo en los treinta primeros dias naturales del mes de enero del ano siguiente. Casos especiales: medios de transporte nuevos 30 dias desde la transmision; ejecuciones forzosas 1 mes desde el pago de la adjudicacion."
 required_text = [
     "Plazo de presentación del modelo 309",
@@ -164,7 +164,7 @@ published_at = 2007-11-29
 effective_from = 2007-11-30
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 1 de la Orden EHA/3434/2007: aprobacion del modelo 322 'Impuesto sobre el Valor Anadido. Grupo de entidades. Modelo individual. Autoliquidacion mensual'. Aplicable a sujetos pasivos del IVA que formen parte de un grupo de entidades conforme al articulo 163 quinquies.Uno de la LIVA."
 required_text = [
     "Aprobación del modelo 322",
@@ -184,7 +184,7 @@ published_at = 2007-11-29
 effective_from = 2007-11-30
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 2 de la Orden EHA/3434/2007: aprobacion del modelo 353 'Grupo de entidades. Modelo agregado. Autoliquidacion mensual' del IVA. Lo presenta la entidad dominante del grupo."
 required_text = [
     "Aprobación del modelo 353",
@@ -241,7 +241,7 @@ published_at = 2007-11-29
 effective_from = 2007-11-30
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 8 de la Orden EHA/3434/2007: plazo de presentacion de los modelos 322 y 353. Treinta dias naturales del mes siguiente al periodo de liquidacion mensual; el periodo de enero se presenta hasta el ultimo dia del mes de febrero."
 required_text = [
     "Plazo de presentación de los modelos 322 y 353",
@@ -298,7 +298,7 @@ published_at = 2008-12-30
 effective_from = 2009-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 1 de la Orden EHA/3786/2008: aprobacion del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidacion. Ingreso del Impuesto sobre el Valor Anadido a la importacion liquidado por la Aduana'."
 required_text = [
     "Aprobación del modelo 303",
@@ -318,7 +318,7 @@ published_at = 2008-12-30
 effective_from = 2009-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 7 de la Orden EHA/3786/2008: plazo de presentacion del Modelo 303. Periodos mensuales y trimestrales: primeros 20 dias naturales del mes siguiente al final del periodo. El ultimo periodo del ano se presenta durante los primeros 30 dias naturales del mes de enero siguiente."
 required_text = [
     "Plazo de presentación del modelo 303",
@@ -338,7 +338,7 @@ published_at = 2008-12-30
 effective_from = 2009-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 2 de la Orden EHA/3786/2008: aprobacion del modelo 308 'Impuesto sobre el Valor Anadido, solicitud de devolucion: recargo de equivalencia, articulo 30 bis del Reglamento del IVA, articulo 21.4 de la Ley del IVA y sujetos pasivos ocasionales'."
 required_text = [
     "Aprobación del modelo 308",
@@ -358,7 +358,7 @@ published_at = 2008-12-30
 effective_from = 2009-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 11 de la Orden EHA/3786/2008: plazos de presentacion del Modelo 308. Sujetos pasivos ocasionales (medios de transporte nuevos): 30 dias naturales desde la entrega. Regimen simplificado actividad de transporte: primeros 20 dias naturales del mes siguiente a la adquisicion."
 required_text = [
     "Plazos de presentación del modelo 308",
@@ -415,7 +415,7 @@ published_at = 2009-11-20
 effective_from = 2010-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 1 de la Orden EHA/3111/2009: aprobacion del modelo 390 'Declaracion-resumen anual del Impuesto sobre el Valor Anadido'."
 required_text = [
     "Aprobación del modelo 390",
@@ -435,7 +435,7 @@ published_at = 2009-11-20
 effective_from = 2010-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 8 de la Orden EHA/3111/2009: plazo de presentacion del Modelo 390. La declaracion-resumen anual del IVA se presenta en los treinta primeros dias naturales del mes de enero siguiente al ejercicio."
 required_text = [
     "Plazo de presentación del modelo 390",
@@ -541,7 +541,7 @@ published_at = 2010-03-31
 effective_from = 2010-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion del modelo 349 de declaracion recapitulativa de operaciones intracomunitarias y de sus disenos fisicos y logicos. Base reglamentaria desarrollada por el RD 1624/1992 articulos 78 a 81 y por la Ley 37/1992 articulo 164.5."
 required_text = [
     "se aprueba el modelo 349",
@@ -562,7 +562,7 @@ published_at = 2010-03-31
 effective_from = 2010-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Obligados a presentar la declaracion recapitulativa de operaciones intracomunitarias y reglas de periodicidad mensual/trimestral en funcion del umbral de 50.000 euros del Reglamento del IVA."
 required_text = [
     "Obligados a presentar la declaración recapitulativa",
@@ -581,7 +581,7 @@ published_at = 2010-03-31
 effective_from = 2010-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Plazo de presentacion del modelo 349: veinte primeros dias naturales del mes inmediato siguiente al periodo, salvo julio (hasta el 20 de septiembre) y diciembre/cuarto trimestre (treinta primeros dias naturales de enero)."
 required_text = [
     "Plazo de presentación del modelo 349",
@@ -601,7 +601,7 @@ published_at = 2020-02-29
 effective_from = 2020-03-01
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Modificacion de la Orden EHA/769/2010 que aprueba el modelo 349. Anade las claves R, D y C para acuerdos de ventas de bienes en consigna y suprime la presentacion anual del modelo 349. Aplicable a declaraciones del ejercicio 2020 y siguientes."
 required_text = [
     "se modifica la Orden EHA/769/2010",
@@ -696,7 +696,7 @@ published_at = 2021-06-18
 effective_from = 2021-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 1 de la Orden HAC/610/2021: aprobacion del modelo 369, autoliquidacion de los regimenes especiales OSS/IOSS del IVA."
 required_text = [
     "Aprobación del modelo 369",
@@ -716,7 +716,7 @@ published_at = 2021-06-18
 effective_from = 2021-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 2 de la Orden HAC/610/2021: obligados a presentar Modelo 369. Esquemas Exterior y Union presentan por trimestre natural; el regimen de importacion presenta por mes natural."
 required_text = [
     "por cada trimestre natural",
@@ -736,7 +736,7 @@ published_at = 2021-06-18
 effective_from = 2021-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 3 de la Orden HAC/610/2021: el Modelo 369 se presenta dentro del mes natural siguiente al final del periodo de autoliquidacion."
 required_text = [
     "Plazo de presentación del modelo 369",
@@ -756,7 +756,7 @@ published_at = 1992-12-29
 effective_from = 2021-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Ley 37/1992, articulo 163 octiesdecies: ambito del regimen exterior para empresarios o profesionales no establecidos en la Comunidad."
 required_text = [
     "Artículo 163 octiesdecies",
@@ -776,7 +776,7 @@ published_at = 1992-12-29
 effective_from = 2021-07-01
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Ley 37/1992, articulo 163 noniesdecies: obligaciones formales del regimen exterior OSS cuando Espana es Estado miembro de identificacion."
 required_text = [
     "Artículo 163 noniesdecies. Obligaciones formales.",
@@ -798,7 +798,7 @@ published_at = 1992-12-29
 effective_from = 2021-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Ley 37/1992, articulo 163 unvicies: ambito del regimen de la Union para servicios, ventas intracomunitarias a distancia y determinadas entregas interiores."
 required_text = [
     "Artículo 163 unvicies",
@@ -818,7 +818,7 @@ published_at = 1992-12-29
 effective_from = 2021-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Ley 37/1992, articulo 163 quinvicies: ambito del regimen de importacion para ventas a distancia de bienes importados de paises o territorios terceros."
 required_text = [
     "Artículo 163 quinvicies",
@@ -876,7 +876,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 99 LIVA: ejercicio del derecho a la deduccion. Regula la deduccion de cuotas soportadas, el periodo en que se ejerce el derecho, la compensacion del exceso de cuotas a deducir cuando sobrepasa el de las devengadas en periodos sucesivos hasta cuatro anos, y la caducidad del derecho."
 required_text = [
     "Uno. En las declaraciones-liquidaciones correspondientes a cada uno de los períodos de liquidación, los sujetos pasivos ",
@@ -976,7 +976,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 102 LIVA: regla de prorrata. Define cuando sera de aplicacion la regla de prorrata - cuando el sujeto pasivo realice conjuntamente entregas de bienes o prestaciones de servicios que originen el derecho a la deduccion y otras operaciones de analoga naturaleza que no habiliten para el ejercicio del citado derecho."
 required_text = [
     "Uno. La regla de prorrata será de aplicación cuando el sujeto pasivo, en el ejercicio de su actividad empresarial o prof",
@@ -1129,7 +1129,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 107 LIVA: regularizacion de deducciones por bienes de inversion. Las cuotas deducibles por la adquisicion o importacion de bienes de inversion se regularizan durante los cuatro anos naturales siguientes a aquel en que los sujetos pasivos inicien su utilizacion (o nueve anos si son terrenos o edificaciones)."
 required_text = [
     "Uno. Las cuotas deducibles por la adquisición o importación de bienes de inversión deberán regularizarse durante los cua",
@@ -1149,7 +1149,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 108 LIVA: concepto de bienes de inversion. Son bienes de inversion los bienes corporales, muebles, semovientes o inmuebles que, por su naturaleza y funcion, esten normalmente destinados a ser utilizados por un periodo de tiempo superior a un ano como instrumentos de trabajo o medios de explotacion, con umbrales de exclusion para bienes de escaso valor."
 required_text = [
     "Dos. No tendrán la consideración de bienes de inversión:",
@@ -1169,7 +1169,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 109 LIVA: procedimiento para practicar la regularizacion de deducciones por bienes de inversion. Establece la formula de regularizacion comparando el porcentaje de deduccion del ano de adquisicion con el del ano de la regularizacion, dividiendo la diferencia entre cinco (o diez para terrenos y edificaciones)."
 required_text = [
     "La regularización de las deducciones a que se refiere el artículo 107 de esta Ley se realizará del siguiente modo:",
@@ -1188,7 +1188,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 110 LIVA: entregas de bienes de inversion durante el periodo de regularizacion. Si los bienes de inversion se entregan antes de la finalizacion del periodo de regularizacion, se efectuara una regularizacion unica por el tiempo que reste, considerando si la entrega esta sujeta y no exenta o exenta/no sujeta."
 required_text = [
     "A tal efecto, se aplicarán las siguientes reglas:",
@@ -1207,7 +1207,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 163 duovicies LIVA: regimen especial aplicable a empresarios o profesionales no establecidos que presten servicios de telecomunicaciones, radiodifusion, television o servicios prestados por via electronica a destinatarios que no sean empresarios o profesionales (one stop shop). Forma parte del bloque de regimenes especiales del titulo IX, capitulo XI."
 required_text = [
     "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno.2.º de esta Ley.",
@@ -1226,7 +1226,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 163 sexvicies LIVA: regimen especial aplicable a las ventas a distancia de bienes importados procedentes de paises terceros (Import One Stop Shop / IOSS). Establecido como ventanilla unica para envios de valor intrinseco no superior a 150 euros."
 required_text = [
     "En las entregas de bienes acogidas a este régimen especial el devengo del impuesto se producirá en el momento de la entrega, que s",
@@ -1244,7 +1244,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 163 septvicies LIVA: definiciones aplicables al regimen especial IOSS - empresario o profesional no establecido, Estado miembro de identificacion, Estado miembro de consumo, intermediario."
 required_text = [
     "a) Disponer del número de identificación fiscal al que se refiere el artículo 164.Uno. 2.º de esta Ley.",
@@ -1263,7 +1263,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 163 octovicies LIVA: obligaciones formales del regimen especial IOSS - declaracion de inicio, modificacion y cese, presentacion de declaraciones por trimestre natural, pagos, llevanza de un registro, conservacion de la documentacion durante diez anos."
 required_text = [
     "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
@@ -1283,7 +1283,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 163 tervicies LIVA: regimen especial aplicable a empresarios o profesionales establecidos en la Comunidad, pero no en el Estado miembro de consumo (Union One Stop Shop). Habilita la declaracion unica de servicios y ventas a distancia intracomunitarias a traves del Estado miembro de identificacion."
 required_text = [
     "Uno. Los empresarios o profesionales que se acojan a este régimen especial no podrán deducir en la declaración-liquidación a que s",
@@ -1303,7 +1303,7 @@ published_at = 1992-12-29
 effective_from = 2021-07-01
 review_status = "reviewed"
 reviewed_at = 2026-06-29
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Ley 37/1992, articulo 163 quatervicies: exclusion del regimen de la Union para prestaciones realizadas en el territorio de aplicacion del impuesto por establecidos en el mismo."
 required_text = [
     "Artículo 163 quatervicies. Prestaciones de servicios realizadas en el territorio de aplicación del impuesto por empresarios o profesionales establecidos en el mismo.",
@@ -1324,7 +1324,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 163 septiesdecies LIVA: ambito objetivo del regimen especial aplicable a los servicios prestados por via electronica, de telecomunicaciones, de radiodifusion y de television (MOSS exterior). Define las prestaciones acogibles y los servicios excluidos del regimen."
 required_text = [
     "Uno. A efectos del presente capítulo, serán de aplicación las siguientes definiciones:",
@@ -1344,7 +1344,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 163 vicies LIVA: obligaciones formales del regimen especial MOSS exterior - declaracion de inicio/cese, presentacion de declaraciones trimestrales, ingreso por el total, llevanza del registro, conservacion durante diez anos, e idioma de las declaraciones."
 required_text = [
     "Uno. Los empresarios o profesionales no establecidos en la Comunidad que se acojan a este régimen especial no podrán deducir en la",
@@ -1364,7 +1364,7 @@ published_at = 2002-05-24
 effective_from = 2002-05-24
 review_status = "reviewed"
 reviewed_at = 2026-06-01
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 29 de la Ley 12/2002 (Concierto Económico con la Comunidad Autónoma del País Vasco): distribución territorial de la recaudación del Impuesto sobre el Valor Añadido entre el Estado y la Administración de la Comunidad Autónoma del País Vasco proporcional al volumen de operaciones en cada territorio, con liquidación provisional anual y regularización en la declaración anual de IVA."
 required_text = [
     "distribución territorial de la recaudación del Impuesto sobre el Valor Añadido",
@@ -1384,7 +1384,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-21
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 94 LIVA: operaciones que originan el derecho a deducir. Los sujetos pasivos podran deducir las cuotas del IVA soportadas en los supuestos en que las referidas operaciones hayan sido realizadas en el ejercicio de su actividad empresarial o profesional."
 required_text = [
     "operaciones cuya realización origina el derecho a la deducción",
@@ -1402,7 +1402,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-21
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 95 LIVA: limitaciones del derecho a deducir. Los empresarios o profesionales no podran deducir las cuotas soportadas o satisfechas por las adquisiciones o importaciones de bienes o servicios que no se afecten a su actividad empresarial o profesional."
 required_text = [
     "limitaciones del derecho a deducir",
@@ -1420,7 +1420,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-21
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 122 LIVA: regimen simplificado del IVA. Seran de aplicacion a los sujetos pasivos que reglamentariamente se determinen en atencion al volumen de operaciones u otras circunstancias."
 required_text = [
     "régimen simplificado",
@@ -1439,7 +1439,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-21
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 123 LIVA: contenido del regimen simplificado. Determinacion de las cuotas tributarias para las actividades acogidas al regimen simplificado mediante el metodo de indices, modulos o signos."
 required_text = [
     "cuotas tributarias",
@@ -1458,7 +1458,7 @@ published_at = 2024-04-09
 effective_from = 2024-04-10
 review_status = "reviewed"
 reviewed_at = 2026-05-30
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 1 de la Orden HAC/819/2024: aprobacion del modelo 303 'Impuesto sobre el Valor Anadido. Autoliquidacion' para los ejercicios 2023 y siguientes. Modifica la Orden EHA/3786/2008 introduciendo las casillas del nuevo formulario: [64] suma de resultados ([46]+[58]+[76]), [65] porcentaje atribuible Administracion del Estado, [66] importe atribuible Administracion del Estado ([64]x[65]/100), [69] resultado autoliquidacion ([66]+[77]+[68]-[78]), [71] resultado final ([69]-[70]+[109])."
 required_text = [
     "Aprobación del modelo 303",
@@ -1478,7 +1478,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-21
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 124 LIVA: obligaciones formales del regimen simplificado. Los sujetos pasivos acogidos al regimen simplificado estaran obligados a llevar un libro registro de facturas recibidas y un libro registro especifico del regimen simplificado."
 required_text = [
     "régimen simplificado",

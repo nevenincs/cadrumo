@@ -174,6 +174,19 @@ async def test_public_close_waits_for_real_inflight_verification(
                 tmp_path=tmp_path,
                 bucket_id=bucket_id,
             )
+            # The completion budget is derived from the SUT's OWN configured
+            # timeouts, not a magic constant: once released, the verify probe
+            # navigation is bounded by the navigation timeout and close() tears
+            # down the real browser under the browser-close timeout. Budgeting
+            # the sum (plus margin) means a test-side timeout can only fire when
+            # the authenticator breaches its own guards (a genuine hang) — never
+            # because real chromium teardown was merely slow under contention,
+            # which a fixed 10s budget (shorter than the 15s close budget alone)
+            # flaked on.
+            sut = _settings(tmp_path, kind)
+            completion_budget_s = (
+                sut.cadrumo_browser_navigation_timeout_ms + sut.cadrumo_browser_close_timeout_ms
+            ) / 1000 + 5.0
             boundary.configure("blocking")
             verify_task = asyncio.create_task(provider.verify(active))
             await boundary.wait_until_blocked()
@@ -181,8 +194,8 @@ async def test_public_close_waits_for_real_inflight_verification(
             await asyncio.sleep(0.1)
             assert not close_task.done()
             boundary.release_request.set()
-            assertion = await asyncio.wait_for(verify_task, timeout=10)
-            await asyncio.wait_for(close_task, timeout=10)
+            assertion = await asyncio.wait_for(verify_task, timeout=completion_budget_s)
+            await asyncio.wait_for(close_task, timeout=completion_budget_s)
 
     assert assertion.is_valid is True
 

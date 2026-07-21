@@ -167,9 +167,9 @@ list and uploads nothing.
 
 EVERY workflow job runs on the self-hosted fleet — no hosted/cloud runners, ever
 (operator mandate 2026-07-21; gated by
-`dev/packaging/tests/test_self_hosted_fleet.py`): `gw-workstation-win` (Windows
-x64), `gw-workstation-wsl` (Linux x64, containerized), and `macbook-neo` (macOS
-arm64). The Scoop Windows-container gate runs on the self-hosted Windows host and
+`dev/packaging/tests/test_self_hosted_fleet.py`): the Windows build host (Windows
+x64), the WSL Linux build host (Linux x64, containerized), and the macOS build host
+(macOS arm64). The Scoop Windows-container gate runs on the self-hosted Windows host and
 fails fast at its docker-mode preflight until that host runs Windows-container
 mode. The Homebrew `macos-intel` and `linux-arm64` matrix rows are excised until
 self-hosted MacBook avenues register (Rosetta `/usr/local`-prefix runner for

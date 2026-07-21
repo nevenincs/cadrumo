@@ -23,7 +23,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LGT art 93: obligaciones de informacion. Base sustantiva de toda obligacion informativa frente a AEAT - personas fisicas y juridicas obligadas a proporcionar datos, informes, antecedentes y justificantes con trascendencia tributaria. Enumera obligados especificos (retenedores, sociedades de cobro de honorarios profesionales, entidades bancarias y de mediacion). Base sustantiva de las declaraciones informativas: M347 (operaciones con terceros), M180/M190/M193 (resumenes anuales de retenciones), M184 (atribucion de rentas), M232 (vinculadas y paraisos), M349 (intracomunitarias), M720 (bienes en el extranjero), M193 (capital mobiliario)."
 required_text = [
     "Obligaciones de información",
@@ -43,7 +43,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Recargos por declaración extemporánea sin requerimiento previo, apartado 2 of LGT art-27. Establishes the 1 per cent + 1 per cent additional per completed month of delay rule (post-Ley 11/2021); 15 per cent once 12 months have elapsed since the end of the original presentation deadline. The band table at registry/aeat/legal/ley-58-2003-recargo-bands.toml is parameterised against this article."
 required_text = [
     "1 por ciento más otro 1 por ciento adicional por cada mes completo de retraso",
@@ -63,7 +63,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Declaracion tributaria: any document presented before AEAT acknowledging a tax-relevant fact. Filing does not imply acceptance of the tax obligation. Options exercised via a declaration cannot be rectified after the filing period closes. Pending compensation / deduction balances cannot be modified through complementarias after AEAT initiates an application procedure."
 required_text = [
     "todo documento presentado ante la Administración tributaria",
@@ -83,7 +83,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Autoliquidaciones: declarations in which the obligado tributario performs the calificacion + cuantificacion necessary to determine the deuda tributaria and either pays, claims a refund, or claims compensation. AEAT may verify and comprobar. Where the obligado considers the autoliquidacion has harmed their legitimate interests they may instar la rectificacion per the apartado 3 procedure; otherwise the autoliquidacion rectificativa procedure of apartado 4 applies where the tax-specific regulation so establishes."
 required_text = [
     "Las autoliquidaciones son declaraciones en las que los obligados tributarios",
@@ -104,7 +104,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Declaraciones, autoliquidaciones y comunicaciones complementarias o sustitutivas. Filed within the original presentation window or extemporaneously while the right to determine the deuda has not prescribed. Complementarias are used when the new autoliquidacion yields a higher importe a ingresar or a lower devolution / compensation; otherwise art-120 rectificacion procedures apply. Loss-of-incentive scenarios (failed deduction conditions) are reported as a complementaria for the period of the breach with intereses de demora."
 required_text = [
     "Los obligados tributarios podrán presentar autoliquidaciones complementarias",

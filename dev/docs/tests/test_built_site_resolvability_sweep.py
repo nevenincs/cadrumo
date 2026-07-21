@@ -56,7 +56,18 @@ from bs4 import BeautifulSoup
 
 from ..pagefind_inject import _materialise_records
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_core,
+    pytest.mark.docs,
+    # The sweep shells a full single-worker user-scope Sphinx HTML build and
+    # then reads every rendered page; the whole test measures ~840s on the
+    # reference workstation now that the casilla reference and sequence corpora
+    # are enrolled — far over the global 300s ceiling. The budget must exceed
+    # the sweep's real cost so a timeout can only mean a genuine hang, never a
+    # merely-slow legitimate build.
+    pytest.mark.timeout(1800),
+]
 
 # dev/docs/tests/test_built_site_resolvability_sweep.py -> parents[3] is the repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[3]

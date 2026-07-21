@@ -10,7 +10,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 9: operaciones asimiladas a las entregas de bienes (autoconsumo). El apartado 1.c establece el autoconsumo del promotor cuando afecta a su patrimonio empresarial o profesional bienes inmuebles de su propia construccion o rehabilitacion. La base imponible se determina conforme al art 79 apartado 4."
 required_text = [
     "autoconsumo",
@@ -50,7 +50,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 79 apartado 4: reglas especiales de base imponible para las operaciones asimiladas a entregas de bienes (autoconsumo). La base imponible del autoconsumo es el coste de los bienes o servicios utilizados, incluidos los gastos de personal, con exclusion del beneficio industrial."
 required_text = [
     "coste",
@@ -89,7 +89,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 84: sujetos pasivos. Establece la regla general (apartado uno 1o) y la inversion del sujeto pasivo (apartado uno 2o), donde el destinatario de la operacion asume la condicion de sujeto pasivo y debe autorepercutirse el IVA."
 required_text = [
     "Sujetos pasivos",
@@ -108,7 +108,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 88: repercusion del impuesto. Establece la obligacion del sujeto pasivo de repercutir integramente el importe del IVA sobre el destinatario de la operacion gravada, quedando este obligado a soportarlo. Es la base legal del flujo IVA repercutido."
 required_text = [
     "Repercusión del impuesto",
@@ -128,7 +128,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 92: cuotas tributarias deducibles. Establece el derecho del sujeto pasivo a deducir las cuotas del IVA devengadas por las operaciones que ha soportado por repercusion directa o por las operaciones equivalentes (importaciones, adquisiciones intracomunitarias, autorepercusion). Es la base legal del flujo IVA soportado y deducible."
 required_text = [
     "Cuotas tributarias deducibles",
@@ -148,7 +148,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 21: exenciones en las exportaciones de bienes. Cubre entregas a fuera de la Comunidad por el transmitente o por el adquirente no establecido, regimen de viajeros (residentes fuera de la UE), tiendas libres de impuestos, trabajos sobre bienes muebles para exportacion y entregas a Organismos reconocidos. Es la base sustantiva del Modelo 308 cuando este lo invoca."
 required_text = [
     "Exenciones en las exportaciones de bienes",
@@ -168,7 +168,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-09
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 7: operaciones no sujetas al impuesto. Enumera los supuestos de no sujecion (transmision de unidad economica autonoma, muestras gratuitas, entregas publicitarias, servicios en regimen de dependencia, operaciones de Administraciones Publicas sin contraprestacion, concesiones administrativas, entregas de dinero). Base sustantiva para la clasificacion no-sujeta en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Operaciones no sujetas al impuesto",
@@ -188,7 +188,7 @@ published_at = 1992-12-29
 effective_from = 2021-07-01
 review_status = "reviewed"
 reviewed_at = 2026-06-09
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 13: hecho imponible de las adquisiciones intracomunitarias de bienes. Sujeta las adquisiciones intracomunitarias efectuadas a titulo oneroso por empresarios, profesionales o personas juridicas, asi como las adquisiciones de medios de transporte nuevos. Base sustantiva del hecho imponible intracomunitario en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Las adquisiciones intracomunitarias de bienes efectuadas a título oneroso",
@@ -207,7 +207,7 @@ published_at = 1992-12-29
 effective_from = 2020-03-01
 review_status = "reviewed"
 reviewed_at = 2026-06-09
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 15: concepto de adquisicion intracomunitaria de bienes. Define la adquisicion intracomunitaria como la obtencion del poder de disposicion sobre bienes muebles corporales expedidos o transportados al territorio de aplicacion del Impuesto desde otro Estado miembro. Base definitoria del enrutamiento intracomunitario M303 (Tier-2 routing)."
 required_text = [
     "Concepto de adquisición intracomunitaria de bienes",
@@ -227,7 +227,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-09
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 17: hecho imponible de las importaciones de bienes. Sujeta al impuesto las importaciones de bienes cualquiera que sea el fin a que se destinen y la condicion del importador. Base sustantiva del hecho imponible de importacion en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Estarán sujetas al impuesto las importaciones de bienes",
@@ -246,7 +246,7 @@ published_at = 1992-12-29
 effective_from = 2019-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-09
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 20: exenciones en operaciones interiores. Enumera las exenciones limitadas (sin derecho a deduccion) aplicables a las operaciones interiores: servicio postal, sanidad, educacion, asistencia social, operaciones financieras y de seguros, arrendamientos y entregas de inmuebles, entre otras. Base sustantiva de la clasificacion exenta interior en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Exenciones en operaciones interiores",
@@ -265,7 +265,7 @@ published_at = 1992-12-29
 effective_from = 2023-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-09
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 22: exenciones en las operaciones asimiladas a las exportaciones. Exime entregas y servicios relativos a buques afectos a navegacion maritima internacional, aeronaves de companias que se dediquen al trafico internacional, operaciones con organismos internacionales y misiones diplomaticas. Base sustantiva de la clasificacion exenta asimilada a exportacion en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Exenciones en las operaciones asimiladas a las exportaciones",
@@ -284,7 +284,7 @@ published_at = 1992-12-29
 effective_from = 2020-03-01
 review_status = "reviewed"
 reviewed_at = 2026-06-09
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 25: exenciones en las entregas de bienes destinados a otro Estado miembro (entregas intracomunitarias). Exime las entregas de bienes expedidos o transportados al territorio de otro Estado miembro cuando el adquirente disponga de un NIF-IVA asignado por otro Estado miembro y la operacion se incluya en la declaracion recapitulativa. Base sustantiva de la clasificacion exenta intracomunitaria en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Exenciones en las entregas de bienes destinados a otro Estado miembro",
@@ -303,7 +303,7 @@ published_at = 1992-12-29
 effective_from = 2010-03-03
 review_status = "reviewed"
 reviewed_at = 2026-06-09
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 26: exenciones en las adquisiciones intracomunitarias de bienes, incluida la operacion triangular. Exime las adquisiciones intracomunitarias cuya entrega interior estaria no sujeta o exenta, las que corresponden a importaciones exentas, las realizadas en el marco de una operacion triangular y aquellas con derecho a devolucion total. Base sustantiva de la exencion intracomunitaria y la triangulacion en el enrutamiento M303 (Tier-2 routing)."
 required_text = [
     "Exenciones en las adquisiciones intracomunitarias de bienes",
@@ -400,7 +400,7 @@ published_at = 1992-12-29
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIVA art 117 bis: solicitudes de devolucion de empresarios o profesionales establecidos en el territorio de aplicacion del Impuesto, Islas Canarias, Ceuta y Melilla, correspondientes a cuotas soportadas por operaciones efectuadas en la Comunidad con excepcion de las realizadas en el territorio de aplicacion del Impuesto. Base sustantiva del Modelo 360 (devolucion 8a Directiva)."
 required_text = [
     "Solicitudes de devolución",
@@ -441,7 +441,7 @@ published_at = 1992-12-31
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Reglamento del IVA art 71: liquidacion del Impuesto, normas generales. Establece la obligacion de autoliquidacion de los sujetos pasivos, las periodicidades trimestral y mensual, la declaracion resumen anual y las exoneraciones. Base reglamentaria comun de los Modelos 303 (autoliquidacion), 309 (no periodica), 322 (REGE individual), 353 (REGE agregada) y 390 (resumen anual)."
 required_text = [
     "Liquidación del Impuesto. Normas generales",
@@ -566,7 +566,7 @@ published_at = 1992-12-31
 effective_from = 1993-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Reglamento del IVA art 30 bis: devolucion de cuotas deducibles a los sujetos pasivos que ejerzan la actividad de transporte de viajeros o de mercancias por carretera tributando por el regimen simplificado. Articulo invocado en el official_name del Modelo 308 como el reglamentario de la solicitud de devolucion."
 required_text = [
     "Devolución de cuotas deducibles",

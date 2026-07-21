@@ -25,8 +25,8 @@ machine, and up to three jobs can co-reside on one box:
 
 | Machine | Cores | Runners on it |
 | --- | --- | --- |
-| gw-workstation (Ryzen 5900X, 12C/24T) | 24 logical | `gw-workstation-win` (Windows X64), `gw-workstation-wsl` + `gw-workstation-wsl-2` (Linux X64 containers) |
-| MacBook (Apple silicon) | 6 | `macbook-neo` (macOS ARM64), `macbook-neo-intel` (macOS X64 via Rosetta), `gw-macbook-linux-arm` (Linux ARM64 via colima, VM capped at 4 CPUs) |
+| Windows/WSL build host (Ryzen 5900X, 12C/24T) | 24 logical | the Windows runner (Windows X64), plus two Linux X64 container runners |
+| macOS build host (Apple silicon) | 6 | the macOS ARM64 runner, the macOS X64 runner (via Rosetta), and a Linux ARM64 runner (via colima, VM capped at 4 CPUs) |
 
 **Sizing rule:** the sum of co-resident workers must fit the machine's CPUs —
 size every parallel knob for worst-case co-residency (3 jobs/machine), never

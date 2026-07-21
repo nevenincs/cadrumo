@@ -20,7 +20,7 @@ license = "Apache-2.0"
 # to packaging/derived works, never the official AEAT/BOE documents.
 license-files = ["LICENSE", "NOTICE"]
 authors = [
-  { name = "wgergely" },
+  { name = "Gergely Wootsch" },
 ]
 keywords = ["aeat", "hacienda", "impuestos", "spain", "tax", "corpus", "data"]
 classifiers = [
