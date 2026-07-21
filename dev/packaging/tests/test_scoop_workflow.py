@@ -47,7 +47,13 @@ def test_scoop_workflow_consumes_one_successful_commit_bound_cohort() -> None:
     assert '$run.name -ne "Cadrumo Packaging Smoke"' in source_gate["run"]
     assert '$run.path -ne ".github/workflows/packaging-smoke.yml"' in source_gate["run"]
     assert '$run.conclusion -ne "success"' in source_gate["run"]
-    assert '$run.event -ne "push" -or $run.head_branch -ne "main"' in source_gate["run"]
+    # Trusted-source predicate (ci-speed redesign): main-branch runs, either
+    # push (historical) or dispatch verified on main history via compare API.
+    assert '$run.head_branch -ne "main"' in source_gate["run"]
+    assert '$run.event -eq "workflow_dispatch"' in source_gate["run"]
+    assert "/compare/main..." in source_gate["run"]
+    assert '$ancestry.status -ne "identical" -and $ancestry.status -ne "behind"' in source_gate["run"]
+    assert '$run.event -ne "push"' in source_gate["run"]
     assert "$run.head_repository.full_name -ne $env:GITHUB_REPOSITORY" in source_gate["run"]
     assert "$run.head_sha -ne $env:SOURCE_COMMIT.ToLowerInvariant()" in source_gate["run"]
     assert checkout["with"]["ref"] == "${{ inputs.source_commit }}"

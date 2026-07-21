@@ -133,6 +133,14 @@ def test_validate_aggregates_all_twelve_rows_from_authoritative_sources() -> Non
     assert 'verify "evidence-homebrew-$HOMEBREW_RUN_ID"  "$HOMEBREW_RUN_ID"' in surface
     assert 'gh release download "$CLAUDE_EVIDENCE_RELEASE"' in surface
 
+    # Trusted-source predicate on the smoke run (ci-speed redesign): a
+    # dispatch-event campaign run is accepted only when its commit is verified
+    # on main history via the compare API; push stays accepted for historical
+    # campaign runs.
+    assert '"$event" = "workflow_dispatch"' in surface
+    assert "/compare/main..." in surface
+    assert 'test "$ancestry" = "identical" -o "$ancestry" = "behind"' in surface
+
     # Per-source identity checks on the acquisition runs (parity with the smoke gate).
     assert ".github/workflows/packaging-scoop.yml" in surface
     assert ".github/workflows/packaging-homebrew.yml" in surface
