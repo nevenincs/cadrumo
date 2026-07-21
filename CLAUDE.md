@@ -84,6 +84,7 @@ You MUST respect these rules at all times:
 @.claude/rules/uncommitted-wip-is-not-orphaned.md
 @.claude/rules/vaultspec-archive-discipline.builtin.md
 @.claude/rules/vaultspec-cli.builtin.md
+@.claude/rules/vaultspec-discovery.builtin.md
 @.claude/rules/vaultspec-dry-run-discipline.builtin.md
 @.claude/rules/vaultspec-plan-editing-discipline.builtin.md
 @.claude/rules/vaultspec-system.builtin.md
