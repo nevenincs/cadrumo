@@ -585,7 +585,11 @@ def _decode_import_bundle(
 
 
 def _resolve_import_target_label(record: UserProfileRecord, label: str | None) -> str:
-    """Resolve the target profile label, refusing UUID collisions and taken labels."""
+    """Resolve the target profile label, refusing UUID collisions and taken labels.
+
+    The label defaults to the bundled :class:`UserProfileRecord` display name,
+    and the record's ``profile_id`` is what the collision check looks up.
+    """
     from ....application.workflow import read_profile_bucket as _read_profile_bucket
     from ....application.workflow import read_profile_bucket_by_id
 
