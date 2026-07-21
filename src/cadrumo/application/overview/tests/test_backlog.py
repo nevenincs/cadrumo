@@ -114,6 +114,27 @@ def test_backlog_late_count_matches_items_length() -> None:
     assert backlog.late_count == len(backlog.items)
 
 
+def test_backlog_future_window_carries_no_past_due_items() -> None:
+    """A window lying entirely after ``as_of`` has nothing past-due, so the
+    backlog is empty and late_count is 0.
+
+    The reference date is an explicit argument rather than the wall clock, so
+    the "window lies wholly in the future" invariant holds on every run date;
+    both dates stay inside 2026, a registry-known year (far-future years carry
+    no deadline calendar and are refused upstream).
+    """
+
+    backlog = build_overview_backlog(
+        _profile(),
+        from_date=date(2026, 7, 1),
+        to_date=date(2026, 12, 31),
+        as_of=date(2026, 1, 15),
+    )
+
+    assert backlog.items == ()
+    assert backlog.late_count == 0
+
+
 def test_backlog_default_lookback_is_365_days() -> None:
     """When neither --from nor --to is supplied the window spans the
     365 days preceding ``as_of`` through ``as_of`` itself.
