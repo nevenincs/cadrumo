@@ -26,6 +26,7 @@ from ._auth_provider import describe_auth_provider_operator_impact
 from ._render import (
     OUTPUT_LANGUAGE_ENV_VAR,
     SUPPORTED_OUTPUT_LANGUAGES,
+    MissingTranslationError,
     UnmatchedPlaceholderError,
     clear_output_language_cache,
     extract_placeholders,
@@ -39,6 +40,7 @@ __all__ = [
     "DEFAULT_OUTPUT_LANGUAGE",
     "OUTPUT_LANGUAGE_ENV_VAR",
     "SUPPORTED_OUTPUT_LANGUAGES",
+    "MissingTranslationError",
     "OutputLanguage",
     "Translatable",
     "UnmatchedPlaceholderError",
