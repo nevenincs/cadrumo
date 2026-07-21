@@ -131,6 +131,51 @@ def _merge_cleanup_failure_into_cancellation(
         cancellation.add_note(f"Retained asynchronous cleanup also failed ({type(cleanup_error).__name__})")
 
 
+async def _close_with_retries(resource: AsyncCloseable, close_attempts: int) -> BaseException | None:
+    """Close one resource, retrying, and return the final failure or ``None``.
+
+    Every attempt's failure is absorbed so a later attempt can still succeed.
+    When all attempts fail, the last failure carries a note counting them.
+    """
+    prior_failures: list[BaseException] = []
+    for _ in range(close_attempts):
+        try:
+            await resource.close()
+        except BaseException as error:
+            prior_failures.append(error)
+        else:
+            return None
+    final_error = prior_failures[-1]
+    if len(prior_failures) > 1:
+        final_error.add_note(f"resource close failed {len(prior_failures)} times")
+    return final_error
+
+
+async def _close_all_resources(
+    resources: tuple[AsyncCloseable | None, ...],
+    *,
+    task_name: str,
+    close_attempts: int,
+) -> None:
+    """Close every resource, retaining the owners whose close attempts all failed."""
+    failed_resources: list[AsyncCloseable] = []
+    failures: list[BaseException] = []
+    for resource in resources:
+        if resource is None:
+            continue
+        failure = await _close_with_retries(resource, close_attempts)
+        if failure is not None:
+            failed_resources.append(resource)
+            failures.append(failure)
+    if failures:
+        raise AsyncResourceCleanupError(
+            tuple(failed_resources),
+            tuple(failures),
+            retry_task_name=task_name,
+            close_attempts=close_attempts,
+        ) from failures[0]
+
+
 async def close_async_resources(
     *resources: AsyncCloseable | None,
     task_name: str,
@@ -150,36 +195,9 @@ async def close_async_resources(
     active_error = sys.exception() if isinstance(primary_error, _AutoPrimaryException) else primary_error
     primary_cancellation = active_error if isinstance(active_error, asyncio.CancelledError) else None
 
-    async def close_all() -> None:
-        failed_resources: list[AsyncCloseable] = []
-        failures: list[BaseException] = []
-        for resource in resources:
-            if resource is None:
-                continue
-            prior_failures: list[BaseException] = []
-            for attempt in range(close_attempts):
-                try:
-                    await resource.close()
-                except BaseException as error:
-                    prior_failures.append(error)
-                    if attempt + 1 == close_attempts:
-                        if len(prior_failures) > 1:
-                            error.add_note(f"resource close failed {len(prior_failures)} times")
-                        failed_resources.append(resource)
-                        failures.append(error)
-                else:
-                    break
-        if failures:
-            raise AsyncResourceCleanupError(
-                tuple(failed_resources),
-                tuple(failures),
-                retry_task_name=task_name,
-                close_attempts=close_attempts,
-            ) from failures[0]
-
     try:
         await await_cancellation_complete(
-            close_all(),
+            _close_all_resources(resources, task_name=task_name, close_attempts=close_attempts),
             task_name=task_name,
             cancellation=cancellation or primary_cancellation,
         )
@@ -220,9 +238,7 @@ def _attach_cleanup_error_to_body(
     if isinstance(previous_cleanup_error, AsyncResourceCleanupError):
         cleanup_error = previous_cleanup_error._merged_with(cleanup_error)
     active_error.__dict__["async_cleanup_error"] = cleanup_error
-    active_error.add_note(
-        "Asynchronous resource cleanup also failed; retry through the attached async_cleanup_error"
-    )
+    active_error.add_note("Asynchronous resource cleanup also failed; retry through the attached async_cleanup_error")
     return True
 
 
