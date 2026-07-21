@@ -40,6 +40,7 @@ from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 from ....tests.user_profile import register_minimal_profile
 from .._app_live import (
+    _PROCESS_INVENTORY_TIMEOUT_SECONDS,
     _iva_remote_state_capture_lines,
     _live_iva_evidence_pull_command_timeout_ms,
     _live_iva_outcome_label,
@@ -67,6 +68,20 @@ from .._app_live_auth_preflight import _live_auth_preflight_lines
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _ACTIVE_TEST_BUCKET_ID = "00000000-0000-4000-8000-000000000000"
+
+#: Allowance for a COLD import of the live application + CLI surface in a fresh
+#: interpreter, which dominates the watchdog subprocess below. Measured at
+#: 4.6-14.0s on this codebase depending on filesystem-cache warmth and load, so
+#: 60s is roughly four times the worst observation.
+_COLD_CLI_IMPORT_ALLOWANCE_SECONDS = 60
+#: Hang guard for the watchdog subprocess, derived rather than guessed: the cold
+#: import above, plus the TWO process-table reads the watchdog performs (bounded
+#: by the SUT's own :data:`_PROCESS_INVENTORY_TIMEOUT_SECONDS`), plus margin for
+#: the auth-context probes. The former flat 15s could not even cover the import
+#: step's worst case, so a busy host failed here on cost rather than on defect;
+#: binding the budget to the production constant keeps the two in step if it
+#: moves. ``timeout = 300`` in pyproject.toml remains the outer per-test ceiling.
+_WATCHDOG_SUBPROCESS_TIMEOUT_SECONDS = _COLD_CLI_IMPORT_ALLOWANCE_SECONDS + 2 * _PROCESS_INVENTORY_TIMEOUT_SECONDS + 20
 
 _FORBIDDEN_LIVE_MUTATION_VERBS = frozenset(
     {
@@ -396,7 +411,7 @@ class TestIvaRemoteStateCliSurface:
             [sys.executable, "-c", textwrap.dedent(code), canary],
             capture_output=True,
             text=True,
-            timeout=15,
+            timeout=_WATCHDOG_SUBPROCESS_TIMEOUT_SECONDS,
             check=False,
         )
 
@@ -404,7 +419,12 @@ class TestIvaRemoteStateCliSurface:
         assert canary not in _live_process_command_lines()
 
     def test_watchdog_reaps_new_playwright_temp_profile_process(self) -> None:
-        preexisting = _playwright_profile_tokens(_process_command_inventory())
+        baseline_inventory = _process_command_inventory()
+        assert baseline_inventory is not None, (
+            "the OS process table must be readable for this proof to mean anything; "
+            "an unreadable baseline makes the reaper refuse by design"
+        )
+        preexisting = _playwright_profile_tokens(baseline_inventory)
         profile_canary = "playwright_chromiumdev_profile-aeatS92Canary"
         proc = subprocess.Popen(
             [
@@ -423,10 +443,47 @@ class TestIvaRemoteStateCliSurface:
             else:
                 raise AssertionError("canary process command line was not visible to process inventory")
 
-            killed = _reap_new_playwright_profile_processes(preexisting_profiles=preexisting)
+            killed, inventory_available = _reap_new_playwright_profile_processes(preexisting_profiles=preexisting)
+            assert inventory_available, (
+                "the reaper could not read the process table, so a zero count would say nothing about leaks"
+            )
             assert killed >= 1
             proc.wait(timeout=10)
             assert proc.returncode is not None
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+                proc.wait(timeout=10)
+
+    def test_watchdog_refuses_to_reap_when_the_process_baseline_is_unknown(self) -> None:
+        """An unreadable baseline must reap NOTHING, and must say so.
+
+        Without the set of profiles that already existed, every Playwright
+        profile on the machine looks newly created by this command, so reaping
+        would SIGTERM browsers it never started -- including a concurrent
+        operator's. This drives the real reaper against a real canary process
+        carrying a Playwright-shaped profile token and proves it is spared, and
+        that the returned flag reports the inventory as unavailable rather than
+        letting a ``0`` count read as "nothing leaked".
+        """
+        profile_canary = "playwright_chromiumdev_profile-aeatBaselineUnknownCanary"
+        proc = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(60)", f"--user-data-dir={profile_canary}"],
+        )
+        try:
+            deadline = datetime.now(UTC).timestamp() + 10
+            while datetime.now(UTC).timestamp() < deadline:
+                if profile_canary in _live_process_command_lines():
+                    break
+                sleep(0.1)
+            else:
+                raise AssertionError("canary process command line was not visible to process inventory")
+
+            killed, inventory_available = _reap_new_playwright_profile_processes(preexisting_profiles=None)
+
+            assert killed == 0
+            assert inventory_available is False
+            assert proc.poll() is None, "the reaper killed a process it did not create"
         finally:
             if proc.poll() is None:
                 proc.kill()
