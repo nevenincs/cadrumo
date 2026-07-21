@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-userdocs-hardening'
-date: '2026-07-15'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S01]]'
   - '[[2026-06-04-aeat-cli-userdocs-hardening-W01-P01-S02]]'
@@ -27,6 +27,7 @@ related:
   - '[[2026-06-05-general-audience-prose-rollout-audit]]'
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
   - '[[2026-06-14-aeat-cli-userdocs-hardening-audit]]'
+  - '[[2026-07-21-aeat-cli-userdocs-hardening-adr]]'
 ---
 
 # `aeat-cli-userdocs-hardening` feature index
@@ -36,6 +37,8 @@ Auto-generated index of all documents tagged with `#aeat-cli-userdocs-hardening`
 ## Documents
 
 ### adr
+
+- `2026-07-21-aeat-cli-userdocs-hardening-adr` - `aeat-cli-userdocs-hardening` adr: `userdocs handbook corpus architecture (retroactive record)` | (**status:** `accepted`)
 
 ### audit
 
