@@ -41,7 +41,7 @@ from typing import Protocol, runtime_checkable
 from pydantic import BaseModel, Field, field_validator
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.i18n import Translatable as tr
+from ...core.i18n import tr as _tr
 from ...core.logging import get_logger
 from ..categories import SpendingCategory, resolve_category_profiles
 from ..iva import IvaCategory
@@ -469,24 +469,32 @@ def prompt_spec_with_saturation_fields(
 def _category_hint(value: SpendingCategory) -> str:
     """Return the best available hint string for a SpendingCategory.
 
-    Pulls the Spanish display label plus the proportionality kind and
-    (first 80 chars of) ``notes`` from
+    Resolves the display label and ``notes`` translation keys to Spanish at
+    read time, and pairs them with the proportionality kind from
     :data:`cadrumo.domain.categories.resolve_category_profiles(2025)` -- gives the
     LLM the authoritative AEAT terminology AND the deductibility
     context (e.g. ``full_deductible``, ``usage_ratio_home_area``) that
     disambiguates home-office from premises rent or drives MIXED vs
     BUSINESS decisions. Falls back to the humanised enum value when a
     category has no registered profile.
+
+    Resolution belongs here rather than in the profile registry, whose
+    loader is cached: resolving there would bake one operator's locale
+    into the shared profile and serve it to the next operator.
     """
     profile = resolve_category_profiles(2025).get(value)
     if profile is None:
         return value.value.replace("_", " ")
-    spanish_label = profile.display_label or value.value.replace("_", " ")
+    # Pinned to Spanish regardless of operator locale: the classifier reasons
+    # over Spanish AEAT invoices, so authoritative AEAT terminology must reach
+    # the prompt even when the operator has selected en/ca/hu.
+    spanish_label = _tr(profile.display_label, locale="es")
     rule = profile.proportionality
-    notes_preview = rule.notes.strip().splitlines()[0][:120] if rule.notes else ""
+    notes = _tr(rule.notes, locale="es") if rule.notes else ""
+    notes_preview = notes.strip().splitlines()[0][:120] if notes else ""
     segments = [spanish_label, f"[{rule.kind.value}]"]
     if notes_preview:
-        segments.append(tr(notes_preview))
+        segments.append(notes_preview)
     return " — ".join(segments)
 
 
