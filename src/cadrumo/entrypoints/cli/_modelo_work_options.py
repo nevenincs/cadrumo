@@ -36,9 +36,7 @@ _RegistryRevisionOpt = Annotated[
 _BucketIdOpt = Annotated[str | None, typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help"))]
 _ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
 _NameOpt = Annotated[str | None, typer.Option("--name", help=tr("cli.app.modelo.work.name_help"))]
-_WorkUnitIdOpt = Annotated[
-    str | None, typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help"))
-]
+_WorkUnitIdOpt = Annotated[str | None, typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help"))]
 _RevisionSelectorOpt = Annotated[
     str,
     typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector.")),
