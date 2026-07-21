@@ -12,6 +12,7 @@ only and emits :class:`WorkDependenciesResult`.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Annotated, Any
 
 import typer
@@ -84,6 +85,27 @@ from ._modelo_work_options import (
 # KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
 # resolver callable whose concrete return type varies by call site;
 # Callable[..., Any] is the DI composition seam.
+@dataclass(frozen=True, slots=True)
+class _VerificationDeps:
+    """The CLI callables the verification/filing sub-registrars are composed with.
+
+    Bundled so the per-command sub-registrars share one injection seam instead of
+    re-declaring the same callable block each (the ``_WizardDeps`` pattern). The
+    public :func:`register_work_verification_commands` keeps its explicit keyword
+    signature — this bundle is internal composition only.
+    """
+
+    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None]
+    require_active_profile: Callable[[], None]
+    resolve_revision_for_cli: Callable[..., Any]
+    resolve_default_actor: Callable[[], str]
+    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter]
+    calculation_revision_not_found_bad_parameter: Callable[[str, BaseException], typer.BadParameter]
+
+
+# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
+# resolver callable whose concrete return type varies by call site;
+# Callable[..., Any] is the DI composition seam.
 def register_work_verification_commands(
     work_app: typer.Typer,
     *,
@@ -95,8 +117,7 @@ def register_work_verification_commands(
     calculation_revision_not_found_bad_parameter: Callable[[str, BaseException], typer.BadParameter],
 ) -> None:
     """Register revision verification, dependency, and internal filing commands."""
-    _register_work_verify_command(
-        work_app,
+    deps = _VerificationDeps(
         activate_output_language=activate_output_language,
         require_active_profile=require_active_profile,
         resolve_revision_for_cli=resolve_revision_for_cli,
@@ -104,36 +125,17 @@ def register_work_verification_commands(
         bad_parameter_from_error=bad_parameter_from_error,
         calculation_revision_not_found_bad_parameter=calculation_revision_not_found_bad_parameter,
     )
+    _register_work_verify_command(work_app, deps=deps)
     _register_work_dependencies_command(
         work_app,
         activate_output_language=activate_output_language,
         require_active_profile=require_active_profile,
         bad_parameter_from_error=bad_parameter_from_error,
     )
-    _register_work_file_command(
-        work_app,
-        activate_output_language=activate_output_language,
-        require_active_profile=require_active_profile,
-        resolve_revision_for_cli=resolve_revision_for_cli,
-        resolve_default_actor=resolve_default_actor,
-        bad_parameter_from_error=bad_parameter_from_error,
-        calculation_revision_not_found_bad_parameter=calculation_revision_not_found_bad_parameter,
-    )
+    _register_work_file_command(work_app, deps=deps)
 
 
-# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
-# resolver callable whose concrete return type varies by call site;
-# Callable[..., Any] is the DI composition seam.
-def _register_work_verify_command(
-    work_app: typer.Typer,
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    require_active_profile: Callable[[], None],
-    resolve_revision_for_cli: Callable[..., Any],
-    resolve_default_actor: Callable[[], str],
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-    calculation_revision_not_found_bad_parameter: Callable[[str, BaseException], typer.BadParameter],
-) -> None:
+def _register_work_verify_command(work_app: typer.Typer, *, deps: _VerificationDeps) -> None:
     @work_app.command("verify", help=tr("cli.app.modelo.work.verify_help"))
     def work_verify(
         ctx: typer.Context,
@@ -160,10 +162,10 @@ def _register_work_verify_command(
         ),
     ) -> None:
         """Persist a :class:`VerificationReport` for the selected draft revision."""
-        activate_output_language(ctx, output_language)
-        require_active_profile()
+        deps.activate_output_language(ctx, output_language)
+        deps.require_active_profile()
         try:
-            selected_revision = resolve_revision_for_cli(
+            selected_revision = deps.resolve_revision_for_cli(
                 calculation_revision_id=calculation_revision_id,
                 work_unit_id=work_unit_id,
                 modelo=modelo,
@@ -183,18 +185,18 @@ def _register_work_verify_command(
             already_verified = selected_revision.state is not CalculationRevisionState.BORRADOR
             report = verify_modelo_revision(
                 selected_revision.calculation_revision_id,
-                actor=actor or resolve_default_actor(),
+                actor=actor or deps.resolve_default_actor(),
                 workflow_profile=workflow_profile,
             )
         except CalculationRevisionNotFoundError as exc:
             if calculation_revision_id is not None:
-                raise calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
-            raise bad_parameter_from_error(exc) from exc
+                raise deps.calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
+            raise deps.bad_parameter_from_error(exc) from exc
         except (
             CalculationRevisionStateError,
             WorkUnitNotFoundError,
         ) as exc:
-            raise bad_parameter_from_error(exc) from exc
+            raise deps.bad_parameter_from_error(exc) from exc
 
         result = WorkVerifyResult.model_validate(verification_report_payload(report).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.verify", *verification_report_lines(report)]
@@ -448,19 +450,7 @@ def _dependency_inventory_lines(result: WorkDependenciesResult) -> list[str]:
     return lines
 
 
-# KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
-# resolver callable whose concrete return type varies by call site;
-# Callable[..., Any] is the DI composition seam.
-def _register_work_file_command(
-    work_app: typer.Typer,
-    *,
-    activate_output_language: Callable[[typer.Context, OutputLanguage | None], None],
-    require_active_profile: Callable[[], None],
-    resolve_revision_for_cli: Callable[..., Any],
-    resolve_default_actor: Callable[[], str],
-    bad_parameter_from_error: Callable[[BaseException], typer.BadParameter],
-    calculation_revision_not_found_bad_parameter: Callable[[str, BaseException], typer.BadParameter],
-) -> None:
+def _register_work_file_command(work_app: typer.Typer, *, deps: _VerificationDeps) -> None:
     @work_app.command("file", help=tr("cli.app.modelo.work.file_help"))
     def work_file(
         ctx: typer.Context,
@@ -492,10 +482,10 @@ def _register_work_file_command(
         ),
     ) -> None:
         """Create an internal :class:`ModeloRecord` for a verified revision."""
-        activate_output_language(ctx, output_language)
-        require_active_profile()
+        deps.activate_output_language(ctx, output_language)
+        deps.require_active_profile()
         try:
-            selected_revision = resolve_revision_for_cli(
+            selected_revision = deps.resolve_revision_for_cli(
                 calculation_revision_id=calculation_revision_id,
                 work_unit_id=work_unit_id,
                 modelo=modelo,
@@ -515,21 +505,21 @@ def _register_work_file_command(
             already_filed = selected_revision.state is CalculationRevisionState.PRESENTADO
             record = file_modelo_revision(
                 selected_revision.calculation_revision_id,
-                actor=actor or resolve_default_actor(),
+                actor=actor or deps.resolve_default_actor(),
                 workflow_profile=workflow_profile,
                 notes=notes,
                 refund_election=disposition,
             )
         except CalculationRevisionNotFoundError as exc:
             if calculation_revision_id is not None:
-                raise calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
-            raise bad_parameter_from_error(exc) from exc
+                raise deps.calculation_revision_not_found_bad_parameter(calculation_revision_id, exc) from exc
+            raise deps.bad_parameter_from_error(exc) from exc
         except (
             CalculationRevisionStateError,
             ModeloRefundElectionNotEligibleError,
             WorkUnitNotFoundError,
         ) as exc:
-            raise bad_parameter_from_error(exc) from exc
+            raise deps.bad_parameter_from_error(exc) from exc
 
         result = WorkFileResult.model_validate(filing_record_payload(record).model_dump(mode="python"))
         lines = ["operation\tmodelo.work.file", *filing_record_lines(record)]
