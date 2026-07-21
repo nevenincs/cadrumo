@@ -29,8 +29,8 @@ adapters:
           elott.
         already_active_before_resume: Az AeatAuthenticator már aktív munkamenettel
           rendelkezik; folytatás előtt hívja meg a close() metódust.
-        assertion_failed: Az AEAT hitelesites nem hozott letre ervenyes bejelentkezesi
-          allitast.
+        assertion_failed: Az AEAT hitelesítés nem hozott létre érvényes bejelentkezési
+          állítást.
         capture_requires_active_session: A capture_storage_state() az aktuálisan aktív
           hitelesített munkamenetet igényli.
         capture_requires_certificate: A capture_storage_state() aktív tanúsítványalapú
@@ -164,8 +164,8 @@ adapters:
     storage:
       factory:
         errors:
-          drive_root_missing: 'Nincs Google Drive gyokermappa-azonosito beallitva
-            az aktiv profilhoz. Futtassa eloszor: `aeat config google folder set <id>`.'
+          drive_root_missing: 'Nincs Google Drive gyökérmappa-azonosító beállítva
+            az aktív profilhoz. Futtassa először: `aeat config google folder set <id>`.'
           google_auth_import_failed: 'A google-auth fuggoseg nem importalhato; futtassa:
             `uv sync`, majd probalja ujra.'
           google_client_missing: 'Nincs Google OAuth-kliens regisztralva az aktiv
@@ -175,34 +175,34 @@ adapters:
             Futtassa eloszor: `aeat config google login`.'
           kind_empty: Az CADRUMO_STORAGE_PROVIDER_KIND ures.
           kind_unhandled: A(z) {kind} tarhelyszolgaltato-tipust a factory nem kezeli.
-          kind_unknown: 'A(z) {value} tarhelyszolgaltato-tipus nem ismert; vart ertekek:
+          kind_unknown: 'A(z) {value} tárhelyszolgáltató-típus nem ismert; várt értékek:
             {expected}.'
       google_drive:
         errors:
           content_hash_blank: A Google Drive tartalom hash nem lehet ures.
           content_hash_mismatch: A Google Drive tartalom hash nem egyezik; a letoltott
             payload integritasellenorzese sikertelen.
-          create_namespace_no_id: A Google Drive nem adott vissza azonositot a nevter
-            mappa letrehozasakor.
-          create_vault_folder_no_id: A Google Drive nem adott vissza azonositot a
-            vault mappa letrehozasakor.
-          folder_not_owned: A Drive mappa {folder_name} nincs az alkalmazas tulajdonakent
-            jelolve; az operatori adatok vedelmeben az iras megtagadva.
-          former_vault_folder: A Google Drive vault mappa {vault_folder_name} az elozo
-            termekhez tartozik es nem hasznalhato; hasznalja a Cadrumo vault mappat.
+          create_namespace_no_id: A Google Drive nem adott vissza azonosítót a névtér
+            mappa létrehozásakor.
+          create_vault_folder_no_id: A Google Drive nem adott vissza azonosítót a
+            vault mappa létrehozásakor.
+          folder_not_owned: A Drive mappa {folder_name} nincs az alkalmazás tulajdonaként
+            jelölve; az operátori adatok védelmében az írás megtagadva.
+          former_vault_folder: A Google Drive vault mappa {vault_folder_name} az előző
+            termékhez tartozik és nem használható; használja a Cadrumo vault mappát.
           googleapiclient_import_failed: 'A google-api-python-client fuggoseg nem
             importalhato; futtassa: `uv sync`, majd probalja ujra.'
           media_non_bytes: A Google Drive medialetoltes {payload_type} tipust adott
             vissza bytes helyett.
           namespace_blank: A Google Drive tarhely nevtere nem lehet ures.
-          namespace_forbidden_characters: A Google Drive nevter {namespace} tiltott
-            utvonal-karaktereket tartalmaz.
+          namespace_forbidden_characters: A Google Drive névtér {namespace} tiltott
+            útvonal-karaktereket tartalmaz.
           namespace_not_found: 'A Google Drive nevter nem talalhato: {namespace}.'
           object_key_hmac_blank: A Google Drive objektumkulcs HMAC nem lehet ures.
           object_not_found: 'A Google Drive objektum {object_key_hmac} nem talalhato
             ebben a nevterben: {namespace}.'
           request_failed: A Google Drive {action} keres {status} allapottal sikertelen.
-          root_folder_id_blank: A Google Drive gyokermappa azonosito nem lehet ures.
+          root_folder_id_blank: A Google Drive gyökérmappa azonosító nem lehet üres.
           vault_entry_not_folder: 'A beallitott Drive gyoker tartalmazza ezt: {vault_folder_name},
             de ez nem mappa.'
           vault_folder_name_blank: A Google Drive vault mappa neve nem lehet ures.
@@ -210,7 +210,7 @@ adapters:
             alaku volt.
       local:
         errors:
-          byte_length_invalid: 'A helyi sidecar byte_length mezojenek tipusa ervenytelen:
+          byte_length_invalid: 'A helyi sidecar byte_length mezőjének típusa érvénytelen:
             {actual_type}.'
           content_hash_blank: A helyi tartalom hash nem lehet ures.
           content_hash_mismatch: A helyi tartalom hash nem egyezik; a payload integritasellenorzese
@@ -223,8 +223,8 @@ adapters:
             config check`).'
           namespace_create_permission: 'A helyi tarhely nem tudta letrehozni a nevteret:
             {namespace}.'
-          namespace_forbidden_characters: A helyi tarhely nevtere {namespace} tiltott
-            utvonal-karaktereket tartalmaz.
+          namespace_forbidden_characters: A helyi tárhely névtere {namespace} tiltott
+            útvonal-karaktereket tartalmaz.
           namespace_not_found: 'A helyi nevter nem talalhato: {namespace}.'
           object_delete_permission: A helyi tarhely nem tudta torolni az objektum
             payloadjat.
@@ -359,8 +359,8 @@ aggregation:
         (pl. 2024-0A).
   retenciones:
     errors:
-      filing_year_out_of_range: A(z) %{filing_year} bevallasi ev a tamogatott %{min_year}-%{max_year}
-        tartomanyon kivul van.
+      filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
+        tartományon kívül van.
       perceptor_nif_blank: A perceptor NIF nem lehet ures.
       perceptor_observations_missing: Nincsenek perceptoronkenti retencion megfigyelesek
         a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forras
@@ -392,8 +392,8 @@ aggregation:
         megadnia a számot, a legkorábbi és a legkésőbbi benyújtási dátumot.
       owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
-      relation_provenance_incomplete: A kapcsolat eredetenek tartalmaznia kell a forras
-        modellt, evet, idoszakokat, mezoket, jogi hivatkozasokat es forrashivatkozasokat.
+      relation_provenance_incomplete: A kapcsolat eredetének tartalmaznia kell a forrás
+        modellt, évet, időszakokat, mezőket, jogi hivatkozásokat és forráshivatkozásokat.
       row_binding_index_invalid: aggregation.source_mesh.errors.row_binding_index_invalid
       row_binding_value_invalid: aggregation.source_mesh.errors.row_binding_value_invalid
       source_transaction_ids_blank: A forrásháló tranzakcióazonosítói nem tartalmazhatnak
@@ -475,7 +475,7 @@ application:
         certificate_source_not_found: A(z) '%{name}' tanúsítványforrás nincs regisztrálva.
           Futtassa a `aeat config auth certificate list` parancsot a regisztrált források
           megtekintéséhez, vagy a `aeat config auth certificate register --name %{name}
-          --file UTVONAL` parancsot a regisztrálásához.
+          --file ÚTVONAL` parancsot a regisztrálásához.
         cleanup_in_progress: Ennél a profilnál még folyamatban van egy hitelesítési
           kijelentkezés vagy visszaállítás helyreállítása. A hitelesítési beállítások
           módosítása előtt folytassa azt a műveletet.
@@ -606,37 +606,37 @@ application:
         év szükséges'
     review:
       errors:
-        approved_by_blank: A jovahagyo azonositoja nem lehet ures.
+        approved_by_blank: A jóváhagyó azonosítója nem lehet üres.
         draft_not_ready: Csak benyujtasra kesz tervezetek hagyhatoak jova.
-        registry_review_mismatch: 'A tervezet nem egyezik a nyilvantartasi ellenorzesi
-          felulettel: %{codes}.'
+        registry_review_mismatch: 'A tervezet nem egyezik a nyilvántartási ellenőrzési
+          felülettel: %{codes}.'
       stale_reasons:
         approval_basis_version_changed: a jovahagyasi alap verzioja megvaltozott
         category_profiles_changed: a kategoriaprofilok megvaltoztak
         draft_payload_changed: a tervezet tartalma megvaltozott
-        draft_review_changed: a tervezet ellenorzesi felulete megvaltozott
-        invoice_catalogue_changed: a szamlakatalogus megvaltozott
-        prior_filing_observations_changed: a korabbi bevallasi megfigyelesek megvaltoztak
-        profile_activity_changed: az adofizetoi profil tevekenysege megvaltozott
+        draft_review_changed: a tervezet ellenőrzési felülete megváltozott
+        invoice_catalogue_changed: a számlakatalógus megváltozott
+        prior_filing_observations_changed: a korábbi bevallási megfigyelések megváltoztak
+        profile_activity_changed: az adófizetői profil tevékenysége megváltozott
         schema_formula_changed: a sema vagy keplet eredete megvaltozott
         transaction_catalogue_changed: a tranzakcios katalogus megvaltozott
         unknown: '%{reason}'
     runtime:
       errors:
-        active_profile_load_failed: 'Az aktiv bevallasi profil nem toltheto be: %{reason}.'
+        active_profile_load_failed: 'Az aktív bevallási profil nem tölthető be: %{reason}.'
         ambiguous_casilla_schema: application.filing.runtime.errors.ambiguous_casilla_schema
         blank_modelo_selection: A kert modellvalasztas nem tartalmazhat ures modellazonositokat.
         filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
-        filing_year_period_pair: A filing_year es a period ertekeket egyutt kell megadni.
-        modelo_not_in_registry: A(z) %{modelo} modelo nem szerepel a szamitasi nyilvantartasban.
+        filing_year_period_pair: A filing_year és a period értékeket együtt kell megadni.
+        modelo_not_in_registry: A(z) %{modelo} modelo nem szerepel a számítási nyilvántartásban.
         modelo_revision_missing: A(z) %{modelo} modellnek nincsenek revizioi.
         period_type: application.filing.runtime.errors.period_type
         provider_year_missing: A(z) %{modelo} modell %{revision} reviziojahoz nincs
           szolgaltatoi ev.
         registry_empty: A(z) %{registry_root_name} registry gyokerben nincsenek modell
           definiciok.
-        registry_empty_for_period: A nyilvantartasi gyokerben nincs modell definicio
-          a(z) %{filing_year} ev %{period} idoszakahoz.
+        registry_empty_for_period: A nyilvántartási gyökérben nincs modell definíció
+          a(z) %{filing_year} év %{period} időszakához.
         registry_missing_requested_modelos: 'A nyilvantartasi gyokerbol hianyoznak
           a kert modell definiciok: %{modelos}.'
         unsupported_casilla_data_type: 'Nem tamogatott nyilvantartasi casilla adattipus:
@@ -644,13 +644,13 @@ application:
   inventory:
     service:
       errors:
-        actividad_conflict: Mar letezik keszletnaplo a(z) %{actividad_id} tevekenyseghez
-          es a(z) %{year} evhez.
-        actividad_not_found: Nincs keszletnaplo a(z) %{actividad_id} tevekenyseghez
-          es a(z) %{year} evhez.
-        duplicate_movement_id: A keszletnaplo mar tartalmazza a(z) %{movement_id}
-          mozgast.
-        invalid_valuation_method: 'A keszlet ertekelesi mod nem tamogatott: %{valuation_method}.'
+        actividad_conflict: Már létezik készletnapló a(z) %{actividad_id} tevékenységhez
+          és a(z) %{year} évhez.
+        actividad_not_found: Nincs készletnapló a(z) %{actividad_id} tevékenységhez
+          és a(z) %{year} évhez.
+        duplicate_movement_id: A készletnapló már tartalmazza a(z) %{movement_id}
+          mozgást.
+        invalid_valuation_method: 'A készlet értékelési mód nem támogatott: %{valuation_method}.'
   invoices:
     bulk_import:
       errors:
@@ -668,11 +668,11 @@ application:
           alábbiak egyikét: %{accepted}.'
     importing:
       errors:
-        import_file_read_failed: 'A szamlaimport fajl nem olvashato: %{path_name}.'
-        invalid_json: A szamla JSON nem ervenyes a(z) %{line}. sor %{column}. oszlopaban.
-        invalid_json_shape: A szamla JSON tartalma objektum vagy objektumlista kell
+        import_file_read_failed: 'A számlaimport fájl nem olvasható: %{path_name}.'
+        invalid_json: A számla JSON nem érvényes a(z) %{line}. sor %{column}. oszlopában.
+        invalid_json_shape: A számla JSON tartalma objektum vagy objektumlista kell
           legyen.
-        invalid_kind: 'A szamla tipusa nem tamogatott: %{kind}.'
+        invalid_kind: 'A számla típusa nem támogatott: %{kind}.'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'A(z) %{invoice_id} számlaazonosító-előtag nem egyértelmű;
@@ -683,8 +683,8 @@ application:
           kapcsolódik: %{linked_transaction_ids}. Előbb oldja fel a kapcsolatokat.'
     linking:
       errors:
-        linked_invoice_not_found: A(z) %{invoice_id} szamla nem talalhato a kapcsolas
-          alkalmazasa utan.
+        linked_invoice_not_found: A(z) %{invoice_id} számla nem található a kapcsolás
+          alkalmazása után.
         transaction_not_found: A(z) %{transaction_id} tranzakcio nem talalhato a tranzakcios
           katalogusban.
     wizard:
@@ -730,13 +730,13 @@ application:
           bucketjevel.
     verify:
       errors:
-        bucket_id_blank: A verify bucket azonositoja nem lehet ures.
+        bucket_id_blank: A verify bucket azonosítója nem lehet üres.
         observation_bucket_mismatch: A verify megfigyeles bucketje nem egyezik a tarolo
           bucketjevel.
-        observation_id_blank: A verify megfigyeles azonositoja nem lehet ures.
-        observation_id_mismatch: A verify megfigyeles azonositoja nem egyezik a kert
-          megfigyelessel.
-        observation_not_found: Nem talalhato verify megfigyeles a kert azonositohoz.
+        observation_id_blank: A verify megfigyelés azonosítója nem lehet üres.
+        observation_id_mismatch: A verify megfigyelés azonosítója nem egyezik a kért
+          megfigyeléssel.
+        observation_not_found: Nem található verify megfigyelés a kért azonosítóhoz.
         observation_prefix_ambiguous: A verify megfigyeles elotagja tobb megfigyelessel
           egyezik.
   modelo:
@@ -745,17 +745,17 @@ application:
         caller_binding_keys_blank: A hívó kötési kulcsok nem lehetnek üresek.
         decimal_value_invalid: A(z) %{binding_id} numerikus kotes tervezetertekenek
           decimaliskompatibilisnek kell lennie.
-        forbidden_bindings: 'A tervezet-pillanatkep olyan ertekeket tartalmaz, amelyeket
-          a regiszter nem jelolt AEAT-prefilled ertekkent: %{bindings}.'
-        registry_snapshot_axis_mismatch: 'A regiszter-pillanatkep tengelye nem egyezik
-          a tervezetkotes parancsaval: pillanatkep ev=%{snapshot_year} idoszak=%{snapshot_period};
-          parancs ev=%{filing_year} idoszak=%{period}.'
+        forbidden_bindings: 'A tervezet-pillanatkép olyan értékeket tartalmaz, amelyeket
+          a regiszter nem jelölt AEAT-prefilled értékként: %{bindings}.'
+        registry_snapshot_axis_mismatch: 'A regiszter-pillanatkép tengelye nem egyezik
+          a tervezetkötés parancsával: pillanatkép év=%{snapshot_year} időszak=%{snapshot_period};
+          parancs év=%{filing_year} időszak=%{period}.'
         registry_snapshot_modelo_mismatch: 'A regiszter-pillanatkep modellje nem egyezik
           a tervezetkotes parancsaval: pillanatkep modell=%{snapshot_modelo}; parancs
           modell=%{command_modelo}.'
-        snapshot_axis_mismatch: 'A tervezet-pillanatkep tengelye nem egyezik a szamitas
-          tengelyevel: pillanatkep ev=%{snapshot_year} idoszak=%{snapshot_period};
-          szamitas ev=%{filing_year} idoszak=%{period}.'
+        snapshot_axis_mismatch: 'A tervezet-pillanatkép tengelye nem egyezik a számítás
+          tengelyével: pillanatkép év=%{snapshot_year} időszak=%{snapshot_period};
+          számítás év=%{filing_year} időszak=%{period}.'
         snapshot_bucket_mismatch: A tervezet-pillanatkep nem az aktiv buckethez tartozik.
         snapshot_load_failed: 'A kivalasztott tervezet-pillanatkep nem toltheto be;
           az aktiv pillanatkepek listazhatok ezzel: aeat app live borrador 100 list.'
@@ -785,15 +785,15 @@ application:
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
         a kért modellhez, évhez és időszakhoz.
-      calculate_binding_is_date_sourced: A --binding %{key} egy datum tipusu kotes,
-        amely az aktiv profilbol szarmazik (az adozo datumadata, peldaul a szuletesi
-        datum); nem adhato meg --binding reven, amely csak decimalis es felsorolasi
-        ertekeket fogad. Allitsd be profiladatkent (pl. aeat config profile create
-        ... --taxpayer-birth-date EEEE-HH-NN), majd szamolj ujra.
-      calculate_binding_unknown: '--binding %{key} egyik binding azonositonak sem
-        felel meg ebben a revizioban. Elfogadott binding azonositok: %{accepted}.
-        Hasznalja a `aeat app modelo bindings list <MODELO>` parancsot az ervenyes
-        azonositok listazasahoz.'
+      calculate_binding_is_date_sourced: A --binding %{key} egy dátum típusú kötés,
+        amely az aktív profilból származik (az adózó dátumadata, például a születési
+        dátum); nem adható meg --binding révén, amely csak decimális és felsorolási
+        értékeket fogad. Állítsd be profiladatként (pl. aeat config profile create
+        ... --taxpayer-birth-date ÉÉÉÉ-HH-NN), majd számolj újra.
+      calculate_binding_unknown: '--binding %{key} egyik binding azonosítónak sem
+        felel meg ebben a revízióban. Elfogadott binding azonosítók: %{accepted}.
+        Használja a `aeat app modelo bindings list <MODELO>` parancsot az érvényes
+        azonosítók listázásához.'
       calculate_boolean_binding_encoding_invalid: 'A(z) %{key} kötés értéke decimálisként
         kódolt logikai jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett:
         %{value}. Elfogadott kódolás: %{mapping}. Futtassa a ''aeat app modelo bindings
@@ -807,28 +807,28 @@ application:
       calculate_casilla_unknown: 'A --casilla %{key} nem kanonikus casilla.id ebben
         a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo casillas
         <MODELO>`.'
-      calculate_decimal_input_invalid: 'A(z) %{flag} ertek %{key} kulcshoz nem decimalis
-        szam: %{value}'
+      calculate_decimal_input_invalid: 'A(z) %{flag} érték %{key} kulcshoz nem decimális
+        szám: %{value}'
       calculate_detail_casilla_unsupported: A(z) %{key} casilla a Modelo 180 perceptor/ingatlan
         reszletsor mezojet nevezi meg, nem skalaris decimalis casilla bemenetet. A
         helyi --casilla csatorna csak skalaris decimalis casillakat fogad; a Modelo
         180 perceptor/ingatlan reszletsorai meg nem tamogatottak a nyilvanos --row
         feluleten. Hasznald a aeat app modelo aggregate --modelo 180 --retencion-observation
         parancsot a tamogatott eves perceptor-szam/base/retenciones forrashoz.
-      calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak reszesedesi
-        szazalekai pontosan 100%-ot kell adjanak; kapott ertek: %{total}, sorok: %{count}.'
+      calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak részesedési
+        százalékai pontosan 100%-ot kell adjanak; kapott érték: %{total}, sorok: %{count}.'
       calculate_m210_tipo_renta_fetch_gated: 'A(z) %{value} Modelo 210 jövedelemtípus-kód
         még megalapozásra vár: az adómértéke még nincs megalapozva a csomagolt korpuszban,
         ezért még nem nyújtható be. Elfogadott kódok: %{accepted}.'
       calculate_m210_tipo_renta_unknown: 'A(z) %{value} nem érvényes Modelo 210 jövedelemtípus-kód.
         Elfogadott kódok: %{accepted}. Megalapozásra váró (még be nem nyújtható) kódok:
         %{fetch_gated}.'
-      calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere osszesen %{total},
-        ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR kuszobot.
+      calculate_m347_threshold_not_met: A 347-es modell %{nif} partnere összesen %{total},
+        ez nem haladja meg az RD 1065/2007 31.1 cikk szerinti %{threshold} EUR küszöböt.
       calculate_pension_inputs_incomplete: A nyugdijterv kivaltasi adatait egyutt
         kell megadni.
-      calculate_relation_unknown: '--relation %{key} egyik relation azonositonak sem
-        felel meg ebben a revizioban. Elfogadott relation azonositok: %{accepted}.'
+      calculate_relation_unknown: '--relation %{key} egyik relation azonosítónak sem
+        felel meg ebben a revízióban. Elfogadott relation azonosítók: %{accepted}.'
       calculate_sal_inputs_incomplete: A SAL/SLL kulonleges tartalek adatait egyutt
         kell megadni.
       calculate_semantic_role_ambiguous: 'A modell revíziója egynél több casillát
@@ -879,10 +879,10 @@ application:
         tartalmaz, amely nem képezhető le regiszter bevallási időszakra.
       export_revision_state_refused: A(z) %{calculation_revision_id} számítási revízió
         nincs ellenőrzött-teljes vagy beadott állapotban, ezért nem exportálható.
-      export_unsupported: A(z) %{modelo} modelo nem exportalhato fichero-BOE fajlba,
-        mert %{reason}. A szamitas, az ellenorzes es a helyi bevallasi rekordok letezhetnek,
-        de ez a parancs ehhez a modelohoz nem tud AEAT feltoltesi fajlt kesziteni,
-        es nem igazolja a BOE/export helyesseget.
+      export_unsupported: A(z) %{modelo} modelo nem exportálható fichero-BOE fájlba,
+        mert %{reason}. A számítás, az ellenőrzés és a helyi bevallási rekordok létezhetnek,
+        de ez a parancs ehhez a modelóhoz nem tud AEAT feltöltési fájlt készíteni,
+        és nem igazolja a BOE/export helyességét.
       external_filing_evidence_reference_blank: A külső bevallás importálásához nem
         üres evidence_reference_id szükséges.
       external_filing_no_casilla_values: A külső bevallás importálásához legalább
@@ -953,28 +953,28 @@ application:
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
       recipient_decryption_failed: A cimzett szamara titkositott csomagot nem sikerult
         megfejteni; a kulcs nem megfelelo, vagy a csomagot modositottak.
-      recipient_encryption_invalid_key: A cimzett nyilvanos kulcsa nem egy ervenyes
-        X25519 nyilvanos kulcs.
-      recipient_encryption_key_not_found: Ehhez a bucket-hez meg nem keszult cimzetti
-        titkositasi kulcspar.
+      recipient_encryption_invalid_key: A címzett nyilvános kulcsa nem egy érvényes
+        X25519 nyilvános kulcs.
+      recipient_encryption_key_not_found: Ehhez a bucket-hez még nem készült címzetti
+        titkosítási kulcspár.
       recipient_registry_already_exists: A(z) %{recipient_id} cimzett mar regisztralva
         van.
       recipient_registry_generic: Hiba tortent a cimzetti ujjlenyomat-nyilvantartasban.
-      recipient_registry_invalid_public_key: A megadott nyilvanos kulcs nem egy ervenyes
-        32 bajtos X25519 kulcs (%{length} bajt erkezett).
+      recipient_registry_invalid_public_key: A megadott nyilvános kulcs nem egy érvényes
+        32 bájtos X25519 kulcs (%{length} bájt érkezett).
       recipient_registry_load_failed: Nem sikerult betolteni a cimzetti ujjlenyomat-nyilvantartast.
-      recipient_registry_not_found: Nincs %{recipient_id} azonositoju regisztralt
-        cimzett.
+      recipient_registry_not_found: Nincs %{recipient_id} azonosítójú regisztrált
+        címzett.
       reconcile_declaration_unsupported: A bevallás-PDF rovatszintű egyeztetése még
         nincs engedélyezve ehhez a modellhez; egyeztessen egy letöltött justificantét
         a aeat app modelo reconcile file paranccsal, vagy várjon, amíg ez a modell
         engedélyezésre kerül.
       reconcile_no_active_bucket: 'Nincs aktív profilmappa; futtassa: `aeat config
         profile create NÉV` az egyeztetés előtt.'
-      refund_election_not_eligible: A(z) %{modelo} %{filing_year} %{period} modellnel
-        visszariteres (devolver) lett kivalasztva, de visszateritites csak az ev utolso
-        bevallasi idoszakaban kerheto. Vigye at a jovairast (compensar), vagy valassza
-        a visszateritest az utolso idoszakban.
+      refund_election_not_eligible: A(z) %{modelo} %{filing_year} %{period} modellnél
+        visszatérítés (devolver) lett kiválasztva, de visszatérítés csak az év utolsó
+        bevallási időszakában kérhető. Vigye át a jóváírást (compensar), vagy válassza
+        a visszatérítést az utolsó időszakban.
       review_only_workspace_no_authority: Ez a csak áttekintésre szolgáló munkaterület
         nem rendelkezik bevallási felhatalmazással; elolvasható és ellenőrizhető,
         de soha nem tekinthető bizonyítéknak arra, hogy a(z) %{calculation_revision_id}
@@ -1070,32 +1070,32 @@ application:
         `%{source_justificante_capture}`, `%{import_official_record}` vagy `%{reconcile_file}`;
         majd futtassa újra az ellenőrzést.'
       cross_period_modelo_not_applicable:
-        message: 'Azok a keresztidoszaki fuggosegek, amelyek olyan forras modellekre
-          mutatnak, amelyeket az adozo nem nyujt be, nem alkalmazhatokent ki lettek
-          zarva: {modelos}. Levont adok eseten az igazolas osszeget --binding KULCS=ÉRTÉK
-          formaban add meg, ne --casilla ertekkent. A KULCS=ÉRTÉK azt jelenti, hogy
-          a binding azonositoja az egyetlen egyenlosegjel bal oldalan all, az ertek
-          pedig a jobb oldalan. Kolcsonosen kizaro reszletfizetesi modellek eseten
-          erositsd meg a profil tevekenysegi becslesi rendszeret.'
-        next_action: 'A `aeat app modelo bindings list --missing` paranccsal azonositsd
-          a retenciones bindinget. Ha alkalmazhato, add meg az igazolas osszeget --binding
-          KULCS=ÉRTÉK formaban: a binding azonositoja az egyetlen egyenlosegjel bal
-          oldalan all, az osszeg pedig a jobb oldalan. Erositsd meg a profil IRPF
-          becslesi rendszeret, ha egy kolcsonosen kizaro reszletfizetesi modell lett
-          kizarva.'
+        message: 'Azok a keresztidőszaki függőségek, amelyek olyan forrás modellekre
+          mutatnak, amelyeket az adózó nem nyújt be, nem alkalmazhatóként ki lettek
+          zárva: {modelos}. Levont adók esetén az igazolás összeget --binding KULCS=ÉRTÉK
+          formában add meg, ne --casilla értékként. A KULCS=ÉRTÉK azt jelenti, hogy
+          a binding azonosítója az egyetlen egyenlőségjel bal oldalán áll, az érték
+          pedig a jobb oldalán. Kölcsönösen kizáró részletfizetési modellek esetén
+          erősítsd meg a profil tevékenységi becslési rendszerét.'
+        next_action: 'A `aeat app modelo bindings list --missing` paranccsal azonosítsd
+          a retenciones bindinget. Ha alkalmazható, add meg az igazolás összeget --binding
+          KULCS=ÉRTÉK formában: a binding azonosítója az egyetlen egyenlőségjel bal
+          oldalán áll, az összeg pedig a jobb oldalán. Erősítsd meg a profil IRPF
+          becslési rendszerét, ha egy kölcsönösen kizáró részletfizetési modell lett
+          kizárva.'
       cross_period_non_official_local_chain:
-        message: 'az idoszakok kozotti atvitel egy ugyanabban az adoevben helyileg
-          benyujtott korabbi idoszakot hasznalt kulso AEAT-bizonyitek nelkul: modelo=%{source_modelo}
-          ev=%{filing_year} idoszak=%{period} forras=%{origin}. Az adoeven beluli
-          lanc helyi exportalasra elfogadott, de az atvitt ertek helyileg igazolt
-          (app_filing), nem az AEAT altal igazolt; nyujtsa be minden idoszakot az
-          AEAT-nal kulsoleg.'
-        next_action: Exportalja es nyujtsa be minden idoszakot az AEAT-nal kulsoleg,
-          majd frissitse a helyi lancot hivatalos bizonyitekkal; hasznalja a `aeat
-          app live justificante pull` parancsot, ha van elo hozzaferes, vagy a `aeat
+        message: 'az időszakok közötti átvitel egy ugyanabban az adóévben helyileg
+          benyújtott korábbi időszakot használt külső AEAT-bizonyíték nélkül: modelo=%{source_modelo}
+          év=%{filing_year} időszak=%{period} forrás=%{origin}. Az adóéven belüli
+          lánc helyi exportálásra elfogadott, de az átvitt érték helyileg igazolt
+          (app_filing), nem az AEAT által igazolt; nyújtsa be minden időszakot az
+          AEAT-nál külsőleg.'
+        next_action: Exportálja és nyújtsa be minden időszakot az AEAT-nál külsőleg,
+          majd frissítse a helyi láncot hivatalos bizonyítékkal; használja a `aeat
+          app live justificante pull` parancsot, ha van élő hozzáférés, vagy a `aeat
           app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf
           --evidence-id CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file
-          WORK_UNIT_ID --file PATH` parancsot a mar rendelkezesre allo bizonyitekhoz.
+          WORK_UNIT_ID --file PATH` parancsot a már rendelkezésre álló bizonyítékhoz.
       cross_period_operator_declared_suppression: 'az időszakok közötti függőség korábbi
         kötelezettség hiányában kizárva (tevékenység megkezdése előtt): modelo=%{modelo}
         év=%{year} időszak=%{period} forrás=%{origin}. Az időszak szigorúan megelőzi
@@ -1121,34 +1121,34 @@ application:
       iva_wallet_next_action: Review the IVA wallet reconciliation decision before
         verifying or exporting this Modelo 303.
       m210_baseline_tipo_deferred:
-        next_action: 'A tipo_renta={tipo_renta} ertekehez tartozo baseline adokulcs
-          egy kesobbi Fazisra van halasztva a #229 task alatt (BOE korpusz fuggoben).
-          Allitsa be a profile.country_of_fiscal_residence erteket az alkalmazhato
-          Convenio tarifa igenylesehez, vagy varja meg amig a baseline korpusz beepiti
+        next_action: 'A tipo_renta={tipo_renta} értékéhez tartozó baseline adókulcs
+          egy későbbi Fázisra van halasztva a #229 task alatt (BOE korpusz függőben).
+          Állítsa be a profile.country_of_fiscal_residence értékét az alkalmazható
+          Convenio tarifa igényléséhez, vagy várja meg amíg a baseline korpusz beépíti
           ezt a sort.'
-      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolorszag-%{cc}
-        (%{document_id}) egyezmenyi adokulcs alkalmazasra kerult a tipo_renta=%{tipo_renta}
-        ertekhez. Az egyezmenyes kedvezmeny csak az adott allamban illetoseggel rendelkezo
-        tenyleges haszonhuzo szamara all rendelkezesre, aki teljesiti az egyezmeny
-        kedvezmenykorlatozasi (LOB) felteteleit; a tipus alkalmazasa elott ellenorizze
-        a jogosultsagot.'
-      m210_convenio_lob_advisory_next_action: Ellenorizze, hogy az adozo teljesiti
-        a Convenio Spanyolorszag-%{cc} (%{document_id}) tenyleges haszonhuzoi es kedvezmenykorlatozasi
-        (LOB) felteteleit, mielott az egyezmenyi adokulcsot alkalmazza; tekintse at
-        az egyezmeny konkret cikkelyet, ne csak az OECD Modellegyezmeny altalanos
-        LOB koncepciojat.
+      m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: a Convenio Spanyolország-%{cc}
+        (%{document_id}) egyezményi adókulcs alkalmazásra került a tipo_renta=%{tipo_renta}
+        értékhez. Az egyezményes kedvezmény csak az adott államban illetőséggel rendelkező
+        tényleges haszonhúzó számára áll rendelkezésre, aki teljesíti az egyezmény
+        kedvezménykorlátozási (LOB) feltételeit; a típus alkalmazása előtt ellenőrizze
+        a jogosultságot.'
+      m210_convenio_lob_advisory_next_action: Ellenőrizze, hogy az adózó teljesíti
+        a Convenio Spanyolország-%{cc} (%{document_id}) tényleges haszonhúzói és kedvezménykorlátozási
+        (LOB) feltételeit, mielőtt az egyezményi adókulcsot alkalmazza; tekintse át
+        az egyezmény konkrét cikkelyét, ne csak az OECD Modellegyezmény általános
+        LOB koncepcióját.
       m210_convenio_rate_missing:
-        next_action: Hozzon letre egy Convenio Espana-{cc} szerzodesi sort a tipo_renta={tipo_renta}
-          ertekhez a registry/aeat/treaties/ alatt, vagy allitsa vissza a profile.country_of_fiscal_residence
-          erteket a TRLIRNR Art 25 alapertek hasznalatahoz.
+        next_action: Hozzon létre egy Convenio España-{cc} szerződési sort a tipo_renta={tipo_renta}
+          értékhez a registry/aeat/treaties/ alatt, vagy állítsa vissza a profile.country_of_fiscal_residence
+          értékét a TRLIRNR Art 25 alapérték használatához.
       madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
-        a(z) %{casilla_id} rovat nulla, de van jogosult leszarmazottak (sulyozott
-        szam %{weighted_count}) a madridi levonashoz. Az automatikus kivaltas zart
-        egyutt adozo/hazas egysegeknel, mert a csaladi jovedelemhatar nem ertekelheto;
-        erositse meg kezileg a jogosultsagot.'
-      madrid_nacimiento_adopcion_eligibility_advisory_next_action: Erositse meg, hogy
-        a csaladi egyseg adoalapja a vonatkozo hataron belul van, es ha jogosult,
-        toltse ki kezzel az 1039 rovatot (madrid-dl-1-2010:art-4, art-18).
+        a(z) %{casilla_id} rovat nulla, de van jogosult leszármazottak (súlyozott
+        szám %{weighted_count}) a madridi levonáshoz. Az automatikus kiváltás zárt
+        együtt adózó/házas egységeknél, mert a családi jövedelemhatár nem értékelhető;
+        erősítse meg kézileg a jogosultságot.'
+      madrid_nacimiento_adopcion_eligibility_advisory_next_action: Erősítse meg, hogy
+        a családi egység adóalapja a vonatkozó határon belül van, és ha jogosult,
+        töltse ki kézzel az 1039 rovatot (madrid-dl-1-2010:art-4, art-18).
       missing_required_casilla: A kötelező %{casilla_id} casilla hiányzik a számítási
         revízió bemeneti adataiból.
       modelo_100_2024_cuota_resultante_determinada_cuando_base_liquidable_general_positiva: Az
@@ -1206,27 +1206,27 @@ application:
         kedvezményes kulcsra való jogosultságot, vagy válassza az általános 24 százalékos
         kulcsot.
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: A
-        teljes levonhato AFA (cuota-deducible-total) pozitiv, de a Diseño de Registros
-        minden hivatalos szamozott rovata (29 belfoldi folyo, 33 import, 37 kozossegen
-        beluli beszerzes) tovabbra is nulla. A szamitas nem tolti ki automatikusan
-        a hivatalos szamozott rovatokat; a benyujtas elott vezesse at az osszeget
-        a megfelelo rovatokba.
+        teljes levonható ÁFA (cuota-deducible-total) pozitív, de a Diseño de Registros
+        minden hivatalos számozott rovata (29 belföldi folyó, 33 import, 37 közösségen
+        belüli beszerzés) továbbra is nulla. A számítás nem tölti ki automatikusan
+        a hivatalos számozott rovatokat; a benyújtás előtt vezesse át az összeget
+        a megfelelő rovatokba.
       modelo_303_official_devengado_boxes_unpopulated_cuando_cuota_devengada_positiva: A
-        teljes felszamitott AFA (cuota-devengada-total) pozitiv, de a Diseño de Registros
-        minden hivatalos szamozott rovata (03 4%, 06 10%, 09 21%, 11 kozossegen beluli,
-        13 forditott adozas) tovabbra is nulla. A szamitas nem tolti ki automatikusan
-        a hivatalos szamozott rovatokat; a benyujtas elott vezesse at az osszeget
-        a megfelelo rovatokba.
+        teljes felszámított ÁFA (cuota-devengada-total) pozitív, de a Diseño de Registros
+        minden hivatalos számozott rovata (03 4%, 06 10%, 09 21%, 11 közösségen belüli,
+        13 fordított adózás) továbbra is nulla. A számítás nem tölti ki automatikusan
+        a hivatalos számozott rovatokat; a benyújtás előtt vezesse át az összeget
+        a megfelelő rovatokba.
       modelo_714_cuota_integra_implica_total_cuota_integra: A teljes adó (cuota íntegra)
         pozitív, de az összesített teljes adó (total cuota íntegra) nulla; ellenőrizze
         az összesített adó átírását.
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
-        next_action: Jeloljon ki egy spanyolorszagi adougyi kepviselot a profile.representante_fiscal_nif
-          beallitasaval a `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
-          megkoveteli, hogy az EU/EGT-n kivuli IRNR bevallok kepviselot jeloljenek
-          ki az AEAT kommunikaciohoz.
+        next_action: Jelöljön ki egy spanyolországi adóügyi képviselőt a profile.representante_fiscal_nif
+          beállításával a `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
+          megköveteli, hogy az EU/EGT-n kívüli IRNR bevallók képviselőt jelöljenek
+          ki az AEAT kommunikációhoz.
     iva_wallet:
       correct_no_record: 'Nincs beállított kompenzációs rekord ehhez: %{filing_year}/%{period}.
         Először futtassa a ''aeat app modelo iva-wallet seed'' parancsot; a javítás
@@ -1242,16 +1242,16 @@ application:
         az időszaknak a kompenzációs alapját. A felülbírálás rögzítése módosítana
         egy benyújtott bevallást.'
       seed_negative_amount: A vetőösszeg nem lehet negatív.
-      seed_no_nif: Nincs NIF meghatarozva a vetoosszeg-muvelethez; rendelje hozza
-        az aktiv profilhoz a vetoosszeg letrehozasa elott.
+      seed_no_nif: Nincs NIF meghatározva a vetőösszeg-művelethez; rendelje hozzá
+        az aktív profilhoz a vetőösszeg létrehozása előtt.
     profile_binding:
       errors:
-        date_value_type_invalid: 'A(z) %{binding_id} datumcsatornas kotes profiladata
-          datum kell legyen; kapott tipus: %{value_type}.'
+        date_value_type_invalid: 'A(z) %{binding_id} dátumcsatornás kötés profiladata
+          dátum kell legyen; kapott típus: %{value_type}.'
         decimal_value_type_invalid: 'A(z) %{binding_id} decimalis csatornas kotes
           profiladata nem tamogatott tipusu: %{value_type}.'
-        enum_boolean_invalid: A(z) %{binding_id} enumcsatornas kotes profiladata boolean
-          ertekre oldodott fel; a boolean adatok nem ervenyes enum dispatch kulcsok.
+        enum_boolean_invalid: A(z) %{binding_id} enumcsatornás kötés profiladata boolean
+          értékre oldódott fel; a boolean adatok nem érvényes enum dispatch kulcsok.
   overview:
     errors:
       horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie;
@@ -1266,14 +1266,14 @@ application:
   registry:
     errors:
       citation_not_found: Nem található nyilvántartási hivatkozás a kért jogi referenciához.
-      invalid_manual_id: 'A nyilvantartasi kezikonyvnek ezek egyikenek kell lennie:
-        {allowed_manual_ids}; kapott ertek: {manual_id}.'
-      invalid_manual_rule_kind: 'A kezikonyvi szabaly tipusanak ezek egyikenek kell
-        lennie: {allowed_rule_kinds}; kapott ertek: {rule_kind}.'
-      invalid_oracle_environment: 'A nyilvantartasi oracle kornyezetnek ezek egyikenek
-        kell lennie: {allowed_values}; kapott ertek: {value}.'
-      invalid_topic_locale: 'A nyilvantartasi tema nyelvenek ezek egyikenek kell lennie:
-        {allowed_locales}; kapott ertek: {locale}.'
+      invalid_manual_id: 'A nyilvántartási kézikönyvnek ezek egyikének kell lennie:
+        {allowed_manual_ids}; kapott érték: {manual_id}.'
+      invalid_manual_rule_kind: 'A kézikönyvi szabály típusának ezek egyikének kell
+        lennie: {allowed_rule_kinds}; kapott érték: {rule_kind}.'
+      invalid_oracle_environment: 'A nyilvántartási oracle környezetnek ezek egyikének
+        kell lennie: {allowed_values}; kapott érték: {value}.'
+      invalid_topic_locale: 'A nyilvántartási téma nyelvének ezek egyikének kell lennie:
+        {allowed_locales}; kapott érték: {locale}.'
       manual_section_not_found: 'A(z) {section} kézikönyvszakasz nem található itt:
         {manual_id} {year} {part}.'
       manual_section_requires_structure: 'A kézikönyvszakasz kinyert struktúrát igényel
@@ -1284,12 +1284,12 @@ application:
     errors:
       conflicting_list_filters: 'A javitasi lista szuroi kizarjak egymast: {filters}.
         Egy szurot adj meg, vagy egyet sem.'
-      decision_id_mismatch_list: A javitasi dontes azonositoja nem egyezik az ujraszamitott
-        tartalmi azonositoval; a listaelem elutasitva.
-      decision_id_mismatch_load: A javitasi dontes hasznos terhenek azonositoja nem
-        egyezik a kert vagy ujraszamitott tartalmi azonositoval; a betoltes elutasitva.
-      decision_id_mismatch_save: A javitasi dontes azonositoja nem egyezik az ujraszamitott
-        tartalmi azonositoval; a mentes elutasitva.
+      decision_id_mismatch_list: A javítási döntés azonosítója nem egyezik az újraszámított
+        tartalmi azonosítóval; a listaelem elutasítva.
+      decision_id_mismatch_load: A javítási döntés hasznos terhének azonosítója nem
+        egyezik a kért vagy újraszámított tartalmi azonosítóval; a betöltés elutasítva.
+      decision_id_mismatch_save: A javítási döntés azonosítója nem egyezik az újraszámított
+        tartalmi azonosítóval; a mentés elutasítva.
       decision_not_found: A(z) {decision_id} javitasi dontes nem letezik.
   storage:
     calc_sheets:
@@ -1448,7 +1448,7 @@ application:
         másik közösséget.
     output_labels:
       active_profile: active_profile
-      next: Kovetkezo
+      next: Következő
       profile: profile
       status: állapot
     status:
@@ -1491,7 +1491,7 @@ application:
       resume_target_contradiction: 'Csak egy resume célt adjon meg: munkafolyamat-futtatás
         azonosítót, munkaegység-azonosítót, számítási revízió azonosítót, vagy modell/év/időszak
         értéket.'
-      resume_target_invalid: 'Ervenytelen resume cel: {target}. Hasznalja: --modelo
+      resume_target_invalid: 'Érvénytelen resume cél: {target}. Használja: --modelo
         --year --period, vagy futtassa: `aeat app modelo work runs`.'
       resume_target_required: Adja meg a --modelo --year --period opciókat, egy munkafolyamat-futtatás
         azonosítót, egy munkaegység-azonosítót vagy egy számítási revízió azonosítót
@@ -1535,8 +1535,8 @@ cli:
         és egy CLAUDE.md) írja.
       plugin_summary: 'Claude bővítmény kiírva ide: {path}: {skills} készség, {agents}
         ügynök ({name} v{version}).'
-      summary: 'Operator munkaterulet kiirva: {path}: {rules} szabaly, {personas}
-        persona, {skills} keszseg.'
+      summary: 'Operátor munkaterület kiírva: {path}: {rules} szabály, {personas}
+        persona, {skills} készség.'
   app:
     ledger:
       bienes_inversion:
@@ -1562,20 +1562,20 @@ cli:
           {accepted}'
       evidence:
         add_help: Vásárlásiszámla-bizonyíték regisztrálása PDF-ből vagy képből.
-        confirm_already_exists_message: Mar letezik szamla ezzel az azonossaggal;
-          valtozatlanul visszaadva, nem pedig duplikaciot letrehozva.
-        confirm_counterparty_name_help: A partner megjelenitett neve (meg nincs kinyerest
-          segito heurisztika; altalaban kotelezo).
-        confirm_counterparty_nif_help: Felulirja a kinyert szallitoi adoazonositot.
+        confirm_already_exists_message: Már létezik számla ezzel az azonossággal;
+          változatlanul visszaadva, nem pedig duplikációt létrehozva.
+        confirm_counterparty_name_help: A partner megjelenített neve (még nincs kinyerést
+          segítő heurisztika; általában kötelező).
+        confirm_counterparty_nif_help: Felülírja a kinyert szállítói adóazonosítót.
         confirm_currency_help: ISO-4217 penznemkod.
-        confirm_help: Ujra kinyeri a bizonylatot helyben, es megerositi valodi katalogus-szamlakent.
-        confirm_invoice_date_help: Felulirja a kinyert szamla datumat (EEEE-HH-NN).
-        confirm_invoice_number_help: Felulirja a kinyert szamlaszamot.
-        confirm_iva_rate_help: Felulirja a kinyert AFA-kulcsot (hagyja ki a kinyert
-          ertek megtartasahoz).
-        confirm_link_hint_message: Kapcsold ossze ezt a szamlat egy konyvelesi tetellel
+        confirm_help: Újra kinyeri a bizonylatot helyben, és megerősíti valódi katalógus-számlaként.
+        confirm_invoice_date_help: Felülírja a kinyert számla dátumát (ÉÉÉÉ-HH-NN).
+        confirm_invoice_number_help: Felülírja a kinyert számlaszámot.
+        confirm_iva_rate_help: Felülírja a kinyert ÁFA-kulcsot (hagyja ki a kinyert
+          érték megtartásához).
+        confirm_link_hint_message: Kapcsold össze ezt a számlát egy könyvelési tétellel
           a `aeat app ledger link` paranccsal.
-        confirm_taxable_base_help: Felulirja a kinyert adoalapot.
+        confirm_taxable_base_help: Felülírja a kinyert adóalapot.
         evidence_id_help: Bizonyíték azonosítója (pontos egyezés).
         extract_attachment_id_help: A kapcsolt melléklet azonosítója, amelyből az
           adatokat ki kell nyerni (a --evidence-id alternatívája).
@@ -1676,36 +1676,36 @@ cli:
         declare_sector_help: 'Adj meg egy megkulonboztetett szektort (LIVA 9.1.c /
           101. cikk): az uzemelteto art. 9.1.c szerinti felosztasa, sosem a konyvbol
           kikovetkeztetve.'
-        ejercicio_help: A bevallasi ev, amelyre a valasztas vonatkozik.
+        ejercicio_help: A bevallási év, amelyre a választás vonatkozik.
         elect_especial_help: 'Valaszd a prorrata especial rezsimet egy ejercicio-ra
           (LIVA art. 103.Dos.1): a bemeneti levonas soronkent az --input-classification
           alapjan tortenik.'
-        elect_general_help: 'Valaszd a prorrata general rezsimet egy ejercicio-ra
-          (LIVA art. 104): egyetlen levonasi szazalek vonatkozik minden levonhato
+        elect_general_help: 'Válaszd a prorrata general rezsimet egy ejercicio-ra
+          (LIVA art. 104): egyetlen levonási százalék vonatkozik minden levonható
           cuota-ra.'
-        general_percentage_help: Ideiglenes levonasi szazalek 0-100 (LIVA art. 104.Uno
+        general_percentage_help: Ideiglenes levonási százalék 0-100 (LIVA art. 104.Uno
           + 105.Uno).
-        group_help: 'Idoszakok kozotti IVA prorrata nyilvantartas: valaszd ki a rezsimet
-          (general / especial) es add meg a megkulonboztetett szektorokat (LIVA 101
+        group_help: 'Időszakok közötti IVA prorrata nyilvántartás: válaszd ki a rezsimet
+          (general / especial) és add meg a megkülönböztetett szektorokat (LIVA 101
           / 103 / 105 / 106. cikk).'
         letra_help: A LIVA 9.1.c cikk betuje (a/b/c/d), amely megkulonboztetette teszi
           ezt a szektort.
         list_help: Listaz minden nyilvantartasi bejegyzest es minden bejelentett megkulonboztetett
           szektort az aktiv profilon.
-        percentage_help: Kozos hasznalatu levonasi szazalek 0-100 (LIVA art. 106.Uno
+        percentage_help: Közös használatú levonási százalék 0-100 (LIVA art. 106.Uno
           regla 3.a / art. 104.Dos).
-        provenance_help: Az ideiglenes szazalek forrasa a LIVA art. 105 szerint.
-        provenance_not_electable: 'A {provenance!r} forras nem az uzemelteto altal
-          megadhato; elfogadott: {accepted}. Az art. 105.Cinco szerinti megszakitasi
-          szazalekot a nyilvantartasbol szamoljuk.'
+        provenance_help: Az ideiglenes százalék forrása a LIVA art. 105 szerint.
+        provenance_not_electable: 'A {provenance!r} forrás nem az üzemeltető által
+          megadható; elfogadott: {accepted}. Az art. 105.Cinco szerinti megszakítási
+          százalékot a nyilvántartásból számoljuk.'
         reference_help: Az AEAT engedely (art. 105.Dos) vagy a tevekenyseg-kezdesi
           javaslat (art. 105.Tres) hivatkozasa.
         reference_not_permitted: A --reference csak aeat_autorizada vagy inicio_actividad
           forrassal engedelyezett.
         reference_required: A {provenance!r} forras (LIVA art. 105.Dos / 105.Tres)
           megkoveteli a --reference kapcsolot.
-        sector_help: A bejegyzes altal lefedett megkulonboztetett szektor azonositoja;
-          hagyd el a teljes tevekenysegre vonatkozo bejegyzeshez.
+        sector_help: A bejegyzés által lefedett megkülönböztetett szektor azonosítója;
+          hagyd el a teljes tevékenységre vonatkozó bejegyzéshez.
         sector_id_help: Stabil szektorazonosito, amelyre a nyilvantartasi bejegyzesek
           es a konyvsorok hivatkoznak.
       ratios:
@@ -1771,8 +1771,8 @@ cli:
         pull_help: Letolti a benyujtott nyilatkozatok adatait a hitelesitett AEAT
           nyilvantartasbol.
         pull_modelo_help: Korlatozza ezt a letoltest erre a modellora.
-        pull_sources_help: Letolti egy cel-nyilatkozat fuggosegeihez szukseges benyujtott
-          megfigyeleseket.
+        pull_sources_help: Letölti egy cél-nyilatkozat függőségeihez szükséges benyújtott
+          megfigyeléseket.
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
       from_year_help: Első benyújtási év.
       iva_wallet:
@@ -1808,8 +1808,8 @@ cli:
         app_help: 'AEAT igazolás-rögzítések (csak olvasható): tölts le egy benyújtott
           igazolást és egyeztess vele.'
         list_help: Listázza az aktív profil mentett igazolás-rögzítéseit.
-        pull_help: Letolti az AEAT igazolast egy benyujtott idoszakra es hivatalos
-          bizonyitekkent menti.
+        pull_help: Letölti az AEAT igazolást egy benyújtott időszakra és hivatalos
+          bizonyítékként menti.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Megjelenít egy igazolás-rögzítést.
       limit_help: Rögzítendő sorok maximális száma.
@@ -1875,12 +1875,12 @@ cli:
           (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).
         period_help: 'Aggregációs időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok.'
         retencion_observation_help: 'JSON RetencionObservation objektum. A source_kind
-          erteke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
-          collectible_invoice lehet. A 111-es Modelo munka eseten a rendimientos_trabajo
-          scheme az alkalmazotti progressziv kulcs (LIRPF 101.1. cikk), a rendimientos_trabajo_administrador
-          pedig a rogzitett igazgatoi/tanacstagi kulcs (LIRPF 101.2. cikk: 35 szazalek,
-          vagy 19 szazalek, ha a szervezet netto arbevetele 100.000 EUR alatt van).
-          Tobb megfigyeleshez ismetelje meg.'
+          értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
+          collectible_invoice lehet. A 111-es Modelo munka esetén a rendimientos_trabajo
+          scheme az alkalmazotti progresszív kulcs (LIRPF 101.1. cikk), a rendimientos_trabajo_administrador
+          pedig a rögzített igazgatói/tanácstagi kulcs (LIRPF 101.2. cikk: 35 százalék,
+          vagy 19 százalék, ha a szervezet nettó árbevétele 100.000 EUR alatt van).
+          Több megfigyeléshez ismételje meg.'
         withholding_observation_help: Kifizetőnkénti-kulcsonkénti visszatartási megfigyelés
           (JSON) a 190-es modell juttatásszámlálásához; ismételhető.
       aggregate_help: 'A háttér nyomtatványonkénti aggregálási szolgáltatás futtatása
@@ -1921,9 +1921,9 @@ cli:
           ideiglenes felülbírálással, az állapot megváltoztatása nélkül
         unknown_keys: 'Ismeretlen --binding kulcs(ok): {keys}; ismert kötések a(z)
           {code}@{revision} ({period}) számára: {suggestion}.'
-        unscoped_revision_suggestion: Mielott az ids ertekeket work calculate parancsba
-          masolod, futtasd ujra --modelo MODELO --year YEAR --period PERIOD kapcsolokkal
-          a cel munkaegyseghez.
+        unscoped_revision_suggestion: Mielőtt az ids értékeket work calculate parancsba
+          másolod, futtasd újra --modelo MODELO --year YEAR --period PERIOD kapcsolókkal
+          a cél munkaegységhez.
         unscoped_revision_warning: A koteslista nincs %{missing_filters} szerint szukitve;
           olyan revizio kotesazonositoit is tartalmazhatja, amely nem egyezik a work
           calculate altal hasznalt munkaegyseggel.
@@ -1937,8 +1937,8 @@ cli:
         explain_help: Lokalizált súgószöveg bevonása a szöveges kimenetbe.
         form_number_help: Mezők szűrése BOE-n nyomtatott nyomtatványszám szerint (pl.
           46).
-        help: A kivalasztott modelo verziohoz tartozo osszes casilla (mezo/doboz)
-          listazasa.
+        help: A kiválasztott modelo verzióhoz tartozó összes casilla (mező/doboz)
+          listázása.
         input_kind_help: Mezők szűrése beviteli típus szerint (manual, bound, computed,
           informational).
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
@@ -1966,7 +1966,7 @@ cli:
         csoportosítva.
       describe:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
-        help: Reszletes struktura, metaadatok es aktiv idoszakok megjelenitese egy
+        help: Részletes struktúra, metaadatok és aktív időszakok megjelenítése egy
           adott modelo-hoz.
         label_bindings: Kötések
         label_cadence: Gyakoriság
@@ -1989,7 +1989,7 @@ cli:
       export:
         actor_help: A MODELO_EXPORTED eseményen rögzített üzemeltetői felirat.
         errors:
-          output_required: Adja meg a --output PATH erteket a fichero-BOE artefaktumhoz.
+          output_required: Adja meg a --output PATH értékét a fichero-BOE artefaktumhoz.
         help: Hitelesített vagy benyújtott modell-revíziót exportál helyi, AEAT-kompatibilis
           fichero-BOE fájlba. Csak helyi; soha nem lép kapcsolatba az AEAT-tal, és
           a létrehozott fájl nem hivatalos AEAT-benyújtási bizonyíték. Benyújtás után
@@ -2031,8 +2031,8 @@ cli:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         explain_help: Az egyes képleteket megalapozó legal_refs és source_refs bevonása
           a szöveges kimenetbe. A JSON-adatcsomag mindig tartalmazza azokat.
-        help: A kivalasztott modelo verziohoz tartozo osszes szamitott casilla es
-          keplet listazasa.
+        help: A kiválasztott modelo verzióhoz tartozó összes számított casilla és
+          képlet listázása.
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         period_help: 'A nyomtatvány-revíziót feloldó időszaktoken: 0A éves, 1T-4T
           negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta,
@@ -2070,29 +2070,29 @@ cli:
         correct_reason_required: 'Adja meg a --reason értéket: rögzítse, miért javítja
           a nyitó egyenleget; nem lehet üres.'
         group_help: Local IVA compensation wallet balance commands.
-        override_amount_help: Felulirt elozo kompenzacios osszeg EUR-ban az iva.compensacion-pendiente-periodos-anteriores
-          mezore, AEAT 110-es casilla; decimalis, peldaul 420.00.
-        override_confirm_help: Kotelezo megerosito jelzo. Elismeri, hogy a feluliras
-          megvaltoztatja a benyujtott elozo kompenzacios erteket, es a bevallas pontossaga
-          a megadott ertektol fugg.
-        override_confirm_required: Adja meg a --confirm kapcsolot annak elismeresere,
-          hogy ez M303 elozo kompenzacios atviteli felulirast rogzit. A bevallas pontossaga
-          a megadott ertektol fugg.
-        override_evidence_locator_help: A felulirast alatamaszto bizonyitek kotelezo
-          hivatkozasa, peldaul korabbi justificante referencia.
-        override_evidence_locator_required: Adja meg a --evidence-locator erteket
-          a felulirast alatamaszto bizonyitek hivatkozasaval.
-        override_filing_year_help: Annak a Modelo 303 idoszaknak a bevallasi eve,
-          amelynek elozo kompenzacios atvitele felulirasra kerul.
-        override_help: Rogzit egy adozoi felulirast a Modelo 303 elozo kompenzacios
-          atvitelehez a helyi tarcan kivuli bizonyitek alapjan. Csak a szamitast oldja
-          fel, es nem teljesiti a hivatalos bizonyiteki ellenorzest. --confirm szukseges.
-        override_period_help: A fuggo Modelo 303 bevallasi idoszak, amely megkapja
-          az atvitelt, peldaul 2T vagy 3T.
-        override_reason_help: A feluliras kotelezo indoka, auditolhato eredetkent
-          rogzitve.
-        override_reason_required: Adja meg a --reason erteket, amely megindokolja
-          az elozo kompenzacios atvitel felulirasat; nem lehet ures.
+        override_amount_help: Felülírt előző kompenzációs összeg EUR-ban az iva.compensacion-pendiente-periodos-anteriores
+          mezőre, AEAT 110-es casilla; decimális, például 420.00.
+        override_confirm_help: Kötelező megerősítő jelző. Elismeri, hogy a felülírás
+          megváltoztatja a benyújtott előző kompenzációs értéket, és a bevallás pontossága
+          a megadott értéktől függ.
+        override_confirm_required: Adja meg a --confirm kapcsolót annak elismerésére,
+          hogy ez M303 előző kompenzációs átviteli felülírást rögzít. A bevallás pontossága
+          a megadott értéktől függ.
+        override_evidence_locator_help: A felülírást alátámasztó bizonyíték kötelező
+          hivatkozása, például korábbi justificante referencia.
+        override_evidence_locator_required: Adja meg a --evidence-locator értékét
+          a felülírást alátámasztó bizonyíték hivatkozásával.
+        override_filing_year_help: Annak a Modelo 303 időszaknak a bevallási éve,
+          amelynek előző kompenzációs átvitele felülírásra kerül.
+        override_help: Rögzít egy adózói felülírást a Modelo 303 előző kompenzációs
+          átviteléhez a helyi tárcán kívüli bizonyíték alapján. Csak a számítást oldja
+          fel, és nem teljesíti a hivatalos bizonyítéki ellenőrzést. --confirm szükséges.
+        override_period_help: A függő Modelo 303 bevallási időszak, amely megkapja
+          az átvitelt, például 2T vagy 3T.
+        override_reason_help: A felülírás kötelező indoka, auditálható eredetként
+          rögzítve.
+        override_reason_required: Adja meg a --reason értékét, amely megindokolja
+          az előző kompenzációs átvitel felülírását; nem lehet üres.
         seed_amount_help: Az IVA-kompenzáció kezdő összege decimálisban.
         seed_confirm_help: Erősítse meg a vetőösszeg műveletet.
         seed_confirm_required: Adja meg a --confirm kapcsolót a vetőösszeg-művelet
@@ -2118,7 +2118,7 @@ cli:
           (pl. 4T).'
       list:
         domain_help: Szűrje a modellkatalógust egyetlen adónemre (pl. iva, irpf, is)
-        help: A rendszerben regisztralt osszes hivatalos adobevallas (modelo) listazasa.
+        help: A rendszerben regisztrált összes hivatalos adóbevallás (modelo) listázása.
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
       m036:
         alta_help: Rögzítse az M036 alta nyilatkozatot (kezdeti adónyilvántartási
@@ -2191,17 +2191,17 @@ cli:
         app_help: 'Egyeztet egy modelo munkaegyseget az AEAT igazolasaval: a pull
           letolti az igazolast az AEAT-tol es egyeztet; a file egy helyi PDF-et egyeztet;
           a history a korabbi futtatasokat listazza.'
-        file_help: Egyeztet egy munkaegyseget egy helyi igazolas vagy bevallas PDF
-          ellen. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.
-        file_kind_help: 'Bizonyitek dokumentum tipusa: justificante (AEAT igazolas,
-          minden modelo) vagy declaration (benyujtott bevallas PDF, rovat szintu egyeztetes,
-          csak engedelyezett modelok). Alapertelmezetten justificante.'
-        file_path_help: A helyi igazolas vagy bevallas PDF utvonala, amellyel egyeztetni
+        file_help: Egyeztet egy munkaegységet egy helyi igazolás vagy bevallás PDF
+          ellen. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
+        file_kind_help: 'Bizonyíték dokumentum típusa: justificante (AEAT igazolás,
+          minden modelo) vagy declaration (benyújtott bevallás PDF, rovat szintű egyeztetés,
+          csak engedélyezett modelok). Alapértelmezetten justificante.'
+        file_path_help: A helyi igazolás vagy bevallás PDF útvonala, amellyel egyeztetni
           kell.
         history_empty: Meg nincsenek rogzitett egyeztesek.
         history_help: Listazza az aktiv profilhoz rogzitett egyeztteseket.
-        history_work_unit_id_help: Opcionalis munkaegyseg-azonosito a tortenet egy
-          egysegre szukitesehez.
+        history_work_unit_id_help: Opcionális munkaegység-azonosító a történet egy
+          egységre szűkítéséhez.
         pull_help: Letolti egy munkaegyseg igazolasat az AEAT-tol, es egyeztet ellene.
           Kapcsolatba lep az AEAT-tal (csak olvasas).
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
@@ -2243,7 +2243,7 @@ cli:
           ennek a bucket-nek az X25519 titkositasi kulcsparjaval (elso hasznalatkor
           letrehozva), es a visszaallitott csomag ZIP kiirasa a --output helyre. Csak
           helyi; soha nem lep kapcsolatba az AEAT-tal.
-        decrypt_output_help: A visszaallitott ellenorzo csomag ZIP kiirasi utvonala.
+        decrypt_output_help: A visszaállított ellenőrző csomag ZIP kiírási útvonala.
         encrypt_feedback_help: Lezárja egy címzett felülvizsgálati visszajelzését
           (egy megjegyzést, opcionálisan egy ellenjegyzett elismervényt) vissza a
           kibocsátónak, hogy csak a kibocsátó privát kulcsa nyithassa meg, és a borítékot
@@ -2251,16 +2251,16 @@ cli:
         encrypt_for_recipient_help: Egy ellenorzo csomag lezarasa ugy, hogy csak a
           regisztralt cimzett privat kulcsa nyithassa meg, es a titkositott boritek
           kiirasa a --output helyre. Csak helyi; soha nem lep kapcsolatba az AEAT-tal.
-        encrypt_output_help: A cimzett szamara titkositott JSON boritek kiirasi utvonala.
-        envelope_path_help: A(z) `encrypt-for-recipient` altal letrehozott, cimzett
-          szamara titkositott JSON boritek utvonala.
+        encrypt_output_help: A címzett számára titkosított JSON boríték kiírási útvonala.
+        envelope_path_help: A(z) `encrypt-for-recipient` által létrehozott, címzett
+          számára titkosított JSON boríték útvonala.
         errors:
           envelope_not_found: 'Nem talalhato cimzett szamara titkositott boritek itt:
             {envelope_path}.'
           feedback_envelope_not_found: 'A visszajelzési boríték nem található itt:
             {envelope_path}.'
-          invalid_valid_for_days: A --valid-for-days erteknek szigoruan pozitiv egesz
-            szamnak kell lennie.
+          invalid_valid_for_days: A --valid-for-days értéknek szigorúan pozitív egész
+            számnak kell lennie.
           output_required: Adja meg a --output ÚTVONAL kapcsolót az áttekintő csomag
             ZIP fájljához.
           package_not_found: 'Nem található áttekintő csomag itt: {package_path}.'
@@ -2304,7 +2304,7 @@ cli:
         public_key_help: Az aláíró nyilvános kulcsa, 64 kisbetűs hexadecimális karakterként.
         receipt_path_help: A `counter-sign` által létrehozott ellenjegyzett nyugta
           JSON elérési útja.
-        recipient_id_help: Regisztralt cimzett azonositoja (lasd `aeat config collab
+        recipient_id_help: Regisztrált címzett azonosítója (lásd `aeat config collab
           recipient add`).
         review_only_help: A lezart csomag megjelolese ugy, hogy nem rendelkezik benyujtasi
           jogosultsaggal (a cimzett elolvashatja es ellenorizheti, de ez nem bizonyitek
@@ -2318,8 +2318,8 @@ cli:
           írja.
         signature_path_help: A `sign` által létrehozott aláírás-boríték JSON elérési
           útja.
-        valid_for_days_help: Opcionalis ervenyessegi ablak napokban; hagyja ki egy
-          soha le nem jaro csomaghoz.
+        valid_for_days_help: Opcionális érvényességi ablak napokban; hagyja ki egy
+          soha le nem járó csomaghoz.
         verify_help: Egy áttekintő csomag checksum-manifestjének ellenőrzése (csak
           integritás; nem igazolja, ki állította össze). Csak helyi; soha nem kapcsolódik
           az AEAT-hoz.
@@ -2445,48 +2445,48 @@ cli:
         create_reused_renamed: 'Meglévő munkaegység visszaadva (idempotens nyomtatvány/év/időszak/revízió
           kombinációra); nem jött létre semmi új. A megadott --name alkalmazva lett
           átnevezésként: %{name}.'
-        create_stub_modelo_151_refused: 'A(z) %{modelo} nyomtatvany (kulonleges kulfoldi
-          munkavallaloi rendszer, Beckham-torveny) munkafeladat-letrehozasa ebben
-          a CLI-ben nem tamogatott. Jogi alap: Ley 35/2006 93. cikk LIRPF, RD 439/2007
-          113. cikk, Orden EHA/2887/2008. A bevallast az AEAT Sede feluleten kell
-          benyujtani.'
+        create_stub_modelo_151_refused: 'A(z) %{modelo} nyomtatvány (különleges külföldi
+          munkavállalói rendszer, Beckham-törvény) munkafeladat-létrehozása ebben
+          a CLI-ben nem támogatott. Jogi alap: Ley 35/2006 93. cikk LIRPF, RD 439/2007
+          113. cikk, Orden EHA/2887/2008. A bevallást az AEAT Sede felületen kell
+          benyújtani.'
         create_stub_modelo_210_refused: 'A(z) %{modelo} nyomtatvány (IRNR, nem rezidensek
           jövedelemadója) munkafeladat-létrehozása ebben a CLI-ben nem támogatott.
           Jogi alap: RD Legislativo 5/2004 TRLIRNR és Art. 28 TRLIRNR. A bevallást
           az AEAT Sede G320 eljárásán keresztül kell benyújtani: sede.agenciatributaria.gob.es.'
-        create_stub_modelo_600_refused: 'A(z) %{modelo} nyomtatvany (ITP-AJD, vagyonatruhazasi
-          ado es okirati illetek) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott.
-          Jogalap: Ley 28/1990 es regionalis ITPyAJD hataskor; a megfelelo regionalis
-          Hacienda / CCAA adohatosagnal kell benyujtani.'
-        create_stub_modelo_620_refused: 'A(z) %{modelo} nyomtatvany (ITP-AJD, hasznalt
-          jarmuvek atruhazasa) munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott.
-          Jogalap: Ley 28/1990 es regionalis ITPyAJD hataskor; az onadozast a megfelelo
-          regionalis Hacienda / CCAA adohatosagnal kell benyujtani.'
-        create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvany (ISD oroklesek)
-          munkafeladat-letrehozasa ebben a CLI-ben nem tamogatott. Jogalap: Ley 29/1987
-          LISyD es Art. 67 RISD; a rendes hatarido a halaltol szamitott 6 honap. A
-          megfelelo regionalis Hacienda adohatosagnal kell benyujtani.'
-        create_stub_modelo_660_refused: 'A(z) %{modelo} nyomtatvany (ISD hagyateki
-          leltar, a Modelo 650 melleklete) munkafeladat-letrehozasa ebben a CLI-ben
-          nem tamogatott. Jogalap: Ley 29/1987 LISyD; a megfelelo regionalis Hacienda
-          adohatosagnal kell benyujtani.'
-        create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvany (vagyonado) munkafeladat-letrehozasa
-          ebben a CLI-ben nem tamogatott. Jogi alap: Ley 19/1991 28. cikk es Orden
-          HAC/1023/2021. A bevallast az AEAT Sede feluleten kell benyujtani.'
+        create_stub_modelo_600_refused: 'A(z) %{modelo} nyomtatvány (ITP-AJD, vagyonátruházási
+          adó és okirati illeték) munkafeladat-létrehozása ebben a CLI-ben nem támogatott.
+          Jogalap: Ley 28/1990 és regionális ITPyAJD hatáskör; a megfelelő regionális
+          Hacienda / CCAA adóhatóságnál kell benyújtani.'
+        create_stub_modelo_620_refused: 'A(z) %{modelo} nyomtatvány (ITP-AJD, használt
+          járművek átruházása) munkafeladat-létrehozása ebben a CLI-ben nem támogatott.
+          Jogalap: Ley 28/1990 és regionális ITPyAJD hatáskör; az önadózást a megfelelő
+          regionális Hacienda / CCAA adóhatóságnál kell benyújtani.'
+        create_stub_modelo_650_refused: 'A(z) %{modelo} nyomtatvány (ISD öröklések)
+          munkafeladat-létrehozása ebben a CLI-ben nem támogatott. Jogalap: Ley 29/1987
+          LISyD és Art. 67 RISD; a rendes határidő a haláltól számított 6 hónap. A
+          megfelelő regionális Hacienda adóhatóságnál kell benyújtani.'
+        create_stub_modelo_660_refused: 'A(z) %{modelo} nyomtatvány (ISD hagyatéki
+          leltár, a Modelo 650 melléklete) munkafeladat-létrehozása ebben a CLI-ben
+          nem támogatott. Jogalap: Ley 29/1987 LISyD; a megfelelő regionális Hacienda
+          adóhatóságnál kell benyújtani.'
+        create_stub_modelo_714_refused: 'A(z) %{modelo} nyomtatvány (vagyonadó) munkafeladat-létrehozása
+          ebben a CLI-ben nem támogatott. Jogi alap: Ley 19/1991 28. cikk és Orden
+          HAC/1023/2021. A bevallást az AEAT Sede felületen kell benyújtani.'
         create_stub_modelo_refused: 'A(z) %{modelo} nyomtatvány (külföldön tartott
           virtuális pénznemek informatív bevallása) munkafeladat-létrehozása ebben
           a CLI-ben nem támogatott. Jogi alap: Orden HFP/886/2023 és RD 1065/2007
           Art. 42 quater; a jelentési küszöb 50 000 EUR december 31-én. Jogszabályi
           kötelezettség esetén az AEAT Sede felületén kell benyújtani.'
-        dependencies_help: Keresztidoszaki bevallastorteneti fuggosegek es az aktualis
-          clean-state blokkolok megjelenitese a celbevallashoz
+        dependencies_help: Keresztidőszaki bevallástörténeti függőségek és az aktuális
+          clean-state blokkolók megjelenítése a célbevalláshoz
         discard_help: Munkaegység eldobottként megjelölése (auditálható állapotváltás).
         discard_requires_yes: 'Az eldobás auditálható állapotváltás. Futtassa újra:
           `aeat app modelo work discard %{work_unit_id} --yes` a megerősítéshez.'
         discard_yes_help: Az eldobási művelet explicit megerősítése.
-        disposition_help: 'A 303-as modell negativ eredmenyenek rendelkezese: compensar
-          (a jovairas atvitele, alapertelmezett) vagy devolver (visszaterites kerese;
-          nem REDEME-adozonal csak az ev utolso bevallasi idoszakaban).'
+        disposition_help: 'A 303-as modell negatív eredményének rendelkezése: compensar
+          (a jóváírás átvitele, alapértelmezett) vagy devolver (visszatérítés kérése;
+          nem REDEME-adózónál csak az év utolsó bevallási időszakában).'
         dt12_computation_error: 'DT12 számítási hiba: %{message}'
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
@@ -2531,17 +2531,17 @@ cli:
           kisbetűs hex-karakterláncnak kell lennie (SHA-256 kivonat).
         invalid_casilla_key: 'A --casilla kulcsa nem érvényes CasillaId (alfanumerikus,
           plusz . _ : - elválasztók, max. 64 karakter).'
-        invalid_relation_key: A --relation kulcs nem ervenyes RelationId. Hasznaljon
-          kisbetus, kotojeles vagy pontozott relation azonosítot.
+        invalid_relation_key: A --relation kulcs nem érvényes RelationId. Használjon
+          kisbetűs, kötőjeles vagy pontozott relation azonosítót.
         invalid_revision_selector: 'Ismeretlen revizio valaszto {value}; valasszon
           ezek kozul: {choices}.'
         invalid_work_unit_id: A work_unit_id értékének 64 karakteres kisbetűs hex-karakterláncnak
           kell lennie (SHA-256 kivonat).
         kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; kapott: {spec}.'
-        kv_format_error: 'A(z) {flag} erteket {key_label}={value_label} alakban kell
-          megadni. Ez egy kulcs-érték bejegyzés: A kulcs a bal oldalon all, utana
-          egyetlen egyenlosegjel kovetkezik, az ertek pedig a jobb oldalon. Kapott
-          ertek: {spec}.'
+        kv_format_error: 'A(z) {flag} értéket {key_label}={value_label} alakban kell
+          megadni. Ez egy kulcs-érték bejegyzés: A kulcs a bal oldalon áll, utána
+          egyetlen egyenlőségjel következik, az érték pedig a jobb oldalon. Kapott
+          érték: {spec}.'
         list_help: Regisztrált munkaegységek listázása, opcionálisan profil szerint
           szűrve.
         list_next_action: Egy munkaegység teljes állapotát a `aeat app modelo work
@@ -2580,21 +2580,21 @@ cli:
           az aktív profilban, majd futtassa újra a számítást. Dátum típusú profiladat
           nem adható meg --binding kapcsolóval. Futtassa: `%{discover}` az összes
           még szükséges kötés listázásához.'
-        missing_relation_guidance: '%{base} Add meg az erteket --relation KEY=VALUE
-          formaban ezen a parancson; a KEY registry relation id, nem binding id. Futtasd:
-          %{discover}, hogy lasd a relation utmutatot es a szamitas altal meg igenyelt
+        missing_relation_guidance: '%{base} Add meg az értéket --relation KEY=VALUE
+          formában ezen a parancson; a KEY registry relation id, nem binding id. Futtasd:
+          %{discover}, hogy lásd a relation útmutatót és a számítás által még igényelt
           bindingokat.'
         missing_relation_guidance_m200_m202: '%{base} A Modelo 202 pagos fraccionados
-          ertekeit a Modelo 200-hoz --relation RELATION_ID=VALUE formaban add meg,
-          nem --bindinggal. A DP200014B:00611 ket, kolcsonosen kizaro M202 payment
-          relation csatornat von le: modelo-200-2024-rel-202-pagos-fraccionados a
-          40.3 casilla 34-hez es modelo-200-2024-rel-202-pagos-fraccionados-40-2 a
-          40.2 casilla 03-hoz. Kezi ertek megadasakor a nem hasznalt modalitast allitsd
-          0-ra. Futtasd: %{discover}, hogy lasd a relation utmutatot es a fennmarado
+          értékeit a Modelo 200-hoz --relation RELATION_ID=VALUE formában add meg,
+          nem --bindinggal. A DP200014B:00611 két, kölcsönösen kizáró M202 payment
+          relation csatornát von le: modelo-200-2024-rel-202-pagos-fraccionados a
+          40.3 casilla 34-hez és modelo-200-2024-rel-202-pagos-fraccionados-40-2 a
+          40.2 casilla 03-hoz. Kézi érték megadásakor a nem használt modalitást állítsd
+          0-ra. Futtasd: %{discover}, hogy lásd a relation útmutatót és a fennmaradó
           bindingokat.'
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         name_help: Opcionális megjelenítési név a munkaegységhez.
-        name_required: Adja meg a --name erteket.
+        name_required: Adja meg a --name értékét.
         notes_help: Opcionális megjegyzések a benyújtási rekordhoz.
         observations_help: Tipizált, mezőnkénti számítási megfigyelések és eredet
           megjelenítése.
@@ -2625,33 +2625,33 @@ cli:
           dinerarias) opcióban.
         prestacion_inss_exenta_not_decimal: '--prestacion-inss-exenta értékének decimálisnak
           kell lennie; a kapott érték: {value}.'
-        preview_maritime_exemption_annual_salary_help: Eves brutto munkaber EUR-ban
-          (Decimal). Akkor kotelezo, ha az aktiv profil teljesiti az Art. 7.p) felteteleit
+        preview_maritime_exemption_annual_salary_help: Éves bruttó munkabér EUR-ban
+          (Decimal). Akkor kötelező, ha az aktív profil teljesíti az Art. 7.p) feltételeit
           (vessel_flag=foreign vagy waters_type=international).
-        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary decimalis
-          osszeg kell legyen; megkapott ertek: {value}.'
-        preview_maritime_exemption_gross_navigation_income_help: 'Hajozasbol szarmazo
-          osszes brutto munkajovedelem EUR-ban (Decimal). Akkor kotelezo, ha az aktiv
-          profil teljesiti a REBECA felteteleit (vessel_registry: REBECA / rebeca_eu_eea
+        preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary decimális
+          összeg kell legyen; megkapott érték: {value}.'
+        preview_maritime_exemption_gross_navigation_income_help: 'Hajózásból származó
+          összes bruttó munkajövedelem EUR-ban (Decimal). Akkor kötelező, ha az aktív
+          profil teljesíti a REBECA feltételeit (vessel_registry: REBECA / rebeca_eu_eea
           / scheduled_canary_route).'
         preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
-          decimalis osszeg kell legyen; megkapott ertek: {value}.'
-        preview_maritime_exemption_help: Tengeri munkavallaloi IRPF-mentesseg (Art.
-          7.p) LIRPF / REBECA 50%) elozetes szamitasa az aktiv profil maritime_worker
-          tenyei alapjan. Tipusos CasillaObservation sorokat ad ki legal_refs adatokkal;
-          megjeleniti a RETMAR kotelezo bevallasi figyelmeztetest, ha retmar_registered=True;
-          visszautasitja a DA 41 inaktiv koddal, ha a tonhalflotta szelektor teljesul.
-        preview_maritime_exemption_qualifying_days_help: Spanyol teruleten kivuli
-          munkavegzes naptari napjai az adoeven belul. Az Art. 7.p) alkalmazasakor
-          az --annual-salary mellett kotelezo.
+          decimális összeg kell legyen; megkapott érték: {value}.'
+        preview_maritime_exemption_help: Tengeri munkavállalói IRPF-mentesség (Art.
+          7.p) LIRPF / REBECA 50%) előzetes számítása az aktív profil maritime_worker
+          tényei alapján. Típusos CasillaObservation sorokat ad ki legal_refs adatokkal;
+          megjeleníti a RETMAR kötelező bevallási figyelmeztetést, ha retmar_registered=True;
+          visszautasítja a DA 41 inaktív kóddal, ha a tonhalflotta szelektor teljesül.
+        preview_maritime_exemption_qualifying_days_help: Spanyol területen kívüli
+          munkavégzés naptári napjai az adóéven belül. Az Art. 7.p) alkalmazásakor
+          az --annual-salary mellett kötelező.
         reason_help: Az eldobás opcionális szabad szöveges oka (max. 500 karakter).
-        relation_help: 'Registry relation ertek KEY=VALUE formaban (ismetelheto).
-          A KEY registry relation id, nem binding id; ezt hasznald idoszakok vagy
-          modellek kozotti relation bemenetekhez. Futtasd: aeat app modelo bindings
-          list --missing a scope-hoz tartozo relation utmutatoert. A Modelo 200 M202
-          pagos fraccionados eseteben a kolcsonosen kizaro 40.3 casilla 34 es 40.2
-          casilla 03 relation csatornakat hasznald, es kezi ertek megadasakor a nem
-          hasznalt modalitast allitsd 0-ra.'
+        relation_help: 'Registry relation érték KEY=VALUE formában (ismételhető).
+          A KEY registry relation id, nem binding id; ezt használd időszakok vagy
+          modellek közötti relation bemenetekhez. Futtasd: aeat app modelo bindings
+          list --missing a scope-hoz tartozó relation útmutatóért. A Modelo 200 M202
+          pagos fraccionados esetében a kölcsönösen kizáró 40.3 casilla 34 és 40.2
+          casilla 03 relation csatornákat használd, és kézi érték megadásakor a nem
+          használt modalitást állítsd 0-ra.'
         rename_help: Egy munkaegység megjelenítési nevének frissítése.
         rescate_contingencia_year_help: 'Az az ev, amikor a nyugdijpenztari esemeny
           (nyugdijazas, rokkantsag, halal) bekovetkezett. Meghatarozza a LIRPF DT
@@ -2671,14 +2671,14 @@ cli:
           kiszámítsa a 40%-os csökkentést és a 0011-es mezőbe írja.
         rescate_plan_pensiones_not_decimal: A --rescate-plan-pensiones-* értékeknek
           decimális összegeknek kell lenniük.
-        rescate_type_help: 'A nyugdijpenztari toke visszavaltasanak tipusa (LIRPF
-          DT 12a): total (a teljes toke egyszerre) vagy parcial (reszletekben). Osztalyozasi
-          es eredetjelzo jel, nem valtoztatja meg az osszeget: a 40%-os csokkentes
-          a kifizetett osszeg 2007 elotti reszere vonatkozik. Parcialis eseten minden
-          reszkifizetes ugyanazt a 4. bekezdes szerinti ablakot osztja.'
-        rescate_year_help: Az az ev, amikor a visszavaltasi juttatast megkapjak (alapertelmezetten
-          a bevallas eve). Osszehasonlitva a LIRPF DT 12a 4. bekezdes szerinti ablakkal,
-          a --contingencia-year evtol merve.
+        rescate_type_help: 'A nyugdíjpénztári tőke visszaváltásának típusa (LIRPF
+          DT 12a): total (a teljes tőke egyszerre) vagy parcial (részletekben). Osztályozási
+          és eredetjelző jel, nem változtatja meg az összeget: a 40%-os csökkentés
+          a kifizetett összeg 2007 előtti részére vonatkozik. Parciális esetén minden
+          részkifizetés ugyanazt a 4. bekezdés szerinti ablakot osztja.'
+        rescate_year_help: Az az év, amikor a visszaváltási juttatást megkapják (alapértelmezetten
+          a bevallás éve). Összehasonlítva a LIRPF DT 12a 4. bekezdés szerinti ablakkal,
+          a --contingencia-year évtől mérve.
         result_summary_header: eredmény-összefoglaló  Modelo %{modelo} %{year} %{period}
         resume_help: Ellenőrzi, hogy megszakított munkafolyamat újrapróbálható-e az
           AEAT megkeresése nélkül. A normál út a --modelo --year --period; a pontos
@@ -2688,8 +2688,8 @@ cli:
         revision_help: 'A célzott nyilvántartási nyomtatvány-revízió stabil azonosítója;
           futtassa: `aeat app modelo describe NYOMTATVÁNY` az elérhető revízióazonosítók
           megtekintéséhez.'
-        revision_selector_ambiguous: Tobb szamitasi revizio illeszkedik erre a valasztora.
-          Valasszon egyet explicit modon. {candidates}
+        revision_selector_ambiguous: Több számítási revízió illeszkedik erre a választóra.
+          Válasszon egyet explicit módon. {candidates}
         revision_selector_help: Revizio valaszto.
         revision_show_help: Egy tárolt számítási revízió megőrzött mezőértékeinek
           megjelenítése (újraszámítás nélkül).
@@ -2709,9 +2709,9 @@ cli:
           porcentaje=40 importe=10000''. M349 példa: --row ''operador codigo_pais=DE
           nif_comunitario=DE123456789 razon_social="DE Auto GmbH" clave_operacion=E
           importe=50000''.'
-        row_kv_format_error: 'A --row {token} mezot KULCS=ÉRTÉK alakban kell megadni.
-          Ez egy kulcs-érték bejegyzés: a sor mezoneve a bal oldalon all, utana egyetlen
-          egyenlosegjel kovetkezik, az ertek pedig a jobb oldalon.'
+        row_kv_format_error: 'A --row {token} mezőt KULCS=ÉRTÉK alakban kell megadni.
+          Ez egy kulcs-érték bejegyzés: a sor mezőneve a bal oldalon áll, utána egyetlen
+          egyenlőségjel következik, az érték pedig a jobb oldalon.'
         row_m349_invalid_nif: '--row operador: a nif_comunitario {nif} nem felel meg
           {pais} ország elvárt NIF-IVA formátumának (2006/112/EK irányelv XI. melléklet)'
         row_unknown_type: 'Ismeretlen --row típus: {row_type!r}; támogatott típusok:
@@ -2770,19 +2770,19 @@ cli:
           parancsot.
         verify_selector_help: Piszkozat-revízió választó (current, latest-draft vagy
           explicit).
-        wizard_help: Vegigvezet a munkaegyseg hianyzo kezi mezoin, majd kiszamitja
-          az eredmenyt
+        wizard_help: Végigvezet a munkaegység hiányzó kézi mezőin, majd kiszámítja
+          az eredményt
         wizard_prompt: '%{number}. sz. rovat (%{label})'
-        wizard_relation_help: A(z) %{binding_id} regiszterkapcsolat tolti fel; add
-          meg az idoszakok vagy modellek kozotti erteket, amit ez a kapcsolat hordoz.
-        wizard_retry_exhausted: A varazslo %{limit} kovetkezmenyi kerdes utan sem
-          tudta feloldani az osszes szamitasi bemenetet. Futtasd kozvetlenul a `aeat
-          app modelo work calculate` parancsot, es add meg kezzel a fennmarado --binding
-          / --relation ertekeket.
-        wizard_saved: 'Elmentve piszkozat szamitasi verziokent: %{revision_id} (allapot:
-          %{state}). Tartosan tarolva van, kesobb folytathato; a verziok listazasa:
+        wizard_relation_help: A(z) %{binding_id} regiszterkapcsolat tölti fel; add
+          meg az időszakok vagy modellek közötti értéket, amit ez a kapcsolat hordoz.
+        wizard_retry_exhausted: A varázsló %{limit} következményi kérdés után sem
+          tudta feloldani az összes számítási bemenetet. Futtasd közvetlenül a `aeat
+          app modelo work calculate` parancsot, és add meg kézzel a fennmaradó --binding
+          / --relation értékeket.
+        wizard_saved: 'Elmentve piszkozat számítási verzióként: %{revision_id} (állapot:
+          %{state}). Tartósan tárolva van, később folytatható; a verziók listázása:
           `aeat app modelo work revisions --modelo %{modelo} --year %{year} --period
-          %{period}`, ennek ujravizsgalata: `aeat app modelo work revision %{revision_id}`.'
+          %{period}`, ennek újravizsgálata: `aeat app modelo work revision %{revision_id}`.'
         work_unit_id_help: A munkaegység stabil 64 karakteres SHA-256 azonosítója.
         workflow_draft_build_refused_next_action: 'Javítsa ki a hivatkozott piszkozatbemenetet,
           majd futtassa újra: %{command}.'
@@ -2927,15 +2927,15 @@ cli:
         add_help: Egy bizalmi cimzett X25519 nyilvanos kulcsanak rogzitese ujjlenyomat
           alapjan.
         errors:
-          invalid_public_key: A --public-key erteknek pontosan 64 kisbetus hexadecimalis
-            karakterbol kell allnia (egy nyers 32 bajtos X25519 nyilvanos kulcs).
-        help: Bizalmi ellenorzocsomag-cimzettek rogzitese, listazasa es torlese.
+          invalid_public_key: A --public-key értéknek pontosan 64 kisbetűs hexadecimális
+            karakterből kell állnia (egy nyers 32 bájtos X25519 nyilvános kulcs).
+        help: Bizalmi ellenőrzőcsomag-címzettek rögzítése, listázása és törlése.
         label_help: Opcionalis, szabad szoveges megjelenitett nev a cimzetthez.
-        list_help: Az aktiv profilon regisztralt osszes bizalmi cimzett listazasa.
+        list_help: Az aktív profilon regisztrált összes bizalmi címzett listázása.
         public_key_help: A cimzett nyers X25519 nyilvanos kulcsa, 64 kisbetus hexadecimalis
           karakterkent.
         recipient_id_help: Stabil, kezelo altal valasztott cimke (pl. 'a-konyvelom').
-        remove_help: Egy bizalmi cimzett eltavolitasa azonosito alapjan az aktiv profilbol.
+        remove_help: Egy bizalmi címzett eltávolítása azonosító alapján az aktív profilból.
     custody:
       data_loss_warning: Jegyezze fel most ezt a helyreallitasi kulcsot. Az AEAT nem
         tarolja a nyilt helyreallitasi kulcsot, es nem tudja ujra megjeleniteni.
@@ -3203,11 +3203,11 @@ cli:
         apply_help: Az AEAT által jelentett nyilvántartási értékekkel felülírja a
           profilt.
         compare_help: Az AEAT nyilvántartás és a profil mezőnkénti összehasonlítása.
-        dropped_fields_notice: 'Az AEAT censo mar nem tartalmaz olyan mezoket, amelyek
-          a legutobbi pillanatfelvetelben szerepeltek: {dropped_fields}. Ha nem valtoztattad
-          meg es nem szuntetted meg ezeket a bejegyzeseket, elofordulhat, hogy reszleges
-          letoltes tortent: futtasd ujra a censo letoltest, vagy add meg ismet az
-          ertekeket; az otthoni iroda levonasi aranya nem biztos, hogy feloldodik.'
+        dropped_fields_notice: 'Az AEAT censo már nem tartalmaz olyan mezőket, amelyek
+          a legutóbbi pillanatfelvételben szerepeltek: {dropped_fields}. Ha nem változtattad
+          meg és nem szüntetted meg ezeket a bejegyzéseket, előfordulhat, hogy részleges
+          letöltés történt: futtasd újra a censo letöltést, vagy add meg ismét az
+          értékeket; az otthoni iroda levonási aránya nem biztos, hogy feloldódik.'
         help: Az AEAT 036-os nyilvántartási adatok szinkronizálása ezzel a profillal.
         pull_help: Letolti a legfrissebb censo-t az AEAT-tol e profil pillanatkep-tarolojaba.
         refresh_help: A legfrissebb nyilvántartás letöltése az AEAT-ból és pillanatkép
@@ -3219,9 +3219,9 @@ cli:
         --tax-id <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet
         --accept-defaults'
       create_help: Új aktív profil inicializálása.
-      delete_active_cleared: A torolt profil volt az aktiv; az aktiv profil mutato
-        torolve lett. Futtasd aeat config switch NAME vagy aeat config profile create
-        NAME a folytatashoz.
+      delete_active_cleared: A törölt profil volt az aktív; az aktív profil mutató
+        törölve lett. Futtasd aeat config switch NAME vagy aeat config profile create
+        NAME a folytatáshoz.
       delete_help: Profil és lemezen lévő állapot törlése (--yes megerősíti).
       delete_name_help: A törölni kívánt profil neve.
       delete_requires_yes: 'A törlés visszafordíthatatlan. Futtassa újra: `aeat config
@@ -3234,7 +3234,7 @@ cli:
         help: Leszarmazottak megadasa a LIRPF 58/61. cikk szerinti leszarmazotti minimumhoz.
         index_out_of_range: A(z) %{index} index tartomanyon kivul esik; a profilon
           %{total} leszarmazott van.
-        invalid_flag: 'A --descendiente jelzo %{flag} ervenytelen: %{detail}'
+        invalid_flag: 'A --descendiente jelző %{flag} érvénytelen: %{detail}'
         list_help: Az aktiv profilon megadott leszarmazottak listazasa.
         remove_help: Egy leszarmazott eltavolitasa 0-alapu index szerint az aktiv
           profilrol.
@@ -3331,20 +3331,20 @@ cli:
         év, időszak) bevallási kontextushoz.
       preflight_modelo_help: Számozott modelo azonosító (pl. 303).
       preflight_period_help: Időszak kód (pl. 1T, 1P, 0A, 01).
-      preflight_revision_ambiguous: 'Egynel tobb registry-revizio illeszkedik a(z)
-        %{modelo} modellhez, %{period} idoszakhoz: %{candidates}. Futtassa ujra a
-        --revision-id kapcsoloval, egyikuket megadva.'
+      preflight_revision_ambiguous: 'Egynél több registry-revízió illeszkedik a(z)
+        %{modelo} modellhez, %{period} időszakhoz: %{candidates}. Futtassa újra a
+        --revision-id kapcsolóval, egyiküket megadva.'
       preflight_revision_help: Nyilvántartási revízió azonosítója.
-      preflight_revision_id_help: Opcionalis registry-revizio-azonosito felulbiralas
-        pontos visszajatszashoz (pl. 2024-0A); alapertelmezetten a modellhez, bevallasi
-        evhez es idoszakhoz tartozo aktiv reviziot hasznalja.
-      preflight_revision_override_invalid: 'A registry-revizio felulbiralas nem ervenyes
-        a(z) %{modelo} modellhez, %{filing_year} bevallasi evhez: %{detail}. Futtassa
-        a `aeat app modelo describe %{modelo}` parancsot a regisztralt reviziok listazasahoz.'
-      preflight_revision_unresolved: Egyetlen registry-revizio sem fedi le a(z) %{modelo}
-        modellt, %{filing_year} bevallasi evet, %{period} idoszakot. Futtassa a `aeat
-        app modelo describe %{modelo}` parancsot az ervenyes idoszakok es reviziok
-        megtekintesehez.
+      preflight_revision_id_help: Opcionális registry-revízió-azonosító felülbírálás
+        pontos visszajátszáshoz (pl. 2024-0A); alapértelmezetten a modellhez, bevallási
+        évhez és időszakhoz tartozó aktív revíziót használja.
+      preflight_revision_override_invalid: 'A registry-revízió felülbírálás nem érvényes
+        a(z) %{modelo} modellhez, %{filing_year} bevallási évhez: %{detail}. Futtassa
+        a `aeat app modelo describe %{modelo}` parancsot a regisztrált revíziók listázásához.'
+      preflight_revision_unresolved: Egyetlen registry-revízió sem fedi le a(z) %{modelo}
+        modellt, %{filing_year} bevallási évet, %{period} időszakot. Futtassa a `aeat
+        app modelo describe %{modelo}` parancsot az érvényes időszakok és revíziók
+        megtekintéséhez.
       preflight_year_help: Benyújtási év.
       remove_help: Profil lezárása (a megváltoztathatatlan benyújtási pillanatképek
         megmaradnak).
@@ -3383,8 +3383,8 @@ cli:
         create_name_help: A sandbox neve.
         discard_active_profile: A(z) %{name} sandbox az aktív profil; váltson másik
           profilra, mielőtt eldobná.
-        discard_dry_run_help: Elonezet arrol, hogy mit tavolitana el a torles, anelkul,
-          hogy barmit is eltavolitana.
+        discard_dry_run_help: Előnézet arról, hogy mit távolítana el a törlés, anélkül,
+          hogy bármit is eltávolítana.
         discard_help: Egy sandbox véglegesen törlése.
         discard_name_help: A sandbox neve (előtag nélkül).
         discard_not_a_sandbox: '%{name} nem sandbox; a sandbox felület megtagadja
@@ -3404,13 +3404,13 @@ cli:
         merge_yes_help: A sandbox adatainak beemelését megerősíti.
         prune_dry_run_help: Elonezet arrol, mely sandboxokat torolne, anelkul, hogy
           torolne oket.
-        prune_help: Az osszes sandbox egyszerre torlese.
-        prune_requires_yes: 'Az osszes sandbox torlese visszavonhatatlan. Futtasd
-          ujra: ''aeat config profile sandbox prune --yes'' a megerositeshez.'
-        prune_skipped_active_info: 'Kihagyva az aktiv sandbox %{names}; valts masik
-          profilra, majd futtasd ujra: ''aeat config profile sandbox prune --yes''
-          a torleshez.'
-        prune_yes_help: Az osszes sandbox torlesenek megerositese.
+        prune_help: Az összes sandbox egyszerre törlése.
+        prune_requires_yes: 'Az összes sandbox törlése visszavonhatatlan. Futtasd
+          újra: ''aeat config profile sandbox prune --yes'' a megerősítéshez.'
+        prune_skipped_active_info: 'Kihagyva az aktív sandbox %{names}; válts másik
+          profilra, majd futtasd újra: ''aeat config profile sandbox prune --yes''
+          a törléshez.'
+        prune_yes_help: Az összes sandbox törlésének megerősítése.
         restore_help: Visszaállít egy archivált sandboxot aktív állapotba.
         restore_name_help: A sandbox neve (előtag nélkül).
         restore_not_archived: A(z) %{name} nincs archiválva; nincs mit visszaállítani.
@@ -3481,8 +3481,8 @@ cli:
         és javítása.
       integrity:
         objects_help: Ellenorzi a biztonsagos objektumok integritasat.
-        objects_namespace_help: Biztonsagos objektumok integritasanak ellenorzese
-          egy nevterre korlatozva.
+        objects_namespace_help: Biztonságos objektumok integritásának ellenőrzése
+          egy névtérre korlátozva.
         registry_help: Ellenőrzi a számítási nyilvántartás épségét.
       integrity_attribution_details_help: Soronkénti biztonságos metaadat-részletek
         bevonása.
@@ -3514,13 +3514,13 @@ cli:
         --yes kapcsolóval a megerősítéshez.
       quarantine_yes_help: A karantén-művelet explicit megerősítése.
       reset_progress_dry_run_help: Megmutatja a torlendo mentett folyamatot.
-      reset_progress_help: Megszakitott parancs mentett folyamatainak torlese (visszafordithatatlan;
-        --yes szukseges).
+      reset_progress_help: Megszakított parancs mentett folyamatainak törlése (visszafordíthatatlan;
+        --yes szükséges).
       reset_progress_requires_yes: Ez a művelet visszafordíthatatlan. Futtassa újra
         a --yes kapcsolóval a megerősítéshez, vagy a --dry-run kapcsolóval, hogy lássa,
         mi törlődne.
-      reset_progress_yes_help: Megszakitott parancs mentett folyamatainak torlesenek
-        megerositese.
+      reset_progress_yes_help: Megszakított parancs mentett folyamatainak törlésének
+        megerősítése.
       yes_help: Javítás megerősítése.
     reset:
       help: Elindítja, megjeleníti vagy folytatja az összes helyben tárolt profil
@@ -3565,8 +3565,8 @@ cli:
       next_step: 'Következő lépés: `aeat app overview status`'
     switch:
       help: Váltson át egy profilra, és tegye aktívvá.
-      name_help: A profil neve, amelyre valtani szeretne. Ha nincs megadva, az aktivprofil-mutato
-        az alapertelmezett.
+      name_help: A profil neve, amelyre váltani szeretne. Ha nincs megadva, az aktívprofil-mutató
+        az alapértelmezett.
     unset:
       help: Egy konfigurációs kulcs értékének törlése.
       key_help: A törlendő kulcs.
@@ -3676,8 +3676,8 @@ cli:
       auth_no_session: A(z) %{provider} hitelesítési szolgáltatónak nincs kész munkamenete.
       auth_none: A hitelesítés nincs konfigurálva.
       auth_session_ready: 'A hitelesítési munkamenet kész: %{provider}.'
-      auth_state_unreadable: A hitelesitesi keszultseg nem ellenorizheto, amig a mentett
-        helyi munkamenetadatok nem olvashatok.
+      auth_state_unreadable: A hitelesítési készültség nem ellenőrizhető, amíg a mentett
+        helyi munkamenetadatok nem olvashatók.
       profile_keys_set: '%{present}/%{total} profilkulcs beállítva.'
       profile_missing_keys: '%{count} profilkulcs hiányzik.'
       profile_none: Nincs beállított profil.
@@ -3779,35 +3779,35 @@ cli:
         a sort. Hagyja el szándékos duplikátum hozzáadásához.'
       idempotent_noop: 'Idempotens üres művelet: már létezik tranzakció ezzel az idempotencia-kulccsal
         (%{transaction_id}); semmi sem került hozzáadásra.'
-      input_classification_help: 'Az uzemelteto altal megadott LIVA art. 106 prorrata
-        especial bemeneti felhasznalasi besorolas (exclusively_deductible: teljes
-        levonas; exclusively_non_deductible: nincs levonas; common: az altalanos prorrata
-        szazalekaval); csak prorrata especial ala tartozo bucket bemeneti soraira
-        ertelmes.'
-      input_classification_inert: 'Az --input-classification hatastalan a(z) {ejercicio}
-        ejercicio-ra: nincs ervenyben prorrata especial valasztas, ezert a bemenet
-        az altalanos szazalekkal vonhato le. Az ejercicio minden bemenetenek osztalyozasa
-        a liquidacioban a LIVA art. 103.Dos.2 kotelezo prorrata especial ellenorzest
-        is engedelyezi altalanos szabalyu keret eseten. Futtasd az ''app ledger prorrata
+      input_classification_help: 'Az üzemeltető által megadott LIVA art. 106 prorrata
+        especial bemeneti felhasználási besorolás (exclusively_deductible: teljes
+        levonás; exclusively_non_deductible: nincs levonás; common: az általános prorrata
+        százalékával); csak prorrata especial alá tartozó bucket bemeneti soraira
+        értelmes.'
+      input_classification_inert: 'Az --input-classification hatástalan a(z) {ejercicio}
+        ejercicio-ra: nincs érvényben prorrata especial választás, ezért a bemenet
+        az általános százalékkal vonható le. Az ejercicio minden bemenetének osztályozása
+        a liquidacioban a LIVA art. 103.Dos.2 kötelező prorrata especial ellenőrzést
+        is engedélyezi általános szabályú keret esetén. Futtasd az ''app ledger prorrata
         elect-especial --ejercicio {ejercicio}'' parancsot, hogy a LIVA art. 106 szerint
-        iranyitsd.'
+        irányítsd.'
       irpf_category_help: IRPF-specifikus kategóriakulcs.
       iva_amount_help: Opcionális IVA-összeg a soron.
       iva_rate_help: Opcionális IVA-kulcs tizedes törtként.
       notes_help: A tranzakcióval együtt tárolt üzemeltetői megjegyzések.
       prorrata_reference_help: IVA prorrata alapjának hivatkozása.
-      prorrata_sector_help: A megkulonboztetett szektor azonositoja (LIVA 9.1.c /
+      prorrata_sector_help: A megkülönböztetett szektor azonosítója (LIVA 9.1.c /
         101. cikk), amelyhez ez a bemenet tartozik; egyeznie kell egy 'app ledger
         prorrata declare-sector' paranccsal megadott szektorral.
       purchase_invoice_evidence_help: Kanonikus vásárlásiszámla-bizonyíték azonosítója.
       recargo_amount_help: A recargo de equivalencia rendszerű kiskereskedőnek történő
         értékesítésre felszámított recargo-tétel (LIVA 161. cikk); a Modelo 303 recargo-tételébe
         IVA-kulcs szerint összesítve
-      sector_unmatched: A(z) --sector '{sector_id}' egyetlen deklaralt megkulonboztetett
-        szektorral sem egyezik (LIVA 9.1.c / 101. cikk), ezert ez a bemenet a kozos
-        hasznalatu szazalekkal vonhato le, nem a szektor sajatjaval. Futtasd az 'app
-        ledger prorrata declare-sector --sector-id {sector_id} ...' parancsot az enrutalasahoz,
-        vagy javitsd a cimket.
+      sector_unmatched: A(z) --sector '{sector_id}' egyetlen deklarált megkülönböztetett
+        szektorral sem egyezik (LIVA 9.1.c / 101. cikk), ezért ez a bemenet a közös
+        használatú százalékkal vonható le, nem a szektor sajátjával. Futtasd az 'app
+        ledger prorrata declare-sector --sector-id {sector_id} ...' parancsot az enrutálásához,
+        vagy javítsd a címkét.
       source_jurisdiction_help: Két betűs ISO 3166-1 alfa-2 országkód, amely azonosítja
         a jövedelem vagy költség szabályozási forrásjogszabályát (pl. ES spanyol forrás,
         FR francia forrás). Az IRNR és a Beckham-szűrő (LIRPF 93. cikk) követelménye.
@@ -3815,8 +3815,8 @@ cli:
         különbözőképp kezeli a spanyol és külföldi forrású jövedelmet; a --source-jurisdiction
         értéket minden tételnél kifejezetten meg kell adni. A csendes ES alapérték
         a külföldi forrású tételeket is bevonná az IRPF alapba (93.5 cikk szegregáció).
-      source_jurisdiction_required_irnr: A --source-jurisdiction megadasa kotelezo
-        nem rezidens IRNR profiloknal.
+      source_jurisdiction_required_irnr: A --source-jurisdiction megadása kötelező
+        nem rezidens IRNR profiloknál.
       system_state_not_assignable: 'A(z) ''%{value}'' besorolást a Cadrumo automatikusan
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
@@ -3869,11 +3869,11 @@ cli:
         az irány határozza meg, és nem kell --category-id; a `ledger check` és `ledger
         preflight` nem jelöli hiányzóként a kategóriát bevételeknél.
       irpf_header: IRPF-KATEGORIAK A --irpf-category KAPCSOLOHOZ
-      irpf_id_column: irpf-category (ezt az erteket adja meg)
-      irpf_purpose_activity_income_withholding: szakmai tevekenysegi visszatartas
-        (netto bevetel vagy kiadas)
-      irpf_purpose_employment_income: munkaviszonybol szarmazo jovedelem (nem netto
-        szamlakhoz)
+      irpf_id_column: irpf-category (ezt az értéket adja meg)
+      irpf_purpose_activity_income_withholding: szakmai tevékenységi visszatartás
+        (nettó bevétel vagy kiadás)
+      irpf_purpose_employment_income: munkaviszonyból származó jövedelem (nem nettó
+        számlákhoz)
       irpf_purpose_rent_expense_withholding: netto berleti dij visszatartasa
       irpf_usage_example: 'Netto berleti dij: --category-id {rent_category} --irpf-category
         {rent_category}. Netto szakmai szolgaltatas: --category-id {professional_category}
@@ -3892,7 +3892,7 @@ cli:
       year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
     classify:
       actor_help: Az üzemeltető neve, amelyet a bucket-eseményen rögzítenek.
-      apply_help: 'Az LLM javaslatat llm: eredettel menti, nem csak elonezetet keszit.'
+      apply_help: 'Az LLM javaslatát llm: eredettel menti, nem csak előnézetet készít.'
       auto_split_help: Beolvassa a csatolt számlát, és ha többkomponensű, soronkénti
         alap/áfa gyermekekre bontja; egyébként helyben osztályozza (a --read-evidence
         szükséges).
@@ -3931,11 +3931,11 @@ cli:
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --from-csv nincs megadva.
-      irpf_category_help: 'IRPF-kategoria azonositoja. Hasznalja: aeat app ledger
-        categories. Netto szakmai szamlakhoz actividad_economica; netto berleti dijhoz
-        arrendamiento_local/arrendamiento_vivienda_afecto. Jogdij/SGAE: a 25.4 cikk
-        szerint capital mobiliario lehet, ha az adozo nem a szerzo; actividad_economica
-        csak sajat szamlas tevekenyseghez a LIRPF 27. cikk szerint.'
+      irpf_category_help: 'IRPF-kategória azonosítója. Használja: aeat app ledger
+        categories. Nettó szakmai számlákhoz actividad_economica; nettó bérleti díjhoz
+        arrendamiento_local/arrendamiento_vivienda_afecto. Jogdíj/SGAE: a 25.4 cikk
+        szerint capital mobiliario lehet, ha az adózó nem a szerző; actividad_economica
+        csak saját számlás tevékenységhez a LIRPF 27. cikk szerint.'
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -3946,8 +3946,8 @@ cli:
       llm_exclusive: --llm nem kombinalhato a --classification vagy --from-csv kapcsoloval;
         a kezi ut a kezelo kifejezett felulbiralasa.
       llm_failed: 'Az LLM osztalyozas sikertelen: {reason}'
-      llm_help: Kerd meg egy helyi LLM szolgaltatot (claude/antigravity/codex), hogy
-        osztalyozza a tranzakciot; alapertelmezetten elonezet, --apply kapcsoloval
+      llm_help: Kérd meg egy helyi LLM szolgáltatót (claude/antigravity/codex), hogy
+        osztályozza a tranzakciót; alapértelmezetten előnézet, --apply kapcsolóval
         menti.
       llm_provider_unavailable: 'A(z) ''{provider}'' LLM szolgaltato nem erheto el:
         a CLI nincs a PATH-on. Telepitsd a(z) ''{provider}'' CLI-t es gondoskodj rola,
@@ -3994,13 +3994,13 @@ cli:
         a reject elutasított javaslatot, az apply elfogadottat rögzít.'
       reject_help: A modell javaslatának kifejezett elutasítását naplóeseményként
         rögzíti, a sor osztályozása nélkül (nem kombinálható a --apply kapcsolóval).
-      saturate_help: 'Telites LLM-mel: az IVA-kategoria kivalasztasa, valamint a kulcs,
-        az alap es az IVA-osszeg szarmaztatasa.'
+      saturate_help: 'Telítés LLM-mel: az IVA-kategória kiválasztása, valamint a kulcs,
+        az alap és az IVA-összeg származtatása.'
       saturate_non_derivable: A kulcs nem szarmaztathato
-      saturate_requires_llm: 'A --saturate szarmaztatashoz AFA-kategoria kell: adja
-        meg az --iva-category kapcsolot (a rendszer szarmaztatja az alapot, a kulcsot
-        es az osszeget), vagy az --llm <szolgaltato> kapcsolot, hogy egy modell valassza
-        ki a kategoriat.'
+      saturate_requires_llm: 'A --saturate származtatáshoz ÁFA-kategória kell: adja
+        meg az --iva-category kapcsolót (a rendszer származtatja az alapot, a kulcsot
+        és az összeget), vagy az --llm <szolgáltató> kapcsolót, hogy egy modell válassza
+        ki a kategóriát.'
       split_recommended_label: bontás javasolt
       split_recommended_message: A csatolt számla több, eltérő kulcsú vagy kategóriájú
         sort tartalmazhat. Futtasd újra a --auto-split kapcsolóval, hogy önállóan
@@ -4042,9 +4042,9 @@ cli:
       id_prefix_too_long: A(z) %{prefix!r} tranzakcióazonosító-előtag hosszabb 64
         karakternél (teljes SHA-256 kivonat).
       id_prefix_unknown: 'Váratlan tranzakcióazonosító-előtag hiba: %{message}'
-      invalid_category: 'Ismeretlen koltsegkategoria: ''{category}''. Ismert kategoriak:
-        {known}. Futtasd: ''aeat app ledger categories'' az ervenyes --category-id
-        ertekekhez.'
+      invalid_category: 'Ismeretlen költségkategória: ''{category}''. Ismert kategóriák:
+        {known}. Futtasd: ''aeat app ledger categories'' az érvényes --category-id
+        értékekhez.'
       invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}. Használjon
         tizedespontot ezreselválasztó nélkül, pl. 1234.56.'
       negative_amount: Az --amount %{raw} értéknek nem negatív összegnek kell lennie.
@@ -4062,8 +4062,8 @@ cli:
         szolgáltatók: {providers}.'
     exclude:
       actor_help: Operator cimke.
-      help: Egy atnezett fokonyvi tranzakciot szandekosan kizartkent jelol a bevallasbol.
-      id_help: Fokonyvi tranzakcio azonositoja.
+      help: Egy átnézett főkönyvi tranzakciót szándékosan kizártként jelöl a bevallásból.
+      id_help: Főkönyvi tranzakció azonosítója.
       reason_help: Opcionalis megjegyzes arrol, miert van kizarva a sor.
       yes_help: Erositse meg az atnezett-kizart dontest.
     export:
@@ -4088,7 +4088,7 @@ cli:
       dry_run_preview: 'Próba futtatás: nem mentett sorok. A fenti számok azt mutatják,
         mi történne valódi importálásnál.'
       empty_directory: 'Nem találhatók importálható kivonatfájlok a könyvtárban: {path}'
-      file_help: Az importalt sorok ellenorzesere hasznalt eredeti fajl.
+      file_help: Az importált sorok ellenőrzésére használt eredeti fájl.
       help: Bankikivonatok vagy nyilvántartások importálása a könyvelési főkönyvbe.
       likely_duplicates: '{count} importált sor megegyező dátummal és összeggel szerepel
         a főkönyvben, de eltérő leírással – valószínűleg ugyanannak a mozgásnak a
@@ -4184,7 +4184,7 @@ cli:
         egyetlen kanonikus hívásban. Vásárlásiszámla-bizonyíték csatolásához használja
         a 'aeat app ledger attach' parancsot. Keresztbucket-hivatkozásokat elutasít.
         Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
-      id_help: Konyvelesi tranzakcio azonosito (SHA-256 vagy egyertelmu elotag).
+      id_help: Könyvelési tranzakció azonosító (SHA-256 vagy egyértelmű előtag).
       invoice_id_help: A bővített számlakatalógus azonosítója egy importált vagy reconciliált
         számlából, vagy a 'aeat app ledger invoice catalogue create' paranccsal létrehozva,
         amely kétirányúan kapcsolódik a tranzakcióhoz. Ez NEM 'aeat app ledger invoice
@@ -4196,15 +4196,15 @@ cli:
         és év (pl. year=2026), besorolás, eltérés, import, irány (bevétel/kiadás)
         vagy szöveg szerint. Csoportcímke szerinti szűréshez használja a külön --group
         kapcsolót.
-      footer_truncated: '{start}-{end}. sor megjelenitese, osszesen {total} (eltolas
-        {offset}). Lapozashoz hasznalja a --offset/--limit kapcsolot.'
+      footer_truncated: '{start}-{end}. sor megjelenítése, összesen {total} (eltolás
+        {offset}). Lapozáshoz használja a --offset/--limit kapcsolót.'
       group_filter_help: Csak az adott csoportcimkehez tartozo sorok megjelenitese.
       header: KÖNYVELÉSI FŐKÖNYVI TRANZAKCIÓK
       help: Főkönyvi tranzakciók listázása az aktív profilban.
       hide_llm_rejected_help: Elrejti azokat a sorokat, amelyek legutóbbi modelljavaslatát
         elutasították (a felülvizsgált és elutasított sor kikerül a függő sorból).
-      limit_help: 'Megjelenitendo sorok maximalis szama (alapertelmezett: az osszes).'
-      offset_help: 'Ennyi sor kihagyasa a listazas elott (alapertelmezett: 0).'
+      limit_help: 'Megjelenítendő sorok maximális száma (alapértelmezett: az összes).'
+      offset_help: 'Ennyi sor kihagyása a listázás előtt (alapértelmezett: 0).'
       sort_by_help: A listázott sorok rendezése e mező szerint (date, amount, description,
         created_at, modified_at, ...).
       sort_order_help: 'Rendezési sorrend: asc (növekvő) vagy desc (csökkenő).'
@@ -4306,8 +4306,8 @@ cli:
     split:
       actor_help: Az üzemeltető neve, amelyet a LEDGER_TRANSACTION_SPLIT eseményen
         rögzítenek.
-      apply_help: Mentsd el a javasolt --llm felosztast (--yes szukseges); enelkul
-        a javaslat csak elonezetben jelenik meg.
+      apply_help: Mentsd el a javasolt --llm felosztást (--yes szükséges); enélkül
+        a javaslat csak előnézetben jelenik meg.
       child_amount_help: Egy gyermek összege nem negatív magnitúdóként a szülő pénznemében.
         Ismételje meg minden gyermek esetén; a darabszámnak egyeznie kell a --child-description
         értékekkel.
@@ -4330,8 +4330,8 @@ cli:
       llm_exclusive: --llm nem kombinalhato a --child-amount/--child-description kapcsolokkal;
         a kezi ut a kezelo explicit felulbiralasa.
       llm_help: Javasolj bizonyitek-alapu N-reszes felosztast a megadott LLM szolgaltatoval.
-      read_evidence_help: Olvasd be a tranzakciohoz csatolt szamlat helyben, es add
-        at a --llm felosztasjavaslonak.
+      read_evidence_help: Olvasd be a tranzakcióhoz csatolt számlát helyben, és add
+        át a --llm felosztásjavaslónak.
       reason_help: A bucket-esemény adatcsomagjában és az életciklus-előzményekben
         rögzített ok.
       vision_model_help: Felülírja a helyi Ollama látómodellt egy beszkennelt vagy
@@ -4390,14 +4390,14 @@ cli:
       field_help: Forditasi mezo.
       key_help: Semakulcs.
       locale_help: Locale kod.
-      modelo_help: Modelo azonosito.
+      modelo_help: Modelo azonosító.
       registry_root_help: Alternativ AEAT regiszter gyoker.
       remove_help: Egy modellsema forditas eltavolitasa.
-      revision_help: Revizio azonosito.
-      scaffold_check_help: Ellenorzes iras nelkul.
+      revision_help: Revízió azonosító.
+      scaffold_check_help: Ellenőrzés írás nélkül.
       scaffold_help: Modellsema forditasi fajlok generalasa.
-      set_help: Egy modellsema forditas beallitasa.
-      value_help: Leforditott ertek.
+      set_help: Egy modellséma fordítás beállítása.
+      value_help: Lefordított érték.
     remove_key_help: Eltávolítandó pontozott locale-kulcs.
     remove_locale_help: Frissítendő locale kód.
     scaffold_check_help: Eltérések jelentése lokalizációs fájlok írása nélkül.
@@ -4468,7 +4468,7 @@ cli:
         diagnostics_logs: A beállított naplóútvonal és a legújabb sorok megjelenítése.
         diagnostics_quarantine: Olvashatatlan biztonságos objektumok karanténba helyezése.
         diagnostics_repair: Helyi konfiguráció és tár állapotának diagnosztikája.
-        diagnostics_reset_progress: Elakadt megszakitott-parancs folyamat torlese.
+        diagnostics_reset_progress: Elakadt megszakított-parancs folyamat törlése.
         first_run_bootstrap: Helyi adóprofil létrehozása.
         first_run_edit: A profilvarázsló újrafuttatása meglévő profilhoz.
         footer: 'Teljes áttekintésért futtassa: aeat --help.'
@@ -4588,8 +4588,8 @@ cli:
       %{keys}. Futtassa a figyelmeztetés javító parancsát, vagy adja meg a --allow-incomplete
       kapcsolót az ideiglenes naptár megtekintéséhez.'
     coverage:
-      investigate: '%{count} bevallasi kotelezettseget nem sikerult egyertelmuen megallapitani
-        ehhez a profilhoz, es bevallatlan maradhat: %{modelos}. Vizsgalja meg mindegyiket
+      investigate: '%{count} bevallási kötelezettséget nem sikerült egyértelműen megállapítani
+        ehhez a profilhoz, és bevallatlan maradhat: %{modelos}. Vizsgálja meg mindegyiket
         a ''aeat app overview explain <modelo>'' paranccsal.'
     drafts: Tervezetek
     explain:
@@ -4665,8 +4665,8 @@ cli:
         csv - banki tranzakciók importálása.'
       next_landing_command: '  aeat --help - visszatérés a parancs-útmutatóhoz.'
       next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - A Modelo
-        210 lathato IRNR-felderiteshez, de helyi munkegyseg-letrehozas meg nem tamogatott;
-        nyujtsa be az AEAT Sede G320 feluleten.'
+        210 látható IRNR-felderítéshez, de helyi munkaegység-létrehozás még nem támogatott;
+        nyújtsa be az AEAT Sede G320 felületen.'
       next_modelo_work_command: '  aeat app modelo work create - nyomtatvány-bevallás
         indítása a főkönyvi adatokból.'
       next_review_command: '  aeat app ledger review - importált sorok ellenőrzése.'
@@ -4695,8 +4695,8 @@ cli:
       a profilt, vagy futtassa újra a hiányos profil felülbírálásával.
     verbose_help: Részletek és következő lépés megjelenítése, ha elérhető.
     warning:
-      m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazando, de a simplificado
-        forfait szamitasi motor meg nem elerheto; beadas elott ellenorizze az egyszerusitett
+      m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazandó, de a simplificado
+        forfait számítási motor még nem elérhető; beadás előtt ellenőrizze az egyszerűsített
         rezsim casillait.
     year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
   registry:
@@ -5079,9 +5079,9 @@ errors:
       az összes böngésző-erőforrást. Új munkamenet előtt próbálja meg újra a lezárást.
     auth_auth_validation: A hitelesítési paraméterek nem mentek át az érvényesítésen.
       Javítsa a megjelenített értékeket, és próbálja újra.
-    auth_former_product_session_state: A Cadrumo egy megszuent termek munkamenet-allapotat
-      eszlelte, es megtagadja annak olvasasat, athelyezeset, ujrakulcsolasat, torleset
-      vagy atvetelet.
+    auth_former_product_session_state: A Cadrumo egy megszűnt termék munkamenet-állapotát
+      észlelte, és megtagadja annak olvasását, áthelyezését, újrakulcsolását, törlését
+      vagy átvételét.
     auth_google: Google-hitelesítési hiba történt.
     auth_google_client_not_registered: Az aktív profilhoz nem regisztráltak Google
       Desktop OAuth-klienst. Regisztráljon egy klienst a Google-funkciók használatához.
@@ -5136,7 +5136,7 @@ errors:
     computed_supplied_as_input: 'Számított mezők nem adhatók meg bemenetként: {casilla_ids}.'
     date_binding_used_as_decimal_leaf: 'Belső hiba: dátum-kötés decimális levélként
       lett használva.'
-    date_binding_value_missing: Hianyzik a datumkotes erteke.
+    date_binding_value_missing: Hiányzik a dátumkötés értéke.
     dispatch_key_unknown: 'A(z) {dispatch_key!r} diszpécserkulcs nem szerepel a(z)
       {op} műveletre és {binding_id} kötésre vonatkozó diszpécser-táblázatban (deklarált
       kulcsok: {available_keys}).'
@@ -5167,20 +5167,20 @@ errors:
     m100_art85_revision_flag_invalid: A 100-as modell 85. cikke szerinti felülvizsgált
       kataszteri érték jelölőjének a hivatalos X jelölőnégyzet-értéknek kell lennie.
     m210_gastos_deducibles_negative: A(z) M210 gastos_deducibles %{casilla_id} nem
-      lehet negativ; kapott ertek %{value}.
+      lehet negatív; kapott érték %{value}.
     m210_gastos_deducibles_not_allowed: A(z) M210 gastos_deducibles %{casilla_id}
       csak az EU/EGT 24.6 cikk szerinti uton engedelyezett; tipo_renta=%{tipo_renta},
       country_of_fiscal_residence=%{country_of_fiscal_residence}.
-    m210_imputation_coefficient_invalid: A(z) M210 ingatlan-imputacios egyutthato
-      %{casilla_id} csak a registryben rogzitett Art. 85 kulcsok egyike lehet (%{allowed_values});
-      kapott ertek %{value}.
-    m210_imputation_days_invalid: A(z) M210 imputacios napok %{casilla_id} erteke
-      1 es %{max_days} kozotti egesz szam kell legyen; kapott ertek %{value}.
-    m210_imputation_no_catastral_value_missing: Kataszteri ertek nelkuli M210 ingatlan-imputaciohoz
-      pozitiv szerzesi ertek vagy hatosag altal megallapitott ertek kell (%{acquisition_casilla_id},
+    m210_imputation_coefficient_invalid: A(z) M210 ingatlan-imputációs együttható
+      %{casilla_id} csak a registryben rögzített Art. 85 kulcsok egyike lehet (%{allowed_values});
+      kapott érték %{value}.
+    m210_imputation_days_invalid: A(z) M210 imputációs napok %{casilla_id} értéke
+      1 és %{max_days} közötti egész szám kell legyen; kapott érték %{value}.
+    m210_imputation_no_catastral_value_missing: Kataszteri érték nélküli M210 ingatlan-imputációhoz
+      pozitív szerzési érték vagy hatóság által megállapított érték kell (%{acquisition_casilla_id},
       %{administrative_casilla_id}).
-    m210_imputation_no_filing_year: Az M210 ingatlan-imputacio szamitasahoz nem nulla
-      bevallasi ev szukseges.
+    m210_imputation_no_filing_year: Az M210 ingatlan-imputáció számításához nem nulla
+      bevallási év szükséges.
     parameter_unknown: A(z) {parameter_id} paraméter nincs regisztrálva.
     relation_value_missing: A(z) {relation_id} relációnak nincs megadott értéke.
     text_input_non_text_casillas: 'Szöveges bemenet érkezett nem szöveges mezőkhöz:
@@ -5693,16 +5693,16 @@ errors:
       további műveleteket.
     modelo_184_share_sum: A Modelo 184 tagi részesedési százalékainak pontosan 100%-ot
       kell kitenniük.
-    modelo_210_agrupacion_renta_rows: A 210-es nyomtatvany eves csoportositott jovedelem-sorainak
-      egyetlen jogszeru csoportot kell alkotniuk (egy kod, egy kulcs, egy azonositott
-      ingatlan, es egy kifizeto, kiveve a tobb kifizetos kivetelt).
+    modelo_210_agrupacion_renta_rows: A 210-es nyomtatvány éves csoportosított jövedelem-sorainak
+      egyetlen jogszerű csoportot kell alkotniuk (egy kód, egy kulcs, egy azonosított
+      ingatlan, és egy kifizető, kivéve a több kifizetős kivételt).
     modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
       bevallási lefedettség szükséges.
-    modelo_349_country_prefix_context: 'A 349-es Modelo elutasitja a(z) {country_code}
-      orszagprefixet a(z) {clave_operacion} muveletkulcshoz {filing_year}/{period}
-      idoszakban: {reason}. Jogalap: AEAT Brexit IVA NIF-IVA / Modelo 349 utmutato.'
-    modelo_ambiguous_semantic_role_casilla: Tobb casilla hasznalja a(z) %{semantic_role}
-      szemantikus szerepet; hasznalja a pontos kanonikus casilla.id erteket.
+    modelo_349_country_prefix_context: 'A 349-es Modelo elutasítja a(z) {country_code}
+      országprefixet a(z) {clave_operacion} műveletkulcshoz {filing_year}/{period}
+      időszakban: {reason}. Jogalap: AEAT Brexit IVA NIF-IVA / Modelo 349 útmutató.'
+    modelo_ambiguous_semantic_role_casilla: Több casilla használja a(z) %{semantic_role}
+      szemantikus szerepet; használja a pontos kanonikus casilla.id értékét.
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
@@ -5775,9 +5775,9 @@ errors:
     refused_auth_diagnostic_payload: errors.refused.refused_auth_diagnostic_payload
     refused_auth_diagnostic_phone_state: A megadott telefonállapot-érték nem ismert.
       Használjon egy érvényes operátori telefonállapot-értéket.
-    refused_auth_login_live_tests_disabled: Az eles bejelentkezesi probak le vannak
+    refused_auth_login_live_tests_disabled: Az éles bejelentkezési próbák le vannak
       tiltva.
-    refused_auth_login_precondition: A bejelentkezes elofeltetele nem teljesul.
+    refused_auth_login_precondition: A bejelentkezés előfeltétele nem teljesül.
     refused_auth_provider_reserved: A kiválasztott hitelesítési szolgáltató foglalt
       és nem elérhető.
     refused_calculations_casilla_constraint: Egy számított mező értéke kívül esik
@@ -5882,12 +5882,12 @@ errors:
     refused_modelo_applicability_filter: Ismeretlen alkalmazhatósági szűrőnév szerepel
       a nyilvántartásban. Ez egy nyilvántartás-szerzői hiba; frissítse a szűrő diszpécser
       táblázatot.
-    refused_modelo_refund_account_missing: Visszateritest kertek, de nincs visszateritesi
-      szamla rogzitve; az AEAT nem tud visszateritest fizetni szamla nelkul. Allitson
-      be visszateritesi szamlat, vagy vigye tovabb a kreditet (compensar).
-    refused_modelo_refund_election_not_eligible: Visszateritest kertek olyan idoszakra,
-      ahol nem elerheto; csak az ev utolso bevallasi idoszaka tesz lehetove nem REDEME
-      visszateritest.
+    refused_modelo_refund_account_missing: Visszatérítést kértek, de nincs visszatérítési
+      számla rögzítve; az AEAT nem tud visszatérítést fizetni számla nélkül. Állítson
+      be visszatérítési számlát, vagy vigye tovább a kreditet (compensar).
+    refused_modelo_refund_election_not_eligible: Visszatérítést kértek olyan időszakra,
+      ahol nem elérhető; csak az év utolsó bevallási időszaka tesz lehetővé nem REDEME
+      visszatérítést.
     refused_no_active_profile: Ehhez a művelethez aktív profil szükséges. Hozzon létre
       vagy válasszon ki egy profilt, és próbálja újra.
     refused_operator_surface_contract: A kért felület kívül esik az elfogadott szerződésen.
@@ -6074,8 +6074,8 @@ locales:
       key_missing: '  hiányzó %{key}'
     modelo:
       audit:
-        missing: hianyzo locale=%{locale_code} modell=%{modelo} revizio=%{revision}
-          scope=%{scope} mezo=%{field} kulcs=%{key}
+        missing: hiányzó locale=%{locale_code} modell=%{modelo} revizio=%{revision}
+          scope=%{scope} mező=%{field} kulcs=%{key}
         stale: elavult locale=%{locale_code} modell=%{modelo} revizio=%{revision}
           scope=%{scope} mezo=%{field} kulcs=%{key}
       coverage:
@@ -6134,12 +6134,12 @@ mcp:
       és soha nem kerülnek továbbításra. Ha harmadik fél (könyvelő vagy szakember)
       nevében jár el, a folytatás előtt erősítse meg, hogy ez elfogadható.'
   identity_gate:
-    elicitation_echo: 'Az adoalany-profil neveben eljarva: %{label}.'
-    first_mutation_refused: 'Elutasitva: erositsd meg az aktiv adoalanyt a munkamenet
-      elso modositasa elott. Bevallas vagy szerkesztes soha nem futhat rossz identitas
+    elicitation_echo: 'Az adóalany-profil nevében eljárva: %{label}.'
+    first_mutation_refused: 'Elutasítva: erősítsd meg az aktív adóalanyt a munkamenet
+      első módosítása előtt. Bevallás vagy szerkesztés soha nem futhat rossz identitás
       alatt. Futtasd a whoami parancsot (vagy a ''config profile status'' / ''overview
-      status'' parancsot), hogy lasd, melyik adoalany aktiv, majd probald ujra; egyetlen
-      identitasolvasas feloldja ezt a munkamenetre, amig profilt nem valtasz.'
+      status'' parancsot), hogy lásd, melyik adóalany aktív, majd próbáld újra; egyetlen
+      identitásolvasás feloldja ezt a munkamenetre, amíg profilt nem váltasz.'
   persona:
     handoff_denied: A(z) '{command}' a benyújtás-átadás visszafordíthatatlan határa,
       amely a(z) '{owner}' personához tartozik; a(z) '{persona}' persona számára szerkezetileg
@@ -6177,8 +6177,8 @@ profile:
 review:
   adapters:
     errors:
-      drafts_load_failed: Nem sikerult betolteni a bevallasi piszkozatokat a biztonsagos
-        hattertarbol.
+      drafts_load_failed: Nem sikerült betölteni a bevallási piszkozatokat a biztonságos
+        háttértárból.
       invoices_load_failed: review.adapters.errors.invoices_load_failed
       transactions_load_failed: review.adapters.errors.transactions_load_failed
   edit:
@@ -6526,14 +6526,14 @@ wizard:
       legal-name:
         help: Jogi személy cégneve az exportfejlécekhez
       ley-49-2002-option-date:
-        help: Rogziti a 036-os nyomtatvany 653-as mezojenek datumat a Ley 49/2002
-          II. cime szerinti valasztashoz.
+        help: Rögzíti a 036-os nyomtatvány 653-as mezőjének dátumát a Ley 49/2002
+          II. címe szerinti választáshoz.
       ley-49-2002-option-declared:
         help: Rogziti, hogy a 036-os nyomtatvany 651-es mezoje bejelenti-e a Ley 49/2002
           II. cime szerinti valasztast.
       ley-49-2002-renunciation-date:
-        help: Rogziti a 036-os nyomtatvany 654-es mezojenek datumat a Ley 49/2002
-          II. cime szerinti lemondashoz.
+        help: Rögzíti a 036-os nyomtatvány 654-es mezőjének dátumát a Ley 49/2002
+          II. címe szerinti lemondáshoz.
       ley-49-2002-renunciation-declared:
         help: Rogziti, hogy a 036-os nyomtatvany 652-es mezoje bejelenti-e a Ley 49/2002
           II. cime szerinti rendszerrol valo lemondast.
@@ -6858,8 +6858,8 @@ wizard:
             label: Spanyolországban szokásos lakóhellyel rendelkező – IRPF
         prompt: Adóügyi illetőségi kategória
       representante-fiscal-nif:
-        prompt: A spanyolorszagi adougyi kepviselo NIF/NIE szama (EU-n/EGT-n kivuli
-          eseten kotelezo)
+        prompt: A spanyolországi adóügyi képviselő NIF/NIE száma (EU-n/EGT-n kívüli
+          esetén kötelező)
       representante-fiscal-nombre:
         prompt: A spanyolországi adóügyi képviselő neve
       tax-residence-ccaa:
@@ -6984,19 +6984,19 @@ wizard:
             label: Kereskedelmi célú polgári társaság
         prompt: Jogi forma
       ley-49-2002-option-date:
-        help: A 036-os nyomtatvany 653-as mezojehez tartozo ISO datumot hasznald.
-        prompt: A Ley 49/2002 szerinti kulonleges rendszer valasztasanak bejelentett
-          datuma
+        help: A 036-os nyomtatvány 653-as mezőjéhez tartozó ISO dátumot használd.
+        prompt: A Ley 49/2002 szerinti különleges rendszer választásának bejelentett
+          dátuma
       ley-49-2002-option-declared:
-        help: A 036-os nyomtatvany 651-es mezojeben szereplo bejelentesi tenyt hasznald;
-          a jogi alkalmazas tovabbra is a torvenyi feltetelektol es a lemondas hianyatol
-          fugg.
+        help: A 036-os nyomtatvány 651-es mezőjében szereplő bejelentési tényt használd;
+          a jogi alkalmazás továbbra is a törvényi feltételektől és a lemondás hiányától
+          függ.
         prompt: A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II.
           cime szerinti kulonleges adozasi rendszer valasztasat?
       ley-49-2002-renunciation-date:
-        help: A 036-os nyomtatvany 654-es mezojehez tartozo ISO datumot hasznald.
-        prompt: A Ley 49/2002 szerinti kulonleges rendszerrol valo lemondas bejelentett
-          datuma
+        help: A 036-os nyomtatvány 654-es mezőjéhez tartozó ISO dátumot használd.
+        prompt: A Ley 49/2002 szerinti különleges rendszerről való lemondás bejelentett
+          dátuma
       ley-49-2002-renunciation-declared:
         help: A 036-os nyomtatvany 652-es mezojeben szereplo bejelentesi tenyt hasznald.
         prompt: A szervezet a 036-os nyomtatvanyon bejelentette a Ley 49/2002 II.
