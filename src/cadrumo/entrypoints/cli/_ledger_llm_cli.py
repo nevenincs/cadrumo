@@ -470,8 +470,11 @@ def _validate_classify_llm_options(
     apply: bool,
     transaction_id: str | None,
     provider: LLMProvider | None,
-) -> None:
+) -> str:
     """Reject the manual-override combination, the reject/apply conflict, a missing id, and an unavailable provider.
+
+    Returns the validated ``transaction_id`` so the caller carries the
+    non-``None`` guarantee this function enforces, rather than re-deriving it.
 
     A provider is checked for PATH availability only when one is named. With
     ``--read-evidence`` and no ``--llm``, a scanned/image invoice is read on-host
@@ -515,6 +518,7 @@ def _validate_classify_llm_options(
                 ),
             ),
         )
+    return transaction_id
 
 
 def _llm_suggestion_base_payload(
@@ -642,7 +646,7 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
     returns). ``suggest_fn`` is the stage-specific suggester
     (:func:`suggest_llm_classification` or :func:`saturate_llm_classification`).
     """
-    _validate_classify_llm_options(
+    validated_transaction_id = _validate_classify_llm_options(
         classification=classification,
         from_csv=from_csv,
         reject=reject,
@@ -653,7 +657,7 @@ def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturat
 
     state = _state()
     transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    resolved_id = _resolve_id(transaction_repository, validated_transaction_id)
     try:
         suggestion = suggest_fn(
             bucket_id=transaction_repository.bucket_id,
