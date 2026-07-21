@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import NamedTuple
 
 from ..core import BucketPointer, capture_pointer
 from ..core.config import load_settings
@@ -401,6 +402,57 @@ def _reconcile_pointer_snapshot_for_resume(
     )
 
 
+class _ResumeTargetOutcome(NamedTuple):
+    target: ConfigResetTarget
+    changed: bool
+    blocked: bool
+
+
+def _resume_target_outcome(
+    target: ConfigResetTarget,
+    assessment: BucketDeletionAssessment,
+    *,
+    acknowledge_retention_override: bool,
+    retention_override_reason: str | None,
+) -> _ResumeTargetOutcome:
+    if not assessment.exists:
+        changed = target.exists_at_snapshot and target.phase is not ConfigResetTargetPhase.DELETING
+        return _ResumeTargetOutcome(target=target, changed=changed, blocked=False)
+    current_fingerprint = assessment.fingerprint
+    assert current_fingerprint is not None
+    fingerprint_changed = (
+        not target.exists_at_snapshot
+        or target.fingerprint is None
+        or target.fingerprint.digest != current_fingerprint.digest
+    )
+    if fingerprint_changed:
+        refreshed, _ = _target_from_assessment(
+            assessment,
+            acknowledge_retention_override=False,
+            retention_override_reason=None,
+        )
+        return _ResumeTargetOutcome(target=refreshed, changed=True, blocked=False)
+    retention = _retention_decision(
+        assessment.retention,
+        acknowledge_retention_override=acknowledge_retention_override,
+        retention_override_reason=retention_override_reason,
+    )
+    resolved = not retention.blocks_erase or retention.override_approved
+    phase = target.phase
+    if _phase_before(phase, ConfigResetTargetPhase.AUTH_CLEARING):
+        phase = ConfigResetTargetPhase.RETENTION_APPROVED if resolved else ConfigResetTargetPhase.SNAPSHOTTED
+    updated_target = _update_target(
+        target,
+        label=assessment.label,
+        status_at_snapshot=assessment.status,
+        exists_at_snapshot=True,
+        fingerprint=current_fingerprint,
+        retention=retention,
+        phase=phase,
+    )
+    return _ResumeTargetOutcome(target=updated_target, changed=False, blocked=not resolved)
+
+
 def _resume_preflight(
     operation: ConfigResetOperation,
     *,
@@ -418,48 +470,16 @@ def _resume_preflight(
         assessment = service.assess_deletion(
             AssessBucketDeletionCommand(bucket_id=target.bucket_id),
         )
-        if not assessment.exists:
-            if target.exists_at_snapshot and target.phase is not ConfigResetTargetPhase.DELETING:
-                changed.append(target.bucket_id)
-            updated_targets.append(target)
-            continue
-        current_fingerprint = assessment.fingerprint
-        assert current_fingerprint is not None
-        fingerprint_changed = (
-            not target.exists_at_snapshot
-            or target.fingerprint is None
-            or target.fingerprint.digest != current_fingerprint.digest
-        )
-        if fingerprint_changed:
-            refreshed, _ = _target_from_assessment(
-                assessment,
-                acknowledge_retention_override=False,
-                retention_override_reason=None,
-            )
-            updated_targets.append(refreshed)
-            changed.append(target.bucket_id)
-            continue
-        retention = _retention_decision(
-            assessment.retention,
+        outcome = _resume_target_outcome(
+            target,
+            assessment,
             acknowledge_retention_override=acknowledge_retention_override,
             retention_override_reason=retention_override_reason,
         )
-        resolved = not retention.blocks_erase or retention.override_approved
-        phase = target.phase
-        if _phase_before(phase, ConfigResetTargetPhase.AUTH_CLEARING):
-            phase = ConfigResetTargetPhase.RETENTION_APPROVED if resolved else ConfigResetTargetPhase.SNAPSHOTTED
-        updated_targets.append(
-            _update_target(
-                target,
-                label=assessment.label,
-                status_at_snapshot=assessment.status,
-                exists_at_snapshot=True,
-                fingerprint=current_fingerprint,
-                retention=retention,
-                phase=phase,
-            ),
-        )
-        if not resolved:
+        updated_targets.append(outcome.target)
+        if outcome.changed:
+            changed.append(target.bucket_id)
+        if outcome.blocked:
             blocked.append(target.bucket_id)
     updated = _update_operation(
         operation,
