@@ -119,7 +119,10 @@ jobs:
         # so this invocation raises the per-test ceiling above the product
         # suite's 300 s ini default (slowest product test: 58.7 s measured);
         # 900 s still kills a genuine wedge in minutes.
-        run: uv run --no-sync pytest -q --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
+        # -n 8, never -n auto: the workstation's 24 logical CPUs are shared by
+        # THREE runners (win + wsl + wsl-2); worst-case co-residency is 3 jobs,
+        # so each lane gets 24/3 (machine-aware sizing, .github/README.md).
+        run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
 
   cadrumo-unit:
     name: Cadrumo / unit suite / Python 3.13
@@ -161,5 +164,7 @@ jobs:
         # No junit artifact: the repo's posture is zero Actions-artifact
         # storage (quota-broken; the release-asset transport exists precisely
         # to avoid it), and the profile lives in the job log.
-        run: uv run pytest --durations=50
+        # -n 8, never -n auto: three runners share this machine's 24 logical
+        # CPUs (machine-aware sizing, .github/README.md).
+        run: uv run pytest --durations=50 -n 8
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
