@@ -185,54 +185,38 @@ class LocaleManager:
         Returns:
             Immutable structured findings for CLI rendering and quality gates.
         """
-        locale_paths = tuple(sorted(self.locales_dir.glob("*.yml")))
-        locale_leaves = {path.name: _flatten_raw_locale_leaves(self.load_locale(path)) for path in locale_paths}
+        locale_leaves = self._load_audit_leaves()
         key_sets = {name: set(leaves) for name, leaves in locale_leaves.items()}
         all_locale_keys = set().union(*key_sets.values()) if key_sets else set()
-        shared_keys = set.intersection(*key_sets.values()) if key_sets else set()
         codebase_keys = self.get_codebase_keys()
-        namespace_prefixes = tuple(
+        namespace_prefixes = self._audit_namespace_prefixes()
+
+        file_results = tuple(
+            _audit_locale_file(
+                locale_file,
+                leaves,
+                key_sets[locale_file],
+                codebase_keys=codebase_keys,
+                all_locale_keys=all_locale_keys,
+                namespace_prefixes=namespace_prefixes,
+            )
+            for locale_file, leaves in locale_leaves.items()
+        )
+        placeholder_mismatches = _audit_placeholder_mismatches(key_sets, locale_leaves)
+        return LocaleAuditResult(file_results, placeholder_mismatches)
+
+    def _load_audit_leaves(self) -> dict[str, dict[str, object]]:
+        """Flatten every catalogue's raw leaves keyed by locale file name."""
+        locale_paths = tuple(sorted(self.locales_dir.glob("*.yml")))
+        return {path.name: _flatten_raw_locale_leaves(self.load_locale(path)) for path in locale_paths}
+
+    def _audit_namespace_prefixes(self) -> tuple[str, ...]:
+        """Return dynamic-namespace prefixes used to exempt codebase-extra keys."""
+        return tuple(
             marker.rstrip("*").rstrip(".")
             for marker in self.get_codebase_namespaces()
             if marker.rstrip("*").rstrip(".")
         )
-
-        file_results: list[LocaleFileAudit] = []
-        for locale_file, leaves in locale_leaves.items():
-            keys = key_sets[locale_file]
-            violations = tuple(
-                LocaleScalarViolation(locale_file, key, type(value).__name__)
-                for key, value in sorted(leaves.items())
-                if not isinstance(value, str)
-            )
-            file_results.append(
-                LocaleFileAudit(
-                    locale_file=locale_file,
-                    codebase_missing=tuple(sorted(codebase_keys - keys)),
-                    codebase_extra=tuple(
-                        sorted(
-                            key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes)
-                        )
-                    ),
-                    inter_locale_missing=tuple(sorted(all_locale_keys - keys)),
-                    scalar_violations=violations,
-                )
-            )
-
-        placeholder_mismatches: list[LocalePlaceholderMismatch] = []
-        for key in sorted(shared_keys):
-            values = {name: leaves[key] for name, leaves in locale_leaves.items()}
-            if not all(isinstance(value, str) for value in values.values()):
-                continue
-            variants = tuple(
-                LocalePlaceholderVariant(name, extract_placeholders(value))
-                for name, value in sorted(values.items())
-                if isinstance(value, str)
-            )
-            if len({variant.placeholders for variant in variants}) > 1:
-                placeholder_mismatches.append(LocalePlaceholderMismatch(key, variants))
-
-        return LocaleAuditResult(tuple(file_results), tuple(placeholder_mismatches))
 
     def get_yaml_keys(self, d: dict[str, LocaleNode], current_path: str = "") -> set[str]:
         """Recursively extract all dot-notated keys from a nested dictionary."""
@@ -398,6 +382,53 @@ class LocaleManager:
 
         _remove_existing_yaml_leaf(locale_path, parts, allow_empty_leaf=cursor is None)
         return locale_path
+
+
+def _audit_locale_file(
+    locale_file: str,
+    leaves: dict[str, object],
+    keys: set[str],
+    *,
+    codebase_keys: set[str],
+    all_locale_keys: set[str],
+    namespace_prefixes: tuple[str, ...],
+) -> LocaleFileAudit:
+    """Compute one catalogue's key-set and scalar findings."""
+    violations = tuple(
+        LocaleScalarViolation(locale_file, key, type(value).__name__)
+        for key, value in sorted(leaves.items())
+        if not isinstance(value, str)
+    )
+    return LocaleFileAudit(
+        locale_file=locale_file,
+        codebase_missing=tuple(sorted(codebase_keys - keys)),
+        codebase_extra=tuple(
+            sorted(key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes))
+        ),
+        inter_locale_missing=tuple(sorted(all_locale_keys - keys)),
+        scalar_violations=violations,
+    )
+
+
+def _audit_placeholder_mismatches(
+    key_sets: dict[str, set[str]],
+    locale_leaves: dict[str, dict[str, object]],
+) -> tuple[LocalePlaceholderMismatch, ...]:
+    """Return placeholder-parity mismatches across keys shared by every catalogue."""
+    shared_keys = set.intersection(*key_sets.values()) if key_sets else set()
+    mismatches: list[LocalePlaceholderMismatch] = []
+    for key in sorted(shared_keys):
+        values = {name: leaves[key] for name, leaves in locale_leaves.items()}
+        if not all(isinstance(value, str) for value in values.values()):
+            continue
+        variants = tuple(
+            LocalePlaceholderVariant(name, extract_placeholders(value))
+            for name, value in sorted(values.items())
+            if isinstance(value, str)
+        )
+        if len({variant.placeholders for variant in variants}) > 1:
+            mismatches.append(LocalePlaceholderMismatch(key, variants))
+    return tuple(mismatches)
 
 
 def _collect_required_leaves(
