@@ -88,6 +88,71 @@ function Invoke-Native {
     }
 }
 
+function Stop-ProcessesUnderPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Root
+    )
+
+    # A child of the exercised venv (a lingering python/MCP subprocess, or a
+    # scanner holding an open handle through it) can outlive the oracle and
+    # block `scoop uninstall` with "it may be in use". Reap every process
+    # whose image path is rooted under the staged app before uninstalling.
+    $normalizedRoot = [System.IO.Path]::GetFullPath($Root)
+    $reaped = @()
+    foreach ($process in @(Get-Process -ErrorAction SilentlyContinue)) {
+        $imagePath = $null
+        try { $imagePath = $process.Path } catch { continue }
+        if (-not $imagePath) { continue }
+        $normalizedImage = [System.IO.Path]::GetFullPath($imagePath)
+        if ($normalizedImage.StartsWith($normalizedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $reaped += "$($process.Id):$($process.ProcessName)"
+            try { Stop-Process -Id $process.Id -Force -ErrorAction Stop } catch { }
+        }
+    }
+    if ($reaped.Count -gt 0) {
+        # Console, not the output stream: these helpers return values through
+        # the pipeline, and a pipelined progress line would corrupt them.
+        [Console]::Out.WriteLine("reaped processes still rooted under ${Root}: $($reaped -join ', ')")
+        Start-Sleep -Seconds 2
+    }
+}
+
+function Invoke-ScoopUninstallWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PackageName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$AppRoot,
+
+        [string[]]$ExtraArguments = @(),
+
+        [int]$SettleSeconds = 4
+    )
+
+    # Windows may hold handles on the exercised venv briefly after the oracle;
+    # a failed `scoop uninstall` then AUTO-REPAIRS (relinks `current` and
+    # recreates the shims), so every retry must RE-RUN uninstall, never merely
+    # re-check. The bounded loop only buys Windows time to release handles —
+    # the caller's retained-app assertions stay fail-loud.
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        Stop-ProcessesUnderPath -Root $AppRoot
+        & scoop uninstall $PackageName @ExtraArguments
+        if ($LASTEXITCODE -eq 0 -and -not (Test-Path -LiteralPath $AppRoot)) {
+            return $true
+        }
+        if ($attempt -lt 3) {
+            [Console]::Out.WriteLine(
+                "scoop uninstall attempt $attempt left $PackageName present " +
+                "(exit $LASTEXITCODE); retrying after handle settle"
+            )
+            Start-Sleep -Seconds $SettleSeconds
+        }
+    }
+    return (-not (Test-Path -LiteralPath $AppRoot))
+}
+
 function Get-ScoopRoot {
     if ($env:SCOOP) {
         return [System.IO.Path]::GetFullPath($env:SCOOP)
@@ -514,8 +579,10 @@ function Invoke-HostSmoke {
         $cleanupErrors = [System.Collections.Generic.List[string]]::new()
         $newScoopApps = @()
         if ($installed -or (Test-Path -LiteralPath $appRoot)) {
-            & scoop uninstall $PackageName --purge
-            if ($LASTEXITCODE -ne 0) {
+            if (-not (Invoke-ScoopUninstallWithRetry `
+                        -PackageName $PackageName `
+                        -AppRoot $appRoot `
+                        -ExtraArguments @("--purge"))) {
                 $cleanupErrors.Add("failed to remove staged Scoop app $PackageName")
             }
         }
@@ -534,8 +601,10 @@ function Invoke-HostSmoke {
                 ForEach-Object { $_.Name }
         )
         foreach ($newScoopApp in $newScoopApps) {
-            & scoop uninstall $newScoopApp --purge
-            if ($LASTEXITCODE -ne 0) {
+            if (-not (Invoke-ScoopUninstallWithRetry `
+                        -PackageName $newScoopApp `
+                        -AppRoot (Join-Path $appsRoot $newScoopApp) `
+                        -ExtraArguments @("--purge"))) {
                 $cleanupErrors.Add(
                     "failed to remove Scoop app installed by the smoke run: $newScoopApp"
                 )
