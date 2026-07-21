@@ -83,6 +83,9 @@ def _invoice(
     counterparty_name: str = "EU Customer GmbH",
     counterparty_country: str = "DE",
     linked_transaction_ids: tuple[str, ...] = ("1" * 64,),
+    currency: str = "EUR",
+    fx_rate: Decimal | None = None,
+    fx_rate_date: date | None = None,
 ) -> Invoice:
     from ....domain.invoices import derive_invoice_id
 
@@ -91,7 +94,7 @@ def _invoice(
         invoice_number=invoice_number,
         issued_at=issued_at,
         counterparty_tax_id=counterparty_tax_id,
-        currency="EUR",
+        currency=currency,
         grand_total=base_total,
     )
     return Invoice(
@@ -106,7 +109,7 @@ def _invoice(
         base_total=base_total,
         iva_total=Decimal("0"),
         grand_total=base_total,
-        currency="EUR",
+        currency=currency,
         lines=(
             InvoiceLine(
                 description="Intra-community service",
@@ -120,6 +123,8 @@ def _invoice(
         payment_status=PaymentStatus.PENDING,
         iva_category=iva_category,
         linked_transaction_ids=linked_transaction_ids,
+        fx_rate=fx_rate,
+        fx_rate_date=fx_rate_date,
     )
 
 
@@ -580,3 +585,81 @@ def test_invoice_catalogue_source_resolver_fails_closed_when_context_bucket_is_n
                     revision=snapshot.revision,
                 ),
             )
+
+
+def test_converted_foreign_invoice_projects_its_euro_value_not_its_face_value(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A GBP invoice contributes euro, so the declared importe is the converted amount.
+
+    ECB EXR.D.GBP.EUR.SP00.A on 2026-01-15 is stubbed here as the stored
+    GBP->EUR multiplier; 1000.00 GBP at that rate is 1187.89 EUR. Declaring the
+    face value 1000.00 would over- or under-state the modelo by the FX spread.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    gbp_rate = Decimal("1") / Decimal("0.84183")
+    converted = _invoice(
+        bucket_id=_BUCKET_ID,
+        invoice_number="F-2026-010",
+        issued_at=date(2026, 1, 15),
+        counterparty_tax_id="DE123456789",
+        base_total=Decimal("1000.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        currency="GBP",
+        fx_rate=gbp_rate,
+        fx_rate_date=date(2026, 1, 15),
+    )
+    repository.save(InvoiceCatalogue.from_invoices((converted,)))
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    expected_eur = (Decimal("1000.00") * gbp_rate).quantize(Decimal("0.01"))
+    assert expected_eur == Decimal("1187.89")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] == expected_eur
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] != Decimal("1000.00")
+
+
+def test_unconverted_foreign_invoice_is_withheld_from_projection(
+    secure_profile: TestRuntimeProfile,
+) -> None:
+    """A foreign invoice with no resolved rate must not reach the modelo at all.
+
+    Its euro value is unknown, so the only safe outcomes are exclusion or
+    refusal -- never declaring the foreign face value as euro. This mirrors the
+    ledger's ``is_non_eur_without_conversion`` gate.
+    """
+    repository = InvoiceCatalogueRepository(objects=secure_profile.repository)
+    unconverted = _invoice(
+        bucket_id=_BUCKET_ID,
+        invoice_number="F-2026-011",
+        issued_at=date(2026, 1, 15),
+        counterparty_tax_id="DE123456789",
+        base_total=Decimal("1000.00"),
+        iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY,
+        currency="GBP",
+    )
+    repository.save(InvoiceCatalogue.from_invoices((unconverted,)))
+    snapshot = resources().modelos.authority.snapshot("349", filing_year=2026, period="1T")
+
+    resolution = InvoiceCatalogueSourceResolver(invoice_repository=repository).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="349",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "1T"),
+            revision=snapshot.revision,
+        ),
+    )
+
+    # No operator counted, and no importe declared from the foreign face value.
+    assert resolution.binding_values["iva-349-declarante-numero-operadores"] == Decimal("0")
+    assert resolution.binding_values["iva-349-declarante-importe-operaciones"] != Decimal("1000.00")
