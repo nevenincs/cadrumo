@@ -67,14 +67,16 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # The dev-tree workflow/tooling conformance gates run per-push here: the
     # default `-m unit` addopts deselects the integration-marked workflow
     # pins from the packaging preflight invocation, so this is their home.
+    # Explicit -n 8, never -n auto: three runners share the machine
+    # (machine-aware sizing, test_machine_aware_load.py).
     assert (
-        'pytest -q --timeout=900 -m "unit or (integration and not serial)"'
+        'pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)"'
         " dev/packaging/tests dev/quality/tests dev/release/tests" in static_commands
     )
 
     unit = document["jobs"]["cadrumo-unit"]
     unit_commands = "\n".join(str(step.get("run", "")) for step in unit["steps"])
-    assert "uv run pytest --durations=50" in unit_commands
+    assert "uv run pytest --durations=50 -n 8" in unit_commands
 
 
 def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
@@ -112,7 +114,7 @@ def test_full_lane_carries_every_slow_conformance_surface() -> None:
     assert "just docs-check" in commands
     assert "pip-audit --strict" in commands
     assert "just check-pre-commit" in commands
-    assert "uv run pytest --durations=100" in commands
+    assert "uv run pytest --durations=100 -n 8" in commands
     assert "uv run --no-sync aeat app registry verify" in commands
     assert _prohibited_aeat_product_forms(_FULL_WORKFLOW.read_text(encoding="utf-8")) == ()
 

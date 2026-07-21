@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
 
-from dev.packaging.campaign import _LANES, _PROFILES
+from dev.packaging.campaign import _LANES, _PROFILES, _TEST_WORKERS_ENV, _test_worker_count
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -59,6 +60,28 @@ def test_lane_commands_match_the_per_lane_just_recipes() -> None:
             assert "--cohort-dir" in command
         for extra in lane.extra_args:
             assert extra in command
+
+
+def test_preflight_test_workers_resolve_flag_then_env_then_local_auto() -> None:
+    """CI legs size the preflight pytest per machine share; local keeps -n auto.
+
+    A resolved value becomes an explicit ``-n N`` (the fleet is three runners
+    per physical machine, so ``-n auto`` over-subscribes); ``None`` leaves the
+    local addopts default untouched.
+    """
+    assert _test_worker_count(4) == 4
+    original = os.environ.get(_TEST_WORKERS_ENV)
+    os.environ[_TEST_WORKERS_ENV] = "8"
+    try:
+        assert _test_worker_count(None) == 8
+        assert _test_worker_count(2) == 2  # CLI flag beats env
+    finally:
+        if original is None:
+            del os.environ[_TEST_WORKERS_ENV]
+        else:
+            os.environ[_TEST_WORKERS_ENV] = original
+    if _TEST_WORKERS_ENV not in os.environ:
+        assert _test_worker_count(None) is None
 
 
 def test_aggregates_route_through_the_campaign_driver() -> None:

@@ -80,7 +80,9 @@ jobs:
         # No junit artifact (zero Actions-artifact posture); the verbose
         # per-test verdicts live in the job log.
         run: |
-          uv run --no-sync pytest \
+          # -n0, never the addopts -n auto: one live-browser test file gains
+          # nothing from 24 workers on a machine three runners share.
+          uv run --no-sync pytest -n0 \
             src/cadrumo/adapters/outbound/aeat/sede/tests/test_groi_check_live.py \
             -v
 
