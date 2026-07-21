@@ -14,6 +14,7 @@ import json
 from collections.abc import Mapping
 from datetime import timedelta
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from pydantic import ValidationError
 
@@ -34,11 +35,35 @@ from ._models import (
     LLMResponse,
 )
 
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from ....adapters.persistence.storage import SecureObjectRepository
+
 _log = get_logger(__name__)
 
 _CACHE_NAMESPACE = LLM_CACHE_NAMESPACE.namespace
 _CACHE_VERSION = LLM_CACHE_NAMESPACE.schema_version
 _CACHE_SENSITIVITY = LLM_CACHE_NAMESPACE.sensitivity
+
+
+def _select_cache_removal_keys(
+    rows: list[tuple[CachedEntry, str]],
+    *,
+    cutoff: datetime,
+    max_records: int,
+) -> list[str]:
+    """Select object keys to delete under the two-stage retention/count bound.
+
+    ``rows`` are sorted oldest-first: every entry older than ``cutoff`` is removed,
+    then -- if more than ``max_records`` survive -- the oldest excess entries too.
+    """
+    to_remove: list[str] = [object_key for entry, object_key in rows if entry.created_at < cutoff]
+    remaining = [row for row in rows if row[0].created_at >= cutoff]
+    if len(remaining) > max_records:
+        excess_count = len(remaining) - max_records
+        to_remove.extend(object_key for _, object_key in remaining[:excess_count])
+    return to_remove
 
 
 class LLMCache:
@@ -236,6 +261,23 @@ class LLMCache:
         effective_max_records = max_records if max_records is not None else settings.cadrumo_llm_cache_max_records
 
         repository = secure_object_repository_for_active_bucket()
+        rows = self._collect_prunable_rows(repository)
+        cutoff = now() - timedelta(days=effective_retention_days)
+        to_remove = _select_cache_removal_keys(rows, cutoff=cutoff, max_records=effective_max_records)
+
+        removed = 0
+        for object_key in to_remove:
+            if repository.delete(_CACHE_NAMESPACE, object_key):
+                removed += 1
+        return removed
+
+    def _collect_prunable_rows(self, repository: SecureObjectRepository) -> list[tuple[CachedEntry, str]]:
+        """Load and parse every root-matching cache entry, sorted oldest-first.
+
+        Raises:
+            :exc:`~adapters.outbound.llm.LLMCacheError`: When a cache
+            entry cannot be parsed during iteration.
+        """
         rows: list[tuple[CachedEntry, str]] = []
         for record in repository.list_records(
             _CACHE_NAMESPACE,
@@ -257,19 +299,7 @@ class LLMCache:
             )
             rows.append((entry, self._object_key_for(key)))
         rows.sort(key=lambda item: item[0].created_at)
-
-        cutoff = now() - timedelta(days=effective_retention_days)
-        to_remove: list[str] = [object_key for entry, object_key in rows if entry.created_at < cutoff]
-        remaining = [row for row in rows if row[0].created_at >= cutoff]
-        if len(remaining) > effective_max_records:
-            excess_count = len(remaining) - effective_max_records
-            to_remove.extend(object_key for _, object_key in remaining[:excess_count])
-
-        removed = 0
-        for object_key in to_remove:
-            if repository.delete(_CACHE_NAMESPACE, object_key):
-                removed += 1
-        return removed
+        return rows
 
     def _path_for(self, key: CacheKey) -> Path:
         """Return the logical cache path for a derived key.
