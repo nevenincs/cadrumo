@@ -25,6 +25,15 @@ from ._modelo_payloads_m036 import (
     M036DeclarationShowResult,
 )
 
+# Shared sede-filing option aliases for the modificacion / baja verbs. The alta
+# verb carries `default=` fallback copy on the same keys and keeps its own local
+# declarations.
+_DeclaredOnOpt = Annotated[str, typer.Option("--declared-on", help=tr("cli.app.modelo.m036.declared_on_help"))]
+_SedeJustificanteOpt = Annotated[
+    str | None, typer.Option("--sede-justificante", help=tr("cli.app.modelo.m036.justificante_help"))
+]
+_NoteOpt = Annotated[str | None, typer.Option("--note", help=tr("cli.app.modelo.m036.note_help"))]
+
 
 def register_m036_commands(
     app: typer.Typer,
@@ -153,15 +162,9 @@ def register_m036_commands(
     )
     def m036_modificacion(
         ctx: typer.Context,
-        declared_on: Annotated[str, typer.Option("--declared-on", help=tr("cli.app.modelo.m036.declared_on_help"))],
-        sede_justificante: Annotated[
-            str | None,
-            typer.Option("--sede-justificante", help=tr("cli.app.modelo.m036.justificante_help")),
-        ] = None,
-        note: Annotated[
-            str | None,
-            typer.Option("--note", help=tr("cli.app.modelo.m036.note_help")),
-        ] = None,
+        declared_on: _DeclaredOnOpt,
+        sede_justificante: _SedeJustificanteOpt = None,
+        note: _NoteOpt = None,
     ) -> None:
         """Record an M036 modificacion declaration filed at sede."""
         record_m036(
@@ -181,15 +184,9 @@ def register_m036_commands(
     )
     def m036_baja(
         ctx: typer.Context,
-        declared_on: Annotated[str, typer.Option("--declared-on", help=tr("cli.app.modelo.m036.declared_on_help"))],
-        sede_justificante: Annotated[
-            str | None,
-            typer.Option("--sede-justificante", help=tr("cli.app.modelo.m036.justificante_help")),
-        ] = None,
-        note: Annotated[
-            str | None,
-            typer.Option("--note", help=tr("cli.app.modelo.m036.note_help")),
-        ] = None,
+        declared_on: _DeclaredOnOpt,
+        sede_justificante: _SedeJustificanteOpt = None,
+        note: _NoteOpt = None,
     ) -> None:
         """Record an M036 baja declaration filed at sede."""
         record_m036(
