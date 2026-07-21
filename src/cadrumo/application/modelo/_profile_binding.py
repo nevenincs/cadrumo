@@ -718,7 +718,7 @@ class _ProfileFacts:
     """The bucket's resolved profile fact index plus its record fingerprint."""
 
     fact_index: dict[str, UserProfileFactValue]
-    fingerprint: str
+    fingerprint: str | None
 
 
 def _is_calculation_only_profile_binding(binding: DataBindingDefinition) -> bool:
