@@ -47,11 +47,7 @@ _WHEN = datetime(2026, 5, 28, 12, 40, 0, tzinfo=UTC)
 
 def _rows_for(profile: TestRuntimeProfile, namespace: str) -> list[SecureObjectRow]:
     with session_scope(profile.repository._engine) as session:
-        return [
-            row
-            for row in session.execute(select(SecureObjectRow)).scalars().all()
-            if row.namespace == namespace
-        ]
+        return [row for row in session.execute(select(SecureObjectRow)).scalars().all() if row.namespace == namespace]
 
 
 def test_llm_cache_row_carries_registry_declared_metadata(
