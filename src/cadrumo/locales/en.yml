@@ -1479,108 +1479,145 @@ auth:
 categories:
   registry:
     amortizacion_vivienda_afecto:
-      notes: categories.registry.amortizacion_vivienda_afecto.notes
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 30.2.5.b rule 4, depreciation of the home used for business).
     arrendamiento_local:
-      notes: categories.registry.arrendamiento_local.notes
-    arrendamiento_vivienda_afecta: categories.registry.arrendamiento_vivienda_afecta
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    arrendamiento_vivienda_afecta: Business-use share of home rent
     arrendamiento_vivienda_afecto:
-      notes: categories.registry.arrendamiento_vivienda_afecto.notes
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
     asesoria_contable:
-      notes: categories.registry.asesoria_contable.notes
+      notes: Fully deductible expense, as an independent professional service (Ley
+        35/2006 art. 28.1).
     asesoria_fiscal:
-      notes: categories.registry.asesoria_fiscal.notes
+      notes: Fully deductible expense, as an independent professional service (Ley
+        35/2006 art. 28.1).
     asesoria_juridica:
-      notes: categories.registry.asesoria_juridica.notes
+      notes: Fully deductible expense, as an independent professional service (Ley
+        35/2006 art. 28.1).
     comunidad_vivienda_afecto:
-      notes: categories.registry.comunidad_vivienda_afecto.notes
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 30.2.5.b rule 2, home-ownership costs).
     cuotas_autonomos_ss:
-      notes: categories.registry.cuotas_autonomos_ss.notes
+      notes: Fully deductible expense; RETA contributions are a statutory condition
+        of carrying on the activity.
     cuotas_colegiales:
-      notes: categories.registry.cuotas_colegiales.notes
-    cuotas_reta: categories.registry.cuotas_reta
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    cuotas_reta: Self-employed social security contributions (RETA)
     formacion_profesional:
-      notes: categories.registry.formacion_profesional.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
     gastos_bancarios:
-      notes: categories.registry.gastos_bancarios.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, financial and banking
+        expenses).
     gastos_financieros:
-      notes: categories.registry.gastos_financieros.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, financial and banking
+        expenses).
     hardware_amortizable:
-      notes: categories.registry.hardware_amortizable.notes
-    home_office_agua: categories.registry.home_office_agua
-    home_office_gas: categories.registry.home_office_gas
-    home_office_internet: categories.registry.home_office_internet
-    home_office_luz: categories.registry.home_office_luz
+      notes: Fully deductible through depreciation (Ley 35/2006 art. 28.1, depreciation
+        of fixed assets).
+    home_office_agua: Home-office water
+    home_office_gas: Home-office gas
+    home_office_internet: Home-office internet
+    home_office_luz: Home-office electricity
     ibi_local_afecto:
-      notes: categories.registry.ibi_local_afecto.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 14 LIS, by reference; fiscally
+        deductible taxes).
     ibi_vivienda_afecto:
-      notes: categories.registry.ibi_vivienda_afecto.notes
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 30.2.5.b rule 2, non-state taxes on the home).
     manutencion_dietas_extranjero:
-      notes: categories.registry.manutencion_dietas_extranjero.notes
+      notes: 'Deductible up to a statutory daily cap: 48.08 EUR/day without an overnight
+        stay, 91.35 EUR/day with an overnight stay (Ley 6/2017 / Ley IRPF art. 30.2.5.c,
+        Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
-          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.con-pernocta.label
+          label: With overnight stay
         sin-pernocta:
-          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.sin-pernocta.label
+          label: Without overnight stay
     manutencion_dietas_nacional:
-      notes: categories.registry.manutencion_dietas_nacional.notes
+      notes: 'Deductible up to a statutory daily cap: 26.67 EUR/day without an overnight
+        stay, 53.34 EUR/day with an overnight stay (Ley 6/2017 / Ley IRPF art. 30.2.5.c,
+        Reglamento IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
-          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.con-pernocta.label
+          label: With overnight stay
         sin-pernocta:
-          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.sin-pernocta.label
-    manutencion_extranjero: categories.registry.manutencion_extranjero
-    manutencion_nacional: categories.registry.manutencion_nacional
+          label: Without overnight stay
+    manutencion_extranjero: Foreign subsistence allowance (meals and stay)
+    manutencion_nacional: Domestic subsistence allowance (meals and stay)
     material_oficina:
-      notes: categories.registry.material_oficina.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
     mobiliario_amortizable:
-      notes: categories.registry.mobiliario_amortizable.notes
+      notes: Fully deductible through depreciation (Ley 35/2006 art. 28.1, depreciation
+        of fixed assets).
     mutualidad_alternativa:
-      notes: categories.registry.mutualidad_alternativa.notes
+      notes: Deductible up to a statutory cap of 15,000 EUR/year per taxpayer, for
+        an alternative mutualidad replacing RETA (AEAT Renta guide, Cotizaciones al
+        RETA).
     publicidad_marketing:
-      notes: categories.registry.publicidad_marketing.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
     reparaciones_conservacion:
-      notes: categories.registry.reparaciones_conservacion.notes
-    seguros_rc: categories.registry.seguros_rc
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    seguros_rc: Professional civil-liability insurance
     seguros_responsabilidad_civil:
-      notes: categories.registry.seguros_responsabilidad_civil.notes
-    seguros_salud: categories.registry.seguros_salud
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
+    seguros_salud: Self-employed health insurance
     seguros_salud_autonomo:
-      notes: categories.registry.seguros_salud_autonomo.notes
+      notes: Deductible up to a statutory cap of 500 EUR/year per taxpayer (Ley 35/2006
+        art. 30.2.5.c rule 1, sickness-insurance premiums).
     software_suscripcion:
-      notes: categories.registry.software_suscripcion.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
     subcontratacion:
-      notes: categories.registry.subcontratacion.notes
+      notes: Fully deductible expense, as an independent professional service (Ley
+        35/2006 art. 28.1).
     suministros_cliente_directos:
-      notes: categories.registry.suministros_cliente_directos.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1).
     suministros_home_office_agua:
-      notes: categories.registry.suministros_home_office_agua.notes
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
     suministros_home_office_gas:
-      notes: categories.registry.suministros_home_office_gas.notes
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
     suministros_home_office_internet:
-      notes: categories.registry.suministros_home_office_internet.notes
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
     suministros_home_office_luz:
-      notes: categories.registry.suministros_home_office_luz.notes
+      notes: Deductible in proportion to the home's business-use floor area (default
+        ratio 30%), where the home is only partly used for the activity (Ley 35/2006
+        art. 30.2.5.b rule 4).
     telefonia_fija:
-      notes: categories.registry.telefonia_fija.notes
+      notes: Deductible in proportion to the home's business-use floor area (Ley 35/2006
+        art. 28.1).
     telefonia_movil:
-      notes: categories.registry.telefonia_movil.notes
-    tributos_deducibles: categories.registry.tributos_deducibles
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the asset).
+    tributos_deducibles: Other fiscally deductible taxes and levies
     tributos_fiscalmente_deducibles:
-      notes: categories.registry.tributos_fiscalmente_deducibles.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 14 LIS, by reference).
     vehiculo_combustible:
-      notes: categories.registry.vehiculo_combustible.notes
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
     vehiculo_mantenimiento:
-      notes: categories.registry.vehiculo_mantenimiento.notes
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
     vehiculo_parking:
-      notes: categories.registry.vehiculo_parking.notes
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
     vehiculo_peaje:
-      notes: categories.registry.vehiculo_peaje.notes
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
     vehiculo_seguro:
-      notes: categories.registry.vehiculo_seguro.notes
+      notes: Deductible on proof of exclusive business use (Reglamento IRPF art. 22,
+        exclusive affectation of the vehicle).
     viajes_alojamiento:
-      notes: categories.registry.viajes_alojamiento.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
     viajes_transporte:
-      notes: categories.registry.viajes_transporte.notes
+      notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
   test_profile:
     display_label_851219: Display label 851219
 cli:
@@ -3077,7 +3114,7 @@ cli:
       quiet_help: Skip the success message after init
       submissions_dir_help: Directory to store submitted filing receipts
       success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
+        next_step: 'Next step: run `aeat app overview status`'
       tax_id_help: Spanish tax identifier (NIF/CIF/DNI/NIE)
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
