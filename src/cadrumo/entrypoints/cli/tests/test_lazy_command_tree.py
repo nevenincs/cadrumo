@@ -37,10 +37,20 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # resolves in well under a second once the command tree is lazy. A
 # re-introduced eager registration pulls the ~0.6 s registry parse (and
 # its workflow / deadlines dependencies) into app construction, pushing
-# a cold start back toward 3 s. 2.0 s is a deliberately generous ceiling
-# that still fails hard on that regression without being flaky on a
-# loaded CI host.
-_COLD_START_BUDGET_S = 2.0
+# a cold start back toward 3 s.
+#
+# The signal is the MARGINAL cost the CLI import adds over a bare
+# interpreter, not the absolute wall time: on a saturated host the bare
+# interpreter spawn itself dilates by seconds, so a fixed absolute
+# ceiling flaked under parallel load even though the import cost had not
+# regressed. We measure a bare-interpreter baseline with the identical
+# spawn harness and assert the difference, so both terms scale together
+# with host load and cancel. ``min`` over a few samples filters transient
+# scheduler spikes (contention only ever adds time). Good runs measure a
+# ~0.8 s margin; the eager-import regression overshoots ~2.9 s, so a 2.0 s
+# marginal ceiling fails hard on the regression without flaking on load.
+_MARGINAL_COLD_START_BUDGET_S = 2.0
+_COLD_START_SAMPLES = 3
 
 # Modules that must stay out of ``sys.modules`` after a state-free CLI
 # surface runs. The registry parse is the headline cost; the heavy
@@ -73,6 +83,24 @@ def _run_python(code: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+def _min_cold_start(code: str, *, samples: int = _COLD_START_SAMPLES) -> tuple[float, subprocess.CompletedProcess[str]]:
+    """Spawn ``code`` ``samples`` times; return the fastest wall time and the last result.
+
+    ``min`` is the cleanest cold-start estimate: interpreter spawns only
+    ever gain time under host contention, so the minimum reflects the
+    unloaded cost while filtering transient scheduler spikes.
+    """
+
+    best = float("inf")
+    completed: subprocess.CompletedProcess[str] | None = None
+    for _ in range(samples):
+        start = time.perf_counter()
+        completed = _run_python(code)
+        best = min(best, time.perf_counter() - start)
+    assert completed is not None
+    return best, completed
+
+
 @pytest.mark.serial
 def test_version_cold_start_completes_under_budget() -> None:
     """A fresh-interpreter ``aeat --version`` returns inside the budget.
@@ -93,15 +121,20 @@ def test_version_cold_start_completes_under_budget() -> None:
         except SystemExit as exit_:
             raise SystemExit(exit_.code)
         """
-    start = time.perf_counter()
-    completed = _run_python(code)
-    elapsed = time.perf_counter() - start
+    # A bare interpreter spawn through the identical harness is the
+    # baseline; the marginal cost the CLI import adds over it is the
+    # load-invariant signal (see the module-level note).
+    baseline_elapsed, _ = _min_cold_start("import sys")
+    sut_elapsed, completed = _min_cold_start(code)
+    marginal = sut_elapsed - baseline_elapsed
 
     assert completed.returncode == 0, completed.stderr
     assert completed.stdout.startswith("CADRUMO ")
-    assert elapsed < _COLD_START_BUDGET_S, (
-        f"aeat --version cold start took {elapsed:.2f}s (budget {_COLD_START_BUDGET_S}s) — "
-        "lazy subcommand registration likely regressed to an eager import"
+    assert marginal < _MARGINAL_COLD_START_BUDGET_S, (
+        f"aeat --version cold start added {marginal:.2f}s over a bare interpreter "
+        f"({sut_elapsed:.2f}s vs baseline {baseline_elapsed:.2f}s; budget "
+        f"{_MARGINAL_COLD_START_BUDGET_S}s) — lazy subcommand registration likely "
+        "regressed to an eager import"
     )
 
 
