@@ -49,7 +49,7 @@ from ._runtime_graph import (
     expression_parameter_refs,
     expression_relation_refs,
 )
-from ._schema import ModeloDefinition, ModeloRevision, RelationDefinition, filing_period_from_scope
+from ._schema import CasillaDefinition, ModeloDefinition, ModeloRevision, RelationDefinition, filing_period_from_scope
 from ._schema_input_kind import InputKind
 from ._support_matrix import build_support_matrix
 
@@ -660,6 +660,21 @@ def _build_modelo_describe_report(
     )
 
 
+def _casilla_row_included(
+    casilla: CasillaDefinition,
+    *,
+    input_kind: InputKind | None,
+    required: bool | None,
+    form_number: str | None,
+) -> bool:
+    """Return whether a casilla passes the report's optional kind/required/form filters."""
+    return (
+        (input_kind is None or casilla.input_kind == input_kind)
+        and (required is None or casilla.required is required)
+        and (form_number is None or casilla.form_number == form_number)
+    )
+
+
 def _build_modelo_casillas_report(
     definition: ModeloDefinition,
     revision: ModeloRevision,
@@ -689,9 +704,7 @@ def _build_modelo_casillas_report(
             localized_help=dict(casilla.localized_help),
         )
         for casilla in revision.casillas
-        if (input_kind is None or casilla.input_kind == input_kind)
-        and (required is None or casilla.required is required)
-        and (form_number is None or casilla.form_number == form_number)
+        if _casilla_row_included(casilla, input_kind=input_kind, required=required, form_number=form_number)
     ]
     return ModeloCasillasReport(
         code=str(definition.id),
