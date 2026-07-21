@@ -36,7 +36,7 @@ self-hosted-provable rows (commit `7c7631fca7`, with a hosted-macOS flip in
 `22b642533d`: the full 12-row `REQUIRED_DISTRIBUTION_ROWS` contract in
 `dev/release/readiness.py` — including the four `claude-*` real-client rows
 and the macOS rows — governs, and the macOS legs run on the self-hosted
-macOS ARM64 runner (`macbook-neo`). When that runner is offline its legs
+macOS ARM64 runner (the macOS build host). When that runner is offline its legs
 queue (or are skipped at dispatch time) until it returns; an offline runner
 is not a reason to rewrite the workflow, does not authorize hosted-runner
 spend, and never converts a required row into a passing readiness skip —
