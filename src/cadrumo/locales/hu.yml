@@ -1768,8 +1768,8 @@ cli:
         view_help: Expediente pillanatkép megjelenítése.
       filed:
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
-        pull_help: Letolti a benyujtott nyilatkozatok adatait a hitelesitett AEAT
-          nyilvantartasbol.
+        pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
+          nyilvántartásból.
         pull_modelo_help: Korlátozza ezt a letöltést erre a modellora.
         pull_sources_help: Letölti egy cél-nyilatkozat függőségeihez szükséges benyújtott
           megfigyeléseket.
@@ -4391,7 +4391,7 @@ cli:
       key_help: Semakulcs.
       locale_help: Locale kód.
       modelo_help: Modelo azonosító.
-      registry_root_help: Alternativ AEAT regiszter gyoker.
+      registry_root_help: Alternatív AEAT regiszter gyökér.
       remove_help: Egy modellséma fordítás eltávolítása.
       revision_help: Revízió azonosító.
       scaffold_check_help: Ellenőrzés írás nélkül.
