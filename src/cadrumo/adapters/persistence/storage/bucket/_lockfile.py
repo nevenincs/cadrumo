@@ -234,45 +234,50 @@ def _reclaim_if_stale(target: Path) -> None:
     _unlink_lockfile_if_present(target, reason="stale_reclaim")
 
 
-def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
-    """Acquire the per-bucket lockfile or raise :class:`BucketBusyError`.
+def _ensure_bucket_dir_lockable(paths: BucketPaths) -> None:
+    """Validate the bucket directory exists before locking, or raise.
 
-    Args:
-        paths: The bucket paths whose ``.lock`` to acquire.
-        wait_seconds: Maximum time to wait for the lock to become free.
-            Defaults to ``0.0`` (no wait); callers that want bounded
-            waiting pass a positive value.
-
-    Raises:
-        BucketBusyError: When the lockfile is held by a live process and
-            the wait window expires.
+    A ``not is_dir()`` bucket path always raises: a present-but-non-directory
+    path raises the ``bucket_dir_not_directory`` refusal (its ``mkdir`` fails),
+    and an absent path raises ``bucket_dir_missing``.
     """
-    target = lock_path(paths)
-    ownership_key = target.expanduser().resolve(strict=False)
-    if not paths.bucket_dir.is_dir():
-        bucket_dir_present = os.path.lexists(paths.bucket_dir)
-        if bucket_dir_present:
-            try:
-                paths.bucket_dir.mkdir(parents=True, exist_ok=True)
-            except FileExistsError as exc:
-                raise BucketValidationError(
-                    "bucket lock directory path is not a directory",
-                    context={
-                        "reason": "bucket_dir_not_directory",
-                        "surface": _LOCKFILE_VALIDATION_SURFACE,
-                    },
-                ) from exc
-        raise BucketValidationError(
-            "bucket lock requires an existing bucket directory",
-            context={
-                "reason": "bucket_dir_missing",
-                "surface": _LOCKFILE_VALIDATION_SURFACE,
-            },
-        )
-    pid = os.getpid()
-    deadline = time.monotonic() + max(wait_seconds, 0.0)
-    thread_id = threading.get_ident()
+    if paths.bucket_dir.is_dir():
+        return
+    bucket_dir_present = os.path.lexists(paths.bucket_dir)
+    if bucket_dir_present:
+        try:
+            paths.bucket_dir.mkdir(parents=True, exist_ok=True)
+        except FileExistsError as exc:
+            raise BucketValidationError(
+                "bucket lock directory path is not a directory",
+                context={
+                    "reason": "bucket_dir_not_directory",
+                    "surface": _LOCKFILE_VALIDATION_SURFACE,
+                },
+            ) from exc
+    raise BucketValidationError(
+        "bucket lock requires an existing bucket directory",
+        context={
+            "reason": "bucket_dir_missing",
+            "surface": _LOCKFILE_VALIDATION_SURFACE,
+        },
+    )
 
+
+def _acquire_local_slot(
+    ownership_key: Path,
+    paths: BucketPaths,
+    *,
+    pid: int,
+    thread_id: int,
+    deadline: float,
+) -> bool:
+    """Claim or re-enter the in-process ownership slot for a bucket lock.
+
+    Returns ``True`` when a fresh slot (depth 0) was created and the caller must
+    proceed to the filesystem claim; ``False`` when an existing same-thread lock
+    was re-entered (depth incremented) and the caller must return immediately.
+    """
     while True:
         with _LOCAL_LOCKS_CONDITION:
             ownership = _LOCAL_LOCKS.get(ownership_key)
@@ -286,14 +291,14 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
                     thread_id=thread_id,
                     depth=0,
                 )
-                break
+                return True
             if ownership.thread_id == thread_id:
                 if ownership.depth == 0:
                     raise RuntimeError(
                         "bucket lock cannot re-enter while initial acquisition is incomplete",
                     )
                 ownership.depth += 1
-                return
+                return False
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 raise BucketBusyError(
@@ -304,6 +309,35 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
                 timeout=min(_poll_interval_seconds(), remaining),
             )
 
+
+def _release_incomplete_local_slot(ownership_key: Path, *, pid: int, thread_id: int) -> None:
+    """Drop a depth-0 in-process slot owned by this thread after a failed claim."""
+    with _LOCAL_LOCKS_CONDITION:
+        ownership = _LOCAL_LOCKS.get(ownership_key)
+        if (
+            ownership is not None
+            and ownership.pid == pid
+            and ownership.thread_id == thread_id
+            and ownership.depth == 0
+        ):
+            del _LOCAL_LOCKS[ownership_key]
+            _LOCAL_LOCKS_CONDITION.notify_all()
+
+
+def _claim_lockfile(
+    target: Path,
+    ownership_key: Path,
+    paths: BucketPaths,
+    *,
+    pid: int,
+    thread_id: int,
+    deadline: float,
+) -> None:
+    """Create the on-disk lockfile, reclaiming stale holders and polling to deadline.
+
+    On success promotes the in-process slot to depth 1 and registers atexit
+    cleanup; on any failure rolls back a freshly-created (depth 0) slot.
+    """
     try:
         while True:
             _reclaim_if_stale(target)
@@ -332,17 +366,76 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
                 )
             time.sleep(_poll_interval_seconds())
     except BaseException:
-        with _LOCAL_LOCKS_CONDITION:
-            ownership = _LOCAL_LOCKS.get(ownership_key)
-            if (
-                ownership is not None
-                and ownership.pid == pid
-                and ownership.thread_id == thread_id
-                and ownership.depth == 0
-            ):
-                del _LOCAL_LOCKS[ownership_key]
-                _LOCAL_LOCKS_CONDITION.notify_all()
+        _release_incomplete_local_slot(ownership_key, pid=pid, thread_id=thread_id)
         raise
+
+
+def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
+    """Acquire the per-bucket lockfile or raise :class:`BucketBusyError`.
+
+    Args:
+        paths: The bucket paths whose ``.lock`` to acquire.
+        wait_seconds: Maximum time to wait for the lock to become free.
+            Defaults to ``0.0`` (no wait); callers that want bounded
+            waiting pass a positive value.
+
+    Raises:
+        BucketBusyError: When the lockfile is held by a live process and
+            the wait window expires.
+    """
+    target = lock_path(paths)
+    ownership_key = target.expanduser().resolve(strict=False)
+    _ensure_bucket_dir_lockable(paths)
+    pid = os.getpid()
+    deadline = time.monotonic() + max(wait_seconds, 0.0)
+    thread_id = threading.get_ident()
+
+    if not _acquire_local_slot(ownership_key, paths, pid=pid, thread_id=thread_id, deadline=deadline):
+        return
+    _claim_lockfile(target, ownership_key, paths, pid=pid, thread_id=thread_id, deadline=deadline)
+
+
+def _release_owned_slot(
+    target: Path,
+    ownership_key: Path,
+    ownership: _LocalLockOwnership,
+    *,
+    current_pid: int,
+    thread_id: int,
+) -> None:
+    """Release a same-process local slot: honour re-entry depth, then unlink.
+
+    A slot owned by another thread, or a re-entered slot (depth > 1), is left in
+    place (only its depth is decremented). At depth 1 the on-disk lockfile is
+    unlinked only when its recorded PID matches, then the slot and its atexit
+    registration are cleared.
+    """
+    if ownership.thread_id != thread_id:
+        return
+    if ownership.depth > 1:
+        ownership.depth -= 1
+        return
+    pid = _read_pid(target)
+    if pid is _PidReadState.UNREADABLE:
+        _log.debug("bucket lockfile release skipped unreadable lockfile")
+        return
+    if pid == current_pid:
+        _unlink_lockfile_if_present(target, reason="release")
+    elif pid is not _PidReadState.MISSING:
+        return
+    del _LOCAL_LOCKS[ownership_key]
+    _ATEXIT_REGISTRY.discard(ownership_key)
+    _LOCAL_LOCKS_CONDITION.notify_all()
+
+
+def _discard_orphan_lockfile_registration(target: Path, ownership_key: Path) -> None:
+    """Sync the atexit registry when no in-process slot owns the lockfile."""
+    pid = _read_pid(target)
+    if pid is _PidReadState.MISSING:
+        _log.debug("bucket lockfile release skipped missing lockfile")
+        _ATEXIT_REGISTRY.discard(ownership_key)
+    elif pid is _PidReadState.INVALID:
+        _ATEXIT_REGISTRY.discard(ownership_key)
 
 
 def release_lock(paths: BucketPaths) -> None:
@@ -363,30 +456,16 @@ def release_lock(paths: BucketPaths) -> None:
             ownership = None
             _LOCAL_LOCKS_CONDITION.notify_all()
         if ownership is not None:
-            if ownership.thread_id != thread_id:
-                return
-            if ownership.depth > 1:
-                ownership.depth -= 1
-                return
-            pid = _read_pid(target)
-            if pid is _PidReadState.UNREADABLE:
-                _log.debug("bucket lockfile release skipped unreadable lockfile")
-                return
-            if pid == current_pid:
-                _unlink_lockfile_if_present(target, reason="release")
-            elif pid is not _PidReadState.MISSING:
-                return
-            del _LOCAL_LOCKS[ownership_key]
-            _ATEXIT_REGISTRY.discard(ownership_key)
-            _LOCAL_LOCKS_CONDITION.notify_all()
+            _release_owned_slot(
+                target,
+                ownership_key,
+                ownership,
+                current_pid=current_pid,
+                thread_id=thread_id,
+            )
             return
 
-    pid = _read_pid(target)
-    if pid is _PidReadState.MISSING:
-        _log.debug("bucket lockfile release skipped missing lockfile")
-        _ATEXIT_REGISTRY.discard(ownership_key)
-    elif pid is _PidReadState.INVALID:
-        _ATEXIT_REGISTRY.discard(ownership_key)
+    _discard_orphan_lockfile_registration(target, ownership_key)
 
 
 class _AtexitRegistry:
