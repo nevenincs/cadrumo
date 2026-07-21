@@ -222,3 +222,103 @@ def test_invoice_catalogue_dropped_oss_transaction_kind_surfaces_at_load(
 
         with pytest.raises(ValidationError, match="supplied together"):
             InvoiceCatalogueRepository().load()
+
+
+def _foreign_currency_invoice() -> Invoice:
+    """GBP invoice carrying the euro-conversion stamp resolved at ingest."""
+
+    return Invoice.model_validate(
+        {
+            "kind": InvoiceKind.RECEIVED,
+            "invoice_number": "GB-2025-300",
+            "issued_at": date(2025, 3, 14),
+            "counterparty_name": "Acme Ltd",
+            "counterparty_tax_id": "GB123456789",
+            "counterparty_country": "GB",
+            "base_total": Decimal("1000.00"),
+            "iva_total": Decimal("0.00"),
+            "grand_total": Decimal("1000.00"),
+            "currency": "GBP",
+            "lines": (
+                InvoiceLine(
+                    description="Cloud services",
+                    quantity=Decimal("1"),
+                    unit_price=Decimal("1000.00"),
+                    subtotal=Decimal("1000.00"),
+                    iva_rate=IvaRate.NOT_SUBJECT,
+                    iva_amount=Decimal("0.00"),
+                ),
+            ),
+            "payment_status": PaymentStatus.PAID,
+            # ECB EXR.D.GBP.EUR.SP00.A 2025-03-14 = 0.84183 (1 EUR = 0.84183 GBP);
+            # the stored rate is the inverted GBP->EUR multiplier.
+            "fx_rate": Decimal("1") / Decimal("0.84183"),
+            "fx_rate_date": date(2025, 3, 14),
+        },
+    )
+
+
+def test_foreign_currency_conversion_stamp_survives_encrypted_storage_roundtrip(
+    tmp_path: Path,
+) -> None:
+    """The fx rate and its date round-trip, and the euro views re-derive from them."""
+
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        original = _foreign_currency_invoice()
+        repo = InvoiceCatalogueRepository()
+        repo.save(InvoiceCatalogue(invoices={original.invoice_id: original}))
+        loaded = InvoiceCatalogueRepository().load()
+
+    restored = next(iter(loaded.values()))
+    assert restored == original
+    assert restored.fx_rate == Decimal("1") / Decimal("0.84183")
+    assert restored.fx_rate_date == date(2025, 3, 14)
+    # 1000.00 GBP * (1 / 0.84183) = 1187.888... -> 1187.89 EUR
+    assert restored.grand_total_eur == Decimal("1187.89")
+    assert restored.base_total_eur == Decimal("1187.89")
+    # The native totals are untouched: conversion is a derived view, not a rewrite.
+    assert restored.grand_total == Decimal("1000.00")
+
+
+def test_dropped_fx_rate_date_surfaces_at_load(tmp_path: Path) -> None:
+    """Anti-tautology proof: deleting ``fx_rate_date`` on disk must refuse the load.
+
+    ``fx_rate`` and ``fx_rate_date`` are an all-or-nothing pair so a stored rate
+    is always auditable. Persists a converted GBP invoice, then surgically
+    deletes the date from the encrypted envelope while leaving the rate. A naive
+    load would re-default the date to ``None`` and return an invoice whose rate
+    has no provenance -- and which still converts, so nothing downstream would
+    notice. The model's own invariant must refuse the load instead.
+
+    If this ever passes with the field dropped, the conversion stamp's
+    coherence is not enforced post-persistence and the boundary is tautological.
+    """
+
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        invoice = _foreign_currency_invoice()
+        InvoiceCatalogueRepository().save(InvoiceCatalogue(invoices={invoice.invoice_id: invoice}))
+
+        record = profile.repository.load(
+            _INVOICE_NAMESPACE,
+            _INVOICE_OBJECT_KEY,
+            expected_class=SensitivityClass.FINANCIAL,
+            max_supported_version=_INVOICE_CATALOGUE_VERSION,
+        )
+        assert record is not None
+        envelope = _json.loads(record.payload.decode("utf-8"))
+        invoice_dict = envelope["payload"]["invoices"][invoice.invoice_id]
+        assert invoice_dict.get("fx_rate_date") is not None, (
+            "fixture must persist fx_rate_date for this proof to be meaningful"
+        )
+        del invoice_dict["fx_rate_date"]
+        profile.repository.save(
+            namespace=_INVOICE_NAMESPACE,
+            object_key=_INVOICE_OBJECT_KEY,
+            classification=record.classification,
+            schema_version=record.schema_version,
+            written_at=record.written_at,
+            payload=_json.dumps(envelope).encode("utf-8"),
+        )
+
+        with pytest.raises(ValidationError, match="set together"):
+            InvoiceCatalogueRepository().load()

@@ -31,6 +31,7 @@ from ...adapters.persistence.storage import (
     StorageValidationError,
 )
 from ...core import BindingSourceKind, IntracomOperationType, Modelo, Period
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import sha256_hex
 from ...core.parsing import parse_iso8601_date
 from ...domain.calculations.registry import (
@@ -238,7 +239,37 @@ def _business_invoice_source_kind(invoice: BusinessOperationInvoice) -> str:
     return invoice.source_kind.value
 
 
+def _eur(converted: Decimal | None, invoice: Invoice) -> Decimal:
+    """Return the euro amount, refusing rather than falling back to face value.
+
+    ``None`` here means the caller skipped the
+    :func:`_is_unconverted_foreign_invoice` gate. Falling back to the native
+    amount would be the exact silent mis-declaration this path exists to
+    prevent, so the inconsistency is raised instead.
+    """
+    if converted is None:
+        msg = (
+            f"invoice {invoice.invoice_id} is denominated in {invoice.currency} with no resolved "
+            f"euro value; it must be gated out of projection, not declared at face value"
+        )
+        raise RegistryValidationError(msg)
+    return converted
+
+
+def _is_unconverted_foreign_invoice(invoice: Invoice) -> bool:
+    """Return whether *invoice* is foreign-currency with no euro equivalent.
+
+    Mirrors the ledger's ``is_non_eur_without_conversion`` gate. Every modelo
+    amount is declared in euro, so an invoice whose euro value could not be
+    resolved must be withheld from projection: summing its face value would
+    declare foreign units as euro.
+    """
+    return invoice.currency != DEFAULT_CURRENCY and invoice.grand_total_eur is None
+
+
 def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext) -> InvoiceObservation | None:
+    if _is_unconverted_foreign_invoice(invoice):
+        return None
     if context.modelo == Modelo.M347.value:
         return _m347_invoice_observation(invoice)
     clave = _intracommunity_clave(invoice)
@@ -257,8 +288,8 @@ def _invoice_observation(invoice: Invoice, *, context: CalculationSourceContext)
         party_tax_id=invoice.counterparty_tax_id,
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
-        base_amount=invoice.base_total,
-        invoice_total_amount=invoice.grand_total,
+        base_amount=_eur(invoice.base_total_eur, invoice),
+        invoice_total_amount=_eur(invoice.grand_total_eur, invoice),
         intracommunity_clave=clave,
         party_legal_name=invoice.counterparty_name,
     )
@@ -273,8 +304,8 @@ def _m347_invoice_observation(invoice: Invoice) -> InvoiceObservation | None:
         party_tax_id=invoice.counterparty_tax_id,
         country_code=invoice.counterparty_country,
         transaction_date=invoice.issued_at,
-        base_amount=invoice.base_total,
-        invoice_total_amount=invoice.grand_total,
+        base_amount=_eur(invoice.base_total_eur, invoice),
+        invoice_total_amount=_eur(invoice.grand_total_eur, invoice),
         intracommunity_clave=None,
         party_legal_name=invoice.counterparty_name,
     )
