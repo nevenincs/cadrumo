@@ -5,6 +5,7 @@ tags:
 date: '2026-07-21'
 modified: '2026-07-21'
 related:
+  - '[[2026-07-21-desktop-capture-harness-reference]]'
   - '[[2026-07-19-post-release-distribution-adr]]'
   - '[[2026-07-16-distribution-harness-identity-adr]]'
   - '[[2026-07-15-distribution-installation-readiness-adr]]'
