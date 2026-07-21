@@ -17,14 +17,20 @@ def _workflow() -> dict[str, object]:
 
 
 def test_scoop_workflow_declares_the_container_release_row() -> None:
-    """The acquisition job runs on a GitHub-hosted Windows-container host."""
+    """The acquisition job runs on the self-hosted Windows host, never hosted.
+
+    Operator mandate 2026-07-21: no hosted/cloud runners. The self-hosted host
+    does not currently run Windows-container docker mode, so the leg fails
+    fast and free at the (unweakened) docker-mode preflight below until a
+    container-mode window is scheduled.
+    """
     document = _workflow()
     assert document["name"] == "Cadrumo Scoop Acquisition"
     assert set(document["jobs"]) == {"cadrumo-scoop-acquisition"}
 
     job = document["jobs"]["cadrumo-scoop-acquisition"]
     assert job["name"] == "Cadrumo / Windows / x64 / Scoop Container"
-    assert job["runs-on"] == "windows-2022"
+    assert job["runs-on"] == ["self-hosted", "Windows", "X64"]
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Windows container release row")
     assert 'PROCESSOR_ARCHITECTURE -ne "AMD64"' in preflight["run"]
     assert "docker version --format" in preflight["run"]
