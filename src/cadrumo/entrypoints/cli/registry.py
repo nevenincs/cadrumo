@@ -11,6 +11,7 @@ import typer._click.types as typer_click_types
 
 from ...application.registry import (
     RegistryRevisionDiffReport,
+    RegistryTreeReport,
     audit_registry_oracles,
     diff_registry_revisions,
     inspect_registry_tree,
@@ -90,6 +91,52 @@ def _join(values: tuple[object, ...] | list[object] | set[object]) -> str:
     return ",".join(str(value) for value in values)
 
 
+_RegistryRootOpt = Annotated[
+    Path | None,
+    typer.Option(
+        "--registry-root",
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help=tr("cli.registry.inspect_registry_root_help"),
+    ),
+]
+_SourceRootOpt = Annotated[
+    Path | None,
+    typer.Option(
+        "--source-root",
+        exists=True,
+        file_okay=False,
+        dir_okay=True,
+        readable=True,
+        help=tr("cli.registry.verify_source_root_help"),
+    ),
+]
+
+
+def _registry_tree_metric_lines(report: RegistryTreeReport) -> tuple[str, ...]:
+    """Render the shared registry-tree inventory metrics common to inspect and verify.
+
+    ``verify`` prepends its own ``verified`` row; every other count row is
+    identical across both commands, so it is one shared projection.
+    """
+    return (
+        _metric_line("modelo_count", report.modelo_count),
+        _metric_line("revision_count", report.revision_count),
+        _metric_line("legal_reference_count", report.legal_reference_count),
+        _metric_line("source_reference_count", report.source_reference_count),
+        _metric_line("casilla_count", report.casilla_count),
+        _metric_line("formula_count", report.formula_count),
+        _metric_line("extraction_profile_count", report.extraction_profile_count),
+        _metric_line("cross_reference_count", report.cross_reference_count),
+        _metric_line("workbook_parity_ref_count", report.workbook_parity_ref_count),
+        _metric_line("verification_expectation_count", report.verification_expectation_count),
+        _metric_line("application_link_count", report.application_link_count),
+        _metric_line("application_link_surfaces", _join(list(report.application_link_surfaces))),
+        _metric_line("modelos", _join(list(report.modelos))),
+    )
+
+
 def _resolve_registry_root(value: Path | None) -> Path:
     return value if value is not None else bundled_path("registry", "aeat")
 
@@ -115,16 +162,7 @@ def _resolve_parity_store_root(value: Path | None) -> Path:
 @app.command("inspect", help=tr("cli.registry.inspect_help"))
 def inspect_registry_cmd(
     ctx: typer.Context,
-    registry_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--registry-root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.inspect_registry_root_help"),
-        ),
-    ] = None,
+    registry_root: _RegistryRootOpt = None,
 ) -> None:
     """Load the read-only registry tree and report inventory counts."""
     registry_root = _resolve_registry_root(registry_root)
@@ -133,48 +171,15 @@ def inspect_registry_cmd(
         ctx,
         command="registry.inspect",
         result=RegistryInspectResult.model_validate(report.model_dump(mode="json")),
-        lines=(
-            _metric_line("modelo_count", report.modelo_count),
-            _metric_line("revision_count", report.revision_count),
-            _metric_line("legal_reference_count", report.legal_reference_count),
-            _metric_line("source_reference_count", report.source_reference_count),
-            _metric_line("casilla_count", report.casilla_count),
-            _metric_line("formula_count", report.formula_count),
-            _metric_line("extraction_profile_count", report.extraction_profile_count),
-            _metric_line("cross_reference_count", report.cross_reference_count),
-            _metric_line("workbook_parity_ref_count", report.workbook_parity_ref_count),
-            _metric_line("verification_expectation_count", report.verification_expectation_count),
-            _metric_line("application_link_count", report.application_link_count),
-            _metric_line("application_link_surfaces", _join(list(report.application_link_surfaces))),
-            _metric_line("modelos", _join(list(report.modelos))),
-        ),
+        lines=_registry_tree_metric_lines(report),
     )
 
 
 @app.command("verify", help=tr("cli.registry.verify_help"))
 def verify_registry_cmd(
     ctx: typer.Context,
-    registry_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--registry-root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.inspect_registry_root_help"),
-        ),
-    ] = None,
-    source_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--source-root",
-            exists=True,
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.verify_source_root_help"),
-        ),
-    ] = None,
+    registry_root: _RegistryRootOpt = None,
+    source_root: _SourceRootOpt = None,
 ) -> None:
     """Validate every registry modelo against shared legal/source catalogues."""
     registry_root = _resolve_registry_root(registry_root)
@@ -186,19 +191,7 @@ def verify_registry_cmd(
         result=RegistryVerifyResult.model_validate(report.model_dump(mode="json")),
         lines=(
             _metric_line("verified", report.verified),
-            _metric_line("modelo_count", report.modelo_count),
-            _metric_line("revision_count", report.revision_count),
-            _metric_line("legal_reference_count", report.legal_reference_count),
-            _metric_line("source_reference_count", report.source_reference_count),
-            _metric_line("casilla_count", report.casilla_count),
-            _metric_line("formula_count", report.formula_count),
-            _metric_line("extraction_profile_count", report.extraction_profile_count),
-            _metric_line("cross_reference_count", report.cross_reference_count),
-            _metric_line("workbook_parity_ref_count", report.workbook_parity_ref_count),
-            _metric_line("verification_expectation_count", report.verification_expectation_count),
-            _metric_line("application_link_count", report.application_link_count),
-            _metric_line("application_link_surfaces", _join(list(report.application_link_surfaces))),
-            _metric_line("modelos", _join(list(report.modelos))),
+            *_registry_tree_metric_lines(report),
         ),
     )
 
@@ -206,16 +199,7 @@ def verify_registry_cmd(
 @app.command("audit-oracles", help=tr("cli.registry.audit_oracles_help"))
 def audit_oracles_cmd(
     ctx: typer.Context,
-    registry_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--registry-root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.inspect_registry_root_help"),
-        ),
-    ] = None,
+    registry_root: _RegistryRootOpt = None,
     environment: Annotated[
         str,
         typer.Option(
@@ -278,27 +262,8 @@ def verify_filed_state_cmd(
             help=tr("cli.registry.source_observation_help"),
         ),
     ] = None,
-    registry_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--registry-root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.inspect_registry_root_help"),
-        ),
-    ] = None,
-    source_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--source-root",
-            exists=True,
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.verify_source_root_help"),
-        ),
-    ] = None,
+    registry_root: _RegistryRootOpt = None,
+    source_root: _SourceRootOpt = None,
     required_casilla_refs: Annotated[
         list[str] | None,
         typer.Option("--casilla", help=tr("cli.registry.casilla_help")),
@@ -352,27 +317,8 @@ def diff_revisions_cmd(
         int,
         typer.Option("--to-year", help=tr("cli.registry.diff_revisions_to_year_help")),
     ],
-    registry_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--registry-root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.inspect_registry_root_help"),
-        ),
-    ] = None,
-    source_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--source-root",
-            exists=True,
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.verify_source_root_help"),
-        ),
-    ] = None,
+    registry_root: _RegistryRootOpt = None,
+    source_root: _SourceRootOpt = None,
 ) -> None:
     """Diff the two registry revisions of one modelo that cover ``--from-year`` and ``--to-year``.
 
@@ -533,27 +479,8 @@ def run_parity_cmd(
             help=tr("cli.registry.parity_scenario_help"),
         ),
     ],
-    registry_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--registry-root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.inspect_registry_root_help"),
-        ),
-    ] = None,
-    source_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--source-root",
-            exists=True,
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.verify_source_root_help"),
-        ),
-    ] = None,
+    registry_root: _RegistryRootOpt = None,
+    source_root: _SourceRootOpt = None,
     store_root: Annotated[
         Path | None,
         typer.Option(
@@ -613,27 +540,8 @@ def replay_parity_cmd(
             help=tr("cli.registry.parity_tape_help"),
         ),
     ],
-    registry_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--registry-root",
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.inspect_registry_root_help"),
-        ),
-    ] = None,
-    source_root: Annotated[
-        Path | None,
-        typer.Option(
-            "--source-root",
-            exists=True,
-            file_okay=False,
-            dir_okay=True,
-            readable=True,
-            help=tr("cli.registry.verify_source_root_help"),
-        ),
-    ] = None,
+    registry_root: _RegistryRootOpt = None,
+    source_root: _SourceRootOpt = None,
 ) -> None:
     """Replay one archived parity tape against the current registry runtime."""
     resolved_registry_root = _resolve_registry_root(registry_root)
