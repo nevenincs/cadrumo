@@ -121,7 +121,7 @@ jobs:
         # 900 s still kills a genuine wedge in minutes.
         # -n 8, never -n auto: the workstation's 24 logical CPUs are shared by
         # THREE runners (win + wsl + wsl-2); worst-case co-residency is 3 jobs,
-        # so each lane gets 24/3 (machine-aware sizing, .github/README.md).
+        # so each lane gets 24/3 (machine-aware sizing, .github/ci-control-plane.md).
         run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
 
   cadrumo-unit:
@@ -165,6 +165,6 @@ jobs:
         # storage (quota-broken; the release-asset transport exists precisely
         # to avoid it), and the profile lives in the job log.
         # -n 8, never -n auto: three runners share this machine's 24 logical
-        # CPUs (machine-aware sizing, .github/README.md).
+        # CPUs (machine-aware sizing, .github/ci-control-plane.md).
         run: uv run pytest --durations=50 -n 8
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
