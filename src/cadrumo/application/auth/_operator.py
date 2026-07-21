@@ -30,7 +30,7 @@ from __future__ import annotations
 import hashlib
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 from ...core import AuthProviderKind
 from ...core.config import Settings, load_settings, unwrap_optional_secret
@@ -500,10 +500,19 @@ def _test_operator_auth_from_snapshot(
     )
 
 
+class _ClaveMovilPreflightFields(TypedDict):
+    """The Cl@ve Móvil preflight fields spliced into ``LiveAuthPreflightReport``."""
+
+    prefer_non_qr: bool | None
+    timeout_ms: int | None
+    dni_fecha_configured: bool | None
+    nie_soporte_configured: bool | None
+
+
 def _clave_movil_preflight_fields(
     settings: Settings,
     provider_kind: AuthProviderKind | None,
-) -> dict[str, object]:
+) -> _ClaveMovilPreflightFields:
     """Return the Cl@ve Móvil preflight fields, all ``None`` for other providers.
 
     The redaction posture is unchanged: identity material never enters the

@@ -30,6 +30,7 @@ from ._sessions import load_persisted_session
 _log = get_logger(__name__)
 
 if TYPE_CHECKING:
+    from ...adapters.outbound.aeat.auth.certificate import CertificateHealth
     from ..workflow import WorkflowState
 
 
@@ -302,7 +303,7 @@ def _resolved_probe_certificate_path(
     )
 
 
-def _classify_bundle_health(bundle_health: object) -> _ProviderProbeOutcome:
+def _classify_bundle_health(bundle_health: CertificateHealth) -> _ProviderProbeOutcome:
     """Map a certificate-bundle health verdict to its probe outcome.
 
     ``EXPIRED`` classifies an already-lapsed bundle distinctly from a
