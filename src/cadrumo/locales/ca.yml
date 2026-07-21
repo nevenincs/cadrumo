@@ -846,7 +846,7 @@ application:
       amendment_verification_refused_no_snapshot: El registre no té una instantània
         per al model, any i període sol·licitats.
       calculate_binding_is_date_sourced: --binding %{key} és un binding de tipus data
-        que s'obte del perfil actiu (una dada de data del contribuent, com la data
+        que s'obté del perfil actiu (una dada de data del contribuent, com la data
         de naixement); no es pot aportar mitjançant --binding, que només admet valors
         decimals i d'enumeració. Defineix-lo com a dada del perfil i torna a calcular.
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
@@ -1032,8 +1032,8 @@ application:
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
       refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{filing_year}
-        %{period}, però la devolució només està disponible en l'ultim període de declaració
-        de l'any. Arrossega el crèdit (compensar) o tria la devolució en l'ultim període.
+        %{period}, però la devolució només està disponible en l'últim període de declaració
+        de l'any. Arrossega el crèdit (compensar) o tria la devolució en l'últim període.
       review_only_workspace_no_authority: Aquest espai de treball de només revisió
         no té autoritat de presentació; es pot llegir i verificar, però mai s'ha de
         tractar com a prova que la revisió de càlcul %{calculation_revision_id} ha
@@ -1307,7 +1307,7 @@ application:
         decimal_value_type_invalid: 'La dada de perfil per al binding de canal decimal
           %{binding_id} té un tipus no suportat: %{value_type}.'
         enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
-          ha resolt a boolea; els booleans no són claus vàlides de dispatch enum.
+          ha resolt a booleà; els booleans no són claus vàlides de dispatch enum.
   overview:
     errors:
       horizon_days_not_positive: horizon_days ha de ser positiu; s'ha rebut %{horizon_days}
@@ -1883,9 +1883,9 @@ cli:
       modelo_help: Codi de model
       notifications:
         app_help: Snapshots de notificacions DEHú de només lectura
-        latest_help: Mostra la instantània de notificació DEHU més recent.
+        latest_help: Mostra la instantània de notificació DEHú més recent.
         list_help: Llista els snapshots de notificacions DEHú desats
-        pull_help: Descàrrega les notificacions DEHu i desa una instantània del bucket.
+        pull_help: Descàrrega les notificacions DEHú i desa una instantània del bucket.
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
         view_help: Mostra un snapshot de notificacions DEHú
       output_root_help: Directori per a observacions capturades de declaracions presentades
@@ -2548,7 +2548,7 @@ cli:
         discard_yes_help: Confirmar explícitament l'operació de descart
         disposition_help: 'Disposició del resultat negatiu del Model 303: compensar
           (arrossegar el crèdit, per defecte) o tornar (sol·licitar la devolució;
-          només en l''ultim període de l''any per a un contribuent no inscrit a REDEME).'
+          només en l''últim període de l''any per a un contribuent no inscrit a REDEME).'
         dt12_computation_error: 'Error de càlcul DT12: %{message}'
         file_help: Marcar una revisió verificada com a internament presentada. NO
           envia a l'AEAT
@@ -2699,7 +2699,7 @@ cli:
         preview_maritime_exemption_help: Previsualitza l'exempció IRPF del treballador
           del mar (Art. 7.p) LIRPF / REBECA 50%) a partir dels fets maritime_worker
           del perfil actiu. Emet files CasillaObservation tipades amb legal_refs;
-          mostra l'avis RETMAR de declaració obligatòria quan retmar_registered=True;
+          mostra l'avís RETMAR de declaració obligatòria quan retmar_registered=True;
           rebutja amb el codi DA 41 inactiu quan el selector tuna_fleet aplica.
         preview_maritime_exemption_qualifying_days_help: Dies naturals treballats
           fora del territori espanyol en l'exercici. Obligatori juntament amb --annual-salary
@@ -3263,7 +3263,7 @@ cli:
           executar la descàrrega del cens o reintrodueix els valors; la proporció
           d''afectació de l''habitatge podria deixar de resoldre''s.'
         help: Sincronitza el cens 036 d'AEAT amb aquest perfil
-        pull_help: Descàrrega el teu cens més recent d'AEAT al magatzem d'instantanies
+        pull_help: Descàrrega el teu cens més recent d'AEAT al magatzem d'instantànies
           d'aquest perfil.
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
@@ -6003,7 +6003,7 @@ errors:
       hi ha cap compte de devolució configurat; l'AEAT no pot pagar una devolució
       sense un compte. Configureu un compte de devolució o compenseu el crèdit (compensar).
     refused_modelo_refund_election_not_eligible: S'ha sol·licitat una devolució en
-      un període on no està disponible; només l'ultim període de declaració de l'any
+      un període on no està disponible; només l'últim període de declaració de l'any
       permet la devolució a un no inscrit a REDEME.
     refused_no_active_profile: Aquesta operació necessita un perfil actiu. Crea o
       selecciona un perfil i torna-ho a provar.
