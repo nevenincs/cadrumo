@@ -87,7 +87,7 @@ jobs:
         # No junit artifact (zero Actions-artifact posture); the durations
         # profile lives in the job log.
         # -n 8, never -n auto: three runners share this machine's 24 logical
-        # CPUs (machine-aware sizing, .github/README.md).
+        # CPUs (machine-aware sizing, .github/ci-control-plane.md).
         run: uv run pytest --durations=100 -n 8
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
 
