@@ -231,25 +231,50 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
         kwargs["locale"] = output_language()
     locale = _normalise_supported_language(kwargs["locale"]) or "en"
     default = kwargs.pop("default", None)
-    rendered = _lookup_translation(locale, translation_key, default=default)
+    looked_up = _lookup_translation(locale, translation_key, default=default)
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
-    strict_placeholders = _I18N_STRICT_PLACEHOLDERS.get()
-    unmatched_placeholders = (
-        sorted(extract_placeholders(rendered) - interpolation.keys()) if strict_placeholders else []
-    )
-    failed_format_placeholders: list[str] = []
     if interpolation:
-        rendered, format_succeeded = _interpolate_with_status(translation_key, rendered, interpolation)
-        if strict_placeholders and not format_succeeded:
-            failed_format_placeholders = sorted(_extract_format_placeholder_roots(rendered))
-    rendered = _normalise_product_identity_references(rendered)
-    if strict_placeholders and (unmatched_placeholders or failed_format_placeholders):
+        interpolated, format_succeeded = _interpolate_with_status(translation_key, looked_up, interpolation)
+    else:
+        interpolated, format_succeeded = looked_up, True
+    rendered = _normalise_product_identity_references(interpolated)
+    if _I18N_STRICT_PLACEHOLDERS.get():
+        _enforce_strict_placeholders(
+            translation_key,
+            looked_up=looked_up,
+            interpolated=interpolated,
+            rendered=rendered,
+            interpolation=interpolation,
+            format_succeeded=format_succeeded,
+        )
+    return rendered
+
+
+def _enforce_strict_placeholders(
+    translation_key: str,
+    *,
+    looked_up: str,
+    interpolated: str,
+    rendered: str,
+    interpolation: Mapping[str, object],
+    format_succeeded: bool,
+) -> None:
+    """Raise when a declared placeholder survived rendering in strict mode.
+
+    ``looked_up`` is the pre-interpolation locale value (its residual
+    ``%{name}``/``{name}`` tokens define the unmatched set); ``interpolated`` is
+    the post-interpolation value whose surviving format roots are inspected only
+    when the format pass failed; ``rendered`` is the fully normalised value
+    reported on the raised error.
+    """
+    unmatched_placeholders = sorted(extract_placeholders(looked_up) - interpolation.keys())
+    failed_format_placeholders = sorted(_extract_format_placeholder_roots(interpolated)) if not format_succeeded else []
+    if unmatched_placeholders or failed_format_placeholders:
         raise UnmatchedPlaceholderError(
             key=translation_key,
             name=(unmatched_placeholders or failed_format_placeholders)[0],
             rendered=rendered,
         )
-    return rendered
 
 
 def _normalise_product_identity_references(rendered: str) -> str:
