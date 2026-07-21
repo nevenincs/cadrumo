@@ -201,35 +201,11 @@ class RegistryQueryService:
                 covers the requested scope.
         """
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
-        return ModeloDescribeReport(
-            code=str(definition.id),
-            title=definition.title,
-            official_name=definition.official_name,
-            tax_domain=definition.tax_domain,
-            cadence=definition.cadence,
-            jurisdiction=definition.jurisdiction,
-            revision=str(revision.id),
-            revision_ids=tuple(
-                str(item.id)
-                for item in sorted(
-                    definition.revisions.values(),
-                    key=lambda candidate: (candidate.valid_from, str(candidate.id)),
-                )
-            ),
+        return _build_modelo_describe_report(
+            definition,
+            revision,
             filing_year=filing_year,
-            filing_period=_query_filing_period(filing_year, registry_period),
-            period=registry_period,
-            valid_from=revision.valid_from,
-            valid_to=revision.valid_to,
-            periods=tuple(revision.period_selector.periods),
-            casilla_count=len(revision.casillas),
-            manual_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.MANUAL),
-            bound_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.BOUND),
-            computed_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.COMPUTED),
-            binding_count=len(revision.bindings),
-            formula_count=len(revision.formulas),
-            legal_refs=tuple(str(ref) for ref in revision.legal_refs),
-            source_refs=tuple(str(ref) for ref in revision.source_refs),
+            registry_period=registry_period,
         )
 
     def describe_modelo_for_scope(
@@ -247,35 +223,11 @@ class RegistryQueryService:
             period=period,
             as_of=as_of,
         )
-        return ModeloDescribeReport(
-            code=str(definition.id),
-            title=definition.title,
-            official_name=definition.official_name,
-            tax_domain=definition.tax_domain,
-            cadence=definition.cadence,
-            jurisdiction=definition.jurisdiction,
-            revision=str(revision.id),
-            revision_ids=tuple(
-                str(item.id)
-                for item in sorted(
-                    definition.revisions.values(),
-                    key=lambda candidate: (candidate.valid_from, str(candidate.id)),
-                )
-            ),
+        return _build_modelo_describe_report(
+            definition,
+            revision,
             filing_year=filing_year,
-            filing_period=_query_filing_period(filing_year, registry_period),
-            period=registry_period,
-            valid_from=revision.valid_from,
-            valid_to=revision.valid_to,
-            periods=tuple(revision.period_selector.periods),
-            casilla_count=len(revision.casillas),
-            manual_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.MANUAL),
-            bound_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.BOUND),
-            computed_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.COMPUTED),
-            binding_count=len(revision.bindings),
-            formula_count=len(revision.formulas),
-            legal_refs=tuple(str(ref) for ref in revision.legal_refs),
-            source_refs=tuple(str(ref) for ref in revision.source_refs),
+            registry_period=registry_period,
         )
 
     def casillas(
@@ -316,35 +268,14 @@ class RegistryQueryService:
                 registered, or no revision covers the requested scope.
         """
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
-        rows = [
-            ModeloCasillaRow(
-                casilla_id=casilla.id,
-                number=casilla.number,
-                label=casilla.label,
-                section=tuple(casilla.section),
-                data_type=casilla.data_type,
-                input_kind=casilla.input_kind,
-                required=casilla.required,
-                formula=str(casilla.formula) if casilla.formula is not None else None,
-                binding=str(casilla.binding) if casilla.binding is not None else None,
-                form_number=casilla.form_number,
-                legal_refs=tuple(str(ref) for ref in casilla.legal_refs),
-                source_refs=tuple(str(ref) for ref in casilla.source_refs),
-                localized_labels=dict(casilla.localized_labels),
-                localized_help=dict(casilla.localized_help),
-            )
-            for casilla in revision.casillas
-            if (input_kind is None or casilla.input_kind == input_kind)
-            and (required is None or casilla.required is required)
-            and (form_number is None or casilla.form_number == form_number)
-        ]
-        return ModeloCasillasReport(
-            code=str(definition.id),
-            revision=str(revision.id),
+        return _build_modelo_casillas_report(
+            definition,
+            revision,
             filing_year=filing_year,
-            filing_period=_query_filing_period(filing_year, registry_period),
-            period=registry_period,
-            rows=tuple(rows),
+            registry_period=registry_period,
+            input_kind=input_kind,
+            required=required,
+            form_number=form_number,
         )
 
     def casillas_for_scope(
@@ -365,35 +296,14 @@ class RegistryQueryService:
             period=period,
             as_of=as_of,
         )
-        rows = [
-            ModeloCasillaRow(
-                casilla_id=casilla.id,
-                number=casilla.number,
-                label=casilla.label,
-                section=tuple(casilla.section),
-                data_type=casilla.data_type,
-                input_kind=casilla.input_kind,
-                required=casilla.required,
-                formula=str(casilla.formula) if casilla.formula is not None else None,
-                binding=str(casilla.binding) if casilla.binding is not None else None,
-                form_number=casilla.form_number,
-                legal_refs=tuple(str(ref) for ref in casilla.legal_refs),
-                source_refs=tuple(str(ref) for ref in casilla.source_refs),
-                localized_labels=dict(casilla.localized_labels),
-                localized_help=dict(casilla.localized_help),
-            )
-            for casilla in revision.casillas
-            if (input_kind is None or casilla.input_kind == input_kind)
-            and (required is None or casilla.required is required)
-            and (form_number is None or casilla.form_number == form_number)
-        ]
-        return ModeloCasillasReport(
-            code=str(definition.id),
-            revision=str(revision.id),
+        return _build_modelo_casillas_report(
+            definition,
+            revision,
             filing_year=filing_year,
-            filing_period=_query_filing_period(filing_year, registry_period),
-            period=registry_period,
-            rows=tuple(rows),
+            registry_period=registry_period,
+            input_kind=input_kind,
+            required=required,
+            form_number=form_number,
         )
 
     def casilla(
@@ -498,27 +408,11 @@ class RegistryQueryService:
             period=period,
             as_of=as_of,
         )
-        rows = tuple(
-            ModeloFormulaRow(
-                formula_id=str(formula.id),
-                target_casilla_id=formula.target_casilla_id,
-                input_casilla_ids=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
-                input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
-                input_parameters=tuple(dict.fromkeys(expression_parameter_refs(formula.expression))),
-                input_relations=tuple(dict.fromkeys(expression_relation_refs(formula.expression))),
-                expression=_public_mapping(formula.expression.model_dump(mode="json")),
-                legal_refs=tuple(str(ref) for ref in formula.legal_refs),
-                source_refs=tuple(str(ref) for ref in formula.source_refs),
-            )
-            for formula in revision.formulas
-        )
-        return ModeloFormulasReport(
-            code=str(definition.id),
-            revision=str(revision.id),
+        return _build_modelo_formulas_report(
+            definition,
+            revision,
             filing_year=filing_year,
-            filing_period=_query_filing_period(filing_year, registry_period),
-            period=registry_period,
-            rows=rows,
+            registry_period=registry_period,
         )
 
     def bindings_for_year(
@@ -634,27 +528,11 @@ class RegistryQueryService:
                 registered, or no revision covers the requested scope.
         """
         definition, revision, filing_year, registry_period = self._resolve_revision(modelo, period=period, as_of=as_of)
-        rows = tuple(
-            ModeloFormulaRow(
-                formula_id=str(formula.id),
-                target_casilla_id=formula.target_casilla_id,
-                input_casilla_ids=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
-                input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
-                input_parameters=tuple(dict.fromkeys(expression_parameter_refs(formula.expression))),
-                input_relations=tuple(dict.fromkeys(expression_relation_refs(formula.expression))),
-                expression=_public_mapping(formula.expression.model_dump(mode="json")),
-                legal_refs=tuple(str(ref) for ref in formula.legal_refs),
-                source_refs=tuple(str(ref) for ref in formula.source_refs),
-            )
-            for formula in revision.formulas
-        )
-        return ModeloFormulasReport(
-            code=str(definition.id),
-            revision=str(revision.id),
+        return _build_modelo_formulas_report(
+            definition,
+            revision,
             filing_year=filing_year,
-            filing_period=_query_filing_period(filing_year, registry_period),
-            period=registry_period,
-            rows=rows,
+            registry_period=registry_period,
         )
 
     def _resolve_revision(
@@ -740,6 +618,121 @@ class RegistryQueryService:
             on=as_of,
         )
         return definition, snapshot.revision, registry_period
+
+
+def _build_modelo_describe_report(
+    definition: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    filing_year: int | None,
+    registry_period: str | None,
+) -> ModeloDescribeReport:
+    """Assemble a :class:`ModeloDescribeReport` from a resolved definition/revision."""
+    return ModeloDescribeReport(
+        code=str(definition.id),
+        title=definition.title,
+        official_name=definition.official_name,
+        tax_domain=definition.tax_domain,
+        cadence=definition.cadence,
+        jurisdiction=definition.jurisdiction,
+        revision=str(revision.id),
+        revision_ids=tuple(
+            str(item.id)
+            for item in sorted(
+                definition.revisions.values(),
+                key=lambda candidate: (candidate.valid_from, str(candidate.id)),
+            )
+        ),
+        filing_year=filing_year,
+        filing_period=_query_filing_period(filing_year, registry_period),
+        period=registry_period,
+        valid_from=revision.valid_from,
+        valid_to=revision.valid_to,
+        periods=tuple(revision.period_selector.periods),
+        casilla_count=len(revision.casillas),
+        manual_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.MANUAL),
+        bound_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.BOUND),
+        computed_casilla_count=sum(1 for casilla in revision.casillas if casilla.input_kind == InputKind.COMPUTED),
+        binding_count=len(revision.bindings),
+        formula_count=len(revision.formulas),
+        legal_refs=tuple(str(ref) for ref in revision.legal_refs),
+        source_refs=tuple(str(ref) for ref in revision.source_refs),
+    )
+
+
+def _build_modelo_casillas_report(
+    definition: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    filing_year: int | None,
+    registry_period: str | None,
+    input_kind: InputKind | None,
+    required: bool | None,
+    form_number: str | None,
+) -> ModeloCasillasReport:
+    """Assemble a filtered :class:`ModeloCasillasReport` from a resolved revision."""
+    rows = [
+        ModeloCasillaRow(
+            casilla_id=casilla.id,
+            number=casilla.number,
+            label=casilla.label,
+            section=tuple(casilla.section),
+            data_type=casilla.data_type,
+            input_kind=casilla.input_kind,
+            required=casilla.required,
+            formula=str(casilla.formula) if casilla.formula is not None else None,
+            binding=str(casilla.binding) if casilla.binding is not None else None,
+            form_number=casilla.form_number,
+            legal_refs=tuple(str(ref) for ref in casilla.legal_refs),
+            source_refs=tuple(str(ref) for ref in casilla.source_refs),
+            localized_labels=dict(casilla.localized_labels),
+            localized_help=dict(casilla.localized_help),
+        )
+        for casilla in revision.casillas
+        if (input_kind is None or casilla.input_kind == input_kind)
+        and (required is None or casilla.required is required)
+        and (form_number is None or casilla.form_number == form_number)
+    ]
+    return ModeloCasillasReport(
+        code=str(definition.id),
+        revision=str(revision.id),
+        filing_year=filing_year,
+        filing_period=_query_filing_period(filing_year, registry_period),
+        period=registry_period,
+        rows=tuple(rows),
+    )
+
+
+def _build_modelo_formulas_report(
+    definition: ModeloDefinition,
+    revision: ModeloRevision,
+    *,
+    filing_year: int | None,
+    registry_period: str | None,
+) -> ModeloFormulasReport:
+    """Assemble a :class:`ModeloFormulasReport` from a resolved revision."""
+    rows = tuple(
+        ModeloFormulaRow(
+            formula_id=str(formula.id),
+            target_casilla_id=formula.target_casilla_id,
+            input_casilla_ids=tuple(dict.fromkeys(expression_casilla_refs(formula.expression))),
+            input_bindings=tuple(dict.fromkeys(expression_binding_refs(formula.expression))),
+            input_parameters=tuple(dict.fromkeys(expression_parameter_refs(formula.expression))),
+            input_relations=tuple(dict.fromkeys(expression_relation_refs(formula.expression))),
+            expression=_public_mapping(formula.expression.model_dump(mode="json")),
+            legal_refs=tuple(str(ref) for ref in formula.legal_refs),
+            source_refs=tuple(str(ref) for ref in formula.source_refs),
+        )
+        for formula in revision.formulas
+    )
+    return ModeloFormulasReport(
+        code=str(definition.id),
+        revision=str(revision.id),
+        filing_year=filing_year,
+        filing_period=_query_filing_period(filing_year, registry_period),
+        period=registry_period,
+        rows=rows,
+    )
 
 
 def _binding_rows(
