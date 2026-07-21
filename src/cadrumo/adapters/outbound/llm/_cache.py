@@ -274,6 +274,10 @@ class LLMCache:
     def _collect_prunable_rows(self, repository: SecureObjectRepository) -> list[tuple[CachedEntry, str]]:
         """Load and parse every root-matching cache entry, sorted oldest-first.
 
+        The rows are read straight off the active bucket's
+        :class:`SecureObjectRepository`, so retention pruning sees exactly the
+        encrypted records the cache wrote.
+
         Raises:
             :exc:`~adapters.outbound.llm.LLMCacheError`: When a cache
             entry cannot be parsed during iteration.
