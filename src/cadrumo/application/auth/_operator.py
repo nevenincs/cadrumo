@@ -41,6 +41,7 @@ from .._workflow_auth_models import (
     AuthCleanupIntent,
     AuthCleanupOperationKind,
     AuthState,
+    CertificateSourceRecord,
 )
 from ..auth_credentials import ActiveCertificateCredentials
 from ._acquisition_lock import (
@@ -58,6 +59,7 @@ from ._credential_resolution import (
 from ._mutation import AuthBucketEventSpec as _BucketEventSpec
 from ._mutation import build_auth_bucket_events as _build_bucket_events
 from ._operator_probes import (
+    _classify_identity_alignment,
     _live_auth_identity_kind,
     _live_auth_identity_state,
     _live_auth_mode,
@@ -295,38 +297,14 @@ def _auth_configure_result(
     alignment = "not_applicable"
     alignment_detail = ""
     if provider == AuthProviderKind.CLAVE_MOVIL.value:
-        if not profile_tax_id and not provider_identity:
-            alignment = "profile_tax_id_missing_and_clave_identity_missing"
-        elif not profile_tax_id:
-            alignment = "profile_tax_id_missing"
-        elif not provider_identity:
-            alignment = "clave_identity_missing"
-        elif profile_tax_id == provider_identity:
-            alignment = "matches"
-        else:
-            alignment = "mismatch"
+        alignment = _classify_identity_alignment(profile_tax_id, provider_identity)
         alignment_detail = _identity_alignment_detail(
             alignment,
             profile_tax_id=profile_tax_id,
             provider_identity=provider_identity,
         )
     complete, incomplete_reason = _certificate_completeness(provider, certificate_path)
-    if not complete:
-        next_action = f"aeat config auth configure --provider {provider} --file PATH"
-    elif provider == AuthProviderKind.CLAVE_MOVIL.value and alignment in {
-        "mismatch",
-        "clave_identity_missing",
-        "profile_tax_id_missing",
-        "profile_tax_id_missing_and_clave_identity_missing",
-    }:
-        # A Cl@ve identity that does not align with the active profile
-        # cannot pass live auth; `auth test` would only re-report the
-        # same mismatch. Route the operator to the actual fix instead.
-        next_action = _identity_alignment_next_action(alignment)
-    elif provider == AuthProviderKind.CLAVE_MOVIL.value:
-        next_action = "aeat config auth test --provider clave_movil"
-    else:
-        next_action = f"aeat config auth test --provider {provider}"
+    next_action = _auth_configure_next_action(provider=provider, complete=complete, alignment=alignment)
     return AuthConfigureResult(
         provider=provider,
         file=str(certificate_path) if certificate_path is not None else "",
@@ -339,6 +317,28 @@ def _auth_configure_result(
         identity_alignment_detail=alignment_detail,
         next_action=next_action,
     )
+
+
+def _auth_configure_next_action(*, provider: str, complete: bool, alignment: str) -> str:
+    """Route the operator to the command that follows an auth configuration.
+
+    An incomplete certificate config routes to re-supply the file. A Cl@ve
+    identity that does not align with the active profile cannot pass live
+    auth; ``auth test`` would only re-report the same mismatch, so route the
+    operator to the actual fix instead. Otherwise route to ``auth test``.
+    """
+    if not complete:
+        return f"aeat config auth configure --provider {provider} --file PATH"
+    if provider == AuthProviderKind.CLAVE_MOVIL.value and alignment in {
+        "mismatch",
+        "clave_identity_missing",
+        "profile_tax_id_missing",
+        "profile_tax_id_missing_and_clave_identity_missing",
+    }:
+        return _identity_alignment_next_action(alignment)
+    if provider == AuthProviderKind.CLAVE_MOVIL.value:
+        return "aeat config auth test --provider clave_movil"
+    return f"aeat config auth test --provider {provider}"
 
 
 def _identity_alignment_next_action(alignment: str) -> str:
@@ -500,6 +500,30 @@ def _test_operator_auth_from_snapshot(
     )
 
 
+def _clave_movil_preflight_fields(
+    settings: Settings,
+    provider_kind: AuthProviderKind | None,
+) -> dict[str, object]:
+    """Return the Cl@ve Móvil preflight fields, all ``None`` for other providers.
+
+    The redaction posture is unchanged: identity material never enters the
+    report, only booleans and the QR/timeout preferences.
+    """
+    if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
+        return {
+            "prefer_non_qr": None,
+            "timeout_ms": None,
+            "dni_fecha_configured": None,
+            "nie_soporte_configured": None,
+        }
+    return {
+        "prefer_non_qr": settings.cadrumo_clave_prefer_non_qr,
+        "timeout_ms": settings.cadrumo_clave_movil_timeout_ms,
+        "dni_fecha_configured": bool((settings.cadrumo_clave_movil_dni_fecha or "").strip()),
+        "nie_soporte_configured": bool(unwrap_optional_secret(settings.cadrumo_clave_movil_nie_soporte).strip()),
+    }
+
+
 def build_live_auth_preflight_report(
     provider: str | None = None,
     *,
@@ -556,24 +580,7 @@ def build_live_auth_preflight_report(
             identity_alignment=identity_alignment,
             identity_kind=_live_auth_identity_kind(provider_kind, settings=resolved_settings),
             auth_mode=_live_auth_mode(provider_kind, settings=resolved_settings),
-            prefer_non_qr=(
-                resolved_settings.cadrumo_clave_prefer_non_qr if provider_kind is AuthProviderKind.CLAVE_MOVIL else None
-            ),
-            timeout_ms=(
-                resolved_settings.cadrumo_clave_movil_timeout_ms
-                if provider_kind is AuthProviderKind.CLAVE_MOVIL
-                else None
-            ),
-            dni_fecha_configured=(
-                bool((resolved_settings.cadrumo_clave_movil_dni_fecha or "").strip())
-                if provider_kind is AuthProviderKind.CLAVE_MOVIL
-                else None
-            ),
-            nie_soporte_configured=(
-                bool(unwrap_optional_secret(resolved_settings.cadrumo_clave_movil_nie_soporte).strip())
-                if provider_kind is AuthProviderKind.CLAVE_MOVIL
-                else None
-            ),
+            **_clave_movil_preflight_fields(resolved_settings, provider_kind),
             certificate_path_configured=certificate_path is not None,
             certificate_file_present=bool(
                 certificate_path is not None and certificate_path.is_file(),
@@ -1138,6 +1145,123 @@ def _assert_reset_request_matches(
         )
 
 
+def _certificate_source_witnesses(
+    auth: AuthState,
+    *,
+    certificate_targeted: bool,
+) -> tuple[AuthCleanupCertificateSource, ...]:
+    """Snapshot the certificate-source witnesses (sorted by name) when targeted."""
+    if not certificate_targeted:
+        return ()
+    return tuple(
+        AuthCleanupCertificateSource(name=record.name, registered_at=record.registered_at)
+        for record in sorted(auth.certificate_sources.values(), key=lambda item: item.name)
+    )
+
+
+def _session_scoped_provider_ids(
+    settings: Settings,
+    provider_ids: tuple[str, ...],
+    *,
+    bucket_id: str,
+) -> tuple[str, ...]:
+    """Return the scoped providers that currently hold a persisted session."""
+    return tuple(
+        provider_id
+        for provider_id in provider_ids
+        if (kind := _implemented_kind(provider_id)) is not None
+        and persisted_session_exists(settings, kind, bucket_id=bucket_id)
+    )
+
+
+def _lock_scoped_provider_ids(
+    settings: Settings,
+    provider_ids: tuple[str, ...],
+    *,
+    bucket_id: str,
+    destructive_reset: bool,
+) -> tuple[str, ...]:
+    """Return the scoped providers holding an acquisition lock (reset only)."""
+    if not destructive_reset:
+        return ()
+    return tuple(
+        provider_id
+        for provider_id in provider_ids
+        if (kind := _implemented_kind(provider_id)) is not None
+        and inspect_auth_acquisition_lock(settings, kind, bucket_id=bucket_id).state
+        is not AuthAcquisitionLockState.ABSENT
+    )
+
+
+def _secret_scoped_source_names(
+    bucket_id: str,
+    certificate_sources: tuple[AuthCleanupCertificateSource, ...],
+    *,
+    certificate_targeted: bool,
+) -> tuple[str, ...]:
+    """Return the witnessed certificate sources whose secret exists (targeted only)."""
+    if not certificate_targeted:
+        return ()
+    return tuple(
+        source.name for source in certificate_sources if _certificate_source_secret_exists(bucket_id, source.name)
+    )
+
+
+def _configuration_scoped_provider_ids(
+    auth: AuthState,
+    provider_ids: tuple[str, ...],
+    *,
+    destructive_reset: bool,
+    certificate_targeted: bool,
+) -> tuple[str, ...]:
+    """Return the provider configurations a reset clears (current + certificate custody)."""
+    if not destructive_reset:
+        return ()
+    return tuple(
+        dict.fromkeys(
+            (
+                *((auth.provider,) if auth.provider is not None and auth.provider in provider_ids else ()),
+                *(
+                    (AuthProviderKind.CERTIFICATE.value,)
+                    if certificate_targeted
+                    and (
+                        auth.certificate_path is not None
+                        or auth.certificate_sources
+                        or auth.active_certificate_source is not None
+                    )
+                    else ()
+                ),
+            ),
+        ),
+    )
+
+
+def _cleanup_operation_id(
+    *,
+    bucket_id: str,
+    operation_kind: AuthCleanupOperationKind,
+    provider_ids: tuple[str, ...],
+    all_providers: bool,
+    started_at: datetime,
+) -> str:
+    """Derive the durable cleanup identity (idempotent across resumes).
+
+    The join format, field ordering, and ``started_at.isoformat()`` are the
+    frozen identity material; a resume of the same operation must hash to the
+    same ``operation_id``.
+    """
+    operation_material = "|".join(
+        (
+            bucket_id,
+            operation_kind.value,
+            ",".join(provider_ids),
+            str(all_providers),
+            started_at.isoformat(),
+        ),
+    )
+    return hashlib.sha256(operation_material.encode("utf-8")).hexdigest()
+
+
 def _build_auth_cleanup_intent(
     *,
     settings: Settings,
@@ -1150,70 +1274,15 @@ def _build_auth_cleanup_intent(
 ) -> AuthCleanupIntent:
     destructive_reset = operation_kind is AuthCleanupOperationKind.RESET
     certificate_targeted = destructive_reset and AuthProviderKind.CERTIFICATE.value in provider_ids
-    certificate_sources = (
-        tuple(
-            AuthCleanupCertificateSource(name=record.name, registered_at=record.registered_at)
-            for record in sorted(auth.certificate_sources.values(), key=lambda item: item.name)
-        )
-        if certificate_targeted
-        else ()
-    )
-    session_provider_ids = tuple(
-        provider_id
-        for provider_id in provider_ids
-        if (kind := _implemented_kind(provider_id)) is not None
-        and persisted_session_exists(settings, kind, bucket_id=bucket_id)
-    )
-    lock_provider_ids = (
-        tuple(
-            provider_id
-            for provider_id in provider_ids
-            if (kind := _implemented_kind(provider_id)) is not None
-            and inspect_auth_acquisition_lock(settings, kind, bucket_id=bucket_id).state
-            is not AuthAcquisitionLockState.ABSENT
-        )
-        if destructive_reset
-        else ()
-    )
-    secret_source_names = (
-        tuple(
-            source.name for source in certificate_sources if _certificate_source_secret_exists(bucket_id, source.name)
-        )
-        if certificate_targeted
-        else ()
-    )
-    provider_configuration_ids = (
-        tuple(
-            dict.fromkeys(
-                (
-                    *((auth.provider,) if auth.provider is not None and auth.provider in provider_ids else ()),
-                    *(
-                        (AuthProviderKind.CERTIFICATE.value,)
-                        if certificate_targeted
-                        and (
-                            auth.certificate_path is not None
-                            or auth.certificate_sources
-                            or auth.active_certificate_source is not None
-                        )
-                        else ()
-                    ),
-                ),
-            ),
-        )
-        if destructive_reset
-        else ()
-    )
-    operation_material = "|".join(
-        (
-            bucket_id,
-            operation_kind.value,
-            ",".join(provider_ids),
-            str(all_providers),
-            started_at.isoformat(),
-        ),
-    )
+    certificate_sources = _certificate_source_witnesses(auth, certificate_targeted=certificate_targeted)
     return AuthCleanupIntent(
-        operation_id=hashlib.sha256(operation_material.encode("utf-8")).hexdigest(),
+        operation_id=_cleanup_operation_id(
+            bucket_id=bucket_id,
+            operation_kind=operation_kind,
+            provider_ids=provider_ids,
+            all_providers=all_providers,
+            started_at=started_at,
+        ),
         operation_kind=operation_kind,
         bucket_id=bucket_id,
         provider_ids=provider_ids,
@@ -1228,11 +1297,111 @@ def _build_auth_cleanup_intent(
         certificate_path_at_start=auth.certificate_path,
         active_certificate_source_at_start=auth.active_certificate_source,
         certificate_sources=certificate_sources,
-        provider_configuration_ids=provider_configuration_ids,
-        session_provider_ids=session_provider_ids,
-        lock_provider_ids=lock_provider_ids,
-        secret_source_names=secret_source_names,
+        provider_configuration_ids=_configuration_scoped_provider_ids(
+            auth,
+            provider_ids,
+            destructive_reset=destructive_reset,
+            certificate_targeted=certificate_targeted,
+        ),
+        session_provider_ids=_session_scoped_provider_ids(settings, provider_ids, bucket_id=bucket_id),
+        lock_provider_ids=_lock_scoped_provider_ids(
+            settings,
+            provider_ids,
+            bucket_id=bucket_id,
+            destructive_reset=destructive_reset,
+        ),
+        secret_source_names=_secret_scoped_source_names(
+            bucket_id,
+            certificate_sources,
+            certificate_targeted=certificate_targeted,
+        ),
     )
+
+
+def _clear_current_provider_state(
+    auth: AuthState,
+    intent: AuthCleanupIntent,
+    updates: dict[str, object],
+) -> str | None:
+    """Clear the current provider's session state when its snapshot is unchanged.
+
+    Records the clearing keys into ``updates`` and returns the cleared provider
+    id, or ``None`` when the provider is out of scope or its readiness moved
+    since the intent was witnessed.
+    """
+    provider_snapshot_unchanged = (
+        auth.provider == intent.provider_at_start
+        and auth.configured_at == intent.configured_at_at_start
+        and auth.authenticated_at == intent.authenticated_at_at_start
+    )
+    if auth.provider in intent.provider_ids and provider_snapshot_unchanged:
+        updates.update(
+            provider=None,
+            configured_at=None,
+            authenticated_at=None,
+            subject=None,
+        )
+        return auth.provider
+    return None
+
+
+def _prune_certificate_sources(
+    auth: AuthState,
+    intent: AuthCleanupIntent,
+) -> tuple[dict[str, CertificateSourceRecord], list[str]]:
+    """Drop each witnessed certificate source whose (name + ``registered_at``) still matches.
+
+    Returns the pruned source map and the removed source names.
+    """
+    sources = dict(auth.certificate_sources)
+    removed_certificate_names: list[str] = []
+    for witness in intent.certificate_sources:
+        current = sources.get(witness.name)
+        if current is None or current.registered_at != witness.registered_at:
+            continue
+        del sources[witness.name]
+        removed_certificate_names.append(witness.name)
+    return sources, removed_certificate_names
+
+
+def _clear_certificate_custody(
+    auth: AuthState,
+    intent: AuthCleanupIntent,
+    updates: dict[str, object],
+) -> tuple[list[str], bool]:
+    """Remove witnessed certificate sources, secrets, and path from custody.
+
+    Records certificate-configuration keys into ``updates`` and returns the
+    removed certificate-source names and whether any certificate configuration
+    changed. A certificate source is removed only when its witness (name +
+    ``registered_at``) still matches; the ``certificate_path`` is cleared only
+    when no active source survives.
+    """
+    if AuthProviderKind.CERTIFICATE.value not in intent.provider_ids:
+        return [], False
+    sources, removed_certificate_names = _prune_certificate_sources(auth, intent)
+    if sources != auth.certificate_sources:
+        updates["certificate_sources"] = sources
+    active_source = auth.active_certificate_source
+    if active_source == intent.active_certificate_source_at_start and active_source in removed_certificate_names:
+        active_source = None
+        updates["active_certificate_source"] = None
+    surviving_active = active_source is not None and active_source in sources
+    if (
+        intent.certificate_path_at_start is not None
+        and auth.certificate_path == intent.certificate_path_at_start
+        and not surviving_active
+    ):
+        updates["certificate_path"] = None
+    certificate_configuration_changed = any(
+        key in updates
+        for key in (
+            "certificate_sources",
+            "active_certificate_source",
+            "certificate_path",
+        )
+    )
+    return removed_certificate_names, certificate_configuration_changed
 
 
 def _apply_auth_cleanup_intent(
@@ -1241,52 +1410,13 @@ def _apply_auth_cleanup_intent(
 ) -> tuple[AuthState, tuple[str, ...], tuple[str, ...]]:
     updates: dict[str, object] = {"cleanup_intent": None}
     cleared_provider_ids: list[str] = []
-    provider_snapshot_unchanged = (
-        auth.provider == intent.provider_at_start
-        and auth.configured_at == intent.configured_at_at_start
-        and auth.authenticated_at == intent.authenticated_at_at_start
-    )
-    if auth.provider in intent.provider_ids and provider_snapshot_unchanged:
-        cleared_provider_ids.append(auth.provider)
-        updates.update(
-            provider=None,
-            configured_at=None,
-            authenticated_at=None,
-            subject=None,
-        )
+    cleared_current = _clear_current_provider_state(auth, intent, updates)
+    if cleared_current is not None:
+        cleared_provider_ids.append(cleared_current)
 
-    removed_certificate_names: list[str] = []
-    if AuthProviderKind.CERTIFICATE.value in intent.provider_ids:
-        sources = dict(auth.certificate_sources)
-        for witness in intent.certificate_sources:
-            current = sources.get(witness.name)
-            if current is None or current.registered_at != witness.registered_at:
-                continue
-            del sources[witness.name]
-            removed_certificate_names.append(witness.name)
-        if sources != auth.certificate_sources:
-            updates["certificate_sources"] = sources
-        active_source = auth.active_certificate_source
-        if active_source == intent.active_certificate_source_at_start and active_source in removed_certificate_names:
-            active_source = None
-            updates["active_certificate_source"] = None
-        surviving_active = active_source is not None and active_source in sources
-        if (
-            intent.certificate_path_at_start is not None
-            and auth.certificate_path == intent.certificate_path_at_start
-            and not surviving_active
-        ):
-            updates["certificate_path"] = None
-        certificate_configuration_changed = any(
-            key in updates
-            for key in (
-                "certificate_sources",
-                "active_certificate_source",
-                "certificate_path",
-            )
-        )
-        if certificate_configuration_changed:
-            cleared_provider_ids.append(AuthProviderKind.CERTIFICATE.value)
+    removed_certificate_names, certificate_configuration_changed = _clear_certificate_custody(auth, intent, updates)
+    if certificate_configuration_changed:
+        cleared_provider_ids.append(AuthProviderKind.CERTIFICATE.value)
 
     return (
         auth.model_copy(update=updates),

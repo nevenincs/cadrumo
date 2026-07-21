@@ -8,12 +8,13 @@ fail-closed readiness from either an active-auth snapshot or direct state.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import NamedTuple
 
 from pydantic import BaseModel
 
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..core import AuthProviderKind
-from ..core.config import load_settings
+from ..core.config import Settings, load_settings
 from ..core.errors import CadrumoError
 from ..core.logging import get_logger
 from .auth import (
@@ -79,6 +80,163 @@ def _provider_configured(
     return True
 
 
+def _resolve_provider_selection(
+    state: WorkflowState,
+    *,
+    provider_kind: AuthProviderKind | None,
+    provider_kind_is_authoritative: bool,
+    requested_provider: str | None,
+) -> tuple[AuthProviderKind | None, str]:
+    """Resolve the effective provider kind and its redacted label.
+
+    An authoritative kind passes through unchanged. Otherwise the requested
+    provider (normalized) or the persisted selector is parsed, failing closed
+    to ``None`` on an invalid selector without exposing its raw value.
+    """
+    if provider_kind_is_authoritative:
+        return provider_kind, (provider_kind.value if provider_kind is not None else "")
+    normalized_request = requested_provider.strip().lower() if requested_provider is not None else None
+    provider_selector = normalized_request or state.auth.provider or ""
+    try:
+        resolved_kind = AuthProviderKind(provider_selector) if provider_selector else None
+    except ValueError:
+        resolved_kind = None
+    return resolved_kind, (resolved_kind.value if resolved_kind is not None else "")
+
+
+class _CertificateResolution(NamedTuple):
+    effective_certificate_path: str
+    backend_settings: Settings | None
+    certificate_credentials: ActiveCertificateCredentials | None
+
+
+def _resolve_certificate_context(
+    state: WorkflowState,
+    *,
+    provider_kind: AuthProviderKind | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
+) -> _CertificateResolution:
+    """Load settings and project certificate credentials only for the certificate kind."""
+    effective_certificate_path = state.auth.certificate_path or ""
+    backend_settings: Settings | None = None
+    if provider_kind is AuthProviderKind.CERTIFICATE:
+        backend_settings = load_settings()
+        if certificate_credentials is None:
+            certificate_credentials = project_active_certificate_credentials(
+                state,
+                settings=backend_settings,
+            )
+        effective_certificate_path = (
+            str(certificate_credentials.certificate_path)
+            if certificate_credentials.certificate_path is not None
+            else ""
+        )
+    return _CertificateResolution(
+        effective_certificate_path=effective_certificate_path,
+        backend_settings=backend_settings,
+        certificate_credentials=certificate_credentials,
+    )
+
+
+class _BackendProbeOutcome(NamedTuple):
+    configured: bool
+    available: bool
+    health_summary: str
+    health_severity: str
+    backend_settings: Settings | None
+
+
+def _describe_backend_health(
+    *,
+    provider_kind: AuthProviderKind,
+    configured: bool,
+    backend_settings: Settings | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
+) -> _BackendProbeOutcome:
+    """Describe the selected backend, lowering ``configured`` and never elevating it.
+
+    Any load / selection / description failure is logged and reported as
+    unavailable. Settings are lazily loaded when absent.
+    """
+    try:
+        if backend_settings is None:
+            backend_settings = load_settings()
+        backend = select_provider(
+            provider_kind,
+            settings=backend_settings,
+            certificate_credentials=certificate_credentials,
+        )
+        description = backend.describe()
+        return _BackendProbeOutcome(
+            configured=configured and description.configured,
+            available=description.available,
+            health_summary=description.health_summary or "",
+            health_severity=description.health_severity or "",
+            backend_settings=backend_settings,
+        )
+    except (CadrumoError, OSError, ValueError, AttributeError):
+        _log.warning(
+            "auth backend probe failed; reporting unavailable",
+            exc_info=True,
+        )
+        return _BackendProbeOutcome(
+            configured=configured,
+            available=False,
+            health_summary="",
+            health_severity="",
+            backend_settings=backend_settings,
+        )
+
+
+def _probe_backend_readiness(
+    *,
+    provider_kind: AuthProviderKind | None,
+    requested_provider: str | None,
+    configured: bool,
+    available: bool,
+    credential_bucket_id: str | None,
+    backend_settings: Settings | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
+) -> _BackendProbeOutcome:
+    """Probe the live backend, downgrading readiness only.
+
+    An unknown requested provider is warned and left unavailable; a selected
+    provider with no credential bucket is downgraded to unavailable; otherwise
+    the backend description supplies health and may only lower ``configured``.
+    """
+    if provider_kind is None:
+        if requested_provider is not None and requested_provider.strip():
+            _log.warning(
+                "auth backend probe skipped for unknown provider; reporting unavailable",
+            )
+        return _BackendProbeOutcome(configured, available, "", "", backend_settings)
+    if credential_bucket_id is None:
+        return _BackendProbeOutcome(configured, False, "", "", backend_settings)
+    return _describe_backend_health(
+        provider_kind=provider_kind,
+        configured=configured,
+        backend_settings=backend_settings,
+        certificate_credentials=certificate_credentials,
+    )
+
+
+def _probe_credentials(
+    *,
+    provider: str,
+    effective_certificate_path: str,
+    backend_settings: Settings | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
+) -> tuple[str, str]:
+    """Probe provider credentials, returning ``(probe_result, probe_summary)``."""
+    provider_probe = probe_provider_credentials(
+        provider,
+        effective_certificate_path,
+        settings=backend_settings,
+        certificate_credentials=certificate_credentials,
+    )
+    return str(provider_probe.result), provider_probe.summary
+
+
 def build_auth_readiness(
     state: WorkflowState,
     *,
@@ -98,31 +256,21 @@ def build_auth_readiness(
     readiness, but never elevate it.
     """
     auth = state.auth
-    if provider_kind_is_authoritative:
-        provider = provider_kind.value if provider_kind is not None else ""
-    else:
-        normalized_request = requested_provider.strip().lower() if requested_provider is not None else None
-        provider_selector = normalized_request or auth.provider or ""
-        try:
-            provider_kind = AuthProviderKind(provider_selector) if provider_selector else None
-        except ValueError:
-            provider_kind = None
-        provider = provider_kind.value if provider_kind is not None else ""
+    provider_kind, provider = _resolve_provider_selection(
+        state,
+        provider_kind=provider_kind,
+        provider_kind_is_authoritative=provider_kind_is_authoritative,
+        requested_provider=requested_provider,
+    )
+    certificate = _resolve_certificate_context(
+        state,
+        provider_kind=provider_kind,
+        certificate_credentials=certificate_credentials,
+    )
+    effective_certificate_path = certificate.effective_certificate_path
+    backend_settings = certificate.backend_settings
+    certificate_credentials = certificate.certificate_credentials
 
-    effective_certificate_path = auth.certificate_path or ""
-    backend_settings = None
-    if provider_kind is AuthProviderKind.CERTIFICATE:
-        backend_settings = load_settings()
-        if certificate_credentials is None:
-            certificate_credentials = project_active_certificate_credentials(
-                state,
-                settings=backend_settings,
-            )
-        effective_certificate_path = (
-            str(certificate_credentials.certificate_path)
-            if certificate_credentials.certificate_path is not None
-            else ""
-        )
     configured = _provider_configured(
         state,
         provider_kind=provider_kind,
@@ -134,42 +282,28 @@ def build_auth_readiness(
     health_severity = ""
     probe_result = ""
     probe_summary = ""
-    if probe_live_backend and provider_kind is None and requested_provider is not None and requested_provider.strip():
-        _log.warning(
-            "auth backend probe skipped for unknown provider; reporting unavailable",
-        )
-    if probe_live_backend and provider_kind is not None:
-        if credential_bucket_id is None:
-            available = False
-        else:
-            try:
-                if backend_settings is None:
-                    backend_settings = load_settings()
-                backend = select_provider(
-                    provider_kind,
-                    settings=backend_settings,
-                    certificate_credentials=certificate_credentials,
-                )
-                description = backend.describe()
-                available = description.available
-                health_summary = description.health_summary or ""
-                health_severity = description.health_severity or ""
-                configured = configured and description.configured
-            except (CadrumoError, OSError, ValueError, AttributeError):
-                _log.warning(
-                    "auth backend probe failed; reporting unavailable",
-                    exc_info=True,
-                )
-                available = False
-    if probe_live_backend and credential_bucket_id is not None:
-        provider_probe = probe_provider_credentials(
-            provider,
-            effective_certificate_path,
-            settings=backend_settings,
+    if probe_live_backend:
+        probe = _probe_backend_readiness(
+            provider_kind=provider_kind,
+            requested_provider=requested_provider,
+            configured=configured,
+            available=available,
+            credential_bucket_id=credential_bucket_id,
+            backend_settings=backend_settings,
             certificate_credentials=certificate_credentials,
         )
-        probe_result = str(provider_probe.result)
-        probe_summary = provider_probe.summary
+        configured = probe.configured
+        available = probe.available
+        health_summary = probe.health_summary
+        health_severity = probe.health_severity
+        backend_settings = probe.backend_settings
+    if probe_live_backend and credential_bucket_id is not None:
+        probe_result, probe_summary = _probe_credentials(
+            provider=provider,
+            effective_certificate_path=effective_certificate_path,
+            backend_settings=backend_settings,
+            certificate_credentials=certificate_credentials,
+        )
 
     authenticated = configured and bool(auth.authenticated_at)
     health_severity = _resolve_health_severity(
