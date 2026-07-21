@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names
 
 ## Scope

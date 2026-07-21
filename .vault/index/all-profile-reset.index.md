@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#all-profile-reset'
-date: '2026-07-19'
-modified: '2026-07-19'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-17-all-profile-reset-P01-S01]]'
   - '[[2026-07-17-all-profile-reset-P01-S02]]'
@@ -23,11 +23,19 @@ related:
   - '[[2026-07-17-all-profile-reset-P03-S15]]'
   - '[[2026-07-17-all-profile-reset-P03-S16]]'
   - '[[2026-07-17-all-profile-reset-P03-S17]]'
+  - '[[2026-07-17-all-profile-reset-P04-S18]]'
+  - '[[2026-07-17-all-profile-reset-P04-S19]]'
   - '[[2026-07-17-all-profile-reset-P04-S20]]'
   - '[[2026-07-17-all-profile-reset-P04-S21]]'
+  - '[[2026-07-17-all-profile-reset-P04-S22]]'
   - '[[2026-07-17-all-profile-reset-P04-S24]]'
   - '[[2026-07-17-all-profile-reset-P04-S25]]'
   - '[[2026-07-17-all-profile-reset-P05-S26]]'
+  - '[[2026-07-17-all-profile-reset-P05-S27]]'
+  - '[[2026-07-17-all-profile-reset-P05-S28]]'
+  - '[[2026-07-17-all-profile-reset-P05-S29]]'
+  - '[[2026-07-17-all-profile-reset-P05-S30]]'
+  - '[[2026-07-17-all-profile-reset-P05-S31]]'
   - '[[2026-07-17-all-profile-reset-adr]]'
   - '[[2026-07-17-all-profile-reset-audit]]'
   - '[[2026-07-17-all-profile-reset-plan]]'
@@ -66,11 +74,19 @@ Auto-generated index of all documents tagged with `#all-profile-reset`.
 - `2026-07-17-all-profile-reset-P03-S15` - Prove target discovery includes live, tombstoned, and dangling-pointer buckets but excludes cold defaults
 - `2026-07-17-all-profile-reset-P03-S16` - Prove every reset phase boundary resumes honestly in a fresh child process
 - `2026-07-17-all-profile-reset-P03-S17` - Prove sorted locking, writer pauses, reset exclusion, retention recheck, and renewed confirmation with real processes
+- `2026-07-17-all-profile-reset-P04-S18` - Restrict config switch to UUIDs and exact labels including canonical sandbox labels and reject bare sandbox names
+- `2026-07-17-all-profile-reset-P04-S19` - Remove the config profile sandbox use registration and execution path without an alias
 - `2026-07-17-all-profile-reset-P04-S20` - Replace flat scoped reset registration with the config reset command group
 - `2026-07-17-all-profile-reset-P04-S21` - Register only reset start, status, and resume with operation, retention, reason, and confirmation options
+- `2026-07-17-all-profile-reset-P04-S22` - Prove exact sandbox labels work through switch while sandbox use and bare names are absent
 - `2026-07-17-all-profile-reset-P04-S24` - Prove reset start, status, resume, operation IDs, retention override, reasons, and confirmations across real processes
 - `2026-07-17-all-profile-reset-P04-S25` - Require yes for reset start and resume while keeping status non-destructive
 - `2026-07-17-all-profile-reset-P05-S26` - Migrate the reset payload schemas and write-policy tokens to the accepted reset grammar
+- `2026-07-17-all-profile-reset-P05-S27` - Migrate the reset family help and risk metadata to the accepted grammar
+- `2026-07-17-all-profile-reset-P05-S28` - Migrate the four locale catalogues for the reset and sandbox families through the locales CLI
+- `2026-07-17-all-profile-reset-P05-S29` - Regenerate the CLI reference and operator how-to pages for the reset family from the frozen live surface
+- `2026-07-17-all-profile-reset-P05-S30` - Prove the removed reset and sandbox spellings are absent from every source and generated surface
+- `2026-07-17-all-profile-reset-P05-S31` - Sweep the MCP identity gate off the sandbox-use grammar onto switch-based sandbox addressing, updating its identity-changing command set and docstring
 
 ### plan
 
