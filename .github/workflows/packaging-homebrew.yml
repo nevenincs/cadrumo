@@ -244,6 +244,35 @@ jobs:
             --destination-locator "${{ matrix.id }}" \
             --distribution-evidence-dir "$CADRUMO_S24_ROOT/distribution-install-readiness"
 
+      # Diagnostics must survive the ephemeral (hosted) runner: on failure,
+      # push the brew-install log and the harness failure detail to the lane's
+      # own draft under debug-* asset names. Upload-only: the draft is
+      # guaranteed by needs: create-evidence-draft (a create here would race
+      # the other legs into duplicate drafts). debug-* assets are outside the
+      # promotable row namespace: none are .json row files, and the publish
+      # gates additionally exclude debug-* from row aggregation.
+      - name: Upload build-failure diagnostics to the run's evidence draft
+        if: failure() && steps.initialize.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          staging=$(mktemp -d)
+          install_log="$(find "$CADRUMO_S24_ROOT/evidence" -path '*/logs/brew-install.log' -print -quit 2>/dev/null || true)"
+          if [ -n "$install_log" ]; then
+            cp "$install_log" "$staging/debug-brew-install-${MATRIX_ID}-${GITHUB_RUN_ID}.log"
+          fi
+          if [ -d "$CADRUMO_S24_ROOT/evidence" ]; then
+            tar -czf "$staging/debug-homebrew-diagnostics-${MATRIX_ID}-${GITHUB_RUN_ID}.tar.gz" \
+              -C "$CADRUMO_S24_ROOT" evidence
+          fi
+          if [ -z "$(ls -A "$staging")" ]; then
+            echo "no diagnostics found to upload"
+            exit 0
+          fi
+          gh release upload "$EVIDENCE_TAG" "$staging"/* --clobber
+
       # Deferred cleanup from --retain-install: runs after the emit (which
       # needed the live keg) and even when earlier steps failed, so the
       # self-hosted runner never accumulates smoke formulae/taps.

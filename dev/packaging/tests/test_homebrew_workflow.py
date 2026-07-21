@@ -120,6 +120,24 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     assert "gh release view" in creator_surface  # create-if-absent probe
     assert job["needs"] == "create-evidence-draft"
 
+    # Failure diagnostics survive the ephemeral hosted runner via debug-*
+    # assets on the same draft: upload-only (the draft is guaranteed by
+    # needs: create-evidence-draft — a create here would race the legs into
+    # duplicate drafts), and never a .json row-namespace name.
+    diagnostics = next(
+        step for step in steps if step.get("name") == "Upload build-failure diagnostics to the run's evidence draft"
+    )
+    assert diagnostics["if"] == "failure() && steps.initialize.outputs.ready == 'true'"
+    assert diagnostics["env"]["EVIDENCE_TAG"] == "evidence-homebrew-${{ github.run_id }}"
+    assert "brew-install.log" in diagnostics["run"]
+    assert "debug-brew-install-${MATRIX_ID}-${GITHUB_RUN_ID}.log" in diagnostics["run"]
+    assert "debug-homebrew-diagnostics-${MATRIX_ID}-${GITHUB_RUN_ID}.tar.gz" in diagnostics["run"]
+    assert "gh release upload" in diagnostics["run"]
+    assert "gh release create" not in diagnostics["run"]
+    assert steps.index(diagnostics) < steps.index(
+        next(step for step in steps if step.get("name") == "Clean up the retained Homebrew install"),
+    )
+
     seal = document["jobs"]["seal-evidence-manifest"]
     assert seal["needs"] == "cadrumo-homebrew-acquisition"
     assert "if" not in seal  # manifest only on full success
