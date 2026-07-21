@@ -126,6 +126,7 @@ from ...adapters.persistence.storage import (
 )
 from ...adapters.persistence.storage import DecryptionError
 from ...adapters.persistence.storage.crypto import EncryptedBlob, decrypt_record, derive_key, encrypt_record
+from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
@@ -144,8 +145,6 @@ _RECIPIENT_ENCRYPTION_ENVELOPE_VERSION = 1
 #: derived for an unrelated purpose even if the same shared secret were
 #: (incorrectly) reused.
 _HKDF_CONTEXT_PREFIX = b"cadrumo.review_package.recipient_encryption.v1"
-
-_HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 
 #: Byte length of the replay-detection nonce (independent of, and never
 #: reused as, the AEAD nonce embedded inside ``ciphertext``).

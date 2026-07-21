@@ -56,6 +56,7 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
 )
+from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
@@ -63,8 +64,6 @@ from ...core.time import now as _utc_now
 
 if TYPE_CHECKING:
     from ...adapters.persistence.storage import SecureObjectRepository
-
-_HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 
 #: Raw X25519 public key size in bytes (RFC 7748).
 _X25519_PUBLIC_KEY_BYTES = 32
