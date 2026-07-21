@@ -20,7 +20,7 @@ related:
 
 Date: 2026-04-13
 Branch: `feature/108-modelo-inventory-catalogue`
-Issue: wgergely/aeat#108
+Issue: operator/aeat#108
 
 ## Status
 

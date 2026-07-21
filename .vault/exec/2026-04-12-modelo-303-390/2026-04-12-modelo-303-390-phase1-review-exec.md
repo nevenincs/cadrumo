@@ -15,7 +15,7 @@ related:
 
 # modelo-303-390 phase1 review
 
-Issue: wgergely/aeat#62
+Issue: operator/aeat#62
 Branch: `feature/62-modelo-303-390`
 Review scope: every file changed in phase 1 task 1.
 

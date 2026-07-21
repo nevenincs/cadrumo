@@ -92,7 +92,7 @@ audit-trail contract requires an explicit doc per wave — without it,
 the load-bearing rationale for exec-record deferral collapses.
 
 **Fix**: reconstruct the wave 68 audit doc retroactively from the
-four stream outputs (preserved in `C:\Users\hello\AppData\Local\Temp\
+four stream outputs (preserved in `<operator-home>\AppData\Local\Temp\
 claude\...\tasks\*.output`). **Closed inline as wave 70 ships a new
 `2026-04-22-real-pdf-import-wave-68-exhaustive-audit.md`.**
 

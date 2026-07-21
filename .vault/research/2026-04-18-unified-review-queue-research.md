@@ -12,7 +12,7 @@ related:
 
 ## context
 
-GitHub issue [#232](https://github.com/wgergely/aeat/issues/232) under EPIC umbrella [#202](https://github.com/wgergely/aeat/issues/202) (C4 review surface). Kent must run **one** command and see *everything* across the produce → verify → export pipeline that wants his attention. Today, six unrelated commands surface six unrelated review surfaces, and Kent has to mentally join them. See `[[2026-04-17-kent-revise-review-audit#scenario b — kent inspects what the semi-autonomous pipeline decided|kent-revise-review-audit scenario B walls 28-33]]` (esp. wall 32: *no unified pipeline review queue dashboard*).
+GitHub issue [#232](https://github.com/operator/aeat/issues/232) under EPIC umbrella [#202](https://github.com/operator/aeat/issues/202) (C4 review surface). Kent must run **one** command and see *everything* across the produce → verify → export pipeline that wants his attention. Today, six unrelated commands surface six unrelated review surfaces, and Kent has to mentally join them. See `[[2026-04-17-kent-revise-review-audit#scenario b — kent inspects what the semi-autonomous pipeline decided|kent-revise-review-audit scenario B walls 28-33]]` (esp. wall 32: *no unified pipeline review queue dashboard*).
 
 ## existing review surfaces (audit)
 
@@ -40,7 +40,7 @@ This is the only working "review queue" today, and it is scoped to sync deltas.
 
 Pending = `not is_classified(state)` AND `state is not BusinessClassification.SKIPPED_BY_RULE`.
 
-The audit (kent-revise-review wall 28) noted that the pre-#237 `UNCLASSIFIED` value conflated four states. PR #252 (#237) resolved that conflation; this queue consumes the new state model directly. The further `REVIEWED_EXCLUDED` (Kent's manual-exclusion) state remains scoped to [#224](https://github.com/wgergely/aeat/issues/224) and will be added to the early-return branch alongside `SKIPPED_BY_RULE` when it lands.
+The audit (kent-revise-review wall 28) noted that the pre-#237 `UNCLASSIFIED` value conflated four states. PR #252 (#237) resolved that conflation; this queue consumes the new state model directly. The further `REVIEWED_EXCLUDED` (Kent's manual-exclusion) state remains scoped to [#224](https://github.com/operator/aeat/issues/224) and will be added to the early-return branch alongside `SKIPPED_BY_RULE` when it lands.
 
 ### 3 — invoices (`src/aeat/domain/financial/invoices/`)
 
@@ -60,7 +60,7 @@ The audit (kent-revise-review wall 28) noted that the pre-#237 `UNCLASSIFIED` va
   - draft has any `ERROR`/`WARNING` finding, or
   - draft is in `DRAFT` or `VALIDATED` status (i.e. has not yet reached READY_TO_SUBMIT, blocking export).
 
-When the planned `APPROVED` state (C4a, [#230](https://github.com/wgergely/aeat/issues/230)) lands, "approved drafts that became stale" become a sixth pending kind. Out of scope here; the queue is forward-compatible because each kind has its own adapter.
+When the planned `APPROVED` state (C4a, [#230](https://github.com/operator/aeat/issues/230)) lands, "approved drafts that became stale" become a sixth pending kind. Out of scope here; the queue is forward-compatible because each kind has its own adapter.
 
 ### 5 — inbox notifications (`src/aeat/inbox/`)
 

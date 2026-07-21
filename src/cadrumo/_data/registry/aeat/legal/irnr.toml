@@ -21,7 +21,7 @@ published_at = 2004-03-12
 effective_from = 2004-03-13
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "TRLIRNR art 2: ambito de aplicacion territorial del impuesto. Incluye salvedad de los regimenes forales (Pais Vasco, Navarra) y especialidades de Canarias, Ceuta y Melilla. Fundamento territorial para la atribucion de obligacion IRNR a contribuyentes no residentes que obtienen rentas con fuente en territorio espanol."
 required_text = ["Este impuesto se aplicara en todo el territorio espanol", "regimenes tributarios forales"]
 
@@ -37,7 +37,7 @@ published_at = 2004-03-12
 effective_from = 2004-03-13
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "TRLIRNR art 10: obligacion de designar representante fiscal con residencia en Espana para los contribuyentes que no sean residentes en otro Estado miembro de la Union Europea, cuando operen mediante establecimiento permanente o cuando la Administracion Tributaria lo requiera por la cuantia o caracteristicas de la renta. Fundamento legal del gate de verification predicate implies_nonzero(['fiscal_residency','representante_fiscal_nif']) en la superficie M210 vigente."
 required_text = ["no sean residentes en otro Estado miembro de la Union Europea", "persona fisica o juridica con residencia en Espana", "les represente ante la Administracion Tributaria"]
 
@@ -85,7 +85,7 @@ published_at = 2004-03-12
 effective_from = 2004-03-13
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "TRLIRNR art 24: base imponible para contribuyentes que obtienen rentas sin mediacion de establecimiento permanente. Apartado 1 fija la regla general (importe integro segun LIRPF, sin porcentajes multiplicadores ni reducciones). Apartado 2 establece la base por diferencia para prestaciones de servicios y actividades economicas en Espana. Apartado 6 permite a residentes UE/EEE deducir gastos vinculados directamente a la renta obtenida en Espana. Fundamento de la base imponible M210 casillas rendimiento_integro y gastos_deducibles."
 required_text = ["importe integro", "sin que sean de aplicacion los porcentajes multiplicadores ni las reducciones", "vinculo economico directo e indisociable"]
 
@@ -101,7 +101,7 @@ published_at = 2004-03-12
 effective_from = 2004-03-13
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "TRLIRNR art 25.1.a: tipo de gravamen general 24 por ciento para rentas obtenidas sin mediacion de establecimiento permanente. El mismo apartado fija un tipo reducido del 19 por ciento cuando el contribuyente es residente en otro Estado miembro de la UE o del EEE con efectivo intercambio de informacion tributaria, lo que motiva la fila tipo_renta=ue_residente del parametro registry m210-tipo-gravamen-2025. Los valores numericos vigentes son consolidados a partir de varias reformas posteriores al RDLeg 5/2004 original."
 required_text = ["Con caracter general, el 24 por ciento", "el tipo de gravamen sera el 19 por ciento", "residentes en otro Estado miembro de la Union Europea o del Espacio Economico Europeo"]
 
@@ -133,7 +133,7 @@ published_at = 2004-03-12
 effective_from = 2004-03-13
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "TRLIRNR art 25.1.f: tipo de gravamen del 19 por ciento aplicable por clase de renta a dividendos, intereses y otros rendimientos de capitales propios, y ganancias patrimoniales por transmision de elementos patrimoniales. No contiene condicion de residencia UE/EEE; esa condicion pertenece al tipo general reducido de art 25.1.a. Soporte legal de las filas tipo_renta=dividend, tipo_renta=interest y tipo_renta=ganancia_patrimonial del parametro registry m210-tipo-gravamen-2025."
 required_text = ["El 19 por ciento cuando se trate de", "Dividendos y otros rendimientos derivados de la participacion en los fondos propios de una entidad", "Intereses y otros rendimientos obtenidos por la cesion a terceros de capitales propios", "Ganancias patrimoniales que se pongan de manifiesto con ocasion de transmisiones de elementos patrimoniales"]
 

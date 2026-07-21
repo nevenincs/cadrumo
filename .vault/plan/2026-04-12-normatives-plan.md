@@ -91,7 +91,7 @@ Every file carries:
 - the canonical Spanish title with an English engineering paraphrase
   and a Hungarian user-facing summary;
 - the v1 article set listed in the research artefact;
-- `reviewed_by: "wgergely"` and `last_reviewed_at: 2026-04-12`;
+- `reviewed_by: "operator"` and `last_reviewed_at: 2026-04-12`;
 - tags grouping the normative by tax domain.
 
 Every article permalink uses the fragment form

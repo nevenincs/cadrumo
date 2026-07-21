@@ -8,7 +8,7 @@ title: Filing Complementaria / Amendment Engine — Research
 related:
   - "[[2026-04-12-filing-draft-engine-research]]"
   - "[[2026-04-12-modelo-303-390-research]]"
-issue: wgergely/aeat#93
+issue: operator/aeat#93
 ---
 
 # research: filing complementaria

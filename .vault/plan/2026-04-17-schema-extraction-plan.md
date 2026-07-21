@@ -1,6 +1,6 @@
 ---
 name: schema-extraction-plan
-description: Implementation plan for the aeat.domain.schema subpackage (pydantic models, Extractor interface, BOE-Orden PoC extractor for Modelo 130), wgergely/aeat#9
+description: Implementation plan for the aeat.domain.schema subpackage (pydantic models, Extractor interface, BOE-Orden PoC extractor for Modelo 130), operator/aeat#9
 type: plan
 tags:
   - "#plan"

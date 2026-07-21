@@ -414,7 +414,7 @@ dependencies, 47 dev-only dependencies, and registry extras `anthropic`,
 
 To separate the packaging/WSL proof from the unrelated deleted data files in the
 shared dirty worktree, a detached clean checkout at
-`C:\Users\hello\aeat-packaging-clean-20260629T092758Z` was overlaid with the
+`<operator-home>\aeat-packaging-clean-20260629T092758Z` was overlaid with the
 packaging implementation and the Linux prompter import fix. In that clean
 checkout, `python -m dev.packaging.source_preflight --json` passed and reported
 17,174 tracked shipped-data files: 1,456 under `src/aeat/_data/corpus`, 15,599

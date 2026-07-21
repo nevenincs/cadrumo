@@ -8,7 +8,7 @@ title: release-please phase-4 task-1 — tests/test_release_config.py tripwire
 related:
   - "[[2026-04-12-release-please-plan]]"
   - "[[2026-04-12-release-please-adr]]"
-issue: wgergely/aeat#60
+issue: operator/aeat#60
 ---
 
 # exec: release-please phase-4 task-1

@@ -1,6 +1,6 @@
 ---
 name: schema-extraction-research
-description: Research into programmatic extraction of AEAT modelo schemas (casillas, validation rules, formulas) from PDF forms, Sede HTML, and instructions, for wgergely/aeat#9
+description: Research into programmatic extraction of AEAT modelo schemas (casillas, validation rules, formulas) from PDF forms, Sede HTML, and instructions, for operator/aeat#9
 type: research
 tags:
   - "#research"
@@ -18,7 +18,7 @@ related:
 
 Date: 2026-04-17
 Branch: `feature/9-schema-extraction`
-Issue: wgergely/aeat#9
+Issue: operator/aeat#9
 
 ## Question
 

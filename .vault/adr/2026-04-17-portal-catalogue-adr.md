@@ -16,7 +16,7 @@ related:
 
 Date: 2026-04-17
 Branch: `feature/7-portal-catalogue`
-Issue: wgergely/aeat#7
+Issue: operator/aeat#7
 
 ## Status
 

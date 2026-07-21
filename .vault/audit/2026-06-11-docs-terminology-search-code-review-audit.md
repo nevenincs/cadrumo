@@ -45,7 +45,7 @@ No blocking findings remain for S31. The seven self-hosting concepts are approve
 
 ## REVIEW-005 | LOW | S01 upstream preprocess-hook kickoff is tracked
 
-Reviewed S01 against ADR D6 and the plan requirement for an upstream vaultspec-rag issue reference. The installed `vaultspec-rag` package metadata points to `wgergely/vaultspec-rag`; the repository has issues enabled, and issue #185 is open. Its body covers the generic hook contract: per-project preprocessor registration, versioned structured output, cache keys over source hash plus preprocessor/schema identity, explicit failure semantics, watcher integration, size-limit interaction, and adjacent default-extension asks. The AEAT workstream is linked from upstream comment `https://github.com/wgergely/vaultspec-rag/issues/185#issuecomment-4687704833`, and the local plan row now carries the issue URL.
+Reviewed S01 against ADR D6 and the plan requirement for an upstream vaultspec-rag issue reference. The installed `vaultspec-rag` package metadata points to `operator/vaultspec-rag`; the repository has issues enabled, and issue #185 is open. Its body covers the generic hook contract: per-project preprocessor registration, versioned structured output, cache keys over source hash plus preprocessor/schema identity, explicit failure semantics, watcher integration, size-limit interaction, and adjacent default-extension asks. The AEAT workstream is linked from upstream comment `https://github.com/operator/vaultspec-rag/issues/185#issuecomment-4687704833`, and the local plan row now carries the issue URL.
 
 No blocking findings remain for S01. The issue is intentionally upstream and generic; AEAT-specific extractors remain local under the interim sidecar path documented by S02.
 

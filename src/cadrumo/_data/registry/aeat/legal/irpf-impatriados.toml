@@ -20,7 +20,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF Art. 93 — régimen especial aplicable a los trabajadores desplazados a territorio español. Permite optar por tributar por IRNR durante el período impositivo del desplazamiento y los cinco siguientes. Desarrollado por RD 439/2007 (RIRPF) Art. 113-120 y presentado mediante Modelo 151 (Orden EHA/2887/2008)."
 required_text = [
     "desplazados",
@@ -59,7 +59,7 @@ published_at = 2007-03-31
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RIRPF Art. 113-120 — condiciones y procedimiento para ejercer la opción del régimen especial de impatriados: comunicación a la AEAT en plazo de 6 meses, mantenimiento de la residencia fiscal española, rentas aplicables."
 required_text = [
     "Ámbito de aplicación",

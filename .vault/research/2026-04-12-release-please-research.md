@@ -8,7 +8,7 @@ title: Release-please LOCAL-only autorelease — Research
 related:
   - "[[2026-04-12-release-please-adr]]"
   - "[[2026-04-12-release-please-plan]]"
-issue: wgergely/aeat#60
+issue: operator/aeat#60
 ---
 
 # research: release-please local-only autorelease
@@ -64,7 +64,7 @@ Relevant flags (verified via Context7 docs, `release-please@16`):
 
 - `--token` — **required**. GitHub token with repo read access.
   `gh auth token` supplies it locally.
-- `--repo-url` — **required**. `wgergely/aeat`.
+- `--repo-url` — **required**. `operator/aeat`.
 - `--target-branch main` — the branch to compute against.
 - `--dry-run` — prepare but do not take action. Prints what the PR
   would contain without opening one.
@@ -84,7 +84,7 @@ since the last tag. This is acceptable because:
 - the token comes from `gh auth token`, which is a developer's
   personal credential — not a CI secret;
 - no content is pushed to the remote; nothing happens on
-  `wgergely/aeat` as a side effect of running `just release`.
+  `operator/aeat` as a side effect of running `just release`.
 
 "Local-only" in this project means **"no Actions, no automatic pushes,
 human-gated"**, not "air-gapped". The ADR pins this definition.

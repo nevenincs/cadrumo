@@ -9,7 +9,7 @@ related:
   - "[[2026-04-12-release-please-adr]]"
   - "[[2026-04-12-release-please-plan]]"
   - "[[2026-04-12-release-please-phase5-summary-exec]]"
-issue: wgergely/aeat#60
+issue: operator/aeat#60
 verdict: accept-with-changes
 ---
 

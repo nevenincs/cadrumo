@@ -12,7 +12,7 @@ related:
 
 Date: 2026-04-17
 Branch: `feature/162-relative-imports`
-Issue: wgergely/aeat#162
+Issue: operator/aeat#162
 
 ## Status
 
