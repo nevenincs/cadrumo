@@ -25,12 +25,12 @@ adapters:
   auth:
     authenticator:
       errors:
-        already_active: AeatAuthenticator ya tiene una sesion activa; llame a close()
+        already_active: AeatAuthenticator ya tiene una sesión activa; llame a close()
           o reauthenticate() antes de autenticar de nuevo.
         already_active_before_resume: AeatAuthenticator ya tiene una sesión activa;
           llame a close() antes de reanudar.
-        assertion_failed: La autenticacion AEAT no produjo una asercion de inicio
-          de sesion valida.
+        assertion_failed: La autenticación AEAT no produjo una aserción de inicio
+          de sesión válida.
         capture_requires_active_session: capture_storage_state() requiere la sesión
           autenticada actualmente activa.
         capture_requires_certificate: capture_storage_state() requiere una sesión
@@ -42,7 +42,7 @@ adapters:
           capturar el estado de almacenamiento.
         persisted_session_verification_failed: La sesión persistida del navegador
           AEAT falló la verificación en vivo.
-        resume_failed: La reanudacion de la sesion AEAT persistida no produjo un contexto
+        resume_failed: La reanudación de la sesión AEAT persistida no produjo un contexto
           utilizable.
         session_stale: La sesión AEAT ha caducado; el plazo de inactividad ha expirado.
     clave_movil:
@@ -53,15 +53,15 @@ adapters:
           en el tiempo configurado.
         dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE no está configurado; configure
           su DNI o NIE antes de autenticarse.
-        initial_navigation_timeout: La navegacion inicial a Cl@ve Movil no se completo
+        initial_navigation_timeout: La navegación inicial a Cl@ve Móvil no se completó
           dentro del tiempo configurado.
         metadata_invalid: Los metadatos de sesión de Cl@ve Móvil son inválidos o no
           pueden analizarse.
-        no_persisted_session: No se encontro sesion de Cl@ve Movil; ejecute `aeat
+        no_persisted_session: No se encontró sesión de Cl@ve Móvil; ejecute `aeat
           config auth status` primero.
-        session_expired: La sesion de Cl@ve Movil ha superado su plazo de inactividad.
+        session_expired: La sesión de Cl@ve Móvil ha superado su plazo de inactividad.
         storage_state_hash_mismatch: El hash del estado de almacenamiento de Cl@ve
-          Movil no coincide; los datos de sesion pueden estar corruptos.
+          Móvil no coincide; los datos de sesión pueden estar corruptos.
         verify_requires_active_context: Cl@ve Móvil verify() requiere un contexto
           de navegador activo; llame a authenticate() primero.
   google:
@@ -171,68 +171,68 @@ adapters:
     storage:
       factory:
         errors:
-          drive_root_missing: No hay ningun id de carpeta raiz de Google Drive configurado
+          drive_root_missing: No hay ningún id de carpeta raíz de Google Drive configurado
             para el perfil activo. Ejecuta `aeat config google folder set <id>` primero.
           google_auth_import_failed: La dependencia google-auth no se puede importar;
-            ejecuta `uv sync` y reintentalo.
-          google_client_missing: No hay ningun cliente OAuth de Google registrado
+            ejecuta `uv sync` y reinténtalo.
+          google_client_missing: No hay ningún cliente OAuth de Google registrado
             para el perfil activo. Ejecuta `aeat config google register --client-json
             <path>` primero.
-          google_token_missing: No hay ningun token OAuth de Google persistido para
+          google_token_missing: No hay ningún token OAuth de Google persistido para
             el perfil activo. Ejecuta `aeat config google login` primero.
-          kind_empty: CADRUMO_STORAGE_PROVIDER_KIND esta vacio.
-          kind_unhandled: El tipo de proveedor de almacenamiento {kind} no esta gestionado
+          kind_empty: CADRUMO_STORAGE_PROVIDER_KIND esta vacío.
+          kind_unhandled: El tipo de proveedor de almacenamiento {kind} no está gestionado
             por la factoria.
           kind_unknown: El tipo de proveedor de almacenamiento {value} no se reconoce;
             se esperaba uno de {expected}.
       google_drive:
         errors:
           content_hash_blank: El hash de contenido de Google Drive no puede estar
-            vacio.
+            vacío.
           content_hash_mismatch: El hash de contenido de Google Drive no coincide;
-            fallo la comprobacion de integridad.
-          create_namespace_no_id: Google Drive no devolvio un id al crear la carpeta
+            falló la comprobación de integridad.
+          create_namespace_no_id: Google Drive no devolvió un id al crear la carpeta
             de espacio de nombres.
-          create_vault_folder_no_id: Google Drive no devolvio un id al crear la carpeta
+          create_vault_folder_no_id: Google Drive no devolvió un id al crear la carpeta
             vault.
-          folder_not_owned: La carpeta de Drive {folder_name} no esta marcada como
+          folder_not_owned: La carpeta de Drive {folder_name} no está marcada como
             propiedad de esta app; se rechaza la escritura para proteger datos del
             operador.
           former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
             pertenece al producto anterior y no se puede usar; usa la carpeta vault
             de Cadrumo.
           googleapiclient_import_failed: La dependencia google-api-python-client no
-            se puede importar; ejecuta `uv sync` y reintentalo.
-          media_non_bytes: La descarga de medios de Google Drive devolvio {payload_type}
+            se puede importar; ejecuta `uv sync` y reinténtalo.
+          media_non_bytes: La descarga de medios de Google Drive devolvió {payload_type}
             en vez de bytes.
           namespace_blank: El espacio de nombres de almacenamiento de Google Drive
-            no puede estar vacio.
+            no puede estar vacío.
           namespace_forbidden_characters: El espacio de nombres de Google Drive {namespace}
             contiene caracteres de ruta prohibidos.
-          namespace_not_found: No se encontro el espacio de nombres de Google Drive
+          namespace_not_found: No se encontró el espacio de nombres de Google Drive
             {namespace}.
           object_key_hmac_blank: El HMAC de clave de objeto de Google Drive no puede
-            estar vacio.
-          object_not_found: No se encontro el objeto de Google Drive {object_key_hmac}
+            estar vacío.
+          object_not_found: No se encontró el objeto de Google Drive {object_key_hmac}
             en el espacio {namespace}.
-          request_failed: La peticion de Google Drive {action} fallo con estado {status}.
-          root_folder_id_blank: El id de carpeta raiz de Google Drive no puede estar
-            vacio.
-          vault_entry_not_folder: La raiz configurada de Drive contiene {vault_folder_name},
+          request_failed: La petición de Google Drive {action} falló con estado {status}.
+          root_folder_id_blank: El id de carpeta raíz de Google Drive no puede estar
+            vacío.
+          vault_entry_not_folder: La raíz configurada de Drive contiene {vault_folder_name},
             pero esa entrada no es una carpeta.
           vault_folder_name_blank: El nombre de carpeta vault de Google Drive no puede
-            estar vacio.
+            estar vacío.
           write_non_dict_response: La respuesta de escritura de Google Drive para
             {action} tuvo una forma inesperada.
       local:
         errors:
-          byte_length_invalid: El byte_length del sidecar local tiene tipo invalido
+          byte_length_invalid: El byte_length del sidecar local tiene tipo inválido
             {actual_type}.
-          content_hash_blank: El hash de contenido local no puede estar vacio.
-          content_hash_mismatch: El hash de contenido local no coincide; fallo la
-            comprobacion de integridad.
+          content_hash_blank: El hash de contenido local no puede estar vacío.
+          content_hash_mismatch: El hash de contenido local no coincide; falló la
+            comprobación de integridad.
           namespace_blank: El espacio de nombres de almacenamiento local no puede
-            estar vacio.
+            estar vacío.
           namespace_create_path_too_long: 'El almacenamiento local no pudo crear el
             espacio de nombres {namespace}: la ruta supera el límite de longitud de
             ruta de Windows. Traslade CADRUMO_LOCAL_STORAGE_ROOT a una ruta más corta
@@ -241,13 +241,13 @@ adapters:
             de nombres {namespace}.
           namespace_forbidden_characters: El espacio de nombres local {namespace}
             contiene caracteres de ruta prohibidos.
-          namespace_not_found: No se encontro el espacio de nombres local {namespace}.
+          namespace_not_found: No se encontró el espacio de nombres local {namespace}.
           object_delete_permission: El almacenamiento local no pudo borrar el payload
             del objeto.
-          object_key_hmac_blank: El HMAC de clave de objeto local no puede estar vacio.
+          object_key_hmac_blank: El HMAC de clave de objeto local no puede estar vacío.
           object_key_hmac_forbidden_characters: El HMAC de clave de objeto local {object_key_hmac}
             contiene caracteres prohibidos.
-          object_not_found: No se encontro el objeto local {object_key_hmac} en el
+          object_not_found: No se encontró el objeto local {object_key_hmac} en el
             espacio {namespace}.
           payload_commit_failed: El almacenamiento local no pudo confirmar atomicamente
             el payload del objeto.
@@ -355,13 +355,13 @@ aggregation:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
         bucket de agregación solicitado.
       candidate_outside_period: 'Error interno: el candidato IVA cae fuera del periodo
-        de agregacion.'
+        de agregación.'
       domestic_counterparty_on_intra_community_transaction: Los terceros españoles
         no son válidos para operaciones intracomunitarias.
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
-      unsupported_iva_category: 'Error interno: categoria IVA no admitida para la
-        agregacion.'
+      unsupported_iva_category: 'Error interno: categoría IVA no admitida para la
+        agregación.'
   modelo_bindings:
     errors:
       unsupported_period: Periodo de modelo no soportado para la agregación del libro.
@@ -388,7 +388,7 @@ aggregation:
     errors:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
         %{min_year}-%{max_year}.
-      perceptor_nif_blank: El NIF del perceptor no puede estar vacio.
+      perceptor_nif_blank: El NIF del perceptor no puede estar vacío.
       perceptor_observations_missing: No existen observaciones de retenciones por
         perceptor para el modelo %{modelo} %{filing_year} %{period}; la fuente %{source_kind}
         no puede resolverse.
@@ -401,21 +401,21 @@ aggregation:
       envelope_provider_payload_mismatch: La carga del proveedor del envoltorio no
         coincide con la esperada.
       observations_mismatch: Las observaciones devueltas no coinciden con las esperadas.
-      per_modelo_modelos_not_unique: Los modelos por modelo no son unicos.
-      per_modelo_providers_not_unique: Los proveedores por modelo no son unicos.
-      provider_modelos_not_unique: Los modelos del proveedor no son unicos.
-      result_source_kinds_not_unique: Los tipos de fuente del resultado no son unicos.
+      per_modelo_modelos_not_unique: Los modelos por modelo no son únicos.
+      per_modelo_providers_not_unique: Los proveedores por modelo no son únicos.
+      provider_modelos_not_unique: Los modelos del proveedor no son únicos.
+      result_source_kinds_not_unique: Los tipos de fuente del resultado no son únicos.
       source_kinds_mismatch: Los tipos de fuente no coinciden con la taxonomia aceptada.
   source_mesh:
     errors:
       ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
       binding_source_mismatch: source_kind y binding_source se refieren a familias
         de origen de binding distintas.
-      duplicate_binding_owner: 'Error interno: propietario de vinculacion duplicado
+      duplicate_binding_owner: 'Error interno: propietario de vinculación duplicado
         en la malla de fuentes.'
       duplicate_bound_casilla_owner: 'Error interno: propietario de casilla vinculada
         duplicado en la malla de fuentes.'
-      duplicate_relation_owner: 'Error interno: propietario de relacion duplicado
+      duplicate_relation_owner: 'Error interno: propietario de relación duplicado
         en la malla de fuentes.'
       duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
       out_of_window_summary_date_span_invalid: La fecha máxima de presentación de
@@ -427,7 +427,7 @@ aggregation:
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
         ser únicas.
-      relation_provenance_incomplete: La procedencia de la relacion debe incluir modelo
+      relation_provenance_incomplete: La procedencia de la relación debe incluir modelo
         origen, ejercicio, periodos, casillas, referencias legales y referencias de
         origen.
       row_binding_index_invalid: aggregation.source_mesh.errors.row_binding_index_invalid
@@ -519,7 +519,7 @@ application:
           de autenticación.
         dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
           resuelve a un bucket de perfil registrado. Ejecuta aeat config profile list
-          para inspeccionar los perfiles registrados y despues aeat config switch
+          para inspeccionar los perfiles registrados y después aeat config switch
           NAME o aeat config profile create NAME.
         no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
           NAME` antes de configurar la autenticación.
@@ -656,42 +656,42 @@ application:
         se requiere un año de cuatro dígitos'
     review:
       errors:
-        approved_by_blank: El identificador del aprobador no puede estar vacio.
+        approved_by_blank: El identificador del aprobador no puede estar vacío.
         draft_not_ready: Solo pueden aprobarse borradores listos para presentar.
-        registry_review_mismatch: 'El borrador no coincide con la superficie de revision
+        registry_review_mismatch: 'El borrador no coincide con la superficie de revisión
           del registro: %{codes}.'
       stale_reasons:
-        approval_basis_version_changed: la version de base de aprobacion ha cambiado
-        category_profiles_changed: los perfiles de categoria han cambiado
+        approval_basis_version_changed: la versión de base de aprobación ha cambiado
+        category_profiles_changed: los perfiles de categoría han cambiado
         draft_payload_changed: el contenido del borrador ha cambiado
-        draft_review_changed: la superficie de validacion del borrador ha cambiado
-        invoice_catalogue_changed: el catalogo de facturas ha cambiado
+        draft_review_changed: la superficie de validación del borrador ha cambiado
+        invoice_catalogue_changed: el catálogo de facturas ha cambiado
         prior_filing_observations_changed: las observaciones de declaraciones anteriores
           han cambiado
         profile_activity_changed: la actividad del perfil del contribuyente ha cambiado
-        schema_formula_changed: la procedencia del esquema o la formula ha cambiado
-        transaction_catalogue_changed: el catalogo de transacciones ha cambiado
+        schema_formula_changed: la procedencia del esquema o la fórmula ha cambiado
+        transaction_catalogue_changed: el catálogo de transacciones ha cambiado
         unknown: '%{reason}'
     runtime:
       errors:
-        active_profile_load_failed: 'No se pudo cargar el perfil activo de presentacion:
+        active_profile_load_failed: 'No se pudo cargar el perfil activo de presentación:
           %{reason}.'
         ambiguous_casilla_schema: application.filing.runtime.errors.ambiguous_casilla_schema
-        blank_modelo_selection: La seleccion de modelos solicitada no puede contener
+        blank_modelo_selection: La selección de modelos solicitada no puede contener
           identificadores vacios.
         filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
         filing_year_period_pair: filing_year y period deben indicarse juntos.
-        modelo_not_in_registry: El modelo %{modelo} no esta presente en el registro
-          de calculo.
+        modelo_not_in_registry: El modelo %{modelo} no está presente en el registro
+          de cálculo.
         modelo_revision_missing: El modelo %{modelo} no tiene revisiones.
         period_type: application.filing.runtime.errors.period_type
-        provider_year_missing: El modelo %{modelo} revision %{revision} no tiene ejercicio
+        provider_year_missing: El modelo %{modelo} revisión %{revision} no tiene ejercicio
           de proveedor.
-        registry_empty: La raiz del registro %{registry_root_name} no tiene definiciones
+        registry_empty: La raíz del registro %{registry_root_name} no tiene definiciones
           de modelo.
-        registry_empty_for_period: La raiz del registro no tiene definiciones de modelo
+        registry_empty_for_period: La raíz del registro no tiene definiciones de modelo
           para el ejercicio %{filing_year} periodo %{period}.
-        registry_missing_requested_modelos: 'La raiz del registro no contiene las
+        registry_missing_requested_modelos: 'La raíz del registro no contiene las
           definiciones de modelo solicitadas: %{modelos}.'
         unsupported_casilla_data_type: 'Tipo de dato de casilla del registro no admitido:
           %{data_type}.'
@@ -700,10 +700,10 @@ application:
       errors:
         actividad_conflict: Ya existe un libro de inventario para la actividad %{actividad_id}
           y el ejercicio %{year}.
-        actividad_not_found: No existe ningun libro de inventario para la actividad
+        actividad_not_found: No existe ningún libro de inventario para la actividad
           %{actividad_id} y el ejercicio %{year}.
         duplicate_movement_id: El libro de inventario ya contiene el movimiento %{movement_id}.
-        invalid_valuation_method: 'El metodo de valoracion de inventario no esta admitido:
+        invalid_valuation_method: 'El método de valoración de inventario no está admitido:
           %{valuation_method}.'
   invoices:
     bulk_import:
@@ -723,13 +723,13 @@ application:
           de: %{accepted}.'
     importing:
       errors:
-        import_file_read_failed: 'No se pudo leer el archivo de importacion de facturas:
+        import_file_read_failed: 'No se pudo leer el archivo de importación de facturas:
           %{path_name}.'
-        invalid_json: El contenido JSON de facturas no es valido en la linea %{line},
+        invalid_json: El contenido JSON de facturas no es válido en la línea %{line},
           columna %{column}.
         invalid_json_shape: El contenido JSON de facturas debe ser un objeto o una
           lista de objetos.
-        invalid_kind: 'El tipo de factura no esta admitido: %{kind}.'
+        invalid_kind: 'El tipo de factura no está admitido: %{kind}.'
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefijo de identificador de factura %{invoice_id}
@@ -741,10 +741,10 @@ application:
           primero.'
     linking:
       errors:
-        linked_invoice_not_found: No se encontro la factura %{invoice_id} despues
+        linked_invoice_not_found: No se encontró la factura %{invoice_id} después
           de aplicar el enlace.
-        transaction_not_found: No se encontro la transaccion %{transaction_id} en
-          el catalogo de transacciones.
+        transaction_not_found: No se encontró la transacción %{transaction_id} en
+          el catálogo de transacciones.
     wizard:
       errors:
         build_failed: 'el asistente de facturas rechazó: %{detail}'
@@ -790,40 +790,40 @@ application:
           con varias instantáneas.
     snapshot_base:
       errors:
-        snapshot_bucket_mismatch: El bucket de la carga de la instantanea no coincide
+        snapshot_bucket_mismatch: El bucket de la carga de la instantánea no coincide
           con el bucket del repositorio.
     verify:
       errors:
-        bucket_id_blank: El identificador del bucket de verificacion no puede estar
-          vacio.
-        observation_bucket_mismatch: El bucket de la observacion de verificacion no
+        bucket_id_blank: El identificador del bucket de verificación no puede estar
+          vacío.
+        observation_bucket_mismatch: El bucket de la observación de verificación no
           coincide con el bucket del repositorio.
-        observation_id_blank: El identificador de la observacion de verificacion no
-          puede estar vacio.
-        observation_id_mismatch: El identificador de la observacion de verificacion
-          no coincide con la observacion solicitada.
-        observation_not_found: No hay ninguna observacion de verificacion que coincida
+        observation_id_blank: El identificador de la observación de verificación no
+          puede estar vacío.
+        observation_id_mismatch: El identificador de la observación de verificación
+          no coincide con la observación solicitada.
+        observation_not_found: No hay ninguna observación de verificación que coincida
           con el identificador solicitado.
-        observation_prefix_ambiguous: El prefijo de la observacion de verificacion
+        observation_prefix_ambiguous: El prefijo de la observación de verificación
           coincide con varias observaciones.
   modelo:
     borrador_binding:
       errors:
         caller_binding_keys_blank: Las claves de binding aportadas no pueden estar
           en blanco.
-        decimal_value_invalid: El valor de borrador para el binding numerico %{binding_id}
+        decimal_value_invalid: El valor de borrador para el binding numérico %{binding_id}
           debe ser compatible con decimal.
         forbidden_bindings: 'El snapshot de borrador contiene valores que el registro
           no ha marcado como AEAT-prefilled: %{bindings}.'
         registry_snapshot_axis_mismatch: 'El eje del snapshot de registro no coincide
-          con el comando de binding de borrador: anio del snapshot=%{snapshot_year}
-          periodo=%{snapshot_period}; anio del comando=%{filing_year} periodo=%{period}.'
+          con el comando de binding de borrador: año del snapshot=%{snapshot_year}
+          periodo=%{snapshot_period}; año del comando=%{filing_year} periodo=%{period}.'
         registry_snapshot_modelo_mismatch: 'El modelo del snapshot de registro no
           coincide con el comando de binding de borrador: modelo del snapshot=%{snapshot_modelo};
           modelo del comando=%{command_modelo}.'
         snapshot_axis_mismatch: 'El snapshot de borrador no coincide con el eje del
-          calculo: anio del snapshot=%{snapshot_year} periodo=%{snapshot_period};
-          anio del calculo=%{filing_year} periodo=%{period}.'
+          cálculo: año del snapshot=%{snapshot_year} periodo=%{snapshot_period}; año
+          del calculo=%{filing_year} periodo=%{period}.'
         snapshot_bucket_mismatch: El snapshot de borrador no pertenece al bucket activo.
         snapshot_load_failed: No se puede cargar el snapshot de borrador seleccionado;
           lista los snapshots activos con aeat app live borrador 100 list.
@@ -856,11 +856,11 @@ application:
       calculate_binding_is_date_sourced: --binding %{key} es un binding de tipo fecha
         que se obtiene del perfil activo (un dato de fecha del contribuyente, como
         la fecha de nacimiento); no puede aportarse mediante --binding, que solo admite
-        valores decimales y de enumeracion. Definelo como dato del perfil y vuelve
+        valores decimales y de enumeración. Definelo como dato del perfil y vuelve
         a calcular.
-      calculate_binding_unknown: '--binding %{key} no coincide con ningun binding
-        de esta revision. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings
-        list <MODELO>` para listar los bindings validos.'
+      calculate_binding_unknown: '--binding %{key} no coincide con ningún binding
+        de esta revisión. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings
+        list <MODELO>` para listar los bindings válidos.'
       calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} es
         un indicador booleano codificado como decimal y debe ser uno de: %{accepted}.
         Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''aeat app
@@ -871,18 +871,18 @@ application:
       calculate_casilla_noncanonical_refused: '--casilla %{key} es un número de casilla
         impreso o de formulario, o una referencia de exportación, no un casilla.id
         canónico. Usa el casilla.id canónico en su lugar: %{accepted}'
-      calculate_casilla_unknown: --casilla %{key} no es un casilla.id canonico de
-        esta revision. Usa `aeat app modelo casillas <MODELO>` para listar los casilla.id
-        validos.
+      calculate_casilla_unknown: --casilla %{key} no es un casilla.id canónico de
+        esta revisión. Usa `aeat app modelo casillas <MODELO>` para listar los casilla.id
+        válidos.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
         %{value}'
       calculate_detail_casilla_unsupported: La casilla %{key} nombra un campo de detalle
         de perceptor/inmueble del Modelo 180, no una casilla decimal escalar. El canal
         local --casilla solo acepta casillas decimales escalares; las filas de detalle
-        de perceptor/inmueble del Modelo 180 aun no estan soportadas en la superficie
-        publica --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
-        para la fuente soportada de numero de perceptores/base/retenciones anual.
-      calculate_m184_share_sum_invalid: Los porcentajes de participacion de las filas
+        de perceptor/inmueble del Modelo 180 aún no están soportadas en la superficie
+        pública --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
+        para la fuente soportada de número de perceptores/base/retenciones anual.
+      calculate_m184_share_sum_invalid: Los porcentajes de participación de las filas
         de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
         en %{count} filas.
       calculate_m210_tipo_renta_fetch_gated: 'El código de tipo de renta %{value}
@@ -898,13 +898,13 @@ application:
       calculate_pension_inputs_incomplete: Los datos del rescate del plan de pensiones
         deben indicarse juntos.
       calculate_relation_unknown: '--relation %{key} no coincide con ninguna relation
-        de esta revision. Relations aceptadas: %{accepted}.'
+        de esta revisión. Relations aceptadas: %{accepted}.'
       calculate_sal_inputs_incomplete: Los datos de la reserva especial SAL/SLL deben
         indicarse juntos.
-      calculate_semantic_role_ambiguous: La revision del modelo contiene mas de una
+      calculate_semantic_role_ambiguous: La revisión del modelo contiene más de una
         casilla con el rol semantico %{semantic_role}; el atajo no puede elegir un
-        casilla.id canonico de forma segura.
-      calculate_semantic_role_missing: La revision del modelo no contiene ninguna
+        casilla.id canónico de forma segura.
+      calculate_semantic_role_missing: La revisión del modelo no contiene ninguna
         casilla con el rol semantico %{semantic_role}.
       calculate_text_casilla_numeric_value: El valor de --casilla para %{key} (%{label})
         corresponde a un selector de declarante de data_type=%{data_type} no numérico
@@ -924,35 +924,35 @@ application:
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
         Casillas afectadas: %{computed}.'
       cross_period_clean_state_incomplete: La prueba de estado limpio entre periodos
-        esta incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count}
+        está incompleta para el modelo {modelo} {filing_year} {period}; quedan {finding_count}
         hallazgo(s).
       deductible_vat_evidence_missing: Las filas de IVA deducible del libro requieren
         evidencia de factura de compra vinculada antes de esta acción.
-      export_cross_bucket_refused: La revision indicada pertenece a un bucket distinto
+      export_cross_bucket_refused: La revisión indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
-      export_draft_approval_failed: No se pudo aprobar el borrador para la revision
-        de calculo %{calculation_revision_id}.
-      export_draft_write_failed: No se pudo escribir el archivo de exportacion para
-        la revision de calculo %{calculation_revision_id}.
-      export_ledger_evidence_missing: La revision de calculo %{calculation_revision_id}
+      export_draft_approval_failed: No se pudo aprobar el borrador para la revisión
+        de cálculo %{calculation_revision_id}.
+      export_draft_write_failed: No se pudo escribir el archivo de exportación para
+        la revisión de cálculo %{calculation_revision_id}.
+      export_ledger_evidence_missing: La revisión de cálculo %{calculation_revision_id}
         derivada del libro mayor no incluye evidencia del libro mayor ni una referencia
-        resoluble al snapshot; verifica la revision otra vez antes de exportar.
+        resoluble al snapshot; verifica la revisión otra vez antes de exportar.
       export_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de exportar una revisión de modelo.
-      export_operator_name_missing: 'La exportacion requiere el nombre del operador
+      export_operator_name_missing: 'La exportación requiere el nombre del operador
         en el perfil activo; faltan estos datos de perfil: %{missing}.'
-      export_operator_profile_missing: La exportacion necesita el nombre del operador
+      export_operator_profile_missing: La exportación necesita el nombre del operador
         del perfil activo, pero no existe un perfil persistido; completa identity.surnames
         e identity.name antes de exportar.
       export_output_path_invalid: application.modelo.errors.export_output_path_invalid
       export_period_unmappable: La unidad de trabajo %{work_unit_id} contiene el periodo
         %{period}, que no se puede asignar a un periodo de registro.
-      export_revision_state_refused: La revision de calculo %{calculation_revision_id}
-        no esta verificada-completa ni presentada y no se puede exportar.
+      export_revision_state_refused: La revisión de cálculo %{calculation_revision_id}
+        no está verificada-completa ni presentada y no se puede exportar.
       export_unsupported: El modelo %{modelo} no se puede exportar a fichero-BOE porque
-        %{reason}. El calculo, la verificacion y los registros locales de presentacion
+        %{reason}. El cálculo, la verificación y los registros locales de presentación
         pueden existir, pero este comando no puede producir un archivo para subir
-        a la AEAT para este modelo ni certifica la correccion BOE/export.
+        a la AEAT para este modelo ni certifica la corrección BOE/export.
       external_filing_evidence_reference_blank: La importación de declaración externa
         requiere un evidence_reference_id no vacío.
       external_filing_no_casilla_values: La importación de declaración externa requiere
@@ -977,7 +977,7 @@ application:
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
       iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
         compensation conflicts with the IVA wallet reconciliation decision.
-      iva_wallet_blocked: 'La conciliacion del saldo IVA esta bloqueada para el Modelo
+      iva_wallet_blocked: 'La conciliación del saldo IVA está bloqueada para el Modelo
         303 (%{divergence}): %{reason}'
       iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
         conflicts with the IVA wallet reconciliation decision.
@@ -1016,24 +1016,24 @@ application:
         en la revisión %{revision_id}: el registro declara un origen de vinculación
         que ningún resolutor de cálculo gestiona. Registre un resolutor o márquelo
         como diferido antes de calcular.'
-      profile_readiness_missing: 'El perfil esta incompleto para el Modelo %{modelo}
+      profile_readiness_missing: 'El perfil está incompleto para el Modelo %{modelo}
         %{filing_year} %{period}; completa antes estos datos de perfil: %{missing}.'
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
       recipient_decryption_failed: No se ha podido descifrar el paquete cifrado para
         el destinatario; la clave no coincide o el paquete ha sido manipulado.
-      recipient_encryption_invalid_key: La clave publica del destinatario no es una
-        clave publica X25519 valida.
-      recipient_encryption_key_not_found: Aun no se ha generado ningun par de claves
+      recipient_encryption_invalid_key: La clave pública del destinatario no es una
+        clave pública X25519 válida.
+      recipient_encryption_key_not_found: Aun no se ha generado ningún par de claves
         de cifrado de destinatario para este bucket.
-      recipient_registry_already_exists: El destinatario %{recipient_id} ya esta registrado.
+      recipient_registry_already_exists: El destinatario %{recipient_id} ya está registrado.
       recipient_registry_generic: Se ha producido un error en el registro de huellas
         digitales de destinatarios.
-      recipient_registry_invalid_public_key: La clave publica proporcionada no es
-        una clave X25519 valida de 32 bytes (se recibieron %{length} bytes).
+      recipient_registry_invalid_public_key: La clave pública proporcionada no es
+        una clave X25519 válida de 32 bytes (se recibieron %{length} bytes).
       recipient_registry_load_failed: No se ha podido cargar el registro de huellas
         digitales de destinatarios.
-      recipient_registry_not_found: No hay ningun destinatario registrado con el id
+      recipient_registry_not_found: No hay ningún destinatario registrado con el id
         %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliación por casilla desde PDF de
         declaración aún no está habilitada para este modelo; reconcilia un justificante
@@ -1041,10 +1041,10 @@ application:
         se habilite.
       reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de reconciliar una unidad de trabajo.
-      refund_election_not_eligible: Se eligio devolver para el Modelo %{modelo} %{filing_year}
-        %{period}, pero la devolucion solo esta disponible en el ultimo periodo de
-        declaracion del ano. Arrastra el credito (compensar) o elige la devolucion
-        en el ultimo periodo.
+      refund_election_not_eligible: Se eligió devolver para el Modelo %{modelo} %{filing_year}
+        %{period}, pero la devolución solo está disponible en el último periodo de
+        declaración del año. Arrastra el crédito (compensar) o elige la devolución
+        en el último periodo.
       review_only_workspace_no_authority: Este espacio de trabajo de solo revisión
         no tiene autoridad de presentación; puede leerse y verificarse, pero nunca
         debe tratarse como prueba de que la revisión de cálculo %{calculation_revision_id}
@@ -1055,14 +1055,14 @@ application:
       review_package_revision_state: 'La revisión de cálculo %{calculation_revision_id}
         está en estado %{state} y no puede empaquetarse para revisión; estados admitidos:
         %{eligible_states}.'
-      revision_pick_explicit_id_required: La seleccion explicita de revision requiere
+      revision_pick_explicit_id_required: La selección explícita de revisión requiere
         calculation_revision_id.
       revision_pick_id_requires_explicit_selector: calculation_revision_id solo es
-        valido con el selector de revision explicita.
+        válido con el selector de revisión explícita.
       verification_report_not_found: No existe ningún informe de verificación con
         id=%{verification_report_id}.
       work_period_token_invalid: '--period ''%{token}'' no es un token de periodo
-        valido para el modelo %{modelo}. Indica --year %{year} por separado y usa
+        válido para el modelo %{modelo}. Indica --year %{year} por separado y usa
         uno de: %{tokens}.'
       work_period_token_unrecognised: --period '%{token}' no se reconoce. Indica --year
         %{year} por separado y usa un token de periodo como 0A, Q1, 1T o 01.
@@ -1076,10 +1076,10 @@ application:
       work_unit_mutation_refused: La unidad de trabajo está descartada; cree una nueva
         unidad de trabajo para continuar.
       work_unit_not_found: No existe ninguna unidad de trabajo de modelo con id=%{work_unit_id}.
-      work_unit_revision_divergence: La unidad de trabajo %{work_unit_id} se creo
-        con la revision de registro %{work_unit_revision}, pero la revision determinada
+      work_unit_revision_divergence: La unidad de trabajo %{work_unit_id} se creó
+        con la revisión de registro %{work_unit_revision}, pero la revisión determinada
         por ley para el modelo %{modelo} %{filing_year} %{period} es ahora %{law_revision}.
-        Vuelva a crear la unidad de trabajo para vincularla a la revision actual.
+        Vuelva a crear la unidad de trabajo para vincularla a la revisión actual.
       workflow_gate_no_pending_obligation: 'No hay ninguna obligación de presentación
         pendiente para este modelo/periodo en la fecha actual (la ventana de obligación
         de presentación de la AEAT no está abierta). La presentación a fichero no
@@ -1092,26 +1092,26 @@ application:
     findings:
       art20_reduccion_next_action: Verifique si sus otras rentas distintas de las
         del trabajo excluidas las exentas del ejercicio no superan 6500 EUR; en ese
-        caso, declare la reduccion por rendimientos del trabajo del articulo 20 LIRPF
-        en la casilla de reduccion general (ley-35-2006:art-20).
+        caso, declare la reducción por rendimientos del trabajo del artículo 20 LIRPF
+        en la casilla de reducción general (ley-35-2006:art-20).
       art20_reduccion_possible: 'ART20_REDUCCION_POSSIBLE: la casilla %{rnt_id} (rendimiento
-        neto del trabajo) = %{rnt_value} esta dentro del tramo de reduccion del articulo
-        20 (por debajo de 19747,50) pero la casilla %{reduccion_id} (reduccion general
+        neto del trabajo) = %{rnt_value} está dentro del tramo de reducción del artículo
+        20 (por debajo de 19747,50) pero la casilla %{reduccion_id} (reducción general
         por rendimientos del trabajo) es cero. Si sus otras rentas distintas de las
-        del trabajo excluidas las exentas no superan 6500, puede aplicar la reduccion
-        por rendimientos del trabajo del articulo 20 LIRPF.'
-      art52_reduccion_individual_sublimit_next_action: Confirme si la aportacion esta
-        respaldada por una aportacion del trabajador a un plan de empleo (casilla
-        0426) o por una contribucion empresarial (casilla 0427); si no es asi, la
-        reduccion del articulo 52 LIRPF se limita a 1500 EUR, no al limite conjunto
+        del trabajo excluidas las exentas no superan 6500, puede aplicar la reducción
+        por rendimientos del trabajo del artículo 20 LIRPF.'
+      art52_reduccion_individual_sublimit_next_action: Confirme si la aportación esta
+        respaldada por una aportación del trabajador a un plan de empleo (casilla
+        0426) o por una contribución empresarial (casilla 0427); si no es así, la
+        reducción del artículo 52 LIRPF se limita a 1500 EUR, no al límite conjunto
         de 10000 EUR (ley-35-2006:art-52).
       art52_reduccion_individual_sublimit_possible: 'ART52_REDUCCION_INDIVIDUAL_SUBLIMIT_POSSIBLE:
-        la casilla %{reduccion_id} (reduccion por prevision social) = %{reduccion_value}
-        supera el limite individual del articulo 52 de %{sublimit} EUR, pero no se
-        ha declarado ninguna aportacion del trabajador a un plan de empleo ni contribucion
-        empresarial. Confirme que la reduccion esta respaldada por una contribucion
+        la casilla %{reduccion_id} (reducción por previsión social) = %{reduccion_value}
+        supera el límite individual del artículo 52 de %{sublimit} EUR, pero no se
+        ha declarado ninguna aportación del trabajador a un plan de empleo ni contribución
+        empresarial. Confirme que la reducción esta respaldada por una contribución
         vinculada al empleador que dé derecho al incremento de 8500 EUR; en caso contrario,
-        el limite aplicable es %{sublimit}.'
+        el límite aplicable es %{sublimit}.'
       attribution_received_uncaptured: 'la casilla %{casilla_id} del régimen de atribución
         del M100 declara una base atribuida (modelo=100 year=%{filing_year} value=%{casilla_value}
         EUR) pero ningún hecho attribution_received la respalda para este ejercicio:
@@ -1144,24 +1144,24 @@ application:
           no presenta se excluyeron como no aplicables: {modelos}. Para retenciones
           soportadas, introduce el importe del certificado de ingresos con --binding
           CLAVE=VALOR, no con --casilla. CLAVE=VALOR significa que el id del binding
-          va a la izquierda de un unico signo igual y el valor a la derecha. Para
-          pagos fraccionados mutuamente excluyentes, confirma el regimen de estimacion
+          va a la izquierda de un único signo igual y el valor a la derecha. Para
+          pagos fraccionados mutuamente excluyentes, confirma el régimen de estimación
           de actividad en el perfil.'
         next_action: 'Usa `aeat app modelo bindings list --missing` para identificar
           el binding de retenciones. Aporta el importe del certificado con --binding
           CLAVE=VALOR cuando corresponda: pon el id del binding a la izquierda de
-          un unico signo igual y el importe a la derecha. Confirma el regimen de estimacion
-          de IRPF del perfil si se excluyo un modelo de pago fraccionado mutuamente
+          un único signo igual y el importe a la derecha. Confirma el régimen de estimación
+          de IRPF del perfil si se excluyó un modelo de pago fraccionado mutuamente
           excluyente.'
       cross_period_non_official_local_chain:
-        message: 'el arrastre entre periodos uso un periodo anterior presentado localmente
+        message: 'el arrastre entre periodos usó un periodo anterior presentado localmente
           en el mismo ejercicio sin evidencia externa de la AEAT: modelo=%{source_modelo}
           ejercicio=%{filing_year} periodo=%{period} origen=%{origin}. La cadena dentro
-          del mismo ejercicio se admite para la exportacion local, pero el valor arrastrado
+          del mismo ejercicio se admite para la exportación local, pero el valor arrastrado
           esta evidenciado localmente (app_filing), no por la AEAT; presente cada
           periodo ante la AEAT de forma externa.'
         next_action: Exporte y presente cada periodo ante la AEAT de forma externa,
-          despues actualice la cadena local con evidencia oficial; use `aeat app live
+          después actualice la cadena local con evidencia oficial; use `aeat app live
           justificante pull` cuando haya acceso en vivo, o `aeat app modelo filing-record
           import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf --evidence-id
           CSV --set CASILLA=VALUE` / `aeat app modelo reconcile file WORK_UNIT_ID
@@ -1174,24 +1174,24 @@ application:
       cross_period_operator_declared_suppression_next_action: Confirme que la fecha
         de inicio de actividad registrada es correcta. Cuando esté disponible la lectura
         en vivo del censo de la AEAT, la fecha se contrastará y este aviso se eliminará.
-      dt12a_reduccion_antiquity_next_action: Confirme que han transcurrido mas de
-        dos anos desde la primera aportacion al plan de pensiones, salvo que la prestacion
+      dt12a_reduccion_antiquity_next_action: Confirme que han transcurrido más de
+        dos años desde la primera aportación al plan de pensiones, salvo que la prestación
         sea por invalidez (ley-35-2006:dt-12).
       dt12a_reduccion_antiquity_possible: 'DT_12A_REDUCCION_ANTIQUITY_POSSIBLE: la
-        casilla %{reduccion_id} (reduccion trabajo) = %{reduccion_value} refleja una
-        reduccion aplicada. Si incluye un rescate en capital de un plan de pensiones
-        DT 12a LIRPF, confirme que han transcurrido mas de dos anos desde la primera
-        aportacion; el requisito de antiguedad de dos anos solo se dispensa en las
+        casilla %{reduccion_id} (reducción trabajo) = %{reduccion_value} refleja una
+        reducción aplicada. Si incluye un rescate en capital de un plan de pensiones
+        DT 12a LIRPF, confirme que han transcurrido más de dos años desde la primera
+        aportación; el requisito de antigüedad de dos años solo se dispensa en las
         prestaciones por invalidez.'
       dt12a_reduccion_next_action: Proporcione --rescate-plan-pensiones-capital IMPORTE
         --rescate-plan-pensiones-aportaciones-pre-2007 IMPORTE --rescate-plan-pensiones-aportaciones-totales
         IMPORTE al calcular para inyectar automáticamente la reducción DT 12ª en la
         casilla correspondiente (ley-35-2006:dt-12).
       dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
-        = %{ingreso_value} pero casilla %{reduccion_id} (reduccion trabajo) es cero.
+        = %{ingreso_value} pero casilla %{reduccion_id} (reducción trabajo) es cero.
         Si este ingreso incluye un rescate en capital de plan de pensiones con aportaciones
-        anteriores al 31-dic-2006, puede aplicar la reduccion del 40%% DT 12a LIRPF.'
-      iva_wallet_next_action: Revise la decision de conciliacion del saldo IVA antes
+        anteriores al 31-dic-2006, puede aplicar la reducción del 40%% DT 12a LIRPF.'
+      iva_wallet_next_action: Revise la decisión de conciliación del saldo IVA antes
         de verificar o exportar este Modelo 303.
       m210_baseline_tipo_deferred:
         next_action: 'El tipo de gravamen baseline para tipo_renta={tipo_renta} esta
@@ -1199,14 +1199,14 @@ application:
           profile.country_of_fiscal_residence para reclamar la tarifa Convenio aplicable,
           o espere a que el corpus baseline incorpore esta fila.'
       m210_convenio_lob_advisory: 'M210_CONVENIO_LOB_ADVISORY: se ha aplicado el tipo
-        de Convenio Espana-%{cc} (%{document_id}) para tipo_renta=%{tipo_renta}. El
-        beneficio del convenio solo esta disponible para el beneficiario efectivo
-        residente en ese Estado que cumpla las condiciones de limitacion de beneficios
+        de Convenio España-%{cc} (%{document_id}) para tipo_renta=%{tipo_renta}. El
+        beneficio del convenio solo está disponible para el beneficiario efectivo
+        residente en ese Estado que cumpla las condiciones de limitación de beneficios
         del convenio; confirme la elegibilidad antes de aplicar este tipo.'
       m210_convenio_lob_advisory_next_action: Confirme que el contribuyente cumple
-        las condiciones de beneficiario efectivo y de limitacion de beneficios del
-        Convenio Espana-%{cc} (%{document_id}) antes de aplicar el tipo del convenio;
-        revise el articulo especifico del convenio, no solo el marco general del Modelo
+        las condiciones de beneficiario efectivo y de limitación de beneficios del
+        Convenio España-%{cc} (%{document_id}) antes de aplicar el tipo del convenio;
+        revise el artículo específico del convenio, no solo el marco general del Modelo
         de Convenio de la OCDE.
       m210_convenio_rate_missing:
         next_action: Autorice una fila de Convenio España-{cc} para tipo_renta={tipo_renta}
@@ -1214,11 +1214,11 @@ application:
           para usar el baseline TRLIRNR Art 25.
       madrid_nacimiento_adopcion_eligibility_advisory: 'MADRID_NACIMIENTO_ADOPCION_ELIGIBILITY_ADVISORY:
         la casilla %{casilla_id} es cero pero el contribuyente tiene un descendiente
-        elegible (recuento %{weighted_count}) para la deduccion de Madrid. El disparo
-        automatico esta cerrado para unidades conjunta/casados porque no se puede
-        evaluar el limite de renta familiar; confirme la elegibilidad manualmente.'
+        elegible (recuento %{weighted_count}) para la deducción de Madrid. El disparo
+        automático está cerrado para unidades conjunta/casados porque no se puede
+        evaluar el límite de renta familiar; confirme la elegibilidad manualmente.'
       madrid_nacimiento_adopcion_eligibility_advisory_next_action: Confirme que la
-        base imponible de la unidad familiar esta dentro del limite aplicable y, si
+        base imponible de la unidad familiar está dentro del límite aplicable y, si
         procede, introduzca la casilla 1039 manualmente (madrid-dl-1-2010:art-4, art-18).
       missing_required_casilla: La casilla requerida %{casilla_id} no está presente
         en los datos de entrada del cálculo.
@@ -1280,13 +1280,13 @@ application:
       modelo_303_official_deducible_boxes_unpopulated_cuando_cuota_deducible_positiva: El
         IVA deducible total (cuota-deducible-total) es positivo, pero todas las casillas
         oficiales del Diseño de Registros (29 interiores corrientes, 33 importaciones,
-        37 adquisiciones intracomunitarias) siguen a cero. El calculo no rellena automaticamente
+        37 adquisiciones intracomunitarias) siguen a cero. El cálculo no rellena automáticamente
         las casillas oficiales numeradas; traslade la cuota a las casillas correspondientes
         antes de presentar.
       modelo_303_official_devengado_boxes_unpopulated_cuando_cuota_devengada_positiva: El
         IVA devengado total (cuota-devengada-total) es positivo, pero todas las casillas
         oficiales del Diseño de Registros (03 4%, 06 10%, 09 21%, 11 intracomunitarias,
-        13 inversion del sujeto pasivo) siguen a cero. El calculo no rellena automaticamente
+        13 inversión del sujeto pasivo) siguen a cero. El cálculo no rellena automáticamente
         las casillas oficiales numeradas; traslade la cuota a las casillas correspondientes
         antes de presentar.
       modelo_714_cuota_integra_implica_total_cuota_integra: La cuota íntegra es positiva
@@ -1295,7 +1295,7 @@ application:
       registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
         period=%{period} could not be resolved
       representante_fiscal_required:
-        next_action: Designe un representante fiscal en Espana estableciendo profile.representante_fiscal_nif
+        next_action: Designe un representante fiscal en España estableciendo profile.representante_fiscal_nif
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
           que los declarantes IRNR no residentes en la UE/EEE designen un representante
           para comunicaciones con la AEAT.
@@ -1318,11 +1318,11 @@ application:
     profile_binding:
       errors:
         date_value_type_invalid: El dato de perfil para el binding de fecha %{binding_id}
-          debe ser una fecha; se recibio %{value_type}.
+          debe ser una fecha; se recibió %{value_type}.
         decimal_value_type_invalid: 'El dato de perfil para el binding de canal decimal
           %{binding_id} tiene un tipo no soportado: %{value_type}.'
         enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
-          resolvio a booleano; los booleanos no son claves validas de despacho enum.
+          resolvio a booleano; los booleanos no son claves válidas de despacho enum.
   overview:
     errors:
       horizon_days_not_positive: horizon_days debe ser positivo; se recibió %{horizon_days}
@@ -1338,30 +1338,30 @@ application:
       citation_not_found: No se encontró ninguna cita del registro para la referencia
         legal solicitada.
       invalid_manual_id: El manual del registro debe ser uno de {allowed_manual_ids};
-        se recibio {manual_id}.
+        se recibió {manual_id}.
       invalid_manual_rule_kind: El tipo de regla del manual del registro debe ser
-        uno de {allowed_rule_kinds}; se recibio {rule_kind}.
+        uno de {allowed_rule_kinds}; se recibió {rule_kind}.
       invalid_oracle_environment: El entorno de oráculos del registro debe ser uno
         de {allowed_values}; se recibió {value}.
       invalid_topic_locale: El locale de temas del registro debe ser uno de {allowed_locales};
-        se recibio {locale}.
-      manual_section_not_found: No se encontro la seccion {section} en {manual_id}
+        se recibió {locale}.
+      manual_section_not_found: No se encontró la sección {section} en {manual_id}
         {year} {part}.
-      manual_section_requires_structure: La seccion del manual requiere estructura
+      manual_section_requires_structure: La sección del manual requiere estructura
         extraida para {manual_key}.
       no_revision_for_diff_year: 'Ninguna revisión del registro de {modelo} cubre
         el ejercicio {filing_year}. Revisiones declaradas: {available_revisions}.'
   repair_integrity:
     errors:
-      conflicting_list_filters: 'Los filtros de lista de reparacion son mutuamente
+      conflicting_list_filters: 'Los filtros de lista de reparación son mutuamente
         excluyentes: {filters}. Usa un filtro o ninguno.'
-      decision_id_mismatch_list: El id de la decision de reparacion no coincide con
+      decision_id_mismatch_list: El id de la decisión de reparación no coincide con
         el id recalculado desde su contenido; se rechaza la entrada de la lista.
-      decision_id_mismatch_load: El id del contenido de la decision de reparacion
+      decision_id_mismatch_load: El id del contenido de la decisión de reparación
         no coincide con el solicitado o recalculado; se rechaza la carga.
-      decision_id_mismatch_save: El id de la decision de reparacion no coincide con
+      decision_id_mismatch_save: El id de la decisión de reparación no coincide con
         el id recalculado desde su contenido; se rechaza el guardado.
-      decision_not_found: La decision de reparacion {decision_id} no existe.
+      decision_not_found: La decisión de reparación {decision_id} no existe.
   storage:
     calc_sheets:
       engine:
@@ -1497,8 +1497,8 @@ application:
       registry_policy_invalid: No se pudo cargar la política de verificación del registro.
       registry_snapshot_invalid: No se pudo cargar el snapshot del registro para verificar
         la declaración.
-      registry_snapshot_ref_mismatch: 'La instantanea de registro para el modelo %{modelo}
-        %{period} no coincide con la referencia estampada en la declaracion: observada
+      registry_snapshot_ref_mismatch: 'La instantánea de registro para el modelo %{modelo}
+        %{period} no coincide con la referencia estampada en la declaración: observada
         %{observed_ref}, resuelta %{resolved_ref}.'
   wizard:
     errors:
@@ -1570,7 +1570,7 @@ application:
         de 16 caracteres; se recibió {run_id}.
       resume_target_contradiction: 'Indica solo un destino de resume: id de ejecución
         de flujo, id de unidad de trabajo, id de revisión de cálculo, o modelo/año/periodo.'
-      resume_target_invalid: Destino de resume {target} invalido. Usa --modelo --year
+      resume_target_invalid: Destino de resume {target} inválido. Usa --modelo --year
         --period o ejecuta `aeat app modelo work runs`.
       resume_target_required: Indica --modelo --year --period, un id de ejecución
         de flujo, un id de unidad de trabajo o un id de revisión de cálculo para reanudar.
@@ -1644,13 +1644,13 @@ cli:
         confirm_already_exists_message: Ya existe una factura con esta identidad;
           se devuelve sin cambios en lugar de crear un duplicado.
         confirm_counterparty_name_help: Nombre de la contraparte (sin heuristica de
-          extraccion todavia; normalmente obligatorio).
+          extracción todavía; normalmente obligatorio).
         confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraido.
-        confirm_currency_help: Codigo de moneda ISO-4217.
-        confirm_help: Vuelve a extraer el justificante en el equipo local y confirmalo
-          como una factura real del catalogo.
+        confirm_currency_help: Código de moneda ISO-4217.
+        confirm_help: Vuelve a extraer el justificante en el equipo local y confírmalo
+          como una factura real del catálogo.
         confirm_invoice_date_help: Sobrescribe la fecha de factura extraida (AAAA-MM-DD).
-        confirm_invoice_number_help: Sobrescribe el numero de factura extraido.
+        confirm_invoice_number_help: Sobrescribe el número de factura extraido.
         confirm_iva_rate_help: Sobrescribe el tipo de IVA extraido (omitir para conservar
           el valor extraido).
         confirm_link_hint_message: Vincula esta factura a un movimiento del libro
@@ -1747,33 +1747,33 @@ cli:
         yes_help: Confirma la eliminación de la factura
         yes_required: Debes pasar --yes para eliminar una factura
       prorrata:
-        activity_code_help: Codigo de actividad CNAE / IAE agrupado en este sector
+        activity_code_help: Código de actividad CNAE / IAE agrupado en este sector
           (repetible, al menos uno).
         declare_sector_help: 'Declara un sector diferenciado (LIVA arts. 9.1.c / 101):
-          la particion del art. 9.1.c que declara el operador, nunca inferida del
+          la partición del art. 9.1.c que declara el operador, nunca inferida del
           libro.'
-        ejercicio_help: Ejercicio (ano) que cubre la eleccion.
+        ejercicio_help: Ejercicio (año) que cubre la elección.
         elect_especial_help: 'Elige prorrata especial para un ejercicio (LIVA art.
-          103.Dos.1): la deduccion por input se enruta con --input-classification
+          103.Dos.1): la deducción por input se enruta con --input-classification
           en cada apunte.'
         elect_general_help: 'Elige prorrata general para un ejercicio (LIVA art. 104):
-          un unico porcentaje de deduccion se aplica a cada cuota deducible.'
-        general_percentage_help: Porcentaje de deduccion provisional 0-100 (LIVA art.
+          un único porcentaje de deducción se aplica a cada cuota deducible.'
+        general_percentage_help: Porcentaje de deducción provisional 0-100 (LIVA art.
           104.Uno + 105.Uno).
-        group_help: 'Registro de prorrata de IVA entre ejercicios: elige el regimen
+        group_help: 'Registro de prorrata de IVA entre ejercicios: elige el régimen
           (general / especial) y declara sectores diferenciados (LIVA arts. 101 /
           103 / 105 / 106).'
         letra_help: Letra del art. 9.1.c de la LIVA (a/b/c/d) que hace diferenciado
           este sector.
         list_help: Lista cada entrada del registro y cada sector diferenciado declarado
           en el perfil activo.
-        percentage_help: Porcentaje de deduccion de uso comun 0-100 (LIVA art. 106.Uno
+        percentage_help: Porcentaje de deducción de uso comun 0-100 (LIVA art. 106.Uno
           regla 3.a / art. 104.Dos).
-        provenance_help: Origen del porcentaje provisional segun LIVA art. 105.
+        provenance_help: Origen del porcentaje provisional según LIVA art. 105.
         provenance_not_electable: 'El origen {provenance!r} no es declarable por el
-          operador; aceptados: {accepted}. El porcentaje de interrupcion del art.
+          operador; aceptados: {accepted}. El porcentaje de interrupción del art.
           105.Cinco se calcula desde el registro.'
-        reference_help: Referencia de la autorizacion de la AEAT (art. 105.Dos) o
+        reference_help: Referencia de la autorización de la AEAT (art. 105.Dos) o
           de la propuesta de inicio (art. 105.Tres).
         reference_not_permitted: --reference solo se permite con un origen aeat_autorizada
           o inicio_actividad.
@@ -1840,7 +1840,7 @@ cli:
         app_help: Snapshots de expedientes AEAT de solo lectura
         latest_help: Muestra el snapshot de expedientes más reciente
         list_help: Lista los snapshots de expedientes guardados
-        pull_help: Descarga el registro de declaraciones de AEAT y guarda una instantanea
+        pull_help: Descarga el registro de declaraciones de AEAT y guarda una instantánea
           del bucket.
         pull_modelo_help: Limita esta descarga a este modelo.
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
@@ -1851,7 +1851,7 @@ cli:
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.
         pull_sources_help: Descarga las observaciones presentadas que requieren las
-          dependencias de una declaracion objetivo.
+          dependencias de una declaración objetivo.
       filed_app_help: Observaciones de declaraciones presentadas de solo lectura
       from_year_help: Primer ejercicio de presentación
       iva_wallet:
@@ -1877,15 +1877,15 @@ cli:
           arrastrados y decisiones de autoridad de cartera persistidas derivadas de
           las capturas de Modelo 303 presentados.
         pull_evidence_help: Descarga el historial del Modelo 303 presentado e intenta
-          la lectura de la cartera/IVA de AEAT como una adquisicion tipada de solo
+          la lectura de la cartera/IVA de AEAT como una adquisición tipada de solo
           lectura.
         pull_help: Descarga en directo y persiste la cartera de compensación de IVA
           de la AEAT. La única acción de formulario AEAT permitida es la consulta
           de lectura protegida de cartera; las puertas de representación solo continuan
           en modo nombre propio.
         pull_history_help: Descarga el historial del Modelo 303 presentado y guarda
-          el estado seguro de compensacion de IVA. No se envia ninguna declaracion
-          ni opcion de formulario de cartera AEAT.
+          el estado seguro de compensación de IVA. No se envía ninguna declaración
+          ni opción de formulario de cartera AEAT.
         taxpayer_nif_help: NIF del contribuyente; por defecto, la identidad autenticada.
       justificante:
         app_help: 'Capturas de justificantes AEAT (solo lectura): descarga un justificante
@@ -1899,9 +1899,9 @@ cli:
       modelo_help: Código de modelo
       notifications:
         app_help: Snapshots de notificaciones DEHú de solo lectura
-        latest_help: Muestra la instantanea de notificacion DEHU mas reciente.
+        latest_help: Muestra la instantánea de notificación DEHú más reciente.
         list_help: Lista los snapshots de notificaciones DEHú guardados
-        pull_help: Descarga las notificaciones DEHu y guarda una instantanea del bucket.
+        pull_help: Descarga las notificaciones DEHú y guarda una instantánea del bucket.
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         view_help: Muestra un snapshot de notificaciones DEHú
       output_root_help: Directorio para observaciones capturadas de declaraciones
@@ -1952,17 +1952,17 @@ cli:
           {pos}.'
         json_validation_error: 'El valor de {flag} no es un objeto de observación
           válido: {details}.'
-        modelo_help: Codigo de modelo soportado por el servicio backend de agregacion
+        modelo_help: Código de modelo soportado por el servicio backend de agregación
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
-        period_help: 'Token de periodo de agregacion: 0A anual, 1T-4T trimestres,
+        period_help: 'Token de periodo de agregación: 0A anual, 1T-4T trimestres,
           01-12 meses.'
         retencion_observation_help: Objeto JSON RetencionObservation. El valor source_kind
           debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
         withholding_observation_help: Observación de retención por perceptor y clave
           (JSON) para el recuento de percepciones del Modelo 190; repetible.
-      aggregate_help: Ejecuta el servicio backend de agregacion por modelo con observaciones
-        canonicas explicitas. Los valores source_kind aceptados son ledger_transaction,
+      aggregate_help: Ejecuta el servicio backend de agregación por modelo con observaciones
+        canónicas explicitas. Los valores source_kind aceptados son ledger_transaction,
         purchase_invoice_evidence, payable_invoice y collectible_invoice.
       app_help: Inspeccionar el catálogo de modelos tributarios AEAT en el registro
       audit:
@@ -1991,7 +1991,7 @@ cli:
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         override_help: Sobrescritura temporal de binding con sintaxis KEY=VALUE (repetible)
         period_help: 'Token de periodo: 0A anual, 1T-4T trimestres, 01-12 meses; para
-          modelos censales (036) usa alta, modificacion o baja.'
+          modelos censales (036) usa alta, modificación o baja.'
         relation_input_channel: "%{binding_id}\talimentada por la relación %{relation_id}\t\
           use --relation %{relation_id}=VALUE"
         relation_input_guidance: Algunas vinculaciones siguientes se alimentan de
@@ -2005,14 +2005,14 @@ cli:
         unscoped_revision_suggestion: Antes de copiar ids en work calculate, vuelve
           a ejecutar con --modelo MODELO --year YEAR --period PERIOD para la unidad
           de trabajo destino.
-        unscoped_revision_warning: La lista de vinculaciones no esta acotada por %{missing_filters};
-          puede incluir ids de vinculaciones de una revision que no coincide con la
+        unscoped_revision_warning: La lista de vinculaciones no está acotada por %{missing_filters};
+          puede incluir ids de vinculaciones de una revisión que no coincide con la
           unidad de trabajo usada por work calculate.
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casilla:
-        casilla_help: Id de casilla o numero impreso de casilla que se debe describir
+        casilla_help: Id de casilla o número impreso de casilla que se debe describir
           (p. ej. 0596).
-        help: Muestra la etiqueta, fundamento legal, tipo de entrada y formula de
+        help: Muestra la etiqueta, fundamento legal, tipo de entrada y fórmula de
           una casilla en el snapshot de registro resuelto.
       casillas:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
@@ -2020,13 +2020,13 @@ cli:
         explain_help: Incluir el texto de ayuda localizado en la salida de texto.
         form_number_help: Filtrar casillas por número de casilla impreso en el BOE
           (p. ej. 46)
-        help: Listar todas las casillas definidas para la revision de un modelo especifico.
+        help: Listar todas las casillas definidas para la revisión de un modelo específico.
         input_kind_help: Filtrar las casillas por tipo de entrada (manual, bound,
           computed, informational)
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         number_help: Filtrar casillas por número impreso o id canónico (p. ej. 0596).
-        period_help: 'Token de periodo para resolver la revision del modelo: 0A anual,
-          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
+        period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,
+          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificación
           o baja.'
         required_help: Mostrar solo las casillas marcadas como obligatorias
       compare:
@@ -2048,7 +2048,7 @@ cli:
         as_of_help: Resolver la revisión del modelo vigente en la fecha ISO indicada
           (AAAA-MM-DD)
         help: Mostrar la estructura detallada, metadatos y periodos activos para un
-          modelo especifico.
+          modelo específico.
         label_bindings: Vinculaciones
         label_cadence: Periodicidad
         label_casillas: Casillas
@@ -2062,8 +2062,8 @@ cli:
         label_title: Título
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         period_error: 'Error de registro: %{message}'
-        period_help: 'Token de periodo para resolver la revision del modelo: 0A anual,
-          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
+        period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,
+          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificación
           o baja.'
         period_token_invalid: '--period ''%{period}'' no es un token de periodo válido
           para el modelo %{modelo}. Tokens válidos: %{tokens}.'
@@ -2114,17 +2114,17 @@ cli:
           (AAAA-MM-DD)
         explain_help: Incluir legal_refs y source_refs que sustentan cada fórmula
           en la salida de texto. El payload JSON los lleva siempre.
-        help: Listar todas las casillas calculadas y sus formulas para la revision
-          de un modelo especifico.
+        help: Listar todas las casillas calculadas y sus fórmulas para la revisión
+          de un modelo específico.
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
-        period_help: 'Token de periodo para resolver la revision del modelo: 0A anual,
-          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
+        period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,
+          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificación
           o baja.'
       history:
         modelo_help: Código de modelo (p. ej. 100, 303)
-        period_help: 'Filtro opcional de periodo con el token de revision del modelo:
+        period_help: 'Filtro opcional de periodo con el token de revisión del modelo:
           0A anual, 1T-4T trimestres, 01-12 meses; para modelos censales (036) usa
-          alta, modificacion o baja.'
+          alta, modificación o baja.'
         year_help: Filtro opcional de ejercicio de presentación
       history_help: Muestra la auditoría cronológica del ciclo de vida de un modelo
       iva_wallet:
@@ -2154,31 +2154,31 @@ cli:
         correct_reason_required: 'Indica --reason: registra por qué se corrige el
           saldo inicial; no puede estar vacío.'
         group_help: Comandos de saldo local de la cartera de compensación IVA.
-        override_amount_help: Importe sobrescrito de compensacion previa en EUR aplicado
-          a iva.compensacion-pendiente-periodos-anteriores, casilla AEAT 110; decimal,
+        override_amount_help: Importe sobrescrito de compensación previa en EUR aplicado
+          a iva.compensación-pendiente-periodos-anteriores, casilla AEAT 110; decimal,
           por ejemplo 420.00.
-        override_confirm_help: Indicador de confirmacion obligatorio. Reconoce que
-          la sobrescritura cambia la cifra de compensacion previa presentada y que
-          la exactitud de la declaracion depende del valor aportado.
+        override_confirm_help: Indicador de confirmación obligatorio. Reconoce que
+          la sobrescritura cambia la cifra de compensación previa presentada y que
+          la exactitud de la declaración depende del valor aportado.
         override_confirm_required: Pasa --confirm para reconocer que esto registra
-          una sobrescritura del arrastre de compensacion previa del M303. La exactitud
-          de la declaracion depende del valor aportado.
+          una sobrescritura del arrastre de compensación previa del M303. La exactitud
+          de la declaración depende del valor aportado.
         override_evidence_locator_help: Localizador obligatorio de la evidencia que
           respalda la sobrescritura, por ejemplo una referencia de justificante previo.
         override_evidence_locator_required: Indica --evidence-locator con la referencia
           de evidencia que respalda esta sobrescritura.
         override_filing_year_help: Ejercicio del periodo del Modelo 303 cuyo arrastre
-          de compensacion previa se sobrescribe.
-        override_help: Registra una sobrescritura del arrastre de compensacion previa
+          de compensación previa se sobrescribe.
+        override_help: Registra una sobrescritura del arrastre de compensación previa
           del Modelo 303 desde evidencia externa al monedero local. Solo desbloquea
-          el calculo y no satisface la verificacion de evidencia oficial. Requiere
+          el cálculo y no satisface la verificación de evidencia oficial. Requiere
           --confirm.
-        override_period_help: Periodo de la declaracion dependiente del Modelo 303
+        override_period_help: Periodo de la declaración dependiente del Modelo 303
           que recibe el arrastre, por ejemplo 2T o 3T.
         override_reason_help: Base obligatoria de la sobrescritura, registrada como
           procedencia auditable.
         override_reason_required: Indica --reason explicando por que se sobrescribe
-          el arrastre de compensacion previa; no puede estar vacio.
+          el arrastre de compensación previa; no puede estar vacío.
         seed_amount_help: Importe inicial de la compensación de IVA en decimal.
         seed_confirm_help: Confirme la operación de importe inicial.
         seed_confirm_required: Proporcione el modificador --confirm para confirmar
@@ -2190,14 +2190,14 @@ cli:
           \ IVA para un período anterior al historial local. Se rechaza si ya existe\
           \ un registro para el período.\n\nDos casos:\n\n  --amount 0   Primer período\
           \ real: es la primera declaración del Modelo 303 del contribuyente bajo\
-          \ este NIF. iva.compensacion-pendiente-periodos-anteriores (número AEAT\
+          \ este NIF. iva.compensación-pendiente-periodos-anteriores (número AEAT\
           \ 110) es cero porque no existe saldo previo (LIVA art. 99.5, Ley 37/1992).\
           \ El módulo de conciliación lo trata como first_period_zero, no bloqueante.\n\
           \n --amount X   Traspaso: el contribuyente ha presentado M303 anteriores\
           \ con otra herramienta o directamente en la AEAT. X es la compensación pendiente\
           \ de períodos posteriores de la última declaración presentada."
         seed_invalid_amount: 'El importe de semilla IVA no es válido: %{amount}.'
-        seed_period_help: 'Periodo de la presentacion del Modelo 303: trimestres 1T-4T
+        seed_period_help: 'Periodo de la presentación del Modelo 303: trimestres 1T-4T
           (p. ej. 4T).'
       list:
         domain_help: Filtra el catálogo de modelos por familia tributaria (p. ej.
@@ -2218,7 +2218,7 @@ cli:
             {value}.
           declaration_not_found: Ninguna declaración M036 coincide con {value!r}.
             Ejecuta 'aeat app modelo m036 list' para ver las declaraciones registradas.
-        group_help: Registra una declaración M036 presentada en sede (alta / modificacion
+        group_help: Registra una declaración M036 presentada en sede (alta / modificación
           / baja). La aplicación local nunca presenta; AEAT es la autoridad.
         justificante_help: Identificador opcional del acuse de recibo emitido por
           sede para la presentación.
@@ -2247,7 +2247,7 @@ cli:
         mark_locally_completed_help: Marca un registro local de comunicación del Modelo
           145 como completado localmente.
         note_help: Nota opcional del operador.
-        period_help: 'Token del periodo de la comunicación: comunicacion o variacion.'
+        period_help: 'Token del periodo de la comunicación: comunicación o variación.'
         validate_help: Valida un registro local de comunicación al pagador del Modelo
           145.
         year_help: Año de la comunicación.
@@ -2266,8 +2266,8 @@ cli:
         anual del Modelo 130).
       readiness:
         modelo_help: Código de modelo (p. ej. 303).
-        period_help: 'Token de periodo para resolver la revision del modelo: 0A anual,
-          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificacion
+        period_help: 'Token de periodo para resolver la revisión del modelo: 0A anual,
+          1T-4T trimestres, 01-12 meses; para modelos censales (036) usa alta, modificación
           o baja.'
         revision_help: Identificador de revisión del registro.
         year_help: Ejercicio de presentación.
@@ -2289,7 +2289,7 @@ cli:
         history_work_unit_id_help: Id de unidad de trabajo opcional para acotar el
           historial a una unidad.
         pull_help: Descarga de AEAT el justificante de una unidad de trabajo y concilia
-          contra el. Contacta con AEAT (solo lectura).
+          contra él. Contacta con AEAT (solo lectura).
         work_unit_id_help: Identificador de la unidad de trabajo (SHA-256 o prefijo
           inequívoco).
       requires:
@@ -2305,7 +2305,7 @@ cli:
           de la vivienda por actividad económica).
         period_help: 'Token de periodo usado para resolver la revisión del modelo:
           0A anual, 1T-4T trimestres, 01-12 meses; para modelos censales (036) usa
-          alta, modificacion o baja.'
+          alta, modificación o baja.'
         section_ledger: derivadas_del_libro_de_movimientos
         section_optional: casillas_opcionales_manuales
         section_profile: derivadas_del_perfil
@@ -2327,15 +2327,15 @@ cli:
           JSON.
         counter_signer_public_key_help: Clave pública del asesor fiscal (contrafirmante),
           en 64 caracteres hexadecimales en minúscula.
-        decrypt_help: Abre un paquete de revision cifrado para un destinatario con
+        decrypt_help: Abre un paquete de revisión cifrado para un destinatario con
           el par de claves X25519 de este bucket (generado en el primer uso) y escribe
           el paquete recuperado en --output. Solo local; nunca contacta con la AEAT.
-        decrypt_output_help: Ruta donde escribir el ZIP del paquete de revision recuperado.
+        decrypt_output_help: Ruta donde escribir el ZIP del paquete de revisión recuperado.
         encrypt_feedback_help: Sella los comentarios de revisión de un destinatario
           (una nota y, opcionalmente, un recibo contrafirmado) de vuelta al originador
           para que solo la clave privada del originador pueda abrirlos, y escribe
           el sobre en --output. Solo local; nunca contacta con la AEAT.
-        encrypt_for_recipient_help: Sella un paquete de revision para que solo la
+        encrypt_for_recipient_help: Sella un paquete de revisión para que solo la
           clave privada de un destinatario registrado pueda abrirlo, y escribe el
           sobre cifrado en --output. Solo local; nunca contacta con la AEAT.
         encrypt_output_help: Ruta donde escribir el sobre cifrado para el destinatario
@@ -2343,7 +2343,7 @@ cli:
         envelope_path_help: Ruta del sobre cifrado para el destinatario en formato
           JSON generado por `encrypt-for-recipient`.
         errors:
-          envelope_not_found: No se encontro el sobre cifrado para el destinatario
+          envelope_not_found: No se encontró el sobre cifrado para el destinatario
             en {envelope_path}.
           feedback_envelope_not_found: No se encontró el sobre de comentarios en {envelope_path}.
           invalid_valid_for_days: --valid-for-days debe ser un entero estrictamente
@@ -2390,11 +2390,11 @@ cli:
           en minúscula.
         receipt_path_help: Ruta del recibo contrafirmado en formato JSON generado
           por `counter-sign`.
-        recipient_id_help: Id del destinatario registrado (vease `aeat config collab
+        recipient_id_help: Id del destinatario registrado (véase `aeat config collab
           recipient add`).
-        review_only_help: Marca el paquete sellado como carente de autoridad de presentacion
+        review_only_help: Marca el paquete sellado como carente de autoridad de presentación
           (el destinatario puede leerlo y verificarlo, pero no es prueba de que la
-          revision subyacente haya sido o vaya a ser presentada).
+          revisión subyacente haya sido o vaya a ser presentada).
         revision_help: Id de la revisión de cálculo a empaquetar; por defecto la revisión
           verificada-completa o presentada más reciente de la unidad de trabajo.
         sign_help: Firma el manifiesto de comprobación de un paquete de revisión con
@@ -2402,7 +2402,7 @@ cli:
           el sobre de firma en --output. Solo local; nunca contacta con la AEAT.
         sign_output_help: Ruta donde escribir el sobre de firma en formato JSON.
         signature_path_help: Ruta del sobre de firma JSON generado por `sign`.
-        valid_for_days_help: Ventana de validez opcional en dias; omitela para un
+        valid_for_days_help: Ventana de validez opcional en días; omitela para un
           paquete que nunca caduque.
         verify_help: Verifica el manifiesto de checksum de un paquete de revisión
           (solo integridad; no certifica quién lo construyó). Solo local; nunca contacta
@@ -2499,7 +2499,7 @@ cli:
         calculation_revision_id_help: Identificador estable (SHA-256 de 64 caracteres)
           de una revisión de cálculo
         casilla_help: Valor de casilla con sintaxis CASILLA_ID=DECIMAL (repetible).
-          CASILLA_ID debe ser el casilla.id canonico mostrado por `aeat app modelo
+          CASILLA_ID debe ser el casilla.id canónico mostrado por `aeat app modelo
           casillas`.
         casilla_not_decimal: 'El valor de --casilla para {key} no es un decimal: {value}.'
         causante_ccaa_help: CCAA de residencia habitual del causante (ISD Modelo 650/660)
@@ -2523,8 +2523,8 @@ cli:
         create_not_applicable_refused: 'Modelo %{modelo} no aplica al tipo de contribuyente
           del perfil activo: %{reason} Si tiene un motivo para crear la unidad de
           trabajo de todas formas, repita el comando con --allow-not-applicable.'
-        create_quiet_help: Omitir la salida de confirmacion legible; el envoltorio
-          --format json, los avisos y el codigo de salida no se ven afectados.
+        create_quiet_help: Omitir la salida de confirmación legible; el envoltorio
+          --format json, los avisos y el código de salida no se ven afectados.
         create_reused: Se devolvió la unidad de trabajo existente (idempotente sobre
           modelo/ejercicio/periodo/revisión); no se creó nada nuevo. Renómbrala con
           `aeat app modelo work rename`.
@@ -2534,34 +2534,34 @@ cli:
         create_reused_renamed: Se devolvió la unidad de trabajo existente (idempotente
           sobre modelo/ejercicio/periodo/revisión); no se creó nada nuevo. El --name
           indicado se aplicó como renombrado a %{name}.
-        create_stub_modelo_151_refused: 'Modelo %{modelo} (regimen especial de impatriados,
-          Ley Beckham) no esta soportado para crear unidades de trabajo en este CLI.
+        create_stub_modelo_151_refused: 'Modelo %{modelo} (régimen especial de impatriados,
+          Ley Beckham) no está soportado para crear unidades de trabajo en este CLI.
           Base legal: Ley 35/2006 Art. 93 LIRPF, RD 439/2007 Art. 113, Orden EHA/2887/2008.
-          Presenta la declaracion en la Sede de la AEAT.'
+          Presenta la declaración en la Sede de la AEAT.'
         create_stub_modelo_210_refused: 'Modelo %{modelo} (IRNR, Impuesto sobre la
           Renta de No Residentes) no está soportado para crear unidades de trabajo
           en este CLI. Base legal: RD Legislativo 5/2004 TRLIRNR y Art. 28 TRLIRNR.
           Presenta la declaración mediante el trámite G320 de la Sede de la AEAT en
           sede.agenciatributaria.gob.es.'
         create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones
-          patrimoniales y actos juridicos documentados) no esta soportado para crear
+          patrimoniales y actos juridicos documentados) no está soportado para crear
           unidades de trabajo en este CLI. Fundamento legal: Ley 28/1990 y competencia
-          autonomica ITPyAJD; presente ante la Hacienda / CCAA competente.'
+          autonómica ITPyAJD; presente ante la Hacienda / CCAA competente.'
         create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones
-          de vehiculos usados) no esta soportado para crear unidades de trabajo en
-          este CLI. Fundamento legal: Ley 28/1990 y competencia autonomica ITPyAJD;
-          presente la autoliquidacion ante la Hacienda / CCAA competente.'
-        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD sucesiones) no esta
+          de vehiculos usados) no está soportado para crear unidades de trabajo en
+          este CLI. Fundamento legal: Ley 28/1990 y competencia autonómica ITPyAJD;
+          presente la autoliquidación ante la Hacienda / CCAA competente.'
+        create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD sucesiones) no está
           soportado para crear unidades de trabajo en este CLI. Fundamento legal:
           Ley 29/1987 LISyD y Art. 67 RISD; plazo ordinario de 6 meses desde el fallecimiento.
-          Presente ante la Hacienda autonomica competente.'
+          Presente ante la Hacienda autonómica competente.'
         create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD caudal relicto, acompanante
-          del Modelo 650) no esta soportado para crear unidades de trabajo en este
-          CLI. Fundamento legal: Ley 29/1987 LISyD; presente ante la Hacienda autonomica
+          del Modelo 650) no está soportado para crear unidades de trabajo en este
+          CLI. Fundamento legal: Ley 29/1987 LISyD; presente ante la Hacienda autonómica
           competente.'
         create_stub_modelo_714_refused: 'Modelo %{modelo} (Impuesto sobre el Patrimonio)
-          no esta soportado para crear unidades de trabajo en este CLI. Base legal:
-          Ley 19/1991 Art. 28 y Orden HAC/1023/2021. Presenta la declaracion en la
+          no está soportado para crear unidades de trabajo en este CLI. Base legal:
+          Ley 19/1991 Art. 28 y Orden HAC/1023/2021. Presenta la declaración en la
           Sede de la AEAT.'
         create_stub_modelo_refused: 'Modelo %{modelo} (declaración informativa sobre
           monedas virtuales situadas en el extranjero) no está soportado para crear
@@ -2575,9 +2575,9 @@ cli:
         discard_requires_yes: El descarte es una transición de estado auditable. Vuelva
           a ejecutar 'aeat app modelo work discard %{work_unit_id} --yes' para confirmar.
         discard_yes_help: Confirmar explícitamente la operación de descarte
-        disposition_help: 'Disposicion del resultado negativo del Modelo 303: compensar
-          (arrastrar el credito, por defecto) o devolver (solicitar la devolucion;
-          solo en el ultimo periodo del ano para un contribuyente no inscrito en REDEME).'
+        disposition_help: 'Disposición del resultado negativo del Modelo 303: compensar
+          (arrastrar el crédito, por defecto) o devolver (solicitar la devolución;
+          solo en el último periodo del año para un contribuyente no inscrito en REDEME).'
         dt12_computation_error: 'Error de cómputo DT12: %{message}'
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
@@ -2621,16 +2621,16 @@ cli:
           hex en minúsculas de 64 caracteres (resumen SHA-256)
         invalid_casilla_key: 'La clave --casilla no es un CasillaId válido (alfanumérico
           más separadores . _ : -, máx. 64 caracteres)'
-        invalid_relation_key: La clave --relation no es un RelationId valido. Usa
-          un id de relation en minusculas con guiones o puntos.
-        invalid_revision_selector: Selector de revision desconocido {value}; elija
+        invalid_relation_key: La clave --relation no es un RelationId válido. Usa
+          un id de relation en minúsculas con guiones o puntos.
+        invalid_revision_selector: Selector de revisión desconocido {value}; elija
           uno de {choices}.
         invalid_work_unit_id: work_unit_id debe ser una cadena hex en minúsculas de
           64 caracteres (resumen SHA-256)
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
         kv_format_error: '{flag} debe escribirse como {key_label}={value_label}. Es
-          una entrada clave-valor: pon el nombre del campo a la izquierda de un unico
-          signo igual y el valor a la derecha. Se recibio {spec}.'
+          una entrada clave-valor: pon el nombre del campo a la izquierda de un único
+          signo igual y el valor a la derecha. Se recibió {spec}.'
         list_help: Listar las unidades de trabajo registradas, opcionalmente filtradas
           por perfil
         list_next_action: Inspecciona el estado completo de una unidad de trabajo
@@ -2669,15 +2669,15 @@ cli:
           con --binding. Ejecuta `%{discover}` para listar todos los bindings que
           aún necesita el cálculo.'
         missing_relation_guidance: '%{base} Aporta el valor con --relation KEY=VALUE
-          en este comando; KEY es un id de relacion del registro, no un id de binding.
-          Ejecuta %{discover} para listar la guia de relaciones y los demas bindings
-          que aun necesita el calculo.'
+          en este comando; KEY es un id de relación del registro, no un id de binding.
+          Ejecuta %{discover} para listar la guía de relaciones y los demás bindings
+          que aún necesita el cálculo.'
         missing_relation_guidance_m200_m202: '%{base} Aporta los pagos fraccionados
           del Modelo 202 al Modelo 200 con --relation RELATION_ID=VALUE, no con --binding.
-          DP200014B:00611 resta dos canales de relacion M202 mutuamente exclusivos:
+          DP200014B:00611 resta dos canales de relación M202 mutuamente exclusivos:
           modelo-200-2024-rel-202-pagos-fraccionados para 40.3 casilla 34 y modelo-200-2024-rel-202-pagos-fraccionados-40-2
           para 40.2 casilla 03. Al introducir valores manuales, pon 0 en la modalidad
-          no usada. Ejecuta %{discover} para listar la guia de relaciones y los bindings
+          no usada. Ejecuta %{discover} para listar la guía de relaciones y los bindings
           restantes.'
         modelo_help: Código del modelo tributario (p. ej. 303, 130, 100)
         name_help: Nombre de visualización opcional de la unidad de trabajo
@@ -2690,7 +2690,7 @@ cli:
           `aeat app modelo bindings list --missing` para ver los bindings que requiere
           el cálculo.
         period_help: 'Token de periodo de la unidad: 0A anual, 1T-4T trimestres, 01-12
-          meses; para modelos censales (036) usa alta, modificacion o baja.'
+          meses; para modelos censales (036) usa alta, modificación o baja.'
         period_token_invalid: '--period ''%{token}'' no es un token de periodo válido
           para el modelo %{modelo}. --year y --period se componen por separado: pasa
           --year %{year} para el ejercicio fiscal y uno de los tokens de periodo declarados
@@ -2716,34 +2716,34 @@ cli:
           (Decimal). Obligatorio cuando el perfil activo cumple los requisitos del
           Art. 7.p) (vessel_flag=foreign o waters_type=international).
         preview_maritime_exemption_annual_salary_not_decimal: '--annual-salary debe
-          ser un importe decimal; se recibio: {value}.'
+          ser un importe decimal; se recibió: {value}.'
         preview_maritime_exemption_gross_navigation_income_help: Total de ingresos
-          brutos de trabajo procedentes de la navegacion en EUR (Decimal). Obligatorio
+          brutos de trabajo procedentes de la navegación en EUR (Decimal). Obligatorio
           cuando el perfil activo cumple REBECA (vessel_registry en REBECA / rebeca_eu_eea
           / scheduled_canary_route).
         preview_maritime_exemption_gross_navigation_income_not_decimal: '--gross-navigation-income
-          debe ser un importe decimal; se recibio: {value}.'
-        preview_maritime_exemption_help: Previsualiza la exencion IRPF del trabajador
+          debe ser un importe decimal; se recibió: {value}.'
+        preview_maritime_exemption_help: Previsualiza la exención IRPF del trabajador
           del mar (Art. 7.p) LIRPF / REBECA 50%) a partir de los hechos maritime_worker
           del perfil activo. Emite filas CasillaObservation tipadas con legal_refs;
-          muestra el aviso RETMAR de declaracion obligatoria cuando retmar_registered=True;
-          rechaza con el codigo DA 41 inactivo cuando el selector tuna_fleet aplica.
-        preview_maritime_exemption_qualifying_days_help: Dias naturales trabajados
-          fuera del territorio espanol en el ejercicio. Obligatorio junto con --annual-salary
+          muestra el aviso RETMAR de declaración obligatoria cuando retmar_registered=True;
+          rechaza con el código DA 41 inactivo cuando el selector tuna_fleet aplica.
+        preview_maritime_exemption_qualifying_days_help: Días naturales trabajados
+          fuera del territorio español en el ejercicio. Obligatorio junto con --annual-salary
           cuando se aplica el Art. 7.p).
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
-        relation_help: Valor de relacion del registro con sintaxis KEY=VALUE (repetible).
-          KEY es un id de relacion del registro, no un id de binding; usalo para entradas
-          de relacion entre periodos o entre modelos. Ejecuta aeat app modelo bindings
-          list --missing para ver la guia de relaciones del ambito. Para los pagos
-          fraccionados M202 del Modelo 200, usa los canales de relacion mutuamente
+        relation_help: Valor de relación del registro con sintaxis KEY=VALUE (repetible).
+          KEY es un id de relación del registro, no un id de binding; úsalo para entradas
+          de relación entre periodos o entre modelos. Ejecuta aeat app modelo bindings
+          list --missing para ver la guía de relaciones del ámbito. Para los pagos
+          fraccionados M202 del Modelo 200, usa los canales de relación mutuamente
           exclusivos 40.3 casilla 34 y 40.2 casilla 03, poniendo 0 en la modalidad
           no usada cuando introduzcas valores manuales.
         rename_help: Actualizar el nombre de visualización de una unidad de trabajo
-        rescate_contingencia_year_help: 'Ano en que acaecio la contingencia (jubilacion,
+        rescate_contingencia_year_help: 'Año en que acaeció la contingencia (jubilación,
           incapacidad, fallecimiento) del plan de pensiones. Determina la ventana
-          temporal del apartado 4 DT 12a LIRPF (Ley 26/2014): si la ventana esta cerrada
-          para el ano de rescate, la reduccion del 40% se retiene.'
+          temporal del apartado 4 DT 12a LIRPF (Ley 26/2014): si la ventana está cerrada
+          para el año de rescate, la reducción del 40% se retiene.'
         rescate_plan_pensiones_aportaciones_pre_2007_help: Aportaciones realizadas
           al plan de pensiones hasta el 31-dic-2006 (base de prorrateo DT 12ª LIRPF).
           Necesario junto con --rescate-plan-pensiones-capital y --rescate-plan-pensiones-aportaciones-totales.
@@ -2758,11 +2758,11 @@ cli:
           deben ser importes decimales.
         rescate_type_help: 'Tipo de rescate del plan de pensiones (DT 12a LIRPF):
           total (todo el capital de una vez) o parcial (cobros escalonados). Es una
-          senal de clasificacion y provenance, no cambia el importe: la reduccion
+          señal de clasificación y provenance, no cambia el importe: la reducción
           del 40% se aplica a la parte pre-2007 de lo percibido. En parcial, cada
           cobro comparte la misma ventana del apartado 4.'
-        rescate_year_help: Ano en que se percibe la prestacion del rescate (por defecto
-          el ano de la declaracion). Se compara con la ventana del apartado 4 DT 12a
+        rescate_year_help: Año en que se percibe la prestación del rescate (por defecto
+          el año de la declaración). Se compara con la ventana del apartado 4 DT 12a
           LIRPF medida desde --contingencia-year.
         result_summary_header: resumen del resultado  Modelo %{modelo} %{year} %{period}
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
@@ -2772,9 +2772,9 @@ cli:
           de unidad de trabajo de 64 caracteres. Prefiere --modelo --year --period.
         revision_help: Identificador estable de la revisión registrada del modelo;
           ejecuta `aeat app modelo describe MODELO` para ver los ids de revisión disponibles.
-        revision_selector_ambiguous: Mas de una revision de calculo coincide con este
-          selector. Elija una explicitamente. {candidates}
-        revision_selector_help: Selector de revision.
+        revision_selector_ambiguous: Mas de una revisión de cálculo coincide con este
+          selector. Elija una explícitamente. {candidates}
+        revision_selector_help: Selector de revisión.
         revision_show_help: Mostrar los valores de casilla guardados de una revisión
           de cálculo concreta (sin recalcular)
         revision_verbose_help: Mostrar la traza completa de la fórmula por casilla
@@ -2795,7 +2795,7 @@ cli:
           importe=50000''.'
         row_kv_format_error: 'El campo --row {token} debe escribirse como CLAVE=VALOR.
           Es una entrada clave-valor: pon el nombre del campo de la fila a la izquierda
-          de un unico signo igual y su valor a la derecha.'
+          de un único signo igual y su valor a la derecha.'
         row_m349_invalid_nif: '--row operador: nif_comunitario {nif} no coincide con
           el formato NIF-IVA esperado para el país {pais} (Directiva 2006/112/CE Anexo
           XI)'
@@ -2821,13 +2821,13 @@ cli:
           con --sal-beneficio-neto y --sal-capital-social.
         sal_reserva_not_decimal: Los valores --sal-* deben ser importes decimales.
         selector_ambiguous: Mas de una unidad de trabajo activa coincide con este
-          modelo/ano/periodo. Elija una revision del registro o pase un id de unidad
-          de trabajo explicito. {candidates}
+          modelo/año/periodo. Elija una revisión del registro o pase un id de unidad
+          de trabajo explícito. {candidates}
         selector_not_found: Ninguna unidad de trabajo activa coincide con este modelo,
-          ano y periodo. Ejecute primero aeat app modelo work create.
+          año y periodo. Ejecute primero aeat app modelo work create.
         selector_revision_conflict: Ya existe una unidad de trabajo activa para este
-          modelo/ano/periodo con revision de registro {existing_revision}; se solicito
-          {requested_revision}. Reanude la unidad existente, descartela explicitamente
+          modelo/año/periodo con revisión de registro {existing_revision}; se solicitó
+          {requested_revision}. Reanude la unidad existente, descartela explícitamente
           o pase un id exacto.
         set_not_decimal: El valor de --set debe ser un decimal; se recibió {value}.
         set_override_help: Valor de casilla corregido con sintaxis CASILLA_ID=DECIMAL
@@ -2835,7 +2835,7 @@ cli:
         state_label_borrador: Borrador
         state_label_descartado: Descartado
         state_label_presentado: Presentado
-        state_label_presentado_supersedido: Presentacion sustituida
+        state_label_presentado_supersedido: Presentación sustituida
         state_label_verificado_completo: Verificado completo
         status_help: Mostrar los metadatos de una unidad de trabajo
         status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
@@ -2849,19 +2849,19 @@ cli:
         verify_next_action_incomplete: La verificación encontró elementos bloqueantes
           (consulta los avisos anteriores). Resuélvelos, recalcula con `aeat app modelo
           work calculate` y vuelve a ejecutar `aeat app modelo work verify`.
-        verify_selector_help: Selector de revision borrador (current, latest-draft
+        verify_selector_help: Selector de revisión borrador (current, latest-draft
           o explicit).
-        wizard_help: Guia paso a paso por las casillas manuales pendientes de la unidad
+        wizard_help: Guía paso a paso por las casillas manuales pendientes de la unidad
           de trabajo y calcula
         wizard_prompt: Casilla %{number} (%{label})
-        wizard_relation_help: Alimentado por la relacion de registro %{binding_id};
-          introduce el valor entre periodos o entre modelos que aporta esta relacion.
+        wizard_relation_help: Alimentado por la relación de registro %{binding_id};
+          introduce el valor entre periodos o entre modelos que aporta esta relación.
         wizard_retry_exhausted: El asistente no pudo resolver todas las entradas de
-          calculo tras %{limit} preguntas de seguimiento. Ejecuta `aeat app modelo
+          cálculo tras %{limit} preguntas de seguimiento. Ejecuta `aeat app modelo
           work calculate` directamente y aporta los valores --binding / --relation
           restantes a mano.
-        wizard_saved: 'Guardado como revision de calculo en borrador %{revision_id}
-          (estado: %{state}). Esta persistido y puede retomarse mas tarde; lista las
+        wizard_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
+          (estado: %{state}). Esta persistido y puede retomarse más tarde; lista las
           revisiones con `aeat app modelo work revisions --modelo %{modelo} --year
           %{year} --period %{period}` y vuelve a consultar esta con `aeat app modelo
           work revision %{revision_id}`.'
@@ -2935,15 +2935,15 @@ cli:
           name_help: Registered certificate source to remove
         remove_help: Remove a registered certificate source
         secret:
-          help: Gestiona la contrasena vinculada a una fuente de certificado con nombre
+          help: Gestiona la contraseña vinculada a una fuente de certificado con nombre
           remove:
-            name_help: Fuente de certificado registrada cuya contrasena debe eliminarse
-          remove_help: Elimina la contrasena vinculada a una fuente de certificado
+            name_help: Fuente de certificado registrada cuya contraseña debe eliminarse
+          remove_help: Elimina la contraseña vinculada a una fuente de certificado
             registrada
           set:
-            name_help: Fuente de certificado registrada a la que se vincula la contrasena
+            name_help: Fuente de certificado registrada a la que se vincula la contraseña
             secret_prompt: 'Frase de contraseña PKCS#12 (entrada oculta): '
-          set_help: Establece (o rota) la contrasena de una fuente de certificado
+          set_help: Establece (o rota) la contraseña de una fuente de certificado
             registrada
         select:
           name_help: Registered certificate source to activate
@@ -2975,7 +2975,7 @@ cli:
       no_active_bucket: No hay un perfil activo. Ejecuta 'aeat config profile create
         NAME' antes de configurar la autenticación.
       output_language_help: Idioma del texto de salida (es, en, ca, hu).
-      provider_help: Identificador del proveedor (p.ej. certificado-electronico)
+      provider_help: Identificador del proveedor (p.ej. certificado-electrónico)
       providers:
         status_implemented: disponible
         status_reserved: reservado
@@ -3006,28 +3006,28 @@ cli:
       missing: ausente
       profile_label: perfil
     collab:
-      help: Gestiona los destinatarios de confianza para la colaboracion con paquetes
-        de revision.
+      help: Gestiona los destinatarios de confianza para la colaboración con paquetes
+        de revisión.
       recipient:
-        add_help: Registra la clave publica X25519 de un destinatario de confianza
+        add_help: Registra la clave pública X25519 de un destinatario de confianza
           por su huella digital.
         errors:
           invalid_public_key: --public-key debe tener exactamente 64 caracteres hexadecimales
-            en minuscula (una clave publica X25519 en bruto de 32 bytes).
+            en minúscula (una clave pública X25519 en bruto de 32 bytes).
         help: Registra, lista y elimina destinatarios de confianza para paquetes de
-          revision.
-        label_help: Nombre de visualizacion opcional en texto libre para el destinatario.
+          revisión.
+        label_help: Nombre de visualización opcional en texto libre para el destinatario.
         list_help: Lista todos los destinatarios de confianza registrados en el perfil
           activo.
-        public_key_help: La clave publica X25519 en bruto del destinatario, en 64
-          caracteres hexadecimales en minuscula.
+        public_key_help: La clave pública X25519 en bruto del destinatario, en 64
+          caracteres hexadecimales en minúscula.
         recipient_id_help: Etiqueta estable elegida por el operador (p. ej. 'mi-gestor').
         remove_help: Elimina un destinatario de confianza por su id del perfil activo.
     custody:
-      data_loss_warning: Anota ahora esta clave de recuperacion. AEAT no almacena
-        la clave de recuperacion en claro y no puede mostrarla otra vez.
+      data_loss_warning: Anota ahora esta clave de recuperación. AEAT no almacena
+        la clave de recuperación en claro y no puede mostrarla otra vez.
       errors:
-        new_passphrase_mismatch: La nueva contrasena y su confirmacion no coinciden.
+        new_passphrase_mismatch: La nueva contraseña y su confirmación no coinciden.
         non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
           interactiva; usa --secrets-stdin.
         secrets_stdin_invalid_json: El contenido de --secrets-stdin no es un objeto
@@ -3090,8 +3090,8 @@ cli:
           {profile}
         no_metadata_for_refresh: no hay sesión OAuth para el perfil {profile}; no
           se puede renovar sin un inicio de sesión previo
-        sync_push_limit_requires_dry_run: La sincronizacion push de Google no puede
-          usar --limit salvo que --dry-run este activado, porque una ejecucion real
+        sync_push_limit_requires_dry_run: La sincronización push de Google no puede
+          usar --limit salvo que --dry-run este activado, porque una ejecución real
           acotada crearia un manifiesto remoto parcial.
       errors:
         adc_stale: 'No se pudieron renovar las Credenciales Predeterminadas de la
@@ -3116,7 +3116,7 @@ cli:
         non_interactive: 'El inicio de sesión de Google necesita un terminal interactivo
           con navegador web, pero este comando se ejecutó de forma no interactiva:
           {detail}'
-        profile_unbound: No hay ningun perfil activo. Ejecuta aeat config switch NAME
+        profile_unbound: No hay ningún perfil activo. Ejecuta aeat config switch NAME
           o indica --profile.
         scope_insufficient: El acceso concedido a Google no incluye los permisos necesarios.
           Ejecuta `aeat config google login` y acepta todos los permisos.
@@ -3150,7 +3150,7 @@ cli:
       sync:
         calc:
           compute:
-            refused_stale: rechazo a calcular contra un libro cuyas marcas de metadatos
+            refused_stale: rechazó a calcular contra un libro cuyas marcas de metadatos
               no coinciden con el snapshot suministrado (metadata_match={metadata_match});
               reexporte y vuelva a recuperar
             spreadsheet_id_help: Identificador del archivo de Drive del libro del
@@ -3289,12 +3289,12 @@ cli:
           AEAT
         compare_help: Compara campo a campo el censo AEAT con este perfil
         dropped_fields_notice: 'El censo de la AEAT ya no incluye campos que tenia
-          tu ultima instantanea: {dropped_fields}. Si no has cambiado ni dado de baja
+          tu última instantánea: {dropped_fields}. Si no has cambiado ni dado de baja
           estos datos, puede tratarse de una descarga parcial: vuelve a ejecutar la
-          descarga del censo o reintroduce los valores; la proporcion de afectacion
+          descarga del censo o reintroduce los valores; la proporción de afectación
           de la vivienda podria dejar de resolverse.'
         help: Sincroniza el censo 036 de AEAT con este perfil
-        pull_help: Descarga tu censo mas reciente de AEAT al almacen de instantaneas
+        pull_help: Descarga tu censo más reciente de AEAT al almacén de instantáneas
           de este perfil.
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
@@ -3415,19 +3415,19 @@ cli:
         (modelo, revisión, ejercicio, periodo).
       preflight_modelo_help: Identificador numérico del modelo (p. ej. 303).
       preflight_period_help: Código de periodo (p. ej. 1T, 1P, 0A, 01).
-      preflight_revision_ambiguous: 'Mas de una revision del registro coincide con
+      preflight_revision_ambiguous: 'Mas de una revisión del registro coincide con
         el modelo %{modelo} periodo %{period}: %{candidates}. Vuelva a ejecutar con
         --revision-id indicando una de ellas.'
       preflight_revision_help: Registry revision id.
-      preflight_revision_id_help: Anulacion opcional del id de revision del registro
-        para reproduccion exacta (p. ej. 2024-0A); por defecto usa la revision activa
+      preflight_revision_id_help: Anulación opcional del id de revisión del registro
+        para reproducción exacta (p. ej. 2024-0A); por defecto usa la revisión activa
         para el modelo, ejercicio y periodo.
-      preflight_revision_override_invalid: 'La anulacion de la revision del registro
-        no es valida para el modelo %{modelo} ejercicio %{filing_year}: %{detail}.
+      preflight_revision_override_invalid: 'La anulación de la revisión del registro
+        no es válida para el modelo %{modelo} ejercicio %{filing_year}: %{detail}.
         Ejecute `aeat app modelo describe %{modelo}` para listar las revisiones registradas.'
-      preflight_revision_unresolved: Ninguna revision del registro cubre el modelo
+      preflight_revision_unresolved: Ninguna revisión del registro cubre el modelo
         %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo
-        describe %{modelo}` para ver los periodos y revisiones validos.
+        describe %{modelo}` para ver los periodos y revisiones válidos.
       preflight_year_help: Filing year.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
@@ -3489,7 +3489,7 @@ cli:
         prune_help: Descarta todos los sandboxes a la vez.
         prune_requires_yes: Descartar todos los sandboxes es destructivo. Vuelve a
           ejecutar 'aeat config profile sandbox prune --yes' para confirmar.
-        prune_skipped_active_info: Se omitio el sandbox activo %{names}; cambia a
+        prune_skipped_active_info: Se omitió el sandbox activo %{names}; cambia a
           otro perfil y vuelve a ejecutar 'aeat config profile sandbox prune --yes'
           para descartarlo.
         prune_yes_help: Confirma el descarte de todos los sandboxes.
@@ -3597,7 +3597,7 @@ cli:
       quarantine_requires_yes: Esta operación es destructiva. Vuelve a ejecutar con
         --yes para confirmar.
       quarantine_yes_help: Confirmar explícitamente la operación de cuarentena
-      reset_progress_dry_run_help: Muestra el progreso guardado que se borraria
+      reset_progress_dry_run_help: Muestra el progreso guardado que se borraría
       reset_progress_help: Borra el progreso guardado de un comando interrumpido (destructivo;
         requiere --yes)
       reset_progress_requires_yes: Esta operación es destructiva. Vuelve a ejecutar
@@ -3625,7 +3625,7 @@ cli:
     set:
       help: Asignar un valor a una clave de configuración
       key_help: Clave a asignar (ej. iva.regime)
-      value_help: Valor a asignar (texto, true/false, importe segun la clave)
+      value_help: Valor a asignar (texto, true/false, importe según la clave)
     setup:
       accept_defaults_help: Rellena con los valores por defecto del descriptor todos
         los flags no indicados, sin preguntar. Úsalo junto a --quiet, o por sí solo
@@ -3680,7 +3680,7 @@ cli:
       target_browser: navegador
       target_label: Destino
     dead_end:
-      registry_bundled: 'Error interno: el registro esta empaquetado en la aplicacion
+      registry_bundled: 'Error interno: el registro está empaquetado en la aplicación
         y no puede repararse manualmente.'
       registry_integrity_internal: Problema interno de la aplicación; no es un fallo
         de tu perfil ni algo que puedas corregir tú.
@@ -3772,27 +3772,27 @@ cli:
         lista
       auth_none: La autenticación no está configurada
       auth_session_ready: Sesión de autenticación lista para %{provider}
-      auth_state_unreadable: No se puede comprobar la autenticacion hasta que los
-        datos locales de sesion guardados sean legibles.
+      auth_state_unreadable: No se puede comprobar la autenticación hasta que los
+        datos locales de sesión guardados sean legibles.
       profile_keys_set: '%{present}/%{total} claves de perfil configuradas.'
       profile_missing_keys: '%{count} claves de perfil ausentes.'
       profile_none: No hay perfil configurado
       profile_storage: active_profile=%{active_profile} source=%{source} status=%{status}
       profile_unreadable: 'No se puede leer el perfil: %{status}'
       registry_counts: '%{modelos} modelos y %{casillas} casillas en el registro.'
-      registry_integrity_failed: 'Comprobacion de integridad del registro: FALLIDA.'
-      registry_integrity_ok: 'Comprobacion de integridad del registro: correcta.'
-      registry_integrity_skipped: 'Comprobacion de integridad del registro: omitida.'
-      registry_unavailable: El registro no esta disponible.
-      secure_objects_empty: El almacen de objetos seguros esta vacio.
+      registry_integrity_failed: 'Comprobación de integridad del registro: FALLIDA.'
+      registry_integrity_ok: 'Comprobación de integridad del registro: correcta.'
+      registry_integrity_skipped: 'Comprobación de integridad del registro: omitida.'
+      registry_unavailable: El registro no está disponible.
+      secure_objects_empty: El almacén de objetos seguros esta vacío.
       secure_objects_readable: '%{readable} namespaces de objetos seguros legibles:
         %{namespaces}.'
       secure_objects_unreadable: '%{unreadable} fila(s) ilegible(s), %{readable} fila(s)
         legible(s)'
-      state_backend_readable: El almacen de estado del flujo de trabajo es accesible.
-      state_backend_unreadable: El almacen de estado del flujo de trabajo no es accesible.
-      venv_in_sync: El entorno virtual esta sincronizado.
-      venv_stale: El entorno virtual esta desactualizado.
+      state_backend_readable: El almacén de estado del flujo de trabajo es accesible.
+      state_backend_unreadable: El almacén de estado del flujo de trabajo no es accesible.
+      venv_in_sync: El entorno virtual está sincronizado.
+      venv_stale: El entorno virtual está desactualizado.
     telemetry:
       app_help: Inspecciona y controla el nivel de telemetría remota, desactivado
         por defecto y opcional.
@@ -3854,9 +3854,9 @@ cli:
       actor_help: Nombre del operador registrado en el evento del bucket
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
         p. ej. 1200.50).
-      art_104_tres_exclusion_help: 'Exclusion del denominador de prorrata declarada
+      art_104_tres_exclusion_help: 'Exclusión del denominador de prorrata declarada
         por el operador (LIVA art. 104.Tres: establecimiento permanente en el extranjero
-        u operacion inmobiliaria o financiera no habitual); excluye la operacion de
+        u operación inmobiliaria o financiera no habitual); excluye la operación de
         ambos terminos de la prorrata.'
       attachment_help: Id de adjunto seguro adicional; se puede repetir
       business_pct_help: Proporción de uso profesional de 0 a 1; solo para filas MIXED.
@@ -3875,17 +3875,17 @@ cli:
         la fila. Omítala para añadir un duplicado deliberado.'
       idempotent_noop: 'Operación idempotente sin efecto: ya existe una transacción
         con esta clave de idempotencia (%{transaction_id}); no se añadió nada.'
-      input_classification_help: 'Clasificacion de uso por input declarada por el
-        operador (LIVA art. 106 prorrata especial: exclusively_deductible deduccion
-        integra; exclusively_non_deductible sin deduccion; common al porcentaje general
+      input_classification_help: 'Clasificación de uso por input declarada por el
+        operador (LIVA art. 106 prorrata especial: exclusively_deductible deducción
+        íntegra; exclusively_non_deductible sin deducción; common al porcentaje general
         de prorrata); solo relevante para operaciones soportadas en un bucket con
         prorrata especial.'
       input_classification_inert: '--input-classification es inerte para el ejercicio
-        {ejercicio}: no se aplica ninguna eleccion de prorrata especial, por lo que
+        {ejercicio}: no se aplica ninguna elección de prorrata especial, por lo que
         el input se deduce al porcentaje general. Clasificar todos los inputs del
-        ejercicio tambien habilita la comprobacion de prorrata especial obligatoria
-        (LIVA art. 103.Dos.2) en la liquidacion para un regimen general. Ejecuta ''app
-        ledger prorrata elect-especial --ejercicio {ejercicio}'' para enrutarlo segun
+        ejercicio también habilita la comprobación de prorrata especial obligatoria
+        (LIVA art. 103.Dos.2) en la liquidación para un régimen general. Ejecuta ''app
+        ledger prorrata elect-especial --ejercicio {ejercicio}'' para enrutarlo según
         LIVA art. 106.'
       irpf_category_help: Categoría de IRPF para cálculos de modelos
       iva_amount_help: Importe de IVA de la transacción
@@ -3899,7 +3899,7 @@ cli:
       recargo_amount_help: Cuota del recargo de equivalencia repercutida en esta venta
         a un minorista en recargo (art. 161 LIVA); se agrega a la cuota de recargo
         del Modelo 303 por tipo de IVA
-      sector_unmatched: --sector '{sector_id}' no coincide con ningun sector diferenciado
+      sector_unmatched: --sector '{sector_id}' no coincide con ningún sector diferenciado
         declarado (LIVA arts. 9.1.c / 101), por lo que este input se deduce al porcentaje
         de uso comun en lugar del propio del sector. Ejecuta 'app ledger prorrata
         declare-sector --sector-id {sector_id} ...' para enrutarlo, o corrige la etiqueta.
@@ -3958,18 +3958,18 @@ cli:
         soporta el movimiento; créalo con 'aeat app ledger evidence add PATH'
     categories:
       family_column: familia
-      header: CATEGORIAS DE GASTO RECONOCIDAS DEL LIBRO
+      header: CATEGORÍAS DE GASTO RECONOCIDAS DEL LIBRO
       help: Lista los identificadores aceptados por --category-id y --irpf-category
       id_column: category-id (pasa este valor exacto)
       income_note: Solo gastos deducibles. Los movimientos de ingreso (INCOMING) se
         clasifican por dirección y no necesitan --category-id; `ledger check` y `ledger
         preflight` no marcan un ingreso como missing_category.
-      irpf_header: CATEGORIAS DE IRPF PARA --irpf-category
+      irpf_header: CATEGORÍAS DE IRPF PARA --irpf-category
       irpf_id_column: irpf-category (pasa este valor exacto)
-      irpf_purpose_activity_income_withholding: retencion por actividad profesional
+      irpf_purpose_activity_income_withholding: retención por actividad profesional
         cobrada o pagada neta
       irpf_purpose_employment_income: rendimientos del trabajo (no para facturas netas)
-      irpf_purpose_rent_expense_withholding: retencion de alquiler pagado neto
+      irpf_purpose_rent_expense_withholding: retención de alquiler pagado neto
       irpf_usage_example: 'Alquiler neto: --category-id {rent_category} --irpf-category
         {rent_category}. Servicio profesional neto: --category-id {professional_category}
         --irpf-category {activity_category}.'
@@ -4014,7 +4014,7 @@ cli:
         de o xi); obligatorio con --iva-category intra_community_supply, prohibido
         con export_third_country_zero_rated o export_assimilated_zero_rated
       evidence_acknowledged_help: Confirma que leer la evidencia con un proveedor
-        en la nube la sube fuera de tu equipo (lo exige la verificacion de consentimiento).
+        en la nube la sube fuera de tu equipo (lo exige la verificación de consentimiento).
       from_csv_exclusive: --from-csv no puede combinarse con un id de transacción
         ni --classification.
       from_csv_help: Ruta a un archivo CSV con columnas transaction_id, classification[,
@@ -4024,7 +4024,7 @@ cli:
       help: Clasificar un movimiento del libro en el perfil activo
       id_help: Id del movimiento del libro a clasificar
       id_required: Se requiere un id de transacción cuando no se usa --from-csv.
-      irpf_category_help: 'Id de categoria de IRPF. Usa aeat app ledger categories.
+      irpf_category_help: 'Id de categoría de IRPF. Usa aeat app ledger categories.
         Facturas profesionales cobradas netas usan actividad_economica; alquileres
         pagados netos usan arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE:
         art. 25.4 puede ser capital mobiliario cuando el contribuyente no es el autor;
@@ -4038,13 +4038,13 @@ cli:
       llm_classified_by_label: clasificado-por
       llm_confidence_label: confianza
       llm_exclusive: --llm no puede combinarse con --classification ni --from-csv;
-        la ruta manual es la anulacion explicita del operador.
-      llm_failed: 'La clasificacion por LLM fallo: {reason}'
+        la ruta manual es la anulación explícita del operador.
+      llm_failed: 'La clasificación por LLM falló: {reason}'
       llm_help: Pide a un proveedor LLM local (claude/antigravity/codex) que clasifique
-        la transaccion; vista previa por defecto, persiste con --apply.
-      llm_provider_unavailable: 'El proveedor LLM ''{provider}'' no esta disponible:
-        su CLI no esta en el PATH. Instala el CLI de ''{provider}'' y asegurate de
-        que este en el PATH, o ejecuta ''aeat app ledger providers'' para listar los
+        la transacción; vista previa por defecto, persiste con --apply.
+      llm_provider_unavailable: 'El proveedor LLM ''{provider}'' no está disponible:
+        su CLI no está en el PATH. Instala el CLI de ''{provider}'' y asegúrate de
+        que esté en el PATH, o ejecuta ''aeat app ledger providers'' para listar los
         proveedores disponibles.'
       llm_reason_label: motivo
       llm_rejected_label: rechazada
@@ -4077,7 +4077,7 @@ cli:
       mixed_requires_business_pct: Rechazado. --classification MIXED necesita un porcentaje
         profesional. Pasa --business-pct con un valor de 0 a 1, o clasifica la fila
         como BUSINESS o PERSONAL.
-      read_evidence_help: Lee en local la evidencia adjunta de la transaccion y la
+      read_evidence_help: Lee en local la evidencia adjunta de la transacción y la
         pasa al clasificador.
       reaffirm_help: Reafirmar la clasificación de una transacción ya clasificada.
       reaffirmed: Clasificación reafirmada.
@@ -4090,10 +4090,10 @@ cli:
         una sugerencia rechazada, apply una aceptada.'
       reject_help: Registra un rechazo explícito de la sugerencia del modelo como
         evento de auditoría, sin clasificar la fila (no se puede combinar con --apply).
-      saturate_help: 'Satura con IA: selecciona tambien la categoria de IVA y deriva
+      saturate_help: 'Satura con IA: selecciona también la categoría de IVA y deriva
         el tipo, la base y la cuota.'
       saturate_non_derivable: Tipo no derivable
-      saturate_requires_llm: La opcion --saturate solo se aplica con --llm; indique
+      saturate_requires_llm: La opción --saturate solo se aplica con --llm; indique
         --llm con un proveedor.
       split_recommended_label: división recomendada
       split_recommended_message: La factura adjunta parece contener varias líneas
@@ -4126,7 +4126,7 @@ cli:
       command_input_invalid: 'Rechazado. La transacción no es válida: {details}'
       command_input_invalid_fallback: uno o más campos no superaron la validación
       confirm_required: Pasa --yes para confirmar esta operación destructiva del libro.
-      filter_parse_error: 'Fallo al analizar el filtro del libro cerca de %{token}:
+      filter_parse_error: 'Falló al analizar el filtro del libro cerca de %{token}:
         %{reason}.'
       id_prefix_collision: 'El prefijo de id %{prefix!r} coincide con varias transacciones:
         %{candidates}. Amplía el prefijo para desambiguar.'
@@ -4138,9 +4138,9 @@ cli:
       id_prefix_too_long: El prefijo de id %{prefix!r} supera los 64 caracteres de
         un SHA-256 completo.
       id_prefix_unknown: 'Error inesperado en el prefijo de id de transacción: %{message}'
-      invalid_category: 'Categoria de gasto desconocida ''{category}''. Categorias
+      invalid_category: 'Categoría de gasto desconocida ''{category}''. Categorías
         conocidas: {known}. Ejecuta ''aeat app ledger categories'' para ver valores
-        validos de --category-id.'
+        válidos de --category-id.'
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto
         como separador decimal y sin separador de miles, p. ej. 1234.56.'
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
@@ -4156,11 +4156,11 @@ cli:
         Proveedores reconocidos: {providers}.'
     exclude:
       actor_help: Etiqueta del operador.
-      help: Marca una transaccion de libro revisada como excluida deliberadamente
-        de la declaracion.
-      id_help: Id de transaccion del libro.
+      help: Marca una transacción de libro revisada como excluida deliberadamente
+        de la declaración.
+      id_help: Id de transacción del libro.
       reason_help: Nota opcional que registra por que la fila esta excluida.
-      yes_help: Confirma la decision de exclusion revisada.
+      yes_help: Confirma la decisión de exclusión revisada.
     export:
       actor_help: Nombre del operador registrado en el evento del bucket
       format_help: Formato de serialización de exportación
@@ -4232,7 +4232,7 @@ cli:
       imported: Entradas importadas
       irpf_category: Categoría IRPF
       iva_amount: Importe de IVA
-      iva_category: Categoria de IVA
+      iva_category: Categoría de IVA
       iva_rate: Tipo de IVA
       lifecycle_state: Estado de ciclo de vida
       merged_id: id_fusionado
@@ -4280,7 +4280,7 @@ cli:
         en una única llamada canónica. Para adjuntar evidencia de factura de compra,
         usa 'aeat app ledger attach'. Rechaza vínculos entre buckets. Local; nunca
         contacta con AEAT.
-      id_help: Id de transaccion del libro (SHA-256 o prefijo inequivoco).
+      id_help: Id de transacción del libro (SHA-256 o prefijo inequívoco).
       invoice_id_help: Id del catálogo de facturas enriquecido, procedente de una
         factura importada, reconciliada o creada con 'aeat app ledger invoice catalogue
         create', vinculado bidireccionalmente con el movimiento. NO es un id de 'aeat
@@ -4289,9 +4289,9 @@ cli:
       by_group_help: Agrupar el listado por etiqueta de grupo.
       column_header: "id\tid_completo\tfecha\timporte\tdescripción\testado_revisión"
       filter_help: Filtre las filas por estado, periodo (un token AEAT simple, p.
-        ej. period=1T) junto con el año (p. ej. year=2026), clasificacion, incidencia,
-        importacion, direccion (ingreso/gasto) o texto. Para filtrar por etiqueta
-        de grupo use la opcion --group.
+        ej. period=1T) junto con el año (p. ej. year=2026), clasificación, incidencia,
+        importación, dirección (ingreso/gasto) o texto. Para filtrar por etiqueta
+        de grupo use la opción --group.
       footer_truncated: Mostrando filas {start}-{end} de {total} (desplazamiento {offset}).
         Use --offset/--limit para paginar.
       group_filter_help: Mostrar solo las filas de esta etiqueta de grupo.
@@ -4299,8 +4299,8 @@ cli:
       help: Listar movimientos del libro en el perfil activo
       hide_llm_rejected_help: Oculta las filas cuya sugerencia del modelo más reciente
         fue rechazada (una fila revisada y descartada sale de la cola pendiente).
-      limit_help: 'Numero maximo de filas a mostrar (por defecto: todas).'
-      offset_help: 'Omitir este numero de filas antes de listar (por defecto: 0).'
+      limit_help: 'Número máximo de filas a mostrar (por defecto: todas).'
+      offset_help: 'Omitir este número de filas antes de listar (por defecto: 0).'
       sort_by_help: Ordena las filas listadas por este campo (date, amount, description,
         created_at, modified_at, ...).
       sort_order_help: 'Orden: asc (ascendente) o desc (descendente).'
@@ -4346,12 +4346,12 @@ cli:
           o su id.
         folder_refused: 'No se puede listar la carpeta de Drive %{folder_id}%{scope_hint}:
           la carpeta debe ser accesible bajo el permiso drive.file (creada por la
-          app o elegida explicitamente por el operador), o concede el permiso de Google
+          app o elegida explícitamente por el operador), o concede el permiso de Google
           requerido y vuelve a intentarlo.'
       folder_help: URL de la carpeta de Drive o su id para obtener en bloque las facturas
         PDF/imagen.
       help: Obtiene en bloque cada PDF/imagen de factura en una carpeta de Drive y
-        guarda cada una como evidencia cifrada (sin vincular a ningun movimiento;
+        guarda cada una como evidencia cifrada (sin vincular a ningún movimiento;
         vincula con 'aeat app ledger attach' o 'link').
       labels:
         fetched: obtenidos
@@ -4362,7 +4362,7 @@ cli:
       note_help: Nota opcional registrada en cada archivo adjunto obtenido.
       notices:
         files_refused: '%{refused_count} archivo(s) de esta carpeta no se pudieron
-          obtener bajo el permiso drive.file; descargalos manualmente y adjuntalos
+          obtener bajo el permiso drive.file; descárgalos manualmente y adjúntalos
           con ''aeat app ledger attach --attachment-id ...''.'
     remove:
       actor_help: Nombre del operador registrado en el evento del bucket
@@ -4394,7 +4394,7 @@ cli:
       verbose_help: Mostrar información detallada durante la revisión
     split:
       actor_help: Nombre del operador registrado en el evento del bucket
-      apply_help: Persiste la division --llm propuesta (requiere --yes); sin ella
+      apply_help: Persiste la división --llm propuesta (requiere --yes); sin ella
         la propuesta solo se previsualiza.
       child_amount_help: Importe de una transacción hija como magnitud no negativa;
         se puede repetir
@@ -4405,16 +4405,16 @@ cli:
       errors:
         child_args_mismatch: Cada importe hijo debe tener una descripción hija correspondiente
         min_two_children: Debes indicar al menos dos transacciones hijas
-      evidence_acknowledged_help: Reconoce que --read-evidence envia la evidencia
+      evidence_acknowledged_help: Reconoce que --read-evidence envía la evidencia
         a un modelo en la nube (desactivado por defecto, vetado para gestores).
       help: Divide una transacción del libro en varias transacciones hijas
       id_help: Id de la transacción que quieres dividir
       llm_exclusive: --llm no puede combinarse con --child-amount/--child-description;
-        la via manual es la anulacion explicita del operador.
-      llm_help: Propon una division en N partes basada en evidencia con el proveedor
+        la vía manual es la anulación explícita del operador.
+      llm_help: Propon una división en N partes basada en evidencia con el proveedor
         LLM indicado.
-      read_evidence_help: Lee la factura adjunta de la transaccion en local y alimentala
-        al proponente de division --llm.
+      read_evidence_help: Lee la factura adjunta de la transacción en local y alimentala
+        al proponente de división --llm.
       reason_help: Motivo registrado en el historial de ciclo de vida
       vision_model_help: Sustituye el modelo de visión local de Ollama para leer una
         factura escaneada o en imagen (p. ej. qwen2.5vl:7b); por defecto usa el modelo
@@ -4442,7 +4442,7 @@ cli:
       date_help: Nueva fecha contable (AAAA-MM-DD)
       description_help: Nueva descripción de la transacción
       direction_help: Nuevo sentido de la transacción
-      group_help: Asignar una etiqueta de grupo organizativa (cadena vacia para borrarla).
+      group_help: Asignar una etiqueta de grupo organizativa (cadena vacía para borrarla).
       help: Actualiza los datos editables de una transacción del libro
       id_help: Id de la transacción que quieres actualizar
       irpf_category_help: Nueva categoría de IRPF para cálculos de modelos
@@ -4465,22 +4465,22 @@ cli:
       app_help: Gestiona traducciones locales de esquemas de modelo.
       audit_help: Audita traducciones de esquemas de modelo.
       coverage_help: Muestra cobertura de esquema de modelo.
-      field_help: Campo de traduccion.
+      field_help: Campo de traducción.
       key_help: Clave del esquema.
-      locale_help: Codigo de locale.
+      locale_help: Código de locale.
       modelo_help: Id del modelo.
-      registry_root_help: Raiz del registro AEAT alternativa.
-      remove_help: Elimina una traduccion de esquema de modelo.
-      revision_help: Id de la revision.
+      registry_root_help: Raíz del registro AEAT alternativa.
+      remove_help: Elimina una traducción de esquema de modelo.
+      revision_help: Id de la revisión.
       scaffold_check_help: Comprueba sin escribir.
-      scaffold_help: Genera archivos de traduccion de esquemas de modelo.
-      set_help: Establece una traduccion de esquema de modelo.
+      scaffold_help: Genera archivos de traducción de esquemas de modelo.
+      set_help: Establece una traducción de esquema de modelo.
       value_help: Valor traducido.
     remove_key_help: Clave de locale con puntos que se eliminará.
     remove_locale_help: Código de locale a actualizar.
     scaffold_check_help: Informar de diferencias sin escribir archivos de locale
     set_key_help: Clave de locale con formato de puntos a establecer.
-    set_locale_help: Codigo del locale a actualizar (p. ej. en, es, ca).
+    set_locale_help: Código del locale a actualizar (p. ej. en, es, ca).
     set_value_help: Valor de locale a establecer.
   log_levels:
     errors:
@@ -4489,7 +4489,7 @@ cli:
         %{value}.'
   operator_surface:
     errors:
-      accepted_roots_only: Solo se aceptan los comandos raiz 'app' y 'config'.
+      accepted_roots_only: Solo se aceptan los comandos raíz 'app' y 'config'.
       contract_not_accepted: 'La superficie %{surface} no aceptó el contrato del operador:
         %{reason}.'
       source_kind_options: 'Opciones de tipo de fuente disponibles: %{options}.'
@@ -4497,20 +4497,20 @@ cli:
         las opciones disponibles.'
     help:
       app:
-        footer: Ejecute 'aeat app <comando> --help' para obtener mas informacion sobre
+        footer: Ejecute 'aeat app <comando> --help' para obtener más información sobre
           cada comando.
-        heading: Operaciones de declaracion fiscal AEAT.
+        heading: Operaciones de declaración fiscal AEAT.
         ledger_add: Añadir una transacción al libro manualmente.
         ledger_allocate: Asignar transacciones a un periodo fiscal.
         ledger_archive: Archivar entradas del libro de transacciones.
         ledger_attach: Adjuntar un fichero de origen a una entrada del libro.
-        ledger_classify: Clasificar transacciones del libro segun su naturaleza fiscal.
+        ledger_classify: Clasificar transacciones del libro según su naturaleza fiscal.
         ledger_export: Exportar el libro de transacciones.
         ledger_import: Importar transacciones al libro desde una fuente externa.
         ledger_list: Listar entradas del libro de transacciones.
         ledger_remove: Eliminar una entrada del libro de transacciones.
         ledger_reset: Reiniciar el estado del libro de transacciones.
-        ledger_review: Revisar entradas del libro para su clasificacion fiscal.
+        ledger_review: Revisar entradas del libro para su clasificación fiscal.
         ledger_stash: Guardar temporalmente cambios del libro pendientes.
         ledger_status: Mostrar el estado del libro de transacciones.
         ledger_update: Actualizar una entrada del libro de transacciones.
@@ -4525,39 +4525,39 @@ cli:
         modelo_verification_report: Listar y ver informes de verificación de modelos.
         modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
           exportar.'
-        overview_status: Mostrar el estado general de la declaracion activa.
+        overview_status: Mostrar el estado general de la declaración activa.
         paragraph_operational_workflow: 'Flujo operativo: configure el perfil -> importe
           transacciones -> trabaje el modelo -> revise -> exporte.'
         registry_inspect: Inspeccionar el registro de modelos fiscales.
         registry_verify: Verificar la integridad del registro de modelos.
-        review_queue: Mostrar la cola de revision pendiente.
-        review_view: Ver el detalle de un elemento de la cola de revision.
+        review_queue: Mostrar la cola de revisión pendiente.
+        review_view: Ver el detalle de un elemento de la cola de revisión.
         section_ledger: Libro de transacciones
         section_live_reads: Lecturas en vivo AEAT
         section_modelo: Modelos fiscales
         section_overview: Estado general
-        section_review_and_registry: Revision y registro
+        section_review_and_registry: Revisión y registro
       config:
-        auth_configure: Configurar el proveedor de autenticacion con la AEAT.
+        auth_configure: Configurar el proveedor de autenticación con la AEAT.
         auth_logout: Cerrar sesiones locales y conservar la configuración del proveedor.
-        auth_providers: Listar los proveedores de autenticacion disponibles.
+        auth_providers: Listar los proveedores de autenticación disponibles.
         auth_reset: Retirar la configuración local de autenticación y las credenciales
           guardadas.
-        auth_status: Mostrar el estado actual de la autenticacion con la AEAT.
-        auth_test: Probar la autenticacion con la AEAT.
-        diagnostics_logs: Consultar los registros de diagnostico de la aplicacion.
+        auth_status: Mostrar el estado actual de la autenticación con la AEAT.
+        auth_test: Probar la autenticación con la AEAT.
+        diagnostics_logs: Consultar los registros de diagnóstico de la aplicación.
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
-          la aplicacion.
+          la aplicación.
         diagnostics_reset_progress: Borrar progreso atascado de comandos interrumpidos.
-        first_run_bootstrap: Inicializar la configuracion en el primer uso.
-        first_run_edit: Editar la configuracion inicial.
-        footer: Ejecute 'aeat config <comando> --help' para obtener mas informacion
+        first_run_bootstrap: Inicializar la configuración en el primer uso.
+        first_run_edit: Editar la configuración inicial.
+        footer: Ejecute 'aeat config <comando> --help' para obtener más información
           sobre cada comando.
-        heading: Configuracion y diagnostico del contribuyente.
-        paragraph_durable_state: El estado duradero (perfil, autenticacion, libro)
+        heading: Configuración y diagnóstico del contribuyente.
+        paragraph_durable_state: El estado duradero (perfil, autenticación, libro)
           persiste entre sesiones.
-        paragraph_storage_isolation: Para una ejecucion aislada desde cero, defina
+        paragraph_storage_isolation: Para una ejecución aislada desde cero, defina
           CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
           y CADRUMO_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
           de almacenamiento.
@@ -4573,32 +4573,32 @@ cli:
         reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles locales.
         reset_status: Muestra el estado de una operación de reinicio sin modificar
           datos locales.
-        section_authentication: Autenticacion AEAT
-        section_diagnostics: Diagnostico
-        section_first_run: Primera ejecucion
-        section_profile_inspection: Inspeccion de perfil
+        section_authentication: Autenticación AEAT
+        section_diagnostics: Diagnóstico
+        section_first_run: Primera ejecución
+        section_profile_inspection: Inspección de perfil
         section_profile_lifecycle: Ciclo de vida del perfil
       root:
         diagnostics_live_filed: Diagnosticar las declaraciones presentadas capturadas
           en vivo.
-        diagnostics_overview: Mostrar el diagnostico general del estado del sistema.
+        diagnostics_overview: Mostrar el diagnóstico general del estado del sistema.
         diagnostics_registry_inspect: Inspeccionar el registro de modelos fiscales.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
-          la aplicacion.
-        diagnostics_review_queue: Mostrar la cola de revision pendiente.
-        footer: Ejecute 'aeat <comando> --help' para obtener mas informacion sobre
+          la aplicación.
+        diagnostics_review_queue: Mostrar la cola de revisión pendiente.
+        footer: Ejecute 'aeat <comando> --help' para obtener más información sobre
           cada comando.
         heading: CADRUMO, herramienta de declaraciones fiscales con la AEAT.
         ledger_allocate: Asignar transacciones a un periodo fiscal.
         ledger_archive: Archivar entradas del libro de transacciones.
         ledger_attach: Adjuntar un fichero de origen a una entrada del libro.
-        ledger_classify: Clasificar transacciones del libro segun su naturaleza fiscal.
+        ledger_classify: Clasificar transacciones del libro según su naturaleza fiscal.
         ledger_export: Exportar el libro de transacciones.
         ledger_import: Importar transacciones al libro desde una fuente externa.
         ledger_list: Listar entradas del libro de transacciones.
         ledger_remove: Eliminar una entrada del libro de transacciones.
         ledger_reset: Reiniciar el estado del libro de transacciones.
-        ledger_review: Revisar entradas del libro para su clasificacion fiscal.
+        ledger_review: Revisar entradas del libro para su clasificación fiscal.
         ledger_stash: Guardar temporalmente cambios del libro pendientes.
         ledger_status: Mostrar el estado del libro de transacciones.
         ledger_update: Actualizar una entrada del libro de transacciones.
@@ -4607,23 +4607,23 @@ cli:
         modelo_list: Listar los modelos fiscales disponibles.
         modelo_work: 'Trabajar con un modelo fiscal: introducir datos, calcular y
           exportar.'
-        paragraph_storage_isolation: Para una ejecucion aislada desde cero, defina
+        paragraph_storage_isolation: Para una ejecución aislada desde cero, defina
           CADRUMO_LOCAL_STORAGE_ROOT, CADRUMO_SECRET_STORE_BACKEND=file, CADRUMO_SECRET_STORE_DIR
           y CADRUMO_SECRET_PASSPHRASE; los logs quedan por defecto bajo ese directorio
           de almacenamiento.
         paragraph_two_roots: 'Dos superficies principales: ''app'' para operaciones
-          de declaracion y ''config'' para configuracion y diagnostico.'
+          de declaración y ''config'' para configuración y diagnóstico.'
         paragraph_type_help: Escriba 'aeat <comando> --help' para obtener ayuda detallada.
         section_daily_ledger: Libro diario de transacciones
-        section_diagnostics: Diagnostico
+        section_diagnostics: Diagnóstico
         section_modelo_lifecycle: Ciclo de vida del modelo
-        section_setup: Configuracion
-        setup_configure_auth: Configurar la autenticacion con la AEAT.
+        section_setup: Configuración
+        setup_configure_auth: Configurar la autenticación con la AEAT.
         setup_create_profile: Crear un nuevo perfil de contribuyente.
         setup_inspect_profile: Inspeccionar el perfil de contribuyente activo.
     landing:
       active_profile_message: 'Perfil activo: %{profile}.'
-      no_active_profile_message: No hay ningun perfil activo. Ejecute 'aeat config
+      no_active_profile_message: No hay ningún perfil activo. Ejecute 'aeat config
         first-run' para comenzar.
       text_template: '%{message} Comando sugerido: %{command}'
   overview:
@@ -4670,15 +4670,15 @@ cli:
       presentación local del calendario; el calendario se deriva del calendario de
       plazos y puede sobrenotificar una obligación como aún pendiente.
     calendar_local_live_events_unavailable: La evidencia local de eventos en vivo
-      no esta disponible para esta fila del calendario.
+      no está disponible para esta fila del calendario.
     calendar_local_modelo_events_unavailable: La evidencia local de eventos de modelo
-      no esta disponible para esta fila del calendario.
+      no está disponible para esta fila del calendario.
     calendar_refused_incomplete: 'El calendario tiene comprobaciones de perfil sin
-      resolver: %{keys}. Ejecuta el comando de correccion del aviso o usa --allow-incomplete
+      resolver: %{keys}. Ejecuta el comando de corrección del aviso o usa --allow-incomplete
       para inspeccionar el calendario provisional.'
     coverage:
-      investigate: 'No se han podido determinar con certeza %{count} obligacion(es)
-        de presentacion para este perfil y podrian quedar sin declarar: %{modelos}.
+      investigate: 'No se han podido determinar con certeza %{count} obligación(es)
+        de presentación para este perfil y podrian quedar sin declarar: %{modelos}.
         Investigue cada una con ''aeat app overview explain <modelo>''.'
     drafts: Borradores
     explain:
@@ -4734,8 +4734,8 @@ cli:
       drafts_empty_with_work_units: No hay borradores de declaraciones guardados;
         es normal y no afecta a tus unidades de trabajo de modelos mostradas abajo.
       drafts_present: '%{count} borrador(es) de declaraciones guardados existen en
-        este almacenamiento local. Un espacio vacio recien creado normalmente tiene
-        0, asi que este perfil/base de datos ya contiene estado local de borradores.'
+        este almacenamiento local. Un espacio vacío recien creado normalmente tiene
+        0, así que este perfil/base de datos ya contiene estado local de borradores.'
       filing_obligation_multiple_pagadores: Percibir rendimientos del trabajo de más
         de un pagador, con más de 1.500 € de los pagadores secundarios, reduce el
         límite de la obligación de declarar (art. 96.3 LIRPF); puede estar obligado
@@ -4744,18 +4744,18 @@ cli:
         filas en cuarentena salvo que quieras archivar deliberadamente datos locales
         antiguos ilegibles.
       invoices_empty: No hay facturas emitidas ni recibidas en el registro de facturas.
-        Es un almacen distinto del libro bancario y no cuenta las transacciones del
-        libro clasificadas. Un registro de facturas vacio es normal si solo usas el
+        Es un almacén distinto del libro bancario y no cuenta las transacciones del
+        libro clasificadas. Un registro de facturas vacío es normal si solo usas el
         libro bancario.
       invoices_present: '%{count} factura(s) emitida(s)/recibida(s) en el registro
-        de facturas (un almacen distinto del libro bancario).'
+        de facturas (un almacén distinto del libro bancario).'
       next_heading: Que escribir ahora
       next_import_command: '  aeat app ledger import <extracto-bancario.csv> --provider
         csv - importar movimientos bancarios.'
-      next_landing_command: '  aeat --help - volver a la guia de comandos.'
+      next_landing_command: '  aeat --help - volver a la guía de comandos.'
       next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - Modelo
-        210 esta visible para descubrimiento IRNR, pero la creacion local de trabajos
-        aun no esta soportada; presenta por AEAT Sede G320.'
+        210 está visible para descubrimiento IRNR, pero la creación local de trabajos
+        aún no está soportada; presenta por AEAT Sede G320.'
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaración
         de modelo a partir de los datos de tu libro.'
       next_review_command: '  aeat app ledger review - revisar filas importadas.'
@@ -4770,11 +4770,11 @@ cli:
         actual.
       storage_warning: '%{count} fila(s) cifradas del almacenamiento local no se pueden
         leer con la clave maestra actual. No son filas de tu extracto bancario; puedes
-        importar movimientos nuevos, pero revisa diagnosticos antes de confiar en
+        importar movimientos nuevos, pero revisa diagnósticos antes de confiar en
         datos locales antiguos.'
       title: Estado del espacio de trabajo
       transactions_empty: Aun no se han importado movimientos bancarios.
-      transactions_present: '%{count} movimiento(s) bancarios estan disponibles en
+      transactions_present: '%{count} movimiento(s) bancarios están disponibles en
         el libro.'
       work_units_empty: Aun no se ha iniciado ninguna unidad de trabajo de modelos.
       work_units_present: '%{count} unidad(es) de trabajo de modelos en curso en este
@@ -4789,8 +4789,8 @@ cli:
     verbose_help: Mostrar detalles y siguiente acción cuando existan
     warning:
       m303_simplificado_forfait_unavailable: El Modelo 303 aplica, pero el motor de
-        calculo forfait del regimen simplificado aun no esta disponible; revise las
-        casillas del regimen simplificado antes de presentar.
+        cálculo forfait del régimen simplificado aún no está disponible; revise las
+        casillas del régimen simplificado antes de presentar.
     year_help: Año de declaración para --period (p. ej. 2024).
   registry:
     app_help: Gestión del registro de modelos fiscales
@@ -4821,7 +4821,7 @@ cli:
       kind_help: Filtrar por tipo de regla del manual
       list_help: Listar los manuales disponibles localmente
       manual_help: Identificador del manual (renta, iva, sociedades)
-      part_help: Volumen del manual (single, part1, part2-deducciones-autonomicas,
+      part_help: Volumen del manual (single, part1, part2-deducciones-autonómicas,
         part3)
       rules_help: Listar las reglas codificadas en un manual
       section_help: Identificador opcional de sección a mostrar
@@ -4970,7 +4970,7 @@ cli:
       quick_start_setup_needed: '  1. `aeat config profile create NAME` - crear primero
         tu perfil fiscal local.'
       quick_start_status: '  2. `aeat app overview status` - leer el estado actual
-        del espacio y sus diagnosticos.'
+        del espacio y sus diagnósticos.'
       section_config: '  config - perfil, autenticación y diagnósticos'
       section_ledger: '  app ledger - importación bancaria y revisión de movimientos'
       section_modelo: '  app modelo - catálogo de modelos y unidades de trabajo'
@@ -5192,8 +5192,8 @@ errors:
       necesario para esta operación de almacenamiento.
     auth_session_corrupt: Los metadatos de la sesión guardada no se pueden leer. Vuelve
       a autenticarte para crear una sesión nueva.
-    auth_session_deserialization: Los datos de sesion de autenticacion almacenados
-      no se pudieron deserializar. Vuelve a autenticarte para crear una sesion nueva.
+    auth_session_deserialization: Los datos de sesión de autenticación almacenados
+      no se pudieron deserializar. Vuelve a autenticarte para crear una sesión nueva.
     auth_session_unavailable: No hay ninguna sesión activa verificada con la AEAT
       disponible. Autentícate antes de continuar.
     auth_storage_bucket_recovery_verification: El código de recuperación introducido
@@ -5212,14 +5212,14 @@ errors:
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:
-    age_at_year_end_no_filing_year: 'Error interno: el calculo de edad a fin de ejercicio
-      no tiene ejercicio de declaracion.'
+    age_at_year_end_no_filing_year: 'Error interno: el cálculo de edad a fin de ejercicio
+      no tiene ejercicio de declaración.'
     binding_value_missing: La vinculación {binding_id} no tiene valor asignado.
     bound_casilla_binding_value_missing: La vinculación {binding_id} no tiene valor
       asignado.
     bound_input_smuggled_without_binding_value: 'Error interno: casilla de entrada
-      vinculada pasada sin valor de vinculacion.'
-    bound_projection_inconsistent: 'Error interno: la proyeccion vinculada es inconsistente.'
+      vinculada pasada sin valor de vinculación.'
+    bound_projection_inconsistent: 'Error interno: la proyección vinculada es inconsistente.'
     bracket_negative_base: El parámetro escalonado {parameter_id} no acepta una base
       negativa {base}.
     bracket_no_coverage: El parámetro escalonado {parameter_id} no tiene tramo que
@@ -5232,9 +5232,9 @@ errors:
       de evaluar su fórmula.
     computed_supplied_as_input: 'No se pueden suministrar como entrada las casillas
       calculadas: {casilla_ids}.'
-    date_binding_used_as_decimal_leaf: 'Error interno: vinculacion de fecha utilizada
+    date_binding_used_as_decimal_leaf: 'Error interno: vinculación de fecha utilizada
       como hoja decimal.'
-    date_binding_value_missing: Falta el valor de la vinculacion de fecha.
+    date_binding_value_missing: Falta el valor de la vinculación de fecha.
     dispatch_key_unknown: 'La clave de despacho {dispatch_key!r} no está en la tabla
       del operador {op} sobre la vinculación {binding_id} (claves declaradas: {available_keys}).'
     dispatch_parameter_kind: El parámetro {parameter_id} no encaja con el operador
@@ -5265,17 +5265,17 @@ errors:
     m210_gastos_deducibles_negative: Los gastos_deducibles M210 %{casilla_id} no pueden
       ser negativos; valor recibido %{value}.
     m210_gastos_deducibles_not_allowed: Los gastos_deducibles M210 %{casilla_id} solo
-      se admiten en la ruta UE/EEE del articulo 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.
-    m210_imputation_coefficient_invalid: El coeficiente de imputacion inmobiliaria
+      se admiten en la ruta UE/EEE del artículo 24.6; tipo_renta=%{tipo_renta}, country_of_fiscal_residence=%{country_of_fiscal_residence}.
+    m210_imputation_coefficient_invalid: El coeficiente de imputación inmobiliaria
       M210 %{casilla_id} debe ser uno de los tipos del art. 85 declarados en el registro
       (%{allowed_values}); valor recibido %{value}.
-    m210_imputation_days_invalid: Los dias de imputacion M210 %{casilla_id} deben
+    m210_imputation_days_invalid: Los días de imputación M210 %{casilla_id} deben
       ser un entero entre 1 y %{max_days}; valor recibido %{value}.
-    m210_imputation_no_catastral_value_missing: La imputacion inmobiliaria M210 sin
-      valor catastral requiere un valor de adquisicion o valor comprobado por la Administracion
+    m210_imputation_no_catastral_value_missing: La imputación inmobiliaria M210 sin
+      valor catastral requiere un valor de adquisición o valor comprobado por la Administración
       positivo (%{acquisition_casilla_id}, %{administrative_casilla_id}).
-    m210_imputation_no_filing_year: La imputacion inmobiliaria M210 requiere un ejercicio
-      de declaracion no nulo.
+    m210_imputation_no_filing_year: La imputación inmobiliaria M210 requiere un ejercicio
+      de declaración no nulo.
     parameter_unknown: El parámetro {parameter_id} no está registrado.
     relation_value_missing: La relación {relation_id} no tiene valor asignado.
     text_input_non_text_casillas: 'Entrada de texto suministrada para casillas no
@@ -5283,8 +5283,8 @@ errors:
     unknown_input_casillas: 'Identificadores de casilla de entrada desconocidos: {casilla_ids}.'
     unknown_text_input_casillas: 'Identificadores de casilla de entrada de texto desconocidos:
       %{casilla_ids}.'
-    unsupported_comparison_op: 'Operador de comparacion no admitido: %{op}.'
-    unsupported_op: 'Operador de formula no admitido: %{op}.'
+    unsupported_comparison_op: 'Operador de comparación no admitido: %{op}.'
+    unsupported_op: 'Operador de fórmula no admitido: %{op}.'
   censo:
     bucket_id_blank: El servicio de sincronización censal requiere un bucket de perfil.
   error:
@@ -5325,7 +5325,7 @@ errors:
     error_config_boundary: El comando de configuración encontró un error interno inesperado.
     error_corpus_search: No se pudo completar la búsqueda local en el corpus.
     error_deadlines_deadline: Se produjo un error en el cálculo de plazos.
-    error_deadlines_missing_windows: Faltan las ventanas de plazo de presentacion.
+    error_deadlines_missing_windows: Faltan las ventanas de plazo de presentación.
     error_deadlines_profile: El perfil de autónomo no se pudo cargar o validar para
       el cálculo de plazos.
     error_deadlines_schedule_computation: El motor no pudo generar un calendario de
@@ -5529,8 +5529,8 @@ errors:
     modelo_projection: Falló la proyección del modelo.
     modelo_work_address_not_found: No hay una unidad de trabajo de modelo activa que
       coincida con el modelo, ejercicio y periodo solicitados.
-    modelo_work_selector: El selector de trabajo de modelo fallo.
-    modelo_work_selector_unit_not_found: No se encontro la unidad de trabajo de modelo
+    modelo_work_selector: El selector de trabajo de modelo falló.
+    modelo_work_selector_unit_not_found: No se encontró la unidad de trabajo de modelo
       seleccionada.
   fail:
     censo_sync: La sincronización del censo del Modelo 036 falló.
@@ -5596,7 +5596,7 @@ errors:
       Comprueba tu conexión a internet y vuelve a intentarlo.
     fail_outbound_storage_unavailable: El servicio de almacenamiento está temporalmente
       no disponible. Espera unos minutos y vuelve a intentarlo.
-    fail_repair_decision_not_found: No se encontro la decision de reparacion solicitada.
+    fail_repair_decision_not_found: No se encontró la decisión de reparación solicitada.
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sanitization_source_parse: El PDF de origen no se pudo abrir para sanearlo.
     fail_secure_storage: Se produjo un error en el almacenamiento seguro.
@@ -5606,7 +5606,7 @@ errors:
     fail_sede_validation: Los datos capturados de la Sede de la AEAT no tienen la
       forma esperada.
     fail_site_health: La comprobación de estado del sitio falló.
-    fail_snapshot_not_found: No se encontro la instantanea solicitada.
+    fail_snapshot_not_found: No se encontró la instantánea solicitada.
     fail_storage: Se produjo un error en el almacenamiento.
     fail_storage_blob_not_found: No se encontró el objeto solicitado en el almacén
       cifrado.
@@ -5711,7 +5711,7 @@ errors:
       con la proyección actual.
     integrity_profile_snapshot_not_found: No existe ningún snapshot de perfil con
       el identificador indicado.
-    integrity_repair_integrity: La comprobacion de integridad de reparacion ha fallado.
+    integrity_repair_integrity: La comprobación de integridad de reparación ha fallado.
     integrity_storage_blob: El hash SHA-256 de un objeto almacenado no coincide con
       el de su manifiesto.
     integrity_storage_bucket_validation: Un parámetro del depósito o campo del manifiesto
@@ -5783,16 +5783,16 @@ errors:
     internal_profile_keys_registration: 'Error interno: no se pudieron registrar las
       claves del perfil.'
     internal_profile_project_answers_not_registered: 'Error interno: las respuestas
-      del proyecto de perfil no estan registradas.'
+      del proyecto de perfil no están registradas.'
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
     internal_wizard_answer_queue_overflow: 'Error interno: el asistente se cerró con
       respuestas canónicas sin consumir.'
     internal_wizard_answer_queue_underflow: 'Error interno: el asistente solicitó
       más respuestas canónicas de las proporcionadas por la ejecución no interactiva.'
-    internal_wizard_catalogue_already_registered: 'Error interno: el catalogo del
-      asistente ya esta registrado.'
-    internal_wizard_catalogue_not_registered: 'Error interno: el catalogo del asistente
-      no esta registrado.'
+    internal_wizard_catalogue_already_registered: 'Error interno: el catálogo del
+      asistente ya está registrado.'
+    internal_wizard_catalogue_not_registered: 'Error interno: el catálogo del asistente
+      no está registrado.'
     internal_workflow_abort_signal: 'Error interno: una etapa del flujo de trabajo
       emitió una señal de cancelación.'
     internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó
@@ -5821,9 +5821,9 @@ errors:
       a intentarlo.
     auth_profile_identity_mismatch: La identidad del perfil activo no puede ser titular
       de la sesión de autenticación solicitada.
-    bootstrap_already_complete: El arranque del almacenamiento seguro ya esta completo.
+    bootstrap_already_complete: El arranque del almacenamiento seguro ya está completo.
       Usa aeat config switch NAME para activar un perfil existente o aeat config profile
-      create NAME para anadir otro perfil.
+      create NAME para añadir otro perfil.
     ledger_preflight: La comprobación previa del libro rechazó la ejecución del modelo
       porque aún no se puede presentar.
     m145_communication_record_ambiguous: El prefijo del id de registro de comunicación
@@ -5845,11 +5845,11 @@ errors:
       y un pagador, salvo la excepción de múltiples pagadores).
     modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
       requieren cobertura declarativa explícita.
-    modelo_349_country_prefix_context: 'El Modelo 349 rechaza el prefijo de pais {country_code}
-      para la clave de operacion {clave_operacion} en {filing_year}/{period}: {reason}.
+    modelo_349_country_prefix_context: 'El Modelo 349 rechaza el prefijo de país {country_code}
+      para la clave de operación {clave_operacion} en {filing_year}/{period}: {reason}.
       Fundamento: instrucciones AEAT Brexit IVA NIF-IVA / Modelo 349.'
     modelo_ambiguous_semantic_role_casilla: Mas de una casilla usa el rol semantico
-      %{semantic_role}; usa el casilla.id canonico exacto.
+      %{semantic_role}; usa el casilla.id canónico exacto.
     modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
     modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
     modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
@@ -5875,7 +5875,7 @@ errors:
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
     modelo_revision_pick: errors.refused.modelo_revision_pick
-    modelo_work_period_token: Periodo de modelo no valido.
+    modelo_work_period_token: Periodo de modelo no válido.
     modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
       el ejercicio fiscal solicitado.
     modelo_work_selector_ambiguous: Mas de una unidad de trabajo de modelo coincide
@@ -5885,9 +5885,9 @@ errors:
     modelo_work_selector_no_active_bucket: Seleccione un perfil activo antes de resolver
       una unidad de trabajo de modelo.
     modelo_work_selector_revision_conflict: La unidad de trabajo de modelo seleccionada
-      pertenece a otra revision.
+      pertenece a otra revisión.
     profile_already_registered: Ya existe un perfil con ese nombre. Usa aeat config
-      switch NAME para cambiar a el.
+      switch NAME para cambiar a él.
     profile_import_collision: El identificador del perfil importado coincide con uno
       que ya existe.
     profile_locked: Esta operación requiere un perfil desbloqueado. Ejecuta `aeat
@@ -5920,14 +5920,14 @@ errors:
       está registrado.
     refused_auth_configure_dangling_active_profile: El puntero de perfil activo no
       resuelve a un bucket registrado.
-    refused_auth_diagnostic_payload: 'Rechazado: la carga de diagnostico de autenticacion
-      no es valida.'
+    refused_auth_diagnostic_payload: 'Rechazado: la carga de diagnóstico de autenticación
+      no es válida.'
     refused_auth_diagnostic_phone_state: El valor de estado del teléfono proporcionado
       no se reconoce. Utilice uno de los valores válidos de estado de teléfono del
       operador.
-    refused_auth_login_live_tests_disabled: Las pruebas de inicio de sesion en vivo
-      estan deshabilitadas.
-    refused_auth_login_precondition: La precondicion para el inicio de sesion de autenticacion
+    refused_auth_login_live_tests_disabled: Las pruebas de inicio de sesión en vivo
+      están deshabilitadas.
+    refused_auth_login_precondition: La precondición para el inicio de sesión de autenticación
       no se cumple.
     refused_auth_provider_reserved: El proveedor de autenticación seleccionado está
       reservado pero no implementado.
@@ -5947,7 +5947,7 @@ errors:
       los componentes opcionales de búsqueda semántica; instálelos y reinténtelo.
     refused_corpus_search_input: No se pudo satisfacer la solicitud de búsqueda en
       el corpus.
-    refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnostico
+    refused_diagnostic_model_invariant: 'Rechazado: invariante del modelo de diagnóstico
       incumplida.'
     refused_evidence_bundle_not_found: No existe ningún paquete de evidencias con
       el identificador indicado.
@@ -5997,9 +5997,9 @@ errors:
       y el año indicados.
     refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
       Corrige la entrada y vuelve a intentarlo.
-    refused_iva_compensation_decimal_parse: 'Rechazado: el importe de compensacion
+    refused_iva_compensation_decimal_parse: 'Rechazado: el importe de compensación
       de IVA no se pudo interpretar como decimal.'
-    refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensacion
+    refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensación
       de IVA esta fuera del rango aceptado.'
     refused_iva_wallet_reconciliation_invariant: Las entradas de conciliación de la
       cartera IVA incumplen un invariante obligatorio. Compruebe la configuración
@@ -6044,12 +6044,12 @@ errors:
     refused_modelo_applicability_filter: Se encontró un nombre de filtro de aplicabilidad
       desconocido en el registro. Se trata de un error de autoría del registro; actualice
       la tabla de despacho de filtros.
-    refused_modelo_refund_account_missing: Se solicito una devolucion pero no hay
-      ninguna cuenta de devolucion configurada; la AEAT no puede pagar una devolucion
-      sin una cuenta. Configure una cuenta de devolucion o compense el credito (compensar).
-    refused_modelo_refund_election_not_eligible: Se solicito una devolucion en un
-      periodo donde no esta disponible; solo el ultimo periodo de declaracion del
-      ano permite la devolucion a un no inscrito en REDEME.
+    refused_modelo_refund_account_missing: Se solicitó una devolución pero no hay
+      ninguna cuenta de devolución configurada; la AEAT no puede pagar una devolución
+      sin una cuenta. Configure una cuenta de devolución o compense el crédito (compensar).
+    refused_modelo_refund_election_not_eligible: Se solicitó una devolución en un
+      periodo donde no está disponible; solo el último periodo de declaración del
+      año permite la devolución a un no inscrito en REDEME.
     refused_no_active_profile: Esta operación necesita un perfil activo. Crea o selecciona
       un perfil y vuelve a intentarlo.
     refused_operator_surface_contract: La superficie solicitada queda fuera del contrato
@@ -6125,7 +6125,7 @@ errors:
       Debe tener al menos 8 caracteres.
     refused_storage_secret_already_exists: Ya existe un secreto con esa clave. Usa
       la opción de sobrescritura si quieres reemplazarlo.
-    refused_storage_session_expired: La sesion activa ha caducado por inactividad.
+    refused_storage_session_expired: La sesión activa ha caducado por inactividad.
       Vuelve a activarla con aeat config switch NAME.
     refused_storage_unsecured_mode: El almacenamiento sin cifrar se solicitó sin la
       habilitación necesaria. No es seguro para datos reales.
@@ -6134,8 +6134,8 @@ errors:
     refused_topic_not_found: No se encontró el tema solicitado.
     refused_user_profile_validation: Un valor del perfil de usuario no es válido.
       Corrige el dato indicado.
-    refused_wizard_answer_type: Un campo de respuesta del asistente recibio un tipo
-      inesperado en el limite tipado.
+    refused_wizard_answer_type: Un campo de respuesta del asistente recibió un tipo
+      inesperado en el límite tipado.
     refused_wizard_missing_flag: La ejecución con --quiet omitió una pregunta obligatoria.
       Aporta el valor que falta o ejecuta el asistente de forma interactiva.
     refused_wizard_status: El asistente no pudo resolver el perfil activo.
@@ -6165,7 +6165,7 @@ errors:
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'
-    modelo_not_registered: El modelo no esta registrado en el registro.
+    modelo_not_registered: El modelo no está registrado en el registro.
     no_revision_for_period: Ninguna revisión del registro cubre el modelo %{modelo_id}
       ejercicio %{filing_year} periodo %{period}.
   storage:
@@ -6194,7 +6194,7 @@ errors:
         solo está disponible antes de seleccionar un bucket de perfil activo.
       cold_bootstrap_explicit_database_refused: El almacenamiento de arranque en frío
         no puede omitir una ruta de base de datos explícita.
-      no_active_session: No hay una sesion de bucket activa. Ejecuta aeat config switch
+      no_active_session: No hay una sesión de bucket activa. Ejecuta aeat config switch
         NAME para desbloquear un perfil.
       no_detail: No se informó ningún detalle de preparación.
       not_ready: 'El runtime de almacenamiento no está listo para almacenamiento vinculado
@@ -6205,9 +6205,9 @@ errors:
         de perfil activo.
       session_changed: La sesión de bucket activa cambió. Desbloquea de nuevo el perfil
         de destino.
-      session_expired: La sesion de bucket activa ha caducado. Ejecuta aeat config
+      session_expired: La sesión de bucket activa ha caducado. Ejecuta aeat config
         switch NAME para reactivar el perfil.
-      session_sealed: La sesion de bucket activa esta sellada. Ejecuta aeat config
+      session_sealed: La sesión de bucket activa está sellada. Ejecuta aeat config
         switch NAME para reactivar el perfil.
       unsecured_backend: La sesión de bucket activa usa el backend no seguro. El almacenamiento
         de producción vinculado a perfil requiere custodia de archivo o llavero.
@@ -6230,11 +6230,11 @@ filing:
     schema_mismatch: Discrepancia con el esquema esperado
 live:
   errors:
-    expediente_not_found: No se encontro el expediente solicitado en la AEAT.
-    iva_history_modelo_303_only: El historial de IVA solo esta disponible para el
+    expediente_not_found: No se encontró el expediente solicitado en la AEAT.
+    iva_history_modelo_303_only: El historial de IVA solo está disponible para el
       Modelo 303.
     target_period_year_mismatch: live.errors.target_period_year_mismatch
-    year_range_invalid: El rango de ejercicios indicado no es valido.
+    year_range_invalid: El rango de ejercicios indicado no es válido.
 locales:
   cli:
     audit:
@@ -6254,7 +6254,7 @@ locales:
       remove:
         removed: Eliminado %{path} %{field} %{key}
       scaffold:
-        no_changes: El scaffold de locales de modelo ya esta alineado.
+        no_changes: El scaffold de locales de modelo ya está alineado.
         updated: Actualizado %{path}
       set:
         updated: Actualizado %{path} %{field} %{key}
@@ -6265,8 +6265,8 @@ locales:
       updated: updated %{locale_file}:%{key}
 mcp:
   call:
-    timeout: '''{command}'' supero el limite de tiempo del nivel {tier} ({seconds}s)
-      y se cancelo. Reintentalo o ejecuta el comando aeat equivalente directamente
+    timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)
+      y se canceló. Reinténtalo o ejecuta el comando aeat equivalente directamente
       en un terminal.'
     timeout_may_complete: '''{command}'' superó su límite de tiempo; puede que la
       operación siga completándose en segundo plano. Vuelve a ejecutarla con la misma
@@ -6306,10 +6306,10 @@ mcp:
   identity_gate:
     elicitation_echo: 'Actuando como el perfil del contribuyente: %{label}.'
     first_mutation_refused: 'Rechazado: confirma el contribuyente activo antes del
-      primer cambio de esta sesion. Una presentacion o edicion nunca debe ejecutarse
+      primer cambio de esta sesión. Una presentación o edición nunca debe ejecutarse
       bajo la identidad equivocada. Ejecuta whoami (o ''config profile status'' /
-      ''overview status'') para ver que contribuyente esta activo y vuelve a intentarlo;
-      una sola lectura de identidad lo desbloquea durante la sesion hasta que cambies
+      ''overview status'') para ver qué contribuyente está activo y vuelve a intentarlo;
+      una sola lectura de identidad lo desbloquea durante la sesión hasta que cambies
       de perfil.'
   persona:
     handoff_denied: '''{command}'' es la frontera irreversible de entrega de la presentación,
@@ -6317,8 +6317,8 @@ mcp:
       estructuralmente. Entrega la unidad de trabajo verificada a la sesión del verificador
       para producir la exportación o el marcador de registro.'
   serving:
-    warm_degraded: '''{command}'' se atendio por el transporte de subproceso porque
-      el runtime en caliente estaba {reason}; el resultado es identico, solo mas lento.
+    warm_degraded: '''{command}'' se atendió por el transporte de subproceso porque
+      el runtime en caliente estaba {reason}; el resultado es idéntico, solo más lento.
       El servicio en caliente se reanuda cuando se libera la llamada lenta.'
 profile:
   descendiente:
@@ -6347,7 +6347,7 @@ profile:
 review:
   adapters:
     errors:
-      drafts_load_failed: No se pudieron cargar los borradores de presentacion desde
+      drafts_load_failed: No se pudieron cargar los borradores de presentación desde
         el backend seguro.
       invoices_load_failed: No se pudieron cargar las facturas del adaptador.
       transactions_load_failed: No se pudieron cargar las transacciones del adaptador.
@@ -6367,12 +6367,12 @@ review:
     summary: Justificante pendiente de revisión
   operator:
     errors:
-      item_not_found: No se encontro el elemento solicitado en la cola de revision.
+      item_not_found: No se encontró el elemento solicitado en la cola de revisión.
       reserved_kind: El tipo de revisión está reservado y no es un elemento de revisión
         emitido.
       unknown_kind: 'Tipo de elemento de revisión desconocido. Valores --kind admitidos:
         %{accepted_kinds}.'
-      unsupported_item_type: 'Tipo de elemento de revision no admitido: %{item_type}.'
+      unsupported_item_type: 'Tipo de elemento de revisión no admitido: %{item_type}.'
   transaction:
     summary: Transacción pendiente de clasificación
 sheets:
@@ -6677,17 +6677,17 @@ wizard:
       legal-name:
         help: Razón social de la persona jurídica para cabeceras de exportación
       ley-49-2002-option-date:
-        help: Registra la fecha de la casilla 653 del modelo 036 para la opcion del
-          titulo II de la Ley 49/2002.
+        help: Registra la fecha de la casilla 653 del modelo 036 para la opción del
+          título II de la Ley 49/2002.
       ley-49-2002-option-declared:
-        help: Registra si la casilla 651 del modelo 036 declara la opcion por el titulo
+        help: Registra si la casilla 651 del modelo 036 declara la opción por el título
           II de la Ley 49/2002.
       ley-49-2002-renunciation-date:
         help: Registra la fecha de la casilla 654 del modelo 036 para la renuncia
-          al titulo II de la Ley 49/2002.
+          al título II de la Ley 49/2002.
       ley-49-2002-renunciation-declared:
-        help: Registra si la casilla 652 del modelo 036 declara la renuncia al regimen
-          del titulo II de la Ley 49/2002.
+        help: Registra si la casilla 652 del modelo 036 declara la renuncia al régimen
+          del título II de la Ley 49/2002.
       llm-vision:
         help: Activar la visión LLM local para leer facturas.
       modelo-111-no-retenciones-periods:
@@ -7138,19 +7138,19 @@ wizard:
         prompt: Forma jurídica
       ley-49-2002-option-date:
         help: Usa la fecha ISO correspondiente a la casilla 653 del modelo 036.
-        prompt: Fecha declarada de la opcion por el regimen especial de la Ley 49/2002
+        prompt: Fecha declarada de la opción por el régimen especial de la Ley 49/2002
       ley-49-2002-option-declared:
-        help: Usa el hecho declarado en la casilla 651 del modelo 036; la aplicacion
+        help: Usa el hecho declarado en la casilla 651 del modelo 036; la aplicación
           legal sigue condicionada a los requisitos legales y a que no exista renuncia.
-        prompt: La entidad ha presentado en el modelo 036 la opcion por el regimen
-          fiscal especial del titulo II de la Ley 49/2002?
+        prompt: La entidad ha presentado en el modelo 036 la opción por el régimen
+          fiscal especial del título II de la Ley 49/2002?
       ley-49-2002-renunciation-date:
         help: Usa la fecha ISO correspondiente a la casilla 654 del modelo 036.
-        prompt: Fecha declarada de la renuncia al regimen especial de la Ley 49/2002
+        prompt: Fecha declarada de la renuncia al régimen especial de la Ley 49/2002
       ley-49-2002-renunciation-declared:
         help: Usa el hecho declarado en la casilla 652 del modelo 036.
-        prompt: La entidad ha presentado en el modelo 036 la renuncia al regimen fiscal
-          especial del titulo II de la Ley 49/2002?
+        prompt: La entidad ha presentado en el modelo 036 la renuncia al régimen fiscal
+          especial del título II de la Ley 49/2002?
       new-entity-first-two-profit-periods:
         help: Aplica solo a personas jurídicas. Si lo marca, la entidad tributa al
           tipo reducido del 15 por ciento durante esos dos periodos.
