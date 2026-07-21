@@ -15,29 +15,29 @@ from dev.packaging.release_cohort import build_release_cohort
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def _pin_source_snapshot(repo_root: Path, destination: Path) -> Path:
-    """Clone the current HEAD into a snapshot whose commit cannot move.
+def _stable_source_clone(repo_root: Path, destination: Path) -> Path:
+    """Clone the working repository into a source whose tip cannot move.
 
-    ``build_release_cohort`` re-reads the live HEAD on every call and refuses
-    when it no longer equals the requested commit — a correct release-integrity
-    guard, since a cohort must be bound to a known commit. Running the two
-    builds directly against the working repository therefore races: this tree is
-    shared with concurrent agents, each build takes minutes, and any commit
-    landing in between fails the second call. Cloning once pins the commit for
-    the whole test, so the proof exercises the real guard instead of tripping
-    over it.
+    A cohort is always built from the tip of the branch it is told to build —
+    no commit is ever pinned or passed in, here or in production. That leaves
+    this reproducibility proof one requirement: both builds must see the *same*
+    tip. Against the working repository they do not, because this tree is shared
+    with concurrent agents and each build takes minutes, so a commit landing in
+    between silently changes the second build's source. Cloning once gives the
+    test a source nobody else commits to, so "build the tip twice" really does
+    build the same thing twice.
 
-    The clone is ``--no-checkout``: the builder only reads this snapshot's HEAD
-    and clones it again into its own clean tree, so materializing a second copy
-    of the (large) working tree would cost minutes and gigabytes per run for
-    nothing. Objects are hardlinked from the local source, keeping the snapshot
-    fast and near-free on disk. The snapshot must itself be a repository — a
-    plain directory under ``var/`` would let git resolve HEAD from the enclosing
-    working tree and reintroduce the very race this removes.
+    The clone is ``--no-checkout``: the builder reads this source's tip and
+    clones it again into its own clean tree, so materializing a second copy of
+    the (large) working tree would cost minutes and gigabytes per run for
+    nothing. Objects are hardlinked from the local source, keeping the clone
+    fast and near-free on disk. It must itself be a repository — a plain
+    directory under ``var/`` would let git resolve the tip from the enclosing
+    working tree and put the moving target straight back.
     """
     git = shutil.which("git")
     if git is None:
-        raise RuntimeError("git is required to pin the release-cohort source snapshot")
+        raise RuntimeError("git is required to clone the release-cohort source")
     subprocess.run(  # noqa: S603 - fixed git argv over a local path
         [git, "-c", "core.longpaths=true", "clone", "--no-checkout", "--quiet", str(repo_root), str(destination)],
         check=True,
@@ -49,24 +49,23 @@ def _pin_source_snapshot(repo_root: Path, destination: Path) -> Path:
 
 
 def test_real_clean_source_build_is_complete_and_reproducible() -> None:
-    """Build the real 12-member cohort twice from one pinned commit and compare every digest."""
+    """Build the real 12-member cohort twice from the branch tip and compare every digest."""
     repo_root = Path(__file__).resolve().parents[3]
     var = (repo_root / "var").resolve(strict=True)
     run_id = uuid.uuid4().hex
     snapshot = var / f"release-cohort-integration-{run_id}-source"
     try:
-        source = _pin_source_snapshot(repo_root, snapshot)
+        source = _stable_source_clone(repo_root, snapshot)
         outputs = (
             source / "var" / "first",
             source / "var" / "second",
         )
+        # Neither build is told which commit to use: each resolves the tip
+        # itself, exactly as a release does. Both must land on the same one.
         first = build_release_cohort(repo_root=source, output_dir=outputs[0])
-        second = build_release_cohort(
-            repo_root=source,
-            output_dir=outputs[1],
-            expected_commit=first.manifest.source.commit,
-        )
+        second = build_release_cohort(repo_root=source, output_dir=outputs[1])
 
+        assert first.manifest.source.commit == second.manifest.source.commit
         assert first.manifest.cohort_id == second.manifest.cohort_id
         assert first.manifest.source == second.manifest.source
         assert {record.name for record in first.manifest.artifacts} == set(
