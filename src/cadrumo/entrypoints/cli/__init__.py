@@ -937,9 +937,18 @@ def _localise_typer_parse_error_messages() -> None:
         elif rendered.startswith("Invalid value"):
             invalid_value = tr("cli.help.invalid_value", default="Invalid value")
             rendered = f"{invalid_value}{rendered.removeprefix('Invalid value')}"
+        localised_integer = tr("cli.help.not_valid_integer", default="is not a valid integer.")
+        # Typer vendors its own Click fork whose IntParamType.name is ``int``
+        # (upstream Click uses ``integer``), so the conversion failure reads
+        # "is not a valid int."; localise both spellings. The "int." form is
+        # not a substring of the "integer." form, so the two replacements are
+        # order-independent and non-overlapping.
         return rendered.replace(
             "is not a valid integer.",
-            tr("cli.help.not_valid_integer", default="is not a valid integer."),
+            localised_integer,
+        ).replace(
+            "is not a valid int.",
+            localised_integer,
         )
 
     def localised_write_usage(self, prog: str, args: str = "", prefix: str | None = None) -> None:
