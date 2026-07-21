@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Migrate the four locale catalogues for the reset and sandbox families through the locales CLI
 
 ## Scope

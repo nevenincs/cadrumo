@@ -14,7 +14,6 @@ related:
   - '[[2026-07-15-cli-authority-verb-conformance-plan]]'
 ---
 
-
 # `all-profile-reset` plan
 
 ### Phase `P01` - Deletion assessment and reset ownership

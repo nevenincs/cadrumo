@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Regenerate the CLI reference and operator how-to pages for the reset family from the frozen live surface
 
 ## Scope
