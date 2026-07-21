@@ -110,3 +110,37 @@ jobs:
 
       - name: Hooks
         run: just check-pre-commit
+
+      - name: Vault structural drift (informational)
+        # Formerly the S335 gate in durable-maintenance-gates.yml (retired;
+        # this step is its replacement, landed in the same commit). The vault
+        # audit carries a standing backlog of status-token drift, so a red
+        # verdict here is visibility, not a nightly failure; flip this to
+        # blocking once `vault check all` is green at HEAD.
+        # Reproduce and fix locally:
+        #   uv run --no-sync vaultspec-core vault check all --fix
+        run: uv run --no-sync vaultspec-core vault check all
+        continue-on-error: true
+
+      - name: Ledger + storage roundtrip suite
+        # Formerly the S336 gate in durable-maintenance-gates.yml (retired;
+        # this step is its replacement, landed in the same commit, on a
+        # strictly tighter cadence — nightly instead of weekly).
+        # ===================================================================
+        # ||  DO NOT DEPRECATE OR REMOVE THIS STEP WITHOUT AN EXPLICIT
+        # ||  REPLACEMENT. The ledger + storage roundtrip suite is the
+        # ||  standing guard on the encrypted persistence boundaries
+        # ||  (aeat-roundtrip-discipline). Deleting this step, or narrowing
+        # ||  its selector so the ledger / storage roundtrips stop running,
+        # ||  silently drops the boundary protection. If this suite is ever
+        # ||  restructured, the replacement gate MUST run the same boundaries
+        # ||  and land in the SAME commit that removes this one.
+        # ===================================================================
+        # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live tests are skipped.
+        run: |
+          uv run --no-sync pytest \
+            src/cadrumo/tests/test_roundtrip_coverage.py \
+            src/cadrumo/application/ledger/tests \
+            src/cadrumo/adapters/persistence/storage \
+            src/cadrumo/adapters/persistence/profile \
+            -k roundtrip

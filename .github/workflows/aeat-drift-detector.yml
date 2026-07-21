@@ -21,13 +21,20 @@
 # When this workflow fails, an issue is automatically opened with
 # the `aeat-drift` label so the maintainer is notified within hours.
 
-name: AEAT drift detector
+name: Cadrumo AEAT Drift Detector
 
 on:
   workflow_dispatch:
   schedule:
     # Every Sunday at 07:00 UTC (off-minute weekend slot).
     - cron: '0 7 * * 0'
+
+# A live cl@ve-movil auth session must never be interrupted mid-flight, and
+# two concurrent sessions against the same stored identity would race; one
+# run at a time, newest queued.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -49,7 +56,9 @@ jobs:
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
           python-version: '3.13'
-          enable-cache: true
+          # Self-hosted: the runner-local uv cache persists between jobs; the
+          # GitHub cloud-cache round-trip only adds transfer time.
+          enable-cache: false
 
       - name: Bootstrap
         run: |
@@ -68,18 +77,12 @@ jobs:
           AEAT_CLAVE_MOVIL_DNI_NIE: ${{ secrets.AEAT_CLAVE_MOVIL_DNI_NIE }}
           AEAT_CLAVE_MOVIL_DNI_FECHA: ${{ secrets.AEAT_CLAVE_MOVIL_DNI_FECHA }}
           AEAT_CLAVE_MOVIL_NIE_SOPORTE: ${{ secrets.AEAT_CLAVE_MOVIL_NIE_SOPORTE }}
+        # No junit artifact (zero Actions-artifact posture); the verbose
+        # per-test verdicts live in the job log.
         run: |
           uv run --no-sync pytest \
-            src/cadrumo/adapters/outbound/aeat/sede/test_groi_oracle_live.py \
-            src/cadrumo/adapters/outbound/aeat/sede/test_groi_dependency_chain_live.py \
-            -v --junitxml=drift-junit.xml
-
-      - name: Upload drift results
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: drift-results
-          path: drift-junit.xml
+            src/cadrumo/adapters/outbound/aeat/sede/tests/test_groi_check_live.py \
+            -v
 
       - name: Open drift issue on failure
         if: failure()

@@ -19,8 +19,9 @@ on:
       - "src/cadrumo/_data/agent/**"
       - "src/cadrumo/application/operator_surface/**"
       - "src/cadrumo/entrypoints/cli/_app_contract*.py"
-  # NO pull_request trigger: self-hosted runners must never execute untrusted
-  # PR-head code (see ci.yml note).
+  # NO pull_request trigger: the harness eval is a merge-time gate (it runs
+  # when a harness change lands on main). PR-time discipline is ci.yml's
+  # same-repo-guarded T1 lane; fork PRs never reach the self-hosted fleet.
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
