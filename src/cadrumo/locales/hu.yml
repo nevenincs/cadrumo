@@ -773,14 +773,14 @@ application:
       amendment_kind_not_permitted: 'A kért módosítási típus ({requested_kind}) jogilag
         nem elérhető a(z) {modelo} nyomtatványhoz, {filing_year} adóévhez, {period}
         időszakhoz. Az ehhez az időszakhoz elfogadott típusok: {accepted_kinds}.'
-      amendment_registry_root_missing: Registry root %{registry_root} is missing;
-        amendment overrides cannot be validated.
-      amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
-        filing year %{filing_year}, period %{period} could not be resolved; amendment
-        overrides cannot be validated.
-      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are
-        not declared in registry modelo %{modelo}, filing year %{filing_year}, period
-        %{period}: %{casillas}.'
+      amendment_registry_root_missing: A(z) %{registry_root} registry gyökér hiányzik;
+        a módosítási felülírások nem érvényesíthetők.
+      amendment_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
+        bevallási év, %{period} időszak registry-pillanatképe nem oldható fel; a módosítási
+        felülírások nem érvényesíthetők.
+      amendment_unknown_casillas: 'A módosítási felülírások olyan casilla-azonosítókat
+        céloznak meg, amelyek nincsenek deklarálva a(z) %{modelo} registry modellben,
+        %{filing_year} bevallási évben, %{period} időszakban: %{casillas}.'
       amendment_verification_refused_missing_casillas: 'A módosítás hiányos: a szükséges
         casilla-azonosítók hiányoznak a javított térképből.'
       amendment_verification_refused_no_snapshot: A nyilvántartásban nincs pillanatkép
@@ -843,14 +843,15 @@ application:
         a tag kiválasztásához.
       calculate_text_input_empty: A --casilla érték egy szöveges casillához tartozik,
         és nem lehet üres.
-      calculation_registry_root_missing: Registry root %{registry_root} is missing;
-        modelo calculation cannot continue.
-      calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
-        filing year %{filing_year}, period %{period} could not be resolved.
+      calculation_registry_root_missing: A(z) %{registry_root} registry gyökér hiányzik;
+        a modelo számítás nem folytatható.
+      calculation_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
+        bevallási év, %{period} időszak registry-pillanatképe nem oldható fel.
       calculation_revision_not_found: Nem található számítás-revízió id=%{calculation_revision_id}
         azonosítóval.
-      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
+      caller_casilla_source_binding_conflict: 'A hívó casilla bemenetek nem írhatják
+        felül a bucket-ből származtatott forráshoz kötött casillákat (forráshoz kötött
+        casillák): %{casillas}.'
       computed_casilla_binding_conflict: 'A bucket-alapú bemenetek számított mezőket
         céloznak, amelyek nem írhatók felül külső kötéssel. Érintett mezők: %{computed}.'
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
@@ -887,52 +888,52 @@ application:
         üres evidence_reference_id szükséges.
       external_filing_no_casilla_values: A külső bevallás importálásához legalább
         egy mező értéke szükséges; a megadott leképezés üres.
-      external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
-        already exists in the catalogue; an identical import was already recorded.
+      external_import_duplicate_revision: A(z) %{calculation_revision_id} számítási
+        revízió már létezik a katalógusban; egy azonos import már rögzítve van.
       external_import_justificante_mismatch: A(z) %{evidence_reference_id} külső bevallásimport-bizonyíték
         nem egyezik a(z) %{modelo} modelóval, a(z) %{filing_year} bevallási évvel
         és a(z) %{period} időszakkal.
       external_import_justificante_missing: A(z) %{evidence_reference_id} (%{evidence_kind})
         külső bevallásimport-bizonyíték nincs tartós igazolási artefaktumként regisztrálva.
-      external_import_registry_root_missing: Registry root %{registry_root} is missing;
-        imported casilla ids cannot be validated.
-      external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
-        filing year %{filing_year}, period %{period} could not be resolved; imported
-        casilla ids cannot be validated.
+      external_import_registry_root_missing: A(z) %{registry_root} registry gyökér
+        hiányzik; az importált casilla-azonosítók nem érvényesíthetők.
+      external_import_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
+        bevallási év, %{period} időszak registry-pillanatképe nem oldható fel; az
+        importált casilla-azonosítók nem érvényesíthetők.
       external_import_tax_id_missing: A külső bevallásimport bizonyítéka %{evidence_reference_id}
         (%{evidence_kind}) megköveteli a bevalló adóazonosítóját, mielőtt igazoló
         artefakthoz köthető.
-      external_import_unknown_casillas: 'External-filing import carries casilla ids
-        that are not declared in registry modelo %{modelo}, filing year %{filing_year},
-        period %{period}: %{casillas}.'
+      external_import_unknown_casillas: 'A külső bevallás importja olyan casilla-azonosítókat
+        tartalmaz, amelyek nincsenek deklarálva a(z) %{modelo} registry modellben,
+        %{filing_year} bevallási évben, %{period} időszakban: %{casillas}.'
       filing_record_not_found: Nem található benyújtási rekord id=%{filing_record_id}
         azonosítóval.
-      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
-        compensation conflicts with the IVA wallet reconciliation decision.
-      iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
-        %{reason}'
-      iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
-        conflicts with the IVA wallet reconciliation decision.
-      iva_wallet_caller_casilla_conflict: Caller casilla input for Modelo 303 prior
-        compensation conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_backend_casilla_conflict: A Modelo 303 előző kompenzációjának backend
+        casilla bemenete ütközik az IVA-tárca egyeztetési döntésével.
+      iva_wallet_blocked: 'Az IVA-tárca egyeztetése blokkolva van a Modelo 303 esetén
+        (%{divergence}): %{reason}'
+      iva_wallet_caller_binding_conflict: A hívó binding a Modelo 303 előző kompenzációjához
+        ütközik az IVA-tárca egyeztetési döntésével.
+      iva_wallet_caller_casilla_conflict: A hívó casilla bemenete a Modelo 303 előző
+        kompenzációjához ütközik az IVA-tárca egyeztetési döntésével.
       iva_wallet_not_seeded: A Modelo 303 számításához feltöltött IVA-kompenzáció
         előzmény szükséges. Egy friss profil első M303 benyújtásához töltse fel az
         előzményt.
-      iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
-        selected amount.
-      iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
-        does not match the persisted decision.
-      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
-        does not match work unit %{filing_year}/%{period}.
-      iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
-        without the work-unit taxpayer identity.
-      iva_wallet_taxpayer_mismatch: IVA wallet reconciliation taxpayer does not match
-        the Modelo 303 work unit.
-      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
+      iva_wallet_selected_amount_missing: Az IVA-tárca egyeztetési döntéshez nincs
+        kiválasztott összeg.
+      iva_wallet_supplied_decision_mismatch: A megadott IVA-tárca egyeztetési döntés
+        nem egyezik a tárolt döntéssel.
+      iva_wallet_target_mismatch: Az IVA-tárca döntés célja (%{target_year}/%{target_period})
+        nem egyezik a munkaegységgel (%{filing_year}/%{period}).
+      iva_wallet_taxpayer_identity_missing: Az IVA-tárca egyeztetése nem folytatható
+        a munkaegység adóalany-azonossága nélkül.
+      iva_wallet_taxpayer_mismatch: Az IVA-tárca egyeztetés adóalanya nem egyezik
+        a Modelo 303 munkaegységgel.
+      iva_wallet_unsupported_decision_type: 'Nem támogatott IVA-tárca döntéstípus:
         %{decision_type}.'
-      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
-        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
-        %{period}` before calculating.'
+      ledger_preflight_blocked: 'a főkönyvi előellenőrzés blokkolja a modelo számítást:
+        %{transaction_id} tranzakció, %{reason}: %{detail}. Futtassa a `aeat app ledger
+        preflight --period %{period}` parancsot számítás előtt.'
       m210_ledger_manual_agrupacion_rows: Az M210-es modell főkönyvi forrásmódja a
         főkönyvi besorolásokból származtatja az éves csoportosított jövedelemsorokat;
         ne adjon meg kézi agrupacion-renta sorokat.
@@ -1058,9 +1059,10 @@ application:
         az M100 számításának %{casilla_id} rovatába, például a(z) `aeat app modelo
         work calculate ... --binding %{casilla_id}=%{total_base}` paranccsal, hogy
         a hozzárendelési rendszer jövedelme bevallásra kerüljön.
-      cross_casilla_invariant_next_action: Ensure all casillas required by predicate
-        %{predicate_id} are non-zero before verifying.
-      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
+      cross_casilla_invariant_next_action: Ellenőrzés előtt győződjön meg arról, hogy
+        a(z) %{predicate_id} predikátum által megkövetelt összes casilla nullától
+        eltérő.
+      cross_casilla_invariant_violated: 'casillák közötti invariáns megsértve (%{predicate_id}):
         %{expression}'
       cross_period_dependency_unclean: 'az időszakok közötti függőség nem tiszta:
         modelo=%{modelo} év=%{year} időszak=%{period} forrás=%{origin} forrásazonosítók=%{origin_ids}
@@ -1116,10 +1118,13 @@ application:
         --rescate-plan-pensiones-aportaciones-pre-2007 ÖSSZEG --rescate-plan-pensiones-aportaciones-totales
         ÖSSZEG paramétereket a számításhoz a DT 12a csökkentés automatikus beillesztéséhez
         (ley-35-2006:dt-12).
-      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
-        = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.'
-      iva_wallet_next_action: Review the IVA wallet reconciliation decision before
-        verifying or exporting this Modelo 303.
+      dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: a(z) %{ingreso_id} rovat
+        = %{ingreso_value}, de a(z) %{reduccion_id} rovat (munkajövedelem-csökkentés)
+        nulla. Ha ez a jövedelem 2006. december 31. előtti hozzájárulásokkal rendelkező
+        nyugdíjterv tőke-visszaváltását tartalmazza, a DT 12a LIRPF szerinti 40%-os
+        csökkentés alkalmazható lehet.'
+      iva_wallet_next_action: Ellenőrzés vagy exportálás előtt tekintse át az IVA-tárca
+        egyeztetési döntést ehhez a Modelo 303-hoz.
       m210_baseline_tipo_deferred:
         next_action: 'A tipo_renta={tipo_renta} értékéhez tartozó baseline adókulcs
           egy későbbi Fázisra van halasztva a #229 task alatt (BOE korpusz függőben).
@@ -1220,8 +1225,8 @@ application:
       modelo_714_cuota_integra_implica_total_cuota_integra: A teljes adó (cuota íntegra)
         pozitív, de az összesített teljes adó (total cuota íntegra) nulla; ellenőrizze
         az összesített adó átírását.
-      registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
-        period=%{period} could not be resolved
+      registry_snapshot_unresolved: 'a registry-pillanatkép nem oldható fel: modelo=%{modelo}
+        filing_year=%{filing_year} period=%{period}'
       representante_fiscal_required:
         next_action: Jelöljön ki egy spanyolországi adóügyi képviselőt a profile.representante_fiscal_nif
           beállításával a `aeat config profile edit` paranccsal. A TRLIRNR 10. cikke
@@ -1432,7 +1437,8 @@ application:
         adatokkal hagyná a profilt. Adja hozzá ezeket a kapcsolókat ugyanahhoz a parancshoz,
         és futtassa újra: %{missing_flags}'
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
-        requires supplied_question_ids — edit is a patch, not a full rewrite.
+        supplied_question_ids paramétert igényel — a szerkesztés egy folt (patch),
+        nem teljes újraírás.
       persist_patch_unknown_question_id: A varázsló javítása ismeretlen kérdésazonosítóra
         hivatkozik.
       profile_flag_required: A varázslóhoz --profile NÉV szükséges (nincs implicit
@@ -1826,25 +1832,29 @@ cli:
         unset_help: Egy kategória konkrét arányának eltávolítása.
         validate_help: Arányok érvényesítése az alkalmas kategóriák és korlátok szerint.
       rule:
-        actor_help: Operator identifier recorded in the rule provenance.
-        add_help: Add a classification rule that auto-classifies matching transactions.
-        apply_dry_run_help: Show what would be classified without persisting changes.
-        apply_dry_run_summary: 'dry-run: %{count} transaction(s) would be classified'
-        apply_help: Apply stored classification rules to unclassified ACTIVE transactions.
-        apply_reaffirm_help: Also re-classify transactions that were manually classified.
-        apply_summary: 'rules: %{rules}, scanned: %{scanned}, matched: %{matched},
-          skipped: %{skipped}, no_match: %{no_match}'
-        category_id_help: Optional spending category to apply.
-        classification_help: Target classification for matching transactions.
-        description_pattern_help: Regex pattern matched (case-insensitive) against
-          transaction description.
+        actor_help: Operátor azonosító, amely a szabály eredetében kerül rögzítésre.
+        add_help: Osztályozási szabály hozzáadása, amely automatikusan osztályozza
+          az egyező tranzakciókat.
+        apply_dry_run_help: Megjeleníti, mi kerülne osztályozásra, változtatások mentése
+          nélkül.
+        apply_dry_run_summary: 'próba futtatás: %{count} tranzakció kerülne osztályozásra'
+        apply_help: Tárolt osztályozási szabályok alkalmazása az osztályozatlan ACTIVE
+          tranzakciókra.
+        apply_reaffirm_help: A kézzel osztályozott tranzakciók újraosztályozása is.
+        apply_summary: 'szabályok: %{rules}, átvizsgálva: %{scanned}, egyezés: %{matched},
+          kihagyva: %{skipped}, nincs_egyezés: %{no_match}'
+        category_id_help: Opcionális alkalmazandó kiadási kategória.
+        classification_help: Az egyező tranzakciók célosztályozása.
+        description_pattern_help: Reguláris kifejezés minta, amelyet a tranzakció
+          leírásához illesztünk (kis- és nagybetűre nem érzékeny).
         empty_pattern: Egy szabályhoz nem üres --description-pattern szükséges (egy
           szó vagy kifejezés, pl. "software"), hogy illeszkedjen a tranzakciók leírásaihoz.
-        group_help: Manage and apply ledger classification rules.
-        list_empty: (no rules stored)
-        list_header: "priority\tclassification\tpattern\trule_id"
-        list_help: List stored classification rules ordered by priority.
-        priority_help: Numeric priority; lower value is evaluated first (default 100).
+        group_help: Főkönyvi osztályozási szabályok kezelése és alkalmazása.
+        list_empty: (nincsenek tárolt szabályok)
+        list_header: "prioritás\tosztályozás\tminta\trule_id"
+        list_help: Tárolt osztályozási szabályok listázása prioritás szerint.
+        priority_help: 'Numerikus prioritás; az alacsonyabb érték kerül előbb kiértékelésre
+          (alapértelmezett: 100).'
     live:
       app_help: Csak olvasható AEAT élő megfigyelési parancsok.
       borrador:
@@ -2149,10 +2159,10 @@ cli:
         year_help: Opcionális benyújtási év szűrő.
       history_help: Egy nyomtatvány kronológiai életciklus-auditjának megjelenítése.
       iva_wallet:
-        as_of_year_help: Reference year for carry-forward age and expiry calculations.
-        balance_help: Show aggregated IVA compensation carry-forward balance computed
-          from local Modelo 303 history. Reports total_balance, active_balance, expired_balance,
-          lot_count, and next_expiry_year.
+        as_of_year_help: Referenciaév az átvitel korának és lejáratának számításához.
+        balance_help: Megjeleníti a helyi Modelo 303 előzményekből számított összesített
+          IVA-kompenzációs átviteli egyenleget. Jelenti a total_balance, active_balance,
+          expired_balance, lot_count és next_expiry_year értékeket.
         correct_amount_help: A javított átvihető egyenleg összege EUR-ban (tizedes,
           pl. 1200.50).
         correct_confirm_help: Kötelező megerősítő jelző. Tudomásul veszi, hogy ez
@@ -2173,7 +2183,7 @@ cli:
         correct_reason_help: A javítás indoka, az auditeseménybe rögzítve.
         correct_reason_required: 'Adja meg a --reason értéket: rögzítse, miért javítja
           a nyitó egyenleget; nem lehet üres.'
-        group_help: Local IVA compensation wallet balance commands.
+        group_help: Helyi IVA-kompenzációs tárca egyenleg parancsok.
         override_amount_help: Felülírt előző kompenzációs összeg EUR-ban az iva.compensacion-pendiente-periodos-anteriores
           mezőre, AEAT 110-es casilla; decimális, például 420.00.
         override_confirm_help: Kötelező megerősítő jelző. Elismeri, hogy a felülírás
@@ -2945,19 +2955,20 @@ cli:
           list_help: Elfogadott apoderado hatókörök listázása.
         status_help: Aktív apoderado-konfiguráció megjelenítése.
       certificate:
-        check_help: Check expiry and rotation health for every registered certificate
-          source
-        help: Manage named certificate sources for the certificate auth provider
-        list_help: List every registered certificate source
+        check_help: Ellenőrzi minden regisztrált tanúsítványforrás lejáratát és rotációs
+          állapotát
+        help: Nevesített tanúsítványforrások kezelése a tanúsítvány-hitelesítési szolgáltatóhoz
+        list_help: Minden regisztrált tanúsítványforrás listázása
         register:
-          file_help: Path to the PKCS#12 (.p12/.pfx) bundle
-          friendly_name_help: Optional human-readable label distinct from --name
-          name_help: Identifier for this certificate source (for example, personal
-            or apoderado-acme)
-        register_help: Register or re-point a named certificate source
+          file_help: A PKCS#12 (.p12/.pfx) csomag útvonala
+          friendly_name_help: Opcionális, ember által olvasható címke, amely eltér
+            a --name paramétertől
+          name_help: Ennek a tanúsítványforrásnak az azonosítója (például personal
+            vagy apoderado-acme)
+        register_help: Nevesített tanúsítványforrás regisztrálása vagy átirányítása
         remove:
-          name_help: Registered certificate source to remove
-        remove_help: Remove a registered certificate source
+          name_help: Az eltávolítandó regisztrált tanúsítványforrás
+        remove_help: Regisztrált tanúsítványforrás eltávolítása
         secret:
           help: A nevesített tanúsítványforráshoz kötött jelszó kezelése
           remove:
@@ -2969,8 +2980,8 @@ cli:
             secret_prompt: 'PKCS#12 jelmondat (rejtett bevitel): '
           set_help: Beállítja (vagy megújítja) egy regisztrált tanúsítványforrás jelszavát
         select:
-          name_help: Registered certificate source to activate
-        select_help: Select the active certificate source
+          name_help: Az aktiválandó regisztrált tanúsítványforrás
+        select_help: Az aktív tanúsítványforrás kiválasztása
       configure_help: Az aktív hitelesítési szolgáltató konfigurálása.
       diagnostics:
         help: Titkosított hitelesítési diagnosztika vizsgálata.
@@ -4006,8 +4017,8 @@ cli:
         helyben osztályozza'
       bulk_all_failed: 'bulk classify sikertelen: minden sor hibás volt; egyetlen
         főkönyvi sor sem frissült'
-      bulk_summary: 'bulk classify: %{total} rows, %{applied} applied, %{skipped}
-        skipped, %{fail} failed'
+      bulk_summary: 'tömeges osztályozás: %{total} sor, %{applied} alkalmazva, %{skipped}
+        kihagyva, %{fail} sikertelen'
       business_pct_help: Üzleti célú arány 0 és 1 között; kötelező --classification
         MIXED esetén, minden más besorolásnál elutasított, teljesen BUSINESS soroknál
         pedig kihagyandó.
@@ -4018,8 +4029,8 @@ cli:
       category_help: Levonható költség kategóriaidentifikátora (csak kiadásoknál;
         bevételekhez nem szükséges).
       classification_help: A tranzakció üzleti besorolási állapota.
-      classification_required: --classification is required when --from-csv is not
-        provided.
+      classification_required: A --classification megadása kötelező, ha a --from-csv
+        nincs megadva.
       counterparty_eu_member_state_help: A szerződő fél EU-tagállama vagy észak-írországi
         IVA-előtagja (ISO 3166-1 alpha-2 kisbetűs, pl. de vagy xi); kötelező --iva-category
         intra_community_supply esetén, tiltott export_third_country_zero_rated vagy
@@ -4028,10 +4039,10 @@ cli:
         való beolvasása feltölti azt a gépéről (a hozzájárulási kapu megköveteli).
       from_csv_exclusive: --from-csv nem kombinálható tranzakció-azonosítóval vagy
         --classification értékkel.
-      from_csv_help: Path to a CSV file with columns transaction_id, classification[,
+      from_csv_help: 'Egy CSV-fájl útvonala, amelynek oszlopai: transaction_id, classification[,
         category_id, business_pct, usage_ratio_id, taxable_base, iva_rate, iva_amount,
-        iva_category, irpf_category].
-      from_csv_not_found: 'CSV file not found: %{path}'
+        iva_category, irpf_category].'
+      from_csv_not_found: 'A CSV-fájl nem található: %{path}'
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --from-csv nincs megadva.
@@ -4592,7 +4603,7 @@ cli:
         profile_rename: Profil átnevezése és mappájának áthelyezése.
         profile_show: Egy profil adatainak megjelenítése.
         profile_status: Az aktív profil készültségének megjelenítése.
-        profile_switch: Switch to a profile and make it the active one.
+        profile_switch: Váltás egy profilra, és annak aktívvá tétele.
         reset_resume: Folytat egy befejezetlen visszaállítási műveletet.
         reset_start: Visszafordíthatatlan visszaállítást indít minden helyben tárolt
           profilra.
@@ -5739,10 +5750,10 @@ errors:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt hiúsult
       meg, nem tárolt adatokkal kapcsolatos probléma miatt. Nézze meg a diagnosztikai
       naplókat, hogy mi hiúsult meg.
-    internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
-      close the active session before re-entering.'
-    internal_master_key_type: 'Internal error: master-key operation received a value
-      of the wrong type.'
+    internal_master_key_reentrant: 'Belső hiba: a mesterkulcs-szolgáltató reentráns
+      módon lett meghívva; zárja be az aktív munkamenetet, mielőtt újra belépne.'
+    internal_master_key_type: 'Belső hiba: a mesterkulcs-művelet hibás típusú értéket
+      kapott.'
     internal_observability_run_context_missing: 'Belső hiba: telemetriai eseményt
       rögzítettek aktív futási kontextuson kívül.'
     internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
