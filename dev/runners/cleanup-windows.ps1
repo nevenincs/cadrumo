@@ -22,7 +22,10 @@ $LaneGlobs      = @('cadrumo-s2*', 'cadrumo-claude-*', 'oracle-emit-work*')
 $LaneMaxAgeHrs  = 24
 $EvidenceExempt = 'distribution-install-readiness'   # keep <7d evidence rows
 $EvidenceKeepHrs = 24 * 7
-$UvCapGB        = 5
+# Windows uv cache is shared by operator dev work + the runner, and the do-once
+# redesign leans on it staying warm, so it is capped higher than the
+# runner-only container/macOS caches (which stay at 5GB).
+$UvCapGB        = 15
 $PipCapGB       = 3
 $NpmCapGB       = 3
 $HeavySweepThrottleHrs = 6          # throttle the expensive size-capped sweeps
