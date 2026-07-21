@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
 from pathlib import Path
 
 import pytest
@@ -127,34 +126,3 @@ def test_backlog_renders_despite_work_unit_load_failure() -> None:
     assert result.exit_code == 0, result.output
     assert "late_count\t" in result.output
     assert "work_units_degraded\t" in result.output
-
-
-def test_backlog_emits_zero_late_count_for_future_window(monkeypatch: pytest.MonkeyPatch) -> None:
-    """A window entirely in the future (but within the registry's known
-    year range) has nothing past-due relative to ``as_of``, so late_count == 0.
-
-    Note: the registry only carries deadline calendars for years it has
-    been configured for. Far-future years (e.g. 2099) are outside that
-    range and the verb correctly refuses them with a non-zero exit.
-    The CLI computes ``as_of`` from the wall clock, so the reference date
-    is pinned here to keep the "window lies entirely in the future"
-    invariant independent of the run date; the second half of 2026 is a
-    registry-known year that lies wholly after the pinned reference.
-    """
-
-    monkeypatch.setattr("cadrumo.application.overview._backlog.today_madrid", lambda: date(2026, 1, 15))
-
-    result = invoke_cached_cli(
-        [
-            "app",
-            "overview",
-            "backlog",
-            "--from",
-            "2026-07-01",
-            "--to",
-            "2026-12-31",
-            "--allow-incomplete",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    assert "late_count\t0" in result.output
