@@ -164,3 +164,87 @@ class TestPayableInvoiceCrud:
         assert svc.list_all(bucket_id=_BUCKET_ID) == ()
         with pytest.raises(BusinessOperationInvoiceNotFoundError):
             svc.view(bucket_id=_BUCKET_ID, invoice_id=add_result.record.invoice_id)
+
+
+class TestBusinessInvoiceCurrencyConversion:
+    """A slim invoice feeds the same modelo bindings as the rich catalogue one,
+    so a foreign-currency record must carry its euro equivalent or be withheld."""
+
+    def test_foreign_currency_add_stamps_the_ecb_conversion(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+    ) -> None:
+        from datetime import date
+
+        from ....adapters.outbound.fx import EcbReferenceRateProvider
+        from ....tests.ecb_stub import ecb_csv_fetch
+
+        # ECB EXR.D.GBP.EUR.SP00.A 2025-03-14 = 0.84183 (1 EUR = 0.84183 GBP).
+        quote = Decimal("0.84183")
+        provider = EcbReferenceRateProvider(fetch=ecb_csv_fetch({"GBP": {date(2025, 3, 14): quote}}))
+        svc = _make_payable_svc(isolated_settings, secure_objects)
+
+        result = svc.add(
+            bucket_id=_BUCKET_ID,
+            counterparty_nif="B12345678",
+            invoice_number="GB-2025-001",
+            invoice_date="2025-03-14",
+            currency="GBP",
+            taxable_base=Decimal("1000.00"),
+            total_amount=Decimal("1000.00"),
+            rate_provider=provider,
+        )
+
+        record = result.record
+        assert record.fx_rate == Decimal("1") / quote
+        assert record.fx_rate_date == "2025-03-14"
+        assert record.total_amount_eur == Decimal("1187.89")
+        # Native amount untouched; the euro value is a derived view.
+        assert record.total_amount == Decimal("1000.00")
+
+    def test_unresolvable_rate_leaves_the_record_unconverted(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+    ) -> None:
+        """No rate means no euro value -- never the foreign face value as euro."""
+        from ....adapters.outbound.fx import EcbReferenceRateProvider
+        from ....tests.ecb_stub import ecb_csv_fetch
+
+        provider = EcbReferenceRateProvider(fetch=ecb_csv_fetch({}))
+        svc = _make_payable_svc(isolated_settings, secure_objects)
+
+        result = svc.add(
+            bucket_id=_BUCKET_ID,
+            counterparty_nif="B12345678",
+            invoice_number="GB-2025-002",
+            invoice_date="2025-03-14",
+            currency="GBP",
+            taxable_base=Decimal("1000.00"),
+            total_amount=Decimal("1000.00"),
+            rate_provider=provider,
+        )
+
+        assert result.record.fx_rate is None
+        assert result.record.total_amount_eur is None
+
+    def test_euro_add_carries_no_conversion_stamp(
+        self,
+        isolated_settings: Settings,
+        secure_objects: SecureObjectRepository,
+    ) -> None:
+        svc = _make_payable_svc(isolated_settings, secure_objects)
+
+        result = svc.add(
+            bucket_id=_BUCKET_ID,
+            counterparty_nif="B12345678",
+            invoice_number="ES-2025-001",
+            invoice_date="2025-03-14",
+            taxable_base=Decimal("1000.00"),
+            total_amount=Decimal("1210.00"),
+        )
+
+        assert result.record.fx_rate is None
+        assert result.record.fx_rate_date is None
+        assert result.record.total_amount_eur == Decimal("1210.00")

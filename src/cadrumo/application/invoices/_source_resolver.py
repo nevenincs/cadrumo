@@ -449,6 +449,8 @@ def _business_invoice_observation(
     *,
     context: CalculationSourceContext,
 ) -> InvoiceObservation | None:
+    if _is_unconverted_foreign_business_invoice(invoice):
+        return None
     if context.modelo == Modelo.M347.value:
         return _m347_business_invoice_observation(invoice)
     clave = _business_invoice_clave(invoice)
@@ -469,11 +471,27 @@ def _business_invoice_observation(
         party_tax_id=party_tax_id,
         country_code=country_code,
         transaction_date=_business_invoice_date(invoice),
-        base_amount=invoice.taxable_base,
-        invoice_total_amount=invoice.total_amount,
+        base_amount=_business_eur(invoice.taxable_base_eur, invoice),
+        invoice_total_amount=_business_eur(invoice.total_amount_eur, invoice),
         intracommunity_clave=clave,
         party_legal_name=invoice.counterparty_name or None,
     )
+
+
+def _is_unconverted_foreign_business_invoice(invoice: BusinessOperationInvoice) -> bool:
+    """Return whether the slim invoice is foreign-currency with no euro equivalent."""
+    return invoice.currency != DEFAULT_CURRENCY and invoice.total_amount_eur is None
+
+
+def _business_eur(converted: Decimal | None, invoice: BusinessOperationInvoice) -> Decimal:
+    """Return the euro amount, refusing rather than declaring the face value."""
+    if converted is None:
+        msg = (
+            f"business invoice {invoice.invoice_id} is denominated in {invoice.currency} with no "
+            f"resolved euro value; it must be gated out of projection, not declared at face value"
+        )
+        raise RegistryValidationError(msg)
+    return converted
 
 
 def _m347_business_invoice_observation(invoice: BusinessOperationInvoice) -> InvoiceObservation | None:
@@ -489,8 +507,8 @@ def _m347_business_invoice_observation(invoice: BusinessOperationInvoice) -> Inv
         party_tax_id=party_tax_id,
         country_code=country_code,
         transaction_date=_business_invoice_date(invoice),
-        base_amount=invoice.taxable_base,
-        invoice_total_amount=invoice.total_amount,
+        base_amount=_business_eur(invoice.taxable_base_eur, invoice),
+        invoice_total_amount=_business_eur(invoice.total_amount_eur, invoice),
         intracommunity_clave=None,
         party_legal_name=invoice.counterparty_name or None,
     )
