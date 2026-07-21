@@ -55,6 +55,49 @@ def _build_attachment_manifest(
     )
 
 
+def _persist_attachment(
+    store: AttachmentStoreProtocol,
+    *,
+    sha256: str,
+    kind: AttachmentKind,
+    source: AttachmentSource,
+    source_reference: str,
+    mime_type: str,
+    bytes_size: int,
+    captured_at: datetime,
+    bucket_id: str | None,
+    link_transaction_ids: tuple[str, ...],
+    link_invoice_ids: tuple[str, ...],
+    metadata: Mapping[str, str] | None,
+    notes: str,
+) -> Attachment:
+    """Build the :class:`Attachment` manifest for already-stored bytes and persist it.
+
+    The shared write core of :func:`add_attachment` and
+    :func:`add_attachment_bytes`: both first hand the bytes to the store (from a
+    file path or from memory) and receive the content ``sha256`` and byte count,
+    then call this to validate the manifest and commit it through the single
+    ``write_manifest`` write path. It introduces no temporary materialisation and
+    re-sequences nothing — the bytes never leave secure storage.
+    """
+    attachment = _build_attachment_manifest(
+        sha256=sha256,
+        kind=kind,
+        source=source,
+        source_reference=source_reference,
+        mime_type=mime_type,
+        bytes_size=bytes_size,
+        captured_at=captured_at,
+        bucket_id=bucket_id,
+        link_transaction_ids=link_transaction_ids,
+        link_invoice_ids=link_invoice_ids,
+        metadata=metadata,
+        notes=notes,
+    )
+    store.write_manifest(attachment)
+    return attachment
+
+
 def add_attachment(
     store: AttachmentStoreProtocol,
     *,
@@ -104,7 +147,8 @@ def add_attachment(
     """
     _logger.debug("ingesting attachment from %s kind=%s source=%s", path, kind.value, source.value)
     sha256, bytes_size = store.put_file(path)
-    attachment = _build_attachment_manifest(
+    attachment = _persist_attachment(
+        store,
         sha256=sha256,
         kind=kind,
         source=source,
@@ -118,7 +162,6 @@ def add_attachment(
         metadata=metadata,
         notes=notes,
     )
-    store.write_manifest(attachment)
     _logger.info("added attachment kind=%s source=%s bytes=%d", kind.value, source.value, bytes_size)
     return attachment
 
@@ -169,7 +212,8 @@ def add_attachment_bytes(
         manifest carrying the real ``sha256`` and ``mime_type``.
     """
     sha256 = store.put_bytes(data)
-    attachment = _build_attachment_manifest(
+    attachment = _persist_attachment(
+        store,
         sha256=sha256,
         kind=kind,
         source=source,
@@ -183,7 +227,6 @@ def add_attachment_bytes(
         metadata=metadata,
         notes=notes,
     )
-    store.write_manifest(attachment)
     _logger.info("added attachment bytes kind=%s source=%s bytes=%d", kind.value, source.value, len(data))
     return attachment
 

@@ -22,6 +22,8 @@ is authoritative profile-scoped taxpayer state, not an AEAT filing surface.
 
 from __future__ import annotations
 
+from typing import Annotated
+
 import typer
 
 from ...application.prorrata_register import ProrrataRegisterService
@@ -59,6 +61,50 @@ _REFERENCED_PROVENANCES = frozenset(
         ProrrataProvisionalProvenance.INICIO_ACTIVIDAD,
     }
 )
+
+# Shared Typer option aliases for the two election verbs (``elect-especial`` and
+# ``elect-general``), which carry a byte-identical --ejercicio/--provenance/
+# --reference/--sector signature. Declared once so the help keys live in one home
+# and ``--help`` renders identically for both verbs. ``--percentage`` is kept
+# per-verb: its help key and copy diverge (especial cites art. 106.Uno regla 3.ª,
+# general cites art. 104.Uno + 105.Uno).
+_EjercicioOpt = Annotated[
+    int,
+    typer.Option(
+        "--ejercicio",
+        help=tr("cli.app.ledger.prorrata.ejercicio_help", default="Filing year the election covers."),
+    ),
+]
+_ProvenanceOpt = Annotated[
+    ProrrataProvisionalProvenance,
+    typer.Option(
+        "--provenance",
+        help=tr(
+            "cli.app.ledger.prorrata.provenance_help",
+            default="LIVA art. 105 source of the provisional percentage.",
+        ),
+    ),
+]
+_ReferenceOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--reference",
+        help=tr(
+            "cli.app.ledger.prorrata.reference_help",
+            default="AEAT authorisation (art. 105.Dos) or inicio proposal (art. 105.Tres) reference.",
+        ),
+    ),
+]
+_SectorOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--sector",
+        help=tr(
+            "cli.app.ledger.prorrata.sector_help",
+            default="Differentiated-sector id this entry covers; omit for the whole-entity entry.",
+        ),
+    ),
+]
 
 
 def register_prorrata_register_commands(app: typer.Typer) -> None:
@@ -198,11 +244,7 @@ def _elect(
 )
 def prorrata_elect_especial(
     ctx: typer.Context,
-    ejercicio: int = typer.Option(
-        ...,
-        "--ejercicio",
-        help=tr("cli.app.ledger.prorrata.ejercicio_help", default="Filing year the election covers."),
-    ),
+    ejercicio: _EjercicioOpt,
     percentage: str = typer.Option(
         ...,
         "--percentage",
@@ -211,30 +253,9 @@ def prorrata_elect_especial(
             default="Common-use deduction percentage 0-100 (LIVA art. 106.Uno regla 3.a / art. 104.Dos).",
         ),
     ),
-    provenance: ProrrataProvisionalProvenance = typer.Option(
-        ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
-        "--provenance",
-        help=tr(
-            "cli.app.ledger.prorrata.provenance_help",
-            default="LIVA art. 105 source of the provisional percentage.",
-        ),
-    ),
-    reference: str | None = typer.Option(
-        None,
-        "--reference",
-        help=tr(
-            "cli.app.ledger.prorrata.reference_help",
-            default="AEAT authorisation (art. 105.Dos) or inicio proposal (art. 105.Tres) reference.",
-        ),
-    ),
-    sector: str | None = typer.Option(
-        None,
-        "--sector",
-        help=tr(
-            "cli.app.ledger.prorrata.sector_help",
-            default="Differentiated-sector id this entry covers; omit for the whole-entity entry.",
-        ),
-    ),
+    provenance: _ProvenanceOpt = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    reference: _ReferenceOpt = None,
+    sector: _SectorOpt = None,
 ) -> None:
     """Persist an ``ESPECIAL`` :class:`ProrrataRegisterEntry` for the ejercicio."""
     _elect(
@@ -262,11 +283,7 @@ def prorrata_elect_especial(
 )
 def prorrata_elect_general(
     ctx: typer.Context,
-    ejercicio: int = typer.Option(
-        ...,
-        "--ejercicio",
-        help=tr("cli.app.ledger.prorrata.ejercicio_help", default="Filing year the election covers."),
-    ),
+    ejercicio: _EjercicioOpt,
     percentage: str = typer.Option(
         ...,
         "--percentage",
@@ -275,30 +292,9 @@ def prorrata_elect_general(
             default="Provisional deduction percentage 0-100 (LIVA art. 104.Uno + 105.Uno).",
         ),
     ),
-    provenance: ProrrataProvisionalProvenance = typer.Option(
-        ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
-        "--provenance",
-        help=tr(
-            "cli.app.ledger.prorrata.provenance_help",
-            default="LIVA art. 105 source of the provisional percentage.",
-        ),
-    ),
-    reference: str | None = typer.Option(
-        None,
-        "--reference",
-        help=tr(
-            "cli.app.ledger.prorrata.reference_help",
-            default="AEAT authorisation (art. 105.Dos) or inicio proposal (art. 105.Tres) reference.",
-        ),
-    ),
-    sector: str | None = typer.Option(
-        None,
-        "--sector",
-        help=tr(
-            "cli.app.ledger.prorrata.sector_help",
-            default="Differentiated-sector id this entry covers; omit for the whole-entity entry.",
-        ),
-    ),
+    provenance: _ProvenanceOpt = ProrrataProvisionalProvenance.CARRIED_PRIOR_DEFINITIVA,
+    reference: _ReferenceOpt = None,
+    sector: _SectorOpt = None,
 ) -> None:
     """Persist a ``GENERAL`` :class:`ProrrataRegisterEntry` for the ejercicio."""
     _elect(
