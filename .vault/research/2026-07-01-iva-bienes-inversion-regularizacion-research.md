@@ -16,7 +16,7 @@ related:
 Scope: issue #349 (P2). The multi-year capital-goods deduction-regularization mechanism
 (LIVA arts. 107-110) is not modelled. Present at HEAD (`debf1b2c1`): the four legal entries
 `ley-37-1992:art-107/108/109/110` grounded to bundled consolidated LIVA text
-(`src/aeat/_data/registry/aeat/legal/iva.toml:1006-1082`, all reviewed, reviewed_by wgergely);
+(`src/aeat/_data/registry/aeat/legal/iva.toml:1006-1082`, all reviewed, reviewed_by operator);
 a dedicated manual casilla `iva.regularizacion-inversiones`
 (`303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml:265`) and the official
 form casilla 43 (`...part-002.toml:280`), both `input_kind = manual`, grounded to arts. 107-110.

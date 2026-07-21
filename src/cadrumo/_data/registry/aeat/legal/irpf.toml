@@ -10,7 +10,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 85: imputacion de rentas inmobiliarias. Tipo general 2 por ciento del valor catastral; tipo reducido 1,1 por ciento cuando los valores catastrales hayan sido revisados en el periodo impositivo o en los diez periodos impositivos anteriores."
 required_text = [
     "Imputación de rentas inmobiliarias",
@@ -27,7 +27,7 @@ applies_to = "lirpf-imputacion-renta-inmobiliaria"
 legal_refs = ["ley-35-2006:art-85"]
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 85: tipo reducido 1,1 por ciento aplicable cuando el valor catastral del inmueble fue revisado, modificado o determinado mediante procedimiento de valoracion colectiva en el periodo impositivo o en los diez periodos anteriores."
 
 [parameters."lirpf-art-85:imputacion-rate-old-or-no-revision"]
@@ -38,7 +38,7 @@ applies_to = "lirpf-imputacion-renta-inmobiliaria"
 legal_refs = ["ley-35-2006:art-85"]
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 85: tipo general 2 por ciento aplicable cuando no concurre revision catastral reciente o el inmueble carece de revision en los diez periodos anteriores."
 
 [parameters."lirpf-art-85:catastral-revision-lookback-years"]
@@ -49,7 +49,7 @@ applies_to = "lirpf-imputacion-renta-inmobiliaria"
 legal_refs = ["ley-35-2006:art-85"]
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 85: ventana 'en los diez periodos impositivos anteriores' que delimita la aplicacion del tipo reducido del 1,1 por ciento sobre el valor catastral revisado."
 
 [legal."rd-439-2007:art-13"]
@@ -64,7 +64,7 @@ published_at = 2007-03-31
 effective_from = 2007-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RIRPF art 13: gastos deducibles de los rendimientos del capital inmobiliario. Detalla las categorias de gasto que reducen el rendimiento integro del capital inmobiliario: intereses y gastos de financiacion, reparacion y conservacion, tributos no estatales, contraprestaciones por servicios, gastos de formalizacion, saldos de dudoso cobro, primas de seguro, suministros y amortizacion. Base reglamentaria del articulo 23 LIRPF y de la seccion rendimientos_capital_inmobiliario > gastos_deducibles del Modelo 100."
 required_text = [
     "Gastos deducibles de los rendimientos del capital inmobiliario",
@@ -84,7 +84,7 @@ published_at = 2007-03-31
 effective_from = 2007-04-01
 review_status = "reviewed"
 reviewed_at = 2026-06-10
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RIRPF art 14: gastos de amortizacion de los rendimientos del capital inmobiliario. Fija la efectividad de la amortizacion de inmuebles arrendados en el 3 por ciento sobre el mayor del coste de adquisicion satisfecho o el valor catastral, excluido el suelo. Provision reglamentaria que establece el tipo del 3 por ciento citado por la seccion rendimientos_capital_inmobiliario > gastos_deducibles > amortizacion del Modelo 100 y por AMORTIZACION_INMUEBLE_RATE. Base sustantiva: articulo 23 LIRPF."
 required_text = [
     "Gastos de amortización de los rendimientos del capital inmobiliario",
@@ -125,7 +125,7 @@ published_at = 2007-03-31
 effective_from = 2007-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RIRPF art 86: tipo de retencion. Heart of the personalized retention scheme for trabajo rendimientos. Define el tipo como cuota de retencion / cuantia total de retribuciones (art-83.2) expresado con dos decimales. Aplica tipo cero cuando la base menos el minimo personal-familiar es no positiva, reduccion de 2 puntos para contribuyentes con vivienda-habitual DT-18 (cifra inferior a 33.007,2 EUR), y un suelo del 2 por ciento para contratos de duracion inferior al anio. Base reglamentaria del calculo del tipo personalizado de retencion del trabajo, citado por art-80 RIRPF."
 required_text = [
     "Tipo de retención",
@@ -166,7 +166,7 @@ published_at = 2007-03-31
 effective_from = 2007-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RIRPF art 80: importe de las retenciones sobre rendimientos del trabajo. Establece el regimen de tipos de retencion: regla general personalizada via tablas del art 86; 35 por ciento para retribuciones de administradores y consejeros (reducido al 19 por ciento si la cifra de negocios de la entidad es inferior a 100.000 euros); 15 por ciento para rendimientos por cursos, conferencias, seminarios y obras literarias, artisticas o cientificas. Base reglamentaria de la retencion sobre rendimientos del trabajo en Modelo 111 (trimestral) y Modelo 190 (resumen anual)."
 required_text = [
     "Importe de las retenciones sobre rendimientos del trabajo",
@@ -186,7 +186,7 @@ published_at = 2007-03-31
 effective_from = 2007-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RIRPF art 90: importe de las retenciones sobre rendimientos del capital mobiliario. Establece el tipo general del 19 por ciento aplicado a la base de retencion, con reduccion del 60 por ciento para rendimientos amparados en la deduccion del articulo 68.4 LIRPF (sociedades de capital semilla). Base reglamentaria de la retencion sobre rendimientos del capital mobiliario en Modelo 123 (trimestral) y Modelo 193 (resumen anual)."
 required_text = [
     "Importe de las retenciones sobre rendimientos del capital mobiliario",
@@ -231,7 +231,7 @@ published_at = 2007-03-31
 effective_from = 2007-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RIRPF art 95: importe de las retenciones sobre rendimientos de actividades economicas. Establece el tipo del 15 por ciento general para actividades profesionales, el tipo reducido del 7 por ciento para nuevos profesionales (inicio + dos siguientes) y para colectivos especificos (recaudadores municipales, mediadores de seguros con auxiliares, delegados comerciales SELAE, actividades artisticas IAE grupos 851-869). Base reglamentaria de la retencion sobre rendimientos de actividades economicas profesionales en Modelo 111."
 required_text = [
     "Importe de las retenciones sobre rendimientos de actividades económicas",
@@ -251,7 +251,7 @@ published_at = 2007-03-31
 effective_from = 2007-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RIRPF art 108: obligaciones formales del retenedor y del obligado a ingresar a cuenta. Establece la obligacion de presentar declaracion-liquidacion trimestral de las cantidades retenidas e ingresadas (M111, M115, M123, art-71 RIVA enlaza mensual cuando aplica), la declaracion negativa, y la declaracion anual resumen (M180, M190, M193). Base reglamentaria comun de los modelos de retencion IRPF."
 required_text = [
     "Obligaciones formales del retenedor y del obligado a ingresar a cuenta",
@@ -299,7 +299,7 @@ published_at = 2011-03-18
 effective_from = 2011-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion del modelo 111 — autoliquidacion de retenciones e ingresos a cuenta del IRPF sobre rendimientos del trabajo, actividades economicas, premios, determinadas ganancias patrimoniales e imputaciones de renta. Foundational orden for the Modelo 111 quarterly retenciones return."
 required_text = [
     "Aprobación del modelo 111",
@@ -319,7 +319,7 @@ published_at = 2000-11-28
 effective_from = 2001-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion del modelo 115 — declaracion-documento de ingreso de retenciones e ingresos a cuenta sobre rentas o rendimientos procedentes del arrendamiento o subarrendamiento de inmuebles urbanos. Foundational orden for the Modelo 115 quarterly return."
 required_text = [
     "Se aprueban los modelos 115",
@@ -379,7 +379,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Deduccion por inversion en empresas de nueva o reciente creacion. 50 per cent of amounts paid in the period for the subscription of shares or holdings in new or recent-creation enterprises, subject to the conditions set out in the sub-paragraphs 2 and 3, plus contribution of business or professional knowledge per the investment agreement. Maximum annual deduction base is 100,000 euros."
 required_text = [
     "Deducción por inversión en empresas de nueva o reciente creación",
@@ -399,7 +399,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Deducciones en actividades economicas. Cross-references the Impuesto sobre Sociedades incentives and inversion empresarial regime at equal percentages and limits, with carve-outs for the IS article 39 paragraphs 2 and 3. Adds a Modelo-100-specific 5 per cent (or 2.5 per cent) reinversion-of-net-business-income deduction for taxpayers meeting the Impuesto sobre Sociedades art. 101 requirements."
 required_text = [
     "Deducciones en actividades económicas",
@@ -420,7 +420,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Deducciones por donativos y otras aportaciones. Three concurrent regimes: (a) Ley 49/2002 mecenazgo deductions; (b) 10 per cent of donations to legally recognised foundations and public-utility associations not covered by Ley 49/2002; (c) 20 per cent of party-affiliation fees and political contributions with a 600 euro annual base cap."
 required_text = [
     "Deducciones por donativos y otras aportaciones",
@@ -441,7 +441,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Deduccion por rentas obtenidas en Ceuta o Melilla, including economic activities effectively carried out there."
 required_text = [
     "Deducción por rentas obtenidas en Ceuta o Melilla",
@@ -461,7 +461,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Deduccion por actuaciones para la proteccion y difusion del Patrimonio Historico Espanol y de las ciudades, conjuntos y bienes declarados Patrimonio Mundial. 15 per cent of investments or expenses for: (a) acquisition of Patrimonio Historico Espanol assets from abroad with permanence + cultural-interest declaration requirements; (b) conservation/restoration/exhibition of bienes de interes cultural; (c) rehabilitation of buildings in protected city perimeters or Patrimonio Mundial sites."
 required_text = [
     "Deducción por actuaciones para la protección y difusión del Patrimonio Histórico Español",
@@ -482,7 +482,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Limites de determinadas deducciones. Caps the base of the art. 68.3 (donativos) and art. 68.5 (Patrimonio Historico) deductions at 10 per cent of the contribuyente's base liquidable. The limits on art. 68.2 (actividades economicas) follow the Impuesto sobre Sociedades incentivos regime and are computed after subtracting art. 68.1 (empresas nueva creacion) and art. 68.5 (Patrimonio Historico) from the combined estatal + autonomica cuota integra."
 required_text = [
     "Límites de determinadas deducciones",
@@ -503,7 +503,7 @@ effective_from = 2019-01-01
 effective_to = 2019-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2019."
 required_text = [
     "Aprobación de los signos, índices o módulos",
@@ -524,7 +524,7 @@ effective_from = 2020-01-01
 effective_to = 2020-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2020."
 required_text = [
     "Aprobación de los signos, índices o módulos",
@@ -545,7 +545,7 @@ effective_from = 2021-01-01
 effective_to = 2021-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2021."
 required_text = [
     "Aprobación de los signos, índices o módulos",
@@ -566,7 +566,7 @@ effective_from = 2022-01-01
 effective_to = 2022-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2022."
 required_text = [
     "Aprobación de los signos, índices o módulos",
@@ -587,7 +587,7 @@ effective_from = 2023-01-01
 effective_to = 2023-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2023."
 required_text = [
     "Aprobación de los signos, índices o módulos",
@@ -608,7 +608,7 @@ effective_from = 2024-01-01
 effective_to = 2024-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2024."
 required_text = [
     "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
@@ -629,7 +629,7 @@ effective_from = 2024-01-01
 effective_to = 2024-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Reduccion especial 2024 para actividades en estimacion objetiva desarrolladas en el termino municipal de Lorca."
 required_text = [
     "Disposición adicional quinta",
@@ -650,7 +650,7 @@ effective_from = 2024-01-01
 effective_to = 2024-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Reduccion especial 2024 para actividades en estimacion objetiva desarrolladas en la Isla de La Palma."
 required_text = [
     "Disposición adicional sexta",
@@ -838,7 +838,7 @@ effective_to = 2024-12-31
 consolidated_as_of = 2025-10-29
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Reduccion DANA 2024 para actividades economicas en estimacion objetiva en municipios afectados."
 required_text = [
     "Artículo 11",
@@ -859,7 +859,7 @@ effective_from = 2024-06-28
 effective_to = 2024-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Extends Ley 35/2006 additional provision 57 La Palma article 68.4 deduction treatment to the 2024 tax period."
 required_text = [
     "disposición adicional quincuagésima séptima",
@@ -880,7 +880,7 @@ effective_from = 2025-01-01
 effective_to = 2025-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2025."
 required_text = [
     "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
@@ -1150,7 +1150,7 @@ effective_from = 2025-11-27
 effective_to = 2025-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Extends Ley 35/2006 additional provision 57 La Palma article 68.4 deduction treatment to the 2025 tax period."
 required_text = [
     "disposición adicional quincuagésima séptima",
@@ -1171,7 +1171,7 @@ effective_from = 2026-01-01
 effective_to = 2026-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion de signos, indices o modulos de estimacion objetiva aplicables durante 2026."
 required_text = [
     "Artículo\u00a04.\u2003Aprobación de los signos, índices o módulos.",
@@ -1445,7 +1445,7 @@ published_at = 2007-11-29
 effective_from = 2008-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion de Modelo 123 como autoliquidacion periodica de retenciones e ingresos a cuenta sobre determinados rendimientos del capital mobiliario y determinadas rentas."
 required_text = [
     "Modelo 123",
@@ -1506,7 +1506,7 @@ published_at = 2024-01-31
 effective_from = 2024-02-01
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Sustituye el anexo II de Orden EHA/3435/2007 para Modelo 123 y desglosa dividendos y otras rentas de participacion frente al resto de rentas."
 required_text = [
     "El anexo II, modelo 123",
@@ -1527,7 +1527,7 @@ published_at = 2014-09-26
 effective_from = 2014-09-27
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Sustituye el anexo VI de la Orden de 20 de noviembre de 2000 para los disenos fisicos y logicos del Modelo 180."
 required_text = [
     "Se sustituye el anexo VI",
@@ -1548,7 +1548,7 @@ published_at = 2023-11-30
 effective_from = 2023-12-01
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Actualiza campos del registro de perceptor del Modelo 180 para identificar Isla de La Palma."
 required_text = [
     "Artículo 7",
@@ -1570,7 +1570,7 @@ published_at = 2011-12-12
 effective_from = 2011-12-13
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion del Modelo 193 y de sus disenos fisicos y logicos para resumen anual de retenciones e ingresos a cuenta sobre rendimientos del capital mobiliario y determinadas rentas."
 required_text = [
     "Se aprueba el modelo 193",
@@ -1591,7 +1591,7 @@ published_at = 2009-11-23
 effective_from = 2009-11-24
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion del Modelo 190 como resumen anual de retenciones e ingresos a cuenta de IRPF sobre rendimientos del trabajo, actividades economicas, premios, ganancias patrimoniales e imputaciones de renta."
 required_text = [
     "Se aprueba el modelo 190",
@@ -1612,7 +1612,7 @@ published_at = 2025-12-12
 effective_from = 2025-12-13
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Modifica la Orden EHA/3127/2009 para el Modelo 190 y aplica por primera vez al ejercicio 2025 y siguientes."
 required_text = [
     "Modificación de la Orden EHA/3127/2009",
@@ -2696,7 +2696,7 @@ published_at = 1994-07-07
 effective_from = 1994-07-08
 review_status = "reviewed"
 reviewed_at = 2026-06-10
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "REBECA (Registro Especial de Buques de Canarias): el art 75.1 fija como renta exenta el 50 por 100 de los rendimientos del trabajo personal de los tripulantes de buques inscritos en el Registro Especial de Buques y Empresas Navieras devengados con ocasion de la navegacion. Provision que establece el 50 por 100 aplicado por REBECA_MARITIME_EXEMPTION_FRACTION y por la seccion renta exenta del Modelo 100 para trabajadores del mar."
 required_text = [
     "renta exenta el 50 por 100",
@@ -2715,7 +2715,7 @@ published_at = 2006-11-29
 effective_from = 2015-01-01
 review_status = "reviewed"
 reviewed_at = 2026-06-02
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Base legal para la integracion y compensacion de rentas en la base imponible GENERAL del IRPF (Modelo 100). El saldo negativo de ganancias y perdidas patrimoniales de la base general se compensa con el saldo positivo de rendimientos e imputaciones con el limite del 25 por ciento; el saldo negativo restante se compensa en los cuatro anios siguientes (casillas 1391 saldo pendiente -> 1388 aplicacion). Distinto del art.49, que rige la base imponible del AHORRO."
 required_text = [
     "La base imponible general será el resultado de sumar los siguientes saldos",
@@ -2756,7 +2756,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 57: minimo del contribuyente. Establece el minimo personal del contribuyente con caracter general (5.550 euros anuales), con incrementos por edad: +1.150 euros anuales para contribuyentes mayores de 65 anios, y +1.400 euros adicionales para mayores de 75 anios. Base sustantiva de las casillas del minimo-del-contribuyente de Modelo 100 (0511 y similares)."
 required_text = [
     "Mínimo del contribuyente",
@@ -2776,7 +2776,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 58: minimo por descendientes. 2.400 euros por el primero, 2.700 por el segundo, 4.000 por el tercero, 4.500 por el cuarto y siguientes. Incremento de 2.800 euros por descendiente menor de 3 anios."
 required_text = [
     "Mínimo por descendientes",
@@ -2796,7 +2796,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 59: minimo por ascendientes. 1.150 euros por ascendiente mayor de 65 anios o con discapacidad, 1.400 euros adicionales por ascendiente mayor de 75 anios."
 required_text = [
     "Mínimo por ascendientes",
@@ -2988,7 +2988,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 7.h: rentas exentas — prestaciones publicas por maternidad y paternidad reconocidas por la Seguridad Social (INSS) y por las Comunidades Autonomas. Las prestaciones de la Seguridad Social por baja de maternidad y paternidad son integras del IRPF (art 7.h ley 35/2006, en vigor tras la STC 207/2013 que declaro inconstitucional la exencion para funcionarios). Desde 2018 la exencion vuelve para todos los contribuyentes. El importe de estas prestaciones NO debe incluirse en la casilla 0003 (Retribuciones dinerarias) ya que no constituye rendimiento de trabajo tributable conforme al art 17."
 required_text = [
     "Rentas exentas",
@@ -3440,7 +3440,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 79: cuota diferencial. Define el resultado de minorar la suma estatal + autonomica por las deducciones siguientes: doble imposicion internacional (art 80), deducciones art 91.10 y 92.4, retenciones art 99.11 y 99.8, cuotas IRNR por cambio de residencia, retenciones y pagos fraccionados. Base sustantiva del Modelo 100 casilla 0610 (cuota diferencial) y 0595 (cuota resultante de la autoliquidacion)."
 required_text = [
     "Cuota diferencial",
@@ -3460,7 +3460,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 81: deduccion por maternidad. Establece la deduccion de hasta 1.200 euros anuales por cada hijo menor de tres anios para madres trabajadoras, con incremento de hasta 1.000 euros por gastos en guarderias. Base sustantiva del Modelo 100 casillas 0611 (deduccion), 0612 (abono anticipado), 0613 (incremento guarderias)."
 required_text = [
     "Deducción por maternidad",
@@ -3480,7 +3480,7 @@ published_at = 2006-11-29
 effective_from = 2015-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 81 bis: deducciones por familia numerosa o personas con discapacidad a cargo. Establece deducciones de hasta 1.200 euros anuales por: descendiente con discapacidad (a), ascendiente con discapacidad (b), familia numerosa o ascendiente separado legalmente con dos hijos (c), conyuge con discapacidad (d). Base sustantiva del Modelo 100 casillas 0623/0624 (descendiente), 0636/0637 (ascendiente), 0248/0249 (conyuge), 0660/0661 (familia numerosa), 0662/0663 (ascendiente separado), 0664/0666 (regularizacion)."
 required_text = [
     "Deducciones por familia numerosa o personas con discapacidad a cargo",
@@ -3500,7 +3500,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 101: importe de los pagos a cuenta. Base sustantiva del regimen de tipos de retencion para rendimientos del trabajo (escala personalizada 19/24/30/37/45/47 por ciento), administradores y consejeros (35 por ciento, 19 por ciento para entidades de cifra de negocios inferior a 100.000 euros), atrasos imputados a ejercicios anteriores (15 por ciento), y reduccion del 60 por ciento para rendimientos de Ceuta o Melilla amparados en la deduccion del art 68.4. Espejo legal del articulo 80 RIRPF que desarrolla el procedimiento."
 required_text = [
     "Importe de los pagos a cuenta",
@@ -3520,7 +3520,7 @@ published_at = 2006-11-29
 effective_from = 2007-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "LIRPF art 103: devolucion derivada de la normativa del tributo. Establece que cuando la suma de retenciones, ingresos a cuenta, pagos fraccionados y deducciones art 81 / 81 bis supera la cuota resultante de la autoliquidacion, la Administracion practica liquidacion provisional en seis meses y devuelve de oficio el exceso. Base sustantiva del Modelo 100 casilla 0670 (resultado de la declaracion) cuando es a devolver."
 required_text = [
     "Devolución derivada de la normativa del tributo",
@@ -3540,7 +3540,7 @@ published_at = 2026-03-27
 effective_from = 2026-03-28
 review_status = "reviewed"
 reviewed_at = 2026-05-05
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprobacion del Modelo D-100 y documentos de ingreso o devolucion del IRPF ejercicio 2025."
 required_text = [
     "Artículo 3",
@@ -3560,7 +3560,7 @@ published_at = 2026-03-27
 effective_from = 2026-03-28
 review_status = "reviewed"
 reviewed_at = 2026-05-21
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 7 de la Orden HAC/277/2026: plazo de presentacion de la declaracion del IRPF ejercicio 2025. El plazo general comprende del 8 de abril al 30 de junio de 2026. La domiciliacion bancaria del pago puede realizarse desde el 8 de abril hasta el 25 de junio de 2026."
 required_text = [
     "Plazo de presentación del borrador de declaración",
@@ -3623,7 +3623,7 @@ published_at = 2024-03-22
 effective_from = 2024-03-23
 review_status = "reviewed"
 reviewed_at = 2026-05-21
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 8 de la Orden HAC/265/2024: plazo de presentacion de la declaracion del IRPF ejercicio 2023. El plazo general comprende del 3 de abril al 1 de julio de 2024. La domiciliacion bancaria del pago puede realizarse desde el 3 de abril hasta el 26 de junio de 2024."
 required_text = [
     "Plazo de presentación del borrador de declaración",
@@ -3686,7 +3686,7 @@ published_at = 2021-03-18
 effective_from = 2021-03-18
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 8 de la Orden HAC/248/2021: plazo de presentacion de la declaracion del IRPF ejercicio 2020. El plazo general comprende del 7 de abril al 30 de junio de 2021. La domiciliacion bancaria del pago puede realizarse desde el 7 de abril hasta el 25 de junio de 2021."
 required_text = [
     "Plazo de presentación del borrador de declaración",
@@ -3749,7 +3749,7 @@ published_at = 2022-03-18
 effective_from = 2022-03-18
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 8 de la Orden HFP/207/2022: plazo de presentacion de la declaracion del IRPF ejercicio 2021. El plazo general comprende del 6 de abril al 30 de junio de 2022. La domiciliacion bancaria del pago puede realizarse desde el 6 de abril hasta el 27 de junio de 2022."
 required_text = [
     "Plazo de presentación del borrador de declaración",
@@ -3812,7 +3812,7 @@ published_at = 2023-03-31
 effective_from = 2023-04-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 8 de la Orden HFP/310/2023: plazo de presentacion de la declaracion del IRPF ejercicio 2022. El plazo general comprende del 11 de abril al 30 de junio de 2023. La domiciliacion bancaria del pago puede realizarse desde el 11 de abril hasta el 27 de junio de 2023."
 required_text = [
     "Plazo de presentación del borrador de declaración",

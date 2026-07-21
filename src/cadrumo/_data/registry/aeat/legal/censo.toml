@@ -10,7 +10,7 @@ published_at = 2007-09-05
 effective_from = 2008-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Reglamento General de las actuaciones y los procedimientos de gestion e inspeccion tributaria (RGAT) art 9: declaracion de alta en el Censo de Empresarios, Profesionales y Retenedores. Base reglamentaria del flujo de alta del Modelo 036."
 required_text = [
     "Declaración de alta en el Censo de Empresarios, Profesionales y Retenedores",
@@ -30,7 +30,7 @@ published_at = 2007-09-05
 effective_from = 2008-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RGAT art 10: declaracion de modificacion en el Censo. Base reglamentaria del flujo de modificacion del Modelo 036 (cambio de domicilio fiscal, variacion de datos censales, inicio de actividad)."
 required_text = [
     "Declaración de modificación en el Censo de Empresarios, Profesionales y Retenedores",
@@ -50,7 +50,7 @@ published_at = 2007-09-05
 effective_from = 2008-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-15
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RGAT art 11: declaracion de baja en el Censo. Base reglamentaria del flujo de baja del Modelo 036 (cese de actividad, plazo de un mes, sucesores)."
 required_text = [
     "Declaración de baja en el Censo de Empresarios, Profesionales y Retenedores",
@@ -92,7 +92,7 @@ effective_from = 2007-07-01
 consolidated_as_of = 2025-02-03
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 1 de la Orden EHA/1274/2007: aprobacion del Modelo 036 de declaracion censal de alta, modificacion y baja."
 required_text = [
     "Aprobacion del modelo 036",
@@ -113,7 +113,7 @@ effective_from = 2007-07-01
 consolidated_as_of = 2025-02-03
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 2 de la Orden EHA/1274/2007: obligados a presentar declaracion censal y declaracion de baja mediante Modelo 036."
 required_text = [
     "Obligados a presentar declaracion censal",
@@ -133,7 +133,7 @@ published_at = 2025-01-09
 effective_from = 2025-02-03
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo primero de la Orden HAC/1526/2024: modifica la Orden EHA/1274/2007 para mantener Modelo 036 y suprimir las superficies activas del Modelo 037."
 required_text = [
     "modelo 036",
@@ -153,7 +153,7 @@ published_at = 2025-01-09
 effective_from = 2025-02-03
 review_status = "reviewed"
 reviewed_at = 2026-05-14
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Disposicion final unica de la Orden HAC/1526/2024: entrada en vigor el 3 de febrero de 2025 para los Modelos 030 y 036."
 required_text = [
     "Entrada en vigor",

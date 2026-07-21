@@ -8,7 +8,7 @@ title: Filing-Deadline Computation Engine — Plan
 related:
   - "[[2026-04-12-deadline-engine-research]]"
   - "[[2026-04-12-deadline-engine-adr]]"
-issue: wgergely/aeat#38
+issue: operator/aeat#38
 ---
 
 # implementation plan: filing-deadline computation engine

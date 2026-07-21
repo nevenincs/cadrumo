@@ -138,7 +138,7 @@ gets past daemon preflight. The shared dirty worktree still stops at the tracked
 shipped-data preflight until the deleted normative JSON files are reconciled.
 To isolate the infrastructure and packaging changes from that unrelated data
 WIP, a detached clean checkout at
-`C:\Users\hello\aeat-packaging-clean-20260629T092758Z` was overlaid with the
+`<operator-home>\aeat-packaging-clean-20260629T092758Z` was overlaid with the
 packaging implementation and the Linux import fix. In that clean checkout,
 `python -m dev.packaging.smoke_docker --timeout 900` passed at
 `var/packaging-smoke/docker-core-20260629T073827Z`, and

@@ -13,7 +13,7 @@ related:
 
 ## context
 
-Issue wgergely/aeat#4: the justfile is provisional. `just gcloud-setup` fails,
+Issue operator/aeat#4: the justfile is provisional. `just gcloud-setup` fails,
 the core dev loop (install/sync/lint/fmt/typecheck/test/hooks) has no recipes,
 and there is no convention for `.env` files — only a loose `.env.example` at
 repo root.

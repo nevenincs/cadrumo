@@ -8,7 +8,7 @@ title: Filing-Deadline Computation Engine
 related:
   - "[[2026-04-12-deadline-engine-research]]"
   - "[[2026-04-12-deadline-engine-plan]]"
-issue: wgergely/aeat#38
+issue: operator/aeat#38
 ---
 
 # architecture decision record: filing-deadline computation engine | (**status:** `accepted`)

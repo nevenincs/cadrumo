@@ -297,7 +297,7 @@ docstrings (feeds gap G3).
 | `l1-anchor-drift.yml` | schedule / dispatch | self-hosted Linux | L1 anchor drift | — |
 
 Cost posture is consistent and deliberate: everything runs on the self-hosted fleet
-(gw-workstation-win, gw-workstation-wsl, macbook-neo) except where hosting is a
+(the Windows build host, the WSL Linux build host, the macOS build host) except where hosting is a
 correctness requirement (Windows-container Scoop, macOS-Intel + Linux-arm64 Homebrew
 rows) or an isolation/trust requirement (all three publish jobs on hosted ubuntu).
 Source-identity gates are byte-identical across the three acquisition workflows and

@@ -13,7 +13,7 @@ related:
 
 ## status
 
-Accepted (issue wgergely/aeat#4 scope pre-approved by maintainer).
+Accepted (issue operator/aeat#4 scope pre-approved by maintainer).
 
 ## context
 

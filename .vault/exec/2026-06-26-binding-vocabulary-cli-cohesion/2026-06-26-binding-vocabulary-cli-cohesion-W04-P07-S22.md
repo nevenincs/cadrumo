@@ -57,8 +57,8 @@ No plan step check was run in this pass. The S22 target files and plan file are 
 - `git grep` at HEAD confirms the split command is committed: `storage_write_policy.py` allows `config google sync calc compute`, `_google_sync_calc.py` registers `@calc_app.command("compute")`, the emitted operation/envelope is `config.google.sync.calc.compute`, and locale catalogues carry `cli.config.google.sync.calc.compute_help`.
 - `uv run --no-sync aeat config google sync calc --help` shows separate `pull` and `compute` commands. `pull` reads operator-edited cells to typed records; `compute` runs the local Decimal engine and emits calculated casilla values without persistence.
 - Source-only stale-command search over the operator surfaces found no `calc pull --compute`, `pull --compute`, or `config.google.sync.calc.pull_compute` hit.
-- `uv run --no-sync pytest --collect-only -q` wrote full output to `C:\Users\hello\AppData\Local\Temp\aeat-d9-current-collect-retry-20260704.log` and completed clean: `12276/14908 tests collected (2632 deselected) in 109.26s`.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-docconf-20260704.log`: `58 passed`.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-jsonschema-20260704.log`: `140 passed`.
+- `uv run --no-sync pytest --collect-only -q` wrote full output to `<operator-home>\AppData\Local\Temp\aeat-d9-current-collect-retry-20260704.log` and completed clean: `12276/14908 tests collected (2632 deselected) in 109.26s`.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` wrote `<operator-home>\AppData\Local\Temp\aeat-d9-vocab-docconf-20260704.log`: `58 passed`.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` wrote `<operator-home>\AppData\Local\Temp\aeat-d9-vocab-jsonschema-20260704.log`: `140 passed`.
 
 This retry supplies the missing clean-gate evidence for checking `W04.P07.S22`.

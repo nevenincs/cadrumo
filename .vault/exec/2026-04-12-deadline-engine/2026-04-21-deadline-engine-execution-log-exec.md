@@ -9,7 +9,7 @@ related:
   - "[[2026-04-12-deadline-engine-research]]"
   - "[[2026-04-12-deadline-engine-adr]]"
   - "[[2026-04-12-deadline-engine-plan]]"
-issue: wgergely/aeat#38
+issue: operator/aeat#38
 ---
 
 # execution log: filing-deadline computation engine

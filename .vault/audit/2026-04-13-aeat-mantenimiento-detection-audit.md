@@ -1,6 +1,6 @@
 ---
 name: aeat-mantenimiento-detection-audit
-description: Final code-review audit for wgergely/aeat#95 (commit 399daf3) — site-health detection + pause-and-alert
+description: Final code-review audit for operator/aeat#95 (commit 399daf3) — site-health detection + pause-and-alert
 tags:
   - "#audit"
   - "#aeat-mantenimiento-detection"

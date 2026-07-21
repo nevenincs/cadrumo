@@ -12,7 +12,7 @@ related:
 
 # aeat-mantenimiento-detection phase9 review-followup
 
-PR wgergely/aeat#131 received five actionable review findings from
+PR operator/aeat#131 received five actionable review findings from
 gemini-code-assist. All five are addressed in a single follow-up commit
 on top of the existing feature branch; no history was amended.
 

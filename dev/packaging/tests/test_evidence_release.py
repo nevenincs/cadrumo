@@ -149,7 +149,7 @@ class TestManifest:
         """extra=forbid rejects a manifest carrying an undeclared field."""
         manifest = _manifest_for(_write_assets(tmp_path / "assets"))
         payload = json.loads(manifest.model_dump_json())
-        payload["runner_name"] = "gw-workstation"
+        payload["runner_name"] = "build-host-example"
         corrupted = tmp_path / "corrupted.json"
         corrupted.write_text(json.dumps(payload), encoding="utf-8")
         with pytest.raises(ValidationError):
@@ -577,8 +577,8 @@ class TestLeakSweep:
     def test_explicit_machine_token_is_refused(self, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
         """A named hostname token anywhere in the payload refuses publication."""
         directory = self._attach_dir(tmp_path)
-        (directory / "notes.txt").write_text("built on gw-workstation runner\n", encoding="utf-8")
-        assert main(["leak-sweep", "--directory", str(directory), "--token", "gw-workstation"]) == 1
+        (directory / "notes.txt").write_text("built on build-host-example runner\n", encoding="utf-8")
+        assert main(["leak-sweep", "--directory", str(directory), "--token", "build-host-example"]) == 1
         assert "notes.txt" in capsys.readouterr().err
 
     def test_missing_directory_is_a_hard_error(self, tmp_path: Path) -> None:

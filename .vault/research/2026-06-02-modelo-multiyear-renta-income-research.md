@@ -37,7 +37,7 @@ registry-authoring + formula work; **no resolver code is needed**.
 ### M200 — BIN compensation cross-year (highest value, fully grounded)
 
 Legal anchor confirmed in `src/aeat/_data/registry/aeat/legal/is.toml`: the
-`ley-27-2014:art-26` entry (reviewed, `reviewed_by = "wgergely"`) carries `corpus_ref`
+`ley-27-2014:art-26` entry (reviewed, `reviewed_by = "operator"`) carries `corpus_ref`
 `corpus/normatives/html/ley-27-2014-art-26.html#a26`, the `notes` describing the 70%
 limit, the €1M absolute floor, and the 10-year prescription, and `required_text` anchors
 `"Compensación de bases imponibles negativas"`, `"70 por ciento de la base imponible

@@ -62,7 +62,7 @@ related:
 - Current focused counterpart service run remains red:
   `uv run --no-sync pytest -q -n 0 src/aeat/application/aggregation/tests/test_per_modelo_service.py -k "counterpart"`
   wrote full output to
-  `C:\Users\hello\AppData\Local\Temp\aeat-d9-retry-counterpart-20260704.log`
+  `<operator-home>\AppData\Local\Temp\aeat-d9-retry-counterpart-20260704.log`
   and exited `1` (`1 failed`, `2 passed`, `21 deselected`).
 - The failing M349 proof still stops at registry authority load because the non-authored
   untracked Modelo 145 scaffold lacks official workbook parity coverage and any casilla.

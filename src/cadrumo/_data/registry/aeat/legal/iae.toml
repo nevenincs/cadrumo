@@ -10,7 +10,7 @@ published_at = 2004-03-09
 effective_from = 2004-03-10
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "TRLRHL art 78: naturaleza y hecho imponible del Impuesto sobre Actividades Economicas (IAE)."
 required_text = [
     "naturaleza",
@@ -30,7 +30,7 @@ published_at = 2004-03-09
 effective_from = 2004-03-10
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "TRLRHL art 82: exenciones del IAE. Estaran exentos los sujetos pasivos cuyo importe neto de la cifra de negocios sea inferior a 1.000.000 EUR."
 required_text = [
     "exentos del impuesto",
@@ -50,7 +50,7 @@ published_at = 2004-03-09
 effective_from = 2004-03-10
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "TRLRHL art 90: gestion tributaria del IAE; matricula del impuesto y reglas de gestion compartida entre AEAT y administracion tributaria local."
 required_text = [
     "matrícula",
@@ -91,7 +91,7 @@ published_at = 2003-09-18
 effective_from = 2003-09-19
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Apartado primero de la Orden HAC/2572/2003: aprobacion del modelo 840 de Declaracion del Impuesto sobre Actividades Economicas."
 required_text = [
     "Aprobación",
@@ -111,7 +111,7 @@ published_at = 2003-09-18
 effective_from = 2003-09-19
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Apartado sexto de la Orden HAC/2572/2003: plazos de presentacion del Modelo 840 (alta, variacion, baja) por remision a los articulos 5, 6 y 7 del Real Decreto 243/1995."
 required_text = [
     "Plazo de presentación",
