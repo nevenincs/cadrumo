@@ -50,6 +50,7 @@ from ._adapter_utils import (
     _SedeCheckerModel,
     assert_query_browser_action_for,
     make_locate_helper,
+    nif_check_operation_tail,
     normalize_response_text,
     registry_failure_message,
     require_playwright_page,
@@ -235,10 +236,7 @@ class NifIvaCheckSedeDriver:
         # Normalise to match AeatNifIvaCheckerOracle._expected_values so the
         # operation labels the guard pre-flight sees (driverless oracle path)
         # match what the live driver emits.
-        for nif in sorted(str(key).strip().upper() for key in expected):
-            operations.append(RemoteOperation(kind="browser_action", action=f"check-nif-{nif}"))
-        operations.append(RemoteOperation(kind="browser_action", action="discard-session"))
-        return tuple(operations)
+        return (*operations, *nif_check_operation_tail(expected))
 
     def collect(
         self,

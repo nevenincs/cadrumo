@@ -322,14 +322,27 @@ class RegistryRevisionInventory(NamedTuple):
     filing_schedule_count: int
 
 
-def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
-    """Load the registry tree and return a :class:`RegistryTreeReport` with stable read-only inventory counts."""
-    authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
+def _registry_tree_report(
+    *,
+    registry_root: Path,
+    authority: _ValidatedRegistryAuthority,
+    verified: bool,
+    source_root: Path | None = None,
+) -> RegistryTreeReport:
+    """Assemble the read-only inventory :class:`RegistryTreeReport` from a loaded authority.
+
+    The shared report-construction body of :func:`inspect_registry_tree` (which
+    passes no ``source_root`` and ``verified=False``) and
+    :func:`verify_registry_tree` (which records the ``source_root`` and
+    ``verified=True``); each caller owns its own load and validation before
+    calling this.
+    """
     modelos = authority.modelos
     catalogues = authority.catalogues
     inventory = _revision_inventory(modelos)
     return RegistryTreeReport(
         registry_root=str(registry_root),
+        source_root=None if source_root is None else str(source_root),
         modelo_count=len(modelos),
         revision_count=sum(len(modelo.revisions) for modelo in modelos),
         legal_reference_count=len(catalogues.legal),
@@ -347,8 +360,14 @@ def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
         filing_schedule_count=inventory.filing_schedule_count,
         modelos=tuple(sorted(modelo.id for modelo in modelos)),
         revision_details=_revision_details(modelos),
-        verified=False,
+        verified=verified,
     )
+
+
+def inspect_registry_tree(registry_root: Path) -> RegistryTreeReport:
+    """Load the registry tree and return a :class:`RegistryTreeReport` with stable read-only inventory counts."""
+    authority = _ValidatedRegistryAuthority.load(registry_root, source_root=_bundled_path())
+    return _registry_tree_report(registry_root=registry_root, authority=authority, verified=False)
 
 
 def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryTreeReport:
@@ -362,30 +381,11 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
     authority = _ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
     authority.validate_registry()
     _verify_legal_catalogue(authority.catalogues.legal, source_root=source_root)
-    modelos = authority.modelos
-    catalogues = authority.catalogues
-    inventory = _revision_inventory(modelos)
-    return RegistryTreeReport(
-        registry_root=str(registry_root),
-        source_root=str(source_root),
-        modelo_count=len(modelos),
-        revision_count=sum(len(modelo.revisions) for modelo in modelos),
-        legal_reference_count=len(catalogues.legal),
-        source_reference_count=len(catalogues.sources),
-        casilla_count=inventory.casilla_count,
-        formula_count=inventory.formula_count,
-        extraction_profile_count=inventory.extraction_profile_count,
-        cross_reference_count=inventory.cross_reference_count,
-        workbook_parity_ref_count=inventory.workbook_parity_ref_count,
-        verification_expectation_count=inventory.verification_expectation_count,
-        application_link_count=inventory.application_link_count,
-        application_link_surfaces=inventory.application_link_surfaces,
-        relation_count=inventory.relation_count,
-        relation_dependency_roles=inventory.relation_dependency_roles,
-        filing_schedule_count=inventory.filing_schedule_count,
-        modelos=tuple(sorted(modelo.id for modelo in modelos)),
-        revision_details=_revision_details(modelos),
+    return _registry_tree_report(
+        registry_root=registry_root,
+        authority=authority,
         verified=True,
+        source_root=source_root,
     )
 
 
