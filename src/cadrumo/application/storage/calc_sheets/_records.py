@@ -513,6 +513,13 @@ class SheetEvidenceContributorRow(BaseModel):
     transaction_id: str = Field(min_length=1)
     amount: Decimal
     currency: str = Field(min_length=1)
+    # Euro projection of a foreign-currency contributor, mirroring the domain
+    # evidence row. The casilla this row explains is denominated in euro, so an
+    # evidence surface showing only the native amount cannot be reconciled
+    # against it; both are rendered. Absent for a euro contributor, where the
+    # native amount already is the euro amount.
+    fx_rate: Decimal | None = None
+    value_in_eur: Decimal | None = None
     taxable_base: Decimal | None = None
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
