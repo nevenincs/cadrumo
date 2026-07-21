@@ -906,8 +906,8 @@ application:
         text i no pot estar buit.
       calculation_registry_root_missing: L'arrel del registre %{registry_root} no
         existeix; el càlcul del model no pot continuar.
-      calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
-        filing year %{filing_year}, period %{period} could not be resolved.
+      calculation_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
+        del registre per al model %{modelo}, exercici %{filing_year}, període %{period}.
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
       caller_casilla_source_binding_conflict: 'Les entrades de casella aportades no
         poden sobreescriure caselles vinculades a una font derivada del dipòsit (caselles
@@ -970,8 +970,8 @@ application:
       iva_wallet_backend_casilla_conflict: L'entrada de casella del backend per a
         la compensació prèvia del Model 303 entra en conflicte amb la decisió de conciliació
         de la cartera de compensació d'IVA.
-      iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
-        %{reason}'
+      iva_wallet_blocked: 'La conciliació de la cartera de compensació d''IVA està
+        bloquejada per al Model 303 (%{divergence}): %{reason}'
       iva_wallet_caller_binding_conflict: El binding aportat per a la compensació
         prèvia del Model 303 entra en conflicte amb la decisió de conciliació de la
         cartera de compensació d'IVA.
@@ -982,8 +982,8 @@ application:
         IVA inicialitzat. Per a la primera declaració d''un perfil nou, inicialitza
         el saldo d''obertura amb zero: `aeat app modelo iva-wallet seed --filing-year
         YEAR --period PERIOD --amount 0 --confirm`.'
-      iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
-        selected amount.
+      iva_wallet_selected_amount_missing: La decisió de la cartera de compensació
+        d'IVA no té cap import seleccionat.
       iva_wallet_supplied_decision_mismatch: La decisió de conciliació de la cartera
         de compensació d'IVA aportada no coincideix amb la decisió persistida.
       iva_wallet_target_mismatch: El destí %{target_year}/%{target_period} de la decisió
@@ -995,11 +995,11 @@ application:
       iva_wallet_taxpayer_mismatch: El contribuent de la conciliació de la cartera
         de compensació d'IVA no coincideix amb el de la unitat de treball del Model
         303.
-      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
-        %{decision_type}.'
-      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
-        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
-        %{period}` before calculating.'
+      iva_wallet_unsupported_decision_type: 'Tipus de decisió de la cartera de compensació
+        d''IVA no admès: %{decision_type}.'
+      ledger_preflight_blocked: 'la comprovació prèvia del llibre bloqueja el càlcul
+        del model: transacció %{transaction_id} %{reason}: %{detail}. Executa `aeat
+        app ledger preflight --period %{period}` abans de calcular.'
       m210_ledger_manual_agrupacion_rows: El mode de font de llibre major del Model
         210 deriva les files anuals d'agrupació de rendes de les classificacions del
         llibre; no proporcioneu files manuals d'agrupació de rendes.
@@ -1124,10 +1124,10 @@ application:
         casella %{casilla_id} en el càlcul del M100, per exemple mitjançant `aeat
         app modelo work calculate ... --binding %{casilla_id}=%{total_base}`, perquè
         la renda del règim d'atribució quedi declarada.
-      cross_casilla_invariant_next_action: Ensure all casillas required by predicate
-        %{predicate_id} are non-zero before verifying.
-      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
-        %{expression}'
+      cross_casilla_invariant_next_action: Assegura't que totes les caselles requerides
+        pel predicat %{predicate_id} són diferents de zero abans de verificar.
+      cross_casilla_invariant_violated: 'invariant entre caselles %{predicate_id}
+        incomplert: %{expression}'
       cross_period_dependency_unclean: 'la dependència entre períodes no està neta:
         model=%{modelo} exercici=%{year} període=%{period} origen=%{origin} ids_origen=%{origin_ids}
         bloquejos=%{blockers}'
@@ -1284,8 +1284,8 @@ application:
       modelo_714_cuota_integra_implica_total_cuota_integra: La quota íntegra és positiva
         però la quota íntegra total és zero; reviseu la transcripció de la quota íntegra
         total.
-      registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
-        period=%{period} could not be resolved
+      registry_snapshot_unresolved: no s'ha pogut resoldre la instantània del registre
+        per al model=%{modelo} exercici=%{filing_year} període=%{period}
       representante_fiscal_required:
         next_action: Designeu un representant fiscal a Espanya establint profile.representante_fiscal_nif
           mitjançant l'ordre `aeat config profile edit`. El TRLIRNR Art. 10 exigeix
@@ -3002,24 +3002,24 @@ cli:
           rent: Renta i patrimoni (modelo 100, 714)
           reten: Retencions (modelo 111, 115, 123, 180, 190, 193)
         scopes:
-          help: Manage apoderado scope vocabulary
-          list_help: List accepted apoderado scopes
-        status_help: Show active apoderado configuration
+          help: Gestiona el vocabulari d'abasts d'apoderat
+          list_help: Llista els abasts d'apoderat acceptats
+        status_help: Mostra la configuració d'apoderat activa
       certificate:
         check_help: Comprova la caducitat i l'estat de rotació de cada font de certificat
           registrada
         help: Gestiona fonts de certificat amb nom per al proveïdor d'autenticació
           per certificat
-        list_help: List every registered certificate source
+        list_help: Llista totes les fonts de certificat registrades
         register:
           file_help: Camí al paquet PKCS#12 (.p12/.pfx)
-          friendly_name_help: Optional human-readable label distinct from --name
+          friendly_name_help: Etiqueta llegible opcional diferent de --name
           name_help: Identificador d'aquesta font de certificat (per exemple, personal
             o apoderado-acme)
         register_help: Registra o redirigeix una font de certificat amb nom
         remove:
-          name_help: Registered certificate source to remove
-        remove_help: Remove a registered certificate source
+          name_help: Font de certificat registrada a eliminar
+        remove_help: Elimina una font de certificat registrada
         secret:
           help: Gestiona la contrasenya vinculada a una font de certificat amb nom
           remove:
@@ -3031,7 +3031,7 @@ cli:
             secret_prompt: 'Frase de contrasenya PKCS#12 (entrada oculta): '
           set_help: Estableix (o rota) la contrasenya d'una font de certificat registrada
         select:
-          name_help: Registered certificate source to activate
+          name_help: Font de certificat registrada a activar
         select_help: Selecciona la font de certificat activa
       configure_help: Configurar el proveïdor d'autenticació actiu
       diagnostics:
@@ -3289,22 +3289,22 @@ cli:
       auth_provider_help: Id del proveïdor d'autenticació que cal usar per al perfil
       certificate_password_env_help: Nom de la variable d'entorn que conté la contrasenya
         del certificat
-      certificate_path_help: Path to the .p12 or .pfx certificate file
-      drafts_dir_help: Directory to store local filing drafts
+      certificate_path_help: Camí al fitxer de certificat .p12 o .pfx
+      drafts_dir_help: Directori on desar els esborranys de presentació locals
       dry_run_help: Informa dels canvis sense modificar la configuració
-      from_help: Source profile ID to import settings from
+      from_help: Id del perfil d'origen del qual importar la configuració
       help: Inicialitza un perfil actiu nou.
-      iva_regime_help: IVA regime (general, simplificado, exento, etc.)
-      manuals_root_help: Root directory for AEAT technical manuals
-      non_interactive_help: Run without prompting for user input
-      output_language_help: Primary language for CLI output (en, es, ca)
+      iva_regime_help: Règim d'IVA (general, simplificado, exento, etc.)
+      manuals_root_help: Directori arrel per als manuals tècnics de l'AEAT
+      non_interactive_help: Executa sense demanar cap entrada a l'usuari
+      output_language_help: Idioma principal de la sortida de la CLI (en, es, ca)
       profile_name_help: Identificador únic d'aquest perfil de configuració
       quiet_help: Amaga el missatge d'èxit després d'inicialitzar
-      submissions_dir_help: Directory to store submitted filing receipts
+      submissions_dir_help: Directori on desar els rebuts de presentació enviats
       success:
-        next_step: 'Próximo paso: ejecuta `aeat app overview status`'
+        next_step: 'Següent pas: executa `aeat app overview status`'
       tax_id_help: Spanish tax identifier (NIF/NIE/CIF)
-      tax_residence_ccaa_help: Autonomous community of tax residence
+      tax_residence_ccaa_help: Comunitat autònoma de residència fiscal
     list:
       help: Llistar tots els perfils registrats i marcar l'actiu
     passphrase:
@@ -3498,7 +3498,7 @@ cli:
       preflight_revision_ambiguous: 'Més d''una revisió del registre coincideix amb
         el model %{modelo} període %{period}: %{candidates}. Torneu a executar amb
         --revision-id indicant-ne una.'
-      preflight_revision_help: Registry revision id.
+      preflight_revision_help: Id de revisió del registre.
       preflight_revision_id_help: Anul-lació opcional de l'id de revisió del registre
         per a reproducció exacta (p. ex. 2024-0A); per defecte fa servir la revisió
         activa per al model, exercici i període.
@@ -3508,7 +3508,7 @@ cli:
       preflight_revision_unresolved: Cap revisió del registre cobreix el model %{modelo}
         exercici %{filing_year} període %{period}. Executeu `aeat app modelo describe
         %{modelo}` per veure els períodes i revisions vàlids.
-      preflight_year_help: Filing year.
+      preflight_year_help: Exercici fiscal.
       remove_help: Marcar un perfil com a retirat (les snapshots immutables es conserven)
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada és destructiva. Torna a executar 'aeat config
@@ -4432,7 +4432,7 @@ cli:
         folder_id: id_carpeta
         refused: rebutjats
         skipped: omesos_no_document
-        total: total_documents
+        total: documents_totals
       note_help: Nota opcional registrada a cada fitxer adjunt obtingut.
       notices:
         files_refused: '%{refused_count} fitxer(s) d''aquesta carpeta no s''han pogut
@@ -6309,10 +6309,10 @@ locales:
     allow_identical:
       recorded: locales.cli.allow_identical.recorded
     audit:
-      file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
-      file_ok: '%{locale_file}: ok'
-      key_extra: '  extra %{key}'
-      key_missing: '  missing %{key}'
+      file_drift: '%{locale_file}: falten=%{missing_count} sobrants=%{extra_count}'
+      file_ok: '%{locale_file}: correcte'
+      key_extra: '  sobrant %{key}'
+      key_missing: '  falta %{key}'
     modelo:
       audit:
         missing: mancant locale=%{locale_code} model=%{modelo} revisió=%{revision}
@@ -6330,10 +6330,10 @@ locales:
       set:
         updated: Actualitzat %{path} %{field} %{key}
     remove:
-      removed: removed %{locale_file}:%{key}
-    scaffold_updated: locale scaffold updated
+      removed: eliminat %{locale_file}:%{key}
+    scaffold_updated: s'ha actualitzat la bastida del locale
     set:
-      updated: updated %{locale_file}:%{key}
+      updated: actualitzat %{locale_file}:%{key}
 mcp:
   call:
     timeout: '''{command}'' ha superat el límit de temps del nivell {tier} ({seconds}s)
@@ -6573,21 +6573,21 @@ wizard:
     general: General
     irpf: IRPF
     iva: IVA
-    simplificado: Simplified
+    simplificado: Simplificat
   commands:
     status:
       created: creat
       updated: actualitzat
   demo:
-    description: A demonstration section to test wizard functionality
+    description: Una secció de demostració per provar la funcionalitat de l'assistent
     section:
-      title: Demo section
+      title: Secció de demostració
     title: Demo
   errors:
-    blank_integer: Integer value required for %{prompt_key}.
-    blank_path: Path required for %{prompt_key}.
-    blank_secret: Secret value required for %{prompt_key}.
-    blank_text: Value required for %{prompt_key}.
+    blank_integer: Cal un valor enter per a %{prompt_key}.
+    blank_path: Cal un camí per a %{prompt_key}.
+    blank_secret: Cal un valor secret per a %{prompt_key}.
+    blank_text: Cal un valor per a %{prompt_key}.
     checkbox_required: Seleccioneu almenys una opció per a %{prompt_key}.
     checkbox_unknown: 'Valor no reconegut per a %{prompt_key}: %{raw}. Opcions vàlides:
       %{choices}.'
