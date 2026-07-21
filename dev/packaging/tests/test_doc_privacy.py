@@ -64,7 +64,7 @@ _BANNED_LITERALS: tuple[str, ...] = (
 _BANNED_PATTERNS: tuple[str, ...] = (
     # Tailscale MagicDNS tailnet domains.
     r"\.ts\.net\b",
-    # CGNAT / tailnet address range 100.64.0.0/10.
+    # CGNAT / tailnet address range (100.64/10 through 100.127).
     r"\b100\.(6[4-9]|[7-9][0-9]|1[01][0-9]|12[0-7])\.[0-9]{1,3}\.[0-9]{1,3}\b",
 )
 
