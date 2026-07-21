@@ -818,3 +818,21 @@ release-collect-evidence *run_ids:
         ForEach-Object { Copy-Item $_.FullName -Destination $dest -Force; $n++ }
     Remove-Item -Recurse -Force $tmp
     Write-Host "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
+
+# Automated Claude Desktop real-client capture (claude-desktop-mcpb /
+# claude-desktop-plugin). Provisions a clean isolated Desktop profile (auth
+# seeded from the operator's logged-in profile, one extension, isolated
+# per-run platform root), launches the real Store app as the debug-enabled
+# primary over MSIX activation, drives it via CDP, verifies the tool CALL
+# RESULT from Desktop's own MCP telemetry, and mints the evidence row.
+# MUST run from a NON-ELEVATED INTERACTIVE session; closes a running Desktop
+# only with --allow-close-running (graceful close first) and leaves it closed.
+[windows]
+desktop-capture row_id release_cohort_dir acquisition_source destination_locator *extra_args:
+    @uv run --no-sync python -m dev.packaging.smoke_desktop_client \
+        --row-id {{row_id}} \
+        --release-cohort-dir {{release_cohort_dir}} \
+        --evidence-dir var/desktop-capture \
+        --acquisition-source {{acquisition_source}} \
+        --destination-locator {{destination_locator}} \
+        --run-real-capture {{extra_args}}
