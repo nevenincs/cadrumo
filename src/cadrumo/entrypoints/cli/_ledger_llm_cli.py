@@ -16,6 +16,8 @@ flags the invoice as multi-component
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 import typer
 from pydantic import BaseModel, ValidationError
 
@@ -515,6 +517,23 @@ def _validate_classify_llm_options(
         )
 
 
+def _llm_suggestion_base_payload(
+    suggestion: LLMClassificationSuggestion | LLMSaturatedSuggestion,
+) -> dict[str, object]:
+    """Build the shared non-persisting suggestion payload for a classify/saturate preview."""
+    return {
+        "llm": True,
+        "persisted": False,
+        "transaction_id": suggestion.transaction_id,
+        "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
+        "classification": suggestion.classification.value,
+        "category": suggestion.category.value if suggestion.category is not None else None,
+        "confidence": format(suggestion.confidence, "f"),
+        "reason": suggestion.reason,
+        "provenance": suggestion.provenance,
+    }
+
+
 def _render_classify_llm_preview(
     ctx: typer.Context,
     *,
@@ -524,19 +543,7 @@ def _render_classify_llm_preview(
     """Emit the non-persisting stage-1 classify suggestion. Approve = --apply, reject = --reject."""
     from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
 
-    suggest_result = LedgerClassifyLlmSuggestResult.model_validate(
-        {
-            "llm": True,
-            "persisted": False,
-            "transaction_id": suggestion.transaction_id,
-            "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
-            "classification": suggestion.classification.value,
-            "category": suggestion.category.value if suggestion.category is not None else None,
-            "confidence": format(suggestion.confidence, "f"),
-            "reason": suggestion.reason,
-            "provenance": suggestion.provenance,
-        },
-    )
+    suggest_result = LedgerClassifyLlmSuggestResult.model_validate(_llm_suggestion_base_payload(suggestion))
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
         f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
@@ -584,18 +591,7 @@ def _render_saturate_llm_preview(
         "derivation_note": suggestion.derivation_note or None,
     }
     classify_result = LedgerClassifyLlmSaturateResult.model_validate(
-        {
-            "llm": True,
-            "persisted": False,
-            "transaction_id": suggestion.transaction_id,
-            "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
-            "classification": suggestion.classification.value,
-            "category": suggestion.category.value if suggestion.category is not None else None,
-            "confidence": format(suggestion.confidence, "f"),
-            "reason": suggestion.reason,
-            "provenance": suggestion.provenance,
-            **derived_fields,
-        },
+        {**_llm_suggestion_base_payload(suggestion), **derived_fields},
     )
     lines = [
         f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
@@ -621,6 +617,74 @@ def _render_saturate_llm_preview(
         notices.append(notice)
         lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
     _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
+
+
+def _llm_classify_prologue[SuggestionT: (LLMClassificationSuggestion, LLMSaturatedSuggestion)](
+    ctx: typer.Context,
+    *,
+    suggest_fn: Callable[..., SuggestionT],
+    classification: BusinessClassification | None,
+    from_csv: str | None,
+    transaction_id: str | None,
+    provider: LLMProvider | None,
+    apply: bool,
+    actor: str | None,
+    read_evidence: bool,
+    evidence_acknowledged: bool,
+    vision_model: str | None,
+    reject: bool,
+    reason: str,
+) -> tuple[SuggestionT, TransactionCatalogueRepositoryProtocol] | None:
+    """Shared classify/saturate prologue: validate options, resolve, suggest, handle ``--reject``.
+
+    Returns ``(suggestion, transaction_repository)`` for the caller to preview or
+    apply, or ``None`` when ``--reject`` handled the invocation (the caller then
+    returns). ``suggest_fn`` is the stage-specific suggester
+    (:func:`suggest_llm_classification` or :func:`saturate_llm_classification`).
+    """
+    _validate_classify_llm_options(
+        classification=classification,
+        from_csv=from_csv,
+        reject=reject,
+        apply=apply,
+        transaction_id=transaction_id,
+        provider=provider,
+    )
+
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    try:
+        suggestion = suggest_fn(
+            bucket_id=transaction_repository.bucket_id,
+            transaction_id=resolved_id,
+            provider=provider,
+            transaction_repository=transaction_repository,
+            read_evidence=read_evidence,
+            evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
+        )
+    except LLMClassifierError as exc:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_failed",
+                reason=str(exc),
+                default=f"LLM classification failed: {exc}",
+            ),
+        ) from exc
+
+    if reject:
+        emit_llm_rejection(
+            ctx,
+            suggestion,
+            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
+            bucket_id=transaction_repository.bucket_id,
+            reason=reason,
+            actor=actor,
+            transaction_repository=transaction_repository,
+        )
+        return None
+    return suggestion, transaction_repository
 
 
 def ledger_classify_llm(
@@ -650,48 +714,24 @@ def ledger_classify_llm(
     unchanged. ``--llm`` is mutually exclusive with the manual
     ``--classification`` / ``--from-csv`` override.
     """
-    _validate_classify_llm_options(
+    prologue = _llm_classify_prologue(
+        ctx,
+        suggest_fn=suggest_llm_classification,
         classification=classification,
         from_csv=from_csv,
-        reject=reject,
-        apply=apply,
         transaction_id=transaction_id,
         provider=provider,
+        apply=apply,
+        actor=actor,
+        read_evidence=read_evidence,
+        evidence_acknowledged=evidence_acknowledged,
+        vision_model=vision_model,
+        reject=reject,
+        reason=reason,
     )
-
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    try:
-        suggestion = suggest_llm_classification(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
-            provider=provider,
-            transaction_repository=transaction_repository,
-            read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
-            vision_model=vision_model,
-        )
-    except LLMClassifierError as exc:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_failed",
-                reason=str(exc),
-                default=f"LLM classification failed: {exc}",
-            ),
-        ) from exc
-
-    if reject:
-        emit_llm_rejection(
-            ctx,
-            suggestion,
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
-            bucket_id=transaction_repository.bucket_id,
-            reason=reason,
-            actor=actor,
-            transaction_repository=transaction_repository,
-        )
+    if prologue is None:
         return
+    suggestion, transaction_repository = prologue
 
     if not apply:
         _render_classify_llm_preview(ctx, suggestion=suggestion, provider=provider)
@@ -744,48 +784,24 @@ def ledger_saturate_llm(
     recorded as a declined audit event and the row is left unchanged. Manual
     ``classify`` flags remain the explicit per-field override.
     """
-    _validate_classify_llm_options(
+    prologue = _llm_classify_prologue(
+        ctx,
+        suggest_fn=saturate_llm_classification,
         classification=classification,
         from_csv=from_csv,
-        reject=reject,
-        apply=apply,
         transaction_id=transaction_id,
         provider=provider,
+        apply=apply,
+        actor=actor,
+        read_evidence=read_evidence,
+        evidence_acknowledged=evidence_acknowledged,
+        vision_model=vision_model,
+        reject=reject,
+        reason=reason,
     )
-
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    try:
-        suggestion = saturate_llm_classification(
-            bucket_id=transaction_repository.bucket_id,
-            transaction_id=resolved_id,
-            provider=provider,
-            transaction_repository=transaction_repository,
-            read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
-            vision_model=vision_model,
-        )
-    except LLMClassifierError as exc:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_failed",
-                reason=str(exc),
-                default=f"LLM classification failed: {exc}",
-            ),
-        ) from exc
-
-    if reject:
-        emit_llm_rejection(
-            ctx,
-            suggestion,
-            origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
-            bucket_id=transaction_repository.bucket_id,
-            reason=reason,
-            actor=actor,
-            transaction_repository=transaction_repository,
-        )
+    if prologue is None:
         return
+    suggestion, transaction_repository = prologue
 
     iva_category_value = suggestion.iva_category.value if suggestion.iva_category is not None else None
 
