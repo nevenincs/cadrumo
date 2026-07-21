@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#settings-di-deferral'
 date: '2026-06-03'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-04-settings-di-deferral-research]]'
 ---
@@ -12,7 +12,7 @@ related:
 
 ## Problem Statement
 
-The `2026-05-14-settings-di-plan` was authored to execute a complete dependency-injection migration for the Settings model: expanding `aeat.core.config.Settings` with three Category-B fields (`aeat_log_dir`, `aeat_libreoffice_executable`, `aeat_master_key_passphrase`), introducing a `ContextVar`-backed `override_settings()` context manager, and migrating 7+ call sites across the codebase to read from the validated Settings singleton instead of `os.environ`.
+The `2026-05-14-settings-di-plan` was authored to execute a complete dependency-injection migration for the Settings model: expanding `cadrumo.core.config.Settings` with three Category-B fields (`aeat_log_dir`, `aeat_libreoffice_executable`, `aeat_master_key_passphrase`), introducing a `ContextVar`-backed `override_settings()` context manager, and migrating 7+ call sites across the codebase to read from the validated Settings singleton instead of `os.environ`.
 
 The plan represents a substantial, cross-package refactor anchored on the `2026-05-14-settings-di-research` and `2026-05-14-settings-di-adr` findings, which identified 27 production `os.environ` reads, categorised them, and selected Strategy 3 (`ContextVar`-backed override) as the DI path forward. All steps were marked complete in the plan document, but the work was never committed to the main branch and execution did not land. The plan explicitly notes deferral to a follow-up sprint.
 

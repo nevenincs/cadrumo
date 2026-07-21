@@ -1,11 +1,11 @@
-"""The WithholdingSourceResolver materialises the M190 percepciones count (#28 P03).
+"""The WithholdingSourceResolver materialises the M190 percepciones count.
 
 Drives the REAL encrypted store plus a typed registry-shaped revision:
 the resolver reads persisted per-perceptor-clave
 :class:`WithholdingObservation` records and materialises the DISTINCT
 (perceptor, clave, subclave) count for a ``percepcion_count`` binding. Empty
-store -> zero count + a non-blocking advisory (the RET-1 ruling: a nil filer
-must still calculate), never a hard refusal.
+store -> zero count + a non-blocking advisory (a nil filer must still
+calculate), never a hard refusal.
 """
 
 from __future__ import annotations

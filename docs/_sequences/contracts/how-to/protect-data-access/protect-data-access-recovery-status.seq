@@ -1,0 +1,2 @@
+@step Confirm the recovery key is enrolled without exposing it.
+@static aeat config recovery status

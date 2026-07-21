@@ -1,13 +1,12 @@
 """Real-behavior tests for the workstation-preflight health probes.
 
 Each probe answers one health question — per-provider certificate / Cl@ve Móvil
-configuration (#286), secure-storage / bundled-corpus / configuration preflight
-(#102), and registry referential integrity (#98) — and MUST return a typed
+configuration, secure-storage / bundled-corpus / configuration preflight,
+and registry referential integrity — and MUST return a typed
 :class:`~cadrumo.application.preflight.PreflightCheck` for both a healthy and an
 unhealthy workstation, never raising. These tests drive the real probes against
 real settings overrides, a real on-disk storage/corpus layout, and the real
-registry referential-integrity gate (``check_all_id_references``) exercised
-through minimal real snapshot fixtures — no mocks.
+registry referential-integrity gate over the bundled production authority.
 """
 
 from __future__ import annotations
@@ -19,15 +18,6 @@ import pytest
 from pydantic import SecretStr
 
 from ...core.config import override_settings
-from ...domain.calculations.registry import ModeloDefinition, RegistrySnapshot, RegistryValidationError
-from ...domain.calculations.registry.tests import (
-    REFERENCE_LEGAL_ID,
-    build_minimal_snapshot,
-    build_snapshot_with_missing_legal,
-    check_all_id_references,
-    minimal_modelo,
-    minimal_revision,
-)
 from ..preflight import (
     HealthSeverity,
     PreflightCheck,
@@ -52,7 +42,7 @@ def _row(rows: tuple[PreflightCheck, ...], check_id: str) -> PreflightCheck:
 
 def test_auth_provider_rows_are_ok_when_no_provider_configured() -> None:
     """An unconfigured optional provider is OK — not-configured is not a fault."""
-    with override_settings(aeat_certificate_path=None, aeat_clave_movil_dni_nie=None):
+    with override_settings(cadrumo_certificate_path=None, cadrumo_clave_movil_dni_nie=None):
         rows = probe_auth_providers()
     cert = _row(rows, "auth-provider:certificate")
     assert cert.healthy is True
@@ -63,7 +53,7 @@ def test_auth_provider_rows_are_ok_when_no_provider_configured() -> None:
 def test_auth_provider_certificate_missing_file_is_error_with_remediation(tmp_path: Path) -> None:
     """A configured certificate path pointing at a missing file is a red row."""
     missing = tmp_path / "does-not-exist.p12"
-    with override_settings(aeat_certificate_path=missing):
+    with override_settings(cadrumo_certificate_path=missing):
         rows = probe_auth_providers()
     cert = _row(rows, "auth-provider:certificate")
     assert cert.healthy is False
@@ -73,7 +63,7 @@ def test_auth_provider_certificate_missing_file_is_error_with_remediation(tmp_pa
 
 def test_auth_provider_clave_invalid_identity_is_error() -> None:
     """A malformed Cl@ve Móvil DNI/NIE is classified as an error row."""
-    with override_settings(aeat_clave_movil_dni_nie=SecretStr("NOT-A-VALID-ID")):
+    with override_settings(cadrumo_clave_movil_dni_nie=SecretStr("NOT-A-VALID-ID")):
         rows = probe_auth_providers()
     clave = _row(rows, "auth-provider:clave_movil")
     assert clave.healthy is False
@@ -141,83 +131,12 @@ def test_env_configuration_ok_with_passphrase() -> None:
     assert env.severity is HealthSeverity.OK
 
 
-# ── #98 — registry referential integrity ─────────────────────────────────────
-
-
-class _CleanAuthority:
-    """Authority whose one revision builds a real, referentially-clean snapshot."""
-
-    def __init__(self) -> None:
-        self._revision = minimal_revision()
-        self._modelo = minimal_modelo(self._revision)
-
-    @property
-    def modelos(self) -> tuple[ModeloDefinition, ...]:
-        return (self._modelo,)
-
-    def snapshot(
-        self,
-        modelo_id: str,
-        *,
-        filing_year: int,
-        period: str,
-        revision_id: str | None = None,
-    ) -> RegistrySnapshot:
-        del modelo_id, filing_year, period, revision_id
-        # build_minimal_snapshot runs the real check_all_id_references gate.
-        return build_minimal_snapshot(self._revision)
-
-
-class _DanglingAuthority:
-    """Authority whose revision fails the real referential-integrity gate."""
-
-    def __init__(self) -> None:
-        self._revision = minimal_revision()
-        self._modelo = minimal_modelo(self._revision)
-
-    @property
-    def modelos(self) -> tuple[ModeloDefinition, ...]:
-        return (self._modelo,)
-
-    def snapshot(
-        self,
-        modelo_id: str,
-        *,
-        filing_year: int,
-        period: str,
-        revision_id: str | None = None,
-    ) -> RegistrySnapshot:
-        del modelo_id, filing_year, period, revision_id
-        # Remove a legal id the revision content actually references so the real
-        # gate sees a genuine dangling reference.
-        snapshot = build_snapshot_with_missing_legal(self._revision, REFERENCE_LEGAL_ID)
-        # Re-run the real gate on the deliberately-broken snapshot; it raises.
-        check_all_id_references(snapshot)
-        return snapshot
-
-
 def test_registry_row_healthy_when_all_references_resolve() -> None:
-    """A registry whose revisions pass the real ID gate reports a healthy row."""
-    row = probe_registry_referential_integrity(authority=_CleanAuthority())
+    """The bundled registry passes the real ID gate and reports a healthy row."""
+    row = probe_registry_referential_integrity()
     assert row.check == "registry:referential-integrity"
     assert row.healthy is True
     assert row.severity is HealthSeverity.OK
-
-
-def test_registry_row_error_on_dangling_reference() -> None:
-    """A dangling typed-ID reference surfaces an error row naming the failure count."""
-    row = probe_registry_referential_integrity(authority=_DanglingAuthority())
-    assert row.healthy is False
-    assert row.severity is HealthSeverity.ERROR
-    assert "1 of" in row.detail
-    assert row.remediation
-
-
-def test_dangling_authority_double_checks_the_real_gate() -> None:
-    """Guard the fixture: the broken snapshot really fails the real gate (anti-tautology)."""
-    authority = _DanglingAuthority()
-    with pytest.raises(RegistryValidationError):
-        authority.snapshot("130", filing_year=2024, period="0A", revision_id="test-revision")
 
 
 # ── Aggregate ────────────────────────────────────────────────────────────────

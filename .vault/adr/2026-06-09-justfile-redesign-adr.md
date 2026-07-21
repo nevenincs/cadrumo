@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#justfile-redesign'
 date: '2026-06-09'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-09-justfile-redesign-research]]'
 ---
@@ -34,7 +34,7 @@ This ADR is persisted to define the standardized, self-documenting prefix taxono
 
 ## Constraints
 
-* **AST Integrity Checks:** The AST-based test marker verification gate `src/aeat/tests/test_marker_integrity.py` is the authority for allowed markers and is immutable. We must not attempt to register retired markers (such as `workbook_parity` or `live_read`) in `pyproject.toml` or attach them to tests.
+* **AST Integrity Checks:** The AST-based test marker verification gate `src/cadrumo/tests/test_marker_integrity.py` is the authority for allowed markers and is immutable. We must not attempt to register retired markers (such as `workbook_parity` or `live_read`) in `pyproject.toml` or attach them to tests.
 * **Hexagonal Layering:** Production code boundaries and layer hierarchies defined in `.importlinter` must be fully respected and validated by the redesigned harness.
 * **No Git Stashing at Commit Time:** The pre-commit workflow in `prek.toml` must remain strictly verify-only.
 
@@ -87,9 +87,9 @@ The root `justfile` will be refactored to implement a standardized prefix-based 
 ### 2. Path-Based Isolation of Parity Tests
 To prevent slow LibreOffice workbook tests from running during the default unit suite without violating `test_marker_integrity.py` restrictions, isolation will be achieved using pytest path exclusion:
 * The `test-unit` command will explicitly ignore the workbook-parity test file:
-  `pytest -m unit --ignore=src/aeat/domain/calculations/registry/tests/test_workbook_parity.py`
+  `pytest -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/test_workbook_parity.py`
 * The `test-workbook-parity` command will target the file directly by path:
-  `pytest src/aeat/domain/calculations/registry/tests/test_workbook_parity.py`
+  `pytest src/cadrumo/domain/calculations/registry/tests/test_workbook_parity.py`
 
 ### 3. Deprecations and Removals
 * **Stale Commands:** `test-domain`, `test-live-read`, and `test-live-write` are retired and removed from the active command list.
@@ -97,8 +97,8 @@ To prevent slow LibreOffice workbook tests from running during the default unit 
 
 ### 4. Testing Framework and Marker Integrity Remediation
 To ensure local and CI harness execution reliability, pre-existing taxonomy contradictions in the test framework are resolved:
-* **`docs` Marker Conflict**: The `"docs"` marker is removed from `_FORBIDDEN_MARKERS` and added to `_EXPECTED_CONFIGURED_MARKERS` in `src/aeat/tests/test_marker_integrity.py` to reconcile it with its active use in 5 documentation-sweep files.
-* **Statement-Order Repair**: The file `src/aeat/tests/test_roundtrip_fixture_saturation.py` is corrected by moving its `pytestmark` assignment immediately after imports to pass the AST ordering gate.
+* **`docs` Marker Conflict**: The `"docs"` marker is removed from `_FORBIDDEN_MARKERS` and added to `_EXPECTED_CONFIGURED_MARKERS` in `src/cadrumo/tests/test_marker_integrity.py` to reconcile it with its active use in 5 documentation-sweep files.
+* **Statement-Order Repair**: The file `src/cadrumo/tests/test_roundtrip_fixture_saturation.py` is corrected by moving its `pytestmark` assignment immediately after imports to pass the AST ordering gate.
 
 ### 5. Comment Wording Standards
 * **Removal of Cruft:** Delete all issue IDs (e.g. `#476`), PR links, and plan-specific step labels (e.g. `Step 7`, `Step 8`) from the comments.

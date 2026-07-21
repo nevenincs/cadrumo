@@ -3,11 +3,9 @@ tags:
   - "#research"
   - "#unified-review-queue"
 date: 2026-04-18
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-12-self-healing-sync-adr]]"
   - "[[2026-04-12-filing-draft-engine-adr]]"
-  - "[[2026-04-12-notifications-inbox-adr]]"
 ---
 
 # unified-review-queue research

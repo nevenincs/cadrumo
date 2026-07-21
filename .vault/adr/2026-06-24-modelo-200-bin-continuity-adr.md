@@ -3,12 +3,13 @@ tags:
   - '#adr'
   - '#modelo-200-bin-continuity'
 date: '2026-06-24'
-modified: '2026-06-28'
+modified: '2026-07-17'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
+  - '[[2026-07-10-modelo-200-bin-continuity-research]]'
 ---
 
-# `modelo-200-bin-continuity` adr: `M200 BIN closing balance must be reconciled to the roll-forward by a no-silent continuity predicate` | (**status:** `proposed`)
+# `modelo-200-bin-continuity` adr: `M200 BIN closing balance must be reconciled to the roll-forward by a no-silent continuity predicate` | (**status:** `accepted`)
 
 ## Problem Statement
 

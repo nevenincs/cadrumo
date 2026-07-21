@@ -44,8 +44,7 @@ CHECKLIST: tuple[ChecklistItem, ...] = (
         detail=(
             "revisions/<revision-id>/revision.toml: valid_from/valid_to, period_selector, "
             "legal_refs, source_refs, and the mandatory orden_aplicabilidad citing the "
-            "Orden(es) ministeriales that approve or amend this revision's form "
-            "(period-revision-resolution ADR, Ruling 4 / D3)."
+            "Orden(es) ministeriales that approve or amend this revision's form."
         ),
     ),
     ChecklistItem(

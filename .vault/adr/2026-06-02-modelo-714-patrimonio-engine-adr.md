@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-714-patrimonio-engine'
 date: '2026-06-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-02-modelo-714-patrimonio-engine-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
@@ -112,7 +112,7 @@ the 2026-06-29 status update above.
   at 60% with the 80% reduction floor on the IP quota. The current registry has the art.31
   80%-floor reference; the full same-year M100 joint-limit relation remains the open tail.
 - Wire the `modelo-714-...-calculation` application link (consumer
-  `aeat.domain.calculations.registry`, `requires_snapshot = true`) only once the formulas exist.
+  `cadrumo.domain.calculations.registry`, `requires_snapshot = true`) only once the formulas exist.
 
 **Cross-renta enrollment.** Two-renta evidence is (i) a `previous_filing` binding
 `filing_year_delta = -1` seeding the prior-year wealth base, proving the base carries across two

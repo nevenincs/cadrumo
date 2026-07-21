@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-44-2015-art-1.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-44-2015-art-1.html",
   "source_sha256": "54c5497dc4c0f54d506aca2c1c306dbe11f86fb45349c5847bf9c5906d4a4691",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

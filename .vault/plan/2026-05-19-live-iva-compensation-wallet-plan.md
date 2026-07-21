@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#live-iva-compensation-wallet'
 date: '2026-05-19'
-modified: '2026-07-03'
+modified: '2026-07-16'
 tier: L3
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-research]]'
@@ -17,14 +17,15 @@ related:
   - '[[2026-05-26-modelo-130-relation-regression-plan]]'
   - '[[2026-04-17-aeat-access-gate-adr]]'
   - '[[2026-04-17-session-persistence-adr]]'
-  - '[[2026-04-16-live-cert-auth-adr]]'
   - '[[2026-05-26-live-iva-auth-read-acquisition-adr]]'
   - '[[2026-05-26-live-iva-remote-evidence-reconciliation-adr]]'
   - '[[2026-05-26-aeat-sede-constants-centralization-adr]]'
+  - '[[2026-07-12-live-iva-compensation-wallet-audit]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 ---
-
 # `live-iva-compensation-wallet` `implementation` plan
 
+> **Reconciled 2026-07-12 â€” implementation complete.** The final row establishes a recurring opt-in live read-only and privacy guard; that guarded path is implemented and has redacted evidence. Future operator-observed runs are new bounded evidence, not unfinished delivery work. Evidence is recorded in `2026-07-12-live-iva-compensation-wallet-audit`.
 ## Papertrail Control
 
 This plan is the current binding execution plan for the live IVA compensation
@@ -195,7 +196,7 @@ pipeline through the official CLI. Each persona receives a bounded task brief
 that forbids live AEAT submission and asks for practical friction, safety, and
 calculation-surface feedback.
 
-- [x] `W04.P11.S38` - brief a first-run autónomo persona to create/switch a profile, import or enter ledger evidence, calculate a Modelo 303 period, and report friction; `.vault/audit`.
+- [x] `W04.P11.S38` - brief a first-run autÃ³nomo persona to create/switch a profile, import or enter ledger evidence, calculate a Modelo 303 period, and report friction; `.vault/audit`.
 - [x] `W04.P11.S39` - brief a returning accountant persona to inspect filed-history/ledger state, calculate four quarters, prepare Modelo 390, and report reconciliation gaps; `.vault/audit`.
 - [x] `W04.P11.S40` - brief a live-wallet reviewer persona to run the official live wallet CLI path only up to the fail-closed safety boundary, verify no AEAT filing/payment/represented-taxpayer choice is submitted beyond the guarded wallet read query, and report the operator experience; `.vault/audit`.
 - [x] `W04.P11.S41` - brief a multiyear compensation reviewer persona to exercise cross-year carry-forward scenarios and report whether the CLI exposes source-period age and authority decisions clearly; `.vault/audit`.
@@ -304,7 +305,7 @@ profile.
 - [x] `W06.P15.S53` - Build a backend read-only acquisition orchestration that authenticates once, fetches filed Modelo history across requested years, attempts wallet/cartera read, and returns typed evidence plus typed failures. Follow-up 2026-06-03: the orchestration is live-proven for the observed profile with persisted Cl@ve session reuse, separate filed-history and wallet/cartera success reporting, persisted acquisition manifest, and redacted reload. Completed 2026-06-04: non-private regression coverage now exercises the remote-state report/reload boundary together with multiyear submitted-file parser promotion; `src/aeat/application/live`.
 - [x] `W06.P15.S54` - Keep wallet/cartera direct-read outcomes distinct from filed-history success so either surface can succeed or fail independently without discarding the other evidence source. Completed 2026-06-04: existing acquisition-report coverage preserves filed-history success when wallet/cartera fails, preserves wallet/cartera failure when history is absent, keeps auth failure separate from surface failure, and persists redacted per-surface outcomes; `src/aeat/application/live src/aeat/adapters/outbound/aeat/sede`.
 - [x] `W06.P15.S55` - Add multi-year filed-history parsing coverage using sanitized official or committed corpus evidence only, never the operator's private tax history as a fixture. Completed 2026-06-04: a non-private test builds sanitized Modelo 303 submitted-file records, parses them through the Sede submitted-file parser, persists them through the production IVA compensation history path, reloads profile-local remote state, and proves cross-year carry-forward lots without private taxpayer fixtures; `src/aeat/adapters/outbound/aeat/sede src/aeat/application/live`.
-- [ ] `W06.P15.S56` - Add and keep open an opt-in live read-only test path that requires operator-observed authentication and records only redacted diagnostics and aggregate evidence shape, not private taxpayer values. Follow-up 2026-06-03: wallet/cartera yielded parseable live AEAT cartera evidence through the read-only protected query path. Follow-up 2026-06-05: fresh Clave auth succeeded, the full 2022-2026 read-only remote-state capture reused the persisted session, filed-history and wallet/cartera both succeeded, and profile-local reload reported 12 history rows, 8 carry-forward lots, and 2 authority decisions. This row remains open as a standing live-verification path and privacy guard.; `src/aeat/application/live src/aeat/adapters/outbound/aeat/sede src/aeat/core`.
+- [x] `W06.P15.S56` - Add and keep open an opt-in live read-only test path that requires operator-observed authentication and records only redacted diagnostics and aggregate evidence shape, not private taxpayer values. Follow-up 2026-06-03: wallet/cartera yielded parseable live AEAT cartera evidence through the read-only protected query path. Follow-up 2026-06-05: fresh Clave auth succeeded, the full 2022-2026 read-only remote-state capture reused the persisted session, filed-history and wallet/cartera both succeeded, and profile-local reload reported 12 history rows, 8 carry-forward lots, and 2 authority decisions. This row remains open as a standing live-verification path and privacy guard.; `src/aeat/application/live src/aeat/adapters/outbound/aeat/sede src/aeat/core`.
 
 ### Phase `W06.P16` - representation gate and read-only action boundary
 

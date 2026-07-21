@@ -1,0 +1,12 @@
+:seed: filing-spine-303-ledger
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@step Run a quarterly ledger preflight.
+aeat app ledger preflight --year 2026 --period 1T
+@step Read the ledger for the annual period.
+aeat app ledger status --year 2026 --period 0A
+@step Run a monthly ledger preflight.
+aeat app ledger preflight --year 2026 --period 03
+@step The same token shape addresses a modelo calculation.
+@result aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T
+@expect result.saved == true
+@expect exit_code == 0

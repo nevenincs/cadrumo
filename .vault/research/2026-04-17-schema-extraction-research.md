@@ -6,9 +6,8 @@ tags:
   - "#research"
   - "#schema-extraction"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-12-casilla-db-research]]"
   - "[[2026-04-12-modelo-303-390-research]]"
   - "[[2026-04-13-modelo-inventory-research]]"
   - "[[2026-04-12-justificante-parser-research]]"

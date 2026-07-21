@@ -3,10 +3,9 @@ tags:
   - "#audit"
   - "#deferred-scope-state-machine"
 date: "2026-05-19"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-19-spanish-stem-terminology-authority-adr]]"
-  - "[[2026-05-19-code-duplication-sweep-audit]]"
 ---
 
 # deferred-scope-state-machine audit: AEAT-Sede lifecycle rename (Submitted/Acknowledged/Rejected → Presentada/Aceptada/Rechazada) deferred to a future campaign

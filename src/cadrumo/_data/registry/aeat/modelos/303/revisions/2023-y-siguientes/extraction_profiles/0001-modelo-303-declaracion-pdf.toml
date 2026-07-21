@@ -5,10 +5,10 @@ artefact_kind = "declaracion"
 accepted_artefact_kinds = ["declaration_pdf"]
 parser = "cadrumo.adapters.inbound.declaracion.parse_declaracion"
 target_casillas = [
-    # Primitive cuota leaves — Route A of the parser-engine-totals-impedance
-    # ADR (2026-06-02). The engine sums these into iva.cuota-devengada-total
-    # and iva.cuota-deducible-total, so resultado-regimen-general is
-    # recomputed from primitives rather than copied from the printed total.
+    # Primitive cuota leaves — the engine sums these into
+    # iva.cuota-devengada-total and iva.cuota-deducible-total, so
+    # resultado-regimen-general is recomputed from primitives rather than
+    # copied from the printed total.
     {casilla_id = "iva.repercutido.general", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+general\s+21\s+por\s+ciento'},
     {casilla_id = "iva.repercutido.reducido", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+reducido\s+10\s+por\s+ciento'},
     {casilla_id = "iva.repercutido.super-reducido", match_strategy = "named_label", value_kind = "amount", label_pattern = 'Primitivo\s+IVA\s+repercutido\s+super-reducido\s+4\s+por\s+ciento'},

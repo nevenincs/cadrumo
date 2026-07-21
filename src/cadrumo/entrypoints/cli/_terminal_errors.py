@@ -4,8 +4,7 @@ Typer's standalone ``main`` renders every :class:`~click.ClickException` (usage
 errors, bad parameters, unknown options) as Rich text and lets unexpected
 exceptions escape as raw Python tracebacks. Under ``--format json`` that
 meant the shared-spine error document (``schema_version`` / ``command`` /
-``status`` / ``error`` / ``notices``) mandated by the
-cli-envelope-notice-standardisation ADR never appeared on any parse-time
+``status`` / ``error`` / ``notices``) never appeared on any parse-time
 or crash failure — automation read prose, an empty stdout, or a traceback.
 
 :func:`run_standalone_with_error_contract`

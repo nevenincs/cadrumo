@@ -25,7 +25,7 @@ illegal kind can never reach the catalogue.
 
 See Also:
     :func:`~core.resolve_amendment_kind_regime`:
-        Codified per-modelo, period-aware permitted-kind table this module
+        Declared per-modelo, period-aware permitted-kind table this module
         binds to :class:`~domain.modelos.CalculationRevisionAmendmentKind`.
     :func:`~application.modelo.amend_modelo_revision`:
         The composition path that calls this module's guard before building
@@ -63,10 +63,10 @@ def assert_amendment_kind_permitted(
 ) -> None:
     """Refuse ``amendment_kind`` unless the resolved period legally permits it.
 
-    Reads the codified regime from
+    Reads the declared regime from
     :func:`~core.resolve_amendment_kind_regime` for ``modelo`` and
     ``period`` and checks ``amendment_kind`` against the permitted set. A
-    modelo with no codified rectificativa-adoption boundary (e.g. M130/M131,
+    modelo with no declared rectificativa-adoption boundary (e.g. M130/M131,
     which carry no bundled rectificativa grounding) always resolves to the
     pre-rectificativa complementaria/sustitutiva pair, so requesting
     ``rectificativa`` for such a modelo is refused at every period until a
@@ -123,9 +123,9 @@ def liability_direction_for_amendment(
 
 
 def _summed_result(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> Decimal | None:
-    """Sum the modelo's codified final-result casilla(s) from a casilla-value map.
+    """Sum the modelo's declared final-result casilla(s) from a casilla-value map.
 
-    Returns ``None`` when the modelo has no codified result-disposition spec
+    Returns ``None`` when the modelo has no declared result-disposition spec
     (:func:`~core.result_disposition_casilla_ids`); callers must then skip
     the liability-direction guard rather than compare against a fabricated
     zero baseline.
@@ -150,13 +150,13 @@ def assert_complementaria_liability_direction_permitted(
     :func:`~core.resolve_amendment_kind_regime`): once rectificativa
     applies, both directions route through the unified mechanism and this
     guard is a no-op. For a pre-rectificativa period requesting
-    ``COMPLEMENTARIA``, sums the modelo's codified final-result casilla(s)
+    ``COMPLEMENTARIA``, sums the modelo's declared final-result casilla(s)
     (:func:`~core.result_disposition_casilla_ids`) before and after the
     operator's overrides and refuses when the correction lowers the declared
     liability — that correction is legally a ``solicitud de rectificación``
     (LGT art. 120.3), not a complementaria (LGT art. 122.2).
 
-    A modelo with no codified result-disposition spec, or a correction that
+    A modelo with no declared result-disposition spec, or a correction that
     does not touch the result casilla(s), is not refused: there is no basis to
     classify a direction, so the guard degrades to a no-op rather than
     fabricating a comparison.

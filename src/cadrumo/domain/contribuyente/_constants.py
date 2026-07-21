@@ -3,8 +3,8 @@
 A `ProfileName` is the operator-typed label for one identity (one NIF,
 one activity, one IVA regime, one language preference). The same
 typed alias is reused on storage-layer surfaces (manifest fields,
-secure-object indices, audit-event records) because the profile-bucket
-lifecycle ADR mandates 1:1 cardinality between profile and bucket:
+secure-object indices, audit-event records) because a profile and its
+bucket carry 1:1 cardinality:
 operator-facing CLI arguments / prompts / status emit and storage-
 layer index entries name the same identifier, so introducing a
 second alias only added documentation surface without changing the

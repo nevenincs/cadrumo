@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m349-payable-invoice-authoring'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-03-m349-payable-invoice-authoring-research]]'
 ---
@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#m349-payable-invoice-authori
 
 ### research
 
-- `2026-06-03-m349-payable-invoice-authoring-research` - `m349-payable-invoice-authoring` research: `M349 R21 closure: mirror payable_invoice bindings + decl casilla union`
+- `2026-06-03-m349-payable-invoice-authoring-research` - `m349-payable-invoice-authoring` research: M349 payable mirror authoring - closed

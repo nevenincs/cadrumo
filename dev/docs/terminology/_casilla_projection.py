@@ -1,8 +1,7 @@
-"""Casilla projection compiler (ADR D4).
+"""Casilla projection compiler.
 
 Projects every casilla of every modelo revision -- read through the
-validated registry authority (never raw TOML, per
-``aeat-registry-authority-flow``) -- into a strict
+validated registry authority, never raw TOML -- into a strict
 :class:`~dev.docs.terminology._search_record.CasillaSearchRecord`, then
 deduplicates across revisions by the canonical ``(modelo, casilla.id)``
 identity. ``number`` and ``segmento`` are projected as AEAT metadata only,

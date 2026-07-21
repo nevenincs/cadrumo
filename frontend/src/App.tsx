@@ -33,7 +33,7 @@ const stepMeta = [
 
 const docLinkHrefs = [
   `${docsBaseUrl}/how-to/quickstart.html`,
-  `${docsBaseUrl}/tutorials/index.html`,
+  `${docsBaseUrl}/how-to/index.html#run-through-a-filing-year`,
   `${docsBaseUrl}/how-to/index.html`,
   `${docsBaseUrl}/explanation/index.html`,
   `${docsBaseUrl}/architecture/index.html`,
@@ -43,7 +43,7 @@ const footerColumnHrefs: readonly (readonly [string, string, string])[] = [
   [downloadUrl, '#steps', '#harness'],
   [
     `${docsBaseUrl}/how-to/quickstart.html`,
-    `${docsBaseUrl}/tutorials/index.html`,
+    `${docsBaseUrl}/how-to/index.html`,
     `${docsBaseUrl}/architecture/index.html`,
   ],
   [repositoryUrl, downloadUrl, siteUrl],

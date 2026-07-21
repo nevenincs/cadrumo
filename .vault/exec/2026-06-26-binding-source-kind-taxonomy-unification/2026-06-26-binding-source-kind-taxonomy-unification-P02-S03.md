@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S03'
 related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"

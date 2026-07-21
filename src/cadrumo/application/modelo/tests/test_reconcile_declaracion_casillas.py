@@ -1,7 +1,7 @@
 """Real-behavior tests for casilla-level filed-declaración reconciliation (Modelo 130).
 
-These lock the ``reconcile-declaration-casillas`` contract (GitHub issue #438,
-first slice): a filed declaración PDF is compared casilla-by-casilla against the
+These lock the ``reconcile-declaration-casillas`` contract: a filed declaración
+PDF is compared casilla-by-casilla against the
 persisted computed :class:`~cadrumo.domain.modelos.CalculationRevision`, not only
 at the header / total level. Modelo 130 is the first modelo enrolled in
 :data:`cadrumo.application.modelo._reconcile._DECLARATION_CASILLA_RECONCILE_MODELOS`
@@ -10,7 +10,7 @@ because its ``declaracion_pdf`` extraction profile targets registry casilla ids
 
 Real-PDF declaración extraction (the ``bbox_anchored`` pdfplumber word-position
 primitive) is Tier-R and out of scope here (tracked separately alongside the
-remaining not-yet-enrolled modelos and blocked on #332-337). This suite tests
+remaining not-yet-enrolled modelos). This suite tests
 the ``_reconcile_parsed_declaracion`` seam directly with a synthetically
 constructed :class:`~cadrumo.adapters.inbound.declaracion.InboundDeclaracionObservation`
 — the same seam-testing pattern ``test_reconcile_value_comparison.py`` uses for
@@ -49,7 +49,8 @@ from ....domain.modelos import (
 )
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .._reconcile import (
     ModeloReconciliationDiffKind,

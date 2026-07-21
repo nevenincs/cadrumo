@@ -36,6 +36,7 @@ from bs4 import BeautifulSoup
 from pydantic import AnyHttpUrl, AnyUrl, BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -84,9 +85,10 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
 BrowserSessionFactory = Callable[[Settings], Awaitable[Any]]
 """Async factory returning an object exposing ``create_context(storage_state=...)`` + ``close()``.
 
-Production passes :func:`default_browser_session_factory`; tests inject a
-recording double via the same protocol so the navigation/landing-guard logic
-can be exercised without a real Playwright browser."""
+Production passes :func:`default_browser_session_factory`. The callable seam
+keeps browser-session construction owned by the outbound adapter composition
+boundary.
+"""
 
 # Page-level marker present on BOTH the summary (``Resumen de notificaciones y
 # comunicaciones no leídas``) and the query (``Consulta de notificaciones y
@@ -486,81 +488,79 @@ async def _navigate_and_parse(
 ) -> NotificationsSnapshot:
     """Storage-state-driven core of :func:`_fetch_and_parse`.
 
-    Split out so unit tests can drive the Playwright orchestration and the
-    landing/marker guard with a recording double via the same protocol
-    production uses.
+    Split out so storage-state navigation and the landing/marker guard remain
+    one explicit adapter boundary shared by the authenticated fetch paths.
     """
     browser_session = await browser_session_factory(settings)
+    context = None
     try:
         context = await browser_session.create_context(storage_state=storage_state)
+        page = await context.new_page()
+        # Warm the cookie jar on the authenticated landing.
+        # Non-Playwright failures (e.g. domain errors, keyboard interrupts)
+        # propagate unmodified; only browser-level transport and OS-level
+        # I/O errors are suppressed here since they do not prevent the
+        # primary goto from succeeding.
         try:
-            page = await context.new_page()
-            # Warm the cookie jar on the authenticated landing.
-            # Non-Playwright failures (e.g. domain errors, keyboard interrupts)
-            # propagate unmodified; only browser-level transport and OS-level
-            # I/O errors are suppressed here since they do not prevent the
-            # primary goto from succeeding.
-            try:
-                await page.goto(_RESUMEN_URL, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
-            except (PlaywrightError, OSError) as exc:
-                log.debug(
-                    "fetch_notifications: warm-up navigation to %s suppressed: %s",
-                    _RESUMEN_URL,
-                    exc,
-                    exc_info=True,
-                )
-            _assert_read_http("GET", url)
-            try:
-                await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
-            except PlaywrightError as exc:
-                raise SedeNavigationError(f"goto {url!r} failed: {exc}") from exc
-            # Follow the redirect chain rather than assuming the request host:
-            # capture where AEAT actually landed and re-assert that host through
-            # the host-suffix read guard so an off-AEAT redirect fails closed
-            # while a ``www{n}`` load-balancer dispatch is tolerated.
-            landing_url = getattr(page, "url", "") or url
-            landing = urlsplit(landing_url)
-            _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
-            html = await page.content()
-            snapshot = parser(html, source_url=url)
-            if not snapshot.rows and not _notifications_marker_present(html):
-                # A zero-row parse with NO notifications page marker is a
-                # wrong-service / auth-gate / maintenance landing, not a genuine
-                # "no pending items" — surface the page signal instead of a
-                # silent empty snapshot. A genuine empty page still renders the
-                # marker and returns normally above.
-                raise SedeNavigationError(
-                    "AEAT notifications navigation returned a page with no notifications marker and no "
-                    "rows; this is a wrong-service / auth-gate / maintenance landing, not an empty inbox. "
-                    f"landing_host={landing.netloc!r} landing_path={landing.path!r} "
-                    f"marker_present=False row_count=0",
-                    failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-                    translated_message=tr("adapters.sede.errors.notifications_bad_landing"),
-                    context={
-                        "requested_url": url,
-                        "landing_host": landing.netloc,
-                        "landing_path": landing.path,
-                        "marker_present": False,
-                        "row_count": 0,
-                    },
-                    suggestion=(
-                        "Re-authenticate (run `aeat config auth status`) and retry; if AEAT is serving a "
-                        "maintenance interstitial, retry later. Do not treat this as an empty inbox."
-                    ),
-                )
-            log.info(
-                "fetch_notifications: fetched %d row(s) from %s",
-                len(snapshot.rows),
-                url,
+            await page.goto(_RESUMEN_URL, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+        except (PlaywrightError, OSError) as exc:
+            log.debug(
+                "fetch_notifications: warm-up navigation to %s suppressed: %s",
+                _RESUMEN_URL,
+                exc,
+                exc_info=True,
             )
-            return snapshot
-        finally:
-            try:
-                await context.close()
-            except Exception as _exc:
-                log.debug("fetch_notifications: context.close suppressed: %s", _exc, exc_info=True)
+        _assert_read_http("GET", url)
+        try:
+            await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
+        except PlaywrightError as exc:
+            raise SedeNavigationError(f"goto {url!r} failed: {exc}") from exc
+        # Follow the redirect chain rather than assuming the request host:
+        # capture where AEAT actually landed and re-assert that host through
+        # the host-suffix read guard so an off-AEAT redirect fails closed
+        # while a ``www{n}`` load-balancer dispatch is tolerated.
+        landing_url = getattr(page, "url", "") or url
+        landing = urlsplit(landing_url)
+        _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
+        html = await page.content()
+        snapshot = parser(html, source_url=url)
+        if not snapshot.rows and not _notifications_marker_present(html):
+            # A zero-row parse with NO notifications page marker is a
+            # wrong-service / auth-gate / maintenance landing, not a genuine
+            # "no pending items" — surface the page signal instead of a
+            # silent empty snapshot. A genuine empty page still renders the
+            # marker and returns normally above.
+            raise SedeNavigationError(
+                "AEAT notifications navigation returned a page with no notifications marker and no "
+                "rows; this is a wrong-service / auth-gate / maintenance landing, not an empty inbox. "
+                f"landing_host={landing.netloc!r} landing_path={landing.path!r} "
+                f"marker_present=False row_count=0",
+                failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
+                translated_message=tr("adapters.sede.errors.notifications_bad_landing"),
+                context={
+                    "requested_url": url,
+                    "landing_host": landing.netloc,
+                    "landing_path": landing.path,
+                    "marker_present": False,
+                    "row_count": 0,
+                },
+                suggestion=(
+                    "Re-authenticate (run `aeat config auth status`) and retry; if AEAT is serving a "
+                    "maintenance interstitial, retry later. Do not treat this as an empty inbox."
+                ),
+            )
+        log.info(
+            "fetch_notifications: fetched %d row(s) from %s",
+            len(snapshot.rows),
+            url,
+        )
+        return snapshot
     finally:
-        await browser_session.close()
+        await close_async_resources(
+            context,
+            browser_session,
+            task_name="cadrumo-notifications-close",
+        )
 
 
 def _assert_read_http(method: str, url: str) -> None:

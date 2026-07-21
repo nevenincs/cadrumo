@@ -54,8 +54,8 @@ async def test_clave_movil_playwright_entrypoint_reaches_live_selector() -> None
         assert response is None or 200 <= response.status < 500
 
         button = page.locator('button[name="autoriza-P"]').first
-        await button.wait_for(state="visible", timeout=settings.aeat_clave_movil_timeout_ms)
-        text = " ".join((await button.inner_text(timeout=settings.aeat_clave_movil_timeout_ms)).split())
+        await button.wait_for(state="visible", timeout=settings.cadrumo_clave_movil_timeout_ms)
+        text = " ".join((await button.inner_text(timeout=settings.cadrumo_clave_movil_timeout_ms)).split())
         assert "Cl@ve" in text or "Móvil" in text
     finally:
         if context is not None:
@@ -68,8 +68,8 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
     """Real provider + central Playwright verify an existing encrypted Cl@ve session."""
 
     settings = _settings_or_skip()
-    if not settings.aeat_clave_movil_dni_nie:
-        pytest.fail("AEAT_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
+    if not settings.cadrumo_clave_movil_dni_nie:
+        pytest.fail("CADRUMO_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
     from ......core import require_active_bucket_id
     from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 
@@ -85,7 +85,7 @@ async def test_clave_movil_provider_probes_persisted_session_with_central_playwr
         try:
             session, assertion = await provider.probe_persisted_session()
             assert isinstance(session, AeatSession)
-            assert session.identity_nif == settings.aeat_clave_movil_dni_nie.get_secret_value().strip().upper()
+            assert session.identity_nif == settings.cadrumo_clave_movil_dni_nie.get_secret_value().strip().upper()
             assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
             assert isinstance(assertion, AeatLoginAssertion)
             assert assertion.is_valid is True, (
@@ -102,15 +102,15 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
     settings = _settings_or_skip()
     if os.environ.get("AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH") != "1":
         pytest.fail("AEAT_CLAVE_MOVIL_FULL_LIVE_AUTH is not 1 after live opt-in")
-    if not settings.aeat_clave_movil_dni_nie:
-        pytest.fail("AEAT_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
+    if not settings.cadrumo_clave_movil_dni_nie:
+        pytest.fail("CADRUMO_CLAVE_MOVIL_DNI_NIE is not configured after live opt-in")
 
     with get_master_key_provider():
         provider = ClaveMovilAuthProvider(settings, browser_session_factory=_central_browser_session)
         try:
             session = await provider.authenticate()
             assert isinstance(session, AeatSession)
-            assert session.identity_nif == settings.aeat_clave_movil_dni_nie.get_secret_value().strip().upper()
+            assert session.identity_nif == settings.cadrumo_clave_movil_dni_nie.get_secret_value().strip().upper()
             assert isinstance(session.provider_detail, ClaveMovilSessionDetail)
             assertion = await provider.verify(session)
             assert assertion.is_valid is True, (
@@ -134,7 +134,9 @@ async def test_clave_movil_provider_full_login_with_central_playwright_when_expl
         try:
             resumed_session, resumed_assertion = await probe_provider.probe_persisted_session()
             assert isinstance(resumed_session, AeatSession)
-            assert resumed_session.identity_nif == settings.aeat_clave_movil_dni_nie.get_secret_value().strip().upper()
+            assert (
+                resumed_session.identity_nif == settings.cadrumo_clave_movil_dni_nie.get_secret_value().strip().upper()
+            )
             assert isinstance(resumed_session.provider_detail, ClaveMovilSessionDetail)
             assert isinstance(resumed_assertion, AeatLoginAssertion)
             assert resumed_assertion.is_valid is True, (

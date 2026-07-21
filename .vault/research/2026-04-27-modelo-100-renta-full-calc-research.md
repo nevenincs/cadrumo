@@ -3,19 +3,16 @@ tags:
   - '#research'
   - '#modelo-100-renta-full-calc'
 date: '2026-04-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-21-modelo-100-renta-research]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"
   - "[[2026-04-21-modelo-100-renta-plan]]"
   - "[[2026-04-27-modelo-130-calc-verify-research]]"
   - "[[2026-04-27-modelo-303-calc-verify-research]]"
-  - "[[2026-04-27-modelo-115-calc-verify-research]]"
   - "[[2026-04-27-modelo-131-calc-verify-research]]"
-  - "[[2026-04-27-modelo-111-calc-verify-research]]"
   - "[[2026-04-27-modelo-123-calc-verify-research]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
-  - "[[2026-04-27-modelo-115-calc-verify-adr]]"
   - "[[2026-04-27-modelo-123-calc-verify-adr]]"
 ---
 

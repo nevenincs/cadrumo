@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#binding-vocabulary-cli-cohesion'
 date: '2026-06-26'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-06-26-binding-vocabulary-cli-cohesion-adr]]'

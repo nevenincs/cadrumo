@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#justificante-parser'
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-12-justificante-parser-adr]]'
   - '[[2026-04-12-justificante-parser-plan]]'
   - '[[2026-04-12-playwright-anti-bot-adr]]'
-  - '[[2026-04-12-base-module-structure-adr]]'
 ---
 
 # `justificante-parser` research: parsing AEAT *justificantes de presentación*

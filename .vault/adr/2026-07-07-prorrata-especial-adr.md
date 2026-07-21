@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#prorrata-especial'
 date: '2026-07-07'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
+  - '[[2026-07-10-prorrata-especial-research]]'
 ---
 
-# `prorrata-especial` adr: `Prorrata especial per-input classification (LIVA arts 103.Dos/106): 100/0/prorrata deduction and the +10% mandatory-especial advisory` | (**status:** `proposed`)
+# `prorrata-especial` adr: `Prorrata especial per-input classification (LIVA arts 103.Dos/106): 100/0/prorrata deduction and the +10% mandatory-especial advisory` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -193,31 +194,31 @@ posture the parent and scope ADRs took for casilla 44.
 Files the implementation will touch (for wave-clustering; see the ADR-vs-ADR overlap
 report):
 
-- `src/aeat/domain/transactions/_models.py` — add the typed `input_classification`
+- `src/cadrumo/domain/transactions/_models.py` — add the typed `input_classification`
   axis to the ledger transaction. **SHARED with `prorrata-sectores-diferenciados`
   (sector reference) and `prorrata-art104-tres-exclusions` (exclusion tag).**
-- `src/aeat/application/aggregation/_iva_ledger.py` — make
+- `src/cadrumo/application/aggregation/_iva_ledger.py` — make
   `_active_general_prorrata_apportionment` regime-aware (especial 100/0/general
   routing). **SHARED with `prorrata-sectores-diferenciados` (per-sector routing) and
   `prorrata-art104-tres-exclusions` (annual-rollup exclusion filtering) — hottest
   shared surface.**
-- `src/aeat/application/calculations/_prorrata_regularizacion.py` — the settlement +10%
+- `src/cadrumo/application/calculations/_prorrata_regularizacion.py` — the settlement +10%
   mandatory-especial advisory builder. **SHARED with `prorrata-art104-tres-exclusions`
   (divergence/rollup advisories live here).**
-- `src/aeat/domain/iva/_prorrata.py` — consume existing `classify_input_deduction` /
+- `src/cadrumo/domain/iva/_prorrata.py` — consume existing `classify_input_deduction` /
   `_deductible_percentage_for` / `is_especial_mandatory` (read-mostly; maybe an especial
   per-input apportionment helper). **SHARED (additive) with all three sibling ADRs.**
-- `src/aeat/domain/prorrata_register/__init__.py` — possibly an especial
+- `src/cadrumo/domain/prorrata_register/__init__.py` — possibly an especial
   classification-complete signal on the entry. **SHARED with
   `prorrata-sectores-diferenciados` and `prorrata-art105-cinco-interrupted`.**
-- `src/aeat/_data/registry/aeat/legal/iva.toml` — new `[legal."ley-37-1992:art-103"]`
+- `src/cadrumo/_data/registry/aeat/legal/iva.toml` — new `[legal."ley-37-1992:art-103"]`
   and `[legal."ley-37-1992:art-106"]` entries. **SHARED (additive, distinct blocks)
   with all three sibling ADRs.**
-- `src/aeat/_data/registry/aeat/modelos/303/**` — especial classification casilla /
+- `src/cadrumo/_data/registry/aeat/modelos/303/**` — especial classification casilla /
   binding metadata. **SHARED with `prorrata-sectores-diferenciados` and
   `prorrata-art104-tres-exclusions`.**
 - CLI ledger surface (`entrypoints/cli/.../_ledger.py` or a `prorrata` verb group) —
   operator declares the per-input classification. **SHARED with
   `prorrata-sectores-diferenciados` and `prorrata-art104-tres-exclusions`.**
-- `src/aeat/core/external_constants.py` — `PRORRATA_ESPECIAL_MANDATORY_MULTIPLE` already
+- `src/cadrumo/core/external_constants.py` — `PRORRATA_ESPECIAL_MANDATORY_MULTIPLE` already
   exists; read-only, no write.

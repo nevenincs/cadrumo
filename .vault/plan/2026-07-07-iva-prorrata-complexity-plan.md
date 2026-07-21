@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#iva-prorrata-complexity'
 date: '2026-07-07'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-07-07-prorrata-especial-adr]]'
@@ -12,6 +12,7 @@ related:
   - '[[2026-07-07-prorrata-art105-cinco-interrupted-adr]]'
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'
+  - '[[2026-07-10-iva-prorrata-complexity-research]]'
 ---
 
 <!-- RETIRED: W05 -->

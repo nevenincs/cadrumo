@@ -9,6 +9,7 @@ Articulo 10. Representantes.
 2. La designacion del representante debera comunicarse a la Delegacion de la Agencia Estatal de Administracion Tributaria en cuya demarcacion hayan de presentar la declaracion por el Impuesto, acompanando a la indicada comunicacion la expresa aceptacion del representante.
 3. El incumplimiento de las obligaciones a que se refieren los apartados anteriores se considerara infraccion tributaria, sancionable con multa pecuniaria fija conforme a lo establecido en la normativa general tributaria.
 Articulo 13. Rentas obtenidas en territorio espanol.
+1. Se consideran rentas obtenidas en territorio espanol las siguientes:
 h) Las rentas imputadas a los contribuyentes personas fisicas titulares de bienes inmuebles urbanos situados en territorio espanol no afectos a actividades economicas.
 Articulo 24. Base imponible.
 1. Con caracter general, la base imponible correspondiente a los rendimientos que los contribuyentes por este impuesto obtengan sin mediacion de establecimiento permanente estara constituida por su importe integro, determinado de acuerdo con las normas del texto refundido de la Ley del Impuesto sobre la Renta de las Personas Fisicas, sin que sean de aplicacion los porcentajes multiplicadores ni las reducciones.

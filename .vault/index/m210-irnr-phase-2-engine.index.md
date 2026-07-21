@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m210-irnr-phase-2-engine'
-date: '2026-07-10'
-modified: '2026-07-10'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P01-S01]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W01-P01-S02]]'
@@ -27,7 +27,6 @@ related:
   - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P08-S17]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-W02-P09-S18]]'
   - '[[2026-05-27-m210-irnr-phase-2-engine-plan]]'
-  - '[[2026-06-04-m210-irnr-phase-2-engine-adr]]'
   - '[[2026-06-04-m210-irnr-phase-2-engine-research]]'
   - '[[2026-07-09-m210-irnr-phase-2-engine-adr]]'
   - '[[2026-07-10-m210-irnr-phase-2-engine-adr]]'
@@ -44,8 +43,7 @@ Auto-generated index of all documents tagged with `#m210-irnr-phase-2-engine`.
 
 ### adr
 
-- `2026-06-04-m210-irnr-phase-2-engine-adr` - `m210-irnr-phase-2-engine` adr: `warning closeout authority alignment` | (**status:** `accepted`)
-- `2026-07-09-m210-irnr-phase-2-engine-adr` - `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `proposed`)
+- `2026-07-09-m210-irnr-phase-2-engine-adr` - `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `superseded`)
 - `2026-07-10-m210-irnr-phase-2-engine-adr` - `m210-irnr-phase-2-engine` adr: `M210 grouped-rentas and source-scope ingestion` | (**status:** `accepted`)
 
 ### audit

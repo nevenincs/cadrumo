@@ -1,0 +1,1675 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--accept-defaults",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "import",
+        "fixtures/movimientos-2026-1t.csv",
+        "--provider",
+        "csv"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Rows\t2\nEntries imported\t2\nSkipped\t0\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "71a5db2b",
+        "--classification",
+        "BUSINESS",
+        "--taxable-base",
+        "1000",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "210"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\t71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518\nDate\t2026-02-10\nAmount\t1210\nDescription\tCobro factura F-2026-001 servicios de consultoria\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "classify",
+        "e3eeac5e",
+        "--classification",
+        "BUSINESS",
+        "--category-id",
+        "material_oficina",
+        "--taxable-base",
+        "500",
+        "--iva-rate",
+        "0.21",
+        "--iva-amount",
+        "105"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "ID\te3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d\nDate\t2026-02-11\nAmount\t605\nDescription\tCompra de material de oficina proveedor local\nReview status\treviewed\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "create",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.create",
+        "notices": [],
+        "result": {
+          "applicability_guard_bypassed": false,
+          "bucket_id": "<bucket-id>",
+          "causante_ccaa": null,
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "current_calculation_revision_id": null,
+          "current_filing_record_id": null,
+          "discard_reason": null,
+          "discarded_at": null,
+          "discarded_by": null,
+          "filed_calculation_revision_id": null,
+          "filing_year": 2026,
+          "modelo": "130",
+          "name": "130-2026-1T",
+          "name_applied": null,
+          "operation": "modelo.work.create",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "revision_id": "2019-y-siguientes",
+          "short_current_calculation_revision_id": null,
+          "short_filed_calculation_revision_id": null,
+          "short_work_unit_id": "41987b138584",
+          "state": "borrador",
+          "status": "created",
+          "status_message": "New work unit created.",
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "calculate",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--binding",
+        "modelo-130-resultados-negativos-anteriores=0",
+        "--binding",
+        "modelo-130-pagos-fraccionados-anteriores=0",
+        "--binding",
+        "irpf.previous_year_economic_activity_net_income=0"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.calculate",
+        "notices": [],
+        "result": {
+          "authorization_state": null,
+          "binding_overrides": {
+            "irpf.previous_year_economic_activity_net_income": "0",
+            "modelo-130-actividad-economica-gastos-cumulative": "500",
+            "modelo-130-actividad-economica-ingresos-cumulative": "1000",
+            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
+            "modelo-130-actividad-economica-retenciones-cumulative": "0",
+            "modelo-130-pagos-fraccionados-anteriores": "0",
+            "modelo-130-resultados-negativos-anteriores": "0"
+          },
+          "calculation_revision_id": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769",
+          "casilla_values": {
+            "01": "1000",
+            "02": "500",
+            "03": "500.00",
+            "04": "100.00",
+            "05": "0",
+            "06": "0",
+            "07": "100.00",
+            "08": "0",
+            "09": "0.00",
+            "10": "0",
+            "11": "0.00",
+            "12": "100.00",
+            "13": "100.00",
+            "14": "0.00",
+            "15": "0.00",
+            "16": "0",
+            "17": "0.00",
+            "18": "0",
+            "19": "0.00",
+            "saldo-negativo-fin-periodo": "0.00"
+          },
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "deadline": {
+            "closes_on": "2026-04-20",
+            "conditional_recargo_preview": null,
+            "days_overdue": null,
+            "days_remaining": 19
+          },
+          "detail_rows": [],
+          "filed_at": null,
+          "filed_by": null,
+          "input_values_by_casilla_id": {
+            "01": "1000",
+            "02": "500",
+            "05": "0",
+            "06": "0"
+          },
+          "modality": null,
+          "modality_reason": null,
+          "observations": [
+            {
+              "casilla_id": "01",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "1000"
+            },
+            {
+              "casilla_id": "02",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "500"
+            },
+            {
+              "casilla_id": "03",
+              "formula_id": "modelo-130-rendimiento-neto",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "01",
+                "02"
+              ],
+              "operand_refs": [
+                "01",
+                "02"
+              ],
+              "operand_values": [
+                "1000",
+                "500"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "500.00"
+            },
+            {
+              "casilla_id": "04",
+              "formula_id": "modelo-130-pago-fraccionado-directa",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "03"
+              ],
+              "operand_refs": [
+                "03",
+                "irpf.direct_estimation_fractional_payment_rate"
+              ],
+              "operand_values": [
+                "500.00",
+                "20"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "05",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "06",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "07",
+              "formula_id": "modelo-130-resultado-apartado-i",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "04",
+                "05",
+                "06"
+              ],
+              "operand_refs": [
+                "04",
+                "05",
+                "06"
+              ],
+              "operand_values": [
+                "100.00",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "08",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "09",
+              "formula_id": "modelo-130-pago-fraccionado-agrario",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "percent",
+              "operand_casilla_refs": [
+                "08"
+              ],
+              "operand_refs": [
+                "08",
+                "irpf.agriculture_fractional_payment_rate"
+              ],
+              "operand_values": [
+                "0",
+                "2"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "10",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "11",
+              "formula_id": "modelo-130-resultado-apartado-ii",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "09",
+                "10"
+              ],
+              "operand_refs": [
+                "09",
+                "10"
+              ],
+              "operand_values": [
+                "0.00",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "12",
+              "formula_id": "modelo-130-suma-parciales",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "07",
+                "11"
+              ],
+              "operand_refs": [
+                "07",
+                "11"
+              ],
+              "operand_values": [
+                "100.00",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "13",
+              "formula_id": "modelo-130-minoracion-rendimientos-netos",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "if_then_else",
+              "operand_casilla_refs": [],
+              "operand_refs": [
+                "irpf.previous_year_economic_activity_net_income"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "14",
+              "formula_id": "modelo-130-neto-tras-minoracion",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "12",
+                "13"
+              ],
+              "operand_refs": [
+                "12",
+                "13"
+              ],
+              "operand_values": [
+                "100.00",
+                "100.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "15",
+              "formula_id": "modelo-130-resultados-negativos-anteriores-cap",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "min",
+              "operand_casilla_refs": [
+                "14"
+              ],
+              "operand_refs": [
+                "modelo-130-resultados-negativos-anteriores",
+                "14"
+              ],
+              "operand_values": [
+                "0",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "16",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "17",
+              "formula_id": "modelo-130-diferencia",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "14",
+                "15",
+                "16"
+              ],
+              "operand_refs": [
+                "14",
+                "15",
+                "16"
+              ],
+              "operand_values": [
+                "0.00",
+                "0.00",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "18",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "19",
+              "formula_id": "modelo-130-resultado-final",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "17",
+                "18"
+              ],
+              "operand_refs": [
+                "17",
+                "18"
+              ],
+              "operand_values": [
+                "0.00",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "saldo-negativo-fin-periodo",
+              "formula_id": "modelo-130-saldo-negativo-fin-periodo",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "17"
+              ],
+              "operand_refs": [
+                "17"
+              ],
+              "operand_values": [
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            }
+          ],
+          "operation": "modelo.work.calculate",
+          "relation_overrides": {},
+          "result_summary": [
+            {
+              "casilla_id": "03",
+              "label": "Net yield",
+              "localized_labels": {
+                "ca": "Rendiment net",
+                "en": "Net yield",
+                "hu": "Nettó jövedelem"
+              },
+              "role": "key_figure",
+              "value": "500.00"
+            },
+            {
+              "casilla_id": "04",
+              "label": "Fractional payment amount",
+              "localized_labels": {
+                "ca": "Import del pagament fraccionat",
+                "en": "Fractional payment amount",
+                "hu": "Részletfizetés összege"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "07",
+              "label": "Partial result of Section I",
+              "localized_labels": {
+                "ca": "Resultat parcial de l'apartat I",
+                "en": "Partial result of Section I",
+                "hu": "I. rész részeredménye"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "09",
+              "label": "Fractional payment amount",
+              "localized_labels": {
+                "ca": "Import del pagament fraccionat",
+                "en": "Fractional payment amount",
+                "hu": "Részletfizetés összege"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "11",
+              "label": "Partial result of Section II",
+              "localized_labels": {
+                "ca": "Resultat parcial de l'apartat II",
+                "en": "Partial result of Section II",
+                "hu": "II. rész részeredménye"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "12",
+              "label": "Sum of partial results",
+              "localized_labels": {
+                "ca": "Suma dels resultats parcials",
+                "en": "Sum of partial results",
+                "hu": "Részeredmények összege"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "13",
+              "label": "Reduction for net yields",
+              "localized_labels": {
+                "ca": "Minoració per rendiments nets",
+                "en": "Reduction for net yields",
+                "hu": "Nettó jövedelem miatti csökkentés"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "14",
+              "label": "Net amount after reduction",
+              "localized_labels": {
+                "ca": "Import net després de la minoració",
+                "en": "Net amount after reduction",
+                "hu": "Csökkentés utáni nettó összeg"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "17",
+              "label": "Difference",
+              "localized_labels": {
+                "ca": "Diferència",
+                "en": "Difference",
+                "hu": "Különbözet"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "19",
+              "label": "Final result",
+              "localized_labels": {
+                "ca": "Resultat final",
+                "en": "Final result",
+                "hu": "Végső eredmény"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            }
+          ],
+          "saved": true,
+          "saved_confirmation": "Saved as draft calculation revision 0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769`.",
+          "state": "borrador",
+          "superseded_at": null,
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "verified_at": null,
+          "verified_by": null,
+          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "revision",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.revision",
+        "notices": [],
+        "result": {
+          "binding_overrides": {
+            "irpf.previous_year_economic_activity_net_income": "0",
+            "modelo-130-actividad-economica-gastos-cumulative": "500",
+            "modelo-130-actividad-economica-ingresos-cumulative": "1000",
+            "modelo-130-actividad-economica-ingresos-taxable-base-cumulative": "1000",
+            "modelo-130-actividad-economica-rendimiento-neto-cumulative": "1000",
+            "modelo-130-actividad-economica-retenciones-cumulative": "0",
+            "modelo-130-pagos-fraccionados-anteriores": "0",
+            "modelo-130-resultados-negativos-anteriores": "0"
+          },
+          "calculation_revision_id": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769",
+          "casilla_values": {
+            "01": "1000",
+            "02": "500",
+            "03": "500.00",
+            "04": "100.00",
+            "05": "0",
+            "06": "0",
+            "07": "100.00",
+            "08": "0",
+            "09": "0.00",
+            "10": "0",
+            "11": "0.00",
+            "12": "100.00",
+            "13": "100.00",
+            "14": "0.00",
+            "15": "0.00",
+            "16": "0",
+            "17": "0.00",
+            "18": "0",
+            "19": "0.00",
+            "saldo-negativo-fin-periodo": "0.00"
+          },
+          "created_at": "2026-04-01T09:00:00+00:00",
+          "detail_rows": [],
+          "filed_at": null,
+          "filed_by": null,
+          "input_values_by_casilla_id": {
+            "01": "1000",
+            "02": "500",
+            "05": "0",
+            "06": "0"
+          },
+          "modality": null,
+          "modality_reason": null,
+          "observations": [
+            {
+              "casilla_id": "01",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "1000"
+            },
+            {
+              "casilla_id": "02",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95",
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "500"
+            },
+            {
+              "casilla_id": "03",
+              "formula_id": "modelo-130-rendimiento-neto",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "01",
+                "02"
+              ],
+              "operand_refs": [
+                "01",
+                "02"
+              ],
+              "operand_values": [
+                "1000",
+                "500"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "500.00"
+            },
+            {
+              "casilla_id": "04",
+              "formula_id": "modelo-130-pago-fraccionado-directa",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "03"
+              ],
+              "operand_refs": [
+                "03",
+                "irpf.direct_estimation_fractional_payment_rate"
+              ],
+              "operand_values": [
+                "500.00",
+                "20"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "05",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "06",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "07",
+              "formula_id": "modelo-130-resultado-apartado-i",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "04",
+                "05",
+                "06"
+              ],
+              "operand_refs": [
+                "04",
+                "05",
+                "06"
+              ],
+              "operand_values": [
+                "100.00",
+                "0",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "08",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "09",
+              "formula_id": "modelo-130-pago-fraccionado-agrario",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "percent",
+              "operand_casilla_refs": [
+                "08"
+              ],
+              "operand_refs": [
+                "08",
+                "irpf.agriculture_fractional_payment_rate"
+              ],
+              "operand_values": [
+                "0",
+                "2"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "10",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "11",
+              "formula_id": "modelo-130-resultado-apartado-ii",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "09",
+                "10"
+              ],
+              "operand_refs": [
+                "09",
+                "10"
+              ],
+              "operand_values": [
+                "0.00",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "12",
+              "formula_id": "modelo-130-suma-parciales",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "07",
+                "11"
+              ],
+              "operand_refs": [
+                "07",
+                "11"
+              ],
+              "operand_values": [
+                "100.00",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "13",
+              "formula_id": "modelo-130-minoracion-rendimientos-netos",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "if_then_else",
+              "operand_casilla_refs": [],
+              "operand_refs": [
+                "irpf.previous_year_economic_activity_net_income"
+              ],
+              "operand_values": [
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "14",
+              "formula_id": "modelo-130-neto-tras-minoracion",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "12",
+                "13"
+              ],
+              "operand_refs": [
+                "12",
+                "13"
+              ],
+              "operand_values": [
+                "100.00",
+                "100.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "15",
+              "formula_id": "modelo-130-resultados-negativos-anteriores-cap",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "min",
+              "operand_casilla_refs": [
+                "14"
+              ],
+              "operand_refs": [
+                "modelo-130-resultados-negativos-anteriores",
+                "14"
+              ],
+              "operand_values": [
+                "0",
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "16",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "17",
+              "formula_id": "modelo-130-diferencia",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "14",
+                "15",
+                "16"
+              ],
+              "operand_refs": [
+                "14",
+                "15",
+                "16"
+              ],
+              "operand_values": [
+                "0.00",
+                "0.00",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "18",
+              "formula_id": null,
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": null,
+              "operand_casilla_refs": [],
+              "operand_refs": [],
+              "operand_values": [],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0"
+            },
+            {
+              "casilla_id": "19",
+              "formula_id": "modelo-130-resultado-final",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "subtract",
+              "operand_casilla_refs": [
+                "17",
+                "18"
+              ],
+              "operand_refs": [
+                "17",
+                "18"
+              ],
+              "operand_values": [
+                "0.00",
+                "0"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "saldo-negativo-fin-periodo",
+              "formula_id": "modelo-130-saldo-negativo-fin-periodo",
+              "legal_refs": [
+                "rd-439-2007:art-110",
+                "orden-eha-672-2007:art-1",
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-95"
+              ],
+              "op": "max",
+              "operand_casilla_refs": [
+                "17"
+              ],
+              "operand_refs": [
+                "17"
+              ],
+              "operand_values": [
+                "0.00"
+              ],
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ],
+              "value": "0.00"
+            }
+          ],
+          "operation": "modelo.work.revision",
+          "relation_overrides": {},
+          "result_summary": [
+            {
+              "casilla_id": "03",
+              "label": "Net yield",
+              "localized_labels": {
+                "ca": "Rendiment net",
+                "en": "Net yield",
+                "hu": "Nettó jövedelem"
+              },
+              "role": "key_figure",
+              "value": "500.00"
+            },
+            {
+              "casilla_id": "04",
+              "label": "Fractional payment amount",
+              "localized_labels": {
+                "ca": "Import del pagament fraccionat",
+                "en": "Fractional payment amount",
+                "hu": "Részletfizetés összege"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "07",
+              "label": "Partial result of Section I",
+              "localized_labels": {
+                "ca": "Resultat parcial de l'apartat I",
+                "en": "Partial result of Section I",
+                "hu": "I. rész részeredménye"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "09",
+              "label": "Fractional payment amount",
+              "localized_labels": {
+                "ca": "Import del pagament fraccionat",
+                "en": "Fractional payment amount",
+                "hu": "Részletfizetés összege"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "11",
+              "label": "Partial result of Section II",
+              "localized_labels": {
+                "ca": "Resultat parcial de l'apartat II",
+                "en": "Partial result of Section II",
+                "hu": "II. rész részeredménye"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "12",
+              "label": "Sum of partial results",
+              "localized_labels": {
+                "ca": "Suma dels resultats parcials",
+                "en": "Sum of partial results",
+                "hu": "Részeredmények összege"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "13",
+              "label": "Reduction for net yields",
+              "localized_labels": {
+                "ca": "Minoració per rendiments nets",
+                "en": "Reduction for net yields",
+                "hu": "Nettó jövedelem miatti csökkentés"
+              },
+              "role": "key_figure",
+              "value": "100.00"
+            },
+            {
+              "casilla_id": "14",
+              "label": "Net amount after reduction",
+              "localized_labels": {
+                "ca": "Import net després de la minoració",
+                "en": "Net amount after reduction",
+                "hu": "Csökkentés utáni nettó összeg"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "17",
+              "label": "Difference",
+              "localized_labels": {
+                "ca": "Diferència",
+                "en": "Difference",
+                "hu": "Különbözet"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            },
+            {
+              "casilla_id": "19",
+              "label": "Final result",
+              "localized_labels": {
+                "ca": "Resultat final",
+                "en": "Final result",
+                "hu": "Végső eredmény"
+              },
+              "role": "key_figure",
+              "value": "0.00"
+            }
+          ],
+          "state": "borrador",
+          "superseded_at": null,
+          "updated_at": "2026-04-01T09:00:00+00:00",
+          "verified_at": null,
+          "verified_by": null,
+          "work_unit_id": "98001b25b2e8cda589a3c69cf943ade7698965c32334048724fa41987b138584"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "verify",
+        "--modelo",
+        "130",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.verify",
+        "notices": [
+          {
+            "code": "modelo.work.verify.finding.advisory",
+            "context": {
+              "kind": "advisory",
+              "legal_refs": "rd-1065-2007:art-9",
+              "severity": "warning",
+              "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
+            },
+            "message": "cross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=100 year=2025 period=0A origin=previous_filing_binding. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.",
+            "severity": "warning",
+            "suggestion": "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared."
+          },
+          {
+            "code": "modelo.work.verify.finding.advisory",
+            "context": {
+              "kind": "advisory",
+              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
+              "severity": "warning",
+              "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
+            },
+            "message": "output VAT transaction '71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+            "severity": "warning",
+            "suggestion": "Advisory only: keep issued/sales invoice support for ledger row 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518 --attachment-id ATTACHMENT_ID`, then rerun verification."
+          },
+          {
+            "code": "modelo.work.verify.finding.advisory",
+            "context": {
+              "kind": "advisory",
+              "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
+              "severity": "warning",
+              "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
+            },
+            "message": "deductible VAT transaction 'e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+            "severity": "warning",
+            "suggestion": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification."
+          },
+          {
+            "code": "modelo.work.verify.next_action_granted",
+            "context": null,
+            "message": "Verification passed. Export the filing artefact with `aeat app modelo export`.",
+            "severity": "info",
+            "suggestion": "aeat app modelo export"
+          }
+        ],
+        "result": {
+          "calculation_revision_id": "0e0ccf423d63a8179381936685e304a5a64573dccdfba6061678b4a2c8123769",
+          "completeness_status": "complete",
+          "findings": [
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "rd-1065-2007:art-9"
+              ],
+              "message": "cross-period dependency scoped out as no-prior-obligation (pre-activity): modelo=100 year=2025 period=0A origin=previous_filing_binding. The period falls strictly before the operator-declared activity-start date 2026-01-01, which has not yet been corroborated against an AEAT censo snapshot.",
+              "next_action": "Confirm the recorded activity-start date is correct. Once the live AEAT censo read is available, the date will be corroborated and this advisory cleared.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "ley-37-1992:art-97",
+                "rd-1619-2012:art-2"
+              ],
+              "message": "output VAT transaction '71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+              "next_action": "Advisory only: keep issued/sales invoice support for ledger row 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518. There is currently no dedicated public CLI path that mints issued-invoice evidence like `aeat app ledger evidence add` does for purchase invoices. If you already have a secure attachment id, link it with `aeat app ledger attach 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518 --attachment-id ATTACHMENT_ID`, then rerun verification.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            },
+            {
+              "casilla_id": null,
+              "expectation_id": null,
+              "kind": "advisory",
+              "legal_refs": [
+                "ley-37-1992:art-97",
+                "rd-1619-2012:art-2"
+              ],
+              "message": "deductible VAT transaction 'e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d' declares a positive IVA quota but carries no linked evidence (no purchase invoice and no attachment); attach the supporting document before filing.",
+              "next_action": "Register the supplier invoice with `aeat app ledger evidence add PATH`, attach it with `aeat app ledger attach e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d --purchase-invoice-evidence-id EVIDENCE_ID`, then rerun verification.",
+              "severity": "warning",
+              "source_refs": [
+                "aeat-dr-130-2019-v12",
+                "aeat-modelo-130-instructions"
+              ]
+            }
+          ],
+          "granted_verificado_completo": true,
+          "missing_required_casilla_ids": [],
+          "operation": "modelo.work.verify",
+          "resolved_casilla_ids": [],
+          "run_at": "2026-04-01T09:00:00+00:00",
+          "verification_report_id": "705d3e7620a401d0ec4bf5248909999586355ee888ce174b9ab9caff3ae3ee39",
+          "verified_by": "docs-sequence-sandbox"
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "modelo-130-review-chain"
+}

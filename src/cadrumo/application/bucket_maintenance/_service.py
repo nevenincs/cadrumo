@@ -1,8 +1,7 @@
 """``BucketMaintenanceService`` composition implementation.
 
 The service delegates every cross-store mutation to its existing
-single-writer primitive (see the ADR
-``2026-06-03-cli-workflow-redesign-adr``). It contributes the
+single-writer primitive. It contributes the
 bucket-maintenance audit-event emission that the inner primitives do
 not own; the inner primitives keep emitting their lifecycle events
 (``PROFILE_RENAMED`` etc.) so each operator action surfaces both
@@ -22,6 +21,8 @@ from __future__ import annotations
 import base64
 import json
 import secrets
+from collections.abc import Generator, Iterable
+from contextlib import ExitStack, contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -32,7 +33,7 @@ from ...adapters.persistence.storage import (
     BUCKET_DB_DIRNAME,
     StorageCustodyProfile,
 )
-from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
+from ...adapters.persistence.storage.bucket import acquire_lock, release_lock
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.product_identity import PRODUCT_IDENTITY
 from ...core.time import now
@@ -47,8 +48,14 @@ from ...domain.buckets import (
     append_bucket_event,
     derive_bucket_event_id,
 )
+from ...domain.user_profile import ProfileNotFoundError, UserProfileStatus
+from .._config_reset_repository import (
+    ConfigResetJournalError,
+    ConfigResetJournalRepository,
+)
 from ..user_profile import (
     UnsupportedBundleSchemaVersionError,
+    active_profile_pointer_transaction,
     delete_profile_with_lifecycle_span,
     deserialize_profile_bundle,
     missing_filing_baseline_flags,
@@ -66,8 +73,10 @@ from ..workflow import read_profile_bucket_by_id
 from ._contracts import (
     ArchiveBucketCommand,
     ArchiveBucketResult,
+    AssessBucketDeletionCommand,
     BrowseBucketCommand,
     BrowseBucketResult,
+    BucketDeletionAssessment,
     BucketDiskUsageSubdirRow,
     BucketNamespaceInventoryRow,
     DeleteBucketCommand,
@@ -85,7 +94,11 @@ from ._contracts import (
     RestoreBucketCommand,
     RestoreBucketResult,
 )
-from ._manifest_digest import compute_manifest_digest
+from ._manifest_digest import (
+    compute_bucket_deletion_fingerprint,
+    compute_manifest_digest,
+    validated_bucket_deletion_paths,
+)
 
 if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
     from datetime import datetime
@@ -102,36 +115,18 @@ _RESTORE_PAYLOAD_VERSION = 1
 _EXPORT_PAYLOAD_VERSION = 1
 _IMPORT_PAYLOAD_VERSION = 1
 _ARCHIVE_SCHEMA_VERSION = 3
-
-#: Oldest sealed-archive schema version the import path keeps readable.
-#: Starts at the current version (no released archives exist below it);
-#: moves forward only through a superseding accepted ADR
-#: (``2026-07-08-released-data-durability-adr``).
-_ARCHIVE_DURABILITY_FLOOR = 3
 _RECOVERY_WRAP_SALT_BYTES = 16
 
 
-def ensure_archive_schema_readable(archive_schema_version: int) -> None:
+def ensure_archive_schema_supported(archive_schema_version: int) -> None:
     """Refuse a sealed-archive version this application cannot restore.
 
-    The gate is a ceiling with a durability floor, not an equality: a
-    version above ``_ARCHIVE_SCHEMA_VERSION`` was exported by a newer
-    application and is refused as such, and a version below
-    ``_ARCHIVE_DURABILITY_FLOOR`` predates the durability guarantee.
-
-    Unlike the secure-object and bundle tiers, the archive tier carries
-    NO upgrade dispatch: this is a range gate only, and nothing here
-    transforms an older archive layout on restore. The lineage gate
-    therefore pins ``_ARCHIVE_DURABILITY_FLOOR == _ARCHIVE_SCHEMA_VERSION``:
-    raising the current version forces an explicit decision in the same
-    change — raise the floor too (dropping older archives, the pre-release
-    posture) or land a version-aware reader/restore transform and widen
-    the gate then. A floor held below current without that machinery
-    would pass this gate green while restore misreads the old layout.
+    Only the current archive layout is restorable. A higher version is
+    identified as written by a newer application; a lower version is
+    unsupported and is never interpreted as the current layout.
 
     Raises:
-        BucketImportError: When the version is above the ceiling or below
-            the durability floor.
+        BucketImportError: When the version is not current.
     """
     if archive_schema_version > _ARCHIVE_SCHEMA_VERSION:
         raise BucketImportError(
@@ -141,7 +136,7 @@ def ensure_archive_schema_readable(archive_schema_version: int) -> None:
                 "max_supported": str(_ARCHIVE_SCHEMA_VERSION),
             },
         )
-    if archive_schema_version < _ARCHIVE_DURABILITY_FLOOR:
+    if archive_schema_version < _ARCHIVE_SCHEMA_VERSION:
         raise BucketImportError(
             translated_message="application.bucket_maintenance.errors.unsupported_archive_schema_version",
             context={"archive_schema_version": str(archive_schema_version)},
@@ -187,7 +182,7 @@ class BucketMaintenanceService:
 
     @staticmethod
     def _event_repository_for_bucket(bucket_id: str) -> BucketEventHistoryRepository:
-        """Return a :class:`BucketEventHistoryRepository` bound to ``bucket_id``'s database.
+        """Return an event repository bound to a surviving target bucket.
 
         The maintenance event for a surviving bucket belongs in that
         bucket's own event history — the same binding principle the
@@ -202,6 +197,72 @@ class BucketMaintenanceService:
         )
 
         return BucketEventHistoryRepository(objects=secure_object_repository_for_bucket(bucket_id))
+
+    @contextmanager
+    def _mutation_target_lock(
+        self,
+        *,
+        root: Path,
+        bucket_id: str,
+        wait_seconds: float,
+        missing_ok: bool = False,
+    ) -> Generator[None]:
+        try:
+            paths = validated_bucket_deletion_paths(
+                root=root,
+                bucket_id=bucket_id,
+            )
+        except FileNotFoundError as exc:
+            if missing_ok:
+                yield
+                return
+            raise ProfileNotFoundError(
+                translated_message="application.user_profile.errors.no_active_profile_selected",
+                context={"bucket_id": bucket_id},
+            ) from exc
+        except ValueError as exc:
+            raise BucketDeleteRefusedError(
+                "bucket mutation lock refuses a linked target",
+                context={"bucket_id": bucket_id},
+            ) from exc
+        acquire_lock(paths, wait_seconds=wait_seconds)
+        try:
+            yield
+        finally:
+            release_lock(paths)
+
+    @contextmanager
+    def deletion_target_locks(
+        self,
+        *,
+        root: Path,
+        bucket_ids: Iterable[str],
+        wait_seconds: float,
+    ) -> Generator[None]:
+        """Hold existing deletion targets in stable UUID order.
+
+        Missing targets, including a dangling active-pointer identifier, are
+        not materialized merely to create a lockfile. Existing targets are
+        validated against link redirection before their canonical bucket
+        lockfiles are acquired.
+        """
+        with ExitStack() as stack:
+            for bucket_id in sorted(set(bucket_ids)):
+                try:
+                    paths = validated_bucket_deletion_paths(
+                        root=root,
+                        bucket_id=bucket_id,
+                    )
+                except FileNotFoundError:
+                    continue
+                except ValueError as exc:
+                    raise BucketDeleteRefusedError(
+                        "bucket deletion lock refuses a linked target",
+                        context={"bucket_id": bucket_id},
+                    ) from exc
+                acquire_lock(paths, wait_seconds=wait_seconds)
+                stack.callback(release_lock, paths)
+            yield
 
     def rename(self, command: RenameBucketCommand) -> RenameBucketResult:
         """Relabel the bucket identified by ``command.bucket_id``.
@@ -227,38 +288,56 @@ class BucketMaintenanceService:
         Returns:
             :class:`RenameBucketResult`: The result of the rename operation.
         """
-        pointer = read_profile_bucket_by_id(command.bucket_id)
-        if pointer is None:
-            from ...domain.user_profile import ProfileNotFoundError
+        from ...core.config import load_settings
 
-            raise ProfileNotFoundError(
-                translated_message="application.user_profile.errors.no_active_profile_selected",
-                context={"bucket_id": command.bucket_id},
-            )
-        previous_label = pointer.label
-        record = rename_profile(profile_id=command.bucket_id, new_label=command.new_label)
-        occurred_at = now()
-        event = BucketEvent(
-            event_id=derive_bucket_event_id(
-                bucket_id=command.bucket_id,
-                event_type=BucketEventType.BUCKET_RENAMED,
-                occurred_at=occurred_at,
-                actor="bucket-maintenance",
-                object_type=BucketEventObjectType.BUCKET,
-                object_id=command.bucket_id,
-                payload={"previous_label": previous_label, "new_label": record.display_name},
-            ),
+        settings = load_settings()
+        with self._mutation_target_lock(
+            root=settings.cadrumo_local_storage_root,
             bucket_id=command.bucket_id,
-            event_type=BucketEventType.BUCKET_RENAMED,
-            occurred_at=occurred_at,
-            actor="bucket-maintenance",
-            object_type=BucketEventObjectType.BUCKET,
-            object_id=command.bucket_id,
-            payload_version=_RENAME_PAYLOAD_VERSION,
-            payload={"previous_label": previous_label, "new_label": record.display_name},
-        )
-        repository = self._event_repository or self._event_repository_for_bucket(command.bucket_id)
-        repository.save(append_bucket_event(repository.load(), event))
+            wait_seconds=settings.cadrumo_file_lock_timeout_s,
+        ):
+            pointer = read_profile_bucket_by_id(command.bucket_id)
+            if pointer is None:
+                raise ProfileNotFoundError(
+                    translated_message="application.user_profile.errors.no_active_profile_selected",
+                    context={"bucket_id": command.bucket_id},
+                )
+            previous_label = pointer.label
+            with profile_storage_session(command.bucket_id):
+                record = rename_profile(
+                    profile_id=command.bucket_id,
+                    new_label=command.new_label,
+                )
+                occurred_at = now()
+                event = BucketEvent(
+                    event_id=derive_bucket_event_id(
+                        bucket_id=command.bucket_id,
+                        event_type=BucketEventType.BUCKET_RENAMED,
+                        occurred_at=occurred_at,
+                        actor="bucket-maintenance",
+                        object_type=BucketEventObjectType.BUCKET,
+                        object_id=command.bucket_id,
+                        payload={
+                            "previous_label": previous_label,
+                            "new_label": record.display_name,
+                        },
+                    ),
+                    bucket_id=command.bucket_id,
+                    event_type=BucketEventType.BUCKET_RENAMED,
+                    occurred_at=occurred_at,
+                    actor="bucket-maintenance",
+                    object_type=BucketEventObjectType.BUCKET,
+                    object_id=command.bucket_id,
+                    payload_version=_RENAME_PAYLOAD_VERSION,
+                    payload={
+                        "previous_label": previous_label,
+                        "new_label": record.display_name,
+                    },
+                )
+                repository = self._event_repository or self._event_repository_for_bucket(
+                    command.bucket_id,
+                )
+                repository.save(append_bucket_event(repository.load(), event))
         return RenameBucketResult(
             bucket_id=command.bucket_id,
             previous_label=previous_label,
@@ -267,6 +346,22 @@ class BucketMaintenanceService:
         )
 
     def delete(self, command: DeleteBucketCommand) -> DeleteBucketResult:
+        """Delete one bucket under pointer-first canonical mutation locks."""
+        from ...core.config import load_settings
+
+        settings = load_settings()
+        with (
+            active_profile_pointer_transaction(settings.cadrumo_local_storage_root),
+            self._mutation_target_lock(
+                root=settings.cadrumo_local_storage_root,
+                bucket_id=command.bucket_id,
+                wait_seconds=settings.cadrumo_file_lock_timeout_s,
+                missing_ok=command.reset_operation_id is not None,
+            ),
+        ):
+            return self._delete_locked(command)
+
+    def _delete_locked(self, command: DeleteBucketCommand) -> DeleteBucketResult:
         """Destructively erase the bucket identified by ``command.bucket_id``.
 
         Composes the existing two-step erase pattern: soft tombstone
@@ -274,17 +369,29 @@ class BucketMaintenanceService:
         active-profile pointer, writes the manifest lifecycle status,
         tombstones the encrypted record, emits ``PROFILE_TOMBSTONED``)
         followed by hard directory removal via
-        :func:`remove_profile_bucket_directory`. The ``BUCKET_DELETED``
-        event is emitted into the bucket's own history between the
-        soft and hard steps so the operator's verb invocation is
-        recorded before the storage is gone.
+        :func:`remove_profile_bucket_directory`. Ordinary deletion writes
+        ``BUCKET_DELETED`` through the injected repository or the default
+        repository bound to the active bucket. Reset-owned deletion uses only
+        an explicitly injected event repository; otherwise its external reset
+        journal remains the surviving ownership evidence and no ambient
+        post-delete event route is opened.
 
         Refuses unless ``command.confirmed`` is ``True``; refuses if
         the target bucket is the active profile (the operator must
-        switch profiles first, per the 2026-05-15 amendment to the
-        bucket ADR). Both refusals are service-boundary contracts,
+        switch profiles first). Both refusals are service-boundary contracts,
         not CLI ergonomics — a programmatic caller observes the same
         guarantees.
+
+        Retention and the deletion fingerprint are reassessed before deletion.
+        An expected-fingerprint mismatch is refused before lifecycle mutation.
+        Supplied operation context must match the journal's target snapshot,
+        approved retention decision, deletion marker, and deleting/deleted
+        phase. It is propagated to the result and to any explicitly routed
+        deletion event.
+
+        An already-absent target is accepted only when the caller supplies an
+        operation identifier and expected fingerprint that match a durable
+        deleting marker in the external reset journal.
 
         Returns:
             :class:`DeleteBucketResult`: The result of the delete operation.
@@ -301,21 +408,65 @@ class BucketMaintenanceService:
                 translated_message="application.bucket_maintenance.errors.delete_active_bucket",
                 context={"bucket_id": command.bucket_id},
             )
-        pointer = read_profile_bucket_by_id(command.bucket_id)
-        if pointer is None:
+        assessment = self.assess_deletion(AssessBucketDeletionCommand(bucket_id=command.bucket_id))
+        if command.reset_operation_id is not None and command.expected_deletion_fingerprint is not None:
+            try:
+                ConfigResetJournalRepository().verify_deletion_ownership(
+                    operation_id=command.reset_operation_id,
+                    bucket_id=command.bucket_id,
+                    expected_fingerprint=command.expected_deletion_fingerprint,
+                )
+            except ConfigResetJournalError as exc:
+                raise BucketDeleteRefusedError(
+                    "reset journal does not own the requested bucket deletion",
+                    context={
+                        "bucket_id": command.bucket_id,
+                        "reset_operation_id": command.reset_operation_id,
+                        "expected_fingerprint": command.expected_deletion_fingerprint,
+                    },
+                ) from exc
+        if not assessment.exists:
+            if command.reset_operation_id is not None and command.expected_deletion_fingerprint is not None:
+                return DeleteBucketResult(
+                    bucket_id=command.bucket_id,
+                    occurred_at=now(),
+                    deletion_fingerprint=command.expected_deletion_fingerprint,
+                    reset_operation_id=command.reset_operation_id,
+                    already_absent=True,
+                )
             from ...domain.user_profile import ProfileNotFoundError
 
             raise ProfileNotFoundError(
                 translated_message="application.user_profile.errors.no_active_profile_selected",
                 context={"bucket_id": command.bucket_id},
             )
-        previous_label = pointer.label
-        assessment = self._assess_retention_floor(command.bucket_id)
-        override_used = self._enforce_retention_floor(command, assessment)
-        latest_safe_erase_date = assessment.latest_safe_erase_date
+        fingerprint = assessment.fingerprint
+        retention = assessment.retention
+        assert fingerprint is not None
+        assert retention is not None
+        if (
+            command.expected_deletion_fingerprint is not None
+            and command.expected_deletion_fingerprint != fingerprint.digest
+        ):
+            raise BucketDeleteRefusedError(
+                "bucket content changed after reset deletion assessment",
+                context={
+                    "bucket_id": command.bucket_id,
+                    "reset_operation_id": command.reset_operation_id or "",
+                    "expected_fingerprint": command.expected_deletion_fingerprint,
+                    "observed_fingerprint": fingerprint.digest,
+                },
+            )
+        previous_label = assessment.label
+        assert previous_label is not None
+        override_used = self._enforce_retention_floor(command, retention)
+        latest_safe_erase_date = retention.latest_safe_erase_date
         delete_profile_with_lifecycle_span(command.bucket_id)
         occurred_at = now()
         payload: dict[str, str] = {"previous_label": previous_label}
+        if command.reset_operation_id is not None:
+            payload["reset_operation_id"] = command.reset_operation_id
+            payload["deletion_fingerprint"] = fingerprint.digest
         if override_used:
             # The override is a legally-material operator decision (erasing a
             # record the law still requires kept); record the acknowledgement,
@@ -344,8 +495,13 @@ class BucketMaintenanceService:
             payload_version=_DELETE_PAYLOAD_VERSION,
             payload=payload,
         )
-        repository = self._event_repository or BucketEventHistoryRepository()
-        repository.save(append_bucket_event(repository.load(), event))
+        if command.reset_operation_id is None:
+            repository = self._event_repository or BucketEventHistoryRepository()
+            repository.save(append_bucket_event(repository.load(), event))
+        elif self._event_repository is not None:
+            self._event_repository.save(
+                append_bucket_event(self._event_repository.load(), event),
+            )
         remove_profile_bucket_directory(command.bucket_id)
         return DeleteBucketResult(
             bucket_id=command.bucket_id,
@@ -353,9 +509,69 @@ class BucketMaintenanceService:
             occurred_at=occurred_at,
             retention_override_used=override_used,
             latest_safe_erase_date=latest_safe_erase_date,
+            deletion_fingerprint=fingerprint.digest,
+            reset_operation_id=command.reset_operation_id,
+        )
+
+    def assess_deletion(
+        self,
+        command: AssessBucketDeletionCommand,
+    ) -> BucketDeletionAssessment:
+        """Assess one explicit bucket target without lifecycle mutation.
+
+        A missing bucket directory produces an absent assessment. An existing
+        bucket with an unregistered or unreadable manifest is refused. A valid
+        existing bucket produces its label, lifecycle status, retention
+        information, and deletion fingerprint.
+        """
+        from ...core.config import load_settings
+
+        root = load_settings().cadrumo_local_storage_root
+        try:
+            validated_bucket_deletion_paths(root=root, bucket_id=command.bucket_id)
+        except FileNotFoundError:
+            return BucketDeletionAssessment(bucket_id=command.bucket_id, exists=False)
+        except ValueError as exc:
+            raise BucketDeleteRefusedError(
+                "bucket deletion assessment refuses a linked bucket root",
+                context={"bucket_id": command.bucket_id},
+            ) from exc
+        pointer = read_profile_bucket_by_id(command.bucket_id)
+        if pointer is None:
+            raise BucketDeleteRefusedError(
+                "bucket directory exists without a readable registered manifest",
+                context={"bucket_id": command.bucket_id},
+            )
+        retention = self._assess_retention_floor(command.bucket_id)
+        fingerprint = compute_bucket_deletion_fingerprint(
+            root=root,
+            bucket_id=command.bucket_id,
+        )
+        return BucketDeletionAssessment(
+            bucket_id=command.bucket_id,
+            exists=True,
+            label=pointer.label,
+            status=pointer.status,
+            fingerprint=fingerprint,
+            retention=retention,
         )
 
     def archive(self, command: ArchiveBucketCommand) -> ArchiveBucketResult:
+        """Archive one bucket under pointer-first canonical mutation locks."""
+        from ...core.config import load_settings
+
+        settings = load_settings()
+        with (
+            active_profile_pointer_transaction(settings.cadrumo_local_storage_root),
+            self._mutation_target_lock(
+                root=settings.cadrumo_local_storage_root,
+                bucket_id=command.bucket_id,
+                wait_seconds=settings.cadrumo_file_lock_timeout_s,
+            ),
+        ):
+            return self._archive_locked(command)
+
+    def _archive_locked(self, command: ArchiveBucketCommand) -> ArchiveBucketResult:
         """Move the bucket identified by ``command.bucket_id`` into reversible dormancy.
 
         Composes :func:`~application.user_profile.reactivate_profile_with_lifecycle_span`'s
@@ -434,6 +650,18 @@ class BucketMaintenanceService:
         return ArchiveBucketResult(bucket_id=command.bucket_id, label=label, occurred_at=occurred_at)
 
     def restore(self, command: RestoreBucketCommand) -> RestoreBucketResult:
+        """Restore one bucket under its canonical mutation lock."""
+        from ...core.config import load_settings
+
+        settings = load_settings()
+        with self._mutation_target_lock(
+            root=settings.cadrumo_local_storage_root,
+            bucket_id=command.bucket_id,
+            wait_seconds=settings.cadrumo_file_lock_timeout_s,
+        ):
+            return self._restore_locked(command)
+
+    def _restore_locked(self, command: RestoreBucketCommand) -> RestoreBucketResult:
         """Bring the archived bucket identified by ``command.bucket_id`` back to active.
 
         Composes :func:`~application.user_profile.reactivate_profile_with_lifecycle_span`
@@ -457,7 +685,7 @@ class BucketMaintenanceService:
                 translated_message="application.user_profile.errors.no_active_profile_selected",
                 context={"bucket_id": command.bucket_id},
             )
-        if pointer.status is not BucketLifecycleStatus.TOMBSTONED:
+        if pointer.status is not UserProfileStatus.TOMBSTONED:
             raise BucketRestoreRefusedError(
                 translated_message="application.bucket_maintenance.errors.restore_not_archived",
                 context={"bucket_id": command.bucket_id},
@@ -553,8 +781,7 @@ class BucketMaintenanceService:
 
         Key-level browse (returning operator-readable keys + classification
         per row) requires decryption and a ``SensitivityClass`` redaction
-        policy; deferred to a follow-up Step per the composition-pattern
-        ADR.
+        policy; not yet implemented.
         """
         from ...adapters.persistence.storage.runtime_repository import (
             secure_object_repository_for_active_bucket,
@@ -756,7 +983,7 @@ class BucketMaintenanceService:
 
         contents = read_sealed_archive(command.source_path)
         header = contents.header
-        ensure_archive_schema_readable(header.archive_schema_version)
+        ensure_archive_schema_supported(header.archive_schema_version)
         existing = read_profile_bucket_by_id(header.bucket_id)
         if existing is not None and not command.force_replace:
             raise BucketImportError(

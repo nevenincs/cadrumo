@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#ledger-filter-period'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-ledger-filter-period-research]]"
   - "[[2026-06-10-cli-operator-surface-adr]]"
@@ -37,11 +37,11 @@ double-count. Three concerns remain after the strict grammar landed (commit
 The grounding research (`2026-06-10-ledger-filter-period-research`) verified against HEAD
 that the CLI filter and the calc engine already converge on one boundary implementation —
 `Period.model_validate(internal_calendar_str)` + `Period.contains(date)` in
-`src/aeat/application/aggregation/_models.py` — with no parallel path. `Period.start`
+`src/cadrumo/application/aggregation/_models.py` — with no parallel path. `Period.start`
 and `Period.end` are computed fields; quarter and month ends use
 `calendar.monthrange(...)` for the true last calendar day; `contains` is the fully-closed
 `start <= value <= end`. The closed set of accepted tokens is `StandardPeriodCode`
-(`src/aeat/core/_period.py`): `1T`-`4T`, `0A`, `01`-`12` are ledger-filterable spans;
+(`src/cadrumo/core/_period.py`): `1T`-`4T`, `0A`, `01`-`12` are ledger-filterable spans;
 `1P`-`4P` are payment events with no date span; `EXT-*` / `AD-HOC` / `EVENT-N` are not
 ledger spans. The binding ADRs `2026-06-10-cli-operator-surface-adr` (D4 grammar) and
 `2026-06-01-registry-period-code-union-cli-boundary-adr` (the registry-union CLI

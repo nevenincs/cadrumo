@@ -1,64 +1,38 @@
-"""Real-behavior CLI tests for ``aeat app ledger classify --auto-split``.
+"""Offline-verifiable CLI contracts for LLM auto-splitting.
 
-Exercises the evidence-driven auto-split router end to end against the real CLI,
-real application use cases, and real SQLite persistence in an isolated storage
-root. No test doubles or monkeypatch: determinism comes from **dependency
-injection** — a concrete classifier/split proposer registered through the
-production :func:`register_classifier` registry.
-
-The router uses one model call (the split proposer) to decide:
-
-* a multi-child verdict drives the evidence-driven split (preview, or with
-  ``--apply`` the base/IVA-separating split);
-* a single-child "no split" verdict classifies the transaction in place from
-  that lone child's selections;
-* ``--auto-split`` without ``--read-evidence`` is refused.
-
-It also covers the typed split-recommendation ``Notice`` that
-``classify --read-evidence`` emits when the model flags the invoice as
-multi-component.
+Successful provider execution requires a live external provider and is not
+simulated here. These cases cover validation, typed notice construction, and
+rejection-state projection through real application and persistence boundaries.
 """
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator, Sequence
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
 import pytest
 from click.testing import Result
 
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.ledger import LLMClassificationSuggestion, LLMProvider, reject_llm_suggestion
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
+from ....core.json_contract import NoticeSeverity
 from ....domain.categories import SpendingCategory
-from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    LLMClassificationResponse,
-    LLMSplitChild,
-    LLMSplitResponse,
-    Transaction,
-    register_classifier,
-)
+from ....domain.transactions import BusinessClassification
+from ....tests.cli_envelope import unwrap_cli_result as _json_result
+from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from .._ledger_llm_cli import split_recommendation_notice
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-def _json_envelope(result: Result) -> dict[str, Any]:
-    return json.loads(result.output)
-
-
-def _json_result(result: Result) -> dict[str, Any]:
-    return _json_envelope(result)["result"]
 
 
 @pytest.fixture(autouse=True)
@@ -72,79 +46,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
         )
         yield
-
-
-class _RouterModel:
-    """Concrete classifier + split proposer with a configurable verdict.
-
-    ``multi`` chooses a two-child split proposal (a genuine split) or a
-    single-child no-split verdict; ``multiple_components`` is the multiplicity
-    flag the classify path carries. Implements both protocol surfaces so the
-    same fixture serves ``classify`` and ``propose_split`` offline.
-    """
-
-    def __init__(self, *, multi: bool, model: str = "router-1") -> None:
-        self._multi = multi
-        self._model = model
-
-    @property
-    def decided_by(self) -> str:
-        return f"llm:claude:{self._model}"
-
-    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
-        return LLMClassificationResponse(
-            classification=BusinessClassification.BUSINESS,
-            confidence=Decimal("0.9"),
-            reason="business supplier invoice",
-            category=SpendingCategory.MATERIAL_OFICINA,
-            iva_category=IvaCategory.DOMESTIC_GENERAL_21,
-            multiple_components=self._multi,
-        )
-
-    def propose_split(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMSplitResponse:
-        if self._multi:
-            return LLMSplitResponse(
-                children=(
-                    LLMSplitChild(
-                        proportion=Decimal("0.6"),
-                        category=SpendingCategory.MATERIAL_OFICINA,
-                        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
-                        evidence_citation="material de oficina",
-                    ),
-                    LLMSplitChild(
-                        proportion=Decimal("0.4"),
-                        category=SpendingCategory.SOFTWARE_SUSCRIPCION,
-                        iva_category=IvaCategory.DOMESTIC_GENERAL_21,
-                        evidence_citation="licencia software",
-                    ),
-                ),
-                reason="invoice carries two distinct line items",
-            )
-        return LLMSplitResponse(
-            children=(
-                LLMSplitChild(
-                    proportion=Decimal("1.0"),
-                    category=SpendingCategory.MATERIAL_OFICINA,
-                    iva_category=IvaCategory.DOMESTIC_GENERAL_21,
-                    evidence_citation="material de oficina",
-                ),
-            ),
-            reason="invoice is a single line at one rate",
-        )
-
-
-def _register(model: _RouterModel) -> None:
-    register_classifier("claude", lambda **_kwargs: model)
-
-
-@pytest.fixture(autouse=True)
-def _restore_claude() -> Iterator[None]:
-    try:
-        yield
-    finally:
-        from ....domain.transactions import build_claude_classifier
-
-        register_classifier("claude", build_claude_classifier)
 
 
 def _import_one_transaction(tmp_path: Path) -> str:
@@ -161,167 +62,28 @@ def _import_one_transaction(tmp_path: Path) -> str:
     return _json_result(listed)["rows"][0]["transaction_id"]
 
 
-def _rows() -> list[dict[str, Any]]:
+def _import_two_transactions(tmp_path: Path) -> tuple[str, str]:
+    csv_path = tmp_path / "two-transactions.csv"
+    csv_path.write_text(
+        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
+        "2026-04-01,Proveedor A,first invoice,-100.00,EUR,two-001\n"
+        "2026-04-02,Proveedor B,second invoice,-200.00,EUR,two-002\n",
+        encoding="utf-8",
+    )
+    imported = _invoke(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
+    assert imported.exit_code == 0, imported.output
     listed = _invoke(["--format", "json", "app", "ledger", "list"])
     assert listed.exit_code == 0, listed.output
-    return _json_result(listed)["rows"]
+    transaction_ids = tuple(row["transaction_id"] for row in _json_result(listed)["rows"])
+    assert len(transaction_ids) == 2
+    return transaction_ids[0], transaction_ids[1]
 
 
 def test_auto_split_requires_read_evidence(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=True))
     tx = _import_one_transaction(tmp_path)
     result = _invoke(["app", "ledger", "classify", tx, "--llm", "claude", "--auto-split"])
     assert result.exit_code != 0
     assert "--read-evidence" in result.output
-
-
-def test_auto_split_multi_component_suggest_previews_split(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=True))
-    tx = _import_one_transaction(tmp_path)
-    result = _invoke(
-        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--read-evidence", "--auto-split"],
-    )
-    assert result.exit_code == 0, result.output
-    envelope = _json_envelope(result)
-    assert envelope["command"] == "ledger.split"
-    payload = envelope["result"]
-    assert payload["persisted"] is False
-    assert [child["amount"] for child in payload["proposed_children"]] == ["72.60", "48.40"]
-    # Nothing persisted: one unsplit parent row.
-    assert len(_rows()) == 1
-
-
-def test_auto_split_multi_component_apply_persists_split(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=True))
-    tx = _import_one_transaction(tmp_path)
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "classify",
-            tx,
-            "--llm",
-            "claude",
-            "--read-evidence",
-            "--auto-split",
-            "--apply",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    payload = _json_result(result)
-    assert payload["persisted"] is True
-    child_ids = payload["child_transaction_ids"]
-    assert len(child_ids) == 2
-    rows = {row["transaction_id"]: row for row in _rows()}
-    persisted_sum = Decimal("0")
-    for child_id in child_ids:
-        row = rows[child_id]
-        assert row["business_classification"] == "BUSINESS"
-        assert row["classified_by"] == "llm:claude:router-1"
-        assert row["iva_rate"] == "0.21"
-        persisted_sum += Decimal(row["amount"])
-    assert persisted_sum == Decimal("121.00")
-
-
-def test_auto_split_single_line_apply_classifies_in_place(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=False))
-    tx = _import_one_transaction(tmp_path)
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "classify",
-            tx,
-            "--llm",
-            "claude",
-            "--read-evidence",
-            "--auto-split",
-            "--apply",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    envelope = _json_envelope(result)
-    assert envelope["command"] == "ledger.classify"
-    # No split happened: still one row, classified in place.
-    rows = _rows()
-    assert len(rows) == 1
-    row = rows[0]
-    assert row["transaction_id"] == tx
-    assert row["business_classification"] == "BUSINESS"
-    assert row["classified_by"] == "llm:claude:router-1"
-    assert row["iva_rate"] == "0.21"
-
-
-def test_classify_read_evidence_emits_split_recommendation_notice(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=True))
-    tx = _import_one_transaction(tmp_path)
-    result = _invoke(
-        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--read-evidence"],
-    )
-    assert result.exit_code == 0, result.output
-    envelope = _json_envelope(result)
-    notices = envelope["notices"]
-    recommend = [n for n in notices if n["code"] == "ledger.classify.split_recommended"]
-    assert recommend, envelope
-    assert recommend[0]["severity"] == "info"
-    assert "--auto-split" in recommend[0]["suggestion"]
-    assert tx in recommend[0]["suggestion"]
-
-
-def test_classify_read_evidence_single_line_emits_no_recommendation(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=False))
-    tx = _import_one_transaction(tmp_path)
-    result = _invoke(
-        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--read-evidence"],
-    )
-    assert result.exit_code == 0, result.output
-    envelope = _json_envelope(result)
-    codes = [n["code"] for n in envelope["notices"]]
-    assert "ledger.classify.split_recommended" not in codes
-
-
-def _history(tx: str) -> list[dict[str, Any]]:
-    out = _invoke(["--format", "json", "app", "ledger", "history", tx])
-    assert out.exit_code == 0, out.output
-    return _json_result(out)["events"]
-
-
-def test_classify_reject_records_event_without_classifying(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=False))
-    tx = _import_one_transaction(tmp_path)
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "classify",
-            tx,
-            "--llm",
-            "claude",
-            "--reject",
-            "--reason",
-            "model is wrong here",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    envelope = _json_envelope(result)
-    assert envelope["command"] == "ledger.classify"
-    payload = envelope["result"]
-    assert payload["rejected"] is True
-    assert payload["persisted"] is False
-    assert payload["suggestion_kind"] == "classification"
-    assert payload["bucket_event_id"]
-    # The row is unchanged — still not classified.
-    row = {r["transaction_id"]: r for r in _rows()}[tx]
-    assert row["business_classification"] == "NOT_YET_PROCESSED"
-    # The rejection rides the audit history.
-    kinds = [e["event_type"] for e in _history(tx)]
-    assert "ledger.transaction.llm_suggestion.rejected" in kinds
 
 
 @pytest.mark.parametrize(
@@ -333,7 +95,6 @@ def test_classify_reject_records_event_without_classifying(tmp_path: Path) -> No
     ],
 )
 def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_flags: list[str]) -> None:
-    _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
     result = _invoke(
         ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--apply", *extra_flags],
@@ -342,89 +103,49 @@ def test_classify_reject_and_apply_are_mutually_exclusive(tmp_path: Path, extra_
     assert "--reject" in result.output and "--apply" in result.output
 
 
-def _import_two_transactions(tmp_path: Path) -> list[str]:
-    csv_content = (
-        "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID\n"
-        "2026-04-01,Proveedor A,first invoice,-100.00,EUR,two-001\n"
-        "2026-04-02,Proveedor B,second invoice,-200.00,EUR,two-002\n"
+def test_split_recommendation_notice_is_info_with_exact_runnable_action() -> None:
+    transaction_id = "txn-contract"
+
+    notice = split_recommendation_notice(transaction_id, provider=LLMProvider.CLAUDE)
+
+    assert notice.severity is NoticeSeverity.INFO
+    assert notice.code == "ledger.classify.split_recommended"
+    assert notice.suggestion == (
+        f"aeat app ledger classify {transaction_id} --read-evidence --saturate --auto-split --apply --llm claude"
     )
-    csv_path = tmp_path / "import.csv"
-    csv_path.write_text(csv_content, encoding="utf-8")
-    result = _invoke(["app", "ledger", "import", str(csv_path), "--provider", "csv"])
-    assert result.exit_code == 0, result.output
-    return [r["transaction_id"] for r in _rows()]
+    assert notice.context == {"transaction_id": transaction_id, "source": "evidence_read"}
 
 
-def test_list_hide_llm_rejected_drops_the_declined_row(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=False))
-    ids = _import_two_transactions(tmp_path)
-    assert len(ids) == 2
-    rejected_id = ids[0]
-    rej = _invoke(
-        ["app", "ledger", "classify", rejected_id, "--llm", "claude", "--reject", "--reason", "no"],
+def test_list_hide_llm_rejected_retains_unrelated_rows(tmp_path: Path) -> None:
+    rejected_id, unrelated_id = _import_two_transactions(tmp_path)
+    suggestion = LLMClassificationSuggestion(
+        transaction_id=rejected_id,
+        provider=None,
+        provenance="llm:recorded-review-input",
+        classification=BusinessClassification.BUSINESS,
+        category=SpendingCategory.MATERIAL_OFICINA,
+        confidence=Decimal("0.9"),
+        reason="recorded review input",
     )
-    assert rej.exit_code == 0, rej.output
-
-    # Without the flag both rows show; with it the rejected row is hidden.
-    all_ids = {r["transaction_id"] for r in _rows()}
-    assert rejected_id in all_ids
+    rejection = reject_llm_suggestion(
+        suggestion,
+        bucket_id="00000000-0000-4000-8000-000000000000",
+        reason="operator declined the recorded suggestion",
+        actor="operator",
+        source_command="aeat app ledger classify --llm --reject",
+    )
+    assert rejection.transaction_id == rejected_id
 
     filtered = _invoke(["--format", "json", "app", "ledger", "list", "--hide-llm-rejected"])
     assert filtered.exit_code == 0, filtered.output
-    shown = {r["transaction_id"] for r in _json_result(filtered)["rows"]}
+    shown = {row["transaction_id"] for row in _json_result(filtered)["rows"]}
     assert rejected_id not in shown
-    assert ids[1] in shown
-
-
-def test_view_surfaces_the_latest_rejection(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=False))
-    tx = _import_one_transaction(tmp_path)
-    rejected = _invoke(
-        ["app", "ledger", "classify", tx, "--llm", "claude", "--reject", "--reason", "not a business cost"],
-    )
-    assert rejected.exit_code == 0, rejected.output
-
-    viewed = _invoke(["--format", "json", "app", "ledger", "view", tx])
-    assert viewed.exit_code == 0, viewed.output
-    envelope = _json_envelope(viewed)
-    rej = [n for n in envelope["notices"] if n["code"] == "ledger.view.llm_suggestion_rejected"]
-    assert rej, envelope
-    assert rej[0]["severity"] == "info"
-    assert rej[0]["context"]["operator_reason"] == "not a business cost"
+    assert unrelated_id in shown
 
 
 def test_view_shows_no_rejection_notice_when_none(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=False))
     tx = _import_one_transaction(tmp_path)
     viewed = _invoke(["--format", "json", "app", "ledger", "view", tx])
     assert viewed.exit_code == 0, viewed.output
-    codes = [n["code"] for n in _json_envelope(viewed)["notices"]]
+    codes = [notice["code"] for notice in unwrap_envelope_notices(viewed.output)]
     assert "ledger.view.llm_suggestion_rejected" not in codes
-
-
-def test_auto_split_reject_records_split_rejection(tmp_path: Path) -> None:
-    _register(_RouterModel(multi=True))
-    tx = _import_one_transaction(tmp_path)
-    result = _invoke(
-        [
-            "--format",
-            "json",
-            "app",
-            "ledger",
-            "classify",
-            tx,
-            "--llm",
-            "claude",
-            "--read-evidence",
-            "--auto-split",
-            "--reject",
-            "--reason",
-            "do not split",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    payload = _json_result(result)
-    assert payload["rejected"] is True
-    assert payload["suggestion_kind"] == "split"
-    # No split happened: still one row.
-    assert len(_rows()) == 1

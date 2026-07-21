@@ -1,8 +1,7 @@
 """Semantic-ish discovery search over the Cadrumo command surface.
 
-The MCP console advertises only an orientation core by default (ADR
-``mcp-progressive-discovery`` P1); the long-tail verb universe is reached
-through the ``search`` meta-tool. That search must bridge the operator's
+The MCP console advertises only an orientation core by default; the
+long-tail verb universe is reached through the ``search`` meta-tool. That search must bridge the operator's
 natural vocabulary to the command's own tokens, which a naive token-substring
 scorer cannot (it misses ``declare quarterly VAT`` -> ``modelo.work.calculate``
 across the Spanish/English and concept/verb gaps). This package builds a small

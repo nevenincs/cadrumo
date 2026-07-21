@@ -1,15 +1,15 @@
 """Domain errors for the :mod:`cadrumo.domain.deadlines` subpackage.
 
-Every error inherits from :class:`cadrumo.core.errors.AeatError` so callers have
+Every error inherits from :class:`cadrumo.core.errors.CadrumoError` so callers have
 a single root they can catch when integrating with the deadline engine.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class DeadlineError(AeatError):
+class DeadlineError(CadrumoError):
     """Base class for every error raised by :mod:`cadrumo.domain.deadlines`."""
 
 
@@ -41,7 +41,7 @@ class NoDeadlineWindowsError(ScheduleComputationError):
 
     This is the *benign* schedule-computation failure: a registry-track
     data gap (the Modelo 100 / 303 / 347 / 202 windows not yet
-    registered — round-3 finding R1), not a corrupt or invalid
+    registered), not a corrupt or invalid
     registry. The overview calendar / agenda / explain surfaces catch
     this narrow subtype to degrade gracefully — a year or modelo with
     no window data contributes zero entries while the surface still

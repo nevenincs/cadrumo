@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#quadlingual-i18n'
 date: '2026-05-01'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-12-trilingual-i18n-adr]]"
   - "[[2026-05-01-quadlingual-i18n-research]]"
@@ -76,21 +76,21 @@ Key factors:
 Architecture changes (additive, see the research doc for the
 terminology rationale):
 
-1. `src/aeat/core/i18n/__init__.py` — add `Language.CA = "ca"`,
+1. `src/cadrumo/core/i18n/__init__.py` — add `Language.CA = "ca"`,
    add the `ca: str` slot to the `Translatable` TypedDict, and
    replace the open-coded last-resort fallback list with a
    module-level `_HARDCODED_FALLBACK_ORDER = ("es", "en", "ca", "hu")`
    tuple consulted only after the configured chain is exhausted.
-2. `src/aeat/core/config.py` — widen the `aeat_fallback_languages`
+2. `src/cadrumo/core/config.py` — widen the `aeat_fallback_languages`
    default from `en,es` to `es,en,ca,hu`. Update the field
    docstrings to reference the four-language contract.
 3. `env/.env.example` — update the i18n block with per-language
    commentary and the new fallback default.
-4. `src/aeat/core/i18n/test_i18n.py` — add membership-closed test;
+4. `src/cadrumo/core/i18n/test_i18n.py` — add membership-closed test;
    add a `Language.CA` exact-match test; add a fallback test that
    confirms Spanish surfaces when `ca` is the target and only `es`
    is populated.
-5. `src/aeat/entrypoints/cli/_i18n.py` — new module exposing
+5. `src/cadrumo/entrypoints/cli/_i18n.py` — new module exposing
    `output_language()` and a thin `t(translatable)` shortcut that
    pre-binds the resolved language. Replace the four pre-existing
    local copies (`cli/filing/__init__.py`, `cli/profile/__init__.py`,
@@ -100,17 +100,17 @@ terminology rationale):
    hardcoded English literal in the user-facing emitters is
    replaced with a `Translatable` literal carrying the four-language
    content from the legal glossary.
-7. `src/aeat/application/review/_adapters.py` and
-   `src/aeat/application/setup/_verifier.py` — replace the nine
+7. `src/cadrumo/application/review/_adapters.py` and
+   `src/cadrumo/application/wizard/_verifier.py` — replace the nine
    pseudo-translations (`{"es": text, "en": text, "hu": text}`
    where `text` is identical English) with real four-language
    `Translatable` literals.
-8. `src/aeat/entrypoints/cli/test_no_hardcoded_user_strings.py` —
+8. `src/cadrumo/entrypoints/cli/test_no_hardcoded_user_strings.py` —
    new collection-time AST regression test that fails when any
    `typer.echo`, `_CONSOLE.print`, or `typer.BadParameter` call in
    `entrypoints/cli/` carries a bare string literal not routed
    through `Translatable` / `get_translation`.
-9. `src/aeat/_corpus_ca_backfill.py` — one-shot maintenance
+9. `src/cadrumo/_corpus_ca_backfill.py` — one-shot maintenance
    script (deleted after the run) that walks every JSON under
    `corpus/casillas/` and `corpus/normatives/`, adds the `ca` key
    on every i18n map, sources the value from the legal glossary

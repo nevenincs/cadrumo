@@ -3,7 +3,7 @@
 :class:`BrowserSession` is the concrete browser runtime behind the
 application auth providers and live Sede readers. It creates one
 Playwright ``BrowserContext`` at a time from a :class:`Profile`, optional
-persisted storage state, and an optional
+decrypted in-memory storage state, and an optional
 :class:`adapters.outbound.aeat.auth.BrowserContextProvisioner`.
 Certificate auth passes a
 :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner` so
@@ -20,7 +20,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -37,6 +36,7 @@ if TYPE_CHECKING:
         Response,
     )
 
+from .....core.async_cleanup import await_cancellation_complete
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.logging import get_logger
@@ -78,8 +78,7 @@ class BrowserSession:
         Args:
             playwright: The Playwright instance.
             settings: Application configuration settings.
-            profile: The :class:`Profile` carrying locale, timezone, and
-                fallback storage-state path.
+            profile: The :class:`Profile` carrying browser locale and timezone.
             evasion_strategy: Optional :class:`EvasionStrategy`; defaults to
                 :class:`PlaywrightStealthEvasion`.
         """
@@ -94,26 +93,21 @@ class BrowserSession:
         self,
         *,
         provisioner: BrowserContextProvisioner | None = None,
-        storage_state_path: Path | None = None,
         storage_state: Mapping[str, object] | None = None,
     ) -> BrowserContext:
         """Create and configure a new Playwright BrowserContext.
 
-        When ``provisioner`` is supplied, it can inject auth-provider-
-        specific ``browser.new_context(...)`` kwargs and tag the
-        resulting context after construction. Certificate auth uses this
-        hook through :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`;
+        When ``provisioner`` is supplied, it injects auth-provider-specific
+        ``browser.new_context(...)`` kwargs. Certificate auth uses this hook
+        through
+        :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`;
         Cl@ve Móvil usually passes only persisted in-memory storage state.
 
         Args:
             provisioner: Optional :class:`BrowserContextProvisioner` used to
-                decorate the new context call and annotate the returned
-                context.
-            storage_state_path: Optional path to a Playwright storage-state
-                JSON file; passed directly to ``browser.new_context``.
+                decorate the new context call.
             storage_state: Optional in-memory storage state mapping passed
-                directly to ``browser.new_context``; takes precedence over
-                ``storage_state_path`` when both are supplied.
+                directly to ``browser.new_context``.
 
         Returns:
             A configured BrowserContext with evasion strategies
@@ -123,8 +117,8 @@ class BrowserSession:
 
         Raises:
             BrowserError: If the browser cannot be launched, the context cannot
-                be created, evasion setup fails, annotation fails, or this
-                session already owns a live browser.
+                be created, evasion setup fails, or this session already owns a
+                live browser.
         """
         async with self._lifecycle_lock:
             if self._browser is not None:
@@ -136,25 +130,32 @@ class BrowserSession:
             logger.info(
                 "browser context create starting profile=%s channel=%s headless=%s has_proxy=%s",
                 self.profile.name,
-                self.settings.aeat_browser_channel,
-                self.settings.aeat_browser_headless,
-                bool(self.settings.aeat_proxy_url),
+                self.settings.cadrumo_browser_channel,
+                self.settings.cadrumo_browser_headless,
+                bool(self.settings.cadrumo_proxy_url),
             )
             proxy = self._build_proxy_settings()
             browser = await self._launch_chromium(proxy)
             self._browser = browser
             try:
                 context_kwargs = self._build_context_kwargs(
-                    storage_state_path=storage_state_path,
                     storage_state=storage_state,
                     provisioner=provisioner,
                 )
-                context = await self._create_playwright_context(browser, context_kwargs)
+                context = await await_cancellation_complete(
+                    self._create_playwright_context(browser, context_kwargs),
+                    task_name="cadrumo-browser-context-create",
+                )
                 await self._apply_evasion(context)
-                if provisioner is not None:
-                    self._annotate_context_via_provisioner(context, provisioner)
                 logger.info("browser context create succeeded profile=%s", self.profile.name)
                 return context
+            except asyncio.CancelledError as cancellation:
+                await await_cancellation_complete(
+                    self._close_after_context_failure(),
+                    task_name="cadrumo-browser-context-cancel-cleanup",
+                    cancellation=cancellation,
+                )
+                raise cancellation from None
             except BrowserError:
                 await self._close_after_context_failure()
                 raise
@@ -175,24 +176,24 @@ class BrowserSession:
 
     def _build_proxy_settings(self) -> ProxySettings | None:
         """Translate the settings's proxy block into a Playwright ProxySettings record."""
-        if not self.settings.aeat_proxy_url:
+        if not self.settings.cadrumo_proxy_url:
             return None
         from playwright.async_api import ProxySettings
 
-        proxy = ProxySettings(server=self.settings.aeat_proxy_url)
-        if self.settings.aeat_proxy_username and self.settings.aeat_proxy_password_secret is not None:
-            proxy["username"] = self.settings.aeat_proxy_username
-            proxy["password"] = self.settings.aeat_proxy_password_secret.get_secret_value()
-        if self.settings.aeat_proxy_bypass:
-            proxy["bypass"] = self.settings.aeat_proxy_bypass
+        proxy = ProxySettings(server=self.settings.cadrumo_proxy_url)
+        if self.settings.cadrumo_proxy_username and self.settings.cadrumo_proxy_password_secret is not None:
+            proxy["username"] = self.settings.cadrumo_proxy_username
+            proxy["password"] = self.settings.cadrumo_proxy_password_secret.get_secret_value()
+        if self.settings.cadrumo_proxy_bypass:
+            proxy["bypass"] = self.settings.cadrumo_proxy_bypass
         return proxy
 
     async def _launch_chromium(self, proxy: ProxySettings | None) -> Browser:
         """Launch Chromium with the profile's channel/headless/proxy config; raise BrowserError on failure."""
         try:
             return await self.playwright.chromium.launch(
-                channel=self.settings.aeat_browser_channel,
-                headless=self.settings.aeat_browser_headless,
+                channel=self.settings.cadrumo_browser_channel,
+                headless=self.settings.cadrumo_browser_headless,
                 proxy=proxy,
             )
         except Exception as exc:
@@ -200,15 +201,15 @@ class BrowserSession:
                 "browser launch failed failure_mode=%s profile=%s channel=%s headless=%s has_proxy=%s exc_type=%s",
                 BrowserFailureMode.BROWSER_LAUNCH_FAILED,
                 self.profile.name,
-                self.settings.aeat_browser_channel,
-                self.settings.aeat_browser_headless,
-                bool(self.settings.aeat_proxy_url),
+                self.settings.cadrumo_browser_channel,
+                self.settings.cadrumo_browser_headless,
+                bool(self.settings.cadrumo_proxy_url),
                 type(exc).__name__,
                 exc_info=True,
             )
             # When the failure is a missing browser binary (the post-install
             # `playwright install` step was skipped), name the exact fix rather
-            # than relaying a bare driver error (dependency-provisioning ADR).
+            # than relaying a bare driver error.
             hint = ""
             if "executable doesn't exist" in str(exc).lower() or "playwright install" in str(exc).lower():
                 hint = " — run 'playwright install chromium' (or 'just provision') to install the browser binary"
@@ -217,9 +218,9 @@ class BrowserSession:
                 failure_mode=BrowserFailureMode.BROWSER_LAUNCH_FAILED,
                 context={
                     "profile": self.profile.name,
-                    "channel": self.settings.aeat_browser_channel,
-                    "headless": self.settings.aeat_browser_headless,
-                    "has_proxy": bool(self.settings.aeat_proxy_url),
+                    "channel": self.settings.cadrumo_browser_channel,
+                    "headless": self.settings.cadrumo_browser_headless,
+                    "has_proxy": bool(self.settings.cadrumo_proxy_url),
                     "cause_type": type(exc).__name__,
                 },
             ) from exc
@@ -227,11 +228,10 @@ class BrowserSession:
     def _build_context_kwargs(
         self,
         *,
-        storage_state_path: Path | None,
         storage_state: Mapping[str, object] | None,
         provisioner: BrowserContextProvisioner | None,
     ) -> dict[str, Any]:
-        """Compose the ``browser.new_context(**kwargs)`` dict from profile + storage + provisioner.
+        """Compose ``browser.new_context(**kwargs)`` from explicit storage and provisioner inputs.
 
         ``dict[str, Any]`` is the irreducible adapter shape: the dict is
         spread into ``new_context(**context_kwargs)`` whose typed kwargs
@@ -240,8 +240,6 @@ class BrowserSession:
         stubs; this is a third-party-API boundary where ``Any`` is the
         right type.
         """
-        self.profile.ensure_storage_dir()
-        effective_storage_state_path = storage_state_path or self.profile.storage_state_path
         context_kwargs: dict[str, Any] = {
             "locale": self.profile.locale,
             "timezone_id": self.profile.timezone_id,
@@ -250,8 +248,6 @@ class BrowserSession:
             context_kwargs["user_agent"] = self.profile.user_agent
         if storage_state is not None:
             context_kwargs["storage_state"] = storage_state
-        elif effective_storage_state_path.exists():
-            context_kwargs["storage_state"] = str(effective_storage_state_path)
         if provisioner is not None:
             context_kwargs.update(dict(provisioner.build_context_kwargs()))
         return context_kwargs
@@ -313,33 +309,6 @@ class BrowserSession:
                 context={
                     "profile": self.profile.name,
                     "evasion_strategy": type(self.evasion_strategy).__name__,
-                    "cause_type": type(exc).__name__,
-                },
-            ) from exc
-
-    def _annotate_context_via_provisioner(
-        self,
-        context: BrowserContext,
-        provisioner: BrowserContextProvisioner,
-    ) -> None:
-        """Run the provisioner's post-construct annotation hook with typed error envelope."""
-        try:
-            provisioner.annotate_context(context)
-        except Exception as exc:
-            logger.error(
-                "browser context annotation failed failure_mode=%s profile=%s provisioner=%s exc_type=%s",
-                BrowserFailureMode.CONTEXT_ANNOTATION_FAILED,
-                self.profile.name,
-                type(provisioner).__name__,
-                type(exc).__name__,
-                exc_info=True,
-            )
-            raise BrowserError(
-                f"Failed to annotate browser context: {exc}",
-                failure_mode=BrowserFailureMode.CONTEXT_ANNOTATION_FAILED,
-                context={
-                    "profile": self.profile.name,
-                    "provisioner": type(provisioner).__name__,
                     "cause_type": type(exc).__name__,
                 },
             ) from exc
@@ -518,6 +487,4 @@ class BrowserSession:
 
 def _storage_state_source(context_kwargs: Mapping[str, object]) -> str:
     """Describe the storage-state input without logging secret material."""
-    if "storage_state" not in context_kwargs:
-        return "none"
-    return "inline" if isinstance(context_kwargs["storage_state"], Mapping) else "path"
+    return "inline" if "storage_state" in context_kwargs else "none"

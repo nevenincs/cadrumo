@@ -1,8 +1,7 @@
-"""The risk table agrees with the two independent risk declarations (H3 cross-checks).
+"""The risk table agrees with the two independent risk declarations.
 
 Two parity gates that catch a mis-declaration by cross-referencing surfaces that
-declare risk-adjacent facts independently (ADR ``mcp-protocol-hardening`` H3, and
-the adjudication's A5/A6 rulings):
+declare risk-adjacent facts independently:
 
 - The live-write tripwire: any exposed command whose leaf is ``submit`` /
   ``present`` / ``send`` MUST declare ``live_write`` - the never-live-submit axis

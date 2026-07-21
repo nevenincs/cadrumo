@@ -1,15 +1,15 @@
-"""CRUD-audit journey (e): bulk-stash recovery without a whole-ledger reset.
+"""Bulk-stash recovery without a whole-ledger reset.
 
-The ``2026-06-10-cli-operator-crud-matrix-audit`` rated journey (e) -- "I
-imported the wrong file twice and stashed half my rows by mistake" -- a FAIL:
-the only documented escape from an accidental bulk stash was ``ledger reset``
-(clear and re-import the whole ledger). This suite is the acceptance evidence
-that the D2 ``restore`` verb makes that journey PASS: it drives the real
-``aeat app ledger`` CLI end-to-end -- add several rows, stash them all, then
-``restore`` each one back to active -- and asserts the ledger is whole again
-WITHOUT a reset, with the restore recorded in each row's event history.
+Journey: "I imported the wrong file twice and stashed half my rows by
+mistake" -- previously the only documented escape from an accidental bulk
+stash was ``ledger reset`` (clear and re-import the whole ledger). This suite
+is the acceptance evidence that the ``restore`` verb makes that journey work:
+it drives the real ``aeat app ledger`` CLI end-to-end -- add several rows,
+stash them all, then ``restore`` each one back to active -- and asserts the
+ledger is whole again WITHOUT a reset, with the restore recorded in each
+row's event history.
 
-Harness mirrors the persona-journey suites: an isolated profile backend via
+Harness mirrors the sibling journey suites: an isolated profile backend via
 ``override_settings`` + ``isolated_profile_storage_root`` +
 ``profile_create_storage_span`` + ``register_minimal_profile``.
 """
@@ -24,11 +24,13 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.ledger_cli import list_ledger_rows_via_cli as _list_rows
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -59,13 +61,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             yield
         finally:
             dispose_engine()
-
-
-def _list_rows() -> list[dict[str, object]]:
-    listed = _invoke(["--format", "json", "app", "ledger", "list"])
-    assert listed.exit_code == 0, listed.output
-    payload = json.loads(listed.output)
-    return payload.get("result", payload).get("rows", [])
 
 
 def _add_rows() -> list[str]:

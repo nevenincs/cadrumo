@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-58-2003-art-120.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-58-2003-art-120.html",
   "source_sha256": "4a46d281446a1776b571e207000b08ab3249287a4c1c6229aff42743486d43a8",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

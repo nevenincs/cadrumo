@@ -156,7 +156,9 @@ def _create_record_id() -> str:
 def _unwrap_error_envelope(output: str) -> dict[str, object]:
     payload = json.loads(output)
     assert payload["status"] == "error"
-    assert payload["command"] is None
+    # The error spine now names the failing command (byte-identical to the
+    # command= its success envelope emits); null only before a command resolves.
+    assert isinstance(payload["command"], str) and payload["command"], payload["command"]
     assert payload["notices"] == []
     error = payload["error"]
     assert isinstance(error, dict)

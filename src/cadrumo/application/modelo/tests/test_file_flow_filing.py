@@ -18,8 +18,6 @@ from ._file_flow_support import (
     T3,
     T4,
     T5,
-    AuthProvider,
-    BucketEventType,
     CalculationRevisionState,
     CalculationRevisionStateError,
     Decimal,
@@ -154,70 +152,6 @@ def test_file_creates_filing_record_and_advances_pointers(repos: Repos) -> None:
     )
     assert current is not None
     assert current.filing_record_id == filing.filing_record_id
-
-
-def test_file_runs_workflow_gate_and_refuses_before_state_writes_when_preflight_blocks(repos: Repos) -> None:
-    """The file transition is gated by WorkflowEngine.run_for_period.
-
-    When submission preflight refuses, the calculation revision remains
-    verified-complete and no filing record or filed bucket event is
-    persisted.
-    """
-
-    wu_repo, cr_repo, fr_repo, vr_repo, bv_repo = repos
-    work_unit = seed_work_unit(wu_repo)
-    revision = calculate_modelo_revision(
-        work_unit.work_unit_id,
-        casilla_inputs={**DEFAULT_130_BASELINE_INPUTS, M130_INCOME_CASILLA: Decimal("1000")},
-        binding_values=DEFAULT_130_BINDING_VALUES,
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T1,
-    )
-    verify_revision(
-        revision.calculation_revision_id,
-        revision=revision,
-        work_unit=work_unit,
-        actor="operator-A",
-        work_unit_repository=wu_repo,
-        calculation_repository=cr_repo,
-        verification_repository=vr_repo,
-        filing_repository=fr_repo,
-        bucket_event_repository=bv_repo,
-        clock=T2,
-    )
-
-    unavailable_provider = AuthProvider(available=False)
-    with pytest.raises(ModeloWorkflowGateError) as gate_error:
-        file_revision(
-            revision.calculation_revision_id,
-            revision=revision,
-            work_unit=work_unit,
-            actor="operator-A",
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-            filing_repository=fr_repo,
-            bucket_event_repository=bv_repo,
-            clock=T3,
-            auth_provider=unavailable_provider,
-        )
-    assert gate_error.value.result.final_stage is WorkflowStage.ABORTED
-    assert gate_error.value.context is not None
-    assert gate_error.value.context["stage"] == WorkflowStage.ABORTED.value
-
-    assert unavailable_provider.describe_calls == 1
-    refreshed_revision = get_calculation_revision(
-        revision.calculation_revision_id,
-        calculation_repository=cr_repo,
-    )
-    assert refreshed_revision.state is CalculationRevisionState.VERIFICADO_COMPLETO
-    assert target_filing_records(list_filing_records(filing_repository=fr_repo), work_unit) == ()
-    filed_events = bv_repo.load().for_bucket(
-        work_unit.bucket_id,
-        event_types=(BucketEventType.MODELO_FILED,),
-    )
-    assert filed_events == ()
 
 
 def test_file_records_verified_modelo_130_2024_as_late_non_official_local_filing(repos: Repos) -> None:

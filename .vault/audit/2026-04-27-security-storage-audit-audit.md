@@ -3,14 +3,13 @@ tags:
   - '#audit'
   - '#security-storage-audit'
 date: '2026-04-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-12-data-storage-research]]"
-  - "[[2026-04-17-path-handling-safety-review-audit]]"
-  - "[[2026-04-17-session-persistence-review-audit]]"
-  - "[[2026-04-18-auth-protocol-review-audit]]"
-  - "[[2026-04-21-live-sync-backend-code-review-audit]]"
-  - "[[2026-04-21-run-trace-rolling-audit]]"
+  - '[[2026-04-17-path-handling-safety-review-audit]]'
+  - '[[2026-04-21-run-trace-rolling-audit]]'
+  - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
+  - '[[2026-04-17-session-persistence-adr]]'
+  - '[[2026-04-18-auth-protocol-adr]]'
 ---
 
 # `security-storage-audit` audit: security-storage-posture

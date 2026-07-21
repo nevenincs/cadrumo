@@ -1,0 +1,2 @@
+@step Pull the Drive document straight into encrypted evidence storage.
+@static aeat app ledger doclink <transaction-id> --source GOOGLE_DRIVE --reference <drive-file-id> --note "Supplier invoice"

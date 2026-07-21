@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 import logging
+import multiprocessing
 import os
 import subprocess
 import sys
 import textwrap
 import time
+from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
+from multiprocessing.process import BaseProcess
+from multiprocessing.queues import Queue
 from pathlib import Path
+from typing import Protocol, runtime_checkable
 
 import pytest
 
@@ -26,6 +32,23 @@ from .._lockfile import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+
+@runtime_checkable
+class _ProcessFactory(Protocol):
+    def __call__(
+        self,
+        *,
+        target: Callable[..., None],
+        args: tuple[object, ...],
+    ) -> BaseProcess: ...
+
+
+@runtime_checkable
+class _ProcessContext(Protocol):
+    """Context surface required to construct one child lock contender."""
+
+    Process: _ProcessFactory
 
 
 def _holder_script(bucket_dir: Path, hold_seconds: float, ready_path: Path) -> str:
@@ -70,6 +93,21 @@ def _stop_process(process: subprocess.Popen[bytes]) -> None:
         process.wait(timeout=10)
 
 
+def _attempt_lock_in_child(
+    root: str,
+    bucket_id: str,
+    results: Queue[tuple[str, int]],
+) -> None:
+    paths = bucket_paths(Path(root), bucket_id)
+    try:
+        acquire_lock(paths, wait_seconds=0.05)
+    except BucketBusyError as exc:
+        results.put(("busy", exc.holding_pid))
+        return
+    results.put(("acquired", os.getpid()))
+    release_lock(paths)
+
+
 def test_acquire_then_release_round_trip(tmp_path: Path) -> None:
     paths = provision_bucket_directory(tmp_path, "alpha")
 
@@ -86,22 +124,93 @@ def test_acquire_then_release_round_trip(tmp_path: Path) -> None:
     assert not lock_path(paths).exists()
 
 
-def test_second_in_process_acquire_fails_fast(tmp_path: Path) -> None:
-    """Two ``acquire_lock`` calls in the same process — the second must fail.
-
-    The lockfile uses ``O_EXCL`` so a re-entrant acquire is rejected just
-    as a foreign-process acquire would be.
-    """
+def test_same_thread_reentrant_acquire_releases_only_at_final_depth(
+    tmp_path: Path,
+) -> None:
+    """Nested ownership composes production writers onto one lockfile."""
 
     paths = provision_bucket_directory(tmp_path, "alpha")
     acquire_lock(paths)
+    acquire_lock(paths)
+
+    release_lock(paths)
+    assert lock_path(paths).is_file()
+
+    release_lock(paths)
+    assert lock_path(paths).exists() is False
+
+
+def test_different_thread_cannot_reenter_same_process_lock(tmp_path: Path) -> None:
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    acquire_lock(paths)
     try:
-        with pytest.raises(BucketBusyError) as excinfo:
-            acquire_lock(paths)
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            blocked = executor.submit(acquire_lock, paths, wait_seconds=0.05)
+            with pytest.raises(BucketBusyError) as excinfo:
+                blocked.result(timeout=5)
         assert excinfo.value.bucket_id == "alpha"
         assert excinfo.value.holding_pid == os.getpid()
+        assert lock_path(paths).is_file()
     finally:
         release_lock(paths)
+
+
+def test_missing_bucket_lock_target_is_not_materialized(tmp_path: Path) -> None:
+    paths = bucket_paths(tmp_path, "missing")
+
+    with pytest.raises(BucketValidationError) as excinfo:
+        acquire_lock(paths)
+
+    assert excinfo.value.context == {
+        "reason": "bucket_dir_missing",
+        "surface": "bucket_lockfile",
+    }
+    assert paths.bucket_dir.exists() is False
+
+
+def test_equivalent_path_release_clears_canonical_local_ownership(
+    tmp_path: Path,
+) -> None:
+    equivalent_root = tmp_path / ".." / tmp_path.name
+    relative_paths = provision_bucket_directory(equivalent_root, "alpha")
+    absolute_paths = bucket_paths(tmp_path.resolve(), "alpha")
+
+    acquire_lock(relative_paths)
+    release_lock(absolute_paths)
+
+    assert lock_path(absolute_paths).exists() is False
+    acquire_lock(absolute_paths)
+    release_lock(absolute_paths)
+
+
+def test_child_process_cannot_inherit_parent_local_lock_ownership(
+    tmp_path: Path,
+) -> None:
+    paths = provision_bucket_directory(tmp_path, "alpha")
+    if "fork" in multiprocessing.get_all_start_methods():
+        context = multiprocessing.get_context("fork")
+    else:
+        context = multiprocessing.get_context("spawn")
+    results = context.Queue()
+    assert isinstance(context, _ProcessContext)
+
+    acquire_lock(paths)
+    child = context.Process(
+        target=_attempt_lock_in_child,
+        args=(str(tmp_path), "alpha", results),
+    )
+    try:
+        child.start()
+        child.join(timeout=10)
+        assert child.exitcode == 0
+        assert results.get(timeout=5) == ("busy", os.getpid())
+        assert lock_path(paths).is_file()
+    finally:
+        if child.is_alive():
+            child.terminate()
+            child.join(timeout=10)
+        release_lock(paths)
+        results.close()
 
 
 def test_cross_process_busy_detection(tmp_path: Path) -> None:
@@ -132,8 +241,12 @@ def test_wait_seconds_eventually_acquires(tmp_path: Path) -> None:
     holder = subprocess.Popen([sys.executable, "-c", script])
     try:
         _wait_for_ready(ready)
-        # Holder releases after 0.25s; wait window must succeed.
-        acquire_lock(paths, wait_seconds=2.0)
+        # Holder releases after 0.25s; the waiting acquisition must succeed
+        # once it does. The window is a hang guard, not a latency assertion:
+        # on a heavily loaded shared box the holder subprocess can be
+        # descheduled well past its nominal 0.25s hold, and a tight 2s
+        # budget produced false timeouts unrelated to the wait contract.
+        acquire_lock(paths, wait_seconds=30.0)
         try:
             assert lock_path(paths).is_file()
         finally:

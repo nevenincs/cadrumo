@@ -19,14 +19,13 @@ from __future__ import annotations
 import json
 from collections.abc import Iterator
 from pathlib import Path
-from typing import Any
 
 import pytest
-from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
+from ....tests.cli_envelope import unwrap_cli_result as _json
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
 
@@ -55,22 +54,6 @@ def _invoke(args: list[str]):
 
     dispose_engine()
     return invoke_cached_cli(args)
-
-
-def _json(result: Result) -> dict[str, Any]:
-    """Unwrap the emit-envelope ``result`` payload from a CLI JSON emission.
-
-    Every CLI verb in this roundtrip emits
-    ``{schema_version, command, status, result, notices}``
-    via the centralised output schema. The tests assert against the
-    operator-visible payload, which lives under ``result``.
-    """
-    payload = json.loads(result.output)
-    assert isinstance(payload, dict), f"expected JSON object, got {type(payload).__name__}"
-    assert "schema_version" in payload and "result" in payload, f"missing CLI output envelope keys: {sorted(payload)}"
-    inner = payload["result"]
-    assert isinstance(inner, dict), f"expected result object, got {type(inner).__name__}"
-    return inner
 
 
 def _create(name: str, tax_id: str = "12345678Z") -> None:

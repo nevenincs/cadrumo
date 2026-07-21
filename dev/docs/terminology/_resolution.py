@@ -1,25 +1,25 @@
-"""Chunk-to-target resolution map: raw RAG hits to typed linkable targets (ADR D6).
+"""Chunk-to-target resolution map: raw RAG hits to typed linkable targets.
 
 The build-time RAG sweep returns raw chunk hits -- a source file path, a line
-range, a relevance score. ADR D6's "output wrangling is a typed transformation
-layer, not ad-hoc filtering" sub-decision requires resolving each hit, by its
-path, to a typed, linkable target across the five grounding surfaces the
-operator named: modelo casillas, the CLI surface, BOE legal grounding, the
-codebase API reference, and the built docs pages. A hit with no resolvable
-target is DROPPED and REPORTED (a typed dropped-hit report), never shipped
-half-mapped.
+range, a relevance score. Output wrangling is a typed transformation layer,
+not ad-hoc filtering: each hit is resolved, by its path, to a typed, linkable
+target across the five grounding surfaces the operator named: modelo
+casillas, the CLI surface, BOE legal grounding, the codebase API reference,
+and the built docs pages. A hit with no resolvable target is DROPPED and
+REPORTED (a typed dropped-hit report), never shipped half-mapped.
 
 The five resolution rules (by source path):
 
 * ``src/cadrumo/_data/registry/.../casillas/*.toml`` -> the modelo's
   :class:`~dev.docs.terminology._search_record.CasillaSearchRecord` set (the
   CASILLA grounding surface).
-* a Disenos de Registro sidecar
-  (``.../disenos_registro/.../*.extracted.md``) -> the modelo's casilla target
-  (the Diseno is the casilla-to-field authority).
-* a normatives sidecar (``.../normatives/.../*.extracted.md``) or a legal
-  catalogue TOML (``.../registry/aeat/legal/*.toml``) -> the legal-grounding
-  target (the BOE permalink + ``#aN`` article anchor, resolved through the
+* a Disenos de Registro source workbook or PDF
+  (``.../disenos_registro/.../*.{xlsx,xls,pdf}``, indexed through the
+  preprocess-hook rules) -> the modelo's casilla target (the Diseno is the
+  casilla-to-field authority).
+* a normatives source page (``.../normatives/.../*.html``, hook-indexed) or a
+  legal catalogue TOML (``.../registry/aeat/legal/*.toml``) -> the
+  legal-grounding target (the BOE permalink + ``#aN`` article anchor, resolved through the
   legal catalogue's ``corpus_ref`` -- the BOE grounding surface).
 * ``src/cadrumo/**/*.py`` -> the generated API stub
   (``docs/api/cadrumo.<dotted.module>.html`` -- the CODEBASE grounding surface).
@@ -68,7 +68,7 @@ _UTF_8: Final[str] = "utf-8"
 
 
 class GroundingSurface(StrEnum):
-    """The grounding surfaces a chunk hit can resolve onto (ADR D6).
+    """The grounding surfaces a chunk hit can resolve onto.
 
     The five operator-named surfaces (casilla, legal/BOE, codebase, docs, CLI)
     plus the Handbook concept surface: a sweep hit landing on a concept
@@ -85,7 +85,7 @@ class GroundingSurface(StrEnum):
 
 
 class DropReason(StrEnum):
-    """Why a chunk hit could not be resolved to a target (ADR D6)."""
+    """Why a chunk hit could not be resolved to a target."""
 
     #: The path matched no resolution rule (unknown source surface).
     UNKNOWN_PATH = "unknown_path"
@@ -113,7 +113,7 @@ class ChunkHit(BaseModel):
 
 
 class ResolvedTarget(BaseModel):
-    """A chunk hit resolved to a typed, linkable target (ADR D6)."""
+    """A chunk hit resolved to a typed, linkable target."""
 
     model_config = _STRICT_FROZEN
 
@@ -162,11 +162,14 @@ _CONCEPT_TOML_RE = re.compile(
 _CASILLA_PATH_RE = re.compile(
     r"^src/cadrumo/_data/registry/aeat/modelos/(?P<modelo>[^/]+)/revisions/[^/]+/casillas/.+\.toml$",
 )
+# Corpus hits arrive under SOURCE file paths: the dev index reads the corpus
+# through the .vaultragpreprocess.toml hook rules, and the extraction sidecars
+# are .vaultragignore-excluded (they remain the committed product payload).
 _DISENO_PATH_RE = re.compile(
-    r"^src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_(?P<modelo>[^/]+)/.+\.extracted\.md$",
+    r"^src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_(?P<modelo>[^/]+)/.+\.(?:xlsx|xls|pdf)$",
 )
 _NORMATIVES_PATH_RE = re.compile(
-    r"^src/cadrumo/_data/corpus/normatives/.+\.extracted\.md$",
+    r"^src/cadrumo/_data/corpus/normatives/.+\.html$",
 )
 _LEGAL_TOML_RE = re.compile(
     r"^src/cadrumo/_data/registry/aeat/legal/[^/]+\.toml$",
@@ -226,7 +229,7 @@ class TargetResolver:
         # Index the Handbook concept cards by concept_id (the fragment stem), so
         # a sweep hit on a concept authoring fragment resolves to its card. Only
         # APPROVED concepts are indexed: a draft concept is absent from the
-        # approved-only generated glossary (ADR D7), so its
+        # approved-only generated glossary, so its
         # ``#term-<id>`` deep link would be dead. Resolving a RAG hit on a draft
         # fragment (or seeding a draft card) would ship a dead link, so drafts
         # are excluded here exactly as they are from the Pagefind injection.
@@ -239,7 +242,7 @@ class TargetResolver:
     def concept_record(self, concept_id: str) -> SearchRecord | None:
         """Return the unified concept-card record for ``concept_id``, if enrolled.
 
-        The concept card is the first-class palette result (ADR D4). The sweep
+        The concept card is the first-class palette result. The sweep
         uses this to seed a query's originating concept card as a guaranteed
         target: a closed-vocabulary term is, by construction, a label *of* that
         concept, so its card is the canonical top result regardless of whether
@@ -312,16 +315,15 @@ class TargetResolver:
         return ResolvedTarget(surface=GroundingSurface.CASILLA, record=record, source_hit=hit)
 
     def _resolve_normatives(self, hit: ChunkHit) -> ResolvedTarget | DroppedHit:
-        # Strip the .extracted.md sidecar suffix to recover the origin html path
-        # relative to src/cadrumo/_data/, then to the corpus/-rooted corpus_ref form.
+        # The hit path IS the origin html source (hook-indexed); reduce it to
+        # the corpus/-rooted corpus_ref form the legal catalogue cites.
         path = hit.posix_path.as_posix()
-        origin = path.removesuffix(".extracted.md")
-        corpus_rel = _to_corpus_relative(origin)
+        corpus_rel = _to_corpus_relative(path)
         if corpus_rel is None:
             return DroppedHit(
                 hit=hit,
                 reason=DropReason.NO_TARGET_ENTITY,
-                detail=f"normatives sidecar outside the corpus root: {path}",
+                detail=f"normatives source outside the corpus root: {path}",
             )
         legal_id = self._legal_by_corpus_path.get(corpus_rel)
         if legal_id is None:
@@ -455,7 +457,7 @@ def resolve_chunk_hits(
     Returns:
         A :class:`ResolutionResult` partitioning resolved targets from
         dropped+reported hits. A hit with no resolvable target is in
-        ``dropped``, never silently mapped (ADR D6).
+        ``dropped``, never silently mapped.
     """
     target_resolver = resolver if resolver is not None else TargetResolver(authority)
     resolved: list[ResolvedTarget] = []

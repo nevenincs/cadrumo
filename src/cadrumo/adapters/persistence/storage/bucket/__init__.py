@@ -5,8 +5,8 @@ the multi-bucket on-disk layout. The facade exposes
 :class:`BucketPaths` / :func:`bucket_paths` /
 :func:`provision_bucket_directory` for the ``db/``, ``blobs/``, and
 ``audit/`` tree; :class:`BucketManifest`,
-:class:`ManifestKdfParams`, :class:`BucketKeySchedule`, and
-:class:`BucketLifecycleStatus` for the plaintext manifest; and
+:class:`ManifestKdfParams` and :class:`BucketKeySchedule` for the plaintext
+manifest; and
 :func:`read_manifest` / :func:`write_manifest` for strict TOML I/O.
 
 The manifest is discovery metadata only: bucket identity, operator label,
@@ -57,7 +57,7 @@ from ._export_header import ExportArchiveHeader
 from ._keystore_paths import keystore_path, keystore_root, validate_keystore_separation
 from ._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from ._lockfile import acquire_lock, lock_path, release_lock
-from ._manifest import BucketKeySchedule, BucketLifecycleStatus, BucketManifest, ManifestKdfParams
+from ._manifest import BucketKeySchedule, BucketManifest, ManifestKdfParams
 from ._manifest_io import MISSING_BUCKET_MANIFEST_MESSAGE, manifest_path, read_manifest, write_manifest
 from ._output_language_hint import (
     clear_bucket_output_language_hint,
@@ -75,7 +75,6 @@ __all__ = [
     "BucketBusyError",
     "BucketError",
     "BucketKeySchedule",
-    "BucketLifecycleStatus",
     "BucketLockedError",
     "BucketManifest",
     "BucketPaths",

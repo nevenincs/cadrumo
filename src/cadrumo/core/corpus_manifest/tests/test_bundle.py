@@ -236,4 +236,4 @@ def test_build_corpus_bundle_overwrites_existing_output_atomically(tmp_path: Pat
     result = verify_corpus_bundle(output_path)
     assert result.is_clean is True
     # The rename leaves no stray temp file behind.
-    assert not output_path.with_name(output_path.name + ".tmp").exists()
+    assert list(output_path.parent.glob("*.tmp")) == []

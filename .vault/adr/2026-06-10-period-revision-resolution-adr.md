@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#period-revision-resolution'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-period-revision-resolution-research]]"
 ---
@@ -25,7 +25,7 @@ foundation, sibling to the calculation-aggregation taxonomy ADR) ratifies the ex
 resolution machinery as the single law-determined authority and closes the gaps the
 grounding research surfaced. The reassuring headline from that research holds and was
 re-verified at HEAD for this ADR: the deterministic resolver `select_revision`
-(`src/aeat/domain/calculations/registry/_temporal.py`) already exists, is enforced
+(`src/cadrumo/domain/calculations/registry/_temporal.py`) already exists, is enforced
 unambiguous by the registry non-overlap gate `validate_revision_windows`
 (`_validate_revision_rules.py`), and every snapshot funnels through it via
 `ValidatedRegistryAuthority.snapshot` → `_build_validated_snapshot`
@@ -35,7 +35,7 @@ The real gaps this ADR decides on:
 
 - **D1 (identity-vs-calc divergence).** `revision_id` is part of the WorkUnit identity
   key `(bucket_id, modelo, filing_year, period, revision_id)`
-  (`src/aeat/domain/modelos/_work_unit.py`) and is persisted at creation, yet every
+  (`src/cadrumo/domain/modelos/_work_unit.py`) and is persisted at creation, yet every
   calculation path re-resolves the snapshot purely from `filing_year`/`period`
   (`_calculation_actions.py`, `_calculate_input.py`, the `PreviousFilingSourceResolver`
   fallback in `application/calculations/_multi_year.py`) and never consults
@@ -49,7 +49,7 @@ The real gaps this ADR decides on:
   `RegistryModeloObservation` records without re-confirming that the source filing's
   revision is the law-determined one. The persisted envelope
   (`_ObservationEnvelopePayload` in
-  `src/aeat/application/calculations/_observations_repository.py`) carries **no revision
+  `src/cadrumo/application/calculations/_observations_repository.py`) carries **no revision
   identifier at all** — `(modelo, filing_year, period, observations, captured_at,
   source_kind, member_nif)` only — so a wrong/stale-revision prior cannot even be
   detected today, let alone refused.
@@ -156,11 +156,12 @@ mechanism the sibling ADR canonicalises.
   snapshots); all plug-in points live inside `ValidatedRegistryAuthority`,
   `_snapshot.py`, `_temporal.py`, and the application-layer gates. No new top-level
   surface, per the registry-authority-flow rule.
-- **Persisted-record compatibility.** WorkUnits already persist `revision_id` inside a
-  content-addressed identity; observations persist with **no** revision field. Both
-  decisions below must work against existing stored records: the calc-time assertion
-  must handle pre-gate units, and the carry gate must handle unstamped legacy
-  observations, without silent acceptance and without bricking historical data.
+- **Persisted-record cutover (reconciled 2026-07-15).** WorkUnits persist
+  `revision_id` inside a content-addressed identity, and the calc-time assertion must
+  still handle pre-gate units. Every persisted observation envelope now requires a
+  non-empty `stamped_revision_id`; strict loading refuses a missing or invalid stamp
+  before the observation can enter carry. This pre-release cutover has no unstamped
+  compatibility reader or reconstruction path.
 - **Legal-catalogue dependency for D3.** The first-class orden field is only as
   auditable as the legal catalogue entries it references; the
   registry-calculation-legal-grounding rule (corpus-backed `corpus_ref`, evidence-gate
@@ -224,9 +225,10 @@ source_period).id`:
   blocker vocabulary already models divergence classes; this adds a
   registry-revision-divergence blocker). A prior filed under one revision must not
   silently propagate its norms into a target period the law binds to another.
-- *Missing stamp (legacy record)* → carry proceeds but MUST surface a non-blocking
-  ADVISORY finding (the no-silent-under-declaration shape: never a silent grant), so
-  legacy data degrades loudly instead of invisibly.
+- *Missing or invalid stamp* → the persisted envelope is REFUSED at strict load and
+  cannot enter the carry gate. A populated stamp that cannot be re-confirmed against
+  `select_revision` is also REFUSED; the system does not reconstruct or bypass legal
+  provenance.
 
 **Ruling 4 — D3 scope: FULL; the orden becomes first-class in this ADR.** Each
 `revision.toml` gains a mandatory applicability declaration — working name
@@ -280,11 +282,11 @@ and pre-gate legacy units), which a creation gate alone can never catch.
 
 R2 is decided YES because the carry path is the one place where a revision error
 *compounds across years*: a prior observation filed under the wrong revision injects
-that revision's norms into every later filing that folds it in. Today the persisted
-envelope cannot even express the question — there is no revision field — so the gate
-necessarily comes with the provenance stamp. The blocking/advisory split follows the
-no-silent-under-declaration discipline: a *contradicted* claim blocks; an *absent*
-claim (legacy data) warns loudly but does not brick years of stored history.
+that revision's norms into every later filing that folds it in. The persisted envelope
+therefore requires the provenance stamp. Missing or invalid stamps refuse at strict
+load; a populated stamp carries only when `select_revision` re-confirms it, while
+divergent or otherwise unreconfirmable stamps block. The pre-release hard cut avoids
+turning compatibility handling into a second provenance contract.
 
 D3 is decided FULL because an unauditable legal anchor under a "law-determined"
 resolver is structurally identical to the Modelo 200 DT-44ª incident that produced the
@@ -307,16 +309,17 @@ check instead of an archaeology exercise.
 - **Costs and difficulties.** The calc-time assertion will refuse previously-working
   stale units after registry corrections — that is the point, but it is new operator
   friction and needs an instructive message plus a documented re-create path. The
-  observation-envelope stamp is a persisted-schema addition behind an encrypted
+  observation-envelope stamp is a required persisted-schema field behind an encrypted
   boundary: it needs the standard strict roundtrip + anti-tautology tests
-  (roundtrip-discipline rule) and a deliberate legacy-read story. The D3 backfill
+  (roundtrip-discipline rule), including proof that deleting the field refuses load.
+  The D3 backfill
   touches every modelo's `revision.toml` and the legal catalogue; for some modelos the
   correct orden must be researched against BOE before it can be declared — the gate
   must not tempt anyone into decorative citations (the legal-grounding rule's
   corpus-text cross-check is the defence).
-- **Pitfalls.** The advisory path for unstamped legacy observations must not become
-  permanent camouflage; the plan should pair it with a backfill-or-ratchet so the
-  advisory population shrinks monotonically. The contextless schema-browse fallback in
+- **Pitfalls.** Do not add an unstamped-observation backfill, advisory bypass, or
+  reconstructed revision: missing and invalid persisted stamps must continue to refuse
+  at strict load. The contextless schema-browse fallback in
   `filing/runtime.py` remains a named exemption — it must never grow into a calc-path
   precedent for passing revision ids.
 - **Pathways opened.** With the orden first-class, a future registry gate can verify
@@ -334,8 +337,8 @@ check instead of an archaeology exercise.
   (refusing instructively on divergence), never injected as the selector.
 
 - **Rule slug:** `carried-observations-stamp-their-revision`.
-  **Rule:** Every persisted prior-filing observation records the registry revision it
-  was captured under, and every cross-period/cross-year carry re-confirms that stamp
-  against `select_revision` for the source context before trusting the value — a
-  divergent stamp blocks the carry, a missing legacy stamp surfaces a non-blocking
-  advisory, never silence.
+  **Rule:** Every persisted prior-filing observation records a required, non-empty
+  registry revision stamp. Missing or invalid stamps refuse at strict load. Every
+  cross-period/cross-year carry re-confirms a populated stamp against `select_revision`
+  for the source context before trusting the value; divergence or inability to
+  re-confirm blocks the carry.

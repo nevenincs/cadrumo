@@ -68,9 +68,8 @@ def test_classification_result_rejects_exemption_article_on_non_exempt_category(
 def test_exemption_article_enum_membership_matches_accepted_correction() -> None:
     """The closed enum carries only the accepted generic-exemption slots.
 
-    Authority: ``2026-07-11-article-20-uno-26-correction-adr``. This test
-    fails when the removed Article 20.Uno.26 route is reintroduced without
-    an approved contract change.
+    This test fails when the removed Article 20.Uno.26 route is
+    reintroduced without an approved contract change.
     """
     expected = {
         IvaExemptionArticle.ART_20_UNO_8.value,

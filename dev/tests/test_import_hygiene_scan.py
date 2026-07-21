@@ -10,6 +10,7 @@ facade -- misclassifying every symbol already exported by that package as
 from __future__ import annotations
 
 import ast
+from pathlib import Path
 
 import pytest
 
@@ -21,6 +22,7 @@ from ..import_hygiene_scan import (
     find_shim_modules,
     find_underscore_in_all_violations,
     is_underscore_named,
+    walk_module_imports,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -113,6 +115,24 @@ def test_find_shim_modules_still_flags_a_non_main_pure_reexport_module() -> None
     shims = find_shim_modules([reexport_path], facades={})
 
     assert any(shim.reason == "pure_reexport_shape" for shim in shims)
+
+
+def test_walk_module_imports_tolerates_file_removed_after_discovery(tmp_path: Path) -> None:
+    """A generated module removed after discovery is not a scanner failure."""
+    generated = tmp_path / "generated_test_module.py"
+    generated.write_text("from pathlib import Path\n", encoding="utf-8")
+    generated.unlink()
+
+    assert walk_module_imports(generated) == []
+
+
+def test_find_shim_modules_tolerates_file_removed_after_discovery(tmp_path: Path) -> None:
+    """Shim classification ignores only a path that genuinely vanished."""
+    generated = tmp_path / "generated_test_module.py"
+    generated.write_text("from pathlib import Path\n", encoding="utf-8")
+    generated.unlink()
+
+    assert find_shim_modules([generated], facades={}) == []
 
 
 def test_is_underscore_named_flags_leading_underscore_but_not_dunders() -> None:

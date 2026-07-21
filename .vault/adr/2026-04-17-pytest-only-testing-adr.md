@@ -1,165 +1,107 @@
 ---
 name: 2026-04-17-pytest-only-testing-adr
-description: Lock the project into a pytest-only testing posture with an enforced unittest ban, a live-mock-import guard, marker discipline, and a documented plugin set for live-web integration
+description: Enforce one pytest-only, real-behaviour test posture with explicit execution and architecture markers
 tags:
   - "#adr"
   - "#pytest-only-testing"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-17-pytest-only-testing-research]]"
   - "[[2026-04-12-dev-scaffolding-adr]]"
-  - "[[2026-04-12-base-module-structure-adr]]"
   - "[[2026-04-16-live-write-test-audit-adr]]"
+  - "[[2026-06-05-test-topology-refactor-adr]]"
 status: accepted
 ---
 
-# pytest-only-testing adr | (**status:** `accepted`)
+# pytest-only testing ADR | (**status:** `accepted`)
 
-## status
+## Context
 
-accepted — 2026-04-17
+The test suite is an architectural proof surface. A passing result must come
+from production code exercised against real objects, local processes,
+authoritative fixtures, persistence, or explicitly selected external systems.
+Mocks, fakes, stubs, patches, monkeypatches, skips, xfails, response recording,
+global clock mutation, retries, and snapshot approval can conceal a broken
+production path and therefore cannot be accepted as test-control mechanisms.
 
-## context
+The repository also needs one execution taxonomy and one hexagonal ownership
+taxonomy. Missing, mixed, or ad-hoc markers make CI coverage ambiguous.
 
-CLAUDE.md already mandates pytest with marker-gated unit/live tests and forbids mocks in live tests. The mandate is declarative only: nothing enforces it at commit- or collection-time. A contributor (human or agent) can silently import `unittest.mock` or `pytest_mock` into a live test and violate the live-AEAT-write safety charter (memory: live_write_safety). Issue #15 closes that gap.
+## Decision
 
-This ADR decides the plugin set, the enforcement surface, and the opt-in gating.
+### Real-behaviour-only controls
 
-## decision
+- `pytest` is the only test runner.
+- `unittest`, `unittest.mock`, third-party `mock`, and `pytest-mock` are
+  prohibited.
+- Tests must not use fake or stub implementations, patch production state,
+  skip or xfail outcomes, retry failures, intercept or replay HTTP responses,
+  globally alter clocks, or approve snapshots.
+- Determinism comes from explicit production seams, isolated real storage,
+  committed authoritative evidence, local servers and processes, and bounded
+  real elapsed-time behaviour.
+- Test expectations must not mirror production business logic.
 
-### 1 — plugin set added to `[dependency-groups].dev`
+The accepted pytest plugin set is limited to concrete runner capabilities:
+`pytest-asyncio`, `pytest-playwright`, `pytest-xdist`, and `pytest-cov`.
+Playwright fixtures are reserved for live browser tests, while deterministic
+single-owner tests may launch the production browser session against owned
+local resources. HTTP interception, rerun, snapshot, and clock-mutation
+plugins are not dependencies.
 
-Every plugin must solve a concrete, near-term problem. The following are accepted:
+### Marker topology
 
-| plugin | role | scope | rationale |
-| --- | --- | --- | --- |
-| `pytest-asyncio` | async test collection | unit + live | Playwright path is async-first; already installed. Pin `asyncio_mode = "strict"` so plain coroutines are not collected by accident. |
-| `pytest-playwright` | browser fixtures for live AEAT flow tests | live only | `aeat.adapters.outbound.aeat.browser` needs a standardised harness; complements the MCP Playwright path. |
-| `pytest-httpx` | httpx wire-shape assertions | unit only | AEAT integrations ride httpx; unit tests must assert URL / headers / body without hitting the network. Must be a **banned import** in any `@pytest.mark.live` file. |
-| `pytest-rerunfailures` | retry flaky live endpoints | live only, per-test opt-in via `@pytest.mark.flaky(reruns=N)` | AEAT has real maintenance windows; scoped retries prevent environmental flake from masking commits. **Never** applied globally and **never** to unit tests. |
-| `syrupy` | snapshot diffing | both | #7 casilla extractions and #9 modelo schemas produce large structured output. |
-| `pytest-xdist` | parallel unit suite | unit only, **opt-in** via a new `just test-parallel` recipe | ~880 tests today; xdist-by-default would mask fixture-scope bugs and break the live suite's ordering guarantees. |
-| `pytest-cov` | coverage measurement + floor | unit only | documented minimum (see 5 below). Live suite excluded from coverage. |
-| `time-machine` | wall-clock control | unit only | deadline engine (#10), expedientes parsers compute against wall time. C-extension implementation is faster and more correct than `freezegun`. Banned in live tests. |
+Every test module carries exactly one execution marker:
 
-Explicitly **not adopted**:
+- `unit` for deterministic offline behaviour owned by one architectural
+  component; owned local processes are permitted.
+- `integration` for deterministic offline behaviour crossing architectural
+  layers.
+- `aeat_live` for explicitly selected reads from real external systems.
 
-- `pytest-sugar`, `pytest-rich` — quality-of-life noise; built-in output is adequate.
-- `pytest-github-actions-annotate-failures` — GitHub Actions is permanently disabled on this repo (memory: github_actions_disabled).
-- `freezegun` — `time-machine` supersedes it.
-- `pytest-timeout` — no concrete flake yet. Add only when it hits us.
+Every test module also carries exactly one accepted `hex_*` owner marker.
+Collection and static inventory gates reject missing, mixed, per-function, or
+retired marker shapes.
 
-### 2 — enforce the unittest ban via ruff `TID251`
+### Live selection
 
-Add `[tool.ruff.lint.flake8-tidy-imports.banned-api]` with entries for `unittest`, `unittest.mock`, and third-party `mock`. Ruff rejects the import at lint-time (`just lint`) and at the pre-commit hook (`prek`). The codebase is already clean (grep confirms zero real imports; existing hits are narrative mentions in docstrings/comments, none of which are actual imports). The rule must be green on the existing tree from day one.
+The default pytest selection is `unit`. Explicit `aeat_live` selection must
+call the central prerequisite gate and fails when
+`CADRUMO_LIVE_TESTS_ENABLED=1` is absent. Google live reads also require
+`CADRUMO_LIVE_TESTS_GOOGLE=1`. A missing prerequisite is a failure, never a
+skip.
 
-The `TID` rule family is added to `[tool.ruff.lint].select`.
+Live-marked files receive an additional AST import check for recording,
+interception, mocking, and clock-control libraries. Project-wide inventory
+tests enforce the same real-behaviour posture for deterministic tests.
 
-### 3 — conftest-driven collection guards
+### Enforcement and coverage
 
-A single `tests/conftest.py` `pytest_collection_modifyitems` hook implements three invariants:
+- Ruff `TID251` rejects `unittest`, `unittest.mock`, and `mock` imports.
+- Collection hooks reject execution- and architecture-marker drift before
+  pytest's marker filter can hide it.
+- Ratchet tests reject fake/stub classes, monkeypatching, mocks, skips,
+  xfails, tautological assertions, and ungrounded calculation expectations.
+- The unit coverage floor remains 60% with branch coverage enabled. It may
+  only increase through a separately grounded decision.
+- `src/cadrumo/tests/README.md` is the maintainer-facing operational
+  reference; this ADR owns the architectural decision.
 
-1. **Marker presence**: every collected item has exactly one of `unit` / `live`. Missing → fail collection. Both → fail collection.
-2. **Live-file mock-import scan**: for any file containing at least one `live`-marked item, AST-parse the file and reject the session if it imports any symbol from the banned set:
-   ```
-   {"unittest", "unittest.mock", "mock", "pytest_mock",
-    "responses", "httpx_mock", "pytest_httpx", "vcr", "vcrpy",
-    "freezegun", "time_machine"}
-   ```
-   `pytest_httpx`, `freezegun`, and `time_machine` are unit-only by ADR and must not appear in a live file even if installed. AST-based scan; never execute the file.
-3. **Live opt-in gate**: when any collected item is marked `live`, the hook checks `AEAT_LIVE_TESTS_ENABLED`. If unset/false, the entire live subset is skipped with a single, clear reason string. Individual tests are not silently skipped.
+## Consequences
 
-Collection-time failure surface = hard, single-line `pytest.exit(..., returncode=2)` with the offending file and symbol. `pytest.exit` (not `pytest.fail`) is the correct primitive here because the violations are session-wide — a single malformed live file taints the whole collection. No warnings, no "--strict" flag required.
+- A green test run represents observed production behaviour rather than a
+  simulated substitute.
+- External-system tests fail clearly when an operator selects them without
+  satisfying prerequisites.
+- Slow real browser, storage, and elapsed-time proofs remain visible costs
+  instead of being hidden by test doubles or global mutation.
+- Historic plans and research that authorize removed test-control plugins are
+  not retained as active semantic-search material.
 
-### 4 — marker configuration
+## Superseded details
 
-Register a third documented marker `flaky` so `@pytest.mark.flaky(reruns=N)` does not trigger `--strict-markers`:
-
-```toml
-markers = [
-    "unit: deterministic tests with no external I/O",
-    "live: tests that hit real AEAT/Google/external endpoints",
-    "flaky: opt-in retry via pytest-rerunfailures; live tests only",
-]
-```
-
-`--strict-markers` is **added** to `addopts` so an unregistered marker is a hard error.
-
-### 5 — coverage gate
-
-Starting threshold **60%**, enforced only on the unit suite. Rationale: the repository has never been measured; 80% is aspirational without evidence. 60% is the minimum floor that prevents brand-new code from shipping without tests. The ADR mandates ratcheting up in follow-up ADRs once the baseline is measured. Live suite is excluded from coverage via `--cov` scope and the `-m "not live"` filter in the cov recipe.
-
-Coverage config lives in `pyproject.toml` under `[tool.coverage.run]` (`source = ["src/aeat"]`, `branch = true`) and `[tool.coverage.report]` (`fail_under = 60`, `skip_covered = false`, `show_missing = true`).
-
-### 6 — justfile recipes
-
-- `just test` — unchanged behaviour (`uv run pytest`, skips live).
-- `just test-live` — unchanged (`uv run pytest -m live`).
-- `just test-cov` — **new**: `uv run pytest --cov=aeat --cov-report=term-missing --cov-fail-under=60`.
-- `just test-parallel` — **new**: `uv run pytest -n auto` (unit suite only; xdist never on live).
-
-Windows + Unix variants follow the existing pattern (both shell branches already tested and present).
-
-### 7 — documentation
-
-- `CLAUDE.md` testing paragraph expanded to reference the full enforcement set and the new `tests/README.md`.
-- `tests/README.md` created as the single consolidated reference: marker rules, banned imports (source + live), opt-in env vars, coverage gate, justfile recipes, plugin roster with scope notes. One authoritative document — not duplicated across README.md and CLAUDE.md.
-
-## consequences
-
-### positive
-
-- A contributor cannot accidentally sneak a mock into a live test: ruff rejects it in source, conftest rejects it at collection, and the live suite is the only surface that would even exercise it.
-- Marker discipline is enforced at the entrypoint, not at review time.
-- Coverage has a measurable floor that can only move up.
-- Plugin set is **minimal**: each plugin has a documented role and scope.
-
-### negative / pitfalls
-
-- Adding `pytest-rerunfailures` creates a risk that a flaky live test masks a real bug. Mitigation: marker is **opt-in per-test**, not global.
-- `pytest-xdist` surfaces fixture-scope bugs that were latent in the serial suite. Mitigation: opt-in recipe, not default.
-- Coverage at 60% will feel low; the ratchet lives in a follow-up ADR that consumes the first measured baseline.
-- The conftest AST scan has a one-time cost at collection. Negligible at 1k tests; monitor if the suite grows 10×.
-
-### risks neutralised
-
-- Live-AEAT-write safety charter (memory: live_write_safety): a test importing `unittest.mock` into a live file can no longer silently pass. Both ruff and conftest block it.
-- Drift between "what CLAUDE.md says" and "what the suite enforces" is eliminated — the rules are executable.
-
-## alternatives considered
-
-- **Add `unittest` ban via a bespoke prek hook** — rejected. Ruff already traverses imports; a second scanner duplicates work and complicates the pre-commit config.
-- **Use `pytest-mock` as the "blessed" mock lib for unit tests** — rejected. The project's culture (memory: pydantic_mandate + live_write_safety) is to prefer real objects / fakes-as-classes. Permitting `pytest-mock` reopens the door `unittest.mock` is trying to close.
-- **Coverage threshold 80%** — rejected as starting point (no baseline yet). Will revisit after first measurement.
-- **xdist-by-default** — rejected. The suite has shared fixture mutations (e.g. `tests/conftest.py` scope changes coming in #7/#9) that have not been audited for parallel safety.
-
-## implementation pointers
-
-- `pyproject.toml`:
-  - extend `[dependency-groups].dev` with the eight plugins above.
-  - add `TID` to `[tool.ruff.lint].select`.
-  - add `[tool.ruff.lint.flake8-tidy-imports.banned-api]`.
-  - extend `markers` with `flaky`; add `--strict-markers` + `asyncio_mode = "strict"` to pytest config.
-  - add `[tool.coverage.run]` + `[tool.coverage.report]`.
-- `tests/conftest.py`:
-  - `pytest_collection_modifyitems` hook implementing marker-discipline + live-mock AST scan + live opt-in gate.
-  - Banned set + marker names sourced from module-level constants so the list is grep-able.
-- `justfile`: add `test-cov` and `test-parallel` (unix + windows variants).
-- `CLAUDE.md`: expand the testing paragraph to cross-reference `tests/README.md`.
-- `tests/README.md`: new, authoritative.
-
-## decision review
-
-This ADR is self-audited against Issue #15's acceptance list:
-
-- [x] Vault research artefact + ADR enumerating chosen plugins with justifications.
-- [x] `pyproject.toml` updates defined for every plugin under a group.
-- [x] `unittest` / `unittest.mock` import ban via ruff `TID251`, *and* a conftest guard that additionally scans live files for the broader banned set (belt-and-braces).
-- [x] Live-test mock-import ban enforced by collection-time guard.
-- [x] Marker-presence guard enforced.
-- [x] Coverage gate wired and documented (60% starting threshold).
-- [x] Justfile recipes covered (`test`, `test-live`, `test-cov`, `test-parallel`).
-- [x] Documentation: CLAUDE.md + new `tests/README.md`.
-
-Non-negotiables met: pytest-only, no unittest, no mocks in live tests, every test marked, live tests opt-in via `AEAT_LIVE_TESTS_ENABLED`.
+This reconciled decision removes the original authorization for
+`pytest-httpx`, `pytest-rerunfailures`, `syrupy`, `time-machine`, a `flaky`
+marker, live-test skips, and fake classes. Those mechanisms conflict with the
+current binding real-behaviour rules and the executable suite.

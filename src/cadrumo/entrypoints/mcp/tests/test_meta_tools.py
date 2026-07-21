@@ -14,10 +14,12 @@ from collections.abc import Iterator
 import pytest
 
 from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
+from ....core import PRODUCT_IDENTITY
 from .._annotations import McpAnnotations
 from .._input_schema import VerbInputSchema
 from .._meta_tools import (
     MetaDescribeResult,
+    ToolRunOutcome,
     describe_command,
     gate_refusal,
     meta_execute,
@@ -26,12 +28,12 @@ from .._meta_tools import (
 )
 from .._persona_scope import AgentPersona
 from .._server import (
-    _run_subprocess_tool,
     build_meta_sdk_tools,
     build_server,
     persona_scope_refusal,
 )
 from .._tools import McpToolDescriptor, build_tool_descriptors
+from .._transport import _run_subprocess_tool
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -130,7 +132,7 @@ def test_gate_refusal_blocks_a_declared_live_write_command() -> None:
 
 
 def test_meta_execute_never_reaches_the_runner_on_a_blocked_command() -> None:
-    def boom(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> tuple[dict[str, object], bool]:
+    def boom(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> ToolRunOutcome:
         raise AssertionError("the runner must not be reached for a blocked command")
 
     blocked = _blocked_descriptor()
@@ -158,14 +160,14 @@ def test_gate_refusal_denies_the_handoff_boundary_to_a_non_verifier_persona() ->
     for persona in (AgentPersona.MODELO_PREPARER, AgentPersona.RECONCILER):
         refusal = gate_refusal(persona=persona, descriptor=export)
         assert refusal is not None
-        assert "verifier" in refusal
+        assert "cadrumo-verifier" in refusal
     # The verifier — the sole owner — is NOT denied it by the handoff rule.
     verifier_refusal = gate_refusal(persona=AgentPersona.VERIFIER, descriptor=export)
-    assert verifier_refusal is None or "verifier" not in verifier_refusal
+    assert verifier_refusal is None or "cadrumo-verifier" not in verifier_refusal
 
 
 def test_meta_execute_never_reaches_the_runner_on_a_handoff_denied_command() -> None:
-    def boom(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> tuple[dict[str, object], bool]:
+    def boom(descriptor: McpToolDescriptor, arguments: dict[str, object]) -> ToolRunOutcome:
         raise AssertionError("the runner must not be reached for a handoff-denied command")
 
     descriptors = build_tool_descriptors()
@@ -178,7 +180,7 @@ def test_meta_execute_never_reaches_the_runner_on_a_handoff_denied_command() -> 
         run=boom,
     )
     assert outcome.refused is not None
-    assert "verifier" in outcome.refused
+    assert "cadrumo-verifier" in outcome.refused
     assert outcome.envelope is None
 
 
@@ -198,13 +200,15 @@ def test_build_meta_sdk_tools_exposes_search_execute_toolsets_and_describe() -> 
     for tool in tools:
         assert tool.inputSchema["type"] == "object"
     product_descriptions = [tool.description for tool in tools if tool.name in {"search", "execute", "describe"}]
-    assert all("Cadrumo command" in description for description in product_descriptions)
-    assert all("aeat command" not in description.lower() for description in product_descriptions)
+    for description in product_descriptions:
+        assert description is not None
+        assert "Cadrumo command" in description
+        assert "aeat command" not in description.lower()
 
 
 def test_server_uses_the_canonical_cadrumo_identity() -> None:
     server = build_server(())
-    assert server.name == "cadrumo"
+    assert server.name == PRODUCT_IDENTITY.mcp_server
 
 
 def test_describe_command_returns_the_full_descriptor_for_a_known_key() -> None:
@@ -223,9 +227,9 @@ def test_describe_command_returns_the_full_descriptor_for_a_known_key() -> None:
     assert described.input_schema == by_key["modelo.export"].input_schema
     # The verifier owns the handoff; the preparer and reconciler are structurally
     # denied it, so they are absent from the reachable set while the verifier is in.
-    assert "verifier" in described.reachable_personas
-    assert "modelo-preparer" not in described.reachable_personas
-    assert "reconciler" not in described.reachable_personas
+    assert "cadrumo-verifier" in described.reachable_personas
+    assert "cadrumo-modelo-preparer" not in described.reachable_personas
+    assert "cadrumo-reconciler" not in described.reachable_personas
 
 
 def test_describe_command_returns_none_for_an_unknown_key() -> None:

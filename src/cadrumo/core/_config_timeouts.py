@@ -2,7 +2,7 @@
 
 Split from :mod:`core.config` to keep that module within the line budget.
 :class:`~core.config.Settings` inherits these fields, so every timeout
-still reads the same ``AEAT_*`` environment variable by field name and is
+still reads the same ``CADRUMO_*`` environment variable by field name and is
 unchanged at runtime.
 
 The browser cleanup and Cl@ve approval budgets are consumed by
@@ -20,7 +20,7 @@ from pydantic import Field
 from pydantic_settings import BaseSettings
 
 
-class AeatTimeoutSettings(BaseSettings):
+class CadrumoTimeoutSettings(BaseSettings):
     """Playwright browser-stage and live-IVA surface timeout fields.
 
     :class:`~core.config.Settings` mixes in this base class so these fields
@@ -28,32 +28,32 @@ class AeatTimeoutSettings(BaseSettings):
     stays separated from the rest of the settings facade.
     """
 
-    aeat_browser_navigation_timeout_ms: int = Field(
+    cadrumo_browser_navigation_timeout_ms: int = Field(
         default=30_000,
         gt=0,
         description="Default Playwright navigation timeout (milliseconds) for AEAT sede pages",
     )
-    aeat_browser_form_interaction_timeout_ms: int = Field(
+    cadrumo_browser_form_interaction_timeout_ms: int = Field(
         default=10_000,
         gt=0,
         description="Timeout for individual form interactions (fill/click/wait) in milliseconds",
     )
-    aeat_browser_ver_click_timeout_ms: int = Field(
+    cadrumo_browser_ver_click_timeout_ms: int = Field(
         default=15_000,
         gt=0,
         description="Timeout (ms) for the AEAT declarations 'Ver' button click and navigation",
     )
-    aeat_browser_buscar_settle_ms: int = Field(
+    cadrumo_browser_buscar_settle_ms: int = Field(
         default=3_000,
         gt=0,
         description="Settle delay (ms) after the AEAT 'Buscar' button before reading the results table",
     )
-    aeat_browser_selector_probe_timeout_ms: int = Field(
+    cadrumo_browser_selector_probe_timeout_ms: int = Field(
         default=2_500,
         gt=0,
         description="Selector visibility probe timeout (ms) used by GROI/NIF-IVA check stages",
     )
-    aeat_browser_close_timeout_ms: int = Field(
+    cadrumo_browser_close_timeout_ms: int = Field(
         default=5_000,
         gt=0,
         description=(
@@ -62,7 +62,7 @@ class AeatTimeoutSettings(BaseSettings):
             "has already failed or timed out."
         ),
     )
-    aeat_live_iva_surface_timeout_ms: int = Field(
+    cadrumo_live_iva_surface_timeout_ms: int = Field(
         default=180_000,
         gt=0,
         description=(
@@ -71,7 +71,7 @@ class AeatTimeoutSettings(BaseSettings):
             "the whole filed-history or wallet/cartera surface."
         ),
     )
-    aeat_live_iva_declaration_capture_timeout_ms: int = Field(
+    cadrumo_live_iva_declaration_capture_timeout_ms: int = Field(
         default=120_000,
         gt=0,
         description=(
@@ -81,7 +81,7 @@ class AeatTimeoutSettings(BaseSettings):
             "surface is cancelled."
         ),
     )
-    aeat_live_filed_register_walk_timeout_ms: int = Field(
+    cadrumo_live_filed_register_walk_timeout_ms: int = Field(
         default=30_000,
         gt=0,
         description=(
@@ -90,7 +90,7 @@ class AeatTimeoutSettings(BaseSettings):
             "all later modelos from returning typed failures."
         ),
     )
-    aeat_live_iva_cancellation_drain_ms: int = Field(
+    cadrumo_live_iva_cancellation_drain_ms: int = Field(
         default=250,
         ge=0,
         description=(
@@ -98,7 +98,7 @@ class AeatTimeoutSettings(BaseSettings):
             "browser tasks time to report cancellation-only errors before the loop handler is restored."
         ),
     )
-    aeat_live_iva_cli_watchdog_timeout_ms: int = Field(
+    cadrumo_live_iva_cli_watchdog_timeout_ms: int = Field(
         default=240_000,
         gt=0,
         description=(

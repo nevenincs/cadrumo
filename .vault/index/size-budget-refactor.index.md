@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#size-budget-refactor'
-date: '2026-07-09'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-09-size-budget-refactor-P01-S01]]'
   - '[[2026-07-09-size-budget-refactor-P01-S02]]'
@@ -24,6 +24,7 @@ related:
   - '[[2026-07-09-size-budget-refactor-P05-S16]]'
   - '[[2026-07-09-size-budget-refactor-adr]]'
   - '[[2026-07-09-size-budget-refactor-plan]]'
+  - '[[2026-07-10-size-budget-refactor-research]]'
 ---
 
 # `size-budget-refactor` feature index
@@ -58,3 +59,7 @@ Auto-generated index of all documents tagged with `#size-budget-refactor`.
 ### plan
 
 - `2026-07-09-size-budget-refactor-plan` - `size-budget-refactor` plan
+
+### research
+
+- `2026-07-10-size-budget-refactor-research` - size-budget-refactor research: warning closeout research grounding

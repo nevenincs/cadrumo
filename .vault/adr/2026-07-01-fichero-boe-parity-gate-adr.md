@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#fichero-boe-parity-gate'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-07-01-fichero-boe-parity-gate-research]]"
 ---

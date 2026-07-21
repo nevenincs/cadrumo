@@ -48,12 +48,11 @@ from ...adapters.persistence.storage import (
     MODELO_REVIEW_PACKAGE_RECIPIENT_REPLAY_GUARD_NAMESPACE as _NAMESPACE,
 )
 from ...adapters.persistence.storage import (
-    SensitivityClass,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_bucket,
 )
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.time import now as _utc_now
 
@@ -63,7 +62,7 @@ if TYPE_CHECKING:
 _HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 
 
-class RecipientReplayGuardError(AeatError):
+class RecipientReplayGuardError(CadrumoError):
     """Base error for recipient-package replay-guard failures."""
 
 
@@ -148,7 +147,7 @@ class RecipientReplayGuardRepository:
             record = self._objects.load(
                 _NAMESPACE.namespace,
                 self._object_key,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_NAMESPACE.sensitivity,
                 max_supported_version=_NAMESPACE.schema_version,
             )
             if record is None:
@@ -199,7 +198,7 @@ class RecipientReplayGuardRepository:
         self._objects.save(
             namespace=_NAMESPACE.namespace,
             object_key=self._object_key,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_NAMESPACE.sensitivity,
             schema_version=_NAMESPACE.schema_version,
             written_at=_utc_now(),
             payload=ledger.model_dump_json().encode(_UTF_8_ENCODING),

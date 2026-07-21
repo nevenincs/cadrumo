@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#iva-compensation-override-cli'
 date: '2026-06-19'
-modified: '2026-06-28'
+modified: '2026-07-17'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-adr]]'
   - '[[2026-05-19-iva-compensation-chain-audit-research]]'
   - '[[2026-06-19-crossperiod-filing-deadlock-adr]]'
+  - '[[2026-07-10-iva-compensation-override-cli-research]]'
 ---
 
-# `iva-compensation-override-cli` adr: `Operator-facing IVA-wallet override verb for cross-period compensación carry` | (**status:** `proposed`)
+# `iva-compensation-override-cli` adr: `Operator-facing IVA-wallet override verb for cross-period compensación carry` | (**status:** `accepted`)
 
 ## Problem Statement
 

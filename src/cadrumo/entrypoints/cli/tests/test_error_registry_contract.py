@@ -50,7 +50,7 @@ def test_suggestions_parse_as_valid_cli_commands() -> None:
     suggestions = [
         code.default_suggestion
         for code in ERROR_REGISTRY.values()
-        if code.default_suggestion is not None and code.default_suggestion.startswith("cadrumo ")
+        if code.default_suggestion is not None and code.default_suggestion.startswith("aeat ")
     ]
     assert suggestions
 
@@ -59,7 +59,7 @@ def test_suggestions_parse_as_valid_cli_commands() -> None:
         if len(tokens) > 1 and not tokens[1].startswith("-"):
             assert tokens[1] in top_level
         try:
-            command.make_context("cadrumo", tokens[1:], resilient_parsing=False)
+            command.make_context("aeat", tokens[1:], resilient_parsing=False)
         except Exit as exc:
             assert exc.exit_code == 0
 

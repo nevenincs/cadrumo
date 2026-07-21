@@ -369,7 +369,9 @@ def test_modelo_100_application_links_route_current_workflows_through_snapshots(
         "portal",
     }.issubset(links_by_surface)
     assert all(link.requires_snapshot is True for link in snapshot.revision.application_links)
-    assert links_by_surface["calculation"].consumer == "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+    assert (
+        links_by_surface["calculation"].consumer == "cadrumo.domain.calculations.registry.calculate_registry_snapshot"
+    )
     assert links_by_surface["export"].consumer == "cadrumo.application.filing.export_draft"
     assert links_by_surface["filing"].consumer == "cadrumo.application.filing"
     assert links_by_surface["verification"].consumer == "cadrumo.application.verification"

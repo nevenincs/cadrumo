@@ -3,12 +3,11 @@ tags:
   - '#plan'
   - '#modelo-formulas'
 date: '2026-04-17'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-17-modelo-formulas-adr]]'
   - '[[2026-04-17-modelo-formula-ruleset-research]]'
   - '[[2026-04-13-modelo-inventory-adr]]'
-  - '[[2026-04-12-casilla-db-adr]]'
   - '[[2026-04-12-filing-draft-engine-adr]]'
   - '[[2026-04-17-relative-imports-adr]]'
 ---

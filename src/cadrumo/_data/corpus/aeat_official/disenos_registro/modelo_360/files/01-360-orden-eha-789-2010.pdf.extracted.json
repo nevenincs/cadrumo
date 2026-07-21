@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_360/files/01-360-orden-eha-789-2010.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_360/files/01-360-orden-eha-789-2010.pdf",
   "source_sha256": "1361d004c0156d99555e0257b269ae379cbae420a454cdb90b9c37e0abc28950",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

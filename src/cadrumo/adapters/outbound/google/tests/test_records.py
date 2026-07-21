@@ -238,7 +238,7 @@ def test_every_leaf_carries_a_registered_error_code() -> None:
 
 
 def test_google_auth_error_constructs_with_context_and_suggestion() -> None:
-    """Verify the AeatError constructor signature flows through cleanly."""
+    """Verify the CadrumoError constructor signature flows through cleanly."""
 
     err = GoogleAuthRevokedError(
         "Refresh token revoked",

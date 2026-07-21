@@ -1,7 +1,6 @@
 """Response-layer provenance gate for the operator golden-task eval.
 
-Closes eval-catalogue category 3 (dropped provenance at the RESPONSE layer,
-``.vault/research/2026-07-01-agent-harness-research.md``): the runner's existing
+Guards against provenance dropped at the RESPONSE layer: the runner's existing
 provenance dimension (``_check_provenance``) inspects the REGISTRY snapshot, which
 proves the registry itself is grounded but NOT that the CLI/MCP
 ``modelo.work.calculate`` RESPONSE payload actually relayed that grounding — the
@@ -19,8 +18,7 @@ payload the operator actually reads.
 
 No mocks: every seeded row is a genuine ``TransactionCatalogueRepository`` write
 and every response value is what the real registry engine plus the real CLI
-envelope serializer produced (``no-tautological-calculation-tests``,
-``aeat-quality-gates``).
+envelope serializer produced.
 """
 
 from __future__ import annotations
@@ -46,11 +44,11 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .. import GoldenScenario, load_scenario, run_golden_scenario
+from ._real_cli_support import create_m130_work_unit, valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -58,10 +56,6 @@ _PROFILE_ID = "0ac1e000-0000-4000-8000-000000000099"
 _SCENARIOS_DIR = Path(__file__).resolve().parent.parent / "scenarios"
 _SCENARIO_PATH = _SCENARIOS_DIR / "modelo_130.toml"
 _REVISION = "2019-y-siguientes"
-
-
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
 
 
 @pytest.fixture
@@ -84,7 +78,7 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     bucket manifest.
     """
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Response-provenance golden-eval test profile",
@@ -161,21 +155,6 @@ def _seed_ledger_row(*, direction: TransactionDirection, amount: Decimal, filing
         )
 
 
-def _create_m130_work_unit(*, filing_year: int, period: str) -> str:
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130",
-            "--year", str(filing_year),
-            "--period", period,
-            "--revision", _REVISION,
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return unwrap_schema_envelope(result.output)["work_unit_id"]
-
-
 def _dispatch_real_m130_calculate(
     runtime_profile: TestRuntimeProfile,
     *,
@@ -193,7 +172,7 @@ def _dispatch_real_m130_calculate(
     the real CLI envelope serializer produced — not a hand-rolled dict.
     """
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = _create_m130_work_unit(filing_year=filing_year, period=period)
+    work_unit_id = create_m130_work_unit(filing_year=filing_year, period=period, revision=_REVISION)
     _seed_ledger_row(
         direction=TransactionDirection.INCOMING,
         amount=Decimal("12000.00"),
@@ -219,7 +198,7 @@ def _dispatch_real_m130_calculate(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = unwrap_schema_envelope(result.output)
+    payload = require_schema_envelope(result.output)
     observations = payload["observations"]
     assert observations, "real M130 calculate response carried zero observations"
     return tuple(observations)
@@ -251,7 +230,7 @@ def test_m130_calculate_response_payload_carries_provenance(runtime_profile: Tes
 
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         response_observations=observations,
     )
 
@@ -280,7 +259,7 @@ def test_runner_rejects_a_response_with_provenance_stripped(runtime_profile: Tes
 
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         response_observations=stripped,
     )
 
@@ -306,7 +285,7 @@ def test_runner_rejects_expected_computed_response_rows_without_formula_id(
 
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         response_observations=stripped,
     )
 
@@ -335,7 +314,7 @@ def test_runner_allows_formula_id_absent_outside_expected_computed_rows(
 
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         response_observations=stripped,
     )
 
@@ -350,5 +329,5 @@ def test_response_provenance_dimension_holds_trivially_when_not_dispatched() -> 
     default does not silently fail every existing scenario run.
     """
     scenario = load_scenario(_SCENARIO_PATH)
-    result = run_golden_scenario(scenario, valid_commands=_valid_commands())
+    result = run_golden_scenario(scenario, valid_commands=valid_cli_commands())
     assert result.response_provenance_present

@@ -1,19 +1,16 @@
 ---
 tags: ["#plan", "#aeat-cli-hardening"]
-date: 2026-05-08
-modified: '2026-07-03'
+date: '2026-05-08'
+modified: '2026-07-15'
 related:
-  - "[[2026-04-24-aeat-cli-wireframe-adr]]"
   - "[[2026-05-07-user-profile-backend-schema-plan]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
-  - "[[2026-04-24-aeat-cli-wireframe-research]]"
-  - "[[2026-05-02-aeat-cli-redesign-research]]"
-  - "[[2026-04-27-auth-cli-research]]"
   - "[[2026-05-12-cli-design-research]]"
+  - '[[2026-07-12-aeat-cli-hardening-audit]]'
 ---
-
 # `aeat-cli-hardening` `Broad CLI Review And Backend Alignment` plan
 
+> **Reconciled 2026-07-12 â€” superseded, not active.** This broad predecessor plan targets the retired `setup` and `declaration` command architecture. Its surviving outcomes were delivered under the accepted `config` and `app` workflow redesign; its remaining rows must not revive rejected root or compatibility surfaces. Evidence is recorded in `2026-07-12-aeat-cli-hardening-audit`.
 This plan turns the 2026-05-08 CLI gap audit into an executable, review-gated
 rollout. The work is broader than user-interface text: missing backend APIs,
 schema routing, validation ownership, registry query surfaces, output/error
@@ -44,23 +41,23 @@ coding continues.
 
 ## Hard Invariants
 
-- [ ] CLI changes are limited to argument parsing, command registration, output
+- [x] CLI changes are limited to argument parsing, command registration, output
       formatting, exit behavior, and delegation.
-- [ ] Validation, mutation, persistence, schema decisions, filing decisions,
+- [x] Validation, mutation, persistence, schema decisions, filing decisions,
       deadline decisions, auth decisions, and modelo calculations live in
       backend/application/domain code.
-- [ ] Missing backend changes are in scope and must be implemented before the
+- [x] Missing backend changes are in scope and must be implemented before the
       CLI exposes the affected behavior.
-- [ ] Tests must be meaningful, non-tautological, and capable of failing when
+- [x] Tests must be meaningful, non-tautological, and capable of failing when
       the protected behavior regresses.
-- [ ] Tests must not use fakes, mocks, stubs, patches, monkeypatches, `skip`,
+- [x] Tests must not use fakes, mocks, stubs, patches, monkeypatches, `skip`,
       or `xfail` as shortcuts for a passing run.
-- [ ] Every closed row requires a code review pass.
-- [ ] Every major wave and significant repair pass is committed separately with
+- [x] Every closed row requires a code review pass.
+- [x] Every major wave and significant repair pass is committed separately with
       explicit staging only.
-- [ ] The shared worktree is protected: no destructive git commands, no broad
+- [x] The shared worktree is protected: no destructive git commands, no broad
       staging, no reverting unrelated changes.
-- [ ] Newly discovered CLI, backend, registry, profile, filing, or test surface
+- [x] Newly discovered CLI, backend, registry, profile, filing, or test surface
       is appended here before implementation proceeds.
 
 ## Execution Contract
@@ -98,28 +95,28 @@ Each execution step must record:
 
 ## Waves
 
-- [ ] `W0 Evidence And Guardrails`: import the audit mapping, freeze invariants,
+- [x] `W0 Evidence And Guardrails`: import the audit mapping, freeze invariants,
       record dirty-worktree policy, and create the first execution records.
-- [ ] `W1 Live CLI Inventory`: inventory executable help, registered commands,
+- [x] `W1 Live CLI Inventory`: inventory executable help, registered commands,
       unregistered CLI modules, i18n/help flags, output formats, and tests.
-- [ ] `W2 Boundary Classification`: classify each command and action as
+- [x] `W2 Boundary Classification`: classify each command and action as
       transport-only, backend-owned, live-read, live-write, deprecated, or
       missing backend.
-- [ ] `W3 Backend Ownership Routing`: assign every action to concrete backend
+- [x] `W3 Backend Ownership Routing`: assign every action to concrete backend
       and CLI owners before code changes.
-- [ ] `W4 User Profile And Config Alignment`: align `aeat setup profile` with
+- [x] `W4 User Profile And Config Alignment`: align `aeat setup profile` with
       the approved `aeat config profile` backend design.
-- [ ] `W5 Registry, Modelo, And Live-Read Hardening`: expose schema/modelo
+- [x] `W5 Registry, Modelo, And Live-Read Hardening`: expose schema/modelo
       introspection through backend APIs and audit registry live-read/capture.
-- [ ] `W6 Output, Error, Warning, And JSON Contract`: centralize rendering,
+- [x] `W6 Output, Error, Warning, And JSON Contract`: centralize rendering,
       suggestions, topics, formats, and logging policy.
-- [ ] `W7 Root Migration And Alias Policy`: implement the root command strategy,
+- [x] `W7 Root Migration And Alias Policy`: implement the root command strategy,
       onboarding, doctor, topics, config, and alias/removal decisions.
-- [ ] `W8 Test And Review Gate Enforcement`: replace weak tests, add
+- [x] `W8 Test And Review Gate Enforcement`: replace weak tests, add
       real-behavior tests, and formalize code review gates.
-- [ ] `W9 Surface Closure Audit`: search all registered, unregistered, and new
+- [x] `W9 Surface Closure Audit`: search all registered, unregistered, and new
       CLI surfaces; append and close discovered rows.
-- [ ] `W10 Continuous Review And Repair Loop`: repeat review, repair, verify,
+- [x] `W10 Continuous Review And Repair Loop`: repeat review, repair, verify,
       and commit until no actionable CLI hardening findings remain.
 
 ## Issue Ledger

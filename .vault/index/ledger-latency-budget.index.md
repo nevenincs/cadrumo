@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-latency-budget'
-date: '2026-07-06'
-modified: '2026-07-10'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
   - '[[2026-07-06-ledger-latency-budget-W01-P01-S01]]'
@@ -69,7 +69,7 @@ Auto-generated index of all documents tagged with `#ledger-latency-budget`.
 ### adr
 
 - `2026-07-05-ledger-latency-budget-adr` - `ledger-latency-budget` adr: `period-scoped aggregation latency: gate reordering vs plaintext-index widening` | (**status:** `accepted`)
-- `2026-07-06-ledger-latency-budget-adr` - `ledger-latency-budget` adr: `dirty-set save semantics` | (**status:** `proposed`)
+- `2026-07-06-ledger-latency-budget-adr` - `ledger-latency-budget` adr: `dirty-set save semantics` | (**status:** `superseded`)
 
 ### audit
 

@@ -13,8 +13,8 @@ import os
 import secrets
 from pathlib import Path
 
+from .....core import fsync_parent_dir
 from .....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING
-from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .._namespace_registry import BUCKET_OUTPUT_LANGUAGE_HINT_FILENAME
 from ._layout import bucket_paths

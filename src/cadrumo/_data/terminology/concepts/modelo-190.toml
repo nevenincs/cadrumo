@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-190"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:190"]
+legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1"]
+related = ["irpf", "modelo-111", "declaracion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Resumen anual de retenciones del trabajo y actividades."
+definition = "Declaracion informativa anual que resume las retenciones del trabajo y de actividades economicas declaradas en los modelos 111 del ejercicio, con el detalle por perceptor."
+
+[language.es.source]
+citation = "Articulo 99 de la Ley 35/2006 del IRPF; Orden EHA/3127/2009."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 190"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "resumen anual de retenciones"
+term_status = "admitted"
+
+[language.en]
+short_description = "Annual summary of the year's salary and fee withholding returns (Modelo 111)."
+
+[language.ca]
+short_description = "Resum anual de retencions del treball i activitats."
+
+[language.hu]
+short_description = "Eves osszesito a beres es vallalkozoi forrasadorol (111-es)."

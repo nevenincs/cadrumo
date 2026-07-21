@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#calculation-truth-registry'
 date: '2026-05-08'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-08-modelo-100-bulk-segmentation-audit]]"
   - "[[2026-05-03-calculation-truth-registry-rebuild-plan]]"
@@ -49,7 +49,7 @@ The canonical modelo storage layout supports two equivalent modes:
 
 The two modes are mutually exclusive per modelo: a single modelo id
 cannot exist as both `modelos/<id>.toml` AND `modelos/<id>/`. The
-loader (`src/aeat/domain/calculations/registry/_loader.py`) raises
+loader (`src/cadrumo/domain/calculations/registry/_loader.py`) raises
 `RegistryLoadError` when both forms are present.
 
 `load_modelo_file(path)` and `load_modelo_directory(path)` produce

@@ -16,7 +16,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_smoke_portals_public_surface() -> None:
     """The subpackage is importable and publishes the documented surface."""
     assert portals_doc is not None
-    assert issubclass(errors.AeatError, Exception)
+    assert issubclass(errors.CadrumoError, Exception)
     assert logging.get_logger(__name__).name == __name__
 
     # Every name advertised in __all__ is resolvable.

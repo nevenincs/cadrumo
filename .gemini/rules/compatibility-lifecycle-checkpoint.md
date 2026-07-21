@@ -7,9 +7,9 @@ trigger: always_on
 
 ## Rule
 
-The persisted-data compatibility posture is governed by `aeat.core.COMPATIBILITY_REGIME`,
+The persisted-data compatibility posture is governed by `cadrumo.core.COMPATIBILITY_REGIME`,
 a one-way constant flipped `PRE_RELEASE -> RELEASED` ONLY by an accepted checkpoint ADR
-whose same commit also freezes `aeat.core.RELEASED_FORMAT_FLOORS` at the then-current
+whose same commit also freezes `cadrumo.core.RELEASED_FORMAT_FLOORS` at the then-current
 per-format durability floors. The regime MUST NOT be read from `Settings`/env, and the
 enforcing gates MUST NOT be skipped, weakened, or monkeypatched.
 
@@ -32,46 +32,33 @@ enforcing gates MUST NOT be skipped, weakened, or monkeypatched.
 
 ## Why
 
-The `released-data-durability` campaign installed the per-format mechanism (version
-ceilings, empty per-hop upgrader registries, chain-upgrade on read, the archive floor-pin)
-but left the TRANSITION ungoverned: nothing defined WHEN the posture flips from the
-pre-release delete-not-migrate regime to the post-release durability-mandatory regime, WHAT
-flips, or WHAT enforces it — so "decide at the checkpoint" was itself an open deferral that
-would surface as a stranded-taxpayer-data hazard on the first post-release version bump. A
-runtime/env flag can silently differ per machine or CI and be patched in its own gate; a
-compliance regime must instead be a property of the codebase commit. Making the checkpoint
-a one-way repo-committed constant plus a version-milestone tripwire gives the transition a
-conscious owner (the flip commit), a trigger (the tripwire that reds CI if a 1.0 is cut
-unflipped), and gate-enforced teeth, while changing zero behaviour today. Recorded in ADR
-`2026-07-09-compatibility-lifecycle-adr`; companion to `no-legacy-compatibility` (which
-governs the pre-release regime verbatim) and `released-data-durability` (which built the
-mechanism this rule switches).
+Per ADR `2026-07-09-compatibility-lifecycle-adr`, the `released-data-durability` campaign
+built the per-format mechanism but left the TRANSITION ungoverned — WHEN the posture flips,
+WHAT flips, and WHAT enforces it were an open deferral that would surface as a
+stranded-taxpayer-data hazard on the first post-release bump. A runtime/env flag can
+silently differ per machine and be patched in its own gate, so the regime is instead a
+one-way repo-committed constant plus a version-milestone tripwire — a conscious owner (the
+flip commit), a trigger (CI reds if a 1.0 is cut unflipped), and gate teeth, changing zero
+behaviour today.
 
 ## How
 
 - **Good:** post-flip, a bundle `v3 -> v4` bump lands the raw-mapping upgrader in
-  `BUNDLE_PAYLOAD_UPGRADERS`, a committed `v3` serialized fixture, and a test that loads the
-  `v3` bytes through the real deserialize path and asserts strict equality — all in one
-  commit.
-- **Good:** pre-flip, raising the archive version and its floor together (delete-not-migrate),
-  with the floor-pin gate green because `expected_floor(PRE_RELEASE, ...) == current`.
-- **Good:** a new persisted format enrolls its floor/version + an (empty) upgrader registry +
-  its lineage gate at birth, in both regimes.
+  `BUNDLE_PAYLOAD_UPGRADERS`, a committed `v3` serialized fixture, and a test loading the
+  `v3` bytes through the real deserialize path asserting strict equality — all one commit;
+  a new persisted format enrolls its floor/version + an (empty) upgrader registry + its
+  lineage gate at birth, in both regimes.
 - **Bad:** post-flip, raising any durability floor above its released value to dodge writing
-  an upgrader — the frozen-floor gate refuses it.
-- **Bad:** flipping `COMPATIBILITY_REGIME` back to `PRE_RELEASE`, or reading the regime from
-  `Settings`/env, or loosening a persisted read model to `extra="ignore"` instead of
-  versioning the shape.
+  an upgrader (the frozen-floor gate refuses it); flipping `COMPATIBILITY_REGIME` back to
+  `PRE_RELEASE`, reading the regime from `Settings`/env, or loosening a persisted read model
+  to `extra="ignore"` instead of versioning the shape.
 - **Bad:** fabricating an old-version fixture or a real upgrader BEFORE a genuine
   post-checkpoint bump needs it — `no-legacy-compatibility` forbids inventing shapes nothing
   wrote; the harness ships empty and vacuous until then.
 
 ## Source
 
-ADR `2026-07-09-compatibility-lifecycle-adr` (accepted), decided by an authorized fable
-architecture pass and approved by the operator, resolving the transition the
-`2026-07-08-released-data-durability-adr` left ownerless. Companion rules:
-`no-legacy-compatibility` (pre-release posture, unchanged), `aeat-schema-central-config`,
+ADR `2026-07-09-compatibility-lifecycle-adr` (resolving `2026-07-08-released-data-durability-adr`).
+Companion: `no-legacy-compatibility`, `aeat-schema-central-config`,
 `sensitive-financial-data-secure-storage-only`. Enforced by the regime-aware lineage gates
-and the central `test_compatibility_lifecycle_gate` (version tripwire + one-way coherence +
-enrollment).
+and `test_compatibility_lifecycle_gate` (version tripwire + one-way coherence + enrollment).

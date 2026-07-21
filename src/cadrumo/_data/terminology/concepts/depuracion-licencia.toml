@@ -11,12 +11,8 @@ updated_at = 2026-06-12
 
 [language.es]
 short_description = "La frontera que permite shippear solo identificadores y rankings limpios de datos de embedding."
-definition = "Regla de transformacion que elimina de los artefactos de busqueda cualquier dato model-derived no permitido, como vectores, pesos sparse, scores crudos, rutas o snippets, y conserva solo identificadores, destinos, superficies y pesos normalizados. En ADR D6, y bajo la restriccion de licencias de D9, esta depuracion mantiene limpio el backend shipped aunque el oraculo dev use recuperacion hibrida."
+definition = "Regla de transformacion que elimina de los artefactos de busqueda cualquier dato model-derived no permitido, como vectores, pesos sparse, scores crudos, rutas o snippets, y conserva solo identificadores, destinos, superficies y pesos normalizados. Bajo la restriccion de licencias de las fuentes, esta depuracion mantiene limpio el backend shipped aunque el oraculo dev use recuperacion hibrida."
 scope_note = "No cambia la fuente legal de un resultado; solo define que informacion derivada puede cruzar al artefacto shipped."
-
-[language.es.source]
-citation = "2026-06-10-docs-terminology-search-adr, decisiones D6 y D9."
-authority = "vaultspec"
 
 [[language.es.term]]
 label = "depuracion de licencia"

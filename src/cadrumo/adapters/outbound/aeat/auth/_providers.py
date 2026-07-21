@@ -1,9 +1,10 @@
-"""Concrete AEAT auth provider detail models and context provisioners.
+"""Provider-specific AEAT session details and context provisioners.
 
-Provider-agnostic abstractions (:class:`AuthProviderKind`,
-:class:`AuthProviderDescription`, :class:`AuthProvider`, and
-:func:`describe_provider_operator_impact`) live in
-:mod:`application.auth`. This module owns the provider-specific payloads
+:class:`core.AuthProviderKind` and :class:`core.AuthProviderDescription` are
+the layer-neutral provider authorities. :class:`application.auth.AuthProvider`
+is the application protocol, and
+:func:`core.i18n.describe_auth_provider_operator_impact` is the canonical
+localized renderer. This module owns only the provider-specific payloads
 used by :class:`adapters.outbound.aeat.auth.AeatSession` and
 :class:`adapters.outbound.aeat.auth.AeatLoginAssertion`, plus the
 certificate browser-context provisioner that wires PKCS#12 credentials into
@@ -12,32 +13,23 @@ Playwright contexts.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Literal, Protocol, TypedDict, runtime_checkable
+from typing import Literal, Protocol, TypedDict, runtime_checkable
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
-from .....application.auth import (
-    AuthProvider,
-    AuthProviderDescription,
-    AuthProviderKind,
-    describe_provider_operator_impact,
+from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core import AuthProviderDescription as _AuthProviderDescription
+from .....core import AuthProviderKind as _AuthProviderKind
+from .....core.config import (
+    AEAT_CERTIFICATE_PROTECTED_ORIGIN,
+    AEAT_CERTIFICATE_PROTECTED_URL,
 )
-from ._certificate_backends._base import CERTIFICATE_CONTEXT_MARKER
-from ._certificate_backends._playwright_context import build_client_certificates_kwarg
 from .certificate import (
     CertificateNifParseError,
-    HandshakeResult,
     LoadedCertificate,
     evaluate_loaded_certificate_health,
     extract_nif_from_subject,
 )
-
-if TYPE_CHECKING:
-    from ._authenticator import (
-        BrowserContextLike,
-    )
-
-from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 
 
 class CertificateSessionDetail(BaseModel):
@@ -46,15 +38,23 @@ class CertificateSessionDetail(BaseModel):
     :class:`adapters.outbound.aeat.auth.AeatAuthenticator` populates this
     detail for certificate-backed :class:`adapters.outbound.aeat.auth.AeatSession`
     records. The thumbprint and subject bind the live session to the loaded
-    certificate, while :class:`HandshakeResult` records the mTLS probe evidence.
+    certificate. ``protected_resource_url`` records the sole accepted browser
+    proof used to establish the session.
     """
 
     model_config = _STRICT_FROZEN
 
-    kind: Literal[AuthProviderKind.CERTIFICATE] = AuthProviderKind.CERTIFICATE
+    kind: Literal[_AuthProviderKind.CERTIFICATE] = _AuthProviderKind.CERTIFICATE
     certificate_thumbprint: str = Field(min_length=1)
     certificate_subject: str = Field(min_length=1)
-    handshake: HandshakeResult
+    protected_resource_url: str = AEAT_CERTIFICATE_PROTECTED_URL
+
+    @field_validator("protected_resource_url")
+    @classmethod
+    def _protected_resource_is_canonical(cls, value: str) -> str:
+        if value != AEAT_CERTIFICATE_PROTECTED_URL:
+            raise ValueError("certificate session proof must use the canonical protected resource")
+        return value
 
 
 class ClaveMovilSessionDetail(BaseModel):
@@ -70,7 +70,7 @@ class ClaveMovilSessionDetail(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    kind: Literal[AuthProviderKind.CLAVE_MOVIL] = AuthProviderKind.CLAVE_MOVIL
+    kind: Literal[_AuthProviderKind.CLAVE_MOVIL] = _AuthProviderKind.CLAVE_MOVIL
     dni_nie: str = Field(
         min_length=1,
         description="DNI/NIE used for the login (authoritative identity).",
@@ -107,7 +107,7 @@ class ClavePermanenteSessionDetail(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
+    kind: Literal[_AuthProviderKind.CLAVE_PERMANENTE] = _AuthProviderKind.CLAVE_PERMANENTE
     dni_nie: str = Field(
         min_length=1,
         description="DNI/NIE used as the Cl@ve Permanente login username (authoritative identity).",
@@ -125,18 +125,15 @@ class ClavePermanenteSessionDetail(BaseModel):
 class CertificateLoginAssertionDetail(BaseModel):
     """Login-assertion detail for certificate-backed AEAT verification.
 
-    Carries the three signals
-    :class:`adapters.outbound.aeat.auth.AeatAuthenticator` collects during
-    a post-auth navigation probe: whether the mTLS handshake leg succeeded,
-    whether AEAT returned a non-challenge HTTP response, and the RFC-4514
-    subject DN of the presented certificate.
+    Carries the observed final URL and certificate subject from the canonical
+    protected-resource browser probe.
     """
 
     model_config = _STRICT_FROZEN
 
-    kind: Literal[AuthProviderKind.CERTIFICATE] = AuthProviderKind.CERTIFICATE
-    handshake_success: bool
-    certificate_recognised: bool
+    kind: Literal[_AuthProviderKind.CERTIFICATE] = _AuthProviderKind.CERTIFICATE
+    final_url: str | None = None
+    response_successful: bool
     parsed_subject: str | None = None
 
 
@@ -151,7 +148,7 @@ class ClaveMovilLoginAssertionDetail(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    kind: Literal[AuthProviderKind.CLAVE_MOVIL] = AuthProviderKind.CLAVE_MOVIL
+    kind: Literal[_AuthProviderKind.CLAVE_MOVIL] = _AuthProviderKind.CLAVE_MOVIL
     session_cookie_present: bool = Field(
         default=False,
         description=(
@@ -176,7 +173,7 @@ class ClavePermanenteLoginAssertionDetail(BaseModel):
 
     model_config = _STRICT_FROZEN
 
-    kind: Literal[AuthProviderKind.CLAVE_PERMANENTE] = AuthProviderKind.CLAVE_PERMANENTE
+    kind: Literal[_AuthProviderKind.CLAVE_PERMANENTE] = _AuthProviderKind.CLAVE_PERMANENTE
     session_cookie_present: bool = Field(
         default=False,
         description=(
@@ -205,7 +202,7 @@ class BrowserContextKwargs(TypedDict, total=False):
     can return a partial mapping.
     """
 
-    client_certificates: list[dict[str, str]]
+    client_certificates: list[dict[str, str | bytes]]
 
 
 @runtime_checkable
@@ -213,13 +210,10 @@ class BrowserContextProvisioner(Protocol):
     """Hook that decorates browser-context creation for auth providers.
 
     :class:`CertificateContextProvisioner` implements this protocol to add
-    Playwright ``new_context()`` kwargs and then annotate the created context
-    with provider-specific runtime evidence.
+    Playwright ``new_context()`` kwargs.
     """
 
     def build_context_kwargs(self) -> BrowserContextKwargs: ...
-
-    def annotate_context(self, context: BrowserContextLike) -> None: ...
 
 
 class CertificateContextProvisioner:
@@ -229,24 +223,19 @@ class CertificateContextProvisioner:
     authentication. ``build_context_kwargs`` wires the loaded certificate into
     Playwright's ``client_certificates`` list so every TLS connection the
     browser makes to the AEAT origin presents the certificate automatically.
-    ``annotate_context`` stamps the SHA-256 thumbprint of the certificate onto
-    the context object under :data:`CERTIFICATE_CONTEXT_MARKER`, so the
-    authenticator can confirm that the context was provisioned with the expected
-    certificate.
+    The provisioner contributes only the Playwright client-certificate
+    construction argument. Authentication is proved by the subsequent
+    canonical protected-resource navigation, never by a context marker.
     """
 
-    def __init__(self, cert: LoadedCertificate, *, origin: str) -> None:
-        """Bind ``cert`` to ``origin`` for context provisioning.
+    def __init__(self, cert: LoadedCertificate) -> None:
+        """Bind ``cert`` to the canonical AEAT certificate origin.
 
         Args:
             cert: The :class:`~adapters.outbound.aeat.auth.certificate.LoadedCertificate`
                 whose PKCS#12 bytes will be presented to the AEAT origin.
-            origin: URL origin (scheme + host) the certificate is valid for,
-                passed to Playwright's ``client_certificates`` list as the
-                binding scope.
         """
         self._cert = cert
-        self._origin = origin
 
     def build_context_kwargs(self) -> BrowserContextKwargs:
         """Return the Playwright ``new_context()`` kwargs that wire the certificate.
@@ -256,24 +245,14 @@ class CertificateContextProvisioner:
             populated for the bound origin.
         """
         return {
-            "client_certificates": build_client_certificates_kwarg(
-                self._cert,
-                self._origin,
-            ),
+            "client_certificates": [
+                {
+                    "origin": AEAT_CERTIFICATE_PROTECTED_ORIGIN,
+                    "pfx": self._cert._pkcs12_bytes,
+                    "passphrase": self._cert._password.get_secret_value(),
+                },
+            ],
         }
-
-    def annotate_context(self, context: BrowserContextLike) -> None:
-        """Stamp the certificate thumbprint onto ``context`` as a marker attribute.
-
-        The marker attribute name is ``CERTIFICATE_CONTEXT_MARKER``. The
-        authenticator reads this attribute after context creation to assert
-        that the context was provisioned with the expected certificate.
-
-        Args:
-            context: The newly created :class:`~adapters.outbound.aeat.auth._authenticator.BrowserContextLike`
-                to annotate.
-        """
-        setattr(context, CERTIFICATE_CONTEXT_MARKER, self._cert.sha256_thumbprint)
 
 
 def describe_certificate_provider(
@@ -281,7 +260,7 @@ def describe_certificate_provider(
     *,
     warn_days: int,
     critical_days: int,
-) -> AuthProviderDescription:
+) -> _AuthProviderDescription:
     """Build an :class:`AuthProviderDescription` from a loaded certificate.
 
     The returned description carries the parsed identity NIF when available and
@@ -297,8 +276,8 @@ def describe_certificate_provider(
         identity_nif = extract_nif_from_subject(cert)
     except CertificateNifParseError:
         identity_nif = None
-    return AuthProviderDescription(
-        kind=AuthProviderKind.CERTIFICATE,
+    return _AuthProviderDescription(
+        kind=_AuthProviderKind.CERTIFICATE,
         label="AEAT certificate",
         configured=True,
         available=True,
@@ -312,11 +291,7 @@ def describe_certificate_provider(
 
 
 __all__ = [
-    "CERTIFICATE_CONTEXT_MARKER",
     "AuthLoginAssertionDetail",
-    "AuthProvider",
-    "AuthProviderDescription",
-    "AuthProviderKind",
     "AuthSessionDetail",
     "BrowserContextProvisioner",
     "CertificateContextProvisioner",
@@ -327,5 +302,4 @@ __all__ = [
     "ClavePermanenteLoginAssertionDetail",
     "ClavePermanenteSessionDetail",
     "describe_certificate_provider",
-    "describe_provider_operator_impact",
 ]

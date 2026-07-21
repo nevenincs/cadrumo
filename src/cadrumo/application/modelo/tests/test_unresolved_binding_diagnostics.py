@@ -1,4 +1,4 @@
-"""Contract tests for the unresolved-binding diagnostic channel (#37).
+"""Contract tests for the unresolved-binding diagnostic channel.
 
 The engine already surfaces unresolved RELATIONS (``unresolved_relation_ids`` ->
 non-blocking ``_UnresolvedFormulaDependencyError`` + a

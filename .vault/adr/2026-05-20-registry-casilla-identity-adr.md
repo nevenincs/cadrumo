@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#registry-casilla-identity'
 date: '2026-05-20'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-20-registry-casilla-identity-research]]'
   - '[[2026-05-20-branch-reconciliation-audit]]'
@@ -14,10 +14,10 @@ related:
 ## Problem Statement
 
 The registry identifies a casilla by its bare five-digit AEAT number.
-`CasillaDefinition` (`src/aeat/domain/calculations/registry/_schema.py`)
+`CasillaDefinition` (`src/cadrumo/domain/calculations/registry/_schema.py`)
 carries both `id` and `number`, and every authored modelo fragment sets
 `id == number`. The registry validator
-(`src/aeat/domain/calculations/registry/_validate.py`) hard-rejects two
+(`src/cadrumo/domain/calculations/registry/_validate.py`) hard-rejects two
 casillas that share an `id`, so the bare number is, in practice, a
 globally unique key within a modelo revision.
 
@@ -106,7 +106,7 @@ fails. This blocks the Modelo 200 formula port and will recur for Modelo
 **Decision A2b — segment-scoped casilla identity.**
 
 - Add an optional field `segmento: str | None = None` to
-  `CasillaDefinition` in `src/aeat/domain/calculations/registry/_schema.py`,
+  `CasillaDefinition` in `src/cadrumo/domain/calculations/registry/_schema.py`,
   carrying the AEAT record-segment identifier (e.g. `"DP200014"`) for
   multi-segment modelos and left unset for single-segment modelos.
 - The casilla uniqueness invariant enforced by the registry validator

@@ -393,7 +393,11 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     owner="cadrumo.application.calculations",
     sensitivity=SensitivityClass.AUDIT,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{modelo}:{filing_year}:{period}",
+    # Single-filer rows key on (modelo, filing_year, period); a per-grupo-member
+    # filing widens the same key with an optional trailing member NIF so two
+    # members' filings for one triple persist as distinct rows (the 353<-322
+    # per_grupo_member fan-in). Both live in this one namespace.
+    object_key_grammar="{modelo}:{filing_year}:{period}[:{member_nif}]",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
@@ -401,9 +405,9 @@ CALCULATION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
 # retención) for the M180/M193 calc-mesh perceptor-count resolver. The
 # DEDICATED store lets the distinct-NIF count be computed from one persisted
 # source shared by the pull and calculate surfaces — never the wrong sum of
-# quarterly aggregate counts (retenciones-perceptor-count ADR 2026-06-24).
+# quarterly aggregate counts.
 # FINANCIAL sensitivity: perceptor NIFs are identity-bearing financial data and
-# live encrypted at rest, never plaintext (sensitive-financial-data-secure-storage-only).
+# live encrypted at rest, never plaintext.
 RETENCION_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="retencion_observations",
     namespace="cadrumo.retenciones.observations",
@@ -675,16 +679,6 @@ CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
 )
-CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE = SecureObjectNamespaceDefinition(
-    key="clave_permanente_diagnostics",
-    namespace="cadrumo.outbound.aeat.auth.clave_permanente.diagnostics",
-    owner="cadrumo.adapters.outbound.aeat.auth",
-    sensitivity=SensitivityClass.SESSION,
-    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{diagnostic_id_or_timestamp_iso}",
-    scope=StorageNamespaceScope.BUCKET_LOCAL,
-    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
-)
 GOOGLE_OAUTH_CLIENT_NAMESPACE = SecureObjectNamespaceDefinition(
     key="google_oauth_client",
     namespace="cadrumo.google.oauth.client",
@@ -906,7 +900,12 @@ TRANSACTION_CATALOGUE_NAMESPACE = SecureObjectNamespaceDefinition(
     owner="cadrumo.domain.transactions",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="transaction-catalogue:{bucket_id}",
+    # One secure-object row per transaction keyed transaction:{bucket_id}:{tx_id}
+    # (transaction_object_key), plus a single per-bucket membership-index row keyed
+    # transaction-index:{bucket_id} (transaction_index_object_key). The unrelated
+    # transaction-catalogue:{bucket_id} token is a BucketEvent audit object_id, not
+    # a secure-object key, and must not be conflated with this key grammar.
+    object_key_grammar="transaction:{bucket_id}:{transaction_id}; transaction-index:{bucket_id}",
     scope=StorageNamespaceScope.BUCKET_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
@@ -1109,7 +1108,6 @@ STORAGE_NAMESPACE_REGISTRY = StorageHierarchyRegistry(
         ATTACHMENT_MANIFEST_NAMESPACE,
         AEAT_BROWSER_SESSION_NAMESPACE,
         CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE,
-        CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE,
         GOOGLE_OAUTH_CLIENT_NAMESPACE,
         GOOGLE_OAUTH_TOKEN_NAMESPACE,
         GOOGLE_OAUTH_METADATA_NAMESPACE,
@@ -1150,7 +1148,6 @@ __all__ = [
     "BUCKET_MANIFEST_FILENAME",
     "CALCULATION_OBSERVATIONS_NAMESPACE",
     "CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE",
-    "CLAVE_PERMANENTE_DIAGNOSTICS_NAMESPACE",
     "DOMAIN_NAMESPACE_DEFINITIONS",
     "GOOGLE_CREDENTIAL_SOURCE_NAMESPACE",
     "GOOGLE_DRIVE_CONFIG_NAMESPACE",

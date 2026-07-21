@@ -1,7 +1,7 @@
 ---
 tags: ['#audit', '#modelo-export-evidence-parity']
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-03-modelo-export-evidence-parity-plan]]'
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'

@@ -99,7 +99,7 @@ _ANUALIDADES_ABOVE_BASE = Decimal("25000")
 def _anualidades_casilla(year: int) -> CasillaId:
     # 2020 and 2021 carry casilla 0527 (IMPALIM) as a direct manual input — the
     # bundled 2021 AEAT XSD declares it `maxOccurs="1"`, a plain scalar, with
-    # no per-child structure (#532 finding #1). 2022-2023 introduce the
+    # no per-child structure. 2022-2023 introduce the
     # per-child "Hijo/Hija N: Importe de las anualidades..." block and compute
     # 0527 from casilla 1741 (renta-{year}-anualidades-alimentos-hijos-suma).
     return _c("0527") if year in (2020, 2021) else _c("1741")
@@ -178,7 +178,7 @@ def test_separate_escala_estatal_assembly_matches_lirpf_tramos(
 def test_separate_escala_ordering_shortcut_below_separate_below_no_benefit(
     registry_authority: ValidatedRegistryAuthority, year: int
 ) -> None:
-    """shortcut < separate < no-benefit for the anualidades filer (#532)."""
+    """shortcut < separate < no-benefit for the anualidades filer."""
     snapshot = _snapshot(registry_authority, year)
     separate = _run(snapshot, year, anualidades=_ANUALIDADES)
     no_benefit = _run(snapshot, year, anualidades=None)
@@ -243,7 +243,7 @@ def test_regime_off_when_anualidades_reach_base(registry_authority: ValidatedReg
 def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields(
     registry_authority: ValidatedRegistryAuthority,
 ) -> None:
-    """2021 regression for #532 finding #1.
+    """2021 regression: 0527 must not derive from the Anexo C pension fields.
 
     In the 2021 revision, casillas 1741/1744/1749/1754/1759 are Anexo C
     aportaciones/contribuciones a sistemas de previsión social fields (a
@@ -291,7 +291,7 @@ def test_2021_casilla_0527_is_manual_and_not_derived_from_anexo_c_pension_fields
     assert stray_result.values[_c("0527")] == Decimal("0"), (
         f"2021: casilla 0527 = {stray_result.values[_c('0527')]!r}; expected 0 — the Anexo C "
         "pension-contribution fields (1744/1749/1754/1759) must not populate the anualidades "
-        "casilla (the #532 finding #1 defect: 0527 was wrongly computed as their sum)."
+        "casilla by being wrongly summed into it."
     )
 
     # A real entry directly on 0527 (the correct 2021 manual-input surface)

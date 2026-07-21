@@ -89,6 +89,12 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         text=_text(r"(?:fixtures|justificantes|\.pdf)"),
     ),
     AllowlistRule(
+        path=_path(r"^src/cadrumo/adapters/persistence/profile/tests/test_secure_bound_namespace_binding\.py$"),
+        reason="namespace-binding roundtrip fixture uses a representative justificante PDF filename",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"justificantes/.*\.pdf"),
+    ),
+    AllowlistRule(
         path=_path(
             r"^src/cadrumo/adapters/inbound/declaracion/tests/(?:"
             r"_parser_boundary_support|_verification_chain_support|"
@@ -153,7 +159,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="result-summary label tests pin external work-unit name labels that embed a period token",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/(core|domain)/(?:_period|period)\.py$|^src/cadrumo/(core|domain)/tests/test_period\.py$"),
+        path=_path(
+            r"^src/cadrumo/(core|domain)/(?:_period|period)\.py$|^src/cadrumo/(core|domain)/tests/test_period\.py$"
+        ),
         reason="Period source and tests explicitly document/refuse the killed combined input forms",
     ),
     AllowlistRule(
@@ -163,7 +171,7 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="CLI period grammar refusal docs and tests prove calendar/hybrid spellings are rejected",
     ),
     AllowlistRule(
-        path=_path(r"^docs/how-to/(filing-periods|troubleshooting)\.md$"),
+        path=_path(r"^docs/how-to/(filing-calendar|filing-periods|troubleshooting)\.md$"),
         reason="operator docs explicitly say the killed calendar forms are not accepted",
     ),
     AllowlistRule(
@@ -270,7 +278,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="filing export support tests preserve external export path labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/application/live/tests/_(?:filed_capture_history|justificante_reconcile)_support\.py$"),
+        path=_path(
+            r"^src/cadrumo/application/live/tests/_(?:filed_capture_history|justificante_reconcile)_support\.py$"
+        ),
         reason="live capture support tests preserve external justificante fixture and work-unit labels",
     ),
     AllowlistRule(
@@ -310,7 +320,9 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="CLI journey tests preserve existing filter-output and external work/evidence labels",
     ),
     AllowlistRule(
-        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_(?:modelo_projection|overview_calendar_local_evidence)\.py$"),
+        path=_path(
+            r"^src/cadrumo/entrypoints/cli/tests/test_(?:modelo_projection|overview_calendar_local_evidence)\.py$"
+        ),
         reason="CLI tests preserve external projection, justificante, and evidence labels",
     ),
     AllowlistRule(
@@ -324,15 +336,65 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         text=_text("2024" + "Q1"),
     ),
     AllowlistRule(
-        path=_path(r"^docs/how-to/(?:quickstart|modelo-390)\.md$"),
+        path=_path(r"^docs/how-to/(?:quickstart|modelo-390|irpf-lifecycle|iva-lifecycle)\.md$"),
         reason="docs preserve justificante/export filename examples, not period input grammar",
         pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(
+            r"^docs/_sequences/how-to/(?:"
+            r"first-quarterly-filing/modelo-130-first-quarter|"
+            r"modelo-130/modelo-130-(?:manual-casilla|quarterly|inspect-boxes|review-chain)|"
+            r"modelo-303/modelo-303-(?:first-quarter|inspect-boxes|revision)|"
+            r"modelo-349/modelo-349-(?:first-quarter|export|inspect)|"
+            r"modelo-390/modelo-390-annual-2025|"
+            r"quickstart/quickstart-modelo-130|"
+            r"verification-reports/verification-reports-(?:modelo-303|work-history)|"
+            r"verification-reports/verification-reports-export-check|"
+            r"file-at-aeat/file-at-aeat-chain|"
+            r"filing-calendar/filing-calendar-work-status|"
+            r"filing-spine/filing-spine-(?:chain|visible-target|work-list)|"
+            r"irpf-lifecycle/irpf-lifecycle-q1|"
+            r"iva-lifecycle/iva-lifecycle-q1|"
+            r"troubleshooting/troubleshooting-period-grammar"
+            r")\.json$"
+        ),
+        reason="captured CLI sequence preserves the WorkUnit.name display-name field "
+        "(<modelo>-<year>-<period>, no modelo- stem) as a JSON string or inside a captured "
+        "tab-separated CLI text-output blob, not export filename or period input grammar",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+    ),
+    AllowlistRule(
+        path=_path(
+            r"^docs/_sequences/how-to/(?:"
+            r"quickstart/quickstart-revision|"
+            r"review-calculation-values/review-values-(?:bindings|manual-casilla|review-saved)"
+            r")\.json$"
+        ),
+        reason="captured CLI sequence's tab-separated modelo.work.create text output embeds "
+        "the WorkUnit.name display-name field, not export filename or period input grammar",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"name\\t\d+-\d{4}-[1-4]T"),
+    ),
+    AllowlistRule(
+        path=_path(r"^docs/_sequences/how-to/iva-lifecycle/iva-lifecycle-q1\.json$"),
+        reason="captured CLI sequence's modelo.export --output/output_path names the canonical "
+        "modelo-<id>-<year>-<period> fichero-BOE export filename schema, not a period input",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"\.boe"),
     ),
     AllowlistRule(
         path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_app_quickfile\.py$"),
         reason="quickfile invoice tests use an opaque operator-facing invoice_number display label, not a period input",
         pattern_names=frozenset({"year-qualified quarterly token"}),
         text=_text(r"invoice_number="),
+    ),
+    AllowlistRule(
+        path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_app_quickfile\.py$"),
+        reason="quickfile export test names its --output path with the canonical "
+        "modelo-<id>-<year>-<period> export filename schema, not a period input",
+        pattern_names=frozenset({"year-qualified quarterly token"}),
+        text=_text(r"tmp_path / "),
     ),
     AllowlistRule(
         path=_path(r"^src/cadrumo/entrypoints/cli/tests/test_modelo_(?:kv_format_localization|state_text_labels)\.py$"),

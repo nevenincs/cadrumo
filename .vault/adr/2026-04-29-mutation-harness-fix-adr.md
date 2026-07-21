@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#mutation-harness-fix'
 date: '2026-04-29'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-29-mutation-harness-fix-research]]'
   - '[[2026-04-25-mutation-harness-extension-adr]]'
@@ -44,7 +44,7 @@ The fix must NOT:
 
 - modify per-modelo rulesets or formulas — the change is harness-only;
 - introduce new mutator classes (that is #338's territory);
-- couple to `aeat.adapters.persistence.storage` / `aeat.domain.financial` (#216 territory; the
+- couple to `cadrumo.adapters.persistence.storage` / `cadrumo.domain.transactions` (#216 territory; the
   pre-merged WIP is for visibility only and is rebased out before the
   PR opens);
 - introduce mocks, fakes, or stubs (project mandate).
@@ -329,7 +329,7 @@ closing it.
   `sub_op_deferred` columns; deferred counts match empirical gap.
 - New regression test `test_mutator_tautology_regression.py`
   enforces `populated - empirical_coverage == declared_deferred`.
-- Coverage floor 60 % preserved on `src/aeat` via `just test-cov`.
+- Coverage floor 60 % preserved on `src/cadrumo` via `just test-cov`.
 - `just lint && just typecheck && just test && just hooks` all
   green on Windows post-rebase.
 - `git log origin/main..HEAD --oneline` shows ONLY #457 commits

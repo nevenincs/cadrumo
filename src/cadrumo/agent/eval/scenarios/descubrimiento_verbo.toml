@@ -1,5 +1,4 @@
-# Golden scenario: discover and correctly invoke a long-tail verb (ADR
-# `mcp-progressive-discovery` P6 / plan step S22).
+# Golden scenario: discover and correctly invoke a long-tail verb.
 #
 # The console's CORE surface advertises only an orientation slice up front (the
 # `harness.load` floor, the two grounding tools, the three meta tools, and the
@@ -14,7 +13,7 @@
 # provenance, an ordered command-key trajectory); it cannot itself express the
 # search -> execute DISCOVERY round-trips (`search`/`execute` are meta-tool names,
 # not resolvable registry command keys, so they cannot appear in
-# `expected_trajectory`). Per the plan's S22 guidance, the scenario is therefore
+# `expected_trajectory`). The scenario is therefore
 # kept minimal-but-valid here and the real discovery assertions -
 # rounds-to-correct-verb selection quality and the CORE-vs-FULL surface
 # comparison - live in `tests/test_discovery_scoring.py`, which scores an OBSERVED
@@ -24,13 +23,13 @@
 # against the live CLI surface, it is a genuine modelo-130 workflow verb (so this
 # scenario passes the shared all-scenarios lifecycle/skill/provenance gate), and
 # it is NOT a member of the CORE orientation slice - exactly the "found through
-# discovery, not listed" case P6 measures.
+# discovery, not listed" case this scenario measures.
 
 name = "descubrimiento-verbo-long-tail"
 modelo = "130"
 filing_year = 2024
 period = "1T"
-skill_name = "preparar-modelo-130"
+skill_name = "cadrumo-preparar-modelo-130"
 provenance_required = true
 # The quarter result (07); in the revision's AEAT-grounded computed-and-verified
 # casilla set, so the verification dimension is grounded, not vacuous.
@@ -38,7 +37,7 @@ expected_computed_casillas = ["07"]
 
 # Minimal lifecycle-valid trajectory the operator drives once discovery has
 # located the long-tail verb: read the form, create the work unit, then calculate.
-# Every verb is cited by the `preparar-modelo-130` skill playbook and the
+# Every verb is cited by the `cadrumo-preparar-modelo-130` skill playbook and the
 # create -> calculate lifecycle order holds.
 expected_trajectory = [
   "modelo.describe",

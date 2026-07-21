@@ -658,14 +658,11 @@ def _whitespace_nif_session() -> AeatSession:
 
     from ...auth import (
         AeatSession,
-        AuthProviderKind,
         CertificateSessionDetail,
-        HandshakeResult,
     )
 
     now = datetime(2026, 5, 28, 12, 0, 0, tzinfo=UTC)
     return AeatSession(
-        provider_kind=AuthProviderKind.CERTIFICATE,
         authenticated_at=now,
         idle_deadline=now + timedelta(hours=8),
         storage_state_path=Path("/synthetic/does_not_exist.json"),
@@ -673,13 +670,5 @@ def _whitespace_nif_session() -> AeatSession:
         provider_detail=CertificateSessionDetail(
             certificate_thumbprint="aabbcc",
             certificate_subject="CN=test",
-            handshake=HandshakeResult(
-                success=True,
-                status_code=200,
-                server_cert_chain=(),
-                elapsed_ms=10,
-                attempted_at=now,
-                error_message=None,
-            ),
         ),
     )

@@ -8,11 +8,11 @@ those steps stay entirely human-run per RELEASING.md.
 
 Two severities distinguish a hard release blocker from an advisory note:
 
-* ``blocking`` — the check is a deterministic, always-computable invariant
-  (version-surface parity, changelog presence). A failure here is a real
+* ``blocking`` — the check is a deterministic release invariant (version-surface
+  parity, changelog presence, complete cohort-bound distribution evidence). A failure here is a real
   release defect and the gate exits non-zero.
 * ``advisory`` — the check depends on live external state (GitHub API
-  reachability, whether a packaging-smoke run happened in this workspace).
+  reachability).
   A failure here is reported but does not fail the gate, because the signal
   is legitimately absent in a fresh checkout or offline environment.
 
@@ -28,8 +28,8 @@ See Also:
         Blocking local version-surface parity check.
     :func:`check_changelog_is_ready`
         Blocking changelog presence and merge-marker check.
-    :func:`check_latest_packaging_smoke_evidence`
-        Advisory packaging-smoke evidence check for the current checkout.
+    :func:`check_distribution_evidence_set`
+        Blocking exact-cohort evidence check for every required release row.
     :func:`check_no_open_release_blockers`
         GitHub-backed audit-state blocker check that degrades when live state
         cannot be read.
@@ -45,11 +45,14 @@ import re
 import shutil
 import subprocess
 import tomllib
+import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Final
 
 from cadrumo.core import PRODUCT_IDENTITY
+from dev.packaging.cohort_manifest import load_release_cohort
+from dev.packaging.evidence import EvidenceStatus, load_distribution_evidence
 
 _UTF_8: Final = "utf-8"
 _VERSION_RE: Final = re.compile(r"^__version__\s*=\s*[\"']([^\"']+)[\"']", re.MULTILINE)
@@ -114,8 +117,8 @@ class ReadinessReport:
         }
 
 
-def _read_pyproject_version(repo_root: Path) -> str:
-    data = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+def _read_project_version(project_file: Path) -> str:
+    data = tomllib.loads(project_file.read_text(encoding=_UTF_8))
     return str(data["project"]["version"])
 
 
@@ -152,18 +155,66 @@ def _read_manifest_version(repo_root: Path) -> str:
     return str(payload.get(".", ""))
 
 
+_MCPB_MANIFEST_PATH: Final = Path("packaging/mcpb/manifest.json")
+
+REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = (
+    "claude-code-plugin",
+    "claude-cowork-plugin",
+    "claude-desktop-mcpb",
+    "claude-desktop-plugin",
+    "homebrew-linux-arm64",
+    "homebrew-linux-x86-64",
+    "homebrew-macos-arm64",
+    "homebrew-macos-x86-64",
+    "python-linux-x86-64",
+    "python-macos-arm64",
+    "python-windows-x86-64",
+    "scoop-windows-x86-64",
+)
+_CLIENT_DISTRIBUTION_ROWS: Final[frozenset[str]] = frozenset(
+    row for row in REQUIRED_DISTRIBUTION_ROWS if row.startswith("claude-")
+)
+
+
+def _read_mcpb_manifest(repo_root: Path) -> tuple[str, tuple[str, ...]]:
+    """Return the ``.mcpb`` bundle's declared version and bootstrap args."""
+    payload = json.loads((repo_root / _MCPB_MANIFEST_PATH).read_text(encoding=_UTF_8))
+    version = str(payload.get("version", ""))
+    mcp_config = payload.get("server", {}).get("mcp_config", {})
+    args = tuple(str(arg) for arg in mcp_config.get("args", []))
+    return version, args
+
+
 def check_version_surfaces_agree(repo_root: Path) -> ReadinessCheck:
-    """Confirm pyproject.toml, `__init__.py`, and the manifest report one version."""
-    pyproject_version = _read_pyproject_version(repo_root)
+    """Confirm every release authority and mandatory companion pin reports one version."""
+    project_versions = tuple(
+        (relative, _read_project_version(repo_root / relative)) for relative, _expected_name in _PROJECT_NAME_PATHS
+    )
+    pyproject_version = project_versions[0][1]
     init_version = _read_init_version(repo_root)
     manifest_version = _read_manifest_version(repo_root)
-    versions = {pyproject_version, init_version, manifest_version}
-    passed = len(versions) == 1 and bool(pyproject_version)
-    detail = (
-        f"pyproject={pyproject_version!r} init={init_version!r} manifest={manifest_version!r}"
-        if not passed
-        else f"all surfaces agree on {pyproject_version!r}"
+    mcpb_version, mcpb_args = _read_mcpb_manifest(repo_root)
+    root_project = tomllib.loads((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+    observed_pins = tuple(
+        str(requirement)
+        for requirement in root_project["project"]["dependencies"]
+        if any(str(requirement).startswith(distribution) for distribution in PRODUCT_IDENTITY.companion_distributions)
     )
+    expected_pins = tuple(
+        f"{distribution}=={pyproject_version}" for distribution in PRODUCT_IDENTITY.companion_distributions
+    )
+    versions = {version for _relative, version in project_versions} | {init_version, manifest_version, mcpb_version}
+    passed = len(versions) == 1 and bool(pyproject_version) and observed_pins == expected_pins
+    surfaces = " ".join(f"{relative}={version!r}" for relative, version in project_versions)
+    detail = (
+        f"{surfaces} init={init_version!r} manifest={manifest_version!r} "
+        f"mcpb={mcpb_version!r} mcpb_args={mcpb_args!r} pins={observed_pins!r}"
+    )
+    if passed:
+        detail = (
+            "all release authorities, the .mcpb bundle, and mandatory exact companion "
+            f"dependencies agree on {pyproject_version!r}"
+        )
     return ReadinessCheck("version-surfaces-agree", "blocking", passed, detail)
 
 
@@ -188,7 +239,7 @@ def check_changelog_is_ready(repo_root: Path) -> ReadinessCheck:
 
 
 def check_no_open_release_blockers(
-    *, repo_slug: str = "cadrumo/cadrumo", gh_executable: str | None = None
+    *, repo_slug: str = "nevenincs/cadrumo", gh_executable: str | None = None
 ) -> ReadinessCheck:
     """Confirm no open GitHub issue carries the `priority:P0-blocker` label.
 
@@ -270,13 +321,18 @@ def check_latest_packaging_smoke_evidence(repo_root: Path) -> ReadinessCheck:
     absence of evidence is reported but does not block the gate.
     """
     smoke_dir = repo_root / "var" / "packaging-smoke"
-    manifests = sorted(smoke_dir.glob("*/packaging-smoke-manifest.json"), key=lambda p: p.stat().st_mtime)
+    evidence_dir = repo_root / "var" / "packaging-smoke-evidence"
+    manifests = sorted(
+        (*smoke_dir.glob("*/packaging-smoke-manifest.json"), *evidence_dir.glob("*.json")),
+        key=lambda path: path.stat().st_mtime,
+    )
     if not manifests:
         return ReadinessCheck(
             "packaging-smoke-evidence",
             "advisory",
             False,
-            "no packaging-smoke manifest found under var/packaging-smoke — run `just packaging-smoke` first",
+            "no packaging-smoke manifest found under var/packaging-smoke or its evidence checkpoint — "
+            "run `just packaging-smoke` first",
         )
     latest = manifests[-1]
     try:
@@ -290,7 +346,7 @@ def check_latest_packaging_smoke_evidence(repo_root: Path) -> ReadinessCheck:
         )
     ok = bool(payload.get("ok"))
     lane = payload.get("lane", "<unknown>")
-    run_label = latest.parent.name
+    run_label = latest.stem if latest.parent == evidence_dir else latest.parent.name
     return ReadinessCheck(
         "packaging-smoke-evidence",
         "advisory",
@@ -299,16 +355,226 @@ def check_latest_packaging_smoke_evidence(repo_root: Path) -> ReadinessCheck:
     )
 
 
+def _checked_out_commit(repo_root: Path) -> str:
+    """Return the exact Git commit whose release readiness is being evaluated."""
+    git = shutil.which("git")
+    if git is None:
+        raise ValueError("cannot resolve checked-out Git commit: git is not installed")
+    completed = subprocess.run(
+        [git, "rev-parse", "HEAD"],
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=_GH_TIMEOUT_SECONDS,
+    )
+    commit = completed.stdout.strip().lower()
+    if completed.returncode != 0 or re.fullmatch(r"[0-9a-f]{40}", commit) is None:
+        detail = completed.stderr.strip()[:200] or completed.stdout.strip()[:200]
+        raise ValueError(f"cannot resolve checked-out Git commit: {detail}")
+    return commit
+
+
+def check_distribution_evidence_set(
+    repo_root: Path,
+    *,
+    cohort_directory: Path | None = None,
+    evidence_directory: Path | None = None,
+    required_rows: tuple[str, ...] = REQUIRED_DISTRIBUTION_ROWS,
+) -> ReadinessCheck:
+    """Require passing, exact-cohort evidence for every declared release row."""
+    cohort_root = cohort_directory or repo_root / "var" / "release-cohort"
+    evidence_root = evidence_directory or repo_root / "var" / "distribution-install-readiness"
+    try:
+        cohort = load_release_cohort(cohort_root)
+        checked_out_commit = _checked_out_commit(repo_root)
+    except (OSError, SystemExit, ValueError) as exc:
+        return ReadinessCheck("distribution-evidence-complete", "blocking", False, str(exc))
+
+    manifest = cohort.manifest
+    expected_tag = f"v{manifest.version}"
+    if manifest.source.commit != checked_out_commit:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            f"cohort commit {manifest.source.commit} does not match checked-out commit {checked_out_commit}",
+        )
+    if manifest.source.tag != expected_tag:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            f"cohort tag {manifest.source.tag!r} does not match version tag {expected_tag!r}",
+        )
+    if not evidence_root.is_dir():
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            f"distribution evidence directory is missing: {evidence_root}",
+        )
+
+    paths = tuple(sorted(evidence_root.glob("*.json")))
+    if not paths:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            f"distribution evidence directory is empty: {evidence_root}",
+        )
+
+    records = []
+    for path in paths:
+        try:
+            records.append(load_distribution_evidence(path, cohort_directory=cohort.directory))
+        except (OSError, SystemExit, ValueError) as exc:
+            return ReadinessCheck(
+                "distribution-evidence-complete",
+                "blocking",
+                False,
+                f"invalid or mismatched evidence {path.name}: {exc}",
+            )
+
+    failed = sorted({record.row_id for record in records if record.result.status is EvidenceStatus.FAILED})
+    if failed:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            f"cohort has failed distribution rows: {failed!r}",
+        )
+
+    passed_rows = {record.row_id for record in records if record.result.status is EvidenceStatus.PASSED}
+    missing = sorted(set(required_rows) - passed_rows)
+    if missing:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            f"missing passing distribution evidence rows: {missing!r}",
+        )
+
+    clients_missing_identity = sorted(
+        record.row_id for record in records if record.row_id in _CLIENT_DISTRIBUTION_ROWS and record.client is None
+    )
+    if clients_missing_identity:
+        return ReadinessCheck(
+            "distribution-evidence-complete",
+            "blocking",
+            False,
+            f"client rows lack real client identity: {clients_missing_identity!r}",
+        )
+
+    return ReadinessCheck(
+        "distribution-evidence-complete",
+        "blocking",
+        True,
+        f"{len(required_rows)} required rows pass for cohort {manifest.cohort_id}",
+    )
+
+
+def check_generated_surface_versions(
+    repo_root: Path,
+    *,
+    cohort_directory: Path | None = None,
+) -> ReadinessCheck:
+    """Require the generated Scoop/Homebrew/marketplace surfaces to bind the cohort.
+
+    Each channel generator embeds the version (and, for Scoop/Homebrew, the exact
+    artifact SHA-256s) at build time. A stale embedded value would ship an
+    install surface pointing at the wrong release under the right tag, so this
+    parses the three real formats - the Scoop JSON manifest, the Homebrew Ruby
+    formula, and the marketplace plugin JSON inside its zip - and refuses with a
+    per-surface enumeration when any embedded value drifts from the cohort.
+    """
+    name = "generated-surface-versions"
+    cohort_root = (cohort_directory or repo_root / "var" / "release-cohort").resolve()
+    manifest_path = cohort_root / "release-cohort.json"
+    python_cohort_path = cohort_root / "python" / "python-cohort.json"
+    try:
+        version = str(json.loads(manifest_path.read_text(encoding=_UTF_8))["version"])
+        python_sha = json.loads(python_cohort_path.read_text(encoding=_UTF_8))["sha256"]
+    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        return ReadinessCheck(
+            name, "blocking", False, f"cohort version/digest surfaces unreadable under {cohort_root}: {exc}"
+        )
+
+    failures: list[str] = []
+
+    try:
+        scoop = json.loads((cohort_root / "scoop" / "cadrumo.json").read_text(encoding=_UTF_8))
+        if str(scoop.get("version")) != version:
+            failures.append(f"scoop version {scoop.get('version')!r} != cohort {version!r}")
+        expected_hashes = [
+            python_sha["cadrumo"],
+            python_sha["cadrumo-data-manuals"],
+            python_sha["cadrumo-data-official"],
+        ]
+        actual_hashes = list(scoop.get("architecture", {}).get("64bit", {}).get("hash", []))
+        if actual_hashes != expected_hashes:
+            failures.append("scoop 64bit hashes do not equal the cohort python-wheel digests")
+    except (OSError, json.JSONDecodeError, KeyError) as exc:
+        failures.append(f"scoop manifest unreadable: {exc}")
+
+    try:
+        formula = (cohort_root / "homebrew" / "Formula" / "cadrumo.rb").read_text(encoding=_UTF_8)
+        url_match = re.search(r'url "[^"]*/cadrumo-([0-9][^"/]*)\.tar\.gz"', formula)
+        sha_match = re.search(r'sha256 "([0-9a-f]{64})"', formula)
+        embedded_version = url_match.group(1) if url_match is not None else None
+        if embedded_version != version:
+            failures.append(f"homebrew formula stable version {embedded_version!r} != cohort {version!r}")
+        if sha_match is None or sha_match.group(1) != python_sha["cadrumo-sdist"]:
+            failures.append("homebrew formula stable sha256 != cohort cadrumo sdist digest")
+    except (OSError, KeyError) as exc:
+        failures.append(f"homebrew formula unreadable: {exc}")
+
+    try:
+        market_zips = sorted(cohort_root.glob("claude/cadrumo-marketplace-*.zip"))
+        if not market_zips:
+            failures.append("marketplace zip is absent")
+        else:
+            with zipfile.ZipFile(market_zips[0]) as archive:
+                plugin = json.loads(archive.read("plugins/cadrumo/.claude-plugin/plugin.json"))
+            if str(plugin.get("version")) != version:
+                failures.append(f"marketplace plugin version {plugin.get('version')!r} != cohort {version!r}")
+    except (OSError, zipfile.BadZipFile, json.JSONDecodeError, KeyError) as exc:
+        failures.append(f"marketplace plugin manifest unreadable: {exc}")
+
+    if failures:
+        return ReadinessCheck(name, "blocking", False, "; ".join(failures))
+    return ReadinessCheck(
+        name, "blocking", True, f"scoop, homebrew, and marketplace all bind cohort version {version} and digests"
+    )
+
+
 def build_report(
-    repo_root: Path | str | None = None, *, skip_network: bool = False, gh_executable: str | None = None
+    repo_root: Path | str | None = None,
+    *,
+    skip_network: bool = False,
+    gh_executable: str | None = None,
+    cohort_directory: Path | None = None,
+    evidence_directory: Path | None = None,
 ) -> ReadinessReport:
-    """Run every readiness check and return the aggregate report."""
+    """Run every readiness check and return the aggregate report.
+
+    ``cohort_directory`` / ``evidence_directory`` relocate the distribution-
+    evidence check off its ``var/release-cohort`` / ``var/distribution-install-
+    readiness`` defaults - the publish workflow downloads the promoted cohort
+    and the aggregated rows into ``var/promotion/*`` and must point the gate at
+    them rather than at a working-tree default that does not exist in CI.
+    """
     root = Path(repo_root) if repo_root is not None else _repo_root()
     checks: list[ReadinessCheck] = [
         check_project_names_are_canonical(root),
         check_version_surfaces_agree(root),
         check_changelog_is_ready(root),
-        check_latest_packaging_smoke_evidence(root),
+        check_distribution_evidence_set(
+            root,
+            cohort_directory=cohort_directory,
+            evidence_directory=evidence_directory,
+        ),
+        check_generated_surface_versions(root, cohort_directory=cohort_directory),
     ]
     if not skip_network:
         checks.append(check_no_open_release_blockers(gh_executable=gh_executable))
@@ -324,9 +590,25 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Skip the gh-backed open-blocker check (offline/no-gh environments).",
     )
+    parser.add_argument(
+        "--cohort-dir",
+        type=Path,
+        default=None,
+        help="Release-cohort directory to gate (default: var/release-cohort).",
+    )
+    parser.add_argument(
+        "--evidence-dir",
+        type=Path,
+        default=None,
+        help="Distribution-evidence directory to gate (default: var/distribution-install-readiness).",
+    )
     args = parser.parse_args(argv)
 
-    report = build_report(skip_network=args.skip_network)
+    report = build_report(
+        skip_network=args.skip_network,
+        cohort_directory=args.cohort_dir,
+        evidence_directory=args.evidence_dir,
+    )
     if args.json:
         print(json.dumps(report.to_dict(), indent=2, sort_keys=True))
         return 0 if report.ok else 1

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import os
-import tempfile
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -22,6 +21,7 @@ from .. import (
     validated_casilla_id,
 )
 from .._loader import _collect_registry_tree_fingerprints, clear_fingerprint_cache
+from .._loader_cache import registry_disk_cache_dir
 from ._loader_directory_mode_support import write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -356,7 +356,9 @@ source_refs = ["test-source-001"]
         hasher.update(item[0].encode("utf-8"))
         hasher.update(str(item[1]).encode("utf-8"))
         hasher.update(str(item[2]).encode("utf-8"))
-    stale_cache_path = Path(tempfile.gettempdir()) / f"aeat_registry_{hasher.hexdigest()}_validated.tmp"
+    cache_dir = registry_disk_cache_dir()
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    stale_cache_path = cache_dir / f"cadrumo_registry_{hasher.hexdigest()}_validated.tmp"
     stale_cache_path.write_text("validated", encoding="utf-8")
 
     try:

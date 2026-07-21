@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2024.pdf",
   "source_sha256": "ad02f914246632dcd7ab30f3e7280daf3501be6ee3938237e2ebfe7328ff8179",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

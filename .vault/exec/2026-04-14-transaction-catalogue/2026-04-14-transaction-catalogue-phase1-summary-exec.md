@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#transaction-catalogue"
 date: "2026-04-14"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-14-transaction-catalogue-plan]]"
   - "[[2026-04-14-transaction-catalogue-review-audit]]"

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#convenio-doble-imposicion'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-30-convenio-doble-imposicion-research]]"
   - "[[2026-05-27-m210-irnr-full-engine-adr]]"
@@ -11,7 +11,7 @@ related:
   - "[[2026-06-30-m210-categorical-conditional-predicate-adr]]"
 ---
 
-# `convenio-doble-imposicion` adr: `Convenio doble imposicion treaty-rate override framework` | (**status:** `proposed`)
+# `convenio-doble-imposicion` adr: `Convenio doble imposicion treaty-rate override framework` | (**status:** `accepted`)
 
 ## Problem Statement
 

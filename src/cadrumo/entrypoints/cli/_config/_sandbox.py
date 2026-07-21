@@ -67,7 +67,6 @@ def register_sandbox_commands(profile_app: typer.Typer) -> None:
     """Mount the ``sandbox`` sub-app on ``config profile``."""
     _register_sandbox_create_command(sandbox_app)
     _register_sandbox_list_command(sandbox_app)
-    _register_sandbox_use_command(sandbox_app)
     _register_sandbox_discard_command(sandbox_app)
     _register_sandbox_prune_command(sandbox_app)
     _register_sandbox_archive_command(sandbox_app)
@@ -114,7 +113,7 @@ def _register_sandbox_create_command(app: typer.Typer) -> None:
             SandboxSourceNotFoundError,
             create_sandbox,
         )
-        from .._config_payloads import ConfigProfileSandboxCreateResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxCreateResult
 
         try:
             outcome = create_sandbox(CreateSandboxCommand(name=name, from_profile=from_profile))
@@ -182,7 +181,8 @@ def _register_sandbox_list_command(app: typer.Typer) -> None:
         from ....application.bucket_maintenance import SANDBOX_LABEL_PREFIX
         from ....application.workflow import list_profile_buckets
         from ....core import resolve_active_bucket_id
-        from .._config_payloads import ConfigProfileSandboxListResult, ProfilePointerPayload
+        from .._config_payloads import ProfilePointerPayload
+        from .._config_sandbox_payloads import ConfigProfileSandboxListResult
 
         active = resolve_active_bucket_id()
         buckets = list_profile_buckets()
@@ -210,59 +210,6 @@ def _register_sandbox_list_command(app: typer.Typer) -> None:
                 marker = "*" if pointer.bucket_id == active else " "
                 lines.append(f"{marker}\t{pointer.label}")
         _emit_envelope(ctx, command="config.profile.sandbox.list", result=result, lines=lines)
-
-
-def _register_sandbox_use_command(app: typer.Typer) -> None:
-    @app.command(
-        "use",
-        help=tr(
-            "cli.config.profile.sandbox.use_help",
-            default="Switch the active profile to an existing sandbox.",
-        ),
-    )
-    def config_profile_sandbox_use(
-        ctx: typer.Context,
-        name: str = typer.Argument(
-            ...,
-            help=tr("cli.config.profile.sandbox.use_name_help", default="Sandbox name (without the prefix)."),
-        ),
-        output_language: OutputLanguage | None = typer.Option(
-            None,
-            "--output-language",
-            "--language",
-            help=tr("cli.config.auth.output_language_help"),
-        ),
-    ) -> None:
-        """Activate an existing sandbox through the canonical select-lifecycle-span primitive."""
-        _activate_subcommand_output_language(ctx, output_language)
-        from ....application.bucket_maintenance import sandbox_label
-        from ....application.user_profile import select_profile_with_lifecycle_span
-        from ....application.workflow import read_profile_bucket
-        from ....domain.user_profile import ProfileNotFoundError
-        from .._config_payloads import ConfigProfileSandboxUseResult
-
-        label = sandbox_label(name)
-        pointer = read_profile_bucket(label)
-        if pointer is None:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.sandbox.unknown_sandbox",
-                context={"name": name},
-            )
-        try:
-            select_profile_with_lifecycle_span(pointer.bucket_id)
-        except ProfileNotFoundError as exc:
-            raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.sandbox.unknown_sandbox",
-                context={"name": name},
-            ) from exc
-
-        result = ConfigProfileSandboxUseResult(active_profile=pointer.label)
-        _emit_envelope(
-            ctx,
-            command="config.profile.sandbox.use",
-            result=result,
-            lines=(f"active_profile\t{pointer.label}",),
-        )
 
 
 def _register_sandbox_discard_command(app: typer.Typer) -> None:
@@ -312,7 +259,7 @@ def _register_sandbox_discard_command(app: typer.Typer) -> None:
         )
         from ....application.workflow import read_profile_bucket
         from ....domain.buckets import BucketDeleteRefusedError
-        from .._config_payloads import ConfigProfileSandboxDiscardResult, SandboxNamespacePayload
+        from .._config_sandbox_payloads import ConfigProfileSandboxDiscardResult, SandboxNamespacePayload
 
         label = sandbox_label(name)
         pointer = read_profile_bucket(label)
@@ -446,7 +393,7 @@ def _register_sandbox_prune_command(app: typer.Typer) -> None:
             list_sandboxes,
         )
         from ....core import resolve_active_bucket_id
-        from .._config_payloads import ConfigProfileSandboxPruneResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxPruneResult
 
         sandboxes = list_sandboxes()
         active_bucket_id = resolve_active_bucket_id()
@@ -554,7 +501,7 @@ def _register_sandbox_archive_command(app: typer.Typer) -> None:
         )
         from ....application.workflow import read_profile_bucket
         from ....domain.buckets import BucketArchiveRefusedError
-        from .._config_payloads import ConfigProfileSandboxArchiveResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxArchiveResult
 
         label = sandbox_label(name)
         pointer = read_profile_bucket(label)
@@ -658,7 +605,7 @@ def _register_sandbox_restore_command(app: typer.Typer) -> None:
             sandbox_label,
         )
         from ....application.workflow import read_profile_bucket
-        from .._config_payloads import ConfigProfileSandboxRestoreResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxRestoreResult
 
         label = sandbox_label(name)
         # The sandbox is dormant (tombstoned) after an archive, so the
@@ -740,7 +687,7 @@ def _register_sandbox_usage_command(app: typer.Typer) -> None:
             sandbox_label,
         )
         from ....application.workflow import read_profile_bucket
-        from .._config_payloads import (
+        from .._config_sandbox_payloads import (
             ConfigProfileSandboxUsageResult,
             SandboxDiskUsagePayload,
             SandboxDiskUsageSubdirPayload,
@@ -852,7 +799,7 @@ def _register_sandbox_merge_command(app: typer.Typer) -> None:
             sandbox_label,
         )
         from ....application.workflow import ProfileLabelAmbiguousError, read_profile_bucket
-        from .._config_payloads import ConfigProfileSandboxMergeResult
+        from .._config_sandbox_payloads import ConfigProfileSandboxMergeResult
 
         label = sandbox_label(name)
         source_pointer = read_profile_bucket(label)

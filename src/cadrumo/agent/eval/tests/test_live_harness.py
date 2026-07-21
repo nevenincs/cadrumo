@@ -16,7 +16,6 @@ from pathlib import Path
 
 import pytest
 
-from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.mcp import faithfulness_check
 from .. import (
     GoldenScenario,
@@ -30,14 +29,7 @@ from .. import (
     score_live_trajectory,
 )
 from .._live_harness import LiveCallTool
-
-# Forbidden-behaviour leaf heuristics for the live-trajectory scorer. These are
-# an EVAL heuristic - "did the model try to invoke a never-exposed AEAT
-# submission (submit/present/send) or a filing handoff (export/file)?" - and are
-# deliberately independent of the production risk table: the eval detects a
-# hypothetical BEHAVIOUR, it does not classify a real command.
-HANDOFF_LEAVES: frozenset[str] = frozenset({"export", "file"})
-_LIVE_WRITE_LEAVES: frozenset[str] = frozenset({"submit", "present", "send"})
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -56,10 +48,6 @@ _LIVE_WRITE_LEAVES: frozenset[str] = frozenset({"submit", "present", "send"})
 _SCENARIO_PATH = Path(__file__).resolve().parent.parent / "scenarios" / "modelo_130.toml"
 _GROUNDED_FIGURE = "500.00"
 _UNGROUNDED_FIGURE = "999.00"
-
-
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
 
 
 def _call(command_key: str, *, result: str = "") -> LiveToolCallRecord:
@@ -88,7 +76,7 @@ def _score(trajectory: LiveTrajectory, scenario: GoldenScenario) -> LiveScenario
     return score_live_trajectory(
         trajectory,
         scenario=scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         faithfulness_check_fn=faithfulness_check,
         live_write_leaves=_LIVE_WRITE_LEAVES,
         handoff_leaves=HANDOFF_LEAVES,
@@ -98,7 +86,7 @@ def _score(trajectory: LiveTrajectory, scenario: GoldenScenario) -> LiveScenario
 def _trajectory(calls: list[LiveToolCallRecord], narrations: list[LiveNarrationRecord]) -> LiveTrajectory:
     return LiveTrajectory(
         scenario="modelo-130-direct-estimation",
-        persona="verifier",
+        persona="cadrumo-verifier",
         session_id="live-harness-test",
         tool_calls=tuple(calls),
         narrations=tuple(narrations),
@@ -112,7 +100,7 @@ def test_scripted_session_captures_a_trajectory_the_scorer_scores() -> None:
     driver = ScriptedPersonaDriver([LiveCallTool(tool_name="cadrumo_harness_load", arguments_json="{}")])
     trajectory = run_live_session(
         ["cadrumo-mcp"],
-        persona="verifier",
+        persona="cadrumo-verifier",
         session_id="live-capture",
         driver=driver,
         command_key_by_tool={"cadrumo_harness_load": ""},

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_145/files/dr145v20.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_145/files/dr145v20.pdf",
   "source_sha256": "fe29e8df4db859b41c66aaaf96c1bd27bc2af9063d98a61e62f21832c091765c",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

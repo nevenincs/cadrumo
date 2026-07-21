@@ -191,8 +191,8 @@ def derive_key(
             for callers that only ever derive one key from the IKM,
             but a per-purpose salt is preferred.
         context: HKDF ``info`` parameter. SHOULD be a stable
-            descriptive bytestring such as ``b"aeat.lookup.v1"`` or
-            ``b"aeat.envelope.payload.v1"``.
+            descriptive bytestring such as ``b"cadrumo.lookup.v1"`` or
+            ``b"cadrumo.envelope.payload.v1"``.
         length: Number of bytes to derive. Defaults to ``KEY_SIZE``.
 
     Returns:

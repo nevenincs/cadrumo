@@ -1,7 +1,7 @@
-"""Faithfulness gate wired end-to-end for the operator golden-task eval (category 9).
+"""Faithfulness gate wired end-to-end for the operator golden-task eval.
 
-Covers eval-catalogue category 9 (hallucinated numeric, high severity): a
-hallucinated numeric is the load-bearing risk for regulated filing narration,
+Guards against a hallucinated numeric - the load-bearing risk for regulated filing
+narration,
 since a plausible-looking but fabricated casilla value reads as authoritative
 to an operator who cannot tell it apart from a real one.
 
@@ -9,7 +9,7 @@ This module dispatches a REAL ``modelo.work.calculate`` for M130 through the
 actual CLI command handling (the identical transport
 :func:`cadrumo.entrypoints.mcp._dispatch.tool_request_argv` projects the
 ``cadrumo_modelo_work_calculate`` MCP tool call onto, mirroring
-``test_response_provenance_golden.py``'s category-3 dispatch), seeds the exact
+``test_response_provenance_golden.py``'s dispatch), seeds the exact
 AEAT DR 130 Instrucciones worked-example inputs (ingresos 12.000, gastos 4.000)
 so casilla 07 resolves to the same 1.600,00 EUR oracle figure
 ``test_modelo_130_value_oracle.py`` grounds, runs the real
@@ -49,12 +49,12 @@ from ....domain.transactions import (
     TransactionDirection,
 )
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
-from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....entrypoints.mcp import faithfulness_check
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from .. import NarrationFaithfulness, load_scenario, run_golden_scenario
+from ._real_cli_support import create_m130_work_unit, valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -67,15 +67,11 @@ _REVISION = "2019-y-siguientes"
 # grounds: ingresos 12.000, gastos 4.000 -> rendimiento neto 8.000 -> casilla 04 =
 # 20 % x 8.000 = 1.600 -> casilla 07 = 1.600,00 EUR (IRPF Ley 35/2006 Art. 99,
 # RD 439/2007 Art. 110). Real narration quoting this real figure must not be
-# flagged - the false-positive proof this category exists to close.
+# flagged - the false-positive proof this gate exists to close.
 _GROUNDED_ORACLE_NARRATION = "La cuota del pago fraccionado (casilla 07) es de 1.600,00 EUR."
 # A plausible but never-computed figure - absent from the captured tool JSON by
 # construction, so a flag on it is a genuine detection, not a coincidence.
 _FABRICATED_NARRATION = "La cuota del pago fraccionado (casilla 07) es de 4.242,17 EUR."
-
-
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
 
 
 @pytest.fixture
@@ -92,7 +88,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed a natural-person (IRPF estimacion directa) profile into the active bucket."""
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name="Faithfulness golden-eval test profile",
@@ -169,21 +165,6 @@ def _seed_ledger_row(*, direction: TransactionDirection, amount: Decimal, filing
         )
 
 
-def _create_m130_work_unit(*, filing_year: int, period: str) -> str:
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "130",
-            "--year", str(filing_year),
-            "--period", period,
-            "--revision", _REVISION,
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return unwrap_schema_envelope(result.output)["work_unit_id"]
-
-
 def _dispatch_real_m130_calculate_json(
     runtime_profile: TestRuntimeProfile,
     *,
@@ -200,7 +181,7 @@ def _dispatch_real_m130_calculate_json(
     ``PostToolUse`` hook receives it.
     """
     _seed_natural_person_profile(runtime_profile)
-    work_unit_id = _create_m130_work_unit(filing_year=filing_year, period=period)
+    work_unit_id = create_m130_work_unit(filing_year=filing_year, period=period, revision=_REVISION)
     _seed_ledger_row(
         direction=TransactionDirection.INCOMING,
         amount=Decimal("12000.00"),
@@ -226,7 +207,7 @@ def _dispatch_real_m130_calculate_json(
     )  # fmt: skip
     assert result.exit_code == 0, result.output
     assert "Traceback" not in result.output
-    payload = unwrap_schema_envelope(result.output)
+    payload = require_schema_envelope(result.output)
     observations = payload["observations"]
     assert observations, "real M130 calculate response carried zero observations"
     casilla_07 = next(obs for obs in observations if obs["casilla_id"] == "07")
@@ -273,7 +254,7 @@ def test_fabricated_value_is_flagged_advisory_on_a_non_handoff_step(runtime_prof
     scenario = load_scenario(_SCENARIO_PATH)
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         narration_faithfulness_checks=(check,),
     )
 
@@ -318,7 +299,7 @@ def test_identical_fabricated_value_hard_blocks_on_the_export_handoff_step(
     scenario = load_scenario(_SCENARIO_PATH)
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         narration_faithfulness_checks=(check,),
     )
 
@@ -362,7 +343,7 @@ def test_grounded_oracle_figure_is_not_flagged_even_on_the_handoff_step(
     scenario = load_scenario(_SCENARIO_PATH)
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         narration_faithfulness_checks=(check,),
     )
 
@@ -379,6 +360,6 @@ def test_narration_faithfulness_dimension_holds_trivially_when_not_checked() -> 
     scenario run.
     """
     scenario = load_scenario(_SCENARIO_PATH)
-    result = run_golden_scenario(scenario, valid_commands=_valid_commands())
+    result = run_golden_scenario(scenario, valid_commands=valid_cli_commands())
     assert result.narration_faithfulness_checks == ()
     assert result.passed, result.failures

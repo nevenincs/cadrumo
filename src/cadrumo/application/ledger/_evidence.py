@@ -40,7 +40,7 @@ from ...adapters.persistence.storage import (
 )
 from ...core import STRICT_FROZEN_CONFIG
 from ...core.config import Settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import PDF_EXTENSION, PDF_MIME_TYPE
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
@@ -88,11 +88,11 @@ class MediaKind(StrEnum):
     IMAGE = "image"
 
 
-class PurchaseInvoiceEvidenceInputError(AeatError):
+class PurchaseInvoiceEvidenceInputError(CadrumoError):
     """Raised when a CLI-supplied evidence input violates the typed contract."""
 
 
-class PurchaseInvoiceEvidenceNotFoundError(AeatError):
+class PurchaseInvoiceEvidenceNotFoundError(CadrumoError):
     """Raised when a CLI lookup targets a missing evidence record."""
 
 
@@ -356,7 +356,7 @@ class PurchaseInvoiceEvidenceService:
         self,
         *,
         bucket_id: str,
-        source_path: Path,
+        source_path: str | Path,
         supplier: str | None = None,
         invoice_number: str | None = None,
         invoice_date: str | None = None,
@@ -368,21 +368,30 @@ class PurchaseInvoiceEvidenceService:
     ) -> PurchaseInvoiceEvidenceResult:
         """Attach a new purchase invoice evidence file to a bucket (ledger).
 
-        Resolves ``source_path`` to an absolute path, verifies the file
+        Resolves ``source_path`` for byte access only, verifies the file
         exists, infers the ``MediaKind`` from the extension, copies the file's
         bytes into the encrypted
         :class:`~cadrumo.adapters.persistence.storage.AttachmentStore` (active
         bucket) and records the resulting content-addressed ``attachment_id`` on
-        the record (the bytes thereafter live only in secure storage;
-        ``source_path`` is a provenance breadcrumb), creates a
+        the record (the bytes thereafter live only in secure storage). The
+        persisted ``source_path`` is the argv-faithful path the operator
+        supplied, never the machine-absolutized form, so it is a stable
+        provenance breadcrumb rather than a machine-dependent one. Creates a
         ``PurchaseInvoiceEvidence`` record,
         appends it to the in-memory catalogue, persists the encrypted bucket-local catalogue
         in secure-object storage, and emits a
-        ``PURCHASE_INVOICE_EVIDENCE_ATTACHED`` audit event.
+        ``PURCHASE_INVOICE_EVIDENCE_ATTACHED`` audit event whose content-addressed
+        id derives from the source digest and stable metadata, never the path.
 
         Args:
             bucket_id: Ledger bucket the evidence belongs to.
-            source_path: Local path to a PDF or image file.
+            source_path: Local path to a PDF or image file. A ``str`` (the raw
+                operator argv) is echoed onto the record verbatim — separators are
+                preserved exactly, never OS-normalized — so the persisted path and
+                envelope are identical across platforms (a forward-slash relative
+                path stays forward-slash on Windows). A ``Path`` is accepted for
+                programmatic callers and stringified for the echo. Byte access
+                always resolves the path regardless.
             supplier: Optional vendor name extracted from the invoice.
             invoice_number: Optional invoice identifier from the document.
             invoice_date: Optional issue date string (free-form; typically
@@ -465,7 +474,12 @@ class PurchaseInvoiceEvidenceService:
         record = PurchaseInvoiceEvidence(
             evidence_id=evidence_id,
             bucket_id=bucket_id,
-            source_path=str(resolved),
+            # Argv-faithful breadcrumb: echo the path the operator supplied, never
+            # the machine-absolutized form. `resolved` is used for byte access
+            # only; folding the absolute path into the persisted record (and the
+            # echoed envelope) made two invocations from different working dirs
+            # non-deterministic for identical bytes.
+            source_path=str(source_path),
             source_sha256=digest,
             attachment_id=digest,
             media_kind=media_kind,
@@ -488,7 +502,11 @@ class PurchaseInvoiceEvidenceService:
             evidence_id=record.evidence_id,
             actor=actor,
             occurred_at=now,
-            payload={"media_kind": record.media_kind, "source_path": record.source_path},
+            # Identity-bearing payload: the content digest plus stable declared
+            # metadata, never the source path. The bucket-event id folds the
+            # payload, so a path here would make the event id machine-path
+            # dependent (the defect this fix closes).
+            payload={"media_kind": record.media_kind, "source_sha256": record.source_sha256},
         )
         return PurchaseInvoiceEvidenceResult(record=record, bucket_event_ids=(event_id,))
 

@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-210"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:210"]
+legal_refs = ["trlirnr-rdleg-5-2004:art-2", "trlirnr-rdleg-5-2004:art-10"]
+related = ["declaracion", "autoliquidacion", "nif"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Autoliquidacion del IRNR sin establecimiento permanente."
+definition = "Autoliquidacion del Impuesto sobre la Renta de no Residentes para rentas obtenidas en Espana sin establecimiento permanente."
+
+[language.es.source]
+citation = "Texto refundido de la Ley del IRNR (RDLeg 5/2004)."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 210"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "impuesto de no residentes"
+term_status = "admitted"
+
+[language.en]
+short_description = "Non-resident income tax return (no permanent establishment)."
+
+[language.ca]
+short_description = "Autoliquidacio de l'IRNR sense establiment permanent."
+
+[language.hu]
+short_description = "Kulfoldi illetoseguek jovedelemado-bevallasa telephely nelkul."

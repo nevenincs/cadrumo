@@ -3,11 +3,10 @@ tags:
   - '#reference'
   - '#arch-remediation-crash-window'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
-  - "[[2026-04-30-secure-persistence-foundation-adr]]"
 ---
 
 # `arch-remediation-crash-window` reference: `multi-store crash-window matrix`

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_131/files/03-131-ejercicio-2008-trimestre-2o-3o-y-4o-31-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_131/files/03-131-ejercicio-2008-trimestre-2o-3o-y-4o-31-kb-pdf.pdf",
   "source_sha256": "1f140bd19597b4b83f3990dc33080cffb1504229fc32fb7147bf308113f9d452",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

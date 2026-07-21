@@ -201,6 +201,9 @@ def _binding_values_2025() -> dict[BindingId, Decimal]:
     # 2025 retenciones/pagos are carried via relation_values not binding_values.
     # Only scalar bindings that lack a relation source are passed here.
     return {
+        # The production profile resolver supplies this predicate as 1/0 from
+        # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
+        "renta-2025-profile-has-economic-activity": Decimal("1"),
         "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         # declaration_type = 1 (individual) → 0461 computed = 0

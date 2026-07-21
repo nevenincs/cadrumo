@@ -1,10 +1,9 @@
 # Golden scenario: the active taxpayer identity is confirmed before a mutation,
-# and RE-confirmed after a profile switch (ADR `mcp-identity-linked-operation`
-# I2 / I4, plan step S11).
+# and RE-confirmed after a profile switch.
 #
 # The Erik/Erika hazard: a gestor operating the console across several taxpayer
 # profiles must never let an autonomous agent run a state-changing command under
-# the wrong active profile. The P03 block-first-mutation identity gate enforces
+# the wrong active profile. The block-first-mutation identity gate enforces
 # this - the first mutating call of a session is refused until an identity read
 # (whoami / `config profile status` / `overview status` / the `harness.load`
 # floor) has occurred, and a profile SWITCH re-arms the gate so identity must be
@@ -30,7 +29,7 @@ name = "identidad-perfil-switch-reconfirm"
 modelo = "130"
 filing_year = 2024
 period = "1T"
-skill_name = "preparar-modelo-130"
+skill_name = "cadrumo-preparar-modelo-130"
 provenance_required = true
 # The quarter result (07); in the revision's AEAT-grounded computed-and-verified
 # casilla set, so the shared verification dimension is grounded, not vacuous.

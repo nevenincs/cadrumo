@@ -1,0 +1,16 @@
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@setup aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING --description "venta" --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210 --idempotency-key irpf-q1-venta
+@setup aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING --description "compra" --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --idempotency-key irpf-q1-compra
+@step Create the first instalment draft.
+aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@step Calculate it with the three first-period carries passed as zeros.
+aeat --format json app modelo work calculate --modelo 130 --year 2026 --period 1T --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@expect result.casilla_values.03 == "500.00"
+@expect result.casilla_values.04 == "100.00"
+@step Verify the instalment before exporting it.
+@result aeat --format json app modelo work verify --modelo 130 --year 2026 --period 1T
+@expect result.granted_verificado_completo == true
+@expect exit_code == 0
+@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe
+@static aeat app modelo work file --modelo 130 --year 2026 --period 1T
+@static aeat app modelo reconcile pull --modelo 130 --year 2026 --period 1T

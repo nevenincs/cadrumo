@@ -2,11 +2,11 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hfp-816-2017.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-816-2017.html",
   "source_sha256": "c9ac79e79a63c9bbf4f65e61fa176dd1ac1273d64555cac16b7b69fb9405f6f4",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",
-  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2017-10042",
   "units": [
     {
       "text": "Se aprueba el modelo 232 de «Declaración informativa de operaciones vinculadas y de operaciones y situaciones relacionadas con países o territorios calificados como paraísos fiscales» cuyo contenido figura en el anexo de la presente orden.\nEl citado modelo estará disponible exclusivamente en formato electrónico.\nEl número de justificante que habrá de figurar en el mismo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 232.",

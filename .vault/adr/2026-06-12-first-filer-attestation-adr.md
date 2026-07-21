@@ -1,20 +1,20 @@
 ---
 tags:
-  - '#adr'
-  - '#first-filer-attestation'
+  - "#adr"
+  - "#first-filer-attestation"
 date: '2026-06-12'
-modified: '2026-07-03'
 related:
   - "[[2026-06-12-first-filer-attestation-research]]"
+superseded_by: '2026-06-13-first-filer-attestation-adr'
+modified: '2026-07-17'
 ---
-
 # `first-filer-attestation` adr: `censo-grounded activity-start scoping` | (**status:** `superseded`)
 
-> **Superseded by `2026-06-13-first-filer-attestation-adr`.** This ADR's core concept (the activity-start date is genuine AEAT authority and the right axis to scope a first filer's cross-period dependency graph) is retained, but two defects below are corrected by the superseding ADR. (1) Factual grounding: this ADR names AEAT sede procedure G313 as the "Mis Datos Censales" data page. That is wrong - G313 is the certificate-issuance procedure (Expedicion de certificados tributarios, Situacion Censal); the censal form is Modelo 036 (sede code G322); and Mis Datos Censales is a separate data surface. (2) Honesty: the live censo read is non-functional today (never returned a readable censo) and mis-wired to the G313 certificate URL, so this ADR's censo-only, fail-closed posture would permanently trap the first filer it aims to free. The superseding ADR keeps the activity-start axis but sources it from the operator-declared `activity_start_date` now (already trusted by the deadline engine for the same pre-alta suppression), stamped operator-declared with an advisory and censo-corroborated once the live surface is fixed. Read `2026-06-13-first-filer-attestation-adr` for the active decision; everything below is retained for provenance.
+> **Superseded by `2026-06-13-first-filer-attestation-adr`.** This ADR's core concept (the activity-start date is genuine AEAT authority and the right axis to scope a first filer's cross-period dependency graph) is retained, but two defects below are corrected by the superseding ADR. (1) Factual grounding: this ADR names AEAT sede procedure G313 as the "Mis Datos Censales" data page. That is wrong - G313 is the certificate-issuance procedure (Expedicion de certificados tributarios, Situacion Censal); the censal form is Modelo 036 (sede code G322); and Mis Datos Censales is a separate data surface. (2) Honesty: the live Censo route cannot be made a structurally safe read because the discovered data-bearing surface is an AEAT modification tool. The superseding ADR keeps the activity-start axis but sources it from the operator-declared `activity_start_date`, stamped operator-declared with an advisory. The later accepted `2026-07-11-censo-operator-manual-enrolment-adr` retires automatic Censo corroboration; it is not deferred compatibility work. Read `2026-06-13-first-filer-attestation-adr` for the active decision; everything below is retained for provenance.
 
 ## Problem Statement
 
-A business whose first-ever filing is the period in which its economic activity begins cannot file that period locally. The cross-period clean-state gate (`src/aeat/application/calculations/_cross_period_clean_state.py`) demands official AEAT evidence of prior-period filings that, for a genuine first filer, never legally existed. Because local `file` requires a `verified_complete` revision and `verify` blocks on `cross_period_dependency_unclean`, the verify to export to file sequence is a closed loop with no legitimate offline exit.
+A business whose first-ever filing is the period in which its economic activity begins cannot file that period locally. The cross-period clean-state gate (`src/cadrumo/application/calculations/_cross_period_clean_state.py`) demands official AEAT evidence of prior-period filings that, for a genuine first filer, never legally existed. Because local `file` requires a `verified_complete` revision and `verify` blocks on `cross_period_dependency_unclean`, the verify to export to file sequence is a closed loop with no legitimate offline exit.
 
 The research `2026-06-12-first-filer-attestation-research` documents the worked failure case from round-5 operator testing: a business starting activity in 2025 4T truthfully binds `irpf.previous_year_economic_activity_net_income = 0` and `modelo-130-resultados-negativos-anteriores = 0`, yet `work verify` still blocks demanding a Modelo 100 year-2024 filing and a Modelo 130 2025-3T filing that were never owed. Every exit was mapped and confirmed closed: `export` refuses drafts, `file` refuses non-verified revisions, and the only gate-satisfying routes (`live filed pull-sources`, `reconcile file --file`, `filing-record import` with an official evidence kind) all demand official AEAT evidence of a filing the legal world never minted. The import honesty gate is correct to refuse a fabricated evidence id; the defect is not an inconsistent gate but the absence of any vocabulary, anywhere in the architecture, to express that no prior obligation existed.
 

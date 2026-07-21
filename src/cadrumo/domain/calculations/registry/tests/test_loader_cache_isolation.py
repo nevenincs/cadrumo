@@ -1,19 +1,19 @@
-"""Registry loader cache isolation under pytest (the #44 test-isolation fix).
+"""Registry loader cache isolation under pytest.
 
-The loader's cross-process ``/tmp`` ``aeat_registry_*.pkl`` disk pickle is keyed by
+The loader's cross-process ``/tmp`` ``cadrumo_registry_*.pkl`` disk pickle is keyed by
 file mtime and SHARED across pytest-xdist worker processes, so a parallel ``-n`` run
-could serve a stale/transient compiled registry from one worker to another (the #44
-isolation gap that flaked the M303-2009 ledger tests under the P05 sweep). The loader
-originally skipped that disk pickle under pytest ENTIRELY -- including collection
-before ``PYTEST_CURRENT_TEST`` is set -- which closed the #44 race but forced every
-xdist worker and every subprocess-spawning test to independently pay the full
+could serve a stale/transient compiled registry from one worker to another, flaking
+tests that depend on a specific registry compile. The loader originally skipped that
+disk pickle under pytest ENTIRELY -- including collection before
+``PYTEST_CURRENT_TEST`` is set -- which closed that race but forced every xdist
+worker and every subprocess-spawning test to independently pay the full
 multi-second registry compile, since a cold compile+validate of the bundled tree
 costs single-to-double-digit seconds on this codebase's registry size.
 
 The gate is now scoped to the ROOT: a mutable/synthetic root (a ``tmp_path`` test
 fixture, or any path that is not the resolved package-bundled root) keeps the disk
-pickle disabled under pytest, preserving the #44 invariant exactly -- such a root can
-be edited mid-run by the very test that built it. The package-bundled, read-only
+pickle disabled under pytest, preserving the isolation invariant exactly -- such a
+root can be edited mid-run by the very test that built it. The package-bundled, read-only
 registry tree is never mutated during a run, so it is exempt: under pytest it now
 shares ONE compiled disk pickle across every worker/subprocess that requests it,
 collapsing N independent cold compiles into one compile the rest read.
@@ -31,8 +31,8 @@ The bundled-tree fingerprint TTL tests below pin a related but distinct
 invariant: the fingerprint cache's directory-mtime walk is only skippable for
 the package-bundled, read-only registry tree, never for a mutable authoring
 tree (a ``tmp_path`` synthetic registry, or any path other than the bundled
-root), so a peer's live TOML edit in this shared worktree is never masked by
-an overlong TTL window.
+root), so a live TOML edit to an authoring tree is never masked by an
+overlong TTL window.
 """
 
 from __future__ import annotations
@@ -62,7 +62,12 @@ from ._loader_directory_mode_support import _standard_manifest_text, _standard_r
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _REPO_ROOT = Path(__file__).resolve().parents[6]
-_SUBPROCESS_TIMEOUT_SECONDS = 60
+# Hang guard only, not a performance assertion: each spawned REAL pytest
+# session compiles the bundled registry (~9s on an idle machine) and this
+# suite runs on a heavily loaded shared box (pytest-xdist workers plus
+# concurrent agent sessions), where a 60s budget produced false timeouts
+# unrelated to the purge regression this module guards against.
+_SUBPROCESS_TIMEOUT_SECONDS = 300
 
 
 def test_registry_disk_cache_disabled_under_pytest_for_a_mutable_root() -> None:
@@ -176,9 +181,9 @@ def test_bundled_tree_fingerprint_cache_survives_past_the_mutable_tree_ttl() -> 
 
 
 def _bundled_registry_disk_cache_files(cache_dir: Path | None = None) -> set[Path]:
-    """List every ``aeat_registry_*.pkl`` in ``cache_dir`` (default: the real OS temp dir)."""
+    """List every ``cadrumo_registry_*.pkl`` in ``cache_dir`` (default: the real OS temp dir)."""
     directory = cache_dir if cache_dir is not None else Path(tempfile.gettempdir())
-    return set(directory.glob("aeat_registry_*.pkl"))
+    return set(directory.glob("cadrumo_registry_*.pkl"))
 
 
 def test_bundled_root_disk_cache_is_shared_across_processes(
@@ -277,7 +282,7 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
 
     Regression proof for a real defect: an earlier version of
     ``_isolate_registry_caches`` (``src/cadrumo/conftest.py``) purged EVERY
-    ``aeat_registry_*.pkl`` unconditionally at session start. Under
+    ``cadrumo_registry_*.pkl`` unconditionally at session start. Under
     pytest-xdist, ``scope="session"`` means "per worker process" -- there is
     no single controlling session spanning all workers -- so every worker's
     own session start deleted the very pickle a sibling worker (or an earlier
@@ -356,12 +361,24 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
                 "--no-header",
                 "-p",
                 "no:cacheprovider",
+                # Pin rootdir to the throwaway scratch package so collection
+                # NEVER walks the shared OS temp tree. Without this, pytest
+                # infers a rootdir across the Y:-drive cwd and the C:\Temp
+                # scratch node, and the inherited testpaths=["src/cadrumo"]
+                # drives a broad collection walk that lstat()s sibling temp
+                # dirs -- a concurrent agent deleting its own transient
+                # ``cli-sequence-*`` temp dir mid-walk then surfaces here as a
+                # spurious collection FileNotFoundError, flaking this proof.
+                "--rootdir",
+                str(scratch_pkg),
+                "--override-ini",
+                "testpaths=",
                 "-n0",
                 "-m",
                 "unit",
                 node_id,
             ],
-            cwd=_REPO_ROOT,
+            cwd=scratch_pkg,
             capture_output=True,
             text=True,
             check=False,

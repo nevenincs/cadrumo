@@ -43,7 +43,7 @@ from ._validate_relation_periods import (
 from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 
 #: The single M303 compensación-pendiente binding id, owned by the iva-wallet
-#: compensación decision (aggregation-taxonomy ADR ruling D3). This is the one
+#: compensación decision. This is the one
 #: canonical declaration of the identifier: the registry relation-source validator
 #: (below), the calculate orchestrator's mesh exclusion, and the previous-filing
 #: exclusion all consume it rather than re-spelling the literal. It rides down here
@@ -51,8 +51,8 @@ from ._validate_source_casilla_ids import source_casilla_id_reference_failure
 #: orchestrator (application -> domain) read one source of truth.
 MODELO_303_IVA_COMPENSATION_BINDING_ID: Final[str] = "modelo-303-compensacion-pendiente-anteriores"
 
-#: The iva-wallet-owned relation-target slot binding set (aggregation-taxonomy ADR
-#: ruling D3): the M303 compensación-pendiente binding is owned by the iva-wallet
+#: The iva-wallet-owned relation-target slot binding set: the M303
+#: compensación-pendiente binding is owned by the iva-wallet
 #: compensación decision (resolved pre-mesh through ``_iva_wallet_gate``), NOT by
 #: the relation mesh. It legitimately remains ``source = "previous_filing"`` while
 #: also being a relation's ``target_binding`` — the iva-wallet gate strips it from
@@ -221,10 +221,10 @@ def validate_slot_source_hygiene(
     modelos: Iterable[ModeloDefinition],
     modelos_by_id: Mapping[str, ModeloDefinition],
 ) -> list[str]:
-    """Validate the relation/previous_filing slot-source hygiene gates (taxonomy ADR ruling 3).
+    """Validate the relation/previous_filing slot-source hygiene gates.
 
-    Two gates, applied per revision (defence-in-depth against the dual-modelling
-    overlap the aggregation-taxonomy ADR closes at the root):
+    Two gates, applied per revision (defence-in-depth against a dual-modelling
+    overlap between the two mechanisms):
 
     (a) A binding with ``source = "previous_filing"`` MUST satisfy the
         direct-selector predicate (``_is_direct_previous_filing_binding``). A

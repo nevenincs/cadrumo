@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#frontend-legal-compliance'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-17'
 related: []
 ---
 

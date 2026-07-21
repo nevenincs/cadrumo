@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1065-2007-art-42-ter.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1065-2007-art-42-ter.html",
   "source_sha256": "fcccd7593f62b20ab43a20e8c23c92c0341d10b2cf3c51191980a46db47c75e3",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

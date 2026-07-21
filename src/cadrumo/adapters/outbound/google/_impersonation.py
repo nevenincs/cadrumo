@@ -49,8 +49,7 @@ the non-secret CONFIGURATION (which kind a profile has chosen, and the target SA
 email / scopes) — never a credential.
 
 The CLI verb and locale strings for configuring this source are still
-deferred (see ``.vault/adr/2026-07-04-google-sa-impersonation-adr.md``,
-``google-sa-impersonation`` ADR, and GitHub issue #591 remainder); the
+deferred; the
 per-profile persistence and
 :func:`~adapters.outbound.storage.build_google_credentials` dispatch wiring
 described there are implemented by

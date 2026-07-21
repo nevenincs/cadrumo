@@ -8,6 +8,8 @@ never reuses these translation keys.
 Major declarations:
 
 * :func:`tr` — translate a key to the active language.
+* :func:`describe_auth_provider_operator_impact` — render the canonical
+  localized impact of an :class:`core.AuthProviderDescription`.
 * :func:`output_language` and
   :data:`OUTPUT_LANGUAGE_ENV_VAR` — resolve and override the active
   :class:`OutputLanguage`, drawn from
@@ -20,11 +22,13 @@ Major declarations:
 from __future__ import annotations
 
 from ..external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ._auth_provider import describe_auth_provider_operator_impact
 from ._render import (
     OUTPUT_LANGUAGE_ENV_VAR,
     SUPPORTED_OUTPUT_LANGUAGES,
     UnmatchedPlaceholderError,
     clear_output_language_cache,
+    extract_placeholders,
     output_language,
     register_profile_language_resolver,
     tr,
@@ -39,6 +43,8 @@ __all__ = [
     "Translatable",
     "UnmatchedPlaceholderError",
     "clear_output_language_cache",
+    "describe_auth_provider_operator_impact",
+    "extract_placeholders",
     "output_language",
     "register_profile_language_resolver",
     "tr",

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#secure-object-backlog-drain'
 date: '2026-05-22'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'

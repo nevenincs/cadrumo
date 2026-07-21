@@ -83,8 +83,7 @@ def resolve_registry_snapshot_for_work_unit(work_unit: WorkUnit) -> RegistrySnap
     """Resolve and return the :class:`~cadrumo.domain.calculations.registry.RegistrySnapshot`.
 
     After resolution the snapshot's revision id is asserted equal to the work
-    unit's pinned ``revision_id`` (D1 calc-time assertion, per the
-    period-revision-resolution ADR ruling 2).  Divergence — possible only when
+    unit's pinned ``revision_id`` (a calc-time assertion).  Divergence — possible only when
     the registry's law-mapping was corrected after the work unit was created, or
     for units persisted before the strengthened creation gate — raises
     :exc:`WorkUnitRevisionDivergenceError` directing the operator to re-create

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-mantenimiento-detection'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-13-aeat-mantenimiento-detection-adr]]'
   - '[[2026-04-13-aeat-mantenimiento-detection-audit]]'
@@ -44,7 +44,7 @@ Auto-generated index of all documents tagged with `#aeat-mantenimiento-detection
 
 ### adr
 
-- `2026-04-13-aeat-mantenimiento-detection-adr` - aeat-mantenimiento-detection adr: site-health-detection-and-pause-and-alert | (**status:** accepted)
+- `2026-04-13-aeat-mantenimiento-detection-adr` - aeat-mantenimiento-detection adr: site-health-detection-and-pause-and-alert | (**status:** `accepted`)
 
 ### audit
 

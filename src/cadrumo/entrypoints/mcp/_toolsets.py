@@ -2,7 +2,7 @@
 
 Dumping the whole verb tree into ``tools/list`` crowds out the user's question
 and degrades tool selection, so the console groups the common surfaces into a
-small closed set of domain toolsets (per ADR decision R2). The five toolsets -
+small closed set of domain toolsets. The five toolsets -
 ``renta``, ``iva``, ``ledger``, ``censo``, ``modelo-lifecycle`` - are the curated
 common path; verbs outside them are reached through the ``search`` + ``execute``
 meta-tool fallback, so a toolset is a curated subset, never a full partition.
@@ -100,9 +100,9 @@ def toolset_for_command(command_key: str, *, family_map: dict[str, MountedComman
 
 
 #: The hard cap on simultaneously-active toolsets. Activation is an enhancement
-#: that widens the advertised surface within the persona scope (ADR
-#: ``mcp-progressive-discovery`` P3); a cap keeps the surface from creeping back
-#: toward the flat listing the core surface exists to avoid.
+#: that widens the advertised surface within the persona scope; a cap keeps
+#: the surface from creeping back toward the flat listing the core surface
+#: exists to avoid.
 MAX_ACTIVE_TOOLSETS = 3
 
 

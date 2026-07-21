@@ -1,4 +1,4 @@
-"""Real selected-language CLI coverage for the S423 continuity repairs."""
+"""Real selected-language CLI coverage for the selected-language continuity repairs."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
 os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["CADRUMO_SECRET_STORE_BACKEND"] = "file"
 os.environ["CADRUMO_SECRET_PASSPHRASE"] = "s423-selected-language-passphrase"
-sys.argv = ["cadrumo", *sys.argv[3:]]
+sys.argv = ["aeat", *sys.argv[3:]]
 
 from cadrumo.entrypoints.cli import main
 
@@ -200,31 +200,28 @@ def _create_modelo_revision(
         "formula_labels",
         "advisory_prefix",
         "next_action",
-        "verified_state",
         "already_verified_phrase",
     ),
     [
         (
             "ca",
-            "Falta l'opció '--modelo'.",
+            "Falta l’opció '--modelo'.",
             "Valor no vàlid per a '--year': 'abc' no és un enter vàlid.",
             "Esborrany",
             ("resta(", "màxim(", "percentatge(", "condicional(", "mínim("),
-            "la dependència entre períodes s'ha exclòs com a sense obligació prèvia",
-            "Confirmeu que la data d'inici d'activitat registrada és correcta.",
-            "Verificat complet",
-            "no es pot verificar de nou",
+            "dependència entre períodes exclosa perquè no hi ha obligació prèvia",
+            "Confirmeu que la data d’inici de l’activitat registrada és correcta.",
+            "ja està verificada",
         ),
         (
             "hu",
-            "Hiányzó kapcsoló '--modelo'.",
+            "Hiányzó beállítás '--modelo'.",
             "Érvénytelen érték ehhez: '--year': 'abc' nem érvényes egész szám.",
             "Piszkozat",
             ("kivonás(", "maximum(", "százalék(", "feltételes(", "minimum("),
-            "Az időszakok közötti függőséget előzetes kötelezettség hiánya miatt kizártuk",
-            "Erősítse meg, hogy a rögzített tevékenységkezdési dátum helyes.",
-            "Teljesen ellenorizve",
-            "nem ellenőrizhető újra",
+            "az időszakok közötti függőség korábbi kötelezettség hiányában kizárva",
+            "Ellenőrizze, hogy a rögzített tevékenységkezdési dátum helyes.",
+            "már ellenőrzött",
         ),
     ],
 )
@@ -237,7 +234,6 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     formula_labels: tuple[str, ...],
     advisory_prefix: str,
     next_action: str,
-    verified_state: str,
     already_verified_phrase: str,
 ) -> None:
     """Exercise the real entrypoint and persisted M130 work for each selected locale."""
@@ -361,15 +357,18 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     assert "cross-period dependency scoped out" not in verification_output
     assert "Confirm the recorded activity-start date" not in verification_output
 
+    # Re-verifying an already-verified revision is a guarded idempotent no-op
+    # (single-subject-mutation-is-idempotent-guarded): the verb returns exit 0
+    # with the existing report and a localized idempotent-no-op notice, never the
+    # old refusal. The raw enum token and the retired refusal phrase must not leak.
     already_verified = _run_cli(
         storage_root,
         [*root, "app", "modelo", "work", "verify", revision_match.group(1)],
     )
     already_verified_output = _combined_output(already_verified)
-    assert already_verified.returncode != 0, already_verified_output
-    assert verified_state in already_verified_output
+    assert already_verified.returncode == 0, already_verified_output
     assert already_verified_phrase in already_verified_output
-    assert "verificado_completo" not in already_verified_output
+    assert "state\tverificado_completo" not in already_verified_output
     assert "verification requires borrador" not in already_verified_output
 
 
@@ -408,8 +407,8 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
     )
     hungarian_output = _combined_output(hungarian)
     assert hungarian.returncode == 0, hungarian_output
-    assert "la dependència entre períodes s'ha exclòs" in catalan_output
-    assert "Az időszakok közötti függőséget" in hungarian_output
+    assert "dependència entre períodes exclosa" in catalan_output
+    assert "az időszakok közötti függőség" in hungarian_output
     assert "cross-period dependency scoped out" not in catalan_output
     assert "cross-period dependency scoped out" not in hungarian_output
 
@@ -419,15 +418,34 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
 
     persisted = _persisted_report(storage_root, catalan_id.group(1))
     assert persisted["report_count"] == 1
-    report = persisted["report"]
-    assert isinstance(report, dict)
-    finding = next(
-        finding
-        for finding in report["findings"]
-        if finding["message"].startswith("cross-period dependency scoped out as no-prior-obligation")
-    )
-    assert "modelo=100 year=2025 period=0A origin=previous_filing_binding" in finding["message"]
-    assert finding["next_action"].startswith("Confirm the recorded activity-start date is correct.")
+    raw_report = persisted["report"]
+    assert isinstance(raw_report, dict)
+    report: dict[str, object] = {key: value for key, value in raw_report.items() if isinstance(key, str)}
+    assert len(report) == len(raw_report)
+    raw_findings = report["findings"]
+    assert isinstance(raw_findings, list)
+    typed_findings: list[dict[str, object]] = []
+    for raw_finding in raw_findings:
+        assert isinstance(raw_finding, dict)
+        finding_values = {key: value for key, value in raw_finding.items() if isinstance(key, str)}
+        assert len(finding_values) == len(raw_finding)
+        typed_findings.append(finding_values)
+
+    finding: dict[str, object] | None = None
+    for candidate in typed_findings:
+        candidate_message = candidate.get("message")
+        if isinstance(candidate_message, str) and candidate_message.startswith(
+            "cross-period dependency scoped out as no-prior-obligation",
+        ):
+            finding = candidate
+            break
+    assert finding is not None
+    message = finding["message"]
+    next_action = finding["next_action"]
+    assert isinstance(message, str)
+    assert isinstance(next_action, str)
+    assert "modelo=100 year=2025 period=0A origin=previous_filing_binding" in message
+    assert next_action.startswith("Confirm the recorded activity-start date is correct.")
 
 
 def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tmp_path: Path) -> None:
@@ -456,10 +474,10 @@ def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tm
     assert hungarian.returncode == 1, hungarian_output
     assert "granted_verificado_completo\tfalse" in catalan_output
     assert "granted_verificado_completo\tfalse" in hungarian_output
-    assert "La dependència entre períodes no està neta" in catalan_output
-    assert "Captureu o importeu evidència de l'AEAT" in catalan_output
-    assert "Az időszakok közötti függőség nem tiszta" in hungarian_output
-    assert "Rögzítse vagy importálja az AEAT bizonyítékot" in hungarian_output
+    assert "la dependència entre períodes no està neta" in catalan_output
+    assert "Captureu o importeu evidència de l’AEAT" in catalan_output
+    assert "az időszakok közötti függőség nem tiszta" in hungarian_output
+    assert "Rögzítse vagy importálja a forrásfüggőség AEAT-bizonyítékát" in hungarian_output
     assert "cross-period dependency is not clean" not in catalan_output
     assert "cross-period dependency is not clean" not in hungarian_output
     assert "Capture/import AEAT evidence" not in catalan_output

@@ -22,7 +22,7 @@ bootstrap:
 # opted-in capability has a missing dependency. This is the product-side
 # "is my workstation ready" check (the dev-toolchain probe is `just env-doctor`).
 doctor:
-    uv run --no-sync cadrumo config check
+    uv run --no-sync aeat config check
 
 # Provision the optional external dependencies a fresh workstation needs for the
 # capability surfaces: the Playwright browser binary now; Ollama + the vision model
@@ -187,64 +187,87 @@ packaging-smoke-preflight-tests:
 packaging-smoke-source:
     @uv run --no-sync python -m dev.packaging.source_preflight
 
-# Build the wheel, validate prod/optional/dev dependency surfaces, install into
-# a fresh venv, and run installed CLI/resource smoke checks.
-packaging-smoke-core: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_core
+# Construct the temporary Python wheel cohort once for the current smoke campaign.
+# The immutable release-cohort builder replaces this transitional constructor.
+packaging-build-python-cohort: packaging-smoke-source
+    @uv run --no-sync python -m dev.packaging.python_cohort build --output var/packaging-smoke-cohort/python
+
+# Consume the supplied wheel cohort, validate dependency surfaces, install into
+# a fresh venv, and run the installed grounded tax-work oracle.
+packaging-smoke-core: packaging-build-python-cohort
+    @uv run --no-sync python -m dev.packaging.smoke_core --cohort-dir var/packaging-smoke-cohort/python
 
 # Build the wheel, create a stdlib venv, install with plain pip, and run the
 # same installed core CLI/resource/attachment/LLM smoke checks.
-packaging-smoke-pip-core: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_pip_core
+packaging-smoke-pip-core: packaging-build-python-cohort
+    @uv run --no-sync python -m dev.packaging.smoke_pip_core --cohort-dir var/packaging-smoke-cohort/python
 
 # Build the source distribution, inspect bundled data, install it with plain
 # pip in a stdlib venv, and run the same installed core smoke checks.
-packaging-smoke-sdist-core: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_sdist_core
+packaging-smoke-sdist-core: packaging-build-python-cohort
+    @uv run --no-sync python -m dev.packaging.smoke_sdist_core --cohort-dir var/packaging-smoke-cohort/python
 
 # Build the wheel, install cadrumo[all] with plain pip in a stdlib venv, and
 # verify every capability-gated optional Python package imports.
-packaging-smoke-extras: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_extras
+packaging-smoke-extras: packaging-build-python-cohort
+    @uv run --no-sync python -m dev.packaging.smoke_extras --cohort-dir var/packaging-smoke-cohort/python
 
 # Create a fresh uv project environment from the frozen lock with all extras
 # and all dependency groups, then verify developer tools and imports start.
 packaging-smoke-dev: packaging-smoke-source
     @uv run --no-sync python -m dev.packaging.smoke_dev
 
-# Build the slim cadrumo wheel plus both cadrumo-data-* companions, install the slim
-# wheel alone (loud advisory path; verification verbs refuse instructively),
-# then add both companions and prove byte-identical source verification.
-packaging-smoke-split: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_split_install
+# Build the command-bearing wheel plus both mandatory cadrumo-data-* wheels,
+# install the exact three-wheel cohort, and prove byte-identical source verification.
+packaging-smoke-split: packaging-build-python-cohort
+    @uv run --no-sync python -m dev.packaging.smoke_split_install --cohort-dir var/packaging-smoke-cohort/python
 
 # Build the wheel, install it with the browser extra, provision Chromium in an
 # isolated Playwright cache, and run the no-secret browser health check.
-packaging-smoke-browser: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_browser
+packaging-smoke-browser: packaging-build-python-cohort
+    @uv run --no-sync python -m dev.packaging.smoke_browser --cohort-dir var/packaging-smoke-cohort/python
 
 # Linux/container browser smoke: also install host browser dependencies.
-packaging-smoke-browser-linux: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_browser --with-deps
+packaging-smoke-browser-linux: packaging-build-python-cohort
+    @uv run --no-sync python -m dev.packaging.smoke_browser --cohort-dir var/packaging-smoke-cohort/python --with-deps
 
 # Linux host release-artifact smoke gates.
 packaging-smoke-linux: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-browser-linux
 
 # Build the wheel, mount only the wheel/probe into python:3.13-slim, and run
 # the installed core CLI/resource smoke with pip inside Linux.
-packaging-smoke-docker-core: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_docker
+packaging-smoke-docker-core: packaging-build-python-cohort
+    @uv run --no-sync python -m dev.packaging.smoke_docker --cohort-dir var/packaging-smoke-cohort/python
 
 # Build the wheel, install cadrumo[browser] in python:3.13-slim, provision
 # Chromium with Linux system dependencies, and run browser health.
-packaging-smoke-docker-browser: packaging-smoke-source
-    @uv run --no-sync python -m dev.packaging.smoke_docker --browser
+packaging-smoke-docker-browser: packaging-build-python-cohort
+    @uv run --no-sync python -m dev.packaging.smoke_docker --cohort-dir var/packaging-smoke-cohort/python --browser
 
 # Fresh Linux image release-artifact smoke gates.
 packaging-smoke-docker: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-docker-core packaging-smoke-docker-browser
 
+# Run both installed public transports against the exact built cohort.
+packaging-smoke-installed-oracles: packaging-build-python-cohort
+    @uv run --no-sync pytest -q -n0 -m "integration and serial" dev/packaging/tests/test_installed_oracles.py
+
 # Local release-artifact smoke gates that do not need host package-manager access.
-packaging-smoke: packaging-smoke-dependencies packaging-smoke-preflight-tests packaging-smoke-core packaging-smoke-pip-core packaging-smoke-sdist-core packaging-smoke-extras packaging-smoke-split packaging-smoke-browser
+# The campaign driver builds the cohort once and runs the flavor lanes
+# concurrently (bounded pool; lanes are disk-disjoint), then the serial
+# installed-oracles pass — same proofs as the former serial aggregate at a
+# fraction of the wall time (the Windows leg measured 26.3 min serial).
+packaging-smoke:
+    @uv run --no-sync python -m dev.packaging.campaign --profile portable
+
+# One CI invocation keeps every artifact and oracle lane on the same cohort bytes.
+packaging-smoke-ci:
+    @uv run --no-sync python -m dev.packaging.campaign --profile ci
+
+# Per-push quick probe: cohort built once plus the single installed core smoke.
+# Deliberately minimal (ten-minute per-push budget); every other flavor lane is
+# a release-campaign proof carried by `packaging-smoke` / `packaging-smoke-ci`.
+packaging-quick:
+    @uv run --no-sync python -m dev.packaging.campaign --profile quick --skip-preflight
 
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
@@ -273,7 +296,7 @@ check-security:
 
 # Check if the RAG service daemon is running.
 check-rag:
-    @uv run --no-sync vaultspec-rag server status
+    @uv run --no-sync vaultspec-rag server status --port 8766
 
 # Run programmatic semantic audit checks using the local RAG daemon. Silent on success.
 check-semantic:
@@ -323,7 +346,7 @@ test-unit:
 
 # Run the unit test suite serially for reruns after a parallel failure.
 test-unit-serial:
-    @uv run --no-sync pytest -q -rs -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
+    @uv run --no-sync pytest -q -rs -n0 -m unit --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity
 
 # Run the integration test suite in two lanes: the bulk in parallel (xdist,
 # excluding serial-marked tests), then the isolation-sensitive `serial`-marked
@@ -380,8 +403,10 @@ audit-dead-code:
     @uv run --no-sync vulture --config pyproject.toml src/cadrumo dev/vulture_whitelist.py
 
 # Scan for copy-paste code duplication. Aggregate line + capped clone list.
+# The runner owns the jscpd invocation AND its parsing, so this recipe and the
+# health report's duplication dimension cannot drift apart or disagree.
 audit-duplication:
-    @npx --yes jscpd@4.2.0 src/cadrumo --format python --min-lines 6 --min-tokens 80 --max-size 250kb --ignore "**/test_*.py,**/_test_*.py,**/tests/**,**/_data/**" --gitignore --reporters console --noTips | uv run --no-sync python -m dev.audit.duplication
+    @uv run --no-sync python -m dev.audit.duplication
 
 # Perform an on-demand semantic search query delegating to the running RAG daemon.
 audit-rag QUERY:
@@ -438,6 +463,20 @@ docs-changed-strict BASE="HEAD":
 # Build changed documentation and update the vector index.
 docs-changed-rag BASE="HEAD":
     uv run --no-sync python -m dev.docs.build --base {{BASE}} --rag-index
+
+# Extract gettext POT templates and refresh the es/ca/hu doc catalogues.
+docs-gettext:
+    uv run --no-sync python -m dev.docs.i18n
+
+# Build the user-scope documentation in one language (es/en/ca/hu).
+docs-lang LANG:
+    uv run --no-sync python -m dev.docs.build --scope user --language {{LANG}}
+
+# Build the user-scope documentation for every translation language.
+docs-langs:
+    uv run --no-sync python -m dev.docs.build --scope user --language es
+    uv run --no-sync python -m dev.docs.build --scope user --language ca
+    uv run --no-sync python -m dev.docs.build --scope user --language hu
 
 # Run docstring structure and Sphinx build checks. Quiet pytest progress.
 docs-check:
@@ -508,10 +547,13 @@ release-rollback version:
     echo "     git revert --no-commit <release-commit-sha>"
     echo "     git commit -m 'revert: roll back v{{version}}'"
     echo "     git tag -a v{{version}}-rollback -m 'marks the rollback of v{{version}}'"
-    echo "     git push origin main --tags"
+    echo "     git push origin main"
+    echo "     git push origin refs/tags/v{{version}}-rollback"
     echo "3. Yank the bad version from PyPI so pip/uv skip it by default (this does"
     echo "   NOT delete the artifact; it only stops new installs from resolving it):"
     echo "     https://pypi.org/manage/project/cadrumo/release/{{version}}/  -> Options -> Yank release"
+    echo "     https://pypi.org/manage/project/cadrumo-data-manuals/release/{{version}}/  -> Options -> Yank release"
+    echo "     https://pypi.org/manage/project/cadrumo-data-official/release/{{version}}/  -> Options -> Yank release"
     echo "4. Publish a corrected patch release following the emergency hotfix cycle"
     echo "   time for the trigger category (docs/_release_checklist.yaml 'hotfix')."
     echo "5. Update docs/updates.md per its critical-updates contract and note the"
@@ -530,10 +572,13 @@ release-rollback version:
     Write-Host "     git revert --no-commit <release-commit-sha>"
     Write-Host "     git commit -m 'revert: roll back v{{version}}'"
     Write-Host "     git tag -a v{{version}}-rollback -m 'marks the rollback of v{{version}}'"
-    Write-Host "     git push origin main --tags"
+    Write-Host "     git push origin main"
+    Write-Host "     git push origin refs/tags/v{{version}}-rollback"
     Write-Host "3. Yank the bad version from PyPI so pip/uv skip it by default (this does"
     Write-Host "   NOT delete the artifact; it only stops new installs from resolving it):"
     Write-Host "     https://pypi.org/manage/project/cadrumo/release/{{version}}/  -> Options -> Yank release"
+    Write-Host "     https://pypi.org/manage/project/cadrumo-data-manuals/release/{{version}}/  -> Options -> Yank release"
+    Write-Host "     https://pypi.org/manage/project/cadrumo-data-official/release/{{version}}/  -> Options -> Yank release"
     Write-Host "4. Publish a corrected patch release following the emergency hotfix cycle"
     Write-Host "   time for the trigger category (docs/_release_checklist.yaml 'hotfix')."
     Write-Host "5. Update docs/updates.md per its critical-updates contract and note the"
@@ -627,16 +672,27 @@ release-apply:
     echo "Then, in this order:"
     echo "  1. Update .release-please-manifest.json to the new version."
     echo "  2. Update pyproject.toml [project].version to the new version."
-    echo "  3. Update src/cadrumo/__init__.py __version__ to the new version."
-    echo "  4. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
-    echo "  5. Stage the four files:"
-    echo "       git add .release-please-manifest.json pyproject.toml src/cadrumo/__init__.py CHANGELOG.md"
-    echo "  6. Commit:"
+    echo "  3. Update packaging/cadrumo_data_manuals/pyproject.toml [project].version."
+    echo "  4. Update packaging/cadrumo_data_official/pyproject.toml [project].version."
+    echo "  5. Update src/cadrumo/__init__.py __version__ to the new version."
+    echo "  5b. Update packaging/mcpb/manifest.json \"version\" to the new version."
+    echo "  6. Update both mandatory base dependency pins in pyproject.toml:"
+    echo "       cadrumo-data-manuals==X.Y.Z"
+    echo "       cadrumo-data-official==X.Y.Z"
+    echo "  7. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
+    echo "  8. Regenerate and verify the lock, then rerun the fail-closed version gate:"
+    echo "       uv lock"
+    echo "       uv lock --check"
+    echo "       just release-readiness"
+    echo "  9. Stage all eight release authorities:"
+    echo "       git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py packaging/mcpb/manifest.json CHANGELOG.md uv.lock"
+    echo "  10. Commit:"
     echo '       git commit -m "chore(release): vX.Y.Z"'
-    echo "  7. Tag:"
+    echo "  11. Tag:"
     echo '       git tag -a vX.Y.Z -m "Cadrumo vX.Y.Z"'
     echo "When ready (human decision only), push with:"
-    echo "  git push origin main --tags"
+    echo "  git push origin main"
+    echo "  git push origin refs/tags/vX.Y.Z"
 
 [windows]
 release-apply:
@@ -665,144 +721,100 @@ release-apply:
     Write-Host "Then, in this order:"
     Write-Host "  1. Update .release-please-manifest.json to the new version."
     Write-Host "  2. Update pyproject.toml [project].version to the new version."
-    Write-Host "  3. Update src/cadrumo/__init__.py __version__ to the new version."
-    Write-Host "  4. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
-    Write-Host "  5. Stage the four files:"
-    Write-Host "       git add .release-please-manifest.json pyproject.toml src/cadrumo/__init__.py CHANGELOG.md"
-    Write-Host "  6. Commit:"
+    Write-Host "  3. Update packaging/cadrumo_data_manuals/pyproject.toml [project].version."
+    Write-Host "  4. Update packaging/cadrumo_data_official/pyproject.toml [project].version."
+    Write-Host "  5. Update src/cadrumo/__init__.py __version__ to the new version."
+    Write-Host "  5b. Update packaging/mcpb/manifest.json 'version' to the new version."
+    Write-Host "  6. Update both mandatory base dependency pins in pyproject.toml:"
+    Write-Host "       cadrumo-data-manuals==X.Y.Z"
+    Write-Host "       cadrumo-data-official==X.Y.Z"
+    Write-Host "  7. Prepend the release block to CHANGELOG.md (use the dry-run log as source)."
+    Write-Host "  8. Regenerate and verify the lock, then rerun the fail-closed version gate:"
+    Write-Host "       uv lock"
+    Write-Host "       uv lock --check"
+    Write-Host "       just release-readiness"
+    Write-Host "  9. Stage all eight release authorities:"
+    Write-Host "       git add .release-please-manifest.json pyproject.toml packaging/cadrumo_data_manuals/pyproject.toml packaging/cadrumo_data_official/pyproject.toml src/cadrumo/__init__.py packaging/mcpb/manifest.json CHANGELOG.md uv.lock"
+    Write-Host "  10. Commit:"
     Write-Host '       git commit -m "chore(release): vX.Y.Z"'
-    Write-Host "  7. Tag:"
+    Write-Host "  11. Tag:"
     Write-Host '       git tag -a vX.Y.Z -m "Cadrumo vX.Y.Z"'
     Write-Host "When ready (human decision only), push with:"
-    Write-Host "  git push origin main --tags"
+    Write-Host "  git push origin main"
+    Write-Host "  git push origin refs/tags/vX.Y.Z"
 
-# Publish the slim cadrumo wheel+sdist to PyPI. LOCAL-ONLY and HUMAN-GATED:
-# refuses in CI, needs a scoped token in UV_PUBLISH_TOKEN, and only runs
-# with the literal confirmation argument. See RELEASING.md for the full
-# release sequence (name claim, cadrumo-data-* companion publish, marketplace push).
+# Aggregate every distribution-evidence row from the given CI run(s)' evidence
+# drafts into var/distribution-install-readiness/ so `just release-readiness`
+# can reach 12/12. Pass the packaging-smoke run id (mints python-<os> rows +
+# the release cohort) plus any acquisition run ids (Scoop, Homebrew) - every
+# run publishes its rows as assets on a draft release tagged
+# evidence-<lane>-<run_id> (release-asset transport; Actions artifacts are
+# retired). The four real client rows (claude-*) are minted locally by
+# `python -m dev.packaging.emit_real_client_evidence ...` and already live in
+# the dest.
 [unix]
-publish confirm="":
+release-collect-evidence *run_ids:
     #!/usr/bin/env bash
     set -euo pipefail
-    if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
-        echo "publish is LOCAL-ONLY — refusing to run in CI." >&2
+    if [ -z "{{run_ids}}" ]; then
+        echo "usage: just release-collect-evidence SMOKE_RUN_ID [SCOOP_RUN_ID HOMEBREW_RUN_ID ...]" >&2
         exit 1
     fi
-    if [ "{{confirm}}" != "yes-publish-to-pypi" ]; then
-        echo "publish is HUMAN-GATED — run: just publish yes-publish-to-pypi" >&2
-        exit 1
-    fi
-    if [ -z "${UV_PUBLISH_TOKEN:-}" ]; then
-        echo "UV_PUBLISH_TOKEN is not set — create a scoped PyPI API token first (see RELEASING.md)." >&2
-        exit 1
-    fi
-    if [ -n "$(git status --porcelain)" ]; then
-        echo "working tree is not clean — publish only from a tagged, committed state." >&2
-        exit 1
-    fi
-    VERSION=$(uv run --no-sync python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
-    if ! git tag --points-at HEAD | grep -qx "v$VERSION"; then
-        echo "HEAD is not tagged v$VERSION — run the release flow first (just release / just release-apply)." >&2
-        exit 1
-    fi
-    rm -rf var/release/dist
-    uv build --out-dir var/release/dist
-    echo "▶ uv publish (cadrumo v$VERSION)"
-    uv publish var/release/dist/*
-    echo "✔ published Cadrumo v$VERSION — verify at https://pypi.org/project/cadrumo/$VERSION/"
+    dest="var/distribution-install-readiness"
+    mkdir -p "$dest"
+    tmp="$(mktemp -d)"
+    for run_id in {{run_ids}}; do
+        tag=""
+        for lane in smoke scoop homebrew claude; do
+            candidate="evidence-$lane-$run_id"
+            if gh release view "$candidate" --json tagName >/dev/null 2>&1; then
+                tag="$candidate"
+                break
+            fi
+        done
+        if [ -z "$tag" ]; then
+            echo "no evidence draft found for run $run_id (expected evidence-<lane>-$run_id)" >&2
+            exit 1
+        fi
+        echo "collecting evidence rows from draft $tag"
+        gh release download "$tag" --pattern '*.json' --dir "$tmp/$run_id" --clobber
+    done
+    n=0
+    while IFS= read -r -d '' f; do cp "$f" "$dest/"; n=$((n + 1)); done \
+        < <(find "$tmp" -name '*.json' ! -name 'evidence-manifest.json' -print0)
+    rm -rf "$tmp"
+    echo "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"
 
 [windows]
-publish confirm="":
+release-collect-evidence *run_ids:
     #!pwsh
     $ErrorActionPreference = 'Stop'
-    if ($env:CI -or $env:GITHUB_ACTIONS) {
-        Write-Error "publish is LOCAL-ONLY - refusing to run in CI."
+    $ids = "{{run_ids}}".Split(" ", [System.StringSplitOptions]::RemoveEmptyEntries)
+    if ($ids.Count -eq 0) {
+        Write-Error "usage: just release-collect-evidence SMOKE_RUN_ID [SCOOP_RUN_ID HOMEBREW_RUN_ID ...]"
         exit 1
     }
-    if ('{{confirm}}' -ne 'yes-publish-to-pypi') {
-        Write-Error "publish is HUMAN-GATED - run: just publish yes-publish-to-pypi"
-        exit 1
+    $dest = "var/distribution-install-readiness"
+    New-Item -ItemType Directory -Force -Path $dest | Out-Null
+    $tmp = (New-Item -ItemType Directory -Path (Join-Path $env:TEMP ("collect-" + [Guid]::NewGuid().ToString("N")))).FullName
+    foreach ($id in $ids) {
+        $tag = $null
+        foreach ($lane in @("smoke", "scoop", "homebrew", "claude")) {
+            $candidate = "evidence-$lane-$id"
+            & gh release view $candidate --json tagName *> $null
+            if ($LASTEXITCODE -eq 0) { $tag = $candidate; break }
+        }
+        if (-not $tag) {
+            Write-Error "no evidence draft found for run $id (expected evidence-<lane>-$id)"
+            exit 1
+        }
+        Write-Host "collecting evidence rows from draft $tag"
+        & gh release download $tag --pattern '*.json' --dir (Join-Path $tmp $id) --clobber
+        if ($LASTEXITCODE -ne 0) { Write-Error "download failed for $tag"; exit 1 }
     }
-    if (-not $env:UV_PUBLISH_TOKEN) {
-        Write-Error "UV_PUBLISH_TOKEN is not set - create a scoped PyPI API token first (see RELEASING.md)."
-        exit 1
-    }
-    $dirty = & git status --porcelain
-    if ($dirty) {
-        Write-Error "working tree is not clean - publish only from a tagged, committed state."
-        exit 1
-    }
-    $version = (& uv run --no-sync python -c "import tomllib,pathlib;print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])").Trim()
-    $tags = & git tag --points-at HEAD
-    if ($tags -notcontains "v$version") {
-        Write-Error "HEAD is not tagged v$version - run the release flow first (just release / just release-apply)."
-        exit 1
-    }
-    if (Test-Path var/release/dist) { Remove-Item -Recurse -Force var/release/dist }
-    & uv build --out-dir var/release/dist
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "▶ uv publish (cadrumo v$version)"
-    & uv publish (Get-ChildItem var/release/dist/*)
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ published Cadrumo v$version - verify at https://pypi.org/project/cadrumo/$version/"
-
-# Publish BOTH cadrumo-data-* corpus companions to PyPI in one gated run (same
-# gates as publish). Both are sub-cap and need no per-file size grant
-# (RELEASING.md); they are version-locked to cadrumo, so bump all three together.
-[unix]
-publish-data confirm="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ -n "${CI:-}" ] || [ -n "${GITHUB_ACTIONS:-}" ]; then
-        echo "publish-data is LOCAL-ONLY — refusing to run in CI." >&2
-        exit 1
-    fi
-    if [ "{{confirm}}" != "yes-publish-to-pypi" ]; then
-        echo "publish-data is HUMAN-GATED — run: just publish-data yes-publish-to-pypi" >&2
-        exit 1
-    fi
-    if [ -z "${UV_PUBLISH_TOKEN:-}" ]; then
-        echo "UV_PUBLISH_TOKEN is not set — create a scoped PyPI API token first (see RELEASING.md)." >&2
-        exit 1
-    fi
-    if [ -n "$(git status --porcelain)" ]; then
-        echo "working tree is not clean — publish only from a tagged, committed state." >&2
-        exit 1
-    fi
-    rm -rf var/release/dist-data
-    uv build --project packaging/cadrumo_data_manuals --out-dir var/release/dist-data
-    uv build --project packaging/cadrumo_data_official --out-dir var/release/dist-data
-    echo "▶ uv publish (cadrumo-data-manuals + cadrumo-data-official)"
-    uv publish var/release/dist-data/*
-    echo "✔ published cadrumo-data-manuals + cadrumo-data-official — verify at https://pypi.org/project/cadrumo-data-manuals/ and https://pypi.org/project/cadrumo-data-official/"
-
-[windows]
-publish-data confirm="":
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    if ($env:CI -or $env:GITHUB_ACTIONS) {
-        Write-Error "publish-data is LOCAL-ONLY - refusing to run in CI."
-        exit 1
-    }
-    if ('{{confirm}}' -ne 'yes-publish-to-pypi') {
-        Write-Error "publish-data is HUMAN-GATED - run: just publish-data yes-publish-to-pypi"
-        exit 1
-    }
-    if (-not $env:UV_PUBLISH_TOKEN) {
-        Write-Error "UV_PUBLISH_TOKEN is not set - create a scoped PyPI API token first (see RELEASING.md)."
-        exit 1
-    }
-    $dirty = & git status --porcelain
-    if ($dirty) {
-        Write-Error "working tree is not clean - publish only from a tagged, committed state."
-        exit 1
-    }
-    if (Test-Path var/release/dist-data) { Remove-Item -Recurse -Force var/release/dist-data }
-    & uv build --project packaging/cadrumo_data_manuals --out-dir var/release/dist-data
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    & uv build --project packaging/cadrumo_data_official --out-dir var/release/dist-data
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "▶ uv publish (cadrumo-data-manuals + cadrumo-data-official)"
-    & uv publish (Get-ChildItem var/release/dist-data/*)
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    Write-Host "✔ published cadrumo-data-manuals + cadrumo-data-official - verify at https://pypi.org/project/cadrumo-data-manuals/ and https://pypi.org/project/cadrumo-data-official/"
+    $n = 0
+    Get-ChildItem -Path $tmp -Recurse -Filter *.json |
+        Where-Object { $_.Name -ne "evidence-manifest.json" } |
+        ForEach-Object { Copy-Item $_.FullName -Destination $dest -Force; $n++ }
+    Remove-Item -Recurse -Force $tmp
+    Write-Host "collected $n record(s) into $dest (client-row records from emit_real_client_evidence are already local there)"

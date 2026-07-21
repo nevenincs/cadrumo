@@ -3,19 +3,21 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-research]]"
   - "[[2026-05-12-cli-workflow-redesign-app-modelo-shape-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-domain-harvest-vat-classification-adr]]"
   - "[[2026-05-07-config-cli-profile-surface-adr]]"
 ---
 
 # `cli-workflow-redesign` adr: `domain harvest OSS/IOSS` | (**status:** `accepted`)
 
-> **PARTIALLY-SUPERSEDED 2026-05-19**: The Value-Added Tax direction in this ADR is reversed: Spanish stems are authoritative for tax-domain identifiers and domain/vat/_oss.py migrates into domain/iva/_oss.py. The app-modelo orchestration surface, profile keys (iva.regime, iva.oss_enrolled), ledger_oss_aggregation binding flow, calculation event surface, destination-country VAT rate validation, and rejected-shapes list remain in force; only the substrate module path renames per the canonical rename ledger.
+This decision governs the current IVA implementation under
+`cadrumo.domain.iva`. It retains the Modelo 369 orchestration, profile keys,
+typed OSS/IOSS binding flow, destination-country rate validation, and rejected
+shapes described below. No `domain.vat` package or migration path is retained.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
 
@@ -23,9 +25,9 @@ related:
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
 
-CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+CLI logging and error handling MUST use the central facilities: `cadrumo.core.logging.get_logger(__name__)`, `cadrumo.core.logging.SecretScrubbingFilter`, `cadrumo.core.errors.CadrumoError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `cadrumo.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
 
-CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
+CLI output MUST use the established emitters, including `cadrumo.entrypoints.cli._common._emit`, `cadrumo.entrypoints.cli._schemas.emit_json_success`, and `cadrumo.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 ## Problem Statement
 
 Modelo 369 OSS/IOSS support has registry and domain substrate, but it lacks the
@@ -38,7 +40,7 @@ harvested into the existing modelo calculation workflow.
 The root contract permits only `aeat config` and `aeat app`. The app-modelo
 shape already owns modelo work units, bindings, calculation revisions,
 verification, file/export, and history. Current OSS/IOSS substrate lives in
-`domain/vat/_oss.py`, while Modelo 369 TOML uses structured
+`domain/iva/_oss.py`, while Modelo 369 TOML uses structured
 `ledger_oss_aggregation` bindings. OSS/IOSS enrollment is profile state, not
 calculation workflow state.
 
@@ -59,7 +61,7 @@ wrapper loads bucket, profile, and ledger facts; creates real
 values; feeds bound casillas into the Modelo 369 registry calculate path;
 persists the calculation revision; and emits the modelo calculation event.
 
-Keep `domain/vat/_oss.py` as pure substrate for `OssIossRegime`, filer roles,
+Keep `domain/iva/_oss.py` as pure substrate for `OssIossRegime`, filer roles,
 periodicity, `regime_allows_deduction`, and destination-country VAT rate lookup.
 Per-destination-country rate resolution remains in the VAT substrate through
 `lookup_rate(member_state, kind, date)`. The application wrapper validates the
@@ -98,6 +100,6 @@ bucket event. JSON output from calculation includes `operation`, `work_unit_id`,
 `event_id`.
 
 Rejected shapes are root `oss` or `ioss` commands, `app vat oss` commands,
-direct CLI calls into `domain/vat/_oss.py`, compatibility shims, Decimal-only
+direct CLI calls into `domain/iva/_oss.py`, compatibility shims, Decimal-only
 binding flow for structured selectors, and conflating OSS/IOSS aggregation with
 ledger VAT classification.

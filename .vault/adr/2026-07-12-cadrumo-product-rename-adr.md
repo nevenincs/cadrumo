@@ -6,8 +6,9 @@ date: '2026-07-12'
 related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
 superseded_by: '2026-07-12-cadrumo-cli-executable-adr'
-modified: '2026-07-13'
+modified: '2026-07-17'
 ---
+
 # `cadrumo-product-rename` adr: `Canonical Cadrumo product identity and rename boundary` | (**status:** `superseded`)
 
 ## Problem Statement
@@ -94,7 +95,7 @@ relevant domains, and Spanish/EU trademark position are reserved or cleared.
 A passing availability query does not satisfy this gate.
 
 Accepted packaging, resource-boundary, Claude ecosystem,
-compatibility-lifecycle, secure-persistence, and profile-state decisions remain
+secure-persistence and profile-state decisions remain
 stable parent constraints. This ADR changes product spelling and cutover
 identity, not architecture, safety policy, or authority semantics.
 

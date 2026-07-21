@@ -1,32 +1,36 @@
 ---
 tags:
-  - '#adr'
-  - '#first-filer-attestation'
+  - "#adr"
+  - "#first-filer-attestation"
 date: '2026-06-13'
-modified: '2026-07-03'
 related:
   - "[[2026-06-12-first-filer-attestation-research]]"
   - "[[2026-06-12-first-filer-attestation-adr]]"
   - "[[2026-06-05-cross-period-filing-clean-state-adr]]"
+  - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'
+supersedes:
+  - '2026-06-12-first-filer-attestation-adr'
+modified: '2026-07-17'
 ---
-
-# `first-filer-attestation` adr: `operator-declared activity-start scoping, censo-corroborated (supersedes G313 grounding)` | (**status:** `accepted`)
+# `first-filer-attestation` adr: `operator-declared activity-start scoping (supersedes G313 grounding)` | (**status:** `accepted`)
 
 This ADR **supersedes** `2026-06-12-first-filer-attestation-adr` (now marked
 `superseded`). It keeps that ADR's sound concept - the activity-start date is
 genuine AEAT authority and is the right axis to scope a first filer's
 cross-period dependency graph - but corrects two defects: a factual grounding
 error (it named the AEAT certificate procedure G313 as the "Mis Datos Censales"
-data page) and an honesty defect (its censo-only, fail-closed design would today
-permanently trap the very first filer it set out to free, because the live censo
-read is non-functional and mis-wired). The decision below is operator-declared
-now, censo-corroborated when the live surface is fixed.
+data page) and an honesty defect (its censo-only, fail-closed design would
+permanently trap the very first filer it set out to free). The later accepted
+`2026-07-11-censo-operator-manual-enrolment-adr` permanently retired the unsafe
+live Censo read. The decision below therefore uses operator-declared activity
+start as its only current automated scoping input; it carries no dormant promise
+to restore that reader.
 
 ## Problem Statement
 
 A business whose first-ever filing is the period in which its economic activity
 begins cannot file that period locally. The cross-period clean-state gate
-(`src/aeat/application/calculations/_cross_period_clean_state.py`) demands
+(`src/cadrumo/application/calculations/_cross_period_clean_state.py`) demands
 official AEAT evidence of prior-period filings that, for a genuine first filer,
 never legally existed. Local `file` requires a `verified_complete` revision, and
 `verify` blocks on `cross_period_dependency_unclean`, so the verify-export-file
@@ -69,10 +73,10 @@ distinct AEAT surfaces, confirmed against the authoritative AEAT sede:
   consultable data.
 
 The codebase reproduces the error:
-`src/aeat/adapters/outbound/aeat/sede/_censo_live.py` hardcodes
+`src/cadrumo/adapters/outbound/aeat/sede/_censo_live.py` hardcodes
 `G313_LAUNCHER_URL` to `/Sede/procedimientoini/G313.shtml` (the certificate
 procedure) while its docstring labels it "Mis Datos Censales" and its parser
-(`src/aeat/adapters/outbound/aeat/sede/_censo.py`) lifts the "Fecha de alta de la
+(`src/cadrumo/adapters/outbound/aeat/sede/_censo.py`) lifts the "Fecha de alta de la
 actividad" label from the data-page vocabulary. So the pull points at the
 certificate procedure but expects the data page.
 
@@ -84,7 +88,7 @@ censo pull has never returned a readable censo for a real profile: every
 authenticated `config profile censo pull` that reached AEAT refused with "AEAT
 sede G313 returned no readable censo for profile". The only `activity_start_date`
 ever populated for a real profile is the operator-typed
-`SetupAnswers.activity_start_date` (`src/aeat/core/setup_answers.py:214`,
+`SetupAnswers.activity_start_date` (`src/cadrumo/core/setup_answers.py:214`,
 ISO-8601 validated), which the deadline engine already consumes: `_engine.py:94`
 suppresses any obligation whose `closes_on < activity_start_date` (pre-start),
 fed from `profile.activity_start_date` at `_profiles.py:150` / `:240`.
@@ -146,16 +150,14 @@ weakening them:
   the profile's `activity_start_date`, the same field the deadline engine already
   trusts for pre-start suppression - not a parameter a caller invents.
 
-The parent live-censo feature
-(`2026-06-05-live-censo-calendar-reconciliation`, currently with uncommitted
-edits in the worktree) is NOT a stable dependency today. Its live read is
-non-functional (never returned a readable censo) and mis-wired (points at the
-G313 certificate procedure, not the Mis Datos Censales data surface). The
-superseded ADR treated this feature as the source of `censo.activity_start_date`;
-this ADR does not block on it. The implementable design uses the
-operator-declared field now and is structured so that, once the live censo
-surface is corrected and works, the AEAT-sourced snapshot corroborates and may
-upgrade the declared date's provenance - without changing the gate's vocabulary.
+The later accepted `2026-07-11-censo-operator-manual-enrolment-adr` retired the
+live Censo scrape because the only discovered data-bearing path is an AEAT
+modification tool whose read and write traffic cannot be separated by a
+structural safety guard. The superseded first-filer ADR treated that reader as
+the source of `censo.activity_start_date`; this ADR does not. The implementable
+design uses the operator-declared profile field and preserves its explicitly
+non-AEAT provenance. Any future genuine consulta-only endpoint requires a new
+ADR; it is not deferred work under this one.
 
 This is a proposed decision. It is NOT to be implemented until the operator
 ratifies it and the open questions below are settled.
@@ -164,25 +166,15 @@ ratifies it and the open questions below are settled.
 
 Adopt activity-start scoping of the cross-period requirement graph, with the
 registry's existing absent-by-design value path materialising the resulting zero.
-The design is "operator-declared now, censo-corroborated when available":
+The design is operator-declared and explicitly non-AEAT-corroborated:
 
 What data grounds the determination (today). The activity-start date is read from
 the profile's `activity_start_date` - the operator-declared field that the
 deadline engine already consumes for pre-start obligation suppression. This is the
 only source that is populated in practice. It is stamped with operator-declared
 provenance (not AEAT-sourced), and its use carries a non-blocking advisory stating
-that the suppression rests on a declared start date that has not yet been
-corroborated against an AEAT censo snapshot.
-
-What data grounds the determination (when the live surface is fixed). Once a
-readable ACTIVE `CensoSnapshot` exists, the gate reconciles the declared date
-against the AEAT-sourced `censo.activity_start_date`. A match upgrades the
-suppression's provenance from operator-declared to censo-corroborated and clears
-the advisory. A divergence surfaces a blocking or advisory contradiction (see open
-questions) - the declared date can no longer silently scope when the authority
-contradicts it. The gate's vocabulary (the suppressed-requirement marker and its
-zero) does not change between the two regimes; only the provenance stamp and
-advisory state change.
+that the suppression rests on a declared start date. No automatic Censo
+corroboration or provenance upgrade exists under the accepted architecture.
 
 What the gate computes. Requirement derivation is taught that a dependency anchor
 whose period falls strictly before the taxpayer's activity-start date is
@@ -195,9 +187,8 @@ registry pure and treating the declared date as a grounded input) rather than a
 selector-grammar facet; this is pinned as an open question.
 
 What provenance is stamped. A suppressed requirement carries a typed provenance
-marker naming the activity-start date that scoped it out, the provenance kind
-(operator-declared vs censo-corroborated), and - when present - the censo snapshot
-id. The `CrossPeriodDependencyEvidence` row records an explicit
+marker naming the activity-start date that scoped it out and the
+operator-declared provenance kind. The `CrossPeriodDependencyEvidence` row records an explicit
 no-obligation-pre-activity-period outcome rather than a silent omission, so the
 removal is declared and auditable. A suppressed pre-activity period has no
 observation to stamp, so the carry resolves to a provenance-marked zero, not an
@@ -261,12 +252,10 @@ period's `end_date` never falls after its `closes_on`, the predicate is strictly
 conservative relative to the deadline engine (it suppresses no later than, and
 typically earlier than, the deadline-engine comparison would). Reusing the exact
 field and a suppression rule on the same axis makes this a consistent,
-already-precedented narrowing rather than a novel authority claim. The declared date is stamped operator-declared with
-an advisory and is reconciled against - and upgradable to - the AEAT censo
-snapshot the moment the live surface is corrected and works. This is
-"operator-declared now, censo-corroborated when available", and it is the only
-posture that frees the first filer today while keeping a clean upgrade path to
-full AEAT corroboration.
+already-precedented narrowing rather than a novel authority claim. The declared
+date is stamped operator-declared with an advisory and is never presented as
+AEAT-corroborated. This is the posture that frees the first filer while remaining
+consistent with the accepted retirement of the unsafe live Censo reader.
 
 The research's Option C (registry-declared first-period semantics) remains a
 complement, not a standalone: the registry declares carry-forward semantics, not
@@ -300,11 +289,10 @@ obligation. The mitigations are:
 - The suppression is stamped operator-declared (non-AEAT) provenance and carries a
   non-blocking advisory, so the determination is never presented as
   AEAT-authoritative and is visible to any reviewer or audit consumer.
-- Censo corroboration closes the gap structurally once the live read is fixed: a
-  divergence between the declared date and the AEAT censo alta contradicts the
-  claim and the gate stops trusting the declared date silently. Until then the
-  advisory keeps the determination honest-but-flagged rather than
-  silent-and-trusted.
+- The advisory keeps the determination honest-but-flagged rather than
+  silent-and-trusted. A future independent, safe authority source would require a
+  new ADR and an explicit reconciliation contract; this ADR creates no dormant
+  reader or compatibility path.
 
 This is weaker authority than an unforgeable snapshot would be - and the ADR says
 so plainly rather than claiming a grounding the system cannot deliver today. The
@@ -323,10 +311,9 @@ and trapped on the other.
 
 Pathways opened. Once activity-start scoping exists as a grounded narrowing, the
 same field already feeds the deadline engine's pre-start suppression, so the two
-surfaces share one activity-start axis. When the live censo surface is corrected,
-the AEAT snapshot corroborates the same axis with no vocabulary change, and the
-absent-by-design provenance shape generalises to any future first-obligation
-boundary.
+surfaces share one activity-start axis. The absent-by-design provenance shape
+generalises to any future first-obligation boundary without depending on a live
+Censo reader.
 
 Rule-compatibility notes.
 
@@ -337,9 +324,9 @@ Rule-compatibility notes.
   is grounded in a legal reality (no obligation before activity start) and in the
   same declared field the deadline engine already trusts, not in a fabricated
   authority claim. It does NOT claim AEAT-sourced authority for the date today,
-  because the AEAT-sourced read is non-functional; instead it stamps the weaker
-  operator-declared provenance, surfaces an advisory, and reconciles against AEAT
-  authority when available. No live AEAT write is introduced.
+  because the accepted architecture has no safe automated Censo read; instead it
+  stamps the weaker operator-declared provenance and surfaces an advisory. No live
+  AEAT write is introduced.
 - `local-filed-observations-are-non-official-evidence`: satisfied and unchanged.
   The fix never touches `_OFFICIAL_SOURCE_KINDS` or the `app_filing` kind. The
   first local filing still persists as non-official `app_filing`, so a later
@@ -365,39 +352,24 @@ toward operator-declared-now-by-necessity.
   selector-grammar facet (Option C; broader blast radius). The research leans
   application-layer.
 - Provenance marker shape. What typed marker records a suppressed pre-activity
-  requirement so it is auditable and not silent, and how does it carry the
-  operator-declared vs censo-corroborated distinction plus the optional censo
-  snapshot id: a new non-blocking enum member, or an explicit no-prior-obligation
-  evidence facet?
+  requirement so it is auditable and not silent: a new non-blocking enum member,
+  or an explicit no-prior-obligation evidence facet? The later Censo retirement
+  removes any snapshot id or corroborated-provenance variant from this choice.
 - Relation uniformity. The M100 carry arrives via `previous_filing`, but registry
   relations (`relation_source_requirements`) also feed the graph; confirm the
   scoping applies uniformly to both origins.
-- Censo-corroboration semantics (new, deferred). Once the live censo surface is
-  fixed, is a declared-vs-censo divergence a blocking contradiction or a
-  non-blocking advisory? This mirrors the
-  `carried-observations-stamp-their-revision` divergence-blocks / absence-advises
-  split but is deferred until the live read works.
+- Censo corroboration is not deferred work. The unsafe reader is retired. A
+  future genuine consulta-only authority source would require a new ADR and could
+  not borrow compatibility or missing-stamp behavior from this decision.
 
-## Dependency / follow-up: standalone live-censo wiring defect
+## Censo authority reconciliation
 
-Independent of first-filer scoping, the live-censo feature carries a code defect
-that must be tracked and fixed on its own track:
-
-- The censo pull (`src/aeat/adapters/outbound/aeat/sede/_censo_live.py`,
-  `G313_LAUNCHER_URL`) targets the wrong AEAT surface - the G313 certificate
-  procedure (`/Sede/procedimientoini/G313.shtml`, "Expedicion de certificados
-  tributarios. Situacion Censal") - while the parser and docstrings expect the
-  Mis Datos Censales data page. The pull must be re-pointed at the real Mis Datos
-  Censales data surface (the censos-nif-domicilio-fiscal datos-censales endpoint),
-  or it must correctly consume a G313 certificate artefact. This is the likely
-  cause, alongside the live-auth blocker, of the live read never returning a
-  readable censo
-  (`2026-06-12-live-pull-verification-sweep-live-auth-blocker-audit`).
-- This is a live-censo-feature bug owned by
-  `2026-06-05-live-censo-calendar-reconciliation`, NOT by first-filer scoping.
-  First-filer scoping must not block on it; it consumes the operator-declared date
-  today and corroborates against the censo only once this defect is fixed and the
-  live read works.
+The former G313 launcher/parser path is retired, not an engineering defect to
+repair. The accepted `2026-07-11-censo-operator-manual-enrolment-adr` establishes
+operator-manual Censo facts and prohibits driving the discovered ZKoss
+modification tool as a read path. First-filer scoping therefore consumes only the
+operator-declared profile date and preserves its non-official provenance. A
+future genuine consulta-only AEAT endpoint would require a new ADR.
 
 ## Ratification
 
@@ -415,17 +387,16 @@ recommended default for each open question. The resolved defaults:
   date as a grounded input, mirroring how the same field already drives the
   deadline engine's pre-start suppression.
 - Provenance marker: an explicit typed no-prior-obligation evidence facet
-  carrying operator-declared provenance and an optional censo snapshot id, NOT a
-  silent omission. Rationale: the suppression must be auditable and visible per
-  `no-silent-under-declaration`; a typed facet records the scoping decision and
-  carries the operator-declared-vs-censo-corroborated distinction.
+  carrying operator-declared provenance, NOT a silent omission. Rationale: the
+  suppression must be auditable and visible per
+  `no-silent-under-declaration`; a typed facet records the scoping decision
+  without claiming AEAT corroboration.
 - Relation uniformity: the scoping applies uniformly to BOTH `previous_filing`
   bindings and `relation_source_requirements`. Rationale: a first filer must not
   be unblocked on one requirement origin while still trapped on the other.
-- Censo-corroboration semantics: deferred. The operator-declared
-  `activity_start_date` is the authority NOW, with a non-blocking advisory that
-  the suppression rests on a declared-but-uncorroborated date; declared-vs-censo
-  divergence handling lands when the live censo read is fixed and works.
+- Censo-corroboration semantics: retired by the later accepted operator-manual
+  Censo decision. The operator-declared `activity_start_date` remains the input,
+  with a non-blocking advisory that the suppression rests on a declared date.
 
 ## Codification candidates
 
@@ -433,12 +404,10 @@ recommended default for each open question. The resolved defaults:
   cross-period dependency may be scoped out as no-prior-obligation only when a
   period falls strictly before the taxpayer's recorded activity-start date; the
   determination is stamped with operator-declared provenance and a non-blocking
-  advisory until an AEAT censo snapshot corroborates it, the gate fails closed when
-  no activity-start date is recorded at all, and the suppression is recorded as
+  advisory, the gate fails closed when no activity-start date is recorded at all,
+  and the suppression is recorded as
   declared provenance rather than a silent blank. (Promote only if this ADR is
   accepted.)
-- Rule slug: `censo-pull-targets-mis-datos-censales-not-g313-certificate`. Rule:
-  The live censo read must target the Mis Datos Censales data surface (or consume a
-  G313 certificate artefact correctly), never the G313 certificate-issuance
-  procedure URL labelled as a data page. (Promote only if the live-censo wiring fix
-  lands.)
+- The retired `censo-pull-targets-mis-datos-censales-not-g313-certificate`
+  candidate must not be promoted. Current authority forbids restoring the unsafe
+  live reader without a new ADR for a genuine consulta-only endpoint.

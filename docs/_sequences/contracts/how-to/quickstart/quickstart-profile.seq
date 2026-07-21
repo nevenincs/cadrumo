@@ -1,0 +1,5 @@
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Read the active profile status.
+@result aeat --format json config profile status
+@expect result.configured == true
+@expect exit_code == 0

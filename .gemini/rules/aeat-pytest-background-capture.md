@@ -18,7 +18,7 @@ The correct shape is to let Tee-Object see the full stream, then read the file w
 ## How
 
 - **Good:** background launch with full file capture:
-  `uv run --no-sync pytest src/aeat -n auto -q --tb=no --no-header 2>&1 | Out-File -FilePath suite.log -Encoding utf8`
+  `uv run --no-sync pytest src/cadrumo -n auto -q --tb=no --no-header 2>&1 | Out-File -FilePath suite.log -Encoding utf8`
   then post-completion `Get-Content suite.log | Where-Object { $_ -match '^FAILED' } | Sort-Object -Unique` to extract the fail list.
 
 - **Good:** when launching via the Bash/PowerShell `run_in_background: true` flag (which already writes the full pipe to a per-task output file), simply `Read` the output file and use `Select-String` or `Where-Object` to slice the relevant rows.

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#modelo-130-100-continuity'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-modelo-130-100-continuity-plan]]"
 ---

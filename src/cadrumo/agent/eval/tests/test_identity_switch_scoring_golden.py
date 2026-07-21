@@ -23,7 +23,6 @@ from pathlib import Path
 import pytest
 
 from ....application.operator_surface import command_classification
-from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.mcp import (
     IDENTITY_READ_CONSOLE_TOOLS,
     SessionIdentityState,
@@ -37,6 +36,7 @@ from .. import (
     run_golden_scenario,
 )
 from .._live_scoring import IdentityConfirmationScore, score_identity_trajectory
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -52,10 +52,6 @@ _IDENTITY_READ_VERB = "config.profile.status"
 # The two console identity-read tool names (they carry no registry command key).
 _WHOAMI = "cadrumo_whoami"
 _HARNESS_LOAD = "cadrumo_harness_load"
-
-
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
 
 
 def _score(trajectory: LiveTrajectory) -> IdentityConfirmationScore:
@@ -82,7 +78,7 @@ def _verb(command_key: str, *, is_error: bool = False) -> LiveToolCallRecord:
 def _trajectory(*calls: LiveToolCallRecord, session_id: str) -> LiveTrajectory:
     return LiveTrajectory(
         scenario="identidad-perfil-switch-reconfirm",
-        persona="modelo-preparer",
+        persona="cadrumo-modelo-preparer",
         session_id=session_id,
         tool_calls=calls,
     )
@@ -97,13 +93,13 @@ def test_identity_scenario_loads_and_passes_the_shared_golden_dimensions() -> No
     """The scenario is valid and passes the shared trajectory, skill, and provenance gate."""
     scenario = load_scenario(_IDENTITY_SCENARIO)
     assert scenario.name == "identidad-perfil-switch-reconfirm"
-    result = run_golden_scenario(scenario, valid_commands=_valid_commands())
+    result = run_golden_scenario(scenario, valid_commands=valid_cli_commands())
     assert result.passed, result.failures
 
 
 def test_scenario_constants_are_real_and_correctly_shaped() -> None:
     """Ground the test's command keys against the live surface + the real classification."""
-    valid = _valid_commands()
+    valid = valid_cli_commands()
     assert _MUTATING in valid and _SWITCH in valid and _IDENTITY_READ_VERB in valid
     # The mutating verb is genuinely non-read-only; the switch and identity-read verbs exist.
     assert not command_classification(_MUTATING).read_only

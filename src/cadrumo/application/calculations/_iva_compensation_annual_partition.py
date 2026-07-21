@@ -198,7 +198,7 @@ def _load_303_observations_for_partition(
             source_modelo=observation.modelo,
             source_filing_year=observation.filing_year,
             source_period=observation.period,
-        )
+        ).refused
         if refused:
             _log.debug(
                 "dropping unreconfirmable m303 observation from iva annual partition stamped_revision_id=%s period=%s",

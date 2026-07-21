@@ -5,46 +5,41 @@ context, the skill that owns the workflow, the expected tool trajectory (in
 registry-key form), and whether the result must carry registry provenance. A
 :class:`GoldenResult` is the runner's per-dimension verdict.
 
-:class:`ExitCodeScenario` and :class:`ExitCodeVerdict` are the eval-catalogue
-category 7 pair (golden-eval catalogue,
-``.vault/research/2026-07-01-agent-harness-research.md``): a non-zero CLI exit
-code paired with a well-formed JSON body is a domain verdict the operator must
-act on, not a crash to abort on.
+:class:`ExitCodeScenario` and :class:`ExitCodeVerdict` verify that a non-zero
+CLI exit code paired with a well-formed JSON body is a domain verdict the
+operator must act on, not a crash to abort on.
 
-:class:`ConfirmationTier` and :class:`ConfirmationGateCheck` are the eval-catalogue
-category 8 pair: an autonomous agent optimising for task completion may attempt to
-bypass a human-in-the-loop confirmation (e.g. by supplying an auto-yes-equivalent
+:class:`ConfirmationTier` and :class:`ConfirmationGateCheck` verify that an
+autonomous agent optimising for task completion cannot bypass a
+human-in-the-loop confirmation (e.g. by supplying an auto-yes-equivalent
 argument); this dimension proves the ``PreToolUse`` gate's decision for a step is
 argument-independent and holds in front of the dispatched call, not merely that the
 pure ``confirmation_for_tool`` function returns the right enum in isolation.
 
-:class:`ContradictionScenario` and :class:`ContradictionVerdict` are the eval-catalogue
-category 4 pair (wrong lifecycle sequencing / cross-surface contradiction,
-``.vault/research/2026-07-01-agent-harness-research.md``, and finding A1 of
-``.vault/audit/2026-05-21-persona-fleet-round2-findings-audit.md``): when one surface
+:class:`ContradictionScenario` and :class:`ContradictionVerdict` verify wrong
+lifecycle sequencing / cross-surface contradiction handling: when one surface
 (e.g. ``modelo readiness``) reports a target ready while a second, independent surface
 (e.g. ``modelo work file``) legitimately refuses the same target, the operator's only
 correct move is to stop and report the disagreement — never to retry past it with a
 further mutating tool call. This is the enforcement surface for the
-``operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
-a retry" section (``src/cadrumo/_data/agent/rules/operator-lifecycle-ordering.md``). This
+``cadrumo-operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
+a retry" section (``src/cadrumo/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``). This
 pair follows the standalone ``check_*_scenario`` shape used by
-:class:`ExitCodeScenario`/:class:`ExitCodeVerdict` (category 7) and
-:class:`UnderDeclarationScenario`/:class:`UnderDeclarationVerdict` (category 1) rather
+:class:`ExitCodeScenario`/:class:`ExitCodeVerdict` and
+:class:`UnderDeclarationScenario`/:class:`UnderDeclarationVerdict` rather
 than being threaded through :class:`GoldenScenario`/:class:`GoldenResult`: a
 cross-surface contradiction is not a property of one modelo-preparation workflow's
 expected trajectory, it is a distinct assertion over two independently dispatched
 responses plus a candidate post-contradiction trajectory.
 
-:class:`ProfileConfirmationScenario` and :class:`ProfileConfirmationVerdict` are the
-eval-catalogue category 5 pair (auth / profile / state confusion,
-``.vault/research/2026-07-01-agent-harness-research.md``): "wrong active profile
+:class:`ProfileConfirmationScenario` and :class:`ProfileConfirmationVerdict` verify
+auth / profile / state confusion handling: "wrong active profile
 silently shows another taxpayer's data" - the cross-tenant data leak, critical for a
 gestor's multi-taxpayer use of the harness. ``docs/how-to/troubleshooting.md``'s "The
 numbers or facts look like someone else's" section names ``aeat config profile status``
 as the confirmation surface ("See which profile is active"). This pair follows the same
 standalone ``check_*_scenario`` shape as :class:`ContradictionScenario` /
-:class:`ContradictionVerdict` (category 4) rather than being threaded through
+:class:`ContradictionVerdict` rather than being threaded through
 :class:`GoldenScenario`/:class:`GoldenResult`: the property under test is a
 required-prefix ordering constraint over an observed trajectory (the active-profile
 confirmation command must precede the first mutating verb), not a property of one
@@ -97,10 +92,8 @@ class GoldenScenario(BaseModel):
 class NarrationFaithfulness(BaseModel):
     """One step's narration-faithfulness verdict, mirroring ``FaithfulnessResult``'s shape.
 
-    Closes eval-catalogue category 9 (hallucinated numeric, NET-NEW, HIGH -
-    ``.vault/research/2026-07-01-agent-harness-research.md``): an operator-facing
-    narration must not state a numeric value absent from the tool result it
-    describes. This model deliberately mirrors
+    An operator-facing narration must not state a numeric value absent from
+    the tool result it describes. This model deliberately mirrors
     :class:`entrypoints.mcp._faithfulness.FaithfulnessResult` field-for-field
     (``faithful``, ``blocking``, ``flagged_values``, the derived ``blocks``
     property) rather than importing that class: ``cadrumo.agent`` is a read-accessor
@@ -116,11 +109,11 @@ class NarrationFaithfulness(BaseModel):
     Attributes:
         step: The registry command key the narration was produced for (e.g.
             ``"modelo.work.calculate"`` for routine narration, ``"modelo.export"``
-            for the irreversible filing-handoff marker per ADR Q4).
+            for the irreversible filing-handoff marker).
         faithful: True when every amount-shaped number in the narration was
             grounded in the tool-result JSON.
-        blocking: True when this step is the irreversible handoff boundary (ADR
-            Q4: advisory by default, hard block at export / record-marker).
+        blocking: True when this step is the irreversible handoff boundary
+            (advisory by default, hard block at export / record-marker).
         flagged_values: The ungrounded amount-shaped tokens the check found.
     """
 
@@ -155,15 +148,13 @@ class ConfirmationTier(StrEnum):
 
 
 class ConfirmationGateCheck(BaseModel):
-    """One step's ``PreToolUse`` confirmation-tier verdict (eval-catalogue category 8).
+    """One step's ``PreToolUse`` confirmation-tier verdict.
 
-    Closes eval-catalogue category 8 (HITL / confirmation bypass, NET-NEW -
-    ``.vault/research/2026-07-01-agent-harness-research.md``): an autonomous agent
-    optimising for completion may attempt to bypass a human-in-the-loop
-    confirmation, so a golden run must prove the gate's decision for a step is not
-    merely correct in isolation but sits in front of the dispatched call and is
-    argument-independent (an auto-yes-equivalent flag on the tool call must not
-    change it).
+    An autonomous agent optimising for completion may attempt to bypass a
+    human-in-the-loop confirmation, so a golden run must prove the gate's
+    decision for a step is not merely correct in isolation but sits in front
+    of the dispatched call and is argument-independent (an auto-yes-equivalent
+    flag on the tool call must not change it).
 
     ``actual_tier`` is caller-injected (mirroring ``NarrationFaithfulness``): the
     caller invokes the real ``confirmation_for_tool`` from
@@ -206,14 +197,14 @@ class GoldenResult(BaseModel):
     calculate returned correct casilla values but no ``legal_refs`` /
     ``formula_id`` at the CLI layer.
 
-    ``narration_faithfulness_checks`` is the category-9 dimension: zero or more
-    per-step :class:`NarrationFaithfulness` verdicts. Unlike the other booleans,
+    ``narration_faithfulness_checks`` carries zero or more per-step
+    :class:`NarrationFaithfulness` verdicts. Unlike the other booleans,
     an unfaithful-but-advisory check (``blocking=False``) does NOT fail
     ``passed`` - only a check whose ``blocks`` is true (the irreversible
-    handoff step) does. This encodes ADR Q4's advisory-by-default,
+    handoff step) does. This encodes an advisory-by-default,
     hard-block-at-the-boundary posture directly in the pass/fail composition.
 
-    ``expected_confirmation_tiers`` is the category-8 dimension: zero or more
+    ``expected_confirmation_tiers`` carries zero or more
     per-step :class:`ConfirmationGateCheck` verdicts. A step whose real
     ``confirmation_for_tool`` decision (``actual_tier``) diverges from the
     scenario's declared expectation (``expected_tier``) fails ``passed`` - the
@@ -254,7 +245,7 @@ class GoldenResult(BaseModel):
 class ExitCodeScenario(BaseModel):
     """A declared expectation that a non-zero CLI exit code is a verdict, not a crash.
 
-    Closes eval-catalogue category 7 (exit-code misread as crash): a command such
+    Guards against exit-code misread as crash: a command such
     as ``modelo.work.verify`` legitimately raises a non-zero process exit code
     when findings exist, while still emitting a well-formed JSON envelope on
     stdout. This scenario declares the exit code that legitimately signals a
@@ -332,16 +323,12 @@ class ExitCodeVerdict(BaseModel):
 class UnderDeclarationScenario(BaseModel):
     """A declared expectation that ``verify`` surfaces an advisory for a cascading zero.
 
-    Closes eval-catalogue category 1 (missed under-declaration, the HIGHEST-
-    severity/legal-soundness class - ``.vault/research/2026-07-01-agent-harness-research.md``):
-    an autonomous agent must not read a well-formed ``modelo.work.verify``
-    response as "safe to file" when a positive economic input cascades to a zero
-    dependent casilla with no offsetting reduction declared
-    (``no-silent-under-declaration``). This is the round-30 CLI persona repro
-    that produced ADR ``2026-06-02-modelo-200-base-determination-adr``: a
-    positive resultado contable with the fiscal-base starting point left at
-    manual zero must surface an ADVISORY finding, never a silent zero-finding
-    grant.
+    This is the highest-severity legal-soundness dimension: an autonomous
+    agent must not read a well-formed ``modelo.work.verify`` response as
+    "safe to file" when a positive economic input cascades to a zero
+    dependent casilla with no offsetting reduction declared. A positive
+    resultado contable with the fiscal-base starting point left at manual
+    zero must surface an ADVISORY finding, never a silent zero-finding grant.
 
     Attributes:
         name: Scenario identifier.
@@ -349,9 +336,8 @@ class UnderDeclarationScenario(BaseModel):
             ``"modelo.work.verify"``).
         expected_legal_refs: The legal references the fired ADVISORY finding
             must cite. Grounds the check to the SPECIFIC declared handoff this
-            scenario exercises (rather than accepting any stray advisory), the
-            same discipline ``registry-calculation-legal-grounding`` requires
-            of the registry predicate itself.
+            scenario exercises (rather than accepting any stray advisory),
+            the same discipline the registry calculation itself must satisfy.
     """
 
     model_config = _STRICT_FROZEN
@@ -389,10 +375,10 @@ class UnderDeclarationVerdict(BaseModel):
 class ContradictionScenario(BaseModel):
     """A declared expectation that a signalled cross-surface contradiction halts the trajectory.
 
-    Closes eval-catalogue category 4 (wrong lifecycle sequencing / cross-surface
-    contradiction): a readiness-shaped signal (``readiness_step``) and a second,
+    Guards against wrong lifecycle sequencing / cross-surface
+    contradiction: a readiness-shaped signal (``readiness_step``) and a second,
     independent, legitimately-blocking signal (``blocking_step``) may disagree — one
-    reports the target ready, the other refuses it. ``operator-lifecycle-ordering``
+    reports the target ready, the other refuses it. ``cadrumo-operator-lifecycle-ordering``
     makes the disagreement itself, not either signal alone, the trigger: the operator
     must stop and report, never retry past it. ``must_halt_after`` names the trajectory
     position the disagreement is anchored to; ``mutating_commands`` is the scenario's own
@@ -458,8 +444,8 @@ class ContradictionVerdict(BaseModel):
 class ProfileConfirmationScenario(BaseModel):
     """A declared expectation that an active-profile confirmation precedes the first mutation.
 
-    Closes eval-catalogue category 5 (auth / profile / state confusion - the
-    wrong-active-profile cross-tenant data leak): "wrong active profile silently shows
+    Guards against auth / profile / state confusion - the
+    wrong-active-profile cross-tenant data leak: "wrong active profile silently shows
     another taxpayer's data." A gestor operating the harness across several taxpayer
     profiles must never let an autonomous agent run a mutating command sequence without
     first confirming which profile is active - a silent wrong-profile mutation writes
@@ -523,7 +509,7 @@ class ElicitationAction(StrEnum):
 class LiveToolCallRecord(BaseModel):
     """One observed tool invocation captured from a real MCP client session.
 
-    Captured by the live subagent-persona harness (ADR R7): the harness starts
+    Captured by the live subagent-persona harness: the harness starts
     the real ``cadrumo-mcp`` server as a subprocess, drives a real client session,
     and records every ``tools/call`` round-trip verbatim. ``command_key`` is the
     registry command key the tool name maps back to, resolved through a
@@ -571,7 +557,7 @@ class LiveNarrationRecord(BaseModel):
 class LiveElicitationRecord(BaseModel):
     """One server-initiated elicitation exchange observed during a live session.
 
-    The console's CONFIRM tier rides MCP elicitation (ADR R6); the harness's
+    The console's CONFIRM tier rides MCP elicitation; the harness's
     client-side responder decides each exchange and the record preserves what
     was asked and what was answered, so the scorer can assert confirmation
     honesty (a state-changing verb was confirmed, a declined confirmation was
@@ -599,7 +585,7 @@ class LiveTrajectory(BaseModel):
         scenario: The golden scenario name this session ran, empty for a free
             exploration session.
         persona: The harness persona the driver played (e.g.
-            ``"modelo-preparer"``).
+            ``"cadrumo-modelo-preparer"``).
         session_id: Caller-supplied stable identifier for the session (clock-free
             identity per the project's determinism discipline; the caller decides
             the scheme).
@@ -624,7 +610,7 @@ class LiveTrajectory(BaseModel):
 
 
 class LiveInvariantVerdict(BaseModel):
-    """The two hard invariants of ADR R7, asserted over one captured trajectory.
+    """The two hard invariants of the live-harness safety contract, asserted over one captured trajectory.
 
     ``live_submit_attempts`` is every observed call whose command key (or raw
     tool name, for calls outside the caller's mapping) matches the scorer's

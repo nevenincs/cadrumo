@@ -5,7 +5,7 @@ tags:
 date: '2026-07-02'
 promoted_to:
   - 'rule:subagent-commits-require-explicit-pathspec'
-modified: '2026-07-03'
+modified: '2026-07-17'
 ---
 # `agent-harness` audit: `git index sweep incident 84f84166f`
 

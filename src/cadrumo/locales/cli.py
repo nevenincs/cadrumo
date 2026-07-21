@@ -24,7 +24,7 @@ from ._modelo_manager import (
     ModeloLocaleFieldKind,
     ModeloLocaleManager,
 )
-from .manager import LocaleError, LocaleManager, _covered_by_namespace
+from .manager import LocaleAuditResult, LocaleError, LocaleManager
 
 app = typer.Typer(name="locales", help=tr("cli.locales.app_help"), no_args_is_help=True)
 modelo_app = typer.Typer(
@@ -54,40 +54,50 @@ RegistryRootOpt = Annotated[
 
 
 @app.command("audit")
-def audit() -> None:
-    """Print codebase-to-locale drift for every locale file."""
-    manager = _default_manager()
-    codebase_keys = manager.get_codebase_keys()
-    namespace_prefixes = tuple(
-        marker.rstrip("*").rstrip(".") for marker in manager.get_codebase_namespaces() if marker.rstrip("*").rstrip(".")
-    )
-    failed = False
-    for locale_path in sorted(manager.locales_dir.glob("*.yml")):
-        keys = manager.get_yaml_keys(manager.load_locale(locale_path))
-        missing = sorted(codebase_keys - keys)
-        extra = sorted(key for key in keys - codebase_keys if not _covered_by_namespace(key, namespace_prefixes))
-        if missing or extra:
-            failed = True
+def audit(ctx: typer.Context) -> None:
+    """Print production scalar, key, placeholder, and codebase audit findings."""
+    manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
+    result = manager.audit()
+    _echo_audit(result)
+    if not result.ok:
+        raise typer.Exit(code=1)
+
+
+def _echo_audit(result: LocaleAuditResult) -> None:
+    """Render a structured manager audit without owning validation policy."""
+    for file_result in result.files:
+        if file_result.ok:
+            typer.echo(tr("locales.cli.audit.file_ok", locale_file=file_result.locale_file))
+            continue
+        if file_result.codebase_missing or file_result.codebase_extra:
             typer.echo(
                 tr(
                     "locales.cli.audit.file_drift",
-                    locale_file=locale_path.name,
-                    missing_count=len(missing),
-                    extra_count=len(extra),
+                    locale_file=file_result.locale_file,
+                    missing_count=len(file_result.codebase_missing),
+                    extra_count=len(file_result.codebase_extra),
                 ),
             )
-            for key in missing:
-                typer.echo(tr("locales.cli.audit.key_missing", key=key))
-            for key in extra:
-                typer.echo(tr("locales.cli.audit.key_extra", key=key))
-        else:
-            typer.echo(tr("locales.cli.audit.file_ok", locale_file=locale_path.name))
-    if failed:
-        raise typer.Exit(code=1)
+        for key in file_result.codebase_missing:
+            typer.echo(tr("locales.cli.audit.key_missing", key=key))
+        for key in file_result.codebase_extra:
+            typer.echo(tr("locales.cli.audit.key_extra", key=key))
+        for key in file_result.inter_locale_missing:
+            typer.echo(f"inter-locale missing file={file_result.locale_file} key={key}")
+        for violation in file_result.scalar_violations:
+            typer.echo(
+                f"non-string leaf file={violation.locale_file} key={violation.key} type={violation.value_type}",
+            )
+    for mismatch in result.placeholder_mismatches:
+        rendered_variants = ", ".join(
+            f"{variant.locale_file}={sorted(variant.placeholders)!r}" for variant in mismatch.variants
+        )
+        typer.echo(f"placeholder mismatch key={mismatch.key} {rendered_variants}")
 
 
 @app.command("scaffold")
 def scaffold(
+    ctx: typer.Context,
     check: Annotated[
         bool,
         typer.Option("--check", help=tr("cli.locales.scaffold_check_help")),
@@ -95,9 +105,10 @@ def scaffold(
 ) -> None:
     """Update locale files so they match concrete codebase translation keys."""
     if check:
-        audit()
+        audit(ctx)
         return
-    _default_manager().scaffold()
+    manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
+    manager.scaffold()
     typer.echo(tr("locales.cli.scaffold_updated"))
 
 
@@ -129,10 +140,10 @@ def canonicalize_product_identity(
     ctx: typer.Context,
     locale: Annotated[
         OutputLanguage | None,
-        typer.Option("--locale", help="Update only this supported locale catalogue."),
+        typer.Option("--locale", help=tr("cli.locales.canonicalize_product_identity.locale_help")),
     ] = None,
 ) -> None:
-    """Normalize product display and command prefixes in selected catalogues."""
+    """Normalize stale command prefixes in selected catalogues."""
     manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
     try:
         updated_paths = manager.canonicalize_product_identity_references(locale=locale)

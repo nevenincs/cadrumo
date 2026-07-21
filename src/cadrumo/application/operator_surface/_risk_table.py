@@ -94,7 +94,8 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.auth.certificate.secret.remove": CommandRiskDeclaration(destructive=True),
     "config.auth.certificate.secret.set": CommandRiskDeclaration(),
     "config.auth.certificate.select": CommandRiskDeclaration(),
-    "config.auth.clear": CommandRiskDeclaration(destructive=True),
+    "config.auth.logout": CommandRiskDeclaration(),
+    "config.auth.reset": CommandRiskDeclaration(destructive=True),
     "config.auth.configure": CommandRiskDeclaration(),
     "config.auth.diagnostics.list": CommandRiskDeclaration(),
     "config.auth.diagnostics.report": CommandRiskDeclaration(),
@@ -121,7 +122,6 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.google.sync.calc.verify": CommandRiskDeclaration(),
     "config.google.sync.probe": CommandRiskDeclaration(),
     "config.google.sync.push": CommandRiskDeclaration(),
-    "config.lock": CommandRiskDeclaration(),
     "config.profile.archive.export": CommandRiskDeclaration(handoff=True),
     "config.profile.archive.import": CommandRiskDeclaration(),
     "config.profile.archive.inspect": CommandRiskDeclaration(),
@@ -148,13 +148,13 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.profile.sandbox.prune": CommandRiskDeclaration(destructive=True),
     "config.profile.sandbox.restore": CommandRiskDeclaration(),
     "config.profile.sandbox.usage": CommandRiskDeclaration(),
-    "config.profile.sandbox.use": CommandRiskDeclaration(),
     "config.profile.show": CommandRiskDeclaration(),
     "config.profile.status": CommandRiskDeclaration(),
-    "config.profile.subject_access_request": CommandRiskDeclaration(),
+    "config.profile.subject_access_request": CommandRiskDeclaration(handoff=True),
     "config.profile.validate": CommandRiskDeclaration(),
     "config.recover": CommandRiskDeclaration(destructive=True),
-    "config.rekey": CommandRiskDeclaration(destructive=True),
+    "config.passphrase.change": CommandRiskDeclaration(destructive=True),
+    "config.repair": CommandRiskDeclaration(),
     "config.repair.connectivity": CommandRiskDeclaration(),
     "config.repair.integrity.objects": CommandRiskDeclaration(),
     "config.repair.integrity.registry": CommandRiskDeclaration(),
@@ -162,10 +162,21 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "config.repair.profile": CommandRiskDeclaration(),
     "config.repair.quarantine": CommandRiskDeclaration(),
     "config.repair.reset_progress": CommandRiskDeclaration(),
-    "config.reset": CommandRiskDeclaration(destructive=True),
-    "config.show_recovery": CommandRiskDeclaration(),
+    # The reset lifecycle inherits the pre-split ``config.reset`` destructive
+    # declaration: start and resume irreversibly wipe local state, so they must
+    # elicit human confirmation on the MCP surface, never auto-approve. ``status``
+    # is a read of the in-progress reset.
+    "config.reset.resume": CommandRiskDeclaration(destructive=True),
+    "config.reset.start": CommandRiskDeclaration(destructive=True),
+    "config.reset.status": CommandRiskDeclaration(),
+    # Recovery lifecycle: ``status`` and ``verify`` read; ``create`` enrolls a
+    # first envelope (nothing replaced); ``rotate`` invalidates the previous
+    # recovery code, so it elicits human confirmation on the MCP surface.
+    "config.recovery.create": CommandRiskDeclaration(),
+    "config.recovery.rotate": CommandRiskDeclaration(destructive=True),
+    "config.recovery.status": CommandRiskDeclaration(),
+    "config.recovery.verify": CommandRiskDeclaration(),
     "config.switch": CommandRiskDeclaration(),
-    "config.verify_recovery": CommandRiskDeclaration(),
     # Diagnostics reads run-health, latency, error, and LLM-usage telemetry and
     # flush/inspect the local telemetry store: a mutating family, none destructive
     # (a flush prunes bounded local telemetry, not taxpayer state) and no handoff
@@ -247,7 +258,6 @@ COMMAND_RISK: dict[str, CommandRiskDeclaration] = {
     "modelo.aggregate": CommandRiskDeclaration(),
     "modelo.audit.check": CommandRiskDeclaration(),
     "modelo.audit.export": CommandRiskDeclaration(handoff=True),
-    "modelo.audit.replay": CommandRiskDeclaration(),
     "modelo.audit.show": CommandRiskDeclaration(),
     "modelo.bindings.list": CommandRiskDeclaration(),
     "modelo.bindings.resolve": CommandRiskDeclaration(),

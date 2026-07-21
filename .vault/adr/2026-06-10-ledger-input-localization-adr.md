@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#ledger-input-localization'
 date: '2026-06-10'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-10-ledger-input-localization-research]]"
 ---
@@ -65,7 +65,7 @@ first, the ledger amount site uses the signed form until C1 retracts the leading
 sign. This coordination is the only cross-feature blocker; both the locale CLI
 and `date.fromisoformat` are stable, in-tree, and carry no frontier risk.
 
-The locale work is constrained to the `aeat.locales` CLI surface
+The locale work is constrained to the `cadrumo.locales` CLI surface
 (`aeat-locales-cli`): the four catalogues must stay in key parity and the
 honesty ratchet must not be bypassed by hand edits.
 
@@ -85,7 +85,7 @@ signed fields use the signed variant.
 
 **Single shared helper.** Consolidate the six duplicated `_parse_decimal` /
 `_parse_required_decimal` copies into one owning helper in
-`src/aeat/entrypoints/cli/_common.py` (which already owns `_parse_iso_date`),
+`src/cadrumo/entrypoints/cli/_common.py` (which already owns `_parse_iso_date`),
 enforcing the regex + finite guard exactly once. The six modules import the
 shared helper rather than re-deriving it; per `service-imports-via-top-level-reexports`
 and the architecture-boundary rules, the canonical helper has one home and is
@@ -97,8 +97,8 @@ which today bypass it (research F5). After the change, `15/01/2026` refuses at
 the CLI boundary for both `--date` and `--invoice-date`, before the value
 reaches the service or the domain length check.
 
-**Localised, actionable refusals (via the `aeat.locales` CLI only).** Three
-catalogue changes, applied with `python -m aeat.locales set ...` to keep
+**Localised, actionable refusals (via the `cadrumo.locales` CLI only).** Three
+catalogue changes, applied with `python -m cadrumo.locales set ...` to keep
 four-locale parity:
 
 - `cli.common.errors.invalid_iso_date` — add the `%{label}` and `%{raw}`
@@ -163,7 +163,7 @@ sequencing is a real coupling: the ledger amount regex variant is not final
 until the absolute-amount convention lands, so the executing plan must either
 sequence after C1 or ship the signed variant with a follow-up to tighten to
 non-negative. The locale changes touch four catalogues and must go through the
-`aeat.locales` CLI; a hand edit would trip the parity and honesty gates.
+`cadrumo.locales` CLI; a hand edit would trip the parity and honesty gates.
 
 Pathways opened: a single owned amount/date validation surface that C4 (the
 invoice command) and any future manual entry command consume directly, ending

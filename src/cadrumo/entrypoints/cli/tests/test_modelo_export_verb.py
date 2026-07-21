@@ -15,11 +15,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import resolve_registry_revision_for_work_target
-from ....application.user_profile import (
-    profile_create_storage_span,
-    register_minimal_profile,
-    set_active_fields,
-)
+from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.modelos import (
@@ -36,6 +32,8 @@ from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from ._modelo_review_package_support import seed_exportable_modelo_revision
 from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
@@ -318,67 +316,6 @@ def _seed_modelo_111_revisions(
     return work_unit_id, tuple(revision_ids)
 
 
-def _seed_exportable_modelo_111_revision(
-    *,
-    modelo: str = "111",
-    filing_year: int = 2026,
-    period: str = "1T",
-) -> tuple[str, str]:
-    """Persist a verified-complete modelo-111 revision ready for export.
-
-    The work unit carries a canonical quarterly period token and the
-    revision captures a real modelo-111 casilla input snapshot so the
-    registry-backed draft build produces a populated fichero-BOE file.
-    """
-
-    state = workflow_state_repository().load()
-    bucket_id = state.active_profile_bucket_id()
-    assert bucket_id is not None
-    revision_id = _active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
-    filing_period = Period.from_year_and_code(filing_year, period)
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=revision_id,
-    )
-    now = datetime.now(UTC)
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{period}",
-        created_at=now,
-        updated_at=now,
-    )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
-
-    calculation_revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id=_MODELO_111_INPUTS,
-        binding_overrides={},
-        casilla_values={},
-    )
-    revision = CalculationRevision(
-        calculation_revision_id=calculation_revision_id,
-        work_unit_id=work_unit_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id=_MODELO_111_INPUTS,
-        created_at=now,
-        updated_at=now,
-        verified_at=now,
-        verified_by="operator",
-    )
-    cr_repo = CalculationRevisionCatalogueRepository()
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
-    return work_unit_id, calculation_revision_id
-
-
 def _seed_exportable_modelo_202_2024_revision() -> tuple[str, str]:
     """Persist a verified-complete M202 2024 1P revision with the 2023-2024 binding channel."""
 
@@ -455,7 +392,7 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     """
 
     _set_export_profile_name()
-    work_unit_id, _ = _seed_exportable_modelo_111_revision()
+    work_unit_id, _ = seed_exportable_modelo_revision(input_values_by_casilla_id=_MODELO_111_INPUTS)
     out = tmp_path / "modelo-111.txt"
 
     result = _invoke(
@@ -483,7 +420,7 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
         filing_year=2024,
         period="1T",
     )
-    out = tmp_path / "m111-2024-1T.boe"
+    out = tmp_path / "modelo-111-2024-1T.boe"
 
     result = _invoke(
         [
@@ -518,7 +455,7 @@ def test_export_modelo_202_2024_emilio_uses_verified_revision_snapshot(
 ) -> None:
     _set_emilio_legal_entity_export_profile()
     _, calculation_revision_id = _seed_exportable_modelo_202_2024_revision()
-    out = tmp_path / "m202-2024-1P.boe"
+    out = tmp_path / "modelo-202-2024-1P.boe"
 
     result = _invoke(
         [
@@ -671,7 +608,7 @@ def test_export_modelo_111_refuses_when_profile_name_missing(
     rather than fabricating a placeholder name."""
 
     _clear_export_profile_surnames()
-    work_unit_id, _ = _seed_exportable_modelo_111_revision()
+    work_unit_id, _ = seed_exportable_modelo_revision(input_values_by_casilla_id=_MODELO_111_INPUTS)
     out = tmp_path / "modelo-111.txt"
 
     result = _invoke(

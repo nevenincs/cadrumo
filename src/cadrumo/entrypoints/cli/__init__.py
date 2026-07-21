@@ -1,4 +1,4 @@
-"""CADRUMO's command-line interface (CLI), provided by the ``aeat`` executable.
+"""Cadrumo's command-line interface (CLI), provided by the ``aeat`` executable.
 
 The command tree exposes two top-level namespaces:
 
@@ -22,7 +22,7 @@ from collections.abc import Callable, Iterator
 from contextlib import contextmanager, nullcontext
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Protocol, cast
 
 import typer
 
@@ -46,7 +46,7 @@ from ._stdio import configure_stdio_for_utf8 as _configure_stdio_for_utf8
 # :mod:`._stdio` for the rationale.
 _configure_stdio_for_utf8()
 
-from ...core import PRODUCT_IDENTITY
+from ...core import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
 from ...core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ...core.i18n import tr
 from ...core.redaction import redact_for_cli_output as _redact_for_cli_output
@@ -65,9 +65,16 @@ from ._log_levels import apply_to_root_logger as _apply_to_root_logger
 from ._log_levels import resolve_log_level as _resolve_log_level
 from ._root_payloads import AppRootResult, RootStatusResult
 
+
+class _TyperExceptionsState(Protocol):
+    """Local marker for Cadrumo's idempotent Typer localisation state."""
+
+    _cadrumo_parse_errors_localised: bool
+
+
 # The command tree is assembled lazily: each leaf command module pulls
 # the application layer and, transitively, the ~0.6 s registry parse.
-# Importing every module just to build the CADRUMO app object made
+# Importing every module just to build the Cadrumo app object made
 # ``aeat --version`` and ``aeat --help`` pay that cost even though they
 # never dispatch into a subcommand. Modules are imported by their
 # :class:`_LazySubcommand` loader only when an operator actually invokes
@@ -81,7 +88,7 @@ from ._root_payloads import AppRootResult, RootStatusResult
 
 
 app = typer.Typer(
-    name=PRODUCT_IDENTITY.cli_executable,
+    name=_PRODUCT_IDENTITY.cli_executable,
     help=tr("cli.root.app_help"),
     no_args_is_help=False,
     invoke_without_command=True,
@@ -145,9 +152,9 @@ def _root(
     state = ctx.ensure_object(dict)
     state["format"] = format_.strip().lower() or _FORMAT_TEXT
     if version:
-        # Fast-path: bare `aeat --version` skips the registry load
-        # (disaster ADR Ruling 4 — registry validation must not run
-        # on the version surface). The `--detail` variant re-invokes
+        # Fast-path: bare `aeat --version` skips the registry load —
+        # registry validation must not run
+        # on the version surface. The `--detail` variant re-invokes
         # with the registry summary populated. The diagnostics import
         # is deferred here so it never loads on a non-version surface.
         from ...application.diagnostics import build_cli_version_report, render_cli_version_text
@@ -157,10 +164,10 @@ def _root(
             typer.echo(render_cli_version_text(report))
         else:
             # The short `aeat --version` line is machine-format semver
-            # (e.g. "CADRUMO 1.2.3") consumed by CI tooling and package
-            # managers. CADRUMO policy treats semver output as machine-format,
+            # (e.g. "Cadrumo 1.2.3") consumed by CI tooling and package
+            # managers. Cadrumo policy treats semver output as machine-format,
             # not operator text, so tr() wrapping is intentionally omitted.
-            typer.echo(f"{PRODUCT_IDENTITY.display_name} {report.package_version}")
+            typer.echo(f"{_PRODUCT_IDENTITY.display_name} {report.package_version}")
         raise typer.Exit()
     if help_:
         # The operator-surface import is deferred so the help-document
@@ -218,9 +225,8 @@ def _root(
         landing = build_root_landing_report(active)
         if active is None or not has_active_bucket_session():
             # Bare invocation with no active profile OR no open
-            # session: render the landing card and exit. Per
-            # `2026-06-03-bare-invocation-bucket-session-gate-adr`
-            # bare invocation is a metadata-emitting introspection
+            # session: render the landing card and exit. Bare
+            # invocation is a metadata-emitting introspection
             # surface analogous to --help/--version and MUST NOT
             # require an active bucket session. Reading
             # workflow_state would force session-open against the
@@ -324,7 +330,7 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
     )
     from ...core import resolve_active_bucket_id
     from ...core.config import override_settings
-    from ...core.errors import AeatError
+    from ...core.errors import CadrumoError
     from ._errors import CliRefusedBoundaryError
 
     active = resolve_active_bucket_id()
@@ -343,12 +349,12 @@ def _normalize_active_profile_label_to_uuid(ctx: typer.Context) -> None:
         raise CliRefusedBoundaryError(
             translated_message="errors.refused.refused_profile_label_ambiguous",
         ) from exc
-    except AeatError:
+    except CadrumoError:
         return
     if pointer is None:
         try:
             inactive_bucket = read_profile_bucket_by_id(active)
-        except AeatError:
+        except CadrumoError:
             return
         if inactive_bucket is not None:
             raise CliRefusedBoundaryError(
@@ -579,7 +585,7 @@ def _verb_path_from_context(ctx: typer.Context) -> str | None:
     where ``sys.argv[0]`` is not the ``aeat`` entry-point and the
     argv-based :func:`_full_invocation_verb_path` returns ``None``.
     The bootstrap-exemption gate treats a ``None`` verb path as
-    "bare invocation" (per the bare-invocation ADR), but the caller
+    "bare invocation", but the caller
     only reaches this helper when ``ctx.invoked_subcommand`` is set —
     i.e. a real subcommand IS being dispatched and the session must
     open. Reconstructs the verb chain from the root invoked
@@ -657,7 +663,7 @@ def _full_invocation_tokens() -> tuple[str, ...]:
     from pathlib import Path
 
     executable = Path(sys.argv[0]).name.lower()
-    canonical_executable = PRODUCT_IDENTITY.cli_executable.lower()
+    canonical_executable = _PRODUCT_IDENTITY.cli_executable.lower()
     if executable not in {canonical_executable, f"{canonical_executable}.exe"}:
         return ()
     return tuple(sys.argv[1:])
@@ -779,7 +785,7 @@ def _lazy(group_name: str, name: str, module_name: str) -> None:
 
 # ---------------------------------------------------------------------
 # Wiring — every heavy subcommand module is registered lazily so the
-# CADRUMO app object can be constructed without importing the command
+# Cadrumo app object can be constructed without importing the command
 # tree (and therefore without the registry parse).
 # ---------------------------------------------------------------------
 
@@ -795,7 +801,7 @@ _lazy("app", "quickfile", "._app_quickfile")
 _lazy("app", "registry", ".registry")
 _lazy("app", "review", "._review")
 
-_lazy(PRODUCT_IDENTITY.cli_executable, "config", "._config")
+_lazy(_PRODUCT_IDENTITY.cli_executable, "config", "._config")
 app.add_typer(app_app, name="app")
 _decorate_typer_app(app)
 
@@ -804,7 +810,7 @@ def __getattr__(name: str) -> object:
     """Lazily resolve re-exported names without importing heavy submodules eagerly.
 
     ``_app_contract``, ``_config._google``, and ``_modelo_rendering`` are
-    kept off the eager import path precisely so constructing the CADRUMO CLI
+    kept off the eager import path precisely so constructing the Cadrumo CLI
     app object never pulls the registry-dependent command tree; a
     top-level ``from ._app_contract import command_schema_refs`` (and
     siblings) would defeat that and reintroduce the startup cost
@@ -834,7 +840,7 @@ def _localise_help_section_headers() -> None:
     frozen to English at import. The already-``tr()``-bound option *descriptions*
     localise via the :func:`_apply_language_argv_to_environment` env promotion,
     but the framework-owned section headers stayed English — the residual gap the
-    operator-surface ``--language`` help-honesty contract (ADR D6) leaves open.
+    operator-surface ``--language`` help-honesty contract leaves open.
     This rebinds those constants to the operator's resolved output language.
 
     Invocation-scoped, no cross-invocation leak: it runs once per console
@@ -921,7 +927,10 @@ def _localise_typer_parse_error_messages() -> None:
     _typer_exceptions.MissingParameter.format_message = localised_missing_parameter_format_message
     _typer_exceptions.BadParameter.format_message = localised_bad_parameter_format_message
     _typer_formatting.HelpFormatter.write_usage = localised_write_usage
-    _typer_exceptions._cadrumo_parse_errors_localised = True
+    typer_exceptions_state = cast(  # CAST-RATIONALE-TYPER-EXCEPTIONS-STATE: module attribute is Cadrumo-owned.
+        "_TyperExceptionsState", _typer_exceptions
+    )
+    typer_exceptions_state._cadrumo_parse_errors_localised = True
 
 
 def main() -> None:
@@ -933,7 +942,7 @@ def main() -> None:
     An explicit ``--language`` / ``--lang`` flag is promoted to
     ``CADRUMO_OUTPUT_LANGUAGE`` here, before the lazily imported subcommand modules
     render their ``tr(...)``-bound help, so the flag genuinely localises help
-    text per operator-surface ADR decision D6 (see :mod:`._language_argv`).
+    text (see :mod:`._language_argv`).
     The Rich ``--help`` section headers are then rebound to the same resolved
     locale (see :func:`_localise_help_section_headers`).
     """
@@ -959,7 +968,7 @@ def main() -> None:
 
         progress_sink = operator_progress_sink(_emit_operator_progress)
     with _metadata_state_isolation(arguments), _ensure_help_render_width(), progress_sink:
-        app(prog_name=PRODUCT_IDENTITY.cli_executable)
+        app(prog_name=_PRODUCT_IDENTITY.cli_executable)
 
 
 def _is_metadata_invocation(arguments: list[str]) -> bool:
@@ -989,7 +998,7 @@ def _metadata_state_isolation(arguments: list[str]) -> Iterator[None]:
     """Keep help and version imports off an operator's retired ``aeat`` state root.
 
     Lazy subgroup construction can import modules that instantiate Settings.
-    Metadata invocations therefore run against a temporary CADRUMO root and
+    Metadata invocations therefore run against a temporary Cadrumo root and
     database before those imports occur. Normal commands never enter this
     scope and continue to refuse a retired ``aeat`` state root in normal operation.
     """

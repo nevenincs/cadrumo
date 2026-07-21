@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cross-domain-continuity'
 date: '2026-05-27'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-12-cli-workflow-redesign-verified-complete-adr]]"
   - "[[2026-05-21-taxpayer-type-applicability-adr]]"
@@ -48,8 +48,9 @@ violations, only a silent gap.
 ## Constraints
 
 - `ModeloRevision` is a frozen pydantic v2 model loaded from TOML by the
-  registry loader. New fields must carry safe defaults to preserve backward
-  compatibility with revisions that do not declare predicates.
+  registry loader. Revisions declare their predicate tuple explicitly; an
+  empty tuple means that revision has no cross-casilla predicate. No retired
+  schema is accepted or translated.
 - Predicate evaluation must happen inside `_classify_verification_outcome` or a
   dedicated helper called from `verify_modelo_revision`, after all casilla
   values are resolved, to avoid polluting the loading path.

@@ -1,16 +1,14 @@
 ---
 tags:
-  - '#adr'
-  - '#docs-architecture'
+  - "#adr"
+  - "#docs-architecture"
 date: '2026-05-30'
-modified: '2026-07-03'
 related:
   - "[[2026-05-30-docs-architecture-research]]"
-  - "[[2026-04-12-docs-rewrite-adr]]"
   - "[[2026-04-17-relative-imports-adr]]"
   - "[[2026-04-25-json-output-contract-adr]]"
+modified: '2026-07-17'
 ---
-
 # `docs-architecture` adr: `documentation surface taxonomy and conventions` | (**status:** `accepted`)
 
 This is the first of three ADRs in the documentation epic. It sets the
@@ -89,11 +87,11 @@ factors:
 - **Autodoc import strategy is fixed by the relative-imports mandate.**
   Any convention touching autodoc must remain compatible with
   `sys.path`-based import and the `autodoc_mock_imports` allowlist.
-- **Conformance tests are colocated under `src/aeat/`**, never in a
+- **Conformance tests are colocated under `src/cadrumo/`**, never in a
   top-level `tests/` package (which the architecture-boundaries rule
-  forbids). Repo-level invariant tests live under `src/aeat/tests/`, and
+  forbids). Repo-level invariant tests live under `src/cadrumo/tests/`, and
   surface-specific tests sit beside the code they govern (for example the
-  existing CLI invariant tests under `src/aeat/entrypoints/cli/`);
+  existing CLI invariant tests under `src/cadrumo/entrypoints/cli/`);
   documentation conformance tests follow the same placement.
 
 ## Implementation
@@ -111,7 +109,7 @@ of truth:
 | Surface | Audience | Language | Source of truth |
 | :------ | :------- | :------- | :-------------- |
 | Repo bootstrap docs (markdown) | General / non-technical operator | English only | Hand-authored, pinned by a conformance test |
-| In-source docstrings | Contributor / technical | English only | Google-style docstrings under `src/aeat/` |
+| In-source docstrings | Contributor / technical | English only | Google-style docstrings under `src/cadrumo/` |
 | Generated Sphinx API docs | Contributor / technical | English only | Autodoc over docstrings plus narrative pages |
 | User help / user-docs page | General operator | Multilang | DEFERRED — not yet implemented; NOT driven by the CLI `tr()` ymls |
 

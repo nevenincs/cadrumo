@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-resolver-contract-unification'
-date: '2026-07-05'
-modified: '2026-07-10'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-26-binding-resolver-contract-unification-P01-S01]]'
   - '[[2026-06-26-binding-resolver-contract-unification-P01-S02]]'
@@ -43,7 +43,7 @@ Auto-generated index of all documents tagged with `#binding-resolver-contract-un
 
 ### adr
 
-- `2026-06-26-binding-resolver-contract-unification-adr` - `binding-resolver-contract-unification` adr: `resolver-contract unification: one source-resolver port and one result envelope across the calculate mesh` | (**status:** `proposed`)
+- `2026-06-26-binding-resolver-contract-unification-adr` - `binding-resolver-contract-unification` adr: `resolver-contract unification: one source-resolver port and one result envelope across the calculate mesh` | (**status:** `accepted`)
 
 ### audit
 

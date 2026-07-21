@@ -39,7 +39,7 @@ def _patch_secure_backend(tmp_path: Path) -> Iterator[None]:
 def _database_bytes(tmp_path: Path) -> bytes:
     from ....tests.secure_sql import read_db_at_rest_bytes
 
-    return read_db_at_rest_bytes(tmp_path / "aeat-storage" / "buckets" / _BUCKET_ID / "db" / "cadrumo.db")
+    return read_db_at_rest_bytes(tmp_path / "cadrumo-storage" / "buckets" / _BUCKET_ID / "db" / "cadrumo.db")
 
 
 def _result(run_id: str, started: datetime) -> WorkflowResult:
@@ -165,9 +165,9 @@ def test_fingerprint_state_classifies_healthy_envelope_as_readable() -> None:
     """A freshly-persisted, decryptable state envelope fingerprints as ``readable``.
 
     The dry-run preview of ``repair reset-progress`` must never slander a
-    sound envelope as ``unreadable`` (persona-fleet finding H4): on a
-    fresh storage root the operator has only just written a healthy
-    state, so the classification must reflect that.
+    sound envelope as ``unreadable``: on a fresh storage root the
+    operator has only just written a healthy state, so the
+    classification must reflect that.
     """
 
     from .._models import WorkflowState

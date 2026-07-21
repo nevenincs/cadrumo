@@ -44,12 +44,10 @@ ACCEPTED_ROOTS: tuple[RootSurface, ...] = (
         owns_operational_workflow=False,
         required_children=(
             "profile",
-            "lock",
             "switch",
-            "rekey",
+            "passphrase",
             "recover",
-            "show-recovery",
-            "verify-recovery",
+            "recovery",
             "auth",
             "repair",
             "check",
@@ -125,15 +123,6 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
-        child="lock",
-        operator_question="seal active profile custody for profile-bound backend workflows",
-        service_owner="cadrumo.application.user_profile",
-        commands=("lock",),
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.CUSTODY,
-        root=RootSurfaceName.CONFIG,
         child="switch",
         operator_question="switch the active taxpayer profile for profile-bound backend workflows",
         service_owner="cadrumo.application.user_profile",
@@ -143,17 +132,17 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
-        child="rekey",
-        operator_question="rotate profile custody passphrase and recovery wrapping",
+        child="passphrase",
+        operator_question="rotate the profile custody passphrase after verifying the current one",
         service_owner="cadrumo.application.user_profile",
-        commands=("rekey",),
+        commands=("change",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
         child="recover",
-        operator_question="recover profile custody using the printed recovery key",
+        operator_question="recover profile custody by entering the recovery code through secure input",
         service_owner="cadrumo.application.user_profile",
         commands=("recover",),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
@@ -161,19 +150,10 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
     MountedCommandFamily(
         domain=MountedCommandDomain.CUSTODY,
         root=RootSurfaceName.CONFIG,
-        child="show-recovery",
-        operator_question="display custody recovery material through the redacted CLI surface",
+        child="recovery",
+        operator_question="inspect, enroll, rotate, and verify the custody recovery code without exposing it",
         service_owner="cadrumo.application.user_profile",
-        commands=("show-recovery",),
-        mutability=OperatorMutability.LOCAL_STATE_MUTATING,
-    ),
-    MountedCommandFamily(
-        domain=MountedCommandDomain.CUSTODY,
-        root=RootSurfaceName.CONFIG,
-        child="verify-recovery",
-        operator_question="verify printed recovery custody material without rotating secrets",
-        service_owner="cadrumo.application.user_profile",
-        commands=("verify-recovery",),
+        commands=("status", "create", "rotate", "verify"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -187,7 +167,8 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
             "configure",
             "status",
             "test",
-            "clear",
+            "logout",
+            "reset",
             "apoderado",
             "diagnostics",
             "login",
@@ -226,9 +207,9 @@ MOUNTED_COMMAND_FAMILIES: tuple[MountedCommandFamily, ...] = (
         domain=MountedCommandDomain.DIAGNOSTICS,
         root=RootSurfaceName.CONFIG,
         child="reset",
-        operator_question="reset operator-entered local configuration scopes",
+        operator_question="start, inspect, or resume the durable all-profile configuration reset",
         service_owner="cadrumo.application.config_reset",
-        commands=("reset",),
+        commands=("start", "status", "resume"),
         mutability=OperatorMutability.LOCAL_STATE_MUTATING,
     ),
     MountedCommandFamily(
@@ -470,7 +451,7 @@ SERVICE_OWNERS: tuple[ServiceOwner, ...] = (
     ServiceOwner(
         capability="config_reset",
         owner="cadrumo.application.config_reset",
-        notes="owns the operator-entered configuration scope reset behind config reset",
+        notes="owns the durable all-profile reset lifecycle (start, status, resume) behind config reset",
     ),
 )
 
@@ -510,7 +491,7 @@ def build_operator_surface_contract() -> OperatorSurfaceContract:
         log_fields=log_fields,
         error_codes=OperatorSurfaceErrorCodes,
     )
-    LOGGER.debug("built operator surface contract", extra=log_fields.as_extra())
+    LOGGER.debug("built operator surface contract", extra=log_fields.as_extra().for_logging())
     return contract
 
 

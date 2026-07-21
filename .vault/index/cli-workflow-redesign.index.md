@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-workflow-redesign'
-date: '2026-07-10'
-modified: '2026-07-10'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-05-12-cli-workflow-redesign-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr]]'
@@ -13,8 +13,6 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-research]]'
   - '[[2026-05-12-cli-workflow-redesign-app-live-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-app-live-shape-research]]'
-  - '[[2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-research]]'
   - '[[2026-05-12-cli-workflow-redesign-app-modelo-shape-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-app-modelo-shape-research]]'
   - '[[2026-05-12-cli-workflow-redesign-app-overview-shape-adr]]'
@@ -30,11 +28,6 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-research]]'
   - '[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-config-auth-shape-research]]'
-  - '[[2026-05-12-cli-workflow-redesign-config-doctor-shape-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-config-doctor-shape-research]]'
-  - '[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-config-init-shape-research]]'
   - '[[2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-domain-harvest-normatives-research]]'
   - '[[2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr]]'
@@ -53,7 +46,6 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-foreign-currency-normalization-research]]'
   - '[[2026-05-12-cli-workflow-redesign-inventory-placement-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-inventory-placement-research]]'
-  - '[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-research]]'
   - '[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]'
@@ -73,8 +65,6 @@ related:
   - '[[2026-05-12-cli-workflow-redesign-observability-wrapping-decision-research]]'
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-research]]'
-  - '[[2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr]]'
-  - '[[2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-research]]'
   - '[[2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr]]'
   - '[[2026-05-12-cli-workflow-redesign-profile-read-path-retirement-research]]'
   - '[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]'
@@ -112,10 +102,8 @@ related:
   - '[[2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-borrador-snapshot-management-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-config-profile-keys-discovery-adr]]'
-  - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-config-repair-shape-plan]]'
-  - '[[2026-05-13-cli-workflow-redesign-epic-plan]]'
   - '[[2026-05-13-cli-workflow-redesign-explain-legal-ref-convention-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-ledger-ratios-eligible-and-validate-adr]]'
   - '[[2026-05-13-cli-workflow-redesign-ledger-transaction-removal-adr]]'
@@ -465,7 +453,6 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-12-cli-workflow-redesign-apoderamientos-surface-adr` - `cli-workflow-redesign` adr: `apoderamientos surface` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr` - `cli-workflow-redesign` adr: `app ledger ratios shape` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-app-live-shape-adr` - `cli-workflow-redesign` adr: `app live shape` | (**status:** `accepted`)
-- `2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr` - `cli-workflow-redesign` adr: `app modelo bindings shape` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-app-modelo-shape-adr` - `cli-workflow-redesign` adr: `App modelo command surface and object boundaries` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-app-overview-shape-adr` - `cli-workflow-redesign` adr: `app overview shape` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-app-registry-boundary-adr` - `cli-workflow-redesign` adr: `app registry boundary` | (**status:** `accepted`)
@@ -475,8 +462,6 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-12-cli-workflow-redesign-bucket-event-history-adr` - `cli-workflow-redesign` adr: `Bucket event history` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-adr` - `cli-workflow-redesign` adr: `complementaria external filing path` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-config-auth-shape-adr` - `cli-workflow-redesign` adr: `Config auth command surface` | (**status:** `accepted`)
-- `2026-05-12-cli-workflow-redesign-config-doctor-shape-adr` - `cli-workflow-redesign` adr: `config doctor shape` | (**status:** `superseded`)
-- `2026-05-12-cli-workflow-redesign-config-init-shape-adr` - `cli-workflow-redesign` adr: `Config init first-run shape` | (**status:** `superseded`)
 - `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-adr` - `cli-workflow-redesign` adr: `domain harvest normatives and manuals` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-adr` - `cli-workflow-redesign` adr: `domain harvest OSS/IOSS` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-domain-harvest-rental-adr` - `cli-workflow-redesign` adr: `domain harvest rental` | (**status:** `accepted`)
@@ -486,7 +471,6 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr` - `cli-workflow-redesign` adr: `festivos deadline shift` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr` - `cli-workflow-redesign` adr: `foreign currency normalization` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-inventory-placement-adr` - `cli-workflow-redesign` adr: `inventory placement and execution` | (**status:** `accepted`)
-- `2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr` - `cli-workflow-redesign` adr: `Invoice domain decoupling` | (**status:** `superseded`)
 - `2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr` - `cli-workflow-redesign` adr: `IVA prorrata arts 101-103` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr` - `cli-workflow-redesign` adr: `ledger transaction management` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-libros-boe-format-exporters-adr` - `cli-workflow-redesign` adr: `libros BOE format exporters` | (**status:** `accepted`)
@@ -499,7 +483,6 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-12-cli-workflow-redesign-modelo-work-units-adr` - `cli-workflow-redesign` adr: `Modelo calculation work units and internal filing state` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr` - `cli-workflow-redesign` adr: `observability wrapping decision` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr` - `cli-workflow-redesign` adr: `output rendering normalization` | (**status:** `accepted`)
-- `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr` - `cli-workflow-redesign` adr: `per-modelo aggregation pipeline` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr` - `cli-workflow-redesign` adr: `profile read path retirement` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr` - `cli-workflow-redesign` adr: `receipt OCR PDF evidence` | (**status:** `accepted`)
 - `2026-05-12-cli-workflow-redesign-verified-complete-adr` - `cli-workflow-redesign` adr: `Modelo verified complete state` | (**status:** `accepted`)
@@ -511,7 +494,6 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr` - `cli-workflow-redesign` adr: `Borrador 100 snapshot binding integration into app modelo calculate` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-borrador-snapshot-management-adr` - `cli-workflow-redesign` adr: `Borrador snapshot management list, discard, export, verify` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-config-profile-keys-discovery-adr` - `cli-workflow-redesign` adr: `Config profile keys discovery verb` | (**status:** `accepted`)
-- `2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr` - `cli-workflow-redesign` adr: `Config profile use shortcut and cross-surface profile list with status` | (**status:** `superseded`)
 - `2026-05-13-cli-workflow-redesign-config-repair-shape-adr` - `cli-workflow-redesign` adr: `config repair shape` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-explain-legal-ref-convention-adr` - `cli-workflow-redesign` adr: `Cross-cutting --explain legal reference convention` | (**status:** `accepted`)
 - `2026-05-13-cli-workflow-redesign-ledger-ratios-eligible-and-validate-adr` - `cli-workflow-redesign` adr: `App ledger ratios eligible and validate verbs` | (**status:** `accepted`)
@@ -530,7 +512,7 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-21-corporate-entity-calculation-adr` - `cli-workflow-redesign` adr: `The corporate-entity calculation model — a legal entity is routed to the Impuesto sobre Sociedades schedule (Modelo 200/202, LIS rate scale), an attribution entity to member pass-through, and never to the IRPF tarifa` | (**status:** `accepted`)
 - `2026-05-21-profile-state-aggregate-adr` - `cli-workflow-redesign` adr: `Profile state is one aggregate, owned by one repository, written through a cross-store unit-of-work` | (**status:** `accepted`)
 - `2026-05-21-profile-uuid-identity-adr` - `cli-workflow-redesign` adr: `Profile identity is a generated UUID; the display name is a decoupled mutable label` | (**status:** `accepted`)
-- `2026-05-21-sii-digital-iva-ledger-adr` - `cli-workflow-redesign` adr: `SII is modelled as a rolling ledger-submission enrolment, not a periodic-window modelo; it suppresses Modelo 347 and 390 and switches Modelo 303 to monthly` | (**status:** `proposed`)
+- `2026-05-21-sii-digital-iva-ledger-adr` - `cli-workflow-redesign` adr: `SII is modelled as a rolling ledger-submission enrolment, not a periodic-window modelo; it suppresses Modelo 347 and 390 and switches Modelo 303 to monthly` | (**status:** `accepted`)
 - `2026-05-21-state-read-projection-adr` - `cli-workflow-redesign` adr: `Every operator-facing surface consumes one canonical state read-projection` | (**status:** `accepted`)
 - `2026-05-21-taxpayer-type-applicability-adr` - `cli-workflow-redesign` adr: `The profile carries a structured entity-type, tax-regime, and enrolment model; modelos, calendar, calculations, and rules derive from it` | (**status:** `accepted`)
 - `2026-05-21-work-verify-deadline-independence-adr` - `cli-workflow-redesign` adr: `work verify validates a calculation and is independent of the filing-window deadline` | (**status:** `accepted`)
@@ -870,7 +852,6 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 ### plan
 
 - `2026-05-13-cli-workflow-redesign-config-repair-shape-plan` - `cli-workflow-redesign` `config repair shape` plan
-- `2026-05-13-cli-workflow-redesign-epic-plan` - `cli-workflow-redesign` `epic` plan
 - `2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan` - `cli-workflow-redesign` `modelo-145-local-payer-communication-reopening` plan
 - `2026-05-21-state-architecture-plan` - `cli-workflow-redesign` plan: profile state-management architecture
 - `2026-05-21-taxpayer-type-applicability-plan` - `cli-workflow-redesign` plan: taxpayer entity-type / regime / enrolment model
@@ -884,16 +865,12 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-12-cli-workflow-redesign-apoderamientos-surface-research` - `cli-workflow-redesign` research: `apoderamientos-surface`
 - `2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-research` - `cli-workflow-redesign` research: `app ledger ratios shape`
 - `2026-05-12-cli-workflow-redesign-app-live-shape-research` - `cli-workflow-redesign` research: `app live shape`
-- `2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-research` - `cli-workflow-redesign` research: `app modelo bindings shape`
 - `2026-05-12-cli-workflow-redesign-app-modelo-shape-research` - CLI workflow redesign app modelo shape research
 - `2026-05-12-cli-workflow-redesign-app-overview-shape-research` - `cli-workflow-redesign` research: `app overview shape`
 - `2026-05-12-cli-workflow-redesign-app-registry-boundary-research` - `cli-workflow-redesign` research: `app registry boundary`
 - `2026-05-12-cli-workflow-redesign-app-review-queue-execution-research` - `cli-workflow-redesign` research: `app-review-queue-execution`
 - `2026-05-12-cli-workflow-redesign-bank-provider-expansion-research` - `cli-workflow-redesign` research: `bank-provider-expansion`
 - `2026-05-12-cli-workflow-redesign-complementaria-external-filing-path-research` - `cli-workflow-redesign` research: `complementaria-external-filing-path`
-- `2026-05-12-cli-workflow-redesign-config-auth-shape-research` - CLI workflow redesign: config auth shape
-- `2026-05-12-cli-workflow-redesign-config-doctor-shape-research` - `cli-workflow-redesign` research: `config doctor shape`
-- `2026-05-12-cli-workflow-redesign-config-init-shape-research` - Research: config-init-shape
 - `2026-05-12-cli-workflow-redesign-domain-harvest-normatives-research` - `cli-workflow-redesign` research: `domain-harvest-normatives`
 - `2026-05-12-cli-workflow-redesign-domain-harvest-oss-ioss-research` - `cli-workflow-redesign` research: `domain-harvest-oss-ioss`
 - `2026-05-12-cli-workflow-redesign-domain-harvest-rental-research` - `cli-workflow-redesign` research: `domain harvest rental`
@@ -910,7 +887,6 @@ Auto-generated index of all documents tagged with `#cli-workflow-redesign`.
 - `2026-05-12-cli-workflow-redesign-modelo-145-foundation-research` - `cli-workflow-redesign` research: `modelo-145-foundation`
 - `2026-05-12-cli-workflow-redesign-observability-wrapping-decision-research` - `cli-workflow-redesign` research: `observability-wrapping-decision`
 - `2026-05-12-cli-workflow-redesign-output-rendering-normalization-research` - `cli-workflow-redesign` research: `output-rendering-normalization`
-- `2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-research` - `cli-workflow-redesign` research: `per-modelo-aggregation-pipeline`
 - `2026-05-12-cli-workflow-redesign-profile-read-path-retirement-research` - `cli-workflow-redesign` research: `profile-read-path-retirement`
 - `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-research` - `cli-workflow-redesign` research: `receipt-ocr-pdf-evidence`
 - `2026-05-12-cli-workflow-redesign-workflow-engine-harvest-research` - `cli-workflow-redesign` research: `workflow engine harvest`

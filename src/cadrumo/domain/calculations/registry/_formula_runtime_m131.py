@@ -192,9 +192,9 @@ def evaluate_m131_resolve_modulos_previo(expression: FormulaExpression, ctx: _Ev
     (``data_type='keyed_bracket_table'``, key ``"<epígrafe>:<módulo>"``), and
     sums the per-módulo products.
 
-    An untabled epígrafe (bounded first-slice per the
-    ``2026-07-01-modelo-131-eo-modulos-engine-adr``) or a blank epígrafe
-    resolves to ``Decimal('0')`` — this op feeds an internal-only
+    An untabled epígrafe (the engine covers a bounded initial set of
+    activities) or a blank epígrafe resolves to ``Decimal('0')`` — this
+    op feeds an internal-only
     advisory-support casilla, never the filed casilla 01 directly, so a zero
     here means "the table-driven engine has no coverage for this activity",
     not "the rendimiento is zero". The
@@ -329,10 +329,10 @@ def evaluate_m131_resolve_modulos_minoracion_empleo(expression: FormulaExpressio
     treated as "no incremento claimed" — the coeficiente por incremento is
     skipped (never fabricated) and the coeficiente por tramos runs on the
     full current-year módulo 1 units. This never over-states the minoración
-    (a real, undeclared increment simply goes uncredited, mirroring the
-    ADR's "omitting an undeclared reduction does not over-state the figure"
-    principle) and keeps a blank optional input from silently manufacturing
-    an increment credit.
+    — a real, undeclared increment simply goes uncredited, following the
+    principle that omitting an undeclared reduction must not over-state
+    the figure — and keeps a blank optional input from silently
+    manufacturing an increment credit.
 
     Both a blank epígrafe and an untabled epígrafe (no módulo 1 coefficient
     row) resolve to ``Decimal('0')`` — this op feeds the same internal-only
@@ -497,9 +497,8 @@ def evaluate_m131_resolve_modulos_indice_exceso(expression: FormulaExpression, c
     ``modelo-131-2025-modulos-indice-exceso-incompatible-autotaxi`` /
     ``-mercancias`` ADVISORY verification predicates surface a non-blocking
     review prompt for these two epígrafes when the índice-exceso path
-    activates, per no-silent-under-declaration — full modelling of b.1 and
-    a.2/a.4 is deferred to Phase 2/3 of the
-    2026-07-01-modelo-131-eo-modulos-engine-adr.
+    activates, guarding against a silent under-declaration — full
+    modelling of b.1 and a.2/a.4 is not yet implemented.
     """
     args = _m131_resolve_modulos_indice_exceso_args(expression)
     minorado = _numeric_casilla_value(args.minorado_casilla_id, ctx)
@@ -648,9 +647,7 @@ def evaluate_m131_resolve_modulos_indices_generales(expression: FormulaExpressio
 
     Incompatibilidades (Orden HAC/1347/2024 Anexo II, instrucción 2.3,
     grounded in ``orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades``),
-    enforced structurally rather than left to an advisory-only guard (per the
-    prior b.3-only code-review HIGH finding on this same engine,
-    commit ``939f3fe010``):
+    enforced structurally rather than left to an advisory-only guard:
 
     * "En ningún caso será aplicable el índice corrector para empresas de
       pequeña dimensión (b.1) a las actividades para las que están previstos

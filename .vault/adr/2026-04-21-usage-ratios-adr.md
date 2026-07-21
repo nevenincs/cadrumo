@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#usage-ratios"
 date: "2026-04-21"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-21-usage-ratios-research]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"
@@ -16,7 +16,7 @@ related:
 
 ## Problem Statement
 
-Issue `#259` and data-prep wall **DP7** (`.vault/audit/2026-04-18-kent-data-prep-journey-audit.md:112–127`) require Kent to persist his own proportionality coefficients once, so every `USAGE_RATIO_*` category defaults to his numbers instead of the statutory 30% stub on `ProportionalityRule.default_ratio`. Today the registry at `src/aeat/domain/financial/categories/_registry.py:400–616` hard-codes twelve usage-ratio categories; six inherit `default_ratio=Decimal("0.30")` and six have no default at all. Kent either re-enters a `--pct` override on every transaction (wall DP7) or accepts a wrong statutory default that misrepresents his home-office share. There is no write surface, no persisted profile, and no hook into the future deductibility compute (issue `#257`).
+Issue `#259` and data-prep wall **DP7** (`.vault/audit/2026-04-18-kent-data-prep-journey-audit.md:112–127`) require Kent to persist his own proportionality coefficients once, so every `USAGE_RATIO_*` category defaults to his numbers instead of the statutory 30% stub on `ProportionalityRule.default_ratio`. Today the registry at `src/cadrumo/domain/categories/_registry.py:400–616` hard-codes twelve usage-ratio categories; six inherit `default_ratio=Decimal("0.30")` and six have no default at all. Kent either re-enters a `--pct` override on every transaction (wall DP7) or accepts a wrong statutory default that misrepresents his home-office share. There is no write surface, no persisted profile, and no hook into the future deductibility compute (issue `#257`).
 
 This ADR commits the data model, persistence location, CLI verbs, and the pure-function lookup contract that `#257` will consume.
 
@@ -28,7 +28,7 @@ This ADR commits the data model, persistence location, CLI verbs, and the pure-f
 - **Pydantic v2 `frozen=True` only blocks attribute reassignment.** It does *not* freeze mutable interiors. A `dict` stored on a frozen model can still be mutated with `profile.ratios[cat] = v`. Any "immutable" claim must be precisely scoped to attribute-level immutability, and the user-facing contract is "treat `profile.ratios` as read-only; use `with_ratio` / `without_ratio` to produce new profiles".
 - **`MappingProxyType` breaks pydantic v2 JSON serialization.** Returning `MappingProxyType(...)` from a validator causes `model_dump_json()` to raise `PydanticSerializationError`. Storage must remain a plain `dict`; read-only enforcement belongs in the contract, not the runtime shape.
 - **`Decimal("NaN") <= Decimal("0")` raises `decimal.InvalidOperation`.** Pydantic strict mode rejects `NaN` / `Infinity` at parse time on **both** the JSON boundary and the Python constructor path, so the model field validator does not need its own `is_finite()` guard (see post-approval amendments). The CLI, however, accepts raw user input via `Decimal(raw)` which silently constructs `Decimal("NaN")`, so the CLI parser retains an explicit `is_finite()` check before the range comparison.
-- **Persistence must match the invoice / transaction round-trip.** `src/aeat/domain/financial/invoices/_service.py:71–126` is the canonical atomic JSON helper pair. The usage-ratio service mirrors it except for one *intentional* divergence: `load_usage_ratios` returns an empty profile when the file does not exist. Rationale: there is no scenario where a missing profile is an error — it is the virgin state. Moving the "empty fallback" into the service keeps the CLI thin and prevents every caller from repeating the same try/except.
+- **Persistence must match the invoice / transaction round-trip.** `src/cadrumo/domain/invoices/_service.py:71–126` is the canonical atomic JSON helper pair. The usage-ratio service mirrors it except for one *intentional* divergence: `load_usage_ratios` returns an empty profile when the file does not exist. Rationale: there is no scenario where a missing profile is an error — it is the virgin state. Moving the "empty fallback" into the service keeps the CLI thin and prevents every caller from repeating the same try/except.
 - **Issue `#257` is not in scope here** but will read this profile. The ADR must publish a stable pure function (`resolve_user_ratio`) so the compute service can compile against a fixed signature.
 - **Issue `#214` (setup wizard)** will call the same save helper during onboarding. No additional API surface required.
 - **Scope of Kent's success moment.** Issue body's success moment is `set-ratio home_office_area 0.21`. A category-keyed design alone forces Kent to type six commands (one per home-office category). To preserve the one-command UX, the CLI accepts three **family aliases** at the `KEY` position — `home_office_area`, `mileage_business`, and `phone_fixed_business` — that expand to every eligible category in that family. The persisted data model is still category-keyed; aliases are a pure CLI convenience that fans out at parse time.
@@ -39,12 +39,12 @@ This ADR commits the data model, persistence location, CLI verbs, and the pure-f
 - Persisted keys are `SpendingCategory` enum values — no parallel taxonomy. Unknown strings fail strict pydantic validation. Categories whose `ProportionalityRule.kind ∉ {USAGE_RATIO_HOME_AREA, USAGE_RATIO_PERSONAL}` are rejected by a `@model_validator(mode="after")` cross-field rule.
 - `UsageRatioProfile` is `model_config = ConfigDict(strict=True, frozen=True, extra="forbid")`. `frozen=True` only freezes attribute rebinding; callers treat `profile.ratios` as read-only and use `with_ratio` / `without_ratio` for edits. The ADR does **not** claim deep immutability.
 - The internal `ratios` storage is a plain `dict[SpendingCategory, Decimal]` (not `MappingProxyType`) so `model_dump_json()` round-trips cleanly.
-- Errors inherit from `aeat.core.errors.AeatError` via a local `UsageRatioError` base; persistence failures raise `UsageRatioPersistenceError` (analogue of `InvoicePersistenceError`).
+- Errors inherit from `cadrumo.core.errors.CadrumoError` via a local `UsageRatioError` base; persistence failures raise `UsageRatioPersistenceError` (analogue of `InvoicePersistenceError`).
 - Save is atomic: `NamedTemporaryFile` sibling + `os.replace`; `parent.mkdir(parents=True, exist_ok=True)` first. No partial writes.
 - Load returns an empty profile when the JSON file does not exist (intentional divergence from the invoice pattern). Any other `OSError` or JSON validation error raises `UsageRatioPersistenceError`.
-- No absolute `aeat.*` imports inside `src/aeat/`; use relative (`..errors`, `...config`).
-- Logging via `aeat.core.logging.get_logger(__name__)` only.
-- Settings field `aeat_usage_ratios_path` joins the `_normalize_repo_relative_paths` after-validator at `src/aeat/config.py:599–624`. Documented in `env/.env.example`.
+- No absolute `aeat.*` imports inside `src/cadrumo/`; use relative (`..errors`, `...config`).
+- Logging via `cadrumo.core.logging.get_logger(__name__)` only.
+- Settings field `aeat_usage_ratios_path` joins the `_normalize_repo_relative_paths` after-validator at `src/cadrumo/core/config.py:599–624`. Documented in `env/.env.example`.
 - Tests colocated with their modules (Rust-style). Module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]` matching `_proportionality.py`'s test.
 - `resolve_user_ratio(profile, category)` is **pure** — no I/O, no side effects, returns `Decimal | None`. `#257` owns the combination with statutory defaults.
 - CLI output uses ASCII only (no em-dash) for cp1252 console safety on Windows.
@@ -53,7 +53,7 @@ This ADR commits the data model, persistence location, CLI verbs, and the pure-f
 
 ### The twelve eligible categories
 
-The authoritative list of categories whose `ProportionalityRule.kind` admits a user override, sourced from `src/aeat/domain/financial/categories/_registry.py:400–616`:
+The authoritative list of categories whose `ProportionalityRule.kind` admits a user override, sourced from `src/cadrumo/domain/categories/_registry.py:400–616`:
 
 | `SpendingCategory` | `kind` | `default_ratio` |
 |---|---|---|
@@ -81,12 +81,12 @@ Two disjoint aliases are accepted at the `KEY` position of `set-ratio` / `unset-
 | `home_office_area` | all six `USAGE_RATIO_HOME_AREA` categories (including `TELEFONIA_FIJA`) |
 | `mileage_business` | `VEHICULO_COMBUSTIBLE`, `VEHICULO_MANTENIMIENTO`, `VEHICULO_SEGURO`, `VEHICULO_PEAJE`, `VEHICULO_PARKING` |
 
-**Disjointness invariant.** Alias expansions must not overlap — otherwise two consecutive `set-ratio` calls using different aliases would silently clobber prior values for the shared category. The original design included a `phone_fixed_business` → `(TELEFONIA_FIJA,)` alias, but `TELEFONIA_FIJA` is already a member of `home_office_area` (it is a `USAGE_RATIO_HOME_AREA` category). That alias was removed; for single-category edits on `TELEFONIA_FIJA`, Kent types the category name directly. `TELEFONIA_MOVIL` has no alias for the same reason. `src/aeat/entrypoints/cli/financial/test_profile_aliases.py::test_no_alias_overlap_across_the_mapping` enforces the invariant.
+**Disjointness invariant.** Alias expansions must not overlap — otherwise two consecutive `set-ratio` calls using different aliases would silently clobber prior values for the shared category. The original design included a `phone_fixed_business` → `(TELEFONIA_FIJA,)` alias, but `TELEFONIA_FIJA` is already a member of `home_office_area` (it is a `USAGE_RATIO_HOME_AREA` category). That alias was removed; for single-category edits on `TELEFONIA_FIJA`, Kent types the category name directly. `TELEFONIA_MOVIL` has no alias for the same reason. `src/cadrumo/entrypoints/cli/financial/test_profile_aliases.py::test_no_alias_overlap_across_the_mapping` enforces the invariant.
 
 ### package layout
 
 ```
-src/aeat/domain/financial/usage_ratios/
+src/cadrumo/domain/usage_ratios/
 ├── __init__.py        # re-exports UsageRatioProfile, UsageRatioError, load, save, resolve
 ├── _errors.py         # UsageRatioError, UsageRatioPersistenceError
 ├── _model.py          # UsageRatioProfile + resolve_user_ratio + ELIGIBLE_USAGE_RATIO_CATEGORIES
@@ -94,14 +94,14 @@ src/aeat/domain/financial/usage_ratios/
 ├── test_model.py
 └── test_service.py
 
-src/aeat/entrypoints/cli/financial/
+src/cadrumo/entrypoints/cli/financial/
 ├── profile.py                 # Kent-facing CLI
 ├── _profile_aliases.py        # FAMILY_ALIASES (CLI-private sugar; never persisted)
 ├── test_profile.py
 └── test_profile_aliases.py
 ```
 
-`FAMILY_ALIASES` lives in the CLI layer deliberately — aliases are UI sugar that expand at parse time, never reach the persistence model, and must not be inherited by future non-CLI consumers (the #214 setup wizard, the #257 compute service). `src/aeat/domain/financial/__init__.py` is left alone (matches the existing "import from subpackages directly" convention).
+`FAMILY_ALIASES` lives in the CLI layer deliberately — aliases are UI sugar that expand at parse time and never reach `src/cadrumo/domain/usage_ratios/` or future non-CLI consumers.
 
 ### data model — `_model.py`
 
@@ -191,7 +191,7 @@ def resolve_user_ratio(
 ) -> Decimal | None:
     """Return Kent's persisted ratio for a category, or ``None`` if unset.
 
-    Pure function consumed by :mod:`aeat.domain.financial.deductibility` (#257), which
+    Pure function consumed by the registry-backed deduction calculation, which
     falls back to ``ProportionalityRule.default_ratio`` when the return is
     ``None`` and records which source won in the transaction's trace fields.
     """
@@ -257,11 +257,11 @@ FAMILY_ALIASES: Mapping[str, tuple[SpendingCategory, ...]] = MappingProxyType(
 ```python
 from __future__ import annotations
 
-from ...errors import AeatError
+from ...errors import CadrumoError
 
 
-class UsageRatioError(AeatError):
-    """Base error for :mod:`aeat.domain.financial.usage_ratios`."""
+class UsageRatioError(CadrumoError):
+    """Base error for :mod:`cadrumo.domain.usage_ratios`."""
 
 
 class UsageRatioPersistenceError(UsageRatioError):
@@ -337,7 +337,7 @@ def save_usage_ratios(profile: UsageRatioProfile, path: Path) -> None:
     _LOGGER.info("saved %s usage ratios to %s", len(profile.ratios), target)
 ```
 
-### settings — `src/aeat/config.py`
+### settings — `src/cadrumo/core/config.py`
 
 Add one field in the `# ── Financial ingest` block:
 
@@ -357,7 +357,7 @@ Add to `env/.env.example`:
 AEAT_USAGE_RATIOS_PATH=var/financial/usage-ratios.json
 ```
 
-### CLI — `src/aeat/entrypoints/cli/financial/profile.py` (new file)
+### CLI — `src/cadrumo/entrypoints/cli/financial/profile.py` (new file)
 
 Verbs are placed flat under `profile` to preserve the exact wording of the issue body (`set-ratio`, `unset-ratio`) while nesting `list` under a `ratios` sub-app to scope the noun. The asymmetry is a deliberate literal match to the issue's own verb shape; renaming would diverge from the issue wording without meaningfully improving UX.
 
@@ -526,7 +526,7 @@ def _format_decimal(value: Decimal) -> str:
     return format(value.normalize(), "f")
 ```
 
-**Register** in `src/aeat/entrypoints/cli/financial/__init__.py`:
+**Register** in `src/cadrumo/entrypoints/cli/financial/__init__.py`:
 
 ```python
 from .profile import app as profile_app
@@ -536,7 +536,7 @@ app.add_typer(profile_app, name="profile", help="Kent's financial profile (#259)
 
 ### tests
 
-**`src/aeat/domain/financial/usage_ratios/test_model.py`** — module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]` — covers:
+**`src/cadrumo/domain/usage_ratios/test_model.py`** — module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]` — covers:
 
 1. empty profile → `UsageRatioProfile()` with zero ratios.
 2. valid construction with `SUMINISTROS_HOME_OFFICE_LUZ=Decimal("0.21")` → round-trip via `model_dump_json` + `model_validate_json` reconstructs equal profile.
@@ -550,7 +550,7 @@ app.add_typer(profile_app, name="profile", help="Kent's financial profile (#259)
 10. `ELIGIBLE_USAGE_RATIO_CATEGORIES` contains exactly the twelve categories enumerated above (assert equal to an explicit literal set).
 11. Simulated `#257` usage: given a profile with `SUMINISTROS_HOME_OFFICE_LUZ=0.21`, a caller calls `resolve_user_ratio` and falls back to `ProportionalityRule.default_ratio` when `None` — demonstrates the consumer contract.
 
-**`src/aeat/domain/financial/usage_ratios/test_service.py`** covers:
+**`src/cadrumo/domain/usage_ratios/test_service.py`** covers:
 
 1. `load_usage_ratios` on missing path → empty profile, no exception.
 2. `load_usage_ratios` on malformed JSON → `UsageRatioPersistenceError`.
@@ -560,7 +560,7 @@ app.add_typer(profile_app, name="profile", help="Kent's financial profile (#259)
 6. Two successive saves replace cleanly; no stale `.tmp` files left in the directory.
 7. `save_usage_ratios` on an unwritable target (directory) → `UsageRatioPersistenceError`, temp file unlinked.
 
-**`src/aeat/domain/financial/usage_ratios/test_aliases.py`** covers:
+**`src/cadrumo/domain/usage_ratios/test_aliases.py`** covers:
 
 1. `FAMILY_ALIASES["home_office_area"]` contains all six `USAGE_RATIO_HOME_AREA` categories.
 2. `FAMILY_ALIASES["mileage_business"]` contains the five vehicle categories.
@@ -568,7 +568,7 @@ app.add_typer(profile_app, name="profile", help="Kent's financial profile (#259)
 4. Every aliased category is in `ELIGIBLE_USAGE_RATIO_CATEGORIES`.
 5. `FAMILY_ALIASES` is immutable at the mapping level (attempting to assign a new key raises).
 
-**`src/aeat/entrypoints/cli/financial/test_profile.py`** — module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]` — drives commands via `CliRunner` with `AEAT_USAGE_RATIOS_PATH` pointed at `tmp_path` via `monkeypatch.setenv` (matching how `test_cli.py` isolates filesystem state):
+**`src/cadrumo/entrypoints/cli/financial/test_profile.py`** — module-level `pytestmark = [pytest.mark.unit, pytest.mark.domain_financial_input]` — drives commands via `CliRunner` with `AEAT_USAGE_RATIOS_PATH` pointed at `tmp_path` via `monkeypatch.setenv` (matching how `test_cli.py` isolates filesystem state):
 
 1. `profile ratios list` on empty profile → "No usage ratios configured.".
 2. `profile set-ratio suministros_home_office_luz 0.21` → exit 0; `profile ratios list` prints a row with `user_ratio=0.21`, `kind=usage_ratio_home_area`, `statutory_default=0.3`.
@@ -596,7 +596,7 @@ app.add_typer(profile_app, name="profile", help="Kent's financial profile (#259)
 - Same command for an ineligible category (`material_oficina`) exits non-zero and names the eligible categories.
 - Ratios `-0.1`, `1.1`, `NaN`, `Infinity`, `not-a-number` all exit non-zero with a clear error.
 - `resolve_user_ratio(profile, SUMINISTROS_HOME_OFFICE_LUZ)` returns `Decimal("0.21")`; `resolve_user_ratio(profile, SUMINISTROS_HOME_OFFICE_AGUA)` returns `None` when unset.
-- `uv run just test-cov` reports ≥ 60% coverage on `src/aeat/domain/financial/usage_ratios/` and `src/aeat/entrypoints/cli/financial/profile.py`.
+- `uv run just test-cov` reports ≥ 60% coverage on `src/cadrumo/domain/usage_ratios/` and `src/cadrumo/entrypoints/cli/financial/profile.py`.
 - Pre-commit passes on every touched file.
 
 ## Out of scope
@@ -619,7 +619,7 @@ The implementation was hardened in two rolling audit rounds after the initial `a
 
 ### Round 2 (commit `437dab7`)
 
-- **Moved `FAMILY_ALIASES` from the library to the CLI layer.** Aliases are CLI-only parse-time sugar; keeping them in the library package invited the #214 wizard and #257 compute to cargo-cult alias names into persistence paths. Now at `src/aeat/entrypoints/cli/financial/_profile_aliases.py` with tests at `src/aeat/entrypoints/cli/financial/test_profile_aliases.py`.
+- **Moved `FAMILY_ALIASES` from the library to the CLI layer.** Aliases are CLI-only parse-time sugar; keeping them in the library package invited the #214 wizard and #257 compute to cargo-cult alias names into persistence paths. Now at `src/cadrumo/entrypoints/cli/financial/_profile_aliases.py` with tests at `src/cadrumo/entrypoints/cli/financial/test_profile_aliases.py`.
 - **Removed the `phone_fixed_business` alias.** It expanded to `(TELEFONIA_FIJA,)` which is already a member of `home_office_area` (both are `USAGE_RATIO_HOME_AREA`). The overlap meant that `set-ratio home_office_area 0.3` followed by `set-ratio phone_fixed_business 0.9` silently clobbered the earlier value with no warning. A regression test at `test_profile_aliases.py::test_no_alias_overlap_across_the_mapping` pins the disjointness invariant.
 - **Surfaced pydantic `ValidationError` detail in `UsageRatioPersistenceError`.** When Kent hand-edits `usage-ratios.json` and introduces a semantic error (out-of-range ratio, ineligible category, unknown key), the CLI now names the offending field and reason instead of collapsing to a generic "invalid usage-ratio profile JSON". The helper `_summarise_validation_errors` walks `exc.errors()` and emits one line per finding.
 - **Surfaced `OSError` class and message on read/write failures.** `unable to read/write usage-ratio profile: <path>` now carries the wrapped exception class name and text (e.g. `PermissionError: [Errno 13] Permission denied`), giving Kent enough to diagnose locked files, ACL denials, and disk-full scenarios.

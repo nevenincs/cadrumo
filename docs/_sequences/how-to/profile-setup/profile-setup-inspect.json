@@ -1,0 +1,89 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\t<unset>\nNext step: `aeat app overview status`\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "show"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Profile record is valid.\nrecord_validity\tvalid\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nstatus\tactive\nactivities.description\tdocumentation examples\nidentity.name\tDocs\nidentity.surnames\tSandbox\nidentity.tax_id\tsha256:1c9f9632\niva.regime\tGENERAL\ntaxpayer_type.entity_type\tnatural_person\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "validate"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "readiness\tready\tissues=0\nprofile_id\t<profile-id>\ndisplay_name\tdocs-sequence-sandbox\nstatus\tactive\nschema_version\t4\nvalid\tTrue\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "preflight",
+        "--modelo",
+        "303",
+        "--filing-year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.profile.preflight",
+        "notices": [],
+        "result": {
+          "filing_year": 2026,
+          "missing": [],
+          "modelo": "303",
+          "period": "1T",
+          "profile_id": "<profile-id>",
+          "ready": true,
+          "revision_id": "2023-y-siguientes"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "profile-setup-inspect"
+}

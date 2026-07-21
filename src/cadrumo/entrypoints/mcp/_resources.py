@@ -1,6 +1,6 @@
 """Operating-layer resource templates: pull the harness by ``cadrumo://`` URI.
 
-ADR R4's second delivery channel above the tools-only floor: MCP resource
+The second delivery channel above the tools-only floor: MCP resource
 templates ``cadrumo://skill/{name}``, ``cadrumo://rule/{name}`` and
 ``cadrumo://persona/{name}`` let a resources-capable client enumerate and pull the
 shipped operating layer verbatim as ``text/markdown``. The concrete resource set
@@ -41,8 +41,8 @@ class HarnessResourceKind(StrEnum):
 
     ``SKILL`` / ``RULE`` / ``PERSONA`` enumerate the shipped agent tree;
     ``CORPUS`` is a template-only category resolving a citation id or
-    ``corpus_ref`` to its verbatim bundled legal text (ADR R3). ``OBSERVATIONS``
-    and ``EVIDENCE`` are the bulk-payload thinning targets (ADR H4): template-only,
+    ``corpus_ref`` to its verbatim bundled legal text. ``OBSERVATIONS``
+    and ``EVIDENCE`` are the bulk-payload thinning targets: template-only,
     per-record, and resolved from the ENCRYPTED persisted state, so - unlike the
     bundled categories above - they are resolved by re-running the owning read
     verb as a subprocess (which carries the active bucket session), never in the
@@ -57,7 +57,7 @@ class HarnessResourceKind(StrEnum):
     EVIDENCE = "evidence"
 
 
-#: The bucket-scoped, encrypted-state resource kinds (ADR H4 result thinning).
+#: The bucket-scoped, encrypted-state resource kinds (result thinning).
 #: These are NOT resolved by :func:`read_harness_resource` (which resolves only
 #: the session-free bundled documents); the server routes them to a supervised
 #: subprocess so resolution carries the active bucket session.
@@ -149,10 +149,10 @@ _TEMPLATE_DESCRIPTIONS: dict[HarnessResourceKind, str] = {
         "Verbatim BOE/AEAT legal text, addressed by citation id or corpus_ref (e.g. ley-58-2003:art-27.2)."
     ),
     HarnessResourceKind.OBSERVATIONS: (
-        "Full calculation observation provenance, addressed by calculation revision id (ADR H4 result thinning)."
+        "Full calculation observation provenance, addressed by calculation revision id (result thinning)."
     ),
     HarnessResourceKind.EVIDENCE: (
-        "Full evidence-record rows for the active bucket, addressed by bucket id (ADR H4 result thinning)."
+        "Full evidence-record rows for the active bucket, addressed by bucket id (result thinning)."
     ),
 }
 

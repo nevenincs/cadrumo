@@ -39,9 +39,10 @@ re-save them through the target bucket's secure-object substrate and
 re-encrypt under the recipient bucket DEK.
 
 Custody helpers exposed here are application commands over storage-owned
-secret-store primitives. :func:`mint_recovery_code`,
-:func:`verify_recovery_code`, :func:`rekey_secret_store`, and
-:func:`recover_secret_store` resolve runtime settings, update active-bucket
+secret-store primitives. :func:`create_recovery_code`,
+:func:`rotate_recovery_code`, :func:`verify_recovery_code`,
+:func:`change_passphrase`, and :func:`recover_secret_store` resolve runtime
+settings, update active-bucket
 recovery metadata when needed, and return typed result records while leaving key
 wrapping and recovery envelope persistence in :mod:`adapters.persistence.storage`.
 
@@ -103,7 +104,6 @@ if TYPE_CHECKING:
         UserProfileStatus,
     )
     from ._bundle import (
-        SUPPORTED_BUNDLE_SCHEMA_VERSIONS,
         UnsupportedBundleSchemaVersionError,
         deserialize_profile_bundle,
         serialize_profile_bundle,
@@ -114,6 +114,19 @@ if TYPE_CHECKING:
         EncryptedProfileBundleExport,
         decrypt_profile_bundle_with_passphrase,
         encrypt_profile_bundle_for_passphrase,
+    )
+    from ._bundle_export import (
+        PreparedProfileExport,
+        ProfileBundleExportPurpose,
+        ProfileBundleExportRequest,
+        ProfileBundleExportResult,
+        ProfileBundleExportTarget,
+        ProfileBundleExportTransport,
+        bundle_data_categories,
+        export_profile_bundle,
+        prepare_profile_export,
+        publish_prepared_export,
+        reconcile_prepared_exports,
     )
     from ._capabilities import (
         CapabilityDecision,
@@ -151,16 +164,17 @@ if TYPE_CHECKING:
     )
     from ._completeness import iva_regime_required
     from ._custody import (
+        CustodyPassphraseChangeResult,
         CustodyRecoverResult,
-        CustodyRecoveryEnrollment,
+        CustodyRecoveryEnrollmentResult,
         CustodyRecoveryStatus,
         CustodyRecoveryVerification,
-        CustodyRekeyResult,
+        change_passphrase,
+        create_recovery_code,
         inspect_recovery_status,
-        mint_recovery_code,
         recover_secret_store,
         recovery_wrap_path,
-        rekey_secret_store,
+        rotate_recovery_code,
         verify_recovery_code,
     )
     from ._custody_carry import (
@@ -175,6 +189,7 @@ if TYPE_CHECKING:
     from ._lifecycle import ProfileLifecycleService
     from ._orchestration import (
         ProfileAlreadyRegisteredError,
+        ProfileLogoutOverrideError,
         build_lifecycle_service,
         delete_profile_with_lifecycle_span,
         fact_value,
@@ -194,6 +209,7 @@ if TYPE_CHECKING:
         set_active_fields,
     )
     from ._preflight import ProfilePreflightService
+    from ._profile_pointer_transaction import active_profile_pointer_transaction
     from ._profile_repository import ProfileRepository
     from ._projections import (
         facts_to_values,
@@ -210,15 +226,14 @@ if TYPE_CHECKING:
         user_profile_snapshot_object_key,
         user_profile_value_object_key,
     )
-    from ._testing import register_minimal_profile
     from ._validation import ProfileValidationService
 
-# W09.P43.S166: replace the prior side-effect import with an explicit
-# register call so the registration point is greppable rather than
-# hidden behind a noqa-protected import. Runs after all module-level
-# imports settle so the call sits in a clear initialiser slot. The
-# resolver implementation defers its workflow / orchestration imports
-# inside its body so this call does not trigger a heavy cascade.
+# An explicit register call replaces a side-effect import so the
+# registration point is greppable rather than hidden behind a
+# suppression-protected import. Runs after all module-level imports settle so
+# the call sits in a clear initialiser slot. The resolver implementation
+# defers its workflow / orchestration imports inside its body so this
+# call does not trigger a heavy cascade.
 _register_language_resolver()
 
 
@@ -300,7 +315,6 @@ def __getattr__(name: str):
 
         return ProfileValidationService
     if name in (
-        "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
         "UnsupportedBundleSchemaVersionError",
         "deserialize_profile_bundle",
         "serialize_profile_bundle",
@@ -309,6 +323,22 @@ def __getattr__(name: str):
         from . import _bundle
 
         return getattr(_bundle, name)
+    if name in (
+        "PreparedProfileExport",
+        "ProfileBundleExportPurpose",
+        "ProfileBundleExportRequest",
+        "ProfileBundleExportResult",
+        "ProfileBundleExportTarget",
+        "ProfileBundleExportTransport",
+        "bundle_data_categories",
+        "export_profile_bundle",
+        "prepare_profile_export",
+        "publish_prepared_export",
+        "reconcile_prepared_exports",
+    ):
+        from . import _bundle_export
+
+        return getattr(_bundle_export, name)
     if name in (
         "EncryptedProfileBundleError",
         "EncryptedProfileBundleExport",
@@ -319,16 +349,17 @@ def __getattr__(name: str):
 
         return getattr(_bundle_encryption, name)
     if name in (
+        "CustodyPassphraseChangeResult",
         "CustodyRecoverResult",
-        "CustodyRecoveryEnrollment",
+        "CustodyRecoveryEnrollmentResult",
         "CustodyRecoveryStatus",
         "CustodyRecoveryVerification",
-        "CustodyRekeyResult",
+        "change_passphrase",
+        "create_recovery_code",
         "inspect_recovery_status",
-        "mint_recovery_code",
         "recover_secret_store",
         "recovery_wrap_path",
-        "rekey_secret_store",
+        "rotate_recovery_code",
         "verify_recovery_code",
     ):
         from . import _custody
@@ -350,8 +381,13 @@ def __getattr__(name: str):
         from ._language_resolver import resolve_profile_output_language_hint
 
         return resolve_profile_output_language_hint
+    if name == "active_profile_pointer_transaction":
+        from ._profile_pointer_transaction import active_profile_pointer_transaction
+
+        return active_profile_pointer_transaction
     if name in (
         "ProfileAlreadyRegisteredError",
+        "ProfileLogoutOverrideError",
         "build_lifecycle_service",
         "delete_profile_with_lifecycle_span",
         "fact_value",
@@ -409,17 +445,12 @@ def __getattr__(name: str):
         from . import _custody_carry
 
         return getattr(_custody_carry, name)
-    if name == "register_minimal_profile":
-        from ._testing import register_minimal_profile
-
-        return register_minimal_profile
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
 __all__ = [
     "CENSO_DERIVED_SOURCE_TAG",
     "CENSO_SOURCE_TAG",
-    "SUPPORTED_BUNDLE_SCHEMA_VERSIONS",
     "TAX_ID_FACT_PATH",
     "USER_PROFILE_SNAPSHOT_NAMESPACE",
     "USER_PROFILE_VALUE_NAMESPACE",
@@ -427,17 +458,23 @@ __all__ = [
     "CapabilitySource",
     "CensoSyncError",
     "CensoSyncService",
+    "CustodyPassphraseChangeResult",
     "CustodyRecoverResult",
-    "CustodyRecoveryEnrollment",
+    "CustodyRecoveryEnrollmentResult",
     "CustodyRecoveryStatus",
     "CustodyRecoveryVerification",
-    "CustodyRekeyResult",
     "DuplicateProfileCommand",
     "EditProfileFieldCommand",
     "EditProfileSectionCommand",
     "EncryptedProfileBundleError",
     "EncryptedProfileBundleExport",
+    "PreparedProfileExport",
     "ProfileAlreadyRegisteredError",
+    "ProfileBundleExportPurpose",
+    "ProfileBundleExportRequest",
+    "ProfileBundleExportResult",
+    "ProfileBundleExportTarget",
+    "ProfileBundleExportTransport",
     "ProfileId",
     "ProfileImportResult",
     "ProfileIntegrityError",
@@ -445,6 +482,7 @@ __all__ = [
     "ProfileLifecycleService",
     "ProfileListResult",
     "ProfileListing",
+    "ProfileLogoutOverrideError",
     "ProfilePreflightReport",
     "ProfilePreflightRequirement",
     "ProfilePreflightService",
@@ -466,32 +504,37 @@ __all__ = [
     "UserProfileRecord",
     "UserProfileSnapshotRepository",
     "UserProfileStatus",
+    "active_profile_pointer_transaction",
     "build_lifecycle_service",
+    "bundle_data_categories",
     "carried_namespace_definitions",
+    "change_passphrase",
+    "create_recovery_code",
     "decrypt_profile_bundle_with_passphrase",
     "delete_profile_with_lifecycle_span",
     "deserialize_profile_bundle",
     "encrypt_profile_bundle_for_passphrase",
+    "export_profile_bundle",
     "fact_value",
     "facts_to_values",
     "inspect_recovery_status",
     "iva_regime_required",
     "list_profile_key_records",
     "logout_active_profile",
-    "mint_recovery_code",
     "missing_filing_baseline_flags",
+    "prepare_profile_export",
     "profile_create_storage_span",
     "profile_storage_session",
     "projection_for_taxpayer",
+    "publish_prepared_export",
     "reactivate_profile_with_lifecycle_span",
+    "reconcile_prepared_exports",
     "record_to_path_values",
     "record_to_values",
     "recover_secret_store",
     "recovery_wrap_path",
     "refuse_duplicate_label",
     "register_active_profile",
-    "register_minimal_profile",
-    "rekey_secret_store",
     "remove_active_profile",
     "remove_profile_bucket_directory",
     "rename_profile",
@@ -500,6 +543,7 @@ __all__ = [
     "resolve_capability",
     "resolve_profile_output_language_hint",
     "restore_carried_objects",
+    "rotate_recovery_code",
     "select_profile",
     "select_profile_with_lifecycle_span",
     "serialize_carried_objects",

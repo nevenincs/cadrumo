@@ -3,13 +3,21 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S33'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"
 ---
 
-# Add region field to Renta deductibility context when category profiles require it
+# [RETIRED] Add region field to Renta deductibility context when category profiles require it
+
+## Reconciliation outcome
+
+Retired on 2026-07-17. The field was dormant: general business-expense
+deductibility is state law and no regional category profile existed. RIC and
+Ceuta/Melilla remain on their dedicated legal paths. The field and its
+synthetic-only coverage were removed; the material below is historical
+execution evidence, not current architecture.
 
 ## Scope
 

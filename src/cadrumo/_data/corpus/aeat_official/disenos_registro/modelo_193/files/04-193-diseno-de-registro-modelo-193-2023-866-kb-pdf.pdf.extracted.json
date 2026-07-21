@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_193/files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/04-193-diseno-de-registro-modelo-193-2023-866-kb-pdf.pdf",
   "source_sha256": "f0faf5a627e4601f6d7277ae13a969e11945fcabada9947fb4b98abf66d74cf1",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

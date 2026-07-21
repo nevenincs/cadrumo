@@ -3,20 +3,22 @@ name: cadrumo-product-authority-names
 trigger: always_on
 ---
 
-# CADRUMO product and AEAT authority names
+# Cadrumo product and AEAT authority names
 
 ## Rule
 
-Always use CADRUMO identity for application-owned surfaces and retain AEAT names
+Use `Cadrumo` in sentence prose and `CADRUMO` in identity contexts for
+application-owned surfaces, and retain AEAT names
 when the referent is the Spanish tax authority, its official evidence, or its
 external protocol. The sole human CLI executable is the exact lowercase token
-`aeat`; it names the CADRUMO command contract, not a legacy product alias.
+`aeat`; it names the Cadrumo command contract, not a legacy product alias.
 
 ## Why
 
-The accepted `2026-07-12-cadrumo-cli-executable-adr` establishes CADRUMO as the
-single product identity, `aeat` as its one human CLI executable, and AEAT as the
-external authority. The `2026-07-12-cadrumo-product-rename-audit` showed that
+The accepted `2026-07-12-cadrumo-cli-executable-adr` establishes `Cadrumo`
+prose and `CADRUMO` identity contexts as the single product identity, `aeat` as
+its one human CLI executable, and AEAT as the external authority. The
+`2026-07-12-cadrumo-product-rename-audit` showed that
 classifying by spelling alone creates contradictions even for apparently
 obvious settings; classifying by ownership and referent prevents both stale
 branding and corrupted tax-authority semantics.

@@ -1,32 +1,36 @@
-"""Real-behavior tests for the ``.mcpb`` Desktop Extension build.
-
-The repo-root ``packaging/`` directory cannot be imported as ``packaging.mcpb``
-(the name collides with the installed PyPA ``packaging`` library), so the build
-module is loaded by file path — exactly how it is meant to be run
-(``python packaging/mcpb/build.py``), never as an importable package.
-"""
+"""Real cohort and archive tests for the secondary Cadrumo MCP Bundle."""
 
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 import json
+import shutil
 import subprocess
 import sys
+import tomllib
 import zipfile
+from collections.abc import Callable
 from pathlib import Path
 from types import ModuleType
+from typing import cast
 
 import pytest
+from dev.packaging.python_cohort import load_python_cohort
+from dev.packaging.smoke_core import _build_companion_wheels, _build_wheel, _run
+from dev.packaging.smoke_sdist_core import _build_sdist
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 _BUILD_PY = Path(__file__).resolve().parents[1] / "build.py"
+_REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _load_build_module() -> ModuleType:
     spec = importlib.util.spec_from_file_location("_cadrumo_mcpb_build", _BUILD_PY)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
     spec.loader.exec_module(module)
     return module
 
@@ -34,37 +38,316 @@ def _load_build_module() -> ModuleType:
 BUILD = _load_build_module()
 
 
-def test_manifest_validates_and_points_at_the_console_script() -> None:
-    """The shipped manifest validates and its server command is ``cadrumo-mcp``."""
-    manifest = BUILD.load_manifest()
-    assert manifest["name"] == "cadrumo"
-    server = manifest["server"]
-    assert isinstance(server, dict)
-    assert server["mcp_config"]["command"] == "cadrumo-mcp"
-    assert server["entry_point"] == "cadrumo-mcp"
-    assert manifest["display_name"] == "Cadrumo tax assistant console"
-    assert all(
-        tool["name"].startswith("cadrumo_") or tool["name"] in {"search", "execute"} for tool in manifest["tools"]
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _write_cohort_manifest(
+    cohort_dir: Path,
+    *,
+    artifacts: dict[str, Path],
+    version: str,
+) -> None:
+    names: dict[str, str] = {}
+    digests: dict[str, str] = {}
+    for label, artifact in artifacts.items():
+        retained = cohort_dir / artifact.name
+        if retained.resolve() != artifact.resolve():
+            shutil.copy2(artifact, retained)
+        names[label] = retained.name
+        digests[label] = _sha256(retained)
+    git = shutil.which("git")
+    assert git is not None
+    source_commit = subprocess.run(  # noqa: S603 - resolved Git with fixed repository argv
+        [git, "rev-parse", "HEAD"],
+        cwd=_REPO_ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    ).stdout.strip()
+    (cohort_dir / "python-cohort.json").write_text(
+        json.dumps(
+            {
+                "artifacts": names,
+                "sha256": digests,
+                "source_commit": source_commit,
+                "version": version,
+            },
+            sort_keys=True,
+        ),
+        encoding="utf-8",
     )
 
-    assert manifest["name"] != "aeat"
-    assert server["entry_point"] != "aeat-mcp"
-    assert server["mcp_config"]["command"] != "aeat-mcp"
+
+@pytest.fixture(scope="module")
+def real_cohort(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    """Build the real six-file canonical cohort consumed by the bundle."""
+    uv = shutil.which("uv")
+    assert uv is not None
+    work = tmp_path_factory.mktemp("mcpb-real-cohort")
+    cohort_dir = work / "cohort"
+    cohort_dir.mkdir()
+    root_wheel = _build_wheel(_REPO_ROOT, work, uv)
+    manuals_wheel, official_wheel = _build_companion_wheels(_REPO_ROOT, work, uv)
+    root_sdist = _build_sdist(_REPO_ROOT, work, uv)
+    companion_sdists = work / "companion-sdists"
+    _run(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
+        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_manuals",
+    )
+    _run(
+        [uv, "build", "--sdist", "--out-dir", str(companion_sdists)],
+        cwd=_REPO_ROOT / "packaging" / "cadrumo_data_official",
+    )
+    manuals_sdist = next(companion_sdists.glob("cadrumo_data_manuals-*.tar.gz"))
+    official_sdist = next(companion_sdists.glob("cadrumo_data_official-*.tar.gz"))
+    version = tomllib.loads(
+        (_REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"),
+    )["project"]["version"]
+    assert isinstance(version, str)
+    _write_cohort_manifest(
+        cohort_dir,
+        artifacts={
+            "cadrumo": root_wheel,
+            "cadrumo-sdist": root_sdist,
+            "cadrumo-data-manuals": manuals_wheel,
+            "cadrumo-data-manuals-sdist": manuals_sdist,
+            "cadrumo-data-official": official_wheel,
+            "cadrumo-data-official-sdist": official_sdist,
+        },
+        version=version,
+    )
+    return load_python_cohort(cohort_dir).directory
 
 
-def test_check_mode_writes_nothing_and_passes(capsys: pytest.CaptureFixture[str]) -> None:
-    """``--check`` validates the manifest, prints a valid line, and writes no bundle."""
-    rc = BUILD.main(["--check"])
-    assert rc == 0
-    output = capsys.readouterr().out
-    assert "manifest.json valid: cadrumo" in output
-    assert "aeat" not in output.casefold()
+def _copy_cohort(source: Path, destination: Path) -> Path:
+    shutil.copytree(source, destination)
+    return destination
 
 
-def test_real_check_cli_reports_the_cadrumo_manifest() -> None:
-    """The real script entry point validates the committed Cadrumo manifest."""
-    completed = subprocess.run(  # noqa: S603 - fixed interpreter, repository-owned script and arguments
+def _rewrite_digest(cohort_dir: Path, label: str) -> None:
+    manifest_path = cohort_dir / "python-cohort.json"
+    document = json.loads(manifest_path.read_text(encoding="utf-8"))
+    artifact = cohort_dir / document["artifacts"][label]
+    document["sha256"][label] = _sha256(artifact)
+    manifest_path.write_text(
+        json.dumps(document, sort_keys=True),
+        encoding="utf-8",
+    )
+
+
+def _load_bootstrap_namespace(bundle: Path) -> dict[str, object]:
+    """Exec the staged bootstrap source with an injected ``__file__``.
+
+    The bootstrap computes its bundle root from ``__file__``; injecting a path
+    under ``bundle/src`` lets its pure provisioning-state logic be exercised
+    without running ``uv`` or ``os.execv``. ``__name__`` is set to a non-main
+    value so the module-level ``main()`` guard does not fire.
+    """
+    namespace: dict[str, object] = {
+        "__file__": str(bundle / "src" / "server.py"),
+        "__name__": "cadrumo_mcpb_bootstrap_under_test",
+    }
+    exec(compile(BUILD._BOOTSTRAP_SOURCE, "server.py", "exec"), namespace)  # noqa: S102 - bundle-owned source under test
+    return namespace
+
+
+def test_bootstrap_provisioning_state_is_keyed_on_the_cohort_marker(tmp_path: Path) -> None:
+    """The bootstrap re-provisions only until the cohort marker matches the digest."""
+    bundle = tmp_path / "extension"
+    (bundle / "src").mkdir(parents=True)
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setenv("CADRUMO_MCP_COHORT_SHA256", '{"cadrumo": "abc"}')
+        namespace = _load_bootstrap_namespace(bundle)
+        venv_python = cast("Callable[[], Path]", namespace["_venv_python"])()
+        is_provisioned = cast("Callable[[Path], bool]", namespace["_is_provisioned"])
+        # No venv interpreter yet: not provisioned, so the first launch provisions.
+        assert is_provisioned(venv_python) is False
+        venv_python.parent.mkdir(parents=True)
+        venv_python.write_text("", encoding="utf-8")
+        marker = cast("Path", namespace["_MARKER"])
+        # Interpreter present but marker absent: still not provisioned.
+        assert is_provisioned(venv_python) is False
+        # Marker matching the cohort digest: provisioned, so a later launch
+        # direct-execs and skips resolution.
+        marker.write_text('{"cadrumo": "abc"}', encoding="utf-8")
+        assert is_provisioned(venv_python) is True
+        # A cohort-digest change (a version upgrade) invalidates the marker.
+        patch.setenv("CADRUMO_MCP_COHORT_SHA256", '{"cadrumo": "def"}')
+        assert is_provisioned(venv_python) is False
+
+
+def test_manifest_declares_only_the_bundle_local_python_runtime() -> None:
+    """Unexecuted client/platform rows are not advertised as compatibility."""
+    manifest = BUILD.load_manifest()
+    assert manifest["manifest_version"] == "0.4"
+    server = manifest["server"]
+    assert server["type"] == "uv"
+    assert server["entry_point"] == "src/server.py"
+    assert server["mcp_config"] == {
+        "command": "uv",
+        "args": ["run", "--no-project", "--directory", "${__dirname}", "src/server.py"],
+        "env": {
+            "CADRUMO_LOCAL_STORAGE_ROOT": "${user_config.storage_root}",
+            "CADRUMO_MCP_PERSONA": "${user_config.persona}",
+            "CADRUMO_MCP_SURFACE": "${user_config.surface}",
+        },
+    }
+    assert manifest["user_config"]["storage_root"] == {
+        "type": "directory",
+        "title": "Cadrumo state directory",
+        "description": "Persistent, project-independent local state for the Cadrumo MCP service.",
+        "required": True,
+    }
+    assert manifest["compatibility"] == {
+        "runtimes": {"python": ">=3.13,<3.14"},
+    }
+
+
+def test_canonical_cohort_renders_bundle_local_sources(real_cohort: Path) -> None:
+    """Every product dependency resolves from its canonical embedded wheel."""
+    cohort = BUILD.load_cohort(real_cohort)
+    project = tomllib.loads(BUILD.runtime_pyproject(cohort))
+    assert project["project"]["dependencies"] == [
+        f"cadrumo[agent]=={cohort.version}",
+        f"cadrumo-data-manuals=={cohort.version}",
+        f"cadrumo-data-official=={cohort.version}",
+    ]
+    sources = project["tool"]["uv"]["sources"]
+    expected = {
+        "cadrumo": cohort.root_wheel,
+        "cadrumo-data-manuals": cohort.manuals_wheel,
+        "cadrumo-data-official": cohort.official_wheel,
+    }
+    for distribution, wheel in expected.items():
+        assert sources[distribution] == {"path": f"artifacts/{wheel.name}"}
+
+
+def test_build_contains_exact_wheels_and_canonical_digest_binding(
+    tmp_path: Path,
+    real_cohort: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Archive bytes and launch-time identity come from the canonical manifest."""
+    cohort = BUILD.load_cohort(real_cohort)
+    bundle = BUILD.build(cohort_dir=real_cohort, dist_dir=tmp_path)
+    assert bundle.name == f"cadrumo-{cohort.version}.mcpb"
+    expected_wheels = {
+        cohort.root_wheel.name: cohort.root_wheel,
+        cohort.manuals_wheel.name: cohort.manuals_wheel,
+        cohort.official_wheel.name: cohort.official_wheel,
+    }
+    with zipfile.ZipFile(bundle) as archive:
+        assert archive.namelist() == [
+            f"artifacts/{cohort.root_wheel.name}",
+            f"artifacts/{cohort.manuals_wheel.name}",
+            f"artifacts/{cohort.official_wheel.name}",
+            "manifest.json",
+            "pyproject.toml",
+            "src/_serve.py",
+            "src/server.py",
+        ]
+        for filename, wheel in expected_wheels.items():
+            assert archive.read(f"artifacts/{filename}") == wheel.read_bytes()
+        manifest = json.loads(archive.read("manifest.json"))
+        bootstrap = archive.read("src/server.py").decode()
+        launcher = archive.read("src/_serve.py").decode()
+    expected_sha256 = {
+        name: cohort.sha256[name]
+        for name in (
+            "cadrumo",
+            "cadrumo-data-manuals",
+            "cadrumo-data-official",
+        )
+    }
+    env = manifest["server"]["mcp_config"]["env"]
+    assert json.loads(env["CADRUMO_MCP_COHORT_SHA256"]) == expected_sha256
+    assert env["CADRUMO_MCP_REQUIRED_VERSION"] == cohort.version
+    assert env["CADRUMO_LOCAL_STORAGE_ROOT"] == "${user_config.storage_root}"
+    assert "UV_PROJECT_ENVIRONMENT" not in env
+    # The digest-pinned cohort verification lives in the real server entry, run
+    # by the provisioned interpreter.
+    assert "distribution(name)" in launcher
+    assert 'read_text("direct_url.json")' in launcher
+    # The bootstrap provisions the bundle-local venv once and direct-execs it
+    # thereafter, so no session after the first re-resolves the project.
+    assert "os.execv" in bootstrap
+    assert "_serve.py" in bootstrap
+    assert '"sync"' in bootstrap
+    assert "distribution(name)" not in bootstrap
+    assert "UNSIGNED; assembly only; client installation unproved" in capsys.readouterr().out
+
+
+def test_unsigned_bundle_is_byte_reproducible(
+    tmp_path: Path,
+    real_cohort: Path,
+) -> None:
+    """Two assemblies of the exact real cohort produce identical MCPB bytes."""
+    first = BUILD.build(cohort_dir=real_cohort, dist_dir=tmp_path / "first")
+    second = BUILD.build(cohort_dir=real_cohort, dist_dir=tmp_path / "second")
+
+    assert first.read_bytes() == second.read_bytes()
+
+
+def test_missing_companion_is_rejected_by_the_canonical_validator(
+    tmp_path: Path,
+    real_cohort: Path,
+) -> None:
+    """MCPB cannot reinterpret an incomplete retained cohort."""
+    candidate = _copy_cohort(real_cohort, tmp_path / "missing")
+    cohort = load_python_cohort(candidate)
+    cohort.official_wheel.unlink()
+    with pytest.raises(BUILD.ManifestError, match="invalid Python cohort"):
+        BUILD.load_cohort(candidate)
+
+
+def test_mixed_companion_identity_is_rejected(
+    tmp_path: Path,
+    real_cohort: Path,
+) -> None:
+    """Digest-valid files still fail when a companion declares the wrong product."""
+    candidate = _copy_cohort(real_cohort, tmp_path / "mixed")
+    document = json.loads(
+        (candidate / "python-cohort.json").read_text(encoding="utf-8"),
+    )
+    manuals = candidate / document["artifacts"]["cadrumo-data-manuals"]
+    official = candidate / document["artifacts"]["cadrumo-data-official"]
+    shutil.copy2(manuals, official)
+    _rewrite_digest(candidate, "cadrumo-data-official")
+    with pytest.raises(BUILD.ManifestError, match="identities or versions drifted"):
+        BUILD.load_cohort(candidate)
+
+
+def test_foreign_same_version_bytes_get_a_distinct_cohort_binding(
+    tmp_path: Path,
+    real_cohort: Path,
+) -> None:
+    """A second same-version cohort cannot satisfy the first cohort binding."""
+    original = BUILD.load_cohort(real_cohort)
+    candidate = _copy_cohort(real_cohort, tmp_path / "foreign")
+    document = json.loads(
+        (candidate / "python-cohort.json").read_text(encoding="utf-8"),
+    )
+    official = candidate / document["artifacts"]["cadrumo-data-official"]
+    with zipfile.ZipFile(official, "a", zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("foreign-same-version-byte.txt", "different cohort\n")
+    _rewrite_digest(candidate, "cadrumo-data-official")
+    foreign = BUILD.load_cohort(candidate)
+    assert foreign.version == original.version
+    assert foreign.sha256["cadrumo-data-official"] != original.sha256["cadrumo-data-official"]
+    original_env = BUILD.stamped_manifest(original)["server"]["mcp_config"]["env"]
+    foreign_env = BUILD.stamped_manifest(foreign)["server"]["mcp_config"]["env"]
+    assert original_env["CADRUMO_MCP_COHORT_SHA256"] != foreign_env["CADRUMO_MCP_COHORT_SHA256"]
+    assert "UV_PROJECT_ENVIRONMENT" not in original_env
+    assert "UV_PROJECT_ENVIRONMENT" not in foreign_env
+
+
+def test_real_check_cli_reports_the_v04_template() -> None:
+    """The public check validates the committed secondary-bundle template."""
+    completed = subprocess.run(  # noqa: S603 - fixed interpreter and repository script
         [sys.executable, str(_BUILD_PY), "--check"],
+        cwd=_REPO_ROOT,
         capture_output=True,
         text=True,
         check=False,
@@ -74,90 +357,14 @@ def test_real_check_cli_reports_the_cadrumo_manifest() -> None:
     assert completed.stderr == ""
 
 
-def test_build_produces_a_wellformed_bundle(tmp_path: Path) -> None:
-    """A real build produces a ``.mcpb`` zip carrying the manifest verbatim."""
-    bundle = BUILD.build(dist_dir=tmp_path)
-    assert bundle.exists() and bundle.name == "cadrumo.mcpb"
-    with zipfile.ZipFile(bundle) as archive:
-        assert archive.namelist() == ["manifest.json"]
-        embedded = json.loads(archive.read("manifest.json"))
-    assert embedded["name"] == "cadrumo"
-    assert embedded == BUILD.load_manifest()
-    assert embedded["server"]["mcp_config"]["command"] == "cadrumo-mcp"
+def test_mcpb_identity_agrees_with_the_product(real_cohort: Path) -> None:
+    """Bundle product names and version agree with installed product authority."""
+    from cadrumo import __version__
+    from cadrumo.core.product_identity import PRODUCT_IDENTITY
 
-
-# --- signing mechanism -------------------------------------------------------
-def test_build_reports_the_real_signing_outcome_without_overclaiming(
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    """The host's real signer state controls the diagnostic; no signature is fabricated."""
-    signing_available = BUILD._signing_available()
-    bundle = BUILD.build(dist_dir=tmp_path)
-    captured = capsys.readouterr()
-    assert bundle.exists()
-    assert f"built {bundle}" in captured.out
-    assert "aeat.mcpb" not in captured.out.casefold()
-    if not signing_available:
-        assert "UNSIGNED (signer unavailable or no signing identity configured)" in captured.out
-        assert captured.err == ""
-    else:
-        assert (
-            "[signed]" in captured.out
-            or "[UNSIGNED (signer unavailable or no signing identity configured)]" in captured.out
-        )
-
-
-def test_sign_invokes_the_mcpb_cli_when_a_signer_is_available(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """With a signer available, the build invokes `mcpb sign <bundle>` — the sign path is wired."""
-    # Simulate a present signer + a successful sign, and assert the build invokes
-    # `mcpb sign <bundle>` — proving the sign path runs when an identity exists.
-    import subprocess
-
-    bundle = tmp_path / "cadrumo.mcpb"
-    bundle.write_bytes(b"PK\x03\x04")
-    captured: dict[str, object] = {}
-
-    def _spy_run(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
-        captured["argv"] = argv
-        return subprocess.CompletedProcess(argv, returncode=0, stdout="signed", stderr="")
-
-    monkeypatch.setattr(BUILD.shutil, "which", lambda _name: "/usr/bin/mcpb")
-    monkeypatch.setattr(BUILD.subprocess, "run", _spy_run)
-
-    assert BUILD._sign(bundle) is True
-    assert captured["argv"] == ["mcpb", "sign", str(bundle)]
-
-
-def test_sign_returns_false_without_fabricating_when_the_signer_fails(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A signer that exits non-zero (no identity) ships unsigned, never claims a signature."""
-    # Signer present but no configured identity: the CLI exits non-zero, and the
-    # build must ship unsigned (return False), never claim a signature.
-    import subprocess
-
-    bundle = tmp_path / "cadrumo.mcpb"
-    bundle.write_bytes(b"PK\x03\x04")
-
-    def _failing_run(argv: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
-        return subprocess.CompletedProcess(argv, returncode=1, stdout="", stderr="no identity configured")
-
-    monkeypatch.setattr(BUILD.shutil, "which", lambda _name: "/usr/bin/mcpb")
-    monkeypatch.setattr(BUILD.subprocess, "run", _failing_run)
-
-    assert BUILD._sign(bundle) is False
-
-
-def test_manifest_version_matches_the_package_release() -> None:
-    """The bundle manifest must move in lockstep with the pyproject version.
-
-    The honesty review found the served plugin pinned a release two minors
-    behind source; this gate keeps at least the in-repo manifest honest.
-    """
-    import tomllib
-
-    repo_root = Path(__file__).resolve().parents[3]
-    manifest = json.loads((repo_root / "packaging" / "mcpb" / "manifest.json").read_text("utf-8"))
-    pyproject = tomllib.loads((repo_root / "pyproject.toml").read_text("utf-8"))
-    assert manifest["version"] == pyproject["project"]["version"]
+    cohort = BUILD.load_cohort(real_cohort)
+    manifest = BUILD.stamped_manifest(cohort)
+    assert manifest["version"] == cohort.version == __version__
+    assert PRODUCT_IDENTITY.distribution == BUILD._DISTRIBUTIONS[0]
+    assert PRODUCT_IDENTITY.companion_distributions == BUILD._DISTRIBUTIONS[1:]
+    assert PRODUCT_IDENTITY.mcp_executable == BUILD._CONSOLE_SCRIPT

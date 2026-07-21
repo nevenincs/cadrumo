@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#aeat-verify'
 date: '2026-04-24'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-24-aeat-verify-adr]]"
   - "[[2026-04-24-aeat-verify-research]]"
@@ -185,6 +185,23 @@ Two endpoints per CSV:
   **Must be fetched via `APIRequestContext` (`context.request.get`),
   not `page.goto`**, because Chrome wraps PDF responses in its
   PDF-viewer stub HTML when navigated.
+
+The 2026-07-17 reconciliation retained these captured endpoints as the
+production verifier contract. AEAT's current public ZZ05 procedure page links
+to `/wlpl/KATA-APLI/cotejo/forms/CotejoSv`; a credential-free live read returned
+HTTP 200 and an HTML form whose `POST` action is
+`/wlpl/KATA-APLI/cotejo/CotejoSv`, with a required 16-character `CSV` input.
+That observation grounds the current public form but does not establish a new
+successful-result iframe leaf. Production therefore continues to use the two
+account-captured `CotejoIdSv` / `CotejoDocIdSv` endpoints above and rejects any
+other result/viewer shape. The official public guidance updated 2026-05-07
+independently confirms that success renders the matched PDF/XML document and an
+unknown CSV renders a not-found message.
+
+Sources:
+
+- `https://sede.agenciatributaria.gob.es/Sede/procedimientoini/ZZ05.shtml`
+- `https://sede.agenciatributaria.gob.es/Sede/ayuda/consultas-informaticas/otros-servicios-ayuda-tecnica/cotejo-documentos-mediante-codigo-seguro-verificacion.html`
 
 The CSV code appears in three places on the detail page — as the
 `ref` token of a `CotejoIdSv` link, in plaintext at the bottom

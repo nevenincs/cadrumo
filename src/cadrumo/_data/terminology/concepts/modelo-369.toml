@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-369"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:369"]
+legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2"]
+related = ["iva", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "IVA de ventanilla unica (OSS / IOSS)."
+definition = "Autoliquidacion del IVA de los regimenes especiales de ventanilla unica (OSS e IOSS) para ventas transfronterizas a consumidores de otros Estados miembros."
+
+[language.es.source]
+citation = "Orden HAC/610/2021."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 369"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "ventanilla unica"
+term_status = "admitted"
+
+[language.en]
+short_description = "One-stop-shop (OSS/IOSS) VAT return for cross-border B2C sales."
+
+[language.ca]
+short_description = "IVA de finestreta unica (OSS / IOSS)."
+
+[language.hu]
+short_description = "Egyablakos (OSS/IOSS) afa-bevallas hataron atnyulo B2C ertekesitesre."

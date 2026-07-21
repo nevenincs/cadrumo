@@ -29,8 +29,6 @@ from .. import _ledger
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_PLAN_PATH = PROJECT_ROOT / ".vault" / "plan" / "2026-05-08-cli-backend-boundary-plan.md"
-_REFERENCE_PATH = PROJECT_ROOT / ".vault" / "reference" / "2026-05-08-cli-backend-boundary-reference.md"
 _CLI_ROOT = PROJECT_ROOT / "src" / "cadrumo" / "entrypoints" / "cli"
 _FORBIDDEN_TEST_PROCESS_LANGUAGE = (
     "aspirational",
@@ -70,27 +68,18 @@ _LIVE_TEST_FILES = frozenset[str]()
 
 @dataclass(frozen=True)
 class BoundaryFinding:
-    row_id: str
     source: str
     symbols: tuple[str, ...]
-    backend_gap: str
-    owner: str
 
 
 _KNOWN_FINDINGS: tuple[BoundaryFinding, ...] = (
     BoundaryFinding(
-        row_id="CLI-001",
         source="src/cadrumo/entrypoints/cli/_common.py",
         symbols=("_canonical_period",),
-        backend_gap="API-005",
-        owner="application.filing",
     ),
     BoundaryFinding(
-        row_id="CLI-007",
         source="src/cadrumo/entrypoints/cli/_overview.py",
         symbols=("overview_status",),
-        backend_gap="API-008",
-        owner="application.overview",
     ),
 )
 
@@ -162,27 +151,13 @@ def test_boundary_inventory_rows_have_live_source_anchors() -> None:
     for finding in _KNOWN_FINDINGS:
         path = PROJECT_ROOT / finding.source
         if not path.exists():
-            offences.append(f"{finding.row_id}: source missing: {finding.source}")
+            offences.append(f"source missing: {finding.source}")
             continue
         symbols = _defined_symbols(_parse_source(finding.source))
         missing = sorted(set(finding.symbols) - symbols)
         if missing:
-            offences.append(f"{finding.row_id}: missing symbols in {finding.source}: {', '.join(missing)}")
+            offences.append(f"missing symbols in {finding.source}: {', '.join(missing)}")
     assert offences == [], "boundary inventory drift:\n  " + "\n  ".join(offences)
-
-
-def test_boundary_plan_tracks_every_known_cli_finding_and_backend_gap() -> None:
-    """The rollout docs must track every static audit row and backend owner."""
-
-    plan_text = _PLAN_PATH.read_text(encoding="utf-8")
-    reference_text = _REFERENCE_PATH.read_text(encoding="utf-8")
-    combined = f"{plan_text}\n{reference_text}"
-    offences: list[str] = []
-    for finding in _KNOWN_FINDINGS:
-        for token in (finding.row_id, finding.backend_gap, finding.owner):
-            if token not in combined:
-                offences.append(f"{finding.row_id}: docs do not track {token!r}")
-    assert offences == [], "boundary docs missing tracked rows:\n  " + "\n  ".join(offences)
 
 
 def test_manual_ledger_import_and_review_boundaries_stay_backend_owned() -> None:
@@ -274,8 +249,9 @@ def test_manual_ledger_export_help_keeps_serialization_format_named_as_export_fo
 
 
 def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path: Path) -> None:
-    """The root ``--format`` flag must remain the rendering switch used by ``_emit``."""
+    """The root ``--format`` flag remains the switch used by the envelope emitter."""
 
+    env = {"CADRUMO_SECRET_PASSPHRASE": "backend-boundary-passphrase"}
     created = invoke_cached_cli(
         [
             "config", "profile", "create", "operator",
@@ -286,6 +262,7 @@ def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path
             "--surnames", "Operator",
             "--activity", "design",
         ],
+        env=env,
     )  # fmt: skip
     assert created.exit_code == 0, created.output
 
@@ -298,6 +275,7 @@ def test_manual_ledger_root_format_still_controls_emitted_payload_shape(tmp_path
 
     result = invoke_cached_cli(
         ["--format", "json", "app", "ledger", "import", str(statement), "--provider", "csv", "--dry-run"],
+        env=env,
     )
 
     assert result.exit_code == 0, result.output

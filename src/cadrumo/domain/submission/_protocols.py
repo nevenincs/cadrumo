@@ -29,57 +29,13 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import AuthProviderDescription
 from ...core.errors import BaseSeverity
 from ._models import ModeloPresentado
 
 if TYPE_CHECKING:  # pragma: no cover — type-only import
     from ...core import Period
     from ...core.identity import SubjectTaxId
-
-
-@runtime_checkable
-class AuthProviderDescriptionLike(Protocol):
-    """Submission-facing shape returned by an auth provider.
-
-    Attributes:
-        kind: Provider identifier (kept as ``object`` so the protocol does
-            not couple submission to the auth subpackage's enum).
-        label: Human-readable provider name.
-        configured: Whether the provider's required settings are present.
-        available: Whether a session can currently be established.
-        subject: Subject DN (or equivalent identity string), if known.
-        expires_on: Expiry date for the underlying credential, if known.
-    """
-
-    @property
-    def kind(self) -> object:
-        """Provider kind identifier."""
-        ...
-
-    @property
-    def label(self) -> str:
-        """Human-readable provider name."""
-        ...
-
-    @property
-    def configured(self) -> bool:
-        """Whether the provider's required settings are present."""
-        ...
-
-    @property
-    def available(self) -> bool:
-        """Whether a session can currently be established."""
-        ...
-
-    @property
-    def subject(self) -> str | None:
-        """Subject DN or identity string when known, else ``None``."""
-        ...
-
-    @property
-    def expires_on(self) -> date | None:
-        """Expiry date for the underlying credential, when known."""
-        ...
 
 
 @runtime_checkable
@@ -91,8 +47,8 @@ class AuthProviderProbe(Protocol):
         """Provider kind identifier consumed by the preflight gate."""
         ...
 
-    def describe(self) -> AuthProviderDescriptionLike:
-        """Return an :class:`AuthProviderDescriptionLike` describing the active auth provider."""
+    def describe(self) -> AuthProviderDescription:
+        """Return the active provider's :class:`core.AuthProviderDescription`."""
         ...
 
 
@@ -132,7 +88,7 @@ class ModeloDraftStatus(StrEnum):
     The preflight engine consumes only :attr:`APROBADO` and
     :attr:`APROBACION_CADUCADA` on its happy path; the broader filing /
     submission stack consumes the full lifecycle. Member names and
-    values mirror the AEAT Sede labels per ADR A7.2.
+    values mirror the AEAT Sede labels.
 
     Attributes:
         BORRADOR: New draft, not yet validated.

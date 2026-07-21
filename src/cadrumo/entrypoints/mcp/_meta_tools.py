@@ -2,7 +2,7 @@
 
 The curated domain toolsets (``_toolsets``) cover the common path; the rest of
 the operator-callable verb tree is reached through two meta-tools, the Cloudflare
-precedent for a large API surface (ADR decision R2): ``search`` maps a natural
+precedent for a large API surface: ``search`` maps a natural
 query onto matching command keys with their intent and mutability, and
 ``execute`` runs one command key with typed arguments.
 
@@ -18,6 +18,7 @@ this module stays SDK-independent and unit-tested.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
@@ -32,16 +33,25 @@ from ._toolsets import MAX_ACTIVE_TOOLSETS, Toolset, _family_domain_map, build_t
 
 _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, extra="forbid")
 
+
+@dataclass(frozen=True)
+class ToolRunOutcome:
+    """The common result contract shared by direct and meta-tool dispatch."""
+
+    envelope: dict[str, object]
+    is_error: bool
+
+
 #: The subprocess runner the server injects into :func:`meta_execute`: it takes a
-#: descriptor and the named arguments and returns the CLI envelope plus an error
-#: flag, exactly as the direct call path runs it.
-ToolRunner = Callable[[McpToolDescriptor, dict[str, object]], tuple[dict[str, object], bool]]
+#: descriptor and the named arguments and returns the same typed outcome the
+#: direct call path uses.
+ToolRunner = Callable[[McpToolDescriptor, dict[str, object]], ToolRunOutcome]
 
 
 class MetaSearchResult(BaseModel):
     """One command matched by :func:`search_commands`, with its decision hints.
 
-    The result is self-sufficient (ADR ``mcp-progressive-discovery`` P2): besides
+    The result is self-sufficient: besides
     the mutability hints it carries the per-verb ``input_schema``, so a model that
     finds a verb through ``search`` can call it through ``execute`` in ONE more
     round-trip without a separate schema lookup.
@@ -74,9 +84,9 @@ class MetaExecuteResult(BaseModel):
     is_error: bool = False
 
 
-#: Curated outcome-vocabulary aliases folded into a command's search document
-#: (ADR ``mcp-progressive-discovery`` P2/S08). This is INDEX text only, never the
-#: model-facing tool description (H5 English-boundary): it lets an outcome-phrased
+#: Curated outcome-vocabulary aliases folded into a command's search document.
+#: This is INDEX text only, never the
+#: model-facing tool description (the English-boundary): it lets an outcome-phrased
 #: query ("file my quarterly VAT", "do my taxes") reach the composite ``quickfile``
 #: chain that literal-verb tokens miss. English plus the Spanish outcome nouns the
 #: CLI help uses (``presentar``, ``declaración``, ``trimestral``, ``autoliquidación``).
@@ -93,13 +103,13 @@ _COMMAND_ALIASES: dict[str, str] = {
 def _command_doc(descriptor: McpToolDescriptor) -> CommandDoc:
     """Build the weighted searchable document for one command.
 
-    The document splits into BM25-weighted tiers (ADR ``mcp-progressive-discovery``
-    P2/S07): ``key_and_name`` (the command key's dotted tokens - ``calculate``,
-    ``export``, ``iva_wallet`` - plus the tool name) ranks highest, curated outcome
-    ``aliases`` next, then the English ``description``, then the command's own
-    per-verb CLI ``help``. The help is the CLI's Spanish domain vocabulary, so
-    folding it into the index - NOT into the English model-facing description (H5) -
-    lets a Spanish concept query recall the right verb; the aliases surface the
+    The document splits into BM25-weighted tiers: ``key_and_name`` (the command
+    key's dotted tokens - ``calculate``, ``export``, ``iva_wallet`` - plus the
+    tool name) ranks highest, curated outcome ``aliases`` next, then the
+    English ``description``, then the command's own per-verb CLI ``help``. The
+    help is the CLI's Spanish domain vocabulary, so folding it into the index -
+    NOT into the English model-facing description - lets a Spanish concept
+    query recall the right verb; the aliases surface the
     composite verbs on outcome-phrased queries without touching the model surface.
     """
     key_tokens = descriptor.command_key.replace(".", " ").replace("_", " ")
@@ -135,8 +145,8 @@ def search_commands(
     Backed by the hybrid command index (FTS5 lexical + Spanish stemming +
     diacritics folding, degrading to token overlap on a minimal install), so a
     concept query bridges the operator's vocabulary to the command's own tokens
-    where a bare substring match would miss it (ADR ``mcp-progressive-discovery``
-    P2). Each result carries the mutability hints AND the per-verb input schema so
+    where a bare substring match would miss it. Each result carries the
+    mutability hints AND the per-verb input schema so
     it is actionable in one further ``execute`` round-trip. ``index`` may be a
     prebuilt index (the server builds it once); when omitted it is built from
     ``descriptors``.
@@ -171,7 +181,7 @@ class MetaSearchResponse(BaseModel):
     """The ``search`` meta-tool result with its overflow signal.
 
     Wraps the capped :class:`MetaSearchResult` page with how much the corpus
-    actually matched (ADR ``mcp-progressive-discovery`` P2/S11): ``total_matches``
+    actually matched: ``total_matches``
     is the full count over the whole verb surface, ``truncated`` is true when the
     page dropped some of them, and ``hint`` names the next moves - ``describe`` for
     one command's full schema, ``toolsets`` to widen the advertised surface - so a
@@ -226,8 +236,8 @@ def search_commands_response(
 class MetaDescribeResult(BaseModel):
     """One command's full descriptor for the ``describe`` meta-tool.
 
-    The self-sufficient counterpart to a :class:`MetaSearchResult` hit (ADR
-    ``mcp-progressive-discovery`` P2/S10): where ``search`` returns a ranked page
+    The self-sufficient counterpart to a :class:`MetaSearchResult` hit: where
+    ``search`` returns a ranked page
     of decision hints, ``describe`` returns ONE command's whole shape by key - its
     per-verb ``input_schema``, its mutability annotations, its confirmation tier,
     its declared risk posture, its owning curated toolset, and exactly which
@@ -310,7 +320,7 @@ def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor)
     out-of-scope call is refused, then a persona's handoff-denied verb, then the
     permanent live-write block. The messages are byte-identical to the direct
     path's refusals, so the two entry points cannot diverge — the per-verb
-    handoff deny (verifier-only export/record-marker, ADR R6(iii)) is enforced
+    handoff deny (verifier-only export/record-marker) is enforced
     here STRUCTURALLY, not left to the sync path's incidental no-elicitation
     fallback.
 
@@ -443,5 +453,5 @@ def meta_execute(
     refusal = gate_refusal(persona=persona, descriptor=descriptor)
     if refusal is not None:
         return MetaExecuteResult(command_key=command_key, refused=refusal)
-    envelope, is_error = run(descriptor, arguments)
-    return MetaExecuteResult(command_key=command_key, envelope=envelope, is_error=is_error)
+    outcome = run(descriptor, arguments)
+    return MetaExecuteResult(command_key=command_key, envelope=outcome.envelope, is_error=outcome.is_error)

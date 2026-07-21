@@ -13,7 +13,7 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from ._adapter_utils import normalize_response_text
 from ._declarations_schema import Declaracion
-from ._errors import SedeParseError, SedeValidationError
+from ._errors import SedeFailureMode, SedeParseError, SedeValidationError
 
 __all__ = ["_has_class", "_parse_listbox", "_parse_presented_at"]
 
@@ -58,6 +58,8 @@ def _parse_listbox(
         raise SedeParseError(
             "declaraciones response missing .z-listbox container",
             translated_message=tr("adapters.sede.errors.listbox_missing"),
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context={"modelo": modelo, "ejercicio": ejercicio},
         )
 
     action_indexes = _listbox_action_indexes(listbox)
@@ -73,6 +75,8 @@ def _parse_listbox(
         raise SedeParseError(
             "declaraciones response missing justificante column",
             translated_message=tr("adapters.sede.errors.justificante_column_missing"),
+            failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+            context={"modelo": modelo, "ejercicio": ejercicio},
         )
     items = listbox.find_all(class_=_has_class("z-listitem"))
 

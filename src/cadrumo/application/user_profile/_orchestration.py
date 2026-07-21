@@ -29,18 +29,23 @@ See Also:
 from __future__ import annotations
 
 import secrets
-from collections.abc import Iterable
+from collections.abc import Generator, Iterable
 from contextlib import contextmanager
 from datetime import date
 from typing import TYPE_CHECKING
 
-from ...adapters.persistence.storage import BUCKET_DEK_FILENAME
-from ...adapters.persistence.storage.bucket import bucket_paths, keystore_path
+from ...adapters.persistence.storage import BUCKET_DEK_FILENAME, close_active_bucket_session
+from ...adapters.persistence.storage.bucket import (
+    BucketValidationError,
+    acquire_lock,
+    bucket_paths,
+    keystore_path,
+    release_lock,
+)
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ...core import BucketPointer, write_pointer
+from ...core import BucketPointer
 from ...core.config import load_settings
-from ...core.errors import AeatError
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.time import now
 from ...domain.user_profile import (
@@ -57,9 +62,11 @@ from . import (
     UserProfileLifecycleRepository,
 )
 from ._lifecycle import ProfileLifecycleService
+from ._profile_pointer_transaction import active_profile_pointer_transaction
 from ._profile_repository import ProfileRepository
 
 if TYPE_CHECKING:
+    from ...domain.buckets import BucketEventHistoryRepositoryProtocol
     from ..workflow import WorkflowState
 
 _log = get_logger(__name__)
@@ -121,25 +128,6 @@ def _append_workflow_event(state: WorkflowState, *, action: str, bucket_id: str,
     return state.model_copy(update={"bucket_events": (*state.bucket_events, event), "updated_at": utc_now()})
 
 
-def _write_active_profile_pointer(bucket_id: str) -> None:
-    """Atomically materialise the active-profile pointer file on disk.
-
-    The :class:`~cadrumo.core.BucketPointer` file is the canonical default
-    for the active-profile precedence chain. Writing happens here so a
-    successful register / select call leaves the on-disk state
-    self-consistent: the next process invocation resolves the active
-    profile from the pointer before any encrypted state row needs to
-    load.
-    """
-    from ...core.config import load_settings
-
-    settings = load_settings()
-    write_pointer(
-        settings.cadrumo_local_storage_root,
-        BucketPointer(bucket_id=bucket_id, schema_version=1),
-    )
-
-
 @contextmanager
 def profile_create_storage_span(profile_id: str):
     """Open the first-profile storage span for a bucket being created.
@@ -147,10 +135,10 @@ def profile_create_storage_span(profile_id: str):
     The span writes the provisional :class:`~cadrumo.core.BucketPointer`
     needed to resolve the create-time bucket route, then enters
     :func:`~cadrumo.adapters.persistence.storage.activate_master_key_provider`
-    with DEK enrollment enabled. If bucket setup fails before or outside
-    :meth:`~cadrumo.application.user_profile.ProfileRepository.create`
-    owns rollback, the prior pointer bytes are restored and provisional
-    bucket/DEK artifacts minted by this span are removed.
+    with DEK enrollment enabled. If bucket setup fails before repository
+    creation, or later outside the repository's own rollback boundary, the
+    prior pointer bytes are restored and provisional bucket/DEK artifacts
+    minted by this span are removed.
     """
     from ...adapters.persistence.storage.errors import (
         MasterKeyMaterialMissingError,
@@ -163,40 +151,53 @@ def profile_create_storage_span(profile_id: str):
     from ...core.config import override_settings
 
     root = load_settings().cadrumo_local_storage_root
-    paths = bucket_paths(root, profile_id)
-    dek_path = keystore_path(root, profile_id) / BUCKET_DEK_FILENAME
-    bucket_dir_existed = paths.bucket_dir.exists()
-    keystore_dir_existed = dek_path.parent.exists()
-    dek_existed = dek_path.exists()
-    prior_pointer = capture_active_profile_pointer()
-    provider = get_master_key_provider()
-    try:
-        _write_active_profile_pointer(profile_id)
+    with active_profile_pointer_transaction(root) as pointer_transaction:
+        paths = bucket_paths(root, profile_id)
+        dek_path = keystore_path(root, profile_id) / BUCKET_DEK_FILENAME
+        bucket_dir_existed = paths.bucket_dir.exists()
+        keystore_dir_existed = dek_path.parent.exists()
+        dek_existed = dek_path.exists()
+        prior_pointer = pointer_transaction.capture()
         try:
-            provider.get_master_key()
-        except MasterKeyMaterialMissingError:
+            pointer_transaction.write(BucketPointer(bucket_id=profile_id, schema_version=1))
+            provider = get_master_key_provider()
             try:
-                provider.provision_master_key()
-            except SecretAlreadyExistsError:
-                _log.debug("master key already provisioned while opening create span for profile %s", profile_id)
-        with (
-            override_settings(cadrumo_active_profile=profile_id),
-            activate_master_key_provider(
-                provider,
-                fallback_bucket_id=profile_id,
-                allow_bucket_dek_enrollment=True,
-            ),
-        ):
-            yield profile_id
-    except Exception:
-        restore_active_profile_pointer(prior_pointer)
-        _remove_create_span_artifacts(
-            profile_id,
-            bucket_dir_existed=bucket_dir_existed,
-            keystore_dir_existed=keystore_dir_existed,
-            dek_existed=dek_existed,
-        )
-        raise
+                provider.get_master_key()
+            except MasterKeyMaterialMissingError:
+                try:
+                    provider.provision_master_key()
+                except SecretAlreadyExistsError:
+                    _log.debug("master key already provisioned while opening create span for profile %s", profile_id)
+            with (
+                override_settings(cadrumo_active_profile=profile_id),
+                activate_master_key_provider(
+                    provider,
+                    fallback_bucket_id=profile_id,
+                    allow_bucket_dek_enrollment=True,
+                ),
+            ):
+                yield profile_id
+        except BaseException as create_error:
+            try:
+                pointer_transaction.restore(prior_pointer)
+            except BaseException as rollback_error:
+                _remove_create_span_artifacts(
+                    profile_id,
+                    bucket_dir_existed=bucket_dir_existed,
+                    keystore_dir_existed=keystore_dir_existed,
+                    dek_existed=dek_existed,
+                )
+                raise BaseExceptionGroup(
+                    "profile creation and active-pointer rollback both failed",
+                    [create_error, rollback_error],
+                ) from None
+            _remove_create_span_artifacts(
+                profile_id,
+                bucket_dir_existed=bucket_dir_existed,
+                keystore_dir_existed=keystore_dir_existed,
+                dek_existed=dek_existed,
+            )
+            raise
 
 
 def _remove_create_span_artifacts(
@@ -213,7 +214,7 @@ def _remove_create_span_artifacts(
     if not bucket_dir_existed:
         try:
             remove_profile_bucket_directory(profile_id)
-        except (AeatError, OSError):
+        except (CadrumoError, OSError):
             _log.debug("failed create-span bucket cleanup for profile %s", profile_id, exc_info=True)
 
     dek_path = keystore_path(root, profile_id) / BUCKET_DEK_FILENAME
@@ -252,20 +253,40 @@ def profile_storage_session(profile_id: str):
         yield profile_id
 
 
-def _clear_active_profile_pointer() -> None:
-    """Remove the active-profile pointer file if present.
+@contextmanager
+def _profile_export_runtime(
+    profile_id: str,
+) -> Generator[BucketEventHistoryRepositoryProtocol]:
+    """Bind export serialization and audit persistence to one profile runtime."""
+    from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
+    from ...adapters.persistence.storage import has_active_bucket_session
+    from ...core import resolve_active_bucket_id
 
-    Tombstoning a profile clears the precedence-chain rung-2 entry so
-    the next CLI invocation reports no active profile rather than
-    pointing at a tombstoned record.
-    """
-    from ...core import pointer_path
-    from ...core.config import load_settings
+    if profile_id == resolve_active_bucket_id() and has_active_bucket_session():
+        yield BucketEventHistoryRepository()
+        return
+    with profile_storage_session(profile_id):
+        yield BucketEventHistoryRepository()
 
+
+@contextmanager
+def _profile_mutation_span(profile_id: str) -> Generator[None]:
+    """Hold the canonical bucket lock for one application mutation."""
     settings = load_settings()
-    target = pointer_path(settings.cadrumo_local_storage_root)
-    if target.is_file():
-        target.unlink()
+    paths = bucket_paths(settings.cadrumo_local_storage_root, profile_id)
+    try:
+        acquire_lock(paths, wait_seconds=settings.cadrumo_file_lock_timeout_s)
+    except BucketValidationError as exc:
+        if exc.context is None or exc.context.get("reason") != "bucket_dir_missing":
+            raise
+        raise ProfileNotFoundError(
+            translated_message="application.user_profile.errors.no_active_profile_selected",
+            context={"profile": profile_id},
+        ) from exc
+    try:
+        yield
+    finally:
+        release_lock(paths)
 
 
 class ProfileAlreadyRegisteredError(ProfileNotFoundError):
@@ -276,6 +297,16 @@ class ProfileAlreadyRegisteredError(ProfileNotFoundError):
     the CLI decorator translates it to a typed refusal that names
     ``config switch`` as the next action.
     """
+
+
+class ProfileLogoutOverrideError(UserProfileError):
+    """Refuse logout while an explicit active-profile override is in force."""
+
+    def __init__(self) -> None:
+        """Initialise the refusal with override-specific recovery guidance."""
+        super().__init__(
+            translated_message="errors.refused.refused_profile_logout_override",
+        )
 
 
 def register_active_profile(
@@ -320,39 +351,36 @@ def register_active_profile(
     event audit stream onto the supplied
     :class:`~cadrumo.application.workflow.WorkflowState`.
 
-    The repository owns every store write, the pointer included. A
-    caller that performs the cold-start pointer write early (so the
-    workflow-state engine can resolve before this function runs inside
-    ``workflow_state_repository().update``) is responsible for
-    restoring that early pointer if the surrounding span fails before
-    or after ``create`` - :func:`capture_active_profile_pointer` and
-    :func:`restore_active_profile_pointer` cover the steps the
-    repository's own rollback cannot see (engine open, master-key
-    activation).
+    The repository owns every aggregate store write, the pointer included.
+    This coordinator enters the shared pointer transaction before repository
+    creation. A surrounding :func:`profile_create_storage_span` retains the
+    same reentrant transaction across cold-start routing, engine activation,
+    repository creation, and byte-exact failed-create rollback.
     """
-    repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
-    repository.create(
-        label=display_name,
-        facts=facts,
-        profile_id=profile_id,
-        enforce_unique_tax_id=enforce_unique_tax_id,
-        routing_profile_id=routing_profile_id,
-    )
-    from ..workflow import utc_now
+    with active_profile_pointer_transaction():
+        repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+        repository.create(
+            label=display_name,
+            facts=facts,
+            profile_id=profile_id,
+            enforce_unique_tax_id=enforce_unique_tax_id,
+            routing_profile_id=routing_profile_id,
+        )
+        from ..workflow import utc_now
 
-    updated = state.model_copy(update={"updated_at": utc_now()})
-    updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
-    updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
-    if facts:
-        keys_id = "keys:" + ",".join(sorted(f.path for f in facts if f.value is not None))
-        if keys_id != "keys:":
-            updated = _append_workflow_event(
-                updated,
-                action="profile.values.updated",
-                bucket_id=profile_id,
-                object_id=keys_id,
-            )
-    return updated
+        updated = state.model_copy(update={"updated_at": utc_now()})
+        updated = _append_workflow_event(updated, action="profile.created", bucket_id=profile_id, object_id=profile_id)
+        updated = _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
+        if facts:
+            keys_id = "keys:" + ",".join(sorted(f.path for f in facts if f.value is not None))
+            if keys_id != "keys:":
+                updated = _append_workflow_event(
+                    updated,
+                    action="profile.values.updated",
+                    bucket_id=profile_id,
+                    object_id=keys_id,
+                )
+        return updated
 
 
 def _append_profile_activated_event(*, profile_id: str, active_profile: str | None) -> None:
@@ -410,7 +438,11 @@ def select_profile_with_lifecycle_span(profile_id: str) -> None:
     from ...core import resolve_active_bucket_id
     from ..workflow import workflow_state_repository
 
-    with profile_storage_session(profile_id):
+    with (
+        active_profile_pointer_transaction(),
+        _profile_mutation_span(profile_id),
+        profile_storage_session(profile_id),
+    ):
         workflow_state_repository().update(lambda current: select_profile(current, profile_id=profile_id))
         _append_profile_activated_event(profile_id=profile_id, active_profile=resolve_active_bucket_id())
 
@@ -421,7 +453,11 @@ def delete_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord:
     Returns the deleted :class:`~cadrumo.domain.user_profile.UserProfileRecord`
     from :meth:`~cadrumo.application.user_profile.ProfileRepository.delete`.
     """
-    with profile_storage_session(profile_id):
+    with (
+        active_profile_pointer_transaction(),
+        _profile_mutation_span(profile_id),
+        profile_storage_session(profile_id),
+    ):
         aggregate = ProfileRepository().delete(profile_id)
     return aggregate.record
 
@@ -433,60 +469,39 @@ def reactivate_profile_with_lifecycle_span(profile_id: str) -> UserProfileRecord
     Returns the reactivated :class:`~cadrumo.domain.user_profile.UserProfileRecord`
     from :meth:`~cadrumo.application.user_profile.ProfileRepository.reactivate`.
     """
-    with profile_storage_session(profile_id):
+    with _profile_mutation_span(profile_id), profile_storage_session(profile_id):
         aggregate = ProfileRepository().reactivate(profile_id)
     return aggregate.record
 
 
 def logout_active_profile() -> str | None:
-    """Clear the active profile pointer and return the profile that was logged out."""
-    from ...core import resolve_active_bucket_id
+    """Close the active storage session, clear its pointer, and return its profile.
 
-    before = resolve_active_bucket_id()
-    _clear_active_profile_pointer()
-    return before
+    Explicit ``cadrumo_active_profile`` overrides are process-scoped and cannot
+    be unset by this application boundary. They are refused before lock
+    acquisition or session teardown so logout never clears an unrelated
+    durable pointer or reports that an override-selected profile was signed
+    out.
 
+    The pointer transaction is acquired before session teardown to preserve the
+    project-wide lock order. Session close and ContextVar eviction complete
+    before pointer mutation, so an unexpected teardown failure cannot report a
+    successful pointer-only logout. Provider bookkeeping remains owned by the
+    provider context and unwinds idempotently when that context exits.
 
-def capture_active_profile_pointer() -> str | None:
-    """Return the raw active-profile pointer text, or ``None`` if absent.
-
-    A cold-start caller — one that must write the active-profile pointer
-    early so ``workflow_state_repository()`` can resolve its per-bucket
-    engine before :func:`register_active_profile` runs — captures the
-    genuine pre-write pointer with this helper, then restores it in a
-    ``try``/``except`` if the create span fails. This closes the window
-    the repository's own rollback cannot reach: a failure between the
-    early pointer write and
-    :meth:`~cadrumo.application.user_profile.ProfileRepository.create`
-    (engine open, master-key activation) would otherwise strand the
-    pointer at a profile whose record was never persisted.
+    Raises:
+        ProfileLogoutOverrideError: If an explicit active-profile override is
+            in force.
     """
-    from ...core import pointer_path
-
-    target = pointer_path(load_settings().cadrumo_local_storage_root)
-    if not target.is_file():
-        return None
-    return target.read_text(encoding=_UTF_8_ENCODING)
-
-
-def restore_active_profile_pointer(prior_text: str | None) -> None:
-    """Restore the active-profile pointer to a previously captured state.
-
-    Counterpart to :func:`capture_active_profile_pointer`. A cold-start
-    caller calls this from the ``except`` arm of the span it wraps: if
-    there was no prior pointer the early write is removed, otherwise the
-    captured bytes are written back, so a failed create leaves the
-    pointer exactly as it was found.
-    """
-    from ...core import pointer_path
-
-    target = pointer_path(load_settings().cadrumo_local_storage_root)
-    if prior_text is None:
-        if target.is_file():
-            target.unlink()
-        return
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(prior_text, encoding=_UTF_8_ENCODING)
+    override = (load_settings().cadrumo_active_profile or "").strip()
+    if override:
+        raise ProfileLogoutOverrideError
+    with active_profile_pointer_transaction() as pointer_transaction:
+        pointer = pointer_transaction.read()
+        before = pointer.bucket_id if pointer is not None else None
+        close_active_bucket_session()
+        pointer_transaction.clear()
+        return before
 
 
 def refuse_duplicate_label(
@@ -533,7 +548,7 @@ def remove_profile_bucket_directory(profile_id: str) -> None:
     """Trash-rename and remove a profile's on-disk bucket directory.
 
     Used both by atomic-create rollback and by
-    :func:`~cadrumo.application.config_reset.reset_config`. The
+    :func:`~cadrumo.application.config_reset.start_config_reset`. The
     directory is first renamed to a trash-prefix sibling so a crashed
     removal leaves a recoverable on-disk trace, then recursively
     deleted. When the rename is refused - Windows denies renaming a
@@ -617,12 +632,13 @@ def select_profile(
     solely in
     :meth:`~cadrumo.application.user_profile.ProfileRepository.select`.
     """
-    repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
-    repository.select(profile_id)  # raises ProfileNotFoundError if missing
-    from ..workflow import utc_now
+    with active_profile_pointer_transaction(), _profile_mutation_span(profile_id):
+        repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+        repository.select(profile_id)  # raises ProfileNotFoundError if missing
+        from ..workflow import utc_now
 
-    updated = state.model_copy(update={"updated_at": utc_now()})
-    return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
+        updated = state.model_copy(update={"updated_at": utc_now()})
+        return _append_workflow_event(updated, action="profile.selected", bucket_id=profile_id, object_id=profile_id)
 
 
 def set_active_field(
@@ -646,17 +662,18 @@ def set_active_field(
         The updated :class:`~cadrumo.application.workflow.WorkflowState`.
     """
     profile_id = _require_active(state)
-    service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
-    service.edit_field(
-        EditProfileFieldCommand(
-            profile_id=profile_id,
-            path=fact.path,
-            value=fact.value,
-            valid_from=fact.valid_from,
-            valid_to=fact.valid_to,
-            source=fact.source,
-        ),
-    )
+    with _profile_mutation_span(profile_id):
+        service = build_lifecycle_service(bucket_id=profile_id, secure_objects=secure_objects, schema=schema)
+        service.edit_field(
+            EditProfileFieldCommand(
+                profile_id=profile_id,
+                path=fact.path,
+                value=fact.value,
+                valid_from=fact.valid_from,
+                valid_to=fact.valid_to,
+                source=fact.source,
+            ),
+        )
     action = "profile.values.cleared" if fact.value is None else "profile.values.updated"
     return _append_workflow_event(state, action=action, bucket_id=profile_id, object_id=fact.path)
 
@@ -707,13 +724,20 @@ def remove_active_profile(
     pointer clear) lives solely in
     :meth:`~cadrumo.application.user_profile.ProfileRepository.delete`.
     """
-    profile_id = _require_active(state)
-    repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
-    repository.delete(profile_id)
-    from ..workflow import utc_now
+    with active_profile_pointer_transaction():
+        profile_id = _require_active(state)
+        with _profile_mutation_span(profile_id):
+            repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+            repository.delete(profile_id)
+            from ..workflow import utc_now
 
-    updated = state.model_copy(update={"updated_at": utc_now()})
-    return _append_workflow_event(updated, action="profile.tombstoned", bucket_id=profile_id, object_id=profile_id)
+            updated = state.model_copy(update={"updated_at": utc_now()})
+            return _append_workflow_event(
+                updated,
+                action="profile.tombstoned",
+                bucket_id=profile_id,
+                object_id=profile_id,
+            )
 
 
 def fact_value(record: UserProfileRecord | None, path: str) -> str | None:
@@ -791,12 +815,14 @@ def rename_profile(
     :class:`~cadrumo.domain.user_profile.UserProfileRecord` after the label
     change is persisted.
     """
-    repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
-    aggregate = repository.rename(profile_id, new_label=new_label)
+    with _profile_mutation_span(profile_id):
+        repository = ProfileRepository(secure_objects=secure_objects, schema=schema)
+        aggregate = repository.rename(profile_id, new_label=new_label)
     return aggregate.record
 
 
 __all__ = [
+    "ProfileLogoutOverrideError",
     "build_lifecycle_service",
     "delete_profile_with_lifecycle_span",
     "fact_value",

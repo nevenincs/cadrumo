@@ -1,4 +1,4 @@
-# How to authenticate Cadrumo with AEAT
+# Authenticate Cadrumo with AEAT
 
 Authenticate Cadrumo with Spain's Tax Agency, the Agencia Estatal de
 Administración Tributaria (AEAT), to let Cadrumo's `aeat` command read information
@@ -20,20 +20,24 @@ Cadrumo no longer retrieves these facts live.
 
 You need:
 
-- an [active profile](profile-setup.md#what-the-active-profile-means). `cadrumo
-  config auth configure` refuses with `No hay un perfil activo` until you create
-  one. Create one non-interactively with `aeat config profile create me --quiet
-  --tax-id <NIF/CIF/DNI/NIE> --name "Ana" --surnames "Garcia Lopez"`. A NIF,
-  CIF, DNI, or NIE is a Spanish tax identifier.
-- the master-key passphrase that protects your local store. The tool prompts for
-  it, or set `CADRUMO_SECRET_PASSPHRASE` to run without a prompt.
+- an [active profile](profile-setup.md#what-the-active-profile-means). `aeat
+  config auth configure` refuses with `No hay un perfil activo` until you
+  create one. Create one non-interactively (a NIF, CIF, DNI, or NIE is a
+  Spanish tax identifier):
+
+  ```{cli-sequence} authenticate-profile
+  :verify: Confirm a taxpayer profile can be created non-interactively.
+  ```
+
+- the master-key passphrase that protects your local store; the tool
+  prompts for it.
 
 ## See supported providers
 
 List providers:
 
-```bash
-aeat config auth providers
+```{cli-sequence} authenticate-providers
+:verify: Confirm the tool lists the supported authentication providers.
 ```
 
 The list marks each provider as `disponible` (available now) or `reservado (no
@@ -54,8 +58,7 @@ Configure one of the available providers.
 
 Configure the provider you use:
 
-```bash
-aeat config auth configure --provider certificate --file ./certificate.p12
+```{cli-sequence} authenticate-configure
 ```
 
 Use `--file` for providers that need a file, such as your digital certificate.
@@ -65,14 +68,14 @@ Keep credential files private and do not share them.
 
 Check what is configured:
 
-```bash
-aeat config auth status
-aeat config auth test
+```{cli-sequence} authenticate-readiness
+:verify: Confirm the tool reports what is configured and probes it locally.
 ```
 
 If you want to inspect a specific provider, use `--provider` with either
 command.
 
+(renew-your-certificate-before-it-expires)=
 ## Renew your certificate before it expires
 
 A digital certificate has an expiry date. The tool reads that date from the
@@ -81,8 +84,8 @@ live read caused by an expired certificate.
 
 Check the remaining validity:
 
-```bash
-aeat config auth test
+```{cli-sequence} authenticate-check-validity
+:verify: Confirm the local probe reports the certificate's remaining validity.
 ```
 
 The report tells you how the certificate stands:
@@ -102,17 +105,19 @@ Download the renewed certificate file (`.p12` or `.pfx`) to your machine.
 
 Point the tool at the renewed file:
 
-```bash
-aeat config auth configure --provider certificate --file ./renewed-certificate.p12
+```{cli-sequence} authenticate-configure-renewed
 ```
 
-If the renewed certificate uses a new password, update the
-`AEAT_CERTIFICATE_PASSWORD_SECRET` environment variable before you re-check.
+If the renewed certificate uses a new password, rotate the stored
+passphrase for its source:
+
+```{cli-sequence} authenticate-secret-set
+```
 
 Confirm the new expiry:
 
-```bash
-aeat config auth test
+```{cli-sequence} authenticate-confirm-expiry
+:verify: Confirm the local probe reports the renewed certificate's later expiry.
 ```
 
 The report now shows the renewed certificate's later expiry date.
@@ -124,27 +129,24 @@ reconfigure `aeat config auth configure --file` every time you switch.
 
 Register each certificate under a name:
 
-```bash
-aeat config auth certificate register --name personal --file ./personal.p12
-aeat config auth certificate register --name apoderado-acme --file ./acme.p12 --friendly-name "ACME SL"
+```{cli-sequence} authenticate-certificate-register
 ```
 
 List every registered certificate:
 
-```bash
-aeat config auth certificate list
+```{cli-sequence} authenticate-certificate-list
+:verify: Confirm the tool lists the registered certificates.
 ```
 
 Select the one you want active:
 
-```bash
-aeat config auth certificate select --name apoderado-acme
+```{cli-sequence} authenticate-certificate-select
 ```
 
 Remove a registered certificate you no longer need:
 
-```bash
-aeat config auth certificate remove --name personal
+```{cli-sequence} authenticate-certificate-remove
+:verify: Confirm the tool removes a registered certificate by name.
 ```
 
 ### Check every registered certificate's expiry
@@ -152,8 +154,8 @@ aeat config auth certificate remove --name personal
 Each registered certificate has its own expiry date. Check all registered
 certificates in one pass, not only the active one:
 
-```bash
-aeat config auth certificate check
+```{cli-sequence} authenticate-certificate-check
+:verify: Confirm the tool checks every registered certificate's expiry in one pass.
 ```
 
 The report lists each registered certificate with its status:
@@ -166,8 +168,7 @@ The report lists each registered certificate with its status:
 Renew an expiring or expired certificate with the body that issued it, then
 re-register it under its existing name:
 
-```bash
-aeat config auth certificate register --name apoderado-acme --file ./renewed-acme.p12
+```{cli-sequence} authenticate-certificate-reregister
 ```
 
 Re-run `aeat config auth certificate check` to confirm the new expiry date.
@@ -176,39 +177,38 @@ Re-run `aeat config auth certificate check` to confirm the new expiry date.
 
 When you are ready to use a live-read command:
 
-```bash
-aeat config auth login
+```{cli-sequence} authenticate-login
 ```
 
 If you need to intentionally reauthenticate, force a fresh authentication:
 
-```bash
-aeat config auth login --fresh
+```{cli-sequence} authenticate-login-fresh
 ```
 
 If a previous login was interrupted and left the authentication step stuck, use
 `--reset-lock`. Run it when `login` reports another login is in progress but it
 is not.
 
-## Clear local auth metadata
+## End sessions or reset authentication
 
-Clear one provider:
+To end the local certificate-provider session without removing its
+configuration:
 
-```bash
-aeat config auth clear --provider certificate
+```{cli-sequence} authenticate-logout-provider
+:verify: Confirm logout ends the local session while preserving the provider configuration.
 ```
 
-Clear sessions or locks:
+To remove one provider's local configuration, sessions, acquisition lock,
+registered certificates, and stored certificate secrets:
 
-```bash
-aeat config auth clear --sessions
-aeat config auth clear --locks
+```{cli-sequence} authenticate-reset-provider
+:verify: Confirm reset removes the selected provider's local authentication state.
 ```
 
-If you intend to reset authentication setup, clear all configured providers:
+To remove local authentication state for every configured provider:
 
-```bash
-aeat config auth clear --all
+```{cli-sequence} authenticate-reset-all
+:verify: Confirm reset removes local authentication state for all configured providers.
 ```
 
 ## Act for someone else (apoderado)
@@ -227,8 +227,8 @@ AEAT. No command writes representation state to AEAT.
 
 List the scope codes the tool accepts:
 
-```bash
-aeat config auth apoderado scopes list
+```{cli-sequence} authenticate-apoderado-scopes
+:verify: Confirm the tool lists the accepted apoderamiento scope codes.
 ```
 
 Each scope is an AEAT apoderamiento area. Examples include:
@@ -245,8 +245,8 @@ Each scope is an AEAT apoderamiento area. Examples include:
 Set the represented party's tax identifier (NIF, CIF, DNI, NIE, or NII) and
 the scopes that match the grant at AEAT:
 
-```bash
-aeat config auth apoderado configure --represented-nif <nif> --scope IVA --scope PAGOSF
+```{cli-sequence} authenticate-apoderado-configure
+:verify: Confirm the tool records the represented party and scopes locally.
 ```
 
 Repeat `--scope` for each code. The CLI rejects a comma-separated list. Scope
@@ -260,8 +260,8 @@ again replaces it. The represented identifier is stored encrypted.
 
 Show what is recorded for the active profile:
 
-```bash
-aeat config auth apoderado status
+```{cli-sequence} authenticate-apoderado-status
+:verify: Confirm the tool shows the apoderado configuration recorded locally.
 ```
 
 `aeat config auth apoderado check` is the live-verification verb, but the
@@ -271,8 +271,8 @@ for the offline configuration read.
 
 Remove the configuration when the representation ends:
 
-```bash
-aeat config auth apoderado clear
+```{cli-sequence} authenticate-apoderado-clear
+:verify: Confirm the tool removes the local apoderado record.
 ```
 
 Clearing removes only the local record. The apoderamiento at AEAT is

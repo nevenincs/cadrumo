@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#semantic-dedup-epic'
 date: '2026-06-13'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-13-semantic-dedup-epic-research]]'
   - "[[2026-06-13-semantic-dedup-epic-audit]]"
@@ -44,7 +44,7 @@ fully determinable from the source.
 
 **F3 — accepted and implemented.** One canonical
 `resolve_repository_bucket_id(bucket_id, *, error_type)` is added to the core
-bucket-pointer module and exported through `aeat.core`. The three per-domain
+bucket-pointer module and exported through `cadrumo.core`. The three per-domain
 runtime-repository resolvers (`domain.modelos`, `domain.filing`,
 `application.filing`) delegate to it, passing their own domain error class. The
 message key and reason contexts were already identical across the three copies,

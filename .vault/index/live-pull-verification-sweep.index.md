@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-pull-verification-sweep'
-date: '2026-07-10'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S01]]'
   - '[[2026-06-12-live-pull-verification-sweep-W01-P01-S02]]'
@@ -16,18 +16,24 @@ related:
   - '[[2026-06-12-live-pull-verification-sweep-W01-P02-S07]]'
   - '[[2026-06-12-live-pull-verification-sweep-W01-P02-summary]]'
   - '[[2026-06-12-live-pull-verification-sweep-W02-P03-S09]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S10]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S11]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S12]]'
   - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S13]]'
   - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S14]]'
   - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S15]]'
   - '[[2026-06-12-live-pull-verification-sweep-W02-P04-S16]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S17]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S19]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S20]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S21]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S22]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S23]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P05-S24]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P06-S25]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W03-P06-S26]]'
   - '[[2026-06-12-live-pull-verification-sweep-W03-P06-S27]]'
+  - '[[2026-06-12-live-pull-verification-sweep-W04-P07-S28]]'
   - '[[2026-06-12-live-pull-verification-sweep-W04-P07-S29]]'
   - '[[2026-06-12-live-pull-verification-sweep-W04-P07-S30]]'
   - '[[2026-06-12-live-pull-verification-sweep-W04-P08-S31]]'
@@ -75,6 +81,8 @@ related:
   - '[[2026-06-13-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-cross-period-aeat-register-exec]]'
   - '[[2026-06-13-live-pull-verification-sweep-w03-p06-s27-w04-p07-s29-expedientes-event-submitted-at-exec]]'
   - '[[2026-07-10-live-pull-verification-sweep-audit]]'
+  - '[[2026-07-12-live-pull-verification-sweep-audit]]'
+  - '[[2026-07-15-live-pull-verification-sweep-audit]]'
 ---
 
 # `live-pull-verification-sweep` feature index
@@ -92,6 +100,8 @@ Auto-generated index of all documents tagged with `#live-pull-verification-sweep
 - `2026-06-12-live-pull-verification-sweep-code-review-audit` - `live-pull-verification-sweep` Code Review
 - `2026-06-12-live-pull-verification-sweep-live-auth-blocker-audit` - `live-pull-verification-sweep` audit: W02.P03 live auth blocker
 - `2026-07-10-live-pull-verification-sweep-audit` - `live-pull-verification-sweep` audit: `closeout reconciliation`
+- `2026-07-12-live-pull-verification-sweep-audit` - `live-pull-verification-sweep` audit: `censo supersession reconciliation code review`
+- `2026-07-15-live-pull-verification-sweep-audit` - `live-pull-verification-sweep` audit: `forbidden git stash incident during justificante fix`
 
 ### exec
 
@@ -158,6 +168,12 @@ Auto-generated index of all documents tagged with `#live-pull-verification-sweep
 - `2026-06-12-live-pull-verification-sweep-W04-P08-S31` - Run code review over the live pull sweep changes and persist findings or no-findings audit before any plan row is checked
 - `2026-06-12-live-pull-verification-sweep-W04-P08-S32` - Run feature-scoped vault checks and rebuild the live-pull-verification-sweep feature index
 - `2026-06-12-live-pull-verification-sweep-W04-P08-S33` - Write the closeout audit listing satisfied rows, real remaining work, touched files, tests and live manual exercises run, and whether the plan can close
+- `2026-06-12-live-pull-verification-sweep-W02-P04-S10` - Prove censo pull and profile reconciliation fetch authenticated Modelo 036 or censo information and derive taxpayer facts without inventing missing obligations
+- `2026-06-12-live-pull-verification-sweep-W03-P05-S19` - Exercise censo CLI commands for pull, show, compare, apply, and calendar projection, proving authenticated Modelo 036 facts drive obligations and typed `core.Period` identities connect those obligations to filed/justificante evidence
+- `2026-06-12-live-pull-verification-sweep-W04-P07-S28` - live pytest lane opt-in inventory and W02.P04 S11-S12-S27 status reconfirmation
+- `2026-06-12-live-pull-verification-sweep-W02-P04-S11` - Prove filed-declaration list, single pull, bulk pull, and source pull fetch authenticated AEAT register data and persist only stamped official evidence
+- `2026-06-12-live-pull-verification-sweep-W02-P04-S12` - Prove expedientes pull fetches authenticated expediente rows with typed empty, timeout, and portal-drift outcomes
+- `2026-06-12-live-pull-verification-sweep-W03-P06-S26` - Run the manual authenticated sweep with the operator present and create one exec record per completed command group
 
 ### plan
 

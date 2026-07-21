@@ -25,7 +25,7 @@ Why this exists:
 
 How these fixtures are built:
 
-- `src/aeat/tests/fixtures/financial/n26/_generate.py` renders committed PDFs with
+- `src/cadrumo/tests/fixtures/financial/n26/_generate.py` renders committed PDFs with
   `reportlab`
 - the PDFs preserve the real template family at the line-structure level:
   statement header, transaction block, summary block, fees/interest block, and
@@ -42,5 +42,5 @@ How the goldens are maintained:
 Regeneration:
 
 ```powershell
-uv run python src/aeat/tests/fixtures/financial/n26/_generate.py
+uv run python src/cadrumo/tests/fixtures/financial/n26/_generate.py
 ```

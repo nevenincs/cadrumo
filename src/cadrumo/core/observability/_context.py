@@ -62,8 +62,8 @@ class RunContextInfo(BaseModel):
             enter.
         arguments: Tuple of :class:`ArgumentRecord` capturing the CLI
             flags / positional values for replay.
-        corpus_sha256: Fingerprint of ``.vault/`` plus :class:`Settings`
-            plus ``env/.env`` at enter time.
+        corpus_sha256: Fingerprint of the effective configuration —
+            :class:`Settings` plus ``env/.env`` — at enter time.
         db_sha256: Fingerprint of the local ``var/`` state tree at
             enter time, excluding cache subdirectories.
         cert_fingerprint: SHA-256 of the configured PKCS#12 certificate,
@@ -134,7 +134,7 @@ def _build_initial_context(
         entrypoint=entrypoint,
         started_at=started_at,
         arguments=tuple(arguments),
-        corpus_sha256=compute_corpus_sha256(PROJECT_ROOT / ".vault", settings),
+        corpus_sha256=compute_corpus_sha256(settings),
         db_sha256=compute_db_sha256(PROJECT_ROOT / "var"),
         cert_fingerprint=read_cert_fingerprint(),
         initial_step_id=step_id or _DEFAULT_INITIAL_STEP,
@@ -303,7 +303,7 @@ def run_context(
                 _log.warning("failed to record STEP_END for run %s", info.run_id, exc_info=True)
     finally:
         # If we were re-entered by ``replay_run``, label the persisted
-    # trace with the original run id so a run-detail view can tell a
+        # trace with the original run id so a run-detail view can tell a
         # replay trace apart from a fresh one. Only a legitimately-shaped
         # 16-hex run id is propagated; any other value is ignored.
         replay_of = _resolve_replay_of()

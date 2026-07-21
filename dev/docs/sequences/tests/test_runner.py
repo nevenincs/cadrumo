@@ -1,0 +1,469 @@
+"""Real-behaviour tests for the per-sequence hermetic sandbox runner.
+
+Every test drives the REAL Cadrumo CLI in-process against a fresh
+real-crypto sandbox (genuine ``bucket-dek-v1`` bucket, encrypted SQLite,
+frozen clock, injected deterministic profile id) — no mocks, no skips, no
+seeded stand-ins. The worked chain is the Modelo 130 lifecycle: ``work
+create`` → ``work calculate`` (with real registry bindings) → ``work verify``,
+whose verify gate genuinely refuses without clean cross-period evidence, so the
+terminal ``@result`` frame exercises a real declared non-zero exit.
+
+Determinism observation (formalised by this anti-tautology gate): two
+executions of the chain in fresh sandboxes produced ZERO pre-mask differing
+JSON paths and byte-identical raw outputs — with the clock frozen and the
+profile id injected, the work-unit and calculation-revision ids are
+content-addressed and every timestamp is pinned, so the residual
+non-deterministic surface of this chain is empty (trivially within the central
+``GOLDEN_MASK_FIELDS``). The test pins that observation.
+"""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+
+from cadrumo.core.observability import GOLDEN_MASK_FIELDS, differing_field_names, differing_paths
+from cadrumo.tests.env_scope import scoped_env_var
+
+from .. import (
+    SANDBOX_PROFILE_ID,
+    FrameKind,
+    ParsedSequence,
+    SequenceExecutionError,
+    SequenceTranscript,
+    execute_sequence,
+    parse_sequence,
+)
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
+
+#: A real create → calculate → verify chain over Modelo 130 2025 1T. The verify
+#: gate refuses (cross-period evidence is absent in a fresh sandbox), so the
+#: result frame declares the non-zero exit and asserts the refusal semantically.
+_CHAIN_BODY = "\n".join(
+    [
+        "aeat --format json app modelo work create --modelo 130 --year 2025 --period 1T",
+        "@capture work_unit_id result.work_unit_id",
+        "aeat --format json app modelo work calculate {work_unit_id}"
+        " --binding irpf.previous_year_economic_activity_net_income=13000"
+        " --binding modelo-130-resultados-negativos-anteriores=0",
+        "@capture calculation_revision_id result.calculation_revision_id",
+        "@result aeat --format json app modelo work verify {calculation_revision_id}",
+        "@expect result.granted_verificado_completo == false",
+        "@expect exit_code == 1",
+    ],
+)
+
+
+def _chain_sequence() -> ParsedSequence:
+    return parse_sequence(
+        sequence_id="runner-m130-chain",
+        options={"verify": "Verify the calculation before exporting."},
+        body=_CHAIN_BODY,
+    )
+
+
+def _result_sequence(body: str, *, sequence_id: str = "runner-refusal-case") -> ParsedSequence:
+    """Parse a minimal structurally-valid sequence around ``body``'s frames."""
+    return parse_sequence(
+        sequence_id=sequence_id,
+        options={"verify": "Verify the command completed."},
+        body=body,
+    )
+
+
+@pytest.fixture(scope="module")
+def chain_transcript(tmp_path_factory: pytest.TempPathFactory) -> SequenceTranscript:
+    """One real chain execution shared by the inspection tests below."""
+    root = tmp_path_factory.mktemp("chain-run-a")
+    return execute_sequence(_chain_sequence(), sandbox_root=root)
+
+
+class TestHermeticChainExecution:
+    def test_chain_executes_all_frames_in_order(self, chain_transcript: SequenceTranscript) -> None:
+        kinds = [frame.kind for frame in chain_transcript.frames]
+        assert kinds == [FrameKind.COMMAND, FrameKind.COMMAND, FrameKind.RESULT]
+        assert chain_transcript.profile_id == SANDBOX_PROFILE_ID
+        assert chain_transcript.frames[0].exit_code == 0
+        assert chain_transcript.frames[1].exit_code == 0
+
+    def test_every_json_frame_records_its_envelope(self, chain_transcript: SequenceTranscript) -> None:
+        for frame in chain_transcript.frames:
+            assert frame.envelope is not None, frame.output
+            # The recorded document is the real shared envelope spine.
+            assert {"command", "status", "schema_version", "result", "notices"} <= set(frame.envelope)
+
+    def test_captures_thread_real_ids_into_later_frames(self, chain_transcript: SequenceTranscript) -> None:
+        create, calculate, verify = chain_transcript.frames
+
+        work_unit_id = chain_transcript.captures["work_unit_id"]
+        revision_id = chain_transcript.captures["calculation_revision_id"]
+
+        # The captured values are the REAL ids the create/calculate envelopes carry.
+        assert create.envelope is not None and calculate.envelope is not None
+        create_result = create.envelope["result"]
+        calculate_result = calculate.envelope["result"]
+        assert isinstance(create_result, dict) and isinstance(calculate_result, dict)
+        assert create_result["work_unit_id"] == work_unit_id
+        assert calculate_result["calculation_revision_id"] == revision_id
+
+        # ... and the later frames executed with those ids interpolated in argv.
+        assert work_unit_id in calculate.argv
+        assert revision_id in verify.argv
+        # The authored line keeps its placeholder; only the executed argv resolves.
+        assert "{work_unit_id}" in calculate.command_line
+        assert "{calculation_revision_id}" in verify.command_line
+
+    def test_declared_nonzero_exit_is_captured_not_fatal(self, chain_transcript: SequenceTranscript) -> None:
+        verify = chain_transcript.result_frame
+        assert verify.exit_code == 1  # declared via '@expect exit_code == 1'
+        assert verify.envelope is not None
+        result = verify.envelope["result"]
+        assert isinstance(result, dict)
+        assert result["granted_verificado_completo"] is False
+
+
+class TestSandboxIsolationAndDeterminism:
+    def test_second_run_is_isolated_and_byte_deterministic(
+        self,
+        chain_transcript: SequenceTranscript,
+        tmp_path: Path,
+    ) -> None:
+        """A rerun in a fresh sandbox neither sees the first run's state nor drifts.
+
+        Isolation and determinism are one assertion here: if any state leaked
+        between the sandboxes, the second ``work create`` would resolve to the
+        first run's existing unit as an idempotent no-op with an extra notice —
+        a pre-mask envelope difference this comparison would surface.
+        """
+        rerun = execute_sequence(_chain_sequence(), sandbox_root=tmp_path / "chain-run-b")
+
+        assert rerun.storage_root != chain_transcript.storage_root
+
+        residual_paths: set[str] = set()
+        residual_names: set[str] = set()
+        for first, second in zip(chain_transcript.frames, rerun.frames, strict=True):
+            assert first.envelope is not None and second.envelope is not None
+            residual_paths |= differing_paths(first.envelope, second.envelope)
+            residual_names |= differing_field_names(first.envelope, second.envelope)
+            assert first.exit_code == second.exit_code
+            # The raw outputs are byte-identical for this chain (observed and
+            # pinned; this gate formalises the mask-honesty proof).
+            assert first.output == second.output
+
+        assert residual_paths == frozenset(), sorted(residual_paths)
+        # Trivially within the central mask; pinned so a new residual field is
+        # a loud, named regression rather than silent golden churn.
+        assert residual_names <= GOLDEN_MASK_FIELDS
+
+        assert rerun.captures == chain_transcript.captures
+
+
+class TestLiveAeatRefusal:
+    @pytest.mark.parametrize(
+        "live_line",
+        [
+            "@setup aeat app live filed pull",
+            "aeat app live iva-wallet pull-history",
+            "aeat --format json app modelo reconcile pull some-work-unit",
+        ],
+    )
+    def test_live_frames_are_refused_before_any_execution(self, live_line: str, tmp_path: Path) -> None:
+        sequence = _result_sequence(
+            f"{live_line}\n@result aeat config profile list\n@expect exit_code == 0\n",
+            sequence_id="runner-live-refusal",
+        )
+        sandbox_root = tmp_path / "never-created"
+
+        with pytest.raises(SequenceExecutionError, match="live-AEAT"):
+            execute_sequence(sequence, sandbox_root=sandbox_root)
+
+        # The refusal precedes the sandbox: nothing was provisioned or executed.
+        assert not sandbox_root.exists()
+
+    def test_option_value_spelled_like_a_pull_verb_is_not_flagged(self) -> None:
+        """The scan skips option VALUES: '--file pull-history.csv' is a local
+        file input, not a live verb (the reviewer-named false positive)."""
+        from .._runner import _live_aeat_tokens
+
+        benign = _result_sequence(
+            "@setup aeat app ledger import --file pull-history.csv\n"
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n',
+            sequence_id="runner-option-value-scan",
+        )
+        assert _live_aeat_tokens(benign.frames[0]) == ()
+
+
+class TestStderrErrorDocument:
+    def test_declared_refusal_records_the_stderr_error_envelope(self, tmp_path: Path) -> None:
+        """A frame that fails via the stderr error-document path is a
+        first-class transcript artifact: the error envelope (which shares the
+        success spine) parses from stderr, ``envelope_source`` names the
+        stream, and ``@expect`` json-paths evaluate against it."""
+        missing_id = "deadbeef" * 8
+        sequence = _result_sequence(
+            f"aeat --format json app modelo work calculate {missing_id}\n"
+            "@expect exit_code == 2\n"
+            '@expect error.code == "REFUSED_CLI_BOUNDARY"\n'
+            "@result aeat --format json config profile list\n"
+            '@expect status == "success"\n',
+            sequence_id="runner-stderr-envelope",
+        )
+        transcript = execute_sequence(sequence, sandbox_root=tmp_path / "stderr-envelope")
+
+        refusal = transcript.frames[0]
+        assert refusal.exit_code == 2
+        assert refusal.stderr, "the refusal must carry the stderr error document"
+        assert refusal.envelope is not None
+        assert refusal.envelope_source == "stderr"
+        error = refusal.envelope["error"]
+        assert isinstance(error, dict)
+        assert error["code"] == "REFUSED_CLI_BOUNDARY"
+
+        success = transcript.result_frame
+        assert success.envelope_source == "stdout"
+        assert success.stderr == ""
+
+
+class TestCaptureFailureDiagnostics:
+    def test_capture_against_text_output_names_the_json_requirement(self, tmp_path: Path) -> None:
+        sequence = _result_sequence(
+            "aeat config profile list\n"
+            "@capture profile_id result.profiles[0].profile_id\n"
+            "@result aeat config profile list\n"
+            "@expect exit_code == 0\n",
+            sequence_id="runner-text-capture",
+        )
+        with pytest.raises(SequenceExecutionError, match="--format json"):
+            execute_sequence(sequence, sandbox_root=tmp_path / "text-capture")
+
+    def test_capture_path_missing_from_envelope_is_instructive(self, tmp_path: Path) -> None:
+        sequence = _result_sequence(
+            "aeat --format json config profile list\n"
+            "@capture nope result.no_such_field\n"
+            "@result aeat config profile list\n"
+            "@expect exit_code == 0\n",
+            sequence_id="runner-missing-path",
+        )
+        with pytest.raises(SequenceExecutionError, match=r"result\.no_such_field"):
+            execute_sequence(sequence, sandbox_root=tmp_path / "missing-path")
+
+    def test_undeclared_nonzero_exit_fails_fast_with_argv_and_output(self, tmp_path: Path) -> None:
+        sequence = _result_sequence(
+            "aeat --format json app modelo work create --modelo 130 --year 2025 --period 9T\n"
+            "@result aeat config profile list\n"
+            "@expect exit_code == 0\n",
+            sequence_id="runner-undeclared-exit",
+        )
+        with pytest.raises(SequenceExecutionError, match="expected 0") as excinfo:
+            execute_sequence(sequence, sandbox_root=tmp_path / "undeclared-exit")
+
+        message = str(excinfo.value)
+        assert "app modelo work create" in message  # the resolved argv
+        assert "@expect exit_code ==" in message  # the instructive remedy
+
+
+class TestNumericJsonPathResolution:
+    """The digit-segment resolution rule of the json-path evaluator.
+
+    An all-digit DOTTED segment is a string object key first (casilla numbers
+    are JSON object keys) and a list index only when the node is a list; the
+    bracketed form stays list-only. Both directions are pinned so neither can
+    silently shadow the other.
+    """
+
+    def test_digit_segment_resolves_a_string_object_key(self) -> None:
+        from .._runner import _resolve_json_path
+
+        document = {"result": {"casilla_values": {"03": "500.00", "01": "1000.00"}}}
+        assert _resolve_json_path(document, "result.casilla_values.03") == (True, "500.00")
+        assert _resolve_json_path(document, "result.casilla_values.01") == (True, "1000.00")
+        assert _resolve_json_path(document, "result.casilla_values.99") == (False, None)
+
+    def test_digit_segment_resolves_a_list_index_when_the_node_is_a_list(self) -> None:
+        from .._runner import _resolve_json_path
+
+        document = {"result": {"items": [{"id": "first"}, {"id": "second"}]}}
+        assert _resolve_json_path(document, "result.items.1.id") == (True, "second")
+        assert _resolve_json_path(document, "result.items.2.id") == (False, None)
+        # The bracketed form remains the explicit list address for the same node.
+        assert _resolve_json_path(document, "result.items[0].id") == (True, "first")
+
+    def test_bracket_form_never_indexes_an_object(self) -> None:
+        from .._runner import _resolve_json_path
+
+        document = {"result": {"casilla_values": {"0": "zero-key"}}}
+        assert _resolve_json_path(document, "result.casilla_values[0]") == (False, None)
+        assert _resolve_json_path(document, "result.casilla_values.0") == (True, "zero-key")
+
+    def test_bracket_quoted_segment_resolves_a_dotted_hyphenated_object_key(self) -> None:
+        from .._runner import _resolve_json_path
+
+        # M349's declarante casillas are flat string keys carrying a literal dot
+        # and hyphens; the dotted grammar would split on the dot, so the
+        # bracket-quoted form is the only way to address them.
+        document = {
+            "result": {
+                "casilla_values": {
+                    "decl.importe-operaciones": "12345.00",
+                    "decl.numero-operadores": "3",
+                },
+            },
+        }
+        assert _resolve_json_path(document, 'result.casilla_values["decl.importe-operaciones"]') == (True, "12345.00")
+        assert _resolve_json_path(document, 'result.casilla_values["decl.numero-operadores"]') == (True, "3")
+        # An absent quoted key misses cleanly.
+        assert _resolve_json_path(document, 'result.casilla_values["decl.nope"]') == (False, None)
+
+    def test_bracket_quoted_segment_is_a_dict_key_never_a_list_index(self) -> None:
+        from .._runner import _resolve_json_path
+
+        # On a list node the quoted form addresses no element and misses cleanly
+        # (it is a literal object key only, never a list index).
+        document = {"result": {"items": [{"id": "first"}, {"id": "second"}]}}
+        assert _resolve_json_path(document, 'result.items["0"]') == (False, None)
+        # On a dict whose key is the digit string, the quoted form finds it.
+        digit_key_doc = {"result": {"casilla_values": {"0": "zero-key"}}}
+        assert _resolve_json_path(digit_key_doc, 'result.casilla_values["0"]') == (True, "zero-key")
+
+    def test_bracket_quoted_segment_on_a_non_dict_node_misses_cleanly(self) -> None:
+        from .._runner import _resolve_json_path
+
+        # A quoted key applied to a scalar (non-Mapping, non-list) node returns
+        # (False, None) rather than raising.
+        document = {"result": {"status": "verified_complete"}}
+        assert _resolve_json_path(document, 'result.status["x"]') == (False, None)
+
+
+class TestAmbientEnvNeutralisation:
+    def test_ambient_operator_env_never_reaches_frame_execution(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """Operator machine state (ambient CADRUMO_*/AEAT_* env — Cl@ve
+        credentials, live opt-ins) is scrubbed for the whole sandbox scope, so
+        no frame execution can observe it; the storage-root isolation pin
+        survives, and everything is restored verbatim on exit."""
+        import os
+
+        from .._runner import sequence_sandbox
+
+        with (
+            scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", "fake-operator-dni-99999999R"),
+            scoped_env_var("AEAT_FAKE_SESSION_TOKEN", "fake-session-token-do-not-leak"),
+        ):
+            observed: dict[str, str | None] = {}
+            with sequence_sandbox(sequence_id="env-scrub-probe", sandbox_root=tmp_path / "scope"):
+                observed["clave"] = os.environ.get("CADRUMO_CLAVE_MOVIL_DNI_NIE")
+                observed["aeat"] = os.environ.get("AEAT_FAKE_SESSION_TOKEN")
+                observed["pin"] = os.environ.get("CADRUMO_LOCAL_STORAGE_ROOT")
+
+            # Inside the scope: operator vars gone, the isolation pin intact.
+            assert observed["clave"] is None
+            assert observed["aeat"] is None
+            assert observed["pin"] is not None
+            # Outside the sandbox scope but still under the export: restored verbatim.
+            assert os.environ["CADRUMO_CLAVE_MOVIL_DNI_NIE"] == "fake-operator-dni-99999999R"
+            assert os.environ["AEAT_FAKE_SESSION_TOKEN"] == "fake-session-token-do-not-leak"  # noqa: S105 - synthetic test value
+
+    def test_external_tool_probes_are_pinned_to_stable_absence(self, tmp_path: Path) -> None:
+        """Real provider and browser probes cannot observe workstation installs."""
+        import os
+
+        from cadrumo.application.provisioning import (
+            probe_playwright_browser,
+            probe_subprocess_providers,
+        )
+
+        from .._runner import sequence_sandbox
+
+        original_path = os.environ.get("PATH")
+        with sequence_sandbox(sequence_id="external-tool-probe", sandbox_root=tmp_path / "scope"):
+            providers = probe_subprocess_providers()
+            browser = probe_playwright_browser()
+
+            assert providers
+            assert all(not status.available for status in providers)
+            assert all("PATH" in status.remediation for status in providers)
+            assert browser.available is False
+            assert browser.remediation == "playwright install chromium"
+            assert os.environ["PATH"] == str(tmp_path / "scope" / "external-tools")
+            assert os.environ["PLAYWRIGHT_BROWSERS_PATH"] == str(
+                tmp_path / "scope" / "playwright-browsers",
+            )
+
+        assert os.environ.get("PATH") == original_path
+
+    def test_frames_execute_green_and_leak_free_under_ambient_operator_env(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """A real sequence executes normally with fake operator env exported,
+        and no frame's captured output carries the operator value — the
+        end-to-end proof that docs builds never observe machine state."""
+        secret = "fake-operator-dni-99999999R"  # noqa: S105 - synthetic test value
+        with scoped_env_var("CADRUMO_CLAVE_MOVIL_DNI_NIE", secret):
+            sequence = _result_sequence(
+                "aeat --format json config profile list\n"
+                "@result aeat --format json config profile list\n"
+                '@expect status == "success"\n',
+                sequence_id="runner-env-scrub",
+            )
+            transcript = execute_sequence(sequence, sandbox_root=tmp_path / "run")
+
+        for frame in transcript.frames:
+            assert frame.exit_code == 0
+            assert secret not in frame.output
+            assert secret not in frame.stderr
+
+    def test_operator_dotenv_never_reaches_frame_execution(
+        self,
+        tmp_path: Path,
+    ) -> None:
+        """The second operator-state channel: the project dotenv (env/.env,
+        loaded by pydantic-settings via an ABSOLUTE path) must not reach
+        sandboxed settings. The REAL dotenv source is redirected to a poisoned
+        temp file; the channel is proven live outside the sandbox
+        (anti-vacuity), then the sandbox scope resolves settings as if no
+        dotenv existed, and a real sequence run never carries the value."""
+        from cadrumo.core.config import Settings, load_settings
+
+        from .._runner import sequence_sandbox
+
+        poison_marker = str(tmp_path / "poisoned-operator-runs")
+        poisoned_dotenv = tmp_path / "poisoned.env"
+        poisoned_dotenv.write_text(f"CADRUMO_RUNS_DIR={poison_marker}\n", encoding="utf-8")
+
+        # Redirect the dotenv source on the class-level model_config, restoring
+        # the prior entry (present-or-absent) on exit — a scoped mutation with no
+        # monkeypatch machinery.
+        had_env_file = "env_file" in Settings.model_config
+        prior_env_file = Settings.model_config.get("env_file")
+        Settings.model_config["env_file"] = poisoned_dotenv
+        try:
+            # Anti-vacuity: outside a sandbox, the poisoned dotenv IS a live source.
+            assert str(load_settings().cadrumo_runs_dir) == poison_marker
+
+            with sequence_sandbox(sequence_id="dotenv-probe", sandbox_root=tmp_path / "scope"):
+                assert str(load_settings().cadrumo_runs_dir) != poison_marker
+
+            # Restored outside the scope: the dotenv source reads again.
+            assert str(load_settings().cadrumo_runs_dir) == poison_marker
+
+            # End to end: a real sequence executes green and no frame observes it.
+            sequence = _result_sequence(
+                "@result aeat --format json config profile list\n" + '@expect status == "success"\n',
+                sequence_id="runner-dotenv-scrub",
+            )
+            transcript = execute_sequence(sequence, sandbox_root=tmp_path / "run")
+            for frame in transcript.frames:
+                assert frame.exit_code == 0
+                assert poison_marker not in frame.output
+                assert poison_marker not in frame.stderr
+        finally:
+            if had_env_file:
+                Settings.model_config["env_file"] = prior_env_file
+            else:
+                Settings.model_config.pop("env_file", None)

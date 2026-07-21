@@ -3,11 +3,13 @@ tags:
   - '#plan'
   - '#integration-fixture-drift'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-07-08-gate-drift-reconciliation-audit]]'
   - '[[2026-07-08-gate-drift-reconciliation-plan]]'
+  - '[[2026-07-10-integration-fixture-drift-research]]'
+  - '[[2026-07-10-integration-fixture-drift-adr]]'
 ---
 
 # `integration-fixture-drift` plan

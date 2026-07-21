@@ -71,7 +71,7 @@ from ...core import resolve_active_bucket_id as _resolve_active_bucket_id
 from ...core.access_gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings
-from ...core.errors import AeatError as _AeatError
+from ...core.errors import CadrumoError as _CadrumoError
 from ...core.hashing import sha256_hex as _sha256_hex
 from ...core.resources import resources as _resources
 from ...core.time import now
@@ -294,9 +294,9 @@ async def _capture_iva_compensation_history_with_session(
                             declaration,
                             artefact_sink=store.persist_artefact,
                         ),
-                        timeout=settings.aeat_live_iva_declaration_capture_timeout_ms / 1000,
+                        timeout=settings.cadrumo_live_iva_declaration_capture_timeout_ms / 1000,
                     )
-                except (TimeoutError, _AeatError, OSError) as exc:
+                except (TimeoutError, _CadrumoError, OSError) as exc:
                     failed_declarations.append(_failed_declaration_ref(declaration, exc))
                     continue
                 manifest_path = store.persist_observation(observation)
@@ -707,7 +707,7 @@ async def _capture_iva_remote_state_for_active_storage(
     _assert_target_period_year(target_year=target_year, target_period=target_period)
     settings = _load_settings()
     async with _suppress_live_iva_playwright_cancellation_noise(
-        drain_ms=settings.aeat_live_iva_cancellation_drain_ms,
+        drain_ms=settings.cadrumo_live_iva_cancellation_drain_ms,
         restore_on_exit=False,
     ):
         if year_from > year_to:
@@ -733,7 +733,7 @@ async def _capture_iva_remote_state_for_active_storage(
                 operation="live-iva-remote-state-read",
                 target_url=_PRE303_PRESENTATION_SERVICE_URL,
             )
-        except (TimeoutError, _AeatError, OSError) as exc:
+        except (TimeoutError, _CadrumoError, OSError) as exc:
             auth_error = exc
 
         if auth_result is None:
@@ -774,7 +774,7 @@ async def _capture_iva_remote_state_for_active_storage(
                 ),
                 progress_context=filed_progress,
             )
-        except (TimeoutError, _AeatError, OSError) as exc:
+        except (TimeoutError, _CadrumoError, OSError) as exc:
             filed_error = exc
 
         try:
@@ -794,10 +794,10 @@ async def _capture_iva_remote_state_for_active_storage(
                     progress_context=wallet_progress,
                 ),
                 surface=LiveIvaReadSurface.WALLET_CARTERA,
-                timeout_ms=settings.aeat_live_iva_surface_timeout_ms,
+                timeout_ms=settings.cadrumo_live_iva_surface_timeout_ms,
                 progress_context=wallet_progress,
             )
-        except (TimeoutError, _AeatError, OSError) as exc:
+        except (TimeoutError, _CadrumoError, OSError) as exc:
             wallet_error = exc
 
         report = build_iva_remote_state_acquisition_report(
@@ -818,7 +818,7 @@ async def _capture_iva_remote_state_for_active_storage(
 
 def _filed_history_surface_timeout_ms(settings: _Settings, *, year_from: int, year_to: int) -> int:
     year_count = max(1, year_to - year_from + 1)
-    return settings.aeat_live_iva_surface_timeout_ms * year_count
+    return settings.cadrumo_live_iva_surface_timeout_ms * year_count
 
 
 async def _capture_iva_compensation_history_by_year_with_session(

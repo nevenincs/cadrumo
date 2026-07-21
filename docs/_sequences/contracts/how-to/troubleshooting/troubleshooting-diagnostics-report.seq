@@ -1,0 +1,2 @@
+@step Record the phone state you observed on one diagnostic.
+@static aeat config auth diagnostics report <diagnostic-id> --phone-state app_prompted_not_accepted

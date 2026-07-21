@@ -51,7 +51,7 @@ from ._app_live_notifications_cli import notifications_app, register_notificatio
 from ._app_live_portals_cli import portals_app, portals_list, portals_show, register_portals_commands
 from ._app_live_rendering import _filed_capture_lines, _metric_line, _source_filed_capture_lines
 from ._app_live_verify_cli import register_verify_commands, verify_app
-from ._common import _emit_envelope
+from ._common import _emit_envelope, active_bucket_id_or_refuse, resolve_pull_year_range
 
 if TYPE_CHECKING:
     from ...application.live import VerifyVerdict
@@ -112,25 +112,6 @@ def _required_live_period_option(period: str, *, year: int) -> Period:
     if parsed is None:
         raise typer.BadParameter("--period is required")
     return parsed
-
-
-def _resolve_pull_year_range(
-    *,
-    year: int | None,
-    year_from: int | None,
-    year_to: int | None,
-) -> tuple[int, int]:
-    if year is not None and (year_from is not None or year_to is not None):
-        raise typer.BadParameter("use --year for a single-year pull or --from-year/--to-year for a range, not both")
-    if year is not None:
-        return year, year
-    if year_from is None and year_to is None:
-        raise typer.BadParameter("either --year or both --from-year and --to-year are required")
-    if year_from is None or year_to is None:
-        raise typer.BadParameter("--from-year and --to-year must be supplied together")
-    if year_from > year_to:
-        raise typer.BadParameter("--from-year must be less than or equal to --to-year")
-    return year_from, year_to
 
 
 def _live_iva_outcome_label(value: object) -> str:
@@ -685,7 +666,7 @@ async def _run_live_iva_evidence_pull_command[T](
     from ...core.config import load_settings
 
     resolved_timeout_ms = (
-        timeout_ms if timeout_ms is not None else load_settings().aeat_live_iva_cli_watchdog_timeout_ms
+        timeout_ms if timeout_ms is not None else load_settings().cadrumo_live_iva_cli_watchdog_timeout_ms
     )
     preexisting_profiles = _playwright_profile_tokens(_process_command_inventory())
     pre_timeout_auth_context = _live_iva_auth_watchdog_context(stage="before")
@@ -714,12 +695,12 @@ def _live_iva_evidence_pull_command_timeout_ms(*, year_from: int, year_to: int) 
 
     settings = load_settings()
     year_count = max(1, year_to - year_from + 1)
-    filed_history_budget_ms = settings.aeat_live_iva_surface_timeout_ms * year_count
-    wallet_budget_ms = settings.aeat_live_iva_surface_timeout_ms
-    auth_budget_ms = settings.aeat_clave_movil_timeout_ms
-    cleanup_budget_ms = settings.aeat_live_iva_cli_watchdog_timeout_ms
+    filed_history_budget_ms = settings.cadrumo_live_iva_surface_timeout_ms * year_count
+    wallet_budget_ms = settings.cadrumo_live_iva_surface_timeout_ms
+    auth_budget_ms = settings.cadrumo_clave_movil_timeout_ms
+    cleanup_budget_ms = settings.cadrumo_live_iva_cli_watchdog_timeout_ms
     return max(
-        settings.aeat_live_iva_cli_watchdog_timeout_ms,
+        settings.cadrumo_live_iva_cli_watchdog_timeout_ms,
         auth_budget_ms + filed_history_budget_ms + wallet_budget_ms + cleanup_budget_ms,
     )
 
@@ -867,10 +848,10 @@ def filed_list_cmd(
     across every registry-configured modelo. Omitted year bounds default to the
     current calendar year.
     """
-    from datetime import date as _date
+    from ...core.time import today_madrid
 
-    resolved_from = year_from if year_from is not None else _date.today().year
-    resolved_to = year_to if year_to is not None else _date.today().year
+    resolved_from = year_from if year_from is not None else today_madrid().year
+    resolved_to = year_to if year_to is not None else today_madrid().year
     _emit_live_auth_preflight()
     if modelo is None:
         bulk_report = asyncio.run(
@@ -1036,8 +1017,7 @@ def filed_pull_cmd(
 
     _emit_live_auth_preflight()
     selected_modelos = tuple(modelos or ())
-    single_mode = len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None
-    if single_mode:
+    if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         resolved_period = _live_period_option(period, year=year)
         report = asyncio.run(
             capture_filed_data(
@@ -1072,7 +1052,7 @@ def filed_pull_cmd(
 
     if period is not None or expediente_id is not None:
         raise typer.BadParameter("--period and --expediente are only valid for one --modelo with --year")
-    resolved_from, resolved_to = _resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
+    resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
     report = asyncio.run(
         capture_filed_data_bulk(
             year_from=resolved_from,
@@ -1203,16 +1183,11 @@ def filed_pull_sources_cmd(
     _emit_envelope(ctx, command="app.live.filed.pull_sources", result=result, lines=lines)
 
 
-def _active_bucket_id() -> str:
-    from ...core import require_active_bucket_id
-
-    try:
-        return require_active_bucket_id()
-    except Exception as exc:
-        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
-
-
-register_notifications_commands(app, active_bucket_id=_active_bucket_id, auth_preflight=_emit_live_auth_preflight)
+register_notifications_commands(
+    app,
+    active_bucket_id=active_bucket_id_or_refuse,
+    auth_preflight=_emit_live_auth_preflight,
+)
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -1220,16 +1195,24 @@ register_notifications_commands(app, active_bucket_id=_active_bucket_id, auth_pr
 register_portals_commands(app)
 
 
-register_expedientes_commands(app, active_bucket_id=_active_bucket_id, auth_preflight=_emit_live_auth_preflight)
+register_expedientes_commands(
+    app,
+    active_bucket_id=active_bucket_id_or_refuse,
+    auth_preflight=_emit_live_auth_preflight,
+)
 
 
-register_justificante_commands(app, active_bucket_id=_active_bucket_id, auth_preflight=_emit_live_auth_preflight)
+register_justificante_commands(
+    app,
+    active_bucket_id=active_bucket_id_or_refuse,
+    auth_preflight=_emit_live_auth_preflight,
+)
 
 
-register_verify_commands(app, active_bucket_id=_active_bucket_id, verify_expected=_verify_expected)
+register_verify_commands(app, active_bucket_id=active_bucket_id_or_refuse, verify_expected=_verify_expected)
 
 
-register_borrador_commands(app, active_bucket_id=_active_bucket_id)
+register_borrador_commands(app, active_bucket_id=active_bucket_id_or_refuse)
 
 __all__ = [
     "app",

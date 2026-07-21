@@ -1,26 +1,15 @@
-"""Fincas calculation-source readiness.
+"""Readiness facts for the fincas calculation source.
 
-Declares whether the fincas domain may act as a calculation source that feeds
-registry bindings. The fincas rendimiento and amortization aggregates are computed
-in-domain (:mod:`~domain.fincas`), but they are not yet persisted through the
-canonical secure-storage revision boundary, so enrolling fincas as a live
-calculation source would resolve bindings against non-canonical state. Until that
-persistence is hardened, fincas readiness is NOT ready and the aggregation resolver
-must refuse visibly (a blocked-readiness diagnostic) rather than resolve a silent
-blank.
-
-The readiness is deliberately a pure, context-independent domain fact: fincas is
-unready regardless of the modelo or period being calculated.
+The strict-frozen record and context-independent readiness check describe only
+whether finca state crosses the canonical secure-storage revision boundary.
+They do not resolve calculation values, adapt or enroll a source, participate
+in the source mesh, or emit diagnostics. The raw ``fincas`` source token is not
+a :class:`~core.BindingSourceKind` member.
 
 See Also:
     :mod:`~domain.fincas`
-        Public domain facade for the finca aggregates that are not yet canonical
-        calculation-source state.
-    :mod:`~application.aggregation._source_fincas`
-        Blocked resolver adapter that turns this readiness fact into a
-        source-mesh diagnostic.
-    :class:`~application.aggregation.CalculationSourceDiagnostic`
-        Shared diagnostic carrier emitted while the source remains blocked.
+        Public domain facade for the finca aggregates whose persistence is not
+        yet canonical calculation-source state.
 """
 
 from __future__ import annotations
@@ -43,16 +32,15 @@ class FincasSourceReadiness(BaseModel):
 
 
 def fincas_source_readiness() -> FincasSourceReadiness:
-    """Return the current fincas calculation-source readiness.
+    """Return the context-independent fincas-source readiness fact.
 
-    Fincas is not yet a calculation source: its rendimiento and amortization
+    The result remains not ready because the rendimiento and amortization
     aggregates are not persisted through the canonical secure-storage revision
-    boundary, so a resolver enrolled today would read non-canonical state. The
-    surface is provisioned but blocked until fincas persistence is hardened.
+    boundary.
 
     Returns:
         A :class:`~domain.fincas.FincasSourceReadiness` with ``ready = False``
-        and the blocking reason, until fincas persistence is canonical.
+        plus the raw source token and reason.
     """
     return FincasSourceReadiness(
         ready=False,

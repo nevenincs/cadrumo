@@ -3,16 +3,17 @@ tags:
   - '#adr'
   - '#modelo-151-beckham-source-scope'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-02-modelo-multiyear-renta-151-beckham-adr]]'
   - '[[2026-05-27-source-jurisdiction-axis-adr]]'
   - '[[2026-05-28-source-jurisdiction-axis-research]]'
   - '[[2026-05-27-non-resident-irnr-axis-adr]]'
   - '[[2026-05-27-m210-irnr-full-engine-adr]]'
+  - '[[2026-07-10-modelo-151-beckham-source-scope-research]]'
 ---
 
-# `modelo-151-beckham-source-scope` adr: `Impatriado Spanish-source base scoping for Modelo 151` | (**status:** `proposed`)
+# `modelo-151-beckham-source-scope` adr: `Impatriado Spanish-source base scoping for Modelo 151` | (**status:** `accepted`)
 
 ## Problem Statement
 

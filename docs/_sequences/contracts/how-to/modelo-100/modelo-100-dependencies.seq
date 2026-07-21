@@ -1,0 +1,5 @@
+@step List what Modelo 100 requires for the year.
+  aeat --format json app modelo requires 100 --year 2025 --period 0A
+  @step Show each source filing the declaration folds in and whether its evidence is satisfied.
+  @result aeat --format json app modelo work dependencies --modelo 100 --year 2025 --period 0A
+  @expect exit_code == 0

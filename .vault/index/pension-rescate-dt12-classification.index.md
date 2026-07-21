@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pension-rescate-dt12-classification'
-date: '2026-07-01'
-modified: '2026-07-03'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-07-01-pension-rescate-dt12-classification-adr]]'
   - '[[2026-07-01-pension-rescate-dt12-classification-research]]'
@@ -18,7 +18,7 @@ Auto-generated index of all documents tagged with `#pension-rescate-dt12-classif
 
 ### adr
 
-- `2026-07-01-pension-rescate-dt12-classification-adr` - `pension-rescate-dt12-classification` adr: `DT 12a rescate-type axis and apartado-4 time-window eligibility` | (**status:** `proposed`)
+- `2026-07-01-pension-rescate-dt12-classification-adr` - `pension-rescate-dt12-classification` adr: `DT 12a rescate-type axis and apartado-4 time-window eligibility` | (**status:** `accepted`)
 
 ### research
 

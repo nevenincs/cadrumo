@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#playwright-anti-bot'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-playwright-anti-bot-adr]]'
   - '[[2026-04-12-playwright-anti-bot-phase1-step1-exec]]'
@@ -23,7 +23,7 @@ Auto-generated index of all documents tagged with `#playwright-anti-bot`.
 
 ### adr
 
-- `2026-04-12-playwright-anti-bot-adr` - Architecture Decision Record: Playwright Anti-Bot Evasion
+- `2026-04-12-playwright-anti-bot-adr` - Architecture Decision Record: Playwright Anti-Bot Evasion | (**status:** `accepted`)
 
 ### audit
 

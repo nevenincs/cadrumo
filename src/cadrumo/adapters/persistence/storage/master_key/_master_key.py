@@ -11,9 +11,6 @@ protocol:
 - :class:`FileFallbackMasterKeyProvider` — backed by a passphrase-
   derived KEK (Argon2id) wrapping an AES-256-GCM master key. The
   per-store random salt is carried inside ``master.kdf`` (``salt_b64``).
-- :class:`EphemeralMasterKeyProvider` — an in-memory provider used
-  exclusively by tests; the key vanishes when the provider object is
-  garbage-collected.
 
 The :func:`get_master_key_provider` factory selects a provider per
 :attr:`Settings.cadrumo_secret_store_backend`. The ``auto`` backend tries
@@ -92,7 +89,6 @@ from ._master_key_derivation import (
     SALT_SIZE,
     derive_kek_with_params,
 )
-from ._master_key_ephemeral import EphemeralMasterKeyProvider as EphemeralMasterKeyProvider
 from ._master_key_io import (
     PASSPHRASE_ENV_VAR,
     PassphraseCallback,
@@ -107,6 +103,9 @@ from ._master_key_records import (
     _KdfVersionEnvelope,
 )
 from ._master_key_tax_id import looks_like_real_tax_id as looks_like_real_tax_id
+from ._provider_session import exit_provider_session
+
+_MASTER_KEY_AAD: Final[bytes] = b"cadrumo.master-key.v1"
 
 NIST_PASSPHRASE_MIN_LENGTH: Final[int] = 8
 """NIST SP 800-63B §5.1.1.1 verifier-side minimum passphrase length."""
@@ -179,42 +178,55 @@ class MasterKeyProvider(Protocol):
         ...
 
 
-@runtime_checkable
-class KeyringClient(Protocol):
-    """Injection seam for the OS-keychain operations the master-key provider depends on.
+class KeyringMasterKeyProvider:
+    """OS-keychain-backed master-key provider.
 
-    The real implementation wraps the third-party :mod:`keyring`
-    module's ``get_password`` / ``set_password`` calls plus the
-    backend probe that rejects ``fail.Keyring`` and ``null.Keyring``.
-    Tests inject a real in-memory implementation rather than mutating
-    the third-party module at runtime.
+    The provider lazily imports the ``keyring`` package and lazily
+    queries the active backend. Before any read or write, the active
+    keyring backend is inspected; the no-op ``fail.Keyring`` and
+    ``null.Keyring`` backends raise :class:`KeyringUnavailableError`
+    so the auto fallback can route to the file backend without
+    silently dropping the master key into a sink.
+
+    The provider resolves the fixed Cadrumo service/account through the
+    platform keyring on each call. Session-scoped reuse belongs to
+    :class:`BucketSession`, not to a second keyring abstraction.
     """
 
-    def probe_backend(self) -> None:
-        """Raise :class:`KeyringUnavailableError` when the active backend cannot persist a master key.
+    def __init__(self) -> None:
+        """Bind the provider to Cadrumo's fixed keyring service and account."""
+        self._service = KEYRING_SERVICE
+        self._username = KEYRING_USERNAME
+        self._session: BucketSession | None = None
+        self._activation_cm: AbstractContextManager[None] | None = None
 
-        No-op fail / null backends trigger this error.
+    def __enter__(self) -> object:
+        return _provider_enter(self)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
+    ) -> None:
+        exit_provider_session(self, exc_type, exc, tb)
+
+    def _probe_backend(self) -> None:
+        """Refuse no-op keyring backends up-front.
+
+        ``keyring.backends.fail.Keyring`` and ``keyring.backends.null.Keyring``
+        are placeholder backends installed when the platform has no
+        usable keychain. ``set_password`` on these silently succeeds
+        (or raises ``NoKeyringError``) but never persists the value, so
+        the master key would be lost on the next process restart.
         """
-
-    def get_password(self, service: str, username: str) -> str | None:
-        """Return the persisted password for ``(service, username)``, or ``None`` when absent."""
-
-    def set_password(self, service: str, username: str, password: str) -> None:
-        """Persist ``password`` under ``(service, username)``."""
-
-
-class _RealKeyringClient:
-    """Default :class:`KeyringClient` backed by the third-party ``keyring`` module."""
-
-    def probe_backend(self) -> None:
         try:
             import keyring
-        except ImportError as exc:
-            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
-        try:
             from keyring.backends import fail as _fail_backend
 
             backend = keyring.get_keyring()
+        except ImportError as exc:
+            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
         except Exception as exc:
             _log.debug("keyring backend probe failed error_type=%s", type(exc).__name__)
             raise KeyringUnavailableError(f"unable to inspect OS keychain backend: {exc}") from exc
@@ -228,89 +240,6 @@ class _RealKeyringClient:
                 "OS keychain backend is the no-op null.Keyring; "
                 "install a usable backend or set CADRUMO_SECRET_STORE_BACKEND=file.",
             )
-
-    def get_password(self, service: str, username: str) -> str | None:
-        try:
-            import keyring
-        except ImportError as exc:
-            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
-        return keyring.get_password(service, username)
-
-    def set_password(self, service: str, username: str, password: str) -> None:
-        try:
-            import keyring
-        except ImportError as exc:
-            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
-        keyring.set_password(service, username, password)
-
-
-class KeyringMasterKeyProvider:
-    """OS-keychain-backed master-key provider.
-
-    The provider lazily imports the ``keyring`` package and lazily
-    queries the active backend. Before any read or write, the active
-    keyring backend is inspected; the no-op ``fail.Keyring`` and
-    ``null.Keyring`` backends raise :class:`KeyringUnavailableError`
-    so the auto fallback can route to the file backend without
-    silently dropping the master key into a sink.
-
-    Older builds kept an in-process key cache keyed by ``(service,
-    username)``. That cache has retired in favour of
-    :class:`BucketSession`; this provider resolves through the keyring
-    on each call.
-
-    The optional ``client`` argument injects a :class:`KeyringClient`
-    implementation so tests exercise the provider's contract against a
-    real in-memory implementation rather than mutating the third-party
-    ``keyring`` module at runtime.
-    """
-
-    def __init__(
-        self,
-        *,
-        service: str = KEYRING_SERVICE,
-        username: str = KEYRING_USERNAME,
-        client: KeyringClient | None = None,
-    ) -> None:
-        """Bind the provider to a keyring service and account.
-
-        Args:
-            service: Service identifier under which the master key is
-                stored. Defaults to :data:`KEYRING_SERVICE`.
-            username: Account identifier within that service. Defaults
-                to :data:`KEYRING_USERNAME`.
-            client: Optional :class:`KeyringClient` implementation;
-                defaults to the production
-                :class:`_RealKeyringClient` wrapping the ``keyring``
-                module. Tests inject a real fake type via this seam.
-        """
-        self._service = service
-        self._username = username
-        self._client: KeyringClient = client or _RealKeyringClient()
-        self._session: BucketSession | None = None
-        self._activation_cm: AbstractContextManager[None] | None = None
-
-    def __enter__(self) -> object:
-        return _provider_enter(self)
-
-    def __exit__(
-        self,
-        exc_type: type[BaseException] | None,
-        exc: BaseException | None,
-        tb: TracebackType | None,
-    ) -> None:
-        _provider_exit(self, exc_type, exc, tb)
-
-    def _probe_backend(self) -> None:
-        """Refuse no-op keyring backends up-front, via the injected client.
-
-        ``keyring.backends.fail.Keyring`` and ``keyring.backends.null.Keyring``
-        are placeholder backends installed when the platform has no
-        usable keychain. ``set_password`` on these silently succeeds
-        (or raises ``NoKeyringError``) but never persists the value, so
-        the master key would be lost on the next process restart.
-        """
-        self._client.probe_backend()
 
     def get_master_key(self) -> bytes:
         """Fetch the master key via the OS keychain.
@@ -356,7 +285,7 @@ class KeyringMasterKeyProvider:
             if stored is not None:
                 raise SecretAlreadyExistsError(
                     "OS keychain master key is already provisioned; use `aeat config recover` "
-                    "or `aeat config rekey` for custody changes.",
+                    "or `aeat config passphrase change` for custody changes.",
                 )
             new_key = self._mint_and_verify_master_key(KeyringError)
             _log.info("master key minted in OS keychain (service=%s)", self._service)
@@ -375,7 +304,11 @@ class KeyringMasterKeyProvider:
         :class:`KeyringUnavailableError`.
         """
         try:
-            return self._client.get_password(self._service, self._username)
+            import keyring
+        except ImportError as exc:
+            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
+        try:
+            return keyring.get_password(self._service, self._username)
         except keyring_error_cls as exc:
             raise MasterKeyKeychainLockedError(
                 f"OS keychain refused get_password: {exc}; "
@@ -411,9 +344,13 @@ class KeyringMasterKeyProvider:
         below catches that class of failure before the dropped key
         reaches a downstream encryption call.
         """
+        try:
+            import keyring
+        except ImportError as exc:
+            raise KeyringUnavailableError(f"keyring package not importable: {exc}") from exc
         new_key = secrets.token_bytes(KEY_SIZE)
         try:
-            self._client.set_password(self._service, self._username, _b64encode(new_key))
+            keyring.set_password(self._service, self._username, _b64encode(new_key))
         except keyring_error_cls as exc:
             raise KeyringUnavailableError(f"OS keychain refused set_password: {exc}") from exc
         except KeyringUnavailableError:
@@ -422,7 +359,7 @@ class KeyringMasterKeyProvider:
             _log.debug("keyring set_password failed unexpectedly error_type=%s", type(exc).__name__)
             raise KeyringUnavailableError(f"OS keychain raised unexpectedly: {exc}") from exc
         try:
-            roundtrip = self._client.get_password(self._service, self._username)
+            roundtrip = keyring.get_password(self._service, self._username)
         except keyring_error_cls as exc:
             raise KeyringUnavailableError(f"OS keychain refused round-trip read: {exc}") from exc
         if roundtrip is None:
@@ -477,7 +414,7 @@ class FileFallbackMasterKeyProvider:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        _provider_exit(self, exc_type, exc, tb)
+        exit_provider_session(self, exc_type, exc, tb)
 
     @property
     def _kdf_params_path(self) -> Path:
@@ -560,7 +497,7 @@ class FileFallbackMasterKeyProvider:
                     f"file-fallback at {self._store_dir} is in a torn state — "
                     f"present={[p.name for p in present]} missing={missing}. "
                     "A previous mint or recovery crashed between writes. Run "
-                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key "
+                    "`aeat config recover` (it prompts for the 24-word recovery key) "
                     "to finish recovery, or move the torn secret-store directory "
                     "aside and run `aeat config profile create NAME` "
                     "only if no records were ever written under the prior key.",
@@ -596,14 +533,14 @@ class FileFallbackMasterKeyProvider:
             if present and not force:
                 raise SecretAlreadyExistsError(
                     f"file-fallback at {self._store_dir} is already provisioned; use "
-                    "`aeat config recover` or `aeat config rekey` for custody changes.",
+                    "`aeat config recover` or `aeat config passphrase change` for custody changes.",
                 )
             if present and len(present) != len(artefacts):
                 missing = [p.name for p in artefacts if not p.exists()]
                 raise MasterKeyMaterialMissingError(
                     f"file-fallback at {self._store_dir} is in a torn state - "
                     f"present={[p.name for p in present]} missing={missing}. Run "
-                    "`aeat config recover --recovery-key <WORDS>` with the 24-word recovery key to "
+                    "`aeat config recover` (it prompts for the 24-word recovery key) to "
                     "finish recovery, or move the torn secret-store directory aside "
                     "only if no records were ever written under the prior key.",
                 )
@@ -639,7 +576,7 @@ class FileFallbackMasterKeyProvider:
         except (OSError, ValueError, binascii.Error) as exc:
             raise _master_key_unavailable_error("failed to read wrapped master key.") from exc
         try:
-            return decrypt_record(blob, key=kek, associated_data=b"aeat.master-key.v1")
+            return decrypt_record(blob, key=kek, associated_data=_MASTER_KEY_AAD)
         except (DecryptionError, EncryptionError) as exc:
             # Distinguish passphrase-mismatch from material-missing so
             # the CLI can render an actionable hint
@@ -648,7 +585,7 @@ class FileFallbackMasterKeyProvider:
             # material).
             raise _master_key_passphrase_mismatch_error(
                 "passphrase did not unlock the master key; verify the passphrase or run "
-                "`aeat config recover --recovery-key <WORDS>`.",
+                "`aeat config recover`.",
             ) from exc
 
     def _mint_new(self, passphrase: bytes) -> bytes:
@@ -661,7 +598,7 @@ class FileFallbackMasterKeyProvider:
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
         master_key = secrets.token_bytes(KEY_SIZE)
-        blob = encrypt_record(master_key, key=kek, associated_data=b"aeat.master-key.v1")
+        blob = encrypt_record(master_key, key=kek, associated_data=_MASTER_KEY_AAD)
         # Restrict directory permissions on POSIX so the wrapped master
         # key and the KDF parameters cannot be world-read.
         # On Windows os.chmod is a no-op; POSIX gets 0o700 on the dir
@@ -722,7 +659,7 @@ class FileFallbackMasterKeyProvider:
             salt_b64=_b64encode(salt),
         )
         kek = self._derive_kek_with_params(passphrase, salt, params)
-        blob = encrypt_record(master_key, key=kek, associated_data=b"aeat.master-key.v1")
+        blob = encrypt_record(master_key, key=kek, associated_data=_MASTER_KEY_AAD)
         # Serialise the rewrite under the same on-disk lock that
         # ``get_master_key`` acquires for first-time mint / unwrap
         # decisions. Without this, a concurrent ``get_master_key`` in
@@ -871,9 +808,11 @@ def _provider_enter(
     :class:`NoActiveProfileError` so the CLI root callback can refuse
     the verb with a translated message.
 
-    Stores the opened session and the activation context manager on
-    ``provider._session`` and ``provider._activation_cm`` so the
-    matching ``_provider_exit`` can tear them down.
+    Stores the opened session and activation context manager on the provider so
+    :func:`exit_provider_session` can tear them down. Provider activation is a
+    custody/read boundary, not a mutation lock: application mutation spans own
+    canonical bucket locking so read-only sessions remain concurrent and the
+    pointer-first lock order remains intact.
     """
     from .....core.config import load_settings
     from ..bucket import NoActiveBucketError
@@ -893,8 +832,8 @@ def _provider_enter(
             "decrypt stored records.",
         )
 
-    key_bytes = provider.get_master_key()
     settings = load_settings()
+    key_bytes = provider.get_master_key()
     if isinstance(provider, UnsecuredMasterKeyProvider):
         dek_bytes = key_bytes
     else:
@@ -916,6 +855,7 @@ def _provider_enter(
         idle_minutes=idle_minutes,
         opened_at=now(),
         unsecured_backend=isinstance(provider, UnsecuredMasterKeyProvider),
+        storage_root=settings.cadrumo_local_storage_root,
     )
     activation = activate_session(session)
     activation.__enter__()
@@ -925,34 +865,9 @@ def _provider_enter(
         if session.unsecured_backend:
             _refuse_unsecured_active_bucket_with_real_profile(session)
     except BaseException:
-        provider._activation_cm = None
-        provider._session = None
-        activation.__exit__(None, None, None)
-        session.close()
+        exit_provider_session(provider, None, None, None)
         raise
     return session
-
-
-def _provider_exit(
-    provider: MasterKeyProvider,
-    exc_type: type[BaseException] | None,
-    exc: BaseException | None,
-    tb: TracebackType | None,
-) -> None:
-    """Tear down the activation + session opened by :func:`_provider_enter`.
-
-    Idempotent on the provider's bookkeeping attributes; tolerant of
-    the case where ``_provider_enter`` raised before fully populating
-    them.
-    """
-    activation = provider._activation_cm
-    session = provider._session
-    provider._activation_cm = None
-    provider._session = None
-    if activation is not None:
-        activation.__exit__(exc_type, exc, tb)
-    if session is not None:
-        session.close()
 
 
 @contextlib.contextmanager
@@ -984,7 +899,7 @@ def activate_master_key_provider(
     try:
         yield provider
     finally:
-        _provider_exit(provider, None, None, None)
+        exit_provider_session(provider, None, None, None)
 
 
 class UnsecuredMasterKeyProvider:
@@ -1047,7 +962,7 @@ class UnsecuredMasterKeyProvider:
         exc: BaseException | None,
         tb: TracebackType | None,
     ) -> None:
-        _provider_exit(self, exc_type, exc, tb)
+        exit_provider_session(self, exc_type, exc, tb)
 
 
 def refuse_unsecured_with_real_nif(
@@ -1088,7 +1003,6 @@ def get_master_key_provider(
     backend: str | None = None,
     settings_override: Settings | None = None,
     passphrase_callback: PassphraseCallback | None = None,
-    keyring_client: KeyringClient | None = None,
 ) -> MasterKeyProvider:
     """Resolve the active :class:`MasterKeyProvider` per project settings.
 
@@ -1101,11 +1015,6 @@ def get_master_key_provider(
             backend writes inside the test sandbox.
         passphrase_callback: Optional override for passphrase
             resolution; only consulted by the file backend.
-        keyring_client: Optional :class:`KeyringClient` implementation
-            threaded into any constructed
-            :class:`KeyringMasterKeyProvider`. Tests inject a real
-            fake type rather than patching the third-party ``keyring``
-            module.
 
     Returns:
         A live provider instance honouring the resolved backend.
@@ -1140,7 +1049,7 @@ def get_master_key_provider(
             )
         return UnsecuredMasterKeyProvider()
     if resolved is SecretStoreBackend.KEYRING:
-        provider = KeyringMasterKeyProvider(client=keyring_client)
+        provider = KeyringMasterKeyProvider()
         # Probe early so callers see unusable keychains at construction
         # without turning absent key material into an implicit mint.
         provider._probe_backend()
@@ -1150,7 +1059,7 @@ def get_master_key_provider(
             store_dir=store_dir,
             passphrase_callback=passphrase_callback,
         )
-    keyring_provider = KeyringMasterKeyProvider(client=keyring_client)
+    keyring_provider = KeyringMasterKeyProvider()
     try:
         keyring_provider.get_master_key()
         return keyring_provider

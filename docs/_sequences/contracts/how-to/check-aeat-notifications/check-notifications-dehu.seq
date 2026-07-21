@@ -1,0 +1,8 @@
+@step Download your notifications and save them locally.
+@static aeat app live notifications pull
+@step Download your current DEHu notifications.
+@static aeat app live notifications list
+@step View a specific saved download by its reference number.
+@static aeat app live notifications view <snapshot-id>
+@step Show the most recent snapshot in the active profile.
+@static aeat app live notifications latest

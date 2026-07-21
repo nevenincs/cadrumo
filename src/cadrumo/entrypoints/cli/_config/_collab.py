@@ -13,7 +13,7 @@ against; see :mod:`~entrypoints.cli._modelo_review_package_cli`.
 ``add`` is idempotent-guarded to the extent the underlying repository already
 is: a duplicate ``recipient_id`` refuses instructively (``RecipientAlreadyRegisteredError``
 propagates verbatim through :func:`~entrypoints.cli._errors.command_error_boundary`,
-which renders every registered :class:`~core.errors.AeatError` at the CLI
+which renders every registered :class:`~core.errors.CadrumoError` at the CLI
 boundary) rather than silently overwriting the prior fingerprint -- a
 fingerprint swap must be an explicit ``remove`` followed by ``add``, never an
 implicit clobber, since the whole point of the out-of-band verification is
@@ -82,7 +82,7 @@ def _validated_public_key_hex(public_key: str) -> str:
 
     A malformed hex string is a CLI input-format error (``typer.BadParameter``),
     distinct from the registry's own domain refusals (duplicate/missing id),
-    which propagate as registered :class:`~core.errors.AeatError`
+    which propagate as registered :class:`~core.errors.CadrumoError`
     subclasses and render automatically at the command boundary.
     """
     normalized = public_key.strip().lower()

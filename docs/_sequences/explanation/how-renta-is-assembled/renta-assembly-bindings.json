@@ -1,0 +1,1514 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "bindings",
+        "list",
+        "--modelo",
+        "100",
+        "--year",
+        "2025",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.bindings.list",
+        "notices": [],
+        "result": {
+          "binding_count": 64,
+          "bindings": [
+            {
+              "binding_id": "renta-2025-modelo-100-estimacion-directa-es-normal",
+              "borrador_capable": false,
+              "encoded_options": [
+                {
+                  "boolean_meaning": true,
+                  "encoded_value": "1",
+                  "registry_value": "N"
+                },
+                {
+                  "boolean_meaning": false,
+                  "encoded_value": "0",
+                  "registry_value": "S"
+                }
+              ],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "manual_input",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": "EstimacionDirectaModalidad"
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0186-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0192-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0199-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0203-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-tax-id",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-display-name",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-tax-residence-ccaa",
+              "borrador_capable": true,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "enum",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": "CCAA"
+            },
+            {
+              "binding_id": "renta-2025-profile-declaration-type",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-taxpayer-sex",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-income-0171",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-28"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_income_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-marital-status",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-taxpayer-birth-date",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-spouse-tax-id",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-spouse-display-name",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-spouse-birth-date",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-spouse-sex",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-taxpayer-disability-grade",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-taxpayer-death-date",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-spouse-disability-grade",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-spouse-non-resident-irpf",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-spouse-eu-eea-resident",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-spouse-eu-eea-country",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-family-descendants-eu-eea-deduction",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-family-minor-children-in-unit",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-descendant-tax-id",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-descendant-display-name",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-descendant-birth-date",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-descendant-disability-grade",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-descendant-death-date",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-ascendant-tax-id",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-ascendant-display-name",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-ascendant-birth-date",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-ascendant-disability-grade",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-ascendant-cohabiting-descendant-count",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-family-ascendant-death-date",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-modelo-111-retenciones-periodicas",
+              "borrador_capable": true,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-108",
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "relation input",
+              "relation_inputs": [
+                "renta-2025-rel-111-retenciones-trimestrales",
+                "renta-2025-rel-111-retenciones-mensuales"
+              ],
+              "revision": "2025",
+              "source": "relation_prefill",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-modelo-123-retenciones-periodicas",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-108",
+                "orden-hac-277-2026:art-3",
+                "orden-eha-3435-2007:anexo-ii",
+                "orden-hac-56-2024:art-1"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "relation input",
+              "relation_inputs": [
+                "renta-2025-rel-123-retenciones-trimestrales"
+              ],
+              "revision": "2025",
+              "source": "relation_prefill",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-modelo-130-pagos-fraccionados",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-109",
+                "orden-hac-277-2026:art-3",
+                "orden-eha-672-2007:art-1"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "relation input",
+              "relation_inputs": [
+                "renta-2025-rel-130-pagos-fraccionados"
+              ],
+              "revision": "2025",
+              "source": "relation_prefill",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-modelo-131-pagos-fraccionados",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "rd-439-2007:art-109",
+                "orden-hac-277-2026:art-3",
+                "orden-eha-672-2007:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "relation input",
+              "relation_inputs": [
+                "renta-2025-rel-131-pagos-fraccionados"
+              ],
+              "revision": "2025",
+              "source": "relation_prefill",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-modelo-184-atribucion-actividades-economicas",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-86",
+                "ley-35-2006:art-87",
+                "ley-35-2006:art-88",
+                "ley-35-2006:art-89",
+                "orden-hap-2250-2015:art-1",
+                "orden-hap-2250-2015:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "relation input",
+              "relation_inputs": [
+                "renta-2025-rel-184-atribucion-actividades-economicas"
+              ],
+              "revision": "2025",
+              "source": "relation_prefill",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1",
+                "aeat-dr-184-2025"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-modelo-190-retenciones-anuales",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-108",
+                "orden-eha-3127-2009:art-1",
+                "orden-hac-1431-2025:art-2"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "relation input",
+              "relation_inputs": [
+                "renta-2025-rel-190-retenciones-anuales"
+              ],
+              "revision": "2025",
+              "source": "relation_prefill",
+              "source_refs": [
+                "aeat-modelo-190-instructions-2025",
+                "boe-modelo-190-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-modelo-193-retenciones-anuales",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-99",
+                "rd-439-2007:art-108",
+                "orden-eha-3377-2011:art-1"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "relation input",
+              "relation_inputs": [
+                "renta-2025-rel-193-retenciones-anuales"
+              ],
+              "revision": "2025",
+              "source": "relation_prefill",
+              "source_refs": [
+                "aeat-modelo-193-296-note-2025",
+                "boe-modelo-193-2011-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-marriage-full-year",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-82"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-marriage-month-start",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-82"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-marriage-month-end",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-82"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-base-liquidable-negativa-general-anterior",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-50",
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "prior filed revision",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "previous_filing",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form",
+                "aeat-dr-100-2025-dictionary"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-certificado-trabajo-retenciones",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-99",
+                "ley-35-2006:art-101",
+                "rd-439-2007:art-80",
+                "rd-439-2007:art-86",
+                "orden-hac-277-2026:art-3"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "manual_input",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-renta-2025-manual-parte1",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-77",
+                "madrid-dl-1-2010:art-4"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-unidad-familiar-otros-miembros-base",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-77",
+                "madrid-dl-1-2010:art-18"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-renta-2025-manual-deducciones-autonomicas",
+                "boe-modelo-100-2025-form"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-anualidades-sin-minimo-descendientes",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-58",
+                "ley-35-2006:art-64"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "lirpf-cuota-chain-authority"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-minimo-descendientes-estatal",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-58",
+                "ley-35-2006:art-61"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0183-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0191-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0193-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0194-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0195-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0200-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0202-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0206-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0208-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-ledger-expense-0217-deductible",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-28",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "ledger source",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "ledger_renta_expense_aggregation",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-minimo-descendientes-autonomico",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-58",
+                "ley-35-2006:art-61",
+                "madrid-dl-1-2010:art-2"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-2025-profile-has-economic-activity",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-27",
+                "ley-35-2006:art-30"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            }
+          ],
+          "missing_filter": false,
+          "modelo_filter": "100",
+          "operation": "modelo.bindings.list",
+          "period_filter": "0A",
+          "year_filter": 2025
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "renta-assembly-bindings"
+}

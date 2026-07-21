@@ -16,7 +16,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..core import CasillaId, read_toml
-from ..core.errors import AeatError
+from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.resources import bundled_path
 from ..domain.calculations.registry import (
@@ -28,7 +28,7 @@ from ..domain.calculations.registry import (
 )
 
 
-class ModeloLocaleError(AeatError, ValueError):
+class ModeloLocaleError(CadrumoError, ValueError):
     """Raised when modelo schema-local locale management fails."""
 
 
@@ -399,16 +399,18 @@ class ModeloLocaleManager:
     ) -> ModeloLocaleFileTarget:
         """Resolve which locale TOML target owns a schema key."""
         language = _coerce_output_language(locale)
-        matching_targets = {
-            _target_for_inventory_key(item, locale=language)
-            for item in self.inventory_keys(modelo_id, revision_id)
-            if item.field is field and item.key == key
-        }
+        matching_targets: list[ModeloLocaleFileTarget] = []
+        for item in self.inventory_keys(modelo_id, revision_id):
+            if item.field is not field or item.key != key:
+                continue
+            target = _target_for_inventory_key(item, locale=language)
+            if target not in matching_targets:
+                matching_targets.append(target)
         if not matching_targets:
             raise ModeloLocaleError(f"Modelo schema key not found: {field.value}/{key!r}")
         if len(matching_targets) > 1:
             raise ModeloLocaleError(f"Modelo schema key is ambiguous across scopes: {field.value}/{key!r}")
-        return next(iter(matching_targets))
+        return matching_targets[0]
 
     def resolve_target_path(self, target: ModeloLocaleFileTarget) -> Path:
         """Resolve a locale target to a contained TOML file path."""

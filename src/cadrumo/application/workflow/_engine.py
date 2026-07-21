@@ -18,12 +18,13 @@ from __future__ import annotations
 from datetime import date, datetime
 from typing import NoReturn
 
-from ...application.auth import describe_provider_operator_impact
 from ...core import Period
 from ...core.config import Settings
 from ...core.errors import BaseSeverity, SiteHealthError
+from ...core.i18n import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
 from ...core.time import now as _utcnow
+from ...core.time import today_madrid
 from ...domain.deadlines import (
     ModeloDeadline,
     ObligationStatus,
@@ -249,7 +250,7 @@ class WorkflowEngine:
     ) -> WorkflowResult:
         """Linearly walk the read-only stages, bailing on the first failure."""
         started_at = _utcnow()
-        reference_today = today or date.today()
+        reference_today = today or today_madrid()
 
         # Record run context so ``_record_site_unavailable`` can lazily
         # recompute the run_id from whichever information is latest
@@ -576,7 +577,7 @@ class WorkflowEngine:
         """Record the filing-window state for a verify run without aborting.
 
         Verification of a calculation is independent of the AEAT filing
-        calendar (see the work-verify deadline-independence ADR). This
+        calendar. This
         helper turns the ``COMPUTING_DEADLINES`` stage into a purely
         informational step for :attr:`WorkflowPurpose.VERIFY`: it never
         raises ``NO_PENDING_OBLIGATION`` or ``DEADLINE_PASSED``.
@@ -1054,13 +1055,13 @@ class WorkflowEngine:
                 ) from exc
             cert_details = {
                 "provider_kind": certificate.kind.value,
-                "provider_operator_impact": describe_provider_operator_impact(certificate),
+                "provider_operator_impact": describe_auth_provider_operator_impact(certificate),
             }
             if not certificate.configured or not certificate.available:
                 provider_summary = _summary_text(
                     f"Auth provider unavailable: kind={certificate.kind.value} "
                     f"configured={certificate.configured} available={certificate.available}. "
-                    f"{describe_provider_operator_impact(certificate)}",
+                    f"{describe_auth_provider_operator_impact(certificate)}",
                 )
                 steps.append(
                     WorkflowStep(
@@ -1127,10 +1128,9 @@ class WorkflowEngine:
 
         try:
             # The AEAT filing-window preflight gate is skipped for BOTH local
-            # purposes. VERIFY is calendar-independent (work-verify
-            # deadline-independence ADR). FILE is a LOCAL mark-as-filed that
-            # contacts AEAT zero times (cross-period filing deadlock ADR,
-            # Decision A): its obligation existence is already enforced at the
+            # purposes. VERIFY is calendar-independent. FILE is a LOCAL
+            # mark-as-filed that contacts AEAT zero times: its obligation
+            # existence is already enforced at the
             # deadline stage (NO_PENDING_OBLIGATION still refuses a never-existing
             # obligation; an existing-but-overdue one is admitted late, con
             # recargo). Re-applying the submission filing-window gate here would
@@ -1138,10 +1138,17 @@ class WorkflowEngine:
             # seeds the next period's cross-period carry. The window gate binds
             # only an actual AEAT submission, which this app never performs.
             skip_window = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)
+            # Auth-provider readiness (gate 4) binds only live/AEAT-touching
+            # purposes. Both workflow purposes are local (the app performs no
+            # actual AEAT submission), so auth is not required to complete the
+            # local build/verify/file/export flow; a taxpayer with no provider
+            # configured uploads at the AEAT portal themselves (operator ruling).
+            skip_auth = purpose in (WorkflowPurpose.VERIFY, WorkflowPurpose.FILE)
             self._submission_engine.preflight(
                 draft,
                 today=today,
                 skip_deadline_window=skip_window,
+                skip_auth_readiness=skip_auth,
             )
         except SiteHealthError as exc:
             self._record_site_unavailable(

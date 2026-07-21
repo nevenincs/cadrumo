@@ -2,7 +2,7 @@
 #
 # Cross-cutting treaty-override authoring surface consumed by the IRNR
 # tipo-de-gravamen resolution op via the ConvenioAuthority snapshot projection.
-# Phase-2 Slice D tranche-1 enrolment. Both overrides are typed as ceilings: the
+# Both overrides are typed as ceilings: the
 # treaty phrases source-state taxation as a cap ("no podrá exceder del 15 por
 # 100" for dividendos, "no puede exceder del 10 por 100" for intereses), so the
 # op applies min(domestic, treaty) — the "más favorable" outcome is computed

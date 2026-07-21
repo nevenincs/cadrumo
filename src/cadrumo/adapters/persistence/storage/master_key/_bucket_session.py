@@ -21,13 +21,12 @@ See Also:
         Provider whose former process cache is replaced by this session.
     :class:`~adapters.persistence.storage.master_key.FileFallbackMasterKeyProvider`
         File-backed provider whose unlocked buffers are session-scoped.
-    ``2026-05-14-profile-bucket-lifecycle-adr``
-        Decision that made unlocked key material bucket-session-owned.
 """
 
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -65,6 +64,7 @@ class BucketSession:
         "_idle_window",
         "_kek_buffer",
         "_sealed",
+        "_storage_root",
         "_unsecured_backend",
     )
 
@@ -77,8 +77,10 @@ class BucketSession:
         idle_window: timedelta,
         idle_deadline: datetime,
         unsecured_backend: bool,
+        storage_root: Path | None,
     ) -> None:
         self._bucket_id = bucket_id
+        self._storage_root = storage_root
         self._kek_buffer = kek_buffer
         self._dek_buffer = dek_buffer
         self._idle_window = idle_window
@@ -97,6 +99,7 @@ class BucketSession:
         idle_minutes: int,
         opened_at: datetime,
         unsecured_backend: bool = False,
+        storage_root: Path | None = None,
     ) -> BucketSession:
         """Open a session for one bucket.
 
@@ -111,6 +114,9 @@ class BucketSession:
             unsecured_backend: When ``True``, the session was opened
                 against an unsecured (non-OS-keychain) backend; callers
                 use this flag to emit appropriate warnings.
+            storage_root: Canonical local-storage root that supplied the
+                bucket key material. ``None`` is reserved for synthetic or
+                rootless sessions.
 
         Returns:
             A new :class:`BucketSession` with the provided credentials and TTL.
@@ -136,11 +142,17 @@ class BucketSession:
             idle_window=idle_window,
             idle_deadline=opened_at + idle_window,
             unsecured_backend=unsecured_backend,
+            storage_root=(storage_root.expanduser().resolve(strict=False) if storage_root is not None else None),
         )
 
     @property
     def bucket_id(self) -> str:
         return self._bucket_id
+
+    @property
+    def storage_root(self) -> Path | None:
+        """Return the local-storage root that owns this session's key material."""
+        return self._storage_root
 
     @property
     def sealed(self) -> bool:

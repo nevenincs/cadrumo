@@ -1,0 +1,2 @@
+@step Pull and reconcile the justificante straight from AEAT.
+@static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#renta-cuota-integra-autonomic-scale'
 date: '2026-05-08'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-08-renta-cuota-integra-autonomic-scale-research]]"
 ---
@@ -28,7 +28,7 @@ typed inputs today.
 - LIRPF art-74 mandates that the autonomic scale be applied; LIRPF
   art-75 fixes the autonomic cuota integra. Each CCAA's scale is
   legally fixed and must be reproduced exactly.
-- The `aeat.domain.profile.CCAA` enum already enumerates the 15
+- The `cadrumo.domain.contribuyente.CCAA` enum already enumerates the 15
   jurisdictions and the binding
   `renta-{year}-profile-tax-residence-ccaa` already exposes the
   operator's CCAA value to the registry.
@@ -67,7 +67,7 @@ Three layers, sequenced strictly:
 
 ### Layer 1 — Runtime extension: `lookup_bracket_by_ccaa` op
 
-Extend `aeat.domain.calculations.registry._formula_runtime` with a
+Extend `cadrumo.domain.calculations.registry._formula_runtime` with a
 new op:
 
 ```

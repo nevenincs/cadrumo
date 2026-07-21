@@ -1,0 +1,483 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: 2026-07-18 13:10+0000\n"
+"Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/index.md:1
+msgid "Getting started"
+msgstr "Primers passos"
+
+#: ../../how-to/index.md:3
+msgid ""
+"This page routes you to the right guide. The guides are grouped the way a"
+" filing year actually runs: set up who the taxpayer is, see what is due "
+"and when, keep the ledger of what happened, and prepare each filing. "
+"Cadrumo is the product; the Agencia Estatal de Administración Tributaria "
+"(AEAT) is the external tax authority, and Cadrumo never submits a return "
+"or acts as AEAT - read [how records become filing-ready "
+"figures](../explanation/from-records-to-figures.md) for that boundary."
+msgstr ""
+"Aquesta pàgina t'encamina a la guia adequada. Les guies s'agrupen tal com"
+" transcorre realment un any de presentació: configura qui és el "
+"contribuent, consulta què venç i quan, mantens el ledger del que ha "
+"passat i prepares cada presentació. Cadrumo és el producte; l'Agencia "
+"Estatal de Administración Tributaria (AEAT) és l'autoritat fiscal "
+"externa, i Cadrumo mai no presenta cap declaració ni actua com a AEAT: "
+"llegeix [com els registres esdevenen xifres a punt per "
+"presentar](../explanation/from-records-to-figures.md) per a aquest límit."
+
+#: ../../how-to/index.md:12
+#, python-brace-format
+msgid ""
+"Start with the [installation guide](../workstation-setup.md) if the "
+"`aeat` command does not run. For a map of the whole journey from bank "
+"records to a filed modelo, read [the filing journey](onboarding.md). For "
+"terminology, use the {doc}`glossary </_generated/glossary>`; for exact "
+"options and refusals, the [command-line reference](../cli/index.rst)."
+msgstr ""
+"Comença amb la [guia d'instal·lació](../workstation-setup.md) si l'ordre "
+"`aeat` no s'executa. Per a un mapa de tot el recorregut des dels "
+"registres bancaris fins a un model presentat, llegeix [el recorregut de "
+"presentació](onboarding.md). Per a la terminologia, utilitza el "
+"{doc}`glossari </_generated/glossary>`; per a les opcions i els rebuigs "
+"exactes, la [referència de línia d'ordres](../cli/index.rst)."
+
+#: ../../how-to/index.md:18
+msgid ""
+"For an ordinary failure, follow [Diagnose and repair](troubleshooting.md)"
+" and open a [public issue](https://github.com/nevenincs/cadrumo/issues) "
+"with redacted output if the problem remains. Never publish taxpayer data,"
+" credentials, or a vulnerability in an issue."
+msgstr ""
+"Per a una fallada ordinària, segueix [Diagnostica i "
+"repara](troubleshooting.md) i obre una [incidència "
+"pública](https://github.com/nevenincs/cadrumo/issues) amb la sortida "
+"ocultada si el problema persisteix. No publiquis mai dades de "
+"contribuent, credencials ni una vulnerabilitat en una incidència."
+
+#: ../../how-to/index.md:23
+msgid "Run through a filing year"
+msgstr "Recorre un any de presentació"
+
+#: ../../how-to/index.md:25
+msgid ""
+"Two modelo-based run-throughs carry one example taxpayer through a "
+"complete filing year, command by command. Start here to see the whole "
+"workflow before running your own."
+msgstr ""
+"Dos recorreguts basats en models porten un contribuent d'exemple a través"
+" d'un any de presentació complet, ordre per ordre. Comença aquí per veure"
+" tot el flux de treball abans d'executar el teu."
+
+#: ../../how-to/index.md:33
+msgid "The income-tax year: Modelo 130 → 100"
+msgstr "L'any de l'impost sobre la renda: Model 130 → 100"
+
+#: ../../how-to/index.md:37
+msgid ""
+"Four quarterly Modelo 130 instalments, each building on the ones before "
+"it, closing with the annual Modelo 100 Renta declaration."
+msgstr ""
+"Quatre pagaments fraccionats trimestrals del Model 130, cadascun "
+"construït sobre els anteriors, que es tanquen amb la declaració anual de "
+"la Renda del Model 100."
+
+#: ../../how-to/index.md:41
+msgid "The IVA year: Modelo 303 → 349 → 390"
+msgstr "L'any de l'IVA: Model 303 → 349 → 390"
+
+#: ../../how-to/index.md:45
+msgid ""
+"Four quarterly Modelo 303 returns with the IVA credit carrying between "
+"them, a Modelo 349 branch, and the annual Modelo 390 summary."
+msgstr ""
+"Quatre declaracions trimestrals del Model 303 amb el crèdit d'IVA que es "
+"trasllada entre elles, una branca del Model 349 i el resum anual del "
+"Model 390."
+
+#: ../../how-to/index.md:49
+msgid "Quickstart"
+msgstr "Començament ràpid"
+
+#: ../../how-to/index.md:53
+msgid ""
+"Shortest path from profile and ledger to an exported modelo file: one "
+"modelo, one period, copy-paste commands."
+msgstr ""
+"El camí més curt del perfil i el ledger a un fitxer de model exportat: un"
+" model, un període, ordres per copiar i enganxar."
+
+#: ../../how-to/index.md:57
+msgid "Your first quarterly filing"
+msgstr "La teva primera presentació trimestral"
+
+#: ../../how-to/index.md:61
+msgid ""
+"First-time walk-through of one Modelo 130 quarter: import a statement, "
+"classify the rows, prepare the draft, and confirm it verifies."
+msgstr ""
+"Recorregut per primera vegada d'un trimestre del Model 130: importa un "
+"extracte, classifica les files, prepara l'esborrany i confirma que "
+"verifica."
+
+#: ../../how-to/index.md:66
+msgid "Your profile"
+msgstr "El teu perfil"
+
+#: ../../how-to/index.md:68
+msgid "Who the taxpayer is, and the facts that decide what you owe."
+msgstr "Qui és el contribuent, i les dades que decideixen què deus."
+
+#: ../../how-to/index.md:74
+msgid "Set up your taxpayer profile"
+msgstr "Configura el teu perfil de contribuent"
+
+#: ../../how-to/index.md:78
+msgid ""
+"Create, inspect, switch, export, import, rename, or delete taxpayer "
+"profiles."
+msgstr ""
+"Crea, inspecciona, canvia, exporta, importa, reanomena o elimina perfils "
+"de contribuent."
+
+#: ../../how-to/index.md:81
+msgid "Authenticate with AEAT"
+msgstr "Autentica't amb l'AEAT"
+
+#: ../../how-to/index.md:85
+msgid "Configure read-only AEAT authentication for live-read workflows."
+msgstr ""
+"Configura l'autenticació de només lectura de l'AEAT per als fluxos de "
+"lectura en directe."
+
+#: ../../how-to/index.md:88
+msgid "Maintain Modelo 036 census facts"
+msgstr "Mantén les dades censals del Model 036"
+
+#: ../../how-to/index.md:92
+msgid "Keep AEAT census facts correct in the active profile."
+msgstr "Mantén correctes les dades censals de l'AEAT al perfil actiu."
+
+#: ../../how-to/index.md:95
+msgid "Find out which modelos apply"
+msgstr "Descobreix quins models s'apliquen"
+
+#: ../../how-to/index.md:99
+msgid "Ask which modelos apply to you and why, from your saved profile facts."
+msgstr ""
+"Pregunta quins models se t'apliquen i per què, a partir de les dades "
+"desades del teu perfil."
+
+#: ../../how-to/index.md:102
+msgid "Protect access to your data"
+msgstr "Protegeix l'accés a les teves dades"
+
+#: ../../how-to/index.md:106
+msgid "Set up a recovery key, change or recover your passphrase, lock, or reset."
+msgstr ""
+"Configura una clau de recuperació, canvia o recupera la contrasenya, "
+"bloqueja o restableix."
+
+#: ../../how-to/index.md:110
+msgid "Your calendar"
+msgstr "El teu calendari"
+
+#: ../../how-to/index.md:112
+msgid "What is due, and when."
+msgstr "Què venç, i quan."
+
+#: ../../how-to/index.md:118
+msgid "Plan your filing calendar"
+msgstr "Planifica el teu calendari de presentacions"
+
+#: ../../how-to/index.md:122
+msgid ""
+"See what may be due, when filing windows open and close, and which period"
+" tokens address them."
+msgstr ""
+"Consulta què pot vèncer, quan s'obren i es tanquen les finestres de "
+"presentació i quins tokens de període les adrecen."
+
+#: ../../how-to/index.md:126
+msgid "Read AEAT notifications"
+msgstr "Llegeix les notificacions de l'AEAT"
+
+#: ../../how-to/index.md:130
+msgid "Capture official notifications and read live AEAT data, view-only."
+msgstr ""
+"Captura notificacions oficials i llegeix dades de l'AEAT en directe, "
+"només de visualització."
+
+#: ../../how-to/index.md:133
+msgid "Check that a filing is ready"
+msgstr "Comprova que una presentació està a punt"
+
+#: ../../how-to/index.md:137
+msgid ""
+"Check readiness, what a filing depends on, its full history, and year-"
+"over-year changes."
+msgstr ""
+"Comprova la preparació, de què depèn una presentació, el seu historial "
+"complet i els canvis interanuals."
+
+#: ../../how-to/index.md:142
+msgid "Your ledger"
+msgstr "El teu ledger"
+
+#: ../../how-to/index.md:144
+msgid ""
+"The record of what happened: bring transactions in, classify them, and "
+"keep the evidence."
+msgstr ""
+"El registre del que ha passat: incorpora moviments, classifica'ls i "
+"conserva l'evidència."
+
+#: ../../how-to/index.md:151
+msgid "Import and manage transactions"
+msgstr "Importa i gestiona els moviments"
+
+#: ../../how-to/index.md:155
+msgid "Import, add, edit, remove, and review ledger rows."
+msgstr "Importa, afegeix, edita, elimina i revisa files del ledger."
+
+#: ../../how-to/index.md:158
+msgid "Classify transactions"
+msgstr "Classifica els moviments"
+
+#: ../../how-to/index.md:162
+msgid ""
+"Classify rows manually, in bulk, with allocation, or through the review "
+"queue."
+msgstr ""
+"Classifica files manualment, en massa, amb assignació o mitjançant la cua"
+" de revisió."
+
+#: ../../how-to/index.md:165
+msgid "Classify with an LLM"
+msgstr "Classifica amb un LLM"
+
+#: ../../how-to/index.md:169
+msgid ""
+"Set up a provider, preview and apply suggestions, and classify from an "
+"attached invoice."
+msgstr ""
+"Configura un proveïdor, previsualitza i aplica suggeriments, i classifica"
+" a partir d'una factura adjunta."
+
+#: ../../how-to/index.md:173
+msgid "Attach invoices and receipts"
+msgstr "Adjunta factures i rebuts"
+
+#: ../../how-to/index.md:177
+msgid ""
+"Store invoices and receipts and link them to the transactions they "
+"support."
+msgstr "Emmagatzema factures i rebuts i enllaça'ls amb els moviments que recolzen."
+
+#: ../../how-to/index.md:180
+msgid "Manage business invoices"
+msgstr "Gestiona les factures de negoci"
+
+#: ../../how-to/index.md:184
+msgid ""
+"Record issued and received invoices and feed intra-community operations "
+"to Modelo 349."
+msgstr ""
+"Registra factures emeses i rebudes i alimenta les operacions "
+"intracomunitàries al Model 349."
+
+#: ../../how-to/index.md:187
+msgid "Correct mistakes in your ledger"
+msgstr "Corregeix els errors del teu ledger"
+
+#: ../../how-to/index.md:191
+msgid "Update, remove, split, merge, stash, or archive transactions safely."
+msgstr ""
+"Actualitza, elimina, divideix, fusiona, posa de banda o arxiva moviments "
+"amb seguretat."
+
+#: ../../how-to/index.md:194
+msgid "Apply IVA prorrata deductions"
+msgstr "Aplica les deduccions de prorrata de l'IVA"
+
+#: ../../how-to/index.md:198
+msgid ""
+"Deduct input IVA under general or especial prorrata and declare "
+"differentiated sectors."
+msgstr ""
+"Dedueix l'IVA suportat amb prorrata general o especial i declara sectors "
+"diferenciats."
+
+#: ../../how-to/index.md:202
+msgid "Your filings"
+msgstr "Les teves presentacions"
+
+#: ../../how-to/index.md:204
+msgid "The per-modelo work: prepare, review, verify, export, file, and reconcile."
+msgstr ""
+"El treball per model: prepara, revisa, verifica, exporta, presenta i "
+"reconcilia."
+
+#: ../../how-to/index.md:210
+msgid "The filing workflow"
+msgstr "El flux de treball de presentació"
+
+#: ../../how-to/index.md:214
+msgid "Understand drafts, verification, export, filing markers, and history."
+msgstr ""
+"Entén els esborranys, la verificació, l'exportació, els marcadors de "
+"presentació i l'historial."
+
+#: ../../how-to/index.md:217
+msgid "Modelo 036"
+msgstr "Model 036"
+
+#: ../../how-to/index.md:221
+msgid "Record an alta, modificacion, or baja you filed at AEAT's sede."
+msgstr ""
+"Registra una alta, modificación o baja que has presentat a la sede de "
+"l'AEAT."
+
+#: ../../how-to/index.md:224
+msgid "Modelo 100 (Renta)"
+msgstr "Model 100 (Renda)"
+
+#: ../../how-to/index.md:228
+msgid "Prepare the annual Renta declaration that gathers the whole year."
+msgstr "Prepara la declaració anual de la Renda que recull tot l'any."
+
+#: ../../how-to/index.md:231
+msgid "Modelo 130"
+msgstr "Model 130"
+
+#: ../../how-to/index.md:235
+msgid "Prepare the quarterly IRPF instalment, cumulative across the year."
+msgstr ""
+"Prepara el pagament fraccionat trimestral de l'IRPF, acumulatiu al llarg "
+"de l'any."
+
+#: ../../how-to/index.md:238
+msgid "Modelo 303"
+msgstr "Model 303"
+
+#: ../../how-to/index.md:242
+msgid "Prepare, verify, and export a quarterly IVA return."
+msgstr "Prepara, verifica i exporta una declaració trimestral de l'IVA."
+
+#: ../../how-to/index.md:245
+msgid "Modelo 349"
+msgstr "Model 349"
+
+#: ../../how-to/index.md:249
+msgid "Declare intra-community operations from your invoice records."
+msgstr ""
+"Declara operacions intracomunitàries a partir dels teus registres de "
+"factures."
+
+#: ../../how-to/index.md:252
+msgid "Modelo 390"
+msgstr "Model 390"
+
+#: ../../how-to/index.md:256
+msgid "Prepare the annual IVA summary."
+msgstr "Prepara el resum anual de l'IVA."
+
+#: ../../how-to/index.md:259
+msgid "Review calculation inputs"
+msgstr "Revisa les dades de càlcul"
+
+#: ../../how-to/index.md:263
+msgid ""
+"Review which form boxes were filled, supply missing values, and handle "
+"offsets."
+msgstr ""
+"Revisa quines caselles del formulari s'han emplenat, proporciona els "
+"valors que falten i gestiones les compensacions."
+
+#: ../../how-to/index.md:266
+msgid "Review with Google Sheets"
+msgstr "Revisa amb Google Sheets"
+
+#: ../../how-to/index.md:270
+msgid ""
+"Export, edit, and pull back modelo calculations using a Google Sheets "
+"spreadsheet."
+msgstr ""
+"Exporta, edita i torna a descarregar els càlculs de models utilitzant un "
+"full de càlcul de Google Sheets."
+
+#: ../../how-to/index.md:273
+msgid "Verify a filing"
+msgstr "Verifica una presentació"
+
+#: ../../how-to/index.md:277
+msgid "Run verification, read the report findings, and fix what blocks export."
+msgstr ""
+"Executa la verificació, llegeix les troballes de l'informe i corregeix "
+"allò que bloqueja l'exportació."
+
+#: ../../how-to/index.md:280
+msgid "File at AEAT"
+msgstr "Presenta a l'AEAT"
+
+#: ../../how-to/index.md:284
+msgid ""
+"Export the file, upload it at the AEAT portal yourself, record, and "
+"reconcile."
+msgstr ""
+"Exporta el fitxer, puja'l tu mateix al portal de l'AEAT, registres i "
+"reconcilies."
+
+#: ../../how-to/index.md:287
+msgid "Reconcile a filing"
+msgstr "Reconcilia una presentació"
+
+#: ../../how-to/index.md:291
+msgid ""
+"Pull and store the AEAT justificante, then compare it with your local "
+"filing record."
+msgstr ""
+"Descarrega i desa el justificante de l'AEAT, i després compara'l amb el "
+"teu registre de presentació local."
+
+#: ../../how-to/index.md:296
+msgid "Tools and help"
+msgstr "Eines i ajuda"
+
+#: ../../how-to/index.md:302
+msgid "Connect an agent (MCP)"
+msgstr "Connecta un agent (MCP)"
+
+#: ../../how-to/index.md:306
+msgid ""
+"Expose the toolset to Claude or any MCP client, with the safety boundary "
+"intact."
+msgstr ""
+"Exposa el conjunt d'eines a Claude o a qualsevol client MCP, amb el límit"
+" de seguretat intacte."
+
+#: ../../how-to/index.md:309
+msgid "Troubleshooting"
+msgstr "Resolució de problemes"
+
+#: ../../how-to/index.md:313
+msgid "Fix active-profile, storage, registry, and authentication problems."
+msgstr ""
+"Corregeix problemes de perfil actiu, emmagatzematge, registre i "
+"autenticació."
+

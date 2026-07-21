@@ -7,25 +7,19 @@ A modelo is a numbered official AEAT tax form, such as 303 for IVA or 130 for qu
 You need:
 
 - An active profile with your taxpayer type, activity, and regime facts filled in. See the [profile setup guide](profile-setup.md), or the [quickstart](quickstart.md) if you're starting from nothing.
-- Your master-key passphrase. Every profile-scoped command needs it; the tool prompts for it, or set `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
+- Your master-key passphrase. Every profile-scoped command needs it; the tool prompts for it.
 
-Check the profile first:
-
-```bash
-aeat config profile status
-```
-
-The status confirms the profile exists and carries the basics. The explain output lists the facts that drive each applicability answer. If a fact is missing, the verdict says so. The CLI emits the rationale, legal references, and refusals in Spanish.
+Check the profile first with `aeat config profile status`. It confirms the profile exists and carries the basics. If a fact is missing, the verdict says so. The CLI emits the rationale, legal references, and refusals in Spanish.
 
 ## Ask whether one modelo applies
 
-Run `overview explain` with the modelo code. By default the tool answers for the current year; to ask about a different year, add `--year`.
+Run `overview explain` with the modelo code. By default the tool answers for the current year; to ask about a different year, add `--year`. The card below confirms the profile, asks whether Modelo 303 applies for 2026, then checks readiness for the first quarter, the whole diagnostic flow in order.
 
-```bash
-aeat app overview explain 303 --year 2026
+```{cli-sequence} choose-modelo-applicability
+:verify: Confirm the tool reports whether Modelo 303 applies and whether the profile is ready to file it.
 ```
 
-The answer has four parts:
+The explain answer has four parts:
 
 - **The verdict** - whether the modelo applies to you for that year.
 - **The rationale** - a plain-language explanation derived from the official rules.
@@ -41,6 +35,7 @@ Some answers also include a scheduling note. Treat it as a pointer, not a calend
 - **Attribution pass-through** - your entity is in régimen de atribución de rentas, such as a comunidad de bienes or a sociedad civil without a commercial object (sin objeto mercantil). The entity passes its income through to its members, so it doesn't file this self-assessment form itself. The members declare the attributed income on their own returns.
 - **Incomplete** - the tool cannot decide and refuses to guess. Usually your profile is missing the facts needed; see [When the verdict is incomplete](#when-the-verdict-is-incomplete). For a few forms the tool has not yet derived an applicability rule. The rationale says so, and in that case no profile change alters the verdict.
 
+(when-the-verdict-is-incomplete)=
 ## When the verdict is incomplete
 
 An incomplete verdict usually means the decision depends on facts your profile doesn't declare yet. The main groups:
@@ -55,11 +50,7 @@ Fix the missing facts by hand with the [profile setup guide](profile-setup.md). 
 
 ## Check readiness for one filing
 
-When you already know which modelo, year, and period you're aiming at, ask for a preflight check instead:
-
-```bash
-aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
-```
+When you already know which modelo, year, and period you're aiming at, ask for a preflight check with `aeat config profile preflight`, the closing frame of the card above.
 
 The preflight reports the profile facts still missing for that specific filing context. Where `overview explain` answers whether the form applies, preflight answers whether you're ready to work on it.
 
@@ -69,20 +60,13 @@ The preflight picks the active revision for that modelo, year, and period automa
 
 ## Browse the catalogue
 
-To see every form the tool knows, list the catalogue. Add `--year` to narrow it to one fiscal year:
+To see every form the tool knows, list the catalogue with `aeat app modelo list`, add `--year` to narrow it to one fiscal year, then look one form up in detail with `aeat app modelo describe 303`:
 
-```bash
-aeat app modelo list
-aeat app modelo list --year 2026
+```{cli-sequence} choose-modelo-catalogue
+:verify: Confirm the catalogue lists the known forms and describes Modelo 303 in detail.
 ```
 
 The list shows each modelo's code, official Spanish title, cadence, tax domain, and revision count. Cadence values include `quarterly`, `annual`, `monthly`, `ad_hoc`, and `profile_based` (the rhythm depends on your situation). Domains include `iva`, `irpf`, `is` (corporate income tax), `censo`, `informative`, `cross_tax`, `irnr` (non-resident income tax), `patrimonio` (wealth tax), and `iae` (tax on economic activities). Being listed does not mean a form applies to you - the catalogue covers everything the tool understands.
-
-To look one form up in detail:
-
-```bash
-aeat app modelo describe 303
-```
 
 The description shows the form's official name (Spanish), domain, cadence, active revision ID, the full list of revision IDs, the valid period tokens, and three structure counts - casillas (boxes), vinculaciones (data bindings), and fórmulas (formulas) - that describe how complex the form is. Keep both commands as lookup aids. Applicability always comes from `overview explain`.
 

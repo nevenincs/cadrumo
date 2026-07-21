@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_232/files/02-232-orden-hfp-816-2017-ejercicios-2016-2017-146-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_232/files/02-232-orden-hfp-816-2017-ejercicios-2016-2017-146-kb-xlsx.xlsx",
   "source_sha256": "fb6802dcf8746e69331b67873cb2e5cae90c3343c69b4f4d430aecde3c56b6ad",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

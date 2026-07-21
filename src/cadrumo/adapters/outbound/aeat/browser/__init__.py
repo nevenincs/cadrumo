@@ -26,7 +26,7 @@ See Also:
         Auth-provider hook consumed by :meth:`BrowserSession.create_context`.
     :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`
         Certificate-auth provisioner that adds Playwright client-certificate
-        kwargs and the context thumbprint marker.
+        kwargs at browser-context construction time.
     :mod:`adapters.outbound.aeat.sede`
         Read-only Sede readers that consume these browser sessions.
 """

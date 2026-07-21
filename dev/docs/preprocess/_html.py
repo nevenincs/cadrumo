@@ -20,23 +20,20 @@ Splitting follows the BOE document structure:
   article or between the marker and the heading; they are stripped so only
   article prose ships.
 
-Attribution is pulled from the sibling normatives ``manifest.json``
-(``boe_url`` / ``boe_id``) where one exists, composing the per-article
-permalink with the ``#aN`` anchor; single-article slices with no manifest
-fall back to the standing BOE/AEAT attribution. Either way the
-reuse-with-attribution obligation is honoured.
+Attribution is pulled from the canonical link embedded in a full BOE document,
+composing the per-article permalink with the ``#aN`` anchor; single-article
+slices with no canonical link fall back to the standing BOE/AEAT attribution.
+Either way the reuse-with-attribution obligation is honoured.
 
-This is the production normatives preprocessor; the ``_example.py`` HTML stub
-remains a worked example only. When the upstream ``vaultspec-rag``
-preprocess-hook lands, this module re-targets the upstream sink and the
-committed sidecars are retired; ``PreprocessOutput`` is the
+This is the production normatives preprocessor. When the upstream
+``vaultspec-rag`` preprocess-hook lands, this module re-targets the upstream
+sink and the committed sidecars are retired; ``PreprocessOutput`` is the
 forward-compatible precursor that makes that migration mechanical.
 """
 
 from __future__ import annotations
 
 import html as html_entities
-import json
 import re
 from pathlib import Path
 from typing import Final
@@ -58,7 +55,7 @@ HTML_EXTRACTOR_ID = "normatives-html"
 HTML_EXTRACTOR_VERSION = "1.0"
 _UTF_8: Final[str] = "utf-8"
 
-#: Standing BOE/AEAT attribution used when no manifest pins a permalink.
+#: Standing BOE/AEAT attribution used when no canonical link pins a permalink.
 _BASE_ATTRIBUTION = (
     "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution."
 )
@@ -69,6 +66,10 @@ _BASE_ATTRIBUTION = (
 # clipped to the textoxslt container before splitting.
 _CONTENT_START = re.compile(r'<div[^>]*id="textoxslt"[^>]*>', re.IGNORECASE)
 _FOOTER_START = re.compile(r'<div[^>]*id="pie"[^>]*>', re.IGNORECASE)
+_CANONICAL_LINK = re.compile(
+    r"""<link\b(?=[^>]*\brel=["']canonical["'])(?=[^>]*\bhref=["'](?P<href>https://www\.boe\.es/[^"']+)["'])[^>]*>""",
+    re.IGNORECASE,
+)
 
 # Block-level noise stripped before article splitting: jurisprudence forms,
 # scripts, styles, and the per-article "Subir" (back-to-top) nav paragraph.
@@ -164,27 +165,15 @@ def _heading_and_body(article_markup: str) -> tuple[str, str]:
     return heading, body
 
 
-def _document_boe_url(source: Path) -> str:
-    """Return the document BOE permalink base from the sibling manifest.
-
-    The manifest is ``<stem>.json`` one directory above the ``html/`` folder
-    (``normatives/<stem>.json`` for ``normatives/html/<stem>.html``). Returns
-    the empty string when no manifest or ``boe_url`` is present.
-    """
-    manifest_path = source.parent.parent / f"{source.stem}.json"
-    if not manifest_path.is_file():
+def _document_boe_url(markup: str) -> str:
+    """Return the authoritative BOE permalink embedded in ``markup``."""
+    match = _CANONICAL_LINK.search(markup)
+    if match is None:
         return ""
-    try:
-        manifest = json.loads(manifest_path.read_text(encoding=_UTF_8))
-    except (OSError, json.JSONDecodeError):
-        return ""
-    if not isinstance(manifest, dict):
-        return ""
-    url = manifest.get("boe_url")
-    return url.strip() if isinstance(url, str) else ""
+    return html_entities.unescape(match.group("href")).strip()
 
 
-def _attribution_for(source: Path, boe_url: str) -> str:
+def _attribution_for(boe_url: str) -> str:
     """Compose the attribution string for a normatives document."""
     if boe_url:
         return f"{_BASE_ATTRIBUTION} Official source: {boe_url}"
@@ -209,6 +198,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
         A list of validated records (one per sidecar pair to write).
     """
     markup = source.read_text(encoding=_UTF_8)
+    boe_url = _document_boe_url(markup)
     markup = _clip_to_content(markup)
     markup = _SCRIPT.sub(" ", markup)
     markup = _STYLE.sub(" ", markup)
@@ -217,8 +207,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
 
     relpath = source.resolve().relative_to(repo_root.resolve()).as_posix()
     digest = sha256_of(source)
-    boe_url = _document_boe_url(source)
-    attribution = _attribution_for(source, boe_url)
+    attribution = _attribution_for(boe_url)
 
     units: list[PreprocessUnit] = []
     for anchor, article_markup in _segments(markup):

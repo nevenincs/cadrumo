@@ -3,9 +3,8 @@ tags:
   - '#audit'
   - '#secure-storage-api'
 date: '2026-05-22'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - '[[2026-04-27-secure-persistence-foundation-adr]]'
   - '[[2026-05-06-secure-persistence-enforcement-adr]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
   - '[[2026-05-22-secure-object-integrity-attribution-plan]]'

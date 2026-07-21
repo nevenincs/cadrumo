@@ -1,8 +1,14 @@
 """Profile bundle import/export command registration for ``aeat config profile``.
 
-Profile import/export emits
-:class:`BucketEventHistoryRepository` lifecycle events
-around portable bundle writes and reads.
+Profile import emits a lifecycle event after restoring a portable bundle.
+Profile export delegates resolution, serialization, publication, and event
+recording to the application-layer export authority.
+
+The bundle passphrase is never an ``argv`` value (the process table and shell
+history must not see it): export under ``--encrypt`` collects it via a hidden
+confirm-retype prompt or one bounded strict-JSON ``--secrets-stdin`` object,
+and import auto-detects an encrypted envelope and collects the passphrase the
+same way, through the shared :mod:`._secure_input` channel.
 """
 
 from __future__ import annotations
@@ -12,8 +18,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import typer
+from pydantic import BaseModel, ConfigDict, SecretStr
 
-from ....core.errors import AeatError as _AeatError
+from ....core.errors import CadrumoError as _CadrumoError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -21,57 +28,79 @@ from ....core.time import now as _now
 from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from ._secure_input import prompt_secret_no_echo, read_secrets_stdin
 
 _PROFILE_TAX_ID_PATH = "identity.tax_id"
 
+
+class _BundleExportSecrets(BaseModel):
+    """Strict ``--secrets-stdin`` payload for ``config profile export --encrypt``.
+
+    Export SETS the bundle passphrase, so the payload carries the value and its
+    confirmation as :class:`~pydantic.SecretStr`; ``extra="forbid"`` refuses an
+    unexpected field.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    passphrase: SecretStr
+    passphrase_confirmation: SecretStr
+
+
+class _BundleImportSecrets(BaseModel):
+    """Strict ``--secrets-stdin`` payload for ``config profile import``.
+
+    Import USES an existing bundle passphrase, so one field suffices.
+    """
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    passphrase: SecretStr
+
+
+def _resolve_export_passphrase(secrets_stdin: bool) -> str:
+    """Return the confirmed bundle passphrase from stdin JSON or no-echo prompts.
+
+    A value/confirmation mismatch refuses before any bundle is serialized;
+    nothing is ever read from ``argv``.
+    """
+    if secrets_stdin:
+        secrets = read_secrets_stdin(_BundleExportSecrets)
+        value = secrets.passphrase.get_secret_value()
+        confirmation = secrets.passphrase_confirmation.get_secret_value()
+    else:
+        value = prompt_secret_no_echo(tr("cli.config.profile.export_passphrase_prompt"))
+        confirmation = prompt_secret_no_echo(tr("cli.config.profile.export_confirm_passphrase_prompt"))
+    if value != confirmation:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.profile.export_passphrase_mismatch",
+        )
+    return value
+
+
+def _resolve_import_passphrase(secrets_stdin: bool) -> str:
+    """Return the bundle passphrase for an encrypted import, never from ``argv``."""
+    if secrets_stdin:
+        return read_secrets_stdin(_BundleImportSecrets).passphrase.get_secret_value()
+    return prompt_secret_no_echo(tr("cli.config.profile.import_passphrase_prompt"))
+
+
 if TYPE_CHECKING:
-    from ....application.workflow import ProfileBucketPointer, WorkflowStateRepository
     from ....domain.buckets import BucketEventType
 
 
 def register_profile_bundle_commands(
     profile_app: typer.Typer,
     *,
-    profile_state: Callable[[], WorkflowStateRepository],
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
-    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
     atomic_create_profile: Callable[..., str],
 ) -> None:
     """Register profile bundle import/export commands."""
-    _register_profile_export_command(
-        profile_app,
-        profile_state=profile_state,
-        resolve_profile_by_label=resolve_profile_by_label,
-        resolve_active_profile_pointer=resolve_active_profile_pointer,
-    )
-    _register_profile_sar_command(
-        profile_app,
-        profile_state=profile_state,
-        resolve_profile_by_label=resolve_profile_by_label,
-        resolve_active_profile_pointer=resolve_active_profile_pointer,
-    )
+    _register_profile_export_command(profile_app)
+    _register_profile_sar_command(profile_app)
     _register_profile_import_command(profile_app, atomic_create_profile=atomic_create_profile)
 
 
-#: Personal-data categories the portable bundle carries, surfaced in the SAR
-#: data catalogue so a subject can see what the archive holds. These mirror the
-#: v3 :class:`UserProfilePortableExport` typed fields.
-_SAR_DATA_CATEGORIES: tuple[str, ...] = (
-    "profile_identity_and_facts",
-    "modelo_work_units",
-    "ledger_transactions",
-    "calculation_revisions",
-    "filing_records",
-)
-
-
-def _register_profile_sar_command(
-    profile_app: typer.Typer,
-    *,
-    profile_state: Callable[[], WorkflowStateRepository],
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
-    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
-) -> None:
+def _register_profile_sar_command(profile_app: typer.Typer) -> None:
     @profile_app.command(
         "subject-access-request",
         help=tr(
@@ -101,71 +130,59 @@ def _register_profile_sar_command(
         ),
     ) -> None:
         """Produce the operator's own personal-data archive (GDPR right of access)."""
-        from ....application.user_profile import profile_storage_session, serialize_profile_bundle
-        from ....domain.buckets import BucketEventType
-        from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
+        from ....application.user_profile import (
+            ProfileBundleExportPurpose,
+            ProfileBundleExportRequest,
+            ProfileBundleExportTransport,
+            export_profile_bundle,
+        )
+        from ....application.workflow import ProfileLabelAmbiguousError
+        from ....domain.user_profile import ProfileNotFoundError
         from .._config_payloads import ConfigProfileSubjectAccessRequestResult
 
         _activate_subcommand_output_language(ctx, output_language)
-        profile_state().load()
-        if name is not None:
-            pointer = resolve_profile_by_label(name)
-        else:
-            pointer = resolve_active_profile_pointer()
-            if pointer is None:
-                raise _CliRefusedBoundaryError(translated_message="cli.config.errors.no_active_profile")
-
-        def _serialize_and_record() -> UserProfilePortableExport:
-            serialized = serialize_profile_bundle(bucket_id=pointer.bucket_id)
-            _emit_profile_lifecycle_event(
-                event_type=BucketEventType.PROFILE_EXPORTED,
-                bucket_id=pointer.bucket_id,
-                object_id=pointer.bucket_id,
-                payload={
-                    "display_name": pointer.label or "",
-                    "out": str(out),
-                    "schema_version": str(serialized.bundle_schema_version),
-                    "subject_access_request": "true",
-                },
-            )
-            return serialized
-
         try:
-            from ....adapters.persistence.storage.master_key import has_active_bucket_session
-            from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
-
-            if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
-                bundle = _serialize_and_record()
-            else:
-                with profile_storage_session(pointer.bucket_id):
-                    bundle = _serialize_and_record()
+            export = export_profile_bundle(
+                ProfileBundleExportRequest(
+                    profile_name=name,
+                    destination=out,
+                    purpose=ProfileBundleExportPurpose.SUBJECT_ACCESS,
+                    transport=ProfileBundleExportTransport.CLEARTEXT_LOCAL,
+                ),
+            )
+        except ProfileLabelAmbiguousError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_profile_label_ambiguous",
+            ) from exc
         except ProfileNotFoundError as exc:
+            if name is None:
+                raise _CliRefusedBoundaryError(
+                    translated_message="cli.config.errors.no_active_profile",
+                ) from exc
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.unknown_profile",
-                context={"name": pointer.label},
+                context={"name": name},
             ) from exc
-        out.parent.mkdir(parents=True, exist_ok=True)
-        out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
 
         result = ConfigProfileSubjectAccessRequestResult(
-            profile_id=pointer.bucket_id,
-            display_name=pointer.label,
-            out=str(out),
-            schema_version=bundle.bundle_schema_version,
-            data_categories=list(_SAR_DATA_CATEGORIES),
+            profile_id=export.profile_id,
+            display_name=export.display_name,
+            out=str(export.destination),
+            schema_version=export.bundle_schema_version,
+            data_categories=list(export.data_categories),
         )
         sensitivity_notice = _build_export_sensitivity_notice(out)
-        catalogue_notice = _build_sar_catalogue_notice()
+        catalogue_notice = _build_sar_catalogue_notice(export.data_categories)
         _emit_envelope(
             ctx,
             command="config.profile.subject_access_request",
             result=result,
             lines=(
-                f"profile_id\t{pointer.bucket_id}",
-                f"display_name\t{pointer.label}",
+                f"profile_id\t{export.profile_id}",
+                f"display_name\t{export.display_name}",
                 f"out\t{out}",
-                f"schema_version\t{bundle.bundle_schema_version}",
-                f"data_categories\t{','.join(_SAR_DATA_CATEGORIES)}",
+                f"schema_version\t{export.bundle_schema_version}",
+                f"data_categories\t{','.join(export.data_categories)}",
                 f"INFO\t{catalogue_notice.message}",
                 f"WARNING\t{sensitivity_notice.message}",
             ),
@@ -173,13 +190,16 @@ def _register_profile_sar_command(
         )
 
 
-def _build_sar_catalogue_notice() -> Notice:
-    """Build the data-catalogue notice naming the personal-data categories held.
+def _build_sar_catalogue_notice(data_categories: tuple[str, ...]) -> Notice:
+    """Build the data-catalogue notice for the personal-data categories held.
 
     A GDPR right-of-access response must tell the subject what categories of
-    their personal data are held, not only hand over a blob. This info
-    :class:`Notice` enumerates the portable-bundle categories and carries them
-    machine-readably in ``context`` per
+    their personal data are held, not only hand over a blob. The authoritative
+    category set is the one the export service derives from the bundle schema
+    and its carried registry namespaces; this info :class:`Notice` points the
+    subject at that derived ``data_categories`` set (carried on the response and
+    machine-readably in ``context``) rather than re-enumerating a static list
+    the CLI would own and let drift, per
     ``cli-notices-are-the-only-diagnostic-channel``.
     """
     return Notice(
@@ -189,23 +209,17 @@ def _build_sar_catalogue_notice() -> Notice:
             "cli.config.profile.sar_catalogue_info",
             default=(
                 "This archive holds every personal-data category kept for the "
-                "profile: identity and profile facts, modelo work units, ledger "
-                "transactions, calculation revisions, and filing records. "
+                "profile. The exact categories are listed in the data_categories "
+                "field of this response and its machine-readable context. "
                 "Attachment evidence bytes and AEAT captures stay in encrypted "
                 "storage; use the encrypted recovery archive to include them."
             ),
         ),
-        context={"data_categories": ",".join(_SAR_DATA_CATEGORIES)},
+        context={"data_categories": ",".join(data_categories)},
     )
 
 
-def _register_profile_export_command(
-    profile_app: typer.Typer,
-    *,
-    profile_state: Callable[[], WorkflowStateRepository],
-    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
-    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
-) -> None:
+def _register_profile_export_command(profile_app: typer.Typer) -> None:
     @profile_app.command(
         "export",
         help=tr(
@@ -227,13 +241,21 @@ def _register_profile_export_command(
             "--to",
             help=tr("cli.config.profile.export_out_help", default="Destination path for the profile bundle."),
         ),
-        passphrase: str | None = typer.Option(
-            None,
-            "--passphrase",
+        encrypt: bool = typer.Option(
+            False,
+            "--encrypt",
             help=tr(
-                "cli.config.profile.export_passphrase_help",
-                default="Passphrase to AEAD-encrypt the serialized profile bundle for transfer.",
+                "cli.config.profile.export_encrypt_help",
+                default=(
+                    "AEAD-encrypt the bundle for transfer; the passphrase is "
+                    "prompted (hidden) or read via --secrets-stdin, never argv."
+                ),
             ),
+        ),
+        secrets_stdin: bool = typer.Option(
+            False,
+            "--secrets-stdin",
+            help=tr("cli.config.custody.secrets_stdin_help"),
         ),
         cleartext_local: bool = typer.Option(
             False,
@@ -252,81 +274,77 @@ def _register_profile_export_command(
     ) -> None:
         """Serialize a profile bundle to a JSON file."""
         from ....application.user_profile import (
-            encrypt_profile_bundle_for_passphrase,
-            profile_storage_session,
-            serialize_profile_bundle,
+            ProfileBundleExportPurpose,
+            ProfileBundleExportRequest,
+            ProfileBundleExportTransport,
+            export_profile_bundle,
         )
-        from ....domain.buckets import BucketEventType
-        from ....domain.user_profile import ProfileNotFoundError, UserProfilePortableExport
+        from ....application.workflow import ProfileLabelAmbiguousError
+        from ....domain.user_profile import ProfileNotFoundError
         from .._config_payloads import ConfigProfileExportResult
 
         _activate_subcommand_output_language(ctx, output_language)
-        _validate_export_transport_options(passphrase=passphrase, cleartext_local=cleartext_local)
-        profile_state().load()
-        if name is not None:
-            pointer = resolve_profile_by_label(name)
-        else:
-            pointer = resolve_active_profile_pointer()
-            if pointer is None:
+        # ``--secrets-stdin`` only carries the encryption passphrase, so it
+        # implies the encrypted transport.
+        encrypted_mode = encrypt or secrets_stdin
+        _validate_export_transport_options(encrypt=encrypted_mode, cleartext_local=cleartext_local)
+        passphrase: str | None = None
+        if encrypted_mode:
+            passphrase = _resolve_export_passphrase(secrets_stdin)
+            if len(passphrase) < 8:
+                raise _CliRefusedBoundaryError(
+                    translated_message="cli.config.profile.export_passphrase_too_short",
+                )
+        try:
+            export = export_profile_bundle(
+                ProfileBundleExportRequest(
+                    profile_name=name,
+                    destination=out,
+                    purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
+                    transport=(
+                        ProfileBundleExportTransport.CLEARTEXT_LOCAL
+                        if passphrase is None
+                        else ProfileBundleExportTransport.PASSPHRASE_ENCRYPTED
+                    ),
+                    passphrase=SecretStr(passphrase) if passphrase is not None else None,
+                ),
+            )
+        except ProfileLabelAmbiguousError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_profile_label_ambiguous",
+            ) from exc
+        except ProfileNotFoundError as exc:
+            if name is None:
                 raise _CliRefusedBoundaryError(
                     translated_message="cli.config.errors.no_active_profile",
-                )
-
-        def _serialize_and_record() -> UserProfilePortableExport:
-            serialized = serialize_profile_bundle(bucket_id=pointer.bucket_id)
-            _emit_profile_lifecycle_event(
-                event_type=BucketEventType.PROFILE_EXPORTED,
-                bucket_id=pointer.bucket_id,
-                object_id=pointer.bucket_id,
-                payload={
-                    "display_name": pointer.label or "",
-                    "out": str(out),
-                    "schema_version": str(serialized.bundle_schema_version),
-                },
-            )
-            return serialized
-
-        try:
-            from ....adapters.persistence.storage.master_key import has_active_bucket_session
-            from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
-
-            if pointer.bucket_id == _resolve_active_bucket_id() and has_active_bucket_session():
-                bundle = _serialize_and_record()
-            else:
-                with profile_storage_session(pointer.bucket_id):
-                    bundle = _serialize_and_record()
-        except ProfileNotFoundError as exc:
+                ) from exc
             raise _CliRefusedBoundaryError(
                 translated_message="cli.config.profile.unknown_profile",
-                context={"name": pointer.label},
+                context={"name": name},
             ) from exc
-        out.parent.mkdir(parents=True, exist_ok=True)
         if passphrase is None:
-            out.write_text(bundle.model_dump_json(indent=2), encoding="utf-8")
             notices = (_build_export_sensitivity_notice(out),)
             transport = "cleartext-local"
         else:
-            encrypted = encrypt_profile_bundle_for_passphrase(bundle, passphrase=passphrase)
-            out.write_text(encrypted.model_dump_json(indent=2), encoding="utf-8")
             notices = (_build_encrypted_export_notice(out),)
             transport = "passphrase-encrypted"
 
         export_result = ConfigProfileExportResult(
-            profile_id=pointer.bucket_id,
-            display_name=pointer.label,
-            out=str(out),
-            schema_version=bundle.bundle_schema_version,
+            profile_id=export.profile_id,
+            display_name=export.display_name,
+            out=str(export.destination),
+            schema_version=export.bundle_schema_version,
         )
         _emit_envelope(
             ctx,
             command="config.profile.export",
             result=export_result,
             lines=(
-                f"profile_id\t{pointer.bucket_id}",
-                f"display_name\t{pointer.label}",
+                f"profile_id\t{export.profile_id}",
+                f"display_name\t{export.display_name}",
                 f"out\t{out}",
                 f"transport\t{transport}",
-                f"schema_version\t{bundle.bundle_schema_version}",
+                f"schema_version\t{export.bundle_schema_version}",
                 *(f"{notice.severity.value.upper()}\t{notice.message}" for notice in notices),
             ),
             notices=notices,
@@ -359,7 +377,7 @@ def _build_export_sensitivity_notice(out: Path) -> Notice:
                 "calculation revisions, and filing records. It was written to {out}. "
                 "Use it only for local/SAR handling; do not email, sync, or transfer it. "
                 "Delete it after that local/SAR handling is complete. "
-                "Use 'aeat config profile export --passphrase ...' for an AEAD-encrypted "
+                "Use 'aeat config profile export --encrypt' for an AEAD-encrypted "
                 "structured transfer bundle. It is NOT a full backup: "
                 "attachment evidence bytes, AEAT captures, and the audit trail are "
                 "excluded. Use the encrypted recovery archive for a complete backup."
@@ -379,31 +397,28 @@ def _build_encrypted_export_notice(out: Path) -> Notice:
             "cli.config.profile.export_encrypted_info",
             default=(
                 "This profile bundle was written to {out} with AEAD passphrase encryption. "
-                "Import it with 'aeat config profile import PATH --passphrase ...'. "
+                "Import it with 'aeat config profile import PATH'; the passphrase is "
+                "prompted (hidden) or read via --secrets-stdin. "
                 "It carries the structured profile bundle only; use the encrypted recovery "
                 "archive for a complete backup with attachment evidence bytes and audit trail."
             ),
             out=str(out),
         ),
-        suggestion="aeat config profile import PATH --passphrase ...",
+        suggestion="aeat config profile import PATH",
         context={"out": str(out), "transport": "passphrase-encrypted"},
     )
 
 
-def _validate_export_transport_options(*, passphrase: str | None, cleartext_local: bool) -> None:
+def _validate_export_transport_options(*, encrypt: bool, cleartext_local: bool) -> None:
     """Require an explicit encrypted or local-cleartext export mode."""
-    if passphrase is not None and cleartext_local:
+    if encrypt and cleartext_local:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.export_transport_conflict",
         )
-    if passphrase is None and not cleartext_local:
+    if not encrypt and not cleartext_local:
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.profile.export_requires_transport",
-            suggestion="aeat config profile export NAME --to bundle.json --passphrase <passphrase>",
-        )
-    if passphrase is not None and len(passphrase) < 8:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.export_passphrase_too_short",
+            suggestion="aeat config profile export NAME --to bundle.json --encrypt",
         )
 
 
@@ -425,13 +440,10 @@ def _register_profile_import_command(
             ...,
             help=tr("cli.config.profile.import_path_help", default="Path to the profile bundle."),
         ),
-        passphrase: str | None = typer.Option(
-            None,
-            "--passphrase",
-            help=tr(
-                "cli.config.profile.import_passphrase_help",
-                default="Passphrase for a bundle exported with 'config profile export --passphrase'.",
-            ),
+        secrets_stdin: bool = typer.Option(
+            False,
+            "--secrets-stdin",
+            help=tr("cli.config.custody.secrets_stdin_help"),
         ),
         label: str | None = typer.Option(
             None,
@@ -471,10 +483,27 @@ def _register_profile_import_command(
             )
         try:
             raw_bundle_text = path.read_text(encoding="utf-8")
-            if passphrase is None:
+        except OSError as exc:
+            raise _CliRefusedBoundaryError(
+                translated_message="cli.config.profile.import_invalid_bundle",
+                context={"error": str(exc)},
+            ) from exc
+        # Auto-detect the transport: the strict encrypted envelope
+        # (extra="forbid", required KDF fields) cannot validate a cleartext
+        # bundle, so a successful parse means an encrypted export. Only then is
+        # the passphrase collected — via the secure-input channel, never argv.
+        from pydantic import ValidationError
+
+        encrypted: EncryptedProfileBundleExport | None
+        try:
+            encrypted = EncryptedProfileBundleExport.model_validate_json(raw_bundle_text)
+        except (ValueError, ValidationError):
+            encrypted = None
+        try:
+            if encrypted is None:
                 bundle = validate_bundle_payload(raw_bundle_text)
             else:
-                encrypted = EncryptedProfileBundleExport.model_validate_json(raw_bundle_text)
+                passphrase = _resolve_import_passphrase(secrets_stdin)
                 bundle = decrypt_profile_bundle_with_passphrase(encrypted, passphrase=passphrase)
         except UnsupportedBundleSchemaVersionError as exc:
             raise _CliRefusedBoundaryError(str(exc)) from exc
@@ -483,7 +512,7 @@ def _register_profile_import_command(
                 translated_message="cli.config.profile.import_encrypted_bundle_invalid",
                 context={"path": str(path)},
             ) from exc
-        except _AeatError:
+        except _CadrumoError:
             raise
         except Exception as exc:
             from ....core.logging import get_logger

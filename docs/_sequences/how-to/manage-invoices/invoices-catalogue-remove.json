@@ -1,0 +1,118 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "catalogue",
+        "create",
+        "--kind",
+        "issued",
+        "--counterparty-nif",
+        "DE345678901",
+        "--counterparty-name",
+        "Kunde GmbH",
+        "--invoice-number",
+        "EU-CAT-099",
+        "--invoice-date",
+        "2026-02-10",
+        "--taxable-base",
+        "2000",
+        "--iva-rate",
+        "0",
+        "--country-code",
+        "DE",
+        "--operation-type",
+        "E"
+      ],
+      "captures": [
+        {
+          "json_path": "result.invoice_id",
+          "name": "invoice_id",
+          "value": "40a571f9701bc391916dba38afa366d1c771a3359521112706e6b73243b1f19b"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.invoice.catalogue.create",
+        "notices": [],
+        "result": {
+          "base_total": "2000.00",
+          "bucket_id": "<bucket-id>",
+          "counterparty_country": "DE",
+          "counterparty_name": "Kunde GmbH",
+          "counterparty_tax_id": "DE345678901",
+          "currency": "EUR",
+          "grand_total": "2000.00",
+          "invoice_id": "40a571f9701bc391916dba38afa366d1c771a3359521112706e6b73243b1f19b",
+          "invoice_number": "EU-CAT-099",
+          "issued_at": "2026-02-10",
+          "iva_total": "0.00",
+          "kind": "issued",
+          "linked_transaction_ids": [],
+          "notes": "",
+          "operation_type": "E",
+          "payment_status": "PENDING"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "invoice",
+        "catalogue",
+        "remove",
+        "40a571f9701bc391916dba38afa366d1c771a3359521112706e6b73243b1f19b",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.invoice.catalogue.remove",
+        "notices": [],
+        "result": {
+          "base_total": "2000.00",
+          "bucket_id": "<bucket-id>",
+          "counterparty_country": "DE",
+          "counterparty_name": "Kunde GmbH",
+          "counterparty_tax_id": "DE345678901",
+          "currency": "EUR",
+          "grand_total": "2000.00",
+          "invoice_id": "40a571f9701bc391916dba38afa366d1c771a3359521112706e6b73243b1f19b",
+          "invoice_number": "EU-CAT-099",
+          "issued_at": "2026-02-10",
+          "iva_total": "0.00",
+          "kind": "issued",
+          "linked_transaction_ids": [],
+          "notes": "",
+          "operation_type": "E",
+          "payment_status": "PENDING"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "invoices-catalogue-remove"
+}

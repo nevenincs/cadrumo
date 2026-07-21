@@ -31,6 +31,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
+from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import (
     WORKFLOW_RUN_NAMESPACE as WORKFLOW_RUN_STORAGE_NAMESPACE,
 )
@@ -43,13 +44,16 @@ from ...adapters.persistence.storage import (
     EnvelopeVersionError,
     SecretStoreError,
     SecureObjectRepository,
+    SecureObjectRevisionConflictError,
     SecureObjectWrite,
     StorageError,
     secure_object_repository_for_active_bucket,
     secure_object_repository_for_cold_bootstrap_state,
 )
+from ...core import ABSENT_SECURE_OBJECT_REVISION_ID
 from ...core.config import Settings, StorageRouteKind, classify_storage_route, load_settings
 from ...core.logging import get_logger
+from ...domain.buckets import BucketEvent, append_bucket_event
 from ._errors import WorkflowError
 from ._events import (
     WorkflowStateResetFingerprint,
@@ -80,6 +84,7 @@ _STATE_SENSITIVITY = WORKFLOW_STATE_STORAGE_NAMESPACE.sensitivity
 _RUN_VERSION = WORKFLOW_RUN_STORAGE_NAMESPACE.schema_version
 _RUN_NAMESPACE = WORKFLOW_RUN_STORAGE_NAMESPACE.namespace
 _RUN_SENSITIVITY = WORKFLOW_RUN_STORAGE_NAMESPACE.sensitivity
+_UPDATE_RETRY_LIMIT = 4
 
 
 def _clear_output_language_cache() -> None:
@@ -113,6 +118,11 @@ class WorkflowStateRepository:
         Returns the persisted :class:`WorkflowState`, or an empty default
         when no state has been saved yet.
         """
+        state, _revision_id = self._load_revisioned()
+        return state
+
+    def _load_revisioned(self) -> tuple[WorkflowState, str]:
+        """Load state together with the exact secure-object revision read."""
         record = self._objects.load(
             _STATE_NAMESPACE,
             _STATE_OBJECT_KEY,
@@ -120,7 +130,7 @@ class WorkflowStateRepository:
             max_supported_version=_STATE_VERSION,
         )
         if record is None:
-            return WorkflowState()
+            return WorkflowState(), ABSENT_SECURE_OBJECT_REVISION_ID
         raw_payload = record.payload.decode("utf-8")
         try:
             envelope = Envelope[WorkflowState].model_validate_json(raw_payload)
@@ -137,7 +147,7 @@ class WorkflowStateRepository:
             raise EnvelopeVersionError(
                 f"workflow state is at version {envelope.schema_version}; consumer supports up to {_STATE_VERSION}",
             )
-        return envelope.payload
+        return envelope.payload, record.revision_id
 
     def save(self, state: WorkflowState) -> None:
         """Persist state in the encrypted database object store."""
@@ -146,7 +156,12 @@ class WorkflowStateRepository:
         _clear_output_language_cache()
         _logger.debug("persisted workflow state to secure backend")
 
-    def to_secure_object_write(self, state: WorkflowState):
+    def to_secure_object_write(
+        self,
+        state: WorkflowState,
+        *,
+        expected_revision_id: str | None = None,
+    ) -> SecureObjectWrite:
         """Return the secure-object upsert for ``state`` without committing it.
 
         Lets callers co-transactionally persist the workflow state and a
@@ -175,6 +190,7 @@ class WorkflowStateRepository:
             schema_version=_STATE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
+            expected_revision_id=expected_revision_id,
         )
 
     def fingerprint_state(
@@ -204,8 +220,7 @@ class WorkflowStateRepository:
         and may run on a cold root where ``cadrumo_database_url`` does
         not resolve (no active profile). In that case there is no
         state envelope to reset; the fingerprint records empty
-        metadata rather than crashing on the absent database
-        (disaster ADR Ruling 6).
+        metadata rather than crashing on the absent database.
         """
         try:
             metadata = self._objects.peek_metadata(_STATE_NAMESPACE, _STATE_OBJECT_KEY)
@@ -288,11 +303,61 @@ class WorkflowStateRepository:
         return fingerprint
 
     def update(self, fn: Callable[[WorkflowState], WorkflowState]) -> WorkflowState:
-        """Load, transform, save, and return the updated :class:`WorkflowState`."""
-        state = self.load()
-        updated = fn(state)
-        self.save(updated)
-        return updated
+        """Revision-safely load, transform, save, and return workflow state."""
+        return self.update_with_writes(lambda state: (fn(state), ()))
+
+    def update_with_writes(
+        self,
+        fn: Callable[[WorkflowState], tuple[WorkflowState, tuple[SecureObjectWrite, ...]]],
+    ) -> WorkflowState:
+        """CAS-update workflow state with optional sibling secure-object writes.
+
+        The callback is re-run from a fresh state after a revision conflict, so
+        it must only derive values and prepare writes. All returned writes are
+        committed with the workflow-state write in one SQL unit of work.
+        """
+        for attempt in range(_UPDATE_RETRY_LIMIT):
+            state, revision_id = self._load_revisioned()
+            updated, sibling_writes = fn(state)
+            if updated == state and not sibling_writes:
+                return state
+            state_write = self.to_secure_object_write(
+                updated,
+                expected_revision_id=revision_id,
+            )
+            try:
+                self._objects.save_many((state_write, *sibling_writes))
+            except SecureObjectRevisionConflictError:
+                if attempt + 1 == _UPDATE_RETRY_LIMIT:
+                    raise
+                continue
+            _clear_output_language_cache()
+            _logger.debug("persisted revision-aware workflow state update")
+            return updated
+        raise AssertionError("bounded workflow-state update retry loop exhausted")
+
+    def update_with_bucket_events(
+        self,
+        fn: Callable[[WorkflowState], tuple[WorkflowState, tuple[BucketEvent, ...]]],
+    ) -> WorkflowState:
+        """CAS-update workflow state and append bucket events atomically."""
+
+        def prepare(state: WorkflowState) -> tuple[WorkflowState, tuple[SecureObjectWrite, ...]]:
+            updated, events = fn(state)
+            if not events:
+                return updated, ()
+            repository = BucketEventHistoryRepository(objects=self._objects)
+            catalogue, revision_id = repository.load_revisioned()
+            for event in events:
+                catalogue = append_bucket_event(catalogue, event)
+            return updated, (
+                repository.to_secure_object_write(
+                    catalogue,
+                    expected_revision_id=revision_id,
+                ),
+            )
+
+        return self.update_with_writes(prepare)
 
 
 class WorkflowRunRepository:

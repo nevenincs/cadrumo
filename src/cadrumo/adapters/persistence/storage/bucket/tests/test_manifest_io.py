@@ -11,10 +11,10 @@ from pydantic import ValidationError
 
 from ......core.errors import build_error_envelope
 from ......core.external_constants import UTF_8_ENCODING
+from ......domain.user_profile import UserProfileStatus
 from ...errors import StorageValidationError
 from .._layout import BucketPaths, bucket_paths, provision_bucket_directory
 from .._manifest import (
-    BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
 )
@@ -45,7 +45,7 @@ def _fixture_manifest(*, last_unlocked: bool = True) -> BucketManifest:
         kdf_params=kdf,
         recovery_enrolled=True,
         schema_version=1,
-        status=BucketLifecycleStatus.ACTIVE,
+        status=UserProfileStatus.ACTIVE,
     )
 
 
@@ -81,7 +81,7 @@ def test_write_is_atomic_no_tmp_file_lingers(tmp_path: Path) -> None:
 
     target = manifest_path(paths)
     assert target.is_file()
-    assert not target.with_suffix(target.suffix + ".tmp").exists()
+    assert list(target.parent.glob("*.tmp")) == []
 
 
 def test_overwrite_replaces_previous_manifest(tmp_path: Path) -> None:

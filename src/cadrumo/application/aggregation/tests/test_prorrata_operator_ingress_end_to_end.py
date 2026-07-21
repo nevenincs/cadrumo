@@ -5,10 +5,9 @@ The especial and sectores apportionment engines
 :func:`~application.aggregation._iva_ledger._apply_sector_apportionment`) were
 verified end-to-end — but those verifications seed
 the register through the RAW adapter (``ProrrataRegisterRepository(...).save``),
-not through any operator surface. The campaign-close honesty review
-(``2026-07-08-iva-prorrata-complexity-audit``) found the engines therefore fire
-ONLY from tests: no production code writes an ``ESPECIAL`` register entry or a
-``SectorDefinition``.
+not through any operator surface: the engines therefore fired
+ONLY from tests, with no production code writing an ``ESPECIAL`` register entry
+or a ``SectorDefinition``.
 
 This test closes that gap. It drives the register write through the EXACT
 application service the ``aeat app ledger prorrata`` CLI verbs call

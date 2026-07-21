@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#m303-parser-engine-totals-impedance'
 date: '2026-06-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
+  - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-02-m390-annual-autoconsumo-promotor-source-adr]]"
   - '[[2026-06-04-m303-parser-engine-totals-impedance-research]]'
 ---
@@ -29,7 +29,7 @@ PM attempted Route A (parser-side id rewrite from `27` → `iva.cuota-devengada-
 
 ## Forces in tension
 
-- **Dual-keying ADR (`2026-06-01-m303-form-vs-semantic-casilla-dual-keying`)** ratified that `casilla.id` is the canonical engine key. Parser-populated values land in the same `casilla_values` mapping the engine consumes.
+- **Canonical dual-keying ADR (`2026-06-13-m303-form-vs-semantic-casilla-dual-keying`)** ratified that `casilla.id` is the canonical engine key. Parser-populated values land in the same `casilla_values` mapping the engine consumes.
 - **Engine-vs-parser authority**: when both parser and engine produce a value for the same casilla, the existing infrastructure has no documented arbitration. The current accidental behaviour (parser writes, engine then overwrites OR test discards) is what produces the 50+ reds.
 - **PDF extraction fidelity**: AEAT publishes the M303 form with totals printed on the page. Parsing those totals is operator-trustworthy data; the operator filed those exact values. Discarding them in favour of engine-recomputed primitives discards regulatory evidence.
 - **Primitive availability**: not all M303 PDFs expose primitives in extractable form. The `iva.repercutido.general / reducido / super-reducido` triple is operator-supplied per AEAT diseño-de-registro, but synthetic-PDF fixtures today don't include them.

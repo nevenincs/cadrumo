@@ -34,20 +34,18 @@ on-disk file and the manifest raises :class:`BlobIntegrityError`.
 
 from __future__ import annotations
 
-import os
 import secrets
-import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.atomic_write import atomic_write_bytes
 from .....core.classification import AtRestTreatment, SensitivityClass, default_policy_for
 from .....core.external_constants import BINARY_MIME_TYPE
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from .....core.hashing import sha256_hex as _sha256_hex
-from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .....core.time import now
 from .._namespace_registry import BLOB_MANIFEST_SCHEMA_VERSION, STORAGE_NAMESPACE_REGISTRY
@@ -75,8 +73,8 @@ from ..master_key import MasterKeyProvider, get_active_master_key
 
 _log = get_logger(__name__)
 
-_BLOB_AAD = b"aeat.blob.payload.v1"
-_DEK_AAD = b"aeat.blob.dek-wrap.v1"
+_BLOB_AAD = b"cadrumo.blob.payload.v1"
+_DEK_AAD = b"cadrumo.blob.dek-wrap.v1"
 _BLOB_ERROR_CONTEXT = {"surface": "encrypted_blob_store"}
 _BLOB_MANIFEST_PATH_KEY = "blob_manifest"
 _BLOB_MANIFEST_PATH_DEFINITION = STORAGE_NAMESPACE_REGISTRY.path_by_key(_BLOB_MANIFEST_PATH_KEY)
@@ -594,27 +592,9 @@ class EncryptedBlobStore:
 
     @staticmethod
     def _atomic_write_bytes(target: Path, payload: bytes) -> None:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        # NamedTemporaryFile raising means no file was created; the
-        # ``except OSError`` below re-raises cleanly.
-        tmp_path: Path | None = None
         try:
-            with tempfile.NamedTemporaryFile(
-                mode="wb",
-                dir=target.parent,
-                prefix=f"{target.stem}.",
-                suffix=".tmp",
-                delete=False,
-            ) as handle:
-                tmp_path = Path(handle.name)
-                handle.write(payload)
-                handle.flush()
-                os.fsync(handle.fileno())
-            os.replace(tmp_path, target)
-            fsync_parent_dir(target)
+            atomic_write_bytes(target, payload)
         except OSError:
-            if tmp_path is not None:
-                tmp_path.unlink(missing_ok=True)
             _log.error(
                 "blob_store: atomic write failed path_marker=%s",
                 _path_log_marker(target),

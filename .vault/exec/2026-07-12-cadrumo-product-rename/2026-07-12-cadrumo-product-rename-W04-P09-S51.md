@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-17'
 step_id: 'S51'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
@@ -44,3 +44,24 @@ Formal review against the committed product-rename ADR and canonical
 `PRODUCT_IDENTITY` found no unresolved finding. An unapproved executable
 decision outside the committed governing chain was not used as acceptance
 authority.
+
+## Contextual-casing continuation
+
+Claude Code 2.1.207 validated the checked marketplace and its ignored served
+plugin directly under strict mode. Both commands returned exit code zero and
+reported `Validation passed`. The standalone repository smoke materialised a
+fresh plugin, reported `validated`, and strict-validated 34 skills and 7 agents
+through the resolved Claude executable.
+
+Three focused real-filesystem validation tests passed: fresh plugin strict
+validation, checked marketplace scaffold parity with the live generator, and
+fresh marketplace strict validation. The validated output carries `CADRUMO`
+display and owner identities, `Cadrumo` sentence descriptions, lowercase
+`cadrumo` plugin/source/server/distribution identities, `cadrumo-mcp`, and the
+two `CADRUMO_MCP_*` environment interpolations.
+
+This evidence proves current manifest schema acceptance, generator parity, and
+generated-layout validity. It does not prove marketplace publication, network
+retrieval, plugin installation, package availability, MCP process startup, or
+an end-to-end operator session; those remain separate artifact and release
+gates.

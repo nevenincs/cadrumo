@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx",
   "source_sha256": "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-addressing-ux'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-code-review-audit]]'
@@ -165,7 +165,7 @@ Auto-generated index of all documents tagged with `#modelo-addressing-ux`.
 ### adr
 
 - `2026-06-04-modelo-addressing-ux-adr` - `modelo-addressing-ux` adr: `natural-key modelo work addressing` | (**status:** `accepted`)
-- `2026-06-05-modelo-addressing-ux-follow-up-queue-adr` - Modelo Addressing UX Follow-Up ADR Queue
+- `2026-06-05-modelo-addressing-ux-follow-up-queue-adr` - Modelo Addressing UX Follow-Up ADR Queue | (**status:** `accepted`)
 
 ### audit
 

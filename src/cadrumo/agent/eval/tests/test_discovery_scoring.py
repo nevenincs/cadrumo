@@ -24,7 +24,6 @@ from pathlib import Path
 
 import pytest
 
-from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.mcp import build_tool_descriptors
 from .. import (
     LiveToolCallRecord,
@@ -38,6 +37,7 @@ from .._live_scoring import (
     compare_surface_discovery,
     score_discovery_trajectory,
 )
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -57,10 +57,6 @@ _TARGET = "modelo.work.calculate"
 _ALWAYS_ON_NON_VERB_TOOLS = 1 + 2 + 3
 
 
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
-
-
 def _is_orientation(command_key: str) -> bool:
     # Mirrors `entrypoints.mcp._surface.is_orientation_command`: the `contract`
     # capability verb plus the `overview.*` obligation-derivation family.
@@ -76,7 +72,7 @@ def _target_tool_name() -> str:
 def _core_trajectory(tool_calls: tuple[LiveToolCallRecord, ...], *, session_id: str) -> LiveTrajectory:
     return LiveTrajectory(
         scenario="descubrimiento-verbo-long-tail",
-        persona="modelo-preparer",
+        persona="cadrumo-modelo-preparer",
         session_id=session_id,
         tool_calls=tool_calls,
     )
@@ -118,13 +114,13 @@ def test_discovery_scenario_loads_and_targets_a_resolvable_long_tail_verb() -> N
     scenario = load_scenario(_DISCOVERY_SCENARIO)
     assert scenario.name == "descubrimiento-verbo-long-tail"
     assert _TARGET in scenario.expected_trajectory
-    assert _TARGET in _valid_commands(), f"{_TARGET!r} must resolve against the live CLI surface"
+    assert _TARGET in valid_cli_commands(), f"{_TARGET!r} must resolve against the live CLI surface"
     assert not _is_orientation(_TARGET), f"{_TARGET!r} must be a long-tail verb, not part of the CORE orientation slice"
 
 
 def test_discovery_scenario_passes_the_shared_golden_dimensions() -> None:
     """The scenario is minimal-but-valid: it passes the trajectory/lifecycle/skill/provenance gate."""
-    result = run_golden_scenario(load_scenario(_DISCOVERY_SCENARIO), valid_commands=_valid_commands())
+    result = run_golden_scenario(load_scenario(_DISCOVERY_SCENARIO), valid_commands=valid_cli_commands())
     assert result.passed, result.failures
 
 

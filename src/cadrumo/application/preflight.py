@@ -30,13 +30,13 @@ import sys
 from collections.abc import Sequence
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from ..core import STRICT_FROZEN_CONFIG
+from ..core import STRICT_FROZEN_CONFIG, AuthProviderKind
 from ..core.config import Settings, load_settings
-from ..core.errors import AeatError
+from ..core.errors import CadrumoError
 from ..core.paths import (
     WINDOWS_MAX_PATH,
     windows_long_paths_enabled,
@@ -44,33 +44,7 @@ from ..core.paths import (
 )
 
 if TYPE_CHECKING:
-    from ..domain.calculations.registry import ModeloDefinition, RegistrySnapshot
     from ..domain.portals import PortalDriftEvent
-
-
-class _RegistryAuthorityLike(Protocol):
-    """Structural view of the registry authority the sweep consumes.
-
-    Declared as a :class:`typing.Protocol` so
-    :func:`probe_registry_referential_integrity` accepts an injected
-    authority in tests without importing the concrete
-    :class:`~domain.calculations.registry.ValidatedRegistryAuthority`
-    at module load and without a mock: any object exposing the real
-    ``modelos`` iterable of :class:`ModeloDefinition` records and a
-    ``snapshot`` builder returning a :class:`RegistrySnapshot` satisfies it.
-    """
-
-    @property
-    def modelos(self) -> tuple[ModeloDefinition, ...]: ...
-
-    def snapshot(
-        self,
-        modelo_id: str,
-        *,
-        filing_year: int,
-        period: str,
-        revision_id: str | None = ...,
-    ) -> RegistrySnapshot: ...
 
 
 __all__ = [
@@ -120,7 +94,7 @@ class PreflightCheck(BaseModel):
     remediation: str = ""
 
 
-# ── #286 — per-auth-provider certificate / Cl@ve Móvil health ────────────────
+# ── Per-auth-provider certificate / Cl@ve Móvil health ────────────────
 
 # ProviderProbeResult values that mean the provider is simply not configured on
 # this workstation — a legitimate, non-fault state for an optional provider.
@@ -135,7 +109,7 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
     """Probe each auth provider's local certificate / Cl@ve Móvil configuration.
 
     Runs the pure-local per-provider probe for every
-    :class:`~application.auth.AuthProviderKind` (no network, no
+    :class:`~core.AuthProviderKind` (no network, no
     active-profile session) and maps its typed
     :class:`~application.auth.ProviderProbeResult` onto a
     :class:`PreflightCheck`. A not-configured optional provider is ``OK``
@@ -143,14 +117,14 @@ def probe_auth_providers(*, settings: Settings | None = None) -> tuple[Preflight
     invalid Cl@ve identity is ``ERROR``; a certificate inside its
     pre-expiry window is ``WARN``. The probe never raises.
     """
-    from .auth import AuthProviderKind, probe_provider_configuration
+    from .auth import probe_provider_configuration
 
     rows: list[PreflightCheck] = []
     for kind in AuthProviderKind:
         check_id = f"auth-provider:{kind.value}"
         try:
             probe = probe_provider_configuration(kind.value, settings=settings)
-        except AeatError as exc:  # never crash the doctor on a probe failure
+        except CadrumoError as exc:  # never crash the doctor on a probe failure
             rows.append(
                 PreflightCheck(
                     check=check_id,
@@ -195,12 +169,12 @@ def _auth_error_remediation(provider: str, result: str) -> str:
         if result == "expired":
             return "obtain a fresh FNMT certificate and reconfigure `aeat config auth certificate`"
         if result == "unreadable":
-            return "set the correct PKCS#12 passphrase (AEAT_CERTIFICATE_PASSWORD)"
+            return "set the correct PKCS#12 passphrase via `aeat config auth certificate secret set`"
         return "re-export a valid .p12 bundle and reconfigure `aeat config auth certificate`"
     return "set a valid DNI/NIE for Cl@ve Móvil via `aeat config auth configure --provider clave_movil`"
 
 
-# ── #102 — secure-storage, bundled-corpus, and configuration preflight ───────
+# ── Secure-storage, bundled-corpus, and configuration preflight ───────
 
 
 def probe_storage_corpus_env(*, settings: Settings | None = None) -> tuple[PreflightCheck, ...]:
@@ -327,7 +301,7 @@ def _probe_config_sanity(settings: Settings) -> PreflightCheck:
     )
 
 
-# ── WIN-003 — Windows MAX_PATH (long-path) headroom ───────────────────────────
+# ── Windows MAX_PATH (long-path) headroom ───────────────────────────
 
 _LONG_PATH_REGISTRY_REMEDIATION = (
     "run `New-ItemProperty -Path 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\FileSystem' "
@@ -349,7 +323,7 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
     (``<root>\buckets\<uuid>\blobs\<hmac>--<label>.meta.json``) would
     meet or exceed :data:`~core.paths.WINDOWS_MAX_PATH`. Zero or
     negative margin is an ``ERROR`` (a real object write can fail
-    mid-campaign); a thin positive margin is a ``WARN`` advisory so the
+    partway through); a thin positive margin is a ``WARN`` advisory so the
     operator can relocate the root before it runs out. This probe never
     writes to disk and never raises — a registry read failure degrades to
     the conservative "not enabled" assumption inside
@@ -410,10 +384,7 @@ def _probe_windows_long_path_support(settings: Settings) -> PreflightCheck:
 # ── #98 — registry referential integrity ─────────────────────────────────────
 
 
-def probe_registry_referential_integrity(
-    *,
-    authority: _RegistryAuthorityLike | None = None,
-) -> PreflightCheck:
+def probe_registry_referential_integrity() -> PreflightCheck:
     """Run the registry referential-integrity gate over every bundled revision.
 
     Drives the same ``check_all_id_references`` existence gate the
@@ -424,9 +395,7 @@ def probe_registry_referential_integrity(
     A dangling reference surfaces as a
     :class:`~domain.calculations.registry.RegistryValidationError`,
     which is caught and reported as an ``error`` row naming the count of
-    failing revisions — the probe never raises. ``authority`` overrides
-    the default bundled authority so the sweep can be exercised against a
-    controlled registry.
+    failing revisions — the probe never raises.
 
     Returns:
         A single :class:`PreflightCheck` row for the registry-integrity dimension.
@@ -437,19 +406,16 @@ def probe_registry_referential_integrity(
         bundled_authority,
     )
 
-    if authority is None:
-        try:
-            authority = bundled_authority()
-        except (RegistryValidationError, RegistrySnapshotError, AeatError) as exc:
-            return PreflightCheck(
-                check="registry:referential-integrity",
-                healthy=False,
-                severity=HealthSeverity.ERROR,
-                detail=f"the bundled registry failed to load: {type(exc).__name__}: {exc}",
-                remediation=(
-                    "inspect the registry TOML sources; run the registry validation suite for the failing modelo"
-                ),
-            )
+    try:
+        authority = bundled_authority()
+    except (RegistryValidationError, RegistrySnapshotError, CadrumoError) as exc:
+        return PreflightCheck(
+            check="registry:referential-integrity",
+            healthy=False,
+            severity=HealthSeverity.ERROR,
+            detail=f"the bundled registry failed to load: {type(exc).__name__}: {exc}",
+            remediation="inspect the registry TOML sources; run the registry validation suite for the failing modelo",
+        )
 
     revisions_checked = 0
     failures: list[str] = []
@@ -507,7 +473,7 @@ def _representative_filing_context(revision: object) -> tuple[int | None, str | 
     return filing_year, period
 
 
-# ── #413 — portal-registry health / recorded portal drift ────────────────────
+# ── Portal-registry health / recorded portal drift ────────────────────
 
 # UrlStability tiers whose drift is a real integrity concern (the URL was
 # promised to change only via explicit Orden / campaign-boundary publication).
@@ -589,9 +555,9 @@ def run_preflight_checks(*, settings: Settings | None = None) -> tuple[Preflight
     """Run every workstation-preflight probe and return the typed :class:`PreflightCheck` rows.
 
     Concatenates the per-auth-provider certificate / Cl@ve Móvil health
-    rows (#286), the secure-storage / bundled-corpus / configuration rows
-    (#102), the registry referential-integrity row (#98), and the
-    portal-registry health / recorded-drift row (#413). Every probe catches
+    rows, the secure-storage / bundled-corpus / configuration rows,
+    the registry referential-integrity row, and the
+    portal-registry health / recorded-drift row. Every probe catches
     its own failures and reports them as ``error`` rows, so the aggregate
     never raises. The portal-drift row runs with the offline default (no
     recorded drift), reporting registered state rather than a live probe.

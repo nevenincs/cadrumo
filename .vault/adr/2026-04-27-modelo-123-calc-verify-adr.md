@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#modelo-123-calc-verify'
 date: '2026-04-27'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-27-modelo-123-calc-verify-research]]'
   - '[[2026-04-27-modelo-130-calc-verify-adr]]'
-  - '[[2026-04-27-modelo-115-calc-verify-adr]]'
 ---
 
 # `modelo-123-calc-verify` adr: aggregation-only 2026 rollover | (**status:** `accepted`)

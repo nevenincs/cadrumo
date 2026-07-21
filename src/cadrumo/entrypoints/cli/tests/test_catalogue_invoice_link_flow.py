@@ -1,14 +1,13 @@
 """End-to-end CLI regression for the catalogue-invoice create -> link flow.
 
-Audit M17 found the documented ``invoice add`` -> ``link --invoice-id`` chain
+The documented ``invoice add`` -> ``link --invoice-id`` chain was previously
 unreachable: ``invoice add`` writes the slim
 :class:`~cadrumo.application.ledger.BusinessOperationInvoice` (no
 ``linked_transaction_ids``), while ``link --invoice-id`` resolves the rich
 :class:`~cadrumo.domain.invoices.Invoice` in the
-:class:`~cadrumo.domain.invoices.InvoiceCatalogue`. Per the accepted
-``2026-06-10-ledger-invoice-unification`` the two stores stay distinct, so
-the gap is closed by giving the operator a verb that mints a rich *linkable*
-invoice: ``aeat app ledger invoice catalogue create``.
+:class:`~cadrumo.domain.invoices.InvoiceCatalogue`. The two stores stay
+distinct, so the gap is closed by giving the operator a verb that mints a
+rich *linkable* invoice: ``aeat app ledger invoice catalogue create``.
 
 These tests assert the now-working flow at the CLI boundary:
 
@@ -16,7 +15,7 @@ These tests assert the now-working flow at the CLI boundary:
   is bidirectional (the invoice cites the transaction and the transaction cites
   the invoice), same active bucket; and
 * an invoice stamped to a *different* bucket is still refused by the cross-bucket
-  link guard (the guard the decision record mandates is preserved, not weakened).
+  link guard (the guard is preserved, not weakened).
 
 Real behaviour only: a real encrypted bucket session, the live Typer tree, and
 the real repositories. No mocks, stubs, or monkeypatch.
@@ -33,13 +32,14 @@ import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....application.invoices import build_catalogue_invoice
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import IntracomOperationType
 from ....domain.invoices import InvoiceCatalogue
 from ....domain.iva import InvoiceKind, IvaCategory
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

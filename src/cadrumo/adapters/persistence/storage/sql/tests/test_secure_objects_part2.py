@@ -8,10 +8,10 @@ from typing import Any, cast
 
 import pytest
 
+from ......tests.master_key import EphemeralMasterKeyProvider
 from ._secure_objects_support import (
     UTC,
     Base,
-    EphemeralMasterKeyProvider,
     Path,
     SecureObjectNamespaceDefinition,
     SecureObjectNamespaceIntegrity,
@@ -121,7 +121,7 @@ def test_iter_records_with_failures_returns_empty_on_empty_namespace(
 
 
 def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) -> None:
-    """Rows below the current version with no upgrade chain are unreadable."""
+    """Rows below the current version are unreadable without migration."""
     from ......core.i18n import tr
 
     with _ephemeral_secure_repo(tmp_path, "older-schema-drift.db") as (_, _, repo):
@@ -147,11 +147,10 @@ def test_iter_records_with_failures_yields_older_schema_drift(tmp_path: Path) ->
         assert isinstance(outcomes[0], SecureObjectUnreadable)
         assert outcomes[0].schema_version == 1
         assert outcomes[0].reason == tr(
-            "errors.storage.namespace.schema_upgrade_path_missing",
+            "errors.storage.namespace.schema_version_unsupported",
             namespace=namespace,
             schema_version=1,
             expected=2,
-            missing_from_version=1,
         )
 
 

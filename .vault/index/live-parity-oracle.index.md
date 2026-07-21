@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-parity-oracle'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
   - '[[2026-05-06-cross-reference-oracle-binding-adr]]'
@@ -37,7 +37,7 @@ Auto-generated index of all documents tagged with `#live-parity-oracle`.
 - `2026-05-06-oracle-surface-compatibility-adr` - `oracle-surface-compatibility` adr: `Reject oracle bindings whose surface_kind is incompatible with the cross-reference surface` | (**status:** `accepted`)
 - `2026-05-07-aeat-vies-surface-split-ixvi-vs-groi-adr` - `aeat-vies-surface-split-ixvi-vs-groi` adr: `Split the AEAT VIES verification surface into two sibling adapters` | (**status:** `accepted`)
 - `2026-05-07-live-parity-oracle-adr` - `authenticated-synthetic-surface-taxonomy` adr: `Add an authenticated_simulator surface category for auth-gated callable verification surfaces` | (**status:** `accepted`)
-- `2026-05-08-live-parity-oracle-adr` - `live-parity-oracle` ADR: cross-reference applicability gate
+- `2026-05-08-live-parity-oracle-adr` - `live-parity-oracle` ADR: cross-reference applicability gate | (**status:** `accepted`)
 
 ### exec
 

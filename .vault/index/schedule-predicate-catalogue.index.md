@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schedule-predicate-catalogue'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-31-schedule-predicate-catalogue-P01-S01]]'
   - '[[2026-05-31-schedule-predicate-catalogue-P01-S02]]'
@@ -24,7 +24,7 @@ Auto-generated index of all documents tagged with `#schedule-predicate-catalogue
 
 ### adr
 
-- `2026-05-31-schedule-predicate-catalogue-adr` - schedule-predicate-catalogue adr: eager compile-time validation of schedule-predicate field references | (status: accepted)
+- `2026-05-31-schedule-predicate-catalogue-adr` - schedule-predicate-catalogue adr: eager compile-time validation of schedule-predicate field references | (**status:** `accepted`)
 
 ### exec
 

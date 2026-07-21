@@ -3,10 +3,10 @@ tags:
   - '#adr'
   - '#registry-period-code-union'
 date: '2026-06-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-27-schema-hardening-casilla-continuity-contract-adr]]"
-  - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
+  - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-05-22-schema-hardening-adr]]"
   - '[[2026-06-04-registry-period-code-union-research]]'
 ---
@@ -15,13 +15,13 @@ related:
 
 ## Authoring note
 
-Authored via the Write tool following the canonical frontmatter shape — the architect's bash session has the same shell-quoting corruption flagged in the M303 dual-keying ADR (`2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr.md`). The `vault add adr` CLI invocation returns EOF immediately. The commit-bot validates via `vault check all` post-commit; the gate is identical regardless of scaffold path.
+Authored via the Write tool following the canonical frontmatter shape — the architect's bash session has the same shell-quoting corruption flagged in the M303 dual-keying ADR (`2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr.md`). The `vault add adr` CLI invocation returns EOF immediately. The commit-bot validates via `vault check all` post-commit; the gate is identical regardless of scaffold path.
 
 ## Problem statement
 
 The CLI exposes ~15 `--period` sites (per the S801 α-survey at commit `b9ff9dc09`) that span multi-modelo contexts. The legitimate value space at the CLI boundary is the UNION of four sub-vocabularies:
 
-- **StandardPeriodCode** (closed StrEnum at `src/aeat/core/_period.py`): `1T-4T`, `1P-4P`, `0A`, `01-12`. 21 members. Covers the dominant case for M100/M130/M131/M200/M303 quarterly + monthly periods.
+- **StandardPeriodCode** (closed StrEnum at `src/cadrumo/core/_period.py`): `1T-4T`, `1P-4P`, `0A`, `01-12`. 21 members. Covers the dominant case for M100/M130/M131/M200/M303 quarterly + monthly periods.
 - **Extended OSS/IOSS scheme**: `EXT-1T`, `EXT-2T`, `EXT-3T`, `EXT-4T`. Used by M369 (Régimen Especial de la Unión OSS).
 - **Ad-hoc lifecycle filings**: `AD-HOC` literal. Used by M308 (devolución a sujetos no establecidos), M309 (declaración no periódica), M360 (devolución intracomunitaria).
 - **Event-driven informativas**: `EVENT-N` where `N` is a per-event counter integer. Used by event-triggered informativa filings (M180/M193/M210 event mode, etc.). The integer is operator-supplied per filing event.
@@ -122,7 +122,7 @@ The α-scope CLI typing for `--period` becomes `RegistryPeriodCode` (a `str` ali
 
 The β-scope ~50-site application-layer migration uses the same alias. Data-class fields declare `period: RegistryPeriodCode`. Pydantic v2 applies the `BeforeValidator` automatically during model_validate; roundtrip through JSON serialises as plain `str`, deserialises back through the validator. No discriminator field needed.
 
-### D2 — Define `RegistryPeriodCode` at `src/aeat/core/_period.py`
+### D2 — Define `RegistryPeriodCode` at `src/cadrumo/core/_period.py`
 
 Co-locate with `StandardPeriodCode`. Module-level constants for the regex patterns. Module-level frozen set for the literal members.
 
@@ -145,7 +145,7 @@ Spot-check during investigation: M308, M309, M360 currently carry varied period 
 
 ### D5 — Author the validator with the registry-authority-flow rule in mind
 
-The validator is Python today (no period-vocabulary TOML). If a future ADR establishes a period-code registry under `src/aeat/_data/registry/aeat/period_codes/` (analogous to `_data/registry/aeat/legal/`), the validator becomes a thin lookup against that registry, and the regex shapes for `EXT-` / `EVENT-` become declared patterns in TOML. The validator's interface stays the same; only its data source changes. This preserves the registry-authority-flow direction of travel.
+The validator is Python today (no period-vocabulary TOML). If a future ADR establishes a period-code registry under `src/cadrumo/_data/registry/aeat/period_codes/` (analogous to `_data/registry/aeat/legal/`), the validator becomes a thin lookup against that registry, and the regex shapes for `EXT-` / `EVENT-` become declared patterns in TOML. The validator's interface stays the same; only its data source changes. This preserves the registry-authority-flow direction of travel.
 
 ## Consequences
 
@@ -153,11 +153,11 @@ The validator is Python today (no period-vocabulary TOML). If a future ADR estab
 
 - ~15 CLI `--period` sites. Each receives the new type annotation. Per-site `--help` text gets an explicit accepted-set list. Estimated 1 commit, ~30 LOC + 15 help-text updates.
 - ~50 application-layer data-class fields under `aggregation/`, `calculations/`, `workflow/`, `modelos/`. Each gains the new type annotation. Pydantic roundtrip tests verify JSON encode/decode preserves the original string verbatim. Estimated 2-3 commits, ~80 LOC + new roundtrip-discipline tests.
-- One new module entry-point at `src/aeat/core/_period.py` exporting `RegistryPeriodCode`, `accepted_period_codes`, `accepted_period_patterns`. ~50 LOC.
+- One new module entry-point at `src/cadrumo/core/_period.py` exporting `RegistryPeriodCode`, `accepted_period_codes`, `accepted_period_patterns`. ~50 LOC.
 
 ### Migration order
 
-1. Land `RegistryPeriodCode` + validator + tests at `src/aeat/core/_period.py`. Standalone commit; no consumers yet.
+1. Land `RegistryPeriodCode` + validator + tests at `src/cadrumo/core/_period.py`. Standalone commit; no consumers yet.
 2. Migrate CLI sites first (α scope). Each site picks up the new type; `--help` text updated; CLI tests assert the parse-failure error message lists the accepted set.
 3. Migrate application-layer data-class fields (β scope). Roundtrip tests per `aeat-roundtrip-discipline` confirm encrypted-envelope persistence preserves the string verbatim and the validator re-runs on deserialise.
 

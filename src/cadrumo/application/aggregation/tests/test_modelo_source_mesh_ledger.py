@@ -15,6 +15,7 @@ from sqlalchemy import text
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ....adapters.persistence.storage.sql import SecureObjectRepository, session_scope
 from ....core import BindingSourceKind, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.classification import SensitivityClass
@@ -37,7 +38,6 @@ from ....domain.iva import (
 )
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.transactions import (
-    TX_BUCKET_NAMESPACE,
     BusinessClassification,
     RawProvenance,
     RawTransaction,
@@ -414,8 +414,9 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     IVA deducible entry (official casilla 37,
     ``modelo-303-iva-autorepercutido-interior-deducible-cuota``). Before the
     flow-fix the application classifier left the observation on its
-    direction-only ``SOPORTADO`` flow, no binding selected it, and the #64
-    advisory surfaced it as an unrouted cuota-bearing gap. Now the classifier
+    direction-only ``SOPORTADO`` flow, no binding selected it, and the
+    unconsumed-declarable-IVA advisory surfaced it as an unrouted cuota-bearing
+    gap. Now the classifier
     recomputes the flow via :func:`derive_flow_for_classification`, routing the
     reverse-charge category to ``INVERSION_SUJETO_PASIVO``; the two new bindings
     consume it (each resolves the 42.00 self-assessed cuota), so the pair nets
@@ -457,8 +458,8 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
         ),
     )
 
-    # The reverse-charge observation is now CONSUMED: the #64 advisory no longer
-    # flags it once the binding routes its self-assessed cuota.
+    # The reverse-charge observation is now CONSUMED: the unconsumed-declarable-IVA
+    # advisory no longer flags it once the binding routes its self-assessed cuota.
     unconsumed_diagnostics = [
         diagnostic
         for diagnostic in resolution.diagnostics
@@ -480,7 +481,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
 def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """#64 refinement: a cuota-less-by-law observation must NOT fire the advisory.
+    """A cuota-less-by-law observation must NOT fire the advisory.
 
     An ``INTRA_COMMUNITY_SUPPLY`` repercutido operation is an entrega
     intracomunitaria exenta (Ley 37/1992 art. 25): it bears zero M303 cuota and
@@ -535,7 +536,7 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation(
 def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_consumed(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """#64 converse: an all-consumed IVA observation set surfaces ZERO unconsumed diagnostics.
+    """The converse case: an all-consumed IVA observation set surfaces ZERO unconsumed diagnostics.
 
     This is the anti-tautology guard for the advisory above: only observations no
     binding selects produce the diagnostic. A domestic sale matched by the
@@ -668,7 +669,7 @@ def test_iva_source_mesh_resolver_degrades_on_unreadable_storage(
     with session_scope(secure_objects._engine) as session:
         session.execute(
             text("UPDATE secure_objects SET payload = X'00' WHERE namespace = :namespace"),
-            {"namespace": TX_BUCKET_NAMESPACE},
+            {"namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace},
         )
 
     with caplog.at_level(logging.DEBUG, logger="cadrumo.application.aggregation._source_mesh"):
@@ -700,7 +701,7 @@ def test_iva_source_mesh_resolver_degrades_on_transaction_catalogue_drift(
     # Per-row catalogue: a corrupt membership-index row makes load() fail closed
     # with StoredTransactionDriftError, the drift the resolver must degrade on.
     secure_objects.save(
-        namespace=TX_BUCKET_NAMESPACE,
+        namespace=TRANSACTION_CATALOGUE_NAMESPACE.namespace,
         object_key=transaction_index_object_key(_BUCKET_ID),
         classification=SensitivityClass.FINANCIAL,
         schema_version=1,

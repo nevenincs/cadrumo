@@ -4,16 +4,23 @@
 
 name: Cadrumo Packaging Smoke
 
+# Cost discipline (operator directives 2026-07-19 and 2026-07-20): the 3-OS
+# matrix is the single most expensive workflow in the repo (a 34-minute
+# Windows leg at its worst), so it is a RELEASE-CANDIDATE campaign only:
+# explicit workflow_dispatch, never per-push. The per-push signal is the
+# lightweight packaging-quick.yml (one cohort build + one core install probe
+# per OS, no evidence minted). This workflow remains the SOLE source of
+# promotable DistributionEvidence; publish-release.yml Gate 2 pins this
+# workflow path. There is deliberately NO pull_request trigger.
 on:
   workflow_dispatch:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
 
+# A newer dispatch must never cancel the running matrix: the release gates
+# consume a COMPLETED successful run. With queueing, the running matrix
+# completes and the newest dispatch waits as the single pending run.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: read
@@ -21,12 +28,22 @@ permissions:
 jobs:
   cadrumo-packaging-smoke:
     name: Cadrumo / Ubuntu / Python 3.13 / wheel artifacts
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 90
+    # Single-creator topology: build-release-cohort is the SOLE draft creator
+    # (drafts reserve no tag ref, so concurrent creates mint duplicates —
+    # cli/cli#4270); every other job waits on it and is upload-only.
+    needs: build-release-cohort
+    # Release-asset transport: this job uploads its outputs to the run's
+    # evidence draft, which needs contents:write at job level only.
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
 
       - name: Install just
         uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
@@ -34,38 +51,495 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
+          version: "0.11.29"
           python-version: "3.13"
-          enable-cache: true
-
-      - name: Dependency surface preflight
-        run: python -m dev.packaging.dependency_surface
-
-      - name: Shipped data source preflight
-        run: python -m dev.packaging.source_preflight
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
 
       - name: Sync frozen development environment
         run: uv sync --frozen
 
-      - name: Cadrumo packaging preflight command tests
-        run: just packaging-smoke-preflight-tests
+      # The dependency/source/preflight-command checks run INSIDE the campaign
+      # driver (dev.packaging.campaign) within the synced environment, so they
+      # are not repeated as workflow steps.
 
-      - name: Cadrumo fresh development dependency smoke
-        run: just packaging-smoke-dev
+      # The hosted runner ships ~14 GB free; the multi-lane campaign plus two
+      # Docker lanes starved it twice (runner lost communication mid-step).
+      # Reclaim the preinstalled toolchains the job never uses, and sample
+      # disk/memory every minute during the one-invocation campaign so a
+      # resource death names its lane in the interleaved output. The campaign
+      # stays a single `just packaging-smoke-ci` invocation so every lane
+      # consumes the same cohort bytes built once.
+      - name: Reclaim runner disk space
+        # GitHub-hosted only: on a self-hosted runner these paths belong to the
+        # operator's machine and the docker prune would wipe the shared WSL
+        # engine's images.
+        if: runner.environment == 'github-hosted'
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force
+          df -h /
+          free -m
 
-      - name: Cadrumo host Linux core packaging smoke
-        run: just packaging-smoke-linux
+      - name: Cadrumo immutable-cohort packaging campaign
+        run: |
+          ( while true; do echo "[resources $(date -u +%H:%M:%S)] $(df -h --output=avail / | tail -1 | tr -d ' ') free disk, $(free -m | sed -n 2p | awk '{print $7}') MiB avail mem"; sleep 60; done ) &
+          sampler=$!
+          just packaging-smoke-ci
+          status=$?
+          kill "$sampler" 2>/dev/null || true
+          exit "$status"
 
-      - name: Cadrumo split-distribution packaging smoke
-        run: just packaging-smoke-split
-
-      - name: Cadrumo clean Docker image packaging smoke
-        run: just packaging-smoke-docker
-
-      - name: Upload Cadrumo packaging smoke evidence
+      - name: Checkpoint packaging evidence
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        run: uv run --no-sync python -m dev.packaging.evidence
+
+      # TEST/DEBUG ASSET ONLY. The per-OS smoke cohort feeds the acquisition
+      # test lanes (scoop/homebrew/claude); it NEVER enters the publication
+      # chain. publish-release.yml ships the SEALED cadrumo-release-cohort only.
+      # Enforced by test_no_workflow_consumes_per_os_cohort_for_publication.
+      - name: Publish tested Cadrumo Python cohort to the run's evidence draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          test -n "$(ls -A var/packaging-smoke-cohort/python)"
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+            -czf cadrumo-python-cohort-linux.tar.gz -C var/packaging-smoke-cohort/python .
+          # Upload-only: build-release-cohort already created the run's draft.
+          gh release upload "$EVIDENCE_TAG" cadrumo-python-cohort-linux.tar.gz --clobber
+
+      - name: Publish Cadrumo packaging smoke evidence to the run's evidence draft
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          staging=$(mktemp -d)
+          cp var/packaging-smoke-evidence/*.json "$staging"/ 2>/dev/null || true
+          find var/distribution-install-readiness/installed-cohorts -name evidence.json \
+            -exec sh -c 'cp "$1" "$0/installed-$(echo "$1" | sha256sum | cut -c1-8).json"' "$staging" {} \; 2>/dev/null || true
+          if [ -n "$(ls -A "$staging")" ]; then
+            tar -czf packaging-smoke-evidence-linux.tar.gz -C "$staging" .
+            gh release upload "$EVIDENCE_TAG" packaging-smoke-evidence-linux.tar.gz --clobber
+          fi
+
+  # Windows leg: proves the python-windows-x86-64 distribution row on a native
+  # windows-latest (x86-64) runner. It runs the host-portable `packaging-smoke`
+  # aggregate (no Docker, no host package-manager lanes) so the cohort is built
+  # once and every portable lane consumes the same bytes. The Linux-only disk
+  # reclamation and the bash resource sampler are omitted; the justfile's
+  # `set windows-shell := pwsh` drives each recipe, and the smoke modules already
+  # branch on os.name for Scripts/.exe layouts.
+  cadrumo-packaging-smoke-windows:
+    name: Cadrumo / Windows / Python 3.13 / wheel artifacts
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 120
+    # Upload-only leg; the sole creator is build-release-cohort (see above).
+    needs: build-release-cohort
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
-          name: cadrumo-packaging-smoke-evidence
-          path: var/packaging-smoke/**/packaging-smoke-manifest.json
-          if-no-files-found: warn
-          retention-days: 14
+          persist-credentials: false
+
+      # taiki-e/install-action shells out to bash and mangles its own action
+      # path on a self-hosted Windows runner using Git Bash (strips the
+      # backslashes -> "C:actions-runner_work..."), so `just` never installs.
+      # Provision it natively instead: prefer the already-present binary, fall
+      # back to scoop (present on the fleet's Windows runner).
+      - name: Ensure just is available
+        shell: powershell
+        run: |
+          if (-not (Get-Command just -ErrorAction SilentlyContinue)) {
+            scoop install just
+          }
+          just --version
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      # The dependency/source/preflight-command checks run INSIDE the campaign
+      # driver (dev.packaging.campaign), so they are not repeated as workflow
+      # steps — the Windows leg alone spent 3.9 measured minutes duplicating
+      # them.
+      - name: Cadrumo host-portable packaging campaign
+        run: just packaging-smoke
+
+      - name: Checkpoint packaging evidence
+        if: always()
+        run: uv run --no-sync python -m dev.packaging.evidence
+
+      # TEST/DEBUG ASSET ONLY (see the Ubuntu leg's cohort-publish note).
+      # shell pinned to pwsh 7: the self-hosted runner's rewritten PSModulePath
+      # breaks Windows PowerShell 5.1 module auto-loading (Get-FileHash etc.).
+      - name: Publish tested Cadrumo Python cohort to the run's evidence draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          if (-not (Get-ChildItem var/packaging-smoke-cohort/python)) { throw "python cohort is empty" }
+          tar -czf cadrumo-python-cohort-windows.tar.gz -C var/packaging-smoke-cohort/python .
+          if ($LASTEXITCODE -ne 0) { throw "cohort archiving failed" }
+          # Upload-only: build-release-cohort already created the run's draft.
+          gh release upload $env:EVIDENCE_TAG cadrumo-python-cohort-windows.tar.gz --clobber
+          if ($LASTEXITCODE -ne 0) { throw "cohort asset upload failed" }
+
+      - name: Publish Cadrumo packaging smoke evidence to the run's evidence draft
+        if: always()
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          $staging = Join-Path $env:RUNNER_TEMP "cadrumo-smoke-evidence-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          New-Item -ItemType Directory -Force $staging | Out-Null
+          Copy-Item var/packaging-smoke-evidence/*.json $staging -ErrorAction SilentlyContinue
+          Get-ChildItem var/distribution-install-readiness/installed-cohorts -Recurse -Filter evidence.json -ErrorAction SilentlyContinue |
+            ForEach-Object {
+              $suffix = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.Substring(0, 8).ToLower()
+              Copy-Item -LiteralPath $_.FullName (Join-Path $staging "installed-$suffix.json")
+            }
+          if (Get-ChildItem $staging) {
+            tar -czf packaging-smoke-evidence-windows.tar.gz -C $staging .
+            if ($LASTEXITCODE -ne 0) { throw "evidence archiving failed" }
+            gh release upload $env:EVIDENCE_TAG packaging-smoke-evidence-windows.tar.gz --clobber
+            if ($LASTEXITCODE -ne 0) { throw "evidence asset upload failed" }
+          }
+
+  # macOS leg: proves the python-macos-arm64 distribution row on a native
+  # macos-latest runner (Apple silicon / arm64). Same host-portable
+  # `packaging-smoke` aggregate as the Windows leg; the Linux-only reclamation
+  # and sampler are omitted, and no host package-manager (Homebrew) lane runs.
+  cadrumo-packaging-smoke-macos:
+    name: Cadrumo / macOS / Python 3.13 / wheel artifacts
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 120
+    # Upload-only leg; the sole creator is build-release-cohort (see above).
+    needs: build-release-cohort
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      # The dependency/source/preflight-command checks run INSIDE the campaign
+      # driver (dev.packaging.campaign), so they are not repeated as workflow
+      # steps — the Windows leg alone spent 3.9 measured minutes duplicating
+      # them.
+      - name: Cadrumo host-portable packaging campaign
+        run: just packaging-smoke
+
+      - name: Checkpoint packaging evidence
+        if: always()
+        run: uv run --no-sync python -m dev.packaging.evidence
+
+      # TEST/DEBUG ASSET ONLY (see the Ubuntu leg's cohort-publish note).
+      # macOS ships bsdtar (no GNU determinism flags); integrity rides the
+      # sealed manifest digest, not byte-reproducible archiving.
+      - name: Publish tested Cadrumo Python cohort to the run's evidence draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          test -n "$(ls -A var/packaging-smoke-cohort/python)"
+          tar -czf cadrumo-python-cohort-macos.tar.gz -C var/packaging-smoke-cohort/python .
+          # Upload-only: build-release-cohort already created the run's draft.
+          gh release upload "$EVIDENCE_TAG" cadrumo-python-cohort-macos.tar.gz --clobber
+
+      - name: Publish Cadrumo packaging smoke evidence to the run's evidence draft
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          staging=$(mktemp -d)
+          cp var/packaging-smoke-evidence/*.json "$staging"/ 2>/dev/null || true
+          find var/distribution-install-readiness/installed-cohorts -name evidence.json \
+            -exec sh -c 'cp "$1" "$0/installed-$(echo "$1" | shasum -a 256 | cut -c1-8).json"' "$staging" {} \; 2>/dev/null || true
+          if [ -n "$(ls -A "$staging")" ]; then
+            tar -czf packaging-smoke-evidence-macos.tar.gz -C "$staging" .
+            gh release upload "$EVIDENCE_TAG" packaging-smoke-evidence-macos.tar.gz --clobber
+          fi
+
+  # Build the ONE immutable full cross-channel cohort (python + Claude plugin/
+  # marketplace + Scoop + Homebrew + MCPB) once, from a clean HEAD clone, and
+  # upload it as cadrumo-release-cohort. The per-OS oracle+emit legs below all
+  # `needs:` this single job so every python-<os> row binds the identical cohort
+  # id (a per-OS rebuild would diverge the id). Pure-Python generators - no node.
+  # This is also the stored bytes the publish authority promotes without rebuild.
+  build-release-cohort:
+    name: Cadrumo / build immutable release cohort
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          # The release-cohort manifest binds the exact v<version> tag. A
+          # single-commit checkout omits tags and would mint source.tag=null,
+          # which the readiness and publication gates correctly refuse.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          # EXACT pin: release_cohort.py enforces _REQUIRED_PYTHON_VERSION for a
+          # reproducible cohort, so this job must provision that exact CPython -
+          # a bare "3.13" resolves to the latest patch (3.13.14 on a fresh runner)
+          # and the builder correctly refuses it. Keep in step with that constant.
+          python-version: "3.13.11"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+
+      - name: Build the immutable full release cohort
+        run: uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort
+
+      - name: Publish the immutable full release cohort to the run's evidence draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          test -n "$(ls -A var/release-cohort)"
+          tar --sort=name --mtime=@0 --owner=0 --group=0 --numeric-owner \
+            -czf cadrumo-release-cohort.tar.gz -C var/release-cohort .
+          # SOLE creator, create-if-absent: a draft reserves no tag ref, so an
+          # unconditional create on a re-run attempt would mint a DUPLICATE
+          # draft (cli/cli#4270) — probe with `release view` first.
+          if ! gh release view "$EVIDENCE_TAG" --json isDraft >/dev/null 2>&1; then
+            gh release create "$EVIDENCE_TAG" --draft \
+              --target "$GITHUB_SHA" \
+              --title "EVIDENCE (non-release): smoke run ${GITHUB_RUN_ID}" \
+              --notes "Machine evidence transport for packaging-smoke run ${GITHUB_RUN_ID} attempt ${GITHUB_RUN_ATTEMPT} at ${GITHUB_SHA}. Not a Cadrumo release."
+          fi
+          gh release upload "$EVIDENCE_TAG" cadrumo-release-cohort.tar.gz --clobber
+
+  # Per-OS proof that THE immutable cohort installs and performs grounded tax work
+  # on each claimed platform, minting the sanctioned python-<os> row bound to the
+  # one cohort. The three legs stay parallel behind the single cheap build.
+  oracle-emit-linux:
+    name: Cadrumo / Linux / immutable-cohort oracle + emit
+    needs: build-release-cohort
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 60
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+      - name: Download the immutable release cohort from the run's evidence draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          # Within one run the manifest is not yet sealed; the cohort's own
+          # manifest/digests are the integrity check (oracle_emit_cohort
+          # refuses a corrupt cohort at load).
+          gh release download "$EVIDENCE_TAG" \
+            --pattern cadrumo-release-cohort.tar.gz --dir var/
+          mkdir -p var/release-cohort
+          tar -xzf var/cadrumo-release-cohort.tar.gz -C var/release-cohort
+      - name: Install the cohort, run installed oracles, emit the row
+        run: |
+          uv run --no-sync python -m dev.packaging.oracle_emit_cohort \
+            --release-cohort-dir var/release-cohort \
+            --row-id python-linux-x86-64 \
+            --work-dir var/oracle-emit-work \
+            --distribution-evidence-dir var/distribution-install-readiness
+      - name: Upload the distribution-evidence record to the run's evidence draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          rows=(var/distribution-install-readiness/*.json)
+          test -e "${rows[0]}"
+          gh release upload "$EVIDENCE_TAG" "${rows[@]}" --clobber
+
+  oracle-emit-windows:
+    name: Cadrumo / Windows / immutable-cohort oracle + emit
+    needs: build-release-cohort
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+      - name: Download the immutable release cohort from the run's evidence draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          gh release download $env:EVIDENCE_TAG --pattern cadrumo-release-cohort.tar.gz --dir var
+          if ($LASTEXITCODE -ne 0) { throw "evidence draft download failed" }
+          New-Item -ItemType Directory -Force var/release-cohort | Out-Null
+          tar -xzf var/cadrumo-release-cohort.tar.gz -C var/release-cohort
+          if ($LASTEXITCODE -ne 0) { throw "cohort extraction failed" }
+      - name: Install the cohort, run installed oracles, emit the row
+        run: |
+          uv run --no-sync python -m dev.packaging.oracle_emit_cohort `
+            --release-cohort-dir var/release-cohort `
+            --row-id python-windows-x86-64 `
+            --work-dir var/oracle-emit-work `
+            --distribution-evidence-dir var/distribution-install-readiness
+      - name: Upload the distribution-evidence record to the run's evidence draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          $rows = @(Get-ChildItem var/distribution-install-readiness -Filter *.json)
+          if (-not $rows) { throw "no distribution-evidence rows to upload" }
+          foreach ($row in $rows) {
+            gh release upload $env:EVIDENCE_TAG $row.FullName --clobber
+            if ($LASTEXITCODE -ne 0) { throw "row upload failed: $($row.Name)" }
+          }
+
+  oracle-emit-macos:
+    name: Cadrumo / macOS / immutable-cohort oracle + emit
+    needs: build-release-cohort
+    runs-on: [self-hosted, macOS, ARM64]
+    timeout-minutes: 90
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+      - name: Sync frozen development environment
+        run: uv sync --frozen
+      - name: Download the immutable release cohort from the run's evidence draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          gh release download "$EVIDENCE_TAG" \
+            --pattern cadrumo-release-cohort.tar.gz --dir var/
+          mkdir -p var/release-cohort
+          tar -xzf var/cadrumo-release-cohort.tar.gz -C var/release-cohort
+      - name: Install the cohort, run installed oracles, emit the row
+        run: |
+          uv run --no-sync python -m dev.packaging.oracle_emit_cohort \
+            --release-cohort-dir var/release-cohort \
+            --row-id python-macos-arm64 \
+            --work-dir var/oracle-emit-work \
+            --distribution-evidence-dir var/distribution-install-readiness
+      - name: Upload the distribution-evidence record to the run's evidence draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          rows=(var/distribution-install-readiness/*.json)
+          test -e "${rows[0]}"
+          gh release upload "$EVIDENCE_TAG" "${rows[@]}" --clobber
+
+  # Terminal seal: after every uploader finished, hash the draft's complete
+  # asset set and bind it to this run's identity as evidence-manifest.json.
+  # Runs only on full success so a sealed manifest always covers a green run.
+  seal-evidence-manifest:
+    name: Cadrumo / seal evidence manifest
+    needs:
+      - cadrumo-packaging-smoke
+      - cadrumo-packaging-smoke-windows
+      - cadrumo-packaging-smoke-macos
+      - oracle-emit-linux
+      - oracle-emit-windows
+      - oracle-emit-macos
+    runs-on: [self-hosted, Linux, X64]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+      - name: Emit and upload the sealed evidence manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-smoke-${{ github.run_id }}
+        run: |
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release emit-manifest \
+            --tag "$EVIDENCE_TAG" --output evidence-manifest.json
+          gh release upload "$EVIDENCE_TAG" evidence-manifest.json --clobber

@@ -225,7 +225,7 @@ def test_operator_rules_exist() -> None:
     docs = _rule_documents()
     assert docs, "no operator rule documents are shipped under _data/agent/rules"
     names = {name for name, _ in docs}
-    assert "operator-operating-rules.md" in names
+    assert "cadrumo-operator-operating-rules.md" in names
 
 
 def test_every_cited_verb_resolves() -> None:
@@ -342,8 +342,6 @@ def test_no_service_owner_value_collides_with_operator_prose() -> None:
     # is ever spelled in that shape, so a substring check against real prose
     # cannot misfire by construction. Confirm the shape invariant holds live.
     malformed = {
-        owner
-        for owner in owner_tokens
-        if not owner.startswith("cadrumo.") or "." not in owner[len("cadrumo.") :]
+        owner for owner in owner_tokens if not owner.startswith("cadrumo.") or "." not in owner[len("cadrumo.") :]
     }
     assert not malformed, f"service_owner/owner values are not dotted module paths: {malformed}"

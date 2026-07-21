@@ -21,7 +21,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
@@ -35,7 +35,6 @@ from ..storage import (
     PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE,
     PROFILE_ASSETS_LEDGER_NAMESPACE,
     SecureObjectRepository,
-    SensitivityClass,
     secure_object_logical_path,
     secure_object_repository_for_active_bucket,
 )
@@ -46,6 +45,8 @@ ASSETS_LEDGER_FILENAME = "assets-ledger.secure-object"
 ASSETS_AMORTIZATION_LEDGER_FILENAME = "assets-amortization-ledger.secure-object"
 _ASSETS_SECURE_OBJECT_VERSION = PROFILE_ASSETS_LEDGER_NAMESPACE.schema_version
 _AMORTIZACION_SECURE_OBJECT_VERSION = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.schema_version
+_ASSETS_SECURE_OBJECT_SENSITIVITY = PROFILE_ASSETS_LEDGER_NAMESPACE.sensitivity
+_AMORTIZACION_SECURE_OBJECT_SENSITIVITY = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.sensitivity
 _ASSETS_NAMESPACE = PROFILE_ASSETS_LEDGER_NAMESPACE.namespace
 _AMORTIZACION_NAMESPACE = PROFILE_ASSETS_AMORTIZATION_LEDGER_NAMESPACE.namespace
 _ASSETS_OBJECT_KEY = PROFILE_ASSETS_LEDGER_NAMESPACE.require_default_object_key()
@@ -156,13 +157,13 @@ class AssetsLedgerRepository:
             record = self._objects.load(
                 _ASSETS_NAMESPACE,
                 self._object_key,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_ASSETS_SECURE_OBJECT_SENSITIVITY,
                 max_supported_version=_ASSETS_SECURE_OBJECT_VERSION,
             )
             if record is None:
                 return AssetsLedgerDocument()
             return AssetsLedgerDocument.model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        except (OSError, AeatError) as exc:
+        except (OSError, CadrumoError) as exc:
             _log.debug(
                 "asset ledger load failed",
                 extra={
@@ -221,7 +222,7 @@ class AssetsLedgerRepository:
         self._objects.save(
             namespace=_ASSETS_NAMESPACE,
             object_key=self._object_key,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_ASSETS_SECURE_OBJECT_SENSITIVITY,
             schema_version=_ASSETS_SECURE_OBJECT_VERSION,
             written_at=now(),
             payload=document.model_dump_json().encode(UTF_8_ENCODING),
@@ -269,13 +270,13 @@ class AmortizacionLedgerRepository:
             record = self._objects.load(
                 _AMORTIZACION_NAMESPACE,
                 self._object_key,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_AMORTIZACION_SECURE_OBJECT_SENSITIVITY,
                 max_supported_version=_AMORTIZACION_SECURE_OBJECT_VERSION,
             )
             if record is None:
                 return AmortizacionLedger()
             return AmortizacionLedger.model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        except (OSError, AeatError) as exc:
+        except (OSError, CadrumoError) as exc:
             _log.debug(
                 "asset amortizacion ledger load failed",
                 extra={
@@ -310,7 +311,7 @@ class AmortizacionLedgerRepository:
         self._objects.save(
             namespace=_AMORTIZACION_NAMESPACE,
             object_key=self._object_key,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_AMORTIZACION_SECURE_OBJECT_SENSITIVITY,
             schema_version=_AMORTIZACION_SECURE_OBJECT_VERSION,
             written_at=now(),
             payload=ledger.model_dump_json().encode(UTF_8_ENCODING),

@@ -1,0 +1,10 @@
+@step Confirm the command is on your path.
+aeat --version
+@step Turn off a capability whose dependency this sandbox does not provision.
+@setup aeat config profile capabilities set llm_vision off
+@step Ask what is installed and what is missing.
+aeat config check
+@step Run the same check with machine-readable output for scripted setups.
+@result aeat --format json config check
+@expect result.ok == true
+@expect exit_code == 0

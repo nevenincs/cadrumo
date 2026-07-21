@@ -13,8 +13,8 @@ You need:
 
 - An active profile - see [set up your taxpayer profile](profile-setup.md). The
   commands below refuse without one (`No hay un perfil activo`).
-- Your master-key passphrase. These commands open the encrypted store, so they
-  prompt for the passphrase (or read `CADRUMO_SECRET_PASSPHRASE` when set).
+- Your master-key passphrase. These commands open the encrypted store, so
+  they prompt for the passphrase.
 - The date you filed the declaration at the sede.
 - Optional: the justificante - the receipt number the sede shows after you file.
 
@@ -30,20 +30,19 @@ Pick the command that matches what you filed:
 
 Record an alta:
 
-```bash
-aeat app modelo m036 alta --declared-on 2026-01-10 --sede-justificante <acuse>
+```{cli-sequence} modelo-036-record-alta
+:verify: Confirm the recorded alta is saved and readable by its id.
 ```
 
-Record a modificacion:
+Record a modificacion (the same record-and-view flow as the alta above, with a
+different event kind):
 
-```bash
-aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
+```{cli-sequence} modelo-036-record-modificacion
 ```
 
 Record a baja:
 
-```bash
-aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
+```{cli-sequence} modelo-036-record-baja
 ```
 
 `--declared-on` is required - the ISO date (year-month-day) you filed at the sede.
@@ -64,24 +63,17 @@ That printed output is your confirmation. Save it with your records.
 
 ## List and view recorded declarations
 
-List the declarations you have recorded in the active profile:
+List the declarations you have recorded in the active profile, then open one by
+its id (the setup step records the same alta shown above so the list has a row):
 
-```bash
-aeat app modelo m036 list
+```{cli-sequence} modelo-036-list-view
+:verify: Confirm the recorded declaration appears in the list and opens by its id.
 ```
 
 The list shows each declaration's id, event kind, declared-on date, recorded-at
 timestamp, and whether you gave a justificante. An empty list means you have recorded
-no declarations yet.
-
-View one declaration in full by its id (or an unambiguous prefix of it):
-
-```bash
-aeat app modelo m036 view <declaration-id>
-```
-
-The view shows the full record, including the justificante and your note if you gave
-them. An id that matches no recorded declaration is refused.
+no declarations yet. The view shows the full record, including the justificante and
+your note if you gave them. An id that matches no recorded declaration is refused.
 
 No command edits or deletes a recorded declaration.
 

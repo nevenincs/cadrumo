@@ -646,11 +646,11 @@ def test_modelo_130_casilla_17_uses_standard_subtraction_for_low_retention_amoun
 
 
 # ---------------------------------------------------------------------------
-# Issue #549 — retención article distinction (Art. 101.5 vs the misattributed
-# "Art. 101.6 sport/art"). Two grounded guards: (1) M130 has no retención-rate
+# Retención article distinction (Art. 101.5 vs the misattributed "Art. 101.6
+# sport/art"). Two grounded guards: (1) M130 has no retención-rate
 # computation home, so no activity-article branch belongs in it; (2) the
 # sport/artistic professional rate is the REDUCED 7% of art. 95.1.d RIRPF, not a
-# distinct 15% "Art. 101.6" case as the round-22 testimonial asserted.
+# distinct 15% "Art. 101.6" case.
 # ---------------------------------------------------------------------------
 
 
@@ -664,9 +664,9 @@ def test_modelo_130_retencion_casilla_is_reported_amount_not_a_rate_computation(
     Modelo 130 never computes it. In M130 the suffered retención enters as a
     manually-reported amount (casilla 06) subtracted by the official form
     arithmetic. There is therefore no place in M130 to branch
-    a retención treatment on the activity article, which is why issue #549's
-    requested "Art. 101.6 sport/art" axis has no M130 calculation home: art. 95
-    RIRPF grounds the reported amount's provenance, not a rate the form derives.
+    a retención treatment on the activity article, so the "Art. 101.6
+    sport/art" axis has no M130 calculation home: art. 95 RIRPF grounds the
+    reported amount's provenance, not a rate the form derives.
     """
     modelo, _catalogues = modelo_130_registry
     revision = modelo.revisions["2019-y-siguientes"]

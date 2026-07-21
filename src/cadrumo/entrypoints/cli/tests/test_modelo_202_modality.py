@@ -31,7 +31,6 @@ No mocks — these tests use the real domain functions directly.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
@@ -47,7 +46,7 @@ from ....domain.deadlines import (
     TaxpayerProfile,
 )
 from ....domain.deadlines.taxpayer_model import EntityType
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -230,12 +229,6 @@ def test_attribution_entity_is_not_applicable_for_modelo_202() -> None:
 # ---------------------------------------------------------------------------
 # CLI work create integration — SL can provision a Modelo 202 work unit
 # ---------------------------------------------------------------------------
-
-
-@pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def test_legal_entity_can_create_modelo_202_work_unit(tmp_path: Path) -> None:

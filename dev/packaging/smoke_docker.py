@@ -13,7 +13,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
 
-from .smoke_core import _build_wheel, _executable, _manifest_path, _write_smoke_manifest
+from .python_cohort import load_python_cohort
+from .smoke_core import _executable, _manifest_path, _write_smoke_manifest
 
 _UTF_8: Final[str] = "utf-8"
 _DOCKER_COMMAND_TIMEOUT_SECONDS: Final[int] = 30
@@ -176,7 +177,7 @@ from pathlib import Path
 
 REPRESENTATIVE_DATA_LEAVES = (
     "registry/aeat/modelos/036/manifest.toml",
-    "registry/aeat/user_profile/schema.toml",
+    "registry/cadrumo/user_profile/schema.toml",
     "corpus/aeat_official/disenos_registro/modelo_100/manifest.json",
 )
 
@@ -206,11 +207,31 @@ def clean_product_env() -> dict[str, str]:
 
 
 wheel = Path(sys.argv[1])
-run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir", str(wheel)])
+companions = [Path(value) for value in sys.argv[2:4]]
+run([
+    sys.executable,
+    "-m",
+    "pip",
+    "install",
+    "--disable-pip-version-check",
+    "--no-cache-dir",
+    str(wheel),
+    *(str(companion) for companion in companions),
+])
 run([sys.executable, "-m", "pip", "check"])
 
-version = run(["cadrumo", "--version"], env=clean_product_env())
-if "cadrumo " not in version.stdout:
+from importlib.metadata import distribution
+for name, artifact in zip(
+    ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official"),
+    (wheel, *companions),
+    strict=True,
+):
+    direct_url = json.loads(distribution(name).read_text("direct_url.json") or "null")
+    if direct_url.get("url") != artifact.as_uri():
+        raise SystemExit(f"{name} installed from unrelated bytes: {direct_url!r}")
+
+version = run(["aeat", "--version"], env=clean_product_env())
+if "CADRUMO " not in version.stdout:
     raise SystemExit(f"unexpected aeat --version output: {version.stdout!r}")
 
 root = files("cadrumo").joinpath("_data")
@@ -227,7 +248,7 @@ default_env = {
     "CADRUMO_LOCAL_STORAGE_ROOT": str(default_root),
     "CADRUMO_DATABASE_URL": f"sqlite:///{(default_root / 'cadrumo.db').as_posix()}",
 }
-default_check = run(["cadrumo", "--format", "json", "config", "check"], expected=(1, 2), env=default_env)
+default_check = run(["aeat", "--format", "json", "config", "check"], expected=(1, 2), env=default_env)
 default_payload = json_payload(default_check.stdout)
 if default_payload.get("status") != "success" or default_payload.get("result", {}).get("ok") is not False:
     raise SystemExit(f"default config check did not report typed dependency diagnostics: {default_payload!r}")
@@ -239,10 +260,13 @@ env = {
     "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
     "CADRUMO_OUTPUT_LANGUAGE": "en",
     "CADRUMO_SECRET_PASSPHRASE": secrets.token_urlsafe(24),
+    # Headless custody: no keyring exists in the container; pin the
+    # passphrase-backed file backend like every other smoke lane.
+    "CADRUMO_SECRET_STORE_BACKEND": "file",
 }
 create = run(
     [
-        "cadrumo",
+        "aeat",
         "--format",
         "json",
         "config",
@@ -272,7 +296,7 @@ create_payload = json_payload(create.stdout)
 if create_payload.get("status") != "success":
     raise SystemExit(f"profile create did not succeed: {create_payload!r}")
 
-ready = run(["cadrumo", "--format", "json", "config", "check"], env=env)
+ready = run(["aeat", "--format", "json", "config", "check"], env=env)
 ready_payload = json_payload(ready.stdout)
 result = ready_payload.get("result", {})
 if ready_payload.get("status") != "success" or result.get("ok") is not True or result.get("issues") != []:
@@ -367,6 +391,7 @@ def _browser_probe_source() -> str:
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import subprocess
 import sys
@@ -390,10 +415,11 @@ def clean_product_env() -> dict[str, str]:
 
 
 wheel = Path(sys.argv[1])
+companions = [Path(value) for value in sys.argv[2:4]]
 env = {
     **clean_product_env(),
-    "AEAT_BROWSER_CHANNEL": "chromium",
-    "AEAT_BROWSER_HEADLESS": "true",
+    "CADRUMO_BROWSER_CHANNEL": "chromium",
+    "CADRUMO_BROWSER_HEADLESS": "true",
     "CADRUMO_LOCAL_STORAGE_ROOT": "/work/profile-root",
     "CADRUMO_DATABASE_URL": "sqlite:////work/profile-root/cadrumo.db",
     "CADRUMO_OUTPUT_LANGUAGE": "en",
@@ -405,8 +431,26 @@ Path(env["CADRUMO_LOCAL_STORAGE_ROOT"]).mkdir(parents=True, exist_ok=True)
 Path(env["PLAYWRIGHT_BROWSERS_PATH"]).mkdir(parents=True, exist_ok=True)
 
 target = f"cadrumo[browser] @ {wheel.as_uri()}"
-run([sys.executable, "-m", "pip", "install", "--disable-pip-version-check", "--no-cache-dir", target], env=env)
+run([
+    sys.executable,
+    "-m",
+    "pip",
+    "install",
+    "--disable-pip-version-check",
+    "--no-cache-dir",
+    target,
+    *(str(companion) for companion in companions),
+], env=env)
 run([sys.executable, "-m", "pip", "check"], env=env)
+from importlib.metadata import distribution
+for name, artifact in zip(
+    ("cadrumo", "cadrumo-data-manuals", "cadrumo-data-official"),
+    (wheel, *companions),
+    strict=True,
+):
+    direct_url = json.loads(distribution(name).read_text("direct_url.json") or "null")
+    if direct_url.get("url") != artifact.as_uri():
+        raise SystemExit(f"{name} installed from unrelated bytes: {direct_url!r}")
 run([sys.executable, "-c", "import playwright.async_api, playwright_stealth"], env=env)
 run([sys.executable, "-m", "playwright", "install", "--with-deps", "chromium"], env=env)
 
@@ -433,7 +477,13 @@ thread.start()
 
 
 async def main():
-    browser_session = await default_browser_session_factory(load_settings())
+    settings = load_settings()
+    if settings.cadrumo_browser_channel != "chromium" or settings.cadrumo_browser_headless is not True:
+        raise SystemExit(
+            "docker browser smoke did not resolve canonical Chromium/headless settings: "
+            f"channel={settings.cadrumo_browser_channel!r} headless={settings.cadrumo_browser_headless!r}"
+        )
+    browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context()
         try:
@@ -463,28 +513,64 @@ def _run_probe(
     docker: DockerCli,
     image: str,
     work_dir: Path,
+    cohort_dir: Path,
     wheel: Path,
+    companion_wheels: tuple[Path, Path],
     probe: Path,
     timeout: int,
 ) -> None:
-    """Run one mounted probe script in the requested Docker image."""
-    command = [
+    """Run one probe script in the requested Docker image.
+
+    The probe inputs are COPIED into the container (``docker create`` +
+    ``docker cp`` + ``docker start --attach``) rather than bind-mounted. A bind
+    mount resolves against the DAEMON host's filesystem, so when this smoke
+    itself executes inside a containerized runner (the self-hosted fleet's
+    Linux runner is a container speaking to Docker Desktop's daemon) the
+    daemon cannot see the runner's paths and silently mounts empty
+    directories. Copying works identically for native daemons and
+    docker-outside-of-docker runners.
+    """
+    create_command = [
         *docker.argv_prefix,
-        "run",
-        "--rm",
-        "-v",
-        f"{_wsl_mount(docker, wheel.parent)}:/wheels:ro",
-        "-v",
-        f"{_wsl_mount(docker, work_dir)}:/work",
+        "create",
         "--workdir",
         "/work",
         image,
         "python",
         f"/work/{probe.name}",
-        f"/wheels/{wheel.name}",
+        f"/cohort/{wheel.name}",
+        *(f"/cohort/{companion.name}" for companion in companion_wheels),
     ]
-    print("running Docker packaging smoke", flush=True)
-    _run_docker(command, timeout=timeout)
+    created = subprocess.run(create_command, capture_output=True, text=True, check=False, timeout=timeout)
+    if created.returncode != 0:
+        sys.stderr.write(f"docker packaging smoke failed to create the probe container ({created.returncode})\n")
+        sys.stdout.write(created.stdout)
+        sys.stderr.write(created.stderr)
+        raise SystemExit(created.returncode or 1)
+    container_id = created.stdout.strip()
+    try:
+        # docker cp semantics differ by destination existence: `--workdir`
+        # pre-creates /work, so the `SRC/.` contents form targets it (a plain
+        # SRC_DIR would nest as /work/<basename>); /cohort does not exist yet,
+        # so the plain SRC_DIR form creates it with the source's contents.
+        _run_docker(
+            [*docker.argv_prefix, "cp", f"{_wsl_mount(docker, work_dir)}/.", f"{container_id}:/work"],
+            timeout=timeout,
+        )
+        _run_docker(
+            [*docker.argv_prefix, "cp", _wsl_mount(docker, cohort_dir), f"{container_id}:/cohort"],
+            timeout=timeout,
+        )
+        print("running Docker packaging smoke", flush=True)
+        _run_docker([*docker.argv_prefix, "start", "--attach", container_id], timeout=timeout)
+    finally:
+        subprocess.run(
+            [*docker.argv_prefix, "rm", "--force", container_id],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=_DOCKER_COMMAND_TIMEOUT_SECONDS,
+        )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -492,6 +578,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--image", default="python:3.13-slim", help="Docker image used for the clean Linux proof.")
     parser.add_argument("--work-dir", help="Empty directory for wheel and Docker smoke artifacts.")
+    parser.add_argument(
+        "--cohort-dir",
+        required=True,
+        type=Path,
+        help="Directory containing the prebuilt immutable Python cohort.",
+    )
     parser.add_argument(
         "--browser",
         action="store_true",
@@ -501,7 +593,6 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     repo_root = _repo_root()
-    uv = _executable("uv")
     docker = _docker_cli()
     mode = "browser" if args.browser else "core"
     timeout = args.timeout if args.timeout is not None else (1800 if args.browser else 900)
@@ -512,15 +603,25 @@ def main(argv: list[str] | None = None) -> int:
     work_dir = _work_dir(repo_root, args.work_dir, mode)
     print(f"Docker packaging smoke work dir: {work_dir}", flush=True)
 
-    print("building wheel", flush=True)
-    wheel = _build_wheel(repo_root, work_dir, uv)
+    cohort = load_python_cohort(args.cohort_dir)
+    wheel = cohort.root_wheel
+    print("using supplied immutable Python cohort", flush=True)
     probe = _write_probe(
         work_dir,
         f"{mode}_probe.py",
         _browser_probe_source() if args.browser else _core_probe_source(),
     )
 
-    _run_probe(docker=docker, image=args.image, work_dir=work_dir, wheel=wheel, probe=probe, timeout=timeout)
+    _run_probe(
+        docker=docker,
+        image=args.image,
+        work_dir=work_dir,
+        cohort_dir=cohort.directory,
+        wheel=wheel,
+        companion_wheels=cohort.companion_wheels,
+        probe=probe,
+        timeout=timeout,
+    )
 
     checks = [
         "docker daemon preflight",
@@ -550,11 +651,14 @@ def main(argv: list[str] | None = None) -> int:
         lane=f"docker-{mode}",
         artifacts={
             "wheel": _manifest_path(work_dir, wheel),
+            "data_wheel_manuals": _manifest_path(work_dir, cohort.manuals_wheel),
+            "data_wheel_official": _manifest_path(work_dir, cohort.official_wheel),
             "probe": _manifest_path(work_dir, probe),
         },
         checks=tuple(checks),
         details={
             "docker_backend": docker.label,
+            "cohort_version": cohort.version,
             "image": args.image,
             "mode": mode,
             "timeout_seconds": timeout,

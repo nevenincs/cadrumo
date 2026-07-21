@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 def test_smoke_modelos() -> None:
     """Asserts the subpackage is importable and conventions hold."""
     assert modelos_doc is not None
-    assert issubclass(errors.AeatError, Exception)
+    assert issubclass(errors.CadrumoError, Exception)
     assert logging.get_logger(__name__).name == __name__
 
 

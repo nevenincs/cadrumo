@@ -23,13 +23,11 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...application.ledger import (
-    LedgerTransactionResultPayload,
     LLMProvider,
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
     create_manual_transaction,
     ledger_transaction_payload,
-    ledger_transaction_result_payload,
     ledger_transaction_review_status,
     resolve_lineage_transaction_id,
     update_manual_transaction_fields,
@@ -46,7 +44,6 @@ from ...domain.iva import (
 )
 from ...domain.transactions import (
     BusinessClassification,
-    Transaction,
     TransactionDirection,
     TransactionIdPrefixError,
     TransactionValidationError,
@@ -100,6 +97,7 @@ from ._ledger_ratios_cli import ratios_app, register_ratios_commands
 from ._ledger_read_cli import register_read_commands
 from ._ledger_rules_cli import register_rule_commands, rule_app
 from ._ledger_support import (
+    _emit_update_result,
     _invoice_link_error_bad_parameter,
     _ledger_transaction_validation_bad,
     _ledger_validation_bad,
@@ -115,7 +113,6 @@ from ._ledger_support import (
     _validate_category_id,
 )
 from ._prorrata_register_cli import register_prorrata_register_commands
-from ._schemas import OutputSchema
 
 _log = get_logger(__name__)
 
@@ -172,40 +169,6 @@ def _resolve_read_id(transaction_repository: _TransactionRepo, prefix: str) -> s
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
     return ManualLedgerTransactionPatch.model_validate(
         {key: value for key, value in values.items() if value is not None},
-    )
-
-
-def _emit_update_result(
-    ctx: typer.Context,
-    result_transaction: Transaction,
-    bucket_id: str,
-    events: tuple[str, ...],
-    *,
-    command: str,
-    result_cls: type[OutputSchema],
-) -> None:
-    transaction_payload = ledger_transaction_payload(result_transaction)
-    review_status = ledger_transaction_review_status(result_transaction)
-    result = result_cls.model_validate(
-        {
-            "bucket_id": bucket_id,
-            "transaction_id": result_transaction.transaction_id,
-            "bucket_event_ids": list(events),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    _emit_envelope(
-        ctx,
-        command=command,
-        result=result,
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-        ],
     )
 
 
@@ -926,9 +889,9 @@ register_lifecycle_commands(app)
     help=tr(
         "cli.ledger.link.help",
         default=(
-            "Bind a ledger transaction to an invoice and/or a purchase-invoice "
-            "evidence record in a single canonical call. Refuses cross-bucket "
-            "links. Local-only; never contacts AEAT."
+            "Bind a ledger transaction to a reconciliation-catalogue invoice in one "
+            "atomic call. Refuses cross-bucket links. To attach purchase-invoice "
+            "evidence, use 'aeat app ledger attach'. Local-only; never contacts AEAT."
         ),
     ),
 )
@@ -938,20 +901,12 @@ def ledger_link(
         ...,
         help=tr("cli.ledger.link.id_help", default="Ledger transaction id (SHA-256 or unambiguous prefix)."),
     ),
-    invoice_id: str | None = typer.Option(
-        None,
+    invoice_id: str = typer.Option(
+        ...,
         "--invoice-id",
         help=tr(
             "cli.ledger.link.invoice_id_help",
             default="Invoice id to bind bidirectionally to the transaction.",
-        ),
-    ),
-    evidence_id: str | None = typer.Option(
-        None,
-        "--evidence-id",
-        help=tr(
-            "cli.ledger.link.evidence_id_help",
-            default="Purchase-invoice evidence record id to attach to the transaction.",
         ),
     ),
     actor: str | None = typer.Option(
@@ -960,18 +915,10 @@ def ledger_link(
         help=tr("cli.ledger.link.actor_help", default="Operator label recorded on bucket events."),
     ),
 ) -> None:
-    """Bind a transaction to invoice / evidence references in one call."""
+    """Bind a transaction to one reconciliation-catalogue invoice, atomically."""
     from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-    from ...application.invoices import link_invoice_transaction_repositories
+    from ...application.ledger import link_manual_transaction_invoice
     from ...domain.invoices import InvoiceLinkError
-
-    if invoice_id is None and evidence_id is None:
-        raise _bad(
-            tr(
-                "cli.ledger.link.errors.missing_target",
-                default="Supply at least one of --invoice-id or --evidence-id.",
-            ),
-        )
 
     state = _state()
     transaction_repository = _tx_repo(state)
@@ -979,76 +926,53 @@ def ledger_link(
     bucket_id = transaction_repository.bucket_id
     actor_label = (actor or "operator").strip() or "operator"
 
-    if invoice_id is not None:
-        # Pre-write bucket guard: load the invoice and verify it is
-        # scoped to the active bucket BEFORE invoking the linker.
-        # link_invoice_transaction_repositories mutates both invoice and
-        # transaction catalogues; a post-write check would leave a
-        # cross-bucket link persisted.
-        invoice_repo = InvoiceCatalogueRepository()
-        invoices_snapshot = invoice_repo.load()
-        invoice_record = invoices_snapshot.invoices.get(invoice_id)
-        if invoice_record is None:
-            raise _bad(
-                tr(
-                    "cli.ledger.link.errors.invoice_not_found",
-                    default="Invoice id not found in the active profile invoice catalogue.",
-                ),
-            )
-        if invoice_record.bucket_id not in (None, bucket_id):
-            raise _bad(
-                tr(
-                    "cli.ledger.link.errors.cross_bucket_invoice",
-                    default="Invoice belongs to a different bucket than the active profile.",
-                ),
-            )
-        try:
-            link_invoice_transaction_repositories(
-                bucket_id=bucket_id,
-                invoice_id=invoice_id,
-                transaction_id=resolved_id,
-                invoice_repository=invoice_repo,
-                transaction_repository=transaction_repository,
-            )
-        except InvoiceLinkError as exc:
-            raise _invoice_link_error_bad_parameter() from exc
-
-    evidence_result_payload: LedgerTransactionResultPayload | None = None
-    if evidence_id is not None:
-        evidence_patch = ManualLedgerTransactionPatch(purchase_invoice_evidence_id=evidence_id)
-        evidence_result = update_manual_transaction_fields(
+    # Pre-write instructive gate: the reconciliation InvoiceCatalogue is the only
+    # store `link` targets. A missing/cross-bucket id is refused with the typed
+    # localized message (the operator's first instructive surface) before the
+    # atomic writer runs.
+    invoice_repo = InvoiceCatalogueRepository()
+    invoice_record = invoice_repo.load().invoices.get(invoice_id)
+    if invoice_record is None:
+        raise _bad(
+            tr(
+                "cli.ledger.link.errors.invoice_not_found",
+                default="Invoice id not found in the active profile invoice catalogue.",
+            ),
+        )
+    if invoice_record.bucket_id not in (None, bucket_id):
+        raise _bad(
+            tr(
+                "cli.ledger.link.errors.cross_bucket_invoice",
+                default="Invoice belongs to a different bucket than the active profile.",
+            ),
+        )
+    try:
+        link_manual_transaction_invoice(
             bucket_id=bucket_id,
             transaction_id=resolved_id,
-            patch=evidence_patch,
+            invoice_id=invoice_id,
             actor=actor_label,
             source_command="aeat app ledger link",
+            transaction_repository=transaction_repository,
+            invoice_repository=invoice_repo,
         )
-        evidence_result_payload = ledger_transaction_result_payload(evidence_result)
+    except InvoiceLinkError as exc:
+        raise _invoice_link_error_bad_parameter() from exc
 
     payload: dict[str, object] = {
         "operation": "ledger.link",
         "bucket_id": bucket_id,
         "transaction_id": resolved_id,
         "invoice_id": invoice_id,
-        "evidence_id": evidence_id,
         "actor": actor_label,
     }
-    if evidence_result_payload is not None:
-        # D1/D2: project the mutated transaction onto the result's `transaction`
-        # slot and carry the evidence update as a typed payload (mode="json" so
-        # the nested TransactionPayload's str fields validate cleanly).
-        payload["evidence_update"] = evidence_result_payload.model_dump(mode="json")
-        payload["transaction"] = evidence_result_payload.transaction.model_dump(mode="json")
     lines = [
         "operation\tledger.link",
         f"bucket\t{bucket_id}",
         f"transaction_id\t{resolved_id}",
         f"actor\t{actor_label}",
+        f"invoice_id\t{invoice_id}",
     ]
-    if invoice_id is not None:
-        lines.append(f"invoice_id\t{invoice_id}")
-    if evidence_id is not None:
-        lines.append(f"evidence_id\t{evidence_id}")
     from ._ledger_payloads import LedgerLinkResult
 
     _emit_envelope(

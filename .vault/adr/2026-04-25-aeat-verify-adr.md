@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#aeat-verify'
 date: '2026-04-25'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-24-aeat-verify-adr]]"
   - "[[2026-04-24-aeat-verify-reference]]"
@@ -37,7 +37,8 @@ shape, the wave ordering, and the gates that make a wave "done".
 - Live ground truth varies per account. Kent's snapshot held only
   Modelo 100 + a single IVA regularización; other accounts will
   carry different sets. The loop needs an "is-applicable-here?"
-  gate up front so empty waves stop cleanly without fake green tests.
+  gate up front so inapplicable waves stop with explicit evidence rather than
+  being counted as verification.
 - Aggregator-cumulation invariants (Modelo 390 ← 4× 303, Modelo 100
   ← 4× 130 + retentions, etc.) are not optional checks; they are
   load-bearing for "Kent can prove his exported numbers match
@@ -51,19 +52,20 @@ shape, the wave ordering, and the gates that make a wave "done".
 
 Inherited and explicitly re-affirmed:
 
-- **Zero writes to AEAT.** Every navigation goes through `aeat.adapters.outbound.aeat.sede`
+- **Zero writes to AEAT.** Every navigation goes through `cadrumo.adapters.outbound.aeat.sede`
   whose grep guard bans `submit/send/commit/POST/enviar/presentar/
   firmar/radicar/remitir/modificar/anular/cancelar/rechazar`. No
   exceptions per wave; the guard runs unchanged.
 - **Strict-frozen pydantic v2** records, `mode: Literal["read"]`
   marker on every boundary record, `extra="forbid"`, `StrEnum` for
   closed enumerations.
-- **No mocks on live paths.** Cl@ve-móvil's 2FA is the sole
-  human-in-the-loop. Live tests skip cleanly when
-  `AEAT_LIVE_TESTS_ENABLED` is off.
-- **Skip-fallback on missing fixtures.** Tests that consume
-  `scratch/` captures use the existing skip-if-missing pattern so
-  CI without scratch is never red.
+- **Real live boundaries.** Cl@ve-móvil's 2FA is the sole
+  human-in-the-loop. Live verification is absent from the default offline
+  selection unless `CADRUMO_LIVE_TESTS_ENABLED=1`; once enabled, boundary
+  failures fail the run.
+- **Committed evidence only.** CI tests consume committed, sanitised,
+  provenance-declared fixtures. Ephemeral `scratch/` captures are discovery
+  inputs and their absence cannot turn a test into an ignored result.
 - **One commit per phase per wave.** Each commit is small enough
   that a code review can land or revert it standalone.
 
@@ -71,50 +73,51 @@ Inherited and explicitly re-affirmed:
 
 ### The per-modelo loop (nine phases)
 
-Each wave executes phases in order. A phase either passes, skips
-with a typed reason, or fails. Failure stops the wave; skips do not.
+Each wave executes phases in order. A phase either passes, is explicitly
+not applicable with evidence, or fails. Failure stops the wave; a
+not-applicable result proves only applicability, never verification.
 
 - **P1 - Discover.** Run `aeat sede list-expedientes --modelo <N>`
   for the wave's modelo. Output: a tuple of `Expediente` records,
-  empty or non-empty. **Skip rule**: empty → wave is "not
+  empty or non-empty. **Applicability rule**: empty → wave is "not
   applicable to this account"; mark in the audit record and stop.
 - **P2 - Capture.** For each expediente, call
-  `aeat.adapters.outbound.aeat.sede.capture_justificante`. Output: raw PDF bytes +
+  `cadrumo.adapters.outbound.aeat.sede.capture_justificante`. Output: raw PDF bytes +
   sha256 + the expediente detail HTML, written to
   `scratch/sede-discovery/<utc-timestamp>/<modelo>/<expediente_id>/`.
-  **Skip rule**: P1 was empty.
+  **Applicability rule**: P1 was empty.
 - **P3 - Justificante metadata parse.** Run
-  `aeat.domain.justificante.parse_justificante` on every captured PDF.
-  Output: a parsed `Justificante` per capture. **Skip rule**:
+  `cadrumo.domain.justificante.parse_justificante` on every captured PDF.
+  Output: a parsed `Justificante` per capture. **Applicability rule**:
   P2 produced no PDFs. **Failure mode**: parser misses a field
-  → land regex extension under `aeat.domain.justificante._extract`,
+  → land regex extension under `cadrumo.domain.justificante._extract`,
   retry. Loop until green.
 - **P4 - Sanitise to fixture.** For every captured PDF, run the
   per-wave sanitiser to strip PII. Output: a fixture PDF + its
   parsed-Justificante sidecar JSON committed under
   `tests/fixtures/justificantes/<modelo>/<year>-<period>.pdf`.
-  **Skip rule**: sanitiser fails to produce a parseable PDF →
-  document the failure in the audit record, fall back to
-  JSON-only fixture (the parsed Justificante record with PII
-  stripped). The wave still progresses.
+  Sanitisation must produce a parseable, PII-free PDF and matching sidecar.
+  Failure is recorded and blocks the fixture-backed verification claim; a
+  metadata-only record is not a substitute for the PDF behavior under test.
 - **P5 - Declaración deep parse.** Build or extend a per-modelo
-  body extractor under `aeat.adapters.inbound.declaracion._parsers/<modelo>/`.
+  body extractor under `cadrumo.adapters.inbound.declaracion._parsers/<modelo>/`.
   Output: a strict-typed casilla map per fixture, with regression
   tests asserting field counts and known-value spot-checks.
-  **Skip rule**: the modelo's PDF is metadata-only (some
-  informativas) → mark N/A and continue.
+  **Applicability rule**: a genuinely metadata-only modelo is marked N/A with
+  source evidence and continues without claiming a deep-body parse.
 - **P6 - Cumulation invariant.** For aggregator modelos, sum the
   inputs and compare to the aggregator's published figures
   within `Decimal("0.01")` tolerance. Output: an integration
-  test that exercises the relationship. **Skip rule**: the
-  aggregator's inputs (other waves) are not yet fixtured.
+  test that exercises the relationship. If the aggregator inputs are not yet
+  fixtured, the phase remains pending and the wave is not complete.
 - **P7 - Live reconcile dry-run.** Build a synthetic APPROVED
   `FilingDraft` from the sanitised fixture's casilla values
-  using the existing `aeat.application.filing.testing` helpers. Run
+  using the existing `cadrumo.application.filing.testing` helpers. Run
   `aeat filing reconcile --last` against live AEAT (which the
   wave already authenticated). Assert MATCH. Output: one live
-  test marked `@pytest.mark.live` per wave. **Skip rule**:
-  Cl@ve session expired → re-auth via the same flow, retry.
+  test marked `@pytest.mark.live` per wave. An expired Cl@ve session is
+  re-authenticated through the same flow and retried; a repeated failure fails
+  the phase.
 - **P8 - Write-guard re-verify.** Per-subpackage
   `test_no_write_surface.py` plus a global grep across new files
   introduced by the wave. **Always runs.**
@@ -157,24 +160,23 @@ returns the synthetic CSV. The sanitiser is a deterministic pure
 function of `(real_pdf_bytes, mapping)` for reproducibility.
 
 **Failure mode:** if pikepdf cannot rewrite the content stream
-without producing a non-parseable PDF (e.g. embedded font subsets
-without the synthetic NIF's glyphs), P4 falls back to a JSON-only
-fixture per the skip rule above. The wave still progresses; the
-audit record flags the modelo for follow-up bbox-anchored
-sanitisation.
+without producing a parseable, PII-free PDF (for example, because an embedded
+font lacks the replacement glyphs), P4 fails. The audit records the evidence
+and the wave remains incomplete until a source-faithful sanitisation strategy
+is implemented.
 
 ### Cumulation tolerance
 
 `Decimal("0.01")` per Kent-visible figure, the same tolerance the
 existing reconciliation comparator uses. Imported as
-`aeat.application.filing.reconciliation.RECONCILIATION_TOLERANCE` (or the
+`cadrumo.application.filing.reconciliation.RECONCILIATION_TOLERANCE` (or the
 local `_TOLERANCE` constant; the ADR is indifferent so long as
 the value is one-cent and shared).
 
 ### Vault discipline
 
 - The plan artefact tracks each wave as a numbered entry. Phase
-  status (`done`, `skipped`, `pending`, `failed`) is updated in
+  status (`done`, `not_applicable`, `pending`, `failed`) is updated in
   the plan as work progresses; the source of truth for "what's
   been done" is the plan plus the wave's audit doc.
 - The audit doc per wave is mandatory even for empty waves. The
@@ -189,7 +191,7 @@ the value is one-cent and shared).
 - **Why nine phases not three.** A coarser loop conflates
   capture, parse, sanitise, and verify, hiding which step
   actually broke when a wave regresses. Each phase has its own
-  pass/skip/fail criterion so failures route to the right code
+  pass/not-applicable/fail criterion so failures route to the right code
   surface (regex set, extractor, sanitiser, reconciler).
 - **Why P1 first across all waves.** Live AEAT enumeration is the
   cheapest way to learn which waves have data. Running P1
@@ -222,11 +224,11 @@ the value is one-cent and shared).
   `aeat auth whoami` keep-alive pattern resets the idle TTL.
 - Empty waves (modelos Kent has not filed) still cost the P1
   enumeration plus the P9 audit record. That is acceptable
-  because the audit doc later turns into an automatic "skip me"
-  hint when the next round runs.
+  because the audit doc supplies applicability evidence to the next capture
+  round without claiming the modelo has been verified.
 - The plan and audit docs become the canonical place to look up
   "which modelos are end-to-end verified today". The README and
   CHANGELOG are not authoritative; the vault is.
-- The sanitiser is the highest-risk new module. The skip-fallback
-  to JSON-only fixtures keeps a sanitiser bug from blocking a
-  wave's progress on parser + reconciler verification.
+- The sanitiser is the highest-risk new module. Its output must remain
+  source-faithful, parseable, and free of PII; failure blocks fixture-backed
+  verification instead of weakening the evidence contract.

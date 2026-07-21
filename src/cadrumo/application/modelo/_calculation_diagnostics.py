@@ -78,9 +78,8 @@ def collect_bucket_aggregation_advisory_diagnostics(
     sequence.
 
     The Modelo 100 mínimo-por-descendientes casillas (0513/0514) are no longer
-    advisory-only for the halving/blank-entry checks the prior interim Option B
-    module raised: the ``modelo-100-minimo-descendientes-engine`` ADR's Option A
-    landed a computed engine (:func:`~application.modelo.inject_derived_minimo_descendientes_facts`)
+    advisory-only for the halving/blank-entry checks a prior interim module
+    raised: a computed engine (:func:`~application.modelo.inject_derived_minimo_descendientes_facts`)
     that derives the Art. 58/61 LIRPF aggregate — including the custodia-compartida
     halving — directly from the active profile, so those two checks are structurally
     unreachable and were retired. A new, narrower advisory

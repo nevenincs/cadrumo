@@ -41,11 +41,12 @@ from typing import cast
 
 import pytest
 
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.json_contract import ENVELOPE_SCHEMA_VERSION
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -103,19 +104,24 @@ def test_json_unknown_command_emits_shared_spine_document() -> None:
 
 
 def test_json_boundary_refusal_emits_shared_spine_document() -> None:
-    """An AeatError refusal inside a callback renders JSON, not prose.
+    """An CadrumoError refusal inside a callback renders JSON, not prose.
 
     This is the vendored-context-stack regression: the probe used to
     consult upstream click's (empty) stack and render text for every
-    refusal even under ``--format json``.
+    refusal even under ``--format json``. The vehicle is the durable
+    all-profile reset's retention-override guard, which raises a
+    ``CliRefusedBoundaryError`` carrying a typed ``context`` (the
+    offending option) from inside the command callback.
     """
-    result = invoke_cached_cli(["--format", "json", "config", "reset"])
+    result = invoke_cached_cli(
+        ["--format", "json", "config", "reset", "start", "--yes", "--override-retention"],
+    )
     assert result.exit_code == 2, result.output
     error = _assert_shared_spine(_error_document(result.output))
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
     context = error["context"]
     assert isinstance(context, dict)
-    assert "accepted_scopes" in context
+    assert context["option"] == "--reason"
 
 
 def test_text_mode_usage_error_keeps_human_rendering() -> None:

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_390/files/11-390-ejercicio-2018-488-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_390/files/11-390-ejercicio-2018-488-kb-xlsx.xlsx",
   "source_sha256": "6ad240de8090017dca775ed4234a90a43b163e3bb44e042502b5c74a9a9e2d61",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

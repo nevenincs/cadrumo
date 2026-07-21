@@ -573,7 +573,7 @@ class LedgerIrnrIncomeAggregationSourceResolver:
     resolver_id = "ledger_irnr_income_aggregation"
     owned_sources: tuple[BindingSourceKind, ...] = (BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,)
 
-    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol | None = None) -> None:
+    def __init__(self, *, transaction_repository: TransactionCatalogueRepositoryProtocol) -> None:
         self._transaction_repository = transaction_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
@@ -1035,7 +1035,7 @@ _RETENCIONES_AGGREGATORS = {
 
 
 class RetencionesAggregationSourceResolver:
-    """Source mesh resolver for the dedicated per-perceptor retención store (RET-1).
+    """Source mesh resolver for the dedicated per-perceptor retención store.
 
     Reads the bucket-scoped per-perceptor retención observations
     (:class:`~._retencion_observations_repository.RetencionObservationRepository`)

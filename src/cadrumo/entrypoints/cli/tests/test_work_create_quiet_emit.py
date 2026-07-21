@@ -1,7 +1,7 @@
 """Real-behavior tests for ``modelo work create --quiet`` output trimming.
 
-Issue #578 (ux:cli-output) added a verb-level ``--quiet`` to
-``aeat app modelo work create`` that suppresses the human-readable
+A verb-level ``--quiet`` on
+``aeat app modelo work create`` suppresses the human-readable
 confirmation prose while leaving the machine surface (the
 ``--format json`` :class:`SchemaEnvelope` and its notices) untouched.
 
@@ -16,8 +16,7 @@ The tests deliberately avoid the full CLI dispatch and the plazo/deadline
 projection so the quiet contract is verified without loading the modelo
 registry — the output-trimming decision is pure transport logic that owes
 nothing to registry validation, and the ``work create`` dispatch path
-eagerly validates the whole registry (which peer legal-grounding
-campaigns keep in flight in this shared worktree). A Modelo 130 unit is
+eagerly validates the whole registry. A Modelo 130 unit is
 used so the Modelo-100 filing-obligation advisory channel
 short-circuits to empty, isolating the confirmation-prose trimming under
 test.
@@ -27,14 +26,17 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime
+from typing import cast
 
 import pytest
 import typer
 import typer.main
+from typer._click.core import Command as TyperCommand
+from typer.core import TyperGroup, TyperOption
 
 from ....core import Period
 from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.cli_runner import cadrumo_click_command, invoke_cached_cli, semantic_cli_output
 from .._common import _emit_envelope
 from .._modelo_payloads import WorkCreateResult
 from .._modelo_rendering import work_unit_payload
@@ -100,16 +102,25 @@ def test_quiet_flag_is_registered_on_the_create_verb() -> None:
 
     ``--help`` renders the Typer tree without loading the modelo registry,
     so this pins the flag wiring independently of registry validation. The
-    help text is the inline default (the shared locale catalogue is under
-    concurrent edit in this worktree), which is enough to prove the flag
-    is documented, not a bare boolean.
+    The rendered surface proves the option is reachable. The live Click
+    parameter proves it carries documentation without coupling this test to
+    whichever output locale materialized the cached command tree first.
     """
     result = invoke_cached_cli(["app", "modelo", "work", "create", "--help"])
     assert result.exit_code == 0, result.output
-    assert "--quiet" in result.output
-    # The flag carries operator-facing help, not an empty description; the
-    # inline default help opens with "Omitir la salida de confirmación".
-    assert "Omitir" in result.output
+    help_output = semantic_cli_output(result)
+    assert "--quiet" in help_output
+
+    command = cast(TyperCommand, cadrumo_click_command())
+    context = typer.Context(command)
+    for segment in ("app", "modelo", "work", "create"):
+        assert isinstance(command, TyperGroup)
+        resolved = command.get_command(context, segment)
+        assert resolved is not None
+        command = resolved
+        context = typer.Context(command, parent=context)
+    quiet = next(param for param in command.params if isinstance(param, TyperOption) and "--quiet" in param.opts)
+    assert quiet.help is not None and quiet.help.strip()
 
 
 # ---------------------------------------------------------------------------

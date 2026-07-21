@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-siguientes-actualizado-septiembre-2019-128-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/06-202-orden-hac-941-2018-ejercicios-2019-y-siguientes-actualizado-septiembre-2019-128-kb-xlsx.xlsx",
   "source_sha256": "99dc1738c38269209bd15053ab5c4805477dc70394e29ead2e4c34a172628cc7",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

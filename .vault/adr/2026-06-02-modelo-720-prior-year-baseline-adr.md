@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-720-prior-year-baseline'
 date: '2026-06-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-02-modelo-720-prior-year-baseline-research]]"
   - "[[2026-06-02-modelo-multiyear-renta-adr]]"
@@ -55,7 +55,7 @@ against, so it cannot detect this — the silent-under-declaration hazard the
   `_previous_year_net_income_binding` is the canonical prior-year copy precedent, and
   `filing_year_delta = -1` is already exercised in the selector-shape tests.
 - **The €50.000 initial threshold is already centralised** as
-  `MODELO_720_REPORTING_THRESHOLD_EUR` in `src/aeat/core/external_constants.py`. The
+  `MODELO_720_REPORTING_THRESHOLD_EUR` in `src/cadrumo/core/external_constants.py`. The
   €20.000 re-declaration increment is **not** yet a constant and must be added beside it.
 - **The re-declaration trigger is a genuinely new semantic.** No existing verification
   predicate operator expresses "current per-category total minus prior-year per-category
@@ -114,7 +114,7 @@ bindings replace a dynamic grouping. The copy-shape mirrors the verified
 
 **(2) The €20.000 re-declaration constant.** Add
 `MODELO_720_REDECLARATION_DELTA_EUR = Decimal("20000.00")` to
-`src/aeat/core/external_constants.py`, beside `MODELO_720_REPORTING_THRESHOLD_EUR`,
+`src/cadrumo/core/external_constants.py`, beside `MODELO_720_REPORTING_THRESHOLD_EUR`,
 with a docstring citing arts. 42-bis.5 / 42-ter.5 / 54-bis.7. Centralising it keeps
 the threshold out of test source (no hand-computed magic numbers) and gives the
 threshold-logic oracle a single authoritative value to assert against.

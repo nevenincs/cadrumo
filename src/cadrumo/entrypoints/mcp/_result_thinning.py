@@ -1,12 +1,12 @@
-"""Result thinning: bulk result arrays ride as ``resource_link`` URIs (ADR H4).
+"""Result thinning: bulk result arrays ride as ``resource_link`` URIs.
 
 Structured output double-emits (text ``content`` plus ``structuredContent`` -
 roughly 2x tokens by construction), so a verb whose result inlines a large bulk
 array - the calculation observation provenance, the evidence-record rows -
-inflates every call. ADR ``mcp-protocol-hardening`` H4 rules that
-``structuredContent`` stays the typed SUMMARY a client acts on, while the bulk
-collections move to ``resource_link`` URIs a resources-capable client fetches on
-demand, resolved from persisted state by the resource read handlers.
+inflates every call. ``structuredContent`` stays the typed SUMMARY a client
+acts on, while the bulk collections move to ``resource_link`` URIs a
+resources-capable client fetches on demand, resolved from persisted state by
+the resource read handlers.
 
 This module is the SINGLE declared authority for that split, keyed by command
 key, so the three consumers cannot drift:
@@ -102,7 +102,7 @@ class ResourceLinkRef(BaseModel):
 
 
 #: The declared thinning map: command key -> the bulk arrays it moves to links.
-#: One canonical mechanism per bulk class (ADR H4): calculation observations ride
+#: One canonical mechanism per bulk class: calculation observations ride
 #: on the ``observations`` array of both the calculate result and the dedicated
 #: observations read verb; evidence rows ride on the evidence-list ``rows`` array.
 THINNED_VERBS: dict[str, tuple[ThinnedArray, ...]] = {
@@ -231,7 +231,7 @@ def thin_output_schema(command_key: str, schema: dict[str, object]) -> dict[str,
         new_properties.pop(spec.result_key, None)
         new_properties[spec.ref_key] = {
             "type": "string",
-            "description": f"Resource URI resolving the full {spec.result_key} rows (ADR H4 result thinning).",
+            "description": f"Resource URI resolving the full {spec.result_key} rows (result thinning).",
         }
         new_properties[spec.count_key] = {
             "type": "integer",

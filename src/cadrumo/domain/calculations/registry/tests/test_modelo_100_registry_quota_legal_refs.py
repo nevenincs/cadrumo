@@ -105,9 +105,9 @@ def test_modelo_100_2025_scale_result_casillas_use_scale_articles_not_fractional
 # 2021 (the bundled AEAT XSD declares IMPALIM `maxOccurs="1"`, a plain scalar
 # with no per-child structure) and a computed sum over the per-child "Hijo/Hija
 # N: Importe de las anualidades por alimentos satisfechas" block from 2022
-# onward (#532 finding #1: the 2021 revision previously summed casillas
-# 1741/1744/1749/1754/1759, which in 2021 are unrelated Anexo C
-# aportaciones/contribuciones a sistemas de previsión social fields).
+# onward. Casillas 1741/1744/1749/1754/1759 are unrelated Anexo C
+# aportaciones/contribuciones a sistemas de previsión social fields in 2021
+# and must not be summed into 0527 for that year.
 
 
 def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
@@ -134,7 +134,7 @@ def test_modelo_100_anualidades_formula_uses_child_support_articles() -> None:
 
 
 def test_modelo_100_anualidades_casilla_is_manual_input_pre_2022() -> None:
-    """2020/2021 carry 0527 as a manual scalar input with no sum formula (#532)."""
+    """2020/2021 carry 0527 as a manual scalar input with no sum formula."""
     expected_refs = {
         _STATE_CHILD_SUPPORT_ANNUITIES_ART_64_REF,
         _AUTONOMIC_CHILD_SUPPORT_ANNUITIES_ART_75_REF,
@@ -168,7 +168,7 @@ def test_modelo_100_2025_cuota_chain_casillas_do_not_cite_fractional_payment_art
     assert not offenders
 
 
-# LIRPF art. 75 (anualidades por alimentos, autonomic separate escala, #532) is
+# LIRPF art. 75 (anualidades por alimentos, autonomic separate escala) is
 # a legitimate legal_ref on the autonomic escala/cuota formulas ONLY for the
 # revisions where the separate-escala régimen is modelled. It stays absent on
 # the tipo-medio and cuota-íntegra formulas, which do not carry the régimen.

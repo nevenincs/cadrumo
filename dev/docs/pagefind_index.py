@@ -45,10 +45,11 @@ loading instead of lazy chunking.
 from __future__ import annotations
 
 import asyncio
+import re
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
@@ -56,6 +57,123 @@ if TYPE_CHECKING:
 #: Callback that injects custom records into the open index after the
 #: directory pass. The custom-record step supplies this; this module calls it.
 InjectCallback = Callable[["PagefindIndex"], Awaitable[None]]
+
+#: Built subtrees excluded from the Pagefind full-text pass. The generated
+#: casilla reference pages carry every casilla the injected custom records
+#: already cover (6,330 records); indexing the pages too would duplicate every
+#: record and, on the two large modelos, bloat the index with thousands of
+#: label tokens. Exclusion is expressed the Pagefind-native way: stamping
+#: ``data-pagefind-ignore`` on the ``<body>`` of each page drops it from the
+#: index (the page's anchors stay in the DOM for the deep links to resolve).
+_PAGEFIND_EXCLUDED_SUBDIRS: Final[tuple[str, ...]] = ("_generated/casillas",)
+_UTF_8: Final[str] = "utf-8"
+
+_BODY_TAG_RE: Final[re.Pattern[str]] = re.compile(r"<body\b(?![^>]*\bdata-pagefind-ignore\b)")
+
+#: A ``<body>`` tag that is neither excluded from the index nor already carrying
+#: a Pagefind meta attribute. The two negative lookaheads keep the display-class
+#: stamping idempotent (a second pass matches nothing) and skip every page the
+#: exclusion pass tagged ``data-pagefind-ignore`` (those are covered by the
+#: injected casilla records, so they must NOT gain a ``display_class``).
+_BODY_UNSTAMPED_RE: Final[re.Pattern[str]] = re.compile(
+    r"<body\b(?![^>]*\bdata-pagefind-ignore\b)(?![^>]*\bdata-pagefind-meta=)"
+)
+
+
+def _mark_excluded_pages(html_root: Path) -> int:
+    """Stamp ``data-pagefind-ignore`` on the body of every excluded built page.
+
+    Runs before the directory pass so Pagefind skips the tagged pages. Idempotent
+    (the regex only matches a body tag that is not already tagged) and a no-op
+    when an excluded subtree is absent (e.g. the fixture sites tests drive).
+
+    Returns:
+        The number of pages tagged.
+    """
+    tagged = 0
+    for subdir in _PAGEFIND_EXCLUDED_SUBDIRS:
+        root = html_root / subdir
+        if not root.is_dir():
+            continue
+        for page in root.rglob("*.html"):
+            html = page.read_text(encoding=_UTF_8)
+            new_html, count = _BODY_TAG_RE.subn("<body data-pagefind-ignore", html, count=1)
+            if count:
+                page.write_text(new_html, encoding=_UTF_8, newline="\n")
+                tagged += 1
+    return tagged
+
+
+def _page_display_class(rel_path: str) -> str:
+    """Classify a built page's path onto the shipped ``display_class`` value.
+
+    Reuses the single page-path derivation authority (ADR D7): rather than
+    re-implementing the ``cli/`` -> ``cli`` / ``api/`` -> ``technical`` / else
+    ``doc`` split (the forbidden re-derivation), it constructs a minimal
+    PAGE-kind :class:`SearchRecord` whose ``target`` is the page path and reads
+    back :func:`derive_display_class`. The path split lives in exactly one place;
+    this stamping consumes it, never copies it.
+
+    Args:
+        rel_path: The page path relative to the built HTML root, POSIX form
+            (e.g. ``"api/foo.html"``, ``"how-to/import.html"``).
+
+    Returns:
+        The ``ResultDisplayClass`` string value to stamp as page meta.
+    """
+    from cadrumo.core.external_constants import OutputLanguage
+
+    from .terminology import (
+        RankingTier,
+        SearchRecord,
+        SearchRecordKind,
+        derive_display_class,
+    )
+
+    probe = SearchRecord(
+        id="page-display-class-probe",
+        kind=SearchRecordKind.PAGE,
+        tier=RankingTier.FULLTEXT,
+        title="page",
+        descriptions={OutputLanguage.ES: "page"},
+        target=rel_path,
+        ranking_weight=0.0,
+    )
+    return derive_display_class(probe).value
+
+
+def _mark_page_display_classes(html_root: Path) -> int:
+    """Stamp ``data-pagefind-meta="display_class:<class>"`` on every indexed page.
+
+    Runs AFTER :func:`_mark_excluded_pages` and BEFORE the directory pass, so a
+    page already tagged ``data-pagefind-ignore`` (the injected-record-covered
+    casilla pages) is skipped by the regex lookahead and never gains a class.
+    Every other built page carries its path-derived class into the index as a
+    ``display_class`` meta ONLY -- deliberately NOT a ``weight`` key, so the
+    weight-sorted card pass keeps dropping full-text pages (they must not
+    pollute the injected-card band; ADR D8). The JS reads the class to order
+    full-text pages within their band (user docs above dev machinery) and to
+    render the per-class icon. Idempotent and a no-op when the tree is absent.
+
+    Returns:
+        The number of pages stamped.
+    """
+    tagged = 0
+    for page in html_root.rglob("*.html"):
+        rel_path = page.relative_to(html_root).as_posix()
+        html = page.read_text(encoding=_UTF_8)
+        if not _BODY_UNSTAMPED_RE.search(html):
+            continue
+        display_class = _page_display_class(rel_path)
+        new_html, count = _BODY_UNSTAMPED_RE.subn(
+            lambda match, cls=display_class: f'{match.group(0)} data-pagefind-meta="display_class:{cls}"',
+            html,
+            count=1,
+        )
+        if count:
+            page.write_text(new_html, encoding=_UTF_8, newline="\n")
+            tagged += 1
+    return tagged
 
 
 class PagefindUnavailableError(RuntimeError):
@@ -103,6 +221,8 @@ async def _run_index(
     """
     from pagefind.index import PagefindIndex
 
+    _mark_excluded_pages(html_root)
+    _mark_page_display_classes(html_root)
     output_path = html_root / "pagefind"
     async with PagefindIndex() as index:
         response = await index.add_directory(str(html_root))

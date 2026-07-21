@@ -57,13 +57,19 @@ BOOTSTRAP_EXEMPT_VERB_PATHS: tuple[str, ...] = (
     # Custody verbs own their own session / recovery / rewrap flow. The
     # root callback must not pre-open the active bucket session before
     # these handlers can resolve passphrase or recovery material. The
-    # profile-switch verb opens the target bucket session itself.
+    # profile-switch verb opens the target bucket session itself. Logout
+    # must remain pointer-sourced so the root callback does not manufacture
+    # an active-profile override that the application correctly refuses.
     "config switch",
-    "config lock",
-    "config rekey",
+    "config profile logout",
+    # Durable reset owns the pointer transaction, target locks, target-scoped
+    # auth sessions, and external journal itself. Root bootstrap must not open
+    # an active bucket session or manufacture an active-profile override before
+    # start/resume; status reads only the external journal.
+    "config reset",
+    "config passphrase change",
     "config recover",
-    "config show-recovery",
-    "config verify-recovery",
+    "config recovery",
     # Diagnostic surface: must operate without a session so the
     # operator can recover from a torn workspace.
     "config repair",
@@ -89,8 +95,7 @@ def is_bootstrap_exempt(verb_path: str | None) -> bool:
 
     Args:
         verb_path: Space-separated verb path or ``None`` for the
-            bare invocation. ``None`` is treated as exempt per
-            ADR ``2026-06-03-bare-invocation-bucket-session-gate``:
+            bare invocation. ``None`` is treated as exempt:
             bare invocation (no subcommand, only top-level flags
             like ``--language``, ``--format``, ``--help``,
             ``--version``) is a metadata-emitting introspection

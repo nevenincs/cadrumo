@@ -55,7 +55,7 @@ from ...core.corpus_manifest import (
     build_corpus_bundle,
     verify_corpus_bundle,
 )
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
@@ -91,7 +91,7 @@ _ELIGIBLE_REVISION_STATES = frozenset(
 )
 
 
-class ReviewPackageError(AeatError):
+class ReviewPackageError(CadrumoError):
     """Base error for review-package build/verify failures."""
 
 
@@ -267,7 +267,7 @@ def build_review_package(
         else '{"present": false}'
     )
 
-    with tempfile.TemporaryDirectory(prefix="aeat-review-package-") as staging_name:
+    with tempfile.TemporaryDirectory(prefix="cadrumo-review-package-") as staging_name:
         staging_root = Path(staging_name)
         (staging_root / _DRAFT_MEMBER).write_bytes(draft_bytes)
         (staging_root / _REVISION_MEMBER).write_text(

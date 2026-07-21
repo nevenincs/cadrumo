@@ -37,7 +37,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 
-from .errors import AeatError
+from .errors import CadrumoError
 
 
 class StandardPeriodCode(StrEnum):
@@ -148,12 +148,12 @@ def _format_accepted_period_set() -> str:
 RegistryPeriodCode = Annotated[str, BeforeValidator(_validate_period_against_registry)]
 
 
-class PeriodError(AeatError, ValueError):
+class PeriodError(CadrumoError, ValueError):
     """Raised when a :class:`Period` is constructed from an invalid year/code.
 
     Subclasses :class:`ValueError` so pydantic validation and existing callers
     retain value-error compatibility while still routing through the registered
-    :class:`AeatError` hierarchy required for production exceptions.
+    :class:`CadrumoError` hierarchy required for production exceptions.
     """
 
 
@@ -311,7 +311,10 @@ class Period(BaseModel):
         Extended OSS/IOSS tokens such as ``EXT-1T`` retain their extended
         cadence and therefore do not acquire a quarter ordinal.
         """
-        return _QUARTER_ORDINALS.get(self.standard_code)
+        standard_code = self.standard_code
+        if standard_code is None:
+            return None
+        return _QUARTER_ORDINALS.get(standard_code)
 
     @property
     def is_quarterly(self) -> bool:
@@ -327,7 +330,10 @@ class Period(BaseModel):
         ad-hoc forms return ``None``; so does ``4P``, which has no declared
         instalment ordinal on that metadata surface.
         """
-        return _DECLARATION_PERIOD_ORDINALS.get(self.standard_code)
+        standard_code = self.standard_code
+        if standard_code is None:
+            return None
+        return _DECLARATION_PERIOD_ORDINALS.get(standard_code)
 
     @property
     def kind(self) -> PeriodKind:

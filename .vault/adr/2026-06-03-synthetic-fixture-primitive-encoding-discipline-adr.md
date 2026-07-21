@@ -3,10 +3,10 @@ tags:
   - '#adr'
   - '#synthetic-fixture-primitive-encoding-discipline'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
-  - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
+  - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-01-verification-fixture-roles-adr]]"
   - '[[2026-06-04-synthetic-fixture-primitive-encoding-discipline-research]]'
 ---
@@ -68,7 +68,7 @@ modelo's chain failure will follow the same pattern.
 ## Decision: synthetic fixtures MUST encode primitives; printed totals are an additional layer, not a substitute
 
 Going forward, every synthetic-PDF fixture under
-`src/aeat/tests/fixtures/justificantes/<modelo>/` MUST print the primitive
+`src/cadrumo/tests/fixtures/justificantes/<modelo>/` MUST print the primitive
 casilla line items that the engine computes its totals from, **in addition to**
 any printed totals AEAT shows on the published form. The discipline has four
 components:

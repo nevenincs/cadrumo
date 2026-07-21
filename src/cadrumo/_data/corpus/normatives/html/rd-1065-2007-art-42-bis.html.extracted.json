@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-1065-2007-art-42-bis.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-1065-2007-art-42-bis.html",
   "source_sha256": "ece891fdc9a90ef04954aa2951426767eecd625239e1c71b6e37349691c5806f",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

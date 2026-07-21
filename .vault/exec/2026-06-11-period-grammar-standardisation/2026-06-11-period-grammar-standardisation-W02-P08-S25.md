@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#period-grammar-standardisation'
 date: '2026-06-11'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S25'
 related:
   - "[[2026-06-11-period-grammar-standardisation-plan]]"

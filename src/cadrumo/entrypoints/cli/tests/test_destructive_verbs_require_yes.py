@@ -30,10 +30,11 @@ from pathlib import Path
 
 import pytest
 
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -95,35 +96,83 @@ def test_ledger_remove_with_dry_run_does_not_require_yes() -> None:
     assert "confirm" not in haystack or "dry" in haystack, result.output
 
 
-def test_config_reset_refuses_without_explicit_scope() -> None:
-    """``aeat config reset --yes`` with no ``--scope`` is refused.
-
-    The most destructive scope (``all``, a full wipe) must never be an
-    implied default: one forgotten flag next to ``--yes`` would erase every
-    profile, session, and stored row. The refusal must name the accepted
-    scope set, never a bare "missing option".
-    """
-    result = invoke_cached_cli(["config", "reset", "--yes"])
+def test_config_reset_start_refuses_without_yes() -> None:
+    """``config reset start`` requires explicit destructive confirmation."""
+    result = invoke_cached_cli(["config", "reset", "start"])
     assert result.exit_code != 0, result.output
     combined = (result.output or "") + (result.stderr or "")
-    for scope_token in ("profile", "auth", "data", "all"):
-        assert scope_token in combined, combined
+    assert "--yes" in combined or "confirm" in combined.lower(), combined
 
 
-def test_config_reset_scope_refusal_fires_before_yes_guard() -> None:
-    """Bare ``aeat config reset`` names the scope contract first."""
-    result = invoke_cached_cli(["config", "reset"])
-    assert result.exit_code != 0, result.output
-    combined = (result.output or "") + (result.stderr or "")
-    assert "--scope" in combined, combined
-
-
-def test_config_reset_with_explicit_scope_and_yes_executes() -> None:
-    """Anti-tautology: an explicit ``--scope auth --yes`` still executes.
-
-    If this fails, the scope-required guard has started refusing the
-    explicit form and the refusal tests above are meaningless.
-    """
-    result = invoke_cached_cli(["config", "reset", "--scope", "auth", "--yes"])
+def test_config_reset_status_is_read_only_and_needs_no_yes() -> None:
+    """``config reset status`` succeeds without confirmation or mutation."""
+    result = invoke_cached_cli(["config", "reset", "status"])
     assert result.exit_code == 0, result.output
-    assert "scope\tAUTH" in result.output, result.output
+    assert "operation\t<none>" in result.output
+
+
+def test_config_reset_removed_scope_spelling_is_rejected() -> None:
+    """The retired flat scoped reset has no alias or compatibility parser."""
+    result = invoke_cached_cli(
+        ["config", "reset", "--scope", "auth", "--yes"],
+    )
+    assert result.exit_code != 0, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--scope" in combined
+
+
+def test_config_reset_resume_refuses_without_yes() -> None:
+    """``config reset resume`` retains the destructive confirmation gate."""
+    result = invoke_cached_cli(["config", "reset", "resume"])
+    assert result.exit_code != 0, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--yes" in combined or "confirm" in combined.lower(), combined
+
+
+def test_auth_reset_refuses_without_yes() -> None:
+    """``config auth reset`` is destructive and refuses before backend mutation."""
+    result = invoke_cached_cli(["config", "auth", "reset", "--provider", "certificate"])
+
+    assert result.exit_code != 0, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--yes" in combined or "confirm" in combined.lower(), combined
+
+
+def test_auth_logout_does_not_require_yes() -> None:
+    """Anti-tautology: session logout executes without the destructive reset guard."""
+    from ....application.auth import configure_operator_auth
+
+    configure_operator_auth("certificate")
+    result = invoke_cached_cli(["config", "auth", "logout", "--provider", "certificate"])
+
+    assert result.exit_code == 0, result.output
+
+
+def test_auth_status_is_non_destructive_and_needs_no_yes() -> None:
+    """Anti-tautology: ``config auth status`` is a read verb needing no confirmation.
+
+    The ``--yes`` guard is scoped to destructive ``auth reset``; the recorded-state
+    report runs against an unconfigured profile and never demands confirmation.
+    """
+    result = invoke_cached_cli(["config", "auth", "status"])
+
+    assert result.exit_code == 0, result.output
+    assert "Traceback" not in result.output, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--yes" not in combined and "confirm" not in combined.lower(), combined
+
+
+def test_auth_test_is_non_destructive_and_needs_no_yes() -> None:
+    """Anti-tautology: ``config auth test`` is a live probe needing no confirmation.
+
+    The probe may report an unavailable verdict, but it never mutates provider
+    state and never demands ``--yes``; only destructive ``auth reset`` is guarded.
+    """
+    from ....application.auth import configure_operator_auth
+
+    configure_operator_auth("certificate")
+    result = invoke_cached_cli(["config", "auth", "test"])
+
+    assert "Traceback" not in result.output, result.output
+    combined = (result.output or "") + (result.stderr or "")
+    assert "--yes" not in combined and "confirm" not in combined.lower(), combined

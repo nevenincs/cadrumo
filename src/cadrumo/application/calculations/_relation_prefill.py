@@ -154,7 +154,7 @@ def _gather_observations_for_snapshot(
                 source_modelo=obs.modelo,
                 source_filing_year=obs.filing_year,
                 source_period=obs.period,
-            )
+            ).refused
             if refused:
                 continue
             key = (obs.modelo, obs.filing_year, obs.period)
@@ -637,7 +637,15 @@ def _resolve_available_relation_values(
         try:
             value = resolve_observed_requirement_value(requirement, observations)
         except RegistryValidationError as exc:
-            _log.warning(
+            # A requirement with no single observed source filing stays
+            # operator-manual. This is a developer breadcrumb only: the
+            # operator-facing form rides the typed Notice channel
+            # (cli-notices-are-the-only-diagnostic-channel) as a
+            # relation-prefill advisory built in the resolver boundary from the
+            # unresolved set, not this stderr log — which was also
+            # environment-inconsistent (present under one logging config, absent
+            # under another), making replay goldens unportable.
+            _log.debug(
                 "relation prefill: relation requirement %s remains operator-manual: %s",
                 requirement.relation_ids,
                 exc,
@@ -796,7 +804,9 @@ class RelationPrefillSourceResolver:
         # exactly that orphaned case. A non-formula relation whose target_binding
         # IS a declared binding still materialises an (absent/zero) slot the engine
         # threads, which is the intended cold-start behaviour for the cross-modelo
-        # carries (M200/M202/M100), so it is deliberately NOT flagged here.
+        # carries (M200/M202/M100), so it is deliberately NOT flagged here (and its
+        # unresolved-source detail is a debug breadcrumb, never operator-facing
+        # stderr, per cli-notices-are-the-only-diagnostic-channel).
         declared_binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
         relation_target_binding = {relation.id: relation.target_binding for relation in snapshot.revision.relations}
         unresolved_non_formula_relation_ids = frozenset(

@@ -1,0 +1,4 @@
+@step Check every registered certificate's expiry.
+@result aeat --format json config auth certificate check
+@expect result.has_warnings == false
+@expect exit_code == 0

@@ -1,8 +1,8 @@
-"""Integration boundary test: AeatError propagation through command_error_boundary.
+"""Integration boundary test: CadrumoError propagation through command_error_boundary.
 
 Verifies the full round-trip without mocks, patches, stubs, or fakes:
 
-  shared CLI runner invocation → real AeatError subclass raised in callback
+  shared CLI runner invocation → real CadrumoError subclass raised in callback
   → command_error_boundary catches → _emit_error_and_exit → typer.Exit(code=N)
   → runner captures exit_code → assertion against live ERROR_REGISTRY
 

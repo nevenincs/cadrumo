@@ -20,7 +20,6 @@ from ....adapters.outbound.aeat.sede import (
     FiledDeclaracionObservationStore,
     ObservedCasillaValue,
 )
-from ....application.auth import AuthProviderKind
 from ....application.live import (
     FiledDataListingRow,
     IvaCompensationCarryForwardLotRow,
@@ -34,7 +33,7 @@ from ....application.live import (
     select_declarations_for_capture,
 )
 from ....application.registry import verify_filed_state
-from ....core import Period
+from ....core import AuthProviderKind, Period
 from ....core.access_gate import AeatLiveReadNotEnabledError
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import CasillaId, calculate_registry_snapshot, validated_casilla_id

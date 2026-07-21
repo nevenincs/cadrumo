@@ -63,7 +63,6 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from sqlalchemy import delete, select, update
 
 from ....core import STRICT_FROZEN_CONFIG
-from ....core.classification import SensitivityClass
 from ....core.config import load_settings
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
@@ -80,6 +79,7 @@ from ....domain.transactions import (
     transaction_index_object_key,
     transaction_object_key,
 )
+from ..storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ..storage.sql import _orm
 from ..storage.sql.session import session_scope
 
@@ -92,10 +92,9 @@ if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
 
 _log = get_logger(__name__)
 
-# namespace / schema-version strings preserved across the relocation to avoid
-# orphaning persisted envelopes; redeclared here as the persisted-envelope contract.
-_TX_CATALOGUE_VERSION = 1
-TX_BUCKET_NAMESPACE = "cadrumo.domain.transactions.bucket"
+_TX_CATALOGUE_VERSION = TRANSACTION_CATALOGUE_NAMESPACE.schema_version
+_TX_CATALOGUE_SENSITIVITY = TRANSACTION_CATALOGUE_NAMESPACE.sensitivity
+TX_BUCKET_NAMESPACE = TRANSACTION_CATALOGUE_NAMESPACE.namespace
 
 
 class _TransactionIndex(BaseModel):
@@ -198,9 +197,9 @@ class TransactionCatalogueRepository:
     behind
     :class:`~domain.transactions.TransactionCatalogueRepositoryProtocol`.
 
-    ``_serialized_hash_cache`` is the O3 write-path lever
-    (``2026-07-06-ledger-perf-optimization-adr``): memoizes the stored-envelope
-    SHA-256 of each loaded frozen :class:`~domain.transactions.Transaction`
+    ``_serialized_hash_cache`` is a write-path optimization: it memoizes the
+    stored-envelope SHA-256 of each loaded frozen
+    :class:`~domain.transactions.Transaction`
     instance, populated once per row at :meth:`load` and consulted by
     :meth:`_reconcile` before re-serializing an untouched row.
 
@@ -209,8 +208,8 @@ class TransactionCatalogueRepository:
     because :attr:`~domain.transactions.RawTransaction.raw_fields` is stored as
     a ``mappingproxy`` (unhashable), which rules out a plain
     :class:`~weakref.WeakKeyDictionary` (it hashes the key object itself). A
-    bare ``id()`` integer key alone would risk the GC-recycle hazard the ADR
-    warns against -- a collected instance's address could be reused by an
+    bare ``id()`` integer key alone would risk a GC-recycle hazard -- a
+    collected instance's address could be reused by an
     unrelated object -- so each cache entry is paired with a
     :class:`~weakref.finalize` callback that evicts the ``id()`` entry the
     INSTANT its ``Transaction`` is garbage-collected, before the address could
@@ -257,7 +256,7 @@ class TransactionCatalogueRepository:
         Raises:
             :class:`~adapters.persistence.storage.ClassificationError`:
                 If a row's inner envelope class is not
-                ``SensitivityClass.FINANCIAL``.
+                ``_TX_CATALOGUE_SENSITIVITY``.
             :class:`~adapters.persistence.storage.EnvelopeVersionError`:
                 If a row's inner envelope schema version is higher than the
                 consumer supports.
@@ -277,7 +276,7 @@ class TransactionCatalogueRepository:
         transactions: list[Transaction] = []
         for record in self._objects.list_records(
             TX_BUCKET_NAMESPACE,
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_TX_CATALOGUE_SENSITIVITY,
             max_supported_version=_TX_CATALOGUE_VERSION,
         ):
             transaction_id = wanted.get(bytes(record.object_key))
@@ -303,14 +302,14 @@ class TransactionCatalogueRepository:
                     exc_info=True,
                 )
                 raise StoredTransactionDriftError(self._bucket_id, exc) from exc
-            if envelope.classification is not SensitivityClass.FINANCIAL:
+            if envelope.classification is not _TX_CATALOGUE_SENSITIVITY:
                 raise ClassificationError(
                     context={
                         "namespace": TX_BUCKET_NAMESPACE,
                         "object_key": transaction_object_key(self._bucket_id, transaction_id),
                         "bucket_id": self._bucket_id,
                         "classification": envelope.classification.value,
-                        "expected": SensitivityClass.FINANCIAL.value,
+                        "expected": _TX_CATALOGUE_SENSITIVITY.value,
                     },
                     translated_message="errors.integrity.integrity_storage_classification",
                 )
@@ -326,8 +325,7 @@ class TransactionCatalogueRepository:
                     translated_message="errors.integrity.integrity_storage_envelope_version",
                 )
             transaction = envelope.payload
-            # O3 write-path cache (2026-07-06-ledger-perf-optimization-adr):
-            # memoize the stored envelope's payload hash against this exact
+            # Write-path cache: memoize the stored envelope's payload hash against this exact
             # loaded instance. An untouched row at save time is the SAME
             # object (frozen models never mutate in place), so ``_reconcile``
             # can reuse this hash instead of re-serializing the row.
@@ -441,8 +439,7 @@ class TransactionCatalogueRepository:
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
         """Split this bucket's catalogue into an in-window half and an out-of-window remainder.
 
-        The O2 period-first partition (``2026-07-05-ledger-latency-budget-adr``):
-        runs a completeness gate against the plaintext
+        The period-first partition runs a completeness gate against the plaintext
         :class:`~adapters.persistence.storage.sql.TransactionDateIndexRow`
         rows for this bucket -- the index row count and id set must exactly
         match the encrypted membership index -- before trusting the index for
@@ -554,7 +551,7 @@ class TransactionCatalogueRepository:
         records = self._objects.load_many(
             TX_BUCKET_NAMESPACE,
             (transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids),
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_TX_CATALOGUE_SENSITIVITY,
             max_supported_version=_TX_CATALOGUE_VERSION,
         )
         for record in records:
@@ -720,8 +717,7 @@ class TransactionCatalogueRepository:
         An incoming transaction that IS (object identity) an instance this
         same repository loaded reuses the memoized
         ``_serialized_hash_cache`` entry instead of re-serializing and
-        re-hashing the row (O3,
-        ``2026-07-06-ledger-perf-optimization-adr``). The store-side
+        re-hashing the row. The store-side
         comparison (``stored_hashes``) is always fresh; only the
         fresh-serialization side of the diff is skipped for a cache hit.
         """
@@ -746,7 +742,7 @@ class TransactionCatalogueRepository:
                 SecureObjectWrite(
                     namespace=TX_BUCKET_NAMESPACE,
                     object_key=object_key,
-                    classification=SensitivityClass.FINANCIAL,
+                    classification=_TX_CATALOGUE_SENSITIVITY,
                     schema_version=_TX_CATALOGUE_VERSION,
                     written_at=transaction.modified_at,
                     payload=payload,
@@ -758,7 +754,7 @@ class TransactionCatalogueRepository:
                 SecureObjectWrite(
                     namespace=TX_BUCKET_NAMESPACE,
                     object_key=transaction_index_object_key(self._bucket_id),
-                    classification=SensitivityClass.FINANCIAL,
+                    classification=_TX_CATALOGUE_SENSITIVITY,
                     schema_version=_TX_CATALOGUE_VERSION,
                     written_at=now(),
                     payload=self._serialise_index(incoming_ids),
@@ -796,7 +792,7 @@ class TransactionCatalogueRepository:
         record = self._objects.load(
             TX_BUCKET_NAMESPACE,
             transaction_index_object_key(self._bucket_id),
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_TX_CATALOGUE_SENSITIVITY,
             max_supported_version=_TX_CATALOGUE_VERSION,
         )
         if record is None:
@@ -814,7 +810,7 @@ class TransactionCatalogueRepository:
         envelope = Envelope[_TransactionIndex](
             schema_version=_TX_CATALOGUE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_TX_CATALOGUE_SENSITIVITY,
             payload=_TransactionIndex(transaction_ids=tuple(sorted(transaction_ids))),
         )
         return envelope.model_dump_json().encode(UTF_8_ENCODING)
@@ -831,7 +827,7 @@ class TransactionCatalogueRepository:
         envelope = Envelope[Transaction](
             schema_version=_TX_CATALOGUE_VERSION,
             written_at=transaction.modified_at,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_TX_CATALOGUE_SENSITIVITY,
             payload=transaction,
         )
         return envelope.model_dump_json().encode(UTF_8_ENCODING)

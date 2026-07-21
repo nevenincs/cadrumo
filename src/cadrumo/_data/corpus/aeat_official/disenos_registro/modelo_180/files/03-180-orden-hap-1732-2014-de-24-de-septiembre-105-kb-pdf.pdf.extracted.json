@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_180/files/03-180-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_180/files/03-180-orden-hap-1732-2014-de-24-de-septiembre-105-kb-pdf.pdf",
   "source_sha256": "281ddf824a9c5de2cd54b377ac4072cb9a1f1e1b6231fce9e775b6d814bcd741",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

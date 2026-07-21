@@ -9,8 +9,8 @@ entrypoint name→UUID normalization, a label-valued ``CADRUMO_ACTIVE_PROFILE`` 
 every profile-bound command hard-miss with a "no registered bucket manifest"
 refusal. This module pins the fixed behaviour by driving the REAL CLI root
 callback (the normalization site) against a REAL profile created through the real
-``config profile create`` flow: exactly the operator path the persona swarm
-missed. The fixed contract feeds a UUID into the single canonical route
+``config profile create`` flow: exactly the operator path that previously
+broke. The fixed contract feeds a UUID into the single canonical route
 resolver after normalizing the operator-facing display label.
 """
 
@@ -130,7 +130,6 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
     path through the entrypoint normalizer.
     """
     from ....adapters.persistence.storage.bucket import (
-        BucketLifecycleStatus,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
@@ -138,6 +137,7 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
     )
     from ....adapters.persistence.storage.master_key import KdfParams
     from ....core.config import load_settings
+    from ....domain.user_profile import UserProfileStatus
 
     root = load_settings().cadrumo_local_storage_root
     duplicate_uuid = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
@@ -152,7 +152,7 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
             schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )
 

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-06-26'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-26-bindings-architecture-unification-audit]]'
   - '[[2026-06-14-bindings-interface-hardening-adr]]'
@@ -33,7 +33,7 @@ other phase references, so it is sequenced first.
 
 The defect, verified at HEAD (`cbf749f5a`): the closed set of "what KIND of source
 feeds a calculation value" is declared **four-plus times** with no single owner.
-`src/aeat/core/aggregation.py` holds three enums for it — `AggregationSourceKind`
+`src/cadrumo/core/aggregation.py` holds three enums for it — `AggregationSourceKind`
 (4 members), `RowSetGroupingKind` (5 members), and the *declared-canonical*
 `BindingSourceKind` (19 members, partially reusing the other two's values) — plus a
 `CounterpartSourceKind` `Literal` subset; and a fourth, byte-identical duplicate
@@ -155,7 +155,7 @@ StrEnum surfaces, well inside the model's competence. The real constraints:
 A high-level layering (the plan, authored next under the report-before-land gate,
 sequences the steps and their sweep-coordination):
 
-1. **One canonical set.** `BindingSourceKind` (in `aeat.core.aggregation`) becomes
+1. **One canonical set.** `BindingSourceKind` (in `cadrumo.core.aggregation`) becomes
    THE single source-kind authority for every cross-source data-sourcing interface —
    registry binding definitions AND the application resolver mesh. It absorbs the
    union: the two currently mesh-only tokens become first-class members

@@ -1,6 +1,7 @@
 """Project-bundled test plumbing, meta tests, and fixtures.
 
-This subpackage ships with ``aeat`` so the wheel is self-testable. It
+This subpackage provides cross-cutting test plumbing for package-root and
+project-structure validation across the repository. It
 hosts the pytest collection hook (``_marker_hook``), the dotenv loader
 the hook uses (``_env_loader``), repo-meta tests (release config,
 ``.env`` alignment, marker-taxonomy integrity), and the on-disk
@@ -19,6 +20,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from ._collection_storage_root import (
+    apply_collection_storage_root,
+    collection_storage_root,
+    register_collection_storage_root_cleanup,
+)
 from ._env import temporary_env
 from ._inventory import (
     REPO_ROOT,
@@ -51,7 +57,9 @@ __all__ = [
     "REPO_ROOT",
     "SRC_CADRUMO",
     "aeat_relative",
+    "apply_collection_storage_root",
     "ast_for_path",
+    "collection_storage_root",
     "discover_test_control_modules",
     "leaf_name",
     "module_name",
@@ -64,6 +72,7 @@ __all__ = [
     "production_ast_items",
     "production_python_files",
     "qualified_name",
+    "register_collection_storage_root_cleanup",
     "repo_path",
     "repo_relative",
     "temporary_env",

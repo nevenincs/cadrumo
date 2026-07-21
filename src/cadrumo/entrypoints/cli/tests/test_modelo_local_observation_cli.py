@@ -38,7 +38,7 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=runtime_profile.bucket_id,
         display_name="Sofia Scratch",

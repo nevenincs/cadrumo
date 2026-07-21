@@ -2,7 +2,7 @@
 
 Exercises the application service against a real workflow-state
 repository (secure-object persisted, encrypted at rest) — no mocks or
-fakes. See GitHub issue #591 (multi-cert source resolution slice).
+fakes.
 """
 
 from __future__ import annotations
@@ -12,9 +12,11 @@ from pathlib import Path
 
 import pytest
 
+from ....core.config import Settings
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import (
     CertificateSourceNotFoundError,
@@ -23,6 +25,7 @@ from .. import (
     list_operator_certificate_sources,
     register_operator_certificate_source,
     remove_operator_certificate_source,
+    resolve_active_certificate_credentials,
     select_operator_certificate_source,
 )
 
@@ -87,10 +90,8 @@ def test_select_one_source_activates_it_and_leaves_the_other_inactive(tmp_path: 
     """Selecting one registered source marks only that source active.
 
     The other stays registered but inactive: selection is exclusive
-    across the registry, and its path is mirrored onto
-    ``AuthState.certificate_path`` so every existing certificate-provider
-    consumer (backend probe, ``auth status``) sees the newly selected
-    certificate without further changes.
+    across the registry, and the canonical projection resolves the selected
+    record without copying it into the unnamed-credential field.
     """
     workflow_state_repository().update(_register_operator_profile())
     personal = tmp_path / "personal.p12"
@@ -114,8 +115,8 @@ def test_select_one_source_activates_it_and_leaves_the_other_inactive(tmp_path: 
     assert by_name["personal"].active is False, "the non-selected source must stay registered but inactive"
     assert report.active_source == "apoderado-acme"
 
-    # `auth status` mirrors the selected source's path onto the single
-    # `certificate_path` field every existing consumer reads.
+    # `auth status` resolves the selected source through the canonical
+    # credential projection.
     status = inspect_operator_auth()
     assert status.certificate_path == str(apoderado)
 
@@ -164,7 +165,7 @@ def test_re_registering_an_existing_name_repoints_its_path(tmp_path: Path) -> No
 
 
 def test_remove_source_clears_registration_and_active_selection(tmp_path: Path) -> None:
-    """Removing the active source clears both its registration and the active marker."""
+    """Removing the active source makes its certificate path unusable."""
     workflow_state_repository().update(_register_operator_profile())
     personal = tmp_path / "personal.p12"
     personal.write_bytes(b"placeholder personal cert")
@@ -178,6 +179,16 @@ def test_remove_source_clears_registration_and_active_selection(tmp_path: Path) 
     report = list_operator_certificate_sources()
     assert report.sources == ()
     assert report.active_source == ""
+    reloaded = workflow_state_repository().load()
+    assert reloaded.auth.certificate_path is None
+    credentials = resolve_active_certificate_credentials(
+        settings=Settings(
+            cadrumo_certificate_path=None,
+            cadrumo_certificate_password_secret=None,
+        ),
+    )
+    assert credentials.certificate_path is None
+    assert credentials.source_name is None
 
 
 def test_remove_unregistered_source_is_a_no_op() -> None:
@@ -215,4 +226,4 @@ def test_certificate_source_registry_roundtrips_through_encrypted_workflow_state
     assert reloaded.auth.certificate_sources["personal"].friendly_name == "Yo mismo"
     assert reloaded.auth.certificate_sources["apoderado-acme"].certificate_path == str(apoderado)
     assert reloaded.auth.active_certificate_source == "apoderado-acme"
-    assert reloaded.auth.certificate_path == str(apoderado)
+    assert reloaded.auth.certificate_path is None

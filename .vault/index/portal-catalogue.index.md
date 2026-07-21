@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#portal-catalogue'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-17-portal-catalogue-adr]]'
   - '[[2026-04-17-portal-catalogue-plan]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#portal-catalogue`.
 
 ### adr
 
-- `2026-04-17-portal-catalogue-adr` - portal-catalogue adr: AEAT filing portal + URL registry (**status:** `accepted`)
+- `2026-04-17-portal-catalogue-adr` - portal-catalogue adr: AEAT filing portal + URL registry | (**status:** `accepted`)
 
 ### plan
 

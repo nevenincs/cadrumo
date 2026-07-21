@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#mcp-progressive-discovery'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-08-mcp-progressive-discovery-research]]"
   - "[[2026-07-02-agent-harness-refoundation-adr]]"
@@ -21,7 +21,7 @@ flat surface because dumping the whole verb tree into the tools list "crowds
 out the user's question and degrades tool selection". As shipped, that
 rejection never reached the protocol: the server's tools/list handler returns
 the floor tool, the two grounding tools, the ENTIRE ~273-verb descriptor set,
-and the two meta-tools (`src/aeat/entrypoints/mcp/_server.py`, line 499). The
+and the two meta-tools (`src/cadrumo/entrypoints/mcp/_server.py`, line 499). The
 five manifest-derived toolsets (`_toolsets.py`) are implemented and
 unit-tested but never called from any serving path — finished, tested, dead
 capacity — and no `tools/listChanged` capability exists, so every MCP client
@@ -63,7 +63,7 @@ the same pass.
   does not use.
 - **Names overflow client budgets.** Four Claude-prefixed tool names exceed
   64 characters because the flat underscored-command-key builder has no
-  length budget and the plugin (`aeat`) and server (`aeat`) names duplicate
+  length budget and the plugin (`cadrumo`) and server (`cadrumo`) names duplicate
   into a 23-char client-side prefix.
 - **Existing gates carry over untouched.** Persona scope, handoff deny,
   CONFIRM elicitation, the live-write block, and argument-faithfulness run
@@ -88,7 +88,7 @@ the same pass.
   manifest-derived orientation slice (the overview/contract family — the
   verbs the operator rules mandate reading first). The full per-verb
   universe remains addressable through discovery (P2) and dynamic activation
-  (P3). An `AEAT_MCP_SURFACE` env toggle (`core` default, `full` opt-out)
+  (P3). A `CADRUMO_MCP_SURFACE` env toggle (`core` default, `full` opt-out)
   preserves the flat surface for users who want it and for A/B measurement.
 
 ### P2 — Discovery spine quality
@@ -141,7 +141,7 @@ the same pass.
 - *Leave names as-is:* rejected — four names already break the ~64-char
   prefixed budget and any new deep verb path silently joins them.
 - **Chosen — de-duplicate the namespace and enforce a budget.** The plugin
-  and server must not both spend "aeat" in the client prefix (the plan
+  and server must not both spend "cadrumo" in the client prefix (the plan
   decides which side renames, weighing that a server rename changes prompt
   slash-command names). The tool-name builder gains an explicit budget with
   declared short forms for the over-length verbs, and a conformance gate
@@ -205,7 +205,7 @@ High-level layering; the paired plan owns steps and sequencing.
 - **Surface builder.** Split descriptor construction from advertisement: a
   surface-policy module computes the default core (floor + grounding + meta
   + orientation slice, persona-filtered) and the activated set; the
-  tools/list handler renders the current surface; `AEAT_MCP_SURFACE=full`
+  tools/list handler renders the current surface; `CADRUMO_MCP_SURFACE=full`
   restores the flat listing.
 - **Command index and search upgrade.** Build a small command-retrieval
   index (FTS5 + optional vectors, RRF fusion) from the manifest and

@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#prorrata-art105-cinco-interrupted'
 date: '2026-07-07'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
+  - '[[2026-07-10-prorrata-art105-cinco-interrupted-research]]'
 ---
 
-# `prorrata-art105-cinco-interrupted` adr: `Prorrata art 105.Cinco interrupted activity: register representation and the last-three-active-years provisional rule` | (**status:** `proposed`)
+# `prorrata-art105-cinco-interrupted` adr: `Prorrata art 105.Cinco interrupted activity: register representation and the last-three-active-years provisional rule` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -174,21 +175,21 @@ report). This slice is deliberately register/seeding-internal — it touches NO 
 transaction field, NO per-input classification, and NO CLI verb, making it the least
 entangled of the four with the ledger/CLI surfaces:
 
-- `src/aeat/core/_prorrata_register.py` — an interrupted-state member/marker (or a new
+- `src/cadrumo/core/_prorrata_register.py` — an interrupted-state member/marker (or a new
   provenance `interrumpida_tres_ultimos`) in the register enums. **SHARED (additive) with
   `prorrata-especial` and `prorrata-sectores-diferenciados` (register enums).**
-- `src/aeat/domain/prorrata_register/__init__.py` — the interrupted-ejercicio representation
+- `src/cadrumo/domain/prorrata_register/__init__.py` — the interrupted-ejercicio representation
   on `ProrrataRegisterEntry` and the last-three-active-years seed walk. **SHARED with
   `prorrata-sectores-diferenciados` (per-sector orchestration) and `prorrata-especial`
   (especial-complete signal).**
-- `src/aeat/domain/iva/_prorrata.py` — reuse `compute_prorrata_definitiva_anual` over the
+- `src/cadrumo/domain/iva/_prorrata.py` — reuse `compute_prorrata_definitiva_anual` over the
   summed three-year volumes (read-mostly; maybe a global-aggregate helper). **SHARED
   (additive) with the sibling ADRs.**
 - the register seeding path (`application/calculations/_prorrata_regularizacion.py` or the
   seeding helper that reads the register) — the art. 105.Cinco seed branch and the
   insufficient-history advisory. **SHARED with `prorrata-especial` (advisory builders) and
   `prorrata-art104-tres-exclusions` (rollup/advisory).**
-- `src/aeat/_data/registry/aeat/legal/iva.toml` — extend the existing
+- `src/cadrumo/_data/registry/aeat/legal/iva.toml` — extend the existing
   `[legal."ley-37-1992:art-105"]` `required_text` with the art. 105.Cinco clause. **SHARED
   (additive, same entry) with the sibling ADRs' distinct legal blocks.**
 - NO change to `domain/transactions/_models.py`, NO change to

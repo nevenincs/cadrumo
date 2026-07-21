@@ -5,7 +5,7 @@ a schema-shaped plugin over a real
 filesystem ``tmp_path``: a ``.claude-plugin/plugin.json`` manifest carrying the
 required publication fields, a top-level ``skills/`` and ``agents/`` tree, and an
 ``.mcp.json`` declaring the stdio ``cadrumo-mcp`` server. The agent frontmatter maps
-to plugin-native fields and never carries the vaultspec ``mode:`` field. Where the
+to plugin-native fields and never carries the harness-authoring ``mode:`` field. Where the
 ``claude`` CLI is on PATH, the emitted tree is additionally asserted to pass
 ``claude plugin validate --strict``; the structural assertions always run so the
 suite never silently degrades to a validator-only skip.
@@ -55,14 +55,16 @@ def test_plugin_manifest_carries_required_fields(tmp_path: Path) -> None:
 
     document = json.loads((tmp_path / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
     assert document["name"] == "cadrumo"
+    assert document["displayName"] == "CADRUMO Spanish tax assistant"
     assert document["version"] == manifest.version
     assert document["defaultEnabled"] is False
     assert document["license"] == "Apache-2.0"
-    assert isinstance(document["author"], dict) and document["author"]["name"]
+    assert document["author"] == {"name": "CADRUMO tax assistant project"}
     assert isinstance(document["keywords"], list) and document["keywords"]
-    # The one-liner distilled from the mcpb manifest states the never-files boundary.
+    # Bilingual (English + Spanish) copy; "never files" stated in the English section.
     assert "never files" in document["description"].lower()
-    assert "Cadrumo Spanish-tax CLI" in document["description"]
+    assert document["description"].startswith("English: Operate Cadrumo, the deterministic Spanish-tax CLI,")
+    assert "\nEspañol: " in document["description"]
     assert "aeat Spanish-tax CLI" not in document["description"]
 
 
@@ -70,15 +72,15 @@ def test_plugin_emits_the_skills_tree_from_the_authored_source(tmp_path: Path) -
     manifest = materialise_plugin(tmp_path)
     assert manifest.skills_written == len(_shipped_skill_names())
 
-    assert (tmp_path / "skills" / "preparar-modelo-130" / "SKILL.md").is_file()
+    assert (tmp_path / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").is_file()
     # The progressive-disclosure reference a SKILL cites must travel with it.
-    assert (tmp_path / "skills" / "preparar-modelo-130" / "reference" / "casillas.md").is_file()
+    assert (tmp_path / "skills" / "cadrumo-preparar-modelo-130" / "reference" / "casillas.md").is_file()
 
 
 def test_plugin_skill_document_matches_the_shipped_bytes(tmp_path: Path) -> None:
     materialise_plugin(tmp_path)
-    shipped = harness_root().joinpath("skills", "preparar-modelo-130", "SKILL.md").read_text(encoding=_UTF_8)
-    written = (tmp_path / "skills" / "preparar-modelo-130" / "SKILL.md").read_text(encoding=_UTF_8)
+    shipped = harness_root().joinpath("skills", "cadrumo-preparar-modelo-130", "SKILL.md").read_text(encoding=_UTF_8)
+    written = (tmp_path / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").read_text(encoding=_UTF_8)
     assert written == shipped
 
 
@@ -92,7 +94,7 @@ def test_plugin_agents_carry_claude_frontmatter_never_mode(tmp_path: Path) -> No
         frontmatter = _agent_frontmatter(agents_dir / f"{slug}.md")
         assert frontmatter["name"] == slug
         assert isinstance(frontmatter["description"], str) and frontmatter["description"].strip()
-        # The vaultspec mode: field is not a Claude field and must never be emitted.
+        # The harness-authoring mode: field is not a Claude field and must never be emitted.
         assert "mode" not in frontmatter
 
 
@@ -101,16 +103,16 @@ def test_read_only_persona_maps_to_a_disallowed_tools_denylist(tmp_path: Path) -
     agents_dir = tmp_path / "agents"
     # The coordinator's tool scope declares itself read-only (orchestration only),
     # so it carries a workspace-mutation denylist; a state-mutating persona does not.
-    coordinator = _agent_frontmatter(agents_dir / "coordinator.md")
+    coordinator = _agent_frontmatter(agents_dir / "cadrumo-coordinator.md")
     assert coordinator["disallowedTools"] == ["Edit", "Write", "NotebookEdit"]
-    classifier = _agent_frontmatter(agents_dir / "classifier.md")
+    classifier = _agent_frontmatter(agents_dir / "cadrumo-classifier.md")
     assert "disallowedTools" not in classifier
 
 
 def test_plugin_agent_body_preserves_the_shipped_persona_prose(tmp_path: Path) -> None:
     materialise_plugin(tmp_path)
-    written = (tmp_path / "agents" / "coordinator.md").read_text(encoding=_UTF_8)
-    shipped = harness_root().joinpath("personas", "coordinator.md").read_text(encoding=_UTF_8)
+    written = (tmp_path / "agents" / "cadrumo-coordinator.md").read_text(encoding=_UTF_8)
+    shipped = harness_root().joinpath("personas", "cadrumo-coordinator.md").read_text(encoding=_UTF_8)
     # The persona prose rides verbatim as the agent system prompt after the frontmatter.
     assert written.endswith(shipped)
 
@@ -126,21 +128,25 @@ def test_version_interpolates_into_manifest_and_mcp_pin(tmp_path: Path) -> None:
     assert "aeat" not in mcp["mcpServers"]
     server = mcp["mcpServers"]["cadrumo"]
     assert server["command"] == "uvx"
-    assert server["args"] == ["--from", "cadrumo[agent]==1.2.3", "cadrumo-mcp"]
-    assert "aeat-cli[agent]==1.2.3" not in server["args"]
-    assert "aeat-mcp" not in server["args"]
+    assert server["args"] == [
+        "--from",
+        "cadrumo[agent]==1.2.3",
+        "cadrumo-mcp",
+    ]
+    assert not (tmp_path / "artifacts").exists()
     assert server["env"] == {
+        "CADRUMO_MCP_REQUIRED_VERSION": "1.2.3",
         "CADRUMO_MCP_PERSONA": "${user_config.persona}",
         "CADRUMO_MCP_SURFACE": "${user_config.surface}",
     }
 
 
 def test_persona_default_interpolates_into_user_config(tmp_path: Path) -> None:
-    materialise_plugin(tmp_path, persona_default="verifier")
+    materialise_plugin(tmp_path, persona_default="cadrumo-verifier")
     document = json.loads((tmp_path / ".claude-plugin" / "plugin.json").read_text(encoding=_UTF_8))
     persona = document["userConfig"]["persona"]
     assert persona["type"] == "string"
-    assert persona["default"] == "verifier"
+    assert persona["default"] == "cadrumo-verifier"
     assert persona["required"] is False
 
 

@@ -66,8 +66,6 @@ from ._ledger_expenses import (
     build_renta_deductible_expense_observation,
     evaluate_renta_deductibility,
     normalize_spending_category,
-    resolve_region_category_profiles,
-    select_deductibility_profile,
 )
 from ._maritime_exemption import (
     ART_7P_EXEMPTION_CAP_EUR,
@@ -114,6 +112,4 @@ __all__ = [
     "guard_da41_inactive",
     "normalize_spending_category",
     "rebeca_eligible",
-    "resolve_region_category_profiles",
-    "select_deductibility_profile",
 ]

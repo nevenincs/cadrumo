@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_130/files/02-130-ejercicio-2007-y-2008-primer-trimestre-48-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_130/files/02-130-ejercicio-2007-y-2008-primer-trimestre-48-kb-pdf.pdf",
   "source_sha256": "b1e2ffcbd9196de5ddc87fcb16e6576a77d7f2e4c5a88d87fd9527ec8d873c40",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

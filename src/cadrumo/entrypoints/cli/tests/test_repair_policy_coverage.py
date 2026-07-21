@@ -40,17 +40,13 @@ def test_policy_command_surface_catalog_covers_cli_repair_import_export_and_prof
     assert catalogued == discovered
 
 
-def test_policy_command_surfaces_are_decision_linked_and_namespace_policies_are_registered() -> None:
+def test_policy_command_surfaces_are_owned_and_namespace_policies_are_registered() -> None:
     surfaces = build_repair_policy_command_surface_catalog()
     assert len({surface.command_path for surface in surfaces}) == len(surfaces)
     registered = {definition.namespace: definition for definition in STORAGE_NAMESPACE_REGISTRY.namespaces}
 
     for surface in surfaces:
-        assert surface.decision_links
         assert surface.owner_domains
-        for link in surface.decision_links:
-            assert link.startswith("[[")
-            assert link.endswith("]]")
         for policy in surface.namespace_policies:
             assert policy.namespace_classification.role != "unknown_secure_object_namespace"
             assert policy.owner_domain != "unknown"
@@ -97,11 +93,12 @@ def _policy_relevant_command_paths_from_sources() -> set[str]:
 
 def _command_paths_from_module(source_path: Path, *, root_var: str, root_prefix: tuple[str, ...]) -> set[str]:
     tree = ast.parse(source_path.read_text(encoding="utf-8"), filename=str(source_path))
+    constructor_names = _typer_constructor_names(tree)
     mounts: dict[str, list[tuple[str, str]]] = {}
     commands: dict[str, list[str]] = {}
     for node in ast.walk(tree):
         if isinstance(node, ast.Expr) and isinstance(node.value, ast.Call):
-            _collect_typer_mount(node.value, mounts)
+            _collect_typer_mount(node.value, mounts, constructor_names)
         if isinstance(node, ast.FunctionDef):
             _collect_typer_commands(node, commands)
 
@@ -117,17 +114,45 @@ def _command_paths_from_module(source_path: Path, *, root_var: str, root_prefix:
     return paths
 
 
-def _collect_typer_mount(call: ast.Call, mounts: dict[str, list[tuple[str, str]]]) -> None:
+def _typer_constructor_names(tree: ast.AST) -> dict[str, str]:
+    """Map ``var = typer.Typer(name="...")`` assignments to their declared mount name."""
+    names: dict[str, str] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign) or not isinstance(node.value, ast.Call):
+            continue
+        func = node.value.func
+        is_typer = (isinstance(func, ast.Attribute) and func.attr == "Typer") or (
+            isinstance(func, ast.Name) and func.id == "Typer"
+        )
+        if not is_typer:
+            continue
+        declared = _keyword_literal(node.value, "name")
+        if declared is None:
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                names[target.id] = declared
+    return names
+
+
+def _collect_typer_mount(
+    call: ast.Call,
+    mounts: dict[str, list[tuple[str, str]]],
+    constructor_names: dict[str, str],
+) -> None:
     if not isinstance(call.func, ast.Attribute) or call.func.attr != "add_typer":
         return
     if not isinstance(call.func.value, ast.Name):
         return
     if not call.args or not isinstance(call.args[0], ast.Name):
         return
-    mount_name = _keyword_literal(call, "name")
+    child_var = call.args[0].id
+    # ``add_typer(child, name="x")`` names the mount at the call site;
+    # ``add_typer(child)`` inherits the child's ``typer.Typer(name="x")``.
+    mount_name = _keyword_literal(call, "name") or constructor_names.get(child_var)
     if mount_name is None:
         return
-    mounts.setdefault(call.func.value.id, []).append((call.args[0].id, mount_name))
+    mounts.setdefault(call.func.value.id, []).append((child_var, mount_name))
 
 
 def _collect_typer_commands(node: ast.FunctionDef, commands: dict[str, list[str]]) -> None:
@@ -160,12 +185,13 @@ def _requires_policy_coverage(command_path: str) -> bool:
         "export",
         "import",
         "recover",
-        "recovery",
-        "rekey",
         "restore",
-        "show-recovery",
-        "verify-recovery",
     }
+    # The custody subgroups are policy-relevant in full: every leaf under
+    # ``config recovery`` (status/create/rotate/verify) and ``config
+    # passphrase`` (change) mutates or inspects secure-storage custody.
+    if tokens[:2] in (["config", "recovery"], ["config", "passphrase"]):
+        return True
     # `config profile history` is the append-only event-history audit surface
     # (formerly `config bucket history`, D1 family rename). It is the only
     # `history` verb that requires policy coverage — `app ledger history` and

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
@@ -18,12 +18,12 @@ unsupported key-schedule guidance now names `aeat config recover` or
 `aeat config rekey` instead of the old generic profile recovery or rotation
 flow.
 
-## S458-002 | PASS | Runtime unlock guidance names `config unlock`
+## S458-002 | PASS | Runtime guidance names `config switch`
 
 Active-session and runtime-readiness messages now direct operators to
-`aeat config unlock NAME` when no active bucket session exists, a session is
+`aeat config switch NAME` when no active bucket session exists, a session is
 sealed, or a session has expired. Storage-refusal locale messages and adapter
-error-registry suggestions use the same canonical unlock command.
+error-registry suggestions use the same canonical switch command.
 
 ## S458-003 | PASS | Recovery verification suggestion is no longer profile switch
 

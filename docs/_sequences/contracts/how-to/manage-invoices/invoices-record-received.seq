@@ -1,0 +1,6 @@
+@step Record an invoice a supplier sent you.
+aeat --format json app ledger invoice add --kind received --counterparty-nif A87654321 --counterparty-name "Proveedor SA" --invoice-number PROV-99 --invoice-date 2026-02-20 --taxable-base 500 --iva-rate 0.21 --iva-amount 105 --total-amount 605
+@capture invoice_id result.invoice_id
+@step Confirm it resolved to a payable invoice.
+@result aeat --format json app ledger invoice view {invoice_id} --kind received
+@expect result.source_kind == "payable_invoice"

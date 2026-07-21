@@ -1,0 +1,10 @@
+@step Start the reset.
+@static aeat config reset start --yes
+@step Check the latest reset operation.
+@static aeat config reset status
+@step Check an exact reset operation.
+@static aeat config reset status --operation-id 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+@step Resume the incomplete reset.
+@static aeat config reset resume --yes
+@step Resume an exact paused operation after reviewing legal duties.
+@static aeat config reset resume --operation-id 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef --yes --override-retention --reason "Legal retention duties reviewed"

@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#arch-remediation-registry-format'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S18'
 related:
   - "[[2026-07-02-arch-remediation-registry-format-plan]]"

@@ -72,8 +72,8 @@ def _isolated_source(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def _invoke(args: Sequence[str]) -> Result:
-    return invoke_cached_cli(args)
+def _invoke(args: Sequence[str], *, input: str | None = None) -> Result:
+    return invoke_cached_cli(args, input=input)
 
 
 def _create_profile(
@@ -115,23 +115,29 @@ def _export_profile(
     passphrase: str | None = None,
     cleartext_local: bool = True,
 ) -> Result:
+    """Drive export; an encryption passphrase rides ``--secrets-stdin``, never argv."""
     args = ["config", "profile", "export", name, "--to", str(bundle_path)]
+    stdin_payload: str | None = None
     if passphrase is not None:
-        args.extend(("--passphrase", passphrase))
+        args.extend(("--encrypt", "--secrets-stdin"))
+        stdin_payload = json.dumps({"passphrase": passphrase, "passphrase_confirmation": passphrase})
     if cleartext_local:
         args.append("--cleartext-local")
     if json_format:
         args = ["--format", "json", *args]
-    return _invoke(args)
+    return _invoke(args, input=stdin_payload)
 
 
 def _import_bundle(bundle_path: Path, *, json_format: bool = False, passphrase: str | None = None) -> Result:
+    """Drive import; an encrypted bundle's passphrase rides ``--secrets-stdin``, never argv."""
     args = ["config", "profile", "import", str(bundle_path)]
+    stdin_payload: str | None = None
     if passphrase is not None:
-        args.extend(("--passphrase", passphrase))
+        args.append("--secrets-stdin")
+        stdin_payload = json.dumps({"passphrase": passphrase})
     if json_format:
         args = ["--format", "json", *args]
-    return _invoke(args)
+    return _invoke(args, input=stdin_payload)
 
 
 def _seed_and_export(tmp_path: Path, bundle_path: Path) -> str:
@@ -606,7 +612,7 @@ def test_export_emits_cleartext_sensitivity_warning_notice(tmp_path: Path) -> No
     # Instructs deletion after transfer.
     assert "delete" in message.lower()
     assert "profile export" in message.lower()
-    assert "--passphrase" in message.lower()
+    assert "--encrypt" in message.lower()
 
 
 def test_export_requires_explicit_cleartext_or_passphrase(tmp_path: Path) -> None:
@@ -620,6 +626,55 @@ def test_export_requires_explicit_cleartext_or_passphrase(tmp_path: Path) -> Non
     assert r_export.exit_code != 0, r_export.output
     assert not bundle_path.exists()
     assert "Traceback" not in r_export.output
+
+
+def test_bundle_verbs_reject_argv_passphrase(tmp_path: Path) -> None:
+    """The retired ``--passphrase`` argv channel is gone from export and import.
+
+    A secret on argv lands in the process table and shell history; the bundle
+    passphrase now arrives only via no-echo prompts or ``--secrets-stdin``.
+    """
+    bundle_path = tmp_path / "never-written.json"
+    for args in (
+        ["config", "profile", "export", "x", "--to", str(bundle_path), "--passphrase", "argv-secret"],
+        ["config", "profile", "import", str(bundle_path), "--passphrase", "argv-secret"],
+    ):
+        result = _invoke(args)
+        assert result.exit_code != 0, (args, result.output)
+        assert "No such option: --passphrase" in result.output, (args, result.output)
+    assert not bundle_path.exists()
+
+
+def test_encrypted_export_refuses_passphrase_confirmation_mismatch(tmp_path: Path) -> None:
+    """A stdin value/confirmation mismatch refuses before any bundle is written."""
+
+    r_create = _create_profile("mismatch-transport", tax_id="55555555K", activity="consulting")
+    assert r_create.exit_code == 0, r_create.output
+
+    bundle_path = tmp_path / "mismatch.json"
+    result = _invoke(
+        ["config", "profile", "export", "mismatch-transport", "--to", str(bundle_path), "--secrets-stdin"],
+        input=json.dumps(
+            {
+                "passphrase": "first candidate value",
+                "passphrase_confirmation": "second different value",
+            },
+        ),
+    )
+    assert result.exit_code == 2, result.output
+    assert not bundle_path.exists()
+    assert "Traceback" not in result.output
+
+
+def test_encrypted_export_without_terminal_or_stdin_refuses_cleanly(tmp_path: Path) -> None:
+    """``--encrypt`` with no TTY and no ``--secrets-stdin`` refuses (exit 2), writing nothing."""
+
+    bundle_path = tmp_path / "never-written-encrypt.json"
+    result = _invoke(["config", "profile", "export", "x", "--to", str(bundle_path), "--encrypt"])
+    assert result.exit_code == 2, result.output
+    assert "--secrets-stdin" in result.output
+    assert not bundle_path.exists()
+    assert "Traceback" not in result.output
 
 
 def test_import_surfaces_active_profile_switch_info_notice(tmp_path: Path) -> None:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-inventory'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-13-modelo-inventory-adr]]'
   - '[[2026-04-13-modelo-inventory-audit]]'
@@ -28,6 +28,7 @@ related:
   - '[[2026-04-17-modelo-inventory-remediation-phase3-green-gates-exec]]'
   - '[[2026-04-17-modelo-inventory-remediation-plan]]'
   - '[[2026-04-17-modelo-inventory-remediation-research]]'
+  - '[[2026-07-12-modelo-inventory-audit]]'
 ---
 
 # `modelo-inventory` feature index
@@ -38,13 +39,14 @@ Auto-generated index of all documents tagged with `#modelo-inventory`.
 
 ### adr
 
-- `2026-04-13-modelo-inventory-adr` - modelo-inventory adr (#108)
+- `2026-04-13-modelo-inventory-adr` - modelo-inventory adr (#108) | (**status:** `accepted`)
 - `2026-04-17-modelo-inventory-remediation-adr` - `modelo-inventory` adr: `regulatory-remediation-for-037-130-347-193-and-year-plan-parity` | (**status:** `accepted`)
 
 ### audit
 
 - `2026-04-13-modelo-inventory-audit` - modelo-inventory audit (#108)
 - `2026-04-17-modelo-inventory-remediation-audit` - `modelo-inventory` Code Review
+- `2026-07-12-modelo-inventory-audit` - `modelo-inventory` audit: `legacy plan status reconciliation`
 
 ### exec
 

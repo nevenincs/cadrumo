@@ -34,7 +34,7 @@ from collections.abc import Iterator
 from typing import TYPE_CHECKING, ClassVar, override
 
 from ....domain.filing import ModeloDraft
-from ..storage import SecureBoundRepository, SensitivityClass
+from ..storage import FILING_DRAFTS_NAMESPACE, SecureBoundRepository, SensitivityClass
 from ._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -55,10 +55,10 @@ class ModeloDraftRepository(SecureBoundRepository[ModeloDraft]):
     version, object-key grammar, and custody contract.
     """
 
-    # namespace string preserved across rename to avoid orphaning persisted envelopes
-    namespace: ClassVar[str] = "cadrumo.domain.filing.drafts"
-    sensitivity: ClassVar[SensitivityClass] = SensitivityClass.FINANCIAL
-    schema_version: ClassVar[int] = 1
+    # namespace/sensitivity/schema_version sourced from the sole registry authority
+    namespace: ClassVar[str] = FILING_DRAFTS_NAMESPACE.namespace
+    sensitivity: ClassVar[SensitivityClass] = FILING_DRAFTS_NAMESPACE.sensitivity
+    schema_version: ClassVar[int] = FILING_DRAFTS_NAMESPACE.schema_version
 
     def __init__(self, *, bucket_id: str | None = None, objects: SecureObjectRepository | None = None) -> None:
         """Bind the repository to a bucket, or to an explicit secure-object store for tests."""

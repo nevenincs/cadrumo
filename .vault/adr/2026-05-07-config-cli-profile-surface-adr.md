@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#config-cli-profile-surface'
 date: '2026-05-07'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-07-user-profile-schema-research]]"
   - "[[2026-05-07-user-profile-filing-export-dependencies-reference]]"
@@ -17,9 +17,9 @@ related:
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
 
-CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+CLI logging and error handling MUST use the central facilities: `cadrumo.core.logging.get_logger(__name__)`, `cadrumo.core.logging.SecretScrubbingFilter`, `cadrumo.core.errors.CadrumoError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `cadrumo.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
 
-CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
+CLI output MUST use the established emitters, including `cadrumo.entrypoints.cli._common._emit`, `cadrumo.entrypoints.cli._schemas.emit_json_success`, and `cadrumo.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 
 ## Problem Statement
 
@@ -55,9 +55,8 @@ import, validate, and model/revision preflight.
 
 ## Constraints
 
-No `aeat setup` compatibility alias is preserved for supported UX. All
-setup/first-run/initialization command families are migrated to `aeat config`,
-and legacy setup roots are deprecated migration routes only.
+No `aeat setup` alias or migration route exists. Initialization and profile
+lifecycle are owned exclusively by `aeat config`.
 
 The CLI must not write plaintext profile files for live profile persistence.
 User-directed portable exports are explicit boundary crossings and must be
@@ -98,8 +97,7 @@ Move setup initialization and profile mutation flows into `aeat config`:
 - onboarding/first-run initialization maps to `aeat config init` or explicit
   config bootstrap under `aeat config`
 - profile lifecycle maps to `aeat config profile ...`
-- legacy root `aeat setup` entrypoints are deprecated and must not remain as
-  supported runtime behavior
+- the retired `aeat setup` root is absent from runtime behavior
 
 `aeat config profile remove` follows backend tombstone semantics. It disables
 the profile for new reads, selection, preflight, and filing/export work, while
@@ -154,7 +152,7 @@ verb set but never shipped, and the matching bucket events
 absent from `BucketEventType`. This amendment locks the export / import
 surface so the gap is closed in a follow-up wave.
 
-Required service surface in `aeat.application.user_profile`:
+Required service surface in `cadrumo.application.user_profile`:
 
 - `export_profile(bucket_id, output_path)` - snapshot the active
   profile (bucket pointer + bucket contents) to a portable encrypted

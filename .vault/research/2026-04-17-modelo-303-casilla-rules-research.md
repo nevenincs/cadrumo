@@ -3,14 +3,12 @@ tags:
   - "#research"
   - "#modelo-303-formulas"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-17-modelo-formulas-adr]]"
   - "[[2026-04-17-modelo-formula-ruleset-research]]"
   - "[[2026-04-12-modelo-303-390-research]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
-  - "[[2026-04-13-r1-vat-enumeration-adr]]"
-  - "[[2026-04-13-r1-vat-enumeration-research]]"
   - "[[2026-04-14-transaction-catalogue-adr]]"
 ---
 

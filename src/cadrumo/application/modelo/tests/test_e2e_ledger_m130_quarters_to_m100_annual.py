@@ -721,7 +721,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
         if finding.severity.value == "blocking" or "formula-divergence" in finding.message
     ]
 
-    output = tmp_path / "m100-2024-export.xml"
+    output = tmp_path / "modelo-100-2024-0A.xml"
     receipt = export_modelo_revision(
         ModeloExportCommand(
             calculation_revision_id=annual.calculation_revision_id,

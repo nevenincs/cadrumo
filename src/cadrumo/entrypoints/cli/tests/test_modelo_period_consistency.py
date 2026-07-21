@@ -13,13 +13,10 @@ expected stage — they do not assert calculated Decimal values.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -29,12 +26,6 @@ _MODELO_202_PERIODS = ("1P", "2P", "3P")
 
 def _assert_payload_period(payload: dict[str, object], *, year: int, code: str) -> None:
     assert payload["period"] == {"filing_year": year, "code": code}
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _create_profile() -> None:

@@ -189,7 +189,7 @@ class WorkUnit(BaseModel):
     current_filing_record_id: _OptionalHex64 = None
     censo_stamped_stale_at: datetime | None = None
     censo_stale_reason: _StaleReason | None = None
-    # Ledger-snapshot drift axis (modelo-filing-ledger-snapshot ADR): set together
+    # Ledger-snapshot drift axis: set together
     # when a contributing ledger row changes after the unit's revision was
     # verified/filed, so the operator sees the modelo's inputs went stale. Mirrors
     # the censo stale-marker pair above.

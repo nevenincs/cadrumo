@@ -73,7 +73,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field
@@ -85,10 +84,11 @@ from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueR
 from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ..adapters.persistence.storage import inspect_bucket_storage_runtime
 from ..core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ..core import BindingSourceKind, Period, resolve_active_bucket_id
-from ..core.errors import AeatError
+from ..core import AuthProviderKind, BindingSourceKind, Period, resolve_active_bucket_id
+from ..core.errors import CadrumoError
 from ..core.identity import ProfileId
 from ..core.logging import get_logger
+from ..core.time import today_madrid
 from ..domain.calculations.registry import LEDGER_BINDING_SOURCE_KINDS as _LEDGER_PREFLIGHT_BINDING_SOURCES
 from ..domain.deadlines import (
     DeadlineEngine,
@@ -98,21 +98,29 @@ from ..domain.deadlines import (
     compute_obligation_schedule,
 )
 from ..domain.modelos import WorkUnitState
-from .auth import AuthProviderKind, select_provider
+from ._state_projection_auth import ProjectionAuthReadiness, build_auth_readiness
+from ._state_projection_readiness import (
+    binding_source_value,
+    one_line_error_message,
+    readiness_binding_input_channel,
+)
+from .auth import (
+    ActiveAuthProjectionSnapshot,
+    active_auth_projection_span,
+)
+from .auth_credentials import ActiveCertificateCredentials
 from .ledger import LedgerPreflightIssue, preflight_ledger_tax_readiness
 from .user_profile import ProfilePreflightRequirement
 from .workflow import (
     ActiveProfileHealth,
     WorkflowState,
     assess_active_profile_health,
-    workflow_state_repository,
 )
 
 if TYPE_CHECKING:
     from ..domain.calculations.registry import RegistrySnapshot
 
 _log = get_logger(__name__)
-_AUTH_PROVIDER_VALUES = frozenset(kind.value for kind in AuthProviderKind)
 
 
 class ProjectionActiveProfile(BaseModel):
@@ -147,52 +155,6 @@ class ProjectionActiveProfile(BaseModel):
     registered_bucket: bool = False
     record_present: bool = False
     next_action: str = ""
-
-
-class ProjectionAuthReadiness(BaseModel):
-    """Auth operational readiness, computed once for every surface.
-
-    The record narrows :class:`~cadrumo.application.workflow.WorkflowState` and
-    provider backend health into the fields consumed by
-    :class:`~cadrumo.application.auth.AuthStatusResult` and
-    :class:`~cadrumo.application.auth.AuthTestResult`.
-
-    ``configured`` is the single canonical definition of "auth is
-    operationally ready": a provider is selected in workflow state and,
-    for the certificate provider, a certificate path is recorded. Both
-    ``auth status`` and ``auth test`` read this same field — they
-    cannot disagree because the value is computed once here.
-
-    Attributes:
-        provider: The configured (or requested) provider id, or ``""``.
-        configured: The single canonical operational-readiness flag.
-        authenticated: Whether a live session has been recorded.
-        available: Whether the live backend reports itself reachable.
-            ``auth test`` may probe the live backend for a fresher
-            ``available`` reading, but it never recomputes
-            ``configured``.
-        health_summary: The backend-reported health summary text.
-        health_severity: A non-empty health severity token coherent
-            with ``health_summary``. The certificate backend's own
-            tokens (``OK`` / ``EXPIRED`` / ...) pass through; for a
-            provider whose backend reports no severity the projection
-            derives ``ok`` / ``warning`` / ``error`` from the readiness
-            signals. Empty only when no provider is selected.
-        certificate_path: Recorded certificate filesystem reference for
-            the certificate provider, or ``""``. A non-certificate
-            provider always reports ``""`` — it never carries a stale
-            path from an earlier certificate configuration.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    provider: str = ""
-    configured: bool = False
-    authenticated: bool = False
-    available: bool = False
-    health_summary: str = ""
-    health_severity: str = ""
-    certificate_path: str = ""
 
 
 class ProjectionWorkspaceSummary(BaseModel):
@@ -335,172 +297,6 @@ def _build_active_profile(health: ActiveProfileHealth) -> ProjectionActiveProfil
     )
 
 
-def _certificate_path_resolves(certificate_path: str) -> bool:
-    """Return whether a recorded certificate path resolves to an existing file.
-
-    ``configured`` for the certificate provider means genuine
-    operational readiness, not merely that a path string was recorded.
-    A path that is blank, or that does not resolve to an existing
-    file, is not usable — and the backend health probe agrees,
-    reporting ``certificate path not configured``. Resolving the path
-    here keeps ``configured`` coherent with that health summary.
-    """
-    if not certificate_path:
-        return False
-    try:
-        return Path(certificate_path).is_file()
-    except OSError:
-        return False
-
-
-def _provider_configured(state: WorkflowState) -> bool:
-    """Return the one canonical ``configured`` flag for the workflow state.
-
-    A provider must be selected in workflow state. For the certificate
-    provider, ``configured`` additionally requires a certificate path
-    that resolves to an existing file: selecting the provider without
-    a usable file leaves the slot operationally incomplete, and the
-    flag must stay consistent with
-    ``health_summary: certificate path not configured``.
-    """
-    auth = state.auth
-    if not auth.provider:
-        return False
-    if auth.provider == AuthProviderKind.CERTIFICATE.value:
-        return _certificate_path_resolves(auth.certificate_path or "")
-    return True
-
-
-def _build_auth_readiness(
-    state: WorkflowState,
-    *,
-    requested_provider: str | None,
-    probe_live_backend: bool,
-) -> ProjectionAuthReadiness:
-    """Compute the auth-readiness sub-record once.
-
-    ``configured`` is computed exactly here, so ``auth status`` and
-    ``auth test`` read one value and cannot disagree. When
-    ``probe_live_backend`` is set, the live backend is queried for the
-    ``available`` / ``health_*`` fields — and the backend's own
-    ``configured`` reading is folded into the canonical ``configured``
-    too. The backend's ``configured`` and ``health_summary`` come from
-    one ``describe()`` evaluation; folding them together keeps the
-    canonical ``configured`` coherent with the health summary, so
-    ``configured: True`` can never co-exist with
-    ``health_summary: certificate path not configured``.
-    """
-    auth = state.auth
-    normalized_request = requested_provider.strip().lower() if requested_provider is not None else None
-    provider = normalized_request or auth.provider or ""
-    configured = _provider_configured(state) and (normalized_request is None or auth.provider == normalized_request)
-
-    available = configured and bool(auth.authenticated_at)
-    health_summary = ""
-    health_severity = ""
-    if probe_live_backend and provider:
-        if provider not in _AUTH_PROVIDER_VALUES:
-            _log.warning(
-                "auth backend probe skipped for unknown provider; reporting unavailable",
-            )
-            available = False
-        else:
-            try:
-                # The certificate path persisted by ``auth configure`` lives in
-                # workflow state; the backend reads from ``Settings``. Carry the
-                # workflow-state path into the Settings instance the backend
-                # sees so ``configure`` and ``status`` cannot disagree on
-                # whether the certificate is configured.
-                # `load_settings()` honours `override_settings`; bare `Settings()`
-                # bypasses the context-var and shows the project default cert
-                # path even when a test overrides it.
-                from ..core.config import load_settings as _load_settings
-
-                backend_settings = _load_settings()
-                if (
-                    provider == AuthProviderKind.CERTIFICATE.value
-                    and auth.certificate_path
-                    and backend_settings.aeat_certificate_path is None
-                ):
-                    backend_settings = backend_settings.model_copy(
-                        update={"aeat_certificate_path": Path(auth.certificate_path)},
-                    )
-                backend = select_provider(AuthProviderKind(provider), settings=backend_settings)
-                description = backend.describe()
-                available = description.available
-                health_summary = description.health_summary or ""
-                health_severity = description.health_severity or ""
-                configured = configured and description.configured
-            except (AeatError, OSError, ValueError, AttributeError):
-                _log.warning(
-                    "auth backend probe failed; reporting unavailable",
-                    exc_info=True,
-                )
-                available = False
-
-    authenticated = configured and bool(auth.authenticated_at)
-    health_severity = _resolve_health_severity(
-        health_severity,
-        health_summary=health_summary,
-        provider=provider,
-        configured=configured,
-        available=available,
-        authenticated=authenticated,
-    )
-
-    return ProjectionAuthReadiness(
-        provider=provider,
-        configured=configured,
-        authenticated=authenticated,
-        available=available,
-        health_summary=health_summary,
-        health_severity=health_severity,
-        # G1: the certificate path is a certificate-provider field; a
-        # non-certificate provider must never carry a stale path left
-        # over from an earlier certificate configuration.
-        certificate_path=(auth.certificate_path or "" if provider == AuthProviderKind.CERTIFICATE.value else ""),
-    )
-
-
-def _resolve_health_severity(
-    backend_severity: str,
-    *,
-    health_summary: str,
-    provider: str,
-    configured: bool,
-    available: bool,
-    authenticated: bool,
-) -> str:
-    """Return a non-empty, coherent ``health_severity`` token.
-
-    The certificate backend already emits its own severity tokens
-    (``OK`` / ``EXPIRED`` / ``EXPIRING`` ...); those are authoritative
-    and pass through unchanged. The Cl@ve Móvil backend reports a
-    ``health_summary`` but no severity, so the field would otherwise
-    always be empty (persona-fleet finding G4). When a provider is
-    selected and the backend left the severity blank, derive a token
-    that agrees with the readiness signals: ``ok`` for a configured,
-    available, authenticated provider; ``warning`` for one that is
-    configured but not yet usable end-to-end; ``info`` when a provider
-    is selected but the configuration is still incomplete (an undeclared
-    state, not a genuine fault — round-5 M5). With no provider selected
-    and no summary the field stays empty — there is nothing to classify.
-
-    ``error`` is reserved for backend-reported genuine faults (a
-    certificate corrupt, expired, or unreadable) so a benign pending
-    or undeclared state can never be paired with the loudest severity.
-    """
-    if backend_severity:
-        return backend_severity
-    if not provider:
-        return ""
-    if not configured:
-        return "info"
-    if available and authenticated:
-        return "ok"
-    return "warning"
-
-
 def _build_workspace_summary(*, bucket_id: str | None) -> ProjectionWorkspaceSummary:
     """Load every workspace store and project its counters.
 
@@ -574,7 +370,7 @@ def build_pending_obligations(
     """
     try:
         schedule: Schedule = compute_obligation_schedule(DeadlineEngine(), profile, today=today)
-    except (AeatError, ValueError, LookupError, AttributeError):
+    except (CadrumoError, ValueError, LookupError, AttributeError):
         _log.warning(
             "deadline schedule computation failed; reporting no pending obligations",
             exc_info=True,
@@ -816,9 +612,9 @@ def _build_modelo_readiness(
     return tuple(reports)
 
 
-# W09.P44.S167: the ledger-preflight binding source set is single-sourced
-# in cadrumo.domain.calculations.registry.LEDGER_BINDING_SOURCE_KINDS; the
-# import is at the top of the module (no more frozenset literal here).
+# The ledger-preflight binding source set is single-sourced in
+# cadrumo.domain.calculations.registry.LEDGER_BINDING_SOURCE_KINDS; the
+# import is at the top of the module (no frozenset literal here).
 
 
 def modelo_requires_ledger_preflight(request: ModeloReadinessRequest) -> bool:
@@ -902,7 +698,7 @@ def _registry_readiness_refusal(
     period_token: str,
     exc: Exception,
 ) -> str:
-    detail = _one_line_error_message(exc)
+    detail = one_line_error_message(exc)
     return (
         "registry snapshot unresolved for modelo "
         f"{request.modelo!r}, year {request.filing_year}, period {period_token!r}, "
@@ -924,14 +720,6 @@ def _registry_readiness_revision_mismatch_refusal(
         f"does not match law-determined revision {resolved_revision_id!r}. "
         f"Run 'aeat app modelo describe {request.modelo}' to inspect declared revision_ids and periods."
     )
-
-
-def _one_line_error_message(exc: Exception) -> str:
-    for line in str(exc).splitlines():
-        stripped = line.strip()
-        if stripped:
-            return stripped
-    return exc.__class__.__name__
 
 
 def _missing_calculation_bindings_for_readiness(
@@ -1003,7 +791,7 @@ def _missing_calculation_bindings_for_readiness(
     missing: list[ProjectionModeloBindingRequirement] = []
     for binding in sorted(revision.bindings, key=lambda item: str(item.id)):
         binding_id = str(binding.id)
-        source = _binding_source_value(binding.source)
+        source = binding_source_value(binding.source)
         if source == "constant_value":
             continue
         if binding.source in _LEDGER_PREFLIGHT_BINDING_SOURCES and ledger_sources_ready:
@@ -1016,7 +804,7 @@ def _missing_calculation_bindings_for_readiness(
             ProjectionModeloBindingRequirement(
                 binding_id=binding_id,
                 source=source,
-                input_channel=_readiness_binding_input_channel(
+                input_channel=readiness_binding_input_channel(
                     binding_id,
                     enum_consumed=enum_consumed,
                     date_consumed=date_consumed,
@@ -1024,24 +812,6 @@ def _missing_calculation_bindings_for_readiness(
             ),
         )
     return tuple(missing)
-
-
-def _binding_source_value(source: object) -> str:
-    value = getattr(source, "value", source)
-    return str(value)
-
-
-def _readiness_binding_input_channel(
-    binding_id: str,
-    *,
-    enum_consumed: set[str],
-    date_consumed: set[str],
-) -> str:
-    if binding_id in date_consumed:
-        return "date"
-    if binding_id in enum_consumed:
-        return "enum"
-    return "decimal"
 
 
 def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Period:
@@ -1058,6 +828,7 @@ def _ledger_period_for_modelo_readiness(request: ModeloReadinessRequest) -> Peri
 def build_operator_state_projection(
     *,
     state: WorkflowState | None = None,
+    auth_snapshot: ActiveAuthProjectionSnapshot | None = None,
     requested_provider: str | None = None,
     probe_live_backend: bool = False,
     include_workspace_summary: bool = True,
@@ -1074,15 +845,24 @@ def build_operator_state_projection(
     Args:
         state: Pre-loaded workflow state. When ``None`` and a profile
             is active, the state is loaded through
-            :func:`workflow_state_repository`; when ``None`` and no
+            :func:`~cadrumo.application.workflow._persistence.workflow_state_repository`;
+            when ``None`` and no
             profile is active, an empty :class:`WorkflowState` is used
             (opening the bucket database would require a session that
-            does not exist yet).
+            does not exist yet). A caller-supplied state has no storage-route
+            provenance, so live backend probing is suppressed rather than
+            combining that snapshot with credentials from the current route.
+        auth_snapshot: Route-witnessed auth state and credentials obtained from
+            :func:`active_auth_projection_span`. The caller keeps that span open
+            while this function consumes the snapshot. Mutually exclusive with
+            ``state``; unlike an unproven state value, the snapshot permits its
+            witnessed credentials to feed the live backend probe.
         requested_provider: Optional provider id the caller scoped the
             auth readiness to. ``None`` reports the configured provider.
         probe_live_backend: When set, the live auth backend is queried
-            for the ``available`` / ``health_*`` fields. ``configured``
-            is never sourced from the probe.
+            for the ``available`` / ``health_*`` fields. The probe may
+            downgrade derived authentication readiness, but it never
+            elevates configuration.
         include_workspace_summary: When false, skip ledger, invoice,
             draft, work-unit, and revision counters. Auth-only surfaces
             use this so unrelated workspace-store corruption cannot
@@ -1102,16 +882,72 @@ def build_operator_state_projection(
         it mutates no store.
     """
     _ensure_profile_key_registry_registered()
-    reference_today = today or date.today()
-    active_bucket_id = resolve_active_bucket_id()
-    has_active_profile = active_bucket_id is not None
-
+    reference_today = today or today_madrid()
+    if state is not None and auth_snapshot is not None:
+        raise ValueError("state and auth_snapshot are mutually exclusive")
+    if auth_snapshot is not None:
+        return _assemble_operator_state_projection(
+            auth_snapshot.state or WorkflowState(),
+            active_bucket_id=auth_snapshot.bucket_id,
+            credential_bucket_id=(auth_snapshot.bucket_id if auth_snapshot.state is not None else None),
+            certificate_credentials=auth_snapshot.certificate_credentials,
+            provider_kind=auth_snapshot.provider,
+            provider_kind_is_authoritative=True,
+            requested_provider=requested_provider,
+            probe_live_backend=probe_live_backend,
+            include_workspace_summary=include_workspace_summary,
+            include_pending_obligations=include_pending_obligations,
+            modelo_readiness_requests=modelo_readiness_requests,
+            reference_today=reference_today,
+        )
     if state is not None:
-        resolved_state = state
-    elif not has_active_profile:
-        resolved_state = WorkflowState()
-    else:
-        resolved_state = workflow_state_repository().load()
+        return _assemble_operator_state_projection(
+            state,
+            active_bucket_id=resolve_active_bucket_id(),
+            credential_bucket_id=None,
+            certificate_credentials=None,
+            provider_kind=None,
+            provider_kind_is_authoritative=False,
+            requested_provider=requested_provider,
+            probe_live_backend=probe_live_backend,
+            include_workspace_summary=include_workspace_summary,
+            include_pending_obligations=include_pending_obligations,
+            modelo_readiness_requests=modelo_readiness_requests,
+            reference_today=reference_today,
+        )
+    with active_auth_projection_span(requested_provider=requested_provider) as snapshot:
+        return _assemble_operator_state_projection(
+            snapshot.state or WorkflowState(),
+            active_bucket_id=snapshot.bucket_id,
+            credential_bucket_id=(snapshot.bucket_id if snapshot.state is not None else None),
+            certificate_credentials=snapshot.certificate_credentials,
+            provider_kind=snapshot.provider,
+            provider_kind_is_authoritative=True,
+            requested_provider=requested_provider,
+            probe_live_backend=probe_live_backend,
+            include_workspace_summary=include_workspace_summary,
+            include_pending_obligations=include_pending_obligations,
+            modelo_readiness_requests=modelo_readiness_requests,
+            reference_today=reference_today,
+        )
+
+
+def _assemble_operator_state_projection(
+    resolved_state: WorkflowState,
+    *,
+    active_bucket_id: str | None,
+    credential_bucket_id: str | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
+    provider_kind: AuthProviderKind | None,
+    provider_kind_is_authoritative: bool,
+    requested_provider: str | None,
+    probe_live_backend: bool,
+    include_workspace_summary: bool,
+    include_pending_obligations: bool,
+    modelo_readiness_requests: tuple[ModeloReadinessRequest, ...],
+    reference_today: date,
+) -> OperatorStateProjection:
+    has_active_profile = active_bucket_id is not None
 
     profile_health = assess_active_profile_health(resolved_state)
 
@@ -1120,10 +956,14 @@ def build_operator_state_projection(
         if include_workspace_summary
         else ProjectionWorkspaceSummary()
     )
-    auth = _build_auth_readiness(
+    auth = build_auth_readiness(
         resolved_state,
+        provider_kind=provider_kind,
+        provider_kind_is_authoritative=provider_kind_is_authoritative,
         requested_provider=requested_provider,
         probe_live_backend=probe_live_backend,
+        credential_bucket_id=credential_bucket_id,
+        certificate_credentials=certificate_credentials,
     )
     active_profile = _build_active_profile(profile_health)
 

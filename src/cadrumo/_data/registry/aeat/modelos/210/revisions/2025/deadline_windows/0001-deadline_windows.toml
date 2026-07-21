@@ -16,11 +16,10 @@
 # (art 14.4 Reglamento) and rentas imputadas tipo 02 (presentación todo el año
 # natural siguiente, 1 enero-31 diciembre; la domiciliación es 1 abril-23 diciembre) — depend
 # on a computed RESULTADO and on the TIPO de renta, which a single period token
-# cannot express; they are deferred to a resultado/tipo-keyed deadline-modelling
-# decision (Slice C / ADR addendum). These windows are calendar-declared registry
-# authority and resolve through `resolve_filing_closes_on`; operator M210 work-unit
-# creation for these periods (period_selector) is deferred to Slice C alongside the
-# agrupación grouped-rentas detail model.
+# cannot express; they are not yet modelled here. These windows are calendar-declared
+# registry authority and resolve through `resolve_filing_closes_on`; operator M210
+# work-unit creation for these periods (period_selector) is not yet modelled, alongside
+# the agrupación grouped-rentas detail model.
 
 [[revisions."2025".deadline_windows]]
 id = "modelo-210-2025-1t"

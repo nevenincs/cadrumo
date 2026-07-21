@@ -96,7 +96,7 @@ def test_transaction_repository_default_uses_runtime_created_bucket_store(tmp_pa
         loaded = TransactionCatalogueRepository(bucket_id=bucket_id).load()
 
     assert loaded == original
-    assert (tmp_path / "aeat-storage" / "buckets" / bucket_id / "db" / "cadrumo.db").is_file()
+    assert (tmp_path / "cadrumo-storage" / "buckets" / bucket_id / "db" / "cadrumo.db").is_file()
 
 
 def test_invoice_repository_default_uses_runtime_created_bucket_store(tmp_path: Path) -> None:
@@ -111,4 +111,4 @@ def test_invoice_repository_default_uses_runtime_created_bucket_store(tmp_path: 
 
     assert loaded == original
     assert loaded.get(invoice.invoice_id) is not None
-    assert (tmp_path / "aeat-storage" / "buckets" / bucket_id / "db" / "cadrumo.db").is_file()
+    assert (tmp_path / "cadrumo-storage" / "buckets" / bucket_id / "db" / "cadrumo.db").is_file()

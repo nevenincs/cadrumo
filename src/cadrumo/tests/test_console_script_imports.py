@@ -1,6 +1,6 @@
 """Structural gate for the Cadrumo package hard cut.
 
-The 2026-05-19 disaster recovery (Ruling 7) traced the cold-start
+A prior disaster-recovery traced a cold-start
 10-minute silent hang to a stale ``cadrumo.domain.iva`` import that
 crashed every Cadrumo console-script invocation after the registry
 validation completed. The crash was masked by a compatibility shim

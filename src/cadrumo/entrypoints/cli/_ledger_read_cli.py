@@ -47,7 +47,15 @@ from ...domain.categories import (
     SpendingCategoryFamily,
 )
 from ...domain.transactions import Transaction, ledger_irpf_category_catalogue
-from ._common import _bad, _canonical_period, _emit_envelope, _optional_canonical_period, _state, _tx_repo
+from ._common import (
+    _bad,
+    _canonical_period,
+    _emit_envelope,
+    _optional_canonical_period,
+    _state,
+    _tx_repo,
+    optional_decimal_text,
+)
 from ._ledger_list import (
     LLM_DECISION_EVENT_TYPES,
     ledger_filter_parse_error_message,
@@ -236,9 +244,9 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
                         "low_confidence_count": row.low_confidence_count,
                         "high_confidence_count": row.high_confidence_count,
                         "medium_confidence_count": row.medium_confidence_count,
-                        "min_confidence": _optional_decimal_text(row.min_confidence),
-                        "max_confidence": _optional_decimal_text(row.max_confidence),
-                        "mean_confidence": _optional_decimal_text(row.mean_confidence),
+                        "min_confidence": optional_decimal_text(row.min_confidence),
+                        "max_confidence": optional_decimal_text(row.max_confidence),
+                        "mean_confidence": optional_decimal_text(row.mean_confidence),
                     }
                     for row in report.confidence_providers
                 ],
@@ -254,7 +262,7 @@ def _register_ledger_llm_diagnostics_command(app: typer.Typer) -> None:
                 f"\ttokens={row.total_tokens}\tcost_usd={format(row.cost_estimate_usd, 'f')}",
             )
         for row in report.confidence_providers:
-            mean_text = _optional_decimal_text(row.mean_confidence) or "-"
+            mean_text = optional_decimal_text(row.mean_confidence) or "-"
             lines.append(
                 f"{row.provider}\tclassified={row.classified_count}"
                 f"\tlow_confidence={row.low_confidence_count}\tmean={mean_text}",
@@ -301,12 +309,6 @@ def _parse_iso_date(value: str | None, option: str) -> date | None:
                 default=f"{option} must be an ISO date (YYYY-MM-DD); got {value!r}.",
             ),
         ) from exc
-
-
-def _optional_decimal_text(value: Decimal | None) -> str | None:
-    if value is None:
-        return None
-    return format(value, "f")
 
 
 def _register_ledger_categories_command(app: typer.Typer) -> None:

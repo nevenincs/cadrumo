@@ -56,7 +56,7 @@ from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogu
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import Period
-from ....core.errors import AeatError
+from ....core.errors import CadrumoError
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....domain.deadlines import EntityType, IVARegime, LegalEntityForm, TaxpayerProfile
@@ -560,7 +560,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports_fichero_boe(
     assert verified.ledger_filing_snapshot is not None
     assert verified.ledger_filing_evidence is not None
 
-    output_path = tmp_path / "modelo-303-1T.boe"
+    output_path = tmp_path / f"modelo-303-{_YEAR}-1T.boe"
     export = export_modelo_revision(
         ModeloExportCommand(
             calculation_revision_id=revision.calculation_revision_id,
@@ -686,7 +686,7 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_export(
         )
         assert report.granted_verificado_completo is True, report.findings
 
-        quarter_output = tmp_path / f"m303-{_IRENE_YEAR}-{period}.boe"
+        quarter_output = tmp_path / f"modelo-303-{_IRENE_YEAR}-{period}.boe"
         exported = export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=revision.calculation_revision_id,
@@ -754,10 +754,9 @@ def test_irene_sl_2024_local_m303_files_support_m390_verify_export(
     assert annual_report.granted_verificado_completo is True, annual_report.findings
     assert _non_official_local_chain_advisory_periods(annual_report) == set(_QUARTER_ORDER), annual_report.findings
 
-    # Modelo 390 gained a renderable fichero-BOE export layout (issue #508); the
-    # annual resumen now exports fixed-width bytes the same way each M303
+    # The annual resumen exports fixed-width bytes the same way each M303
     # quarter does above, rather than refusing with ModeloExportUnsupportedError.
-    annual_output = tmp_path / f"m390-{_IRENE_YEAR}.boe"
+    annual_output = tmp_path / f"modelo-390-{_IRENE_YEAR}-0A.boe"
     annual_export = export_modelo_revision(
         ModeloExportCommand(
             calculation_revision_id=annual.calculation_revision_id,
@@ -872,7 +871,7 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
     after_revision_ids = frozenset(cr_repo.load().revisions)
 
     assert after_revision_ids == before_revision_ids
-    assert isinstance(exc_info.value, AeatError)
+    assert isinstance(exc_info.value, CadrumoError)
     assert exc_info.value.translated_message == "application.modelo.errors.cross_period_clean_state_incomplete"
     context = exc_info.value.context or {}
     assert context["reason"] == "missing_clean_cross_period_303_filings_or_observations"

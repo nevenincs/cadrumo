@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#release-please"
 date: 2026-04-12
-modified: '2026-07-10'
+modified: '2026-07-17'
 title: Release-please LOCAL-only autorelease — ADR
 related:
   - "[[2026-04-12-release-please-research]]"
@@ -13,6 +13,35 @@ status: accepted
 ---
 
 # adr: release-please local-only autorelease | (**status:** `accepted`)
+
+## Current authority amendment (2026-07-20)
+
+The publication half of this decision no longer governs. The accepted
+`[[2026-07-15-distribution-installation-readiness-adr]]` made a manually
+dispatched GitHub Actions workflow with OIDC Trusted Publishing
+(`publish-release.yml`, protected `release` environment, human required
+reviewer, `CADRUMO_PUBLISH_ENABLED` opt-in) the sole release publication
+authority, and `[[2026-07-20-release-asset-transport-adr]]` moved evidence
+and cohort transport onto GitHub Release assets. The following rulings of
+this ADR are therefore superseded:
+
+- the "no GitHub Actions workflow ever" absolute (decision 2) and the
+  "No Actions footprint; the ban holds" consequence — GitHub Actions
+  workflows exist and one of them is the sole publication authority;
+- the non-goals "GitHub Actions workflows of any kind" and
+  "PyPI publishing" — PyPI publishing is delivered through OIDC Trusted
+  Publishing in the successor authority.
+
+What survives, and remains governing, is the local versioning surface:
+release-please-driven version/CHANGELOG/tag hygiene via `just release` /
+`just release-apply`, the human-review checklist, the
+`pyproject.toml`-canonical version with the `__init__.py` mirror and the
+release-config parity test, the conventional-commits mandate, and the rule
+that nothing is pushed as a side effect of a release recipe. The human-gated
+invariant this ADR pioneered did not die — it moved: publication is still
+never automatic, gated now by the `CADRUMO_PUBLISH_ENABLED` variable and the
+protected `release` environment's human approval instead of by the absence
+of workflows.
 
 ## context
 
@@ -63,7 +92,7 @@ reconstruct later.
      - `"separate-pull-requests": false`
      - `"draft": false`, `"prerelease": false`
      - `"changelog-path": "CHANGELOG.md"`
-     - `"extra-files": ["src/aeat/__init__.py"]` to keep
+     - `"extra-files": ["src/cadrumo/__init__.py"]` to keep
        `__version__` in lockstep with `pyproject.toml`.
    - `.release-please-manifest.json`:
      ```json
@@ -76,7 +105,7 @@ reconstruct later.
      and out of scope.
 
 5. **Version source of truth:** `pyproject.toml [project].version`
-   is the canonical version. `src/aeat/__init__.py __version__` is
+   is the canonical version. `src/cadrumo/__init__.py __version__` is
    a *mirror* kept in sync by release-please via `extra-files`. A
    unit test (`tests/test_release_config.py`) asserts the three
    surfaces (`pyproject.toml`, `__init__.py`, manifest) agree at
@@ -103,7 +132,7 @@ reconstruct later.
 
 8. **Test location exception:** `tests/test_release_config.py`
    lives at the top-level `tests/` directory, not colocated under
-   `src/aeat/`. Rationale: it validates project-meta files
+   `src/cadrumo/`. Rationale: it validates project-meta files
    (`pyproject.toml`, the manifest, `CHANGELOG.md`) that do not
    belong to any `aeat.*` subpackage. Colocating it would require
    inventing a synthetic `aeat.release` subpackage just to host

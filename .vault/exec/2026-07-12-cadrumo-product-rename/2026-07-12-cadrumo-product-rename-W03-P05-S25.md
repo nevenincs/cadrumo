@@ -20,36 +20,39 @@ related:
 - Derive the Typer root name, lazy root registration, pinned program name, and
   real-process argument recognition from `PRODUCT_IDENTITY.cli_executable`.
 - Render the short version surface from `PRODUCT_IDENTITY.display_name` while
-  retaining the lowercase distribution identifier in package diagnostics.
+  retaining `Cadrumo` for sentence prose and the lowercase distribution
+  identifier in package diagnostics.
 - Retarget installed-console and fast-path structural tests to the sole `aeat`
-  executable and the `CADRUMO` display contract.
+  executable, the contextual Cadrumo/CADRUMO display contract, and preserved
+  `AEAT` authority language.
 - Verify the focused CLI surface with Ruff, real subprocess tests, and live
   `uv run --no-sync` command probes.
 
 ## Outcome
 
-Commit `0589de6f0fab3e238998bd0d57f8be07c5903df4` landed the runtime
-mechanics: the installed `aeat` entry point renders `aeat` in generated usage
-lines, recognises its real-process argument stream, and reports `CADRUMO 0.1.1`
-on the short version surface. Those values derive from the canonical product
-identity rather than duplicated command or display literals.
+The runtime mechanics from commit `0589de6f0fab3e238998bd0d57f8be07c5903df4`
+remain correct: the installed `aeat` entry point pins `aeat` in generated
+command guidance, recognises its real-process argument stream, and reports
+exactly `CADRUMO 0.2.1` on the short version surface. The CLI source uses
+`Cadrumo` in sentence prose and `CADRUMO` for the rendered identity heading;
+root help retains `AEAT` only for the Spanish tax authority.
 
-Twenty focused integration tests passed across state-free help and version,
-cold startup, installed-console discovery, former-state refusal, and curated
-help resolution. The live absence probe confirmed that `cadrumo` is not a
-human executable.
-
-Formal review did not accept S25 as complete. Live `aeat --help` still fails
-the Step's help acceptance contract, so S25 remains open pending the
-locale-authority work in S62-S67 and a real installed-console assertion for
-the corrected output.
+The focused acceptance suite now includes a real installed-console subprocess
+test that jointly proves the exact version line, the `CADRUMO` help heading,
+`aeat` command guidance, preserved `AEAT` authority language, and absence of a
+human `cadrumo` alias beside the active interpreter. Nineteen focused CLI
+integration tests pass across fast-path help and version, cold startup,
+installed-console discovery, former-state refusal, and curated help resolution.
 
 ## Notes
 
-The default Spanish root-help catalogue still contains title-case `Cadrumo`
-and two `cadrumo <comando>` guidance lines. Those catalogue-owned strings were
-not changed in the runtime mechanics commit. The formal review therefore found
-the checked Step dishonest and S25 was reopened through the plan CLI. The
-locale-authority Steps S62-S67 remain responsible for replacing the strings
-through the locale CLI before S25 can close. No compatibility executable,
-Python import shim, state reader, or migration path was added.
+- Direct probes passed for `uv run --no-sync aeat --version`, default Spanish
+  `aeat --help`, and English `aeat --language en --help`; a command lookup
+  confirmed that no `cadrumo` human executable is installed.
+- Ruff lint and format checks pass on the focused CLI source and tests. Ty
+  passes on both focused test files. A broader diagnostic of unchanged
+  `cli/__init__.py` still reports its pre-existing dynamically attached Typer
+  sentinel attribute; S25 neither hides that diagnostic nor expands into an
+  unrelated typing repair.
+- No compatibility executable, Python import shim, state reader, or migration
+  path was added.

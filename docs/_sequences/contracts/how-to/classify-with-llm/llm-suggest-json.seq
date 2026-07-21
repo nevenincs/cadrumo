@@ -1,0 +1,2 @@
+@step Preview with machine-readable output.
+@static aeat --format json app ledger classify <transaction-id> --llm claude

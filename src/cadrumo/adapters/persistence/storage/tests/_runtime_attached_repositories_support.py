@@ -29,7 +29,6 @@ from .....application.calculations import (
     IvaCompensationHistoryRepository,
     IvaWalletDecisionRepository,
 )
-from .....application.config_reset import ConfigResetScope, reset_config
 from .....application.diagnostics import (
     preview_quarantine_unreadable_secure_objects,
     secure_object_unreadable_total,
@@ -56,7 +55,6 @@ from .....application.workflow import (
 )
 from .....core import Period as _Period
 from .....core.config import override_settings
-from .....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE
 from .....domain import ModeloIdentifier
 from .....domain.attachments import AttachmentNotFoundError
 from .....domain.buckets import (
@@ -133,6 +131,7 @@ from .....tests.aeat_literal_fixtures import (
     JUSTIFICANTE_VERIFY_PATH_FIXTURE,
     aeat_url,
 )
+from .....tests.master_key import EphemeralMasterKeyProvider
 from ....outbound.aeat.auth import _session_store as _session_store
 from ....outbound.aeat.sede import ExpedienteNotFoundError, FiledDeclaracionArtefact, FiledDeclaracionObservationStore
 from ....outbound.google import (
@@ -155,7 +154,7 @@ from ...profile.assets import load_amortizacion_ledger, load_assets, save_amorti
 from ...profile.inventory import load_inventory, save_inventory
 from ...profile.submission import SubmissionRepository
 from ...profile.usage_ratios import load_usage_ratios, save_usage_ratios
-from .. import AttachmentStore, EphemeralMasterKeyProvider, SensitivityClass, StorageValidationError
+from .. import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, AttachmentStore, SensitivityClass, StorageValidationError
 from .._namespace_registry import LLM_USAGE_NAMESPACE
 from ..master_key import BucketSession, activate_session
 from ..runtime_repository import secure_object_repository_for_active_bucket
@@ -180,7 +179,6 @@ __all__ = [
     "CalculationObservationRepository",
     "CalculationRevisionCatalogueRepository",
     "Callable",
-    "ConfigResetScope",
     "ExpedienteNotFoundError",
     "FiledDeclaracionObservationStore",
     "InvoiceCatalogue",
@@ -218,7 +216,6 @@ __all__ = [
     "load_inventory",
     "load_usage_ratios",
     "preview_quarantine_unreadable_secure_objects",
-    "reset_config",
     "save_amortizacion_ledger",
     "save_assets",
     "save_inventory",
@@ -249,16 +246,6 @@ def _casilla_id(value: object) -> CasillaId:
 
 _CALCULATION_INPUT_CASILLA: CasillaId = _casilla_id("base")
 _CALCULATION_OUTPUT_CASILLA: CasillaId = _casilla_id("casilla-01")
-
-
-@pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path) -> Iterator[None]:
-    with override_settings(cadrumo_local_storage_root=tmp_path) as settings:
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
 
 
 @contextmanager
@@ -840,7 +827,7 @@ def _save_auth_diagnostic(label: str) -> None:
         "auth_attempt": {"auth_mode": "clave", "headless": True},
     }
     secure_object_repository_for_active_bucket().save(
-        namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+        namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
         object_key=payload["diagnostic_id"],
         classification=SensitivityClass.SESSION,
         schema_version=1,

@@ -44,6 +44,9 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         f"renta-{year}-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
     if year == 2025:
+        # The production profile resolver supplies this predicate as 1/0 from
+        # taxpayer_type.irpf_income_categories; the scenario models a directa filer.
+        values["renta-2025-profile-has-economic-activity"] = Decimal("1")
         values["renta-2025-modelo-184-atribucion-actividades-economicas"] = Decimal("0")
         # Madrid nacimiento/adopción deducción (casilla 1039) profile-derived
         # facts; neutral zero when the chain under test is unrelated.

@@ -1,0 +1,2 @@
+@step Review all actions the tool has taken on this filing, in order.
+  @static aeat app modelo work history --modelo 303 --year 2026 --period 1T

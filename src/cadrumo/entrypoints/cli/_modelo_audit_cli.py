@@ -8,13 +8,13 @@ from typing import Annotated
 import typer
 
 from ...core.i18n import tr
-from ._common import _emit_envelope
+from ._common import _emit_envelope, active_bucket_id_or_refuse
 
 audit_app = typer.Typer(
     name="audit",
     help=tr(
         "cli.app.modelo.audit.group_help",
-        default="Evidence bundle audit verbs (show/check/export/replay).",
+        default="Evidence bundle audit verbs (show/check/export).",
     ),
     no_args_is_help=True,
 )
@@ -29,15 +29,6 @@ def _evidence_bundle_service():
     from ...application.evidence import EvidenceBundleService
 
     return EvidenceBundleService()
-
-
-def _active_bucket_id() -> str:
-    from ...core import require_active_bucket_id
-
-    try:
-        return require_active_bucket_id()
-    except Exception as exc:
-        raise typer.BadParameter(tr("cli.config.errors.no_active_profile")) from exc
 
 
 @audit_app.command(
@@ -55,7 +46,7 @@ def audit_show(
     ],
 ) -> None:
     """Render an evidence bundle's manifest and referenced record list."""
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     bundle = _evidence_bundle_service().show(bucket_id=bucket_id, bundle_id=bundle_id)
     from ._modelo_payloads import EvidenceRecordRefPayload, ModeloAuditShowResult
 
@@ -106,7 +97,7 @@ def audit_check(
     ],
 ) -> None:
     """Re-verify the evidence bundle's integrity without mutating state."""
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     report = _evidence_bundle_service().check(bucket_id=bucket_id, bundle_id=bundle_id)
     from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditCheckResult
 
@@ -165,7 +156,7 @@ def audit_export(
     ] = False,
 ) -> None:
     """Write the evidence bundle as a ZIP archive to ``--output``."""
-    bucket_id = _active_bucket_id()
+    bucket_id = active_bucket_id_or_refuse()
     service = _evidence_bundle_service()
     output_path = service.export(
         bucket_id=bucket_id,
@@ -190,48 +181,6 @@ def audit_export(
         f"verification_state\t{bundle.verification_state.value}",
     ]
     _emit_envelope(ctx, command="modelo.audit.export", result=result, lines=lines)
-
-
-@audit_app.command(
-    "replay",
-    help=tr(
-        "cli.app.modelo.audit.replay_help",
-        default="Replay the bundle's evidence case (never contacts AEAT).",
-    ),
-)
-def audit_replay(
-    ctx: typer.Context,
-    bundle_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.app.modelo.audit.bundle_id_help", default="Evidence bundle id.")),
-    ],
-) -> None:
-    """Replay the evidence bundle's case assertions without contacting AEAT."""
-    bucket_id = _active_bucket_id()
-    report = _evidence_bundle_service().replay(bucket_id=bucket_id, bundle_id=bundle_id)
-    from ._modelo_payloads import EvidenceBundleCheckFindingPayload, ModeloAuditReplayResult
-
-    result = ModeloAuditReplayResult(
-        bundle_id=report.bundle_id,
-        verification_state=report.verification_state.value,
-        completeness_ratio=report.completeness_ratio,
-        findings=[
-            EvidenceBundleCheckFindingPayload(
-                check=f.check.value,
-                passed=f.passed,
-                detail=f.detail,
-            )
-            for f in report.findings
-        ],
-    )
-    lines = [
-        f"bucket\t{bucket_id}",
-        f"bundle_id\t{report.bundle_id}",
-        f"verification_state\t{report.verification_state.value}",
-        f"completeness_ratio\t{report.completeness_ratio}",
-        f"findings\t{len(report.findings)}",
-    ]
-    _emit_envelope(ctx, command="modelo.audit.replay", result=result, lines=lines)
 
 
 __all__ = ["audit_app", "register_audit_commands"]

@@ -34,10 +34,6 @@ See Also:
     ``src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0293-renta-2025-eo-agraria-rendimiento-base.toml``
         Registry formulas for the Fase 1ª product base, Fase 1ª aggregate, and
         Fase 2ª minorado chain.
-    ``2026-05-19-schema-hardening-m100-actividad-agraria-audit`` and
-    ``2026-07-03-registry-grounding-spotcheck-audit``
-        Audit records for the M100 agraria cluster and 2025 estimación
-        objetiva grounding.
 """
 
 from __future__ import annotations
@@ -86,6 +82,9 @@ def _neutral_binding_values() -> dict[str, Decimal]:
     axes.
     """
     return {
+        # Agricultural activity is económica; the production profile resolver
+        # supplies this predicate as 1/0 from taxpayer_type.irpf_income_categories.
+        "renta-2025-profile-has-economic-activity": Decimal("1"),
         "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-2025-profile-declaration-type": Decimal("1"),

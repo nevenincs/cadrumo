@@ -3,9 +3,8 @@ tags:
   - '#audit'
   - '#code-duplication-sweep'
 date: '2026-05-19'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-05-19-code-duplication-sweep-research]]"
   - "[[2026-05-19-spanish-stem-terminology-authority-adr]]"
 title: "Retirement and Rename Residue Audit"
 source: "Automated Codebase Scanning with Regex and Manual Verification"

@@ -9,8 +9,12 @@ Classification rule:
 - Any mock import under deterministic production tests is drift.
 - Any pytest-mock ``mocker`` fixture reference is drift.
 - Any imported, assigned, or locally defined ``Mock*``, ``Fake*``, ``Stub*``,
-  ``Spy*``, or ``Dummy*`` test helper is drift; tests must name helpers by the concrete
-  behaviour or contract they exercise.
+  ``Spy*``, or ``Dummy*`` test helper is drift.
+- Semantic helper-class names that advertise supplied behavior (recording,
+  canned/fixed responses, unavailable/corrupt dependencies, call counting,
+  import blocking, or forced exceptions) are also drift. Real loopback HTTP
+  endpoint handlers are explicitly exempt because they cross the production
+  network boundary.
 
 Current inventory for durable replacement:
   Zero ``unittest``, ``mock``, or ``pytest_mock`` imports found in deterministic
@@ -51,6 +55,24 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 # Import module names that constitute banned test-control usage.
 _FORBIDDEN_TEST_CONTROL_IMPORTS = ("unittest.mock", "unittest", "mock", "pytest_mock")
 _FORBIDDEN_TEST_DOUBLE_PREFIXES = ("mock", "fake", "stub", "spy", "dummy")
+_FORBIDDEN_SEMANTIC_DOUBLE_DEFINITION_TOKENS = (
+    "alwaysclosed",
+    "alwaysopen",
+    "canned",
+    "corrupt",
+    "counting",
+    "dangling",
+    "fixedvector",
+    "importblocker",
+    "nowindows",
+    "recording",
+    "reconfigurable",
+    "refusing",
+    "raising",
+    "storedobservation",
+    "unavailable",
+)
+_ALLOWED_REAL_BOUNDARY_DEFINITION_NAMES = frozenset({"recordingtelemetryendpoint"})
 _PYTEST_MOCK_FIXTURE_NAME = "mocker"
 
 
@@ -87,7 +109,10 @@ def _test_control_inventory_sites(tree: ast.AST) -> _TestControlInventorySites:
         if (
             isinstance(node, ast.ClassDef | ast.FunctionDef | ast.AsyncFunctionDef)
             and not node.name.startswith("test_")
-            and _is_test_double_name(node.name)
+            and (
+                _is_test_double_name(node.name)
+                or (isinstance(node, ast.ClassDef) and _is_semantic_test_double_class_name(node.name))
+            )
         ):
             test_double_definitions.append((node.lineno, node.name))
 
@@ -231,6 +256,14 @@ def _is_test_double_name(name: str) -> bool:
     return any(
         normalized.startswith(prefix) or normalized.endswith(prefix) for prefix in _FORBIDDEN_TEST_DOUBLE_PREFIXES
     )
+
+
+def _is_semantic_test_double_class_name(name: str) -> bool:
+    """Return True for class names that advertise supplied dependency behavior."""
+    normalized = name.strip("_").lower()
+    if normalized in _ALLOWED_REAL_BOUNDARY_DEFINITION_NAMES:
+        return False
+    return any(token in normalized for token in _FORBIDDEN_SEMANTIC_DOUBLE_DEFINITION_TOKENS)
 
 
 def _test_control_inventory_for_module_trees(
@@ -444,6 +477,23 @@ def repositoryMock():
             Counter({"client_fake": 1, "transportStub": 1, "repository_dummy": 1}),
             Counter({"TransportSpy": 1, "repositoryMock": 1}),
             id="suffix-named-helpers",
+        ),
+        pytest.param(
+            """
+class _CannedOracle:
+    pass
+
+class _CountingRepository:
+    pass
+
+class _RecordingTelemetryEndpoint:
+    pass
+""",
+            Counter(),
+            Counter(),
+            Counter(),
+            Counter({"_CannedOracle": 1, "_CountingRepository": 1}),
+            id="semantic-double-helper-names",
         ),
     ),
 )

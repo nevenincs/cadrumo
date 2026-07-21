@@ -1,17 +1,17 @@
 """Codemod: rewrite cross-package private imports onto owning facades.
 
-Wave W02 (production) and Wave W05 (test-only) of the import-centralization
-campaign. Consumes the same AST walk as ``dev/import_hygiene_scan.py``
+Rewrites production files by default, and can also (or exclusively) rewrite
+test-only files. Consumes the same AST walk as ``dev/import_hygiene_scan.py``
 (re-run fresh, not from a stale JSON) and, for every ``ImportFrom`` statement
 that reaches into a foreign package's private submodule where the imported
 name is resolvable from the owning package's top-level facade, rewrites the
 statement to import from the facade instead.
 
-By default only production (non-test) files are visited, matching Wave W02.
+By default only production (non-test) files are visited.
 Pass ``--include-tests`` to also visit test files (``tests/`` directories,
-``test_*`` modules, and ``conftest``) for Wave W05; combine with
+``test_*`` modules, and ``conftest``); combine with
 ``--tests-only`` to restrict the rewrite to test files exclusively once the
-production wave has already landed.
+production sweep has already landed.
 
 Behavior-preserving only:
 
@@ -130,10 +130,10 @@ def collect_plans(
 ) -> tuple[list[RewritePlan], dict[str, scan.FacadeInfo]]:
     """Collect every rewritable ``ImportFrom`` statement under ``src/cadrumo``.
 
-    ``include_tests=False`` (the default) preserves the Wave W02
-    production-only behavior. ``include_tests=True`` also visits test
+    ``include_tests=False`` (the default) preserves production-only
+    behavior. ``include_tests=True`` also visits test
     modules; ``tests_only=True`` additionally excludes production modules,
-    restricting the sweep to test files only (Wave W05).
+    restricting the sweep to test files only.
     """
     facades = scan.discover_facades()
 
@@ -248,9 +248,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--apply", action="store_true", help="Write changes (default: dry-run report only)")
     parser.add_argument("--only-file", type=Path, default=None, help="Restrict to one file (repo-relative or absolute)")
-    parser.add_argument(
-        "--include-tests", action="store_true", help="Also visit test files (Wave W05; default: production only)"
-    )
+    parser.add_argument("--include-tests", action="store_true", help="Also visit test files (default: production only)")
     parser.add_argument(
         "--tests-only", action="store_true", help="Restrict the sweep to test files only (implies --include-tests)"
     )

@@ -1,14 +1,4 @@
-"""Real-behavior tests for :func:`cadrumo.application.diagnostics_run_health.build_run_health_report`.
-
-Exercises the aggregator against a real
-:class:`~cadrumo.adapters.outbound.llm.LLMRunTelemetryRecorder` (real encrypted
-secure-object persistence, no mocks). The auth-session half is verified with
-an injected :class:`~cadrumo.application.auth.AuthTestResult` -- ``auth_probe``
-is a first-class dependency-injection seam the function accepts precisely so
-callers can supply a real, previously-constructed probe result without
-re-invoking the live probe on every call; this keeps the test independent of
-the auth package's own (separately-tested) probe machinery.
-"""
+"""Real-behavior diagnostics over encrypted LLM telemetry and local auth state."""
 
 from __future__ import annotations
 
@@ -20,7 +10,6 @@ from pathlib import Path
 import pytest
 
 from ...adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-from ...application.auth import AuthTestResult
 from ...tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..diagnostics_run_health import (
     build_error_breakdown,
@@ -75,31 +64,12 @@ def _seed(recorder: LLMRunTelemetryRecorder) -> None:
     )
 
 
-_NO_SESSION_PROBE = AuthTestResult(
-    provider="",
-    configured=False,
-    persisted_session_present=False,
-    persisted_session_expired=None,
-    persisted_session_state="no_session",
-    probe_summary="no provider configured",
-)
-
-_STALE_SESSION_PROBE = AuthTestResult(
-    provider="certificate",
-    configured=True,
-    persisted_session_present=True,
-    persisted_session_expired=True,
-    persisted_session_state="expired",
-    probe_summary="session expired",
-)
-
-
-def test_build_run_health_report_folds_llm_runs_and_no_session_probe(profile: TestRuntimeProfile) -> None:
-    """Real LLM run records fold per-provider; an injected no-session probe is reported."""
+def test_build_run_health_report_folds_llm_runs_and_real_auth_probe(profile: TestRuntimeProfile) -> None:
+    """Real LLM records fold per provider alongside the real local auth probe."""
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
     _seed(recorder)
 
-    report = build_run_health_report(run_telemetry_recorder=recorder, auth_probe=_NO_SESSION_PROBE)
+    report = build_run_health_report(run_telemetry_recorder=recorder)
 
     assert report.has_run_data is True
     providers = {row.provider: row for row in report.llm_providers}
@@ -121,19 +91,6 @@ def test_build_run_health_report_folds_llm_runs_and_no_session_probe(profile: Te
     assert report.session_stale is False
 
 
-def test_build_run_health_report_flags_stale_session(profile: TestRuntimeProfile) -> None:
-    """An injected expired-session probe is surfaced as ``session_stale``."""
-    recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
-
-    report = build_run_health_report(run_telemetry_recorder=recorder, auth_probe=_STALE_SESSION_PROBE)
-
-    assert report.has_run_data is False
-    assert report.auth_configured is True
-    assert report.persisted_session_present is True
-    assert report.persisted_session_expired is True
-    assert report.session_stale is True
-
-
 def test_build_run_health_report_provider_filter_scopes_llm_section(profile: TestRuntimeProfile) -> None:
     """The ``provider`` filter restricts only the LLM run-timing section, never the auth probe."""
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
@@ -142,15 +99,14 @@ def test_build_run_health_report_provider_filter_scopes_llm_section(profile: Tes
     report = build_run_health_report(
         provider="llm:codex:test-model",
         run_telemetry_recorder=recorder,
-        auth_probe=_STALE_SESSION_PROBE,
     )
 
     assert len(report.llm_providers) == 1
     assert report.llm_providers[0].provider == "llm:codex:test-model"
     assert report.total_runs == 1
     # The auth section is unaffected by the LLM provider filter.
-    assert report.auth_configured is True
-    assert report.session_stale is True
+    assert report.auth_configured is False
+    assert report.session_stale is False
 
 
 def test_build_run_health_report_date_range_scopes_llm_section(profile: TestRuntimeProfile) -> None:
@@ -162,7 +118,6 @@ def test_build_run_health_report_date_range_scopes_llm_section(profile: TestRunt
         since=date(2026, 4, 1),
         until=date(2026, 4, 1),
         run_telemetry_recorder=recorder,
-        auth_probe=_NO_SESSION_PROBE,
     )
 
     assert report.total_runs == 1
@@ -174,7 +129,7 @@ def test_build_run_health_report_empty_store_reports_no_run_data(profile: TestRu
     """An empty run-telemetry store reports ``has_run_data = False``, not an error."""
     recorder = LLMRunTelemetryRecorder(root_dir=profile.settings.cadrumo_llm_run_telemetry_dir)
 
-    report = build_run_health_report(run_telemetry_recorder=recorder, auth_probe=_NO_SESSION_PROBE)
+    report = build_run_health_report(run_telemetry_recorder=recorder)
 
     assert report.has_run_data is False
     assert report.llm_providers == ()

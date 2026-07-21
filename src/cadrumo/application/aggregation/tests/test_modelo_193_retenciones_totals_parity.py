@@ -5,7 +5,7 @@ Modelo 193's resumen-anual summary casillas (``decl.base-total``,
 taxpayer's four Modelo 123 quarterly filings — a ``source =
 "relation_prefill"`` aggregation entirely independent of the dedicated
 per-perceptor retención store
-(:class:`~application.aggregation.RetencionesAggregation`, RET-1,
+(:class:`~application.aggregation.RetencionesAggregation`,
 ``source = "retenciones_aggregation"``) that also materialises the
 ``decl.total-perceptores`` distinct-NIF count.
 
@@ -35,7 +35,7 @@ See Also:
         Verdict model that keeps the perceptor-count, base, and retención axes
         explicit instead of collapsing mismatches into a boolean.
     :func:`~application.aggregation.aggregate_retenciones_193`
-        Dedicated per-perceptor RET-1 aggregator that supplies the store-side
+        Dedicated per-perceptor aggregator that supplies the store-side
         totals for Modelo 193.
     :class:`~application.aggregation.RetencionesAggregation`
         Repository-backed retenciones summary source enrolled on the calculate
@@ -280,7 +280,7 @@ def test_totals_parity_over_empty_retencion_store_reports_full_shortfall() -> No
     """No persisted per-perceptor detail at all is a full shortfall, not a vacuous pass.
 
     A nil-percepciones filer legitimately has zero rows AND a zero summary
-    total (RET-1 empty-store ruling); this test pins that when the summary
+    total; this test pins that when the summary
     total is nonzero but the aggregation is empty, the gate reports the entire
     summary amount as the delta rather than silently treating "no rows" as
     "nothing to check".

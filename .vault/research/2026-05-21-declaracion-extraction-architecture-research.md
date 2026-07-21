@@ -3,10 +3,9 @@ tags:
   - '#research'
   - '#declaracion-extraction-architecture'
 date: '2026-05-21'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-20-branch-reconciliation-audit]]'
-  - '[[2026-04-21-declaracion-extractor-adr]]'
 ---
 
 # `declaracion-extraction-architecture` research: `registry-driven vs per-modelo Python extractors`

@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING, Literal
 from ...core.hashing import content_hash_hex
 
 if TYPE_CHECKING:
-    pass
+    from ..invoices import InvoiceTransactionLinkResult
 
 from ...core import BindingSourceKind, Period
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
@@ -31,7 +31,7 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
-from ...domain.invoices import InvoiceCatalogueRepositoryProtocol
+from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceLinkError
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
     WorkUnitCatalogueRepositoryProtocol,
@@ -65,6 +65,7 @@ from ._actions_common import (
     _display_decimal,
     _EventSpec,
     _evidence_event_ids,
+    _invoice_repository,
     _merge_identifier_tuple,
     _mutation_signature,
     _normalise_attachment_patch_ids,
@@ -102,6 +103,12 @@ from ._preflight import preflight_ledger_tax_readiness
 from ._review_projection import ledger_transaction_review_status, project_ledger_review_query
 
 _MANUAL_PROVIDER_NAME = "manual-ledger"
+
+# Evidence catalogue and provenance are mutated ONLY through the attach authority
+# (`attach_manual_transaction_evidence`). The generic manual-field update door
+# refuses any patch/command that touches these fields; internal evidence-authority
+# callers thread the private `_evidence_authority=True` flag to pass the guard.
+_EVIDENCE_PATCH_FIELDS = frozenset({"purchase_invoice_evidence_id", "attachment_ids"})
 
 
 def create_manual_transaction(
@@ -237,6 +244,62 @@ def attach_manual_transaction_evidence(
         calculation_repository=calculation_repository,
         occurred_at=occurred_at,
         _preloaded_catalogue=catalogue,
+        _evidence_authority=True,
+    )
+
+
+def link_manual_transaction_invoice(
+    *,
+    bucket_id: str,
+    transaction_id: str,
+    invoice_id: str,
+    actor: str = "operator",
+    source_command: str = "aeat app ledger link",
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
+) -> InvoiceTransactionLinkResult:
+    """Establish an atomic invoice-only relationship for one ledger transaction.
+
+    This is the sole invoice-linkage writer. It resolves the transaction,
+    enforces the invoice's missing and cross-bucket policy up front, then
+    delegates the bidirectional catalogue mutation and persistence to
+    :func:`~cadrumo.application.invoices.link_invoice_transaction_repositories`.
+    It never touches purchase evidence or attachments: evidence mutation is
+    reserved for :func:`attach_manual_transaction_evidence`. Every rejection
+    fires before any catalogue write, so a refused link leaves the transaction,
+    invoice catalogue, and event history unchanged.
+
+    Returns an
+    :class:`~cadrumo.application.invoices.InvoiceTransactionLinkResult`.
+    """
+    from ..invoices import link_invoice_transaction_repositories
+
+    _require_actor(actor, operation="ledger invoice linkage")
+    _require_source_command(source_command, operation="ledger invoice linkage")
+    repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
+    current = _require_transaction(repository.load(), transaction_id)
+    invoices_repo = _invoice_repository(bucket_id=bucket_id, repository=invoice_repository)
+    invoice_record = invoices_repo.load().get(invoice_id)
+    if invoice_record is None:
+        raise InvoiceLinkError(
+            "invoice_id not found in the active profile invoice catalogue",
+            context={"invoice_id": invoice_id, "bucket_id": bucket_id},
+        )
+    if invoice_record.bucket_id not in (None, bucket_id):
+        raise InvoiceLinkError(
+            "invoice belongs to a different bucket than the active profile",
+            context={
+                "invoice_id": invoice_id,
+                "command_bucket_id": bucket_id,
+                "invoice_bucket_id": invoice_record.bucket_id or "",
+            },
+        )
+    return link_invoice_transaction_repositories(
+        bucket_id=bucket_id,
+        invoice_id=invoice_id,
+        transaction_id=current.transaction_id,
+        invoice_repository=invoices_repo,
+        transaction_repository=repository,
     )
 
 
@@ -466,12 +529,20 @@ def update_manual_transaction(
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None = None,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
+    _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Replace one manual ledger transaction from a validated command payload.
 
     The replacement is built from
     :class:`~cadrumo.application.ledger.ManualLedgerTransactionCommand` and saved
     as a new :class:`~cadrumo.domain.transactions.Transaction` revision.
+
+    ``_evidence_authority`` is a private flag threaded only by the evidence
+    attach authority (:func:`attach_manual_transaction_evidence`) and the
+    evidence-driven split inheritance. When it is :data:`False` (every generic
+    manual-field update) the command MUST NOT change
+    ``purchase_invoice_evidence_id`` or ``attachment_ids``; evidence catalogue and
+    provenance mutation are reserved for ``aeat app ledger attach``.
 
     Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`.
     """
@@ -487,6 +558,15 @@ def update_manual_transaction(
                 "transaction_id": transaction_id,
                 "lifecycle_state": current.lifecycle_state.value,
             },
+        )
+    if not _evidence_authority and (
+        command.purchase_invoice_evidence_id != current.purchase_invoice_evidence_id
+        or command.attachment_ids != current.attachment_ids
+    ):
+        raise TransactionValidationError(
+            "purchase evidence and attachments are managed only by `aeat app ledger attach`; "
+            "a generic ledger transaction update must not change purchase_invoice_evidence_id or attachment_ids",
+            context={"transaction_id": transaction_id},
         )
     blockers = _blocking_modelo_references(
         bucket_id=command.bucket_id,
@@ -633,6 +713,7 @@ def update_manual_transaction_fields(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
     _preloaded_catalogue: TransactionCatalogue | None = None,
+    _evidence_authority: bool = False,
 ) -> ManualLedgerTransactionResult:
     """Apply a typed field patch to one active bucket-scoped ledger transaction.
 
@@ -657,6 +738,15 @@ def update_manual_transaction_fields(
     Returns a :class:`~cadrumo.application.ledger.ManualLedgerTransactionResult`
     reflecting the updated transaction state after the patch is applied.
     """
+    if not _evidence_authority and patch.model_fields_set & _EVIDENCE_PATCH_FIELDS:
+        raise TransactionValidationError(
+            "purchase evidence and attachments are managed only by `aeat app ledger attach`; "
+            "a generic ledger field update must not set purchase_invoice_evidence_id or attachment_ids",
+            context={
+                "transaction_id": transaction_id,
+                "evidence_fields": ",".join(sorted(patch.model_fields_set & _EVIDENCE_PATCH_FIELDS)),
+            },
+        )
     repository = _transaction_repository(bucket_id=bucket_id, repository=transaction_repository)
     catalogue = _preloaded_catalogue if _preloaded_catalogue is not None else repository.load()
     current = _require_transaction(catalogue, transaction_id)
@@ -691,6 +781,7 @@ def update_manual_transaction_fields(
         work_unit_repository=work_unit_repository,
         calculation_repository=calculation_repository,
         occurred_at=occurred_at,
+        _evidence_authority=_evidence_authority,
     )
 
 
@@ -995,7 +1086,7 @@ def _transaction_from_command(
         counterparty=command.counterparty,
         description=command.description,
         provenance=RawProvenance(
-            source_path=Path.cwd() / ".aeat-manual-ledger",
+            source_path=Path.cwd() / ".cadrumo-manual-ledger",
             source_sha256=_source_sha256(command, occurred_at=occurred_at),
             source_row_index=1,
             source_format=SourceFormat.MANUAL,

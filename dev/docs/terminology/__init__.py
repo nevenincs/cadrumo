@@ -3,10 +3,9 @@
 This package is dev build tooling (alongside ``dev/docs/cli_reference.py``
 and ``dev/docs/apidocs``), not shippable ``src/cadrumo`` code: the projected
 records are a build-time artifact consumed by the downstream Pagefind
-injection, never committed (like the generated CLI reference). Per ADR D4
-the casilla records are MACHINE-GENERATED from registry snapshots and
-never hand-curated, distinct from the curated ``dev.docs.terminology_handbook`` concept
-Handbook.
+injection, never committed (like the generated CLI reference). The casilla
+records are MACHINE-GENERATED from registry snapshots and never hand-curated,
+distinct from the curated ``dev.docs.terminology_handbook`` concept Handbook.
 """
 
 from __future__ import annotations
@@ -58,6 +57,7 @@ from ._resolution import (
 )
 from ._search_record import (
     CasillaSearchRecord,
+    ResultDisplayClass,
     SearchRecordBase,
     SearchRecordKind,
 )
@@ -92,7 +92,10 @@ from ._unified_record import (
     RankingTier,
     SearchRecord,
     SearchRecordMetadata,
+    derive_display_class,
+    display_class_base_weight,
     kind_base_weight,
+    normalise_display_class_weight,
     normalise_ranking_weight,
     to_search_record,
 )
@@ -141,6 +144,7 @@ __all__ = [
     "RelativeCosineThresholds",
     "ResolutionResult",
     "ResolvedTarget",
+    "ResultDisplayClass",
     "Rung2Adjudication",
     "Rung2Decision",
     "SearchRecord",
@@ -160,6 +164,8 @@ __all__ = [
     "TermTargetRef",
     "WrangledResult",
     "adjudicate_rung2",
+    "derive_display_class",
+    "display_class_base_weight",
     "enumerate_query_vocabulary",
     "evaluate_held_out_miss_rate",
     "held_out_query_set_path",
@@ -168,6 +174,7 @@ __all__ = [
     "load_held_out_query_set",
     "load_synonym_ratification_queue",
     "mine_synonym_candidates",
+    "normalise_display_class_weight",
     "normalise_ranking_weight",
     "project_casilla_search_records",
     "project_cli_search_records",

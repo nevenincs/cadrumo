@@ -45,6 +45,7 @@ from ...core.hashing import sha256_hex
 from ...core.i18n import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.logging import get_logger
+from ...core.time import today_madrid
 from ...domain.modelos import WorkUnit
 from ._common import (
     _bad,
@@ -434,9 +435,8 @@ def overview_status(
     """Emit the overview status payload for readiness or per-period detail.
 
     The deadline-calendar surface that used to live behind `--calendar`
-    is now the first-class `aeat app overview calendar` verb per the
-    app-overview-shape ADR's Consequences section. No alternate flag path
-    remains; callers must use the dedicated verb. The full-status branch projects
+    is now the first-class `aeat app overview calendar` verb. No alternate
+    flag path remains; callers must use the dedicated verb. The full-status branch projects
     :func:`build_overview_status_report`; the period branch emits only the
     matching draft rows.
     """
@@ -491,7 +491,7 @@ def overview_status(
     # default advisory the calendar does, so status never reads as complete while
     # obligations go unscoped. The coverage report rides the Notice channel.
     if current is not None and current.active_profile_bucket_id() is not None:
-        status_today = _date.today()
+        status_today = today_madrid()
         status_cal = build_overview_calendar(
             _profile_to_taxpayer(current),
             OverviewCalendarRange(
@@ -633,7 +633,7 @@ def overview_calendar(
     cal: OverviewCalendar = build_overview_calendar(
         workflow_profile,
         rng,
-        today=_date.today(),
+        today=today_madrid(),
         raw_values=raw_values,
         show_suppressed=show_suppressed,
         events=events,
@@ -678,7 +678,6 @@ def _overview_calendar_all_profiles(
     payload still uses the single :class:`OverviewCalendarResult` schema
     registered for ``overview.calendar``.
     """
-    from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
     from ...application.user_profile import (
         ProfileRepository,
         profile_storage_session,
@@ -686,10 +685,11 @@ def _overview_calendar_all_profiles(
         record_to_values,
     )
     from ...application.workflow import list_profile_buckets
+    from ...domain.user_profile import UserProfileStatus
 
-    today = _date.today()
+    today = today_madrid()
     buckets = list_profile_buckets()
-    active_buckets = {bid: ptr for bid, ptr in buckets.items() if ptr.status is BucketLifecycleStatus.ACTIVE}
+    active_buckets = {bid: ptr for bid, ptr in buckets.items() if ptr.status is UserProfileStatus.ACTIVE}
 
     all_lines: list[str] = [
         f"from\t{rng.from_date.isoformat()}",
@@ -811,7 +811,7 @@ def overview_agenda(
     from ...application.user_profile import record_to_values
 
     current = _state()
-    as_of_date = _parse_iso_date(as_of, label="--date") if as_of else _date.today()
+    as_of_date = _parse_iso_date(as_of, label="--date") if as_of else today_madrid()
     if horizon_days <= 0:
         raise _bad(
             tr(

@@ -8,9 +8,9 @@ from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage import SensitivityClass
+from ....adapters.persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE, SensitivityClass
 from ....core.errors import ERROR_REGISTRY, build_error_envelope
-from ....core.external_constants import CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE, UTF_8_ENCODING, load_external_constants
+from ....core.external_constants import UTF_8_ENCODING, load_external_constants
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.secure_sql import isolated_runtime_profile
 from .._diagnostics import (
@@ -40,7 +40,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         older = datetime(2026, 5, 19, 8, 0, tzinfo=UTC)
         newer = datetime(2026, 5, 19, 9, 0, tzinfo=UTC)
         repo.save(
-            namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+            namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
             object_key="diag-old",
             classification=SensitivityClass.SESSION,
             schema_version=1,
@@ -57,7 +57,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
             ).encode(UTF_8_ENCODING),
         )
         repo.save(
-            namespace=CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
+            namespace=CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE.namespace,
             object_key="diag-new",
             classification=SensitivityClass.SESSION,
             schema_version=1,
@@ -91,7 +91,6 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
                         "certificate_path_configured": True,
                         "certificate_password_configured": False,
                         "certificate_file_present": False,
-                        "certificate_backend": "playwright_context",
                         "certificate_path_fingerprint": "sha256:certpath",
                     },
                     "html": "<html><body>newer captured page with sensitive form fields</body></html>",
@@ -122,7 +121,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert listed.rows[0].identity_alignment == "mismatch"
         assert listed.rows[0].nie_soporte_configured is True
         assert listed.rows[0].certificate_path_configured is True
-        assert listed.rows[0].certificate_backend == "playwright_context"
+        assert "certificate_backend" not in listed.rows[0].model_dump()
         assert listed.rows[0].url.startswith(
             f"{external.domains.www12.removeprefix('https://')}{external.clave_movil.autentica_dni_nie_contraste_path}",
         )
@@ -141,6 +140,7 @@ def test_auth_diagnostics_list_and_show_redact_page_bodies(
         assert detail.clave_identity_fingerprint == "sha256:clavetax"
         assert detail.nie_soporte_fingerprint == "sha256:support"
         assert detail.certificate_path_fingerprint == "sha256:certpath"
+        assert "certificate_backend" not in detail.model_dump()
         assert detail.operator_report_commands == (
             "aeat config auth diagnostics report diag-new --phone-state app_prompted_and_accepted",
             "aeat config auth diagnostics report diag-new --phone-state app_prompted_not_accepted",

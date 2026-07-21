@@ -15,7 +15,7 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 from ...core.logging import get_logger
 from ...core.resources import bundled_path
-from ...core.time import now
+from ...core.time import now, today_madrid
 
 # Type-only registry references. Runtime callers below import the
 # concrete symbols lazily inside the helpers that use them so importing
@@ -171,7 +171,7 @@ class DeadlineEngine:
                 are registered for ``year`` — the benign data gap callers
                 degrade around.
         """
-        reference_today = today or date.today()
+        reference_today = today or today_madrid()
         _logger.debug("computing schedule year=%d reference_today=%s", year, reference_today)
         obligations: list[ModeloDeadline] = []
         for modelo, revision, window in self._deadline_windows(year):
@@ -267,7 +267,7 @@ class DeadlineEngine:
             modelo: The AEAT modelo identifier to look up.
             year: Optional fiscal year; defaults to the current year.
         """
-        selected_year = year or date.today().year
+        selected_year = year or today_madrid().year
         windows = [
             window
             for code, revision, window in self._deadline_windows(selected_year)
@@ -294,7 +294,7 @@ class DeadlineEngine:
             modelo: The AEAT modelo identifier to check.
             year: Optional fiscal year; defaults to the current year.
         """
-        selected_year = year or date.today().year
+        selected_year = year or today_madrid().year
         return any(
             code == modelo
             and self._schedule_applies(profile, revision, window)
@@ -404,7 +404,7 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
         The earliest non-overdue :class:`ModeloDeadline`, or ``None``
         if no such obligation exists.
     """
-    reference_today = today or date.today()
+    reference_today = today or today_madrid()
     upcoming = [o for o in schedule.obligations if o.closes_on >= reference_today]
     if not upcoming:
         return None

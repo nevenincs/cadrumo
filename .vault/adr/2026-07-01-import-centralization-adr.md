@@ -3,9 +3,11 @@ tags:
   - '#adr'
   - '#import-centralization'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-07-01-import-centralization-research]]'
+  - '[[2026-07-02-import-centralization-audit]]'
+  - '[[2026-07-02-arch-remediation-program-adr]]'
 ---
 
 # `import-centralization` adr: `centralized top-level exports as the sole cross-package import surface` | (**status:** `accepted`)
@@ -36,12 +38,14 @@ requires 149 facade promotions (302 sites) before 400 simple consumer rewrites
    purpose; (iii) treat the reach as a design defect to remove if neither
    fits. An underscore name used by >=2 unrelated production packages -> (i);
    by exactly one narrow caller -> (ii). Decide per-symbol in Wave-1 planning.
-4. FAMILY 2 bridges: a single DOCUMENTED non-`__init__` public re-export module
-   is an acceptable canonical source (keep the 6 documented bridges:
+4. FAMILY 2 bridges: the following six investigated non-`__init__` public
+   modules are explicitly authorized as canonical sources:
    `registry/applicability.py`, `deadlines/taxpayer_model.py`,
    `transactions/_ids.py`, `cli/_schemas.py`,
-   `outbound/aeat/_playwright.py`, `workflow/_utils.py` [add a one-line
-   docstring]); `locales/__main__.py` is an entry-point FALSE POSITIVE (exclude
+   `outbound/aeat/_playwright.py`, and `workflow/_utils.py`. This is a closed,
+   named set, not a general permission to add re-export modules. Each carries
+   a boundary docstring and appears in the exact import-hygiene baseline.
+   `locales/__main__.py` is an entry-point FALSE POSITIVE (exclude
    `__main__.py` from the shim classifier). The one genuine violation
    `application/aggregation/_withholding_observations_repository.py` (real
    282-line M190 percepciones impl) is an English-stem name: RENAME to
@@ -66,8 +70,8 @@ requires 149 facade promotions (302 sites) before 400 simple consumer rewrites
    entry, `core.i18n` sole facade.
 6. DYNAMIC IMPORTS in `core/setup_answers.py`: keep the deferred
    `importlib.import_module` cycle-break technique, but retarget its module
-   strings to PUBLIC facades: `_m()` -> `aeat.domain.deadlines.taxpayer_model`,
-   `_ccaa()` -> `aeat.domain.contribuyente` (drop `._ccaa`). These are
+   strings to PUBLIC facades: `_m()` -> `cadrumo.domain.deadlines.taxpayer_model`,
+   `_ccaa()` -> `cadrumo.domain.contribuyente` (drop `._ccaa`). These are
    ordinary Ruling-1 fixes, not exceptions.
 7. TEST-ONLY (1599 sites): deferred to a dedicated LAST wave after production
    facades stabilize; batch by owning package.
@@ -87,6 +91,16 @@ requires 149 facade promotions (302 sites) before 400 simple consumer rewrites
    production Family-1 wave; test wave last. Every batch:
    `pytest --collect-only -q` clean before commit (relocation atomicity),
    behavior-preserving substitutions only.
+
+### Relationship to the July 2 remediation
+
+The July 2 architecture remediation prohibits generic re-export shims,
+compatibility aliases, and duplicate public authorities. It does not silently
+revoke the six named bridges in Ruling 4: those modules were individually
+investigated and remain the sole public source for their bounded contracts.
+Every other re-export-only module is prohibited unless a later ADR explicitly
+supersedes this closed set. A relocation must move the definition and all
+consumers atomically; it may not introduce a temporary bridge.
 
 ## Rationale
 Grounded in the re-runnable AST scan (`python dev/import_hygiene_scan.py`);

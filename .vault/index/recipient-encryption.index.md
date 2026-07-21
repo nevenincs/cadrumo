@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#recipient-encryption'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-04-recipient-encryption-adr]]'
   - '[[2026-07-04-recipient-encryption-research]]'

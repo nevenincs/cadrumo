@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#multi-row-modelo-declaration'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-12-cli-workflow-redesign-modelo-work-units-adr]]"
   - "[[2026-04-13-modelo-inventory-adr]]"
@@ -44,13 +44,13 @@ round-18 triple-confirmed the pattern.
 
 Add `--row TYPE FIELD=value` as a repeatable option on `work calculate`. Each
 `--row` invocation supplies one record of the given `TYPE`. The CLI parser
-`_parse_row_spec` in `src/aeat/entrypoints/cli/_modelo.py` dispatches to the
+`_parse_row_spec` in `src/cadrumo/entrypoints/cli/_modelo.py` dispatches to the
 appropriate pydantic row model based on `TYPE`.
 
 ### D2.2 — Introduce `ModeloDetailRow` strict pydantic discriminated union
 
 Add `ModeloDetailRow` as a `Annotated[..., Discriminator("row_type")]`
-union in `src/aeat/domain/modelos/_row_models.py` with members:
+union in `src/cadrumo/domain/modelos/_row_models.py` with members:
 - `Modelo184MemberRow` — fields: `row_type="miembro"`, `nif`, `share:
   Decimal` (0–100), `importe: Decimal`.
 - `Modelo232VinculadaRow` — fields: `row_type="vinculada"`, `nif`,
@@ -116,7 +116,7 @@ implementation cost across the four modelos.
 
 ## D5 — Consequences
 
-- `src/aeat/domain/modelos/_row_models.py` is the canonical definition point
+- `src/cadrumo/domain/modelos/_row_models.py` is the canonical definition point
   for all row types. The CLI `_modelo.py` imports from it for parsing and
   validation.
 - All four modelos (M184, M232, M349, M347) are unblocked in the CLI `work

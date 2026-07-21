@@ -42,7 +42,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
 from ...core import M210_TIPO_RENTA_CODE_PROJECTION, M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, M210PayerMode
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.identity import nif_iva_format_for_country
 
 # ---------------------------------------------------------------------------
@@ -266,7 +266,7 @@ _M349_SERVICE_CLAVES = frozenset({"S", "I"})
 _M349_2021_FIRST_PERIODS = frozenset({"01", "1M", "1T"})
 
 
-class Modelo349CountryPrefixContextError(AeatError, ValueError):
+class Modelo349CountryPrefixContextError(CadrumoError, ValueError):
     """A Modelo 349 country prefix is invalid for the filing context."""
 
     def __init__(
@@ -696,7 +696,7 @@ class Modelo210AgrupacionRentaRow(BaseModel):
         return self
 
 
-class Modelo210AgrupacionRentaRowsError(ValueError):
+class Modelo210AgrupacionRentaRowsError(CadrumoError, ValueError):
     """A Modelo 210 annual grouped-renta set violates Article 2 compatibility."""
 
     def __init__(self, *, reason: str, detail: str) -> None:
@@ -798,7 +798,7 @@ ModeloDetailRow = (
 # ---------------------------------------------------------------------------
 
 
-class Modelo347ThresholdError(AeatError, ValueError):
+class Modelo347ThresholdError(CadrumoError, ValueError):
     """A Modelo 347 contraparte row falls at or below the declarability threshold."""
 
     def __init__(self, *, nif: str, total: Decimal) -> None:
@@ -810,7 +810,7 @@ class Modelo347ThresholdError(AeatError, ValueError):
         )
 
 
-class Modelo184ShareSumError(AeatError, ValueError):
+class Modelo184ShareSumError(CadrumoError, ValueError):
     """Modelo 184 member share percentages do not sum to exactly 100%."""
 
     def __init__(self, *, total: Decimal, count: int) -> None:

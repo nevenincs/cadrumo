@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#registry-casilla-identity'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-20-registry-casilla-identity-P01-S01]]'
   - '[[2026-05-20-registry-casilla-identity-P01-S02]]'

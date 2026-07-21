@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#exception-restructure'
 date: '2026-05-09'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-09-exception-restructure-research]]"
   - "[[2026-06-01-semantic-cluster-hardening-plan]]"
 ---
 
-# `exception-restructure` adr: every domain error roots at AeatError via `_errors.py` convention | (**status:** `accepted`)
+# `exception-restructure` adr: every domain error roots at CadrumoError via `_errors.py` convention | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -24,7 +24,7 @@ trying to locate the error surface of a domain package, and it
 encodes an implicit signal that `errors.py` is part of the public
 API while `_errors.py` is internal — a distinction the codebase
 never actually relied on. A separate concern: the
-`src/aeat/domain/_errors.py` module defines `DomainError` as a base
+`src/cadrumo/domain/_errors.py` module defines `DomainError` as a base
 class with exactly one subclass (`DomainValidationError`) and no
 direct usage anywhere in the tree. The class is a vestige of an
 abandoned hierarchy plan.
@@ -33,7 +33,7 @@ abandoned hierarchy plan.
 
 Two conventions were weighed: rename every `errors.py` to
 `_errors.py` for uniformity (the underscore-prefix convention used
-elsewhere in `src/aeat`), or rename every `_errors.py` to
+elsewhere in `src/cadrumo`), or rename every `_errors.py` to
 `errors.py` for "public-friendly" naming. The former is consistent
 with the project's package-private file convention (every other
 helper module uses an underscore prefix) and with the central error
@@ -43,7 +43,7 @@ structural value.
 
 For `DomainError`: three outcomes were considered. Delete it
 outright (would orphan `DomainValidationError`'s inheritance chain);
-re-parent `DomainValidationError` directly to `AeatError, ValueError`
+re-parent `DomainValidationError` directly to `CadrumoError, ValueError`
 (eliminates the intermediate class without losing functionality);
 keep it as a "future hierarchy hook" (canonical metastate per
 `metastate-zero-tolerance-adr` — rejected).
@@ -66,28 +66,28 @@ Four atomic file renames, one commit per package, each combining
 the canonical-site rename + every consumer update + the registry
 path-string update:
 
-- `src/aeat/domain/renta/errors.py` → `_errors.py`. Consumers:
+- `src/cadrumo/domain/renta/errors.py` → `_errors.py`. Consumers:
   `renta/_maritime_exemption.py`, `renta/_ledger_expenses.py`,
   `renta/test_maritime_exemption.py`,
   `application/calculations/test_maritime_exemption_service.py`,
   registry entries at `core/errors/registry/_domain.py` lines 1030,
   1041, 1618, 1629.
-- `src/aeat/domain/iva/errors.py` → `_errors.py`. Larger consumer
+- `src/cadrumo/domain/iva/errors.py` → `_errors.py`. Larger consumer
   surface across the iva package internals plus
   `iva/test_prorrata.py` and 14 registry entries.
-- `src/aeat/domain/normatives/errors.py` → `_errors.py`. Consumers:
+- `src/cadrumo/domain/normatives/errors.py` → `_errors.py`. Consumers:
   `normatives/__init__.py`, `_lookup.py`, `_loader.py`,
   `_verify.py`, `_schema.py`, `core/resources/_repos/test_normatives.py`,
   registry entries at `_domain.py` lines 788, 799, 810, 1695.
-- `src/aeat/domain/manuals/errors.py` → `_errors.py`. Consumers:
+- `src/cadrumo/domain/manuals/errors.py` → `_errors.py`. Consumers:
   `manuals/__init__.py`, `_verify.py`, `_schema.py`, `_rule_id.py`,
   `_loader.py`, `_fetch.py`, `test_verify.py`, `test_schema.py`,
   `test_loader.py`, `test_fetch.py`,
   `core/resources/_repos/test_manuals.py`, six registry entries.
 
 `DomainError` is re-parented out: `DomainValidationError` becomes a
-direct subclass of `AeatError, ValueError` in
-`src/aeat/domain/_errors.py`; the unused `DomainError` class is
+direct subclass of `CadrumoError, ValueError` in
+`src/cadrumo/domain/_errors.py`; the unused `DomainError` class is
 deleted from both the module and from the registry
 (`core/errors/registry/_domain.py` line 1332). The deletion lands in
 its own commit per the audit's separation request.

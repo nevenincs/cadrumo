@@ -70,9 +70,9 @@ _IBAN_VALUE = "ES9121000418450200051332"
 # inequality. The values model a non-SEPA (Resto Países) refund account
 # so the full foreign-bank block is exercised.
 #
-# ``sepa_marca`` is intentionally NOT a persisted operator fact: per the
-# decision record it is DERIVED at export from the account country (España / UE SEPA
-# / Resto Países), not entered or stored. Its schema field carries only
+# ``sepa_marca`` is intentionally NOT a persisted operator fact: it is
+# DERIVED at export from the account country (España / UE SEPA /
+# Resto Países), not entered or stored. Its schema field carries only
 # the DID export-header mapping the P02 composer writes into. Persisting
 # it here is therefore out of scope; the stored set is the genuine
 # operator-supplied refund-account data.
@@ -97,7 +97,7 @@ def _populated_record() -> UserProfileRecord:
     created = datetime(2024, 2, 1, 8, 30, 0, tzinfo=UTC)
     updated = datetime(2024, 7, 9, 11, 15, 42, tzinfo=UTC)
     return UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=2,
         profile_id=_PROFILE_UUID,
         display_name="IVA refund operator (cuenta-devolución roundtrip)",

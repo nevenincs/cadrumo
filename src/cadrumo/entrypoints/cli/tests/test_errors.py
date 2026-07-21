@@ -13,7 +13,7 @@ See Also:
     :mod:`~entrypoints.cli._errors`
         Shared CLI error-emission boundary that owns callback wrapping,
         memoisation, and typed stderr emission.
-    :class:`~core.errors.AeatError`
+    :class:`~core.errors.CadrumoError`
         Central typed error base forwarded through the command boundary.
 
 Every CLI callback must pass through the central error boundary and its

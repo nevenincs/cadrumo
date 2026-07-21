@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#docs-lifecycle-tutorials'
 date: '2026-07-13'
-modified: '2026-07-13'
+modified: '2026-07-15'
 tier: L2
 related:
   - '[[2026-07-13-docs-lifecycle-tutorials-adr]]'
@@ -54,7 +54,7 @@ Regroup the how-to index and landing grid on the filing-year axes, pass the conf
 - [x] `P05.S16` - Run the documented-command conformance gate and the Sphinx nitpicky build gate; `fix every failure the campaign's edits caused; `docs src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py dev/docs/tests/test_docs_build.py`.
 - [x] `P05.S17` - Run the mandated fresh-context campaign-close honesty review; `persist it as a vault audit and open follow-up steps for every surfaced item; `.vault/audit`.
 - [x] `P05.S18` - Retire the three stray project-management files from the docs root (ADRS.md, USERDOCS-KICKOFF-BRIEF.md, HARNESS-USERDOCS-KICKOFF-BRIEF.md) per docs-architecture ADR clause 3a; `docs/ADRS.md docs/USERDOCS-KICKOFF-BRIEF.md docs/HARNESS-USERDOCS-KICKOFF-BRIEF.md`.
-- [ ] `P05.S19` - Replay both lifecycle tutorials end-to-end against a sandbox profile and reconcile the narrated figures with real command output; `docs/tutorials/irpf-lifecycle.md docs/tutorials/iva-lifecycle.md`.
+- [x] `P05.S19` - Replay both lifecycle tutorials end-to-end against a sandbox profile and reconcile the narrated figures with real command output; `docs/tutorials/irpf-lifecycle.md docs/tutorials/iva-lifecycle.md`.
 
 ## Description
 

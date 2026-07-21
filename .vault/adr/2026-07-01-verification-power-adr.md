@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#verification-power'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-07-01-verification-power-research]]'
   - '[[2026-07-01-verification-reconcile-when-present-adr]]'

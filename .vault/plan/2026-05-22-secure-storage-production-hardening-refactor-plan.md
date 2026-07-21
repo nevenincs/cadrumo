@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#secure-storage-production-hardening'
 date: '2026-05-22'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
@@ -28,6 +28,8 @@ related:
   - '[[2026-05-26-secure-storage-migration-review-audit]]'
   - '[[2026-05-26-secure-storage-convention-regrounding-audit]]'
   - '[[2026-05-26-securestorage-repair-policy-adr-coverage-audit]]'
+  - '[[2026-05-28-secure-storage-production-hardening-w05-p09-s40-research]]'
+  - '[[2026-06-10-cli-operator-surface-adr]]'
 ---
 
 Retired steps: `S422`, `S423`.
@@ -1093,13 +1095,13 @@ Adopt the remaining W16 observation-pool work that is still real after the broad
 
 Close the oldest custody and passphrase observations with current command-surface evidence and centralized redaction behavior.
 
-- [x] `W20.P40.S451` - Verify recovery lock unlock rekey recover show-recovery and verify-recovery command/API exposure against the accepted custody architecture and add missing owner rows for absent accepted operations; `src/aeat/entrypoints/cli/_config; src/aeat/adapters/persistence/storage/master_key`.
+- [x] `W20.P40.S451` - Verify recovery lock switch rekey recover show-recovery and verify-recovery command/API exposure against the accepted current operator architecture and add missing owner rows for absent operations; `src/aeat/entrypoints/cli/_config; src/aeat/adapters/persistence/storage/master_key`.
 - [x] `W20.P40.S452` - Harden passphrase environment bootstrap and central redaction handling so passphrase material is one-shot where feasible, logs/prints stay centrally redacted, and remaining env-based custody tests have explicit Settings-backed justification; `src/aeat/core; src/aeat/adapters/persistence/storage/master_key; src/aeat/entrypoints/cli`.
-- [x] `W20.P40.S457` - Implement first-class config custody verbs for lock unlock rekey recover show-recovery and verify-recovery using the accepted recovery facade and bucket session lifecycle; `src/aeat/entrypoints/cli/_config; src/aeat/adapters/persistence/storage/master_key; src/aeat/locales`.
-- [x] `W20.P40.S458` - Replace stale custody and recovery guidance with canonical config custody verbs and locale-backed recovery copy; `src/aeat/adapters/persistence/storage/master_key; src/aeat/adapters/persistence/storage/runtime.py; src/aeat/core/errors/registry; src/aeat/locales`.
-- [x] `W20.P40.S459` - Implement and localize the first-class `config lock` and `config unlock` custody aliases through the existing profile lifecycle session path, with real CLI coverage; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales`.
-- [x] `W20.P40.S460` - Close post-S458 stale guidance drift by routing runtime, diagnostics, operator help, repair next actions, registry suggestions, and locale recovery copy to canonical `config unlock` and `config recover` verbs; `src/aeat/adapters/persistence/storage; src/aeat/application; src/aeat/entrypoints/cli; src/aeat/core/errors/registry; src/aeat/locales`.
-- [x] `W20.P40.S461` - Decide and implement the `config profile switch` compatibility contract after `config unlock` adoption: either retire the command surface with migration coverage or keep it as an explicit compatibility alias hidden from recovery guidance; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales; .vault/adr`.
+- [x] `W20.P40.S457` - Implement first-class config custody verbs for lock switch rekey recover show-recovery and verify-recovery using the accepted recovery facade and bucket session lifecycle; `src/aeat/entrypoints/cli/_config; src/aeat/adapters/persistence/storage/master_key; src/aeat/locales`.
+- [x] `W20.P40.S458` - Replace stale custody and recovery guidance with canonical config switch and locale-backed recovery copy; `src/aeat/adapters/persistence/storage/master_key; src/aeat/adapters/persistence/storage/runtime.py; src/aeat/core/errors/registry; src/aeat/locales`.
+- [x] `W20.P40.S459` - Implement and localize the first-class config lock and config switch custody verbs through the existing profile lifecycle session path with real CLI coverage; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales`.
+- [x] `W20.P40.S460` - Close post-S458 stale guidance drift by routing runtime diagnostics operator help repair next actions registry suggestions and locale recovery copy to canonical config switch and config recover verbs; `src/aeat/adapters/persistence/storage; src/aeat/application; src/aeat/entrypoints/cli; src/aeat/core/errors/registry; src/aeat/locales`.
+- [x] `W20.P40.S461` - Record the D1 hard replacement of config unlock with config switch and enforce the no-alias compatibility contract; `src/aeat/entrypoints/cli/_config; src/aeat/entrypoints/cli/tests; src/aeat/locales; .vault/adr`.
 
 ### Phase `W20.P41` - convention and provenance privacy follow-up
 
@@ -1124,3 +1126,56 @@ Track current-tree CLI startup blockers discovered while exhausting secure-stora
 Resolve command startup registration failures that prevent real CLI verification from reaching modelo and secure-storage paths.
 
 - [x] `W21.P43.S462` - Root-cause and repair wizard catalogue registration during CLI startup so real modelo command verification reaches application paths instead of failing with INTERNAL startup errors; `src/aeat/entrypoints/cli; src/aeat/application/wizard; src/aeat/core/wizard_catalogue; src/aeat/entrypoints/cli/tests`.
+
+## Wave `W22` - passkey custody and traceability completion
+
+Reconcile the current D1 `config switch` command contract and settle every missing execution record before secure-storage hardening is considered fully built. This Wave preserves code-led profile lifecycle architecture and removes stale `config unlock` claims.
+
+### Phase `W22.P44` - canonical switch contract reconciliation
+
+Confirm `config switch` is the canonical D1 custody command, eliminate stale `config unlock` claims from planning, audits, locales, and tests, and preserve first-class real CLI coverage.
+
+- [x] `W22.P44.S463` - Reconcile W20 custody rows with the D1 `config switch` contract; `.vault/plan`.
+- [x] `W22.P44.S464` - Correct stale `config unlock` claims in secure-storage rollout and review audits; `.vault/audit`.
+- [x] `W22.P44.S465` - Assert `config switch` is mounted and `config unlock` is absent; `src/aeat/application/operator_surface/tests/test_contract.py`.
+- [x] `W22.P44.S466` - Verify real-entrypoint `config unlock` refusal and `config switch` activation; `src/aeat/entrypoints/cli/tests/test_profile_lifecycle_verbs.py`.
+- [x] `W22.P44.S467` - Audit and correct custody recovery guidance to name `config switch` only; `src/aeat/locales`.
+- [x] `W22.P44.S468` - Verify user guidance names the D1 profile-switch command; `docs/how-to`.
+
+### Phase `W22.P45` - execution evidence settlement
+
+Resolve each completed row that lacks a matching execution record by reconstructing primary evidence or returning the claim to active implementation; no evidence debt remains hidden behind a checked box.
+
+- [x] `W22.P45.S469` - Reconstruct or reopen evidence for W07.P13.S54 before plan closure; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py`.
+- [x] `W22.P45.S470` - Reconstruct or reopen evidence for W07.P14.S56 before plan closure; `src/aeat/tests`.
+- [x] `W22.P45.S471` - Reconstruct or reopen evidence for W07.P14.S57 before plan closure; `src/aeat/adapters/persistence/storage/test_ephemeral_key_hygiene.py`.
+- [x] `W22.P45.S472` - Reconstruct or reopen evidence for W07.P14.S58 before plan closure; `src/aeat/tests/secure_sql.py`.
+- [x] `W22.P45.S473` - Reconstruct or reopen evidence for W12.P26.S124 before plan closure; `src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py`.
+- [x] `W22.P45.S474` - Reconstruct or reopen evidence for W12.P26.S125 before plan closure; `src/aeat/adapters/outbound/aeat/sede/_observation_store.py`.
+- [x] `W22.P45.S475` - Reconstruct or reopen evidence for W12.P26.S126 before plan closure; `src/aeat/adapters/outbound/aeat/sede/_parse.py`.
+- [x] `W22.P45.S476` - Reconstruct or reopen evidence for W12.P26.S127 before plan closure; `src/aeat/adapters/outbound/aeat/sede/_renta_web_open_safety.py`.
+- [x] `W22.P45.S477` - Reconstruct or reopen evidence for W12.P26.S128 before plan closure; `src/aeat/adapters/outbound/aeat/verify/__init__.py`.
+- [x] `W22.P45.S478` - Reconstruct or reopen evidence for W12.P26.S303 before plan closure; `src/aeat/core/observability/_errors.py`.
+- [x] `W22.P45.S479` - Reconstruct or reopen evidence for W12.P26.S304 before plan closure; `src/aeat/core/observability/_fingerprint.py`.
+- [x] `W22.P45.S480` - Reconstruct or reopen evidence for W12.P26.S307 before plan closure; `src/aeat/core/observability/_sink.py`.
+- [x] `W22.P45.S481` - Reconstruct or reopen evidence for W12.P26.S334 before plan closure; `src/aeat/domain/categories/_registry.py`.
+- [x] `W22.P45.S482` - Reconstruct or reopen evidence for W12.P26.S335 before plan closure; `src/aeat/domain/deadlines/_engine.py`.
+- [x] `W22.P45.S483` - Reconstruct or reopen evidence for W12.P26.S336 before plan closure; `src/aeat/domain/deadlines/_festivos.py`.
+- [x] `W22.P45.S484` - Reconstruct or reopen evidence for W12.P26.S337 before plan closure; `src/aeat/domain/deadlines/_recargo.py`.
+- [x] `W22.P45.S485` - Reconstruct or reopen evidence for W12.P26.S341 before plan closure; `src/aeat/domain/fincas/_imputacion_parameters.py`.
+- [x] `W22.P45.S486` - Reconstruct or reopen evidence for W12.P26.S344 before plan closure; `src/aeat/domain/iva/_catalogue.py`.
+- [x] `W22.P45.S487` - Reconstruct or reopen evidence for W12.P26.S345 before plan closure; `src/aeat/domain/iva/_rates.py`.
+- [x] `W22.P45.S488` - Reconstruct or reopen evidence for W12.P26.S346 before plan closure; `src/aeat/domain/iva/_recargo_equivalencia.py`.
+- [x] `W22.P45.S489` - Reconstruct or reopen evidence for W12.P26.S349 before plan closure; `src/aeat/domain/manuals/_fetch.py`.
+- [x] `W22.P45.S490` - Reconstruct or reopen evidence for W12.P26.S350 before plan closure; `src/aeat/domain/manuals/_loader.py`.
+- [x] `W22.P45.S491` - Reconstruct or reopen evidence for W12.P26.S351 before plan closure; `src/aeat/domain/manuals/_verify.py`.
+- [x] `W22.P45.S492` - Reconstruct or reopen evidence for W12.P26.S352 before plan closure; `src/aeat/domain/manuals/errors.py`.
+- [x] `W22.P45.S493` - Reconstruct or reopen evidence for W12.P26.S360 before plan closure; `src/aeat/domain/normatives/_loader.py`.
+- [x] `W22.P45.S494` - Reconstruct or reopen evidence for W20.P40.S461 before plan closure; `src/aeat/entrypoints/cli/_config`.
+
+### Phase `W22.P46` - no-deferral closure audit
+
+Prove the repaired custody surface and execution ledger are complete before this successor plan can return to a closed state.
+
+- [x] `W22.P46.S495` - Require zero missing execution identifiers before closing the successor plan; `.vault/plan`.
+- [x] `W22.P46.S496` - Publish the no-deferral closure audit after real custody and traceability gates pass; `.vault/audit`.

@@ -1,14 +1,15 @@
 ---
 tags:
   - '#plan'
-  - '#mcp-hardening-conformance'
+  - '#mcp-protocol-hardening'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-07-08-mcp-console-review-audit]]'
   - '[[2026-07-08-mcp-protocol-hardening-adr]]'
   - '[[2026-07-08-mcp-progressive-discovery-adr]]'
+  - '[[2026-07-08-mcp-protocol-hardening-research]]'
 ---
 
 # `mcp-hardening-conformance` plan

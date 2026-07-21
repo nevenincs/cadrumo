@@ -11,4 +11,4 @@
 modelo = "390"
 renta_years = [2025, 2026]
 evidence_class = "reconciliation"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py"

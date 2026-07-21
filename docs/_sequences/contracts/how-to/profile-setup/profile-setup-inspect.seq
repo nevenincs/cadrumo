@@ -1,0 +1,9 @@
+@step Show the active profile's readiness summary.
+aeat config profile status
+@step Show the stored facts in full.
+aeat config profile show
+@step Validate the facts against the schema.
+aeat config profile validate
+@result aeat --format json config profile preflight --modelo 303 --filing-year 2026 --period 1T
+@expect result.ready == true
+@expect exit_code == 0

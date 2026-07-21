@@ -26,12 +26,15 @@ from __future__ import annotations
 
 import logging
 import logging.config
+import logging.handlers
 import re
 import sys
 from collections.abc import Mapping
 from contextvars import ContextVar
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, overload, override
+
+from pydantic import ConfigDict, RootModel
 
 if TYPE_CHECKING:
     from .observability import RunContextInfo
@@ -68,6 +71,37 @@ SCRUB_FIELD_PATTERNS: tuple[str, ...] = (
     "tax_id",
     "token",
 )
+
+
+LogExtraValue = str | int | float | bool | None
+"""Closed union of stdlib-loggable scalar types accepted by :class:`LogExtra`."""
+
+
+class LogExtra(RootModel[dict[str, LogExtraValue]]):
+    """Typed logging ``extra`` payload restricted to flat loggable scalars.
+
+    Upgrades the historical ``Mapping[str, object]`` return annotation on
+    service-layer ``as_extra()`` log-field helpers (e.g.
+    :class:`~cadrumo.application.aggregation.PerModeloAggregationLogFields`,
+    :class:`~cadrumo.application.operator_surface.OperatorSurfaceContract`'s
+    ``log_fields``): every current emitter only ever writes flat, non-secret
+    scalars into :meth:`logging.Logger.debug`'s ``extra=`` mapping, so
+    accepting bare ``object`` values understated the real contract. A future
+    field that accidentally carried a nested mapping, a Decimal, or another
+    non-serialisable value now fails loudly at construction with a
+    :class:`pydantic.ValidationError` naming the offending field, instead of
+    surfacing later as a JSONL-sink serialisation surprise.
+
+    Use :meth:`for_logging` to materialise the plain ``dict`` the stdlib
+    ``logging`` module's ``extra=`` parameter expects; the model itself is not
+    iterable the way :meth:`logging.Logger.makeRecord` requires.
+    """
+
+    model_config = ConfigDict(frozen=True)
+
+    def for_logging(self) -> dict[str, LogExtraValue]:
+        """Return the payload as the plain ``dict`` ``logging`` extras expect."""
+        return dict(self.root)
 
 
 def _is_cli_metadata_invocation() -> bool:
@@ -413,8 +447,10 @@ def configure_logging() -> None:
         configured_handlers["file"] = {
             "level": settings.cadrumo_log_file_level,
             "formatter": "standard",
-            "class": "logging.FileHandler",
+            "class": "logging.handlers.RotatingFileHandler",
             "filename": str(log_file),
+            "maxBytes": settings.cadrumo_log_file_max_bytes,
+            "backupCount": settings.cadrumo_log_file_backup_count,
             "encoding": "utf-8",
             "filters": ["drop_run_event"],
         }

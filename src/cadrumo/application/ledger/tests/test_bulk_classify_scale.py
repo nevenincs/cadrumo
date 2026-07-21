@@ -12,18 +12,17 @@ O(n)-save regression ever returns.
 
 from __future__ import annotations
 
+import logging
 import time
 from collections.abc import Iterator
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import override
 
 import pytest
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRepository, SecureObjectWrite
 from ....domain.transactions import (
     BusinessClassification,
     RawProvenance,
@@ -40,23 +39,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _ROW_COUNT = 270
 _BUCKET_ID = "18181818-1818-4818-8818-181818181818"
-
-
-class _CountingTxRepo(TransactionCatalogueRepository):
-    """Real repository that counts the single atomic catalogue persist."""
-
-    def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
-        super().__init__(bucket_id=bucket_id, objects=objects)
-        self.save_calls = 0
-
-    @override
-    def save_with_secure_object_writes(
-        self,
-        catalogue: TransactionCatalogue,
-        extra_writes: tuple[SecureObjectWrite, ...],
-    ) -> None:
-        self.save_calls += 1
-        return super().save_with_secure_object_writes(catalogue, extra_writes)
 
 
 def _raw(idx: int) -> RawTransaction:
@@ -98,7 +80,10 @@ def profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
         yield profile
 
 
-def test_bulk_classify_270_rows_persists_catalogue_once(profile: TestRuntimeProfile) -> None:
+def test_bulk_classify_270_rows_persists_catalogue_once(
+    profile: TestRuntimeProfile,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
     objects = profile.repository
     bucket_id = profile.bucket_id
 
@@ -110,17 +95,19 @@ def test_bulk_classify_270_rows_persists_catalogue_once(profile: TestRuntimeProf
     lines += [f"{txn.transaction_id},BUSINESS,material_oficina" for txn in transactions]
     csv_text = "\n".join(lines) + "\n"
 
-    counting_repo = _CountingTxRepo(bucket_id=bucket_id, objects=objects)
+    transaction_repo = TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects)
     event_repo = BucketEventHistoryRepository(objects=objects)
 
-    start = time.perf_counter()
-    result = bulk_classify_from_csv(
-        bucket_id=bucket_id,
-        csv_text=csv_text,
-        actor="operator",
-        transaction_repository=counting_repo,
-        bucket_event_repository=event_repo,
-    )
+    caplog.clear()
+    with caplog.at_level(logging.INFO, logger="cadrumo.adapters.persistence.profile.transactions"):
+        start = time.perf_counter()
+        result = bulk_classify_from_csv(
+            bucket_id=bucket_id,
+            csv_text=csv_text,
+            actor="operator",
+            transaction_repository=transaction_repo,
+            bucket_event_repository=event_repo,
+        )
     elapsed = time.perf_counter() - start
 
     # Every row applied, none failed.
@@ -128,9 +115,14 @@ def test_bulk_classify_270_rows_persists_catalogue_once(profile: TestRuntimeProf
     assert result.failures == ()
     assert result.skipped == 0
 
-    # The load-once/save-once contract: one atomic catalogue persist for the
-    # whole batch, NOT one per row.
-    assert counting_repo.save_calls == 1, counting_repo.save_calls
+    atomic_save_events = [
+        record
+        for record in caplog.records
+        if record.name == "cadrumo.adapters.persistence.profile.transactions"
+        and record.getMessage().startswith("saved transaction catalogue")
+    ]
+    assert len(atomic_save_events) == 1
+    assert f"entries={_ROW_COUNT}" in atomic_save_events[0].getMessage()
 
     # Smoke ceiling: a single save keeps a 270-row batch well under the prior
     # ~400s O(n) regression. Generous to absorb CI variance.

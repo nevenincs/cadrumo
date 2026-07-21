@@ -13,6 +13,7 @@ See Also:
 
 from __future__ import annotations
 
+import logging
 import subprocess
 import sys
 from pathlib import Path
@@ -28,6 +29,7 @@ def test_posix_file_permission_failures_are_logged(caplog: pytest.LogCaptureFixt
     """The helper must leave a debug breadcrumb when POSIX chmod fails."""
 
     missing_path = tmp_path / "missing-auth-state.json"
+    caplog.set_level(logging.DEBUG, logger=_restrict_posix_file_permissions.__module__)
 
     _restrict_posix_file_permissions(missing_path)
 

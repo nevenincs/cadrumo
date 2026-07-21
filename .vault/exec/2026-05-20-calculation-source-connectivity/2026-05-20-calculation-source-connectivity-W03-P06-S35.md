@@ -3,13 +3,20 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S35'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"
 ---
 
-# Represent region scoped category profiles in registry resources
+# [RETIRED] Represent region scoped category profiles in registry resources
+
+## Reconciliation outcome
+
+Retired on 2026-07-17. This step deliberately created no registry enrollment;
+keeping code for that empty layer violated the no-dormant-resolver rule. RIC
+and Ceuta/Melilla continue through their dedicated legal mechanisms. The
+material below is historical execution evidence, not current architecture.
 
 ## Scope
 

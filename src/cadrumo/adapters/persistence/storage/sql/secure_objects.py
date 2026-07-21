@@ -10,7 +10,7 @@ from sqlalchemy import Engine, bindparam, delete, inspect, select, text, update
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from .....core import DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
+from .....core import ABSENT_SECURE_OBJECT_REVISION_ID, DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
 from .....core.classification import SensitivityClass
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
@@ -21,7 +21,7 @@ from .._namespace_registry import (
     StorageHierarchyRegistry,
     is_former_product_namespace,
 )
-from .._schema_lineage import ensure_schema_version_readable
+from .._schema_version import ensure_schema_version_supported
 from ..crypto import (
     encrypt_secure_object_payload,
     secure_object_key_digest,
@@ -207,7 +207,7 @@ class SecureObjectRepository:
     ) -> None:
         if definition is None or schema_version == definition.schema_version:
             return
-        ensure_schema_version_readable(
+        ensure_schema_version_supported(
             namespace=namespace,
             schema_version=schema_version,
             current_version=definition.schema_version,
@@ -425,12 +425,17 @@ class SecureObjectRepository:
 
         This method answers a strictly crypto-layer question -- can the
         ``payload`` ciphertext be unwrapped under the current master key
-        -- and intentionally bypasses the classification and
-        schema-version contracts that consumer reads enforce. Used by
-        ``aeat config repair`` to surface namespaces holding rows from a
-        prior keychain master-key generation.
+        -- and intentionally bypasses the classification, schema-version,
+        and namespace-registration contracts that consumer reads enforce.
+        It probes over whatever namespaces are physically present in the
+        table (as surfaced by :meth:`list_namespaces`), including orphan,
+        legacy, and unregistered ones -- those are precisely the rows a
+        repair diagnostic exists to find -- so it runs the session /
+        route freshness check but not the namespace-registration check.
+        Used by ``aeat config repair`` to surface namespaces holding rows
+        from a prior keychain master-key generation.
         """
-        self._check_session_freshness(namespace)
+        self._check_session_freshness()
         return _probe_namespace_integrity(self._engine, namespace, logger=_log)
 
     def iter_namespace_decryptability(self, namespace: str) -> Iterator[SecureObjectDecryptabilityRow]:
@@ -439,9 +444,12 @@ class SecureObjectRepository:
         This is the row-level companion to :meth:`probe_namespace_integrity`.
         It decrypts only to validate the AEAD tag, never returns plaintext, and
         exposes the HMAC lookup digest plus storage metadata needed by repair
-        diagnostics.
+        diagnostics. Like its namespace-level companion it is a crypto-layer
+        probe over whatever namespaces are physically present, so it runs the
+        session / route freshness check but not the namespace-registration
+        check.
         """
-        self._check_session_freshness(namespace)
+        self._check_session_freshness()
         yield from _iter_namespace_decryptability(self._engine, namespace)
 
     def list_keys(self, namespace: str) -> tuple[str, ...]:
@@ -482,9 +490,8 @@ class SecureObjectRepository:
             expected_class: The
                 :class:`~adapters.persistence.storage.SensitivityClass`
                 all rows in this namespace must carry.
-            max_supported_version: The consumer's current ``schema_version``
-                ceiling; a row above it, or below it without a complete
-                registered upgrade chain, is treated as unreadable.
+            max_supported_version: The consumer's current ``schema_version``;
+                any differing row version is treated as unreadable.
         """
         records: list[SecureObjectRecord] = []
         for item in self.iter_records_with_failures(
@@ -627,9 +634,8 @@ class SecureObjectRepository:
                 all rows in this namespace must carry; rows with a differing
                 classification are yielded as
                 :class:`~adapters.persistence.storage.SecureObjectUnreadable`.
-            max_supported_version: The consumer's current ``schema_version``
-                ceiling. Rows above it, or below it without a complete
-                registered upgrade chain, are yielded
+            max_supported_version: The consumer's current ``schema_version``.
+                Rows carrying any other version are yielded
                 as :class:`~adapters.persistence.storage.SecureObjectUnreadable`.
             batch_size: SQLAlchemy ``yield_per`` chunk size for the raw row
                 scan. The default keeps memory bounded for large namespaces
@@ -1033,7 +1039,7 @@ class SecureObjectRepository:
             # column is now AEAD wire bytes, so there is no plaintext to fall back
             # on (and hashing the ciphertext would be meaningless).
             previous_payload_hash = previous_metadata.payload_hash
-        elif expected_revision_id is not None:
+        elif expected_revision_id is not None and expected_revision_id != ABSENT_SECURE_OBJECT_REVISION_ID:
             raise self._revision_conflict(
                 namespace=namespace,
                 expected_revision_id=expected_revision_id,
@@ -1106,6 +1112,12 @@ class SecureObjectRepository:
             )
             session.flush()
         except IntegrityError as exc:
+            if expected_revision_id is not None and expected_revision_id == ABSENT_SECURE_OBJECT_REVISION_ID:
+                raise self._revision_conflict(
+                    namespace=namespace,
+                    expected_revision_id=expected_revision_id,
+                    current_revision_id=None,
+                ) from exc
             raise RepositoryError(
                 context={
                     "namespace": namespace,

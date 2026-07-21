@@ -1,7 +1,7 @@
 """Strict search-record schema for the compiled docs search index.
 
-Per ADR D4 the compiled index unifies four record kinds (concept cards,
-casilla projections, CLI surface records, doc pages). This module owns
+The compiled index unifies four record kinds (concept cards, casilla
+projections, CLI surface records, doc pages). This module owns
 the shared base every kind extends -- a strict, frozen pydantic model
 carrying the ``kind`` discriminator, the four-language localised
 descriptions, and the legal grounding -- plus the casilla projection
@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry import CasillaId
 
 __all__ = [
     "CasillaSearchRecord",
+    "ResultDisplayClass",
     "SearchRecordBase",
     "SearchRecordKind",
 ]
@@ -34,12 +35,34 @@ _STRICT_FROZEN = ConfigDict(strict=True, frozen=True, extra="forbid")
 
 
 class SearchRecordKind(StrEnum):
-    """The four record kinds the compiled search index unifies (ADR D4)."""
+    """The four record kinds the compiled search index unifies."""
 
     CONCEPT = "concept"
     CASILLA = "casilla"
     CLI = "cli"
     PAGE = "page"
+
+
+class ResultDisplayClass(StrEnum):
+    """The closed visual/ranking display class a search result carries.
+
+    Orthogonal to :class:`SearchRecordKind`: the record kind is the producing
+    surface, whereas the display class is the operator-facing categorisation
+    that drives both the result icon and the user-first ranking ladder (ADR
+    ``2026-07-15-docs-terminology-search-adr`` D7/D8). A CONCEPT record splits
+    across two classes by its Handbook domain -- a modelo-domain card is a
+    ``MODELO`` document, a general-fact card is a ``DOC`` -- and full-text page
+    hits split by path (``cli/`` -> ``CLI``, ``api/`` and dev machinery ->
+    ``TECHNICAL``, everything else user-facing -> ``DOC``). Derived once at the
+    injection seam and shipped in the Pagefind meta; the JS renderer reads it
+    verbatim and never re-derives it.
+    """
+
+    CASILLA = "casilla"
+    MODELO = "modelo"
+    CLI = "cli"
+    TECHNICAL = "technical"
+    DOC = "doc"
 
 
 class SearchRecordBase(BaseModel):
@@ -66,7 +89,7 @@ class SearchRecordBase(BaseModel):
 
 
 class CasillaSearchRecord(SearchRecordBase):
-    """A machine-projected search record for one AEAT casilla (ADR D4).
+    """A machine-projected search record for one AEAT casilla.
 
     Built from registry snapshots, never hand-curated. Identity is
     ``(modelo, casilla_id)``, deduplicated across revisions. ``number`` and

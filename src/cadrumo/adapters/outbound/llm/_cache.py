@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 from collections.abc import Mapping
+from datetime import timedelta
 from pathlib import Path
 
 from pydantic import ValidationError
@@ -36,7 +37,8 @@ from ._models import (
 _log = get_logger(__name__)
 
 _CACHE_NAMESPACE = LLM_CACHE_NAMESPACE.namespace
-_CACHE_VERSION = 1
+_CACHE_VERSION = LLM_CACHE_NAMESPACE.schema_version
+_CACHE_SENSITIVITY = LLM_CACHE_NAMESPACE.sensitivity
 
 
 class LLMCache:
@@ -106,7 +108,7 @@ class LLMCache:
         record = secure_object_repository_for_active_bucket().load(
             _CACHE_NAMESPACE,
             self._object_key_for(key),
-            expected_class=SensitivityClass.DIAGNOSTIC,
+            expected_class=_CACHE_SENSITIVITY,
             max_supported_version=_CACHE_VERSION,
         )
         if record is None:
@@ -179,7 +181,7 @@ class LLMCache:
             secure_object_repository_for_active_bucket().save(
                 namespace=_CACHE_NAMESPACE,
                 object_key=self._object_key_for(key),
-                classification=SensitivityClass.DIAGNOSTIC,
+                classification=_CACHE_SENSITIVITY,
                 schema_version=_CACHE_VERSION,
                 written_at=now(),
                 payload=payload,
@@ -201,15 +203,24 @@ class LLMCache:
             record
             for record in secure_object_repository_for_active_bucket().list_records(
                 _CACHE_NAMESPACE,
-                expected_class=SensitivityClass.DIAGNOSTIC,
+                expected_class=_CACHE_SENSITIVITY,
                 max_supported_version=_CACHE_VERSION,
             )
             if self._payload_root_matches(record.payload)
         )
         return CacheStats(entries=len(records), total_bytes=sum(len(record.payload) for record in records))
 
-    def prune(self) -> int:
-        """Delete every cached entry in this logical partition.
+    def prune(self, *, retention_days: int | None = None, max_records: int | None = None) -> int:
+        """Delete cached entries older than the retention window or beyond the count cap.
+
+        Two-stage bound mirroring
+        :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.prune`: entries
+        older than ``retention_days`` (measured against the current time) are
+        removed, then -- if more than ``max_records`` remain -- the oldest excess
+        entries beyond the cap are removed too. Both bounds default to the
+        centralized ``cadrumo_llm_cache_retention_days`` /
+        ``cadrumo_llm_cache_max_records`` settings, giving the response cache a
+        declared retention lifecycle instead of unbounded growth.
 
         Returns:
             Number of removed cache objects.
@@ -218,11 +229,17 @@ class LLMCache:
             :exc:`~adapters.outbound.llm.LLMCacheError`: When a cache
             entry cannot be parsed during iteration.
         """
-        removed = 0
+        settings = load_settings()
+        effective_retention_days = (
+            retention_days if retention_days is not None else settings.cadrumo_llm_cache_retention_days
+        )
+        effective_max_records = max_records if max_records is not None else settings.cadrumo_llm_cache_max_records
+
         repository = secure_object_repository_for_active_bucket()
+        rows: list[tuple[CachedEntry, str]] = []
         for record in repository.list_records(
             _CACHE_NAMESPACE,
-            expected_class=SensitivityClass.DIAGNOSTIC,
+            expected_class=_CACHE_SENSITIVITY,
             max_supported_version=_CACHE_VERSION,
         ):
             if not self._payload_root_matches(record.payload):
@@ -238,7 +255,19 @@ class LLMCache:
                 prompt_hash=entry.prompt_hash,
                 args_hash=entry.args_hash,
             )
-            if repository.delete(_CACHE_NAMESPACE, self._object_key_for(key)):
+            rows.append((entry, self._object_key_for(key)))
+        rows.sort(key=lambda item: item[0].created_at)
+
+        cutoff = now() - timedelta(days=effective_retention_days)
+        to_remove: list[str] = [object_key for entry, object_key in rows if entry.created_at < cutoff]
+        remaining = [row for row in rows if row[0].created_at >= cutoff]
+        if len(remaining) > effective_max_records:
+            excess_count = len(remaining) - effective_max_records
+            to_remove.extend(object_key for _, object_key in remaining[:excess_count])
+
+        removed = 0
+        for object_key in to_remove:
+            if repository.delete(_CACHE_NAMESPACE, object_key):
                 removed += 1
         return removed
 

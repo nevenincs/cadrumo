@@ -10,9 +10,9 @@ from pathlib import Path
 
 import pytest
 
+from ....core import AuthProviderKind
 from ....core.config import Settings
 from ....core.external_constants import UTF_8_ENCODING
-from .. import AuthProviderKind
 from .._acquisition_lock import (
     AuthAcquisitionLockedError,
     AuthAcquisitionLockRecord,
@@ -152,4 +152,77 @@ def test_auth_acquisition_lock_can_be_cleared_for_manual_recovery(tmp_path: Path
     assert cleared.state is AuthAcquisitionLockState.HELD
     assert cleared.reason == "operator-confirmed-crash"
     assert cleared.recoverable is True
+    assert not path.exists()
+
+
+def _write_live_lock(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    bucket_id: str,
+    now: datetime,
+) -> Path:
+    """Write a real, live (unexpired, running-owner) lock file and return its path."""
+    path = auth_acquisition_lock_path(settings, kind, bucket_id=bucket_id)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    record = AuthAcquisitionLockRecord(
+        provider_kind=kind,
+        profile_name=bucket_id,
+        pid=os.getpid(),
+        hostname=socket.gethostname(),
+        created_at=now,
+        expires_at=now + timedelta(minutes=10),
+        operation="live-auth-login",
+    )
+    path.write_text(record.model_dump_json(), encoding=UTF_8_ENCODING)
+    return path
+
+
+def test_clear_auth_acquisition_lock_is_target_scoped_across_providers(tmp_path: Path) -> None:
+    """Clearing one provider's lock leaves an unrelated provider's real lock file intact."""
+    settings = _settings(tmp_path)
+    now = datetime.now(UTC)
+    certificate_lock = _write_live_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="operator", now=now)
+    clave_lock = _write_live_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", now=now)
+
+    cleared = clear_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="operator")
+
+    assert cleared.state is AuthAcquisitionLockState.HELD
+    assert not certificate_lock.exists()
+    assert clave_lock.exists(), "an unrelated provider's acquisition lock must survive a scoped clear"
+    surviving = inspect_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator")
+    assert surviving.state is AuthAcquisitionLockState.HELD
+
+
+def test_clear_auth_acquisition_lock_is_target_scoped_across_buckets(tmp_path: Path) -> None:
+    """Clearing one bucket's provider lock leaves the same provider's lock for another bucket intact."""
+    settings = _settings(tmp_path)
+    now = datetime.now(UTC)
+    target_lock = _write_live_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="bucket-a", now=now)
+    other_lock = _write_live_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="bucket-b", now=now)
+
+    clear_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="bucket-a")
+
+    assert not target_lock.exists()
+    assert other_lock.exists(), "another bucket's acquisition lock must survive a target-scoped clear"
+    surviving = inspect_auth_acquisition_lock(settings, AuthProviderKind.CERTIFICATE, bucket_id="bucket-b")
+    assert surviving.state is AuthAcquisitionLockState.HELD
+
+
+def test_clear_auth_acquisition_lock_is_repeatable(tmp_path: Path) -> None:
+    """Clearing a target repeatedly removes the real lock once, then reports absence truthfully."""
+    settings = _settings(tmp_path)
+    now = datetime.now(UTC)
+    path = _write_live_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", now=now)
+
+    first = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", reason="reset-1")
+    second = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", reason="reset-2")
+    third = clear_auth_acquisition_lock(settings, AuthProviderKind.CLAVE_MOVIL, bucket_id="operator", reason="reset-3")
+
+    assert first.state is AuthAcquisitionLockState.HELD
+    assert first.recoverable is True
+    assert not path.exists()
+    assert second.state is AuthAcquisitionLockState.ABSENT
+    assert second.recoverable is False
+    assert third.state is AuthAcquisitionLockState.ABSENT
     assert not path.exists()

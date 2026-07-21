@@ -1,9 +1,8 @@
 """Modelo 100 régimen-de-atribución omission advisory.
 
-The socio-side ``attribution_received`` profile fact group (S411) is the typed
+The socio-side ``attribution_received`` profile fact group is the typed
 home for a base imponible attributed to a member by an entity in the régimen de
-atribución de rentas (LIRPF arts. 86-89). Per the
-``2026-07-09-m184-socio-attribution-handoff-adr`` addendum (decision (a)), that
+atribución de rentas (LIRPF arts. 86-89). That
 value is NOT auto-bound onto the M100 atribución casilla — casilla 1577 stays
 relation-canonical, and the cross-bucket attributed value enters the member's
 own M100 via a documented manual ``--binding`` override. This module is the

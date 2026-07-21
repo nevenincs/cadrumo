@@ -40,11 +40,11 @@ def default_viewport() -> ViewportSize:
     """Return the configured browser viewport size from settings."""
     settings = load_settings()
     return {
-        "width": settings.aeat_browser_viewport_width,
-        "height": settings.aeat_browser_viewport_height,
+        "width": settings.cadrumo_browser_viewport_width,
+        "height": settings.cadrumo_browser_viewport_height,
     }
 
 
 def selector_probe_timeout_ms() -> int:
     """Return the configured selector-probe timeout (ms) from settings."""
-    return load_settings().aeat_browser_selector_probe_timeout_ms
+    return load_settings().cadrumo_browser_selector_probe_timeout_ms

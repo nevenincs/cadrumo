@@ -13,10 +13,10 @@ from datetime import date
 
 import pytest
 
-from ......application.auth import AuthProviderKind, ensure_authenticated_aeat_session
-from ......core import Modelo, Period
+from ......application.auth import ensure_authenticated_aeat_session
+from ......core import AuthProviderKind, Modelo, Period
 from ......core.config import load_settings
-from ......core.errors import AeatError
+from ......core.errors import CadrumoError
 from ......tests.live_gate import requires_live_enabled
 from .....persistence.storage import get_master_key_provider
 from .._errors import SedeError
@@ -43,7 +43,7 @@ async def test_fetch_iva_compensation_wallet_live_returns_read_observation() -> 
                 operation="sede-iva-wallet-live-test",
                 target_url=PRE303_PRESENTATION_SERVICE_URL,
             )
-    except AeatError as exc:
+    except CadrumoError as exc:
         pytest.fail(f"Cl@ve-móvil live authentication is not available: {exc}")
 
     today = date.today()

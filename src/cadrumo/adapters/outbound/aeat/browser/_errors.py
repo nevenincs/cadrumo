@@ -22,10 +22,10 @@ from __future__ import annotations
 from collections.abc import Mapping
 from enum import StrEnum
 
-from .....core.errors import AeatError
+from .....core.errors import CadrumoError
 
 
-class BrowserError(AeatError):
+class BrowserError(CadrumoError):
     """Base class for browser-related failures.
 
     ``failure_mode`` may be a :class:`BrowserFailureMode` member or an existing
@@ -86,16 +86,15 @@ class BrowserFailureMode(StrEnum):
 
     :class:`BrowserSession <adapters.outbound.aeat.browser.BrowserSession>`
     uses these values for one-live-context enforcement, browser launch,
-    context creation, evasion, provider annotation, page-content reads,
-    navigation transport failures, site-health classifications, and retained
-    browser close failures.
+    context creation, evasion, page-content reads, navigation transport
+    failures, site-health classifications, and retained browser close
+    failures.
     """
 
     SESSION_BUSY = "session_busy"
     BROWSER_LAUNCH_FAILED = "browser_launch_failed"
     CONTEXT_CREATE_FAILED = "context_create_failed"
     EVASION_FAILED = "evasion_failed"
-    CONTEXT_ANNOTATION_FAILED = "context_annotation_failed"
     PAGE_CONTENT_FAILED = "page_content_failed"
     NAVIGATION_TIMEOUT = "navigation_timeout"
     NAVIGATION_TRANSPORT_ERROR = "navigation_transport_error"

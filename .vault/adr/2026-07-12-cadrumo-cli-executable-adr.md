@@ -7,7 +7,7 @@ related:
   - "[[2026-07-12-cadrumo-product-rename-research]]"
 supersedes:
   - '2026-07-12-cadrumo-product-rename-adr'
-modified: '2026-07-13'
+modified: '2026-07-17'
 ---
 # `cadrumo-cli-executable` adr: `CADRUMO product identity with aeat CLI executable` | (**status:** `accepted`)
 
@@ -60,7 +60,8 @@ is exactly `CADRUMO`, and the sole human CLI executable is exactly `aeat`.
 The complete canonical identity matrix is:
 
 - product display name: `CADRUMO`;
-- Python package, root distribution, and repository identifier: `cadrumo`;
+- Python package and root distribution: `cadrumo`;
+- owner-qualified repository slug: `nevenincs/cadrumo`;
 - sole human command-line executable: `aeat`;
 - MCP server identifier, tool prefix, and resource URI scheme: `cadrumo`;
 - plugin identifier: `cadrumo`;
@@ -83,9 +84,8 @@ state migration.
 
 Authority-owned `AEAT` names remain correct for official endpoints,
 credentials, legal provenance, registry classifications, evidence, and
-statements about the counterparty. The previously accepted packaging,
-resource-boundary, compatibility-lifecycle, persistence, and safety decisions
-remain stable constraints. This ADR changes the human executable and product
+statements about the counterparty. Packaging, resource-boundary, persistence,
+and safety decisions remain stable constraints. This ADR changes the human executable and product
 display casing elements of the renamed product tuple, and
 supersedes the prior rename ADR as its active source of naming authority.
 

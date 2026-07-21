@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#invoice-catalogue"
 date: "2026-04-17"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-17-invoice-catalogue-research]]"
   - "[[2026-04-14-transaction-catalogue-adr]]"
@@ -16,7 +16,7 @@ related:
 
 Issue `#75` must introduce a durable invoice catalogue for issued (income)
 and received (expense) invoices, with a many-to-one link from
-`aeat.domain.financial.transactions.Transaction` (T1/T2) to `Invoice` (T3). One
+`cadrumo.domain.transactions.Transaction` (T1/T2) to `Invoice` (T3). One
 invoice may be cited from multiple transactions (e.g. deposit + refund);
 one transaction may cite at most one invoice. The catalogue must enforce
 IVA totals, validate NIF/CIF/VAT counterparty identities, preserve T1
@@ -48,11 +48,11 @@ service, `#77` tax-category catalogue).
 
 ## Constraints
 
-- Public API must be imported from `aeat.domain.financial.invoices` only.
+- Public API must be imported from `cadrumo.domain.invoices` only.
 - Every persisted structure must be strict pydantic v2; closed sets must
   use `enum.StrEnum`.
-- Errors inherit from `aeat.core.errors.AeatError`; logging goes through
-  `aeat.core.logging.get_logger(__name__)`.
+- Errors inherit from `cadrumo.core.errors.CadrumoError`; logging goes through
+  `cadrumo.core.logging.get_logger(__name__)`.
 - `Invoice`, `InvoiceLine`, and `InvoiceCatalogue` are frozen models with
   immutable-return helpers. No in-place mutation.
 - `tests/test_config.py` enforces `Settings` ↔ `env/.env.example`
@@ -62,7 +62,7 @@ service, `#77` tax-category catalogue).
 
 ### Package shape
 
-- Create `src/aeat/domain/financial/invoices/` following the `#74` precedent:
+- Create `src/cadrumo/domain/invoices/` following the `#74` precedent:
   - `__init__.py` — public re-exports only.
   - `_enums.py` — `InvoiceKind`, `IvaRate`, `PaymentStatus`.
   - `_errors.py` — `InvoiceError`, `InvoiceCatalogueError`,
@@ -240,8 +240,8 @@ subtotal."
 ### Bidirectional linking contract
 
 The two catalogues are loosely coupled: `Invoice.linked_transaction_ids`
-lives in `aeat.domain.financial.invoices`, `Transaction.invoice_id` lives in
-`aeat.domain.financial.transactions`. We acknowledge that two sequential
+lives in `cadrumo.domain.invoices`, `Transaction.invoice_id` lives in
+`cadrumo.domain.transactions`. We acknowledge that two sequential
 `os.replace` writes are **not** truly atomic — the classical all-or-nothing
 guarantee requires either a shared single-file snapshot or a write-ahead
 journal. We explicitly defer journalling until the Track-B persistence
@@ -249,7 +249,7 @@ layer lands (`#81` / post-`P2-K`), and instead adopt the following
 rigorous contract that is safe for single-operator use:
 
 - A single helper
-  `aeat.domain.financial.invoices.link_transaction_bidirectional(invoices_path,
+  `cadrumo.domain.invoices.link_transaction_bidirectional(invoices_path,
   transactions_path, invoice_id, transaction_id)` performs the update:
   1. Loads both catalogues.
   2. Computes both new catalogues in memory and validates each by
@@ -263,7 +263,7 @@ rigorous contract that is safe for single-operator use:
      `InvoiceLinkInconsistencyError` carrying both file paths and the
      IDs involved — the operator is expected to resolve manually.
 - A verify helper
-  `aeat.domain.financial.invoices.verify_link_consistency(invoices,
+  `cadrumo.domain.invoices.verify_link_consistency(invoices,
   transactions) -> tuple[LinkInconsistency, ...]` returns a list of
   pairs where the two catalogues disagree (invoice cites tx but tx
   does not cite invoice, or vice versa). The CLI exposes this via

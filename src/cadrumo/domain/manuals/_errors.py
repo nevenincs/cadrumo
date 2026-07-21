@@ -3,15 +3,15 @@
 Every exception raised by loading, verifying, fetching, or extracting
 from the AEAT *Manual práctico* corpus inherits from
 :class:`ManualError`, which in turn inherits from
-:class:`cadrumo.core.errors.AeatError`.
+:class:`cadrumo.core.errors.CadrumoError`.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class ManualError(AeatError):
+class ManualError(CadrumoError):
     """Base error for every :mod:`cadrumo.domain.manuals` failure mode."""
 
 
@@ -30,7 +30,7 @@ class ManualReviewRequiredError(ManualError):
     :class:`~cadrumo.domain.manuals.Section`, or
     :class:`~cadrumo.domain.manuals.Rule` record missing
     ``definition_reviewed_by`` or ``definition_reviewed_at`` when the
-    ``AEAT_MANUALS_REVIEW_REQUIRED`` setting is enabled.
+    ``CADRUMO_MANUALS_REVIEW_REQUIRED`` setting is enabled.
     """
 
 

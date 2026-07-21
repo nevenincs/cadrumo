@@ -1,0 +1,135 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../reference/index.md:1
+msgid "Cadrumo reference"
+msgstr "Referencia de Cadrumo"
+
+#: ../../reference/index.md:3
+msgid ""
+"Use this collection to look up exact Cadrumo names, boundaries, and "
+"generated technical surfaces while you work. For installation and first "
+"use, start with the [installation guide](../workstation-setup.md) and "
+"[quickstart](../how-to/quickstart.md). For a task, choose a [how-to guide"
+"](../how-to/index.md). For the relationships between stages, read [how "
+"imports, exports, and evidence differ](import-export-and-evidence.md)."
+msgstr ""
+"Usa esta colección para consultar nombres exactos de Cadrumo, límites y "
+"superficies técnicas generadas mientras trabajas. Para la instalación y el "
+"primer uso, empieza por la [guía de instalación](../workstation-setup.md) y "
+"el [inicio rápido](../how-to/quickstart.md). Para una tarea, elige una [guía "
+"práctica](../how-to/index.md). Para las relaciones entre etapas, lee [en qué "
+"se diferencian las importaciones, las exportaciones y la evidencia](import-"
+"export-and-evidence.md)."
+
+#: ../../reference/index.md:10
+msgid ""
+"The Agencia Estatal de Administración Tributaria (AEAT) is the external "
+"tax authority. The command-line interface (CLI), Model Context Protocol "
+"(MCP), and application programming interface (API) are Cadrumo product "
+"surfaces."
+msgstr ""
+"La Agencia Estatal de Administración Tributaria (AEAT) es la autoridad "
+"tributaria externa. La interfaz de línea de comandos (CLI), el Model Context "
+"Protocol (MCP) y la interfaz de programación de aplicaciones (API) son "
+"superficies del producto Cadrumo."
+
+#: ../../reference/index.md:14
+msgid "Lookup map"
+msgstr "Mapa de consulta"
+
+#: ../../reference/index.md:16
+msgid ""
+"[Import, export, and evidence](import-export-and-evidence.md) - supported"
+" source material, authority boundaries, export purposes, and the evidence"
+" required for filing review or audit."
+msgstr ""
+"[Importación, exportación y evidencia](import-export-and-evidence.md): "
+"material de origen admitido, límites de autoridad, finalidades de "
+"exportación y la evidencia necesaria para la revisión de la presentación o "
+"la auditoría."
+
+#: ../../reference/index.md:19
+msgid ""
+"[Identity and naming](identity-and-naming.md) - canonical product "
+"identifiers and the Cadrumo-versus-AEAT vocabulary."
+msgstr ""
+"[Identidad y nomenclatura](identity-and-naming.md): identificadores "
+"canónicos del producto y el vocabulario Cadrumo frente a AEAT."
+
+#: ../../reference/index.md:21
+msgid ""
+"[Commands and configuration](commands-and-configuration.md) - CLI, "
+"workflow-stage, schema, and configuration lookups."
+msgstr ""
+"[Comandos y configuración](commands-and-configuration.md): consultas de CLI, "
+"de etapa de flujo de trabajo, de esquema y de configuración."
+
+#: ../../reference/index.md:23
+msgid ""
+"[Filesystem, state, and safety](filesystem-state-and-safety.md) - storage"
+" layout, former-state refusal, local export, live-read, and filing "
+"boundaries."
+msgstr ""
+"[Sistema de archivos, estado y seguridad](filesystem-state-and-safety.md): "
+"disposición del almacenamiento, rechazo de estados antiguos, exportación "
+"local, lectura en vivo y límites de presentación."
+
+#: ../../reference/index.md:25
+msgid ""
+"[Registry, legal sources, and Python API](registry-legal-api.md) - "
+"grounding sources and generated public API pages."
+msgstr ""
+"[Registro, fuentes legales y API de Python](registry-legal-api.md): fuentes "
+"de fundamentación y páginas generadas de la API pública."
+
+#: ../../reference/index.md:27
+msgid ""
+"[Environment overrides](environment-overrides.md) - every environment "
+"variable the application reads, generated from the live settings model. "
+"Advanced deployment and development configuration; no user workflow needs"
+" them."
+msgstr ""
+"[Sobrescrituras de entorno](environment-overrides.md): todas las variables "
+"de entorno que lee la aplicación, generadas a partir del modelo de "
+"configuración en vivo. Configuración avanzada de despliegue y desarrollo; "
+"ningún flujo de trabajo de usuario las necesita."
+
+#: ../../reference/index.md:32
+#, python-brace-format
+msgid ""
+"Terms are defined in the {doc}`glossary </_generated/glossary>`. For "
+"ordinary failures, use [Diagnose and repair](../how-"
+"to/troubleshooting.md) and then the [public issue "
+"tracker](https://github.com/nevenincs/cadrumo/issues) with redacted "
+"output. Never publish taxpayer data, credentials, or vulnerability "
+"details. Use the [security "
+"policy](https://github.com/nevenincs/cadrumo/blob/main/SECURITY.md) for "
+"private security reporting and its fallback when private reporting is "
+"unavailable."
+msgstr ""
+"Los términos se definen en el {doc}`glosario </_generated/glossary>`. Para "
+"los fallos habituales, usa [Diagnostica y repara](../how-to/troubleshooting."
+"md) y luego el [gestor de incidencias público](https://github.com/nevenincs/"
+"cadrumo/issues) con la salida redactada. Nunca publiques datos de "
+"contribuyentes, credenciales ni detalles de vulnerabilidades. Usa la "
+"[política de seguridad](https://github.com/nevenincs/cadrumo/blob/main/"
+"SECURITY.md) para el reporte privado de seguridad y su alternativa cuando el "
+"reporte privado no esté disponible."

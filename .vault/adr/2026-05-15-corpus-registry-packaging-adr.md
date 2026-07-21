@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#corpus-registry-packaging'
 date: '2026-05-15'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-15-corpus-registry-packaging-research]]"
   - "[[2026-05-01-corpus-data-hydration-adr]]"
@@ -21,14 +21,14 @@ mechanism and asserted that editable installs would honour the
 mapping. Empirical verification against the editable install in
 this worktree contradicted that claim:
 `importlib.resources.files("aeat").joinpath("_data")` resolved to
-`src/aeat/_data` on disk and reported `is_dir() == False`. The
+`src/cadrumo/_data` on disk and reported `is_dir() == False`. The
 force-include table affects the built wheel's archive layout but
 does not materialise files into the editable source tree.
 
 The decision now mandates a physical relocation of the on-disk
-trees under `src/aeat/_data/corpus/` and `src/aeat/_data/registry/`.
+trees under `src/cadrumo/_data/corpus/` and `src/cadrumo/_data/registry/`.
 No force-include block is introduced; the existing
-`packages = ["src/aeat"]` directive packages the relocated trees
+`packages = ["src/cadrumo"]` directive packages the relocated trees
 automatically. The `Traversable` boundary, the Settings env-override
 seam, the consumer migration buckets, and the test guards all
 remain unchanged in their public contract; only the on-disk path
@@ -36,9 +36,9 @@ shifts.
 
 Discovery sweeps surfaced several consumer surfaces that the first
 revision did not enumerate: a `Path(__file__).resolve().parents[5]`
-walk in `src/aeat/domain/auth/apoderamientos/_catalogue.py`, five
+walk in `src/cadrumo/domain/auth/apoderamientos/_catalogue.py`, five
 module-level CWD-relative `Path("registry/aeat")` defaults under
-`src/aeat/entrypoints/cli/` and `src/aeat/application/`, four
+`src/cadrumo/entrypoints/cli/` and `src/cadrumo/application/`, four
 error-message strings that embed registry paths as user-facing
 documentation, nine f-string compositions that compose paths
 against the trees in tests, and eleven glob sites in loaders that
@@ -46,7 +46,7 @@ iterate `*.toml` or `*.json` inside the trees. The plan associated
 with this ADR records each of these as its own Step.
 
 The ratification of in-wheel bundling, the boundary placement at
-`src/aeat/core/resources.py`, the preservation of Settings
+`src/cadrumo/core/resources/`, the preservation of Settings
 env-override semantics, and the two real-behaviour test guards
 remain unchanged.
 
@@ -58,13 +58,13 @@ normatives, official AEAT workbooks, parity replays) and `registry/`
 (authoritative TOML registries for modelos, legal parameters,
 calendars, categories, VAT rates, topics, user-profile schema). The
 runtime resolves every read off a `PROJECT_ROOT` constant defined in
-`src/aeat/core/config.py` as
+`src/cadrumo/core/config.py` as
 `Path(__file__).resolve().parent.parent.parent.parent`, then joins
 `PROJECT_ROOT / "corpus" / ...` or `PROJECT_ROOT / "registry" / "aeat"`.
 This walk lands on the repository checkout when running from source,
 but lands inside `site-packages` when running from an installed
 wheel — where neither tree exists. The wheel build target in
-`pyproject.toml` packages only `src/aeat` plus two explicit data files;
+`pyproject.toml` packages only `src/cadrumo` plus two explicit data files;
 nothing under `corpus/` or `registry/` is included. The installed
 package therefore cannot serve the calculations, legal grounding,
 manuals, parity, or registry surfaces it claims. The decision needed
@@ -86,18 +86,18 @@ the bundled location.
 
 Two precedents already use `importlib.resources` inside the codebase.
 The BIP-39 wordlist in
-`src/aeat/adapters/persistence/storage/master_key/_recovery.py` and the
-i18n YAML packs in `src/aeat/core/i18n/_render.py` both call
+`src/cadrumo/adapters/persistence/storage/master_key/_recovery.py` and the
+i18n YAML packs in `src/cadrumo/core/i18n/_render.py` both call
 `resources.files(...)` to read package data. A third small file
-(`src/aeat/core/external_constants.toml`) is named in the hatch
+(`src/cadrumo/core/external_constants.toml`) is named in the hatch
 include array but the loader still uses `Path(__file__).parent`. No
 helper module abstracts resource access today. The packaging refactor
 needs one canonical accessor so call sites stop choosing between the
 file-system walk and ad-hoc `__file__` parent chains.
 
 The corpus and registry trees move on disk to
-`src/aeat/_data/corpus/` and `src/aeat/_data/registry/`. The existing
-`packages = ["src/aeat"]` hatchling directive ships every file under
+`src/cadrumo/_data/corpus/` and `src/cadrumo/_data/registry/`. The existing
+`packages = ["src/cadrumo"]` hatchling directive ships every file under
 that subtree as part of the `aeat` distribution without any
 additional include or force-include declaration. Editable installs
 and built wheels both resolve
@@ -135,7 +135,7 @@ tautological assertions. Both layout guards land as real-behaviour
 tests against the actual bundled tree and the actual built wheel.
 
 The architecture-boundary rule keeps the new accessor inside
-`src/aeat/core/`. Domain, application, adapters, and entrypoints all
+`src/cadrumo/core/`. Domain, application, adapters, and entrypoints all
 depend inward on the core boundary. No adapter-layer "resource
 locator" parallel surface is introduced.
 
@@ -152,23 +152,23 @@ in-wheel bundling decision regardless.
 
 ## Implementation
 
-A new boundary module ships under `src/aeat/core/resources.py`. It
+A new boundary module ships under `src/cadrumo/core/resources/`. It
 exposes one function — `packaged_data(*parts: str) -> Traversable` —
 that returns a Traversable rooted at
 `importlib.resources.files("aeat").joinpath("_data", *parts)`. A
 companion helper materialises a real on-disk `Path` for the cases
 that require it: `as_path(traversable: Traversable) -> ContextManager[Path]`
 wrapping `importlib.resources.as_file`. The module is the only
-production surface that knows about `aeat/_data`; every other consumer
+production surface that knows about `cadrumo/_data`; every other consumer
 calls `packaged_data(...)`.
 
 The on-disk trees relocate via `git mv` to
-`src/aeat/_data/corpus/` and `src/aeat/_data/registry/`. The
-existing `packages = ["src/aeat"]` directive packages the relocated
+`src/cadrumo/_data/corpus/` and `src/cadrumo/_data/registry/`. The
+existing `packages = ["src/cadrumo"]` directive packages the relocated
 trees automatically; no force-include block is introduced. The two
 narrow `include` entries that currently ship the BIP-39 wordlist
 and the external-constants TOML stay where they are (those files
-live under `src/aeat/` and are not affected by this ADR). The
+live under `src/cadrumo/` and are not affected by this ADR). The
 `.gitignore` block that allow-lists tracked Renta `source.pdf`
 files migrates to the new prefix so the seven currently-tracked
 PDFs remain tracked.
@@ -176,7 +176,7 @@ PDFs remain tracked.
 Consumer migration runs in five buckets:
 
 The first bucket is the foundation: the `git mv` of `corpus/` and
-`registry/` into `src/aeat/_data/`, the `.gitignore` rewrite that
+`registry/` into `src/cadrumo/_data/`, the `.gitignore` rewrite that
 preserves the PDF allow-list under the new prefix, the
 `env/.env.example` update that points the three operator-visible
 env-var defaults at the new layout, and the in-process leaf-presence
@@ -184,10 +184,10 @@ test that confirms the boundary resolves correctly post-move. This
 bucket lands as a single self-contained slice with no other code
 changes so the rename diff stays clean.
 
-The second bucket is the locator itself: `src/aeat/core/resources.py`
+The second bucket is the locator itself: `src/cadrumo/core/resources/`
 plus its unit tests. The locator file already exists on the branch;
-the unit tests under `src/aeat/core/test_resources.py` land in this
-bucket. The `PROJECT_ROOT` constant in `src/aeat/core/config.py`
+the unit tests under `src/cadrumo/core/tests/test_resources.py` land in this
+bucket. The `PROJECT_ROOT` constant in `src/cadrumo/core/config.py`
 loses its `corpus`/`registry` join responsibility; the constant may
 stay for `var/` outputs but the corpus/registry resolution paths
 leave it.
@@ -204,12 +204,12 @@ The fourth bucket is every other production resolution path beyond
 the Settings-mediated three. It spans the ~25 `PROJECT_ROOT / "registry" / "aeat"`
 and `PROJECT_ROOT / "corpus" / ...` joins enumerated in the plan,
 the lone `Path(__file__).resolve().parents[5]` walk in
-`src/aeat/domain/auth/apoderamientos/_catalogue.py`, the seven
+`src/cadrumo/domain/auth/apoderamientos/_catalogue.py`, the seven
 CWD-relative `Path("registry/aeat")` typer-argument defaults under
-`src/aeat/entrypoints/cli/registry.py`, the additional CWD-relative
-defaults at module level in `src/aeat/entrypoints/cli/_app_live.py`,
-`src/aeat/application/registry/__init__.py`, and
-`src/aeat/application/live/__init__.py`, plus the four error
+`src/cadrumo/entrypoints/cli/registry.py`, the additional CWD-relative
+defaults at module level in `src/cadrumo/entrypoints/cli/_app_live.py`,
+`src/cadrumo/application/registry/__init__.py`, and
+`src/cadrumo/application/live/__init__.py`, plus the four error
 messages that embed registry paths verbatim and the eleven glob
 sites in loaders that iterate `*.toml` or `*.json` patterns. Each
 site replaces the source-tree-dependent join with a
@@ -228,7 +228,7 @@ change.
 Two real-behaviour test guards land alongside the migration:
 
 The first guard is an in-process layout assertion under
-`src/aeat/core/test_resources.py`. It imports `aeat`, calls
+`src/cadrumo/core/tests/test_resources.py`. It imports `aeat`, calls
 `packaged_data(...)` for a representative leaf in each top-level
 subtree (`manuals/iva/2025/manifest.json`,
 `normatives/html/ley-27-2014-art-100.html`,
@@ -238,24 +238,24 @@ subtree (`manuals/iva/2025/manifest.json`,
 `registry/aeat/calendars/<a known file>`,
 `registry/aeat/legal/iva-flow.toml`,
 `registry/aeat/topics/<a known file>`,
-`registry/aeat/user_profile/schema.toml`,
+`registry/cadrumo/user_profile/schema.toml`,
 `registry/aeat/vat/rates.toml`), and asserts each returned
 Traversable reports `is_file()` true. This guard exercises both
 editable-install and installed-wheel layouts identically.
 
 The second guard is a built-wheel manifest assertion under
-`src/aeat/tests/test_wheel_bundles_corpus_and_registry.py`. The test
+`src/cadrumo/tests/test_wheel_bundles_corpus_and_registry.py`. The test
 shells out to `uv build --wheel` into a `tmp_path`, opens the
 resulting wheel as a zip archive, enumerates every git-tracked path
-under `src/aeat/_data/corpus/` and `src/aeat/_data/registry/` via
+under `src/cadrumo/_data/corpus/` and `src/cadrumo/_data/registry/` via
 `git ls-files`, and asserts that every tracked path appears in the
-archive at the expected `aeat/_data/<relative-path>` prefix. The
+archive at the expected `cadrumo/_data/<relative-path>` prefix. The
 test runs as part of the default unit gate. It fails loudly when
 someone edits `pyproject.toml`, moves a file, or drops a path
 without updating the hatch configuration. It uses no mocks, fakes,
 or skips; the subprocess and zip inspection are real.
 
-The third small change is to `src/aeat/core/external_constants.py`:
+The third small change is to `src/cadrumo/core/external_constants.py`:
 its `Path(__file__).resolve().parent` walk migrates to
 `resources.files(__package__).joinpath("external_constants.toml")` so
 the codebase consolidates on a single resource-access idiom. The
@@ -269,7 +269,7 @@ built-wheel resolution paths into one. Both surfaces resolve
 same on-disk subtree byte-for-byte; the locator does not branch on
 install mode. The wheel is self-sufficient without any
 force-include declaration because the relocated trees ride along
-inside `src/aeat/` and are packaged by the existing `packages` line.
+inside `src/cadrumo/` and are packaged by the existing `packages` line.
 The hidden coupling between the runtime and the source-checkout
 location dies; the curators take a one-time path-anchor update in
 return for an installable artefact.
@@ -294,7 +294,7 @@ authority for *what* is curated and *how* curation is reviewed; this
 ADR locks how the curated outputs reach the installed artefact. The
 two decisions compose: corpus-data-hydration writes to
 `corpus/casillas/<modelo>/<year><period>.json` (and analogous paths);
-packaging makes those same paths land at `aeat/_data/corpus/...`
+packaging makes those same paths land at `cadrumo/_data/corpus/...`
 inside the wheel with byte-for-byte equivalence.
 
 Real-behaviour test guards align with the project's quality-gate
@@ -333,8 +333,8 @@ path differs. Tests that already accept an injectable
 `registry_root: Path | None` keep their injection seam.
 
 The on-disk layout changes for curators. Authors of corpus content
-now anchor at `src/aeat/_data/corpus/` rather than the top-level
-`corpus/`; the same applies to `src/aeat/_data/registry/`. The
+now anchor at `src/cadrumo/_data/corpus/` rather than the top-level
+`corpus/`; the same applies to `src/cadrumo/_data/registry/`. The
 `.gitignore` allow-list rules for the seven tracked Renta
 `source.pdf` files relocate to the new prefix in the same commit
 that performs the rename, so no PDF drops from tracking. Curator
@@ -342,7 +342,7 @@ documentation under `README.md` and `ROADMAP.md` carries path
 mentions that drift after the move; updating them is scoped to a
 follow-up documentation PR rather than this feature.
 
-The `PROJECT_ROOT` constant in `src/aeat/core/config.py` retains its
+The `PROJECT_ROOT` constant in `src/cadrumo/core/config.py` retains its
 `var/` output role but loses every `corpus`/`registry` join. A
 future cleanup may move the `var/` defaults to an operator-config
 surface independent of the source-checkout layout; that is out of

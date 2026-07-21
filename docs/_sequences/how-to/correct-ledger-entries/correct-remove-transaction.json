@@ -1,0 +1,161 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "add",
+        "--date",
+        "2026-03-15",
+        "--amount",
+        "60.50",
+        "--direction",
+        "OUTGOING",
+        "--description",
+        "Wrong import",
+        "--idempotency-key",
+        "correct-remove"
+      ],
+      "captures": [
+        {
+          "json_path": "result.transaction_id",
+          "name": "transaction_id",
+          "value": "1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "ledger.add",
+        "notices": [],
+        "result": {
+          "bucket_event_ids": [
+            "8b33ed95365478e1093bdc08e4960210b7eb3fda5fe8f7de1144c1a9c47a8688"
+          ],
+          "bucket_id": "<bucket-id>",
+          "review_status": "pending",
+          "transaction": {
+            "amount": "60.5",
+            "attachment_ids": [],
+            "booked_date": "2026-03-15",
+            "business_classification": "NOT_YET_PROCESSED",
+            "business_pct": null,
+            "category_id": null,
+            "classification_confidence": null,
+            "classification_reason": "",
+            "classified_at": null,
+            "classified_by": "auto",
+            "counterparty": "",
+            "counterparty_eu_member_state": null,
+            "created_at": "2026-04-01T09:00:00+00:00",
+            "currency": "EUR",
+            "date": "2026-03-15",
+            "description": "Wrong import",
+            "direction": "OUTGOING",
+            "fx_rate": null,
+            "irpf_category": null,
+            "iva_amount": null,
+            "iva_category": null,
+            "iva_rate": null,
+            "lifecycle_state": "ACTIVE",
+            "m210_income_classification": null,
+            "modified_at": "2026-04-01T09:00:00+00:00",
+            "notes": "",
+            "prorrata_reference": null,
+            "purchase_invoice_evidence_id": null,
+            "source_jurisdiction": "ES",
+            "taxable_base": null,
+            "transaction_id": "1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb",
+            "usage_ratio_id": null,
+            "value_date": null,
+            "value_in_eur": null
+          },
+          "transaction_id": "1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "remove",
+        "1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb",
+        "--reason",
+        "wrong file imported",
+        "--dry-run"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Bucket\t<profile-id>\nID\t1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb\nRemoved\tFalse\nDRY RUN MODE\tTrue\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "app",
+        "ledger",
+        "remove",
+        "1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb",
+        "--reason",
+        "wrong file imported",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Bucket\t<profile-id>\nID\t1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb\nRemoved\tTrue\nDRY RUN MODE\tFalse\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "ledger",
+        "view",
+        "1caacc8087e969e8648cc8618626fb93510b89a62186b1854f9a1893813869eb"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": null,
+        "error": {
+          "category": "REFUSED",
+          "code": "REFUSED_CLI_BOUNDARY",
+          "context": null,
+          "message": "Invalid value: Unexpected transaction id prefix error: ",
+          "retryable": false,
+          "runbook_id": null,
+          "suggestion": null,
+          "trace_id": null
+        },
+        "notices": [],
+        "schema_version": "2",
+        "status": "error"
+      },
+      "envelope_source": "stderr",
+      "exit_code": 2,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "correct-remove-transaction"
+}

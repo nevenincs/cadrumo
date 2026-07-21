@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#docs-terminology-search'
 date: '2026-06-15'
-modified: '2026-06-28'
+modified: '2026-07-17'
 related:
   - '[[2026-06-10-docs-terminology-search-research]]'
   - '[[2026-06-10-docs-terminology-search-adr]]'
@@ -81,7 +81,7 @@ concept genuinely superseded by a named successor.
 
 **D3 — Committed light data, uncommitted heavy index.** The committed,
 reviewable, CI-consumed artefacts are the Handbook TOML fragments and the
-laundered precompiled data under `src/aeat/_data/terminology/` (the
+laundered precompiled data under `src/cadrumo/_data/terminology/` (the
 `relevance.json` term-to-target mapping, synonym candidates, held-out queries).
 The compiled Pagefind index (`pagefind/`, the per-language fragment/index/wasm
 corpus — thousands of files) is a generated build output: it is gitignored,

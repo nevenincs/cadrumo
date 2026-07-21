@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-research]]"
@@ -17,9 +17,9 @@ related:
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
 
-CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+CLI logging and error handling MUST use the central facilities: `cadrumo.core.logging.get_logger(__name__)`, `cadrumo.core.logging.SecretScrubbingFilter`, `cadrumo.core.errors.CadrumoError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `cadrumo.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
 
-CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
+CLI output MUST use the established emitters, including `cadrumo.entrypoints.cli._common._emit`, `cadrumo.entrypoints.cli._schemas.emit_json_success`, and `cadrumo.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 ## Problem Statement
 
 Modelo filing resume needs a single user-facing command placement and a precise
@@ -129,7 +129,7 @@ events, or compatibility surfaces.
 The 2026-05-15 ground-truth audit found that the W59 and W80 execution
 records claim a `WorkflowResult.resumed_from` field and a
 `WorkflowEngine.run_for_period(resumed_from=...)` parameter exist;
-neither is present in `src/aeat/application/workflow/_models.py` or
+neither is present in `src/cadrumo/application/workflow/_models.py` or
 `_engine.py`. This amendment locks the engine-linkage contract so the
 gap is closed in a follow-up wave rather than left implicit.
 
@@ -154,14 +154,14 @@ The CLI `aeat app modelo work resume` surface is unchanged.
 The engine-linkage gap recorded above is now closed:
 
 - `WorkflowResult.resumed_from: str | None` ships in
-  `src/aeat/application/workflow/_models.py` with field validation.
+  `src/cadrumo/application/workflow/_models.py` with field validation.
 - `WorkflowEngine.run_for_period(..., resumed_from: str | None = None)`
-  ships in `src/aeat/application/workflow/_engine.py` and validates the
+  ships in `src/cadrumo/application/workflow/_engine.py` and validates the
   parameter shape at the boundary (16-char lowercase hex), forwarding
   the value into the produced `WorkflowResult`.
 - The revision-verify gate
   (`_run_revision_workflow_gate` in
-  `src/aeat/application/modelo/_actions.py`) accepts an optional
+  `src/cadrumo/application/modelo/_calculation_actions.py`) accepts an optional
   `resumed_from` and forwards it to `run_for_period`, so callers
   driving a fresh attempt over a prior aborted run preserve the
   linkage end-to-end.
@@ -170,11 +170,11 @@ Real-behavior coverage:
 
 - Unit: `test_run_for_period_propagates_resumed_from_into_result`,
   `test_run_for_period_rejects_malformed_resumed_from`
-  (`src/aeat/application/workflow/test_engine.py`).
+  (`src/cadrumo/application/workflow/test_engine.py`).
 - End-to-end: `test_resume_context_run_id_satisfies_engine_resumed_from_contract`,
   `test_resume_is_idempotent_for_a_persistently_aborted_run`,
   `test_resume_for_unknown_run_id_is_indistinguishable_from_stale`
-  (`src/aeat/application/workflow/test_resume.py`).
+  (`src/cadrumo/application/workflow/test_resume.py`).
 
 Existence verification of the prior run remains the upstream resume
 action's responsibility — the engine validates shape only.

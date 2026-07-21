@@ -33,9 +33,8 @@ an integrity gate, not an authenticity gate; :mod:`._bundle_signing`
 from __future__ import annotations
 
 import hashlib
+import io
 import json
-import os
-import tempfile
 import zipfile
 from collections.abc import Iterator
 from datetime import datetime
@@ -84,8 +83,8 @@ _MANIFEST_FILENAME = "corpus.manifest.json"
 
 
 # Sha-256 content-fingerprint shape shared by the per-entry file digest and
-# the self-attesting manifest digest. Stays bare-str under ADR Rule 7
-# (fingerprint, not identity); factored to a single module-local constraint
+# the self-attesting manifest digest. Stays bare-str deliberately (it is a
+# fingerprint, not an identity); factored to a single module-local constraint
 # kwargs mapping to remove the duplication of the shape literal.
 class _Sha256FieldKwargs(TypedDict):
     min_length: int
@@ -385,32 +384,17 @@ def verify_corpus_manifest(
 def save_corpus_manifest(manifest: CorpusManifest, target: Path) -> None:
     """Atomically persist ``manifest`` as JSON to ``target``."""
     resolved = target.resolve()
-    resolved.parent.mkdir(parents=True, exist_ok=True)
     payload = manifest.model_dump_json()
-    # NamedTemporaryFile raising means no file was created; the outer
-    # except re-raises cleanly.
-    tmp_path: Path | None = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding="utf-8",
-            dir=resolved.parent,
-            prefix=f"{resolved.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(payload)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(tmp_path, resolved)
-        from ..locks import fsync_parent_dir
+    # Deferred import: mirrors the existing deferred-import discipline in
+    # this module (see build_corpus_bundle) -- core.atomic_write
+    # transitively imports core.locks, which imports core.config; kept
+    # local to avoid widening this module's eager import surface.
+    from ..atomic_write import atomic_write_text
 
-        fsync_parent_dir(resolved)
+    try:
+        atomic_write_text(resolved, payload, encoding="utf-8")
         _logger.debug("save_corpus_manifest: wrote manifest to %s", resolved)
     except OSError:
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
         _logger.error("save_corpus_manifest: failed to write manifest to %s", resolved, exc_info=True)
         raise
 
@@ -538,10 +522,11 @@ def build_corpus_bundle(
     sidecar itself are excluded), builds the manifest, then writes a
     new zip archive containing the manifest under
     :data:`_BUNDLE_MANIFEST_MEMBER` plus every corpus file under its
-    POSIX-relative path. The write is atomic: the archive is built at a
-    temporary path in the same directory and renamed into place only on
-    success, so a failure mid-write never leaves a partial bundle at
-    ``output_path``.
+    POSIX-relative path. The archive is assembled fully in memory, then
+    persisted through :func:`~cadrumo.core.atomic_write.atomic_write_bytes`
+    (standard tier: tempfile sibling, fsync, :func:`os.replace`,
+    best-effort parent-directory fsync), so a failure mid-write never
+    leaves a partial bundle at ``output_path``.
 
     Args:
         corpus_root: The corpus directory to bundle.
@@ -566,18 +551,17 @@ def build_corpus_bundle(
         generated_at=generated_at,
     )
     resolved_output = output_path.resolve()
-    resolved_output.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path = resolved_output.with_name(resolved_output.name + ".tmp")
-    tmp_path.unlink(missing_ok=True)
-    try:
-        with zipfile.ZipFile(tmp_path, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
-            archive.writestr(_BUNDLE_MANIFEST_MEMBER, manifest.model_dump_json())
-            for entry in manifest.entries:
-                archive.write(corpus_root / entry.relative_path, arcname=entry.relative_path)
-        os.replace(tmp_path, resolved_output)
-    except BaseException:
-        tmp_path.unlink(missing_ok=True)
-        raise
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr(_BUNDLE_MANIFEST_MEMBER, manifest.model_dump_json())
+        for entry in manifest.entries:
+            archive.write(corpus_root / entry.relative_path, arcname=entry.relative_path)
+    # Deferred import: core.atomic_write imports core.logging, whose runtime
+    # configuration depends on settings. Keep it local to avoid widening this
+    # module's eager import surface during settings bootstrap.
+    from ..atomic_write import atomic_write_bytes
+
+    atomic_write_bytes(resolved_output, buffer.getvalue())
     _logger.info(
         "build_corpus_bundle: wrote %r bundle with %d files to %s",
         corpus_root_name,

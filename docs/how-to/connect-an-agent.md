@@ -7,64 +7,57 @@ deterministic engine, and nothing is ever submitted to the Agencia Estatal de
 Administración Tributaria (AEAT): the agent surface exposes the same local,
 gated commands the CLI does.
 
-## What the agent surface is
+## What the agent connection is
 
-Cadrumo ships an MCP (Model Context Protocol) server, `aeat-mcp`, alongside the
-`aeat` command. MCP is an open standard that lets assistants call tools. Any
-MCP-capable client can connect; Claude is one such client.
+Cadrumo ships an MCP (Model Context Protocol) server, `cadrumo-mcp`, alongside
+the `aeat` command. MCP is an open standard that lets assistants call tools.
+Any MCP-capable client can connect; Claude is one such client.
 
-The server exposes the CLI's read and prepare operations as tools, plus grounded
-search over the bundled BOE and AEAT legal corpus. It refuses live submission by
-construction, exactly like the CLI.
+The server exposes the CLI's read and prepare operations as tools, plus
+grounded search over the bundled BOE and AEAT legal corpus. It refuses live
+submission by construction, exactly like the CLI.
 
-## 1. Install the agent extra
+In the beta, connect from the repository checkout below. Every release also
+builds the plugin and Desktop extension artifacts; their marketplace and
+registry listings open with the public launch (see
+[Get Cadrumo](../download.md) for channel status).
 
-The MCP runtime is an optional extra of the same `cadrumo` package:
-
-```bash
-pip install "cadrumo[agent]"
-```
-
-Confirm the server script is on your path:
+## Prepare the source checkout
 
 ```bash
-aeat-mcp --help
+git clone https://github.com/nevenincs/cadrumo.git
+cd cadrumo
+uv sync --extra agent
+uv run cadrumo-mcp --help
 ```
 
-Without the extra, `aeat-mcp` refuses with an install hint instead of running.
+## Register the source server
 
-## 2. Connect Claude through the plugin
-
-For Claude Code, Claude Desktop, or Cowork, install the published plugin. Add
-the marketplace once, then install the plugin:
-
-```text
-/plugin marketplace add nevenincs/neve-marketplace
-/plugin install aeat@neve
-```
-
-The plugin bundles the MCP server configuration together with the rules,
-skills, and scoped agent personas that keep the assistant inside the safety
-boundary.
-
-## 3. Connect any other MCP client
-
-Register `aeat-mcp` as a stdio server in your client's MCP configuration:
+Register `uv run cadrumo-mcp` as a stdio server and set the checkout as the
+working directory. In clients that accept a JSON server definition:
 
 ```json
 {
   "mcpServers": {
-    "aeat": {
-      "command": "aeat-mcp",
-      "args": []
+    "cadrumo": {
+      "command": "uv",
+      "args": ["run", "cadrumo-mcp"],
+      "cwd": "/absolute/path/to/cadrumo"
     }
   }
 }
 ```
 
-The server uses the same local encrypted store and the same active profile as
-the CLI, and prompts for the master-key passphrase the same way. Set
-`CADRUMO_SECRET_PASSPHRASE` in the server's environment to run without a prompt.
+Replace the example path with the absolute path to your authorized checkout.
+Do not replace this with `uvx`, a marketplace install, or a downloaded
+extension until public distribution is announced.
+
+## Before the first agent session
+
+The server uses the same local encrypted store and the same active profile
+as the CLI. A server cannot answer a passphrase prompt, so configure the
+passphrase for unattended runs first - see
+[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 ## What the agent can and cannot do
 

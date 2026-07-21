@@ -13,14 +13,16 @@ from pathlib import Path
 
 import pytest
 
+from .... import __version__
 from ....application.operator_surface import build_help_document
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import PRODUCT_IDENTITY
 from ....core.config import SecretStoreBackend, Settings
 from ....core.redaction import CLI_PROFILE_ID_PLACEHOLDER
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root, isolated_sessionless_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -102,10 +104,12 @@ def test_root_help_uses_curated_two_root_shape() -> None:
 
 def test_config_and_app_help_use_curated_subtree_shape() -> None:
     config = _invoke(["config", "--help"])
+    config_json = _invoke(["--format", "json", "config", "--help"])
     app_result = _invoke(["app", "--help"])
     retired_init = "aeat config " + "init"
 
     assert config.exit_code == 0, config.output
+    assert config_json.exit_code == 0, config_json.output
     assert "aeat config - profile, auth, diagnostics" in config.output
     assert "aeat config profile create NAME" in config.output
     assert "CADRUMO_LOCAL_STORAGE_ROOT" in config.output
@@ -114,6 +118,9 @@ def test_config_and_app_help_use_curated_subtree_shape() -> None:
     assert ("aeat config profile " + "view [NAME]") not in config.output
     assert retired_init not in config.output
     assert "Run aeat --help for the full overview." in config.output
+    config_envelope = json.loads(config_json.output)
+    assert config_envelope["command"] == "root.config"
+    assert config_envelope["result"]["surface"] == "config"
 
     assert app_result.exit_code == 0, app_result.output
     assert "aeat app - operational tax work" in app_result.output
@@ -164,6 +171,46 @@ def test_installed_console_base_command_starts_clean_workspace(tmp_path: Path) -
     assert "unreadable_rows" not in combined_output
 
 
+def test_installed_console_exposes_contextual_product_identity(tmp_path: Path) -> None:
+    """The sole human executable exposes the binding Cadrumo identity tuple."""
+    cli_executable = _installed_cli_executable()
+    env = _console_env(tmp_path)
+
+    version = subprocess.run(
+        [cli_executable, "--version"],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+    help_result = subprocess.run(
+        [cli_executable, "--language", "en", "--help"],
+        cwd=Path.cwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=60,
+        check=False,
+    )
+
+    assert version.returncode == 0, version.stderr
+    assert version.stdout == f"{PRODUCT_IDENTITY.display_name} {__version__}\n"
+    assert __version__ == "0.2.1"
+    assert help_result.returncode == 0, help_result.stderr
+    assert help_result.stdout.startswith(f"{PRODUCT_IDENTITY.display_name} -")
+    assert f"{PRODUCT_IDENTITY.cli_executable} config" in help_result.stdout
+    assert "AEAT" in help_result.stdout
+    assert f"{PRODUCT_IDENTITY.python_package} config" not in help_result.stdout
+
+    suffix = ".exe" if os.name == "nt" else ""
+    human_alias = Path(sys.executable).with_name(f"{PRODUCT_IDENTITY.python_package}{suffix}")
+    assert not human_alias.exists(), f"unexpected human CLI alias installed at {human_alias}"
+
+
 def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
     uv_exe = shutil.which("uv")
     assert uv_exe is not None
@@ -198,7 +245,7 @@ def test_uv_no_sync_console_help_starts_from_repo_root(tmp_path: Path) -> None:
     ],
 )
 def test_installed_console_help_does_not_adopt_former_product_state(tmp_path: Path, arguments: tuple[str, ...]) -> None:
-    """Help remains available when CADRUMO correctly refuses legacy state."""
+    """Help remains available when Cadrumo correctly refuses legacy state."""
     cli_executable = _installed_cli_executable()
     former_root = tmp_path / "former-product-state"
     former_root.mkdir()

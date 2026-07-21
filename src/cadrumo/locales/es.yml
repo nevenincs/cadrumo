@@ -34,11 +34,7 @@ adapters:
         capture_requires_active_session: capture_storage_state() requiere la sesión
           autenticada actualmente activa.
         capture_requires_certificate: capture_storage_state() requiere una sesión
-          respaldada por certificado con metadatos de handshake.
-        closing: El autenticador está cerrando; no se permiten nuevas operaciones
-          verify_login.
-        context_marker_missing: El contexto del navegador no está etiquetado con el
-          marcador de certificado esperado.
+          activa con certificado y metadatos del recurso protegido.
         metadata_parse_failed: Los metadatos persistidos no produjeron un modelo analizado.
         no_active_context: No hay contexto de navegador activo; llame a authenticate()
           primero.
@@ -55,16 +51,14 @@ adapters:
           de autenticarse de nuevo.
         approval_timeout: La autenticación por navegador Cl@ve Móvil no se completó
           en el tiempo configurado.
-        dni_nie_not_set: AEAT_CLAVE_MOVIL_DNI_NIE no está configurado; configure su
-          DNI o NIE antes de autenticarse.
+        dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE no está configurado; configure
+          su DNI o NIE antes de autenticarse.
         initial_navigation_timeout: La navegacion inicial a Cl@ve Movil no se completo
           dentro del tiempo configurado.
         metadata_invalid: Los metadatos de sesión de Cl@ve Móvil son inválidos o no
           pueden analizarse.
         no_persisted_session: No se encontro sesion de Cl@ve Movil; ejecute `aeat
           config auth status` primero.
-        page_missing_click: La pagina de Playwright no expone click(); no se puede
-          operar la entrada de Cl@ve Movil.
         session_expired: La sesion de Cl@ve Movil ha superado su plazo de inactividad.
         storage_state_hash_mismatch: El hash del estado de almacenamiento de Cl@ve
           Movil no coincide; los datos de sesion pueden estar corruptos.
@@ -206,7 +200,7 @@ adapters:
             operador.
           former_vault_folder: La carpeta vault de Google Drive {vault_folder_name}
             pertenece al producto anterior y no se puede usar; usa la carpeta vault
-            de CADRUMO.
+            de Cadrumo.
           googleapiclient_import_failed: La dependencia google-api-python-client no
             se puede importar; ejecuta `uv sync` y reintentalo.
           media_non_bytes: La descarga de medios de Google Drive devolvio {payload_type}
@@ -353,6 +347,9 @@ aggregation:
       tipo_renta_code_not_declared: El código oficial de tipo de renta %{tipo_renta_code}
         del Modelo 210 no está declarado para la revisión y el período de presentación
         %{period} seleccionados.
+    errors:
+      official_tipo_renta_parameter_count: La revisión %{revision_id} del Modelo 210
+        debe declarar exactamente un parámetro de código oficial de tipo de renta.
   iva_ledger:
     errors:
       bucket_mismatch: El bucket del repositorio de movimientos no coincide con el
@@ -481,12 +478,12 @@ application:
         fecha-hora o cadena ISO-8601.
     operator:
       alignment:
-        both_missing_detail: No están configurados ni la identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+        both_missing_detail: No están configurados ni la identidad Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           ni el identificador fiscal del perfil activo. Configura ambos con el mismo
           DNI/NIE antes de la autenticación AEAT en directo.
         both_missing_next_action: Edita el perfil activo con 'aeat config profile
           edit NOMBRE --tax-id DNI/NIE' y configura el mismo DNI/NIE para Cl@ve Móvil.
-        clave_identity_missing_detail: La identidad Cl@ve (AEAT_CLAVE_MOVIL_DNI_NIE)
+        clave_identity_missing_detail: La identidad Cl@ve (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           no está configurada, por lo que no se puede comparar con el identificador
           fiscal del perfil activo. Configúrala con el DNI/NIE del perfil activo.
         clave_identity_missing_next_action: Configura el DNI/NIE de Cl@ve Móvil con
@@ -510,16 +507,25 @@ application:
         certificate_file_unresolved: La ruta del certificado '%{certificate_path}'
           no resuelve a un archivo existente. Ejecuta `aeat config auth configure
           --provider certificate --file RUTA` con una ruta a tu paquete PKCS#12 (.p12/.pfx).
+        certificate_secret_mutation_in_progress: Aún se está recuperando un cambio
+          del secreto de certificado para este perfil. Reintenta el mismo comando
+          de secreto antes de cambiar la configuración de autenticación.
         certificate_source_not_found: El origen de certificado '%{name}' no está registrado.
           Ejecute `aeat config auth certificate list` para ver los orígenes registrados,
           o `aeat config auth certificate register --name %{name} --file RUTA` para
           registrarlo.
+        cleanup_in_progress: Aún se está recuperando un cierre o reinicio de autenticación
+          para este perfil. Reanuda esa operación antes de cambiar la configuración
+          de autenticación.
         dangling_active_profile: El puntero de perfil activo '%{active_profile}' no
           resuelve a un bucket de perfil registrado. Ejecuta aeat config profile list
           para inspeccionar los perfiles registrados y despues aeat config switch
           NAME o aeat config profile create NAME.
         no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile create
           NAME` antes de configurar la autenticación.
+        provider_not_configured: No hay ningún proveedor de autenticación configurado;
+          indica --provider o configura uno primero.
+        scope_conflict: Elige --provider o --all, pero no ambos.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
           manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).
           Siguiente acción: %{next_action}.'
@@ -580,18 +586,19 @@ application:
     sessions:
       errors:
         clave_identity_missing: La autenticación Cl@ve Móvil en directo requiere un
-          DNI/NIE configurado (AEAT_CLAVE_MOVIL_DNI_NIE) antes de usar cualquier sesión
-          AEAT.
+          DNI/NIE configurado (CADRUMO_CLAVE_MOVIL_DNI_NIE) antes de usar cualquier
+          sesión AEAT.
         clave_identity_profile_mismatch: La identidad de Cl@ve Móvil no coincide con
           la identidad fiscal del perfil activo; cambia al perfil que coincida o actualiza
           el perfil antes de la autenticación AEAT en directo.
         corrupt_session: La sesión de autenticación guardada está dañada y no se puede
-          leer. Ejecuta `aeat config auth clear --sessions` y después `aeat config
-          auth test`.
+          leer. Ejecuta `aeat config auth logout` y después `aeat config auth test`.
         no_session: No hay sesión AEAT activa; ejecuta `aeat config auth test` antes
           de leer datos AEAT.
         profile_tax_id_missing: La autenticación Cl@ve Móvil en directo requiere que
           el perfil activo tenga identity.tax_id.
+        provider_close_failed: No se pudo cerrar de forma segura la sesión del navegador
+          AEAT; repite la autenticación antes de leer datos AEAT.
         sede_rejected: La sesión AEAT no es aceptada por la Sede; ejecuta `aeat config
           auth test` antes de leer datos AEAT.
         session_expired: La sesión AEAT ha caducado; ejecuta `aeat config auth test`
@@ -1728,8 +1735,11 @@ cli:
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
           a un proveedor)'
         list_help: Lista las facturas de negocio (ambos tipos salvo que --kind filtre)
-        operation_type_help: 'Tipo de operación M349: E entregas, S servicios, T triangular,
-          R rectificación, A adquisición bienes, I adquisición servicios, M miscelánea'
+        operation_type_help: 'Clave de operación M349: E entregas, M entregas posteriores
+          a importación exenta, H las mismas por representante fiscal, A adquisiciones,
+          T entregas triangulares, S servicios prestados, I servicios adquiridos,
+          R transferencias de bienes en consigna, D devoluciones de bienes en consigna,
+          C sustituciones del destinatario en consigna'
         operation_type_invalid: '--operation-type debe ser uno de: {valid}'
         remove_help: Elimina una factura de negocio
         update_help: Actualiza los datos de una factura de negocio
@@ -1964,10 +1974,8 @@ cli:
           (manifest.json se escribe el último).
         force_incomplete_help: Permitir la exportación cuando la verificación señale
           el paquete como incompleto.
-        group_help: Verbos de auditoría del paquete de evidencia (show/check/export/replay).
+        group_help: Verbos de auditoría del paquete de evidencia (show/check/export).
         output_help: Ruta de salida para el ZIP del paquete.
-        replay_help: Reproducir la verificación del caso de evidencia para entrega
-          forense; nunca contacta con AEAT ni realiza envíos.
         show_help: Mostrar el manifiesto y los registros referenciados de un paquete
           de evidencia
       bindings:
@@ -2832,10 +2840,10 @@ cli:
         status_help: Mostrar los metadatos de una unidad de trabajo
         status_next_action: Crea o recalcula esta unidad con `aeat app modelo work
           calculate` y luego verifica el borrador con `aeat app modelo work verify`.
-        verify_already_verified_refused: La revisión de cálculo %{calculation_revision_id}
-          ya está en estado %{state} y no se puede volver a verificar. La verificación
-          solo acepta una revisión en borrador.
         verify_help: Verificar una revisión draft contra el contrato verified-complete
+        verify_idempotent_noop: 'Operación idempotente sin efecto: la revisión de
+          cálculo %{calculation_revision_id} ya está verificada; se devolvió el informe
+          de verificación existente sin cambios.'
         verify_next_action_granted: La verificación se superó. Exporta el artefacto
           de presentación con `aeat app modelo export`.
         verify_next_action_incomplete: La verificación encontró elementos bloqueantes
@@ -2933,20 +2941,13 @@ cli:
           remove_help: Elimina la contrasena vinculada a una fuente de certificado
             registrada
           set:
-            backend_help: 'Backend del secreto: secure_storage (por defecto, cifrado
-              en reposo) o keyring (llavero del sistema operativo)'
             name_help: Fuente de certificado registrada a la que se vincula la contrasena
-            secret_help: La contrasena del PKCS#12 (se solicita, oculta, nunca se
-              muestra)
+            secret_prompt: 'Frase de contraseña PKCS#12 (entrada oculta): '
           set_help: Establece (o rota) la contrasena de una fuente de certificado
             registrada
         select:
           name_help: Registered certificate source to activate
         select_help: Select the active certificate source
-      clear_all_help: Limpiar todos los proveedores de autenticación configurados
-      clear_help: Limpiar metadatos locales de autenticación
-      clear_locks_help: Limpiar bloqueos de adquisición de autenticación
-      clear_sessions_help: Limpiar sesiones AEAT persistidas
       configure_help: Configurar el proveedor de autenticación activo
       diagnostics:
         help: Inspecciona los diagnósticos de autenticación cifrados.
@@ -2967,6 +2968,10 @@ cli:
       login_help: Adquirir o verificar una sesión AEAT en vivo.
       login_reset_lock_help: Eliminar un bloqueo de adquisición de autenticación obsoleto
         antes de empezar.
+      logout_all_help: Cerrar las sesiones de todos los proveedores de autenticación
+        conocidos
+      logout_help: Cerrar las sesiones locales de autenticación sin retirar la configuración
+        del proveedor
       no_active_bucket: No hay un perfil activo. Ejecuta 'aeat config profile create
         NAME' antes de configurar la autenticación.
       output_language_help: Idioma del texto de salida (es, en, ca, hu).
@@ -2978,6 +2983,12 @@ cli:
       providers_help: Listar proveedores de autenticación soportados
       reserved_provider: 'Proveedor de autenticación reservado pero no disponible:
         %{provider}.'
+      reset_all_help: Restablecer todos los proveedores de autenticación conocidos
+      reset_help: Retirar la configuración local del proveedor, las sesiones, los
+        bloqueos, los certificados registrados y sus secretos guardados
+      reset_requires_yes: El restablecimiento retira la configuración y las credenciales
+        guardadas. Vuelve a ejecutar el comando con --yes para confirmar.
+      reset_yes_help: Confirmar el restablecimiento destructivo de la autenticación
       status_help: Mostrar el estado de autenticación configurado
       status_summary_configured: La autenticación está configurada pero aún no hay
         una sesión activa disponible.
@@ -3013,17 +3024,20 @@ cli:
         recipient_id_help: Etiqueta estable elegida por el operador (p. ej. 'mi-gestor').
         remove_help: Elimina un destinatario de confianza por su id del perfil activo.
     custody:
-      confirm_new_passphrase_help: Repite la nueva contrasena del almacen secreto.
-      confirm_new_passphrase_prompt: 'Confirma la nueva contrasena del almacen secreto
-        AEAT: '
       data_loss_warning: Anota ahora esta clave de recuperacion. AEAT no almacena
         la clave de recuperacion en claro y no puede mostrarla otra vez.
       errors:
-        missing_new_passphrase_confirmation: Repite la nueva contrasena con --confirm-new-passphrase.
         new_passphrase_mismatch: La nueva contrasena y su confirmacion no coinciden.
-      new_passphrase_help: Nueva contrasena del almacen secreto. Omitela para introducirla
-        de forma interactiva.
-      new_passphrase_prompt: 'Nueva contrasena del almacen secreto AEAT: '
+        non_interactive_secret_required: Se requiere un secreto pero no hay una terminal
+          interactiva; usa --secrets-stdin.
+        secrets_stdin_invalid_json: El contenido de --secrets-stdin no es un objeto
+          JSON válido.
+        secrets_stdin_missing_fields: Al objeto de --secrets-stdin le faltan campos
+          obligatorios o tiene campos inesperados.
+        secrets_stdin_too_large: El contenido de --secrets-stdin supera el tamaño
+          máximo permitido.
+      secrets_stdin_help: Lee los secretos como un único objeto JSON acotado desde
+        la entrada estándar en lugar de solicitarlos.
     errors:
       invalid_value: 'Valor inválido para %{name}: %{value}'
       no_active_profile: No hay un perfil activo. Ejecuta 'aeat config profile create
@@ -3211,8 +3225,19 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: Listar todos los perfiles registrados y marcar el activo
-    lock:
-      help: Bloquear el perfil activo eliminando el puntero de perfil activo.
+    passphrase:
+      change:
+        help: Cambia la contraseña del almacén de secretos tras verificar la actual.
+      confirm_new_passphrase_prompt: 'Confirma la nueva contraseña del almacén secreto
+        Cadrumo: '
+      current_passphrase_prompt: 'Contraseña actual del almacén secreto Cadrumo: '
+      errors:
+        current_passphrase_incorrect: La contraseña actual es incorrecta; el almacén
+          de secretos no se ha modificado.
+        store_unprovisioned: El almacén de secretos en archivo no está inicializado;
+          no hay contraseña que cambiar.
+      help: Gestiona la contraseña del almacén de secretos en archivo.
+      new_passphrase_prompt: 'Nueva contraseña del almacén secreto Cadrumo: '
     profile:
       already_exists: El perfil %{name} ya existe. Elige otro identificador de destino.
       archive:
@@ -3305,29 +3330,34 @@ cli:
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
       export_cleartext_local_help: Escribe JSON en claro solo para gestión local/SAR;
         no es seguro para correo, sincronización ni transferencia.
+      export_confirm_passphrase_prompt: 'Confirma la frase de contraseña del paquete: '
+      export_encrypt_help: Cifra el paquete con AEAD para la transferencia; la frase
+        de contraseña se solicita (oculta) o se lee con --secrets-stdin, nunca por
+        argv.
       export_encrypted_info: Este paquete de perfil se escribió en {out} con cifrado
-        AEAD por frase de contraseña. Impórtalo con 'aeat config profile import PATH
-        --passphrase ...'. Solo contiene el paquete estructurado del perfil; usa el
-        archivo de recuperación cifrado para una copia completa con evidencias adjuntas
-        y auditoría.
+        AEAD por frase de contraseña. Impórtalo con 'aeat config profile import RUTA';
+        la frase de contraseña se solicita (oculta) o se lee con --secrets-stdin.
+        Solo contiene el paquete estructurado del perfil; usa el archivo de recuperación
+        cifrado para una copia completa con evidencias adjuntas y auditoría.
       export_help: Escribe un paquete portátil de perfil cifrado por frase de contraseña
         en RUTA; el JSON en claro requiere --cleartext-local y solo es para uso local/SAR.
       export_name_help: Perfil que quieres exportar; por defecto, el activo
       export_out_help: Ruta de destino para el paquete de perfil
-      export_passphrase_help: Frase de contraseña para cifrar con AEAD el paquete
-        de perfil serializado para transferencia.
+      export_passphrase_mismatch: La frase de contraseña del paquete y su confirmación
+        no coinciden; no se ha escrito nada.
+      export_passphrase_prompt: 'Frase de contraseña del paquete (mínimo 8 caracteres): '
       export_passphrase_too_short: La frase de contraseña de exportación del perfil
         debe tener al menos 8 caracteres.
-      export_requires_transport: Usa --passphrase para un paquete cifrado de transferencia,
+      export_requires_transport: Usa --encrypt para un paquete cifrado de transferencia,
         o --cleartext-local solo para JSON local/SAR.
       export_sensitivity_warning: 'Este paquete NO está cifrado y contiene datos financieros
         sensibles: el NIF en claro (sin ocultar), nombre y apellidos, el libro de
         movimientos completo, las revisiones de cálculo y los registros de presentación.
         Se escribió en {out}. Úsalo solo para gestión local/SAR; no lo envíes por
         correo, no lo sincronices ni lo transfieras. Bórralo cuando termine esa gestión
-        local/SAR. Usa ''aeat config profile export --passphrase ...'' para un paquete
-        estructurado de transferencia cifrado AEAD.'
-      export_transport_conflict: Elige --passphrase o --cleartext-local, no ambos.
+        local/SAR. Usa ''aeat config profile export --encrypt'' para un paquete estructurado
+        de transferencia cifrado AEAD.'
+      export_transport_conflict: Elige --encrypt o --cleartext-local, no ambos.
       help: Gestionar valores de configuración del perfil activo
       history:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
@@ -3368,16 +3398,16 @@ cli:
       import_missing_filing_baseline: 'Al paquete de perfil le faltan datos de identidad
         para presentar modelos. Corrige el paquete o vuelve a exportar un perfil completo
         con estos campos: %{missing_flags}.'
-      import_passphrase_help: Frase de contraseña para un paquete exportado con 'config
-        profile export --passphrase'.
+      import_passphrase_prompt: 'Frase de contraseña del paquete: '
       import_path_help: Ruta al archivo del paquete de perfil
       import_uuid_collision: El UUID del paquete entra en conflicto con un perfil
         existente.
-      logout_help: Cierra la sesión del perfil activo limpiando el puntero local
-      logout_session_warning: El cierre de sesion limpio el puntero del perfil activo.
-        Los verbos posteriores en este terminal seran rechazados con NoActiveBucketSessionError
-        hasta que ejecutes aeat config switch NAME o abras un nuevo terminal y vuelvas
-        a seleccionar.
+      logout_help: Cierra la sesión de almacenamiento activa, descarta las claves
+        en memoria, libera los motores del bucket y limpia el puntero local
+      logout_session_warning: El cierre de sesión cerró el almacenamiento activo,
+        descartó las claves en memoria, liberó los motores del bucket y limpió el
+        puntero del perfil activo. Ejecuta aeat config switch NAME antes de otro comando
+        que necesite un perfil.
       no_active_profile: No hay un perfil activo. Ejecuta `aeat config profile create
         NAME --tax-id <NIF/CIF/DNI/NIE>` primero.
       preflight_filing_year_help: Ejercicio de presentación (cuatro dígitos).
@@ -3473,13 +3503,11 @@ cli:
         usage_help: Informar del espacio en disco de un sandbox, o de todos a la vez.
         usage_name_help: Nombre del sandbox (sin el prefijo); omitir para informar
           de todos.
-        use_help: Cambia el perfil activo a un sandbox existente.
-        use_name_help: Nombre del sandbox (sin el prefijo).
-      sar_catalogue_info: 'Este archivo contiene todas las categorías de datos personales
-        del perfil: identidad y datos del perfil, unidades de trabajo de modelos,
-        movimientos del libro, revisiones de cálculo y registros de presentación.
-        Los bytes de las pruebas adjuntas y las capturas de AEAT permanecen en almacenamiento
-        cifrado; utilice el archivo de recuperación cifrado para incluirlos.'
+      sar_catalogue_info: Este archivo contiene todas las categorías de datos personales
+        del perfil. Las categorías exactas figuran en el campo data_categories de
+        esta respuesta y en su contexto legible por máquina. Los bytes de las pruebas
+        adjuntas y las capturas de AEAT permanecen en almacenamiento cifrado; utilice
+        el archivo de recuperación cifrado para incluirlos.
       sar_help: 'Exporta todos los datos personales de un perfil como archivo de acceso
         del interesado (RGPD): el paquete portátil del perfil.'
       show:
@@ -3499,11 +3527,35 @@ cli:
         activo.
       view_help: Mostrar los hechos de un perfil (por defecto el perfil activo)
     recover:
-      help: Recuperar el almacen secreto de archivo con una clave de recuperacion
-        y vincularlo a una nueva contrasena.
-      recovery_key_help: Clave de recuperacion de veinticuatro palabras.
-    rekey:
-      help: Reenvolver el almacen secreto de archivo con una nueva contrasena.
+      errors:
+        recovery_code_rejected: El código de recuperación no abrió el envoltorio de
+          recuperación; el almacén de secretos no se ha cambiado.
+      help: Recupera el almacén de secretos de archivo con el código de recuperación
+        de 24 palabras y vincúlalo a una frase de contraseña nueva.
+    recovery:
+      candidate_intro: 'Tu nuevo código de recuperación. Anota ahora estas 24 palabras,
+        en orden:'
+      create:
+        help: Registra un código de recuperación; las palabras aparecen una sola vez
+          en el terminal y deben volver a escribirse.
+      errors:
+        interactive_terminal_required: 'El registro de recuperación necesita un terminal
+          interactivo: el código se muestra una vez y debe volver a escribirse.'
+        retype_mismatch: El código de recuperación reescrito no coincide con el mostrado;
+          no se ha cambiado nada.
+      help: Gestiona el código de recuperación de 24 palabras del almacén de secretos
+        de archivo.
+      recovery_code_prompt: 'Código de recuperación de 24 palabras: '
+      retype_prompt: 'Vuelve a escribir el código de recuperación de 24 palabras para
+        confirmar (entrada oculta): '
+      rotate:
+        help: Sustituye el código de recuperación registrado; las palabras nuevas
+          aparecen una sola vez y deben volver a escribirse.
+      status:
+        help: Muestra si hay un código de recuperación registrado, sin exponerlo.
+      verify:
+        help: Comprueba que un código de recuperación abre el envoltorio de recuperación
+          guardado.
     repair:
       connectivity_help: Comprobar conectividad del navegador y la Sede AEAT
       connectivity_target_help: Objetivo de conectividad que se debe comprobar
@@ -3554,15 +3606,22 @@ cli:
         interrumpido
       yes_help: Confirmar la reparación.
     reset:
-      help: Reiniciar ámbitos de configuración introducidos por el operador
-      invalid_scope: 'Ámbito no válido: %{scope}. Los ámbitos válidos son: %{valid}.'
-      requires_yes: El reinicio es destructivo. Vuelve a ejecutar con --yes para confirmar.
-      scope_help: 'Ámbito a reiniciar. profile: borra todos los perfiles (manifiestos,
-        DEKs, declaraciones, revisiones de libro mayor y facturas). auth: limpia la
-        sesión de autenticación AEAT/SEDE persistida. data: pone en cuarentena las
-        filas de objetos seguros ilegibles en todos los espacios de nombres. all:
-        aplica profile, auth y data juntos.'
-      yes_help: Confirmar explícitamente la operación de reinicio
+      help: Inicia, consulta o reanuda el reinicio irreversible de todos los perfiles
+        almacenados localmente.
+      operation_id_help: Selecciona una operación de reinicio exacta por su ID; omítelo
+        para seleccionar automáticamente la operación aplicable.
+      override_retention_help: Anula una pausa por conservación legal después de revisar
+        tus obligaciones; requiere un valor no vacío para --reason.
+      reason_help: Indica el motivo obligatorio para anular una pausa por conservación
+        legal.
+      requires_yes: Usa --yes para confirmar este reinicio irreversible.
+      resume_help: Continúa una operación de reinicio incompleta.
+      start_help: Inicia un nuevo reinicio irreversible de todos los perfiles almacenados
+        localmente.
+      status_help: Muestra el estado de una operación de reinicio sin modificar datos
+        locales.
+      yes_help: Confirma el borrado irreversible de todos los perfiles almacenados
+        localmente.
     set:
       help: Asignar un valor a una clave de configuración
       key_help: Clave a asignar (ej. iva.regime)
@@ -3584,13 +3643,6 @@ cli:
         next_step: 'Próximo paso: ejecuta `aeat app overview status` para revisar
           tu espacio de trabajo.'
         saved: Perfil '%{profile_name}' guardado.
-    show_recovery:
-      existing_notice: La clave de recuperacion en claro no se almacena y no puede
-        volver a mostrarse. Usa --rotate para generar una nueva clave de recuperacion.
-      help: Mostrar el estado de recuperacion o generar una clave de recuperacion
-        de un solo uso.
-      rotate_help: Rotar el envoltorio de recuperacion e imprimir una nueva clave
-        de recuperacion de un solo uso.
     status:
       empty_profile: Sin perfil configurado. Ejecuta `aeat config profile create NAME`
         para empezar.
@@ -3603,9 +3655,6 @@ cli:
     unset:
       help: Eliminar el valor asignado a una clave de configuración
       key_help: Clave a limpiar
-    verify_recovery:
-      help: Verificar que una clave de recuperacion abre el envoltorio de recuperacion
-        persistido.
     workflow_help: Mostrar ayuda del flujo de configuración
   contract:
     app_help: 'Emite el manifiesto de capacidades del operador: raices, familias de
@@ -3867,7 +3916,7 @@ cli:
         --source-jurisdiction explícitamente (TRLIRNR RDLeg 5/2004 art. 2 / art. 10).
         Use un código ISO 3166-1 alfa-2 de dos letras; sólo las filas con ES entran
         en la base del IRNR.
-      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna CADRUMO
+      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna Cadrumo
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
@@ -4050,7 +4099,7 @@ cli:
       split_recommended_message: La factura adjunta parece contener varias líneas
         de tipo o categoría. Vuelve a ejecutar con --auto-split para separarlas en
         hijos de base e IVA declarables de forma independiente.
-      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna CADRUMO
+      system_state_not_assignable: 'La clasificación ''%{value}'' la asigna Cadrumo
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED.'
       taxable_base_help: Importe de base imponible
@@ -4225,14 +4274,12 @@ cli:
           del operador y no se pueden vincular aquí. Para crear una factura de catálogo
           vinculable manualmente, ejecuta 'aeat app ledger invoice catalogue create'
           y pasa ese invoice_id a --invoice-id. Para adjuntar evidencia de factura
-          de compra, ejecuta 'aeat app ledger link <tx> --evidence-id <id>' (o 'aeat
-          app ledger attach') con un id de 'aeat app ledger evidence add'.
-        missing_target: Indica al menos uno de --invoice-id o --evidence-id.
-      evidence_id_help: Id de evidencia de factura de compra generado por 'aeat app
-        ledger evidence add', adjuntado al movimiento.
-      help: Vincula un movimiento contable con una factura y/o con un registro de
-        evidencia de factura de compra en una única llamada canónica. Rechaza vínculos
-        entre buckets. Local; nunca contacta con AEAT.
+          de compra, ejecuta 'aeat app ledger attach' con un id de 'aeat app ledger
+          evidence add'.
+      help: Vincula un movimiento contable con una factura del catálogo de reconciliación
+        en una única llamada canónica. Para adjuntar evidencia de factura de compra,
+        usa 'aeat app ledger attach'. Rechaza vínculos entre buckets. Local; nunca
+        contacta con AEAT.
       id_help: Id de transaccion del libro (SHA-256 o prefijo inequivoco).
       invoice_id_help: Id del catálogo de facturas enriquecido, procedente de una
         factura importada, reconciliada o creada con 'aeat app ledger invoice catalogue
@@ -4412,6 +4459,8 @@ cli:
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
     app_help: Auditar y generar catálogos de traducción
+    canonicalize_product_identity:
+      locale_help: Actualiza solo este catálogo de idioma compatible.
     modelo:
       app_help: Gestiona traducciones locales de esquemas de modelo.
       audit_help: Audita traducciones de esquemas de modelo.
@@ -4489,9 +4538,11 @@ cli:
         section_overview: Estado general
         section_review_and_registry: Revision y registro
       config:
-        auth_clear: Eliminar las credenciales de autenticacion almacenadas.
         auth_configure: Configurar el proveedor de autenticacion con la AEAT.
+        auth_logout: Cerrar sesiones locales y conservar la configuración del proveedor.
         auth_providers: Listar los proveedores de autenticacion disponibles.
+        auth_reset: Retirar la configuración local de autenticación y las credenciales
+          guardadas.
         auth_status: Mostrar el estado actual de la autenticacion con la AEAT.
         auth_test: Probar la autenticacion con la AEAT.
         diagnostics_logs: Consultar los registros de diagnostico de la aplicacion.
@@ -4518,6 +4569,10 @@ cli:
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
         profile_switch: Switch to a profile and make it the active one.
+        reset_resume: Continúa una operación de reinicio incompleta.
+        reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles locales.
+        reset_status: Muestra el estado de una operación de reinicio sin modificar
+          datos locales.
         section_authentication: Autenticacion AEAT
         section_diagnostics: Diagnostico
         section_first_run: Primera ejecucion
@@ -4759,14 +4814,6 @@ cli:
     diff_revisions_modelo_help: Identificador del modelo a comparar
     diff_revisions_to_year_help: Ejercicio fiscal posterior cuya revisión cubridora
       se compara con la base
-    errors:
-      capability:
-        manuals_verify: manual corpus verification
-        parity: registry parity verification
-        registry_verify: registry verification
-        workbooks_verify: workbook verification
-      corpus_companion_absent: Required corpus companion data is unavailable for {capability}.
-        Install {install} and retry.
     inspect_help: Inspeccionar el estado del registro y las referencias
     inspect_registry_root_help: Ruta al directorio raíz del registro
     manuals:
@@ -5108,8 +5155,6 @@ errors:
     auth_auth_certificate: Se produjo un error en la autenticación con certificado.
     auth_auth_certificate_expired: El certificado digital ha caducado. Renueva el
       certificado para poder autenticarte.
-    auth_auth_certificate_handshake: La entrada del handshake TLS no es válida. Revisa
-      la URL indicada.
     auth_auth_certificate_load: No se pudieron leer los datos del certificado PKCS#12.
       Comprueba que el archivo no esté dañado.
     auth_auth_certificate_nif_parse: No se pudo extraer ningún NIF ni NIE del titular
@@ -5124,8 +5169,12 @@ errors:
       Cl@ve Móvil o son incorrectos. Revisa la configuración de Cl@ve.
     auth_auth_configuration: Faltan ajustes de autenticación obligatorios o son incorrectos.
       Revisa la configuración de autenticación.
+    auth_auth_provider_cleanup: El proveedor de autenticación no pudo liberar todos
+      los recursos del navegador. Reintenta el cierre antes de iniciar otra sesión.
     auth_auth_validation: Los parámetros de autenticación no superaron la validación.
       Corrige los valores indicados y vuelve a intentarlo.
+    auth_former_product_session_state: Cadrumo detectó estado de sesión de un producto
+      retirado y se niega a leerlo, moverlo, re-cifrarlo, eliminarlo o adoptarlo.
     auth_google: Se produjo un error en la autenticación con Google.
     auth_google_client_not_registered: No hay ningún cliente OAuth de escritorio de
       Google registrado para el perfil activo. Registra un cliente para usar funciones
@@ -5157,9 +5206,9 @@ errors:
       la aplicación.
     auth_storage_master_key_material_missing: No existe material de clave maestra.
       El almacenamiento seguro aún no está aprovisionado.
-    auth_storage_master_key_passphrase_mismatch: La frase de contrasena no abre la
-      clave maestra. Vuelve a introducirla; si la has olvidado, ejecuta aeat config
-      recover --recovery-key <WORDS>.
+    auth_storage_master_key_passphrase_mismatch: La frase de contraseña no desenvuelve
+      la clave maestra. Vuelve a introducirla; si la has olvidado, ejecuta aeat config
+      recover con tu código de recuperación de 24 palabras.
     auth_storage_master_key_unavailable: No se pudo obtener la clave maestra de ningún
       proveedor. Comprueba el llavero o la frase de contraseña de la copia de seguridad.
   calc:
@@ -5243,9 +5292,6 @@ errors:
       de envío.
     error_access_gate_submission_preflight: La comprobación previa del control de
       acceso rechazó una operación de escritura.
-    error_aeat_core: Se produjo un error interno en la aplicación.
-    error_aeat_core_not_found: No se encontró el recurso o registro solicitado.
-    error_aeat_observability: Se produjo un error en la telemetría de la aplicación.
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
@@ -5255,6 +5301,11 @@ errors:
       rechazada.
     error_borrador_artefact_not_recognised: El PDF no coincide con ningún formato
       de borrador de Modelo 100 conocido.
+    error_cadrumo_async_resource_cleanup: Falló la limpieza asíncrona de recursos;
+      vuelva a intentar la limpieza antes de continuar.
+    error_cadrumo_core: Se produjo un error interno en la aplicación.
+    error_cadrumo_core_not_found: No se encontró el recurso o registro solicitado.
+    error_cadrumo_observability: Se produjo un error en la telemetría de la aplicación.
     error_calc_sheets_engine: El motor de exportación de hojas de cálculo encontró
       un estado irresoluble al generar el plan de exportación.
     error_calc_sheets_parity: El escenario del arnés de paridad hace referencia a
@@ -5627,13 +5678,12 @@ errors:
   integrity:
     integrity_active_profile_pointer: El puntero de perfil activo no es válido; repara
       el perfil seleccionado antes de continuar.
-    integrity_aeat_core_validation: Una comprobación interna de integridad de datos
+    integrity_cadrumo_core_validation: Una comprobación interna de integridad de datos
       no se superó.
     integrity_cli_output_schema: El registro de esquemas de salida de la CLI está
       mal configurado.
     integrity_filing_amendment_validation: La declaración complementaria infringe
       una invariante legal o de estructura.
-    integrity_filing_fixture: Los datos de prueba de la declaración no son válidos.
     integrity_filing_validation: La validación de la declaración detectó un problema
       que impide continuar.
     integrity_financial_attachments_attachment_validation: El justificante adjunto
@@ -5717,6 +5767,8 @@ errors:
     profile_import_signature: El archivo de perfil no superó la comprobación de firma
       o integridad. No importes archivos de origen no fiable.
   internal:
+    internal_active_profile_pointer_transaction: 'Error interno: la propiedad de la
+      transacción del puntero de perfil activo no es válida.'
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
       no por un problema de datos almacenados. Consulte los registros de diagnóstico
       para ver qué falló.
@@ -5733,14 +5785,14 @@ errors:
     internal_profile_project_answers_not_registered: 'Error interno: las respuestas
       del proyecto de perfil no estan registradas.'
     internal_profile_registration: 'Error interno: no se pudo registrar el perfil.'
+    internal_wizard_answer_queue_overflow: 'Error interno: el asistente se cerró con
+      respuestas canónicas sin consumir.'
+    internal_wizard_answer_queue_underflow: 'Error interno: el asistente solicitó
+      más respuestas canónicas de las proporcionadas por la ejecución no interactiva.'
     internal_wizard_catalogue_already_registered: 'Error interno: el catalogo del
       asistente ya esta registrado.'
     internal_wizard_catalogue_not_registered: 'Error interno: el catalogo del asistente
       no esta registrado.'
-    internal_wizard_script_overflow: 'Error interno: el asistente se cerró con respuestas
-      guionizadas sin consumir.'
-    internal_wizard_script_underflow: 'Error interno: el asistente solicitó más respuestas
-      de las que tenía guionizadas.'
     internal_workflow_abort_signal: 'Error interno: una etapa del flujo de trabajo
       emitió una señal de cancelación.'
     internal_workflow_unhandled: 'Error interno: una etapa del flujo de trabajo lanzó
@@ -5788,6 +5840,9 @@ errors:
       no admite más operaciones.
     modelo_184_share_sum: Los porcentajes de participación de los miembros del Modelo
       184 deben sumar exactamente el 100 %.
+    modelo_210_agrupacion_renta_rows: Las rentas agrupadas anuales del Modelo 210
+      deben formar una agrupación única y válida (un código, un tipo, un bien identificado
+      y un pagador, salvo la excepción de múltiples pagadores).
     modelo_347_threshold: Las operaciones del Modelo 347 por encima del umbral informativo
       requieren cobertura declarativa explícita.
     modelo_349_country_prefix_context: 'El Modelo 349 rechaza el prefijo de pais {country_code}
@@ -6024,6 +6079,9 @@ errors:
     refused_profile_label_ambiguous: 'Rechazado: la etiqueta del perfil es ambigua.'
     refused_profile_lifo_forbidden: La valoración de existencias por el método LIFO
       no está admitida fiscalmente. Usa FIFO, precio medio ponderado o coste medio.
+    refused_profile_logout_override: El cierre de sesión no puede cambiar un perfil
+      activo seleccionado mediante --profile o CADRUMO_ACTIVE_PROFILE. Elimina la
+      selección explícita y vuelve a intentarlo.
     refused_profile_not_configured: La verificación de la declaración de la Renta
       necesita un perfil de residencia fiscal. Completa el perfil antes de continuar.
     refused_profile_not_found: No existe ningún perfil con el identificador indicado.
@@ -6121,14 +6179,12 @@ errors:
         está registrado con sensibilidad %{expected}, pero el llamador usó %{classification}.
       schema_mismatch: El espacio de nombres de objeto seguro %{namespace} está registrado
         con esquema %{expected}, pero el llamador usó el esquema %{schema_version}.
-      schema_upgrade_path_missing: 'No hay ruta de actualización de esquema para el
-        espacio de nombres {namespace}: falta un actualizador desde la versión {missing_from_version}
-        hacia {expected}.'
-      schema_upgrader_already_registered: Ya hay un actualizador de esquema registrado
-        para el espacio de nombres {namespace} desde la versión {from_version}.
       schema_version_from_future: La versión de esquema almacenada {schema_version}
         del espacio de nombres {namespace} es más reciente de lo que admite esta aplicación
         (hasta {expected}); no se puede leer.
+      schema_version_unsupported: La versión de esquema almacenada {schema_version}
+        del espacio de nombres {namespace} no es compatible; esta aplicación requiere
+        la versión {expected}.
       unknown_classification: 'El espacio de nombres de objetos seguros %{namespace}
         contiene una sensibilidad desconocida: %{classification}.'
       unregistered: El espacio de nombres de objeto seguro %{namespace} no está registrado
@@ -6210,8 +6266,12 @@ locales:
 mcp:
   call:
     timeout: '''{command}'' supero el limite de tiempo del nivel {tier} ({seconds}s)
-      y se cancelo. Reintentalo o ejecuta el comando CADRUMO equivalente directamente
+      y se cancelo. Reintentalo o ejecuta el comando aeat equivalente directamente
       en un terminal.'
+    timeout_may_complete: '''{command}'' superó su límite de tiempo; puede que la
+      operación siga completándose en segundo plano. Vuelve a ejecutarla con la misma
+      clave de idempotencia para comprobarlo: la garantía de idempotencia hace que
+      el reintento sea seguro y nunca duplica la escritura.'
   elicitation:
     confirm:
       consequence_handoff: Esto genera el documento de presentación que el contribuyente
@@ -6228,8 +6288,8 @@ mcp:
         presenta por sí mismo.'
       no_channel: '''{command}'' requiere confirmación humana y este cliente no admite
         la función de preguntas (elicitation). Ejecútalo desde un cliente que pueda
-        hacerte preguntas, o ejecuta el comando CADRUMO CLI equivalente directamente
-        en un terminal.'
+        hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI (`aeat`)
+        directamente en un terminal.'
   faithfulness:
     advisory: 'AVISO DE FIDELIDAD: los argumentos de la llamada citan importes [{values}]
       que ningún resultado de herramienta de esta sesión ha producido. Verifica la
@@ -6256,6 +6316,10 @@ mcp:
       propiedad de la persona ''{owner}''; la persona ''{persona}'' la tiene denegada
       estructuralmente. Entrega la unidad de trabajo verificada a la sesión del verificador
       para producir la exportación o el marcador de registro.'
+  serving:
+    warm_degraded: '''{command}'' se atendio por el transporte de subproceso porque
+      el runtime en caliente estaba {reason}; el resultado es identico, solo mas lento.
+      El servicio en caliente se reanuda cuando se libera la llamada lenta.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: Se ha aplicado prorrata 50 % (Art. 61 LIRPF)

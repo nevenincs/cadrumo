@@ -1,0 +1,70 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "create",
+        "me",
+        "--quiet",
+        "--entity-type",
+        "natural_person",
+        "--tax-id",
+        "87654321X",
+        "--name",
+        "Ana",
+        "--surnames",
+        "Garcia Lopez"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tme\nStatus\tcreated\nActive profile\tme\nNext\taeat app modelo work create\nNo comunidad autónoma was chosen, so madrid was assumed for this profile. Autonomic deductions and the autonomic part of the tax scale are calculated for madrid. Set --tax-residence-ccaa to use a different comunidad.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "edit",
+        "me",
+        "--quiet",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": null,
+        "command": "config.profile.edit",
+        "notices": [
+          {
+            "code": "config.profile.edit.next_step",
+            "context": null,
+            "message": "Next",
+            "severity": "info",
+            "suggestion": "aeat app modelo work create"
+          }
+        ],
+        "result": {
+          "profile_name": "me",
+          "status": "updated"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "verification-reports-scope-dependency"
+}

@@ -3,14 +3,15 @@ generated: true
 tags:
   - '#index'
   - '#rental-income-hardening'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-29-rental-income-hardening-adr]]'
   - '[[2026-04-29-rental-income-hardening-audit]]'
   - '[[2026-04-29-rental-income-hardening-plan]]'
   - '[[2026-04-29-rental-income-hardening-research]]'
   - '[[2026-04-29-rental-income-hardening-summary-exec]]'
+  - '[[2026-07-12-rental-income-hardening-audit]]'
 ---
 
 # `rental-income-hardening` feature index
@@ -26,6 +27,7 @@ Auto-generated index of all documents tagged with `#rental-income-hardening`.
 ### audit
 
 - `2026-04-29-rental-income-hardening-audit` - `rental-income-hardening` audit: code review against 8 safety invariants — PASS
+- `2026-07-12-rental-income-hardening-audit` - `rental-income-hardening` audit: `legacy plan supersession reconciliation`
 
 ### exec
 

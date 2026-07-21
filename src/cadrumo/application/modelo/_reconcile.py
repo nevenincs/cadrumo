@@ -49,7 +49,7 @@ from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.identity import BucketId
 from ...core.time import now
 from ...domain.modelos import WorkUnitId
@@ -274,7 +274,7 @@ class ModeloReconciliationReport(BaseModel):
     narrative: str = ""
 
 
-class ReconciliationEvidenceInvalidError(AeatError):
+class ReconciliationEvidenceInvalidError(CadrumoError):
     """Raised when the supplied external evidence cannot be parsed.
 
     Raised for malformed justificantes. The CLI surfaces it as a refusal
@@ -308,7 +308,7 @@ def _evidence_invalid_refusal(
     )
 
 
-class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
+class ReconciliationDeclaracionSourceUnsupportedError(CadrumoError):
     """Raised when a declaración reconcile targets a modelo not yet enrolled.
 
     Casilla-level declaración reconciliation is enrolled one modelo at a time
@@ -317,7 +317,7 @@ class ReconciliationDeclaracionSourceUnsupportedError(AeatError):
     """
 
 
-class ReconciliationCrossBucketRefusedError(AeatError):
+class ReconciliationCrossBucketRefusedError(CadrumoError):
     """Raised when the addressed work unit belongs to a different bucket than the active profile bucket.
 
     Every event is scoped to a bucket id. Allowing the service to emit
@@ -844,7 +844,7 @@ def _reconcile_receipt_totals(
     modelo = str(work_unit.modelo)
     try:
         targets = _total_targets_for_work_unit(work_unit)
-    except (LookupError, KeyError, AttributeError, ValueError, AeatError):
+    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return [], [_totals_not_reconciled("snapshot_unavailable", modelo=modelo)]
     if not targets:
         return [], [_totals_not_reconciled("map_not_declared", modelo=modelo)]
@@ -859,7 +859,7 @@ def _reconcile_receipt_totals(
 
     try:
         computed = _computed_result_value(work_unit, target.casilla_id)
-    except (LookupError, KeyError, AttributeError, ValueError, AeatError):
+    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return [], [_totals_not_reconciled("no_persisted_revision", modelo=modelo)]
     if computed is None:
         return [], [_totals_not_reconciled("no_persisted_revision", modelo=modelo)]
@@ -968,7 +968,7 @@ def _reconcile_declaracion_casillas(
 
         snapshot = resolve_registry_snapshot_for_work_unit(work_unit)
         policy = snapshot.verification_policy()
-    except (LookupError, KeyError, AttributeError, ValueError, AeatError):
+    except (LookupError, KeyError, AttributeError, ValueError, CadrumoError):
         return [], [_totals_not_reconciled("snapshot_unavailable", modelo=modelo)]
     if not policy.computed_casilla_ids and not policy.reconcile_when_present_casilla_ids:
         return [], [_totals_not_reconciled("map_not_declared", modelo=modelo)]

@@ -36,18 +36,22 @@ Submodules
    :maxdepth: 4
 
    cadrumo.core._amendment_kind_regime
+   cadrumo.core._auth_provider
    cadrumo.core._bucket_pointer
    cadrumo.core._bucket_pointer_io
    cadrumo.core._capabilities
    cadrumo.core._casilla_id
    cadrumo.core._config_integration_fields
    cadrumo.core._config_live_tests
+   cadrumo.core._config_llm_fields
+   cadrumo.core._config_mcp_serving_fields
    cadrumo.core._config_runtime_fields
    cadrumo.core._config_state_root
    cadrumo.core._config_storage_route
    cadrumo.core._config_support
    cadrumo.core._config_timeouts
    cadrumo.core._foreign_asset_obligation
+   cadrumo.core._fsync
    cadrumo.core._google_credential_source
    cadrumo.core._iban
    cadrumo.core._irnr
@@ -65,9 +69,10 @@ Submodules
    cadrumo.core._tax_domain
    cadrumo.core._toml
    cadrumo.core.aggregation
+   cadrumo.core.async_cleanup
+   cadrumo.core.atomic_write
    cadrumo.core.auth_session_keys
    cadrumo.core.click_context
-   cadrumo.core.compatibility_lifecycle
    cadrumo.core.config
    cadrumo.core.env_io
    cadrumo.core.external_constants

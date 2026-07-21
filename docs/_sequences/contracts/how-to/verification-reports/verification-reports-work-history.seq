@@ -1,0 +1,9 @@
+:seed: autonomo-irpf-2026
+@setup aeat config switch docs-sequence-sandbox
+@setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
+@step Show the work unit's current state.
+aeat --format json app modelo work status --modelo 303 --year 2026 --period 1T
+@step Show the actions taken on the work unit.
+@result aeat --format json app modelo work history --modelo 303 --year 2026 --period 1T
+@expect result.operation == "modelo.work.history"
+@expect exit_code == 0

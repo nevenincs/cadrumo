@@ -24,17 +24,17 @@ from ....core.external_constants import UTF_8_ENCODING
 from ....core.logging import get_logger
 from ....core.time import now
 from ....domain.invoices import InvoiceCatalogue, InvoicePersistenceError
+from ..storage import INVOICE_CATALOGUE_NAMESPACE
 
 if TYPE_CHECKING:
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _log = get_logger(__name__)
 
-# namespace/version constants redeclared here (the persistence contract now lives
-# with the adapter); the string is preserved to avoid orphaning persisted envelopes
-_INVOICE_CATALOGUE_VERSION = 1
-_INVOICE_NAMESPACE = "cadrumo.domain.invoices"
-_INVOICE_OBJECT_KEY = "catalogue"
+_INVOICE_CATALOGUE_VERSION = INVOICE_CATALOGUE_NAMESPACE.schema_version
+_INVOICE_CATALOGUE_SENSITIVITY = INVOICE_CATALOGUE_NAMESPACE.sensitivity
+_INVOICE_NAMESPACE = INVOICE_CATALOGUE_NAMESPACE.namespace
+_INVOICE_OBJECT_KEY = INVOICE_CATALOGUE_NAMESPACE.require_default_object_key()
 
 
 def _secure_objects_for_bucket(bucket_id: str) -> SecureObjectRepository:
@@ -112,32 +112,29 @@ class InvoiceCatalogueRepository:
         Raises:
             :class:`~adapters.persistence.storage.ClassificationError`:
                 If the persisted object's classification is not
-                ``SensitivityClass.FINANCIAL``.
+                ``_INVOICE_CATALOGUE_SENSITIVITY``.
             :class:`~adapters.persistence.storage.EnvelopeVersionError`:
                 If the envelope schema version is higher than the consumer
                 supports.
         """
-        from ..storage import (
-            Envelope,
-            SensitivityClass,
-        )
+        from ..storage import Envelope
 
         record = self._objects.load(
             _INVOICE_NAMESPACE,
             _INVOICE_OBJECT_KEY,
-            expected_class=SensitivityClass.FINANCIAL,
+            expected_class=_INVOICE_CATALOGUE_SENSITIVITY,
             max_supported_version=_INVOICE_CATALOGUE_VERSION,
         )
         if record is None:
             _log.debug("no invoice catalogue in database, returning empty")
             return InvoiceCatalogue()
         envelope = Envelope[InvoiceCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        if envelope.classification is not _INVOICE_CATALOGUE_SENSITIVITY:
             from ..storage import ClassificationError
 
             raise ClassificationError(
                 f"invoice catalogue has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.FINANCIAL}",
+                f"consumer expected {_INVOICE_CATALOGUE_SENSITIVITY}",
             )
         if envelope.schema_version > _INVOICE_CATALOGUE_VERSION:
             from ..storage import EnvelopeVersionError
@@ -161,21 +158,18 @@ class InvoiceCatalogueRepository:
         Args:
             catalogue: The :class:`InvoiceCatalogue` to persist.
         """
-        from ..storage import (
-            Envelope,
-            SensitivityClass,
-        )
+        from ..storage import Envelope
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_INVOICE_CATALOGUE_SENSITIVITY,
             payload=catalogue,
         )
         self._objects.save(
             namespace=_INVOICE_NAMESPACE,
             object_key=_INVOICE_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_INVOICE_CATALOGUE_SENSITIVITY,
             schema_version=_INVOICE_CATALOGUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
@@ -193,18 +187,18 @@ class InvoiceCatalogueRepository:
         Args:
             catalogue: The :class:`InvoiceCatalogue` to serialise.
         """
-        from ..storage import Envelope, SecureObjectWrite, SensitivityClass
+        from ..storage import Envelope, SecureObjectWrite
 
         envelope = Envelope[InvoiceCatalogue](
             schema_version=_INVOICE_CATALOGUE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_INVOICE_CATALOGUE_SENSITIVITY,
             payload=catalogue,
         )
         return SecureObjectWrite(
             namespace=_INVOICE_NAMESPACE,
             object_key=_INVOICE_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_INVOICE_CATALOGUE_SENSITIVITY,
             schema_version=_INVOICE_CATALOGUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),

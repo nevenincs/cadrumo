@@ -12,10 +12,10 @@ from __future__ import annotations
 from logging import Logger
 from typing import NoReturn
 
-from ...core.errors import AeatError, CoreValidationError
+from ...core.errors import CadrumoError, CoreValidationError
 
 
-class ModeloError(AeatError):
+class ModeloError(CadrumoError):
     """Base error for the modelos subpackage."""
 
 

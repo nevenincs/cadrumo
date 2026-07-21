@@ -36,5 +36,5 @@ def test_demo_bootstrap_runs_the_real_cadrumo_help_surface() -> None:
     )
 
     assert completed.returncode == 0, completed.stderr
-    assert "Cadrumo" in completed.stdout
+    assert completed.stdout.splitlines()[0] == ("CADRUMO - local-first workflow for Spanish tax work with AEAT")
     assert "import aeat" not in completed.stderr

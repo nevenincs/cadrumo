@@ -464,7 +464,6 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
         bindings_sourced_from_borrador=revision.bindings_sourced_from_borrador,
         detail_rows=revision.detail_rows,
         source_issues=revision.source_issues,
-        source_resolution_assessed=revision.source_resolution_assessed,
     )
     if expected != revision.calculation_revision_id:
         raise StoredCalculationDriftError(

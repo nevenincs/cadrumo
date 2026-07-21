@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-68-5.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-68-5.html",
   "source_sha256": "be7da055cdf2725bb9df7d9f2ebb7c3831dc13a423151524f2d66308b77b5c9a",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

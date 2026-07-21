@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#deadline-engine'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-deadline-engine-adr]]'
   - '[[2026-04-12-deadline-engine-plan]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#deadline-engine`.
 
 ### adr
 
-- `2026-04-12-deadline-engine-adr` - architecture decision record: filing-deadline computation engine
+- `2026-04-12-deadline-engine-adr` - architecture decision record: filing-deadline computation engine | (**status:** `accepted`)
 
 ### audit
 

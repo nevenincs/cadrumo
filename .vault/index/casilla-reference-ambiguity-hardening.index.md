@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#casilla-reference-ambiguity-hardening'
-date: '2026-06-24'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-24-casilla-reference-ambiguity-hardening-audit]]'
 ---

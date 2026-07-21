@@ -30,13 +30,12 @@
 Implication: the corpus was fetched 2026-05-05 (or later) against
 an AEAT page last published 2026-04-01. The 34-day delay between
 AEAT publication and corpus capture is within the project's
-corpus-freshness convention (re-fetch on every campaign that
-quotes from the corpus).
+corpus-freshness convention (re-fetch whenever a new clause is
+quoted from the corpus).
 
 ## Verification
 
-The carry-forward sentence cited in
-`.vault/audit/2026-05-27-modelo-130-relation-regression-audit.md`
+The carry-forward sentence that grounds the cap predicate
 — "Casilla 11. Si en la casilla 10 anterior se
 hubiera obtenido una cantidad positiva, se hará constar en la
 casilla 11 el importe (sin signo) de los resultados negativos
@@ -61,5 +60,5 @@ to the page footer's "Página actualizada" datetime), the corpus
 HTML files MUST be re-fetched from
 `sede.agenciatributaria.gob.es/Sede/...` and this PROVENANCE.md
 updated. The corpus carries no automatic re-fetch trigger; the
-re-fetch is a manual coordinator action invoked when a campaign
-relies on a new AEAT-published clause.
+re-fetch is a manual action invoked when the project relies on a
+new AEAT-published clause.

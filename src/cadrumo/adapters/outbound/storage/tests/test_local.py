@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import stat
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 import pytest
 
+from .....core.atomic_write import atomic_write_text
 from .....core.errors import ERROR_REGISTRY, build_error_envelope, resolve_error_message
 from .....core.i18n import tr
 from .. import (
@@ -62,6 +65,53 @@ def test_put_creates_namespace_and_writes_payload_atomically(provider: LocalFile
     assert target.name == "abcdef01--payroll-2026Q1.bin"
     sidecar = target.with_name(target.stem + ".meta.json")
     assert sidecar.is_file()
+
+
+def test_put_sidecar_write_is_atomic_and_preserves_prior_content_on_failure(
+    provider: LocalFileSystemProvider,
+) -> None:
+    """A real induced sidecar-write failure never corrupts the prior sidecar.
+
+    Exercises the exact atomic-write call `put()` now uses for the sidecar
+    (`atomic_write_text`) directly against the sidecar path a real `put()`
+    already wrote, rather than mocking or patching anything: a wrongly-typed
+    payload genuinely raises inside the write, proving the prior good
+    sidecar content survives byte-for-byte and no `*.tmp` sibling lingers.
+    """
+    payload = b"sidecar-atomicity-check"
+    metadata = provider.put(
+        "ledger_transaction",
+        "99887766554433aa",
+        payload,
+        content_hash=_hash(payload),
+        label="sidecar-atomic",
+    )
+    target = Path(metadata.provider_object_id)
+    sidecar = target.with_name(target.stem + ".meta.json")
+    original_sidecar_bytes = sidecar.read_bytes()
+
+    invalid_text: Any = None
+    with pytest.raises(AttributeError):
+        atomic_write_text(sidecar, invalid_text, encoding="utf-8")
+
+    assert sidecar.read_bytes() == original_sidecar_bytes
+    assert list(sidecar.parent.glob("*.tmp")) == []
+
+
+def test_put_writes_payload_with_hardened_mode_and_no_tmp_leftover(provider: LocalFileSystemProvider) -> None:
+    """The object payload write is the atomic-write helper's hardened tier."""
+    payload = b"hardened-mode-check"
+    metadata = provider.put(
+        "ledger_transaction",
+        "0011223344556677",
+        payload,
+        content_hash=_hash(payload),
+        label="hardened-check",
+    )
+    target = Path(metadata.provider_object_id)
+    if os.name != "nt":
+        assert stat.S_IMODE(target.stat().st_mode) == 0o600
+    assert list(target.parent.glob("*.tmp")) == []
 
 
 def test_put_writes_sidecar_with_canonical_fields(provider: LocalFileSystemProvider) -> None:

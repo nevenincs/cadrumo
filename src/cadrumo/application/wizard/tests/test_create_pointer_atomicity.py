@@ -73,7 +73,6 @@ def _quiet_create(profile_name: str) -> None:
     _run_full_flow(
         SETUP_FLOW,
         dict(_QUIET_CREATE_FLAGS),
-        _prompter=None,
         quiet=True,
         accept_defaults=False,
         profile_name=profile_name,
@@ -152,7 +151,6 @@ def test_full_flow_edit_refuses_branch_change_without_legal_name(_backend: Path)
                 "tax-id": "00000000T",
                 "activity": "Servicios",
             },
-            _prompter=None,
             quiet=False,
             accept_defaults=True,
             profile_name="Editable",

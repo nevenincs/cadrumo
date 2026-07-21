@@ -31,7 +31,8 @@ import pytest
 from ....core import Period, RescateType
 from ....core.resources import resources
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import create_work_unit
 from .._calculate_input import WorkCalculateInputBundle, build_work_calculate_input_bundle

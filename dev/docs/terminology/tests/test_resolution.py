@@ -1,4 +1,4 @@
-"""Real-behaviour conformance for the chunk-to-target resolution map (ADR D6).
+"""Real-behaviour conformance for the chunk-to-target resolution map.
 
 The resolution map wrangles raw RAG sweep hits (path + line range + score) into
 typed, linkable targets across the five grounding surfaces -- modelo casillas,
@@ -45,8 +45,7 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
     path = (
-        "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes"
-        "/casillas/0001-casillas.part-001.toml"
+        "src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/casillas/0001-casillas.part-001.toml"
     )
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
@@ -55,13 +54,13 @@ def test_casilla_toml_resolves_to_the_casilla_surface(resolver: TargetResolver) 
     assert "303" in out.record.target
 
 
-def test_diseno_sidecar_resolves_to_the_casilla_surface(resolver: TargetResolver) -> None:
-    """A Diseno de Registro sidecar resolves to its modelo's casilla target."""
+def test_diseno_source_resolves_to_the_casilla_surface(resolver: TargetResolver) -> None:
+    """A Diseno de Registro source workbook resolves to its modelo's casilla target."""
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
     path = (
         "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/files/"
-        "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx.extracted.md"
+        "01-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-124-kb-xlsx.xlsx"
     )
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
@@ -69,18 +68,18 @@ def test_diseno_sidecar_resolves_to_the_casilla_surface(resolver: TargetResolver
     assert out.record.metadata.modelo == "036"
 
 
-def test_normatives_sidecar_resolves_to_the_boe_article_anchor(resolver: TargetResolver) -> None:
-    """A normatives sidecar resolves to the BOE permalink via the legal corpus_ref.
+def test_normatives_source_resolves_to_the_boe_article_anchor(resolver: TargetResolver) -> None:
+    """A normatives source page resolves to the BOE permalink via the legal corpus_ref.
 
     The legal catalogue's ``corpus_ref`` points at the normatives html path;
-    stripping the ``.extracted.md`` suffix recovers that path, and the reverse
-    index resolves it to the legal id carrying the BOE permalink + ``#aN``
-    article anchor.
+    the hook-indexed hit path IS that source path, and the reverse index
+    resolves it to the legal id carrying the BOE permalink + ``#aN`` article
+    anchor.
     """
     from dev.docs.terminology._resolution import GroundingSurface, ResolvedTarget
 
     # ley-37-1992:art-104 has corpus_ref corpus/normatives/html/ley-37-1992-art-104.html#a104
-    path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md"
+    path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.surface is GroundingSurface.LEGAL
@@ -95,7 +94,7 @@ def test_normatives_target_matches_the_catalogue_permalink(resolver: TargetResol
 
     catalogue = bundled_authority().catalogues.legal
     entry = catalogue["ley-37-1992:art-104"]
-    path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html.extracted.md"
+    path = "src/cadrumo/_data/corpus/normatives/html/ley-37-1992-art-104.html"
     out = resolver.resolve(_hit(path))
     assert isinstance(out, ResolvedTarget)
     assert out.record.target == entry.permalink
@@ -235,7 +234,7 @@ def test_resolver_reuse_avoids_reprojection() -> None:
 
     shared = TargetResolver()
     first = resolve_chunk_hits((_hit("docs/index.md"),), resolver=shared)
-    second = resolve_chunk_hits((_hit("docs/tutorials/index.md"),), resolver=shared)
+    second = resolve_chunk_hits((_hit("docs/how-to/quickstart.md"),), resolver=shared)
     assert first.resolved_count == 1
     assert second.resolved_count == 1
 

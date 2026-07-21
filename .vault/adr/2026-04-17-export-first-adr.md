@@ -3,11 +3,9 @@ tags:
   - "#adr"
   - "#export-first"
 date: '2026-04-17'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-12-gsuite-bootstrap-audit]]"
   - "[[2026-04-16-submission-safety-sweep-adr-audit]]"
-  - "[[2026-04-18-auth-provider-ecosystem-research]]"
   - "[[2026-04-27-export-first-research]]"
   - '[[2026-04-27-live-submit-permanently-forbidden-adr]]'
 ---

@@ -1,0 +1,10 @@
+@step Describe the modelo and its available revisions.
+aeat --format json app modelo describe 130 --period 1T
+@step List the modelo's casillas.
+aeat --format json app modelo casillas 130 --period 1T
+@step Show only the required manual casillas.
+aeat --format json app modelo casillas 130 --period 1T --input-kind manual --required
+@step Inspect the formulas with their legal and source references.
+@result aeat --format json app modelo formulas 130 --period 1T --explain
+@expect result.code == "130"
+@expect exit_code == 0

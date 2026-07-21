@@ -37,7 +37,6 @@ from ...adapters.outbound.aeat.sede import (
     Declaracion,
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
-    SedeParseError,
     capture_previous_filing_observations,
     capture_relation_source_observations,
     open_declarations_register,
@@ -46,7 +45,8 @@ from ...adapters.outbound.aeat.sede import (
 from ...core import Period, require_active_bucket_id
 from ...core.resources import bundled_path, resources
 from ...domain.calculations.registry import ValidatedRegistryAuthority
-from ._errors import LiveApplicationError, LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from ._errors import LiveApplicationInputError, LiveIvaSurfaceTimeoutError
+from ._filed_capture_finalizer import FiledCaptureFailurePolicy, finalize_filed_capture
 from ._filed_data import (
     BulkFiledDataListingReport,
     FiledDataListingReport,
@@ -56,9 +56,7 @@ from ._filed_data import (
 )
 from ._filed_observation_persistence import (
     _filed_observation_identity_key,
-    _filed_observation_rank,
     enroll_filed_justificante_evidence,
-    persist_filed_calculation_observation,
 )
 from ._remote_state_models import (
     BulkFiledDataCaptureReport,
@@ -101,71 +99,6 @@ def _unsupported_filed_capture_failure_row(
         error_type="LiveApplicationInputError",
         message=reason,
     )
-
-
-def _filed_registry_enrollment_failure_row(
-    observation: FiledDeclaracionObservation,
-    error: BaseException,
-) -> FiledDataCaptureFailureRow:
-    return FiledDataCaptureFailureRow(
-        modelo=observation.modelo,
-        year=observation.ejercicio,
-        period=observation.period,
-        expediente_id=observation.expediente_id,
-        error_type=error.__class__.__name__,
-        message=bounded_context_text(error),
-    )
-
-
-def _raise_registry_enrollment_failure(failures: tuple[FiledDataCaptureFailureRow, ...]) -> None:
-    if not failures:
-        return
-    first = failures[0]
-    raise LiveApplicationError(
-        "filed observation could not be enrolled as registry-grounded calculation evidence",
-        context={
-            "failed_count": len(failures),
-            "modelo": first.modelo,
-            "year": first.year,
-            "period": first.period.registry_token if first.period is not None else None,
-            "expediente_id": first.expediente_id,
-            "error_type": first.error_type,
-            "message": first.message,
-        },
-    )
-
-
-def _persist_latest_filed_calculation_observations_with_failures(
-    observations: tuple[FiledDeclaracionObservation, ...],
-    *,
-    justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]],
-) -> tuple[tuple[str, ...], tuple[FiledDataCaptureFailureRow, ...]]:
-    latest: dict[tuple[str, int, Period], FiledDeclaracionObservation] = {}
-    for observation in observations:
-        key = (observation.modelo, observation.ejercicio, observation.period)
-        current = latest.get(key)
-        if current is None or _filed_observation_rank(observation) > _filed_observation_rank(current):
-            latest[key] = observation
-
-    keys: list[str] = []
-    failures: list[FiledDataCaptureFailureRow] = []
-    for _key, observation in sorted(
-        latest.items(),
-        key=lambda item: (item[0][0], item[0][1], item[0][2].registry_token),
-    ):
-        try:
-            keys.append(
-                persist_filed_calculation_observation(
-                    observation,
-                    justificante_csvs=justificante_csvs_by_observation.get(
-                        _filed_observation_identity_key(observation),
-                        (),
-                    ),
-                ),
-            )
-        except (LiveApplicationInputError, SedeParseError) as exc:
-            failures.append(_filed_registry_enrollment_failure_row(observation, exc))
-    return tuple(keys), tuple(failures)
 
 
 def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
@@ -226,7 +159,7 @@ async def list_filed_data(
         )
 
     session, settings = await active_verified_session(operation="live-expedientes-read")
-    walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
+    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     rows: list[FiledDataListingRow] = []
     async with (
         shared_playwright(session) as playwright,
@@ -296,7 +229,7 @@ async def list_filed_data_bulk(
         )
 
     session, settings = await active_verified_session(operation="live-expedientes-read")
-    walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
+    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     async with (
         shared_playwright(session) as playwright,
         open_declarations_register(
@@ -346,7 +279,7 @@ async def capture_filed_data(
     observation keys produced from the captured AEAT rows.
     """
     session, settings = await active_verified_session()
-    walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
+    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     store = FiledDeclaracionObservationStore(output_root)
     observation_paths: list[str] = []
     artefact_refs: list[str] = []
@@ -400,14 +333,12 @@ async def capture_filed_data(
             casilla_count += len(observation.casillas)
             observations_for_calculation.append(observation)
 
-    (
-        calculation_observation_keys,
-        registry_enrollment_failures,
-    ) = _persist_latest_filed_calculation_observations_with_failures(
+    finalization = finalize_filed_capture(
         tuple(observations_for_calculation),
         justificante_csvs_by_observation=justificante_csvs_by_observation,
+        policy=FiledCaptureFailurePolicy.FAIL_FAST,
     )
-    _raise_registry_enrollment_failure(registry_enrollment_failures)
+    calculation_observation_keys = finalization.calculation_observation_keys
 
     return FiledDataCaptureReport(
         output_root=str(output_root),
@@ -494,7 +425,7 @@ async def capture_filed_data_bulk(
         )
 
     session, settings = await active_verified_session(operation="live-expedientes-read")
-    walk_timeout_ms = settings.aeat_live_filed_register_walk_timeout_ms
+    walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     bucket_id = require_active_bucket_id()
 
     async with (
@@ -557,14 +488,13 @@ async def capture_filed_data_bulk(
             if limit is not None and len(observation_paths) >= limit:
                 break
 
-    (
-        calculation_observation_keys,
-        registry_enrollment_failures,
-    ) = _persist_latest_filed_calculation_observations_with_failures(
+    finalization = finalize_filed_capture(
         tuple(observations_for_calculation),
         justificante_csvs_by_observation=justificante_csvs_by_observation,
+        policy=FiledCaptureFailurePolicy.BEST_EFFORT,
     )
-    failures.extend(registry_enrollment_failures)
+    calculation_observation_keys = finalization.calculation_observation_keys
+    failures.extend(finalization.failures)
     return BulkFiledDataCaptureReport(
         output_root=str(output_root),
         modelos=tuple(resolved_modelos),
@@ -670,14 +600,12 @@ async def capture_source_filed_data(
         casilla_count += len(observation.casillas)
         observations_for_calculation.append(observation)
 
-    (
-        calculation_observation_keys,
-        registry_enrollment_failures,
-    ) = _persist_latest_filed_calculation_observations_with_failures(
+    finalization = finalize_filed_capture(
         tuple(observations_for_calculation),
         justificante_csvs_by_observation=justificante_csvs_by_observation,
+        policy=FiledCaptureFailurePolicy.FAIL_FAST,
     )
-    _raise_registry_enrollment_failure(registry_enrollment_failures)
+    calculation_observation_keys = finalization.calculation_observation_keys
 
     return SourceFiledDataCaptureReport(
         output_root=str(output_root),

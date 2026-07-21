@@ -5,8 +5,6 @@ yields the encrypted payload bytes + optional recovery-wrap bytes
 for the caller to decrypt. Fast-fails on layout drift (extra,
 missing, out-of-order, or unknown members) before any decryption
 attempt so a tampered or wrong-version archive surfaces precisely.
-
-Authority: ``2026-06-03-bucket-sealed-archive-adr``.
 """
 
 from __future__ import annotations
@@ -87,7 +85,7 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
 
     Raises:
         SealedArchiveLayoutError: When the tar layout deviates from
-            the ADR contract (extra / missing / out-of-order /
+            the expected contract (extra / missing / out-of-order /
             unknown members, non-regular members).
         SealedArchiveHeaderError: When ``header.json`` fails strict
             validation as :class:`ExportArchiveHeader`.

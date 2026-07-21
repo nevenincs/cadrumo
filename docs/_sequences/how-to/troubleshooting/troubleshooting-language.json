@@ -1,0 +1,68 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--language",
+        "en",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "describe",
+        "303"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.describe",
+        "notices": [],
+        "result": {
+          "binding_count": 28,
+          "cadence": "quarterly",
+          "casilla_count": 126,
+          "code": "303",
+          "filing_year": null,
+          "formula_count": 25,
+          "official_name": "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.",
+          "operation": "modelo.describe",
+          "period": null,
+          "periods": [
+            "1T",
+            "2T",
+            "3T",
+            "4T",
+            "01",
+            "02",
+            "03",
+            "04",
+            "05",
+            "06",
+            "07",
+            "08",
+            "09",
+            "10",
+            "11",
+            "12"
+          ],
+          "revision": "2023-y-siguientes",
+          "revision_ids": [
+            "2009-y-siguientes",
+            "2023-y-siguientes"
+          ],
+          "tax_domain": "iva",
+          "title": "IVA. Autoliquidación (trimestral)"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-language"
+}

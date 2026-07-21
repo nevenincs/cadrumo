@@ -3,51 +3,88 @@ tags:
   - "#adr"
   - "#auth-protocol"
 date: "2026-04-18"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-18-auth-protocol-research]]"
   - "[[2026-04-18-auth-provider-abstraction-adr]]"
   - "[[2026-04-17-aeat-access-gate-adr]]"
   - "[[2026-04-17-export-first-adr]]"
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-research]]'
 ---
 
 # `auth-protocol` adr: `issue-281 auth-provider protocol and session-shape split` | (**status:** `accepted`)
 
 ## Problem Statement
 
-Issue `#281` is the prerequisite refactor for EPIC `#279`. The current AEAT auth surface is centered on a certificate session shape rather than on a provider contract. `AeatAuthenticator`, `AeatSession`, `AeatLoginAssertion`, and `BrowserSessionLike.create_context(cert=...)` all assume that AEAT authentication means “load a certificate, verify the handshake, then build a browser context.” That assumption blocks any future provider whose login flow happens after context creation and forces downstream consumers to depend on certificate-specific stubs.
+Certificate and Cl@ve authentication share session acquisition, verification,
+persistence, and ownership semantics, but their proof details differ. The
+shared application boundary must remain provider-agnostic without duplicating
+provider kind, certificate fields, browser construction, or cleanup policy in
+downstream consumers.
 
-## Considerations
+## Decision
 
-- Existing certificate behavior must remain intact because it is already used by live-read and submission-adjacent surfaces.
-- The export-first charter keeps live-write policy separate from authentication choice. Provider selection must not weaken or replace the existing live-write gate.
-- `storage_state_path` and the session idle TTL are already provider-agnostic concepts and should remain part of the shared session core.
-- Submission, workflow, and status modules still compile against in-flight protocol stubs, so the refactor must provide a rebase-safe migration path.
-- The issue acceptance criteria require a protocol conformance test and per-variant session JSON round-trips.
+The layer-neutral `AuthProviderKind` and `AuthProviderDescription` records live
+in `src/cadrumo/core/_auth_provider.py`. The sole application provider protocol
+lives in `src/cadrumo/application/auth/__init__.py`:
 
-## Constraints
+```python
+class AuthProvider(Protocol):
+    kind: AuthProviderKind
 
-- This issue does not implement Cl@ve or any other new provider. It defines the abstraction and migrates the core engine away from cert-only shapes.
-- The modernized path must not introduce a new default-enabled live-write flow or change the existing charter-backed submission refusal semantics.
-- The change must remain incremental enough that downstream callers can continue to operate with the existing certificate implementation while the provider epic lands in follow-up issues.
+    async def authenticate(self) -> AeatSession: ...
+    async def verify(self, session: AeatSession) -> AeatLoginAssertion: ...
+    def describe(self) -> AuthProviderDescription: ...
+    async def close(self) -> None: ...
+```
 
-## Implementation
+`close()` is mandatory. Every concrete provider owns the browser resources it
+creates, bars new work once close intent exists, drains admitted work, and
+releases its context and browser deterministically. Application orchestration
+closes providers on success and failure and performs one bounded retry while a
+provider retains failed cleanup handles.
 
-- Introduce `AuthProviderKind`, `AuthProvider`, and provider-description/detail models in `src/aeat/auth`.
-- Reframe the current certificate implementation as the concrete certificate provider behind that protocol.
-- Split `AeatSession` into provider-agnostic fields plus a discriminated `provider_detail` payload. The core fields are `provider_kind`, `identity_nif`, `authenticated_at`, `idle_deadline`, and `storage_state_path`.
-- Split `AeatLoginAssertion` the same way: provider-agnostic validity and timing fields plus a discriminated assertion-detail payload. Certificate-specific handshake and subject material move into the certificate detail record instead of staying at the top level.
-- Replace `BrowserSessionLike.create_context(cert=...)` with a provisioner-based seam. The browser layer will accept an optional provisioner that can contribute `new_context()` kwargs and context markers. The certificate provider will supply the current `client_certificates` behavior through that seam.
-- Rebase-swap downstream protocol stubs in `submission`, `workflow`, and related helpers away from `LoadedCertificate` so they depend on provider-agnostic contracts.
-- Keep `AeatAccessGate` as the env-policy layer and continue using it for audit snapshots and doctor output. The gate remains orthogonal to provider selection.
+`AeatSession` and `AeatLoginAssertion` live in
+`src/cadrumo/adapters/outbound/aeat/auth/_authenticator_types.py`. Their common
+fields are provider-neutral. Each carries a discriminated provider-detail
+union whose `kind` field is the sole stored provider-kind authority;
+`provider_kind` is only a projection. Certificate proof, Cl@ve landing data,
+and other provider-specific evidence remain inside those detail records.
+
+`BrowserSessionLike.create_context()` and the concrete `BrowserSession` accept
+only keyword arguments for an optional `BrowserContextProvisioner` and an
+optional in-memory `storage_state` mapping. A certificate provisioner
+contributes Playwright `client_certificates` at construction time. Cl@ve
+providers authenticate after construction. No auth contract accepts a
+certificate object, auth backend, context marker, or storage-state filesystem
+path.
+
+The certificate implementation is `AeatAuthenticator`; no parallel
+`CertificateAuthProvider` alias or extraction exists. Certificate validity is
+the exact protected-resource browser proof governed by the related
+protected-browser decision. Cl@ve Móvil and Cl@ve Permanente implement the same
+application protocol with their own proof details.
+
+Application `select_provider()` is the provider-construction choke point. It
+passes already resolved `ActiveCertificateCredentials` to the outbound
+certificate factory, preserving explicit absent secrets and preventing an
+adapter from resolving a second credential source.
 
 ## Rationale
 
-This is the smallest architectural change that unlocks pluggable auth providers without destabilizing current certificate behavior. It moves provider-specific material behind explicit detail records, keeps the browser seam focused on context construction, and prevents submission/workflow/status code from hard-coding certificate-shaped dependencies. The result is a stable core auth contract that future providers can implement without rewriting shared engine code.
+The split gives downstream code one lifecycle and session contract while
+keeping provider-specific mechanics in the outbound adapter. A discriminated
+detail union prevents parallel kind fields from drifting. A construction-only
+browser provisioner keeps certificate material out of the generic browser and
+lets every resume path use the same validated in-memory storage-state boundary.
 
 ## Consequences
 
-- `src/aeat/auth`, `src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/session.py`, `src/aeat/adapters/outbound/aeat/export/_protocols.py`, `src/aeat/application/workflow/_protocols.py`, and their tests will all need coordinated edits.
-- The certificate provider becomes the first concrete implementation of the new protocol, so some current names and exports will shift even though the observable behavior should remain unchanged.
-- Transitional translation code may exist briefly while downstream modules move from `LoadedCertificate`-based seams to provider-agnostic contracts.
-- The issue will leave follow-on work for the concrete Cl@ve providers, doctor/provider UX, and any status/sync surfaces that still assume certificate preloading as the only authenticated path.
+- Application and live-read consumers depend on `AuthProvider`, not local
+  protocol mirrors or certificate backends.
+- Provider selection, typed credential resolution, browser ownership, and
+  encrypted session persistence each have one authority.
+- There are no compatibility aliases, rebase stubs, or transitional protocol
+  shapes in this pre-release contract.
+- Authentication never enables an AEAT write path; the independent access gate
+  permanently refuses live writes.

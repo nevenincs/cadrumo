@@ -1,4 +1,4 @@
-"""Canonical CADRUMO product identity and AEAT authority vocabulary.
+"""Canonical Cadrumo product identity and AEAT authority vocabulary.
 
 This module is the single runtime authority for names that identify the
 application.  :data:`PRODUCT_IDENTITY` projects the accepted CADRUMO tuple into
@@ -27,9 +27,13 @@ class IdentityReferent(StrEnum):
 
 
 class ProductIdentity(NamedTuple):
-    """Immutable names that jointly identify the CADRUMO product."""
+    """Immutable names that jointly identify the Cadrumo product.
+
+    ``repository`` is the owner-qualified source repository slug.
+    """
 
     display_name: str
+    prose_name: str
     python_package: str
     distribution: str
     cli_executable: str
@@ -46,10 +50,11 @@ class ProductIdentity(NamedTuple):
 
 PRODUCT_IDENTITY: Final[ProductIdentity] = ProductIdentity(
     display_name="CADRUMO",
+    prose_name="Cadrumo",
     python_package="cadrumo",
     distribution="cadrumo",
     cli_executable="aeat",
-    repository="cadrumo",
+    repository="nevenincs/cadrumo",
     mcp_server="cadrumo",
     mcp_executable="cadrumo-mcp",
     mcp_tool_prefix="cadrumo",

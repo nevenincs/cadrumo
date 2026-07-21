@@ -5,7 +5,7 @@ tags:
   - "#adr"
   - "#workflow-engine"
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-12-workflow-engine-research]]"
   - "[[2026-04-12-workflow-engine-plan]]"
@@ -85,7 +85,7 @@ it on every row of the domain matrix.
 Every domain `WorkflowAbortReason` in the table above is reachable
 from exactly one or two stages and exhaustively tested. The unit
 test suite is the executable specification of this matrix; see
-`src/aeat/application/workflow/test_engine.py` for the one-to-one mapping.
+`src/cadrumo/application/workflow/test_engine.py` for the one-to-one mapping.
 
 ### 3. dry-run is the default; live requires double confirmation
 
@@ -103,28 +103,30 @@ the engine inherits the submission engine's contract verbatim:
 we copy the submission engine's exact kwarg name (`override_confirmation`)
 so the gate is uniform across the codebase.
 
-### 4. components are Protocol-injected
+### 4. components use live typed boundaries
 
-`WorkflowEngine` takes seven `typing.Protocol` handles in its constructor:
+`WorkflowEngine` composes the deadline, filing-draft, submission, certificate,
+and casilla-input boundaries required by the local workflow. Optional live
+reads are expressed as two narrow async callables:
 
-- `DeadlineEngineProtocol` (#38, on main — adapter wraps `DeadlineEngine`)
-- `FilingDraftBuilderProtocol` (#39, on main — adapter wraps `build_draft`)
-- `SubmissionEngineProtocol` (#42, on main — adapter wraps `SubmissionEngine`)
-- `SyncRunnerProtocol` (#11, on main — adapter wraps `LiveSyncRunner`)
-- `StatusReaderProtocol` (#43, **stub only**)
-- `InboxProtocol` (#46, **stub only**)
-- `CertificateBundleProtocol` (#8, **stub only** — uses
-  `aeat.adapters.outbound.aeat.export.LoadedCertificate` shape)
+- `expedientes_source(session, modelo)` returns the typed declaration rows used
+  to decide whether an obligation is already filed.
+- `notifications_source(session)` returns the typed notification snapshot used
+  by the inbox probe.
 
-a `default_engine(...)` factory wires the on-main components to their
-adapters. tests construct the engine with hand-rolled Protocol-conforming
-classes — never mocks, never patches.
+The production adapter in `src/cadrumo/application/workflow/_adapters.py` wires
+those callables directly to
+`cadrumo.adapters.outbound.aeat.sede.walk_expedientes_tree` and
+`cadrumo.adapters.outbound.aeat.sede.fetch_notifications_query` when a typed
+`AeatSession` is available. With no session, both live probes are omitted. There
+is no `StatusReaderProtocol`, `InboxProtocol`, sync-runner compatibility seam,
+or certificate-backend stub. Tests inject concrete async callables conforming
+to the same narrow signatures and never shadow Sede business logic.
 
-**why Protocol injection:** sibling branches `feature-43`, `feature-46`,
-and `feature-8` are still in flight. hard imports would either break our
-build or require speculative scaffolding in their territory. Protocols
-let the engine compile + test standalone today and rebase cleanly when
-the real implementations land.
+**Why narrow callable injection:** the workflow owns orchestration, while the
+Sede adapter owns authenticated navigation and parsing. Injecting the exact read
+operations keeps those responsibilities separate without recreating a retired
+status-reader facade.
 
 ### 5. files-only persistence (v1)
 
@@ -135,7 +137,7 @@ single file. the storage layer (#10) wires in as a follow-up.
 
 ### 6. strict pydantic v2 everywhere
 
-every record in `aeat.application.workflow` is a strict pydantic v2 `BaseModel` with
+every record in `cadrumo.application.workflow` is a strict pydantic v2 `BaseModel` with
 `model_config = ConfigDict(strict=True, extra="forbid", frozen=True)`:
 
 - `WorkflowResult`
@@ -147,7 +149,7 @@ closed enumerations are `enum.StrEnum`:
 - `WorkflowStage`
 - `WorkflowAbortReason`
 
-errors inherit from `aeat.core.errors.AeatError`:
+errors inherit from `cadrumo.core.errors.CadrumoError`:
 
 - `WorkflowError` (base)
 - `WorkflowAbortedError` (raised only when the caller explicitly opts in

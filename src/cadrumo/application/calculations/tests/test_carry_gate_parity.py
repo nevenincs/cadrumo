@@ -168,7 +168,7 @@ def test_public_carry_reads_match_shared_gate_for_resolvable_source(tmp_path: Pa
         source_modelo=_MODELO,
         source_filing_year=_YEAR,
         source_period=_SOURCE_PERIOD,
-    )
+    ).refused
     binding_refused, cross_period_refused = _public_carry_outcomes(tmp_path / case, stamp)
 
     assert shared_refused is expected, f"shared gate disagreed with the spec for {case!r}"
@@ -184,6 +184,6 @@ def test_shared_gate_refuses_unresolvable_source() -> None:
             source_modelo=_NONEXISTENT_MODELO,
             source_filing_year=_YEAR,
             source_period=_SOURCE_PERIOD,
-        )
+        ).refused
         is True
     )

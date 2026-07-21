@@ -22,7 +22,7 @@ from ...core import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
-# The rate-concept-grounded codes Slice A declares, keyed to the TRLIRNR
+# The rate-concept-grounded codes declared here, keyed to the TRLIRNR
 # Art. 25 letter (or Art. 13.1.h) the bundled corpus grounds the concept on.
 # Derived from the bundled HOJA INFORMATIVA 210 income-type labels; NOT copied
 # from engine output.

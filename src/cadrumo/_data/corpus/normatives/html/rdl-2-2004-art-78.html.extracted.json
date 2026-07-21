@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/rdl-2-2004-art-78.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rdl-2-2004-art-78.html",
   "source_sha256": "c6f820f256360b445d1012a692b5c56c08da7d96c23275a5f1d7080f704144bd",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

@@ -50,7 +50,7 @@ against an incomplete draft being filed by accident.
 
 ## Where this sits in the journey
 
-This page is part of the [Understanding the AEAT pipeline](index.md)
+This page is part of the [how-it-works overview](index.md)
 cluster. Earlier filings feed into later ones; for how a verified prior
 period carries forward, see
 [How filings build on earlier ones](building-on-earlier-filings.md). Once a

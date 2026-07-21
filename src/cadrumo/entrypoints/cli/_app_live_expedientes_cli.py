@@ -19,7 +19,7 @@ import typer
 from ...application.live import capture_expedientes_bulk
 from ...core.i18n import tr
 from ._app_live_auth_preflight import _metric_line, resolve_active_bucket, run_auth_preflight
-from ._common import _emit_envelope
+from ._common import _emit_envelope, resolve_pull_year_range
 
 _active_bucket_id: Callable[[], str] | None = None
 _auth_preflight: Callable[[], None] | None = None
@@ -47,25 +47,6 @@ def register_expedientes_commands(
 
 def _bucket_id() -> str:
     return resolve_active_bucket(_active_bucket_id, family="expedientes")
-
-
-def _resolve_pull_year_range(
-    *,
-    year: int | None,
-    year_from: int | None,
-    year_to: int | None,
-) -> tuple[int, int]:
-    if year is not None and (year_from is not None or year_to is not None):
-        raise typer.BadParameter("use --year for a single-year pull or --from-year/--to-year for a range, not both")
-    if year is not None:
-        return year, year
-    if year_from is None and year_to is None:
-        raise typer.BadParameter("either --year or both --from-year and --to-year are required")
-    if year_from is None or year_to is None:
-        raise typer.BadParameter("--from-year and --to-year must be supplied together")
-    if year_from > year_to:
-        raise typer.BadParameter("--from-year must be less than or equal to --to-year")
-    return year_from, year_to
 
 
 class _ExpedientesRowDict(TypedDict):
@@ -138,8 +119,7 @@ def expedientes_pull(
     bucket_id = _bucket_id()
     run_auth_preflight(_auth_preflight, family="expedientes")
     selected_modelos = tuple(modelos or ())
-    single_mode = len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None
-    if single_mode:
+    if len(selected_modelos) == 1 and year is not None and year_from is None and year_to is None:
         persisted = asyncio.run(capture_expedientes(bucket_id=bucket_id, modelo=selected_modelos[0], year=year))
         result = ExpedientesCaptureResult(
             bucket_id=bucket_id,
@@ -159,7 +139,7 @@ def expedientes_pull(
         _emit_envelope(ctx, command="app.live.expedientes.pull", result=result, lines=lines)
         return
 
-    resolved_from, resolved_to = _resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
+    resolved_from, resolved_to = resolve_pull_year_range(year=year, year_from=year_from, year_to=year_to)
     report = asyncio.run(
         capture_expedientes_bulk(
             bucket_id=bucket_id,

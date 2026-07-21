@@ -23,6 +23,9 @@ from sphinx.deprecation import RemovedInSphinx90Warning
 _PROJECT_ROOT = Path(os.environ.get("CADRUMO_DOCS_PROJECT_ROOT", Path(__file__).resolve().parents[1])).resolve()
 sys.path.insert(0, str(_PROJECT_ROOT / "src"))
 
+from cadrumo.core.external_constants import OutputLanguage  # noqa: E402
+from cadrumo.core.product_identity import PRODUCT_IDENTITY  # noqa: E402
+
 warnings.filterwarnings("ignore", category=RemovedInSphinx90Warning, module=r"hoverxref\.extension")
 
 
@@ -49,12 +52,29 @@ _RELEASES_URL = f"{_REPOSITORY_URL}/releases" if _REPOSITORY_URL else ""
 _LATEST_RELEASE_URL = f"{_RELEASES_URL}/latest" if _RELEASES_URL else ""
 
 # ── Project metadata ────────────────────────────────────────────────────────
-project = str(_PYPROJECT["name"])
+project = PRODUCT_IDENTITY.display_name
 author = ", ".join(author["name"] for author in _PYPROJECT.get("authors", []))
 # Human-facing footer credit; the packaging author handle stays in pyproject.
-copyright = "2026, the cadrumo authors"
+copyright = f"2026, the {PRODUCT_IDENTITY.prose_name} authors"
 release = str(_PYPROJECT["version"])
 version = release
+
+# ── Build scope ──────────────────────────────────────────────────────────────
+# ``CADRUMO_DOCS_SCOPE`` selects how much of the set this invocation builds:
+#   * ``full`` (default, CI + deploy): the whole handbook including the API
+#     autodoc tree (``docs/api/**`` — ~1,150 ``automodule`` stubs that import the
+#     entire application) and the viewcode ``_modules`` source tree.
+#   * ``user``: ONLY the operator-facing surface (index / how-to / explanation /
+#     reference / architecture / cli / glossary / the executed cli-sequences).
+#     The API autodoc tree and the ``_modules`` tree are excluded and the
+#     autodoc / viewcode / typehints extensions are never loaded, so the
+#     application is never imported for *rendering* — cutting the ~60 user pages
+#     free of the ~1,150 app-importing API pages so user-docs iteration builds in
+#     minutes instead of an hour.
+_DOCS_SCOPE = os.environ.get("CADRUMO_DOCS_SCOPE", "full")
+if _DOCS_SCOPE not in {"full", "user"}:
+    raise ValueError(f"CADRUMO_DOCS_SCOPE must be 'full' or 'user'; got {_DOCS_SCOPE!r}")
+_USER_SCOPE = _DOCS_SCOPE == "user"
 
 # ── Extensions ──────────────────────────────────────────────────────────────
 extensions = [
@@ -71,14 +91,20 @@ extensions = [
     "hoverxref.extension",
     "myst_parser",
 ]
+if _USER_SCOPE:
+    # Drop ONLY the app-importing autodoc machinery; every narrative/rendering
+    # extension (myst, design, mermaid, copybutton, hoverxref, opengraph,
+    # notfound, intersphinx, napoleon) stays so the user surface renders
+    # identically. napoleon is left loaded but inert (its docstring transform
+    # never fires without autodoc).
+    _AUTODOC_ONLY_EXTENSIONS = {"sphinx.ext.autodoc", "sphinx.ext.viewcode", "sphinx_autodoc_typehints"}
+    extensions = [name for name in extensions if name not in _AUTODOC_ONLY_EXTENSIONS]
 
 # Hover tooltip cards on :term: cross-references to the generated glossary.
 # One term per glossary entry (the shared-entry rendering bug); aliases ride as
 # additional term lines on the same entry, so every declared surface resolves.
 hoverxref_roles = ["term"]
 hoverxref_role_types = {"term": "tooltip"}
-if _DOCS_BASE_URL:
-    extensions.append("sphinx_sitemap")
 
 # Source file types — both reStructuredText (autodoc stubs, index) and MyST
 # Markdown (narrative pages, generated API surface) are first-class.
@@ -88,11 +114,24 @@ source_suffix = {
 }
 
 master_doc = os.environ.get("CADRUMO_DOCS_MASTER_DOC", "index")
-# English is the only documentation language. Additional languages attach
-# here - set `language`, add `locale_dirs` and `gettext_compact`, and a
-# gettext / sphinx-intl build matrix. Documentation translation must not
-# reuse the runtime CLI translation catalogues.
-language = "en"
+# The build language is read from CADRUMO_DOCS_LANGUAGE and validated against the
+# OutputLanguage closed set (es/en/ca/hu) - the single language authority shared
+# with the runtime CLI catalogues, never a second hand-listed set. English is the
+# msgid source (the default) and carries no catalogue; es/ca/hu substitute
+# translated paragraphs from docs/locales/<lang>/LC_MESSAGES. The CLI OUTPUT
+# language stays pinned to English at the top of this module (executed sequences
+# render live CLI output as evidence, not translatable prose). gettext_compact is
+# disabled so each source page owns one catalogue, which the all-languages
+# completeness gate reads per page. Documentation translation must not reuse the
+# runtime CLI translation catalogues.
+_VALID_DOCS_LANGUAGES = {member.value for member in OutputLanguage}
+language = os.environ.get("CADRUMO_DOCS_LANGUAGE", "en")
+if language not in _VALID_DOCS_LANGUAGES:
+    raise ValueError(
+        f"CADRUMO_DOCS_LANGUAGE must be one of {sorted(_VALID_DOCS_LANGUAGES)}; got {language!r}",
+    )
+locale_dirs = ["locales"]
+gettext_compact = False
 
 exclude_patterns = [
     "_build",
@@ -102,6 +141,11 @@ exclude_patterns = [
     "**/_test_*.py",
     "USERDOCS-KICKOFF-BRIEF.md",
 ]
+if _USER_SCOPE:
+    # User scope excludes the generated API autodoc tree and the viewcode
+    # ``_modules`` source pages from the read set entirely, so no app module is
+    # imported to render them.
+    exclude_patterns += ["api/**", "_modules/**"]
 
 _DOCS_ROOT = Path(__file__).resolve().parent
 _ONLY_SOURCES = {
@@ -134,6 +178,14 @@ suppress_warnings = [
 if os.environ.get("CADRUMO_DOCS_SINGLE_PAGE"):
     suppress_warnings.append("toc.excluded")
     suppress_warnings.append("toc.not_included")
+if _USER_SCOPE:
+    # The root toctree carries one ``API <api/index>`` entry (docs/index.md);
+    # under user scope that target is excluded, so the toctree reference to it is
+    # a benign ``toc.excluded`` — the entry simply drops from the nav. This is the
+    # only excluded toctree target in the user set, so the suppression is scoped
+    # to exactly the pruned API entry, and the ``-n -W`` gate stays on for every
+    # other reference class.
+    suppress_warnings.append("toc.excluded")
 
 # ── Autodoc / Napoleon ──────────────────────────────────────────────────────
 napoleon_google_docstring = True
@@ -252,14 +304,13 @@ if os.environ.get("CADRUMO_DOCS_OFFLINE"):
 
 # ── HTML theme ──────────────────────────────────────────────────────────────
 html_theme = "furo"
-html_title = "Cadrumo - local Spanish tax preparation"
-html_short_title = "Cadrumo"
+html_title = f"{PRODUCT_IDENTITY.prose_name} documentation - local Spanish tax preparation"
+html_short_title = f"{PRODUCT_IDENTITY.prose_name} documentation"
 html_baseurl = f"{_DOCS_BASE_URL}/" if _DOCS_BASE_URL else ""
-sitemap_url_scheme = "{link}"
 html_meta = {
     "description": (
-        "Local tax engine with CLI, MCP, rules, skills, and scoped agents. "
-        "Deterministic calculations. LLM-assisted operation. No filing."
+        "Cadrumo helps you prepare, check, and export Spanish tax files locally. "
+        "Cadrumo never files or submits them for you."
     ),
 }
 html_favicon = "_static/cadrumo-favicon.svg"
@@ -389,11 +440,10 @@ html_theme_options = {
 html_context = {
     "cadrumo_repository_url": _REPOSITORY_URL,
     "cadrumo_nav": [
-        {"label": "Guides", "doc": "how-to/index"},
-        {"label": "Tutorial", "doc": "tutorials/index"},
+        {"label": "Getting started", "doc": "how-to/index"},
         {"label": "CLI reference", "doc": "cli/index"},
         {"label": "How it works", "doc": "explanation/index"},
-        {"label": "API", "doc": "api/cadrumo"},
+        {"label": "API", "doc": "api/index"},
     ],
     "cadrumo_broadcasts": [
         {
@@ -438,12 +488,37 @@ html_context = {
     "cadrumo_footer_note": (
         "Cadrumo is pre-alpha, local-first software. It is not tax advice, is not affiliated with the "
         "Agencia Estatal de Administración Tributaria (AEAT), "
-        "and never replaces official AEAT tools or professional review."
+        "and never replaces official AEAT tools or advice from a qualified professional."
     ),
 }
+if _USER_SCOPE:
+    # The header nav carries an "API" entry pointing at the excluded api/index
+    # overview; drop it so the user-scope preview nav has no dead API link.
+    html_context["cadrumo_nav"] = [entry for entry in html_context["cadrumo_nav"] if entry.get("doc") != "api/index"]
+
+# ── Language switcher ────────────────────────────────────────────────────────
+# The deploy publisher emits per-language site roots (``/`` = en, ``/es/``,
+# ``/ca/``, ``/hu/``). The header language switcher (docs/_templates) links the
+# current page to its counterpart under each language root. The set derives from
+# OutputLanguage (English first as the authoring source, then the translation
+# targets in enum order) - never a second hand-listed set - and each entry
+# carries its endonym, the language's own name, which is the same in every build.
+_DOCS_LANGUAGE_ENDONYMS = {
+    OutputLanguage.EN: "English",
+    OutputLanguage.ES: "Español",
+    OutputLanguage.CA: "Català",
+    OutputLanguage.HU: "Magyar",
+}
+_DOCS_LANGUAGE_ORDER = (OutputLanguage.EN, *(member for member in OutputLanguage if member is not OutputLanguage.EN))
+html_context["cadrumo_docs_language"] = language
+html_context["cadrumo_docs_default_language"] = OutputLanguage.EN.value
+html_context["cadrumo_docs_language_is_default"] = language == OutputLanguage.EN.value
+html_context["cadrumo_docs_languages"] = [
+    {"code": member.value, "label": _DOCS_LANGUAGE_ENDONYMS[member]} for member in _DOCS_LANGUAGE_ORDER
+]
 
 # ── Publishing metadata ─────────────────────────────────────────────────────
-ogp_site_name = "Cadrumo documentation"
+ogp_site_name = f"{PRODUCT_IDENTITY.prose_name} documentation"
 ogp_site_url = html_baseurl
 ogp_description_length = 180
 ogp_type = "website"
@@ -567,11 +642,11 @@ nitpick_ignore_regex = [
         r"py:.*",
         r"^(CasillaDelta|CasillaInputs|CounterpartSourceKind|FiledCaptureReport|"
         r"FiledDeclaracionArtefactSink|IvaCompensationAuthority|JsonObject|"
-        r"IvaCompensationAuthorityKind|IvaCompensationDivergence|LocaleNode|"
-        r"ModeloAmendment|ModeloCalculationRevisionDefault|ModeloCode|"
+        r"IvaCompensationAuthorityKind|IvaCompensationDivergence|LlmReviewResult|"
+        r"LocaleNode|ModeloAmendment|ModeloCalculationRevisionDefault|ModeloCode|"
         r"ModeloInputScalar|ModeloInputValue|ModeloInputs|ModeloWorkTarget|"
         r"PlaywrightStorageState|ProviderSessionMetadata|RegisteredSchema|"
-        r"SourceEvidenceFingerprint|UserProfileFactValue)$",
+        r"ReviewedSuggestion|SourceEvidenceFingerprint|UserProfileFactValue)$",
     ),
     # References into private (single-underscore) modules or to private classes
     # (``pkg._mod.Thing``, ``pkg.mod._Private``), which are implementation
@@ -605,7 +680,7 @@ nitpick_ignore_regex = [
         r"py:.*",
         r"^(pydantic|pydantic_core|pydantic_settings|httpx|typer|click|mcp|"
         r"rich|yaml|tomllib|tomli|cryptography|jinja2|markupsafe|numpy|"
-        r"prompt_toolkit|google|typing_extensions|asyncio|contextvars|"
+        r"prompt_toolkit|google|typing_extensions|asyncio|anyio|contextvars|"
         r"_pytest|playwright|_schema|_orm|annotated_types)(\..*)?$",
     ),
     # Test modules are excluded from the documented API surface (see
@@ -797,6 +872,11 @@ def _should_generate_cli_reference() -> bool:
 
 def _should_resolve_deferred_models() -> bool:
     """Return whether this Sphinx invocation needs diagnostics model rebuilding."""
+    if _USER_SCOPE:
+        # The deferred-model rebuild only exists so autodoc can import the
+        # diagnostics report models; user scope loads no autodoc, so importing
+        # the application here would defeat the whole point of the scope.
+        return False
     if os.environ.get("CADRUMO_DOCS_FORCE_DEFERRED_MODELS"):
         return True
     if os.environ.get("CADRUMO_DOCS_SKIP_DEFERRED_MODELS"):
@@ -960,6 +1040,51 @@ class _LegacyDirective(Directive):
         return [admonition]
 
 
+def _suppress_api_scope_reference(app, env, node, contnode):
+    """Resolve references into the excluded API surface inertly under user scope.
+
+    The user-scope build (``CADRUMO_DOCS_SCOPE=user``) excludes ``docs/api/**``
+    and loads no autodoc, so the py domain is intentionally empty and the API
+    reference doc is absent. Two reference classes then have no target and would
+    red the ``-n -W`` gate even though they resolve in the full/deployed build:
+
+    * every py-domain cross-reference (``:class:`` / ``:func:`` / ... — chiefly
+      the generated CLI reference pages, which point at the application symbols
+      autodoc documents in full scope); and
+    * the ``std:doc`` links into ``api/`` from the reference / architecture pages.
+
+    This handler — connected ONLY under user scope — resolves exactly those to
+    their plain display text (dropping the hyperlink), so the preview builds
+    clean while every OTHER missing reference still reds the gate. It is the
+    documented, scope-aware suppression of just the API-domain missing-reference
+    class (never a blanket ``-W`` off); full-scope builds never connect it.
+    """
+    if node.get("refdomain") == "py":
+        return contnode
+    if (
+        node.get("refdomain") == "std"
+        and node.get("reftype") == "doc"
+        and node.get("reftarget", "").lstrip("/").startswith("api/")
+    ):
+        return contnode
+    return None
+
+
+class _UserScopeApiWarningFilter:
+    """Drop the user-scope MyST 'Unknown source document api/...' warnings.
+
+    MyST emits ``myst.xref_missing`` for the markdown links into the excluded API
+    tree directly (not via the ``missing-reference`` event that
+    :func:`_suppress_api_scope_reference` intercepts), so this logging filter
+    drops exactly those API-targeted records under user scope, leaving every
+    other broken-link warning intact so the gate stays meaningful.
+    """
+
+    def filter(self, record) -> bool:
+        message = record.getMessage()
+        return not ("Unknown source document" in message and "api/" in message)
+
+
 def setup(app):
     """Resolve deferred pydantic forward references before autodoc runs.
 
@@ -1030,13 +1155,98 @@ def setup(app):
 
         generate_glossary_reference(Path(__file__).resolve().parent)
 
+    def _generate_casilla_reference(app):
+        """Render the per-modelo casilla reference pages fresh from the registry.
+
+        The ``docs/_generated/casillas/<modelo>.rst`` pages are a build-time
+        projection of the registry casilla set (the same projection the injected
+        search records use): regenerated on every build and gitignored, never
+        committed, so they cannot drift from the registry. Generating in
+        ``builder-inited`` writes the pages before Sphinx reads the source tree,
+        so their anchors resolve and the nitpicky ``-n -W`` gate holds. These
+        pages are the destination the search palette's casilla results deep-link
+        to (they carry each casilla's full legal/source grounding).
+
+        Args:
+            app: The Sphinx application instance (unused).
+        """
+        from dev.docs.casilla_reference import generate_casilla_reference
+
+        generate_casilla_reference(Path(__file__).resolve().parent)
+
+    def _emit_cli_tree(app):
+        """Write a fresh ``_static/cli-tree.json`` help projection for the widget.
+
+        The projection is a build-time asset the ``cli-sequence`` frontend widget
+        fetches for hover help. It is gitignored and regenerated, never
+        committed. Guarded like the sibling
+        CLI-reference hook: an incremental changed-page build whose artifact
+        already exists skips the projection's subprocess cost (the CLI tree
+        cannot change on a docs-only page build).
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        from dev.docs.sequence_build_gate import emit_cli_tree
+
+        emit_cli_tree(app, specific_sources=_specific_build_sources())
+
+    def _check_cli_sequences(app):
+        """Fail the build on any cli-sequence golden divergence.
+
+        The docs-build half of the two-surfaces-one-engine gate: runs the engine
+        check mode so a divergence or a failed ``@expect`` reds the build. Scoped
+        to the changed-page set on an incremental changed-page build (the same
+        specific-source detection the CLI reference and deferred-model hooks use),
+        unscoped on a full build.
+
+        Args:
+            app: The Sphinx application instance.
+        """
+        from dev.docs.sequence_build_gate import check_sequence_goldens
+
+        specific_sources = _specific_build_sources()
+        pages: list[str] | None
+        if specific_sources is None:
+            pages = None
+        else:
+            docs_root = Path(app.srcdir)
+            pages = []
+            for source in specific_sources:
+                if source.suffix != ".md":
+                    continue
+                try:
+                    pages.append(source.relative_to(docs_root).with_suffix("").as_posix())
+                except ValueError:
+                    continue
+        check_sequence_goldens(app, pages=pages)
+
     app.connect("builder-inited", _resolve_deferred_models)
     app.connect("builder-inited", _generate_cli_reference)
     app.connect("builder-inited", _generate_glossary_reference)
+    app.connect("builder-inited", _generate_casilla_reference)
+    app.connect("builder-inited", _emit_cli_tree)
+    app.connect("builder-inited", _check_cli_sequences)
     # Priority 700 runs after intersphinx (which resolves external targets at the
     # default priority) so the short-name bridge only fires for genuinely
     # unresolved in-tree references.
     app.connect("missing-reference", _resolve_short_reference, priority=700)
+    if _USER_SCOPE:
+        # Scope-aware API-reference suppression (see the two helpers above): the
+        # missing-reference handler runs LAST (priority 900, after the short-name
+        # bridge) so it only inerts references the full build would resolve
+        # against the excluded autodoc surface; the logging filter drops the
+        # MyST markdown-link warnings into api/ that never reach that event.
+        import logging as _stdlib_logging
+
+        app.connect("missing-reference", _suppress_api_scope_reference, priority=900)
+        _stdlib_logging.getLogger("sphinx").addFilter(_UserScopeApiWarningFilter())
     app.add_role("paramref", _paramref_role)
     app.add_directive("legacy", _LegacyDirective)
+
+    # Register the cli-sequence directive: server-rendered executed-CLI frames
+    # plus one inline JSON payload per sequence.
+    from dev.docs.sequence_directive import register as _register_cli_sequence
+
+    _register_cli_sequence(app)
     return {"parallel_read_safe": True, "parallel_write_safe": True}

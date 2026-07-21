@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#retenciones-perceptor-count'
 date: '2026-06-24'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
   - '[[2026-06-30-retenciones-perceptor-count-research]]'

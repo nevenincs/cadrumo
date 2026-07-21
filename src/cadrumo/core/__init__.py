@@ -1,11 +1,11 @@
-"""Core cross-cutting infrastructure shared by every ``aeat`` layer.
+"""Core cross-cutting infrastructure shared by every Cadrumo layer.
 
 The core layer is the innermost package in the hexagonal architecture. It
 exports typed primitives, configuration-adjacent helpers, parsing utilities,
 and layer-neutral policies that domain, application, adapter, and entrypoint
 modules can import without depending outward.
 
-The public facade groups four stable surfaces. Immutable modelling primitives
+The public facade groups stable surfaces. Immutable modelling primitives
 include :data:`STRICT_FROZEN_CONFIG`, :class:`CasillaId`, :class:`Modelo`,
 :class:`Period`, :class:`StandardPeriodCode`, ``PeriodKind``,
 :class:`TaxDomain`, :class:`RefundElection`, :class:`ResultDisposition`, and
@@ -14,7 +14,9 @@ Obligation-coverage mappings expose :data:`OUT_OF_SCOPE_OBLIGATIONS` and
 :data:`UNMODELED_OBLIGATIONS`, the codified AEAT modelo sets the overview
 coverage report reads to distinguish product-scope exclusions from
 registry gaps. Active-bucket context uses the plaintext :class:`BucketPointer` value object
-plus :func:`pointer_path`, :func:`read_pointer`, :func:`write_pointer`,
+plus :func:`pointer_path`, :func:`read_pointer`, :func:`capture_pointer`,
+:func:`restore_pointer`, :func:`clear_pointer`, :func:`write_pointer`,
+:func:`exclusive_file_lock`,
 :func:`resolve_active_bucket_id`, :func:`require_active_bucket_id`, and
 :func:`resolve_repository_bucket_id`. TOML and option utilities expose
 :func:`read_toml`, :func:`parse_toml_text`, :func:`freeze_toml`,
@@ -67,6 +69,7 @@ from ._amendment_kind_regime import (
     permitted_amendment_kind_values,
     resolve_amendment_kind_regime,
 )
+from ._auth_provider import AuthProviderDescription, AuthProviderKind
 from ._capabilities import ServiceCapability
 from ._casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ._config_state_root import FormerProductStateError
@@ -134,16 +137,13 @@ from ._result_disposition import (
 )
 from ._tax_domain import TaxDomain
 from ._toml import freeze_toml, freeze_toml_value, parse_toml_text, read_toml, to_str_keyed_dict
-from .compatibility_lifecycle import (
-    COMPATIBILITY_REGIME,
-    RELEASED_FORMAT_FLOORS,
-    CompatibilityRegime,
-    expected_floor,
-    lineage_obligations,
-)
 from .external_constants import M347_THRESHOLD_EUR
 from .product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY, IdentityReferent, ProductIdentity
-from .secure_object_write import DEFAULT_WRITE_PROVENANCE, SecureObjectWrite
+from .secure_object_write import (
+    ABSENT_SECURE_OBJECT_REVISION_ID,
+    DEFAULT_WRITE_PROVENANCE,
+    SecureObjectWrite,
+)
 
 if TYPE_CHECKING:
     # Static bindings for the lazily-exposed surface below. At runtime these
@@ -151,11 +151,14 @@ if TYPE_CHECKING:
     # real callable signatures here.
     from ._bucket_pointer import BucketPointer
     from ._bucket_pointer_io import (
+        capture_pointer,
+        clear_pointer,
         pointer_path,
         read_pointer,
         require_active_bucket_id,
         resolve_active_bucket_id,
         resolve_repository_bucket_id,
+        restore_pointer,
         write_pointer,
     )
     from ._foreign_asset_obligation import (
@@ -169,16 +172,18 @@ if TYPE_CHECKING:
         foreign_asset_declaration_threshold,
         foreign_asset_obligation_group,
     )
+    from ._fsync import fsync_parent_dir
     from .aggregation import BindingSourceKind, IntracomOperationType
+    from .locks import exclusive_file_lock
 
 __all__: list[str] = [
+    "ABSENT_SECURE_OBJECT_REVISION_ID",
     "ACTIONABLE_POST_FILING_EVENT_KINDS",
     "AEAT_AUTHORITY_SHORT_NAME",
     "ANTHROPIC_EXTRA",
     "ART_104_TRES_AUTO_DERIVED_EXCLUSIONS",
     "ART_104_TRES_OPERATOR_DECLARED_EXCLUSIONS",
     "BROWSER_EXTRA",
-    "COMPATIBILITY_REGIME",
     "DEFAULT_WRITE_PROVENANCE",
     "FETCH_GATED_M210_TIPO_RENTA_CODES",
     "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
@@ -195,16 +200,16 @@ __all__: list[str] = [
     "OPTIONAL_EXTRAS",
     "OUT_OF_SCOPE_OBLIGATIONS",
     "PRODUCT_IDENTITY",
-    "RELEASED_FORMAT_FLOORS",
     "STRICT_FROZEN_CONFIG",
     "UNMODELED_OBLIGATIONS",
     "AmendmentKindRegime",
     "AmendmentLiabilityDirection",
     "Art104TresExclusion",
+    "AuthProviderDescription",
+    "AuthProviderKind",
     "BindingSourceKind",
     "BucketPointer",
     "CasillaId",
-    "CompatibilityRegime",
     "ConvenioOverrideKind",
     "ForeignAssetDeclarationThreshold",
     "ForeignAssetObligationGroup",
@@ -240,17 +245,19 @@ __all__: list[str] = [
     "TipoRentaIrnr",
     "accepted_period_codes",
     "accepted_period_patterns",
+    "capture_pointer",
     "classify_amendment_liability_direction",
     "classify_post_filing_event_kind",
+    "clear_pointer",
     "derive_result_disposition",
-    "expected_floor",
+    "exclusive_file_lock",
     "foreign_asset_class_declaration_threshold",
     "foreign_asset_declaration_threshold",
     "foreign_asset_obligation_group",
     "freeze_toml",
     "freeze_toml_value",
+    "fsync_parent_dir",
     "iban_mod_97",
-    "lineage_obligations",
     "modelo_has_codified_amendment_regime",
     "modelo_has_codified_disposition",
     "optional_extra_available",
@@ -266,6 +273,7 @@ __all__: list[str] = [
     "resolve_active_bucket_id",
     "resolve_amendment_kind_regime",
     "resolve_repository_bucket_id",
+    "restore_pointer",
     "result_disposition_casilla_ids",
     "result_disposition_is_refund",
     "to_str_keyed_dict",
@@ -284,6 +292,14 @@ def __getattr__(name: str) -> object:
         from .aggregation import IntracomOperationType
 
         return IntracomOperationType
+    if name == "exclusive_file_lock":
+        from .locks import exclusive_file_lock
+
+        return exclusive_file_lock
+    if name == "fsync_parent_dir":
+        from ._fsync import fsync_parent_dir
+
+        return fsync_parent_dir
     if name in (
         "FOREIGN_ASSET_CLASS_OBLIGATION_GROUP",
         "FOREIGN_ASSET_DECLARATION_THRESHOLDS",
@@ -303,11 +319,14 @@ def __getattr__(name: str) -> object:
 
         return BucketPointer
     if name in (
+        "capture_pointer",
+        "clear_pointer",
         "pointer_path",
         "read_pointer",
         "resolve_active_bucket_id",
         "resolve_repository_bucket_id",
         "require_active_bucket_id",
+        "restore_pointer",
         "write_pointer",
     ):
         from . import _bucket_pointer_io

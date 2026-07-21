@@ -1,7 +1,7 @@
-"""Wrangling corrections over the resolved sweep hits (ADR D6).
+"""Wrangling corrections over the resolved sweep hits.
 
-ADR D6 mandates that output wrangling is "a typed transformation layer, not
-ad-hoc filtering": the raw-hit corrections the research documented are TESTED
+Output wrangling is a typed transformation layer, not
+ad-hoc filtering: the raw-hit corrections are TESTED
 CODE with an audit trail, not inline ``if score > 0.5`` scattered through the
 compiler. This module takes the :class:`~dev.docs.terminology._resolution.ResolutionResult`
 the chunk-to-target resolver produces and applies the four documented
@@ -12,7 +12,7 @@ The four corrections, in composition order:
 
 1. **score-floor + TOC-noise filtering** -- drop a resolved target whose
    originating hit scored below the strong-signal floor
-   (:data:`STRONG_SIGNAL_SCORE_FLOOR`, the research's ~0.5 convention), and
+   (:data:`STRONG_SIGNAL_SCORE_FLOOR`, the ~0.5 strong-signal convention), and
    drop low-value navigation / TOC / index pages that pollute the tail.
 2. **casilla-revision dedupe** -- collapse multiple hits landing on the SAME
    opaque casilla search-record id to one target, keeping the highest-scored
@@ -97,9 +97,9 @@ class CollapsedHit:
 
 
 class DirectoryCluster(BaseModel):
-    """A dominant directory / surface cluster across the resolved hits (ADR D6).
+    """A dominant directory / surface cluster across the resolved hits.
 
-    The research's "when scores collapse, read the dominant directory cluster
+    The "when scores collapse, read the dominant directory cluster
     across 3-5 hits" signal, materialised as typed data: a cluster groups
     resolved targets by their surface plus a coarse locator (modelo for
     casillas, domain for concepts, the top path segment otherwise). ``size`` is
@@ -154,7 +154,7 @@ def wrangle(
     *,
     score_floor: float = STRONG_SIGNAL_SCORE_FLOOR,
 ) -> WrangledResult:
-    """Apply the four ADR-D6 corrections to a resolution result.
+    """Apply the four documented corrections to a resolution result.
 
     Composition order (documented, deterministic):
 

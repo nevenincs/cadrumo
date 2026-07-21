@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-domain-handoffs-swarm'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-16-cross-domain-handoffs-swarm-audit]]'
 ---

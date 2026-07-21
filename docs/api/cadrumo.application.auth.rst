@@ -20,12 +20,14 @@ Submodules
    cadrumo.application.auth._certificate_secret_backend
    cadrumo.application.auth._certificate_sources
    cadrumo.application.auth._certificate_sources_operator
+   cadrumo.application.auth._credential_resolution
    cadrumo.application.auth._diagnostics
    cadrumo.application.auth._errors
-   cadrumo.application.auth._models
+   cadrumo.application.auth._mutation
    cadrumo.application.auth._operator
    cadrumo.application.auth._operator_probes
    cadrumo.application.auth._operator_results
    cadrumo.application.auth._operator_scope
    cadrumo.application.auth._protocols
    cadrumo.application.auth._sessions
+   cadrumo.application.auth._workflow_repository

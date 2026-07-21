@@ -1,7 +1,7 @@
 """Regression test for ``--output-language`` parity across the CLI surface.
 
 contract closes the parity gap identified in personas R7-C, Ines D3+D6, and
-Joan R7-002: ``auth clear``, ``auth providers``, ``auth configure``,
+Joan R7-002: ``auth logout``, ``auth reset``, ``auth providers``, ``auth configure``,
 ``config profile show``, ``modelo work calculate``, ``modelo work verify``,
 and ``modelo work file`` must each accept ``--output-language`` so the
 operator can request a specific output language on any user-facing verb.
@@ -25,7 +25,7 @@ from pathlib import Path
 import pytest
 
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES
-from ....tests.cli_runner import invoke_cached_cli
+from ....tests.cli_runner import invoke_cached_cli, semantic_cli_output
 from ....tests.secure_sql import isolated_sessionless_storage_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -34,7 +34,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 _OPTION_FLAG = "--output-language"
 _CHOICE_LIST = f"[{'|'.join(SUPPORTED_OUTPUT_LANGUAGES)}]"
 _AUTH_COMMANDS = (
-    ("config", "auth", "clear"),
+    ("config", "auth", "logout"),
+    ("config", "auth", "reset"),
     ("config", "auth", "providers"),
     ("config", "auth", "configure"),
     ("config", "auth", "status"),
@@ -99,11 +100,12 @@ def _assert_output_language_registered(args: Sequence[str]) -> None:
     help_args = [*args, "--help"]
     result = invoke_cached_cli(help_args)
     assert result.exit_code == 0, f"`{' '.join(help_args)}` exited {result.exit_code}:\n{result.output}"
-    assert _OPTION_FLAG in result.output, (
-        f"`{' '.join(args)}` help does not include `{_OPTION_FLAG}`.\nHelp output:\n{result.output}"
+    help_output = semantic_cli_output(result)
+    assert _OPTION_FLAG in help_output, (
+        f"`{' '.join(args)}` help does not include `{_OPTION_FLAG}`.\nHelp output:\n{help_output}"
     )
-    assert _CHOICE_LIST in result.output, (
-        f"`{' '.join(args)}` help does not constrain `{_OPTION_FLAG}` to {_CHOICE_LIST}.\nHelp output:\n{result.output}"
+    assert _CHOICE_LIST in help_output, (
+        f"`{' '.join(args)}` help does not constrain `{_OPTION_FLAG}` to {_CHOICE_LIST}.\nHelp output:\n{help_output}"
     )
 
 

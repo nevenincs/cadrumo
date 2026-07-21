@@ -1,7 +1,6 @@
-"""Exit-code-as-verdict golden gate for the operator eval (eval-catalogue category 7).
+"""Exit-code-as-verdict golden gate for the operator eval.
 
-Closes eval-catalogue category 7 (exit-code misread as crash,
-``.vault/research/2026-07-01-agent-harness-research.md``): a non-zero CLI process
+Guards against an exit code being misread as a crash: a non-zero CLI process
 exit code paired with a well-formed JSON envelope is a domain VERDICT the operator
 must read and act on, not a crash to abort on or retry blindly.
 
@@ -13,14 +12,13 @@ no prior filed M100 for the preceding year), decodes the real stdout envelope, a
 feeds the real exit code plus the real envelope into
 :func:`cadrumo.agent.eval.check_exit_code_scenario`. No mocks: the exit code, the
 envelope shape, the ``status``, and the continuation-command citation are all
-real CLI/registry output (``no-tautological-calculation-tests``,
-``aeat-quality-gates``).
+real CLI/registry output.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -29,10 +27,8 @@ from typing import Any
 import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.user_profile import profile_storage_session
 from ....core import resolve_active_bucket_id
-from ....core.config import override_settings
 from ....core.json_contract import EnvelopeStatus
 from ....domain.transactions import (
     BusinessClassification,
@@ -43,33 +39,16 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ExitCodeScenario, check_exit_code_scenario
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _FILING_YEAR = 2025
 _PERIOD = "1T"
-
-
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _create_profile() -> None:
@@ -190,7 +169,7 @@ def _dispatch_m130_verify_with_cross_period_finding() -> tuple[int, dict[str, An
             "--modelo", "130", "--year", str(_FILING_YEAR), "--period", _PERIOD,
         ],
     )  # fmt: skip
-    payload = unwrap_schema_envelope(verified.output)
+    payload = require_schema_envelope(verified.output)
     assert payload["granted_verificado_completo"] is False, verified.output
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean", verified.output
 
@@ -236,7 +215,7 @@ def test_exit_1_with_findings_reads_as_an_actionable_verdict_not_a_crash() -> No
         scenario,
         exit_code=exit_code,
         envelope=envelope,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert result.passed, result.failures
@@ -271,7 +250,7 @@ def test_runner_rejects_an_exit_1_with_no_continuation_guidance() -> None:
         scenario,
         exit_code=exit_code,
         envelope=stripped,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -304,7 +283,7 @@ def test_runner_rejects_an_exit_code_mismatch() -> None:
         scenario,
         exit_code=exit_code,
         envelope=envelope,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -350,7 +329,7 @@ def test_runner_rejects_a_fabricated_continuation_command() -> None:
         scenario,
         exit_code=exit_code,
         envelope=envelope,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed

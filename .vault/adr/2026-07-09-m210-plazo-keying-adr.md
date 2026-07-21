@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#m210-plazo-keying'
 date: '2026-07-09'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-07-09-m210-irnr-phase-2-engine-adr]]"
+  - "[[2026-07-10-m210-irnr-phase-2-engine-adr]]"
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
 ---
 
@@ -30,9 +30,10 @@ the calculation engine COMPUTES (not a profile fact, not a devengo period token)
 and the TIPO de renta is declared PER WORK UNIT (the tipo_renta casilla / the
 Slice-A `OfficialTipoRentaCode` axis), not a profile-static census fact. The
 annual/resultado cases therefore cannot be period-keyed nor profile-condition
-keyed as the schema stands. This ADR decides how to attach the two qualifiers,
-how they resolve, whether to widen the M210 `period_selector`, and how the work
-sequences against Slice C.
+keyed as the schema stands. The M210 work model has since widened to
+`period_selector = ["EVENT-N", "0A"]`, and the accepted 10-July phase-2 ADR
+implements strict annual grouped-renta behaviour. This ADR now decides only how
+to attach the two deadline qualifiers and resolve them after calculation.
 
 The Slice-B builder's working plazo table carried one grounding error this ADR
 corrects: it stated the rentas-imputadas tipo-02 window as "del 1 de abril al 31
@@ -83,16 +84,14 @@ presentation close. The corrected figures below are used throughout.
   `(filing_year, registry_token)`. It is resultado- and tipo-agnostic today. It
   feeds the extemporaneidad surface at work-unit creation, BEFORE any calculation
   has run, so it structurally cannot know the resultado.
-- **`period_selector = ["EVENT-N"]`** on the M210 2025 revision is hard-pinned by
-  `test_modelo_210_registry.py:110` (`... .periods == ("EVENT-N",)`). It gates
-  operator WORK-UNIT CREATION, which is a separate concern from deadline-window
-  AUTHORITY: the landed quarterly windows already resolve via
-  `resolve_filing_closes_on` without any period_selector change.
-- **Slice C dependency.** The agrupacion grouped-rentas Type-2 detail-row model is
-  Slice C, fetch-gated on the official diseno de registro. Agrupacion work units,
-  and a calculate path that PRODUCES a resultado, both depend on Slice C. Slice A
-  (the `OfficialTipoRentaCode` / `TipoRentaIrnr` axis) is in progress and owns the
-  tipo axis this ADR's tipo qualifier reuses.
+- **`period_selector = ["EVENT-N", "0A"]` is already live.** It gates operator
+  work-unit creation, which remains a separate concern from deadline-window
+  authority. Strict annual grouped-renta behaviour lives in
+  `application/modelo/_m210_agrupacion_renta.py` under the accepted
+  `2026-07-10-m210-irnr-phase-2-engine-adr`.
+- **The former Slice-C dependency is settled.** The grouped-renta work model and
+  resultado-producing calculation path have landed. This ADR reuses those
+  accepted axes; it does not reopen their grouping or period decisions.
 - **Codified constraints in play.** `aeat-schema-central-config` (regulatory dates
   live in the registry, never inline in code); `period-filter-single-boundary-
   authority` (the period grammar is a devengo-period identity, not a computed
@@ -145,30 +144,22 @@ Decision 2 - the TIPO-dependent cases:
   M210 mode) and is NOT a `deadline_windows` row. The exact offset is NEEDS-FETCH
   (the RD 1776/2004 reglamento is not bundled).
 
-Decision 3 - the `period_selector` widen:
+Decision 3 - the `period_selector`:
 
-- **O3a widen `period_selector` now to add 1T-4T + 0A.** Rejected for this
-  addendum: work-unit creation for the quarterly/agrupacion modes needs the Slice-C
-  detail-row model and a calculate path that yields a resultado; widening the
-  selector before that ships would expose creatable periods with no work model
-  behind them, and would break the pin-test with nothing consuming the new tokens.
-- **O3b keep `period_selector = ["EVENT-N"]`; land the annual windows as authority
-  only; sequence the widen with Slice C (chosen).** The `deadline_windows` are
-  calendar authority resolvable independent of `period_selector`; the widen (and
-  the pin-test update) is a Slice-C precondition. Accepted - keeps the pin and the
-  landed windows stable now.
+- **O3a retain the implemented `["EVENT-N", "0A"]` selector (chosen).** The
+  accepted phase-2 work model already consumes annual `0A`; this ADR does not
+  add synthetic resultado/tipo period tokens and does not reopen the selector.
+- **O3b encode deadline qualifiers as new period tokens.** Rejected: resultado
+  and tipo are declaration/calculation axes, not devengo-period identities.
 
-Decision 4 - relationship to Slice C:
+Decision 4 - relationship to the accepted phase-2 work model:
 
-- **O4a land the registry window DATA now (bundled-groundable), sequence the
-  RESOLUTION WIRING after Slice A + Slice C (chosen).** The annual resultado/tipo
-  window rows are groundable from bundled art-5 today and land independently; their
-  post-calc resolver, the `period_selector` widen, and the tipo/resultado work-unit
-  axis depend on Slice A (tipo axis) and Slice C (detail rows + agrupacion work
-  model + resultado-producing calculate). Accepted.
-- **O4b block all annual-plazo work behind Slice C.** Rejected: the registry window
-  DATA needs no fetch and no detail-row model; blocking it wastes bundled grounding
-  and bloats Slice C.
+- **O4a land registry data and post-calculation resolution over the accepted
+  phase-2 axes (chosen).** The annual resultado/tipo rows are groundable from
+  bundled art-5, and the grouped-renta calculation path now exists.
+- **O4b couple plazo delivery to another grouping redesign.** Rejected: grouping
+  is accepted and implemented; delaying the deadline resolver would preserve a
+  false dependency and bloat unrelated work.
 
 ## Constraints
 
@@ -184,10 +175,10 @@ Decision 4 - relationship to Slice C:
   bundled (art-5 recital), but the "3 months after 1 month" numeral is not
   corpus-groundable and must not be authored from memory. Until fetched, tipo-28
   carries the event-shape only, no numeric offset.
-- **Parent stability:** Slice A (`OfficialTipoRentaCode` axis) is in progress and
-  owns the tipo axis reused here; the resolution wiring waits on it and on Slice C.
-  The Slice-B quarterly windows and `resolve_filing_closes_on` are landed and
-  test-pinned.
+- **Parent stability:** the accepted 10-July phase-2 ADR owns the grouped-renta
+  and annual `0A` work model reused here. The quarterly windows and
+  `resolve_filing_closes_on` are landed and test-pinned. This ADR may add
+  qualifier-aware deadline resolution but must not duplicate those authorities.
 - **Grounding discipline:** every date is verbatim-grounded in the bundled
   consolidated Orden EHA/3316/2010 art 5; the imputadas-02 figure is CORRECTED to
   the bundled "todo el ano natural siguiente" (1 Jan - 31 Dec of year+1), not the
@@ -224,28 +215,28 @@ surfaces the close as an `info` `Notice` on the M210 calculate/verify envelope
 deadline-window section validator (`_validate_surfaces.validate_deadline_window_
 section`) keeps enforcing `legal_refs`/`source_refs` coverage on the new rows.
 
-**`period_selector` is unchanged in this addendum.** The widen to add the
-quarterly + `0A` tokens (and the `test_modelo_210_registry.py:110` pin update from
-`== ("EVENT-N",)` to "EVENT-N present AND the quarterly/0A tokens present") is a
-Slice-C task, co-landed with the agrupacion work model.
+**`period_selector` remains the implemented `["EVENT-N", "0A"]`.** No
+resultado- or tipo-flavoured period token is introduced. The remaining work is
+the typed qualifier schema, grounded annual window rows, post-calculation
+resolver and typed `Notice` projection.
 
 **Code-surface footprint** (for the implementation plan):
-- `src/aeat/core/_irnr.py` - new `M210ResultadoScope` StrEnum; reuse
+- `src/cadrumo/core/_irnr.py` - new `M210ResultadoScope` StrEnum; reuse
   `TipoRentaIrnr` / `OfficialTipoRentaCode` for the tipo axis.
-- `src/aeat/domain/calculations/registry/_schema.py` - two optional qualifier
+- `src/cadrumo/domain/calculations/registry/_schema.py` - two optional qualifier
   fields on `DeadlineWindowDefinition` (default `None`).
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/deadline_windows/`
+- `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/deadline_windows/`
   - the four annual resultado/tipo window rows (art-5 grounded).
-- `src/aeat/domain/deadlines/_plazo.py` (+ a new resultado/tipo-aware resolver
+- `src/cadrumo/domain/deadlines/_plazo.py` (+ a new resultado/tipo-aware resolver
   entry point in `domain/deadlines/`) - post-calculation annual-plazo resolution.
-- `src/aeat/application/modelo/` (calculate/verify emit) +
+- `src/cadrumo/application/modelo/` (calculate/verify emit) +
   `core/json_contract.Notice` - the post-calculation plazo advisory.
-- `src/aeat/_data/registry/aeat/legal/irnr.toml` - `orden-eha-3316-2010:art-5`
+- `src/cadrumo/_data/registry/aeat/legal/irnr.toml` - `orden-eha-3316-2010:art-5`
   legal entry already present; extend `required_text` only if the annual clauses
   need distinct corpus phrases.
-- **Slice-C-sequenced (not this addendum):** `period_selector` widen +
-  `test_modelo_210_registry.py:110` pin update; the tipo/resultado work-unit axis
-  and the resultado-producing calculate path.
+- **Already supplied by the accepted phase-2 implementation:** annual `0A`
+  selection, grouped-renta work-unit behaviour and the resultado-producing
+  calculate path. This plan must consume them, not recreate them.
 - **NEEDS-FETCH-gated:** transmisiones tipo-28 event offset (RD 1776/2004 art 14).
 
 ## Rationale
@@ -264,10 +255,9 @@ resolution where the resultado is actually known and rides the single diagnostic
 channel (`cli-notices-are-the-only-diagnostic-channel`), instead of the
 creation-time extemporaneidad line that runs before any value exists. Rejecting the
 period-token synthesis (O1c) preserves the single period-boundary authority.
-Splitting the registry DATA (land now) from the resolution WIRING (sequence after
-Slice A + C) follows the phase-2 ADR's grounding-honesty through-line: no slice
-waits on a blocker it does not need, and the landed quarterly windows and the
-EVENT-N pin stay stable. The imputadas-02 correction is the corpus-verification
+The accepted phase-2 grouping and annual work model remove the former sequencing
+dependency, so the registry data and resolution wiring can land together without
+recreating those axes. The imputadas-02 correction is the corpus-verification
 rule in action: the Slice-B table's "1 abril - 31 diciembre" was a
 domiciliacion/presentation conflation the bundled art-5 text refutes.
 
@@ -285,9 +275,8 @@ domiciliacion/presentation conflation the bundled art-5 text refutes.
   beside `resolve_filing_closes_on`; the two are kept distinct by timing (pre- vs
   post-calculation) rather than merged, because only the post-calc path can know the
   resultado.
-- **Sequenced, not blocked:** the registry window rows land in this addendum's
-  implementation slice; the `period_selector` widen, the pin-test update, and the
-  operator-facing resolution wiring co-land with Slice A + Slice C.
+- **Unblocked:** the registry window rows and operator-facing resolution wiring
+  can use the accepted annual/grouped-renta path directly.
 - **Bounded:** transmisiones tipo-28's numeric offset stays out until RD 1776/2004
   art 14 is fetched and bundled; until then tipo-28 carries the EVENT-N event-shape
   with no fabricated offset.

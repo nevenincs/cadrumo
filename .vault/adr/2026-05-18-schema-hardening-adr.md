@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#schema-hardening'
 date: '2026-05-18'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-18-schema-hardening-research]]"
   - '[[2026-05-28-schema-hardening-continuity-conformance-research]]'
@@ -14,9 +14,9 @@ related:
 
 ## Problem Statement
 
-The AEAT modelo registry under `src/aeat/_data/registry/aeat/modelos/`
+The AEAT modelo registry under `src/cadrumo/_data/registry/aeat/modelos/`
 declares 26 hand-authored TOML schemas validated by the strict pydantic
-schema in `src/aeat/domain/calculations/registry/_schema.py`. The
+schema in `src/cadrumo/domain/calculations/registry/_schema.py`. The
 schema enforces identifier integrity, referential closure, and a narrow
 numeric-bounds contract. It does not enforce semantic uniformity across
 modelos.
@@ -136,7 +136,7 @@ a clean `main`.
 
 ### Plan A — `data_type` Literal extension
 
-Extend the `data_type` Literal in `src/aeat/domain/calculations/
+Extend the `data_type` Literal in `src/cadrumo/domain/calculations/
 registry/_schema.py` with the following variants, each backed by a
 pydantic `Annotated` alias and `BeforeValidator`:
 
@@ -269,6 +269,6 @@ matters most.
   typo-twin warning fires repeatedly in practice. The decision can be
   revisited with concrete data after Plan C lands.
 - Mechanism A's typed aliases (NIF check-digit, IBAN mod-97) may
-  belong in `aeat.core` rather than in `aeat.domain.calculations.registry`
+  belong in `cadrumo.core` rather than in `cadrumo.domain.calculations.registry`
   if other domains (filing draft assembly, oracle replay, export
   layouts) need to validate the same atoms independently.

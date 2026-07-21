@@ -11,13 +11,10 @@ ledger access, :class:`InvoiceCatalogue` and
 :class:`TaxpayerProfile` for deadline and period
 calculations.
 
-The output boundary has two paths. Legacy/exempt surfaces call
-:func:`_emit`, which delegates to
-:func:`render_command_output`. Envelope-aware
-command handlers call :func:`_emit_envelope`,
-which routes JSON through :class:`SchemaEnvelope` and
-carries typed :class:`Notice` diagnostics while
-preserving the text line iterator unchanged.
+The output boundary is :func:`_emit_envelope`. It routes every JSON result
+through :class:`SchemaEnvelope`, requires a registered result schema, and
+carries typed :class:`Notice` diagnostics while preserving the text line
+iterator unchanged.
 
 Application-layer and domain symbols are imported lazily inside each
 helper to avoid pulling the registry parse into fast-path commands such
@@ -43,7 +40,7 @@ from ...core.output_rendering import render_command_output
 # inside the helpers that use them at runtime. A module-level import
 # would pull the application layer — and transitively the registry
 # parse — into every consumer of this transport module, including the
-# ``aeat --version`` / ``aeat --help`` fast paths that import ``_emit``
+# ``aeat --version`` / ``aeat --help`` fast paths that import ``_emit_envelope``
 # but never reach a registry-backed helper. ``from __future__ import
 # annotations`` keeps the type annotations valid as strings without a
 # runtime import; the ``TYPE_CHECKING`` block keeps static checkers
@@ -84,19 +81,6 @@ def _is_metadata_invocation() -> bool:
 def _format_of(ctx: typer.Context) -> str:
     state = ctx.ensure_object(dict)
     return state.get("format", _FORMAT_TEXT)
-
-
-def _emit(ctx: typer.Context, payload: object, lines: Iterable[str]) -> None:
-    """Render a bare payload or text lines through the shared output renderer.
-
-    This helper is for documented non-envelope surfaces; registered command
-    results should use :func:`_emit_envelope` so
-    their JSON path carries the shared
-    :class:`SchemaEnvelope` spine.
-    """
-    rendered = render_command_output(format_name=_format_of(ctx), payload=payload, lines=lines)
-    if rendered.text:
-        typer.echo(rendered.text)
 
 
 def emit_help_text(ctx: typer.Context) -> None:
@@ -164,8 +148,8 @@ def _emit_envelope(
         emit_json_success(command, result, notices=resolved_notices, active_profile=active_profile)
         return
     # Route non-JSON paths through render_command_output so unsupported
-    # ``--format`` values (e.g. ``xml``) raise the same refusal contract
-    # that the bare ``_emit`` path enforces. ``render_command_output``
+    # ``--format`` values (e.g. ``xml``) raise the shared refusal contract.
+    # ``render_command_output``
     # ignores ``payload`` outside JSON mode and emits the line iterator.
     rendered_lines = lines if sandbox_notice is None else (f"SANDBOX\t{sandbox_notice.message}", *lines)
     rendered = render_command_output(format_name=format_name, payload=result, lines=rendered_lines)
@@ -193,8 +177,8 @@ def _active_sandbox_notice() -> Notice | None:
     is not a sandbox, so a real profile's output is never annotated and a
     corrupt/torn manifest degrades this purely-advisory indicator rather
     than breaking every command's output. The manifest is deliberately
-    re-read on every call (no caching) so a mid-process
-    ``switch``/``sandbox use`` is reflected on the very next command.
+    re-read on every call (no caching) so a mid-process ``switch`` is
+    reflected on the very next command.
     """
     from ...adapters.persistence.storage import StorageValidationError
     from ...adapters.persistence.storage.bucket import bucket_paths, manifest_path, read_manifest
@@ -312,8 +296,7 @@ def _translate(translatable: str) -> str:
 #
 # The ledger ``--period`` surface speaks ONE strict operator grammar — the
 # canonical AEAT modelo tokens (``0A`` annual, ``1T``-``4T`` quarters,
-# ``01``-``12`` months) the modelo surfaces already teach, per the
-# operator-surface ADR decision D4 as amended 2026-06-10 (one strict period
+# ``01``-``12`` months) the modelo surfaces already teach (one strict period
 # grammar everywhere, AEAT tokens only). Those tokens carry no year of their
 # own, so every ledger ``--period`` command also takes ``--year`` to supply
 # the year context — exactly the modelo ``--year``/``--period`` composition,
@@ -453,8 +436,8 @@ def _parse_optional_iso_date_str(raw: str | None, *, label: str) -> str | None:
 # the ``_DECIMAL_RE`` shape the declaration-edit path enforces
 # (``cadrumo.application.review._edit``), tightened to a two-digit fractional cap so
 # the Spanish thousands-grouping shape ``1.000`` (a dot followed by three digits)
-# refuses rather than silently becoming ``1.0`` — the F1 silent-misparse the
-# input-localisation ADR closes. ``1234.56`` (two fractional digits) and a bare
+# refuses rather than silently becoming ``1.0`` — a silent misparse this
+# closes. ``1234.56`` (two fractional digits) and a bare
 # ``1000`` / ``0`` accept; ``1.000``, ``1.234,56``, ``1e3``, ``NaN``,
 # ``Infinity`` all refuse. The regex runs *before* ``Decimal(...)`` so the
 # refusal carries the instructive, localised message; ``is_finite()`` is
@@ -512,6 +495,33 @@ def parse_optional_decimal_amount(raw: str | None, *, label: str, signed: bool =
     return parse_decimal_amount(raw, label=label, signed=signed)
 
 
+def optional_decimal_text(value: Decimal | None) -> str | None:
+    """Render an optional decimal without scientific notation."""
+    if value is None:
+        return None
+    return format(value, "f")
+
+
+def resolve_pull_year_range(
+    *,
+    year: int | None,
+    year_from: int | None,
+    year_to: int | None,
+) -> tuple[int, int]:
+    """Resolve mutually exclusive single-year and inclusive range pull options."""
+    if year is not None and (year_from is not None or year_to is not None):
+        raise typer.BadParameter("use --year for a single-year pull or --from-year/--to-year for a range, not both")
+    if year is not None:
+        return year, year
+    if year_from is None and year_to is None:
+        raise typer.BadParameter("either --year or both --from-year and --to-year are required")
+    if year_from is None or year_to is None:
+        raise typer.BadParameter("--from-year and --to-year must be supplied together")
+    if year_from > year_to:
+        raise typer.BadParameter("--from-year must be less than or equal to --to-year")
+    return year_from, year_to
+
+
 def _profile_to_taxpayer(state: WorkflowState) -> TaxpayerProfile:
     from ...application.user_profile import projection_for_taxpayer
 
@@ -530,9 +540,8 @@ def active_bucket_id_or_refuse() -> str:
     """Return the active profile bucket id or raise the canonical no-active-profile refusal.
 
     Stateless single source for the cold-start bucket-id guard shared across
-    the ledger command family;
-    :func:`_active_bucket_id_or_bad` delegates
-    here.
+    bucket-bound CLI command families. :func:`_active_bucket_id_or_bad`
+    delegates here.
     """
     from ...core import require_active_bucket_id
     from ...core.errors import NoActiveProfileError

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#crossperiod-filing-deadlock'
 date: '2026-06-21'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-06-19-crossperiod-filing-deadlock-adr]]'

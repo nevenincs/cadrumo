@@ -6,10 +6,10 @@ surfaced through the ``config profile`` verb tree.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class CensoSyncError(AeatError):
+class CensoSyncError(CadrumoError):
     """Base for every 036 censo application failure."""
 
 

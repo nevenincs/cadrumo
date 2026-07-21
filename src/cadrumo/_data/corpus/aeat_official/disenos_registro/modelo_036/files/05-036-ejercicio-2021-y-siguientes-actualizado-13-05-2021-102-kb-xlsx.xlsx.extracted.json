@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_036/files/05-036-ejercicio-2021-y-siguientes-actualizado-13-05-2021-102-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_036/files/05-036-ejercicio-2021-y-siguientes-actualizado-13-05-2021-102-kb-xlsx.xlsx",
   "source_sha256": "fd9b1379b78f6bdcefd4d3392f224bbd9bbeb4c22a41d70ac391385366ff8d30",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

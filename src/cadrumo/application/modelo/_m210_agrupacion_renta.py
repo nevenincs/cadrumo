@@ -49,8 +49,7 @@ def validate_m210_agrupacion_renta_rows_for_calculation(
     """
     m210_rows = tuple(row for row in detail_rows if isinstance(row, Modelo210AgrupacionRentaRow))
     is_m210_annual_group = (
-        str(work_unit.modelo) == str(Modelo.M210)
-        and work_unit.period.standard_code is StandardPeriodCode.ANNUAL
+        str(work_unit.modelo) == str(Modelo.M210) and work_unit.period.standard_code is StandardPeriodCode.ANNUAL
     )
 
     if not is_m210_annual_group:

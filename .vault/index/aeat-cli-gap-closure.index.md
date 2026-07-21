@@ -3,12 +3,12 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-gap-closure'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-05-08-aeat-cli-gap-closure-adr]]'
-  - '[[2026-05-08-aeat-cli-gap-closure-plan]]'
   - '[[2026-06-04-aeat-cli-gap-closure-research]]'
+  - '[[2026-07-12-aeat-cli-gap-closure-audit]]'
 ---
 
 # `aeat-cli-gap-closure` feature index
@@ -19,11 +19,11 @@ Auto-generated index of all documents tagged with `#aeat-cli-gap-closure`.
 
 ### adr
 
-- `2026-05-08-aeat-cli-gap-closure-adr` - `aeat-cli-gap-closure` adr
+- `2026-05-08-aeat-cli-gap-closure-adr` - `aeat-cli-gap-closure` adr | (**status:** `accepted`)
 
-### plan
+### audit
 
-- `2026-05-08-aeat-cli-gap-closure-plan` - `aeat-cli-gap-closure` `AEAT CLI gap closure granular execution plan`
+- `2026-07-12-aeat-cli-gap-closure-audit` - `aeat-cli-gap-closure` audit: `legacy plan closure reconciliation`
 
 ### research
 

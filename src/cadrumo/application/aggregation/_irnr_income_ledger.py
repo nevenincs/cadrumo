@@ -25,7 +25,6 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_serializer, field_validator, model_validator
 
-from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import M210PayerMode, Modelo, Period
 from ...core.i18n import tr
@@ -147,18 +146,20 @@ def aggregate_irnr_income_ledger_from_repositories(
     period: Period,
     revision: ModeloRevision,
     selected_official_tipo_renta_code: str,
-    transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
 ) -> IrnrIncomeLedgerAggregation:
-    """Load the bucket's secure :class:`TransactionCatalogueRepository` catalogue and aggregate one selected M210 code.
+    """Load an injected secure transaction catalogue and aggregate one selected M210 code.
 
     ``revision`` is the :class:`ModeloRevision` that declares the binding.
+    ``transaction_repository`` is the composition-root-owned
+    :class:`TransactionCatalogueRepositoryProtocol` for ``bucket_id``.
 
     The repository date partition limits decryption/classification to the
     filing span and returns a compact, provenance-free summary for the other
     dates.  Full-catalogue callers retain the per-row ``OUTSIDE_PERIOD`` issues
     instead.
     """
-    repository = transaction_repository or TransactionCatalogueRepository(bucket_id=bucket_id)
+    repository = transaction_repository
     if repository.bucket_id != bucket_id:
         raise AggregationValidationError(
             t("aggregation.renta_ledger.errors.bucket_mismatch"),
@@ -215,8 +216,11 @@ def aggregate_irnr_income_ledger(
     declared_codes = _declared_m210_tipo_renta_codes(revision, period)
     if selected_official_tipo_renta_code not in declared_codes:
         raise AggregationValidationError(
-            "selected M210 official tipo-renta code is not declared by the calculation revision: "
-            f"{selected_official_tipo_renta_code!r}",
+            t("aggregation.irnr_income_ledger.diagnostics.tipo_renta_code_not_declared"),
+            context={
+                "tipo_renta_code": selected_official_tipo_renta_code,
+                "period": str(period),
+            },
         )
 
     observations: list[IrnrIncomeObservation] = []
@@ -256,7 +260,8 @@ def _declared_m210_tipo_renta_codes(revision: ModeloRevision, period: Period) ->
     )
     if len(parameters) != 1:
         raise AggregationValidationError(
-            f"Modelo 210 revision {revision.id!r} must declare exactly one official tipo-renta code parameter",
+            t("aggregation.irnr_income_ledger.errors.official_tipo_renta_parameter_count"),
+            context={"revision_id": str(revision.id)},
         )
     return frozenset(
         entry.key
@@ -367,10 +372,13 @@ def _irnr_gross_income_casilla_aggregation(
     totals: dict[CasillaId, Decimal] = {}
     grouped: dict[CasillaId, list[IrnrIncomeObservation]] = {}
     for observation in observations:
-        totals[observation.target_casilla_id] = totals.get(
-            observation.target_casilla_id,
-            Decimal("0"),
-        ) + observation.gross_income_amount
+        totals[observation.target_casilla_id] = (
+            totals.get(
+                observation.target_casilla_id,
+                Decimal("0"),
+            )
+            + observation.gross_income_amount
+        )
         grouped.setdefault(observation.target_casilla_id, []).append(observation)
     provenance = tuple(
         CasillaProvenance(

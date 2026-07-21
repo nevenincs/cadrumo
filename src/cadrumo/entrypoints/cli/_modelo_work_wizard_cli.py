@@ -21,30 +21,28 @@ registry formula engine already populate them, exactly as a bare
 surface a bare calculate call would otherwise reject with a bindings-missing
 refusal.
 
-A real interactive terminal is required by default:
-:class:`_QuestionaryTextPrompter` reuses the exact non-TTY / Windows-no-console
-detection :class:`~application.wizard.QuestionaryPrompter` applies for
-the profile setup wizard, and raises the same translated
-:class:`~application.wizard.WizardUnsupportedConsoleError`.
-Tests and scripted callers inject a deque-backed :class:`_ScriptedTextPrompter`
-through the keyword-only ``_prompter`` slot, mirroring
-:func:`~application.wizard.build_wizard_command`. Prompt copy is dynamic
-(the casilla number and label come from the resolved registry snapshot, not a
-static translation-catalogue key), so this module does not reuse the wizard
-package's ``WizardQuestion`` model — that model's ``prompt`` field is a static
-``Translatable`` catalogue key with no interpolation support, the wrong shape
-for a runtime-discovered casilla label.
+A real interactive terminal is required: the prompting itself is the
+application layer's canonical :class:`~application.wizard.QuestionaryPrompter`,
+the same prompter the profile setup wizard drives, so the non-TTY /
+Windows-no-console detection and the translated
+:class:`~application.wizard.WizardUnsupportedConsoleError` are that one
+implementation rather than a re-derived copy of it.
+
+Only the prompt *copy* differs from the setup wizard: the casilla number and
+label come from the resolved registry snapshot, not a static
+translation-catalogue key, so this module does not build the wizard package's
+``WizardQuestion`` model — that model's ``prompt`` field is a static
+``Translatable`` key with no interpolation support, the wrong shape for a
+runtime-discovered casilla label. The rendered string goes to
+:meth:`~application.wizard.QuestionaryPrompter.ask_text` instead, which is the
+same plain-text primitive ``ask`` dispatches a ``TEXT`` widget onto.
 """
 
 from __future__ import annotations
 
-import contextvars
-import sys
-from collections import deque
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Annotated, Any
 
 import typer
 
@@ -59,7 +57,7 @@ from ...application.modelo import (
     registry_bindings_for_scope,
     registry_casillas_for_registry_scope,
 )
-from ...application.wizard import WizardScriptUnderflowError, WizardUnsupportedConsoleError
+from ...application.wizard import QuestionaryPrompter
 from ...core.external_constants import OutputLanguage
 from ...core.i18n import output_language, tr
 from ...core.json_contract import Notice
@@ -74,114 +72,22 @@ if TYPE_CHECKING:
     from ...domain.modelos import WorkUnit
 
 
-@runtime_checkable
-class _TextAnswerPrompter(Protocol):
-    """Capability protocol for collecting one free-text answer to a dynamic prompt.
+def _ask_wizard_text(prompter: QuestionaryPrompter, prompt: str, *, help_text: str | None) -> str:
+    """Ask one dynamic free-text wizard question, showing ``help_text`` above it.
 
-    Deliberately narrower than
-    :class:`~application.wizard.Prompter`: the wizard's questions are
-    always plain-text casilla/binding/relation values, and the prompt text
-    itself is built from a runtime-resolved registry label rather than a
-    static translation-catalogue key, so it takes an already-rendered
-    ``prompt`` string rather than a
-    :class:`~application.wizard._models.WizardQuestion`.
+    The console-support check runs first, so an unsupported host refuses cleanly
+    rather than rendering guidance for a question it can never ask.
+
+    The help line rides on the prompt string rather than a bare ``print``
+    because the prompt is not written to stdout: it is rendered on the
+    prompter's own output device (the terminal in production, whatever an
+    embedding host declares otherwise). Printing help to stdout would interleave
+    operator prose with the ``--format json`` envelope and leave it unparseable
+    for a machine caller, which is the one thing stdout owes the agent operator.
     """
-
-    def ask_text(self, prompt: str, *, help_text: str | None) -> str: ...
-
-
-class _QuestionaryTextPrompter:
-    """Production prompter: renders ``prompt`` with ``questionary.text``.
-
-    Reuses the exact console-support detection
-    :class:`~application.wizard.QuestionaryPrompter` applies (non-TTY
-    stdin, Windows no-console-buffer) so a non-interactive host refuses with
-    the same translated
-    :class:`~application.wizard.WizardUnsupportedConsoleError`
-    the profile setup wizard raises, rather than hanging or crashing with a
-    raw ``questionary``/``prompt_toolkit`` traceback.
-    """
-
-    def _ensure_interactive_environment(self) -> None:
-        if not sys.stdin.isatty():
-            raise WizardUnsupportedConsoleError(translated_message="wizard.errors.unsupported_console")
-        try:
-            from prompt_toolkit.output.defaults import create_output
-
-            output = create_output(always_prefer_tty=True)
-            output.flush()
-        except OSError as exc:
-            raise WizardUnsupportedConsoleError(translated_message="wizard.errors.unsupported_console") from exc
-
-    def ask_text(self, prompt: str, *, help_text: str | None) -> str:
-        import questionary
-
-        self._ensure_interactive_environment()
-        if help_text:
-            print(help_text)  # noqa: T201 - operator-facing wizard help line, not a debug print
-        try:
-            result = questionary.text(prompt, default="").ask()
-        except OSError as exc:
-            raise WizardUnsupportedConsoleError(translated_message="wizard.errors.unsupported_console") from exc
-        if result is None:
-            return ""
-        return str(result)
-
-
-class _ScriptedTextPrompter:
-    """Test-only prompter that pops canonical-token answers from a FIFO queue.
-
-    Mirrors :class:`~application.wizard.ScriptedPrompter`'s contract
-    (pop-and-raise-on-underflow) for the narrower ``ask_text`` surface, so
-    tests can drive the wizard's full step sequence deterministically without
-    a live terminal.
-    """
-
-    def __init__(self, answers: deque[str] | list[str] | tuple[str, ...]) -> None:
-        self._answers: deque[str] = deque(answers)
-        self.asked_prompts: list[str] = []
-
-    def ask_text(self, prompt: str, *, help_text: str | None) -> str:
-        del help_text
-        if not self._answers:
-            raise WizardScriptUnderflowError(
-                translated_message="errors.internal.internal_wizard_script_underflow",
-                context={"prompt": prompt},
-            )
-        self.asked_prompts.append(prompt)
-        return self._answers.popleft()
-
-
-#: Context-local prompter override, mirroring
-#: :func:`~core.config.override_settings`'s contextvar-based test-injection
-#: pattern. Typer statically introspects a registered command's *signature*, so
-#: (unlike :func:`~application.wizard.build_wizard_command`, which builds
-#: its own dynamic ``__signature__`` with no ``_prompter`` slot at all) a plain
-#: ``@work_app.command`` function cannot carry a hidden keyword-only test
-#: parameter — Typer would try to resolve it into a CLI option and fail on
-#: an unsupported type. A contextvar override reaches the real command body
-#: through the real Typer/Click invocation path without perturbing the
-#: command's introspected signature.
-_prompter_override: contextvars.ContextVar[_TextAnswerPrompter | None] = contextvars.ContextVar(
-    "modelo_work_wizard_prompter_override",
-    default=None,
-)
-
-
-@contextmanager
-def override_wizard_prompter(prompter: _TextAnswerPrompter) -> Iterator[None]:
-    """Route the next ``work wizard`` invocation's prompts through ``prompter``.
-
-    Test-only entry point. A real CLI invocation never calls this; it always
-    falls back to :class:`_QuestionaryTextPrompter`, so an operator's session
-    is unaffected by a coexisting test's override (the token is reset even
-    on exception).
-    """
-    token = _prompter_override.set(prompter)
-    try:
-        yield
-    finally:
-        _prompter_override.reset(token)
+    prompter.ensure_interactive_environment()
+    rendered = f"{help_text}\n{prompt}" if help_text else prompt
+    return prompter.ask_text(rendered)
 
 
 @dataclass(frozen=True, slots=True)
@@ -273,7 +179,6 @@ def register_work_wizard_commands(
             bucket_id=bucket_id,
             actor=actor,
             output_language_opt=output_language_opt,
-            prompter=_prompter_override.get(),
         )
 
 
@@ -289,7 +194,6 @@ def run_modelo_work_wizard(
     bucket_id: str | None,
     actor: str | None,
     output_language_opt: OutputLanguage | None,
-    prompter: _TextAnswerPrompter | None,
 ) -> None:
     deps.activate_output_language(ctx, output_language_opt)
     deps.require_active_profile()
@@ -302,7 +206,7 @@ def run_modelo_work_wizard(
         bucket_id=bucket_id,
     )
 
-    active_prompter = prompter if prompter is not None else _QuestionaryTextPrompter()
+    active_prompter = QuestionaryPrompter.from_ambient_app_session()
     try:
         steps = _outstanding_wizard_steps(unit)
     except RegistrySnapshotError as exc:
@@ -578,7 +482,7 @@ def _profile_resolved_binding_ids(unit: WorkUnit) -> frozenset[str]:
 
 
 def _run_wizard_steps(
-    prompter: _TextAnswerPrompter,
+    prompter: QuestionaryPrompter,
     steps: tuple[_WizardStep, ...],
 ) -> tuple[tuple[_WizardStep, str], ...]:
     """Ask ``prompter`` one question per outstanding step, in order.
@@ -596,7 +500,7 @@ def _run_wizard_steps(
             label=step.label,
             default="Casilla {number} ({label})",
         )
-        raw = prompter.ask_text(prompt_text, help_text=step.help_text)
+        raw = _ask_wizard_text(prompter, prompt_text, help_text=step.help_text)
         answers.append((step, raw.strip()))
     return tuple(answers)
 
@@ -667,4 +571,4 @@ def _emit_wizard_result(
     _emit_envelope(ctx, command="modelo.work.wizard", result=result, lines=lines, notices=notices or None)
 
 
-__all__ = ["override_wizard_prompter", "register_work_wizard_commands"]
+__all__ = ["register_work_wizard_commands"]

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-06-cross-reference-oracle-binding-adr]]'
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'
@@ -116,7 +116,7 @@ the existing registry-validator's failure-list pattern.
 
 ## Implementation Direction
 
-Extend `src/aeat/domain/calculations/registry/_live_parity.py`:
+Extend `src/cadrumo/domain/calculations/registry/_live_parity.py`:
 
 - Add `audit_oracle_bindings(modelo, catalogue, *, environment)` that
   returns `tuple[str, ...]`. Iterate revisions, then cross-references.
@@ -132,7 +132,7 @@ Extend `src/aeat/domain/calculations/registry/_live_parity.py`:
   reports no registered oracles, so the boot-time audit is a no-op
   during the field-addition / adapter-registration handoff.
 
-Add `src/aeat/domain/calculations/registry/test_audit_oracle_bindings.py`
+Add `src/cadrumo/domain/calculations/registry/test_audit_oracle_bindings.py`
 with the following coverage:
 
 - A modelo with no cross-reference bindings produces an empty audit.

@@ -4,11 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from ......application.auth import (
-    AuthProviderDescription,
-    AuthProviderKind,
-    describe_provider_operator_impact,
-)
+from ......core import AuthProviderDescription, AuthProviderKind
+from ......core.i18n import describe_auth_provider_operator_impact
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -38,7 +35,7 @@ def test_operator_impact_returns_a_non_empty_string_for_every_branch() -> None:
         _description(configured=True, available=True, kind=AuthProviderKind.CERTIFICATE),
         _description(configured=True, available=True, kind=AuthProviderKind.CLAVE_MOVIL),
     ):
-        message = describe_provider_operator_impact(description)
+        message = describe_auth_provider_operator_impact(description)
         assert message
         assert message.strip() == message
 
@@ -46,12 +43,12 @@ def test_operator_impact_returns_a_non_empty_string_for_every_branch() -> None:
 def test_operator_impact_distinguishes_every_branch() -> None:
     """Each (configured, available, kind) combination must produce a unique message."""
     branches = {
-        describe_provider_operator_impact(_description(configured=False, available=False)),
-        describe_provider_operator_impact(_description(configured=True, available=False)),
-        describe_provider_operator_impact(
+        describe_auth_provider_operator_impact(_description(configured=False, available=False)),
+        describe_auth_provider_operator_impact(_description(configured=True, available=False)),
+        describe_auth_provider_operator_impact(
             _description(configured=True, available=True, kind=AuthProviderKind.CERTIFICATE),
         ),
-        describe_provider_operator_impact(
+        describe_auth_provider_operator_impact(
             _description(configured=True, available=True, kind=AuthProviderKind.CLAVE_MOVIL),
         ),
     }
@@ -60,4 +57,4 @@ def test_operator_impact_distinguishes_every_branch() -> None:
 
 def test_operator_impact_is_deterministic() -> None:
     description = _description(configured=True, available=True)
-    assert describe_provider_operator_impact(description) == describe_provider_operator_impact(description)
+    assert describe_auth_provider_operator_impact(description) == describe_auth_provider_operator_impact(description)

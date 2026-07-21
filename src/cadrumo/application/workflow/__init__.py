@@ -10,6 +10,11 @@ submission collaborators into resumable modelo runs. A
 pointers, auth readiness, review annotations, and bucket events; it does not
 store profile facts or profile-value maps.
 
+Persisted authentication records are part of this public workflow boundary.
+Their definitions live in the internal shared leaf
+:mod:`application._workflow_auth_models`, while callers import them from this
+facade.
+
 The profile-discovery surface is manifest-backed and intentionally cheap.
 :func:`list_profile_buckets`,
 :func:`read_profile_bucket`,
@@ -26,7 +31,7 @@ sensitive profile records are loaded only through the active bucket and the
 user-profile orchestration layer.
 
 Workflow persistence is likewise bucket-scoped.
-:func:`workflow_state_repository` binds the
+:func:`~cadrumo.application.workflow._persistence.workflow_state_repository` binds the
 state envelope to the currently resolved active bucket via the storage
 runtime's secure-object repository. A cold root with no active pointer is the
 only bootstrap exception, so recovery and status probes can observe an absent
@@ -63,7 +68,7 @@ See Also:
         manifest-backed profile buckets without opening secure storage.
     :func:`assess_active_profile_health`: Produce
         the redacted active-profile status used by CLI status surfaces.
-    :func:`workflow_state_repository`: Resolve the
+    :func:`~cadrumo.application.workflow._persistence.workflow_state_repository`: Resolve the
         active-bucket secure-object repository for encrypted workflow state.
     :class:`WorkflowStateResetFingerprint`: Redacted
         reset audit record produced before workflow-state deletion.
@@ -73,8 +78,16 @@ See Also:
 
 from __future__ import annotations
 
-# ---- auth (re-exported for WorkflowState.auth field callers) ----------------
-from ..auth import AuthState
+# ---- persisted auth state (workflow-owned shared leaf) ----------------------
+from .._workflow_auth_models import (
+    AuthCleanupCertificateSource,
+    AuthCleanupIntent,
+    AuthCleanupOperationKind,
+    AuthState,
+    CertificateSecretMutationEventKind,
+    CertificateSecretMutationIntent,
+    CertificateSourceRecord,
+)
 
 # ---- adapters & engine (pull in auth / filing layers) -----------------------
 from ._adapters import (
@@ -143,6 +156,7 @@ from ._profile_health import (
     ActiveProfileHealth,
     ActiveProfileRepairResult,
     assess_active_profile_health,
+    assess_active_profile_health_with_session,
     repair_active_profile_pointer,
 )
 
@@ -179,8 +193,14 @@ from ._resume import (
 __all__ = [
     "ActiveProfileHealth",
     "ActiveProfileRepairResult",
+    "AuthCleanupCertificateSource",
+    "AuthCleanupIntent",
+    "AuthCleanupOperationKind",
     "AuthState",
     "CertificateBundleProtocol",
+    "CertificateSecretMutationEventKind",
+    "CertificateSecretMutationIntent",
+    "CertificateSourceRecord",
     "DeadlineEngineAdapter",
     "DeadlineEngineProtocol",
     "DeclaracionPointer",
@@ -219,6 +239,7 @@ __all__ = [
     "WorkflowStepDetails",
     "active_transaction_catalogue_repository",
     "assess_active_profile_health",
+    "assess_active_profile_health_with_session",
     "compute_run_id",
     "declaration_key",
     "default_engine",

@@ -633,7 +633,6 @@ class RepairPolicyCommandSurface(BaseModel):
 
     command_family: str = Field(min_length=1)
     owner_domains: tuple[str, ...]
-    decision_links: tuple[str, ...]
     namespace_policies: tuple[RepairPolicyNamespacePolicy, ...] = ()
 
 
@@ -657,16 +656,6 @@ _LEDGER_POLICY = RepairPolicyNamespacePolicy(
     repair_policy="preserve_transaction_evidence_and_import_payloads",
     recovery_policy="reimport_authoritative_ledger_source",
     mutation_authority="operator_requested_import_or_export_only",
-)
-_REPAIR_DECISION_LINKS: tuple[str, ...] = (
-    # Catalog itself (build_repair_policy_command_surface_catalog,
-    # repair_remediation_decision_id, and the linkage-coordination
-    # contract these surfaces serve as the executable mirror of).
-    "[[2026-05-26-linkage-design-audit]]",
-    # Repair CLI shape (the operator-facing verb surface every entry
-    # in the catalog mirrors — adding a verb here without an entry
-    # there is the drift the gate exists to catch).
-    "[[2026-05-13-cli-workflow-redesign-config-repair-shape]]",
 )
 
 
@@ -707,7 +696,6 @@ def _surface(
         command_path=command_path,
         command_family=command_family,
         owner_domains=owner_domains,
-        decision_links=_REPAIR_DECISION_LINKS,
         namespace_policies=namespace_policies,
     )
 
@@ -781,17 +769,27 @@ def build_repair_policy_command_surface_catalog() -> tuple[RepairPolicyCommandSu
             owner_domains=("secure_storage",),
         ),
         _surface(
-            "config rekey",
+            "config passphrase change",
+            command_family="passphrase",
+            owner_domains=("secure_storage",),
+        ),
+        _surface(
+            "config recovery status",
             command_family="recovery",
             owner_domains=("secure_storage",),
         ),
         _surface(
-            "config show-recovery",
+            "config recovery create",
             command_family="recovery",
             owner_domains=("secure_storage",),
         ),
         _surface(
-            "config verify-recovery",
+            "config recovery rotate",
+            command_family="recovery",
+            owner_domains=("secure_storage",),
+        ),
+        _surface(
+            "config recovery verify",
             command_family="recovery",
             owner_domains=("secure_storage",),
         ),

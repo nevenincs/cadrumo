@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import timezone
 
 import pytest
+from pydantic import ValidationError
 
 from ......core.i18n import tr
 from .. import AuthConfigurationError
+from .. import _authenticator as authenticator_module
+from .._authenticator import _require_exact_active_certificate_session
+from .._authenticator_types import _is_exact_active_provider_session
+from .._providers import ClaveMovilSessionDetail, ClavePermanenteSessionDetail
 from ._authenticator_support import (
     _SENSITIVE_HEALTH_PAYLOAD,
     _SENSITIVE_STORAGE_BASENAME,
@@ -15,11 +21,12 @@ from ._authenticator_support import (
     SECRET_PASSPHRASE,
     UTC,
     AeatAuthenticator,
+    AeatLoginAssertion,
     AeatLoginAssertionError,
+    AeatSession,
     AuthProvider,
     AuthProviderKind,
     AuthValidationError,
-    CertificateBackend,
     CertificateError,
     CertificateNifParseError,
     NameOID,
@@ -28,18 +35,75 @@ from ._authenticator_support import (
     _build_bundle,
     _certificate_assertion,
     _certificate_session,
-    _HandshakeVerifier,
     _load_cert,
-    authenticator_module,
     datetime,
     extract_nif_from_subject,
-    logging,
     select_provider,
     timedelta,
+    unnamed_certificate_credentials,
     x509,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+
+
+def test_exact_active_certificate_session_guard_rejects_copies_and_other_providers() -> None:
+    current = datetime.now(UTC)
+    active = _certificate_session(
+        authenticated_at=current,
+        idle_deadline=current + AEAT_SESSION_IDLE_TTL,
+        thumbprint="active-thumbprint",
+        subject="CN=ACTIVE,SERIALNUMBER=12345678Z",
+    )
+
+    _require_exact_active_certificate_session(active, active)
+    with pytest.raises(AeatLoginAssertionError, match="exact active certificate-bound session"):
+        _require_exact_active_certificate_session(active.model_copy(), active)
+
+    wrong_provider = AeatSession(
+        authenticated_at=current,
+        idle_deadline=current + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=None,
+        identity_nif="12345678Z",
+        provider_detail=ClaveMovilSessionDetail(dni_nie="12345678Z"),
+    )
+    with pytest.raises(AeatLoginAssertionError, match="exact active certificate-bound session"):
+        _require_exact_active_certificate_session(wrong_provider, wrong_provider)
+
+
+@pytest.mark.parametrize(
+    ("kind", "detail"),
+    [
+        (AuthProviderKind.CLAVE_MOVIL, ClaveMovilSessionDetail(dni_nie="12345678Z")),
+        (AuthProviderKind.CLAVE_PERMANENTE, ClavePermanenteSessionDetail(dni_nie="12345678Z")),
+    ],
+)
+def test_exact_active_provider_session_predicate_rejects_equal_reconstructions(
+    kind: AuthProviderKind,
+    detail: ClaveMovilSessionDetail | ClavePermanenteSessionDetail,
+) -> None:
+    """Only the retained provider session object is browser-context-bound."""
+    current = datetime.now(UTC)
+    active = AeatSession(
+        authenticated_at=current,
+        idle_deadline=current + AEAT_SESSION_IDLE_TTL,
+        storage_state_path=None,
+        identity_nif="12345678Z",
+        provider_detail=detail,
+    )
+
+    assert _is_exact_active_provider_session(
+        active,
+        active,
+        provider_kind=kind,
+        detail_type=type(detail),
+    )
+    assert not _is_exact_active_provider_session(
+        active.model_copy(),
+        active,
+        provider_kind=kind,
+        detail_type=type(detail),
+    )
 
 
 def test_extract_nif_from_serial_with_idces_prefix(tmp_path: Path) -> None:
@@ -131,6 +195,40 @@ def test_aeat_session_model_dump_carries_no_secrets(tmp_path: Path) -> None:
     assert "_pkcs12_bytes" not in dumped
 
 
+def test_aeat_session_provider_kind_is_derived_not_stored() -> None:
+    """Session detail is the sole provider-kind authority across roundtrip."""
+    authenticated_at = datetime.now(UTC)
+    session = _certificate_session(
+        authenticated_at=authenticated_at,
+        idle_deadline=authenticated_at + AEAT_SESSION_IDLE_TTL,
+    )
+
+    payload = session.model_dump()
+
+    assert session.provider_kind is AuthProviderKind.CERTIFICATE
+    assert "provider_kind" not in AeatSession.model_fields
+    assert "provider_kind" not in payload
+    assert AeatSession.model_validate(payload) == session
+    assert AeatSession.model_validate_json(session.model_dump_json()) == session
+    with pytest.raises(ValidationError, match="provider_kind"):
+        AeatSession.model_validate({**payload, "provider_kind": AuthProviderKind.CERTIFICATE})
+
+
+def test_aeat_login_assertion_provider_kind_is_derived_not_stored() -> None:
+    """Assertion detail is the sole provider-kind authority across roundtrip."""
+    assertion = _certificate_assertion()
+
+    payload = assertion.model_dump()
+
+    assert assertion.provider_kind is AuthProviderKind.CERTIFICATE
+    assert "provider_kind" not in AeatLoginAssertion.model_fields
+    assert "provider_kind" not in payload
+    assert AeatLoginAssertion.model_validate(payload) == assertion
+    assert AeatLoginAssertion.model_validate_json(assertion.model_dump_json()) == assertion
+    with pytest.raises(ValidationError, match="provider_kind"):
+        AeatLoginAssertion.model_validate({**payload, "provider_kind": AuthProviderKind.CERTIFICATE})
+
+
 def test_aeat_login_assertion_is_valid_composite() -> None:
     assertion = _certificate_assertion()
     assert assertion.is_valid is True
@@ -144,7 +242,10 @@ def test_invalid_persisted_session_redacts_path_and_reason(
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    auth = AeatAuthenticator(settings, handshake_verifier=_HandshakeVerifier())
+    auth = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    )
     storage_state_path = tmp_path / _SENSITIVE_STORAGE_BASENAME
 
     caplog.set_level(logging.INFO, logger=authenticator_module.__name__)
@@ -173,12 +274,15 @@ def test_invalid_persisted_session_redacts_path_and_reason(
 
 def test_describe_warns_when_password_missing(tmp_path: Path, _settings_factory) -> None:
     bundle_path = _build_bundle(tmp_path)
-    settings = _settings_factory(bundle_path, aeat_certificate_password_secret=None)
-    description = AeatAuthenticator(settings).describe()
+    settings = _settings_factory(bundle_path, cadrumo_certificate_password_secret=None)
+    description = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    ).describe()
 
     assert description.configured is True
     assert description.available is False
-    assert description.health_summary == "AEAT_CERTIFICATE_PASSWORD_SECRET not set"
+    assert description.health_summary == "CADRUMO_CERTIFICATE_PASSWORD_SECRET not set"
 
 
 def test_describe_preserves_expired_certificate_severity(tmp_path: Path, _settings_factory) -> None:
@@ -187,7 +291,10 @@ def test_describe_preserves_expired_certificate_severity(tmp_path: Path, _settin
         not_valid_after=datetime.now(UTC) - timedelta(hours=12),
     )
     settings = _settings_factory(bundle_path)
-    description = AeatAuthenticator(settings).describe()
+    description = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    ).describe()
 
     assert description.available is True
     assert description.health_severity == "EXPIRED"
@@ -209,6 +316,7 @@ def test_describe_redacts_certificate_health_error(
     caplog.set_level(logging.DEBUG, logger=authenticator_module.__name__)
     description = AeatAuthenticator(
         settings,
+        credentials=unnamed_certificate_credentials(settings),
         certificate_health_check=_certificate_health_error,
     ).describe()
 
@@ -235,6 +343,7 @@ def test_describe_redacts_unexpected_certificate_health_error(
     with pytest.raises(AuthValidationError) as exc_info:
         AeatAuthenticator(
             settings,
+            credentials=unnamed_certificate_credentials(settings),
             certificate_health_check=_unexpected_certificate_health_error,
         ).describe()
 
@@ -249,14 +358,14 @@ def test_describe_redacts_unexpected_certificate_health_error(
     assert "failure=RuntimeError" in log_text
 
 
-def test_describe_forwards_bundle_backend_and_friendly_name(
+def test_describe_forwards_typed_bundle_and_friendly_name(
     tmp_path: Path,
     _settings_factory,
 ) -> None:
     bundle_path = _build_bundle(tmp_path)
     from pydantic import SecretStr
 
-    settings = _settings_factory(bundle_path, aeat_certificate_friendly_name="operator cert")
+    settings = _settings_factory(bundle_path, cadrumo_certificate_friendly_name="operator cert")
 
     captured: dict[str, object] = {}
     real_certificate_health = authenticator_module.certificate_health
@@ -267,7 +376,6 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
         password: SecretStr,
         warn_days: int,
         critical_days: int,
-        backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
         friendly_name: str | None = None,
         now: datetime | None = None,
     ):
@@ -275,20 +383,19 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
         captured["password"] = password
         captured["warn_days"] = warn_days
         captured["critical_days"] = critical_days
-        captured["backend"] = backend
         captured["friendly_name"] = friendly_name
         return real_certificate_health(
             path,
             password=password,
             warn_days=warn_days,
             critical_days=critical_days,
-            backend=backend,
             friendly_name=friendly_name,
             now=now,
         )
 
     description = AeatAuthenticator(
         settings,
+        credentials=unnamed_certificate_credentials(settings),
         certificate_health_check=_capture_certificate_health,
     ).describe()
 
@@ -297,7 +404,6 @@ def test_describe_forwards_bundle_backend_and_friendly_name(
     captured_password = captured["password"]
     assert isinstance(captured_password, SecretStr)
     assert captured_password.get_secret_value() == SECRET_PASSPHRASE
-    assert captured["backend"] == CertificateBackend.HTTPX_FALLBACK
     assert captured["friendly_name"] == "operator cert"
 
 
@@ -322,7 +428,10 @@ def test_describe_does_not_touch_os_environ(
     settings = _settings_factory(bundle_path)
     before = dict(_os.environ)
 
-    description = AeatAuthenticator(settings).describe()
+    description = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    ).describe()
     assert description.available is True
 
     after = dict(_os.environ)
@@ -439,7 +548,10 @@ async def test_resolve_browser_session_without_factory_raises_configuration_erro
     """
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
-    authenticator = AeatAuthenticator(settings)
+    authenticator = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    )
 
     with pytest.raises(AuthConfigurationError, match=r"browser.*session factory") as exc_info:
         await authenticator._resolve_browser_session()
@@ -451,7 +563,14 @@ def test_auth_provider_protocol_conformance(tmp_path: Path, _settings_factory) -
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
 
-    providers = tuple(select_provider(kind, settings=settings) for kind in AuthProviderKind)
+    providers = tuple(
+        select_provider(
+            kind,
+            settings=settings,
+            certificate_credentials=unnamed_certificate_credentials(settings),
+        )
+        for kind in AuthProviderKind
+    )
 
     assert {provider.kind for provider in providers} == set(AuthProviderKind)
     assert all(isinstance(provider, AuthProvider) for provider in providers)
@@ -461,7 +580,21 @@ def test_select_provider_returns_certificate_provider(tmp_path: Path, _settings_
     bundle_path = _build_bundle(tmp_path)
     settings = _settings_factory(bundle_path)
 
-    provider = select_provider(AuthProviderKind.CERTIFICATE, settings=settings)
+    provider = select_provider(
+        AuthProviderKind.CERTIFICATE,
+        settings=settings,
+        certificate_credentials=unnamed_certificate_credentials(settings),
+    )
 
     assert isinstance(provider, AeatAuthenticator)
     assert isinstance(provider, AuthProvider)
+    assert callable(provider.verify)
+    assert not hasattr(provider, "verify_login")
+
+
+def test_outbound_certificate_factory_requires_typed_credentials(tmp_path: Path, _settings_factory) -> None:
+    bundle_path = _build_bundle(tmp_path)
+    settings = _settings_factory(bundle_path)
+
+    with pytest.raises(AuthConfigurationError, match="ActiveCertificateCredentials"):
+        select_provider(AuthProviderKind.CERTIFICATE, settings=settings)

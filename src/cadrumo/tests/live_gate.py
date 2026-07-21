@@ -15,7 +15,7 @@ from ..core.config import Settings
 
 
 def requires_live_enabled() -> None:
-    """Skip the calling test unless ``CADRUMO_LIVE_TESTS_ENABLED`` is exactly ``"1"``.
+    """Fail unless ``CADRUMO_LIVE_TESTS_ENABLED`` is exactly ``"1"``.
 
     The single live-test gate. Reads the opt-in through
     ``Settings.live_tests_enabled`` (which sources ``env/.env`` via
@@ -24,11 +24,11 @@ def requires_live_enabled() -> None:
     """
 
     if not Settings().live_tests_enabled:
-        pytest.skip("CADRUMO_LIVE_TESTS_ENABLED is not 1; opt in via env/.env")
+        pytest.fail("selected live test requires CADRUMO_LIVE_TESTS_ENABLED=1 via env/.env")
 
 
 def requires_live_google_enabled() -> None:
-    """Skip the calling test unless ``CADRUMO_LIVE_TESTS_GOOGLE`` is exactly ``"1"``.
+    """Fail unless ``CADRUMO_LIVE_TESTS_GOOGLE`` is exactly ``"1"``.
 
     Companion to :func:`requires_live_enabled` for the Google (OAuth / Drive)
     live tests, routed through ``Settings.live_tests_google_enabled`` so
@@ -36,4 +36,4 @@ def requires_live_google_enabled() -> None:
     """
 
     if not Settings().live_tests_google_enabled:
-        pytest.skip("CADRUMO_LIVE_TESTS_GOOGLE is not 1; opt in via env/.env")
+        pytest.fail("selected Google live test requires CADRUMO_LIVE_TESTS_GOOGLE=1 via env/.env")

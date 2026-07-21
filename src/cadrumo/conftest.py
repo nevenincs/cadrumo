@@ -15,10 +15,8 @@ across all child conftests by pytest).
 from __future__ import annotations
 
 import ast
-import os
 from collections.abc import Iterator, Mapping
 from pathlib import Path
-from tempfile import gettempdir
 
 import pytest
 
@@ -28,20 +26,19 @@ import pytest
 # session (short-circuiting the CLI bootstrap's catalogue registration at
 # entrypoints/cli/__init__.py:281) and doesn't transitively import the
 # wizard package hits the "Wizard catalogue has not been registered"
-# guard. Documented in #158 entry 2 and ADR pending under
-# session-honest-followups P03.S19.
+# guard.
 from .core.external_constants import UTF_8_ENCODING
-from .tests import package_python_files, prime_ast_cache
-
-_COLLECTION_STORAGE_ROOT = Path(gettempdir()) / f"cadrumo-pytest-{os.getpid()}"
-"""Process-private local-storage root set before child conftests import Cadrumo."""
+from .tests import apply_collection_storage_root, package_python_files, prime_ast_cache
 
 # Child conftests import command-line interface (CLI) and internationalization
 # (`i18n`) modules while pytest is collecting tests. Those imports initialise
 # logging, which resolves Settings before function-scoped fixtures can establish
 # their own temporary storage roots. Set this Cadrumo root first so tests do not
-# read a user's legacy product-state directory during collection.
-os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = str(_COLLECTION_STORAGE_ROOT)
+# read a user's legacy product-state directory during collection. `overwrite=True`
+# because this conftest is the authoritative source for its own process's root,
+# regardless of what the repo-root conftest's permissive `setdefault` already set.
+_COLLECTION_STORAGE_ROOT = apply_collection_storage_root(overwrite=True)
+"""Process-private local-storage root set before child conftests import Cadrumo."""
 
 _SRC_CADRUMO_ROOT: Path = Path(__file__).resolve().parent
 """Root of the ``src/cadrumo/`` source tree (the directory hosting this conftest)."""
@@ -89,7 +86,7 @@ def source_tree_ast() -> Mapping[Path, ast.AST]:
 def _isolate_registry_caches() -> Iterator[None]:
     """Clear the registry loader's in-process caches per pytest session (the #44 fix).
 
-    The loader's cross-process ``/tmp`` ``aeat_registry_*.pkl`` disk pickle is
+    The loader's cross-process ``/tmp`` ``cadrumo_registry_*.pkl`` disk pickle is
     keyed by file mtime and was historically shared across pytest-xdist worker
     processes, so a parallel ``-n`` run could serve a stale/transient compiled
     registry from one worker to another (the #44 isolation gap). The loader

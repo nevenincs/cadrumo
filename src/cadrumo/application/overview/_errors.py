@@ -3,16 +3,16 @@
 Overview services are local application projections. These exceptions
 cover failures to assemble status, calendar, agenda, backlog, or explain
 payloads from already-loaded inputs rather than transport or AEAT live
-read failures. They inherit from :class:`~core.errors.AeatError` so the
+read failures. They inherit from :class:`~core.errors.CadrumoError` so the
 central error registry can map overview failures to stable CLI envelopes.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class OverviewError(AeatError):
+class OverviewError(CadrumoError):
     """Base error for overview status, calendar, agenda, backlog, and explain failures."""
 
 

@@ -1,15 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#redeme-company-refund'
+  - "#adr"
+  - "#redeme-company-refund"
 date: '2026-06-21'
-modified: '2026-06-28'
 related:
-  - '[[2026-06-21-redeme-company-refund-research]]'
-  - '[[2026-06-19-iva-compensation-override-cli-adr]]'
+  - "[[2026-06-21-redeme-company-refund-research]]"
+  - "[[2026-06-19-iva-compensation-override-cli-adr]]"
+superseded_by: '2026-06-24-m303-refund-election-adr'
+modified: '2026-07-17'
 ---
-
-# `redeme-company-refund` adr: `Modelo 303 refund (devolución) disposition: eligibility-gated election + refund-account axis` | (**status:** `proposed`)
+# `redeme-company-refund` adr: `Modelo 303 refund (devolución) disposition: eligibility-gated election + refund-account axis` | (**status:** `superseded`)
 
 ## Problem Statement
 

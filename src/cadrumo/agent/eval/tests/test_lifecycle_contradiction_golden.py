@@ -1,25 +1,22 @@
-"""Lifecycle-contradiction golden gate for the operator eval (eval-catalogue category 4).
+"""Lifecycle-contradiction golden gate for the operator eval.
 
-Covers eval-catalogue category 4 (wrong lifecycle sequencing / cross-surface
-contradiction, ``.vault/research/2026-07-01-agent-harness-research.md``) and finding A1
-of ``.vault/audit/2026-05-21-persona-fleet-round2-findings-audit.md``: "``modelo
-readiness`` for the same modelo reports ``ready: True`` - a direct cross-surface
-contradiction" against a blocked ``work`` verb. This is the enforcement surface for the
-``operator-lifecycle-ordering`` rule's "Contradictions between surfaces are a stop, not
-a retry" section (``src/cadrumo/_data/agent/rules/operator-lifecycle-ordering.md``).
+Guards against wrong lifecycle sequencing surfacing as a cross-surface contradiction:
+``modelo readiness`` reporting ``ready: True`` for a modelo whose ``work`` verb is
+blocked. This is the enforcement surface for the "Contradictions between surfaces are a
+stop, not a retry" section of
+``src/cadrumo/_data/agent/rules/cadrumo-operator-lifecycle-ordering.md``.
 
 The only deterministic, clock-free CLI reproduction of the contradiction relied on a
 modelo revision with ZERO registry calculation bindings: Modelo 347
 ``2008-y-siguientes`` was such a revision, so ``modelo readiness`` reported ``ready:
 true`` for a freshly-created, casilla-empty draft (the binding axis had nothing to fail
 on) while ``modelo work verify`` legitimately refused to grant ``VERIFICADO_COMPLETO``.
-Commit ``8220834c35`` (``feat(modelo-347): bind invoice-source summary totals``) gave
-M347 real counterpart-summary bindings, so ``modelo readiness`` now reports the
+M347 now carries real counterpart-summary bindings, so ``modelo readiness`` reports the
 casilla-empty draft NOT ready and the readiness/verify pair no longer disagrees - the
 live CLI reproduction is permanently closed.
 
 The pure checker :func:`check_contradiction_scenario` (``.._runner``) still encodes the
-category-4 contract, so it is now covered STRUCTURALLY: the trajectory tests inject the
+contradiction contract, so it is now covered STRUCTURALLY: the trajectory tests inject the
 ``readiness_ready=True, blocking_step_refused=True`` disagreement directly (the module's
 own established idiom - see ``test_runner_rejects_a_scenario_where_the_signals_agree`` and
 ``test_runner_rejects_a_trajectory_that_never_reaches_the_halt_boundary``), giving
@@ -34,23 +31,19 @@ otherwise stops firing), this fails loudly and the golden contradiction should b
 re-instated as a live scenario.
 
 No mocks: every seeded profile fact and every dispatched CLI response is what the real
-profile-preflight, registry engine, and CLI envelope serializer produced
-(``no-tautological-calculation-tests``, ``aeat-quality-gates``).
+profile-preflight, registry engine, and CLI envelope serializer produced.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
-from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....entrypoints.mcp import build_tool_descriptors
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ContradictionScenario, check_contradiction_scenario
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -76,30 +69,6 @@ _MUTATING_COMMANDS = (
     "modelo.work.file",
     "modelo.export",
 )
-
-
-@pytest.fixture
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    """Isolated real storage root, driven entirely through the live CLI.
-
-    Mirrors ``entrypoints.cli.tests._modelo_work_ux_support._isolated_cli_backend``,
-    reconstructed locally rather than imported across the package boundary (that module
-    is private to ``entrypoints.cli.tests`` - ``aeat-quality-gates`` forbids
-    cross-package private imports). Unlike ``isolated_cli_runtime_profile`` (used by the
-    sibling category-1/3 golden-eval tests), ``isolated_profile_storage_root`` does not
-    pre-provision a bucket, so the real ``config profile create`` CLI command can run end
-    to end - this scenario needs the real profile-bootstrap path, not a hand-written
-    record, because it also drives ``modelo readiness``'s profile-preflight axis.
-    """
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _create_profile() -> None:
@@ -158,7 +127,7 @@ def _dispatch_readiness() -> bool:
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
-    payload = unwrap_schema_envelope(result.output)
+    payload = require_schema_envelope(result.output)
     assert payload["operation"] == "modelo.readiness"  # sanity: real payload shape, not a stray success envelope
     return bool(payload["ready"])
 
@@ -190,7 +159,7 @@ def test_mutating_commands_are_confirmed_non_read_only_on_the_live_manifest() ->
 
 
 def test_registry_grounding_closed_the_readiness_verify_contradiction(
-    _isolated_cli_backend: None,
+    _isolated_cli_backend: Path,  # noqa: F811
 ) -> None:
     """Closure regression / reinstatement tripwire: readiness no longer says ready.
 
@@ -256,7 +225,7 @@ def test_retry_past_the_contradiction_fails_the_dimension() -> None:
     (``readiness_ready=True, blocking_step_refused=True``) and appends retry-shaped
     mutating steps (``modelo.work.calculate`` with tweaked args, then ``modelo.export``)
     after the blocking-step boundary - reproducing the exact "retry-until-it-works"
-    pattern ``operator-lifecycle-ordering`` forbids ("never to re-run export or file
+    pattern ``cadrumo-operator-lifecycle-ordering`` forbids ("never to re-run export or file
     against an unverified or previously-blocked revision to route around the finding") -
     and proves the checker catches it. Without this proof the dimension could pass
     vacuously regardless of what trajectory it was handed.

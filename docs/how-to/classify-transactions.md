@@ -16,23 +16,18 @@ nothing to Spain's Tax Agency (AEAT).
 You need:
 
 - An active taxpayer profile. Every command below works on the active profile; if none is set, the command refuses. See [Set up your taxpayer profile](profile-setup.md).
-- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session; for a non-interactive shell, set `CADRUMO_SECRET_PASSPHRASE`.
-- A ledger with transactions in it. See [Work with Transactions](import-bank-statements.md) to import a bank statement or add rows by hand.
+- A master-key passphrase. The tool prompts for it the first time it opens your encrypted storage in a session.
+- A ledger with transactions in it. See [Import and manage transactions](import-bank-statements.md) to import a bank statement or add rows by hand.
 
 The CLI help and error text render in Spanish, even though this guide is in English. When a step sends you to `--help`, expect Spanish option names.
 
 ## Review the row first
 
-Find the transaction id:
+Find the transaction id, then inspect the row before you classify it. The
+sequence imports the standard quarter and inspects the unclassified expense:
 
-```bash
-aeat app ledger list --filter classification=NOT_YET_PROCESSED
-```
-
-Inspect the row:
-
-```bash
-aeat app ledger view <transaction-id>
+```{cli-sequence} classify-review-row
+:verify: Confirm the row is still unclassified before you decide.
 ```
 
 Use the description, amount, counterparty, source document, and business context
@@ -50,17 +45,11 @@ Use only these three values. Cadrumo sets the others automatically.
 
 ## Pick a category for expenses
 
-List accepted category ids:
+List the accepted category ids, then classify an expense row with one. Expense
+rows normally need a category id before a modelo can calculate from them:
 
-```bash
-aeat app ledger categories
-```
-
-Expense rows normally need a category id before a modelo can calculate from
-them:
-
-```bash
-aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id>
+```{cli-sequence} classify-expense-category
+:verify: Confirm the expense is classified as business with a category.
 ```
 
 For money you received (income), Cadrumo does not usually need a category. It
@@ -74,10 +63,11 @@ use `aeat app ledger invoice` with `--kind received` for supplier invoices and
 
 ## Add tax fields when needed
 
-If a row needs regulated tax fields, add only the fields that apply:
+If a row needs regulated tax fields, add only the fields that apply. The
+sequence classifies the expense with its taxable base, rate, and IVA amount:
 
-```bash
-aeat app ledger classify <transaction-id> --classification BUSINESS --category-id <category-id> --taxable-base 100.00 --iva-rate 0.21 --iva-amount 21.00
+```{cli-sequence} classify-tax-fields
+:verify: Confirm the taxable base and IVA fields were recorded on the row.
 ```
 
 Common fields include taxable base, IVA rate, IVA amount, IVA category, IRPF
@@ -93,6 +83,7 @@ for special cases: reduced rate (food, books), exempt supplies, purchases from
 EU suppliers, or recargo de equivalencia. Run
 `aeat app ledger classify --help` to see the accepted values.
 
+(classify-mixed-use-transactions)=
 ## Classify mixed-use transactions
 
 A mixed-use transaction is one you use partly for business and partly
@@ -112,38 +103,26 @@ until the row carries `--usage-ratio-id`.
 
 For one-row commands, `--usage-ratio-id` lives on the `allocate` verb (and on
 `add`), not on `classify`. Its value is the spending-category id, and the same
-category must already have a saved ratio. Record a mixed-use share in three
-steps.
+category must already have a saved ratio. The sequence checks the eligible
+categories, saves a ratio, and allocates the share on a row:
 
-Check which categories accept a ratio:
-
-```bash
-aeat app ledger ratios eligible
+```{cli-sequence} classify-mixed-use
+:verify: Confirm the mixed-use row carries the allocated business share.
 ```
 
-Save the ratio for the category, as a percentage from `0` to `1`:
-
-```bash
-aeat app ledger ratios set <category-id> 0.5
-```
-
-Allocate the share on the row, naming the same category id for both
-`--usage-ratio-id` and `--category-id`:
-
-```bash
-aeat app ledger allocate <transaction-id> --business-pct 0.5 --usage-ratio-id <category-id> --category-id <category-id>
-```
-
-The `--business-pct` value must match the saved ratio for that category. The
+A row's `--usage-ratio-id` must name a ratio-eligible category (the ones
+`ratios eligible` lists, such as `telefonia_movil` or a home-office suministros
+category), and the same category is passed as `--category-id`. The
+`--business-pct` value must match the saved ratio for that category. The
 classification follows the share automatically: a `0.5` allocation becomes
 `MIXED`, a `1` allocation becomes `BUSINESS`, and a `0` allocation becomes
 `PERSONAL`.
 
-List or check the saved ratios at any time:
+List or check the saved ratios at any time. The sequence saves a ratio, lists
+the saved ratios, and validates them:
 
-```bash
-aeat app ledger ratios list
-aeat app ledger ratios validate
+```{cli-sequence} classify-ratios-manage
+:verify: Confirm the saved ratios validate cleanly.
 ```
 
 Remove a category ratio you no longer want with
@@ -159,62 +138,39 @@ workflow; keep the census facts in your profile correct first - see
 For bulk review, `classify --from-csv` reads a CSV with columns
 `transaction_id`, `classification`, and optional classification facts such as
 `category_id`, `business_pct`, `usage_ratio_id`, taxable-base and IVA columns,
-`iva_category`, and `irpf_category`:
+`iva_category`, and `irpf_category`. Prepare a narrow CSV holding only the rows
+you mean to change, one row per transaction:
 
-```bash
-aeat app ledger classify --from-csv ./classifications.csv
+```text
+transaction_id,classification,category_id,business_pct,usage_ratio_id
+<business-expense-id>,BUSINESS,<category-id>,,
+<mixed-expense-id>,MIXED,<category-id>,0.5,<category-id>
+<private-row-id>,PERSONAL,,,
 ```
 
-The CSV path is the implemented batch-editing workflow for classifications.
-Use it when filtered review shows many rows that can be classified safely from
-their descriptions, counterparties, and source documents.
+The sequence below imports the quarter, lists the rows still needing a decision,
+exports a review snapshot to work from, applies a prepared CSV, and confirms the
+result:
 
-Recommended workflow:
+```{cli-sequence} classify-from-csv
+:verify: Confirm the CSV batch classified the quarter's rows.
+```
 
-1. Select rows with `ledger list`:
-
-   ```bash
-   aeat app ledger list --filter period=1T --filter year=2026 --filter classification=NOT_YET_PROCESSED
-   ```
-
-2. Export the period as a review snapshot:
-
-   ```bash
-   aeat app ledger export --output ./ledger-2026-q1.csv --year 2026 --period 1T
-   ```
-
-3. Prepare a narrow CSV containing only the rows you mean to change:
-
-   ```text
-   transaction_id,classification,category_id,business_pct,usage_ratio_id
-   <business-expense-id>,BUSINESS,<category-id>,,
-   <mixed-expense-id>,MIXED,<category-id>,0.5,<category-id>
-   <private-row-id>,PERSONAL,,,
-   ```
-
-4. Apply and review:
-
-   ```bash
-   aeat app ledger classify --from-csv ./classifications.csv
-   aeat app ledger list --filter period=1T --filter year=2026
-   aeat app ledger preflight --year 2026 --period 1T
-   ```
-
-Keep a copy of the file — it gives you a record of how you classified that
-period if you are later asked to justify your return. This path does not batch-update amounts,
+Use the CSV path when filtered review shows many rows you can classify safely
+from their descriptions, counterparties, and source documents. Keep a copy of
+the file. It gives you a record of how you classified that period if you are
+later asked to justify your return. This path does not batch-update amounts,
 descriptions, IVA values, notes, attachments, or split/merge state; use the
 transaction workflow for those row-level edits.
 
 ## Apply stored rules automatically
 
 Rules automatically classify transactions whose description contains a word or
-phrase you specify. Matching ignores uppercase and lowercase differences:
+phrase you specify. Matching ignores uppercase and lowercase differences. The
+sequence adds a rule, lists the rules, previews the effect, then applies it:
 
-```bash
-aeat app ledger rule add --description-pattern "software" --classification BUSINESS --category-id <category-id>
-aeat app ledger rule list
-aeat app ledger rule apply --dry-run
-aeat app ledger rule apply
+```{cli-sequence} classify-rules
+:verify: Confirm the stored rule is registered and applies cleanly.
 ```
 
 Run `--dry-run` first. Add `--reaffirm` only if you want the rule to overwrite
@@ -223,12 +179,13 @@ classifications you already set by hand.
 ## Use an LLM suggestion
 
 Cadrumo can use an AI assistant to suggest how to classify each transaction. The
-suggestion is a starting point — you must confirm or correct it. It does not
+suggestion is a starting point. You must confirm or correct it. It does not
 fill in tax amounts such as taxable base, IVA rate, or IRPF category.
 
 Use [Classify transactions with an LLM](classify-with-llm.md) for the full
 provider, preview, apply, and override flow.
 
+(see-everything-that-still-needs-a-decision)=
 ## See everything that still needs a decision
 
 The review queue is one profile-wide list of everything that still wants your
@@ -236,20 +193,19 @@ attention before a filing: transactions without a classification, invoice
 records that are unmatched or disputed, and verification findings on modelo
 drafts. Each row names the exact command that resolves it, so the queue is a
 to-do list you can work through top to bottom. The queue is read-only; items
-clear when you fix the underlying record with the command the row names.
+clear when you fix the underlying record with the command the row names. The
+sequence imports the quarter, then reads the queue:
 
-```bash
-aeat app review queue
+```{cli-sequence} classify-review-queue
+:verify: Confirm the review queue lists the pending work.
 ```
 
 Each row shows the item id, its kind, the affected record, the period, a
 severity (`critical`, `high`, `normal`, or `info`), and a final column with
 the command to run next. Narrow the list by kind, modelo, or state:
 
-```bash
-aeat app review queue --kind ledger_transaction
-aeat app review queue --kind modelo_finding --modelo 303
-aeat app review queue --state all
+```{cli-sequence} classify-review-queue-filter
+:verify: Confirm the queue can be narrowed by kind.
 ```
 
 Accepted `--kind` tokens are `ledger_transaction`, `purchase_invoice_evidence`,
@@ -268,11 +224,11 @@ you fix the reported values and verify again - see
 
 ## Confirm readiness
 
-Run preflight after classification:
+Run preflight after classification. The sequence imports and classifies the
+quarter, then runs preflight and reads the ledger status:
 
-```bash
-aeat app ledger preflight --year 2026 --period 1T
-aeat app ledger status --year 2026 --period 1T
+```{cli-sequence} classify-confirm-readiness
+:verify: Confirm preflight reports the classified quarter's readiness.
 ```
 
 Preflight names rows that still need category, taxable base, IVA amount, IVA
@@ -280,18 +236,19 @@ rate, currency, or proportionality reference.
 
 ## Correct a classification
 
-Re-run `classify` on the same transaction id:
+Re-run `classify` on the same transaction id. A manual decision replaces the
+previous classification. The sequence classifies a row as business, then
+corrects it to personal:
 
-```bash
-aeat app ledger classify <transaction-id> --classification PERSONAL
+```{cli-sequence} classify-correct
+:verify: Confirm the re-classification replaced the previous decision.
 ```
 
-A manual decision replaces the previous classification. Inspect the row again
-with `ledger view` before calculating.
+Inspect the row again with `ledger view` before calculating.
 
 ## Next steps
 
-- [Work with Transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Classify transactions with an LLM](classify-with-llm.md)
 - [How your records become tax figures](../explanation/from-records-to-figures.md)
 - [Review and supply calculation inputs](review-calculation-values.md)

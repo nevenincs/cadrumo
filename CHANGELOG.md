@@ -10,6 +10,60 @@ and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-07-19
+
+First public release cohort of **Cadrumo** — the product's first distribution
+under its product name (renamed from the internal `aeat` working name) — built
+once into one immutable, hash-bound cross-platform cohort and promoted without
+rebuild to every channel, so PyPI, the GitHub release, Scoop, Homebrew, and
+Claude all serve identical bytes. No `v0.2.0` distribution was ever published;
+the `v0.2.0` tag predates the work below.
+
+### Added
+
+- **Distribution channels:** Cadrumo installs from PyPI
+  (`cadrumo`, `cadrumo-data-manuals`, `cadrumo-data-official` via Trusted
+  Publishing), the GitHub release, a Scoop bucket, a Homebrew tap, the Claude
+  plugin marketplace, and a Claude Desktop MCPB bundle. Every artefact is
+  digest-verified against the one tested cohort; each channel's installed
+  behaviour is proven by a grounded tax-work oracle before release.
+- **Warm MCP serving:** local read and mutate MCP tools run in-process against
+  a warm runtime — steady-state latency is roughly 0.09 s for reads, 0.28 s for
+  simple writes, and 1.7 s for the heaviest Modelo 200 calculation — replacing
+  the previous per-call subprocess spawn.
+- **Bilingual client-display copy:** the Claude plugin, marketplace, and MCPB
+  product descriptions carry English and Spanish summaries.
+
+### Changed
+
+- **Product identity:** the agent harness (personas, skills, operator rules) is
+  namespaced under the `cadrumo-` prefix, and the MCP server, tools, and
+  resource URIs use the `cadrumo` / `cadrumo://` identity. The Python package
+  imports as `cadrumo`, the human CLI executable is `aeat`, and the MCP server
+  executable is `cadrumo-mcp`.
+- **Config safety:** state-destroying config operations (`config reset`,
+  `config repair`) now require explicit human confirmation on the MCP surface.
+- **User documentation:** the installation surfaces address end users
+  installing a released package; developer-checkout setup moved to
+  `CONTRIBUTING.md`. The documented MCP command is `cadrumo-mcp`.
+
+### Fixed
+
+- **MCP robustness:** the MCP server now starts and answers the protocol on a
+  machine carrying retired prior-product state instead of crashing before its
+  first response; the `execute` meta-tool no longer blocks the event loop
+  (removing multi-second and Cowork-client hangs); a wedged warm call degrades
+  to the supervised subprocess transport with a visible warning.
+- **Packaging:** `click` is now a declared direct dependency; `typer>=0.26`
+  stopped pulling it in, so a clean wheel install crashed on import
+  (`ModuleNotFoundError: click`). Caught by the split-install packaging
+  smoke; `uv.lock` reconciled to the committed `pyproject.toml`.
+- **Publish lane:** one GitHub environment per distribution
+  (`pypi`, `pypi-data-manuals`, `pypi-data-official`) so all three pending
+  Trusted Publishers can register from the one publish workflow.
+- **`just doctor`** invoked a nonexistent `cadrumo` console script; the
+  human CLI is `aeat`.
+
 ## [0.2.0] - 2026-07-04
 
 Prepared per issue #382. No `v0.1.0` git tag exists on the remote, so this

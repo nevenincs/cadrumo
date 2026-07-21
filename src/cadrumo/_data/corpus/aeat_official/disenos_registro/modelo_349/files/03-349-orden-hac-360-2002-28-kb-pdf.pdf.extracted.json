@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_349/files/03-349-orden-hac-360-2002-28-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_349/files/03-349-orden-hac-360-2002-28-kb-pdf.pdf",
   "source_sha256": "2aec34746d7f91b89b4f59b127a4fc00658b49d091137a8777dee68ae50d7ea2",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

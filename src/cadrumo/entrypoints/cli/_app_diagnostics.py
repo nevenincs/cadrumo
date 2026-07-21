@@ -4,7 +4,7 @@ Provides the ``run-health``, ``runs``, ``latency``, ``errors``, and
 ``llm-usage`` verbs: local-only, read-only reports over recent LLM
 classification/completion run timing (duration, provider, outcome), so an
 operator can diagnose a slow LLM-backed run, a stale/expired auth session, or
-a recurring failure mode without leaving the host (GitHub issue #407).
+a recurring failure mode without leaving the host.
 ``run-health`` folds the run telemetry with the persisted-AEAT-session
 staleness probe into one aggregate-by-provider report; ``runs`` lists the
 individual recorded runs, most-recent-first; ``latency`` reports P50/P95/P99
@@ -43,13 +43,12 @@ See Also:
 from __future__ import annotations
 
 from datetime import date as _date
-from decimal import Decimal
 
 import typer
 
 from ...core.i18n import tr
 from ._app_diagnostics_telemetry import telemetry_app
-from ._common import _emit_envelope
+from ._common import _emit_envelope, optional_decimal_text
 from ._diagnostics_payloads import (
     ErrorKindCountPayload,
     ErrorsBreakdownResult,
@@ -163,7 +162,7 @@ def diagnostics_run_health(
                 failed=row.failed,
                 min_duration_ms=row.min_duration_ms,
                 max_duration_ms=row.max_duration_ms,
-                mean_duration_ms=_optional_decimal_text(row.mean_duration_ms),
+                mean_duration_ms=optional_decimal_text(row.mean_duration_ms),
             )
             for row in report.llm_providers
         ],
@@ -394,7 +393,7 @@ def diagnostics_latency(
             entries=report.overall.entries,
             min_duration_ms=report.overall.min_duration_ms,
             max_duration_ms=report.overall.max_duration_ms,
-            mean_duration_ms=_optional_decimal_text(report.overall.mean_duration_ms),
+            mean_duration_ms=optional_decimal_text(report.overall.mean_duration_ms),
             p50_duration_ms=report.overall.p50_duration_ms,
             p95_duration_ms=report.overall.p95_duration_ms,
             p99_duration_ms=report.overall.p99_duration_ms,
@@ -406,7 +405,7 @@ def diagnostics_latency(
                     entries=percentiles.entries,
                     min_duration_ms=percentiles.min_duration_ms,
                     max_duration_ms=percentiles.max_duration_ms,
-                    mean_duration_ms=_optional_decimal_text(percentiles.mean_duration_ms),
+                    mean_duration_ms=optional_decimal_text(percentiles.mean_duration_ms),
                     p50_duration_ms=percentiles.p50_duration_ms,
                     p95_duration_ms=percentiles.p95_duration_ms,
                     p99_duration_ms=percentiles.p99_duration_ms,
@@ -572,7 +571,7 @@ def diagnostics_llm_usage(
                 failed=row.failed,
                 min_duration_ms=row.min_duration_ms,
                 max_duration_ms=row.max_duration_ms,
-                mean_duration_ms=_optional_decimal_text(row.mean_duration_ms),
+                mean_duration_ms=optional_decimal_text(row.mean_duration_ms),
                 total_duration_ms=row.total_duration_ms,
                 success_rate=format(row.success_rate, "f"),
                 models=[
@@ -583,7 +582,7 @@ def diagnostics_llm_usage(
                         failed=model_row.failed,
                         min_duration_ms=model_row.min_duration_ms,
                         max_duration_ms=model_row.max_duration_ms,
-                        mean_duration_ms=_optional_decimal_text(model_row.mean_duration_ms),
+                        mean_duration_ms=optional_decimal_text(model_row.mean_duration_ms),
                         total_duration_ms=model_row.total_duration_ms,
                         success_rate=format(model_row.success_rate, "f"),
                     )
@@ -622,12 +621,6 @@ def diagnostics_llm_usage(
                 )
 
     _emit_envelope(ctx, command="diagnostics.llm_usage", result=result, lines=lines, notices=notices)
-
-
-def _optional_decimal_text(value: Decimal | None) -> str | None:
-    if value is None:
-        return None
-    return format(value, "f")
 
 
 app.add_typer(telemetry_app, name="telemetry")

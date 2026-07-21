@@ -5,7 +5,7 @@ download links, event notes, and support routes. The banner and footer point her
 so important project status is available from every documentation page.
 
 ```{important}
-Cadrumo is pre-alpha software. Treat every release note as potentially relevant
+Cadrumo is in beta. Treat every release note as potentially relevant
 before upgrading, and verify filing deadlines, forms, and submission rules with
 the Agencia Estatal de Administración Tributaria (AEAT) before you file.
 ```
@@ -54,9 +54,8 @@ links to release and issue activity.
 
 ## Current status
 
-Cadrumo is local-first, pre-alpha software for preparing Spanish tax filing
-records. It does not submit declarations for you, does not replace official AEAT
-tools, and is not affiliated with AEAT.
+Cadrumo is local-first beta software for preparing Spanish tax filing
+records ([read the full disclaimer](disclaimer.md)).
 
 Expect breaking changes while the command-line interface (CLI) workflows,
 generated documentation, and modelo coverage are still being hardened. Before relying on a version for a
@@ -78,9 +77,10 @@ Check this section when you need to know whether a release affects:
 
 ## Download guidance
 
-Use the latest release link when you need the current packaged version. If a
-packaged artifact is not available for your environment, use the repository and
-record the commit or tag you installed from.
+Use the latest release link when you need the current packaged version, and
+follow the [installation guide](workstation-setup.md) to install it. If no
+packaged artifact is available for your environment, open an issue so the gap
+is recorded.
 
 After installing or upgrading, run:
 
@@ -91,7 +91,7 @@ $ aeat --version
 Keep that version with the local export, AEAT submission receipt, and any
 reconciliation notes for the filing period.
 
-## Events and deadlines
+## Deadlines and project announcements
 
 This documentation may describe filing workflows and preparation order, but it
 does not publish an authoritative tax calendar. Always confirm deadlines,

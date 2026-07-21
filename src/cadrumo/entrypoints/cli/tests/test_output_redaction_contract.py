@@ -12,7 +12,8 @@ from ....core.redaction import (
     CLI_PROFILE_ID_PLACEHOLDER,
 )
 from ....tests.cli_runner import cadrumo_click_command
-from .._common import _emit
+from .._common import _emit_envelope
+from .._root_payloads import RootStatusResult
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -25,7 +26,7 @@ _OBJECT_KEY = "wallet:2026-secret"
 
 
 def _context(format_name: str) -> typer.Context:
-    # Get the cadrumo CLI command and narrow it to TyperGroup for compatibility with typer.Context.
+    # Get the Cadrumo CLI command and narrow it to TyperGroup for compatibility with typer.Context.
     root_cmd = cadrumo_click_command()
     assert isinstance(root_cmd, TyperGroup)
     ctx = typer.Context(root_cmd)
@@ -56,7 +57,12 @@ def _lines() -> tuple[str, ...]:
 
 
 def test_emit_text_redacts_command_output_canary_matrix(capsys: pytest.CaptureFixture[str]) -> None:
-    _emit(_context("text"), _payload(), _lines())
+    _emit_envelope(
+        _context("text"),
+        command="root.status",
+        result=RootStatusResult.model_validate(_payload()),
+        lines=_lines(),
+    )
 
     output = capsys.readouterr().out
 
@@ -72,10 +78,16 @@ def test_emit_text_redacts_command_output_canary_matrix(capsys: pytest.CaptureFi
 
 
 def test_emit_json_redacts_command_output_canary_matrix(capsys: pytest.CaptureFixture[str]) -> None:
-    _emit(_context("json"), _payload(), _lines())
+    _emit_envelope(
+        _context("json"),
+        command="root.status",
+        result=RootStatusResult.model_validate(_payload()),
+        lines=_lines(),
+    )
 
     output = capsys.readouterr().out
-    payload = json.loads(output)
+    envelope = json.loads(output)
+    payload = envelope["result"]
 
     for raw in (_PROFILE_ID, _BUCKET_ID, _NIF, _JWT, _URL, _OBJECT_KEY):
         assert raw not in output
@@ -87,3 +99,4 @@ def test_emit_json_redacts_command_output_canary_matrix(capsys: pytest.CaptureFi
         "authorization": "token:sha256:0a2c77ea",
         "object_key": CLI_OBJECT_KEY_PLACEHOLDER,
     }
+    assert envelope["command"] == "root.status"

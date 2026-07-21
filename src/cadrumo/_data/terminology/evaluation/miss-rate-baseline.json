@@ -1,0 +1,60 @@
+{
+  "evaluation": {
+    "case_count": 5,
+    "compiled_failed_query_count": 0,
+    "compiled_query_count": 72,
+    "compiled_targeted_query_count": 72,
+    "hit_count": 5,
+    "miss_count": 0,
+    "miss_rate": 0.0,
+    "rows": [
+      {
+        "concept_id": "prorrata",
+        "hit": true,
+        "matched_record_id": "legal:ley-37-1992:art-104",
+        "query": "regla de prorrata",
+        "reason": "hit",
+        "target_count": 7
+      },
+      {
+        "concept_id": "prorrata",
+        "hit": true,
+        "matched_record_id": "concept:prorrata",
+        "query": "pro rata",
+        "reason": "hit",
+        "target_count": 9
+      },
+      {
+        "concept_id": "casilla",
+        "hit": true,
+        "matched_record_id": "concept:casilla",
+        "query": "box",
+        "reason": "hit",
+        "target_count": 1
+      },
+      {
+        "concept_id": "modelo-303",
+        "hit": true,
+        "matched_record_id": "concept:modelo-303",
+        "query": "modelo 303",
+        "reason": "hit",
+        "target_count": 4
+      },
+      {
+        "concept_id": "recargo-equivalencia",
+        "hit": true,
+        "matched_record_id": "concept:recargo-equivalencia",
+        "query": "recargo de equivalencia",
+        "reason": "hit",
+        "target_count": 7
+      }
+    ]
+  },
+  "note": "Baseline held-out miss-rate before the vocabulary widening (threshold 0.10). Re-measured over the post-cutover refreshed mapping (hook-fed source-path index).",
+  "rung2": {
+    "decision": "keep-deferred",
+    "measured_miss_rate": 0.0,
+    "miss_rate_threshold": 0.1,
+    "rationale": "The relevance artifact is not marked degraded and the held-out miss-rate is within the accepted threshold, so rung-2 static term embeddings remain deferred."
+  }
+}

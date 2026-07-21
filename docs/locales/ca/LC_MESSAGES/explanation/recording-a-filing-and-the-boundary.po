@@ -1,0 +1,248 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:1
+msgid "Recording a filing, and why the tool never files for you"
+msgstr "Registrar una presentació, i per què l'eina mai no presenta per tu"
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:3
+msgid ""
+"This page covers the last stretch of the journey: the line between the "
+"work you do on your own computer and the real Agencia Estatal de "
+"Administración Tributaria (AEAT, the Spanish tax agency). The short "
+"answer is that you file it yourself, and the tool keeps a careful record "
+"around that act. This page is about why the boundary sits where it does."
+msgstr ""
+"Aquesta pàgina tracta l'últim tram del recorregut: la línia entre la "
+"feina que fas al teu propi ordinador i la veritable Agencia Estatal de "
+"Administración Tributaria (AEAT, l'agència tributària espanyola). La "
+"resposta curta és que la presentes tu mateix, i que l'eina en manté un "
+"registre acurat al voltant d'aquell acte. Aquesta pàgina tracta de per "
+"què el límit se situa on se situa."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:9
+msgid "The boundary is permanent"
+msgstr "El límit és permanent"
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:11
+msgid ""
+"The tool can never submit a return, register anything, or change a single"
+" value at the agency. This is not a cautious default you could switch off"
+" later. There is no setting, no flag, and no expert mode that turns it "
+"on. The submit path is built to refuse, every time, with a clear error "
+"rather than a quiet attempt."
+msgstr ""
+"L'eina mai no pot presentar una declaració, registrar res ni canviar un "
+"sol valor a l'agència. Això no és un valor per defecte prudent que puguis"
+" desactivar més endavant. No hi ha cap configuració, cap indicador ni cap"
+" mode expert que ho activi. El camí de tramesa està construït per "
+"negar-s'hi, cada vegada, amb un error clar en comptes d'un intent "
+"silenciós."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:13
+msgid ""
+"That refusal is deliberate. Filing a tax return is a legal act with your "
+"name on it. A piece of software that could press the button on your "
+"behalf would carry a risk you can never fully see. By making submission "
+"impossible, the tool removes that risk entirely and keeps you in the "
+"chair where the law expects you to be."
+msgstr ""
+"Aquella negativa és deliberada. Presentar una declaració tributària és un"
+" acte legal amb el teu nom. Un programari que pogués prémer el botó en "
+"nom teu comportaria un risc que mai no podries veure del tot. En fer "
+"impossible la tramesa, l'eina elimina aquell risc del tot i et manté a la"
+" cadira on la llei espera que estiguis."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:15
+msgid "Read-only access is the only connection"
+msgstr "L'accés de només lectura és l'única connexió"
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:17
+msgid ""
+"When you connect the tool to the agency, you grant it one thing: the "
+"ability to read your own data from AEAT, view-only. It can look at the "
+"returns you've already filed, the receipts on record, and the facts the "
+"agency holds about you. It reads this so it can show it to you and "
+"compare it against your local work."
+msgstr ""
+"Quan connectes l'eina amb l'agència, li concedeixes una sola cosa: la "
+"capacitat de llegir les teves pròpies dades de l'AEAT, només de "
+"visualització. Pot mirar les declaracions que ja has presentat, els "
+"justificants registrats i les dades que l'agència té sobre tu. Ho llegeix"
+" per poder mostrar-t'ho i comparar-ho amb la teva feina local."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:19
+msgid ""
+"Nothing flows the other way. The connection has no path that writes, "
+"edits, or registers. Reading your data, view-only, is the whole of what "
+"it can do at the agency."
+msgstr ""
+"Res no flueix en l'altre sentit. La connexió no té cap camí que escrigui,"
+" editi o registri. Llegir les teves dades, només de visualització, és tot"
+" el que pot fer a l'agència."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:21
+msgid "You upload the file yourself"
+msgstr "El fitxer el puges tu mateix"
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:23
+msgid ""
+"The real submission happens in your own browser, on the agency's website,"
+" with your own login credentials - a digital certificate or Cl@ve (the "
+"Spanish government's shared identity login). You sign in as yourself, you"
+" upload the file the tool prepared, and you press submit. The tool never "
+"holds your credentials for this and never stands between you and the "
+"agency at that moment."
+msgstr ""
+"La tramesa real passa al teu propi navegador, al lloc web de l'agència, "
+"amb les teves pròpies credencials d'inici de sessió: un certificat "
+"digital o Cl@ve (l'inici de sessió d'identitat compartida del govern "
+"espanyol). Inicies la sessió com a tu mateix, puges el fitxer que l'eina "
+"ha preparat i prems presentar. L'eina mai no reté les teves credencials "
+"per a això i mai no s'interposa entre tu i l'agència en aquell moment."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:25
+msgid ""
+"For the steps, see [Upload your exported modelo at the AEAT portal"
+"](../how-to/file-at-aeat.md)."
+msgstr ""
+"Per als passos, consulta [Puja el teu model exportat al portal de l'AEAT"
+"](../how-to/file-at-aeat.md)."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:27
+msgid "Recording a filing in your own records"
+msgstr "Registrar una presentació als teus propis registres"
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:29
+msgid ""
+"After you've uploaded the return yourself, you come back and mark that "
+"saved version as final in your own history. This is recording that you've"
+" filed - a local note in your own records, like writing \"sent\" next to "
+"an invoice in your ledger."
+msgstr ""
+"Després d'haver pujat la declaració tu mateix, tornes i marques aquella "
+"versió desada com a definitiva al teu propi historial. Això és registrar "
+"que has presentat: una anotació local als teus propis registres, com "
+"escriure «enviada» al costat d'una factura al teu ledger."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:31
+msgid ""
+"It changes nothing at the agency. It does not submit, re-send, or confirm"
+" anything with AEAT. It marks one version as the answer you actually "
+"filed, so that later, when you look back, you know which numbers went out"
+" and when."
+msgstr ""
+"No canvia res a l'agència. No tramet, no reenvia ni confirma res amb "
+"l'AEAT. Marca una versió com la resposta que realment vas presentar, de "
+"manera que més endavant, quan miris enrere, sàpigues quins números van "
+"sortir i quan."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:33
+msgid "Checking your record against the agency's receipt"
+msgstr "Comprovar el teu registre contra el justificant de l'agència"
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:35
+msgid ""
+"When you file, the agency gives you a justificante - the official receipt"
+" confirming what it received. The tool can compare your local figures "
+"against that receipt to catch any disagreement. This is checking your "
+"record against the agency's receipt."
+msgstr ""
+"Quan presentes, l'agència et lliura un justificant: el rebut oficial que "
+"confirma el que va rebre. L'eina pot comparar les teves xifres locals "
+"contra aquell justificant per detectar qualsevol discrepància. Això és "
+"comprovar el teu registre contra el justificant de l'agència."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:37
+msgid ""
+"The comparison reads only the receipt you supply. It does not contact the"
+" agency to do its work. You hand it the justificante; it reports whether "
+"your record matches, diverges, or doesn't line up with any receipt yet."
+msgstr ""
+"La comparació llegeix només el justificant que aportes. No contacta amb "
+"l'agència per fer la seva feina. Li lliures el justificant; t'informa de "
+"si el teu registre coincideix, divergeix o encara no lliga amb cap "
+"justificant."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:39
+msgid ""
+"For the steps, see [Reconcile a filed modelo against its justificante"
+"](../how-to/reconcile.md)."
+msgstr ""
+"Per als passos, consulta [Concilia un model presentat contra el seu "
+"justificant](../how-to/reconcile.md)."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:41
+msgid "What this comparison can and can't tell you"
+msgstr "Què et pot dir i què no aquesta comparació"
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:43
+msgid ""
+"The comparison confirms that your local record matches the receipt's "
+"header fields - the modelo, the filing year, the period, and your tax ID "
+"- and names any field that disagrees. It does not compare individual box "
+"values, and it is not a live re-check of your maths against the agency: "
+"none of these steps re-derives your tax; they confirm what was filed and "
+"keep proof of it. The precise scope and the mismatch-handling steps are "
+"in [Reconcile a filed modelo against its justificante](../how-"
+"to/reconcile.md)."
+msgstr ""
+"La comparació confirma que el teu registre local coincideix amb els camps"
+" de capçalera del justificant (el model, l'any de presentació, el període"
+" i la teva identificació fiscal) i indica qualsevol camp que discrepi. No"
+" compara valors de caselles individuals, i no és una recomprovació en "
+"directe dels teus càlculs contra l'agència: cap d'aquests passos no torna"
+" a derivar el teu impost; confirmen el que es va presentar i en conserven"
+" la prova. L'abast precís i els passos per gestionar discrepàncies es "
+"troben a [Concilia un model presentat contra el seu justificant](../how-"
+"to/reconcile.md)."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:51
+msgid "Where this sits in the journey"
+msgstr "On se situa això dins del recorregut"
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:53
+msgid ""
+"This is the end of the pipeline that the [overview](index.md) lays out. "
+"Everything before it - building the modelo, checking it, recording the "
+"result - is yours to do locally; this page is where that local work meets"
+" the real agency, across a line the tool will not cross."
+msgstr ""
+"Aquest és el final del flux que exposa la [visió general](index.md). Tot "
+"el que hi ha abans (construir el model, comprovar-lo, registrar-ne el "
+"resultat) és teu per fer localment; aquesta pàgina és on aquella feina "
+"local es troba amb l'agència real, a través d'una línia que l'eina no "
+"traspassarà."
+
+#: ../../explanation/recording-a-filing-and-the-boundary.md:55
+msgid ""
+"If a comparison turns up a mismatch and you fix it, re-checking the "
+"corrected version is covered in [Editing and verifying a calculation"
+"](editing-and-verifying.md). And once a filing is recorded, it becomes "
+"evidence the tool can lean on for later returns, which [How filings build"
+" on earlier ones](building-on-earlier-filings.md) explains."
+msgstr ""
+"Si una comparació treu a la llum una discrepància i la corregeixes, "
+"tornar a comprovar la versió corregida es tracta a [Editar i verificar un"
+" càlcul](editing-and-verifying.md). I un cop una presentació està "
+"registrada, esdevé una evidència en què l'eina es pot basar per a "
+"declaracions posteriors, cosa que explica [Com les presentacions es basen"
+" en d'anteriors](building-on-earlier-filings.md)."
+

@@ -1,5 +1,5 @@
 {
-  "$schema_note": "Checked-in allowlist for the TEST-ONLY Family-1 underscore-named remainder of the import-hygiene CI gate (dev/import_hygiene_scan.py). Read by src/cadrumo/tests/test_import_hygiene_gate.py. Every entry here is a NAMED, REASONED test-only white-box reach into a private implementation symbol (a private repository-factory function, a private evaluator, a private module-level cache, a private constant that intentionally has no public promotion candidate) that the import-centralization campaign's Wave W05 test sweep deliberately did NOT promote to a public facade, per ADR 2026-07-01-import-centralization-adr Ruling 2/3 (an underscore-named candidate gets an individual per-symbol disposition, not mechanical promotion; promoting an internals-only helper, a private cache, or a private constant onto a public facade would pollute the facade with implementation detail no other consumer needs). The gate FAILS if a NEW, undocumented test-only underscore-named private import appears that is not in this list; it does not fail if the count is lower. A production (non-test) violation is NEVER tolerated here -- this file governs test-only debt exclusively; see dev/import_hygiene_baseline.json for the production Family-1 cycle-break baseline.",
+  "$schema_note": "Checked-in allowlist for the TEST-ONLY Family-1 underscore-named remainder of the import-hygiene CI gate (dev/import_hygiene_scan.py). Read by src/cadrumo/tests/test_import_hygiene_gate.py. Every entry here is a NAMED, REASONED test-only white-box reach into a private implementation symbol (a private repository-factory function, a private evaluator, a private module-level cache, a private constant that intentionally has no public promotion candidate) that was deliberately NOT promoted to a public facade (an underscore-named candidate gets an individual per-symbol disposition, not mechanical promotion; promoting an internals-only helper, a private cache, or a private constant onto a public facade would pollute the facade with implementation detail no other consumer needs). The gate FAILS if a NEW, undocumented test-only underscore-named private import appears that is not in this list; it does not fail if the count is lower. A production (non-test) violation is NEVER tolerated here -- this file governs test-only debt exclusively; see dev/import_hygiene_baseline.json for the production Family-1 cycle-break baseline.",
   "test_only_family1_underscore_reaches": {
     "_note": "Each site is a test file reaching a foreign package's private submodule to exercise an internal helper, evaluator, repository factory, or module-private constant/cache by name. Grouped by owning package below for readability; the gate reads the flat 'sites' list.",
     "sites": [
@@ -270,27 +270,6 @@
         "reason": "White-box unit test instantiating the concrete local-filesystem StorageProvider backend directly to exercise push/manifest behaviour. The package docstring explicitly documents _local and _google_drive as private implementation details behind the StorageProvider Protocol; promoting the concrete class to the public facade would contradict that documented boundary."
       },
       {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
-        "lineno": 244,
-        "target_mod": "cadrumo.application.user_profile._orchestration",
-        "imported_names": ["_write_active_profile_pointer"],
-        "reason": "White-box test seeding a stale/phantom active-profile pointer to exercise a lifecycle-verb error path. Internal pointer-write primitive; the public surface is register_active_profile / select_profile, not a raw pointer write."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
-        "lineno": 653,
-        "target_mod": "cadrumo.application.user_profile._orchestration",
-        "imported_names": ["_clear_active_profile_pointer"],
-        "reason": "White-box test clearing the active-profile pointer directly to set up a no-active-profile scenario. Internal pointer-clear primitive; the public surface is logout_active_profile / remove_active_profile."
-      },
-      {
-        "importer_path": "src/cadrumo/entrypoints/cli/tests/test_profile_lifecycle_verbs.py",
-        "lineno": 757,
-        "target_mod": "cadrumo.application.user_profile._orchestration",
-        "imported_names": ["_write_active_profile_pointer"],
-        "reason": "Same private pointer-write primitive reach as line 244 in the same file, seeding a different phantom-pointer scenario."
-      },
-      {
         "importer_path": "src/cadrumo/entrypoints/cli/tests/test_self_referential_string_conformance.py",
         "lineno": 65,
         "target_mod": "cadrumo.core.i18n._render",
@@ -386,7 +365,7 @@
         "lineno": 28,
         "target_mod": "cadrumo.entrypoints.mcp._meta_tools",
         "imported_names": ["build_command_search_index", "search_commands"],
-        "reason": "Pinned retrieval golden set (ADR mcp-progressive-discovery P2/S09) asserting the live command-ranking over build_tool_descriptors(). The ranking helpers wrap the private `search` meta-tool surface and have no public facade promotion candidate; the golden set is authored under the command_search package it validates, so it is a white-box test-only reach into the meta-tool ranking API."
+        "reason": "Pinned retrieval golden set asserting the live command-ranking over build_tool_descriptors(). The ranking helpers wrap the private `search` meta-tool surface and have no public facade promotion candidate; the golden set is authored under the command_search package it validates, so it is a white-box test-only reach into the meta-tool ranking API."
       }
     ]
   }

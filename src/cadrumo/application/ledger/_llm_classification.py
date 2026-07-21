@@ -36,8 +36,7 @@ regulated tax value.
 model-selected ``iva_category`` and the system-DERIVED ``taxable_base`` /
 ``iva_rate`` / ``iva_amount``. The model still never emits a number — the rate
 is looked up from the registry and the base and amount are derived with
-``round_to_cents`` (see ``2026-06-04-llm-ledger-classification-adr``).
-``irpf_category`` remains operator-only.
+``round_to_cents``. ``irpf_category`` remains operator-only.
 """
 
 from __future__ import annotations
@@ -84,7 +83,7 @@ from ._actions_common import (
     _transaction_repository,
 )
 from ._actions_manual import update_manual_transaction_fields
-from ._actions_split_merge import split_transaction
+from ._actions_split_merge import split_transaction_with_classified_children
 from ._evidence import MediaKind, PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceService
 from ._evidence_advisory import printed_iva_advisory
 from ._evidence_input import (
@@ -271,8 +270,8 @@ def _run_vision_or_refuse[T](run: Callable[[], T], *, settings: Settings) -> T:
     model-missing failure escaped every CLI ``except`` clause as a raw
     ``httpx.ConnectError`` / ``LLMProviderError`` traceback. This converts both into
     an ``LLMClassifierError`` (which the classify CLI already renders) carrying the
-    exact remediation from :func:`probe_ollama_vision`
-    (``dependency-provisioning`` ADR: probe -> typed refusal with the fix).
+    exact remediation from :func:`probe_ollama_vision` (probe -> typed refusal
+    with the fix).
     """
     import httpx
 
@@ -526,7 +525,7 @@ def apply_llm_classification(
     bucket_id: str,
     business_pct: Decimal | None = None,
     actor: str = "operator",
-    source_command: str = "aeat app ledger classify --llm",
+    source_command: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -826,7 +825,7 @@ def apply_saturated_llm_classification(
     bucket_id: str,
     business_pct: Decimal | None = None,
     actor: str = "operator",
-    source_command: str = "aeat app ledger classify --llm --saturate --apply",
+    source_command: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -928,7 +927,7 @@ def derive_operator_iva_substrate(
     iva_category: IvaCategory,
     on_date: date | None = None,
     actor: str = "operator",
-    source_command: str = "aeat app ledger classify --iva-category --saturate",
+    source_command: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -1184,12 +1183,36 @@ def suggest_evidence_split(
     )
 
 
+def _split_child_patch_fields(child: LLMSplitChildSuggestion, *, evidence_link: dict[str, object]) -> dict[str, object]:
+    """Build the classification patch fields for one evidence-split child.
+
+    Assembles the ``BUSINESS`` classification, the inherited evidence link, and
+    the model-selected category / IVA substrate (the euro figures only when the
+    category was registry-derivable). Shared by the atomic split writer's
+    per-child classification so the split and no-split paths stamp identical
+    fields.
+    """
+    patch_fields: dict[str, object] = {
+        "business_classification": BusinessClassification.BUSINESS,
+        **evidence_link,
+    }
+    if child.category is not None:
+        patch_fields["category_id"] = child.category.value
+    if child.iva_category is not None:
+        patch_fields["iva_category"] = child.iva_category
+    if child.rate_derivable:
+        patch_fields["taxable_base"] = child.taxable_base
+        patch_fields["iva_rate"] = child.iva_rate
+        patch_fields["iva_amount"] = child.iva_amount
+    return patch_fields
+
+
 def apply_evidence_split(
     suggestion: LLMSplitSuggestion,
     *,
     bucket_id: str,
     actor: str = "operator",
-    source_command: str = "aeat app ledger split --llm --apply",
+    source_command: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -1246,10 +1269,28 @@ def apply_evidence_split(
     commands = tuple(
         SplitChildCommand(amount=child.amount, description=child.description) for child in suggestion.children
     )
-    split_result = split_transaction(
+
+    # Every split child inherits the parent's validated evidence link.
+    evidence_link: dict[str, object] = {}
+    if parent.purchase_invoice_evidence_id is not None:
+        evidence_link["purchase_invoice_evidence_id"] = parent.purchase_invoice_evidence_id
+    elif parent.attachment_ids:
+        evidence_link["attachment_ids"] = parent.attachment_ids
+
+    child_classifications = tuple(
+        ManualLedgerTransactionPatch.model_validate(_split_child_patch_fields(child, evidence_link=evidence_link))
+        for child in suggestion.children
+    )
+
+    # One atomic transaction: parent transition + every classified,
+    # evidence-bearing child + all events persist together, or nothing does.
+    # No generic field patch re-enters evidence after the split.
+    split_result = split_transaction_with_classified_children(
         bucket_id=bucket_id,
         transaction_id=suggestion.transaction_id,
         children=commands,
+        child_classifications=child_classifications,
+        classified_by=suggestion.provenance,
         actor=actor,
         source_command=source_command,
         reason=suggestion.reason,
@@ -1257,40 +1298,7 @@ def apply_evidence_split(
         bucket_event_repository=bucket_event_repository,
         occurred_at=occurred_at,
     )
-
-    evidence_link: dict[str, object] = {}
-    if parent.purchase_invoice_evidence_id is not None:
-        evidence_link["purchase_invoice_evidence_id"] = parent.purchase_invoice_evidence_id
-    elif parent.attachment_ids:
-        evidence_link["attachment_ids"] = parent.attachment_ids
-
-    classified = 0
-    for child_txn, child in zip(split_result.child_transactions, suggestion.children, strict=True):
-        patch_fields: dict[str, object] = {
-            "business_classification": BusinessClassification.BUSINESS,
-            **evidence_link,
-        }
-        if child.category is not None:
-            patch_fields["category_id"] = child.category.value
-        if child.iva_category is not None:
-            patch_fields["iva_category"] = child.iva_category
-        if child.rate_derivable:
-            patch_fields["taxable_base"] = child.taxable_base
-            patch_fields["iva_rate"] = child.iva_rate
-            patch_fields["iva_amount"] = child.iva_amount
-        patch = ManualLedgerTransactionPatch.model_validate(patch_fields)
-        update_manual_transaction_fields(
-            bucket_id=bucket_id,
-            transaction_id=child_txn.transaction_id,
-            patch=patch,
-            actor=actor,
-            source_command=source_command,
-            classified_by_override=suggestion.provenance,
-            transaction_repository=repository,
-            bucket_event_repository=bucket_event_repository,
-            occurred_at=occurred_at,
-        )
-        classified += 1
+    classified = len(split_result.child_transactions)
 
     _logger.info(
         "llm split apply: parent=%s split_group=%s children=%d classified=%d classified_by=%s",
@@ -1315,7 +1323,7 @@ def apply_evidence_classification(
     *,
     bucket_id: str,
     actor: str = "operator",
-    source_command: str = "aeat app ledger classify --read-evidence --auto-split --apply",
+    source_command: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,
@@ -1365,11 +1373,11 @@ def apply_evidence_classification(
             context={"transaction_id": suggestion.transaction_id},
         )
     child = suggestion.children[0]
+    # In-place classification on the PARENT: the parent already carries its own
+    # evidence, which the manual-write replacement preserves verbatim. Evidence
+    # is therefore never re-set through this generic-classification patch —
+    # evidence mutation is reserved for `aeat app ledger attach`.
     patch_fields: dict[str, object] = {"business_classification": BusinessClassification.BUSINESS}
-    if parent.purchase_invoice_evidence_id is not None:
-        patch_fields["purchase_invoice_evidence_id"] = parent.purchase_invoice_evidence_id
-    elif parent.attachment_ids:
-        patch_fields["attachment_ids"] = parent.attachment_ids
     if child.category is not None:
         patch_fields["category_id"] = child.category.value
     if child.iva_category is not None:
@@ -1409,7 +1417,7 @@ def reject_llm_suggestion(
     bucket_id: str,
     reason: str = "",
     actor: str = "operator",
-    source_command: str = "aeat app ledger classify --llm --reject",
+    source_command: str,
     transaction_repository: TransactionCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     occurred_at: datetime | None = None,

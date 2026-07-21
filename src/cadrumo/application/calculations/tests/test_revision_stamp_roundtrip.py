@@ -1,13 +1,11 @@
-"""Stamped_revision_id roundtrip and R2 carry-gate tests.
+"""Stamped_revision_id roundtrip and revision-stamp carry-gate tests.
 
-Tests for the period-revision-resolution decision, Ruling 3 / R2:
-
-- ``_ObservationEnvelopePayload.stamped_revision_id`` survives the
-  encrypted-storage roundtrip with a non-default (non-None) value.
+- :class:`ObservationEnvelopePayload` preserves the required
+  ``stamped_revision_id`` through a secure-repository round trip.
 - ``save_observation`` derives the law-determined stamp when callers omit it.
-- Anti-tautology proof: nulling ``stamped_revision_id`` in the on-disk JSON
+- Anti-tautology proof: deleting ``stamped_revision_id`` from the on-disk JSON
   envelope refuses on reload.
-- R2 carry gate in ``resolve_bindings_from_local_store``: a divergent or
+- Carry gate in ``resolve_bindings_from_local_store``: a divergent or
   unreconfirmable stamped revision blocks the carry (binding absent from
   resolved map), and a matching stamp carries cleanly.
   Subject: Modelo 303/2025/2T whose single ``previous_filing`` binding
@@ -96,7 +94,7 @@ def _law_revision_id(modelo: str = _MODELO, year: int = _YEAR, period: str = _PE
 
 
 def test_stamped_revision_id_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
-    """stamped_revision_id with a non-None value roundtrips through the encrypted store."""
+    """The required stamped_revision_id roundtrips through the encrypted store."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         revision_id = _law_revision_id()
         repo = CalculationObservationRepository()
@@ -151,15 +149,15 @@ def test_stamped_revision_id_iter_modelo_propagates_stamp(tmp_path: Path) -> Non
 
 
 # ---------------------------------------------------------------------------
-# Anti-tautology proof: drop stamped_revision_id from JSON, reload, assert inequality
+# Anti-tautology proof: drop stamped_revision_id from JSON and refuse reload
 # ---------------------------------------------------------------------------
 
 
-def test_stamped_revision_id_anti_tautology_null_refuses_load(tmp_path: Path) -> None:
-    """Anti-tautology: nulling stamped_revision_id in on-disk JSON must refuse.
+def test_stamped_revision_id_anti_tautology_missing_refuses_load(tmp_path: Path) -> None:
+    """Anti-tautology: deleting stamped_revision_id from on-disk JSON must refuse.
 
     After stamping with a non-empty revision id, reaching into the raw JSON
-    envelope and clearing the field to ``null`` must fail strict payload
+    envelope and deleting the field must fail strict payload
     validation. This proves the boundary is not tautological: a saved value is
     not re-derived on reload.
     """
@@ -200,7 +198,7 @@ def test_stamped_revision_id_anti_tautology_null_refuses_load(tmp_path: Path) ->
             assert envelope["payload"]["stamped_revision_id"] == revision_id, (
                 "fixture must serialize stamped_revision_id as a non-null value for this proof to be meaningful"
             )
-            envelope["payload"]["stamped_revision_id"] = None
+            del envelope["payload"]["stamped_revision_id"]
             row.payload = encrypt_secure_object_payload(_json.dumps(envelope).encode("utf-8"), associated_data=_h3_aad)
 
         with pytest.raises(ValidationError):
@@ -332,6 +330,6 @@ def test_carry_matching_stamp_carries_cleanly(tmp_path: Path) -> None:
 
 
 # The R2 carry-gate coverage for ``MultiYearResolver`` was removed with the
-# orphaned resolver itself; the live-path R2 gate (``_revision_prefill_divergence``)
-# stays comprehensively covered by ``test_carry_gate_parity.py`` across the
+# orphaned resolver itself; the shared live-path gate stays comprehensively
+# covered by ``test_carry_gate_parity.py`` across the
 # matching / divergent / indeterminate outcomes.

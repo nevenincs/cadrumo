@@ -1,7 +1,7 @@
 ---
 tags: ["#reference", "#calculation-source-connectivity"]
 date: '2026-05-21'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-20-calculation-source-connectivity-research]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'

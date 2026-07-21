@@ -1,6 +1,6 @@
 """Lightweight validation error base for root domain value objects.
 
-Defines :class:`DomainValidationError`, the :class:`core.errors.AeatError`
+Defines :class:`DomainValidationError`, the :class:`core.errors.CadrumoError`
 subclass that also behaves as :exc:`ValueError` so Pydantic validators can
 surface invalid domain identifiers and models as validation failures.
 
@@ -13,8 +13,8 @@ importing a larger package-specific authority would be the wrong dependency.
 
 from __future__ import annotations
 
-from ..core.errors import AeatError
+from ..core.errors import CadrumoError
 
 
-class DomainValidationError(AeatError, ValueError):
+class DomainValidationError(CadrumoError, ValueError):
     """Raised when root-level domain identifiers or value objects are invalid."""

@@ -37,8 +37,8 @@ def test_materialise_emits_agent_envelope_and_writes_files(tmp_path: Path) -> No
     assert payload["rules_written"] >= 7
     assert payload["personas_written"] >= 3
     assert payload["skills_written"] >= 1
-    assert (out / ".claude" / "rules" / "operator-operating-rules.md").is_file()
-    assert (out / ".claude" / "skills" / "preparar-modelo-130" / "SKILL.md").is_file()
+    assert (out / ".claude" / "rules" / "cadrumo-operator-operating-rules.md").is_file()
+    assert (out / ".claude" / "skills" / "cadrumo-preparar-modelo-130" / "SKILL.md").is_file()
 
 
 def test_materialise_requires_output_option() -> None:

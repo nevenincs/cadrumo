@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#prorrata-sectores-diferenciados'
 date: '2026-07-07'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-05-cross-period-prorrata-adr]]"
   - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
+  - '[[2026-07-10-prorrata-sectores-diferenciados-research]]'
 ---
 
-# `prorrata-sectores-diferenciados` adr: `Sectores diferenciados de actividad (LIVA arts 9.1.c/101): sector assignment, per-sector register orchestration and provisional/definitive lifecycle` | (**status:** `proposed`)
+# `prorrata-sectores-diferenciados` adr: `Sectores diferenciados de actividad (LIVA arts 9.1.c/101): sector assignment, per-sector register orchestration and provisional/definitive lifecycle` | (**status:** `accepted`)
 
 ## Problem Statement
 
@@ -176,29 +177,29 @@ de-risk the core per-sector routing.
 Files the implementation will touch (for wave-clustering; see the ADR-vs-ADR overlap
 report):
 
-- `src/aeat/domain/prorrata_register/__init__.py` — per-sector orchestration over the
+- `src/cadrumo/domain/prorrata_register/__init__.py` — per-sector orchestration over the
   existing `sector_id` axis; a sector-definition model. **SHARED with `prorrata-especial`
   (especial-complete signal) and `prorrata-art105-cinco-interrupted` (interrupted-year
   representation).**
-- `src/aeat/application/aggregation/_iva_ledger.py` — sector-aware apportionment
+- `src/cadrumo/application/aggregation/_iva_ledger.py` — sector-aware apportionment
   (route each input to its sector percentage; common-use → art. 104.Dos). **SHARED with
   `prorrata-especial` (regime routing) and `prorrata-art104-tres-exclusions` (exclusion
   filtering) — hottest shared surface.**
-- `src/aeat/domain/transactions/_models.py` — a sector reference on the ledger row.
+- `src/cadrumo/domain/transactions/_models.py` — a sector reference on the ledger row.
   **SHARED with `prorrata-especial` (input_classification) and
   `prorrata-art104-tres-exclusions` (exclusion tag).**
-- `src/aeat/domain/iva/_prorrata.py` — consume `requires_sectoral_separation` /
+- `src/cadrumo/domain/iva/_prorrata.py` — consume `requires_sectoral_separation` /
   `compute_sectoral_prorrata` (read-mostly). **SHARED (additive) with the sibling ADRs.**
-- taxpayer profile model (`src/aeat/domain/contribuyente/...`) — optional activity/IAE
+- taxpayer profile model (`src/cadrumo/domain/contribuyente/...`) — optional activity/IAE
   code axis. Mostly unique to this ADR.
-- `src/aeat/_data/registry/aeat/legal/iva.toml` and `legal/iva-flow.toml` — new
+- `src/cadrumo/_data/registry/aeat/legal/iva.toml` and `legal/iva-flow.toml` — new
   `[legal."ley-37-1992:art-101"]` entry; art. 9.1.c sector-definition grounding.
   **SHARED (additive, distinct blocks) with the sibling ADRs.**
-- `src/aeat/_data/registry/aeat/modelos/303/**` — sector-classification metadata.
+- `src/cadrumo/_data/registry/aeat/modelos/303/**` — sector-classification metadata.
   **SHARED with `prorrata-especial` and `prorrata-art104-tres-exclusions`.**
 - CLI ledger surface / a `prorrata` verb group — sector declaration + per-row sector
   assignment. **SHARED with `prorrata-especial` and `prorrata-art104-tres-exclusions`.**
-- `src/aeat/core/_prorrata_register.py` — the register regime enum is per-sector already;
+- `src/cadrumo/core/_prorrata_register.py` — the register regime enum is per-sector already;
   read-mostly. **SHARED (additive) with `prorrata-art105-cinco-interrupted`.**
-- `src/aeat/core/external_constants.py` — `PRORRATA_SECTORAL_SEPARATION_SPREAD_PP`
+- `src/cadrumo/core/external_constants.py` — `PRORRATA_SECTORAL_SEPARATION_SPREAD_PP`
   already exists; read-only, no write.

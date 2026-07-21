@@ -5,11 +5,10 @@ type: adr
 tags:
   - "#adr"
   - "#schema-extraction"
-date: 2026-04-17
-modified: '2026-07-10'
+date: '2026-04-17'
+modified: '2026-07-17'
 related:
   - "[[2026-04-17-schema-extraction-research]]"
-  - "[[2026-04-12-casilla-db-adr]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
   - "[[2026-04-13-modelo-inventory-adr]]"
   - "[[2026-04-12-manual-practico-adr]]"
@@ -29,7 +28,7 @@ in the sections below (see §Audit for the resolution map).
 The filing automation, draft builder (#39), submission engine (#42),
 self-healing sync (#11), and casilla DB (#23) all currently depend on
 a hand-rolled schema shape that lives in ad-hoc per-modelo Python
-modules (`aeat.application.filing._builders._modelo_130_schema.py`) or curated
+modules (`cadrumo.application.filing._builders._modelo_130_schema.py`) or curated
 JSON files (`corpus/casillas/<modelo>/<period>.json`). Every new
 modelo or filing period needs a human transcription of the AEAT
 form; every transcription is an opportunity for drift. Issue #9 is
@@ -40,9 +39,9 @@ pydantic v2 records the rest of the codebase can trust.
 Two closed catalogues are already on `main` and constrain the
 design:
 
-- `aeat.domain.modelos` (#6) owns `ModeloCode` — 20 enum members; every
+- `cadrumo.domain.modelos` (#6) owns `ModeloCode` — 20 enum members; every
   extracted `Modelo` MUST cite one of these.
-- `aeat.domain.portals` (#7) owns `Portal` — every `ModeloCode` with a
+- `cadrumo.domain.portals` (#7) owns `Portal` — every `ModeloCode` with a
   filing procedure has a matching `FILING` portal; the extracted
   `Modelo` MUST reference it.
 
@@ -57,22 +56,22 @@ rather than the primary source.
 
 ## Decision
 
-We will implement a new public subpackage **`aeat.domain.schema`** that
+We will implement a new public subpackage **`cadrumo.domain.schema`** that
 owns the extracted modelo IR, the `Extractor` Protocol, and one
 concrete `BoeOrdenExtractor` for Modelo 130 as proof-of-concept.
 The full decision is enumerated below.
 
 ### 1. Package location and public API
 
-- **Location**: `src/aeat/domain/schema/` (the directory exists on `main`
+- **Location**: `src/cadrumo/domain/schema/` (the directory exists on `main`
   with only a smoke test; this issue owns its first real contents).
-- **Public API**: imports allowed *only* from `aeat.domain.schema` root.
+- **Public API**: imports allowed *only* from `cadrumo.domain.schema` root.
   Underscore-prefixed submodules (`_models`, `_extractor`,
   `_boe_extractor`, `_cache`) are internal and unstable.
   `__all__` gates the public surface. Enforced by a smoke test.
-- **Non-goal**: `aeat.domain.schema` is NOT a curated catalogue. It is an
+- **Non-goal**: `cadrumo.domain.schema` is NOT a curated catalogue. It is an
   extraction pipeline + typed IR. The hand-reviewed catalogue is
-  `aeat.domain.casillas` (#23).
+  `cadrumo.domain.casillas` (#23).
 
 ### 2. Typed model hierarchy (pydantic v2 strict, mandatory)
 
@@ -104,10 +103,10 @@ This is the project-wide pydantic mandate (memory:
     normalised to UTC via a field validator that rejects naive
     datetimes.
 
-- **`CasillaDataType`** — `StrEnum`. **Owned by `aeat.domain.schema`**;
-  `aeat.domain.casillas.models.CasillaDataType` is the current home but
-  will be re-exported from `aeat.domain.schema` in a follow-up (see §7).
-  For v1 the `aeat.domain.schema.CasillaDataType` is a new StrEnum with
+- **`CasillaDataType`** — `StrEnum`. **Owned by `cadrumo.domain.schema`**;
+  `cadrumo.domain.casillas.models.CasillaDataType` is the current home but
+  will be re-exported from `cadrumo.domain.schema` in a follow-up (see §7).
+  For v1 the `cadrumo.domain.schema.CasillaDataType` is a new StrEnum with
   identical members; the follow-up consolidation does the import
   flip and deletes the duplicate. Members:
   `CURRENCY_EUR`, `INTEGER`, `BOOLEAN`, `DATE`, `TEXT`, `SELECT`,
@@ -134,7 +133,7 @@ This is the project-wide pydantic mandate (memory:
   `Mapping[str, Decimal]` of casilla values. The evaluator lives
   in `_models.py` as a free function `evaluate(node, values)`.
   All four node kinds (`literal`, `ref`, `binop`, `sum`) are
-  fully implemented in v1 — no `NotImplementedError` stubs — and
+  fully implemented in v1 and
   each is directly exercised by `test_models.py`. `BinaryFormulaOp`
   division applies `Decimal` quantization with `ROUND_HALF_UP` and
   raises `SchemaEvaluationError` (a dedicated subclass of
@@ -161,7 +160,7 @@ This is the project-wide pydantic mandate (memory:
     under in the BOE annex ("Operaciones interiores —
     IVA devengado")
   - `label: Translatable` — authoritative Spanish REQUIRED
-    via `aeat.core.i18n.require_authoritative`, English and Hungarian
+    via `cadrumo.core.i18n.require_authoritative`, English and Hungarian
     MAY be empty in extracted records (reviewer / LLM fills them
     downstream).
   - `data_type: CasillaDataType`
@@ -179,15 +178,15 @@ This is the project-wide pydantic mandate (memory:
     validator on `Modelo`.
 
 - **`Modelo`**:
-  - `modelo_code: ModeloCode` (imported from `aeat.domain.modelos`)
-  - `portal: Portal | None` (imported from `aeat.domain.portals`;
+  - `modelo_code: ModeloCode` (imported from `cadrumo.domain.modelos`)
+  - `portal: Portal | None` (imported from `cadrumo.domain.portals`;
     nullable because Modelo 037 has no filing portal)
   - `period: str` — validated against `ModeloCode` cadence
     metadata (quarterly → `YYYYQ[1-4]`, annual → `YYYY`, monthly
     → `YYYY-MM`). The regex is delegated to a helper
     `validate_period_for_modelo(code, period)` that lives in
-    `aeat.domain.schema._models` and consumes cadence metadata via the
-    public `aeat.domain.modelos` API (`get_modelo(code).cadence`).
+    `cadrumo.domain.schema._models` and consumes cadence metadata via the
+    public `cadrumo.domain.modelos` API (`get_modelo(code).cadence`).
     Cadence logic MUST NOT be duplicated here — if a new regex
     is needed it is derived from the enum member, not redefined.
   - `casillas: tuple[Casilla, ...]` — non-empty.
@@ -203,7 +202,7 @@ This is the project-wide pydantic mandate (memory:
     `Modelo`.
   - Portal cross-ref: if `portal` is set, `Portal` metadata must
     carry `related_modelo == modelo_code`. Enforced via
-    `aeat.domain.portals.get_portal`.
+    `cadrumo.domain.portals.get_portal`.
 
 ### 3. Extractor Protocol and concrete backend
 
@@ -238,11 +237,8 @@ This is the project-wide pydantic mandate (memory:
   - The extractor is **deliberately narrow for v1**: it covers
     the patterns needed by Modelo 130. Follow-up PRs extend the
     pattern library for 303/390.
-- **`LocalPdfFixtureExtractor`** (test-only, under
-  `src/aeat/domain/schema/testing.py`) — takes a fixture path directly
-  to keep unit tests hermetic. Unit tests in
-  `src/aeat/domain/schema/test_boe_extractor.py` run against a small,
-  redistributable PDF fixture checked into
+- The real `BoeOrdenExtractor` is exercised directly against a small,
+  redistributable PDF source checked into
   `tests/fixtures/schema/modelo_130_boe_a_2023_15412_annex.pdf`
   — extracted from the public BOE PDF and trimmed to the annex
   pages (BOE content is in the public domain per Ley 37/2007
@@ -261,11 +257,11 @@ This is the project-wide pydantic mandate (memory:
   with sorted keys (stable diff). Re-loadable with
   `Modelo.model_validate_json`.
 - Manifest sidecar `<file>.manifest.json` records
-  `SchemaProvenance` only — mirrors the `aeat.domain.manuals`
+  `SchemaProvenance` only — mirrors the `cadrumo.domain.manuals`
   pattern exactly.
 - The cache root is configurable via **new settings** (§5).
 
-### 5. Settings additions (`src/aeat/config.py`)
+### 5. Settings additions (`src/cadrumo/core/config.py`)
 
 Three new env-backed settings, added to `Settings` and mirrored in
 `env/.env.example` (enforced by `tests/test_config.py`):
@@ -280,7 +276,7 @@ Three new env-backed settings, added to `Settings` and mirrored in
     `{modelo_code: {boe_ref: url}}` that overrides the built-in
     BOE URL table (used for offline CI). The JSON-string shape is
     an intentional ergonomic compromise: env-vars are the only
-    single-shape contract the rest of `aeat.core.config.Settings`
+    single-shape contract the rest of `cadrumo.core.config.Settings`
     uses; a typed nested settings model is deferred until the
     project adopts one project-wide."
 - `aeat_schema_extraction_concurrency: int`
@@ -295,11 +291,11 @@ Three new env-backed settings, added to `Settings` and mirrored in
 ### 6. CLI and refresh workflow
 
 - New Typer subcommand group `aeat schema` authored in
-  `src/aeat/entrypoints/cli/schema.py`, registered in
-  `src/aeat/entrypoints/cli/__init__.py`. (The ADR originally proposed
-  `aeat.domain.schema._cli` as the owning module; the plan-audit round
-  moved the CLI into `aeat.entrypoints.cli.schema` to match the existing
-  `aeat.entrypoints.cli.casillas` precedent and preserve public-API discipline
+  `src/cadrumo/entrypoints/cli/schema.py`, registered in
+  `src/cadrumo/entrypoints/cli/__init__.py`. (The ADR originally proposed
+  `cadrumo.domain.schema._cli` as the owning module; the plan-audit round
+  moved the CLI into `cadrumo.entrypoints.cli.schema` to match the existing
+  `cadrumo.entrypoints.cli.casillas` precedent and preserve public-API discipline
   — see plan §7.)
 - Commands in v1:
   - `aeat schema refresh --modelo MODELO_130 --boe-ref
@@ -309,9 +305,9 @@ Three new env-backed settings, added to `Settings` and mirrored in
     BOE-A-2023-15412` — pretty-print the cached `Modelo`. The
     cache key is `(modelo_code, boe_ref)`; `--period` is a
     refresh-time input, not a show-time lookup key.
-- **Fetch helper** — `aeat.domain.schema._fetch.fetch_boe_pdf(boe_ref,
+- **Fetch helper** — `cadrumo.domain.schema._fetch.fetch_boe_pdf(boe_ref,
   origin_url, cache_dir) -> FetchedSchemaSource` mirrors the
-  `aeat.domain.manuals._fetch` pattern exactly: streams the bytes via
+  `cadrumo.domain.manuals._fetch` pattern exactly: streams the bytes via
   `httpx`, records sha256 + content length, returns a typed
   pydantic record carrying the on-disk path. `aeat schema
   refresh` composes `fetch_boe_pdf → BoeOrdenExtractor → persist`.
@@ -319,40 +315,33 @@ Three new env-backed settings, added to `Settings` and mirrored in
   `(ModeloCode, boe_ref) → AnyHttpUrl`; the
   `aeat_schema_source_urls_override` setting (§5) lets CI / tests
   short-circuit the table.
-- **Test-only PDF override** — `aeat schema refresh` accepts a
-  hidden Typer option `--_pdf-path-override` (leading underscore,
-  `hidden=True`). It is NOT exposed in `env/.env.example`, is NOT
-  read from any env var, and tests assert that
-  `Settings.env_var_names()` does not contain any name derived
-  from it.
+- Offline verification composes the real extractor with the committed BOE
+  source bytes at the application boundary. Product CLI and settings surfaces
+  carry no test-only option.
 - `aeat schema diff` is **deferred** to a follow-up issue; only
   `refresh` and `show` are in scope for v1. This is a scope
   narrowing vs. the issue body, justified by the "deliberately
   conservative first cut" clause in the issue's "Notes" section,
   and recorded here for traceability.
 
-### 7. Interaction with `aeat.domain.casillas` (#23)
+### 7. Interaction with `cadrumo.domain.casillas` (#23)
 
-- `aeat.domain.casillas.models.ModeloCode` (the local duplicate) is
+- `cadrumo.domain.casillas.models.ModeloCode` (the local duplicate) is
   flagged for removal. The follow-up PR imports
-  `aeat.domain.modelos.ModeloCode` and deletes the local StrEnum. **Not
+  `cadrumo.domain.modelos.ModeloCode` and deletes the local StrEnum. **Not
   done in this PR** to keep the blast radius contained.
-- `aeat.domain.casillas.models.FormulaReference` and
-  `ValidationRuleReference` were explicitly authored as
-  Protocol stubs pointing at #9. They are retained for v1;
-  a follow-up PR re-points them at `aeat.domain.schema.FormulaNode` /
-  `ValidationRule` by adapter. The adapter, not the model
-  replacement, is the right shape because the casilla DB is a
-  curated layer that may add reviewer-level fields the raw
-  extracted model deliberately lacks.
-- `aeat.domain.schema` MUST NOT import from `aeat.domain.casillas` (reverse
+- The curated casilla layer references the canonical
+  `cadrumo.domain.schema.FormulaNode` and `ValidationRule` contracts through an
+  explicit adapter where reviewer-level fields differ from the raw extracted
+  model. It does not declare parallel placeholder types.
+- `cadrumo.domain.schema` MUST NOT import from `cadrumo.domain.casillas` (reverse
   dependency direction only). Enforced by smoke test.
 
 ### 8. Error hierarchy
 
-`src/aeat/domain/schema/_errors.py` defines:
+`src/cadrumo/domain/schema/_errors.py` defines:
 
-- `SchemaError(AeatError)` — base.
+- `SchemaError(CadrumoError)` — base.
 - `SchemaExtractionError(SchemaError)` — extractor failures
   (PDF parse error, annex not found, unexpected table layout).
 - `SchemaCacheError(SchemaError)` — persistence / manifest
@@ -368,10 +357,9 @@ the exception message; pdfplumber exceptions are wrapped with
 
 ### 9. Testing
 
-- All new tests `@pytest.mark.unit`. **No mocks, no patches, no
-  stubs.** Real fakes only (the fixture PDF is a real AEAT
-  artefact, the `BoeOrdenExtractor` runs against a real
-  `pdfplumber.open`).
+- All new tests `@pytest.mark.unit`. They exercise the production extractor,
+  cache, evaluator, and CLI composition against real, licence-clean AEAT source
+  bytes and real filesystem behavior.
 - Coverage additions:
   - `test_models.py` — pydantic validators, formula evaluator
     happy-path for the four node kinds used by Modelo 130.
@@ -379,12 +367,11 @@ the exception message; pdfplumber exceptions are wrapped with
     committed fixture PDF; assert casilla IDs, labels,
     formulas against a golden JSON also committed in fixtures.
   - `test_cache.py` — round-trip persistence.
-  - `test_cli.py` — CLI `refresh` and `show` end-to-end with a
-    `--pdf-path` override that short-circuits the network fetch
-    (so no live dependency is introduced; the override is
-    unit-test-only and NOT exposed through `env`).
+  - `test_cli.py` — CLI `refresh` and `show` composition against the
+    committed source through the real application boundary; product CLI and
+    settings carry no testing-only control.
   - `test_smoke.py` — `__all__` completeness, package docstring
-    present, no imports of `aeat.domain.casillas`.
+    present, no imports of `cadrumo.domain.casillas`.
   - `test_config.py` — env var parity (the existing shared test
     picks up the three new fields automatically).
 
@@ -400,14 +387,15 @@ Explicitly required on every module this PR touches:
 
 - Google-style docstrings on every public symbol.
 - `from __future__ import annotations` at the top of every file.
-- `aeat.core.logging.get_logger(__name__)` for any module that emits
+- `cadrumo.core.logging.get_logger(__name__)` for any module that emits
   logs — no `print`, no raw `logging.getLogger`.
-- Domain errors inherit from `aeat.core.errors.AeatError`.
-- Trilingual labels via `aeat.core.i18n.Translatable` with Spanish
+- Domain errors inherit from `cadrumo.core.errors.CadrumoError`.
+- Trilingual labels via `cadrumo.core.i18n.Translatable` with Spanish
   authoritative (`require_authoritative(..., domain="aeat")`).
-- `@pytest.mark.unit` on every test — no `@pytest.mark.live`,
-  no mocks, no patches, no stubs.
-- Public API discipline: consumers outside `aeat.domain.schema` import
+- Tests are classified by the behavior they exercise. Offline extraction and
+  cache tests are unit-scoped; external network verification is an explicit
+  live surface and failures remain failures when enabled.
+- Public API discipline: consumers outside `cadrumo.domain.schema` import
   only from the subpackage root.
 
 ## Consequences
@@ -422,8 +410,8 @@ Explicitly required on every module this PR touches:
   merely descriptive, satisfying the existing
   `filing-formula-divergence` finding already emitted by the
   filing draft validator.
-- `aeat.domain.schema` cleanly owns the IR; `aeat.domain.casillas` cleanly
-  owns the reviewer catalogue; `aeat.domain.modelos` + `aeat.domain.portals`
+- `cadrumo.domain.schema` cleanly owns the IR; `cadrumo.domain.casillas` cleanly
+  owns the reviewer catalogue; `cadrumo.domain.modelos` + `cadrumo.domain.portals`
   own the identity enums. Each layer has one responsibility.
 
 **Negative / accepted trade-offs**
@@ -434,8 +422,8 @@ Explicitly required on every module this PR touches:
   grammar-driven — it will fail on layouts the pattern library
   does not cover. Mitigation: `SchemaExtractionError` surfaces
   the failing page number so a human can investigate in minutes.
-- Two modelo enums remain (`aeat.domain.modelos.ModeloCode` and
-  `aeat.domain.casillas.models.ModeloCode`) until the #23-side
+- Two modelo enums remain (`cadrumo.domain.modelos.ModeloCode` and
+  `cadrumo.domain.casillas.models.ModeloCode`) until the #23-side
   follow-up merges.
 
 **Deferred**
@@ -446,7 +434,7 @@ Explicitly required on every module this PR touches:
 - Strategy 3 (LLM draft) — scaffolded via
   `SchemaSource.MANUAL_LLM_DRAFT` only.
 - XSD / wire-format extractor.
-- `aeat.domain.casillas` integration (adapter PR).
+- `cadrumo.domain.casillas` integration (adapter PR).
 - Scheduling / CI for refresh.
 
 ## Audit
@@ -456,17 +444,17 @@ mandate. Checklist:
 
 - [x] Every boundary-crossing type is a pydantic v2 model
   (`strict=True, frozen=True`). ✓
-- [x] `ModeloCode` from `aeat.domain.modelos` is the authoritative
-  identity; `aeat.domain.schema.Modelo.modelo_code` types against it. ✓
-- [x] `Portal` from `aeat.domain.portals` is referenced from
-  `aeat.domain.schema.Modelo.portal`; enum invariants enforced via
+- [x] `ModeloCode` from `cadrumo.domain.modelos` is the authoritative
+  identity; `cadrumo.domain.schema.Modelo.modelo_code` types against it. ✓
+- [x] `Portal` from `cadrumo.domain.portals` is referenced from
+  `cadrumo.domain.schema.Modelo.portal`; enum invariants enforced via
   `get_portal`. ✓
 - [x] Scope matches issue #9 acceptance criteria: research doc
-  (present), ADR (this doc), `src/aeat/domain/schema/` types, one
+  (present), ADR (this doc), `src/cadrumo/domain/schema/` types, one
   working extractor (Modelo 130), settings additions,
   `.env.example` alignment, refresh workflow documented. ✓
 - [x] Deferrals explicit: `schema diff`, live probe, LLM drafts,
-  XSD, `aeat.domain.casillas` adapter. ✓
+  XSD, `cadrumo.domain.casillas` adapter. ✓
 - [x] No dependencies added beyond what is already in
   `pyproject.toml`. ✓
 - [x] Unit tests declared, live tests explicitly out of scope
@@ -484,14 +472,14 @@ persona produced ten findings. Each is resolved inline:
 | # | Severity | Resolution |
 |---|----------|-----------|
 | 1 | MINOR | §2 CasillaDataType bullet — blessed string-value round-trip recorded; `isinstance` cross-comparison forbidden. |
-| 2 | MINOR | §2 Modelo.period bullet — helper owned by `aeat.domain.schema._models`; cadence logic non-duplication rule stated. |
+| 2 | MINOR | §2 Modelo.period bullet — helper owned by `cadrumo.domain.schema._models`; cadence logic non-duplication rule stated. |
 | 3 | MINOR | §4 persistence — path nailed to `var/schema-cache/modelo_<value>/<boe_ref>.json`. |
-| 4 | MINOR | §2 FormulaNode evaluator — `NotImplementedError` branch removed; all four kinds implemented. Division-by-zero wraps `SchemaExtractionError`. |
-| 5 | MINOR | §6 — fetch helper named (`aeat.domain.schema._fetch.fetch_boe_pdf`); composition order stated. |
-| 6 | MINOR | §6 — test-only override pinned to `--_pdf-path-override` hidden flag; env-exposure forbidden. |
+| 4 | MINOR | §2 FormulaNode evaluator — all four kinds are implemented. Division-by-zero wraps `SchemaExtractionError`. |
+| 5 | MINOR | §6 — fetch helper named (`cadrumo.domain.schema._fetch.fetch_boe_pdf`); composition order stated. |
+| 6 | MINOR | §6 — offline verification uses the real application composition; no testing-only product option is allowed. |
 | 7 | NIT | §2 Casilla.source_page — required when `SchemaSource.BOE_ORDEN`; model-level validator enforces. |
 | 8 | NIT | §2 SchemaProvenance.fetched_at — typed as `pydantic.AwareDatetime`; sha256 field regex added. |
-| 9 | NIT | §11 added — Google docstrings, logging, `AeatError`, Translatable, `@pytest.mark.unit`, public API discipline restated. |
+| 9 | NIT | §11 added — Google docstrings, logging, `CadrumoError`, Translatable, `@pytest.mark.unit`, public API discipline restated. |
 | 10 | NIT | §5 — `aeat_schema_source_urls_override` JSON-string shape called out as an ergonomic compromise (a typed nested settings model is rejected for now because env vars are the single-shape contract the rest of the project uses). |
 
 Verdict post-amendment: PASS, mergeable.
@@ -502,7 +490,7 @@ Verdict post-amendment: PASS, mergeable.
   strategy trade-offs and library survey.
 - `[[2026-04-13-modelo-inventory-adr]]` — `ModeloCode` enum
   shape this ADR depends on.
-- `[[2026-04-12-casilla-db-adr]]` — the downstream curated
+- `retired architecture decision` — the downstream curated
   catalogue this extractor feeds.
-- `src/aeat/domain/manuals/_fetch.py` — the sha256-verified fetch
+- `src/cadrumo/domain/manuals/_fetch.py` — the sha256-verified fetch
   pattern this issue mirrors.

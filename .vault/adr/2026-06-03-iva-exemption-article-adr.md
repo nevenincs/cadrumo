@@ -1,15 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#iva-exemption-article'
+  - "#adr"
+  - "#iva-exemption-article"
 date: '2026-06-03'
-modified: '2026-07-10'
 related:
   - "[[2026-06-03-iva-exemption-article-research]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
+superseded_by: '2026-07-11-article-20-uno-26-correction-adr'
+modified: '2026-07-17'
 ---
-
-# `iva-exemption-article` adr: `IvaExemptionArticle discriminator on Transaction` | (**status:** `accepted`)
+# `iva-exemption-article` adr: `IvaExemptionArticle discriminator on Transaction` | (**status:** `superseded`)
 
 ## Problem Statement
 
@@ -76,13 +76,13 @@ Land in one atomic explicit-path commit per the relocation-atomicity
 rule:
 
 1. New closed enum `IvaExemptionArticle` under
-   `src/aeat/domain/iva/_schema.py` next to `IvaCategory`. StrEnum
+   `src/cadrumo/domain/iva/_schema.py` next to `IvaCategory`. StrEnum
    with MVP members named above; docstring cites Ley 37/1992 art-20
    per the registry-calculation-legal-grounding rule.
 2. New optional `exemption_article: IvaExemptionArticle | None`
    field on the Transaction model. Model-validator rejects
    `exemption_article != None AND category != DOMESTIC_EXEMPT`.
-3. Classification rules in `src/aeat/domain/iva/_classification.py`
+3. Classification rules in `src/cadrumo/domain/iva/_classification.py`
    gain auto-classification heuristics for the ART_20_UNO_8 / 14 /
    26 cases that can be inferred from transaction shape. Heuristics
    that fail leave the field `None` rather than guessing.

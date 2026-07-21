@@ -1,34 +1,31 @@
-"""Prove the split install: slim wheel degrades loudly, companions restore byte-parity.
+"""Prove the mandatory three-wheel Cadrumo installation cohort.
 
-The split ships the runtime as a slim ``cadrumo`` wheel with the corpus source
-binaries excluded, plus TWO sub-cap companion distributions carrying exactly
-those binaries between them: ``cadrumo-data-manuals`` (``corpus/manuals``) and
-``cadrumo-data-official`` (``corpus/aeat_official`` + ``corpus/normatives``). Both
-contribute subtrees to the SAME ``cadrumo_data`` implicit namespace package, so the
-corpus seam resolves a binary from either portion. This lane proves both halves
-of the contract in a fresh stdlib venv:
+The command-bearing ``cadrumo`` wheel excludes large corpus source binaries,
+while two exact-version mandatory dependencies carry them:
+``cadrumo-data-manuals`` owns ``corpus/manuals`` and
+``cadrumo-data-official`` owns ``corpus/aeat_official`` plus
+``corpus/normatives``. Both contribute to the same ``cadrumo_data`` implicit
+namespace package.
 
-- **Core alone (degraded path):** the installed source catalogue and companion
-  resolver expose the missing split-owned set plus the canonical
-  ``cadrumo[corpus-sources]`` install hint, and the
-  full registry authority remains deferred until its evidence is installed.
-- **With both companions (byte-identical path):** the same venv, after
-  installing the two ``cadrumo-data-*`` wheels, resolves the binaries through the
-  corpus seam over the joined namespace, the advisory disappears, and full
-  byte-exact source verification runs clean — behaviour identical to a full
-  checkout.
+This lane builds all three wheels from one pristine source snapshot, installs
+them together into a fresh stdlib venv, proves their versions and root metadata
+form one exact cohort, and runs full byte-exact registry verification. There is
+no supported command-bearing installation without both data distributions.
 """
 
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import zipfile
 from pathlib import Path
+from typing import Final
 
+from .installed_tax_oracle import run_installed_tax_oracle
+from .python_cohort import assert_installed_cohort, load_python_cohort
 from .smoke_core import (
     _clean_product_env,
-    _executable,
     _manifest_path,
     _run,
     _venv_bin,
@@ -36,70 +33,44 @@ from .smoke_core import (
     _work_dir,
     _write_smoke_manifest,
 )
-from .smoke_pip_core import _create_pip_venv, _install_target_with_pip
+from .smoke_pip_core import _create_pip_venv
 
 _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsx", ".zip")
+_UTF_8: Final[str] = "utf-8"
 
-_ADVISORY_PROBE = """
-from importlib.resources import files
+_COHORT_PROBE = """
+from importlib.metadata import requires, version
 
-from cadrumo.core.resources import bundled_path, resolve_companion_binary
-from cadrumo.domain.calculations.registry import CORPUS_SOURCES_INSTALL_HINT, load_registry_tree
-from cadrumo.entrypoints.cli._errors import CliRefusedBoundaryError
-from cadrumo.entrypoints.cli._registry_corpus import refuse_when_corpus_companion_absent
+from cadrumo.domain.calculations.registry import bundled_authority
 
-source_root = bundled_path()
-_, catalogues = load_registry_tree(source_root.joinpath("registry", "aeat"))
-split_suffixes = (".docx", ".pdf", ".xls", ".xlsx", ".zip")
-missing = sorted({
-    source.corpus_path
-    for source in catalogues.sources.values()
-    if source.corpus_path.lower().endswith(split_suffixes)
-    and not source_root.joinpath(source.corpus_path).is_file()
-    and resolve_companion_binary(*source.corpus_path.split("/")) is None
-})
-if not missing:
-    raise SystemExit("expected split-owned corpus binaries to be absent from the slim install")
-if not files("cadrumo").joinpath("_data", "corpus", "aeat_official", "instructions").is_dir():
-    raise SystemExit("slim wheel lost its non-split official instruction surfaces")
+root_version = version("cadrumo")
+expected = {
+    f"cadrumo-data-manuals=={root_version}",
+    f"cadrumo-data-official=={root_version}",
+}
+declared = set(requires("cadrumo") or ())
+missing_requirements = expected - declared
+if missing_requirements:
+    raise SystemExit(f"root metadata lost mandatory companion pins: {sorted(missing_requirements)!r}")
+for distribution in ("cadrumo-data-manuals", "cadrumo-data-official"):
+    observed = version(distribution)
+    if observed != root_version:
+        raise SystemExit(f"{distribution} version {observed!r} != root version {root_version!r}")
 
-if CORPUS_SOURCES_INSTALL_HINT != "pip install 'cadrumo[corpus-sources]'":
-    raise SystemExit(f"unexpected companion install hint: {CORPUS_SOURCES_INSTALL_HINT!r}")
-try:
-    refuse_when_corpus_companion_absent(capability="registry verification", missing_advisories=tuple(missing))
-except CliRefusedBoundaryError as exc:
-    if exc.context.get("install") != CORPUS_SOURCES_INSTALL_HINT:
-        raise SystemExit(f"unexpected companion refusal context: {exc.context!r}") from exc
-else:
-    raise SystemExit("production companion boundary did not refuse for the missing split-owned set")
-print(f"split-degradation-ok: {len(missing)} missing; {CORPUS_SOURCES_INSTALL_HINT}")
-"""
-
-_CLEAN_PROBE = """
-import warnings
-
-from cadrumo.domain.calculations.registry import CorpusCompanionAdvisory, bundled_authority
-
-with warnings.catch_warnings(record=True) as caught:
-    warnings.simplefilter("always")
-    authority = bundled_authority()
-    authority.validate_registry()
-
-advisories = [w for w in caught if issubclass(w.category, CorpusCompanionAdvisory)]
-if advisories:
-    raise SystemExit(f"companion installed but the advisory still fired: {advisories[0].message!s}")
-print("split-companion-clean-ok")
+authority = bundled_authority()
+authority.validate_registry()
+print(f"three-wheel-cohort-ok: {root_version}")
 """
 
 
 def _head_extract(repo_root: Path, work_dir: Path) -> Path:
     """Extract a pristine ``git archive HEAD`` tree to build the lane's wheels from.
 
-    The shared factory worktree carries concurrent campaigns' uncommitted WIP
-    (including registry TOML mid-edits) that a tree-built wheel would sweep into
-    this lane's registry-validation probes, failing them for reasons outside the
-    split contract. Building from the HEAD archive keeps the proof owner-clean;
-    on a clean checkout (CI) it is identical to the tree.
+    A working tree may carry uncommitted changes (including registry TOML
+    mid-edits) that a tree-built wheel would sweep into this lane's
+    registry-validation probes, failing them for reasons outside the split
+    contract. Building from the HEAD archive keeps the proof clean of
+    uncommitted state; on a clean checkout (CI) it is identical to the tree.
     """
     archive = work_dir / "head.zip"
     extract_root = work_dir / "head"
@@ -110,8 +81,8 @@ def _head_extract(repo_root: Path, work_dir: Path) -> Path:
     return extract_root
 
 
-def _build_slim_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
-    """Build the slim ``cadrumo`` wheel and assert it sheds every corpus binary."""
+def _build_root_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
+    """Build the command-bearing wheel and assert split-owned binaries stay external."""
     wheel_dir = work_dir / "wheel"
     wheel_dir.mkdir(parents=True, exist_ok=True)
     _run([uv, "build", "--wheel", "--out-dir", str(wheel_dir)], cwd=build_root)
@@ -125,7 +96,7 @@ def _build_slim_wheel(build_root: Path, work_dir: Path, uv: str) -> Path:
             if name.startswith("cadrumo/_data/corpus/") and name.lower().endswith(_CORPUS_BINARY_SUFFIXES)
         ]
     if leaked:
-        raise SystemExit(f"slim wheel leaked {len(leaked)} corpus source binaries; first ten: {leaked[:10]!r}")
+        raise SystemExit(f"root wheel leaked {len(leaked)} corpus source binaries; first ten: {leaked[:10]!r}")
     return wheels[0]
 
 
@@ -142,7 +113,7 @@ _PYPI_FILE_CAP_BYTES = 100 * 1_000_000
 
 def _venv_cadrumo(venv: Path) -> Path:
     """Return the installed canonical Cadrumo console script."""
-    executable = "cadrumo.exe" if sys.platform == "win32" else "cadrumo"
+    executable = "aeat.exe" if sys.platform == "win32" else "aeat"
     return _venv_bin(venv) / executable
 
 
@@ -184,8 +155,27 @@ def _build_data_wheels(build_root: Path, work_dir: Path, uv: str) -> list[Path]:
     return wheels
 
 
+def _install_cohort_with_pip(work_dir: Path, wheel: Path, data_wheels: list[Path], venv_path: Path) -> None:
+    """Install the three local wheels in one pip transaction and validate dependencies."""
+    python = _venv_python(venv_path)
+    _run(
+        [
+            str(python),
+            "-m",
+            "pip",
+            "install",
+            "--disable-pip-version-check",
+            "--no-cache-dir",
+            str(wheel.resolve()),
+            *(str(data_wheel.resolve()) for data_wheel in data_wheels),
+        ],
+        cwd=work_dir,
+    )
+    _run([str(python), "-m", "pip", "check"], cwd=work_dir)
+
+
 def _assert_registry_verify_runs_clean(work_dir: Path, venv_path: Path) -> None:
-    """With the companion installed, full source verification runs clean."""
+    """With the complete cohort installed, full source verification runs clean."""
     _run(
         [str(_venv_cadrumo(venv_path)), "app", "registry", "verify"],
         cwd=work_dir,
@@ -194,7 +184,7 @@ def _assert_registry_verify_runs_clean(work_dir: Path, venv_path: Path) -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the split-install packaging smoke gate."""
+    """Run the three-wheel cohort packaging smoke gate."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--python",
@@ -202,69 +192,85 @@ def main(argv: list[str] | None = None) -> int:
         help="Expected Python major.minor for the stdlib venv.",
     )
     parser.add_argument("--work-dir", help="Empty directory for wheels, venv, and artifacts.")
+    parser.add_argument(
+        "--cohort-dir",
+        required=True,
+        type=Path,
+        help="Directory containing the prebuilt immutable Python cohort.",
+    )
     args = parser.parse_args(argv)
 
     repo_root = Path(__file__).resolve().parents[2]
-    uv = _executable("uv")
     work_dir = _work_dir(repo_root, args.work_dir, prefix="split")
-    print(f"split-install packaging smoke work dir: {work_dir}", flush=True)
+    print(f"three-wheel cohort packaging smoke work dir: {work_dir}", flush=True)
 
-    print("extracting pristine HEAD tree for owner-clean wheel builds", flush=True)
-    build_root = _head_extract(repo_root, work_dir)
+    cohort = load_python_cohort(args.cohort_dir)
+    wheel = cohort.root_wheel
+    data_wheels = list(cohort.companion_wheels)
+    print("using supplied immutable Python cohort", flush=True)
 
-    print("building slim Cadrumo wheel and both cadrumo-data-* companion wheels", flush=True)
-    wheel = _build_slim_wheel(build_root, work_dir, uv)
-    data_wheels = _build_data_wheels(build_root, work_dir, uv)
-
-    print("creating stdlib venv and installing the slim wheel ALONE", flush=True)
+    print("creating stdlib venv and installing the complete three-wheel cohort", flush=True)
     venv_path = _create_pip_venv(work_dir, args.python)
-    _install_target_with_pip(work_dir, str(wheel.resolve()), venv_path)
-
-    print("degraded path: split absence and remedy detected; full authority remains deferred", flush=True)
-    _run(
-        [str(_venv_python(venv_path)), "-c", _ADVISORY_PROBE],
+    _install_cohort_with_pip(work_dir, wheel, data_wheels, venv_path)
+    assert_installed_cohort(
+        _venv_python(venv_path),
+        cohort,
+        root_artifact=wheel,
         cwd=work_dir,
-        env=_runtime_env(work_dir, "advisory-state"),
     )
 
-    print("installing BOTH cadrumo-data-* companions into the same venv", flush=True)
-    for data_wheel in data_wheels:
-        _install_target_with_pip(work_dir, str(data_wheel.resolve()), venv_path)
-
-    print("byte-identical path: advisory gone; full source verification runs clean", flush=True)
+    print("verifying exact dependency cohort and byte-identical source authority", flush=True)
     _run(
-        [str(_venv_python(venv_path)), "-c", _CLEAN_PROBE],
+        [str(_venv_python(venv_path)), "-c", _COHORT_PROBE],
         cwd=work_dir,
-        env=_runtime_env(work_dir, "clean-import-state"),
+        env=_runtime_env(work_dir, "cohort-import-state"),
     )
     _assert_registry_verify_runs_clean(work_dir, venv_path)
+    tax_evidence = run_installed_tax_oracle(
+        _venv_cadrumo(venv_path),
+        storage_root=work_dir / "tax-oracle-state",
+        work_dir=work_dir / "outside-checkout",
+    )
+    tax_evidence_path = work_dir / "installed-tax-oracle.json"
+    tax_evidence_path.write_text(
+        json.dumps(tax_evidence.to_jsonable(), indent=2, sort_keys=True) + "\n",
+        encoding=_UTF_8,
+    )
 
     manifest = _write_smoke_manifest(
         work_dir,
-        lane="split-install",
+        lane="three-wheel-cohort",
         artifacts={
             "wheel": _manifest_path(work_dir, wheel),
             "data_wheel_manuals": _manifest_path(work_dir, data_wheels[0]),
             "data_wheel_official": _manifest_path(work_dir, data_wheels[1]),
+            "installed_tax_oracle": _manifest_path(work_dir, tax_evidence_path),
             "venv": _manifest_path(work_dir, venv_path),
         },
         checks=(
-            "pristine HEAD extract",
-            "slim wheel build sheds every corpus binary",
-            "both cadrumo-data-* companion wheels build sub-cap (< 100 MB each)",
+            "supplied immutable Python cohort",
+            "root wheel sheds split-owned corpus binaries",
+            "both cadrumo-data-* companion wheels remain sub-cap (< 100 MB each)",
             "stdlib venv creation",
-            "slim-wheel-only pip install",
-            "companion-less source catalogue exposes split absence and canonical remedy "
-            "without full authority construction",
-            "both companions pip install into one venv (joined namespace)",
-            "companion registry load is advisory-free",
-            "companion registry verify runs byte-exact clean",
+            "all three local wheels install in one pip transaction",
+            "pip dependency check",
+            "all installed origins and digests match the supplied cohort",
+            "root metadata declares both exact mandatory companion requirements",
+            "all three installed distributions share one version",
+            "joined companion namespace resolves the complete corpus",
+            "registry verify runs byte-exact clean",
+            "installed grounded Modelo 200 tax-work oracle",
         ),
-        details={"python": args.python},
+        details={
+            "cohort_version": cohort.version,
+            "python": args.python,
+            "target_casilla": tax_evidence.target_casilla,
+            "target_value": tax_evidence.target_value,
+        },
     )
 
     joined = " + ".join(str(w) for w in (wheel, *data_wheels))
-    print(f"split-install packaging smoke passed: {joined}", flush=True)
+    print(f"three-wheel cohort packaging smoke passed: {joined}", flush=True)
     print(f"packaging smoke manifest: {manifest}", flush=True)
     return 0
 

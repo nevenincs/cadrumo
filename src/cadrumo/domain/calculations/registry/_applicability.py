@@ -45,10 +45,9 @@ routes to the IS path (Modelo 200 / 202), a natural person to the IRPF
 path (Modelo 100 / 130), and an attribution entity to member
 pass-through for cuota self-assessments. IVA and payer-fact modelos are
 then decided by their own declared profile facts (IVA regime,
-withholding-payer facts, trade thresholds). This is the
-corporate-entity ADR §4 engine routing contract without treating
-pass-through income taxation as an exemption from non-income-tax
-obligations.
+withholding-payer facts, trade thresholds). The engine routing contract
+does not treat pass-through income taxation as an exemption from
+non-income-tax obligations.
 
 **Canonical applicability authority — modelo level.**
 :data:`_MODELO_APPLICABILITY_RULES` is the single canonical source for
@@ -97,6 +96,7 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from ....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core import Modelo
+from ....core.time import today_madrid
 from ...deadlines import FiscalResidency, IVARegime
 from ...deadlines.taxpayer_model import (
     EntityType,
@@ -268,7 +268,7 @@ class ModeloApplicabilityRule(BaseModel):
             entity* yields an :attr:`ApplicabilityVerdict.ATTRIBUTION_PASS_THROUGH`
             verdict rather than a plain ``NOT_APPLICABLE``: the entity
             runs no cuota of its own, the income is taxed in the
-            members' returns (corporate-entity ADR §2). An
+            members' returns. An
             informational modelo (Modelo 184) is *not* cuota-bearing —
             it stays a plain ``NOT_APPLICABLE`` for the entity types
             its ``applicable_entity_types`` excludes.
@@ -311,9 +311,9 @@ class ModeloApplicabilityRule(BaseModel):
             # An attribution entity asked about a cuota self-assessment
             # gets the honest pass-through answer, not a plain
             # exclusion: it runs no IS and no IRPF cuota — the income
-            # is attributed to and taxed in the members' returns
-            # (corporate-entity ADR §2). An informational modelo is not
-            # cuota-bearing and falls through to NOT_APPLICABLE.
+            # is attributed to and taxed in the members' returns. An
+            # informational modelo is not cuota-bearing and falls
+            # through to NOT_APPLICABLE.
             if self.cuota_bearing and profile.entity_type is EntityType.ATTRIBUTION_ENTITY:
                 return ModeloApplicability(
                     modelo=self.modelo,
@@ -417,9 +417,8 @@ _ATTRIBUTION_PASS_THROUGH_REASON = (
 """``ATTRIBUTION_PASS_THROUGH`` rationale.
 
 The honest answer to "what is my cuota" for an attribution entity: it
-files no IS and no IRPF cuota of its own (corporate-entity ADR §2).
-The substantive tax is each member's; the entity's own obligation is
-the informational Modelo 184.
+files no IS and no IRPF cuota of its own. The substantive tax is each
+member's; the entity's own obligation is the informational Modelo 184.
 """
 
 _INCOMPLETE_UNDECLARED_REASON = (
@@ -629,7 +628,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # natural person who is an IRPF contribuyente, regardless of which
     # income category they declare. It does NOT apply to a legal entity:
     # an S.L. is a contribuyente del Impuesto sobre Sociedades and files
-    # Modelo 200, never Modelo 100. Research §1.1, §1.2.
+    # Modelo 200, never Modelo 100.
     Modelo.M100: ModeloApplicabilityRule(
         modelo=Modelo.M100,
         applicable_entity_types=_NATURAL_PERSON,
@@ -714,7 +713,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # category ONLY when the activity is determined under estimación
     # objetiva. This is the regime counterpart of Modelo 130: an activity
     # in estimación directa files Modelo 130, never Modelo 131. A legal
-    # entity never files Modelo 131. Research §2.1.
+    # entity never files Modelo 131.
     Modelo.M131: ModeloApplicabilityRule(
         modelo=Modelo.M131,
         applicable_entity_types=_NATURAL_PERSON,
@@ -753,7 +752,6 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # taxpayer pays such income is a payer fact the three-axis model
     # cannot decide on its own; a profile that does not positively
     # declare it yields INCOMPLETE rather than a guessed NOT_APPLICABLE.
-    # Research §1.1.
     Modelo.M111: ModeloApplicabilityRule(
         modelo=Modelo.M111,
         applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
@@ -1137,7 +1135,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # actividad económica, a legal entity, or an attribution entity — who
     # performs operaciones intracomunitarias. Whether the taxpayer trades
     # intracommunity is a payer fact the three-axis model cannot decide
-    # alone; an undeclared fact yields INCOMPLETE. Research §3.3.
+    # alone; an undeclared fact yields INCOMPLETE.
     Modelo.M349: ModeloApplicabilityRule(
         modelo=Modelo.M349,
         applicable_entity_types=_PAYER_FACT_ENTITY_TYPES,
@@ -1200,8 +1198,8 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # legal and attribution entities do not carry the IRPF income-category
     # axis, so their gate is entity type plus IVA regime. Same
     # applicability gate as Modelo 303. (SII filers are exempt from Modelo
-    # 390; that suppression is a deferred expansion gated on the SII
-    # enrolment axis — research §3.1.)
+    # 390; that suppression is not yet modelled and would gate on the SII
+    # enrolment axis.)
     Modelo.M390: ModeloApplicabilityRule(
         modelo=Modelo.M390,
         applicable_entity_types=_IVA_OBLIGED_ENTITY_TYPES,
@@ -1255,7 +1253,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # Modelo 200 — autoliquidación anual del Impuesto sobre Sociedades.
     # Applies, in general, to every IS contribuyente — a legal entity with
     # personalidad jurídica. It does NOT apply to a natural person, who
-    # files the Renta (Modelo 100). Research §1.2.
+    # files the Renta (Modelo 100).
     Modelo.M200: ModeloApplicabilityRule(
         modelo=Modelo.M200,
         applicable_entity_types=_LEGAL_ENTITY,
@@ -1291,7 +1289,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     ),
     # Modelo 202 — pago fraccionado del Impuesto sobre Sociedades. Filed by
     # IS contribuyentes in April / October / December. A natural person
-    # never files Modelo 202. Research §1.2.
+    # never files Modelo 202.
     Modelo.M202: ModeloApplicabilityRule(
         modelo=Modelo.M202,
         applicable_entity_types=_LEGAL_ENTITY,
@@ -1328,7 +1326,7 @@ _MODELO_APPLICABILITY_RULES: dict[str, ModeloApplicabilityRule] = {
     # attribution entity; a natural person and a legal entity never
     # file it. Modelo 184 is not cuota-bearing: a non-attribution
     # entity asked about it gets a plain NOT_APPLICABLE, never a
-    # pass-through verdict. Corporate-entity ADR §2; research §1.3.
+    # pass-through verdict.
     Modelo.M184: ModeloApplicabilityRule(
         modelo=Modelo.M184,
         applicable_entity_types=_ATTRIBUTION_ENTITY,
@@ -1488,7 +1486,7 @@ def taxpayer_model_is_declared(profile: TaxpayerProfile) -> bool:
 
 
 def derive_tax_route(profile: TaxpayerProfile) -> TaxRoute:
-    """Return the tax branch ``profile`` routes to — corporate-entity ADR §4.
+    """Return the tax branch ``profile`` routes to.
 
     The routing contract: the ``entity_type`` axis selects the tax. A
     legal-entity profile routes to the Impuesto sobre Sociedades
@@ -1536,13 +1534,14 @@ def derive_modelo_applicability(
         profile: The operator's three-axis taxpayer model.
         modelo: The AEAT modelo identifier to decide.
         today: Reference date for the Beckham window check. Defaults to
-            ``date.today()`` when ``None``. Pass an explicit date in tests
-            so results are deterministic.
+            the Europe/Madrid civil date (``today_madrid()``) when ``None`` —
+            the six-year window is a Spanish-calendar boundary. Pass an explicit
+            date in tests so results are deterministic.
 
     Returns:
         The :class:`ModeloApplicability` for ``modelo`` and ``profile``.
     """
-    _today = today if today is not None else date.today()
+    _today = today if today is not None else today_madrid()
     beckham_window_active = profile.beckham_window_active(_today)
 
     # The Art. 93 impatriado route is a modelo-level switch while the

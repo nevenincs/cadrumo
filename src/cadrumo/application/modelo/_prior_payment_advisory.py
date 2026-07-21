@@ -211,11 +211,10 @@ def collect_prior_payment_minoracion_not_captured_diagnostics(
     ``Σ max(0, prior 07_q) − Σ prior 16_q``. A prior-trimestre filing that carries
     casilla 07 (a real pago fraccionado the carry deducts) but LACKS any casilla-16
     entry is "not captured" - distinct from a filing that genuinely declared
-    casilla 16 = 0. Per the ratified ADR
-    ``2026-06-13-modelo-130-pagos-fraccionados-carry`` casilla-16
-    filed-zero-vs-not-captured distinction, the carry proceeds (treating the absent
-    minoración as zero) but the gap MUST surface as a non-blocking advisory naming
-    it - the minoración is never silently dropped (``no-silent-under-declaration``).
+    casilla 16 = 0. Distinguishing filed-zero from not-captured, the carry
+    proceeds (treating the absent minoración as zero) but the gap MUST surface
+    as a non-blocking advisory naming it - the minoración is never silently
+    dropped (``no-silent-under-declaration``).
 
     The advisory fires for the SAME ejercicio's prior trimestres of a non-first
     target quarter, only when at least one prior filing carries casilla 07 but no

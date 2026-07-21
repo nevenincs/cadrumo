@@ -3,13 +3,14 @@ generated: true
 tags:
   - '#index'
   - '#mutation-harness-extension'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-25-mutation-harness-extension-adr]]'
   - '[[2026-04-25-mutation-harness-extension-plan]]'
   - '[[2026-04-25-mutation-harness-extension-research]]'
   - '[[2026-04-25-mutation-harness-extension-summary-exec]]'
+  - '[[2026-07-12-mutation-harness-extension-audit]]'
 ---
 
 # `mutation-harness-extension` feature index
@@ -20,7 +21,11 @@ Auto-generated index of all documents tagged with `#mutation-harness-extension`.
 
 ### adr
 
-- `2026-04-25-mutation-harness-extension-adr` - `mutation-harness-extension` adr: percent + brackets + scalar mutators (**status:** `accepted`)
+- `2026-04-25-mutation-harness-extension-adr` - `mutation-harness-extension` adr: percent + brackets + scalar mutators | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-12-mutation-harness-extension-audit` - `mutation-harness-extension` audit: `legacy plan supersession reconciliation`
 
 ### exec
 

@@ -3,7 +3,7 @@ tags:
   - "#exec"
   - "#error-code-registry"
 date: 2026-04-25
-modified: '2026-07-10'
+modified: '2026-07-17'
 title: "error-code-registry code review"
 related:
   - "[[2026-04-25-error-code-registry-plan]]"

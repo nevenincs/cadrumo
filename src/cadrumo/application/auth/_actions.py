@@ -1,7 +1,8 @@
-"""Application services for AEAT auth readiness.
+"""State transitions for workflow-owned authentication readiness.
 
-:func:`update_auth` rewrites the workflow state's :class:`AuthState` snapshot
-after provider configuration, authentication, or subject updates.
+:func:`update_auth` returns a new :class:`application.workflow.WorkflowState`
+whose :class:`application.workflow.AuthState` snapshot reflects provider
+configuration, authentication, or subject changes.
 """
 
 from __future__ import annotations
@@ -9,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from ...core.time import now as utc_now
-from ._models import AuthState
+from .._workflow_auth_models import AuthState
 
 if TYPE_CHECKING:
     from ..workflow import WorkflowState

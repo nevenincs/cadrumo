@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#arch-remediation-modelo-surface'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S12'
 related:
   - "[[2026-07-02-arch-remediation-modelo-surface-plan]]"

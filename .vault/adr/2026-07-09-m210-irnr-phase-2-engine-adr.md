@@ -1,18 +1,18 @@
 ---
 tags:
-  - '#adr'
-  - '#m210-irnr-phase-2-engine'
+  - "#adr"
+  - "#m210-irnr-phase-2-engine"
 date: '2026-07-09'
-modified: '2026-07-10'
 related:
   - "[[2026-06-04-m210-irnr-phase-2-engine-research]]"
   - "[[2026-05-27-m210-irnr-full-engine-adr]]"
   - "[[2026-06-30-convenio-doble-imposicion-adr]]"
   - "[[2026-05-27-m210-irnr-phase-2-engine-plan]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
+superseded_by: '2026-07-10-m210-irnr-phase-2-engine-adr'
+modified: '2026-07-17'
 ---
-
-# `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `proposed`)
+# `m210-irnr-phase-2-engine` adr: `Phase 2 registry design, grounding strategy, and slice decomposition` | (**status:** `superseded`)
 
 ## Problem Statement
 
@@ -212,16 +212,16 @@ to bless.
 
 ## Code-surface footprint
 
-- `src/aeat/_data/registry/aeat/modelos/210/revisions/2025/` (casillas,
+- `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/` (casillas,
   parameters, verification_expectations, completeness manifest; Slices A/B/C)
-- `src/aeat/_data/registry/aeat/treaties/` plus
-  `src/aeat/_data/registry/aeat/legal/irnr.toml` plus
-  `src/aeat/_data/corpus/normatives/html/` (Slice D tranches)
-- `src/aeat/core/_irnr.py` (official-code axis projection; Slice A)
-- the canonical period grammar home in `src/aeat/core/` (token `0A`; Slice B)
-- `src/aeat/domain/deadlines/` (M210 plazo windows; Slice B)
-- `src/aeat/domain/calculations/registry/_formula_runtime_irnr.py` plus
+- `src/cadrumo/_data/registry/aeat/treaties/` plus
+  `src/cadrumo/_data/registry/aeat/legal/irnr.toml` plus
+  `src/cadrumo/_data/corpus/normatives/html/` (Slice D tranches)
+- `src/cadrumo/core/_irnr.py` (official-code axis projection; Slice A)
+- the canonical period grammar home in `src/cadrumo/core/` (token `0A`; Slice B)
+- `src/cadrumo/domain/deadlines/` (M210 plazo windows; Slice B)
+- `src/cadrumo/domain/calculations/registry/_formula_runtime_irnr.py` plus
   `_validate_revision_rules.py` (code-conditional dispatch + parity gate;
   Slice A)
-- `src/aeat/application/modelo/_m210_rate.py` plus
+- `src/cadrumo/application/modelo/_m210_rate.py` plus
   `_verification_predicates.py` (grouping-validity findings; Slice B)

@@ -1,0 +1,2 @@
+@step Enroll your recovery key. The 24 words appear once on the terminal and must be retyped.
+@static aeat config recovery create

@@ -3,7 +3,7 @@ tags:
   - '#reference'
   - '#m210-irnr-phase-2-engine'
 date: '2026-07-10'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-10-m210-irnr-phase-2-engine-research]]"
 ---

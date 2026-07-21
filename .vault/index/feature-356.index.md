@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#feature-356'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-23-feature-356-adr]]'
   - '[[2026-04-23-feature-356-phase1-review-exec]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#feature-356`.
 
 ### adr
 
-- `2026-04-23-feature-356-adr` - `feature-356` adr
+- `2026-04-23-feature-356-adr` - `feature-356` adr | (**status:** `accepted`)
 
 ### exec
 

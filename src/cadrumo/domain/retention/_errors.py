@@ -8,10 +8,10 @@ one or more filed tax records are still inside their legal retention window
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class RetentionError(AeatError):
+class RetentionError(CadrumoError):
     """Base error for the tax-record retention domain."""
 
 

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#modelo-720-prior-year-baseline'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-06-02-modelo-720-prior-year-baseline-adr]]'

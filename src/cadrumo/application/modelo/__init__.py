@@ -21,8 +21,7 @@ those services, including :class:`CalculationRevisionState`,
 :class:`ModeloRecordStatus`, :class:`ModeloVerificationFindingKind`, and
 :class:`VerificationCompletenessStatus`. ``CalculationRevision``, ``WorkUnit``,
 ``CalculationRevisionAmendmentKind``, and ``ExternalEvidenceKind`` are
-NOT re-exported here; :mod:`domain.modelos` is their sole canonical source
-(import-centralization ADR ruling 5).
+NOT re-exported here; :mod:`domain.modelos` is their sole canonical source.
 
 Verification, filing, and export remain owned by their focused service modules.
 :func:`verify_modelo_revision` persists a verification
@@ -448,7 +447,6 @@ from ._selectors import (
     resolve_modelo_calculation_revision_pick,
     resolve_modelo_work_bucket,
     resolve_modelo_work_unit,
-    select_current_draft_revision,
     select_current_verified_revision,
     select_exportable_revision,
     select_modelo_calculation_revision,
@@ -521,7 +519,7 @@ from ._work_plazo import (
     ModeloWorkDeadlinePosture,
     modelo_work_deadline_posture,
 )
-from ._workflow_gate import workflow_period_for_work_unit
+from ._workflow_gate import build_revision_deadline_window_checker, workflow_period_for_work_unit
 
 __all__ = [
     "APP_FILING_SOURCE_KIND",
@@ -746,6 +744,7 @@ __all__ = [
     "build_feedback_package",
     "build_m145_communication_service_contract",
     "build_review_package",
+    "build_revision_deadline_window_checker",
     "build_work_calculate_input_bundle",
     "calculate_modelo_revision",
     "calculate_modelo_revision_from_bucket_aggregation",
@@ -882,7 +881,6 @@ __all__ = [
     "review_package_signing_public_key",
     "run_modelo_quickfile",
     "seed_iva_compensation_period_for_bucket",
-    "select_current_draft_revision",
     "select_current_verified_revision",
     "select_exportable_revision",
     "select_modelo_calculation_revision",

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#arch-remediation-modelo-surface'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L3
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'

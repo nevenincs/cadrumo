@@ -3,10 +3,10 @@ tags:
   - '#research'
   - '#cpdefix-followup-allgreen'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-30-cpdefix-calculation-allgreen-audit]]"
-  - "[[2026-07-04-counterpart-source-provider-adr]]"
+  - "[[2026-07-05-cpdefix-followup-allgreen-adr]]"
   - "[[2026-07-05-modelo-720-prior-year-baseline-plan]]"
 ---
 
@@ -45,7 +45,7 @@ The accepted counterpart-source provider ADR remains authoritative for `ledger_t
 
 Source locators:
 
-- `.vault/adr/2026-07-04-counterpart-source-provider-adr.md`: accepted provider design and promotion trigger.
+- `.vault/adr/2026-07-05-cpdefix-followup-allgreen-adr.md`: accepted provider design and promotion trigger.
 - `src/aeat/application/aggregation/_source_mesh.py`: `RESERVED_SOURCE_KINDS` still contains `ledger_transaction` and `purchase_invoice_evidence`.
 - `src/aeat/application/aggregation/_counterpart.py`: repository-free resolver remains a supplied-observation adapter.
 

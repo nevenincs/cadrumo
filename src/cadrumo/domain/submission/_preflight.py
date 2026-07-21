@@ -20,11 +20,11 @@ from __future__ import annotations
 
 from datetime import date
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
+from ...core.i18n import describe_auth_provider_operator_impact
 from ...core.logging import get_logger
 from ._errors import SubmissionPreflightError
 from ._protocols import (
-    AuthProviderDescriptionLike,
     AuthProviderProbe,
     DeadlineWindowChecker,
     ModeloDraftLike,
@@ -34,52 +34,12 @@ from ._protocols import (
 _logger = get_logger(__name__)
 
 
-# StrEnum value for ``AuthProviderKind.CERTIFICATE`` — duplicated as a
-# bare string so the domain layer does not import the application-layer
-# enum at runtime. Kept in sync with
-# :class:`cadrumo.application.auth.AuthProviderKind` by code review.
-_AUTH_KIND_CERTIFICATE = "certificate"
 _PREFLIGHT_DRAFT_STALE_LOCALE_KEY = "errors.refused.submission_preflight_draft_stale"
 _PREFLIGHT_DRAFT_NOT_APPROVED_LOCALE_KEY = "errors.refused.submission_preflight_draft_not_approved"
 _PREFLIGHT_ERROR_FINDINGS_LOCALE_KEY = "errors.refused.submission_preflight_error_findings"
 _PREFLIGHT_DEADLINE_CLOSED_LOCALE_KEY = "errors.refused.submission_preflight_deadline_closed"
 _PREFLIGHT_AUTH_DESCRIBE_FAILED_LOCALE_KEY = "errors.refused.submission_preflight_auth_describe_failed"
 _PREFLIGHT_AUTH_NOT_READY_LOCALE_KEY = "errors.refused.submission_preflight_auth_not_ready"
-
-
-def _describe_provider_operator_impact(description: AuthProviderDescriptionLike) -> str:
-    """Return the operator-impact summary for ``description``.
-
-    Mirror of
-    :func:`cadrumo.application.auth.describe_provider_operator_impact`.
-    Duplicated here because the layered-import contract forbids
-    `cadrumo.domain.*` from depending on `cadrumo.application.*` at runtime;
-    the helper is pure string formatting against ``description``'s
-    pydantic fields, so co-locating it with the gate that consumes
-    its output keeps the domain leaf clean.
-    """
-    if not description.configured:
-        return (
-            "operator can still produce, verify, and export filings locally, but "
-            "AEAT-backed reads stay unavailable until an auth "
-            "provider is configured."
-        )
-    if not description.available:
-        return (
-            f"{description.label} is configured but not ready yet. operator can still "
-            "produce, verify, and export filings locally, but AEAT-backed reads "
-            "stay unavailable until auth is fixed."
-        )
-    if _enum_value(description.kind) == _AUTH_KIND_CERTIFICATE:
-        return (
-            "Certificate auth is ready. operator keeps the same CLI filing flow for "
-            "AEAT-backed reads, and future providers can plug into the same "
-            "commands without changing the workflow."
-        )
-    return (
-        f"{description.label} is ready. operator keeps the same CLI filing flow while "
-        "this provider plugs into the shared auth protocol."
-    )
 
 
 class Preflight:
@@ -122,6 +82,7 @@ class Preflight:
         *,
         today: date,
         skip_deadline_window: bool = False,
+        skip_auth_readiness: bool = False,
     ) -> None:
         """Run the four preflight gates against ``draft``.
 
@@ -130,11 +91,17 @@ class Preflight:
             today: Reference date for the deadline-window gate.
             skip_deadline_window: When ``True``, gate 3 (the AEAT
                 filing-window check) is skipped. Workflow callers use
-                this for local VERIFY and local FILE purposes: gates 1,
-                2, and 4 still confirm draft soundness and auth-provider
-                readiness, while the redundant AEAT submission-window
-                check remains disabled for paths that do not submit to
-                AEAT.
+                this for local VERIFY and local FILE purposes: the
+                redundant AEAT submission-window check remains disabled
+                for paths that do not submit to AEAT.
+            skip_auth_readiness: When ``True``, gate 4 (auth-provider
+                readiness) is skipped. Auth binds only live/AEAT-touching
+                purposes (pull, reconcile, a live session): the whole
+                local artefact flow — build, calculate, VERIFY, local
+                FILE, export — completes with no auth provider configured,
+                because the human uploads at the AEAT portal themselves.
+                Callers that perform an actual AEAT read/submission leave
+                the gate enabled (the default).
 
         Raises:
             SubmissionPreflightError: If any gate fails. The exception
@@ -193,9 +160,16 @@ class Preflight:
         else:
             _logger.debug("preflight gate-3 ok: deadline window is open")
 
+        if skip_auth_readiness:
+            _logger.debug(
+                "preflight gate-4 skipped: auth-provider readiness binds only "
+                "live/AEAT-touching purposes, not the local build/verify/file/export flow",
+            )
+            return
+
         try:
             description = self.auth_provider.describe()
-        except AeatError as exc:
+        except CadrumoError as exc:
             _logger.warning("preflight gate-4 fail: auth provider describe raised", exc_info=True)
             raise SubmissionPreflightError(
                 "auth provider failed to describe itself",
@@ -216,7 +190,7 @@ class Preflight:
                     "kind": _enum_value(description.kind),
                     "configured": description.configured,
                     "available": description.available,
-                    "operator_impact": _describe_provider_operator_impact(description),
+                    "operator_impact": describe_auth_provider_operator_impact(description),
                 },
             )
         _logger.debug(

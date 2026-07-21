@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#multi-bucket-test-fixture'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-06-03-bucket-sealed-archive-adr]]"
@@ -15,7 +15,7 @@ related:
 ## Problem Statement
 
 The existing `isolated_runtime_profile` test helper at
-`src/aeat/tests/secure_sql.py:124` provisions exactly one bucket
+`src/cadrumo/tests/secure_sql.py:124` provisions exactly one bucket
 with a single active session. Three operator-facing scenarios
 require two distinct buckets co-existing in the test runtime:
 
@@ -121,7 +121,7 @@ or (b) call the factory after switching active sessions.
 This ADR adopts option (2) for master-key material and option (A)
 for session-management.
 
-The new fixture lives in `src/aeat/tests/secure_sql.py`:
+The new fixture lives in `src/cadrumo/tests/secure_sql.py`:
 
 - A new frozen dataclass `MultiBucketTestRuntime` carries the
   `primary` and `secondary` `TestRuntimeProfile` records, plus the
@@ -156,7 +156,7 @@ surface) while preserving an explicit-switch escape hatch for
 tests that genuinely need to read secondary's repository
 directly.
 
-The fixture stays inside `src/aeat/tests/secure_sql.py` alongside
+The fixture stays inside `src/cadrumo/tests/secure_sql.py` alongside
 the single-bucket fixture so future migrations across both
 fixtures land in one file. A separate module would split related
 test-infra changes across two files for no gain.

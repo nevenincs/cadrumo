@@ -26,7 +26,6 @@ from ._materialisation import (
     export_to_temp_path,
     get_secret_store,
     materialise_secret,
-    override_secret_store,
 )
 
 __all__ = [
@@ -36,5 +35,4 @@ __all__ = [
     "export_to_temp_path",
     "get_secret_store",
     "materialise_secret",
-    "override_secret_store",
 ]

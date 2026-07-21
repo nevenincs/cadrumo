@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'
   - '[[2026-05-06-live-parity-oracle-backend-research]]'
@@ -64,7 +64,7 @@ ADR that explicitly authorises the host-pinning expansion.
 This ADR proposes the following concrete architecture.
 
 1. The AEAT NIF-IVA checker adapter lives under
-   `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py` and
+   `src/cadrumo/domain/calculations/registry/_aeat_nif_iva_oracle.py` and
    implements the `LiveParityOracle` Protocol declared by the live
    parity oracle backend ADR.
 2. The adapter's `oracle_id` is the stable identifier
@@ -155,7 +155,7 @@ the EU VIES direct path is left out of scope.
 ## Implementation Direction
 
 Implement the adapter under
-`src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`:
+`src/cadrumo/domain/calculations/registry/_aeat_nif_iva_oracle.py`:
 
 - One class `AeatNifIvaCheckerOracle` satisfies the
   `LiveParityOracle` Protocol.
@@ -169,7 +169,7 @@ Implement the adapter under
   adapter under environment `production` once the live driver is
   ready. The helper is not invoked at import time.
 
-Add `src/aeat/domain/calculations/registry/test_aeat_nif_iva_oracle.py`
+Add `src/cadrumo/domain/calculations/registry/test_aeat_nif_iva_oracle.py`
 with the following coverage:
 
 - The adapter satisfies the `LiveParityOracle` Protocol.

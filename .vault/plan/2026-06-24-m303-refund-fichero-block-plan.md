@@ -3,10 +3,11 @@ tags:
   - '#plan'
   - '#m303-refund-fichero-block'
 date: '2026-06-24'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-06-24-m303-refund-fichero-block-adr]]'
+  - '[[2026-07-10-m303-refund-fichero-block-research]]'
 ---
 
 # `m303-refund-fichero-block` plan

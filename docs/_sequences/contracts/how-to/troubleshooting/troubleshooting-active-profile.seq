@@ -1,0 +1,6 @@
+@step Check what the tool thinks is active.
+aeat config profile status
+@result aeat --format json config repair profile
+@expect result.dry_run == true
+@expect result.before.status == "ready"
+@expect exit_code == 0

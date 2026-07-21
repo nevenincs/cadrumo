@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/12-202-orden-hap-636-2013-v3-3-39-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/12-202-orden-hap-636-2013-v3-3-39-kb-pdf.pdf",
   "source_sha256": "90385eb1ca5692d4504b3b567aa6b63fddd2e60b0805b70fbecb044e35587d84",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

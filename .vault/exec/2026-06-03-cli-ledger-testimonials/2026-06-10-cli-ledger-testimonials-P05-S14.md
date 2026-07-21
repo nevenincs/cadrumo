@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-ledger-testimonials'
 date: '2026-06-10'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: P05.S14
 related:
   - '[[2026-06-03-cli-ledger-testimonials-plan]]'

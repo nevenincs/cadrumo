@@ -6,11 +6,10 @@ tags:
   - "#plan"
   - "#schema-extraction"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-17-schema-extraction-adr]]"
   - "[[2026-04-17-schema-extraction-research]]"
-  - "[[2026-04-12-casilla-db-adr]]"
   - "[[2026-04-13-modelo-inventory-adr]]"
 ---
 

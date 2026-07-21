@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#calendar-live-operational-hardening'
 date: '2026-06-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-05-calendar-live-operational-hardening-plan]]'
   - '[[2026-06-04-calendar-live-filing-integration-live-verification-audit]]'

@@ -1,19 +1,21 @@
 ---
 tags:
-  - '#adr'
-  - '#iva-prorrata-complexity'
+  - "#adr"
+  - "#iva-prorrata-complexity"
 date: '2026-07-07'
-modified: '2026-07-10'
 related:
-  - '[[2026-07-07-prorrata-especial-adr]]'
-  - '[[2026-07-07-prorrata-sectores-diferenciados-adr]]'
-  - '[[2026-07-07-prorrata-art104-tres-exclusions-adr]]'
-  - '[[2026-07-07-prorrata-art105-cinco-interrupted-adr]]'
-  - '[[2026-07-07-iva-prorrata-complexity-plan]]'
-  - '[[2026-07-05-cross-period-prorrata-adr]]'
-  - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'
+  - "[[2026-07-07-prorrata-especial-adr]]"
+  - "[[2026-07-07-prorrata-sectores-diferenciados-adr]]"
+  - "[[2026-07-07-prorrata-art104-tres-exclusions-adr]]"
+  - "[[2026-07-07-prorrata-art105-cinco-interrupted-adr]]"
+  - "[[2026-07-07-iva-prorrata-complexity-plan]]"
+  - "[[2026-07-05-cross-period-prorrata-adr]]"
+  - "[[2026-07-01-iva-complexity-hardening-scope-adr]]"
+  - "[[2026-07-10-iva-prorrata-complexity-research]]"
+supersedes:
+  - '2026-07-01-iva-complexity-hardening-scope-adr'
+modified: '2026-07-17'
 ---
-
 # `iva-prorrata-complexity` adr: `IVA prorrata complexity: bind the 4 deferred W06 axis decisions into one collision-clustered implementation campaign` | (**status:** `accepted`)
 
 ## Problem Statement

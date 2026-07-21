@@ -13,7 +13,7 @@ register or a stamped prior-year settlement observation for the provisional
 percentage. The definitive percentage itself comes from the full-year volume
 rollup fed to
 :func:`~domain.iva.compute_prorrata_definitiva_anual`; deriving it from a
-single quarter is a correctness defect (the silent-zero-base ADR).
+single quarter is a correctness defect (a silent zero base).
 
 The resolver reads the target :class:`ModeloRevision`'s bindings to locate the
 casillas that carry the provisional/definitive percentages, and consumes a
@@ -704,7 +704,7 @@ def _stamped_prior_year_definitiva(
             source_modelo=observation.modelo,
             source_filing_year=observation.filing_year,
             source_period=observation.period,
-        )
+        ).refused
         if refused:
             continue
         candidates.append(
@@ -746,7 +746,7 @@ def _source_period_feed_from_observations(
             source_modelo=observation.modelo,
             source_filing_year=observation.filing_year,
             source_period=observation.period,
-        )
+        ).refused
         if refused:
             missing_periods.append(period)
             continue
@@ -1082,8 +1082,7 @@ def build_prorrata_regularizacion_advisory(
 
 #: The binding provision of the +10% mandatory-especial obligation (LIVA art.
 #: 103.Dos.2, "cuando el montante total de las cuotas deducibles ... exceda en un
-#: 10 por ciento o más ... por aplicación de la regla de prorrata especial"),
-#: authored into ``legal/iva.toml`` by W02.P03.S10.
+#: 10 por ciento o más ... por aplicación de la regla de prorrata especial").
 _ESPECIAL_MANDATORY_LEGAL_REF: Final = "ley-37-1992:art-103"
 
 

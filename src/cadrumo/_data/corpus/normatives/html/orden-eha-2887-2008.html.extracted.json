@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-2887-2008.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-2887-2008.html",
   "source_sha256": "6b97fd0c646467eac203fa64d18b811d1aa71acd35f61946956e378a0dd3caf3",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

@@ -1,0 +1,2 @@
+@step Clear the saved progress of interrupted commands.
+@static aeat config repair reset-progress --yes

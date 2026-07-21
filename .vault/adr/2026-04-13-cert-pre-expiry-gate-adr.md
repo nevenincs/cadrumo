@@ -3,13 +3,13 @@ tags:
   - "#adr"
   - "#cert-pre-expiry-gate"
 date: 2026-04-13
-modified: '2026-07-10'
+modified: '2026-07-17'
 title: "Certificate Pre-Expiry Health Check + Workflow Gate"
 related:
   - "[[2026-04-13-cert-pre-expiry-gate-research]]"
   - "[[2026-04-13-cert-pre-expiry-gate-plan]]"
-  - "[[2026-04-12-cert-auth-adr]]"
   - "[[2026-04-12-workflow-engine-adr]]"
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 ---
 
 # ADR: Certificate Pre-Expiry Health Check + Workflow Gate | (**status:** `accepted`)
@@ -30,8 +30,8 @@ has a 24-month lifetime.
 ### 1 — `CertificateHealth` record
 
 Add a strict pydantic v2 `CertificateHealth` model in
-`src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/certificate.py` (colocated with the existing cert
-surface; the issue explicitly targets `aeat.adapters.outbound.aeat.auth.certificate`).
+`src/cadrumo/adapters/outbound/aeat/auth/certificate.py` (colocated with the existing cert
+surface; the issue explicitly targets `cadrumo.adapters.outbound.aeat.auth.certificate`).
 
 ```python
 class CertificateHealthSeverity(StrEnum):
@@ -54,7 +54,7 @@ class CertificateHealth(BaseModel):
     evaluated_at: datetime
 ```
 
-Exported from `aeat.adapters.outbound.aeat.auth` alongside `CertificateHealthSeverity`.
+Exported from `cadrumo.adapters.outbound.aeat.auth` alongside `CertificateHealthSeverity`.
 
 ### 2 — Severity mapping
 
@@ -93,7 +93,7 @@ genuine load failures, because those aren't "pre-expiry" situations.
 
 `CertificatePreExpiryError(CertificateError)` — raised by the workflow
 gate and CLI when severity is CRITICAL/EXPIRED and no override flag is
-passed. Inherits from the existing `CertificateError` → `AeatError`
+passed. Inherits from the existing `CertificateError` → `CadrumoError`
 chain.
 
 ### 5 — Settings + env var additions
@@ -108,7 +108,7 @@ its existing alignment scanner.
 
 ### 6 — Workflow gate
 
-In `aeat.application.workflow._engine.WorkflowEngine._stage_running_preflight`,
+In `cadrumo.application.workflow._engine.WorkflowEngine._stage_running_preflight`,
 after the existing cert `.load()` probe, compute
 `CertificateHealth` off the loaded certificate and:
 
@@ -117,7 +117,7 @@ after the existing cert `.load()` probe, compute
   live submission"). The step summary carries the severity and
   `days_until_expiry`.
 - `WARN` → proceed, emit a structured `log.warning` via
-  `aeat.core.logging.get_logger(__name__)` naming subject + days-remaining.
+  `cadrumo.core.logging.get_logger(__name__)` naming subject + days-remaining.
 - `OK` → proceed silently.
 
 **Rationale for reusing `CERT_INVALID`**: adding a new abort reason
@@ -150,7 +150,7 @@ not a crash — the doctor never aborts mid-table.
 
 ### 8 — CLI: `aeat submission submit --force-expiring-cert`
 
-Extend `aeat.entrypoints.cli.submission.submit.submit_cmd` with a
+Extend `cadrumo.entrypoints.cli.submission.submit.submit_cmd` with a
 `--force-expiring-cert` boolean flag. Before entering the engine,
 compute `CertificateHealth` from the configured bundle; if severity is
 CRITICAL/EXPIRED and the flag is not set, exit with code 2 and a red

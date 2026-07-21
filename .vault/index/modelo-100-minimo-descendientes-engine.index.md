@@ -3,10 +3,11 @@ generated: true
 tags:
   - '#index'
   - '#modelo-100-minimo-descendientes-engine'
-date: '2026-07-01'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-01-modelo-100-minimo-descendientes-engine-adr]]'
+  - '[[2026-07-10-modelo-100-minimo-descendientes-engine-research]]'
 ---
 
 # `modelo-100-minimo-descendientes-engine` feature index
@@ -17,4 +18,8 @@ Auto-generated index of all documents tagged with `#modelo-100-minimo-descendien
 
 ### adr
 
-- `2026-07-01-modelo-100-minimo-descendientes-engine-adr` - `modelo-100-minimo-descendientes-engine` adr: `Modelo 100 minimo por descendientes engine: compute 0513/0514 vs manual` | (**status:** `proposed`)
+- `2026-07-01-modelo-100-minimo-descendientes-engine-adr` - `modelo-100-minimo-descendientes-engine` adr: `Modelo 100 minimo por descendientes engine: compute 0513/0514 vs manual` | (**status:** `accepted`)
+
+### research
+
+- `2026-07-10-modelo-100-minimo-descendientes-engine-research` - modelo-100-minimo-descendientes-engine research: warning closeout research grounding

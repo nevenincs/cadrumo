@@ -1,0 +1,2 @@
+@step Restore a saved profile file under a fresh label.
+@static aeat config profile import ./bruno-real-profile.json --label bruno-restored

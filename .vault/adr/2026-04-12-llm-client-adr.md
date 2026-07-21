@@ -2,12 +2,10 @@
 tags:
   - "#adr"
   - "#llm-client"
-date: "2026-04-12"
-modified: '2026-07-10'
+date: '2026-04-12'
+modified: '2026-07-17'
 related:
   - "[[2026-04-12-llm-client-research]]"
-  - "[[2026-04-12-base-module-structure-adr]]"
-  - "[[2026-04-12-base-module-structure-reference]]"
 ---
 
 # `llm-client` adr: `async-llm-client-with-anthropic-primary` | (**status:** `accepted`)
@@ -25,24 +23,23 @@ SDK imports outside the LLM provider chokepoint.
 - The LLM package will be consumed by translation work immediately and by
   downstream extraction issues later.
 - Spanish is the authoritative language for AEAT legal and tax content.
-- The package must stay buildable before issue `#20` merges.
-- The project wants one real provider adapter now, not a sprawling matrix of
-  partially-tested SDK integrations.
-- The public surface must remain importable from `aeat.adapters.outbound.llm` only.
+- The package uses the canonical shared internationalisation contract.
+- Every provider named by the factory must have a real adapter; enum-only or
+  placeholder provider entries are prohibited.
+- The public surface must remain importable from `cadrumo.adapters.outbound.llm` only.
 
 ## Constraints
 
 - All boundary-crossing types must be strict pydantic v2 models.
 - API keys must use `SecretStr` and must never be logged or serialized in the
   public models.
-- Provider SDK imports are allowed only under `src/aeat/adapters/outbound/llm/_providers/`.
-- Settings changes must stay additive in `src/aeat/config.py`.
-- The branch must not hard-import `aeat.core.i18n` because issue `#20` is still in
-  flight.
+- Provider SDK imports are allowed only under `src/cadrumo/adapters/outbound/llm/_providers/`.
+- Settings changes must stay additive in `src/cadrumo/core/config.py`.
+- `cadrumo.core.i18n` is the sole `Language` / `Translatable` authority.
 
 ## Implementation
 
-- Create a new `src/aeat/adapters/outbound/llm/` subpackage with:
+- Create a new `src/cadrumo/adapters/outbound/llm/` subpackage with:
   - public typed exports in `__init__.py`,
   - strict pydantic request / response / cache / usage / translation models,
   - a single async-first `LLMClient.complete()` entry point,
@@ -51,16 +48,16 @@ SDK imports outside the LLM provider chokepoint.
   - an append-only `UsageRecorder`,
   - `Translator` and `BulkTranslator` built on top of `LLMClient`.
 - Use Anthropic as the primary production adapter with the official Python SDK.
-- Include a real `_FakeAdapter` for deterministic unit tests and a local
-  fallback adapter for experimental offline use.
+- Support the hosted provider adapters and the real local
+  Ollama-compatible adapter behind the same typed provider contract.
 - Keep `OPENAI` and `GEMINI` in the public provider enum and provider factory
   contract so the package surface matches the intended provider matrix, but do
   not make them the primary path for this issue.
 - Render prompts with standard-library formatting instead of Jinja2.
 - Persist cache entries under `var/llm-cache/` and usage JSONL files under
   `var/llm-usage/`.
-- Add a local compatibility shim with `TODO #20` markers for the future
-  `Language` / `Translatable` contract.
+- Use the shared `cadrumo.core.i18n` `Language` / `Translatable` contract
+  directly; no local duplicate, shim, or deferred replacement is permitted.
 
 ## Rationale
 
@@ -74,14 +71,17 @@ SDK imports outside the LLM provider chokepoint.
   and easier to audit than a more expressive templating language.
 - A single `LLMClient` chokepoint guarantees that caching, retries, cost
   estimation, and usage accounting cannot be bypassed accidentally.
+- Provider-neutral tests exercise real cache, usage, request, response, and
+  local HTTP boundary behavior. Hosted-provider verification is opt-in and
+  fails honestly when enabled; the architecture does not prescribe a
+  synthetic production adapter.
 
 ## Consequences
 
-- Anthropic becomes the default hosted dependency for v1, so live verification
-  will initially cover Anthropic only.
-- OpenAI and Gemini remain part of the public provider matrix but are not the
-  project default in this branch.
+- Anthropic is the default hosted provider. Anthropic, OpenAI, Gemini, and the
+  local Ollama-compatible provider each resolve to a real adapter; live
+  verification is provider-specific and explicit.
 - The package intentionally does not expose streaming, fine-tuning, or UI-level
   usage browsing in v1.
-- A follow-up after issue `#20` merges must replace the local compatibility shim
-  with the real `aeat.core.i18n` imports.
+- The implementation imports `cadrumo.core.i18n` directly and owns no
+  transitional internationalisation surface.

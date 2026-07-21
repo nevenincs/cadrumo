@@ -42,6 +42,7 @@ from ....domain.filing import (
     ModeloComplementaria,
     ModeloSustitutiva,
 )
+from ..storage import FILING_AMENDMENTS_NAMESPACE
 from ._filing_runtime import resolve_filing_repository_bucket_id, secure_objects_for_filing_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
@@ -51,9 +52,9 @@ type ModeloAmendment = ModeloComplementaria | ModeloSustitutiva
 
 _log = get_logger(__name__)
 
-_AMENDMENT_ENVELOPE_VERSION = 1
-# namespace string preserved across rename to avoid orphaning persisted envelopes
-_AMENDMENT_NAMESPACE = "cadrumo.domain.filing.amendments"
+_AMENDMENT_ENVELOPE_VERSION = FILING_AMENDMENTS_NAMESPACE.schema_version
+_AMENDMENT_SENSITIVITY = FILING_AMENDMENTS_NAMESPACE.sensitivity
+_AMENDMENT_NAMESPACE = FILING_AMENDMENTS_NAMESPACE.namespace
 
 
 class ModeloAmendmentRepository:
@@ -110,7 +111,6 @@ class ModeloAmendmentRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
-            SensitivityClass,
             safe_repository_id,
         )
 
@@ -118,16 +118,16 @@ class ModeloAmendmentRepository:
         record = self._objects.load(
             _AMENDMENT_NAMESPACE,
             amendment_id,
-            expected_class=SensitivityClass.AUDIT,
+            expected_class=_AMENDMENT_SENSITIVITY,
             max_supported_version=_AMENDMENT_ENVELOPE_VERSION,
         )
         if record is None:
             return None
         envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))
-        if envelope.classification is not SensitivityClass.AUDIT:
+        if envelope.classification is not _AMENDMENT_SENSITIVITY:
             raise ClassificationError(
                 f"filing amendment {amendment_id} has classification {envelope.classification}; "
-                f"consumer expected {SensitivityClass.AUDIT}",
+                f"consumer expected {_AMENDMENT_SENSITIVITY}",
             )
         if envelope.schema_version > _AMENDMENT_ENVELOPE_VERSION:
             raise EnvelopeVersionError(
@@ -142,19 +142,19 @@ class ModeloAmendmentRepository:
         The row is stored under
         :data:`adapters.persistence.storage.FILING_AMENDMENTS_NAMESPACE`.
         """
-        from ..storage import Envelope, SensitivityClass, safe_repository_id
+        from ..storage import Envelope, safe_repository_id
 
         safe_repository_id(amendment.amendment_id, context="amendment_id")
         envelope = Envelope[BaseAmendment](
             schema_version=_AMENDMENT_ENVELOPE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.AUDIT,
+            classification=_AMENDMENT_SENSITIVITY,
             payload=amendment,
         )
         self._objects.save(
             namespace=_AMENDMENT_NAMESPACE,
             object_key=amendment.amendment_id,
-            classification=SensitivityClass.AUDIT,
+            classification=_AMENDMENT_SENSITIVITY,
             schema_version=_AMENDMENT_ENVELOPE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode("utf-8"),
@@ -174,12 +174,12 @@ class ModeloAmendmentRepository:
 
     def list_amendment_ids(self) -> tuple[str, ...]:
         """Return every amendment id persisted in this repository."""
-        from ..storage import Envelope, SensitivityClass
+        from ..storage import Envelope
 
         ids: list[str] = []
         for record in self._objects.list_records(
             _AMENDMENT_NAMESPACE,
-            expected_class=SensitivityClass.AUDIT,
+            expected_class=_AMENDMENT_SENSITIVITY,
             max_supported_version=_AMENDMENT_ENVELOPE_VERSION,
         ):
             envelope = Envelope[ModeloAmendment].model_validate_json(record.payload.decode("utf-8"))

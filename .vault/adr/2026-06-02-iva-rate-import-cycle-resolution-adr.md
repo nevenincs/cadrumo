@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#iva-rate-import-cycle-resolution'
 date: '2026-06-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
+  - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-01-registry-period-code-union-cli-boundary-adr]]"
   - "[[2026-06-01-output-language-typed-constant-migration-adr]]"
   - '[[2026-06-04-iva-rate-import-cycle-resolution-research]]'
@@ -21,9 +21,10 @@ Authored via the Write tool — same bash-quoting constraint as the M303 dual-ke
 
 P05.S14 of the suite-redgreen plan. Two facts collide:
 
-1. `aeat.domain.iva._invoice_classification` builds two dict literals keyed by `IvaRate` at module-import time. Today it imports `from ..invoices._enums import IvaRate`, which bypasses the sibling-package init.
+1. `cadrumo.domain.iva._invoice_classification` builds two dict literals keyed by `IvaRate` at module-import time. Today it imports `from ..invoices._enums import IvaRate`, which bypasses the sibling-package init.
 
-2. `aeat.diagnostics.test_identity_primitive_placement::test_no_sibling_domain_enum_imports` rejects sibling-domain `_enums` imports as a structural-hygiene violation.
+2. The structural enum-import placement gate rejects sibling-domain private
+   `_enums` imports as a boundary violation.
 
 The naive fix (`from ..invoices import IvaRate`) creates a real circular init: `invoices/__init__.py` re-exports symbols whose modules import from `iva._invoice_classification` (via the recargo-equivalencia path), which would re-enter `invoices` mid-init.
 
@@ -52,7 +53,7 @@ Every existing module-level dict reference becomes a `_iva_rate_to_iva_kind()` c
 
 Semantically defensible (IvaRate IS an iva-domain concept), but two costs make it heavier than (c):
 
-- `domain.invoices` is the public surface for invoice-shaped types (already exports IvaRate via its package init). Moving the source breaks every external consumer that imports from `aeat.domain.invoices`.
+- `domain.invoices` is the public surface for invoice-shaped types (already exports IvaRate via its package init). Moving the source breaks every external consumer that imports from `cadrumo.domain.invoices`.
 - The re-export shim in `_enums` would then violate the same sibling-domain-`_enums` rule that surfaced this issue. The cycle moves rather than resolves.
 
 ## Why not Path (b) — move IvaRate to `core/iva_rate.py`
@@ -74,7 +75,7 @@ Path (b) is a future-hardening direction, not the lowest-blast-radius fix.
 ## Consequences
 
 - `_invoice_classification.py` changes: ~20 LOC (helper + call-site updates).
-- 0 external API changes. Public surface of `aeat.domain.iva` and `aeat.domain.invoices` unchanged.
+- 0 external API changes. Public surface of `cadrumo.domain.iva` and `cadrumo.domain.invoices` unchanged.
 - `test_no_sibling_domain_enum_imports` passes because the module-level import drops; the runtime import is from the package (`..invoices`), not the sibling `_enums`.
 - Future-hardening direction (Path b promotion to core) stays open and can be revisited if IvaRate consumers grow significantly.
 

@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#google-sa-impersonation'
 date: '2026-07-04'
-modified: '2026-07-04'
-related: []
+modified: '2026-07-17'
+related:
+  - '[[2026-07-10-google-sa-impersonation-research]]'
 ---
 
 # `google-sa-impersonation` adr: `Google service-account impersonation credential source` | (**status:** `accepted`)
@@ -128,7 +129,7 @@ without re-running the interactive consent flow on every machine.
 ## Implementation
 
 A new `GoogleCredentialSourceKind` `StrEnum` (`oauth_desktop`, `service_account_
-impersonation`) is added to `aeat.core` as the closed taxonomy for how
+impersonation`) is added to `cadrumo.core` as the closed taxonomy for how
 `adapters.outbound.google` may obtain a `Credentials`-shaped object, per
 `aeat-architecture-boundaries`.
 

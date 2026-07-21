@@ -39,7 +39,7 @@ from typing import IO, Any, Protocol, cast, runtime_checkable
 
 from pydantic import BaseModel, ConfigDict, Field, RootModel
 
-from .errors import AeatError
+from .errors import CadrumoError
 from .logging import get_logger
 from .redaction import redact_structured_for_cli_output
 
@@ -76,7 +76,7 @@ class EnvelopeStatus(StrEnum):
     success-envelope authority for computing it.
 
     :func:`emit_json_success` never emits :attr:`ERROR`; blocking
-    failures route through the shared :class:`~core.errors.AeatError`
+    failures route through the shared :class:`~core.errors.CadrumoError`
     boundary instead of being smuggled into stdout notices.
     """
 
@@ -123,7 +123,7 @@ class Notice(BaseModel):
             machine-queryable sub-fields without a bespoke payload model.
 
     Blocking failures are not notices; they raise an
-    :class:`~core.errors.AeatError` and emit on stderr. Command payload
+    :class:`~core.errors.CadrumoError` and emit on stderr. Command payload
     schemas should also avoid reintroducing bespoke advisory, hint, or
     warning fields inside ``result`` when a :class:`Notice` can carry the
     same non-blocking diagnostic.
@@ -152,13 +152,13 @@ def derive_status(notices: Sequence[Notice]) -> EnvelopeStatus:
     return EnvelopeStatus.SUCCESS
 
 
-class OutputSchemaError(AeatError):
+class OutputSchemaError(CadrumoError):
     """Raised when the CLI output-schema registry is misconfigured.
 
     Triggered by :func:`register_schema` when a non-schema class is
     decorated, when a command path is registered twice with different
     schemas, or when the command path is blank.  It deliberately inherits
-    :class:`core.errors.AeatError` so registry defects route through
+    :class:`core.errors.CadrumoError` so registry defects route through
     the shared CLI error boundary instead of bypassing structured output.
     """
 
@@ -349,7 +349,7 @@ def emit_json_success(
     :func:`core.redaction.redact_structured_for_cli_output` before
     :func:`emit_json_document` writes it.
 
-    This helper is stdout-only. Any raised :class:`~core.errors.AeatError`
+    This helper is stdout-only. Any raised :class:`~core.errors.CadrumoError`
     is handled by the CLI error boundary, which renders the sibling stderr
     envelope instead of returning a success document with an error-shaped
     ``result``.

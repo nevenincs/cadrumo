@@ -5,7 +5,7 @@
 # Cadrumo: turn Spanish tax records into locally verified filing artifacts
 
 [![Apache 2.0 license](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
-![Project status: alpha](https://img.shields.io/badge/status-alpha-orange)
+![Project status: beta](https://img.shields.io/badge/status-beta-yellow)
 
 Cadrumo turns local financial records into calculated, checked, and exportable artifacts for supported Spanish tax forms. It keeps the calculation path deterministic and preserves each result's sources.
 
@@ -20,7 +20,7 @@ Public publishing remains blocked while package, repository, marketplace, domain
 
 ## Understand the names
 
-- **Cadrumo** is the product. Its Python package, distribution, repository, plugin, and human command use `cadrumo`.
+- **Cadrumo** is the product. Its package, distribution, repository, and plugin use the machine identifier `cadrumo`. Its permanent command-line interface (CLI) command is `aeat`.
 - **AEAT** is Spain's tax authority. The name remains in official portals, credentials, evidence, citations, and legal terminology.
 - A **profile** isolates one taxpayer's local settings, records, and filing workspaces.
 - A **modelo** is a Spanish tax form. A **casilla** is one registered field in that form.
@@ -39,7 +39,7 @@ uv run aeat --version
 uv run aeat --help
 ```
 
-The last two commands verify the sole human command, `cadrumo`.
+The `aeat --version` command verifies that `aeat` launches the Cadrumo CLI and reports `CADRUMO` followed by the installed version. The `aeat --help` command displays the Cadrumo command tree and options.
 
 If you choose encrypted file storage, or Cadrumo falls back to it, the first command that opens local storage asks for a master-key passphrase. That passphrase unlocks the locally encrypted records. Operating-system-backed secret stores use their own unlock flow.
 
@@ -47,9 +47,9 @@ Don't install from the Python Package Index or a public plugin marketplace yet. 
 
 ## Complete one local filing path
 
-The following example uses fictional data. It prepares Modelo 130 for the first quarter of 2026 and writes a local fichero-BOE: an AEAT-compatible, fixed-width filing file with the `.boe` extension.
+The following example uses fictional data to prepare Modelo 130 for the first quarter of 2026. It writes a local fichero-BOE, an AEAT-compatible, fixed-width filing file with the `.boe` extension. BOE stands for Boletín Oficial del Estado.
 
-Long commands below use PowerShell's backtick continuation. Copy the complete block, including each backtick.
+Long PowerShell commands use backticks for line continuation. Copy each complete block, including every backtick.
 
 ### 1. Create a profile
 
@@ -63,7 +63,7 @@ uv run aeat config profile create demo `
   --tax-residence-ccaa madrid
 ```
 
-The profile becomes active. The commands below store their records and filing workspace under it.
+The profile becomes active. It is the storage authority for records you create or change and for the filing workspace. Read-only commands inspect that profile without creating records. Export writes the cleartext `.boe` file to the path you choose with `--output`.
 
 ### 2. Add two classified records
 
@@ -87,7 +87,7 @@ The fictional expense claims no deductible IVA quota. Its amount and Impuesto so
 
 ### 3. Create and calculate the filing workspace
 
-The `--binding` options supply calculation inputs that do not come from these two ledger records.
+The `--binding` options supply calculation inputs that don't come from these two ledger records.
 
 ```powershell
 uv run aeat app modelo work create --modelo 130 --year 2026 --period 1T
@@ -103,7 +103,7 @@ uv run aeat app modelo work revision --modelo 130 --year 2026 --period 1T
 
 The two `modelo-130-*` bindings declare that this fictional first-quarter filing has no negative result or fractional payment carried from an earlier quarter.
 
-`irpf.previous_year_economic_activity_net_income=0` is different. It supplies the prior-year economic-activity income used to determine the low-income reduction; it is not a quarterly carry.
+`irpf.previous_year_economic_activity_net_income=0` is different. It supplies the prior-year economic-activity income used to determine the low-income reduction; it isn't a quarterly carry.
 
 ### 4. Verify the calculation revision and export
 
@@ -127,11 +127,11 @@ casilla 04  100.00  instalment amount
 casilla 19    0.00  final result
 ```
 
-The export command reports the output path, byte size, and SHA-256 digest. The `.boe` file is cleartext and remains on your computer. It is a local AEAT-compatible artifact, not official filing evidence.
+The export command reports the output path, byte size, and 256-bit Secure Hash Algorithm (SHA-256) digest. The `.boe` file is cleartext and remains on your computer. It's a local AEAT-compatible artifact, not official filing evidence.
 
 Official evidence comes from AEAT after filing. A justificante is AEAT's receipt confirming submission. A filed-declaration query shows AEAT's record of the filing.
 
-A CSV cotejo checks a document's authenticity using its Código Seguro de Verificación (CSV). Here, CSV is a security code, not a comma-separated-values file.
+A cotejo checks a document's authenticity using its Código Seguro de Verificación (CSV). Here, CSV is a security code, not a comma-separated-values file.
 
 This result demonstrates the workflow, not the correct tax treatment for your circumstances. Review the full revision and resolve every blocker before using an export.
 
@@ -165,7 +165,7 @@ Before using real data, read the [filing boundary](docs/explanation/recording-a-
 
 ## Get help or contribute
 
-The repository remains private during alpha development. If you have access, use these routes to report defects, handle security concerns, set up a workstation, and review changes:
+The repository remains private during the beta. If you have access, use these routes to report defects, handle security concerns, set up a workstation, and review changes:
 
 - [Open an issue](https://github.com/nevenincs/cadrumo/issues) for bugs and documentation problems
 - Follow [`SECURITY.md`](SECURITY.md) for vulnerability reporting
@@ -176,8 +176,8 @@ Don't publish vulnerability details in an issue. A public support channel and gu
 
 ## Status, license, and disclaimer
 
-Cadrumo is alpha software. Behavior, schemas, commands, and persisted state may change without compatibility support before 1.0.
+Cadrumo is beta software. Behavior, schemas, commands, and persisted state may change without compatibility support before 1.0.
 
-Cadrumo is available under the [Apache License 2.0](LICENSE). It is provided as-is, without warranties or guarantees.
+Cadrumo is available under the [Apache License 2.0](LICENSE). It's provided as-is, without warranties or guarantees.
 
 You are responsible for reviewing calculations, meeting deadlines, and filing through official AEAT channels. Read the [full disclaimer](docs/disclaimer.md) for the advice, affiliation, responsibility, and liability boundaries.

@@ -22,11 +22,6 @@ See Also:
     :func:`~domain.calculations.registry.calculate_registry_snapshot`
         Registry engine invoked without persistence to materialise current-year
         casilla values for staged resolvers.
-    Governing vault records
-        ``2026-05-20-calculation-source-connectivity-adr`` and
-        ``2026-06-10-calculation-engine-foundations-audit`` define the
-        source-mesh design and no-dormant-source-resolver audit that govern
-        these staging helpers.
 """
 
 from __future__ import annotations

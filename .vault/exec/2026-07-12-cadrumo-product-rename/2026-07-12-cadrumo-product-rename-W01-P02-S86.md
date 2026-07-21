@@ -33,25 +33,33 @@ related:
 
 ## Outcome
 
-The active authority chain now states one unambiguous contract: CADRUMO is the
-product display name, `aeat` is its only human CLI executable, `cadrumo` remains
-the Python and machine-identity root, `cadrumo-mcp` remains the distinct MCP
-executable, and AEAT remains the Spanish tax authority.
+The active authority chain now states one referent-aware contract: `Cadrumo` is
+used in sentence prose and `CADRUMO` in identity contexts; `aeat` is its only
+human CLI executable; `cadrumo` remains the Python and machine-identity root;
+`cadrumo-mcp` remains the distinct MCP executable; and AEAT remains the Spanish
+tax authority.
 
-The plan links the accepted executable ADR, corrects its command and casing
-claims, and records this reconciliation as `W01.P02.S86`. The promoted source
-rule, its four generated provider copies, and the immutable runtime identity
+The plan links the accepted executable ADR, restores its ratified prose/identity
+casing note, and records this reconciliation as `W01.P02.S86`. The promoted
+source rule, its four generated provider copies, and the immutable runtime identity
 contract project the same tuple. No downstream CLI implementation, locale,
 packaging, documentation, MCP, persistence, or generic Python error surface was
 changed in this Step.
 
 ## Notes
 
-The identity source and its focused test already contained uncommitted
-`cli_executable="aeat"` overlap when this Step began. That overlap matched the
-accepted executable decision and was preserved; this Step added the binding
-CADRUMO display casing and reconciled the governing records around it.
+The committed identity source and its focused test already matched the complete
+binding tuple when this Step began, including `display_name="CADRUMO"`,
+`cli_executable="aeat"`, and `mcp_executable="cadrumo-mcp"`. They therefore
+required verification rather than modification.
 
 Historical quoted commit text remains byte-faithful where it records the former
 title-case spelling. Downstream surfaces remain intentionally open for separate
 path-owned Steps and review.
+
+## Evidence correction from S87
+
+The earlier claim that the runtime authority proved the complete contextual
+casing tuple was too broad: `display_name="CADRUMO"` proved the identity-context
+value only. S87 adds the distinct consumable `prose_name="Cadrumo"` contract and
+a direct test of both values without changing the display identity.

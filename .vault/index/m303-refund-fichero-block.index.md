@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m303-refund-fichero-block'
-date: '2026-07-04'
-modified: '2026-07-04'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-24-m303-refund-fichero-block-P01-S01]]'
   - '[[2026-06-24-m303-refund-fichero-block-P01-S02]]'
@@ -19,6 +19,7 @@ related:
   - '[[2026-06-24-m303-refund-fichero-block-P03-S11]]'
   - '[[2026-06-24-m303-refund-fichero-block-adr]]'
   - '[[2026-06-24-m303-refund-fichero-block-plan]]'
+  - '[[2026-07-10-m303-refund-fichero-block-research]]'
 ---
 
 # `m303-refund-fichero-block` feature index
@@ -48,3 +49,7 @@ Auto-generated index of all documents tagged with `#m303-refund-fichero-block`.
 ### plan
 
 - `2026-06-24-m303-refund-fichero-block-plan` - `m303-refund-fichero-block` plan
+
+### research
+
+- `2026-07-10-m303-refund-fichero-block-research` - m303-refund-fichero-block research: warning closeout research grounding

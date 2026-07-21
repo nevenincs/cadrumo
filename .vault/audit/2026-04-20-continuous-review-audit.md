@@ -3,11 +3,9 @@ tags:
   - '#audit'
   - '#continuous-review'
 date: '2026-04-20'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-18-auth-protocol-adr]]'
-  - '[[2026-04-18-auth-protocol-plan]]'
-  - '[[2026-04-18-auth-protocol-review-audit]]'
 ---
 
 # `continuous-review` Code Review

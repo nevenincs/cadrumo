@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -14,27 +14,53 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from ._custody_secret import register_secret_custody_commands
 
+if TYPE_CHECKING:
+    from ....application.workflow import ProfileBucketPointer
 
-def select_profile_pointer(pointer: Any) -> None:
+
+def select_profile_pointer(pointer: ProfileBucketPointer) -> None:
     """Select and unlock ``pointer`` through the canonical profile lifecycle span."""
     from ....application.user_profile import select_profile_with_lifecycle_span
-    from ....domain.user_profile import ProfileNotFoundError
 
-    try:
-        select_profile_with_lifecycle_span(pointer.bucket_id)
-    except ProfileNotFoundError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.profile.unknown_profile",
-            context={"name": pointer.label},
-        ) from exc
+    select_profile_with_lifecycle_span(pointer.bucket_id)
+
+
+def _resolve_switch_target(
+    name: str,
+    *,
+    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
+) -> ProfileBucketPointer:
+    """Resolve a ``switch`` target from an unambiguous UUID or an exact label.
+
+    ``switch`` is the single accepted profile selector (ADR
+    ``cli-authority-verb-conformance``, Decision 3): it accepts the same
+    identifiers profile and sandbox listing return — the immutable bucket
+    UUID, or the exact operator label, including a sandbox's canonical
+    ``sandbox:<name>`` label. A bare sandbox short name is NOT implicitly
+    namespaced: it carries no ``sandbox:`` prefix, so it matches no sandbox
+    bucket and the label resolver refuses it as an unknown profile — the
+    sandbox namespace check the removed second sandbox-selection door
+    performed is preserved by requiring the canonical label. A live UUID resolves
+    directly; a tombstoned UUID falls through to the label resolver, which
+    refuses it. UUID/label ambiguity or duplicate labels refuse through the
+    injected label resolver's typed selection error.
+    """
+    from ....application.workflow import read_profile_bucket_by_id
+    from ....domain.user_profile import UserProfileStatus
+
+    trimmed = name.strip()
+    if trimmed:
+        by_id = read_profile_bucket_by_id(trimmed)
+        if by_id is not None and by_id.status is not UserProfileStatus.TOMBSTONED:
+            return by_id
+    return resolve_profile_by_label(name)
 
 
 def _register_switch_command(
     app: typer.Typer,
     *,
-    resolve_active_profile_pointer: Callable[[], Any],
-    resolve_profile_by_label: Callable[[str], Any],
-    assert_profile_record_present: Callable[..., None],
+    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
+    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
 ) -> None:
     """Register the operator profile-switch transport command."""
 
@@ -58,13 +84,7 @@ def _register_switch_command(
                     translated_message="cli.config.errors.no_active_profile",
                 )
         else:
-            pointer = resolve_profile_by_label(name)
-        assert_profile_record_present(
-            ctx,
-            profile_id=pointer.bucket_id,
-            bucket_id=pointer.bucket_id,
-            label=pointer.label,
-        )
+            pointer = _resolve_switch_target(name, resolve_profile_by_label=resolve_profile_by_label)
         select_profile_pointer(pointer)
         from .._config_payloads import ConfigSwitchResult
 
@@ -80,15 +100,13 @@ def _register_switch_command(
 def register_custody_commands(
     app: typer.Typer,
     *,
-    resolve_active_profile_pointer: Callable[[], Any],
-    resolve_profile_by_label: Callable[[str], Any],
-    assert_profile_record_present: Callable[..., None],
+    resolve_active_profile_pointer: Callable[[], ProfileBucketPointer | None],
+    resolve_profile_by_label: Callable[[str], ProfileBucketPointer],
 ) -> None:
     """Register root-level profile custody commands."""
     _register_switch_command(
         app,
         resolve_active_profile_pointer=resolve_active_profile_pointer,
         resolve_profile_by_label=resolve_profile_by_label,
-        assert_profile_record_present=assert_profile_record_present,
     )
     register_secret_custody_commands(app)

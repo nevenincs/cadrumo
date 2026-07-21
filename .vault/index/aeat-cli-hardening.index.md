@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-cli-hardening'
-date: '2026-06-15'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-08-aeat-cli-hardening-adr]]'
   - '[[2026-05-08-aeat-cli-hardening-inventory-audit]]'
@@ -20,6 +20,7 @@ related:
   - '[[2026-05-08-aeat-cli-hardening-w7-config-doctor-exec]]'
   - '[[2026-05-08-aeat-cli-hardening-w7-version-surface-exec]]'
   - '[[2026-06-04-aeat-cli-hardening-research]]'
+  - '[[2026-07-12-aeat-cli-hardening-audit]]'
 ---
 
 # `aeat-cli-hardening` feature index
@@ -30,12 +31,13 @@ Auto-generated index of all documents tagged with `#aeat-cli-hardening`.
 
 ### adr
 
-- `2026-05-08-aeat-cli-hardening-adr` - `aeat-cli-hardening` adr
+- `2026-05-08-aeat-cli-hardening-adr` - `aeat-cli-hardening` adr | (**status:** `accepted`)
 
 ### audit
 
 - `2026-05-08-aeat-cli-hardening-inventory-audit` - `aeat-cli-hardening` audit: `W1 live CLI inventory`
 - `2026-05-08-aeat-cli-hardening-review-audit` - `aeat-cli-hardening` Code Review
+- `2026-07-12-aeat-cli-hardening-audit` - `aeat-cli-hardening` audit: `legacy plan supersession reconciliation`
 
 ### exec
 

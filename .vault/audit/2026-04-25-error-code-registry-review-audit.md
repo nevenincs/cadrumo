@@ -3,13 +3,11 @@ tags:
   - '#audit'
   - '#error-code-registry'
 date: '2026-04-25'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-25-error-code-registry-plan]]'
   - '[[2026-04-25-error-code-registry-adr]]'
   - '[[2026-04-25-error-code-registry-research]]'
-  - '[[2026-04-24-aeat-cli-wireframe-reference]]'
-  - '[[2026-04-24-aeat-cli-wireframe-adr]]'
 ---
 
 # `error-code-registry` Code Review

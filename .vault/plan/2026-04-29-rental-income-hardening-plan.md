@@ -3,24 +3,24 @@ tags:
   - '#plan'
   - '#rental-income-hardening'
 date: '2026-04-29'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-29-rental-income-hardening-adr]]"
   - "[[2026-04-29-rental-income-hardening-research]]"
   - "[[2026-04-28-modelo-100-renta-full-calc-reference]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
+  - '[[2026-07-12-rental-income-hardening-audit]]'
 ---
-
 # `rental-income-hardening` rollout plan
 
 Implements the per-finca + per-contract rental register, the LIRPF
 art. 23.2 four-tier auto-resolver (post Ley 12/2023, BOE-A-2023-12203),
-the LIRPF art. 23.1.f amortización 3 % multi-year ledger with cost-
+the LIRPF art. 23.1.f amortizaciÃ³n 3 % multi-year ledger with cost-
 basis cap, the LIRPF art. 23.1 expense rollup with art. 23.1.a) cap +
-4-year carry-forward, the LIRPF art. 85 imputación 1,1 % / 2 %
+4-year carry-forward, the LIRPF art. 85 imputaciÃ³n 1,1 % / 2 %
 computation, the M100 Anexo C wiring with backwards-compat shim, and
 the `aeat rental` CLI sub-app. SQLite via the merged `aeat.adapters.persistence.storage`
-substrate (Path B per ADR §Rationale).
+substrate (Path B per ADR Â§Rationale).
 
 ## Proposed Changes
 
@@ -28,11 +28,11 @@ This plan splits delivery into seven sequential phases. Each phase is
 independently green (lint + typecheck + test + hooks) before
 proceeding; commits are conventional-form per phase. The phase
 boundary is the unit of self-review, not a delivery cadence
-identifier — the produced source code carries no wave/phase markers.
+identifier â€” the produced source code carries no wave/phase markers.
 
 ## Tasks
 
-- **Phase 1 — Storage schema**
+- **Phase 1 â€” Storage schema**
   1. Add five ORM tables in `src/aeat/adapters/persistence/storage/_orm.py`:
      `rental_fincas`, `rental_contracts`, `rental_income_records`,
      `rental_expenses`, `rental_amortization_ledger`. Encrypted
@@ -42,7 +42,7 @@ identifier — the produced source code carries no wave/phase markers.
      unique constraints; down drops in reverse order.
   3. Verify `_test_migrations.py` round-trip still passes.
 
-- **Phase 2 — Public records + repositories + errors**
+- **Phase 2 â€” Public records + repositories + errors**
   1. Create `src/aeat/domain/rental/__init__.py` public surface.
   2. Create `src/aeat/domain/rental/_enums.py` with `UseType`,
      `ExpenseCategory`, `ReduccionTier`.
@@ -56,42 +56,42 @@ identifier — the produced source code carries no wave/phase markers.
      register every subclass in
      `aeat.core.errors._registry._DECLARED_ERROR_CODES` per #398.
   5. Create `src/aeat/domain/rental/_repository.py` with five
-     `Repository[RecordT]` subclasses mapping records ↔ ORM rows.
-  6. Round-trip tests: create → upsert → list → get → delete for
+     `Repository[RecordT]` subclasses mapping records â†” ORM rows.
+  6. Round-trip tests: create â†’ upsert â†’ list â†’ get â†’ delete for
      each repository against `tmp_path` SQLite engines (no mocks).
 
-- **Phase 3 — Tier resolver**
+- **Phase 3 â€” Tier resolver**
   1. Create `src/aeat/domain/rental/_tier_resolver.py`:
      - `TierResolution` Pydantic record (frozen-strict): `tier`,
        `reduccion_pct`, `qualifying_share`, `boe_citation_id`.
      - `resolve_reduccion(contract, finca, period_year, *,
        ejercicio_amendment_year=2024) -> TierResolution`.
-     - Dispatch order: pre-amendment ejercicio → DT 38ª; pre-
-       2023-05-26 contract → DT 38ª; LAU art. 17.6 forfeit;
-       BOE priority 90 → 70 → 60 → 50.
+     - Dispatch order: pre-amendment ejercicio â†’ DT 38Âª; pre-
+       2023-05-26 contract â†’ DT 38Âª; LAU art. 17.6 forfeit;
+       BOE priority 90 â†’ 70 â†’ 60 â†’ 50.
      - Tier 70-b-1 multi-tenant: `qualifying_share =
        qualifying_co_tenant_count / tenant_count`.
   2. Tests:
-     - `2023 ejercicio + any contract → 60 % flat (pre-amendment)`.
-     - `2024 ejercicio + 2023-05-25 contract → DT 38ª (60 %)`.
+     - `2023 ejercicio + any contract â†’ 60 % flat (pre-amendment)`.
+     - `2024 ejercicio + 2023-05-25 contract â†’ DT 38Âª (60 %)`.
      - `2024 ejercicio + 2023-05-26 contract + 90-a happy path
-        (all conditions met) → 90 %`.
-     - `90-a near-miss: rebaja 5.00 % exactly → falls through (BOE
-        says "más de un 5 por ciento")`.
+        (all conditions met) â†’ 90 %`.
+     - `90-a near-miss: rebaja 5.00 % exactly â†’ falls through (BOE
+        says "mÃ¡s de un 5 por ciento")`.
      - `70-b-1 single tenant 30 yo + zona tensionada + first
-        rental → 70 % × share=1`.
-     - `70-b-1 multi tenant: 2 of 3 qualify → 70 % × share=2/3`.
-     - `70-b-1 stressed-area + tenant 36 → fall through to 60-c
+        rental â†’ 70 % Ã— share=1`.
+     - `70-b-1 multi tenant: 2 of 3 qualify â†’ 70 % Ã— share=2/3`.
+     - `70-b-1 stressed-area + tenant 36 â†’ fall through to 60-c
         if rehab applies, else 50-d`.
-     - `70-b-2 Public Admin + alquiler social → 70 %`.
-     - `70-b-2 Ley 49/2002 entity + IMV beneficiary → 70 %`.
-     - `60-c rehab finished 365 days before contract → 60 %`.
-     - `60-c rehab finished 730 days before contract → 60 % (boundary)`.
-     - `60-c rehab finished 731 days before contract → 50 %`.
+     - `70-b-2 Public Admin + alquiler social â†’ 70 %`.
+     - `70-b-2 Ley 49/2002 entity + IMV beneficiary â†’ 70 %`.
+     - `60-c rehab finished 365 days before contract â†’ 60 %`.
+     - `60-c rehab finished 730 days before contract â†’ 60 % (boundary)`.
+     - `60-c rehab finished 731 days before contract â†’ 50 %`.
      - `50-d default`.
-     - `LAU 17.6 violation → FORFEIT_LAU_17_6 (0 %)`.
+     - `LAU 17.6 violation â†’ FORFEIT_LAU_17_6 (0 %)`.
 
-- **Phase 4 — Amortización ledger + expense rollup**
+- **Phase 4 â€” AmortizaciÃ³n ledger + expense rollup**
   1. Create `src/aeat/domain/rental/_amortization_ledger.py`:
      - `AmortizationComputation` record: `period_year`, `basis`,
        `gross_amortization`, `capped_amortization`,
@@ -103,28 +103,28 @@ identifier — the produced source code carries no wave/phase markers.
        `dias_alquilados` AND the caller asked for the strict
        variant; default behaviour is to return zero (graceful).
      - `recompute_ledger(finca, contracts, incomes,
-        repository) -> tuple[AmortizationComputation, ...]` — full
+        repository) -> tuple[AmortizationComputation, ...]` â€” full
         per-finca recompute over years.
   2. Create `src/aeat/domain/rental/_expense_rollup.py`:
      - `GastosForYear` record: `total`, `por_categoria`,
-       `cap_excedido` (Decimal — financiación + reparación
+       `cap_excedido` (Decimal â€” financiaciÃ³n + reparaciÃ³n
        overflow), `carry_forward_years_remaining`.
      - `compute_gastos_for_year(finca, expenses, ingresos,
         prior_year_carry) -> GastosForYear`. Applies LIRPF
-        art. 23.1.a) cap on financiación + reparación at ingresos;
+        art. 23.1.a) cap on financiaciÃ³n + reparaciÃ³n at ingresos;
         carry-forward 4 years (so each year tracks 4 generations
         of carry).
   3. Tests:
-     - Amortización single-finca single-year + cumulative ledger.
-     - Cap reached mid-year → year-N amortización = remaining cap.
+     - AmortizaciÃ³n single-finca single-year + cumulative ledger.
+     - Cap reached mid-year â†’ year-N amortizaciÃ³n = remaining cap.
      - Multi-finca isolation.
      - Expense rollup per-category sum.
-     - `art. 23.1.a)` cap: financiación 8 000 + reparación 5 000,
-        ingresos 10 000 → cap excess 3 000 carries forward.
+     - `art. 23.1.a)` cap: financiaciÃ³n 8 000 + reparaciÃ³n 5 000,
+        ingresos 10 000 â†’ cap excess 3 000 carries forward.
      - 4-year carry-forward expiration: year-N+5 carry from year-N
         is dropped.
 
-- **Phase 5 — Anexo C aggregator + M100 wiring**
+- **Phase 5 â€” Anexo C aggregator + M100 wiring**
   1. Create `src/aeat/domain/rental/_anexo_c_aggregator.py`:
      - `AnexoCAggregates` Pydantic record: `casilla_0061`,
        `casilla_0066`, `casilla_0072`, `casilla_0078`,
@@ -132,25 +132,25 @@ identifier — the produced source code carries no wave/phase markers.
         str, FincaAttribution]` and `per_contract_tier: Mapping[
         str, TierResolution]` for audit traceability.
      - `compute_anexo_c_aggregates(period_year, store)`.
-     - Casilla 0078 attribution: `Σ_per_contract tier_pct ×
-        qualifying_share × clamp_pos(per_contract_rendimiento_neto)`.
+     - Casilla 0078 attribution: `Î£_per_contract tier_pct Ã—
+        qualifying_share Ã— clamp_pos(per_contract_rendimiento_neto)`.
   2. Create `src/aeat/domain/rental/anexo_c_provider.py`:
      - `compute_or_passthrough(period_year, provided_casillas,
-        store=None)` — empty / unconfigured store passes through.
+        store=None)` â€” empty / unconfigured store passes through.
   3. Tests:
-     - Empty store + caller-supplied aggregates → passthrough.
-     - Populated store → derived 0061/0066/0072/0078/0085 +
+     - Empty store + caller-supplied aggregates â†’ passthrough.
+     - Populated store â†’ derived 0061/0066/0072/0078/0085 +
        attribution.
-     - Tier 70-b-1 multi-contract: per-contract reducción attributes
-        proportionally; 0078 sum = Σ per-contract reducción amounts.
+     - Tier 70-b-1 multi-contract: per-contract reducciÃ³n attributes
+        proportionally; 0078 sum = Î£ per-contract reducciÃ³n amounts.
      - Mixed: store has finca f1 only; supplied 0061 lists both f1
-        + f2 → derived path covers f1, supplied path contributes
+        + f2 â†’ derived path covers f1, supplied path contributes
         f2; merged 0061 = f1.derived + (supplied - f1.estimated_
         from_register). Document the merge semantics in the
         aggregator docstring; surface a discrepancy when
-        register-derived f1 ≠ supplied f1.
+        register-derived f1 â‰  supplied f1.
 
-- **Phase 6 — CLI commands**
+- **Phase 6 â€” CLI commands**
   1. Create `src/aeat/entrypoints/cli/rental/__init__.py` exposing the
      `app: typer.Typer` root.
   2. Create `src/aeat/entrypoints/cli/rental/finca.py`, `contract.py`,
@@ -170,21 +170,21 @@ identifier — the produced source code carries no wave/phase markers.
      - Trilingual ES + EN explicit on `--help` and on error
         messages.
 
-- **Phase 7 — Documentation**
+- **Phase 7 â€” Documentation**
   1. Author `docs/concepts/rental-income.md` covering tier
-     auto-resolver, BOE primary sources, the amortización ledger
+     auto-resolver, BOE primary sources, the amortizaciÃ³n ledger
      cap, the procedural cap, the LAU 17.6 forfeit, and the
      backwards-compat shim. References every BOE consult date
      used.
   2. Append row to `docs/coverage/kent-capabilities.md`:
-     "Auto-derive rental income tier per Ley 12/2023" → ✅ via
+     "Auto-derive rental income tier per Ley 12/2023" â†’ âœ… via
      #454.
 
 ## Parallelization
 
 Phases 1-2 must land first (storage substrate). Once on main inside
 this branch, phases 3 (tier resolver) + 4 (ledger + expense rollup)
-have no source overlap and could be split across two agents — but
+have no source overlap and could be split across two agents â€” but
 since this delivery runs as a single agent end-to-end, the
 parallelization opportunity is moot. Phase 5 depends on 3 + 4. Phase
 6 depends on 5. Phase 7 depends on 5 + 6 (so the doc references the
@@ -195,73 +195,73 @@ cross-phase atomic transaction is required.
 
 ### Mission criteria
 
-- [ ] Per-finca + per-contract register persists via SQLite under
+- [x] Per-finca + per-contract register persists via SQLite under
   the merged `aeat.adapters.persistence.storage` substrate.
-- [ ] Tier auto-resolver implements the BOE priority order
-  (90 → 70 → 60 → 50) with verbatim trigger conditions and the
+- [x] Tier auto-resolver implements the BOE priority order
+  (90 â†’ 70 â†’ 60 â†’ 50) with verbatim trigger conditions and the
   `qualifying_share` split for 70-b-1.
-- [ ] Pre-amendment + DT 38ª grandfathering routes correctly.
-- [ ] LAU 17.6 forfeit yields `FORFEIT_LAU_17_6`.
-- [ ] Amortización ledger enforces per-finca cumulative cap at
+- [x] Pre-amendment + DT 38Âª grandfathering routes correctly.
+- [x] LAU 17.6 forfeit yields `FORFEIT_LAU_17_6`.
+- [x] AmortizaciÃ³n ledger enforces per-finca cumulative cap at
   `coste_adquisicion_construccion`.
-- [ ] Expense rollup applies the art. 23.1.a) cap with 4-year
+- [x] Expense rollup applies the art. 23.1.a) cap with 4-year
   carry-forward.
-- [ ] Anexo C casillas 0061/0066/0072/0078/0085 derive correctly
+- [x] Anexo C casillas 0061/0066/0072/0078/0085 derive correctly
   from the register; backwards-compat passthrough is preserved
   when the register is empty.
-- [ ] `aeat rental` CLI surface ships with all 5 command groups +
+- [x] `aeat rental` CLI surface ships with all 5 command groups +
   `--json` schemas + trilingual help.
-- [ ] Every new error subclass registers an `ErrorCode` per #398.
-- [ ] Coverage floor 60 % preserved on `src/aeat`.
-- [ ] `just lint && just typecheck && just test && just hooks` pass
+- [x] Every new error subclass registers an `ErrorCode` per #398.
+- [x] Coverage floor 60 % preserved on `src/aeat`.
+- [x] `just lint && just typecheck && just test && just hooks` pass
   on Windows.
 
 ### Self-review checklist (against ADR + research + project
 mandates)
 
-- **Pydantic v2 strict** — every record uses
-  `ConfigDict(strict=True, frozen=True, extra="forbid")`. ✅ ADR
-  Constraints §1.
-- **`AeatError` discipline** — every new exception subclasses
-  `aeat.core.errors.AeatError`; every subclass has a registry entry. ✅
-  ADR Constraints §2 + research §1.
-- **Logging via `aeat.core.logging.get_logger`** — no other logger
-  factory used. ✅ ADR Constraints §3.
-- **Public API discipline** — only `aeat.domain.rental` package root
-  exposed; underscore-prefixed modules are private. ✅ ADR
-  Implementation §Subpackage layout.
-- **Trilingual** — every Translatable surface ships ES + EN + HU;
-  tests cover ES + EN. ✅ ADR Constraints §5.
-- **No mocks** — every test uses real Pydantic instances + real
+- **Pydantic v2 strict** â€” every record uses
+  `ConfigDict(strict=True, frozen=True, extra="forbid")`. âœ… ADR
+  Constraints Â§1.
+- **`AeatError` discipline** â€” every new exception subclasses
+  `aeat.core.errors.AeatError`; every subclass has a registry entry. âœ…
+  ADR Constraints Â§2 + research Â§1.
+- **Logging via `aeat.core.logging.get_logger`** â€” no other logger
+  factory used. âœ… ADR Constraints Â§3.
+- **Public API discipline** â€” only `aeat.domain.rental` package root
+  exposed; underscore-prefixed modules are private. âœ… ADR
+  Implementation Â§Subpackage layout.
+- **Trilingual** â€” every Translatable surface ships ES + EN + HU;
+  tests cover ES + EN. âœ… ADR Constraints Â§5.
+- **No mocks** â€” every test uses real Pydantic instances + real
   Repositories + real CliRunner. Storage tests bind
-  `create_engine_from_settings` to `tmp_path` SQLite URLs. ✅ ADR
-  Constraints §6.
-- **Module-level pytest markers** —
+  `create_engine_from_settings` to `tmp_path` SQLite URLs. âœ… ADR
+  Constraints Â§6.
+- **Module-level pytest markers** â€”
   `pytestmark = [pytest.mark.unit, pytest.mark.domain_local_state]`
   on every unit test module under `aeat.domain.rental`; `pytest.mark.
-  domain_submission` on M100 wiring tests. ✅ ADR Constraints §7.
-- **No wave/phase numbering in code** — phase markers exist only
+  domain_submission` on M100 wiring tests. âœ… ADR Constraints Â§7.
+- **No wave/phase numbering in code** â€” phase markers exist only
   in this plan + commit messages, never in source code or
-  docstrings. ✅ ADR Constraints §9.
-- **No live AEAT submission surfaces** — work is local-state +
-  M100 calc only; charter #116 / #432 unaffected. ✅ ADR
-  Constraints §10.
-- **Path B (SQLite) chosen with backwards-compat shim** — empty
+  docstrings. âœ… ADR Constraints Â§9.
+- **No live AEAT submission surfaces** â€” work is local-state +
+  M100 calc only; charter #116 / #432 unaffected. âœ… ADR
+  Constraints Â§10.
+- **Path B (SQLite) chosen with backwards-compat shim** â€” empty
   register returns passthrough; this preserves Kent's existing
-  M100 flow with no migration cliff. ✅ ADR Rationale §1.
-- **CLI namespace `aeat rental`** matches issue body §1. ✅ ADR
-  Rationale §2.
-- **Tier 60 audit traceability** — distinct
-  `TIER_60_GRANDFATHERED_DT38` vs `TIER_60_REHAB`. ✅ ADR
-  Rationale §3.
-- **70-b-1 qualifying-share split** modelled at resolver. ✅ ADR
-  Rationale §4.
-- **LAU 17.6 forfeit as sentinel tier**, not exception. ✅ ADR
-  Rationale §5.
-- **BOE primary sources cited verbatim** — research §2 reproduces
-  the disposición final segunda apartado uno of Ley 12/2023; the
+  M100 flow with no migration cliff. âœ… ADR Rationale Â§1.
+- **CLI namespace `aeat rental`** matches issue body Â§1. âœ… ADR
+  Rationale Â§2.
+- **Tier 60 audit traceability** â€” distinct
+  `TIER_60_GRANDFATHERED_DT38` vs `TIER_60_REHAB`. âœ… ADR
+  Rationale Â§3.
+- **70-b-1 qualifying-share split** modelled at resolver. âœ… ADR
+  Rationale Â§4.
+- **LAU 17.6 forfeit as sentinel tier**, not exception. âœ… ADR
+  Rationale Â§5.
+- **BOE primary sources cited verbatim** â€” research Â§2 reproduces
+  the disposiciÃ³n final segunda apartado uno of Ley 12/2023; the
   resolver's `boe_citation_id` field carries the article+letter
-  identifier. ✅ research §2 + research §3 + research §5.
+  identifier. âœ… research Â§2 + research Â§3 + research Â§5.
 
 ### Beyond unit testing
 
@@ -270,7 +270,7 @@ mandates)
   branch. Boundary cases (5.00 % rebaja exact; rehab 730 vs 731
   days) are explicit. Multi-tenant share split is tested.
 
-- The amortización ledger test grid covers single-year, multi-year
+- The amortizaciÃ³n ledger test grid covers single-year, multi-year
   accumulation, cap-mid-year clamping, multi-finca isolation. The
   expense-rollup test grid covers per-category aggregation, cap
   application, carry-forward inflow / outflow / expiration.
@@ -300,7 +300,7 @@ mandates)
 
 ### Honest limitations
 
-- The CLI surface is exercised through Typer's `CliRunner` —
+- The CLI surface is exercised through Typer's `CliRunner` â€”
   there is no manual smoke step on a real terminal. Rich /
   trilingual rendering is verified by output-string assertions,
   not visually.

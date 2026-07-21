@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#linkage-design-audit'
 date: '2026-05-26'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-26-linkage-design-audit-research]]"
   - "[[2026-05-15-linkage-design-audit-research]]"
@@ -127,7 +127,7 @@ because:
 ### Stage one (this wave, plan rows `P02.S09` + `P08.S37`)
 
 - `_outputs_for_hash(observations)` helper lands in
-  `aeat.domain.modelos._calculation_revision` materialising the
+  `cadrumo.domain.modelos._calculation_revision` materialising the
   canonical `{casilla_id: Decimal}` projection. Pure function,
   trivially testable, used by both the model validator and the id
   derivation.
@@ -177,7 +177,7 @@ because:
   (P08.S35) plus the validator assertion together cover both
   directions.
 - **Hexagonal direction**: change is confined to
-  `aeat.domain.modelos`; no application or adapter import edges
+  `cadrumo.domain.modelos`; no application or adapter import edges
   shift.
 - **Anti-tautology**: the helper is pure and exercised by the
   pinned SHA test; if the helper drifts, the pin fails. No
@@ -216,9 +216,9 @@ cycle of stage one running in production.
 
 `RegistryValidationError` and `RegistrySnapshotError` are raised
 across 29 production sites in
-`src/aeat/domain/calculations/registry/` each passing an ad-hoc
-`context` dict via the `AeatError` base class. Downstream
-consumers (the `aeat.core.errors._registry.resolve_error_message`
+`src/cadrumo/domain/calculations/registry/` each passing an ad-hoc
+`context` dict via the `CadrumoError` base class. Downstream
+consumers (the `cadrumo.core.errors._registry.resolve_error_message`
 template renderer, CLI JSON emit via `SchemaEnvelope`, the i18n
 translation layer that references context keys by name in locale
 files) all assume specific keys exist but no contract pins them.
@@ -274,7 +274,7 @@ Strategy R chosen over:
   anti-tautology test asserts every committed raise site routes
   through a factory (no naked `RegistryValidationError(...)`
   construction with `context=` outside the error module).
-- Locale files (`src/aeat/locales/*.yml`) keep their existing
+- Locale files (`src/cadrumo/locales/*.yml`) keep their existing
   template keys; the factories pin the kwargs that flow into the
   templates so locale renames are caught by the type checker
   rather than at user-facing render time.
@@ -290,7 +290,7 @@ Strategy R chosen over:
   output and the `error.context` dict shape — not against the
   factory's own internals.
 - **Hexagonal direction**: change confined to
-  `aeat.domain.calculations.registry._errors`; no application or
+  `cadrumo.domain.calculations.registry._errors`; no application or
   adapter import edges shift.
 
 ### Risks accepted
@@ -325,7 +325,7 @@ authority — no new architectural decision required at those rows.
 
 Today's `aeat` CLI work-lifecycle commands emit bare JSON
 payloads via `_emit(ctx, payload, lines)` (`_common.py:46`).
-The canonical contract per `aeat.core.json_contract.emit_json_success`
+The canonical contract per `cadrumo.core.json_contract.emit_json_success`
 wraps the payload in a `SchemaEnvelope` (`schema_version`,
 `command`, `result`, `warnings`). The `2026-04-25-json-output-contract`
 audit documents the gap: "newly registered emitters do not use
@@ -414,7 +414,7 @@ Strategy B chosen over:
   output bytes and the registered schema's JSON Schema — not
   against the migration's own state.
 - **Hexagonal direction**: change is confined to
-  `aeat.entrypoints.cli` (per-command emit sites) and the
+  `cadrumo.entrypoints.cli` (per-command emit sites) and the
   conformance test surface; no domain or adapter import edges
   shift.
 - **Anti-tautology**: each per-command commit's surface test
@@ -460,7 +460,7 @@ for `RepairRemediationDecision`, `RepairRemediationDecisionRepository`,
 `repair_remediation_decision_id`, and `build_repair_policy_command_surface_catalog` —
 all imported by two test files in `chore/eliminate-shims`
 (`test_runtime_migrated_repositories.py` and `test_repair_policy_coverage.py`)
-but not defined in `src/aeat/application/repair_integrity.py` on
+but not defined in `src/cadrumo/application/repair_integrity.py` on
 this branch.
 
 The live-iva-compensation-wallet campaign's exec record
@@ -481,7 +481,7 @@ production code wholesale).
 
 Adopt **Strategy Q — scaffold compatible stubs** matching the
 exec-record-documented public contract and the test surface's
-imports. The four symbols land in `src/aeat/application/repair_integrity.py`
+imports. The four symbols land in `src/cadrumo/application/repair_integrity.py`
 as additive code; the live-iva-compensation-wallet campaign's
 full implementation supersedes via standard merge resolution
 once their work lands.
@@ -551,7 +551,7 @@ Strategy Q chosen over:
   use the same `SecureObjectRepository` infrastructure the
   existing `repair_integrity.py` functions use.
 - **Hexagonal direction**: change confined to
-  `aeat.application.repair_integrity`; no application or
+  `cadrumo.application.repair_integrity`; no application or
   adapter import edges shift.
 - **No live AEAT submission**: stubs are read-only planning
   records; `mutation_authorized` is hard-typed to `False`.

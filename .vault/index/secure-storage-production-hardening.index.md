@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#secure-storage-production-hardening'
-date: '2026-06-15'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-17'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S01]]'
   - '[[2026-05-22-secure-storage-production-hardening-W01-P01-S02]]'
@@ -20,6 +20,18 @@ related:
   - '[[2026-05-22-secure-storage-production-hardening-W02-P03-S11]]'
   - '[[2026-05-22-secure-storage-production-hardening-W02-P03-S12]]'
   - '[[2026-05-22-secure-storage-production-hardening-W02-P03-S13]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W07-P13-S54]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W07-P14-S56]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W07-P14-S57]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W07-P14-S58]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S124]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S125]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S126]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S127]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S128]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S303]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S304]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S307]]'
   - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S318]]'
   - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S319]]'
   - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S320]]'
@@ -36,7 +48,55 @@ related:
   - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S331]]'
   - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S332]]'
   - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S333]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S334]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S335]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S336]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S337]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S341]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S344]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S345]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S346]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S349]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S350]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S351]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S352]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W12-P26-S360]]'
   - '[[2026-05-22-secure-storage-production-hardening-W14-P29-S402]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W20-P40-S461]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P44-S463]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P44-S464]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P44-S465]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P44-S466]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P44-S467]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P44-S468]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S469]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S470]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S471]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S472]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S473]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S474]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S475]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S476]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S477]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S478]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S479]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S480]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S481]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S482]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S483]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S484]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S485]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S486]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S487]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S488]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S489]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S490]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S491]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S492]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S493]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P45-S494]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P46-S495]]'
+  - '[[2026-05-22-secure-storage-production-hardening-W22-P46-S496]]'
   - '[[2026-05-22-secure-storage-production-hardening-architecture-adr]]'
   - '[[2026-05-22-secure-storage-production-hardening-architecture-research]]'
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
@@ -872,6 +932,7 @@ related:
   - '[[2026-06-11-secure-storage-production-hardening-W21-P43-S462]]'
   - '[[2026-06-11-secure-storage-production-hardening-w13-p28-s401-testimonial-synthesis-audit]]'
   - '[[2026-06-11-secure-storage-production-hardening-w20-p41-s454-localization-error-hierarchy-audit]]'
+  - '[[2026-07-10-secure-storage-production-hardening-audit]]'
 ---
 
 # `secure-storage-production-hardening` feature index
@@ -1271,6 +1332,7 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-06-secure-storage-production-hardening-w20-p42-s456-redaction-enrollment-audit` - S456 redaction enrollment audit
 - `2026-06-11-secure-storage-production-hardening-w13-p28-s401-testimonial-synthesis-audit` - S401 testimonial retest synthesis and final dispositions
 - `2026-06-11-secure-storage-production-hardening-w20-p41-s454-localization-error-hierarchy-audit` - S454 Filing/Modelo Localization And Error-Hierarchy Audit
+- `2026-07-10-secure-storage-production-hardening-audit` - `secure-storage-production-hardening` audit: `W22 no-deferral closure`
 
 ### exec
 
@@ -1749,6 +1811,66 @@ Auto-generated index of all documents tagged with `#secure-storage-production-ha
 - `2026-06-11-secure-storage-production-hardening-W13-P28-S401` - W13.P28.S401 testimonial synthesis
 - `2026-06-11-secure-storage-production-hardening-W20-P41-S454` - W20.P41.S454 Filing/Modelo Localization And Error Hierarchy
 - `2026-06-11-secure-storage-production-hardening-W21-P43-S462` - W21.P43.S462 CLI Startup Registration Repair
+- `2026-05-22-secure-storage-production-hardening-W07-P13-S54` - Run the secure-SQL guard and focused repaired-slice tests for the first adopted slice
+- `2026-05-22-secure-storage-production-hardening-W07-P14-S56` - Define the shared development/test database password in core settings and route database-backed storage tests through `Settings.aeat_dev_test_database_password` or `aeat.tests.secure_sql`
+- `2026-05-22-secure-storage-production-hardening-W07-P14-S57` - Add a guard that flags ad hoc secure-storage test password and ephemeral default-repository patterns
+- `2026-05-22-secure-storage-production-hardening-W07-P14-S58` - Commit the first secure-SQL isolation helper and proof tests
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S124` - Close `AFR-022` for `src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S125` - Close `AFR-023` for `src/aeat/adapters/outbound/aeat/sede/_observation_store.py` with signals `secure-object, manifest-bucket, master-key, plain-file`, target `runtime-default`, and owner `W12.P21.S86`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S126` - Close `AFR-024` for `src/aeat/adapters/outbound/aeat/sede/_parse.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S127` - Close `AFR-025` for `src/aeat/adapters/outbound/aeat/sede/_renta_web_open_safety.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S128` - Close `AFR-026` for `src/aeat/adapters/outbound/aeat/verify/__init__.py` with signals `remote-provider`, target `remote-mirror`, and owner `W12.P24.S98`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S303` - Close `AFR-201` for `src/aeat/core/observability/_errors.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S304` - Close `AFR-202` for `src/aeat/core/observability/_fingerprint.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S307` - Close `AFR-205` for `src/aeat/core/observability/_sink.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S334` - Close `AFR-232` for `src/aeat/domain/categories/_registry.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S335` - Close `AFR-233` for `src/aeat/domain/deadlines/_engine.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S336` - Close `AFR-234` for `src/aeat/domain/deadlines/_festivos.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S337` - Close `AFR-235` for `src/aeat/domain/deadlines/_recargo.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S341` - Close `AFR-239` for `src/aeat/domain/fincas/_imputacion_parameters.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S344` - Close `AFR-242` for `src/aeat/domain/iva/_catalogue.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S345` - Close `AFR-243` for `src/aeat/domain/iva/_rates.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S346` - Close `AFR-244` for `src/aeat/domain/iva/_recargo_equivalencia.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S349` - Close `AFR-247` for `src/aeat/domain/manuals/_fetch.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S350` - Close `AFR-248` for `src/aeat/domain/manuals/_loader.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S351` - Close `AFR-249` for `src/aeat/domain/manuals/_verify.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S352` - Close `AFR-250` for `src/aeat/domain/manuals/errors.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W12-P26-S360` - Close `AFR-258` for `src/aeat/domain/normatives/_loader.py` with signals `plain-file`, target `plaintext-exception`, and owner `W12.P24.S96`
+- `2026-05-22-secure-storage-production-hardening-W20-P40-S461` - Record the D1 hard replacement of config unlock with config switch and enforce the no-alias compatibility contract
+- `2026-05-22-secure-storage-production-hardening-W22-P44-S463` - Reconcile W20 custody rows with the D1 `config switch` contract
+- `2026-05-22-secure-storage-production-hardening-W22-P44-S464` - Correct stale `config unlock` claims in secure-storage rollout and review audits
+- `2026-05-22-secure-storage-production-hardening-W22-P44-S465` - Assert `config switch` is mounted and `config unlock` is absent
+- `2026-05-22-secure-storage-production-hardening-W22-P44-S466` - Verify real-entrypoint `config unlock` refusal and `config switch` activation
+- `2026-05-22-secure-storage-production-hardening-W22-P44-S467` - Audit and correct custody recovery guidance to name `config switch` only
+- `2026-05-22-secure-storage-production-hardening-W22-P44-S468` - Verify user guidance names the D1 profile-switch command
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S469` - Reconstruct or reopen evidence for W07.P13.S54 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S470` - Reconstruct or reopen evidence for W07.P14.S56 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S471` - Reconstruct or reopen evidence for W07.P14.S57 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S472` - Reconstruct or reopen evidence for W07.P14.S58 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S473` - Reconstruct or reopen evidence for W12.P26.S124 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S474` - Reconstruct or reopen evidence for W12.P26.S125 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S475` - Reconstruct or reopen evidence for W12.P26.S126 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S476` - Reconstruct or reopen evidence for W12.P26.S127 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S477` - Reconstruct or reopen evidence for W12.P26.S128 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S478` - Reconstruct or reopen evidence for W12.P26.S303 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S479` - Reconstruct or reopen evidence for W12.P26.S304 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S480` - Reconstruct or reopen evidence for W12.P26.S307 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S481` - Reconstruct or reopen evidence for W12.P26.S334 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S482` - Reconstruct or reopen evidence for W12.P26.S335 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S483` - Reconstruct or reopen evidence for W12.P26.S336 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S484` - Reconstruct or reopen evidence for W12.P26.S337 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S485` - Reconstruct or reopen evidence for W12.P26.S341 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S486` - Reconstruct or reopen evidence for W12.P26.S344 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S487` - Reconstruct or reopen evidence for W12.P26.S345 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S488` - Reconstruct or reopen evidence for W12.P26.S346 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S489` - Reconstruct or reopen evidence for W12.P26.S349 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S490` - Reconstruct or reopen evidence for W12.P26.S350 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S491` - Reconstruct or reopen evidence for W12.P26.S351 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S492` - Reconstruct or reopen evidence for W12.P26.S352 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S493` - Reconstruct or reopen evidence for W12.P26.S360 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P45-S494` - Reconstruct or reopen evidence for W20.P40.S461 before plan closure
+- `2026-05-22-secure-storage-production-hardening-W22-P46-S495` - Require zero missing execution identifiers before closing the successor plan
+- `2026-05-22-secure-storage-production-hardening-W22-P46-S496` - Publish the no-deferral closure audit after real custody and traceability gates pass
 
 ### plan
 

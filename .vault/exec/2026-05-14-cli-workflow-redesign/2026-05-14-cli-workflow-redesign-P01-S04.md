@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cli-workflow-redesign'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S04'
 related:
   - "[[2026-05-14-cli-workflow-redesign-modelo-145-reopen-plan]]"

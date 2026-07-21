@@ -16,11 +16,11 @@ from ....adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
 from ....adapters.outbound.aeat.sede import SedeFailureMode, SedeNavigationError
 from ....adapters.persistence.storage import LIVE_IVA_REMOTE_STATE_ACQUISITIONS_NAMESPACE
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....core import Period
+from ....core import AuthProviderKind, Period
 from ....core.config import Settings
 from ....core.identity import nif_check_letter
 from ....tests.secure_sql import isolated_runtime_profile, isolated_sessionless_storage_root
-from ...auth import AuthenticatedAeatSessionResult, AuthProviderKind
+from ...auth import AuthenticatedAeatSessionResult
 from .. import (
     IvaCompensationHistoryCaptureReport,
     IvaRemoteStateAcquisitionManifest,
@@ -339,7 +339,7 @@ def test_live_surface_timeout_is_typed_and_classified() -> None:
 
 
 def test_filed_history_surface_timeout_scales_with_requested_years() -> None:
-    settings = Settings(aeat_live_iva_surface_timeout_ms=180_000)
+    settings = Settings(cadrumo_live_iva_surface_timeout_ms=180_000)
 
     assert _filed_history_surface_timeout_ms(settings, year_from=2026, year_to=2026) == 180_000
     assert _filed_history_surface_timeout_ms(settings, year_from=2022, year_to=2026) == 900_000

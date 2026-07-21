@@ -116,9 +116,9 @@ def _all_m202_relation_values(
 
 
 def test_is3_first_year_cuota_resolves_unfiled_m202_relations_to_zero(tmp_path: Path) -> None:
-    """IS-3: a first-year modalidad-cuota filer (no M202 filed) resolves the M202 fold-in
+    """A first-year modalidad-cuota filer (no M202 filed) resolves the M202 fold-in
     relations to 0 instead of None, so the cuota-diferencial formula computes (no draft-build
-    crash) rather than refusing on an unsupplied relation. decision record 2026-06-19-m202-first-period."""
+    crash) rather than refusing on an unsupplied relation."""
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = CalculationObservationRepository()  # no M202 observations persisted
         values = _all_m202_relation_values(repository, first_year_cuota=True)

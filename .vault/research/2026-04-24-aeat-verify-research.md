@@ -3,9 +3,8 @@ tags:
   - '#research'
   - '#aeat-verify'
 date: '2026-04-24'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-22-ruleset-architecture-adr]]"
   - "[[2026-04-21-calc-verification-adr]]"
 ---
 

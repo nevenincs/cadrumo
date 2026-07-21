@@ -3,8 +3,7 @@
 Exposes:
 
 * The bundled-data boundary (:func:`packaged_data`, :func:`bundled_path`,
-  :func:`as_path`) inherited from the corpus-registry-packaging
-  feature.
+  :func:`as_path`) for locating packaged corpus/registry data.
 * The typed repository surface (:class:`ResourceCacheRepository`,
   :class:`ResourceRepository`) for read-only bundled resources.
 * The ``resources`` factory and :class:`ResourceRegistry`
@@ -12,8 +11,8 @@ Exposes:
 * The typed error hierarchy (:class:`ResourceLoadError` and its three
   top-level subclasses).
 
-Per the resource-management-api ADR this is the project's only
-resource-access surface. Consumer code that wants a bundled
+This is the project's only resource-access surface. Consumer code that
+wants a bundled
 resource imports ``resources`` and goes through the
 appropriate Repository attribute; tests that verify the data-
 tree shape may use :func:`bundled_path` / :func:`packaged_data` directly.

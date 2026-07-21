@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#iva-bienes-inversion-regularizacion"
 date: "2026-07-01"
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-research]]"
   - "[[2026-06-19-silent-zero-base-aggregation-adr]]"
@@ -11,7 +11,7 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
 ---
 
-# `iva-bienes-inversion-regularizacion` adr: `Multi-year capital-goods IVA deduction regularizacion (LIVA arts 107-110): profile register + annual compute + bounded first slice` | (**status:** `proposed`)
+# `iva-bienes-inversion-regularizacion` adr: `Multi-year capital-goods IVA deduction regularizacion (LIVA arts 107-110): profile register + annual compute + bounded first slice` | (**status:** `accepted`)
 
 ## Problem Statement
 

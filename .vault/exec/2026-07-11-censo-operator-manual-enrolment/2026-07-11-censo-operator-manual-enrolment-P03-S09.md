@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#censo-operator-manual-enrolment'
 date: '2026-07-11'
-modified: '2026-07-11'
+modified: '2026-07-17'
 step_id: 'S09'
 related:
   - "[[2026-07-11-censo-operator-manual-enrolment-plan]]"

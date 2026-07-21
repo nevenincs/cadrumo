@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#iva-complexity-hardening-scope'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'
   - '[[2026-06-19-silent-zero-base-aggregation-adr]]'

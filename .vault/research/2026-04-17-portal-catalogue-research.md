@@ -3,14 +3,12 @@ tags:
   - '#research'
   - '#portal-catalogue'
 date: '2026-04-17'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-13-modelo-inventory-research]]'
   - '[[2026-04-13-modelo-inventory-adr]]'
-  - '[[2026-04-12-submission-engine-adr]]'
-  - '[[2026-04-12-setup-wizard-adr]]'
-  - '[[2026-04-12-cert-auth-adr]]'
   - '[[2026-04-12-trilingual-i18n-adr]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-research]]'
 ---
 
 # portal-catalogue research: AEAT Sede Electrónica portals and form URLs

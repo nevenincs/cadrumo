@@ -1,6 +1,6 @@
 """Typed errors for the on-host corpus-search grounding surface.
 
-These are registered :class:`~core.errors.AeatError` subclasses, so a
+These are registered :class:`~core.errors.CadrumoError` subclasses, so a
 corpus-search failure that reaches the CLI boundary renders as its proper
 category envelope (a ``REFUSED`` input/dependency refusal, an ``ERROR`` base)
 rather than collapsing into the generic ``INTERNAL`` unexpected-boundary path.
@@ -16,10 +16,10 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class CorpusSearchError(AeatError):
+class CorpusSearchError(CadrumoError):
     """Base error for the corpus-search grounding surface."""
 
     def __init__(
@@ -30,7 +30,7 @@ class CorpusSearchError(AeatError):
         suggestion: str | None = None,
     ) -> None:
         super().__init__(message)
-        # Preserve the surface's always-a-dict ``context`` contract (AeatError's
+        # Preserve the surface's always-a-dict ``context`` contract (CadrumoError's
         # own base leaves it None when unset); consumers read ``.context`` as a
         # mapping.
         self.context = dict(context or {})

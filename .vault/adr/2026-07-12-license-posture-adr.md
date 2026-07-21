@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#license-posture'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-17'
 related:
   - "[[2026-07-12-license-posture-research]]"
 ---
@@ -76,7 +76,7 @@ companions' READMEs; the operator contact `hello@neve.md` published in
 follow-up: `ofxtools` gated behind the `ofx` capability extra per the
 dependency-provisioning pattern (`OFX_EXTRA` in the core optional-extras
 registry, lazy guarded import in the OFX provider, OFX-looking sources refuse
-with the `pip install aeat-cli[ofx]` hint while non-OFX detection candidates
+with the `pip install cadrumo[ofx]` hint while non-OFX detection candidates
 degrade to a probe miss; real-import-blocker degradation tests). The CORE
 dependency closure is now free of strong copyleft. Also landed: the Apache
 4(d) attribution chain now ships inside every published artifact — explicit

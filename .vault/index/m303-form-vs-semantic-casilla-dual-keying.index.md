@@ -3,10 +3,9 @@ generated: true
 tags:
   - '#index'
   - '#m303-form-vs-semantic-casilla-dual-keying'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-17'
 related:
-  - '[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]'
   - '[[2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-P01-S01]]'
   - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-P01-S02]]'
@@ -42,7 +41,6 @@ Auto-generated index of all documents tagged with `#m303-form-vs-semantic-casill
 
 ### adr
 
-- `2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr` - `m303-form-vs-semantic-casilla-dual-keying` adr: M303 form-numbered vs semantic casilla dual-keying convention | (**status:** `accepted`)
 - `2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr` - `m303-form-vs-semantic-casilla-dual-keying` adr: `M303 official Diseno box population via semantic projection (Stage 2)` | (**status:** `accepted`)
 
 ### exec

@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-06'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
 ---
@@ -78,13 +78,20 @@ Status: no action required.
 
 ## S460-002 | MEDIUM | Operator-surface contract under-declared root custody verbs
 
-The accepted operator-surface contract only declared `config unlock` while the CLI mounted first-class `config lock`, `config unlock`, `config rekey`, `config recover`, `config show-recovery`, and `config verify-recovery`. S460 now adds an explicit custody domain and mounted command-family rows for each root-level custody child.
+The current D1 operator-surface contract declares `config switch`, not the
+retired `config unlock`, alongside `config lock`, `config rekey`, `config
+recover`, `config show-recovery`, and `config verify-recovery`. S460 adds an
+explicit custody domain and mounted command-family rows for each root-level
+custody child.
 
 Status: resolved in S460.
 
-## S460-003 | LOW | Root-fallback recovery-path coverage still exercised profile switch
+## S460-003 | LOW | Root-fallback recovery-path coverage used a stale profile path
 
-The root-fallback real-entrypoint regression continued to exercise `config profile switch` after the static policy table moved to `config unlock`. S460 updates the real-entrypoint regression to drive `config unlock` so the canonical recovery path remains guarded against root-fallback write-policy refusal.
+The root-fallback real-entrypoint regression continued to exercise `config
+profile switch` after the D1 hard rename established root-level `config switch`.
+S460 updates the real-entrypoint regression to drive `config switch` so the
+canonical recovery path remains guarded against root-fallback write-policy refusal.
 
 Status: resolved in S460.
 

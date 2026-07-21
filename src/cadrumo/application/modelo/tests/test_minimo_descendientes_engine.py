@@ -1,9 +1,9 @@
-"""Modelo 100 mínimo por descendientes computed engine (#515, Option A; #593 CCAA).
+"""Modelo 100 mínimo por descendientes computed engine.
 
 Covers :func:`inject_derived_minimo_descendientes_facts` — the derived-fact
 injector that computes the Art. 58/61 LIRPF mínimo por descendientes ESTATAL
 aggregate from the active profile's ``renta_family.descendiente.*`` facts and
-the revision's own registry parameters, and the AUTONÓMICO aggregate (#593),
+the revision's own registry parameters, and the AUTONÓMICO aggregate,
 which resolves each birth-order tranche against the filer's declared
 tax-residence CCAA first — Comunidad de Madrid publishes its own divergent
 tranche amounts (Decreto Legislativo 1/2010, art. 2), every other CCAA mirrors
@@ -326,7 +326,7 @@ def test_profile_descendant_facts_feed_2024_minimo_and_downstream_tariff(tmp_pat
 
 
 # ---------------------------------------------------------------------------
-# #593: autonómico aggregate mirrors estatal by default; Madrid diverges.
+# The autonómico aggregate mirrors estatal by default; Madrid diverges.
 # ---------------------------------------------------------------------------
 
 
@@ -408,7 +408,7 @@ def test_madrid_resident_three_descendants_autonomico_exceeds_estatal() -> None:
     Three descendants trigger the diverging tercer tranche in every engine
     year; the autonómico aggregate (Madrid tranches) must exceed the estatal
     one (general Art. 58 tranches) for the identical descendientes facts —
-    the exact under-computation #593 reports for Madrid family filers.
+    the exact under-computation Madrid family filers would otherwise see.
     """
     for year in _ENGINE_FILING_YEARS:
         snapshot = _snapshot(year)

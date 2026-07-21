@@ -67,7 +67,7 @@ from ....core.corpus_manifest import (
     save_corpus_manifest,
     verify_corpus_manifest,
 )
-from ....core.locks import DEFAULT_LOCK_TIMEOUT, exclusive_file_lock
+from ....core.locks import DEFAULT_LOCK_TIMEOUT
 from ....core.locks_errors import LockAcquisitionError
 from ....core.redaction import (
     default_rules,
@@ -188,7 +188,6 @@ from .blob_store import (
     export_to_temp_path,
     get_secret_store,
     materialise_secret,
-    override_secret_store,
 )
 from .bucket import RecoveryVerificationError
 from .crypto import (
@@ -244,7 +243,6 @@ from .errors import (
     UnsecuredModeRefusedError,
 )
 from .master_key import (
-    EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
@@ -257,6 +255,7 @@ from .master_key import (
     activate_master_key_provider,
     activate_session,
     atomic_write_secure_bytes,
+    close_active_bucket_session,
     decode_mnemonic,
     encode_mnemonic,
     generate_recovery_key,
@@ -297,6 +296,7 @@ from .secret_store import (
     SecretStore,
 )
 from .sql import (
+    Base,
     SecureObjectDeletion,
     SecureObjectNamespaceIntegrity,
     SecureObjectRepository,
@@ -403,6 +403,7 @@ __all__ = [
     "AeadAlgorithm",
     "AtRestTreatment",
     "AttachmentStore",
+    "Base",
     "BlobIntegrityError",
     "BlobManifest",
     "BlobNotFoundError",
@@ -425,7 +426,6 @@ __all__ = [
     "EncryptionMetadata",
     "Envelope",
     "EnvelopeVersionError",
-    "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
     "HashedLookup",
     "KeyDerivationError",
@@ -494,6 +494,7 @@ __all__ = [
     "assert_corpus_clean",
     "atomic_write_secure_bytes",
     "build_corpus_manifest",
+    "close_active_bucket_session",
     "create_engine_from_settings",
     "decode_mnemonic",
     "decrypt_record",
@@ -510,7 +511,6 @@ __all__ = [
     "dispose_engines_for_bucket",
     "encode_mnemonic",
     "encrypt_record",
-    "exclusive_file_lock",
     "export_to_temp_path",
     "generate_recovery_key",
     "get_active_master_key",
@@ -531,7 +531,6 @@ __all__ = [
     "materialise_secret",
     "mint_recovery_envelope",
     "open_session_from_recovery",
-    "override_secret_store",
     "redact",
     "redact_for_log",
     "redact_structured",

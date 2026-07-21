@@ -3,14 +3,13 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-13'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L2
 related:
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-doctor-shape-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-doctor-shape-research]]"
   - "[[2026-05-13-cli-workflow-redesign-epic-plan]]"
+  - '[[2026-05-26-securestorage-repair-policy-adr-adjudication-research]]'
 ---
 
 # `cli-workflow-redesign` `config repair shape` plan

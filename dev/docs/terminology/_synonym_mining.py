@@ -1,4 +1,4 @@
-"""Synonym-candidate mining and ratification queue gates (ADR D6).
+"""Synonym-candidate mining and ratification queue gates.
 
 The live embedding pass is intentionally outside CI: it can run on the dev GPU
 box and export cosine observations. This module owns the deterministic part that

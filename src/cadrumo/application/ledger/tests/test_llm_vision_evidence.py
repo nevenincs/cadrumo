@@ -87,7 +87,7 @@ def test_llm_vision_off_refuses_both_on_host_read_modes(
     name: str,
     data_factory: Callable[[], bytes],
 ) -> None:
-    """An ``llm_vision=off`` profile refuses BOTH on-host read modes (honesty review M1).
+    """An ``llm_vision=off`` profile refuses BOTH on-host read modes.
 
     The capability gate sits past the text-layer early return, so it must cover
     every on-host read mode: a scan-only PDF (rasterise path) and an image

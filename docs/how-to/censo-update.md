@@ -23,21 +23,19 @@ You need:
   tax regime, IVA regime, and enrollment facts. Read them from your Modelo 036
   copy or from the AEAT sede.
 
-Every command on this page needs your master-key passphrase. The tool prompts
-for it, or set `CADRUMO_SECRET_PASSPHRASE` to run non-interactively. The tool's
-messages are in Spanish.
+Every command on this page needs your master-key passphrase; the tool
+prompts for it. The tool's messages are in Spanish.
 
 If you have no profile yet, create one non-interactively with `--quiet` (a bare
 `profile create NAME` opens an interactive wizard instead):
 
-```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria"
+```{cli-sequence} censo-update-create-profile
 ```
 
 Check the active profile first:
 
-```bash
-aeat config profile status
+```{cli-sequence} censo-update-check-profile
+:verify: Confirm the active profile reports its status.
 ```
 
 ## Why census facts matter
@@ -60,15 +58,15 @@ warning and refuses strict projection until you accept that basis; see
 
 Edit the active profile with the wizard:
 
-```bash
-aeat config profile edit <profile-name>
+```{cli-sequence} censo-update-edit-wizard
 ```
 
 The wizard walks the profile fields, including the census-backed ones. For a
-scripted update, pass the field flags with `--quiet`:
+scripted update, pass the field flags with `--quiet`. Name your own profile in
+place of `docs-sequence-sandbox`:
 
-```bash
-aeat config profile edit <profile-name> --quiet --activity "consultoria"
+```{cli-sequence} censo-update-record-facts
+:verify: Confirm the profile validates after you record the census facts.
 ```
 
 Copy each value from your Modelo 036 copy or the AEAT sede exactly. Do not
@@ -76,39 +74,29 @@ guess a regime or a start date.
 
 ## Record a Modelo 036 filing done outside Cadrumo
 
-If you file Modelo 036 in AEAT's sede, record that local fact separately:
-
-```bash
-aeat app modelo m036 alta --declared-on 2026-01-10 --sede-justificante <acuse>
-aeat app modelo m036 modificacion --declared-on 2026-03-15 --sede-justificante <acuse>
-aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>
-```
-
-These commands record that you filed the Modelo 036 alta, modificacion, or baja
-through AEAT. They never file with AEAT themselves. After you record a filing,
-update the profile fields the filing changed. For the flags, the success
-output, and what the record does and does not change, see
-[Record a Modelo 036 declaration you filed at AEAT](modelo-036.md).
+If you file a Modelo 036 alta, modificacion, or baja in AEAT's sede, record
+that fact locally so later filings can rely on it.
+[Record a Modelo 036 declaration you filed at AEAT](modelo-036.md) owns the
+commands, the success output, and what the record does and does not change.
+After you record a filing, update the profile fields the filing changed.
 
 ## Check the profile afterwards
 
 Validate the active profile after editing census facts:
 
-```bash
-aeat config profile status
-aeat config profile validate
+```{cli-sequence} censo-update-validate
+:verify: Confirm the active profile validates after the census edits.
 ```
 
 If the profile still reports missing facts, edit those fields directly:
 
-```bash
-aeat config profile edit <profile-name> --quiet --activity <value>
+```{cli-sequence} censo-update-edit-field
 ```
 
 For modelo-specific readiness, use profile preflight:
 
-```bash
-aeat config profile preflight --modelo 303 --filing-year 2026 --period 1T
+```{cli-sequence} censo-update-preflight
+:verify: Confirm the profile preflight runs for the target modelo and period.
 ```
 
 ## Keep the facts current
@@ -122,5 +110,5 @@ filing year.
 
 - [Set up your taxpayer profile](profile-setup.md)
 - [Plan your filing calendar](filing-calendar.md)
-- [Work with Transactions](import-bank-statements.md)
+- [Import and manage transactions](import-bank-statements.md)
 - [Review and supply calculation inputs](review-calculation-values.md)

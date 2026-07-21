@@ -1,0 +1,945 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-19 16:19+0200\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo translation team\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/profile-setup.md:1
+msgid "Set up your taxpayer profile"
+msgstr "Configura el teu perfil de contribuent"
+
+#: ../../how-to/profile-setup.md:3
+#, python-brace-format
+msgid ""
+"A profile holds the facts about one taxpayer that every `aeat app` command "
+"reads and updates. Set one up before you import transactions, calculate a "
+"{term}`modelo`, or export a filing."
+msgstr ""
+"Un perfil conté les dades d'un contribuent que cada ordre `aeat app` llegeix"
+" i actualitza. Configura'n un abans d'importar transaccions, calcular un "
+"{term}`modelo` o exportar una presentació."
+
+#: ../../how-to/profile-setup.md:7
+msgid ""
+"A profile is local. Creating, editing, showing, exporting, or importing a "
+"profile never submits anything to the Agencia Estatal de Administración "
+"Tributaria (AEAT). Cadrumo builds and verifies your filing on your machine; "
+"you upload it yourself."
+msgstr ""
+"Un perfil és local. Crear, editar, mostrar, exportar o importar un perfil "
+"mai no presenta res a l'Agencia Estatal de Administración Tributaria (AEAT)."
+" Cadrumo construeix i verifica la teva presentació a la teva màquina; tu la "
+"puges."
+
+#: ../../how-to/profile-setup.md:12
+msgid ""
+"If you haven't installed Cadrumo and run the `aeat` command yet, start with "
+"the [quickstart](quickstart.md), then come back here."
+msgstr ""
+"Si encara no has instal·lat Cadrumo ni has executat l'ordre `aeat`, comença "
+"per la [guia ràpida](quickstart.md) i després torna aquí."
+
+#: ../../how-to/profile-setup.md:16
+msgid "What the active profile means"
+msgstr "Què significa el perfil actiu"
+
+#: ../../how-to/profile-setup.md:18
+msgid ""
+"The active profile is the taxpayer context for `aeat app` commands. While a "
+"profile is active, commands such as ledger import, transaction "
+"classification, modelo calculation, export, and local filing history read "
+"and update that profile's data."
+msgstr ""
+"El perfil actiu és el context de contribuent per a les ordres `aeat app`. "
+"Mentre un perfil és actiu, les ordres com ara la importació al ledger, la "
+"classificació de transaccions, el càlcul de modelos, l'exportació i "
+"l'historial de presentacions local llegeixen i actualitzen les dades "
+"d'aquell perfil."
+
+#: ../../how-to/profile-setup.md:23
+msgid ""
+"Keep one profile per taxpayer. Add a second profile when you prepare filings"
+" for another taxpayer, separate a test profile from a real one, or restore a"
+" copy under a different name. To understand why the tool is local-first and "
+"human-gated, see the [explanation guides](../explanation/index.md)."
+msgstr ""
+"Mantén un perfil per contribuent. Afegeix un segon perfil quan preparis "
+"presentacions per a un altre contribuent, separis un perfil de proves d'un "
+"de real, o restauris una còpia amb un nom diferent. Per entendre per què "
+"l'eina és local abans que res i controlada per una persona, consulta les "
+"[guies d'explicació](../explanation/index.md)."
+
+#: ../../how-to/profile-setup.md:28
+msgid ""
+"List your profiles with `aeat config profile list`, see which one is active,"
+" add a second taxpayer, then switch to it. The example runs the whole flow: "
+"it lists the profiles, adds a second one, and switches the active context to"
+" it."
+msgstr ""
+"Llista els teus perfils amb `aeat config profile list`, mira quin és actiu, "
+"afegeix un segon contribuent i, tot seguit, canvia-hi. L'exemple executa tot"
+" el flux: llista els perfils, n'afegeix un segon i hi canvia el context "
+"actiu."
+
+#: ../../how-to/profile-setup.md:36
+msgid ""
+"Switching changes which local ledger, modelo drafts, and filing markers "
+"`aeat app` commands use. The switch verb is `aeat config switch`, not `aeat "
+"config profile switch`."
+msgstr ""
+"Canviar de perfil canvia quin ledger local, quins esborranys de modelo i "
+"quins marcadors de presentació utilitzen les ordres `aeat app`. El verb per "
+"canviar és `aeat config switch`, no `aeat config profile switch`."
+
+#: ../../how-to/profile-setup.md:40
+msgid "Decide your facts before you start"
+msgstr "Decideix les teves dades abans de començar"
+
+#: ../../how-to/profile-setup.md:42
+msgid ""
+"Profile setup asks a series of questions. Most are conditional: the answers "
+"you give early decide which later questions appear. Decide these facts "
+"first, and the rest of setup follows:"
+msgstr ""
+"La configuració del perfil fa una sèrie de preguntes. La majoria són "
+"condicionals: les respostes que dones al principi decideixen quines "
+"preguntes posteriors apareixen. Decideix primer aquestes dades i la resta de"
+" la configuració ve tota sola:"
+
+#: ../../how-to/profile-setup.md:46
+msgid ""
+"**Who the taxpayer is.** A natural person (an individual), a legal entity (a"
+" company such as an SL or SA), or an attribution entity (a co-ownership such"
+" as a *comunidad de bienes*, where income passes through to its members)."
+msgstr ""
+"**Qui és el contribuent.** Una persona física (un particular), una persona "
+"jurídica (una empresa com ara una SL o SA) o una entitat en atribució (una "
+"cotitularitat com ara una *comunidad de bienes*, on la renda es transmet als"
+" seus membres)."
+
+#: ../../how-to/profile-setup.md:49
+msgid ""
+"**Which tax identifier applies.** Spanish citizens use their DNI as their "
+"tax identifier (NIF). Foreign individuals use their NIE. Companies use a NIF"
+" or CIF."
+msgstr ""
+"**Quin identificador tributari aplica.** Els ciutadans espanyols utilitzen "
+"el seu DNI com a identificador tributari (NIF). Els particulars estrangers "
+"utilitzen el seu NIE. Les empreses utilitzen un NIF o CIF."
+
+#: ../../how-to/profile-setup.md:52
+msgid ""
+"**What the taxpayer does.** The economic activity and which kinds of income "
+"apply: business or professional activity, salaried work, rental income, "
+"investment income, capital gains, or a pension."
+msgstr ""
+"**Què fa el contribuent.** L'activitat econòmica i quins tipus de renda "
+"apliquen: activitat empresarial o professional, treball assalariat, rendes "
+"del lloguer, rendes d'inversió, guanys patrimonials o una pensió."
+
+#: ../../how-to/profile-setup.md:55
+msgid ""
+"**Which VAT regime applies.** Value Added Tax (IVA) determines whether the "
+"taxpayer charges and declares it, and how. The general regime files IVA "
+"through Modelo 303."
+msgstr ""
+"**Quin règim d'IVA aplica.** L'Impost sobre el Valor Afegit (IVA) determina "
+"si el contribuent el repercuteix i el declara, i com. El règim general "
+"presenta l'IVA mitjançant el Modelo 303."
+
+#: ../../how-to/profile-setup.md:58
+msgid ""
+"**Where the taxpayer is resident.** The autonomous community for a Spanish "
+"resident, or the country of residence for a non-resident."
+msgstr ""
+"**On resideix el contribuent.** La comunitat autònoma per a un resident "
+"espanyol, o el país de residència per a un no resident."
+
+#: ../../how-to/profile-setup.md:60
+msgid ""
+"**Which output language you want.** The language `cadrumo` uses for its "
+"output."
+msgstr ""
+"**Quin idioma de sortida vols.** L'idioma que utilitza `cadrumo` per a la "
+"seva sortida."
+
+#: ../../how-to/profile-setup.md:62
+msgid ""
+"You don't need to memorize flag names. The guided wizard walks you through "
+"these decisions. For the complete, current list of flags and their accepted "
+"values, run `aeat config profile create --help` and `aeat config profile "
+"edit --help`:"
+msgstr ""
+"No cal que memoritzis els noms de les opcions. L'assistent guiat et porta "
+"per aquestes decisions. Per obtenir la llista completa i actual d'opcions i "
+"els seus valors acceptats, executa `aeat config profile create --help` i "
+"`aeat config profile edit --help`:"
+
+#: ../../how-to/profile-setup.md:69
+msgid "Create your profile"
+msgstr "Crea el teu perfil"
+
+#: ../../how-to/profile-setup.md:71
+msgid "Create a profile interactively, or non-interactively with flags."
+msgstr "Crea un perfil de manera interactiva, o no interactiva amb opcions."
+
+#: ../../how-to/profile-setup.md:73
+msgid "Run the guided wizard when you're setting up a profile for the first time:"
+msgstr "Executa l'assistent guiat quan configuris un perfil per primera vegada:"
+
+#: ../../how-to/profile-setup.md:78
+msgid ""
+"The wizard asks the questions described in this guide. Prompt labels follow "
+"the selected output language, while official AEAT terms and stable command "
+"tokens remain recognizable across languages."
+msgstr ""
+"L'assistent fa les preguntes descrites en aquesta guia. Les etiquetes de les"
+" indicacions segueixen l'idioma de sortida seleccionat, mentre que els "
+"termes oficials de l'AEAT i els tokens d'ordre estables continuen sent "
+"reconeixibles en tots els idiomes."
+
+#: ../../how-to/profile-setup.md:82
+msgid ""
+"The wizard prompts for your master-key passphrase before it stores anything."
+" For unattended runs, see [Run without a passphrase prompt](protect-data-"
+"access.md#run-without-a-passphrase-prompt)."
+msgstr ""
+"L'assistent demana la teva contrasenya de clau mestra abans de desar res. "
+"Per a execucions desateses, consulta [Executa sense demanar la contrasenya"
+"](protect-data-access.md#run-without-a-passphrase-prompt)."
+
+#: ../../how-to/profile-setup.md:86
+msgid ""
+"Use `--language en`, `es`, `ca`, or `hu` for one command. A profile can also"
+" store its default output language."
+msgstr ""
+"Fes servir `--language en`, `es`, `ca` o `hu` per a una ordre. Un perfil "
+"també pot desar el seu idioma de sortida per defecte."
+
+#: ../../how-to/profile-setup.md:89
+msgid ""
+"Use flags with `--quiet` when you want a repeatable, scriptable setup, "
+"passing the entity type, tax id, name, and surnames to `aeat config profile "
+"create`. The [worked example below](#worked-example-a-natural-person-with-"
+"an-activity) runs a complete scripted create."
+msgstr ""
+"Fes servir opcions amb `--quiet` quan vulguis una configuració repetible i "
+"apta per a scripts, passant el tipus d'entitat, l'identificador tributari, "
+"el nom i els cognoms a `aeat config profile create`. L'[exemple resolt de "
+"més avall](#worked-example-a-natural-person-with-an-activity) executa una "
+"creació completa amb script."
+
+#: ../../how-to/profile-setup.md:94
+msgid ""
+"`--quiet` runs without prompts and uses only the flags you provide. A "
+"`--quiet` run refuses if a required flag is missing and tells you which ones"
+" to add. A scripted create needs the filing identity: the tax identifier, "
+"the entity type, and the name and surnames:"
+msgstr ""
+"`--quiet` s'executa sense indicacions i utilitza només les opcions que "
+"proporciones. Una execució amb `--quiet` es nega si falta una opció "
+"obligatòria i t'indica quines has d'afegir. Una creació amb script necessita"
+" la identitat de presentació: l'identificador tributari, el tipus d'entitat "
+"i el nom i els cognoms:"
+
+#: ../../how-to/profile-setup.md:104
+msgid ""
+"Add `--accept-defaults` when you intentionally want Cadrumo to fill the "
+"questions you omit from its built-in defaults."
+msgstr ""
+"Afegeix `--accept-defaults` quan vulguis intencionadament que Cadrumo "
+"empleni les preguntes que ometis amb els seus valors per defecte integrats."
+
+#: ../../how-to/profile-setup.md:108
+msgid "Worked example: a natural person with an activity"
+msgstr "Exemple resolt: una persona física amb una activitat"
+
+#: ../../how-to/profile-setup.md:110
+msgid ""
+"This example creates a natural-person profile for an individual with an "
+"economic activity, then inspects and validates it before you rely on it:"
+msgstr ""
+"Aquest exemple crea un perfil de persona física per a un particular amb una "
+"activitat econòmica, i després l'inspecciona i el valida abans de refiar-"
+"te'n:"
+
+#: ../../how-to/profile-setup.md:117
+msgid "The facts setup asks for"
+msgstr "Les dades que demana la configuració"
+
+#: ../../how-to/profile-setup.md:119
+msgid ""
+"Setup groups its questions by decision area. These values are stable command"
+" tokens: they're case-sensitive and don't translate. Run `aeat config "
+"profile create --help` for the exhaustive flag list. It includes the "
+"conditional spouse, family-unit, non-resident, and enrollment questions this"
+" guide summarizes rather than repeats."
+msgstr ""
+"La configuració agrupa les seves preguntes per àrea de decisió. Aquests "
+"valors són tokens d'ordre estables: distingeixen majúscules i minúscules i "
+"no es tradueixen. Executa `aeat config profile create --help` per obtenir la"
+" llista exhaustiva d'opcions. Inclou les preguntes condicionals de cònjuge, "
+"unitat familiar, no resident i altes que aquesta guia resumeix en lloc de "
+"repetir."
+
+#: ../../how-to/profile-setup.md:125
+msgid "Who the taxpayer is"
+msgstr "Qui és el contribuent"
+
+#: ../../how-to/profile-setup.md:127
+msgid "Choose the entity type:"
+msgstr "Tria el tipus d'entitat:"
+
+#: ../../how-to/profile-setup.md:129
+msgid "`natural_person` - an individual."
+msgstr "`natural_person` - un particular."
+
+#: ../../how-to/profile-setup.md:130
+msgid ""
+"`legal_entity` - a company. Record its legal form too, such as `sl`, `sa`, "
+"or `cooperativa`."
+msgstr ""
+"`legal_entity` - una empresa. Registra'n també la forma jurídica, com ara "
+"`sl`, `sa` o `cooperativa`."
+
+#: ../../how-to/profile-setup.md:132
+msgid ""
+"`attribution_entity` - a co-ownership or community of goods whose income is "
+"attributed to its members."
+msgstr ""
+"`attribution_entity` - una cotitularitat o comunidad de bienes la renda de "
+"la qual s'atribueix als seus membres."
+
+#: ../../how-to/profile-setup.md:135
+msgid ""
+"For a natural person, list each kind of income that applies, repeating the "
+"flag once per category:"
+msgstr ""
+"Per a una persona física, llista cada tipus de renda que apliqui, repetint "
+"l'opció una vegada per categoria:"
+
+#: ../../how-to/profile-setup.md:138
+msgid "`actividad_economica` - business or professional activity."
+msgstr "`actividad_economica` - activitat empresarial o professional."
+
+#: ../../how-to/profile-setup.md:139
+msgid "`trabajo` - salaried employment."
+msgstr "`trabajo` - treball assalariat."
+
+#: ../../how-to/profile-setup.md:140
+msgid "`capital_inmobiliario` - rental income from property."
+msgstr "`capital_inmobiliario` - rendes del lloguer d'immobles."
+
+#: ../../how-to/profile-setup.md:141
+msgid "`capital_mobiliario` - investment income such as dividends or interest."
+msgstr "`capital_mobiliario` - rendes d'inversió com ara dividends o interessos."
+
+#: ../../how-to/profile-setup.md:142
+msgid "`ganancias_patrimoniales` - capital gains."
+msgstr "`ganancias_patrimoniales` - guanys patrimonials."
+
+#: ../../how-to/profile-setup.md:143
+msgid "`pension` - a retirement or disability pension."
+msgstr "`pension` - una pensió de jubilació o d'incapacitat."
+
+#: ../../how-to/profile-setup.md:145
+msgid ""
+"Choose `actividad_economica` only when the taxpayer runs an activity. A pure"
+" landlord, a salaried-only taxpayer, or a pensioner with no activity should "
+"not select it."
+msgstr ""
+"Tria `actividad_economica` només quan el contribuent duu a terme una "
+"activitat. Un arrendador pur, un contribuent només assalariat o un "
+"pensionista sense activitat no l'haurien de seleccionar."
+
+#: ../../how-to/profile-setup.md:149
+msgid ""
+"For an activity, record how IRPF estimates its yield. Direct estimation is "
+"the default and files Modelo 130. Use `--irpf-estimation-regime objetiva` "
+"for the objective-estimation (módulos) regime, which files Modelo 131 "
+"instead."
+msgstr ""
+"Per a una activitat, registra com l'IRPF n'estima el rendiment. L'estimación"
+" directa és el valor per defecte i presenta el Modelo 130. Fes servir "
+"`--irpf-estimation-regime objetiva` per al règim d'estimación objetiva "
+"(módulos), que presenta el Modelo 131 en el seu lloc."
+
+#: ../../how-to/profile-setup.md:153
+msgid "Identity"
+msgstr "Identitat"
+
+#: ../../how-to/profile-setup.md:155
+msgid ""
+"The tax identifier (NIF, CIF, DNI, or NIE) is required. Spanish citizens use"
+" their DNI as their NIF; foreign individuals use their NIE; companies use a "
+"NIF or CIF. Record the name and surnames (or the entity's display name), the"
+" economic activity when there is one, and the fiscal-address postcode."
+msgstr ""
+"L'identificador tributari (NIF, CIF, DNI o NIE) és obligatori. Els ciutadans"
+" espanyols utilitzen el seu DNI com a NIF; els particulars estrangers "
+"utilitzen el seu NIE; les empreses utilitzen un NIF o CIF. Registra el nom i"
+" els cognoms (o el nom visible de l'entitat), l'activitat econòmica quan "
+"n'hi ha, i el codi postal del domicili fiscal."
+
+#: ../../how-to/profile-setup.md:160
+msgid "Where the taxpayer is resident"
+msgstr "On resideix el contribuent"
+
+#: ../../how-to/profile-setup.md:162
+msgid ""
+"For a Spanish IRPF (personal income tax) resident, set the autonomous "
+"community (`--tax-residence-ccaa`), such as `madrid` or `cataluna`."
+msgstr ""
+"Per a un resident a efectes de l'IRPF espanyol, estableix la comunitat "
+"autònoma (`--tax-residence-ccaa`), com ara `madrid` o `cataluna`."
+
+#: ../../how-to/profile-setup.md:165
+msgid ""
+"This tool does not model the foral regimes. Setting the community to "
+"`pais_vasco` or `navarra` is refused, because residents there file with "
+"their *Hacienda Foral* under the *Concierto Económico*, not with the AEAT:"
+msgstr ""
+"Aquesta eina no modela els règims forals. Establir la comunitat a "
+"`pais_vasco` o `navarra` es rebutja, perquè els residents d'aquests "
+"territoris presenten davant la seva *Hacienda Foral* sota el *Concierto "
+"Económico*, no davant l'AEAT:"
+
+#: ../../how-to/profile-setup.md:175
+msgid ""
+"For a non-resident, set `--fiscal-residency non_resident_irnr` (not `--tax-"
+"residence-ccaa`), then supply the country of residence with `--country-of-"
+"fiscal-residence` (an ISO 3166-1 alpha-2 code, such as `DE`) and, when "
+"required, a fiscal representative with `--representante-fiscal-nif` and "
+"`--representante-fiscal-nombre`."
+msgstr ""
+"Per a un no resident, estableix `--fiscal-residency non_resident_irnr` (no "
+"`--tax-residence-ccaa`), després aporta el país de residència amb "
+"`--country-of-fiscal-residence` (un codi ISO 3166-1 alfa-2, com ara `DE`) i,"
+" quan calgui, un representant fiscal amb `--representante-fiscal-nif` i "
+"`--representante-fiscal-nombre`."
+
+#: ../../how-to/profile-setup.md:181
+msgid "Which IVA regime applies"
+msgstr "Quin règim d'IVA aplica"
+
+#: ../../how-to/profile-setup.md:183
+msgid "Set `--iva-regime` to the taxpayer's IVA regime:"
+msgstr "Estableix `--iva-regime` al règim d'IVA del contribuent:"
+
+#: ../../how-to/profile-setup.md:185
+msgid "`GENERAL` - the standard regime; files quarterly IVA through Modelo 303."
+msgstr ""
+"`GENERAL` - el règim estàndard; presenta l'IVA trimestral mitjançant el "
+"Modelo 303."
+
+#: ../../how-to/profile-setup.md:186
+msgid "`SIMPLIFICADO` - the simplified, module-based regime."
+msgstr "`SIMPLIFICADO` - el règim simplificat basat en mòduls."
+
+#: ../../how-to/profile-setup.md:187
+msgid "`RECARGO_EQUIVALENCIA` - the equivalence surcharge for qualifying retailers."
+msgstr ""
+"`RECARGO_EQUIVALENCIA` - el recàrrec d'equivalència per als comerciants "
+"minoristes que hi tenen dret."
+
+#: ../../how-to/profile-setup.md:188
+msgid "`REAGP` - the special regime for agriculture, livestock, and fishing."
+msgstr "`REAGP` - el règim especial de l'agricultura, la ramaderia i la pesca."
+
+#: ../../how-to/profile-setup.md:189
+msgid "`EXENTO` - exempt activities, such as some education or healthcare."
+msgstr "`EXENTO` - activitats exemptes, com ara alguns serveis d'educació o sanitat."
+
+#: ../../how-to/profile-setup.md:191
+msgid ""
+"Record any IVA enrollments that apply, such as ROI (intra-community "
+"operators) or OSS (one-stop-shop for cross-border B2C sales)."
+msgstr ""
+"Registra qualsevol alta d'IVA que apliqui, com ara el ROI (operadors "
+"intracomunitaris) o l'OSS (finestreta única per a vendes B2C "
+"transfrontereres)."
+
+#: ../../how-to/profile-setup.md:194
+msgid "Which recurring obligations apply"
+msgstr "Quines obligacions recurrents apliquen"
+
+#: ../../how-to/profile-setup.md:196
+msgid ""
+"These facts decide which forms the taxpayer must file. Record the ones that "
+"are true:"
+msgstr ""
+"Aquestes dades decideixen quins formularis ha de presentar el contribuent. "
+"Registra les que siguin certes:"
+
+#: ../../how-to/profile-setup.md:199
+msgid ""
+"`--has-employees` or `--pays-professionals-with-retencion` - pays salaries "
+"or professional fees with withholding."
+msgstr ""
+"`--has-employees` o `--pays-professionals-with-retencion` - paga salaris o "
+"honoraris professionals amb retenció."
+
+#: ../../how-to/profile-setup.md:201
+msgid "`--pays-rent-with-retencion` - pays business-premises rent with withholding."
+msgstr ""
+"`--pays-rent-with-retencion` - paga el lloguer d'un local de negoci amb "
+"retenció."
+
+#: ../../how-to/profile-setup.md:202
+msgid "`--does-intracomunitario` - trades with businesses in other EU countries."
+msgstr ""
+"`--does-intracomunitario` - fa operacions amb empreses d'altres països de la"
+" UE."
+
+#: ../../how-to/profile-setup.md:203
+msgid ""
+"`--third-party-transactions-above-347-threshold` - transactions with third "
+"parties exceed the Modelo 347 threshold."
+msgstr ""
+"`--third-party-transactions-above-347-threshold` - les operacions amb "
+"terceres persones superen el llindar del Modelo 347."
+
+#: ../../how-to/profile-setup.md:205
+msgid ""
+"`--bienes-extranjero-above-threshold` - foreign assets exceed the legal "
+"threshold."
+msgstr ""
+"`--bienes-extranjero-above-threshold` - els béns a l'estranger superen el "
+"llindar legal."
+
+#: ../../how-to/profile-setup.md:207
+msgid ""
+"`--art109-activity-income-withholding-ge-70pct` - the Art. 109 RIRPF 70 "
+"percent income-coverage exception applies for covered professional, "
+"agricultural, livestock, or forestry activity income. For activity starts, "
+"record the coverage fact for the current payment period."
+msgstr ""
+"`--art109-activity-income-withholding-ge-70pct` - s'aplica l'excepció del 70"
+" per cent de cobertura d'ingressos de l'art. 109 del RIRPF per a rendes "
+"d'activitat professional, agrícola, ramadera o forestal cobertes. Per als "
+"inicis d'activitat, registra la dada de cobertura per al període de pagament"
+" actual."
+
+#: ../../how-to/profile-setup.md:212
+msgid ""
+"Leaving an obligation flag unset is not the same as marking it false. When a"
+" fact is undeclared, the readiness check reports the related form as "
+"*incomplete* (cannot determine), not *not applicable*. Record each fact you "
+"know."
+msgstr ""
+"Deixar una opció d'obligació sense assignar no és el mateix que marcar-la "
+"com a falsa. Quan una dada no està declarada, la comprovació de preparació "
+"informa del formulari relacionat com a *incomplet* (no es pot determinar), "
+"no com a *no aplicable*. Registra cada dada que coneguis."
+
+#: ../../how-to/profile-setup.md:216
+msgid "Check your facts before you calculate"
+msgstr "Comprova les teves dades abans de calcular"
+
+#: ../../how-to/profile-setup.md:218
+msgid ""
+"A wrong or missing fact produces a wrong filing. Confirm the profile before "
+"you calculate a modelo. The example shows the active profile's readiness "
+"summary and stored facts, validates them against the schema, then checks "
+"whether the profile holds the facts a specific form needs for a specific "
+"filing context:"
+msgstr ""
+"Una dada errònia o que falti produeix una presentació errònia. Confirma el "
+"perfil abans de calcular un modelo. L'exemple mostra el resum de preparació "
+"del perfil actiu i les dades desades, les valida contra l'esquema i, tot "
+"seguit, comprova si el perfil conté les dades que un formulari concret "
+"necessita per a un context de presentació concret:"
+
+#: ../../how-to/profile-setup.md:227
+msgid ""
+"`preflight` names the missing fields for that `(modelo, filing-year, "
+"period)` context. Use [Choose which modelo to file](choose-modelo.md) to "
+"find the period codes a modelo accepts. Fix any wrong facts with `edit` "
+"before you continue."
+msgstr ""
+"`preflight` anomena els camps que falten per a aquell context `(modelo, any "
+"de presentació, període)`. Fes servir [Tria quin modelo presentar](choose-"
+"modelo.md) per trobar els codis de període que accepta un modelo. Corregeix "
+"qualsevol dada errònia amb `edit` abans de continuar."
+
+#: ../../how-to/profile-setup.md:231
+msgid "How your facts decide which forms apply"
+msgstr "Com les teves dades decideixen quins formularis apliquen"
+
+#: ../../how-to/profile-setup.md:233
+msgid ""
+"The profile facts you recorded determine which modelos the taxpayer must "
+"file. Use this mapping to sanity-check your profile, then confirm a specific"
+" form with `preflight`:"
+msgstr ""
+"Les dades del perfil que has registrat determinen quins modelos ha de "
+"presentar el contribuent. Fes servir aquesta correspondència per fer una "
+"comprovació de coherència del teu perfil i, tot seguit, confirma un "
+"formulari concret amb `preflight`:"
+
+#: ../../how-to/profile-setup.md:223
+msgid "When this is true of the taxpayer"
+msgstr "Quan això és cert del contribuent"
+
+#: ../../how-to/profile-setup.md:223
+msgid "These forms apply"
+msgstr "S'apliquen aquests formularis"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Is a natural person"
+msgstr "És una persona física"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Modelo 100 (annual Renta)"
+msgstr "Modelo 100 (Renta anual)"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Is a company"
+msgstr "És una empresa"
+
+#: ../../how-to/profile-setup.md:223
+msgid ""
+"Modelo 200 (annual IS, corporate income tax), Modelo 202 (payments on "
+"account)"
+msgstr ""
+"Modelo 200 (IS anual, impost sobre societats), Modelo 202 (pagaments a "
+"compte)"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Runs an activity under direct estimation"
+msgstr "Duu a terme una activitat en estimación directa"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Modelo 130 (quarterly IRPF)"
+msgstr "Modelo 130 (IRPF trimestral)"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Runs an activity under objective estimation (módulos)"
+msgstr "Duu a terme una activitat en estimación objetiva (módulos)"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Modelo 131"
+msgstr "Modelo 131"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Art. 109 activity-income coverage exception applies"
+msgstr "S'aplica l'excepció de cobertura d'ingressos d'activitat de l'art. 109"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Removes the Modelo 130 obligation"
+msgstr "Elimina l'obligació del Modelo 130"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Charges VAT under the general regime"
+msgstr "Repercuteix l'IVA sota el règim general"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Modelo 303 (quarterly), Modelo 390 (annual)"
+msgstr "Modelo 303 (trimestral), Modelo 390 (anual)"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Pays employees or professionals with withholding"
+msgstr "Paga empleats o professionals amb retenció"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Modelo 111 (quarterly), Modelo 190 (annual)"
+msgstr "Modelo 111 (trimestral), Modelo 190 (anual)"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Pays business-premises rent with withholding"
+msgstr "Paga el lloguer d'un local de negoci amb retenció"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Modelo 115 (quarterly), Modelo 180 (annual)"
+msgstr "Modelo 115 (trimestral), Modelo 180 (anual)"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Trades with EU businesses"
+msgstr "Fa operacions amb empreses de la UE"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Modelo 349"
+msgstr "Modelo 349"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Has third-party transactions over the 347 threshold"
+msgstr "Té operacions amb terceres persones per sobre del llindar del 347"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Modelo 347"
+msgstr "Modelo 347"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Holds foreign assets over the legal threshold"
+msgstr "Té béns a l'estranger per sobre del llindar legal"
+
+#: ../../how-to/profile-setup.md:223
+msgid "Modelo 720"
+msgstr "Modelo 720"
+
+#: ../../how-to/profile-setup.md:251
+msgid ""
+"This is a guide, not the authority. The tool decides applicability from the "
+"full profile and the registry rules. To see what applies to your profile, "
+"use [Choose which modelo to file](choose-modelo.md)."
+msgstr ""
+"Això és una guia, no l'autoritat. L'eina decideix l'aplicabilitat a partir "
+"del perfil complet i de les regles del registre. Per veure què s'aplica al "
+"teu perfil, fes servir [Tria quin modelo presentar](choose-modelo.md)."
+
+#: ../../how-to/profile-setup.md:255
+msgid "Maintain your profile"
+msgstr "Manté el teu perfil"
+
+#: ../../how-to/profile-setup.md:257
+msgid ""
+"The following steps edit a fact, rename the profile, duplicate it, delete "
+"the duplicate, and export the profile to a portable JSON file:"
+msgstr ""
+"Els passos següents editen una dada, canvien el nom del perfil, el "
+"dupliquen, eliminen el duplicat i exporten el perfil a un fitxer JSON "
+"portable:"
+
+#: ../../how-to/profile-setup.md:264
+msgid "What each step does:"
+msgstr "Què fa cada pas:"
+
+#: ../../how-to/profile-setup.md:266
+msgid ""
+"**Edit** changes only the flags you pass. Run `show`, `status`, or "
+"`validate` again after editing."
+msgstr ""
+"**Edit** canvia només les opcions que passes. Torna a executar `show`, "
+"`status` o `validate` després d'editar."
+
+#: ../../how-to/profile-setup.md:268
+msgid ""
+"**Rename** changes only the visible label; the active-profile pointer "
+"follows it."
+msgstr ""
+"**Rename** canvia només l'etiqueta visible; el punter del perfil actiu la "
+"segueix."
+
+#: ../../how-to/profile-setup.md:270
+msgid ""
+"**Duplicate** starts a second profile from the same facts. The second name "
+"you pass is the new profile's name, the name you address it by in every "
+"later command. The new profile becomes the active one."
+msgstr ""
+"**Duplicate** inicia un segon perfil a partir de les mateixes dades. El "
+"segon nom que passes és el nom del nou perfil, el nom amb què l'adreces a "
+"cada ordre posterior. El nou perfil passa a ser l'actiu."
+
+#: ../../how-to/profile-setup.md:273
+msgid ""
+"**Delete** removes a profile for good. If the deleted profile was active, "
+"Cadrumo clears the active-profile pointer."
+msgstr ""
+"**Delete** elimina un perfil per sempre. Si el perfil eliminat era l'actiu, "
+"Cadrumo esborra el punter del perfil actiu."
+
+#: ../../how-to/profile-setup.md:275
+msgid ""
+"**Export** writes a portable JSON file. Pass `--cleartext-local` for a local"
+" JSON file, or `--encrypt` for an encrypted transfer bundle; the passphrase "
+"is prompted (hidden), never given on the command line."
+msgstr ""
+"**Export** escriu un fitxer JSON portable. Passa `--cleartext-local` per a "
+"un fitxer JSON local, o `--encrypt` per a un paquet xifrat de transferència;"
+" la frase de contrasenya es demana (oculta), mai no es passa a la línia "
+"d'ordres."
+
+#: ../../how-to/profile-setup.md:279
+msgid ""
+"Import a saved file back into another session or storage root. Import under "
+"a fresh label; the imported profile becomes the active one. A store that "
+"still holds the same profile refuses the import on the profile's identifier,"
+" so import is for restoring into a different storage root:"
+msgstr ""
+"Importa un fitxer desat de nou a una altra sessió o arrel d'emmagatzematge. "
+"Importa'l amb una etiqueta nova; el perfil importat passa a ser l'actiu. Un "
+"magatzem que encara conté el mateix perfil rebutja la importació per "
+"l'identificador del perfil, de manera que la importació serveix per "
+"restaurar en una arrel d'emmagatzematge diferent:"
+
+#: ../../how-to/profile-setup.md:287
+msgid ""
+"A portable profile file contains taxpayer data, including the tax "
+"identifier, activity, and local filing history. Store it as sensitive tax "
+"data, and don't attach it to a support request unless you've removed "
+"personal details."
+msgstr ""
+"Un fitxer de perfil portable conté dades del contribuent, inclosos "
+"l'identificador tributari, l'activitat i l'historial de presentacions local."
+" Desa'l com a dada tributària sensible i no l'adjuntis a una sol·licitud "
+"d'ajuda tret que n'hagis eliminat les dades personals."
+
+#: ../../how-to/profile-setup.md:291
+msgid ""
+"Sign out without deleting the profile using `aeat config profile logout`. "
+"Logout closes the active storage session, discards its in-memory keys, "
+"disposes the bucket engines, and clears the local active-profile pointer:"
+msgstr ""
+"Tanca la sessió sense eliminar el perfil amb `aeat config profile logout`. "
+"El tancament de sessió tanca la sessió d'emmagatzematge activa, descarta les"
+" seves claus en memòria, elimina els motors de bucket i esborra el punter "
+"local del perfil actiu:"
+
+#: ../../how-to/profile-setup.md:299
+msgid "Choose your service capabilities"
+msgstr "Tria les capacitats de servei"
+
+#: ../../how-to/profile-setup.md:301
+msgid ""
+"Each profile carries its own opt-in for three optional services. The setup "
+"wizard asks these questions when you create or edit a profile, and you can "
+"change them at any time. These steps show the current posture, turn one "
+"capability off, then show the posture again:"
+msgstr ""
+"Cada perfil porta la seva pròpia acceptació per a tres serveis opcionals. "
+"L'assistent de configuració fa aquestes preguntes quan crees o edites un "
+"perfil, i les pots canviar en qualsevol moment. Aquests passos mostren la "
+"postura actual, desactiven una capacitat i tornen a mostrar la postura:"
+
+#: ../../how-to/profile-setup.md:310
+msgid "The three capabilities are:"
+msgstr "Les tres capacitats són:"
+
+#: ../../how-to/profile-setup.md:312
+msgid ""
+"`cloud_evidence_upload` - allow sending sensitive evidence to a cloud LLM "
+"provider. Off by default. Barred for gestor profiles."
+msgstr ""
+"`cloud_evidence_upload` - permet enviar evidència sensible a un proveïdor "
+"d'LLM al núvol. Desactivat per defecte. Vedat per als perfils de gestor."
+
+#: ../../how-to/profile-setup.md:314
+msgid "`llm_vision` - read invoices with the on-host vision model. On by default."
+msgstr ""
+"`llm_vision` - llegeix factures amb el model de visió local. Activat per "
+"defecte."
+
+#: ../../how-to/profile-setup.md:315
+msgid "`google_export` - export calculations to Google Sheets. On by default."
+msgstr "`google_export` - exporta càlculs a Google Sheets. Activat per defecte."
+
+#: ../../how-to/profile-setup.md:317
+msgid ""
+"Turn any capability on or off with `aeat config profile capabilities set`. "
+"The example turns `llm_vision` off. Pass `cloud_evidence_upload on` to "
+"enable cloud upload. Missing package extras produce the exact install "
+"command. See [Install Cadrumo](../workstation-setup.md) for the extras."
+msgstr ""
+"Activa o desactiva qualsevol capacitat amb `aeat config profile capabilities"
+" set`. L'exemple desactiva `llm_vision`. Passa `cloud_evidence_upload on` "
+"per habilitar la pujada al núvol. Els extres de paquet que faltin produeixen"
+" l'ordre d'instal·lació exacta. Consulta [Instal·la Cadrumo](../workstation-"
+"setup.md) per als extres."
+
+#: ../../how-to/profile-setup.md:322
+msgid "See what changed"
+msgstr "Mira què ha canviat"
+
+#: ../../how-to/profile-setup.md:324
+msgid ""
+"Every change to a profile - creation, edits, imports, classifications, "
+"calculations, and filings - is recorded as an event in that profile's "
+"append-only history (a log you can read but not alter). Reading history "
+"needs an active profile, so switch to it first after logout. The example "
+"creates, renames, and edits a profile before browsing and filtering its "
+"history:"
+msgstr ""
+"Cada canvi a un perfil -creació, edicions, importacions, classificacions, "
+"càlculs i presentacions- es registra com un esdeveniment a l'historial només"
+" d'afegit d'aquell perfil (un registre que pots llegir però no alterar). "
+"Llegir l'historial necessita un perfil actiu, així que canvia-hi primer "
+"després de tancar la sessió. L'exemple crea, canvia de nom i edita un perfil"
+" abans de navegar i filtrar el seu historial:"
+
+#: ../../how-to/profile-setup.md:334
+msgid ""
+"Repeat `--event-type` to include several types. An unknown type is refused "
+"with the full accepted list, so an empty value is a quick way to discover "
+"the vocabulary."
+msgstr ""
+"Repeteix `--event-type` per incloure diversos tipus. Un tipus desconegut es "
+"rebutja amb la llista acceptada completa, de manera que un valor buit és una"
+" manera ràpida de descobrir el vocabulari."
+
+#: ../../how-to/profile-setup.md:338
+msgid ""
+"A rename appears as two events on purpose: `profile.renamed` records that "
+"the data changed, and `bucket.renamed` records that you ran the rename "
+"action. One answers \"what changed\", the other \"what was done\"."
+msgstr ""
+"Un canvi de nom apareix com a dos esdeveniments a propòsit: "
+"`profile.renamed` registra que les dades han canviat, i `bucket.renamed` "
+"registra que has executat l'acció de canvi de nom. L'un respon «què ha "
+"canviat» i l'altre «què s'ha fet»."
+
+#: ../../how-to/profile-setup.md:342
+msgid "If setup looks wrong"
+msgstr "Si la configuració sembla incorrecta"
+
+#: ../../how-to/profile-setup.md:344
+msgid ""
+"If a command reports no active profile, an invalid field value, or that "
+"you're working under the wrong profile, see [Diagnose and repair your local "
+"setup](troubleshooting.md)."
+msgstr ""
+"Si una ordre informa que no hi ha cap perfil actiu, d'un valor de camp no "
+"vàlid, o que estàs treballant sota el perfil incorrecte, consulta "
+"[Diagnostica i repara la teva configuració local](troubleshooting.md)."
+
+#: ../../how-to/profile-setup.md:348
+msgid ""
+"When the troubleshooting steps don't resolve it, follow [Prepare a privacy-"
+"safe support request](troubleshooting.md#prepare-a-privacy-safe-support-"
+"request). It names the outputs to include and the personal data to leave out"
+" before you take the issue to the project's issue tracker."
+msgstr ""
+"Quan els passos de resolució de problemes no ho resolen, segueix [Prepara "
+"una sol·licitud d'ajuda segura per a la "
+"privadesa](troubleshooting.md#prepare-a-privacy-safe-support-request). "
+"Anomena les sortides que has d'incloure i les dades personals que has de "
+"deixar fora abans de portar el problema al seguidor d'incidències del "
+"projecte."
+
+#: ../../how-to/profile-setup.md:354
+msgid "Next steps"
+msgstr "Passos següents"
+
+#: ../../how-to/profile-setup.md:356
+msgid "[Import and manage transactions](import-bank-statements.md)"
+msgstr "[Importa i gestiona transaccions](import-bank-statements.md)"
+
+#: ../../how-to/profile-setup.md:357
+msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
+msgstr "[Mantén les dades censals del Modelo 036 al teu perfil](censo-update.md)"
+
+#: ../../how-to/profile-setup.md:358
+msgid "[Plan your filing calendar](filing-calendar.md)"
+msgstr "[Planifica el teu calendari de presentacions](filing-calendar.md)"
+
+#: ../../how-to/profile-setup.md:359
+msgid "[Review and supply calculation inputs](review-calculation-values.md)"
+msgstr "[Revisa i aporta entrades de càlcul](review-calculation-values.md)"
+
+#: ../../how-to/profile-setup.md:360
+msgid "[CLI reference](../cli/index.rst)"
+msgstr "[Referència de la CLI](../cli/index.rst)"
+

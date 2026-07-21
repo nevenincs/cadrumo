@@ -1,8 +1,8 @@
-"""Real-behaviour conformance for the concept-card search-record emitter (ADR D4).
+"""Real-behaviour conformance for the concept-card search-record emitter.
 
 The emitter loads the REAL bundled Terminology Handbook (the committed
 authoring tree under ``src/cadrumo/_data/terminology/concepts/``, run through
-the loader's full ADR-D8 gate inventory) and projects one
+the loader's full gate inventory) and projects one
 :class:`~dev.docs.terminology._concept_cards.ConceptCardRecord` per concept.
 These gates assert one card per concept, that an approved concept carries its
 four-language short_descriptions / alias set / resolvable legal-grounding
@@ -96,7 +96,7 @@ def test_approved_prorrata_card_is_fully_populated(
 ) -> None:
     """The approved ``prorrata`` card carries its full four-language surface.
 
-    Asserts the worked example from the ADR end-to-end: an approved concept
+    Asserts the worked example end-to-end: an approved concept
     surfaces es+en+ca+hu short_descriptions, its alias set (with the admitted
     synonyms the palette expands), and resolvable legal-grounding links.
     """
@@ -132,12 +132,12 @@ def test_approved_prorrata_card_is_fully_populated(
 def test_self_hosted_architectural_vocabulary_is_deprecated_not_glossary_facing(
     projection: tuple[tuple[ConceptCardRecord, ...], ConceptCardProjectionStats],
 ) -> None:
-    """The epic's own architecture terms project to cards but are DEPRECATED.
+    """These self-hosted architecture terms project to cards but are DEPRECATED.
 
     These concepts document the search/calculation machinery itself, not a
-    taxpayer-facing AEAT surface, so the glossary-enrolment policy
-    (`2026-06-15-docs-terminology-search-adr` D1/D2) excludes them from the
-    APPROVED tier: they stay enrolled and resolvable for the dev/agent RAG
+    taxpayer-facing AEAT surface, so the glossary-enrolment policy excludes
+    them from the APPROVED tier: they stay enrolled and resolvable for the
+    dev/agent RAG
     (they still project to cards, with their content intact) but are
     `deprecated`, so the approved-only glossary and the shipped Pagefind
     injection drop them.
@@ -167,7 +167,7 @@ def test_self_hosted_architectural_vocabulary_is_deprecated_not_glossary_facing(
         es_definition = next(
             definition.definition for definition in card.definitions if definition.language is OutputLanguage.ES
         )
-        assert es_definition is not None and "ADR D" in es_definition
+        assert es_definition
 
 
 def test_every_card_has_a_spanish_short_description(

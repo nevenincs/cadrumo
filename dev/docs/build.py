@@ -8,9 +8,13 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import xml.etree.ElementTree as ET
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
+
+_UTF_8: Final[str] = "utf-8"
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
 if str(_ROOT_FOR_DIRECT_INVOCATION) not in sys.path:
@@ -353,7 +357,157 @@ def _targets_for_docs_root(original_docs_root: Path, copied_docs_root: Path, tar
     return mapped
 
 
-def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page: bool = False) -> None:
+def docs_build_jobs(env: Mapping[str, str]) -> str:
+    """Resolve the Sphinx ``-j`` parallelism from the deployment override.
+
+    Defaults to ``auto`` (one worker per core) so local and CI builds keep the
+    full-parallel read. The deployment sets ``CADRUMO_DOCS_JOBS=1`` to pin a
+    single-worker build when a serial run is wanted for reproducibility; the
+    post-build sitemap and Pagefind passes run after Sphinx completes and are
+    parallel-safe regardless. A set value must be ``auto`` or a positive
+    integer worker count.
+
+    Args:
+        env: The build environment mapping to read the override from.
+
+    Returns:
+        The ``-j`` value string to hand to ``sphinx-build``.
+
+    Raises:
+        SystemExit: If the override is set to a non-positive or non-integer
+            value, so a bad deployment knob fails loudly rather than silently
+            degrading parallelism.
+    """
+    raw = env.get("CADRUMO_DOCS_JOBS")
+    if raw is None or raw == "auto":
+        return "auto"
+    try:
+        jobs = int(raw)
+    except ValueError:
+        raise SystemExit(
+            f"CADRUMO_DOCS_JOBS must be 'auto' or a positive integer worker count; got {raw!r}.",
+        ) from None
+    if jobs < 1:
+        raise SystemExit(f"CADRUMO_DOCS_JOBS must be a positive integer worker count; got {raw!r}.")
+    return str(jobs)
+
+
+#: The two search-index contracts the deployment may select. ``full`` runs the
+#: custom-record injection (concept/casilla/CLI records boosted by the sweep);
+#: ``pages`` indexes only the rendered HTML pages, shipping a lighter index with
+#: no injected navigation records.
+_PAGEFIND_MODES = ("full", "pages")
+
+
+def pagefind_index_mode(env: Mapping[str, str]) -> str:
+    """Resolve the Pagefind indexing contract from the deployment override.
+
+    Defaults to ``full`` so local docs keep the injected concept/casilla/CLI
+    records. The deployment may set ``CADRUMO_DOCS_PAGEFIND_MODE=pages`` to
+    index only the rendered pages, skipping the custom-record injection seam.
+
+    Args:
+        env: The build environment mapping to read the override from.
+
+    Returns:
+        Either ``full`` or ``pages``.
+
+    Raises:
+        SystemExit: If the override names an unsupported mode, so the
+            deployment cannot silently select an unknown search contract.
+    """
+    raw = env.get("CADRUMO_DOCS_PAGEFIND_MODE")
+    if raw is None:
+        return "full"
+    if raw not in _PAGEFIND_MODES:
+        raise SystemExit(
+            f"CADRUMO_DOCS_PAGEFIND_MODE must be one of {', '.join(_PAGEFIND_MODES)}; got {raw!r}.",
+        )
+    return raw
+
+
+#: Sitemaps.org urlset namespace for the deployment sitemap.
+_SITEMAP_NS = "http://www.sitemaps.org/schemas/sitemap/0.9"
+
+#: Top-level built pages that carry no canonical human content (Sphinx
+#: builder-owned orphans); excluded from the deployment sitemap.
+_SITEMAP_EXCLUDED_PAGES = frozenset({"search.html", "genindex.html", "py-modindex.html", "404.html"})
+
+#: Top-level directories of generated / infrastructure surfaces that never
+#: belong in the human sitemap (API autodoc, viewcode, assets, sources).
+_SITEMAP_EXCLUDED_ROOTS = frozenset({"api", "_modules", "_static", "_sources"})
+
+
+def _sitemap_page_url(base_url: str, rel_posix: str) -> str:
+    """Map a built page's relative path to its canonical deployment URL.
+
+    ``index.html`` pages canonicalise to their directory root (the site root
+    for the top-level index), matching how the served site addresses them; any
+    other page keeps its ``.html`` path.
+    """
+    if rel_posix == "index.html":
+        suffix = ""
+    elif rel_posix.endswith("/index.html"):
+        suffix = rel_posix[: -len("index.html")]
+    else:
+        suffix = rel_posix
+    return f"{base_url}/{suffix}"
+
+
+def _sitemap_urls(html_root: Path, base_url: str) -> list[str]:
+    """Return the deterministic canonical human-page URL set for the sitemap."""
+    urls: set[str] = set()
+    for page in sorted(html_root.rglob("*.html")):
+        rel = page.relative_to(html_root)
+        parts = rel.parts
+        if parts[0] in _SITEMAP_EXCLUDED_ROOTS:
+            continue
+        if len(parts) == 1 and rel.name in _SITEMAP_EXCLUDED_PAGES:
+            continue
+        urls.add(_sitemap_page_url(base_url, rel.as_posix()))
+    return sorted(urls)
+
+
+def write_deployment_sitemap(html_root: Path, base_url: str) -> Path:
+    """Write a deterministic, canonical-human-page ``sitemap.xml`` for deployment.
+
+    Walks the built HTML tree, filters to canonical human pages (excluding the
+    generated ``api``/``_modules`` trees, the ``_static``/``_sources`` asset
+    roots, and the builder-owned ``search``/``genindex``/``py-modindex``/``404``
+    orphans), canonicalises ``index.html`` pages to their directory roots,
+    sorts the URLs lexicographically, and emits the sitemaps.org urlset with no
+    ``lastmod`` stamps. Stdlib-only and side-effect-deterministic so the deploy
+    validator's exact canonical-root and canonical-prefix checks hold.
+
+    Args:
+        html_root: The built Sphinx HTML output directory.
+        base_url: The canonical docs base URL (trailing slash tolerated).
+
+    Returns:
+        The path to the written ``sitemap.xml``.
+    """
+    base = base_url.rstrip("/")
+    ET.register_namespace("", _SITEMAP_NS)
+    urlset = ET.Element(f"{{{_SITEMAP_NS}}}urlset")
+    for url in _sitemap_urls(html_root, base):
+        entry = ET.SubElement(urlset, f"{{{_SITEMAP_NS}}}url")
+        ET.SubElement(entry, f"{{{_SITEMAP_NS}}}loc").text = url
+    tree = ET.ElementTree(urlset)
+    ET.indent(tree)
+    sitemap_path = html_root / "sitemap.xml"
+    tree.write(sitemap_path, encoding=_UTF_8, xml_declaration=True)
+    return sitemap_path
+
+
+def build_docs(
+    repo_root: Path,
+    plan: DocBuildPlan,
+    *,
+    strict: bool,
+    single_page: bool = False,
+    scope: str = "full",
+    output_root: Path | None = None,
+) -> None:
     """Run Sphinx against the selected targets.
 
     Full builds write the actual documentation output under ``docs/_build/html``.
@@ -362,12 +516,27 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     artifacts never pollute the repository. Single-page builds are an explicit
     exception: they write the requested page into the canonical HTML output
     directory while excluding generated API/CLI/autodoc surfaces.
+
+    ``scope`` selects the documentation surface (``full`` | ``user``). Under
+    ``user`` scope the API autodoc tree is excluded and the app is never imported
+    for rendering (see ``CADRUMO_DOCS_SCOPE`` in ``docs/conf.py``), so the
+    apidocs scaffold is skipped — a user-scope build never regenerates API stubs.
+
+    ``output_root`` redirects a full build's HTML output (and its per-build
+    Pagefind index, orphan sweep, and sitemap) to a chosen directory instead of
+    the canonical ``docs/_build/html``. The deploy publisher uses it to build each
+    localized site into a per-language subdirectory (``docs/_build/html/<lang>``)
+    without disturbing the English root. It applies only to a full build; the
+    canonical-``_build`` cleanup is skipped when redirected so a language subdir
+    build never clears the English root beside it.
     """
     docs_root = repo_root / "docs"
     targets = plan.targets
+    canonical_html_root = docs_root / "_build" / "html"
+    html_output_root = output_root if output_root is not None else canonical_html_root
     ensure_isolated_storage_root()
-    command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", "auto"]
-    env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root)}
+    command = [sys.executable, "-m", "sphinx", "-b", "html", "-j", docs_build_jobs(os.environ)]
+    env = {**os.environ, "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root), "CADRUMO_DOCS_SCOPE": scope}
     if strict:
         command.extend(["-n", "-W"])
         env["CADRUMO_DOCS_OFFLINE"] = "1"
@@ -387,8 +556,10 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
             env["CADRUMO_DOCS_SINGLE_PAGE"] = "1"
 
     if plan.full_build_required:
-        remove_noncanonical_build_entries(docs_root)
-        out_dir = docs_root / "_build" / "html"
+        if output_root is None:
+            remove_noncanonical_build_entries(docs_root)
+        out_dir = html_output_root
+        out_dir.mkdir(parents=True, exist_ok=True)
         command.extend(
             [
                 str(docs_root),
@@ -415,7 +586,7 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
             temp_root = Path(tmp)
             temp_docs_root = temp_root / "docs-source"
             _copy_docs_source(docs_root, temp_docs_root)
-            if plan.api_scaffold_required:
+            if plan.api_scaffold_required and scope != "user":
                 ApiStubManager(src_cadrumo=repo_root / "src" / "cadrumo", docs_api=temp_docs_root / "api").scaffold()
             if plan.cli_reference_required:
                 generate_cli_reference(temp_docs_root)
@@ -432,8 +603,13 @@ def build_docs(repo_root: Path, plan: DocBuildPlan, *, strict: bool, single_page
     # build: the changed-page and single-page modes write previews (temp trees
     # or a lone page) that must not regenerate the whole search index.
     if plan.full_build_required:
-        remove_orphan_pages(docs_root, docs_root / "_build" / "html", repo_root)
-        compile_search_index(docs_root / "_build" / "html", repo_root)
+        html_root = html_output_root
+        remove_orphan_pages(docs_root, html_root, repo_root)
+        base_url = os.environ.get("CADRUMO_DOCS_BASE_URL")
+        if base_url:
+            sitemap_path = write_deployment_sitemap(html_root, base_url)
+            print(f"Wrote deployment sitemap: {sitemap_path}", flush=True)
+        compile_search_index(html_root, repo_root)
 
 
 def compile_search_index(
@@ -444,9 +620,9 @@ def compile_search_index(
 ) -> None:
     """Compile the bundled Ctrl-K search corpus over the freshly built HTML.
 
-    Runs the post-build Pagefind index pass (ADR D5) and injects the unified
+    Runs the post-build Pagefind index pass and injects the unified
     search records -- concept cards, casilla and CLI navigation surfaces --
-    boosted by the committed build-time RAG sweep (ADR D4/D6). The resulting
+    boosted by the committed build-time RAG sweep. The resulting
     per-language index is an uncommitted build artifact, regenerated on every
     full build exactly like the generated CLI/API surfaces. A missing vendored
     Pagefind wheel is reported and skipped rather than failing the
@@ -456,17 +632,26 @@ def compile_search_index(
     Args:
         html_root: The built Sphinx HTML output directory to index.
         repo_root: Repository root (for the committed relevance sweep file).
-        injector: Optional pre-built injection callback. Defaults to the full
-            record injector (concepts + casillas + CLI). Injectable so a test
-            can drive a small real injector without paying the full
-            materialisation cost; production always uses the default.
+        injector: Optional pre-built injection callback. When omitted, the
+            injector is chosen from :func:`pagefind_index_mode`: the ``full``
+            contract builds the record injector (concepts + casillas + CLI),
+            while the deployment ``pages`` contract injects no custom records
+            and indexes only the rendered pages. Injectable so a test can drive
+            a small real injector without paying the full materialisation cost.
     """
     ensure_isolated_storage_root()
     from dev.docs.pagefind_index import PagefindUnavailableError, build_search_index
     from dev.docs.pagefind_inject import InjectionStats, build_record_injector
 
     captured: list[InjectionStats] = []
-    resolved_injector = build_record_injector(repo_root, on_complete=captured.append) if injector is None else injector
+    if injector is not None:
+        resolved_injector = injector
+    elif pagefind_index_mode(os.environ) == "pages":
+        # Deployment ``pages`` contract: index the rendered HTML pages only,
+        # skipping the custom-record injection seam entirely.
+        resolved_injector = None
+    else:
+        resolved_injector = build_record_injector(repo_root, on_complete=captured.append)
     try:
         outcome = build_search_index(html_root, inject=resolved_injector)
     except PagefindUnavailableError as exc:
@@ -521,23 +706,78 @@ def main(argv: list[str] | None = None) -> int:
         metavar="PATH",
         help=("Build one documentation source into docs/_build/html without rebuilding generated API/autodoc pages."),
     )
+    parser.add_argument(
+        "--scope",
+        choices=("full", "user"),
+        default=None,
+        help=(
+            "Documentation surface to build. 'full' (default, CI + deploy) includes the API autodoc tree; "
+            "'user' builds only the operator-facing surface, excluding docs/api and never importing the app "
+            "for rendering (minutes instead of an hour). Overrides CADRUMO_DOCS_SCOPE; bare '--scope user' "
+            "with no paths runs a full user build."
+        ),
+    )
+    parser.add_argument(
+        "--language",
+        default=None,
+        help=(
+            "Build the localized documentation in one language (es/en/ca/hu). Sets CADRUMO_DOCS_LANGUAGE, "
+            "which docs/conf.py validates against the OutputLanguage set. A localized build is always the "
+            "user scope (the API autodoc tree stays English), so --language forces --scope user."
+        ),
+    )
+    parser.add_argument(
+        "--out-dir",
+        default=None,
+        help=(
+            "Redirect a full build's HTML output (and its Pagefind index and sitemap) to this directory "
+            "instead of the canonical HTML output root. Used by the deploy publisher to build each localized "
+            "site into a per-language subdirectory. Full builds only; not valid with --single-page or explicit paths."
+        ),
+    )
     args = parser.parse_args(argv)
 
     repo_root = _repo_root()
+    output_root = Path(args.out_dir) if args.out_dir else None
+    if output_root is not None and (args.single_page or args.paths):
+        raise SystemExit("--out-dir applies to a whole-scope build; it cannot combine with --single-page or paths.")
+    if args.language is not None:
+        # A localized build is a user-scope build: the API autodoc tree is
+        # English-only, so only the operator surface is translated. conf.py reads
+        # CADRUMO_DOCS_LANGUAGE and validates it against the OutputLanguage set,
+        # so an unknown tag fails the build loudly rather than being re-listed here.
+        os.environ["CADRUMO_DOCS_LANGUAGE"] = args.language
+        if args.scope is None:
+            args.scope = "user"
+        elif args.scope != "user":
+            raise SystemExit(f"--language builds are user-scope only; got --scope {args.scope!r}")
+    # Precedence: explicit --scope flag, then the CADRUMO_DOCS_SCOPE env, then full.
+    scope = args.scope or os.environ.get("CADRUMO_DOCS_SCOPE") or "full"
+    if scope not in {"full", "user"}:
+        raise SystemExit(f"scope must be 'full' or 'user'; got {scope!r}")
     if args.single_page and args.paths:
         raise SystemExit("--single-page cannot be combined with positional paths")
-    paths = (
-        [Path(args.single_page)]
-        if args.single_page
-        else ([Path(path) for path in args.paths] if args.paths else changed_paths(repo_root, args.base))
-    )
-    plan = planned_doc_targets(repo_root, paths)
-    if args.single_page and (plan.full_build_required or len(plan.targets) != 1):
-        raise SystemExit(f"--single-page requires one existing docs source file: {args.single_page}")
-    if args.single_page and _is_generated_doc(repo_root / "docs", plan.targets[0]):
+    if scope == "user" and not args.single_page and not args.paths:
+        # `--scope user` with no target is the ergonomic "build all user docs"
+        # command: force a full build (docs/conf.py is the full-build trigger),
+        # scoped to the user surface by CADRUMO_DOCS_SCOPE.
+        paths = [Path("docs") / "conf.py"]
+    else:
+        paths = (
+            [Path(args.single_page)]
+            if args.single_page
+            else ([Path(path) for path in args.paths] if args.paths else changed_paths(repo_root, args.base))
+        )
+    if args.single_page and _is_generated_doc(
+        repo_root / "docs",
+        (repo_root / args.single_page).resolve(),
+    ):
         raise SystemExit(
             "--single-page does not support generated API/CLI pages; use the explicit generator or full docs build.",
         )
+    plan = planned_doc_targets(repo_root, paths)
+    if args.single_page and (plan.full_build_required or len(plan.targets) != 1):
+        raise SystemExit(f"--single-page requires one existing docs source file: {args.single_page}")
     if not plan.full_build_required and not plan.targets:
         print("No changed documentation targets detected.", flush=True)
         if args.rag_index:
@@ -553,7 +793,14 @@ def main(argv: list[str] | None = None) -> int:
         print("Building changed documentation targets:", flush=True)
         for target in plan.targets:
             print(f"  {target.relative_to(repo_root)}", flush=True)
-    build_docs(repo_root, plan, strict=args.strict, single_page=bool(args.single_page))
+    build_docs(
+        repo_root,
+        plan,
+        strict=args.strict,
+        single_page=bool(args.single_page),
+        scope=scope,
+        output_root=output_root,
+    )
     if args.rag_index:
         update_rag_index(repo_root)
     return 0

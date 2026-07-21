@@ -24,11 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import (
-    profile_create_storage_span,
-    register_minimal_profile,
-    set_active_fields,
-)
+from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.aggregation import LEDGER_BINDING_SOURCE_KINDS, BindingSourceKind
@@ -37,6 +33,7 @@ from ....domain.calculations.registry import InputKind
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 from .envelope_helpers import unwrap_envelope_notices, unwrap_schema_envelope
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -262,7 +259,7 @@ def test_requires_warns_about_unresolved_profile_coefficients(_partial_m100_prof
     notices = unwrap_envelope_notices(invocation.output)
     warning = next(notice for notice in notices if notice["code"] == "modelo.requires.missing_profile_coefficient")
     assert warning["severity"] == "warning"
-    assert warning["suggestion"] == "aeat config profile ratios"
+    assert warning["suggestion"] == "aeat app ledger ratios set"
     for binding_id in unresolved:
         assert binding_id in warning["context"]["missing_bindings"]
 

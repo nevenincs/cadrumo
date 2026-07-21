@@ -3,12 +3,19 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import TypedDict
 
 import pytest
 
 from ...bucket import BucketLockedError
 from ...errors import StorageValidationError
+from .._active_session import (
+    activate_session,
+    close_active_bucket_session,
+    current_active_bucket_session,
+    has_active_bucket_session,
+)
 from .._bucket_session import (
     BucketSession,
 )
@@ -30,6 +37,7 @@ def _open_session(
     dek: bytes = _DEK,
     idle_minutes: int = 15,
     opened_at: datetime = _NOW,
+    storage_root: Path | None = None,
 ) -> BucketSession:
     return BucketSession.open(
         bucket_id=bucket_id,
@@ -37,15 +45,18 @@ def _open_session(
         dek=dek,
         idle_minutes=idle_minutes,
         opened_at=opened_at,
+        storage_root=storage_root,
     )
 
 
 def test_open_round_trip_exposes_kek_and_dek() -> None:
-    session = _open_session()
+    storage_root = Path("var") / "profiles"
+    session = _open_session(storage_root=storage_root)
 
     assert session.kek == _KEK
     assert session.dek == _DEK
     assert session.bucket_id == _BUCKET_ID
+    assert session.storage_root == storage_root.resolve()
     assert session.sealed is False
 
 
@@ -80,6 +91,75 @@ def test_close_is_idempotent() -> None:
     session.close()
 
     assert session.sealed is True
+
+
+def test_close_active_bucket_session_closes_evicts_and_repeats_as_no_op() -> None:
+    session = _open_session()
+    kek_buffer = session._kek_buffer
+    dek_buffer = session._dek_buffer
+
+    with activate_session(session):
+        assert current_active_bucket_session() is session
+        assert has_active_bucket_session() is True
+
+        close_active_bucket_session()
+
+        assert current_active_bucket_session() is None
+        assert has_active_bucket_session() is False
+        assert session.sealed is True
+        assert bytes(kek_buffer) == bytes(32)
+        assert bytes(dek_buffer) == bytes(32)
+
+        close_active_bucket_session()
+
+        assert current_active_bucket_session() is None
+        assert has_active_bucket_session() is False
+
+
+def test_close_inner_active_session_restores_unclosed_outer_after_token_reset() -> None:
+    outer = _open_session()
+    inner = _open_session(
+        bucket_id=_OTHER_BUCKET_ID,
+        kek=b"i" * 32,
+        dek=b"I" * 32,
+    )
+
+    with activate_session(outer):
+        with activate_session(inner):
+            assert current_active_bucket_session() is inner
+
+            close_active_bucket_session()
+
+            assert current_active_bucket_session() is None
+            assert has_active_bucket_session() is False
+            assert inner.sealed is True
+
+        assert current_active_bucket_session() is outer
+        assert has_active_bucket_session() is True
+        assert outer.sealed is False
+        assert outer.dek == _DEK
+
+        close_active_bucket_session()
+
+        assert current_active_bucket_session() is None
+        assert has_active_bucket_session() is False
+
+    assert current_active_bucket_session() is None
+    assert has_active_bucket_session() is False
+
+
+def test_close_active_bucket_session_evicts_already_sealed_binding() -> None:
+    session = _open_session()
+    session.close()
+
+    with activate_session(session):
+        assert current_active_bucket_session() is session
+        assert has_active_bucket_session() is True
+
+        close_active_bucket_session()
+
+        assert current_active_bucket_session() is None
+        assert has_active_bucket_session() is False
 
 
 def test_two_sessions_do_not_alias_buffers() -> None:

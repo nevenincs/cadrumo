@@ -1,9 +1,10 @@
-"""Pure parsing / validation / error-formatting helpers for the ledger CLI.
+"""Shared parsing, validation, and mutation-output helpers for the ledger CLI.
 
 Split from :mod:`_ledger` to keep each module within the line budget. These are
 stateless input-coercion and error-shaping utilities consumed by the
 ``aeat app ledger`` command bodies, including :class:`TransactionCatalogueRepository`
-id resolution.
+id resolution. Mutation emitters validate their result through the supplied
+:class:`OutputSchema` subtype.
 """
 
 from __future__ import annotations
@@ -16,13 +17,19 @@ from pydantic import ValidationError
 from pydantic_core import ErrorDetails
 
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...application.ledger import list_manual_transactions, resolve_transaction_id
+from ...application.ledger import (
+    ledger_transaction_payload,
+    ledger_transaction_review_status,
+    list_manual_transactions,
+    resolve_transaction_id,
+)
 from ...core.i18n import tr
 from ...domain.categories import SpendingCategory
 from ...domain.contribuyente import FiscalResidency
 from ...domain.deadlines import IrpfSpecialRegime
-from ...domain.transactions import TransactionIdPrefixError, TransactionValidationError
-from ._common import _bad, parse_decimal_amount, parse_optional_decimal_amount
+from ...domain.transactions import Transaction, TransactionIdPrefixError, TransactionValidationError
+from ._common import _bad, _emit_envelope, parse_decimal_amount, parse_optional_decimal_amount
+from ._schemas import OutputSchema
 
 
 class _TransactionRepo(Protocol):
@@ -30,6 +37,41 @@ class _TransactionRepo(Protocol):
 
     @property
     def bucket_id(self) -> str: ...
+
+
+def _emit_update_result(
+    ctx: typer.Context,
+    result_transaction: Transaction,
+    bucket_id: str,
+    events: tuple[str, ...],
+    *,
+    command: str,
+    result_cls: type[OutputSchema],
+) -> None:
+    """Emit the canonical single-transaction ledger mutation result."""
+    transaction_payload = ledger_transaction_payload(result_transaction)
+    review_status = ledger_transaction_review_status(result_transaction)
+    result = result_cls.model_validate(
+        {
+            "bucket_id": bucket_id,
+            "transaction_id": result_transaction.transaction_id,
+            "bucket_event_ids": list(events),
+            "review_status": review_status,
+            "transaction": transaction_payload.model_dump(mode="json"),
+        },
+    )
+    _emit_envelope(
+        ctx,
+        command=command,
+        result=result,
+        lines=[
+            f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
+            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
+            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
+            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
+            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
+        ],
+    )
 
 
 def _bucket_transaction_ids(transaction_repository: _TransactionRepo) -> tuple[str, ...]:

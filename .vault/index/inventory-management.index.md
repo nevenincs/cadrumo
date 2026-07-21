@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#inventory-management'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-29-inventory-management-adr]]'
   - '[[2026-04-29-inventory-management-code-review-audit]]'
@@ -28,7 +28,7 @@ Auto-generated index of all documents tagged with `#inventory-management`.
 ### adr
 
 - `2026-04-29-inventory-management-adr` - `inventory-management` adr: `profile ledgers for Anexo D inventory and amortization` | (**status:** `accepted`)
-- `2026-04-30-inventory-management-cli-design-adr` - inventory-management cli design adr: canonical data ledgers ux
+- `2026-04-30-inventory-management-cli-design-adr` - inventory-management cli design adr: canonical data ledgers ux | (**status:** `accepted`)
 
 ### audit
 

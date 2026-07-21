@@ -10,15 +10,14 @@ name = "cadrumo-data-manuals"
 # two ever drift, so the companion can only ship at the same version as the
 # runtime wheel that resolves it. Bump both (and the sibling
 # `cadrumo-data-official`) together on every release.
-version = "0.2.0"
-description = "AEAT/BOE práctico manuals (corpus source binaries) for the cadrumo distribution"
+version = "0.2.1"
+description = "AEAT/BOE práctico manuals (corpus source binaries) for the Cadrumo distribution"
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
 # Explicit so the wheel/sdist always carry the Apache 4(d) attribution chain
 # (dist-info/licenses/{LICENSE,NOTICE}); the NOTICE also scopes the licence
-# to packaging/derived works, never the official AEAT/BOE documents
-# (license-posture ADR).
+# to packaging/derived works, never the official AEAT/BOE documents.
 license-files = ["LICENSE", "NOTICE"]
 authors = [
   { name = "wgergely" },

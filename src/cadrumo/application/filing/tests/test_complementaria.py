@@ -26,7 +26,7 @@ from .. import (
     build_runtime_schema_provider,
     load_amendment,
 )
-from ..testing import ModeloTestProfile
+from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -144,7 +144,7 @@ def _registry_draft(*, inputs: ModeloInputs) -> ModeloDraft:
     return build_draft(
         modelo="130",
         period=Period.from_year_and_code(2024, "1T"),
-        profile=ModeloTestProfile(
+        profile=ModeloOperatorProfile(
             tax_id="00000000T",
             display_name="Complementaria registry test",
         ),

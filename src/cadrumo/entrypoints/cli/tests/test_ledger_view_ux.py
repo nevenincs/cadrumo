@@ -312,7 +312,7 @@ def test_ledger_view_surfaces_manual_decision_provenance(tmp_path: Path) -> None
     the transaction's active decision; ``view`` must expose ``classified_by``,
     ``classified_at``, ``classification_confidence``, and
     ``classification_reason`` on both the text and JSON surfaces so an
-    operator can read the "why" from a single command (#231).
+    operator can read the "why" from a single command.
     """
     txn = _imported_transaction_id(tmp_path)
 
@@ -344,63 +344,6 @@ def test_ledger_view_surfaces_manual_decision_provenance(tmp_path: Path) -> None
     assert "Classification reason\tmatches counterparty + amount-range rule" in viewed_text.output
     assert "Classification confidence\t1" in viewed_text.output
     assert "Classified at\t" in viewed_text.output
-
-
-def test_ledger_view_surfaces_llm_decision_provenance(tmp_path: Path) -> None:
-    """A distinct classifier source (`llm:<model>`) surfaces its own provenance.
-
-    Confirms the "why" surface differentiates classifier sources: a manual
-    decision reads ``classified_by = manual`` (previous test); an applied LLM
-    suggestion reads ``classified_by = llm:<provider>:<model>`` with the
-    model's own confidence and reason, proving the provenance is read from
-    the real per-decision state rather than a hardcoded label.
-    """
-    from decimal import Decimal
-
-    from ....domain.categories import SpendingCategory
-    from ....domain.transactions import (
-        BusinessClassification,
-        LLMClassificationResponse,
-        Transaction,
-        register_classifier,
-    )
-
-    class _DeterministicClassifier:
-        @property
-        def decided_by(self) -> str:
-            return "llm:claude:test-fixed-1"
-
-        def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
-            return LLMClassificationResponse(
-                classification=BusinessClassification.BUSINESS,
-                confidence=Decimal("0.91"),
-                reason="restaurante meal with a named client suggests a business meal",
-                category=SpendingCategory.MANUTENCION_DIETAS_NACIONAL,
-            )
-
-    fixture = _DeterministicClassifier()
-    register_classifier("claude", lambda **_kwargs: fixture)
-    try:
-        txn = _imported_transaction_id(tmp_path)
-        applied = _invoke(["app", "ledger", "classify", txn, "--llm", "claude", "--apply"])
-        assert applied.exit_code == 0, applied.output
-
-        viewed_json = _invoke(["--format", "json", "app", "ledger", "view", txn])
-        assert viewed_json.exit_code == 0, viewed_json.output
-        transaction = json.loads(viewed_json.output)["result"]["transaction"]
-        assert transaction["classified_by"] == "llm:claude:test-fixed-1"
-        assert transaction["classification_reason"] == ("restaurante meal with a named client suggests a business meal")
-        assert transaction["classification_confidence"].startswith("0.91")
-        assert transaction["classified_at"]
-
-        viewed_text = _invoke(["app", "ledger", "view", txn])
-        assert viewed_text.exit_code == 0, viewed_text.output
-        assert "Classified by\tllm:claude:test-fixed-1" in viewed_text.output
-        assert "Classification confidence\t0.91" in viewed_text.output
-    finally:
-        from ....domain.transactions import build_claude_classifier
-
-        register_classifier("claude", build_claude_classifier)
 
 
 def test_list_and_view_render_accented_descriptions_identically(

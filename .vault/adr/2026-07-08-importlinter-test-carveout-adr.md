@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#importlinter-test-carveout'
 date: '2026-07-08'
-modified: '2026-07-10'
-related: []
+modified: '2026-07-17'
+related:
+  - '[[2026-07-10-importlinter-test-carveout-research]]'
 ---
 
 # `importlinter-test-carveout` adr: `Test-file import-linter carve-out` | (**status:** `accepted`)
@@ -37,10 +38,10 @@ edit, and the file had grown past a thousand lines of near-duplicate entries.
   (one module segment) and `**` (one-or-more segments, no zero-segment
   match); confirmed empirically that covering "a test module at any nesting
   depth under a layer" needs two lines per (source, target) pair: the
-  zero-intervening-segment case (`aeat.domain.tests.**`) and the
-  one-or-more-intervening case (`aeat.domain.**.tests.**`).
-- A handful of test edges route through the shared `aeat.tests.*` /
-  `aeat.locales` cross-cutting helper packages (not declared layers
+  zero-intervening-segment case (`cadrumo.domain.tests.**`) and the
+  one-or-more-intervening case (`cadrumo.domain.**.tests.**`).
+- A handful of test edges route through the shared `cadrumo.tests.*` /
+  `cadrumo.locales` cross-cutting helper packages (not declared layers
   themselves) that transitively reach a forbidden outer layer; the direct
   edge into the helper must be exempted, not the transitive target.
 - `conftest.py` files sitting directly in a layer subpackage (not nested
@@ -83,7 +84,7 @@ has at least one real matching edge today: `<layer>.tests.**` for a test
 module directly under the layer root, `<layer>.**.tests.**` for a test module
 nested under an arbitrary number of subpackages, plus `<layer>.**.conftest`
 for a `conftest.py` outside a `tests/` folder, and two narrow lines routing
-through the shared `aeat.tests.cli_runner` / `aeat.locales` helper packages
+through the shared `cadrumo.tests.cli_runner` / `cadrumo.locales` helper packages
 that transitively reach an outer layer. Every production entry (the
 `application -> adapters` ADR sec. 538 allowance, the per-repository
 ports-inversion edges, the `core/resources/_repos` deferred loaders) is kept

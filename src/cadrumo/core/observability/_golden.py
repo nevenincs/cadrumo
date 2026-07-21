@@ -1,7 +1,6 @@
 """Canonicalise / mask / compare primitive for golden-output determinism.
 
-One substrate, two consumers (ADR
-``2026-06-30-deterministic-output-replay-substrate``): the observability
+One substrate, two consumers: the observability
 :func:`core.observability.replay_run` envelope-assertion tier and
 the harness operator golden gate both call this primitive; neither
 re-implements capture or compare.

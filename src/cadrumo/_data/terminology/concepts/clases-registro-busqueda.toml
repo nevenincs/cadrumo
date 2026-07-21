@@ -11,12 +11,8 @@ updated_at = 2026-06-12
 
 [language.es]
 short_description = "Las categorias de resultado que la busqueda offline combina y rankea juntas."
-definition = "Conjunto tipado de registros que la busqueda de documentacion combina: tarjetas de concepto del Handbook, proyecciones de casilla desde el registro, superficies CLI y paginas documentales. En ADR D4 y D5, estas clases permiten que una consulta devuelva significado, casillas, grounding legal y navegacion en un unico ranking."
+definition = "Conjunto tipado de registros que la busqueda de documentacion combina: tarjetas de concepto del Handbook, proyecciones de casilla desde el registro, superficies CLI y paginas documentales. Estas clases permiten que una consulta devuelva significado, casillas, grounding legal y navegacion en un unico ranking."
 scope_note = "La clase de registro no es una clase Python concreta solamente; es la categoria semantica que viaja en los metadatos de busqueda."
-
-[language.es.source]
-citation = "2026-06-10-docs-terminology-search-adr, decisiones D4 y D5."
-authority = "vaultspec"
 
 [[language.es.term]]
 label = "clases de registro de busqueda"

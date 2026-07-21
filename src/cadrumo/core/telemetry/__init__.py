@@ -20,16 +20,16 @@ be emitted remotely unless it is explicitly registered in
 :func:`~core.telemetry.emit_telemetry_event`'s default sink,
 :class:`~core.telemetry.LocalNoopTelemetrySink`, discards the payload -- this
 proves the gate-then-schema-then-emit pipeline end-to-end without any real
-transmission, per ``2026-07-04-remote-telemetry-adr``.
+transmission.
 :class:`~core.telemetry.HttpTelemetrySink` is the real network-transmitting
 implementation of the same :class:`~core.telemetry.TelemetrySink` protocol: it
 is structurally inert (a pure no-op) unless a caller both builds it with a
 configured ``settings.cadrumo_telemetry_endpoint`` AND the consent gate already
 permitted emission, and any transport failure is swallowed rather than raised.
-No caller wires it as a default sink in this slice; a producer or CLI surface
-must explicitly opt a call site into it.
+No caller wires it as a default sink today; a producer or CLI surface must
+explicitly opt a call site into it.
 
-Three non-sensitive operational producers are wired in this slice
+Three non-sensitive operational producers are wired
 (:func:`~core.telemetry.emit_command_invocation_telemetry`,
 :func:`~core.telemetry.emit_llm_run_telemetry`,
 :func:`~core.telemetry.emit_error_frequency_telemetry`), each registered in
