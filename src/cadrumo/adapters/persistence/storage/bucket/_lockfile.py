@@ -314,12 +314,7 @@ def _release_incomplete_local_slot(ownership_key: Path, *, pid: int, thread_id: 
     """Drop a depth-0 in-process slot owned by this thread after a failed claim."""
     with _LOCAL_LOCKS_CONDITION:
         ownership = _LOCAL_LOCKS.get(ownership_key)
-        if (
-            ownership is not None
-            and ownership.pid == pid
-            and ownership.thread_id == thread_id
-            and ownership.depth == 0
-        ):
+        if ownership is not None and ownership.pid == pid and ownership.thread_id == thread_id and ownership.depth == 0:
             del _LOCAL_LOCKS[ownership_key]
             _LOCAL_LOCKS_CONDITION.notify_all()
 

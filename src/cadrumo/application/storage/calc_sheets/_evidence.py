@@ -59,6 +59,8 @@ def sheet_evidence_from_ledger_filing(
                     transaction_id=row.transaction_id,
                     amount=row.amount,
                     currency=row.currency,
+                    fx_rate=row.fx_rate,
+                    value_in_eur=row.value_in_eur,
                     taxable_base=row.taxable_base,
                     iva_rate=row.iva_rate,
                     iva_amount=row.iva_amount,

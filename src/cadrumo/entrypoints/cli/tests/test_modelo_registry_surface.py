@@ -82,8 +82,13 @@ def _seed_modelo_130_ready_profile(bucket_id: str) -> None:
 
 def test_documented_subverb_is_listed_in_help_and_resolves() -> None:
     """Documented app subverbs appear in help and resolve to real commands."""
+    # The resolved-verb hint is the positional-argument metavar as Typer
+    # renders it in the usage line: a required positional appears braced
+    # (`{modelo}`). Older Typer emitted a bare-uppercase `MODELO`; the
+    # capability (a required MODELO positional) is unchanged — only the
+    # metavar spelling moved.
     cases = (
-        ("modelo-describe", ["app", "modelo"], "describe", "MODELO"),
+        ("modelo-describe", ["app", "modelo"], "describe", "{modelo}"),
         ("ledger-preflight", ["app", "ledger"], "preflight", None),
     )
 

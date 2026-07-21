@@ -37,7 +37,7 @@ from ....domain.modelos import (
 )
 from ....tests.aeat_literal_fixtures import aeat_url, justificante_cotejo_url
 from ....tests.registry_observations import registry_grounded_observations
-from ...calculations import CalculationObservationRepository
+from ...calculations import ObservationEnvelopePayload
 from .. import (
     OverviewCalendar,
     OverviewCalendarEvent,
@@ -202,7 +202,7 @@ def calculation_observation_payload(
     source_kind: str,
     source_metadata: dict[str, str] | None = None,
     value: Decimal = Decimal("123.45"),
-) -> object:
+) -> ObservationEnvelopePayload:
     observation = RegistryModeloObservation(
         modelo="303",
         filing_year=2025,
@@ -210,13 +210,13 @@ def calculation_observation_payload(
         observations=observed_casilla_observations(value),
     )
     if source_metadata is None:
-        return CalculationObservationRepository.payload_type(
+        return ObservationEnvelopePayload(
             observation=observation,
             captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
             source_kind=source_kind,
             stamped_revision_id=OBSERVED_REVISION_ID,
         )
-    return CalculationObservationRepository.payload_type(
+    return ObservationEnvelopePayload(
         observation=observation,
         captured_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
         source_kind=source_kind,

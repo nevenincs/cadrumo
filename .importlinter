@@ -312,6 +312,11 @@ ignore_imports =
     cadrumo.application.filing._import -> cadrumo.adapters.**
     cadrumo.application.filing._runtime_repository -> cadrumo.adapters.**
     cadrumo.application.inventory._service -> cadrumo.adapters.**
+    # Foreign-currency invoices are converted at creation time, so the invoice
+    # creation path constructs the default ECB rate provider (the concrete
+    # ExchangeRateProvider) — the outbound-wiring edge sec. 538 permits, pinned
+    # at the narrow fx target rather than a broad adapters wildcard.
+    cadrumo.application.invoices._creation -> cadrumo.adapters.outbound.fx
     cadrumo.application.invoices._source_resolver -> cadrumo.adapters.**
     cadrumo.application.ledger._actions_common -> cadrumo.adapters.**
     cadrumo.application.ledger._actions_import -> cadrumo.adapters.**

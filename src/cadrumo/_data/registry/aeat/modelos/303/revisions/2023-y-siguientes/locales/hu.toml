@@ -119,6 +119,12 @@
 "iva.resultado-regimen-general" = "Általános rendszer eredménye"
 "iva.soportado.importaciones" = "Levonható előzetesen felszámított ÁFA folyó áruk importján"
 "iva.soportado.interiores" = "Levonható ÁFA összeg belföldi folyó ügyletek után"
+"modulos-iva-1-unidades" = "1. modul (Alkalmazott személyzet): egységek száma"
+"modulos-iva-2-unidades" = "2. modul (tevékenységspecifikus egység: megtett távolság, járművek raksúlya vagy a helyiség alapterülete): egységek száma"
+"modulos-iva-3-unidades" = "3. modul (tevékenységspecifikus egység: villamosenergia- vagy egyéb energiafogyasztás): egységek száma"
+"modulos-iva-cuota-derivada" = "Az egyszerűsített rendszerből eredő adó (a levonhatókkal/átalánnyal csökkentett nettó keletkezett ÁFA, vagy a minimális adó közül a nagyobb)"
+"modulos-iva-cuota-devengada" = "Folyó ügyletek után keletkezett ÁFA (Σ modulegységek × egységenkénti éves keletkezett ÁFA)"
+"modulos-iva-epigrafe" = "A tevékenység IAE-tételszáma az ÁFA egyszerűsített rendszerében (modulok)"
 
 [help]
 "01" = "01. mező: keletkezett ÁFA adóalapja az általános rendszer szupercsökkentett 4%-os kulcsán."
@@ -241,3 +247,9 @@
 "iva.resultado-regimen-general" = "Az általános rendszer eredménye, a keletkezett ÁFA és a levonható ÁFA különbségeként számítva."
 "iva.soportado.importaciones" = "Folyó áruk importján előzetesen felszámított levonható ÁFA."
 "iva.soportado.interiores" = "A belföldi termékbeszerzések és szolgáltatásigénybevételek után fizetett, levonható ÁFA."
+"modulos-iva-1-unidades" = "1. modul (Alkalmazott személyzet): egységek száma"
+"modulos-iva-2-unidades" = "2. modul (tevékenységspecifikus egység: megtett távolság, járművek raksúlya vagy a helyiség alapterülete): egységek száma"
+"modulos-iva-3-unidades" = "3. modul (tevékenységspecifikus egység: villamosenergia- vagy egyéb energiafogyasztás): egységek száma"
+"modulos-iva-cuota-derivada" = "Az egyszerűsített rendszerből eredő adó (a levonhatókkal/átalánnyal csökkentett nettó keletkezett ÁFA, vagy a minimális adó közül a nagyobb)"
+"modulos-iva-cuota-devengada" = "Folyó ügyletek után keletkezett ÁFA (Σ modulegységek × egységenkénti éves keletkezett ÁFA)"
+"modulos-iva-epigrafe" = "A tevékenység IAE-tételszáma az ÁFA egyszerűsített rendszerében (modulok)"

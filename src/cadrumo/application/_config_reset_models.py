@@ -258,9 +258,7 @@ class ConfigResetOperation(BaseModel):
         return expected_deleted_count, expected_already_absent_count, expected_override_count
 
     def _validate_summary_reconciliation(self, summary: ConfigResetSummary) -> None:
-        expected_deleted_count, expected_already_absent_count, expected_override_count = (
-            self._expected_summary_counts()
-        )
+        expected_deleted_count, expected_already_absent_count, expected_override_count = self._expected_summary_counts()
         if summary.target_count != len(self.targets):
             raise ValueError("complete reset summary target count does not match targets")
         if summary.deleted_count != expected_deleted_count:
@@ -271,10 +269,7 @@ class ConfigResetOperation(BaseModel):
             raise ValueError("complete reset summary retention override count does not match targets")
         if summary.completed_at != self.updated_at:
             raise ValueError("complete reset summary timestamp must match operation update timestamp")
-        if any(
-            target.completed_at is None or target.completed_at > summary.completed_at
-            for target in self.targets
-        ):
+        if any(target.completed_at is None or target.completed_at > summary.completed_at for target in self.targets):
             raise ValueError("complete reset target timestamps must precede operation completion")
 
     def _validate_pause(self) -> None:

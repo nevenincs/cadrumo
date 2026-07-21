@@ -75,6 +75,7 @@ from ...domain.modelos import (
 from ._action_errors import ExternalModeloImportError, WorkUnitMutationRefusedError, WorkUnitNotFoundError
 from ._calculation_helpers import external_filing_observations as _external_filing_observations
 from ._registry_helpers import reject_unknown_import_casillas as _reject_unknown_import_casillas
+from ._revision_persistence import _supersede_prior_current_filing
 from ._revision_persistence import emit_bucket_event as _emit_bucket_event
 
 _JUSTIFICANTE_BOUND_EVIDENCE_KINDS = frozenset(
@@ -304,25 +305,13 @@ def _supersede_prior_current_external_filing(
     updated_filing_catalogue = filing_catalogue
     if prior_current is None:
         return updated_filing_catalogue, revisions
-    superseded_prior = prior_current.model_copy(
-        update={
-            "status": ModeloRecordStatus.SUPERSEDIDO,
-            "superseded_at": now,
-            "superseded_by_filing_record_id": new_filing_id,
-        },
+    return _supersede_prior_current_filing(
+        prior_current,
+        filing_catalogue=updated_filing_catalogue,
+        revisions=revisions,
+        new_filing_id=new_filing_id,
+        now=now,
     )
-    updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
-    prior_revision = revisions.get(prior_current.calculation_revision_id)
-    if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
-        superseded_revision = prior_revision.model_copy(
-            update={
-                "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-                "superseded_at": now,
-                "updated_at": now,
-            },
-        )
-        revisions = upsert_calculation_revision(revisions, superseded_revision)
-    return updated_filing_catalogue, revisions
 
 
 def _build_external_filing_record(

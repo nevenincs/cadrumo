@@ -2,11 +2,35 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from pydantic import BaseModel
 
 
-def single_field_model(field_name: str, field_type: object) -> type[BaseModel]:
-    """Return a one-field model that validates a real scalar alias type.
+@dataclass(frozen=True)
+class SingleFieldHolder:
+    """A one-field model plus construction and read-back over its dynamic field.
+
+    ``field_name`` is a runtime string, so the generated class exposes neither a
+    constructor keyword nor an attribute a type checker can see. Routing both
+    construction and read-back through this holder keeps the dynamic name in one
+    place instead of leaking an unprovable keyword to every call site.
+    """
+
+    field_name: str
+    model: type[BaseModel]
+
+    def build(self, value: object) -> BaseModel:
+        """Validate ``value`` through the real alias type, as pydantic would."""
+        return self.model(**{self.field_name: value})
+
+    def value_of(self, holder: BaseModel) -> object:
+        """Read the dynamically-declared field back off a built instance."""
+        return getattr(holder, self.field_name)
+
+
+def single_field_holder(field_name: str, field_type: object) -> SingleFieldHolder:
+    """Return a holder over a one-field model that validates a real scalar alias.
 
     Builds the class directly through :class:`type` (invoking ``BaseModel``'s
     own metaclass, exactly as a plain class-body field declaration would)
@@ -15,15 +39,5 @@ def single_field_model(field_name: str, field_type: object) -> type[BaseModel]:
     dunder keyword parameters (``__config__``, ``__base__``, ...), so no
     static overload of that ``**field_definitions`` splat can be proven safe.
     """
-    return type("_Holder", (BaseModel,), {"__annotations__": {field_name: field_type}})
-
-
-def single_field_value(holder: BaseModel, field_name: str) -> object:
-    """Read the dynamically-declared field back off a :func:`single_field_model` instance.
-
-    The field name is a runtime string, so the class :func:`single_field_model`
-    returns exposes no attribute the type checker can see; this accessor reads
-    it back through the declared name once, here, instead of a per-call-site
-    attribute access every consumer would otherwise need to widen.
-    """
-    return getattr(holder, field_name)
+    model = type("_Holder", (BaseModel,), {"__annotations__": {field_name: field_type}})
+    return SingleFieldHolder(field_name=field_name, model=model)

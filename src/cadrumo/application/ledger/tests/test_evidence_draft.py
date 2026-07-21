@@ -118,6 +118,32 @@ def test_extracts_every_field_from_a_full_invoice_layout_on_host() -> None:
     assert draft.iva_amount == 21
     assert draft.grand_total == 121
     assert draft.raw_text_length > 0
+    # No currency code is printed on this layout, so none is asserted -- the
+    # amounts are not silently claimed to be euro by the extractor.
+    assert draft.currency is None
+
+
+def test_printed_currency_code_is_recovered() -> None:
+    lines = (*_PARTIAL_INVOICE_LINES, "Importe en USD")
+    ev = _evidence_input(_text_pdf_bytes(lines), MediaKind.PDF, "application/pdf")
+
+    draft = extract_invoice_fields(ev)
+
+    assert draft.currency == "USD"
+
+
+def test_two_currency_codes_are_ambiguous_and_ground_to_none() -> None:
+    """An invoice quoting a foreign total beside its euro equivalent is unresolvable.
+
+    Picking the first match would silently denominate the filing amount in
+    whichever code the layout happened to print first.
+    """
+    lines = (*_PARTIAL_INVOICE_LINES, "Total USD 250,00", "Contravalor EUR 230,00")
+    ev = _evidence_input(_text_pdf_bytes(lines), MediaKind.PDF, "application/pdf")
+
+    draft = extract_invoice_fields(ev)
+
+    assert draft.currency is None
 
 
 def test_missing_fields_are_none_not_fabricated() -> None:

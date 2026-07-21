@@ -119,6 +119,12 @@
 "iva.resultado-regimen-general" = "Resultat del règim general"
 "iva.soportado.importaciones" = "Quota d'IVA suportat deduïble en importacions de béns corrents"
 "iva.soportado.interiores" = "Quota IVA suportat en operacions interiors corrents"
+"modulos-iva-1-unidades" = "Mòdul 1 (Personal empleat): nombre d'unitats"
+"modulos-iva-2-unidades" = "Mòdul 2 (unitat activitat específica: distància recorreguda, càrrega de vehicles o superfície del local): nombre d'unitats"
+"modulos-iva-3-unidades" = "Mòdul 3 (unitat activitat específica: consum d'energia elèctrica o altra): nombre d'unitats"
+"modulos-iva-cuota-derivada" = "Quota derivada del règim simplificat (major de quota meritada neta de deduïbles/forfet, o quota mínima)"
+"modulos-iva-cuota-devengada" = "Quota meritada per operacions corrents (Σ unitats mòdul × quota meritada anual per unitat)"
+"modulos-iva-epigrafe" = "Epígraf IAE de l'activitat en règim simplificat d'IVA (mòduls)"
 
 [help]
 "01" = "Casella 01: base imposable de l'IVA meritat en el règim general al tipus superreduït del 4%."
@@ -241,3 +247,9 @@
 "iva.resultado-regimen-general" = "Resultat del règim general calculat com IVA meritat menys IVA deduïble."
 "iva.soportado.importaciones" = "IVA suportat deduïble en importacions de béns corrents."
 "iva.soportado.interiores" = "Total d'IVA suportat pagat en compres interiors de béns i serveis corrents."
+"modulos-iva-1-unidades" = "Mòdul 1 (Personal empleat): nombre d'unitats"
+"modulos-iva-2-unidades" = "Mòdul 2 (unitat activitat específica: distància recorreguda, càrrega de vehicles o superfície del local): nombre d'unitats"
+"modulos-iva-3-unidades" = "Mòdul 3 (unitat activitat específica: consum d'energia elèctrica o altra): nombre d'unitats"
+"modulos-iva-cuota-derivada" = "Quota derivada del règim simplificat (major de quota meritada neta de deduïbles/forfet, o quota mínima)"
+"modulos-iva-cuota-devengada" = "Quota meritada per operacions corrents (Σ unitats mòdul × quota meritada anual per unitat)"
+"modulos-iva-epigrafe" = "Epígraf IAE de l'activitat en règim simplificat d'IVA (mòduls)"

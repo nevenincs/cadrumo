@@ -53,14 +53,14 @@ jobs:
     name: Cadrumo / ${{ matrix.label }} / Homebrew source install
     strategy:
       fail-fast: false
-      # Machine-aware load (.github/ci-control-plane.md): THREE of the four legs live on
-      # the one 6-core MacBook (ARM native, Rosetta Intel, colima linux-arm64);
-      # unbounded, they co-land and thrash the laptop. Two at a time keeps the
-      # worst co-residency at two Mac legs (or one Mac + the workstation leg).
+      # Machine-aware load (.github/ci-control-plane.md): TWO of the three legs live on
+      # the one 6-core MacBook (ARM native, colima linux-arm64); unbounded, they
+      # co-land and thrash the laptop. Two at a time keeps the worst
+      # co-residency at two Mac legs (or one Mac + the workstation leg).
       max-parallel: 2
       matrix:
         include:
-          # All four legs are self-hosted (operator ruling 2026-07-21: no
+          # All three legs are self-hosted (operator ruling 2026-07-21: no
           # hosted/cloud runners, ever). per-leg make_jobs feeds
           # HOMEBREW_MAKE_JOBS: brew's build-from-source parallelism is sized
           # to the machine share, not the whole box.
@@ -80,17 +80,9 @@ jobs:
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             row_id: homebrew-linux-x86-64
             make_jobs: "8"
-          # Restored per operator MacBook-avenue provisioning 2026-07-21:
-          # the macOS Linux-ARM container host (colima arm64 container on the ARM MacBook)
-          # and the macOS Intel host (Rosetta x64 runner + /usr/local Intel brew).
-          - id: macos-intel
-            label: macOS Intel
-            runner: [self-hosted, macOS, X64]
-            expected_os: Darwin
-            expected_arch: x86_64
-            brew: /usr/local/bin/brew
-            row_id: homebrew-macos-x86-64
-            make_jobs: "2"
+          # macOS Intel dropped 2026-07-21: Intel is no longer a supported
+          # platform (ARM-only macOS). The remaining MacBook avenue is the
+          # macOS Linux-ARM container host (colima arm64 container on the ARM MacBook).
           - id: linux-arm64
             label: Linux arm64
             runner: [self-hosted, Linux, ARM64]
@@ -311,7 +303,7 @@ jobs:
             echo "no retained Homebrew install to clean up"
           fi
 
-      # All four matrix legs publish distinct asset names to the ONE draft
+      # All three matrix legs publish distinct asset names to the ONE draft
       # evidence-homebrew-<run_id> created by the create-evidence-draft job;
       # the legs are upload-only (single-creator topology).
       - name: Publish Homebrew evidence to the run's evidence draft

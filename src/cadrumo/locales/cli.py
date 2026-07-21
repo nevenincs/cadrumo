@@ -58,6 +58,19 @@ RegistryRootOpt = Annotated[
     ),
 ]
 
+_LocaleArg = Annotated[
+    OutputLanguage,
+    typer.Argument(help=tr("cli.locales.modelo.locale_help", default="Locale code to update.")),
+]
+_ModeloIdArg = Annotated[
+    str,
+    typer.Argument(help=tr("cli.locales.modelo.modelo_help", default="Modelo id to update.")),
+]
+_RevisionIdArg = Annotated[
+    str,
+    typer.Argument(help=tr("cli.locales.modelo.revision_help", default="Revision id to update.")),
+]
+
 
 @app.command("audit")
 def audit(ctx: typer.Context) -> None:
@@ -149,6 +162,34 @@ def set_value(
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
     typer.echo(tr("locales.cli.set.updated", locale_file=path.name, key=key))
+
+
+@app.command("allow-identical")
+def allow_identical(
+    locale: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.allow_identical_locale_help", default="Locale code to update.")),
+    ],
+    key: Annotated[
+        str,
+        typer.Argument(help=tr("cli.locales.allow_identical_key_help", default="Dotted locale key to exempt.")),
+    ],
+    reason: Annotated[
+        str,
+        typer.Argument(
+            help=tr(
+                "cli.locales.allow_identical_reason_help",
+                default="Why this string is legitimately identical to English.",
+            )
+        ),
+    ],
+) -> None:
+    """Record one key as deliberately identical to English."""
+    try:
+        path = _default_manager().allow_identical(locale, key, reason)
+    except LocaleError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(tr("locales.cli.allow_identical.recorded", allowlist_file=path.name, locale=locale, key=key))
 
 
 @app.command("canonicalize-product-identity")
@@ -269,18 +310,9 @@ def modelo_scaffold(
 
 @modelo_app.command("set", help=tr("cli.locales.modelo.set_help", default="Set one modelo schema translation."))
 def modelo_set_value(
-    locale: Annotated[
-        OutputLanguage,
-        typer.Argument(help=tr("cli.locales.modelo.locale_help", default="Locale code to update.")),
-    ],
-    modelo_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.locales.modelo.modelo_help", default="Modelo id to update.")),
-    ],
-    revision_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.locales.modelo.revision_help", default="Revision id to update.")),
-    ],
+    locale: _LocaleArg,
+    modelo_id: _ModeloIdArg,
+    revision_id: _RevisionIdArg,
     field: Annotated[
         ModeloLocaleFieldKind,
         typer.Argument(help=tr("cli.locales.modelo.field_help", default="Translation field to update.")),
@@ -308,18 +340,9 @@ def modelo_set_value(
     help=tr("cli.locales.modelo.remove_help", default="Remove one modelo schema translation."),
 )
 def modelo_remove_value(
-    locale: Annotated[
-        OutputLanguage,
-        typer.Argument(help=tr("cli.locales.modelo.locale_help", default="Locale code to update.")),
-    ],
-    modelo_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.locales.modelo.modelo_help", default="Modelo id to update.")),
-    ],
-    revision_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.locales.modelo.revision_help", default="Revision id to update.")),
-    ],
+    locale: _LocaleArg,
+    modelo_id: _ModeloIdArg,
+    revision_id: _RevisionIdArg,
     field: Annotated[
         ModeloLocaleFieldKind,
         typer.Argument(help=tr("cli.locales.modelo.field_help", default="Translation field to remove.")),

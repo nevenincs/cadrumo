@@ -91,6 +91,8 @@ from ._operator_scope import (
 )
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ...domain.buckets import BucketEvent, BucketEventType
     from ..workflow import WorkflowState, WorkflowStateRepository
 
@@ -527,6 +529,72 @@ def _auth_state_certificate_sources(state: WorkflowState) -> dict[str, object]:
     return dict(_auth_state(state).certificate_sources)
 
 
+def _pending_intent_resumes(
+    existing: CertificateSecretMutationIntent,
+    *,
+    backend: SecureStorageCertificateSecretBackend,
+    source_name: str,
+    removing: bool,
+    secret: SecretStr | None,
+) -> bool:
+    """Report whether a durable pending intent is the one this call resumes.
+
+    A resumable intent names the same source, carries the matching event kind
+    for the requested direction, and — for a set or rotate — was requested with
+    the same secret witness.
+    """
+    matching_kind = (
+        existing.event_kind is CertificateSecretMutationEventKind.REMOVED
+        if removing
+        else existing.event_kind
+        in {
+            CertificateSecretMutationEventKind.SET,
+            CertificateSecretMutationEventKind.ROTATED,
+        }
+    )
+    matching_request = (
+        True
+        if removing
+        else (secret is not None and existing.request_witness == backend.request_witness(source_name, secret))
+    )
+    return existing.source_name == source_name and matching_kind and matching_request
+
+
+def _new_certificate_secret_mutation_intent(
+    *,
+    backend: SecureStorageCertificateSecretBackend,
+    active_bucket_id: str,
+    source_name: str,
+    removing: bool,
+    secret: SecretStr | None,
+    prior_present: bool,
+    started_at: datetime,
+) -> CertificateSecretMutationIntent:
+    """Build the secret-free durable intent for one certificate-secret mutation."""
+    event_kind = (
+        CertificateSecretMutationEventKind.REMOVED
+        if removing
+        else (CertificateSecretMutationEventKind.ROTATED if prior_present else CertificateSecretMutationEventKind.SET)
+    )
+    operation_material = "|".join(
+        (
+            active_bucket_id,
+            source_name,
+            event_kind.value,
+            started_at.isoformat(),
+        ),
+    )
+    return CertificateSecretMutationIntent(
+        operation_id=hashlib.sha256(operation_material.encode("utf-8")).hexdigest(),
+        bucket_id=active_bucket_id,
+        source_name=source_name,
+        event_kind=event_kind,
+        started_at=started_at,
+        prior_present=prior_present,
+        request_witness=(None if secret is None else backend.request_witness(source_name, secret)),
+    )
+
+
 def _prepare_certificate_secret_mutation(
     *,
     repository: WorkflowStateRepository,
@@ -543,21 +611,13 @@ def _prepare_certificate_secret_mutation(
         assert_auth_cleanup_not_in_progress(state)
         existing = state.auth.certificate_secret_mutation_intent
         if existing is not None:
-            matching_kind = (
-                existing.event_kind is CertificateSecretMutationEventKind.REMOVED
-                if removing
-                else existing.event_kind
-                in {
-                    CertificateSecretMutationEventKind.SET,
-                    CertificateSecretMutationEventKind.ROTATED,
-                }
-            )
-            matching_request = (
-                True
-                if removing
-                else (secret is not None and existing.request_witness == backend.request_witness(source_name, secret))
-            )
-            if existing.source_name != source_name or not matching_kind or not matching_request:
+            if not _pending_intent_resumes(
+                existing,
+                backend=backend,
+                source_name=source_name,
+                removing=removing,
+                secret=secret,
+            ):
                 assert_certificate_secret_mutation_not_in_progress(state)
                 raise AssertionError("pending certificate-secret intent did not refuse")
             return state
@@ -569,29 +629,14 @@ def _prepare_certificate_secret_mutation(
         prior_present = backend.get(source_name) is not None
         if removing and not prior_present:
             return state
-        event_kind = (
-            CertificateSecretMutationEventKind.REMOVED
-            if removing
-            else (
-                CertificateSecretMutationEventKind.ROTATED if prior_present else CertificateSecretMutationEventKind.SET
-            )
-        )
-        operation_material = "|".join(
-            (
-                active_bucket_id,
-                source_name,
-                event_kind.value,
-                started_at.isoformat(),
-            ),
-        )
-        intent = CertificateSecretMutationIntent(
-            operation_id=hashlib.sha256(operation_material.encode("utf-8")).hexdigest(),
-            bucket_id=active_bucket_id,
+        intent = _new_certificate_secret_mutation_intent(
+            backend=backend,
+            active_bucket_id=active_bucket_id,
             source_name=source_name,
-            event_kind=event_kind,
-            started_at=started_at,
+            removing=removing,
+            secret=secret,
             prior_present=prior_present,
-            request_witness=(None if secret is None else backend.request_witness(source_name, secret)),
+            started_at=started_at,
         )
         return state.model_copy(
             update={

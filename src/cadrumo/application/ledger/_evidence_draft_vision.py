@@ -87,7 +87,10 @@ Return ONLY one JSON object with exactly these keys (no other text):
   "taxable_base": <string or null, the "base imponible" amount exactly as printed, e.g. "100,00">,
   "iva_rate": <string or null, the IVA percentage exactly as printed, e.g. "21">,
   "iva_amount": <string or null, the IVA cuota amount exactly as printed, e.g. "21,00">,
-  "grand_total": <string or null, the invoice total amount exactly as printed, e.g. "121,00">
+  "grand_total": <string or null, the invoice total amount exactly as printed, e.g. "121,00">,
+  "currency": <string or null, the ISO-4217 code for the currency the amounts \
+are printed in, e.g. "EUR", "USD", "GBP". Read it from the printed symbol or \
+code next to the amounts. If no currency is shown anywhere, null>
 }}
 """
 
@@ -112,6 +115,7 @@ class _VisionExtractedFields(BaseModel):
     iva_rate: str | None = Field(default=None)
     iva_amount: str | None = Field(default=None)
     grand_total: str | None = Field(default=None)
+    currency: str | None = Field(default=None)
 
 
 def _extract_json_object(text: str) -> str | None:
@@ -195,6 +199,23 @@ def _grounded_decimal(raw: str | None) -> Decimal | None:
         return None
 
 
+def _grounded_currency(raw: str | None) -> str | None:
+    """Return *raw* as an ISO-4217 code, or ``None`` when it is not one.
+
+    A currency the model transcribed as a symbol, a word, or anything other
+    than a three-letter alphabetic code is dropped rather than guessed: mapping
+    a bare "$" to USD would invent a fact the document may not support (it is
+    also CAD, AUD, MXN), and inventing the currency of a filing amount is the
+    one error the grounded-extraction discipline exists to prevent.
+    """
+    if raw is None:
+        return None
+    candidate = raw.strip().upper()
+    if len(candidate) != 3 or not candidate.isalpha():
+        return None
+    return candidate
+
+
 def _ground_extracted_fields(fields: _VisionExtractedFields, *, raw_text_length: int) -> InvoiceDraft:
     """Re-validate the model's transcribed strings into a grounded :class:`InvoiceDraft`.
 
@@ -211,6 +232,7 @@ def _ground_extracted_fields(fields: _VisionExtractedFields, *, raw_text_length:
         iva_rate=_grounded_decimal(fields.iva_rate),
         iva_amount=_grounded_decimal(fields.iva_amount),
         grand_total=_grounded_decimal(fields.grand_total),
+        currency=_grounded_currency(fields.currency),
         raw_text_length=raw_text_length,
     )
 

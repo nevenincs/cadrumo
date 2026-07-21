@@ -25,8 +25,11 @@ from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict
 
+from ...adapters.outbound.fx import default_ecb_rate_provider
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
+from ...core.external_constants import DEFAULT_CURRENCY
+from ...domain.currency import ExchangeRateProvider
 from ...domain.invoices import (
     Invoice,
     InvoiceCatalogue,
@@ -102,6 +105,7 @@ def build_catalogue_invoice(
     notes: str = "",
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
+    rate_provider: ExchangeRateProvider | None = None,
 ) -> Invoice:
     """Return a strict rich :class:`Invoice` from operator-supplied fields.
 
@@ -157,7 +161,36 @@ def build_catalogue_invoice(
         invoice_payload["iva_category"] = iva_category.value
     if operation_type is not None:
         invoice_payload["operation_type"] = operation_type.value
+    _stamp_fx_conversion(invoice_payload, currency=currency, issued_at=issued_at, rate_provider=rate_provider)
     return Invoice.model_validate(invoice_payload)
+
+
+def _stamp_fx_conversion(
+    payload: dict[str, object],
+    *,
+    currency: str,
+    issued_at: date,
+    rate_provider: ExchangeRateProvider | None,
+) -> None:
+    """Stamp the euro conversion rate for a foreign-currency invoice.
+
+    Converts at the invoice's issue date, which is the operation date Spanish
+    law binds the official rate to (Ley 46/1998 art. 36), matching the ledger's
+    convert-once-at-ingest shape rather than converting at read time.
+
+    A euro invoice is left unstamped. A foreign invoice whose rate cannot be
+    resolved is also left unstamped rather than defaulted: the record then
+    reports no euro value and is gated out of projection, which is recoverable,
+    where a fabricated rate would not be.
+    """
+    if currency.strip().upper() == DEFAULT_CURRENCY:
+        return
+    provider = rate_provider or default_ecb_rate_provider()
+    rate = provider.get_eur_rate(currency, issued_at)
+    if rate is None:
+        return
+    payload["fx_rate"] = format(rate, "f")
+    payload["fx_rate_date"] = issued_at.isoformat()
 
 
 def create_catalogue_invoice(
@@ -177,6 +210,7 @@ def create_catalogue_invoice(
     iva_category: IvaCategory | None = None,
     operation_type: IntracomOperationType | None = None,
     repository: InvoiceCatalogueRepositoryProtocol | None = None,
+    rate_provider: ExchangeRateProvider | None = None,
 ) -> CatalogueInvoiceCreateResult:
     """Persist one rich catalogue :class:`Invoice` and return the updated catalogue.
 
@@ -202,6 +236,7 @@ def create_catalogue_invoice(
         notes=notes,
         iva_category=iva_category,
         operation_type=operation_type,
+        rate_provider=rate_provider,
     )
     catalogue = repo.load()
     if invoice.invoice_id in catalogue:

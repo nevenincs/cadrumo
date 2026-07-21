@@ -16,6 +16,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ...core.decimal import format_decimal
+from ...core.external_constants import CLASSIFIED_BY_AUTO, CLASSIFIED_BY_MANUAL
 from ...core.time import now
 
 if TYPE_CHECKING:
@@ -48,6 +49,7 @@ from ...domain.modelos import (
 )
 from ...domain.transactions import (
     BucketTransactionRef,
+    BusinessClassification,
     Transaction,
     TransactionCatalogue,
     TransactionCatalogueRepositoryProtocol,
@@ -634,6 +636,22 @@ def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
     )
 
 
+def _persisted_classified_by(command: ManualLedgerTransactionCommand) -> str:
+    """Return the ``classified_by`` value a write of ``command`` would persist.
+
+    Mirrors the stamp in ``_transaction_from_command``: a command that carries a real
+    classification stamps ``classified_by_override or CLASSIFIED_BY_MANUAL``; a
+    still-unprocessed command leaves the field unstamped, so the rebuilt transaction
+    takes the ``Transaction.classified_by`` model default. Projecting the *effective*
+    value keeps the comparison apples-to-apples: a retry that omits the override on a
+    row already stamped ``manual`` still matches, while a retry that changes the
+    override (``rule:a`` -> ``rule:b``) is correctly seen as different content.
+    """
+    if command.business_classification is BusinessClassification.NOT_YET_PROCESSED:
+        return CLASSIFIED_BY_AUTO
+    return command.classified_by_override or CLASSIFIED_BY_MANUAL
+
+
 def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> tuple[object, ...]:
     """Project every persisted field of ``command`` into a positional tuple.
 
@@ -641,6 +659,24 @@ def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> 
     requires the no-op match to compare EVERY persisted field. Keeping the field set as one
     ordered tuple makes a new model field omitted here a single greppable site, paired with
     :func:`_transaction_idempotency_projection` position-for-position.
+
+    Four command fields are deliberately excluded, because none of them is content a
+    retry could silently drop:
+
+    - ``bucket_id`` scopes the lookup rather than describing the movement; the stored
+      row is only ever found by scanning that bucket's own catalogue, so a differing
+      bucket yields a different row, not a false match.
+    - ``actor`` and ``source_command`` are provenance of the invocation, not of the
+      movement. They are stamped once at creation (``created_by`` / ``source_command``)
+      and deliberately NOT re-stamped by a retry, so folding them in would turn a
+      benign retry from a different entry point into a spurious conflict.
+    - ``idempotency_key`` is the match key itself: the guard has already resolved the
+      stored row by the clock-free provider id derived from it, so both sides are equal
+      by construction.
+
+    ``classified_by_override`` is NOT excluded: it is persisted content
+    (``Transaction.classified_by``) and is projected through
+    :func:`_persisted_classified_by`.
     """
     return (
         command.booked_date,
@@ -672,6 +708,7 @@ def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> 
         command.attachment_ids,
         command.notes,
         command.group_label,
+        _persisted_classified_by(command),
     )
 
 
@@ -680,7 +717,9 @@ def _transaction_idempotency_projection(current: Transaction) -> tuple[object, .
 
     The banking-boundary fields read from ``current.raw``; the classification and
     provenance fields read from the transaction directly — position-for-position with
-    :func:`_command_idempotency_projection`.
+    :func:`_command_idempotency_projection`. The trailing ``classified_by`` slot holds
+    the stored stamp, compared against the value a write of the command would persist
+    (:func:`_persisted_classified_by`).
     """
     raw = current.raw
     return (
@@ -712,6 +751,7 @@ def _transaction_idempotency_projection(current: Transaction) -> tuple[object, .
         current.attachment_ids,
         current.notes,
         current.group_label,
+        current.classified_by,
     )
 
 

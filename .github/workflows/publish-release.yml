@@ -28,7 +28,7 @@ on:
         required: true
         type: string
       homebrew_run_id:
-        description: Successful Cadrumo Homebrew Acquisition run (4 homebrew rows)
+        description: Successful Cadrumo Homebrew Acquisition run (3 homebrew rows)
         required: true
         type: string
       claude_evidence_release:
@@ -190,8 +190,8 @@ jobs:
           # DERIVED from the run-id inputs (the run is the identity anchor);
           # verify layers run identity (Actions API), release<->run binding
           # (target_commitish + sealed manifest claims), and per-asset sha256
-          # over every downloaded byte. Aggregate all twelve rows: 3 python
-          # (smoke draft), 1 scoop, 4 homebrew, and the operator's 4 claude-*
+          # over every downloaded byte. Aggregate all eleven rows: 3 python
+          # (smoke draft), 1 scoop, 3 homebrew, and the operator's 4 claude-*
           # rows from the pre-uploaded evidence release (no backing run).
           mkdir -p "$EVIDENCE_DOWNLOAD/rows" "$EVIDENCE_DOWNLOAD/rows-raw"
           verify() {  # tag, run-id, workflow-path, dest

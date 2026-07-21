@@ -30,7 +30,7 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TypedDict
@@ -126,6 +126,38 @@ def _filed_capture_unsupported_reason(*, modelo: str, year: int) -> str | None:
         f"AEAT declarations register does not offer modelo {modelo!r}; "
         "registry revision declares no filed-declarations live read surface"
     )
+
+
+def _plan_filed_capture_queries(
+    resolved_modelos: Sequence[str],
+    *,
+    year_from: int,
+    year_to: int,
+) -> tuple[list[tuple[str, int]], list[FiledDataCaptureFailureRow]]:
+    """Plan the ``(modelo, year)`` pairs a bulk filed-data walk should query.
+
+    Shared by :func:`list_filed_data_bulk` and :func:`capture_filed_data_bulk`:
+    walks each requested modelo across the year range newest-first and diverts
+    any pair the declarations register cannot serve into a typed unsupported
+    failure row instead of querying it, so an unserviceable modelo/year is
+    reported rather than silently dropped.
+
+    Returns:
+        The queryable ``(modelo, year)`` pairs and the unsupported failure rows,
+        each in walk order.
+    """
+    query_pairs: list[tuple[str, int]] = []
+    failures: list[FiledDataCaptureFailureRow] = []
+    for code in resolved_modelos:
+        for year in range(year_to, year_from - 1, -1):
+            unsupported_reason = _filed_capture_unsupported_reason(modelo=code, year=year)
+            if unsupported_reason is not None:
+                failures.append(
+                    _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason),
+                )
+                continue
+            query_pairs.append((code, year))
+    return query_pairs, failures
 
 
 async def _await_filed_register_walk(
@@ -314,17 +346,7 @@ async def list_filed_data_bulk(
 
     resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in resources().modelos.all())
     rows: list[FiledDataListingRow] = []
-    failures: list[FiledDataCaptureFailureRow] = []
-    query_pairs: list[tuple[str, int]] = []
-    for code in resolved_modelos:
-        for year in range(year_to, year_from - 1, -1):
-            unsupported_reason = _filed_capture_unsupported_reason(modelo=code, year=year)
-            if unsupported_reason is not None:
-                failures.append(
-                    _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason),
-                )
-                continue
-            query_pairs.append((code, year))
+    query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
 
     if not query_pairs:
         return BulkFiledDataListingReport(
@@ -459,17 +481,7 @@ async def capture_filed_data_bulk(
     resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in resources().modelos.all())
     store = FiledDeclaracionObservationStore(output_root)
     accumulator = _CaptureAccumulator()
-    failures: list[FiledDataCaptureFailureRow] = []
-    query_pairs: list[tuple[str, int]] = []
-    for code in resolved_modelos:
-        for year in range(year_to, year_from - 1, -1):
-            unsupported_reason = _filed_capture_unsupported_reason(modelo=code, year=year)
-            if unsupported_reason is not None:
-                failures.append(
-                    _unsupported_filed_capture_failure_row(modelo=code, year=year, reason=unsupported_reason),
-                )
-                continue
-            query_pairs.append((code, year))
+    query_pairs, failures = _plan_filed_capture_queries(resolved_modelos, year_from=year_from, year_to=year_to)
 
     if not query_pairs:
         return BulkFiledDataCaptureReport(

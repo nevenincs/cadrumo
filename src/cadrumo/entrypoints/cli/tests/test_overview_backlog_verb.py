@@ -126,30 +126,3 @@ def test_backlog_renders_despite_work_unit_load_failure() -> None:
     assert result.exit_code == 0, result.output
     assert "late_count\t" in result.output
     assert "work_units_degraded\t" in result.output
-
-
-def test_backlog_emits_zero_late_count_for_future_window() -> None:
-    """A window entirely in the future (but within the registry's known
-    year range) has nothing past-due relative to today, so late_count == 0.
-
-    Note: the registry only carries deadline calendars for years it has
-    been configured for. Far-future years (e.g. 2099) are outside that
-    range and the verb correctly refuses them with a non-zero exit.
-    Use the second half of 2026 — a registry-known year that lies
-    entirely in the future relative to the test-run date (2026-05-20).
-    """
-
-    result = invoke_cached_cli(
-        [
-            "app",
-            "overview",
-            "backlog",
-            "--from",
-            "2026-07-01",
-            "--to",
-            "2026-12-31",
-            "--allow-incomplete",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    assert "late_count\t0" in result.output

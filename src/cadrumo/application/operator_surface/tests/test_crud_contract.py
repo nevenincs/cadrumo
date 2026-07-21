@@ -194,4 +194,4 @@ class TestImmutability:
             cli_path="aeat app ledger payable-invoice",
         )
         with pytest.raises(ValidationError):
-            contract.noun = "other"
+            setattr(contract, "noun", "other")  # noqa: B010 - frozen-model refusal is the assertion

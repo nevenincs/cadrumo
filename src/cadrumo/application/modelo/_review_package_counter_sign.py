@@ -51,6 +51,8 @@ from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from pydantic import BaseModel, Field
 
+from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
+from ...core import HEX_PATTERN_128 as _HEX_PATTERN_128
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
@@ -64,12 +66,6 @@ from ._review_package_signing import (
 #: Wire-format version of the counter-signature envelope. Bumped when the
 #: envelope schema changes shape.
 _COUNTER_SIGNATURE_ENVELOPE_VERSION = 1
-
-#: Raw Ed25519 signature size, per RFC 8032.
-_ED25519_SIGNATURE_BYTES = 64
-
-_HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
-_HEX_PATTERN_128 = r"^[0-9a-f]{128}$"
 
 
 class ReviewPackageCounterSigningError(CadrumoError):

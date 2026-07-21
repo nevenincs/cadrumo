@@ -23,12 +23,12 @@ from uuid import uuid4
 import pytest
 from pydantic import ValidationError
 
-from ....tests.fixtures.identity_holder import single_field_model, single_field_value
+from ....tests.fixtures.identity_holder import single_field_holder
 from .. import ProfileId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_Holder = single_field_model("profile_id", ProfileId)
+_Holder = single_field_holder("profile_id", ProfileId)
 _VALID_PROFILE_ID = str(uuid4())
 _UPPERCASE_PROFILE_ID = str(uuid4()).upper()
 _EXTRA_SUFFIX_PROFILE_ID = f"{uuid4()}-extra"
@@ -42,7 +42,7 @@ _EXTRA_SUFFIX_PROFILE_ID = f"{uuid4()}-extra"
     ),
 )
 def test_profile_id_constraint_accepts_valid_values(profile_id: str, expected: str) -> None:
-    assert single_field_value(_Holder(profile_id=profile_id), "profile_id") == expected
+    assert _Holder.value_of(_Holder.build(profile_id)) == expected
 
 
 @pytest.mark.parametrize(
@@ -58,4 +58,4 @@ def test_profile_id_constraint_accepts_valid_values(profile_id: str, expected: s
 )
 def test_profile_id_constraint_rejects_invalid_values(profile_id: str) -> None:
     with pytest.raises(ValidationError):
-        _Holder(profile_id=profile_id)
+        _Holder.build(profile_id)

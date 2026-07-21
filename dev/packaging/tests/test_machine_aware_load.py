@@ -5,7 +5,7 @@ The fleet is six runners on TWO physical machines (three per box, see
 (`pytest -n auto` grabbing every logical CPU) over-subscribes whatever runs
 beside it. Every CI pytest invocation must carry an explicit worker count, the
 packaging campaign legs must pass their per-machine sizing env, and the
-Homebrew matrix — three of whose four legs live on the one MacBook — must be
+Homebrew matrix — two of whose three legs live on the one MacBook — must be
 parallelism-bounded.
 """
 
@@ -79,7 +79,7 @@ def test_campaign_legs_pass_machine_share_sizing() -> None:
 
 
 def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None:
-    """Three of the four homebrew legs share the MacBook: bound them.
+    """Two of the three homebrew legs share the MacBook: bound them.
 
     ``max-parallel: 2`` caps co-landing legs, and brew's build-from-source
     parallelism is sized per leg via ``HOMEBREW_MAKE_JOBS``.
@@ -91,7 +91,6 @@ def test_homebrew_matrix_is_parallelism_bounded_with_per_leg_make_jobs() -> None
     jobs_by_id = {row["id"]: row["make_jobs"] for row in rows}
     assert jobs_by_id == {
         "macos-arm64": "2",
-        "macos-intel": "2",
         "linux-arm64": "2",
         "linux-x86_64": "8",
     }

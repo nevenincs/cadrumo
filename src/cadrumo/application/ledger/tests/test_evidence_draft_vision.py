@@ -134,6 +134,25 @@ class TestGroundExtractedFields:
         assert draft.iva_rate is None
         assert draft.iva_amount is None
         assert draft.grand_total is None
+        assert draft.currency is None
+
+    def test_printed_currency_code_grounds(self) -> None:
+        fields = _VisionExtractedFields.model_validate_json(_extraction_json(currency="usd"))
+        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        assert draft.currency == "USD"
+
+    def test_currency_symbol_is_dropped_not_guessed(self) -> None:
+        """A bare symbol cannot ground a currency: '$' is USD, CAD, AUD and MXN."""
+        fields = _VisionExtractedFields.model_validate_json(_extraction_json(currency="$"))
+        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        assert draft.currency is None
+
+    def test_absent_currency_stays_none_rather_than_defaulting_to_euro(self) -> None:
+        # The draft must not assert a currency the document never showed; euro
+        # is applied (if at all) at confirm time, where the operator can override.
+        fields = _VisionExtractedFields.model_validate_json(_extraction_json(currency=None))
+        draft = _ground_extracted_fields(fields, raw_text_length=10)
+        assert draft.currency is None
 
 
 class TestLocalVisionInvoiceFieldExtractor:

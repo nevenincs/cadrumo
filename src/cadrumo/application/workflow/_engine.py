@@ -752,7 +752,43 @@ class WorkflowEngine:
         Any unexpected exception lands as ``UNHANDLED_EXCEPTION``.
         """
         started = _utcnow()
+        await self._abort_if_already_filed(obligation=obligation, started=started, steps=steps)
+        draft = self._load_and_build_draft(
+            profile=profile,
+            obligation=obligation,
+            fail_on_warning=fail_on_warning,
+            started=started,
+            steps=steps,
+        )
+        self._require_registry_draft_for_obligation(
+            draft=draft,
+            obligation=obligation,
+            profile=profile,
+            started=started,
+            steps=steps,
+        )
+        self._abort_if_draft_not_ready(draft=draft, started=started, steps=steps)
 
+        steps.append(
+            WorkflowStep(
+                stage=WorkflowStage.BUILDING_DRAFT,
+                started_at=started,
+                ended_at=_utcnow(),
+                success=True,
+                summary=_summary_text(f"Draft built draft_id={draft.draft_id}"),
+                details={"draft_id": draft.draft_id},
+            ),
+        )
+        return draft
+
+    async def _abort_if_already_filed(
+        self,
+        *,
+        obligation: ModeloDeadline,
+        started: datetime,
+        steps: list[WorkflowStep],
+    ) -> None:
+        """Abort with ``ALREADY_FILED`` when the status reader reports an existing expediente."""
         if self._session is not None and self._expedientes_source is not None:
             try:
                 expedientes = await self._expedientes_source(self._session, obligation.modelo)
@@ -799,6 +835,21 @@ class WorkflowEngine:
                     summary=already_summary,
                 )
 
+    def _load_and_build_draft(
+        self,
+        *,
+        profile: TaxpayerProfile,
+        obligation: ModeloDeadline,
+        fail_on_warning: bool,
+        started: datetime,
+        steps: list[WorkflowStep],
+    ) -> RegistryModeloDraftProtocol:
+        """Load modelo inputs and build the draft, recording site/build failures.
+
+        Aborts with ``DRAFT_HAS_ERRORS`` when the builder refuses; a
+        :class:`SiteHealthError` or any other unexpected exception is recorded and
+        re-raised through :meth:`_record_site_unavailable` / :meth:`_record_unhandled`.
+        """
         try:
             inputs: ModeloInputs = self._inputs_provider.load_inputs(
                 modelo=obligation.modelo,
@@ -863,13 +914,16 @@ class WorkflowEngine:
                 exc=exc,
                 steps=steps,
             )
-        self._require_registry_draft_for_obligation(
-            draft=draft,
-            obligation=obligation,
-            profile=profile,
-            started=started,
-            steps=steps,
-        )
+        return draft
+
+    def _abort_if_draft_not_ready(
+        self,
+        *,
+        draft: RegistryModeloDraftProtocol,
+        started: datetime,
+        steps: list[WorkflowStep],
+    ) -> None:
+        """Abort with ``DRAFT_HAS_ERRORS`` unless the draft promoted to a ready status."""
         ready_statuses = {
             ModeloDraftStatus.LISTO_PARA_PRESENTAR.value,
             ModeloDraftStatus.APROBADO.value,
@@ -900,18 +954,6 @@ class WorkflowEngine:
                 reason=WorkflowAbortReason.DRAFT_HAS_ERRORS,
                 summary=status_summary,
             )
-
-        steps.append(
-            WorkflowStep(
-                stage=WorkflowStage.BUILDING_DRAFT,
-                started_at=started,
-                ended_at=_utcnow(),
-                success=True,
-                summary=_summary_text(f"Draft built draft_id={draft.draft_id}"),
-                details={"draft_id": draft.draft_id},
-            ),
-        )
-        return draft
 
     def _require_registry_draft_for_obligation(
         self,

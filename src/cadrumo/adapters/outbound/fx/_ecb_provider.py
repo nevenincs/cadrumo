@@ -1,104 +1,176 @@
 """ECB euro reference-rate exchange-rate provider.
 
-Implements the :class:`domain.currency.ExchangeRateProvider` protocol over a
-bundled snapshot of the European Central Bank euro foreign-exchange reference
-rates (``eurofxref`` XML). The ECB rates are the official exchange rate of
-Spanish law (Ley 46/1998 art. 36) accepted for IRPF, IVA, and PGC conversion.
+Implements the :class:`domain.currency.ExchangeRateProvider` protocol against the
+European Central Bank Data Portal, resolving each rate from the published series
+at lookup time. The ECB rates are the official exchange rate of Spanish law (Ley
+46/1998 art. 36) accepted for IRPF, IVA, and PGC conversion.
 
 The ECB publishes EUR-base quotes (``1 EUR = rate CCY``). The
-:class:`domain.currency.CurrencyNormalizationService` expects
-``get_eur_rate`` to return CCY->EUR (so ``eur = amount * rate``), so this provider
-returns ``1 / ecb_rate``. The ECB publishes only on TARGET working days, so a
-lookup for a non-publication date falls back to the most-recent prior published
-date.
+:class:`domain.currency.CurrencyNormalizationService` expects ``get_eur_rate`` to
+return CCY->EUR (so ``eur = amount * rate``), so this provider returns
+``1 / ecb_rate``.
+
+The ECB publishes only on TARGET working days and the Data Portal answers a
+non-publication date with an empty result set, so a lookup widens its query
+window backwards by :data:`LOOKBACK_DAYS` and takes the most recent published
+observation on or before the requested date.
+
+A transport or protocol failure raises
+:exc:`domain.currency.ExchangeRateProviderError` rather than returning ``None``:
+an unreachable ECB must not be indistinguishable from a currency the ECB does
+not publish, which would silently degrade ledger rows to a zero EUR value.
 """
 
 from __future__ import annotations
 
-from bisect import bisect_right
-from datetime import date
-from decimal import Decimal
+import csv
+import io
+import urllib.error
+import urllib.request
+from collections.abc import Callable
+from datetime import date, timedelta
+from decimal import Decimal, InvalidOperation
 from functools import lru_cache
-from pathlib import Path
+from urllib.parse import urlparse
 
-from defusedxml import ElementTree
-
-from ....core.external_constants import UTF_8_ENCODING
+from ....core.config import load_settings
+from ....core.external_constants import DEFAULT_CURRENCY, UTF_8_ENCODING
 from ....core.parsing import parse_iso8601_date
+from ....domain.currency import ExchangeRateProviderError
 
-_BUNDLED_RATES = Path(__file__).resolve().parents[3] / "_data" / "fx" / "eurofxref-bundled.xml"
+ECB_DATA_API_HOST = "data-api.ecb.europa.eu"
+ECB_EXR_ENDPOINT = f"https://{ECB_DATA_API_HOST}/service/data/EXR"
+
+# The longest ECB non-publication run is the TARGET year-end closure plus its
+# adjacent weekends, comfortably under a week; 14 days leaves margin without
+# ever reaching back into a materially different rate.
+LOOKBACK_DAYS = 14
+
+#: Transport contract: given a URL, return the response body as text.
+RateFetch = Callable[[str], str]
 
 
 class EcbReferenceRateProvider:
-    """EUR reference-rate provider backed by a bundled ECB ``eurofxref`` snapshot."""
+    """EUR reference-rate provider backed by the live ECB Data Portal series."""
 
-    def __init__(self, *, rates_path: Path | None = None) -> None:
-        path = rates_path or _BUNDLED_RATES
-        # date -> {currency: ecb_eur_base_rate}; sorted date index for fallback.
-        self._by_date: dict[date, dict[str, Decimal]] = _parse_eurofxref(path)
-        self._dates: list[date] = sorted(self._by_date)
+    def __init__(
+        self,
+        *,
+        fetch: RateFetch | None = None,
+        lookback_days: int = LOOKBACK_DAYS,
+    ) -> None:
+        """Construct the provider.
+
+        Args:
+            fetch: Transport returning a response body for a URL. Defaults to a
+                guarded HTTPS reader bound to the ECB Data Portal host; tests
+                inject a fake so no suite depends on the network.
+            lookback_days: How far back a lookup may reach for the most recent
+                prior publication when the requested date is not a TARGET
+                working day.
+        """
+        self._fetch = fetch or _https_fetch
+        self._lookback = timedelta(days=lookback_days)
+        # Resolved results are memoized per (currency, date) so a ledger import
+        # spanning many rows on few distinct dates issues few requests.
+        self._resolved: dict[tuple[str, date], Decimal | None] = {}
 
     def get_eur_rate(self, currency: str, rate_date: date) -> Decimal | None:
         """Return the CCY->EUR rate for ``rate_date`` (or most-recent prior).
 
-        Returns ``None`` for EUR (handled natively upstream) or an unknown
-        currency / a date earlier than the snapshot's first published date.
+        Returns ``None`` when the ECB publishes no series for ``currency``, or
+        no observation within the lookback window ending at ``rate_date``.
+
+        Raises:
+            ExchangeRateProviderError: When the ECB Data Portal cannot be
+                reached or returns an unusable response.
         """
         code = currency.upper()
-        if code == "EUR":
+        if code == DEFAULT_CURRENCY:
             return Decimal("1")
-        effective = self._effective_date(rate_date)
-        if effective is None:
+        key = (code, rate_date)
+        if key not in self._resolved:
+            self._resolved[key] = self._resolve(code, rate_date)
+        return self._resolved[key]
+
+    def _resolve(self, code: str, rate_date: date) -> Decimal | None:
+        url = _observation_url(code, rate_date - self._lookback, rate_date)
+        observations = _parse_observations(self._fetch(url))
+        if not observations:
             return None
-        ecb_rate = self._by_date[effective].get(code)
-        if ecb_rate is None or ecb_rate == 0:
+        # The window ends at rate_date, so the latest observation in it is the
+        # operation-date rate or the most recent prior publication.
+        _, ecb_rate = max(observations, key=lambda row: row[0])
+        if ecb_rate <= 0:
             return None
         # ECB quotes EUR-base (1 EUR = ecb_rate CCY); CCY->EUR is the inverse.
         return Decimal("1") / ecb_rate
 
-    def _effective_date(self, rate_date: date) -> date | None:
-        """Most-recent published date on or before ``rate_date`` (working-day fallback)."""
-        index = bisect_right(self._dates, rate_date)
-        if index == 0:
-            return None
-        return self._dates[index - 1]
+
+def _observation_url(currency: str, start: date, end: date) -> str:
+    """Build the ECB Data Portal daily-spot observation URL for one currency."""
+    return (
+        f"{ECB_EXR_ENDPOINT}/D.{currency}.EUR.SP00.A"
+        f"?startPeriod={start.isoformat()}&endPeriod={end.isoformat()}&format=csvdata"
+    )
 
 
-def _parse_eurofxref(path: Path) -> dict[date, dict[str, Decimal]]:
-    """Parse an ECB ``eurofxref`` XML file into ``{date: {currency: rate}}``.
+def _parse_observations(payload: str) -> list[tuple[date, Decimal]]:
+    """Parse an ECB ``csvdata`` response into ``[(date, ecb_eur_base_rate)]``.
 
-    Namespace-agnostic: the ECB feed uses default + ``gesmes`` namespaces, so
-    elements are matched by the local ``Cube`` tag name rather than a fixed
-    qualified name.
+    A non-publication window yields an empty body, and the ECB emits rows with a
+    blank ``OBS_VALUE`` for series gaps; both produce no observations rather
+    than an error, so the caller reports a missing rate.
     """
-    root = ElementTree.fromstring(path.read_text(encoding=UTF_8_ENCODING))
-    by_date: dict[date, dict[str, Decimal]] = {}
-    for node in root.iter():
-        if not node.tag.endswith("Cube"):
+    if not payload.strip():
+        return []
+    observations: list[tuple[date, Decimal]] = []
+    for row in csv.DictReader(io.StringIO(payload)):
+        period = (row.get("TIME_PERIOD") or "").strip()
+        value = (row.get("OBS_VALUE") or "").strip()
+        if not period or not value:
             continue
-        time_attr = node.get("time")
-        if time_attr is None:
-            continue
-        day = parse_iso8601_date(time_attr)
+        day = parse_iso8601_date(period)
         if day is None:
             continue
-        rates: dict[str, Decimal] = {}
-        for child in node:
-            if not child.tag.endswith("Cube"):
-                continue
-            currency = child.get("currency")
-            rate = child.get("rate")
-            if currency and rate:
-                rates[currency.upper()] = Decimal(rate)
-        if rates:
-            by_date[day] = rates
-    return by_date
+        try:
+            observations.append((day, Decimal(value)))
+        except InvalidOperation:
+            continue
+    return observations
+
+
+def _https_fetch(url: str) -> str:
+    """Read ``url`` over HTTPS, constrained to the ECB Data Portal host."""
+    parsed = urlparse(url)
+    if parsed.scheme != "https" or parsed.netloc != ECB_DATA_API_HOST:
+        msg = f"refusing non-https or non-ECB exchange-rate URL: {url!r}"
+        raise ExchangeRateProviderError(msg)
+    timeout = load_settings().cadrumo_fx_rate_lookup_timeout_s
+    # URL is constrained to the canonical ECB Data Portal HTTPS host above.
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as response:  # nosemgrep
+            return response.read().decode(UTF_8_ENCODING)
+    except (urllib.error.URLError, TimeoutError, OSError) as exc:
+        msg = f"ECB euro reference-rate lookup failed for {url!r}: {exc}"
+        raise ExchangeRateProviderError(msg) from exc
 
 
 @lru_cache(maxsize=1)
 def default_ecb_rate_provider() -> EcbReferenceRateProvider:
-    """Return the process-wide :class:`EcbReferenceRateProvider` over the bundled ECB snapshot (cached)."""
+    """Return the process-wide :class:`EcbReferenceRateProvider` (cached).
+
+    Caching the instance keeps its per-(currency, date) memo shared across every
+    lookup in the process, so a multi-row ledger import re-uses resolved rates.
+    """
     return EcbReferenceRateProvider()
 
 
-__all__ = ["EcbReferenceRateProvider", "default_ecb_rate_provider"]
+__all__ = [
+    "ECB_DATA_API_HOST",
+    "ECB_EXR_ENDPOINT",
+    "LOOKBACK_DAYS",
+    "EcbReferenceRateProvider",
+    "RateFetch",
+    "default_ecb_rate_provider",
+]

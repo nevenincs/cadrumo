@@ -53,6 +53,7 @@ Submodules
    cadrumo.core._foreign_asset_obligation
    cadrumo.core._fsync
    cadrumo.core._google_credential_source
+   cadrumo.core._hex
    cadrumo.core._iban
    cadrumo.core._irnr
    cadrumo.core._ledger_sort

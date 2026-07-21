@@ -696,10 +696,6 @@ def verify_modelo_revision(
     cr_repo = repos.calculation
     wu_repo = repos.work_unit
     vr_repo = repos.verification
-    fr_repo = repos.filing
-    obs_repo = repos.observation
-    bv_repo = repos.bucket_event
-    run_repo = repos.run
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
@@ -748,8 +744,8 @@ def verify_modelo_revision(
         work_unit=work_unit,
         target=target,
         workflow_profile=workflow_profile,
-        observation_repository=obs_repo,
-        filing_repository=fr_repo,
+        observation_repository=repos.observation,
+        filing_repository=repos.filing,
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         transaction_repository=transaction_repository,
@@ -795,7 +791,7 @@ def verify_modelo_revision(
             work_unit=work_unit,
             today=now.date(),
             runs_dir=workflow_runs_dir,
-            run_repository=run_repo,
+            run_repository=repos.run,
             purpose=WorkflowPurpose.VERIFY,
         )
 
@@ -822,7 +818,7 @@ def verify_modelo_revision(
         )
 
     _emit_verification_bucket_event(
-        repository=bv_repo,
+        repository=repos.bucket_event,
         work_unit=work_unit,
         target=target,
         report_id=report.verification_report_id,

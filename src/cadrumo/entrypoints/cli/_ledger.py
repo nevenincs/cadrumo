@@ -425,10 +425,17 @@ def ledger_add(
     # boundary and surface only the human-readable validator message, matching
     # the `ManualLedgerTransactionCommand` treatment above — CLI errors are
     # typed refusals, never raw dumps.
+    # Same ECB-backed normalizer the file-import path wires in: a manually
+    # entered foreign-currency row must convert at entry, or it persists with no
+    # value_in_eur and every aggregation gate withholds it from the modelo.
+    from ...adapters.outbound.fx import default_ecb_rate_provider
+    from ...domain.currency import CurrencyNormalizationService
+
     try:
         result = create_manual_transaction(
             command,
             transaction_repository=transaction_repository,
+            currency_normalizer=CurrencyNormalizationService(rate_provider=default_ecb_rate_provider()),
         )
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc

@@ -57,9 +57,11 @@ from cryptography.hazmat.primitives.serialization import (
     PrivateFormat,
     PublicFormat,
 )
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE
+from ...core import HEX_PATTERN_64 as _HEX_PATTERN_64
+from ...core import HEX_PATTERN_128 as _HEX_PATTERN_128
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
 from ...core.errors import CadrumoError
@@ -73,13 +75,6 @@ if TYPE_CHECKING:
 #: Wire-format version of the signature envelope. Bumped when the envelope
 #: schema changes shape (e.g. a future multi-signer / counter-sign extension).
 _SIGNATURE_ENVELOPE_VERSION = 1
-
-#: Raw Ed25519 signature size, per RFC 8032. Used to validate hex-encoded
-#: signature material at the pydantic boundary rather than trusting the caller.
-_ED25519_SIGNATURE_BYTES = 64
-
-_HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
-_HEX_PATTERN_128 = r"^[0-9a-f]{128}$"
 
 
 class ReviewPackageSigningError(CadrumoError):
@@ -158,13 +153,6 @@ class SignedReviewPackage(BaseModel):
     signature_hex: str = Field(pattern=_HEX_PATTERN_128)
     public_key_hex: str = Field(pattern=_HEX_PATTERN_64)
     signed_at: datetime
-
-    @field_validator("signature_hex")
-    @classmethod
-    def _signature_is_ed25519_length(cls, value: str) -> str:
-        if len(bytes.fromhex(value)) != _ED25519_SIGNATURE_BYTES:
-            raise ValueError(f"Ed25519 signature must be {_ED25519_SIGNATURE_BYTES} bytes")
-        return value
 
 
 def _signing_key_object_key(bucket_id: str) -> str:

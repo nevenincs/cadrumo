@@ -110,6 +110,7 @@ from ...core import STRICT_FROZEN_CONFIG, ServiceCapability
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings
 from ...core.decimal import normalize_decimal_separators
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.identity import IdentityError, validate_spanish_tax_id
 from ...core.parsing import parse_date, parse_iso8601_date
 from ...domain.attachments import link_attachment_invoice
@@ -172,6 +173,14 @@ _TOTAL_LABEL_RE = re.compile(
 # An IVA rate percentage, e.g. "IVA 21%" or "IVA (21%)".
 _IVA_RATE_RE = re.compile(r"\biva\b[^%\n]{0,12}?(\d{1,2}(?:[.,]\d{1,2})?)\s*%", re.IGNORECASE)
 
+# An explicit ISO-4217 code printed beside an amount. Only the alphabetic code
+# is matched, never a symbol: "$" is ambiguous across USD/CAD/AUD/MXN and "kr"
+# across the Nordic currencies, so a symbol cannot ground a currency fact.
+_CURRENCY_CODE_RE = re.compile(
+    r"(?<![A-Za-z])(EUR|USD|GBP|CHF|SEK|NOK|DKK|PLN|CZK|JPY|CAD|AUD)(?![A-Za-z])",
+    re.IGNORECASE,
+)
+
 
 class InvoiceDraft(BaseModel):
     """Best-effort invoice fields extracted from an on-host PDF text layer.
@@ -195,6 +204,12 @@ class InvoiceDraft(BaseModel):
             ``None``.
         iva_amount: Labelled IVA cuota amount, or ``None``.
         grand_total: Labelled invoice total amount, or ``None``.
+        currency: ISO-4217 code for the currency the amounts are printed in,
+            or ``None`` when the document shows no currency marker. Left
+            ``None`` rather than defaulted to euro: a foreign-currency
+            invoice silently read as euro would carry its face value into a
+            filing unconverted, so an absent marker must stay absent and be
+            resolved by the operator.
         raw_text_length: Length of the on-host extracted text, kept as an
             honest signal of how much source material the heuristics had to
             work with (zero means the PDF carried no usable text layer for
@@ -211,7 +226,24 @@ class InvoiceDraft(BaseModel):
     iva_rate: Decimal | None = None
     iva_amount: Decimal | None = None
     grand_total: Decimal | None = None
+    currency: str | None = None
     raw_text_length: int = 0
+
+
+def _find_currency(text: str) -> str | None:
+    """Return the single ISO-4217 code printed in *text*, or ``None``.
+
+    Grounds a currency only when the document is unambiguous: exactly one
+    distinct code appears. A document showing two codes (an invoice quoting a
+    foreign total beside its euro equivalent) cannot be resolved from the text
+    alone, so the heuristic declines rather than picking the first match and
+    silently mis-denominating a filing amount. An absent code stays ``None``
+    for the operator to resolve; it is never defaulted to euro.
+    """
+    found = {match.group(1).upper() for match in _CURRENCY_CODE_RE.finditer(text)}
+    if len(found) != 1:
+        return None
+    return found.pop()
 
 
 def _find_supplier_tax_id(text: str) -> str | None:
@@ -299,6 +331,7 @@ def extract_invoice_fields(evidence: EvidenceInput) -> InvoiceDraft:
         iva_rate=_find_iva_rate(text),
         iva_amount=_parse_labelled_amount(_IVA_AMOUNT_LABEL_RE, text),
         grand_total=_parse_labelled_amount(_TOTAL_LABEL_RE, text),
+        currency=_find_currency(text),
         raw_text_length=len(text),
     )
 
@@ -461,7 +494,7 @@ def confirm_invoice_draft_from_evidence(
     invoice_date: date | None = None,
     taxable_base: Decimal | None = None,
     iva_rate: Decimal | None = None,
-    currency: str = "EUR",
+    currency: str | None = None,
     notes: str = "",
     settings: Settings | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
@@ -502,7 +535,9 @@ def confirm_invoice_draft_from_evidence(
         taxable_base: Override for the extracted taxable base.
         iva_rate: Override for the extracted IVA rate (``None`` resolves to
             the EXEMPT slot, matching :func:`build_catalogue_invoice`).
-        currency: ISO-4217 currency code. Defaults to ``"EUR"``.
+        currency: ISO-4217 currency code overriding the extracted one.
+            When omitted, the currency printed on the document is used,
+            falling back to euro only when the document shows none.
         notes: Free-text operator notes carried onto the invoice.
         settings: Resolved ``Settings``; ``load_settings()`` when ``None``.
         invoice_repository: Optional injected
@@ -555,6 +590,11 @@ def confirm_invoice_draft_from_evidence(
     )
     assert isinstance(resolved_taxable_base, Decimal)
     resolved_iva_rate = iva_rate if iva_rate is not None else draft.iva_rate
+    # Same override-on-extraction layering as every other field: an explicit
+    # operator value wins, else the currency actually printed on the document,
+    # else euro. Preferring the extracted code over the euro default is what
+    # stops a foreign-currency invoice being minted at its face value in euro.
+    resolved_currency = (currency or draft.currency or DEFAULT_CURRENCY).strip().upper()
     resolved_counterparty_name = (counterparty_name or "").strip()
     if not resolved_counterparty_name:
         raise PurchaseInvoiceEvidenceInputError(
@@ -574,7 +614,7 @@ def confirm_invoice_draft_from_evidence(
         issued_at=resolved_invoice_date,
         taxable_base=resolved_taxable_base,
         iva_rate=resolved_iva_rate,
-        currency=currency,
+        currency=resolved_currency,
         notes=notes,
     )
     attachment_store = AttachmentStore(objects=secure_object_repository_for_bucket(bucket_id, resolved_settings))
@@ -600,7 +640,7 @@ def confirm_invoice_draft_from_evidence(
         issued_at=resolved_invoice_date,
         taxable_base=resolved_taxable_base,
         iva_rate=resolved_iva_rate,
-        currency=currency,
+        currency=resolved_currency,
         notes=notes,
         repository=repository,
     )

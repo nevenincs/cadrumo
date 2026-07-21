@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator, model_
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import IntracomOperationType
 from ...core.decimal import coerce_decimal
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, validate_spanish_tax_id
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
@@ -167,6 +168,8 @@ def _normalise_invoice_string_fields(payload: dict[str, object]) -> dict[str, ob
 def _normalise_invoice_dates(payload: dict[str, object]) -> dict[str, object]:
     if "issued_at" in payload:
         payload["issued_at"] = _coerce_date(payload["issued_at"])
+    if payload.get("fx_rate_date") is not None:
+        payload["fx_rate_date"] = _coerce_date(payload["fx_rate_date"])
     return payload
 
 
@@ -198,7 +201,7 @@ def _normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, 
     for key in ("grand_total", "base_total", "iva_total"):
         if key in payload:
             payload[key] = coerce_decimal(payload[key])
-    for key in ("retention_rate", "retention_amount"):
+    for key in ("retention_rate", "retention_amount", "fx_rate"):
         if key in payload and payload[key] is not None:
             payload[key] = coerce_decimal(payload[key])
     return payload
@@ -384,10 +387,42 @@ class Invoice(BaseModel):
     retention_rate: Decimal | None = None
     retention_amount: Decimal | None = None
     payment_id: str | None = None
+    fx_rate: Decimal | None = None
+    fx_rate_date: date | None = None
 
     @override
     def __hash__(self) -> int:
         return hash(self.invoice_id)
+
+    @property
+    def base_total_eur(self) -> Decimal | None:
+        """``base_total`` in euro, or ``None`` when the invoice is unconverted."""
+        return self._in_eur(self.base_total)
+
+    @property
+    def iva_total_eur(self) -> Decimal | None:
+        """``iva_total`` in euro, or ``None`` when the invoice is unconverted."""
+        return self._in_eur(self.iva_total)
+
+    @property
+    def grand_total_eur(self) -> Decimal | None:
+        """``grand_total`` in euro, or ``None`` when the invoice is unconverted."""
+        return self._in_eur(self.grand_total)
+
+    def _in_eur(self, amount: Decimal) -> Decimal | None:
+        """Convert *amount* to euro using the stored rate.
+
+        A euro invoice is already euro and converts to itself. A foreign
+        invoice converts only when :attr:`fx_rate` was resolved at ingest;
+        without it the euro value is genuinely unknown and is reported as
+        ``None`` so the caller gates the invoice, rather than returning the
+        face value and silently declaring foreign units as euro.
+        """
+        if self.currency == DEFAULT_CURRENCY:
+            return amount
+        if self.fx_rate is None:
+            return None
+        return (amount * self.fx_rate).quantize(Decimal("0.01"))
 
     @model_validator(mode="before")
     @classmethod
@@ -422,6 +457,23 @@ class Invoice(BaseModel):
         if not value:
             raise InvoiceValidationError("invoice must carry at least one line")
         return value
+
+    @model_validator(mode="after")
+    def _validate_fx_conversion_coherence(self) -> Self:
+        """Reject an incoherent conversion stamp.
+
+        The pair is all-or-nothing so a stored rate is always auditable: a rate
+        without its date has no provenance (which ECB publication produced it),
+        and a date without a rate converts nothing. A euro invoice carries
+        neither -- a stamp there would imply a conversion that never happened.
+        """
+        if self.currency == DEFAULT_CURRENCY and (self.fx_rate is not None or self.fx_rate_date is not None):
+            raise InvoiceValidationError("a EUR invoice must not carry an fx_rate or fx_rate_date")
+        if (self.fx_rate is None) != (self.fx_rate_date is None):
+            raise InvoiceValidationError("fx_rate and fx_rate_date must be set together")
+        if self.fx_rate is not None and self.fx_rate <= Decimal("0"):
+            raise InvoiceValidationError("fx_rate must be strictly positive")
+        return self
 
     @model_validator(mode="after")
     def _validate_totals_and_exempt_invariants(self) -> Self:

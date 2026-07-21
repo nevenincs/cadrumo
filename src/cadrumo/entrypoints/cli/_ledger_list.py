@@ -291,6 +291,31 @@ def project_ledger_list(
     )
 
 
+def ledger_review_query_for_spec(
+    spec: LedgerReviewFilterSpec,
+    *,
+    bucket_id: str,
+    transaction_id: str | None = None,
+) -> LedgerReviewQuery:
+    """Project one parsed operator filter spec onto its :class:`LedgerReviewQuery`.
+
+    The single home for the spec-to-query field mapping, shared by ``ledger
+    list``'s review-spec narrowing and the ``ledger review`` verb, so the two
+    surfaces cannot resolve the same ``--filter`` clauses differently.
+    """
+    return LedgerReviewQuery(
+        bucket_id=bucket_id,
+        transaction_id=transaction_id,
+        period=spec.period,
+        status=spec.status.value if spec.status is not None else None,
+        issue=spec.issue.value if spec.issue is not None else None,
+        import_id=spec.import_id,
+        classification=spec.classification.value if spec.classification is not None else None,
+        text=spec.text,
+        direction=spec.direction.value if spec.direction is not None else None,
+    )
+
+
 def _filter_results_by_review_spec(
     *,
     bucket_id: str,
@@ -299,16 +324,7 @@ def _filter_results_by_review_spec(
     results: tuple[ManualLedgerTransactionResult, ...],
 ) -> tuple[ManualLedgerTransactionResult, ...]:
     matching = query_ledger_review_rows(
-        LedgerReviewQuery(
-            bucket_id=bucket_id,
-            period=spec.period,
-            status=spec.status.value if spec.status is not None else None,
-            issue=spec.issue.value if spec.issue is not None else None,
-            import_id=spec.import_id,
-            classification=spec.classification.value if spec.classification is not None else None,
-            text=spec.text,
-            direction=spec.direction.value if spec.direction is not None else None,
-        ),
+        ledger_review_query_for_spec(spec, bucket_id=bucket_id),
         transaction_repository=transaction_repository,
     )
     matching_ids = {row.id for row in matching.rows}

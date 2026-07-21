@@ -190,6 +190,22 @@ def enforce_required_runtime_cohort() -> None:
     if not required:
         return
 
+    observed, missing = _observe_runtime_cohort()
+    mismatched = {name: installed for name, installed in observed.items() if installed != required}
+    if not missing and not mismatched:
+        return
+
+    details = _cohort_mismatch_details(missing, mismatched)
+    sys.stderr.write(
+        "Cadrumo MCP runtime cohort does not satisfy the installed integration: "
+        f"required {required}; {'; '.join(details)}. "
+        f"Install cadrumo[agent]=={required} with both exact-version data companions.\n",
+    )
+    raise SystemExit(4)
+
+
+def _observe_runtime_cohort() -> tuple[dict[str, str], list[str]]:
+    """Return the installed version per cohort member and the list of absent members."""
     observed: dict[str, str] = {}
     missing: list[str] = []
     for distribution in _RUNTIME_COHORT:
@@ -197,23 +213,18 @@ def enforce_required_runtime_cohort() -> None:
             observed[distribution] = distribution_version(distribution)
         except PackageNotFoundError:
             missing.append(distribution)
+    return observed, missing
 
-    mismatched = {name: installed for name, installed in observed.items() if installed != required}
-    if not missing and not mismatched:
-        return
 
+def _cohort_mismatch_details(missing: list[str], mismatched: dict[str, str]) -> list[str]:
+    """Render the ``missing:`` / ``version mismatch:`` detail fragments for the refusal."""
     details: list[str] = []
     if missing:
         details.append(f"missing: {', '.join(missing)}")
     if mismatched:
         rendered = ", ".join(f"{name}={installed}" for name, installed in sorted(mismatched.items()))
         details.append(f"version mismatch: {rendered}")
-    sys.stderr.write(
-        "Cadrumo MCP runtime cohort does not satisfy the installed integration: "
-        f"required {required}; {'; '.join(details)}. "
-        f"Install cadrumo[agent]=={required} with both exact-version data companions.\n",
-    )
-    raise SystemExit(4)
+    return details
 
 
 def serve() -> None:

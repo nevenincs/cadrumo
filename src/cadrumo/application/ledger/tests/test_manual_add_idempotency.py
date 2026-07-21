@@ -22,6 +22,7 @@ from ._action_test_support import (
     UTC,
     BucketEventHistoryRepository,
     BucketEventType,
+    BusinessClassification,
     Decimal,
     ManualLedgerTransactionCommand,
     SecureObjectRepository,
@@ -209,6 +210,103 @@ def test_same_key_differing_only_in_source_jurisdiction_raises_conflict(
             occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
         )
     assert len(repo.load().transactions) == 1
+    assert _created_event_count(events) == 1
+
+
+def test_same_key_differing_only_in_classified_by_override_raises_conflict(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A same-key add differing ONLY in classified_by_override is a conflict, never a silent no-op.
+
+    ``classified_by_override`` is persisted content: the create path stamps it into
+    ``Transaction.classified_by`` (falling back to ``manual``). An idempotency match
+    that omitted it would return the stored row unchanged and silently drop the new
+    classifier provenance — the failure mode
+    ``single-subject-mutation-is-idempotent-guarded`` forbids.
+    """
+    repo, events = _repositories(secure_objects)
+    base: _ManualTransactionBaseArgs = {
+        "bucket_id": _BUCKET_ID,
+        "booked_date": _DEFAULT_BOOKED_DATE,
+        "amount": _DEFAULT_AMOUNT,
+        "direction": TransactionDirection.OUTGOING,
+        "description": "rule-classified sale",
+        "idempotency_key": "cls-1",
+    }
+    first = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            **base,
+            business_classification=BusinessClassification.BUSINESS,
+            classified_by_override="rule:office-supplies",
+        ),
+        transaction_repository=repo,
+        bucket_event_repository=events,
+        occurred_at=_DEFAULT_OCCURRED_AT,
+    )
+    stored = repo.load().get(first.ref.transaction_id)
+    assert stored is not None
+    assert stored.classified_by == "rule:office-supplies"
+
+    with pytest.raises(TransactionValidationError):
+        create_manual_transaction(
+            ManualLedgerTransactionCommand(
+                **base,
+                business_classification=BusinessClassification.BUSINESS,
+                classified_by_override="rule:travel",
+            ),
+            transaction_repository=repo,
+            bucket_event_repository=events,
+            occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+        )
+
+    # The refusal is loud, and the stored provenance is neither overwritten nor lost.
+    assert len(repo.load().transactions) == 1
+    assert _created_event_count(events) == 1
+    unchanged = repo.load().get(first.ref.transaction_id)
+    assert unchanged is not None
+    assert unchanged.classified_by == "rule:office-supplies"
+
+
+def test_same_key_repeating_the_same_classified_by_override_is_a_noop(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A faithful retry carrying the same override still collapses to the guarded no-op.
+
+    Anti-tautology companion to the conflict case above: the projection must
+    discriminate a CHANGED override, not refuse every classified retry.
+    """
+    repo, events = _repositories(secure_objects)
+    base: _ManualTransactionBaseArgs = {
+        "bucket_id": _BUCKET_ID,
+        "booked_date": _DEFAULT_BOOKED_DATE,
+        "amount": _DEFAULT_AMOUNT,
+        "direction": TransactionDirection.OUTGOING,
+        "description": "rule-classified sale",
+        "idempotency_key": "cls-2",
+    }
+    first = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            **base,
+            business_classification=BusinessClassification.BUSINESS,
+            classified_by_override="rule:office-supplies",
+        ),
+        transaction_repository=repo,
+        bucket_event_repository=events,
+        occurred_at=_DEFAULT_OCCURRED_AT,
+    )
+    retry = create_manual_transaction(
+        ManualLedgerTransactionCommand(
+            **base,
+            business_classification=BusinessClassification.BUSINESS,
+            classified_by_override="rule:office-supplies",
+        ),
+        transaction_repository=repo,
+        bucket_event_repository=events,
+        occurred_at=datetime(2026, 5, 4, 10, 0, tzinfo=UTC),
+    )
+    assert retry.ref.transaction_id == first.ref.transaction_id
+    assert retry.bucket_event_ids == ()
+    assert tuple(repo.load().transactions) == (first.ref.transaction_id,)
     assert _created_event_count(events) == 1
 
 

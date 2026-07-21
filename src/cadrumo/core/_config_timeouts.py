@@ -1,4 +1,4 @@
-"""Browser-automation and live-IVA timeout settings.
+"""Browser-automation, live-IVA, and exchange-rate timeout settings.
 
 Split from :mod:`core.config` to keep that module within the line budget.
 :class:`~core.config.Settings` inherits these fields, so every timeout
@@ -11,7 +11,8 @@ The live IVA surface, filed-register, cancellation-drain, and CLI watchdog
 budgets are consumed by :mod:`application.live._iva_remote_state`,
 :mod:`application.live._filed_data_capture`, and the
 :func:`~entrypoints.cli._app_live._run_live_iva_evidence_pull_command`
-watchdog.
+watchdog. The exchange-rate lookup budget is consumed by
+:class:`~adapters.outbound.fx.EcbReferenceRateProvider`.
 """
 
 from __future__ import annotations
@@ -105,5 +106,14 @@ class CadrumoTimeoutSettings(BaseSettings):
             "Top-level CLI watchdog timeout (ms) for the combined read-only IVA remote-state command. "
             "This must exceed the normal auth and surface budgets but remain below operator shell/tool "
             "timeouts so the CLI can cancel and clean up inside its own process."
+        ),
+    )
+    cadrumo_fx_rate_lookup_timeout_s: int = Field(
+        default=15,
+        gt=0,
+        description=(
+            "Timeout (seconds) for one ECB Data Portal euro reference-rate lookup. A ledger import "
+            "resolves one lookup per distinct currency/date, so this budget bounds a single "
+            "observation query rather than the whole import."
         ),
     )

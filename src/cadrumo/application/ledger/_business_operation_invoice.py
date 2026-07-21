@@ -36,6 +36,7 @@ from typing import override
 
 from pydantic import BaseModel, Field, field_serializer, field_validator
 
+from ...adapters.outbound.fx import default_ecb_rate_provider
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.storage import (
     LEDGER_BUSINESS_OPERATION_INVOICE_NAMESPACE,
@@ -48,6 +49,7 @@ from ...core.errors import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
+from ...core.parsing import parse_iso8601_date
 from ...core.time import now as _utc_now
 from ...domain import canonical_decimal_string
 from ...domain.buckets import (
@@ -56,6 +58,7 @@ from ...domain.buckets import (
     BucketEventType,
     append_bucket_event,
 )
+from ...domain.currency import ExchangeRateProvider
 
 
 class BusinessOperationInvoiceDirection(StrEnum):
@@ -174,6 +177,13 @@ class BusinessOperationInvoice(BaseModel):
     iva_rate: Decimal | None = Field(default=None)
     iva_amount: Decimal = Field(default=Decimal("0"))
     total_amount: Decimal = Field(default=Decimal("0"))
+    # Euro-conversion stamp for a foreign-currency invoice, resolved at entry
+    # from the ECB reference rate. Both are absent for a EUR invoice (already
+    # euro) and for a foreign invoice whose rate could not be resolved -- which
+    # is then withheld from modelo projection rather than declared at face
+    # value. See `Invoice.fx_rate` for the rich-catalogue counterpart.
+    fx_rate: Decimal | None = Field(default=None)
+    fx_rate_date: str | None = Field(default=None, min_length=10, max_length=10)
     notes: str = Field(default="", max_length=2000)
     # Intracom EU fields — None for domestic invoices.
     country_code: str | None = Field(min_length=2, max_length=2)
@@ -187,7 +197,25 @@ class BusinessOperationInvoice(BaseModel):
     def _normalise_country_code(cls, v: str | None) -> str | None:
         return v.upper() if v is not None else None
 
-    @field_serializer("taxable_base", "iva_amount", "total_amount", "iva_rate", when_used="json")
+    @property
+    def taxable_base_eur(self) -> Decimal | None:
+        """``taxable_base`` in euro, or ``None`` when unconverted."""
+        return self._in_eur(self.taxable_base)
+
+    @property
+    def total_amount_eur(self) -> Decimal | None:
+        """``total_amount`` in euro, or ``None`` when unconverted."""
+        return self._in_eur(self.total_amount)
+
+    def _in_eur(self, amount: Decimal) -> Decimal | None:
+        """Convert *amount* to euro using the stored rate, or report it unknown."""
+        if self.currency == DEFAULT_CURRENCY:
+            return amount
+        if self.fx_rate is None:
+            return None
+        return (amount * self.fx_rate).quantize(Decimal("0.01"))
+
+    @field_serializer("taxable_base", "iva_amount", "total_amount", "iva_rate", "fx_rate", when_used="json")
     def _serialize_decimal(self, value: Decimal | None) -> str | None:
         if value is None:
             return None
@@ -441,6 +469,35 @@ def _resolve_id(records: list[BusinessOperationInvoice], id_or_prefix: str) -> B
     return matches[0]
 
 
+def _resolve_fx_stamp(
+    *,
+    currency: str,
+    invoice_date: str,
+    rate_provider: ExchangeRateProvider | None,
+) -> tuple[Decimal | None, str | None]:
+    """Return the euro-conversion stamp for a foreign-currency invoice.
+
+    Converts at the invoice date, the operation date Spanish law binds the
+    official rate to (Ley 46/1998 art. 36), through the same shared ECB
+    provider the ledger import and rich-catalogue paths use.
+
+    A euro invoice is unstamped. A foreign invoice whose rate or date cannot be
+    resolved is also left unstamped rather than defaulted: the record then
+    reports no euro value and is withheld from projection, which an operator can
+    correct, where a fabricated rate could not be.
+    """
+    if currency.strip().upper() == DEFAULT_CURRENCY:
+        return (None, None)
+    parsed = parse_iso8601_date(invoice_date)
+    if parsed is None:
+        return (None, None)
+    provider = rate_provider or default_ecb_rate_provider()
+    rate = provider.get_eur_rate(currency, parsed)
+    if rate is None:
+        return (None, None)
+    return (rate, parsed.isoformat())
+
+
 class _BusinessOperationInvoiceService:
     """Shared CRUD implementation for payable and collectible noun-groups.
 
@@ -481,8 +538,14 @@ class _BusinessOperationInvoiceService:
         eu_iva_id: str | None = None,
         operation_type: IntracomOperationType | None = None,
         actor: str = "cli",
+        rate_provider: ExchangeRateProvider | None = None,
     ) -> BusinessOperationInvoiceResult:
         now = _utc_now()
+        fx_rate, fx_rate_date = _resolve_fx_stamp(
+            currency=currency,
+            invoice_date=invoice_date,
+            rate_provider=rate_provider,
+        )
         # Normalise country_code to the stored (upper) form so the id derives
         # from the same value the record persists (the model upper-cases it).
         normalised_country_code = country_code.upper() if country_code is not None else None
@@ -536,6 +599,8 @@ class _BusinessOperationInvoiceService:
             country_code=country_code,
             eu_iva_id=eu_iva_id,
             operation_type=operation_type,
+            fx_rate=fx_rate,
+            fx_rate_date=fx_rate_date,
             created_at=now,
             updated_at=now,
         )

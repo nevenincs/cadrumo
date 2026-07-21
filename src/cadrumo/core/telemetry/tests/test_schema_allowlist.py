@@ -88,7 +88,7 @@ def test_payload_rejects_an_unknown_field_structurally() -> None:
             command="diagnostics.run_health",
             succeeded=True,
             captured_at=_CAPTURED_AT,
-            nif="12345678Z",  # type: ignore
+            nif="12345678Z",
         )
 
 

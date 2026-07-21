@@ -38,6 +38,7 @@ from ._modelo_manager import (
     ModeloLocaleScope,
     ModeloLocaleTranslationFile,
 )
+from ._registry_scanner import scan_registry_keys
 from .manager import LocaleError, LocaleManager, StrictUniqueKeyLoader
 
 __all__ = [
@@ -56,5 +57,6 @@ __all__ = [
     "StrictUniqueKeyLoader",
     "get_registered_keys",
     "scan_namespace_markers",
+    "scan_registry_keys",
     "scan_source_tree",
 ]

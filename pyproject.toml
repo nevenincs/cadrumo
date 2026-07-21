@@ -681,7 +681,7 @@ convention = "google"
 "src/cadrumo/application/wizard/_models.py" = ["S105"]
 "src/cadrumo/core/config.py" = ["S105"]
 "src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py" = ["S105", "S106"]
-"src/cadrumo/adapters/outbound/fx/_ecb_refresh.py" = ["S310"]
+"src/cadrumo/adapters/outbound/fx/_ecb_provider.py" = ["S310"]
 # AEAT registry uses ``Q1..Q4`` casing on the BOE-published row model field names; the
 # domain model preserves the canonical AEAT casing so the registry-binding mapping
 # stays 1:1 with the published source. N815's mixedCase heuristic mis-flags these.

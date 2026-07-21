@@ -7,18 +7,18 @@ import hashlib
 import pytest
 from pydantic import ValidationError
 
-from ....tests.fixtures.identity_holder import single_field_model, single_field_value
+from ....tests.fixtures.identity_holder import single_field_holder
 from .._ids import InvoiceId
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-_Holder = single_field_model("invoice_id", InvoiceId)
+_Holder = single_field_holder("invoice_id", InvoiceId)
 
 
 def test_accepts_canonical_sha256_hex_digest() -> None:
     digest = hashlib.sha256(b"invoice-payload").hexdigest()
-    holder = _Holder(invoice_id=digest)
-    assert single_field_value(holder, "invoice_id") == digest
+    holder = _Holder.build(digest)
+    assert _Holder.value_of(holder) == digest
 
 
 def test_rejects_noncanonical_digest_shapes() -> None:
@@ -31,7 +31,7 @@ def test_rejects_noncanonical_digest_shapes() -> None:
 
     for case_id, raw_id in cases:
         try:
-            _Holder(invoice_id=raw_id)
+            _Holder.build(raw_id)
         except ValidationError:
             continue
         pytest.fail(f"{case_id}: expected ValidationError")

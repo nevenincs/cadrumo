@@ -31,6 +31,7 @@ from ...domain.buckets import (
     BucketEventObjectType,
     BucketEventType,
 )
+from ...domain.currency import CurrencyNormalizationService
 from ...domain.invoices import InvoiceCatalogueRepositoryProtocol, InvoiceLinkError
 from ...domain.modelos import (
     CalculationRevisionCatalogueRepositoryProtocol,
@@ -87,6 +88,7 @@ from ._actions_common import (
     _verify_evidence_references,
     _verify_usage_ratio_reference,
 )
+from ._actions_import import _apply_fx_conversion
 from ._models import (
     LedgerReviewQuery,
     LedgerReviewQueryResult,
@@ -120,6 +122,7 @@ def create_manual_transaction(
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
     occurred_at: datetime | None = None,
+    currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> ManualLedgerTransactionResult:
     """Persist one manual ledger transaction in the command's bucket.
 
@@ -155,7 +158,7 @@ def create_manual_transaction(
                 "movement, or omit --idempotency-key to append a deliberate duplicate",
                 translated_message="application.ledger.errors.idempotency_key_conflict",
             )
-    transaction_base = _transaction_from_command(command, occurred_at=now)
+    transaction_base = _transaction_from_command(command, occurred_at=now, currency_normalizer=currency_normalizer)
     _verify_evidence_references(
         command,
         transaction_id=transaction_base.transaction_id,
@@ -171,7 +174,12 @@ def create_manual_transaction(
         object_id=transaction_base.transaction_id,
         payload=_event_payload(command),
     )
-    transaction = _transaction_from_command(command, occurred_at=now, bucket_event_id=event.event_id)
+    transaction = _transaction_from_command(
+        command,
+        occurred_at=now,
+        bucket_event_id=event.event_id,
+        currency_normalizer=currency_normalizer,
+    )
     _save_transaction_catalogue_and_events(
         transaction_repository=repository,
         event_repository=event_repository,
@@ -610,6 +618,7 @@ def _prepare_manual_transaction_update(
     command: ManualLedgerTransactionCommand,
     previous_transaction_id: str,
     now: datetime,
+    currency_normalizer: CurrencyNormalizationService | None = None,
     invoice_repository: InvoiceCatalogueRepositoryProtocol | None = None,
     attachment_store: _AttachmentStoreProtocol | None = None,
     usage_ratio_profile: UsageRatioProfile | None = None,
@@ -628,6 +637,7 @@ def _prepare_manual_transaction_update(
         command,
         occurred_at=now,
         provider_transaction_id=current.raw.provider_transaction_id if command.idempotency_key is None else None,
+        currency_normalizer=currency_normalizer,
         created_by=current.created_by,
         created_source_command=current.source_command,
         created_event_id=current.created_event_id,
@@ -672,6 +682,7 @@ def _prepare_manual_transaction_update(
         command,
         occurred_at=now,
         provider_transaction_id=current.raw.provider_transaction_id if command.idempotency_key is None else None,
+        currency_normalizer=currency_normalizer,
         created_by=current.created_by,
         created_source_command=current.source_command,
         created_event_id=current.created_event_id,
@@ -1076,6 +1087,7 @@ def _transaction_from_command(
     import_fingerprint: str | None = None,
     created_at: datetime | None = None,
     modified_at: datetime | None = None,
+    currency_normalizer: CurrencyNormalizationService | None = None,
 ) -> Transaction:
     raw = RawTransaction(
         provider_transaction_id=provider_transaction_id or _provider_transaction_id(command, occurred_at=occurred_at),
@@ -1149,22 +1161,46 @@ def _transaction_from_command(
         "created_at": created_at if created_at is not None else occurred_at,
         "modified_at": modified_at if modified_at is not None else occurred_at,
     }
-    if command.business_classification is not BusinessClassification.NOT_YET_PROCESSED:
-        payload.update(
-            {
-                "classified_at": occurred_at,
-                "classified_by": command.classified_by_override or CLASSIFIED_BY_MANUAL,
-                # #231: the operator's free-text rationale (the manual `classify
-                # --reason` value, threaded through as `command.notes`) is the
-                # real "why" behind the decision and takes precedence; the
-                # invoking command name remains the fallback for classification
-                # paths that carry no operator-supplied reason (e.g. bulk
-                # `--from-csv` rows with no `notes` column).
-                "classification_reason": command.notes or command.source_command,
-                "classification_confidence": Decimal("1"),
-            },
-        )
+    # Convert a foreign-currency manual row at entry, exactly as the file-import
+    # path does. Without this the row persists with no value_in_eur and every
+    # aggregation gate withholds it, so a manually-entered foreign invoice never
+    # reaches the modelo at all.
+    payload.update(_fx_conversion_fields(raw, currency_normalizer))
+    payload.update(_classification_fields(command, occurred_at=occurred_at))
     return Transaction.model_validate(payload)
+
+
+def _fx_conversion_fields(
+    raw: RawTransaction,
+    currency_normalizer: CurrencyNormalizationService | None,
+) -> dict[str, object]:
+    """Project the converted foreign-currency fields, empty when no rate resolves."""
+    fx_rate, value_in_eur, _rate_source, _rate_date_iso = _apply_fx_conversion(raw, currency_normalizer)
+    if fx_rate is None or value_in_eur is None:
+        return {}
+    return {"fx_rate": fx_rate, "value_in_eur": value_in_eur}
+
+
+def _classification_fields(
+    command: ManualLedgerTransactionCommand,
+    *,
+    occurred_at: datetime,
+) -> dict[str, object]:
+    """Project the classification stamp, empty while the row is unprocessed."""
+    if command.business_classification is BusinessClassification.NOT_YET_PROCESSED:
+        return {}
+    return {
+        "classified_at": occurred_at,
+        "classified_by": command.classified_by_override or CLASSIFIED_BY_MANUAL,
+        # #231: the operator's free-text rationale (the manual `classify
+        # --reason` value, threaded through as `command.notes`) is the
+        # real "why" behind the decision and takes precedence; the
+        # invoking command name remains the fallback for classification
+        # paths that carry no operator-supplied reason (e.g. bulk
+        # `--from-csv` rows with no `notes` column).
+        "classification_reason": command.notes or command.source_command,
+        "classification_confidence": Decimal("1"),
+    }
 
 
 def _evidence_provenance(

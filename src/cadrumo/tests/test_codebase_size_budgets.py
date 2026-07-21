@@ -53,7 +53,12 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # secure_objects.py: extracted the raw-row decode/fault-isolation codec
     # (_list_item_from_raw_row) to the sibling _secure_object_row_codec.py
     # module alongside the existing secure_object_record_from_row extraction;
-    # back under the default budget, override removed.
+    # that split put it back under the default budget. The WP10 core-complexity
+    # decomposition (1110a630d1) then split its remaining hotspot callables into
+    # named helpers, taking it 1219 -> 1277: the added lines are helper
+    # signatures and docstrings, and radon reports no callable above C. Pinned
+    # at the post-decomposition size.
+    "src/cadrumo/adapters/persistence/storage/sql/secure_objects.py": 1277,  # SPLIT-CANDIDATE
     # M143/M156/M185/M186/M490/M604/M763/M848 applicability-rule enrollment
     # (data-shaped dict literal growth); SPLIT-CANDIDATE: extract the rule
     # table into per-family submodules during the next applicability pass.
@@ -76,7 +81,10 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # pinned at present size pending an owner split pass.
     "src/cadrumo/adapters/outbound/google/_calc_sheets_apply.py": 1272,  # SPLIT-CANDIDATE (+13: call-time vault-folder Settings deferral, 1d026764cc)
     "src/cadrumo/adapters/outbound/google/_calc_sheets_pull.py": 1316,  # SPLIT-CANDIDATE (regrew past prior pin)
-    "src/cadrumo/application/modelo/_calculation_actions.py": 1438,  # SPLIT-CANDIDATE (regrew past prior pin)
+    # Extracting caller-override reconciliation out of the calculate-diagnostics
+    # entry (e3caca846b) took this module 1367 -> 1452. Pinned at the
+    # post-decomposition size.
+    "src/cadrumo/application/modelo/_calculation_actions.py": 1452,  # SPLIT-CANDIDATE (regrew past prior pin)
     "src/cadrumo/application/aggregation/_iva_ledger.py": 1617,  # SPLIT-CANDIDATE
     "src/cadrumo/application/wizard/_commands.py": 1339,  # SPLIT-CANDIDATE
     # _loader.py: extracted the locale-translation load/merge/inject pipeline
@@ -94,8 +102,19 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     "src/cadrumo/domain/transactions/_models.py": 1419,  # SPLIT-CANDIDATE
     "src/cadrumo/entrypoints/cli/_config/__init__.py": 1261,  # SPLIT-CANDIDATE
     # Authentication lifecycle responsibilities keep this module above the
-    # default budget.
-    "src/cadrumo/application/auth/_operator.py": 1450,  # SPLIT-CANDIDATE
+    # default budget. The WP2 auth decomposition (d6e1dbf7a3, plus the
+    # signature-typing follow-up e03b9674b8) split its complexity hotspots into
+    # named private helpers, taking it 1436 -> 1575; radon now reports no callable
+    # above C here. Pinned at the post-decomposition size.
+    "src/cadrumo/application/auth/_operator.py": 1575,  # SPLIT-CANDIDATE
+    # The _delete_locked decomposition into named private helpers (f764cc53de)
+    # took this module 1219 -> 1295, its first override. The only callable radon
+    # still rates C is import_ (11). Pinned at the post-decomposition size.
+    "src/cadrumo/application/bucket_maintenance/_service.py": 1295,  # SPLIT-CANDIDATE
+    # The WP11 workflow decomposition (d5a365ae08) took this module from exactly
+    # the default budget (1250) to 1292, its first override, by extracting the
+    # engine's stage helpers. Pinned at the post-decomposition size.
+    "src/cadrumo/application/workflow/_engine.py": 1292,  # SPLIT-CANDIDATE
 }
 _CALLABLE_LINE_LIMIT_OVERRIDES = {
     ("src/cadrumo/application/modelo/_revision_persistence.py", "persist_filed_revision"): 192,  # SPLIT-CANDIDATE

@@ -133,7 +133,7 @@ class StatutoryCapVariant(_ProportionalityStrictFrozenModel):
     """One legally distinct daily cap inside a statutory-cap rule."""
 
     id: str = Field(min_length=1, max_length=64)
-    label: tr = Field(description="Human-readable label.")
+    label: tr = Field(description="Translation key for the human-readable label.")
     statutory_cap_eur_per_day: Decimal = Field(ge=Decimal("0"))
 
     @model_validator(mode="after")
@@ -175,7 +175,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             legally relevant condition.
         citations: At least one :class:`CategoryCitation` proving
             the rule.
-        notes: Authoritative Spanish-language notes describing the rule.
+        notes: Translation key for the notes describing the rule.
     """
 
     kind: ProportionalityKind
@@ -187,7 +187,7 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
     statutory_cap_period: StatutoryCapPeriod | None = None
     statutory_cap_variants: tuple[StatutoryCapVariant, ...] = Field(default_factory=tuple)
     citations: tuple[CategoryCitation, ...] = Field(default_factory=tuple)
-    notes: tr = Field(description="Authoritative Spanish-language notes.")
+    notes: tr = Field(description="Translation key for the notes describing the rule.")
 
     @model_validator(mode="after")
     def _validate_shape(self) -> ProportionalityRule:

@@ -173,7 +173,9 @@ def _seed_work_unit():
 def test_resume_help_advertises_the_command() -> None:
     result = _invoke_work(["resume", "--help"])
     assert result.exit_code == 0
-    assert "TARGET" in result.output
+    # Optional positional metavar, Typer-rendered as `[target]` (older Typer
+    # used bare-uppercase `TARGET`); the positional is still advertised.
+    assert "[target]" in result.output
     assert "--modelo" in result.output
     assert "--year" in result.output
     assert "--period" in result.output

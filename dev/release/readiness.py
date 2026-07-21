@@ -165,7 +165,6 @@ REQUIRED_DISTRIBUTION_ROWS: Final[tuple[str, ...]] = (
     "homebrew-linux-arm64",
     "homebrew-linux-x86-64",
     "homebrew-macos-arm64",
-    "homebrew-macos-x86-64",
     "python-linux-x86-64",
     "python-macos-arm64",
     "python-windows-x86-64",

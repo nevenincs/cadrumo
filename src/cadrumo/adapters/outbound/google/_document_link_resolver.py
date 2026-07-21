@@ -24,6 +24,7 @@ of being silently stored as links.
 from __future__ import annotations
 
 import re
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import Any, Final, Protocol, cast
 
@@ -276,8 +277,32 @@ def list_drive_folder_documents(
     drive_service = service if service is not None else _drive_service(credentials)
     documents: list[DriveFolderDocument] = []
     skipped = 0
-    page_token: str | None = None
+    for raw_file in _iter_drive_folder_files(drive_service, folder_id=folder_id):
+        mime_type = raw_file.get("mimeType", "")
+        if mime_type == _DRIVE_FOLDER_MIME_TYPE:
+            continue
+        if mime_type not in _INVOICE_MIME_TYPES:
+            skipped += 1
+            continue
+        documents.append(
+            DriveFolderDocument(
+                file_id=raw_file["id"],
+                name=raw_file.get("name", raw_file["id"]),
+                mime_type=mime_type,
+            ),
+        )
+    return DriveFolderListing(documents=tuple(documents), skipped_non_document_count=skipped)
+
+
+def _iter_drive_folder_files(drive_service: _DriveService, *, folder_id: str) -> Iterator[GoogleDriveFile]:
+    """Yield every raw Drive child of ``folder_id`` across pages, mapping scope refusals.
+
+    A 403/404 (or any permission refusal without an already-named ``required_scope``)
+    is remapped to the same ``drive.file``-scope refusal :func:`resolve_document_link`
+    uses, so both fetch surfaces read identically.
+    """
     query = f"'{folder_id}' in parents and trashed = false"
+    page_token: str | None = None
     while True:
         files = drive_service.files()
         if page_token is None:
@@ -311,25 +336,11 @@ def list_drive_folder_documents(
             ) from exc
         # CAST-RATIONALE-thirdparty: Google Drive files-list is an untyped JSON API response
         raw_files = cast("list[GoogleDriveFile]", response.get("files", []))
-        for raw_file in raw_files:
-            mime_type = raw_file.get("mimeType", "")
-            if mime_type == _DRIVE_FOLDER_MIME_TYPE:
-                continue
-            if mime_type not in _INVOICE_MIME_TYPES:
-                skipped += 1
-                continue
-            documents.append(
-                DriveFolderDocument(
-                    file_id=raw_file["id"],
-                    name=raw_file.get("name", raw_file["id"]),
-                    mime_type=mime_type,
-                ),
-            )
+        yield from raw_files
         # CAST-RATIONALE-thirdparty: Google Drive nextPageToken is an untyped JSON API response
         page_token = cast("str | None", response.get("nextPageToken"))
         if not page_token:
             break
-    return DriveFolderListing(documents=tuple(documents), skipped_non_document_count=skipped)
 
 
 __all__ = [

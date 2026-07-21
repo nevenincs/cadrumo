@@ -21,7 +21,7 @@ from ...application.ledger import (
 from ...application.review import FilterParseError, LedgerReviewFilterSpec
 from ...core.i18n import tr
 from ._common import _bad, _emit_envelope, _state, _tx_repo
-from ._ledger_list import ledger_filter_parse_error_message
+from ._ledger_list import ledger_filter_parse_error_message, ledger_review_query_for_spec
 
 ResolveTransactionId = Callable[[TransactionCatalogueRepository, str], str]
 
@@ -64,16 +64,10 @@ def _ledger_review_query(
     resolve_transaction_id: ResolveTransactionId,
 ) -> LedgerReviewQuery:
     resolved_record_id = resolve_transaction_id(transaction_repository, record_id) if record_id is not None else None
-    return LedgerReviewQuery(
+    return ledger_review_query_for_spec(
+        spec,
         bucket_id=transaction_repository.bucket_id,
         transaction_id=resolved_record_id,
-        period=spec.period,
-        status=spec.status.value if spec.status is not None else None,
-        issue=spec.issue.value if spec.issue is not None else None,
-        import_id=spec.import_id,
-        classification=spec.classification.value if spec.classification is not None else None,
-        text=spec.text,
-        direction=spec.direction.value if spec.direction is not None else None,
     )
 
 

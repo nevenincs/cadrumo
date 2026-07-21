@@ -353,6 +353,7 @@ def _register_evidence_extract_command() -> None:
             f"iva_rate\t{draft.iva_rate if draft.iva_rate is not None else '-'}",
             f"iva_amount\t{draft.iva_amount if draft.iva_amount is not None else '-'}",
             f"grand_total\t{draft.grand_total if draft.grand_total is not None else '-'}",
+            f"currency\t{draft.currency if draft.currency is not None else '-'}",
             f"raw_text_length\t{draft.raw_text_length}",
         ]
         # `extract_invoice_draft_from_evidence` raises when the resolved PDF has
@@ -478,10 +479,13 @@ def _register_evidence_confirm_command() -> None:
                 default="Counterparty ISO 3166-1 alpha-2 country code.",
             ),
         ),
-        currency: str = typer.Option(
-            "EUR",
+        currency: str | None = typer.Option(
+            None,
             "--currency",
-            help=tr("cli.app.ledger.evidence.confirm_currency_help", default="ISO-4217 currency code."),
+            help=tr(
+                "cli.app.ledger.evidence.confirm_currency_help",
+                default="ISO-4217 currency code overriding the one printed on the document.",
+            ),
         ),
         notes: str = typer.Option(
             "",
@@ -528,7 +532,7 @@ def _run_evidence_confirm(
     taxable_base: str | None,
     iva_rate: str | None,
     country_code: str,
-    currency: str,
+    currency: str | None,
     notes: str,
 ) -> None:
     if (evidence_id is None) == (attachment_id is None):

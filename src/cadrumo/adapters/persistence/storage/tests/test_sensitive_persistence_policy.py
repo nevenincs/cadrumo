@@ -230,16 +230,6 @@ _REVIEWED_PRODUCTION_FILE_WRITES = {
         "write_text",
     ): "operator-enabled IVA wallet diagnostic writes redacted structural metadata only",
     (
-        "src/cadrumo/adapters/outbound/fx/_ecb_refresh.py",
-        "refresh_bundled_ecb_rates",
-        "tmp.write_text",
-    ): "ECB refresh utility writes a temporary official reference-rate snapshot before validation",
-    (
-        "src/cadrumo/adapters/outbound/fx/_ecb_refresh.py",
-        "refresh_bundled_ecb_rates",
-        "target.write_text",
-    ): "ECB refresh utility writes bundled non-user reference-rate data after parser validation",
-    (
         "src/cadrumo/domain/calculations/registry/_workbook_parity.py",
         "_converted_binary_xls_path",
         "cached_path.write_bytes",

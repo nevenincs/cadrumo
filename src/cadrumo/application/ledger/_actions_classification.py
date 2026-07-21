@@ -179,9 +179,9 @@ def _parse_bulk_classify_rows(csv_text: str) -> tuple[list[_ParsedBulkClassifyRo
 class _BulkRowOutcome(NamedTuple):
     """The per-row result of applying one parsed bulk-classify row.
 
-    ``working`` is the (possibly-updated) working catalogue; on a skip or a
-    failure it is the unchanged input catalogue. Exactly one of ``applied``,
-    ``skipped``, or ``failure is not None`` characterises the row.
+    ``working`` is the (possibly-updated) working :class:`TransactionCatalogue`;
+    on a skip or a failure it is the unchanged input catalogue. Exactly one of
+    ``applied``, ``skipped``, or ``failure is not None`` characterises the row.
     """
 
     working: TransactionCatalogue
@@ -215,8 +215,7 @@ def _apply_one_bulk_classify_row(
         current = _require_transaction(working, resolved_transaction_id)
         if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             raise TransactionValidationError(
-                "only active ledger transactions can be edited; archived, stashed, "
-                "and split-parent rows are immutable",
+                "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
                 context={
                     "transaction_id": resolved_transaction_id,
                     "lifecycle_state": current.lifecycle_state.value,

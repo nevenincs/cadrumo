@@ -351,7 +351,10 @@ def test_app_modelo_work_resume_help_exposes_documented_argument() -> None:
     """
     result = invoke_cached_cli(["app", "modelo", "work", "resume", "--help"])
     assert result.exit_code == 0
-    assert "TARGET" in result.output
+    # Typer renders the optional positional metavar as `[target]` in the
+    # usage line (older Typer emitted bare-uppercase `TARGET`). The optional
+    # TARGET positional is still advertised — only the metavar spelling moved.
+    assert "[target]" in result.output
 
 
 def test_profile_backend_schema_duplicate_branch_stays_removed() -> None:

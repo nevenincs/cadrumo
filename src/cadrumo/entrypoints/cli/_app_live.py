@@ -668,12 +668,17 @@ async def _run_live_iva_evidence_pull_command[T](
     resolved_timeout_ms = (
         timeout_ms if timeout_ms is not None else load_settings().cadrumo_live_iva_cli_watchdog_timeout_ms
     )
-    preexisting_profiles = _playwright_profile_tokens(_process_command_inventory())
+    baseline_inventory = _process_command_inventory()
+    # None (not an empty set) when the process table could not be read, so the
+    # reaper can refuse to kill rather than treat every browser as newly ours.
+    preexisting_profiles = None if baseline_inventory is None else _playwright_profile_tokens(baseline_inventory)
     pre_timeout_auth_context = _live_iva_auth_watchdog_context(stage="before")
     try:
         return await asyncio.wait_for(awaitable, timeout=resolved_timeout_ms / 1000)
     except TimeoutError as exc:
-        killed_processes = _reap_new_playwright_profile_processes(preexisting_profiles=preexisting_profiles)
+        killed_processes, inventory_available = _reap_new_playwright_profile_processes(
+            preexisting_profiles=preexisting_profiles,
+        )
         post_timeout_auth_context = _live_iva_auth_watchdog_context(stage="after")
         raise LiveIvaSurfaceTimeoutError(
             f"live IVA evidence pull command did not complete within {resolved_timeout_ms} ms",
@@ -683,6 +688,10 @@ async def _run_live_iva_evidence_pull_command[T](
                 "stage": "cli_watchdog",
                 "surface": LiveIvaReadSurface.FILED_HISTORY.value,
                 "watchdog_reaped_process_count": killed_processes,
+                # Without this an operator cannot tell "reaped nothing because
+                # there was nothing to reap" from "never managed to look", which
+                # are opposite conclusions about whether a browser leaked.
+                "watchdog_process_inventory_available": inventory_available,
                 **pre_timeout_auth_context,
                 **post_timeout_auth_context,
             },
@@ -729,16 +738,48 @@ class _ProcessCommand:
 
 
 _PLAYWRIGHT_PROFILE_RE = re.compile(r"playwright_chromiumdev_profile-[A-Za-z0-9_-]+")
-_PROCESS_INVENTORY_TIMEOUT_SECONDS = 2
+#: Budget for ONE OS process-table read.
+#:
+#: Derived from measurement, not guessed, and the measurement is bimodal. On
+#: Windows the read shells out to PowerShell running ``Get-CimInstance
+#: Win32_Process``, which costs 1.1-2.0s once the CIM subsystem is WARM but was
+#: measured at 30.3s on a COLD first query -- the assemblies and the WMI service
+#: have to spin up, and a machine with ~1000 processes makes that first
+#: enumeration expensive. The former 2s budget did not even cover the warm case
+#: with headroom, and never had a chance at the cold one.
+#:
+#: That mattered because the expiry is swallowed (see
+#: :func:`_process_command_inventory`): the watchdog silently reaped nothing and
+#: reported "0 processes", so a leaked headless browser and its profile
+#: directory survived unnoticed. The cold path is the LIKELY one in production --
+#: this runs once, after a live pull has already timed out, often as the first
+#: CIM query of the session.
+#:
+#: 60s is roughly twice the worst observed cold read. Two reads at this bound
+#: stay inside the cleanup phase's own configured ceiling,
+#: ``cadrumo_live_iva_cli_watchdog_timeout_ms`` (240s by default). The cleanup
+#: path runs only after the operation has ALREADY failed, so a slower error path
+#: is far cheaper than leaking a browser -- and if even this bound expires, the
+#: caller is now TOLD rather than shown a misleading zero.
+_PROCESS_INVENTORY_TIMEOUT_SECONDS = 60
 
 
-def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
-    """Return local process command lines for watchdog cleanup."""
+def _process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
+    """Return local process command lines for watchdog cleanup.
+
+    Returns ``None`` when the OS process table could NOT be inspected (the
+    helper is missing, the query timed out, or its output did not parse) --
+    deliberately distinct from an empty tuple, which asserts that the table WAS
+    read and held nothing of interest. Collapsing the two is what let the
+    watchdog report "reaped 0" when the truth was "never managed to look", and
+    it is what made a failed baseline read look like "no pre-existing browsers",
+    which would have licensed the reaper to kill processes it never created.
+    """
     try:
         if platform.system() == "Windows":
             powershell = shutil.which("powershell") or shutil.which("pwsh")
             if powershell is None:
-                return ()
+                return None
             script = "Get-CimInstance Win32_Process | Select-Object ProcessId,CommandLine | ConvertTo-Json -Compress"
             completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
                 [powershell, "-NoProfile", "-Command", script],
@@ -748,7 +789,9 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
             )
             payload = completed.stdout.decode("utf-8", errors="replace").strip()
             if not payload:
-                return ()
+                # Win32_Process can never legitimately be empty -- there is always
+                # at least this process -- so empty output means the query failed.
+                return None
             # ANY-RETURN-RATIONALE-JSON-PROCESS-INVENTORY: json.loads returns Any;
             # payload is a Win32_Process PowerShell JSON array or single-object response.
             decoded: Any = json.loads(payload)
@@ -760,7 +803,7 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
 
         ps = shutil.which("ps")
         if ps is None:
-            return ()
+            return None
         completed = subprocess.run(  # noqa: S603 - executable resolved with shutil.which; argv is fixed
             [ps, "-axo", "pid=,args="],
             check=True,
@@ -769,7 +812,7 @@ def _process_command_inventory() -> tuple[_ProcessCommand, ...]:
             timeout=_PROCESS_INVENTORY_TIMEOUT_SECONDS,
         )
     except (OSError, subprocess.SubprocessError, json.JSONDecodeError, KeyError, TypeError, ValueError):
-        return ()
+        return None
 
     rows: list[_ProcessCommand] = []
     for raw_line in completed.stdout.splitlines():
@@ -790,12 +833,28 @@ def _playwright_profile_tokens(processes: tuple[_ProcessCommand, ...]) -> frozen
     return frozenset(tokens)
 
 
-def _reap_new_playwright_profile_processes(*, preexisting_profiles: frozenset[str]) -> int:
-    """Terminate processes tied to Playwright temp profiles created by this command."""
+def _reap_new_playwright_profile_processes(*, preexisting_profiles: frozenset[str] | None) -> tuple[int, bool]:
+    """Terminate processes tied to Playwright temp profiles created by this command.
+
+    Returns ``(killed, inventory_available)``. ``inventory_available`` is
+    ``False`` when the process table could not be read either now or when the
+    baseline was taken; the caller must not read a ``0`` count in that case as
+    "there was nothing to reap".
+
+    Reaping is fail-safe on a missing baseline: without the set of profiles that
+    already existed before this command ran, every profile on the machine looks
+    new, and reaping them would SIGTERM browsers this command never created --
+    including a concurrent operator's. When the baseline is unknown this returns
+    without killing anything, leaving the honest signal to the caller.
+    """
+    if preexisting_profiles is None:
+        return 0, False
     processes = _process_command_inventory()
+    if processes is None:
+        return 0, False
     new_profiles = _playwright_profile_tokens(processes) - preexisting_profiles
     if not new_profiles:
-        return 0
+        return 0, True
 
     killed = 0
     current_pid = os.getpid()
@@ -809,7 +868,7 @@ def _reap_new_playwright_profile_processes(*, preexisting_profiles: frozenset[st
         except OSError:
             continue
         killed += 1
-    return killed
+    return killed, True
 
 
 def _compact_failure_context(context: dict[str, object] | None) -> str:

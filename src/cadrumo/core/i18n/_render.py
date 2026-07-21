@@ -37,6 +37,12 @@ _OUTPUT_LANGUAGE_CACHE_VERSION = 0
 # declared placeholder not supplied by the caller. Production leaves this False.
 _I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar("cadrumo_i18n_strict_placeholders", default=False)
 
+# Test-scope flag: when True, tr raises MissingTranslationError for a key the
+# catalogue does not carry, instead of returning a humanised fallback. A caller
+# supplying an explicit `default` has opted into a fallback and never raises.
+# Production leaves this False so a missing string can never abort a filing.
+_I18N_STRICT_MISSING_KEYS: ContextVar[bool] = ContextVar("cadrumo_i18n_strict_missing_keys", default=False)
+
 
 class UnmatchedPlaceholderError(CoreError):
     """Raised in strict-placeholder mode when a locale value retains a {name} token.
@@ -63,6 +69,35 @@ class UnmatchedPlaceholderError(CoreError):
         self.key = key
         self.name = name
         self.rendered = rendered
+
+
+class MissingTranslationError(CoreError):
+    """Raised in strict-missing-key mode when a catalogue does not carry a key.
+
+    Indicates that a ``tr()`` call site names a key absent from the locale, or
+    one whose value is the key itself (the scaffold placeholder for "not
+    translated yet"). Outside strict mode both cases fall back to a humanised
+    label, so a missing string never aborts a filing.
+
+    Attributes:
+        key: The locale translation key that could not be resolved.
+        locale: The locale whose catalogue was consulted.
+    """
+
+    def __init__(self, *, key: str, locale: str) -> None:
+        """Initialise with the unresolved translation key and its locale.
+
+        Args:
+            key: The locale translation key that could not be resolved.
+            locale: The locale whose catalogue was consulted.
+        """
+        super().__init__(
+            f"locale key {key!r} is not translated in {locale!r}; "
+            f"run `python -m cadrumo.locales scaffold` to declare it, then "
+            f"`python -m cadrumo.locales set {locale} {key} <value>` to translate it"
+        )
+        self.key = key
+        self.locale = locale
 
 
 # Application-layer hook: set by cadrumo.application at startup to allow the i18n
@@ -226,6 +261,9 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
         UnmatchedPlaceholderError: When strict-placeholder mode is
             active and the rendered string still contains an
             un-interpolated ``{name}`` token.
+        MissingTranslationError: When strict-missing-key mode is active,
+            the catalogue does not carry ``translation_key``, and no
+            explicit ``default`` was supplied.
     """
     if "locale" not in kwargs or kwargs["locale"] is None:
         kwargs["locale"] = output_language()
@@ -399,9 +437,9 @@ def _flatten_translations(value: object, prefix: str = "") -> dict[str, str]:
 
 
 def _lookup_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:
-    fallback = str(default) if default is not None else _humanise_key(translation_key)
+    rendered: str | None
     try:
-        rendered = _locale_map(locale).get(translation_key, fallback)
+        rendered = _locale_map(locale).get(translation_key)
     except (OSError, yaml.YAMLError, IndexError) as exc:
         _log.debug(
             "i18n: unable to load locale %s; falling back to python-i18n (%s)",
@@ -411,9 +449,30 @@ def _lookup_translation(locale: str, translation_key: str, *, default: object | 
         )
         _ensure_initialised()
         rendered = i18n.t(translation_key, locale=locale)
-    if rendered == translation_key:
-        return fallback
+    # A value equal to its own key is the scaffold placeholder for "declared
+    # but not translated yet", so it is a miss just as an absent key is.
+    if rendered is None or rendered == translation_key:
+        return _missing_translation(locale, translation_key, default=default)
     return rendered
+
+
+def _missing_translation(locale: str, translation_key: str, *, default: object | None = None) -> str:
+    """Resolve a key the catalogue does not carry, or refuse it in strict mode.
+
+    An explicit ``default`` is the caller opting into a fallback, so it is
+    honoured even under strict mode. Otherwise strict mode refuses and
+    production returns a humanised label — a missing string must never abort
+    a filing.
+
+    Raises:
+        MissingTranslationError: When strict-missing-key mode is active and
+            the caller supplied no explicit ``default``.
+    """
+    if default is not None:
+        return str(default)
+    if _I18N_STRICT_MISSING_KEYS.get():
+        raise MissingTranslationError(key=translation_key, locale=locale)
+    return _humanise_key(translation_key)
 
 
 def _humanise_key(translation_key: str) -> str:
@@ -468,6 +527,7 @@ def _interpolate_with_status(
 __all__ = [
     "DEFAULT_OUTPUT_LANGUAGE",
     "SUPPORTED_OUTPUT_LANGUAGES",
+    "MissingTranslationError",
     "UnmatchedPlaceholderError",
     "extract_placeholders",
     "output_language",

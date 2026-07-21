@@ -745,7 +745,7 @@ release-apply:
 
 # Aggregate every distribution-evidence row from the given CI run(s)' evidence
 # drafts into var/distribution-install-readiness/ so `just release-readiness`
-# can reach 12/12. Pass the packaging-smoke run id (mints python-<os> rows +
+# can reach 11/11. Pass the packaging-smoke run id (mints python-<os> rows +
 # the release cohort) plus any acquisition run ids (Scoop, Homebrew) - every
 # run publishes its rows as assets on a draft release tagged
 # evidence-<lane>-<run_id> (release-asset transport; Actions artifacts are
