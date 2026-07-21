@@ -145,7 +145,7 @@ class LocaleManager:
     def get_codebase_keys(self) -> set[str]:
         """Extract all concrete dotted translation keys from the codebase.
 
-        Combines three discovery paths:
+        Combines four discovery paths:
 
         1. Regex scanner — ``tr("…")`` / ``t("…")`` literal call sites.
         2. AST scanner — programmatic emissions such as
@@ -154,6 +154,11 @@ class LocaleManager:
         3. F-string registry — bounded f-string patterns whose value sets
            are fully known at import time (e.g. wizard choice labels
            keyed by enum values). See :mod:`locales._fstring_registry`.
+        4. Registry scanner — keys declared as data by the category profile
+           registry rather than by a Python call site. The first three paths
+           read Python source only, so these were invisible to every parity
+           check and sat unresolved in all four catalogues. See
+           :mod:`locales._registry_scanner`.
 
         Dynamic namespaces (open-ended f-string and concatenation forms)
         are returned by :meth:`get_codebase_namespaces` and checked
@@ -162,6 +167,7 @@ class LocaleManager:
         """
         from ._ast_scanner import scan_source_tree
         from ._fstring_registry import get_registered_keys
+        from ._registry_scanner import scan_registry_keys
 
         keys: set[str] = set()
         for py_file in self.src_dir.rglob("*.py"):
@@ -176,6 +182,7 @@ class LocaleManager:
                 keys.add(match.group(1))
         keys.update(scan_source_tree(self.src_dir))
         keys.update(get_registered_keys())
+        keys.update(scan_registry_keys())
         return keys
 
     def get_codebase_namespaces(self) -> set[str]:

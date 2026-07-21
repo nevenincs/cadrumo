@@ -1477,6 +1477,110 @@ auth:
     dnie_pkcs_description: Reserved closed provider slot for DNI-e PKCS.
     dnie_pkcs_label: DNI-e PKCS
 categories:
+  registry:
+    amortizacion_vivienda_afecto:
+      notes: categories.registry.amortizacion_vivienda_afecto.notes
+    arrendamiento_local:
+      notes: categories.registry.arrendamiento_local.notes
+    arrendamiento_vivienda_afecta: categories.registry.arrendamiento_vivienda_afecta
+    arrendamiento_vivienda_afecto:
+      notes: categories.registry.arrendamiento_vivienda_afecto.notes
+    asesoria_contable:
+      notes: categories.registry.asesoria_contable.notes
+    asesoria_fiscal:
+      notes: categories.registry.asesoria_fiscal.notes
+    asesoria_juridica:
+      notes: categories.registry.asesoria_juridica.notes
+    comunidad_vivienda_afecto:
+      notes: categories.registry.comunidad_vivienda_afecto.notes
+    cuotas_autonomos_ss:
+      notes: categories.registry.cuotas_autonomos_ss.notes
+    cuotas_colegiales:
+      notes: categories.registry.cuotas_colegiales.notes
+    cuotas_reta: categories.registry.cuotas_reta
+    formacion_profesional:
+      notes: categories.registry.formacion_profesional.notes
+    gastos_bancarios:
+      notes: categories.registry.gastos_bancarios.notes
+    gastos_financieros:
+      notes: categories.registry.gastos_financieros.notes
+    hardware_amortizable:
+      notes: categories.registry.hardware_amortizable.notes
+    home_office_agua: categories.registry.home_office_agua
+    home_office_gas: categories.registry.home_office_gas
+    home_office_internet: categories.registry.home_office_internet
+    home_office_luz: categories.registry.home_office_luz
+    ibi_local_afecto:
+      notes: categories.registry.ibi_local_afecto.notes
+    ibi_vivienda_afecto:
+      notes: categories.registry.ibi_vivienda_afecto.notes
+    manutencion_dietas_extranjero:
+      notes: categories.registry.manutencion_dietas_extranjero.notes
+      statutory_cap_variants:
+        con-pernocta:
+          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.con-pernocta.label
+        sin-pernocta:
+          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.sin-pernocta.label
+    manutencion_dietas_nacional:
+      notes: categories.registry.manutencion_dietas_nacional.notes
+      statutory_cap_variants:
+        con-pernocta:
+          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.con-pernocta.label
+        sin-pernocta:
+          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.sin-pernocta.label
+    manutencion_extranjero: categories.registry.manutencion_extranjero
+    manutencion_nacional: categories.registry.manutencion_nacional
+    material_oficina:
+      notes: categories.registry.material_oficina.notes
+    mobiliario_amortizable:
+      notes: categories.registry.mobiliario_amortizable.notes
+    mutualidad_alternativa:
+      notes: categories.registry.mutualidad_alternativa.notes
+    publicidad_marketing:
+      notes: categories.registry.publicidad_marketing.notes
+    reparaciones_conservacion:
+      notes: categories.registry.reparaciones_conservacion.notes
+    seguros_rc: categories.registry.seguros_rc
+    seguros_responsabilidad_civil:
+      notes: categories.registry.seguros_responsabilidad_civil.notes
+    seguros_salud: categories.registry.seguros_salud
+    seguros_salud_autonomo:
+      notes: categories.registry.seguros_salud_autonomo.notes
+    software_suscripcion:
+      notes: categories.registry.software_suscripcion.notes
+    subcontratacion:
+      notes: categories.registry.subcontratacion.notes
+    suministros_cliente_directos:
+      notes: categories.registry.suministros_cliente_directos.notes
+    suministros_home_office_agua:
+      notes: categories.registry.suministros_home_office_agua.notes
+    suministros_home_office_gas:
+      notes: categories.registry.suministros_home_office_gas.notes
+    suministros_home_office_internet:
+      notes: categories.registry.suministros_home_office_internet.notes
+    suministros_home_office_luz:
+      notes: categories.registry.suministros_home_office_luz.notes
+    telefonia_fija:
+      notes: categories.registry.telefonia_fija.notes
+    telefonia_movil:
+      notes: categories.registry.telefonia_movil.notes
+    tributos_deducibles: categories.registry.tributos_deducibles
+    tributos_fiscalmente_deducibles:
+      notes: categories.registry.tributos_fiscalmente_deducibles.notes
+    vehiculo_combustible:
+      notes: categories.registry.vehiculo_combustible.notes
+    vehiculo_mantenimiento:
+      notes: categories.registry.vehiculo_mantenimiento.notes
+    vehiculo_parking:
+      notes: categories.registry.vehiculo_parking.notes
+    vehiculo_peaje:
+      notes: categories.registry.vehiculo_peaje.notes
+    vehiculo_seguro:
+      notes: categories.registry.vehiculo_seguro.notes
+    viajes_alojamiento:
+      notes: categories.registry.viajes_alojamiento.notes
+    viajes_transporte:
+      notes: categories.registry.viajes_transporte.notes
   test_profile:
     display_label_851219: Display label 851219
 cli:
@@ -4132,6 +4236,9 @@ cli:
         rejected; classify it manually when ready.
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
+    allow_identical_key_help: cli.locales.allow_identical_key_help
+    allow_identical_locale_help: cli.locales.allow_identical_locale_help
+    allow_identical_reason_help: cli.locales.allow_identical_reason_help
     app_help: Audit and scaffold locale catalogues
     canonicalize_product_identity:
       locale_help: Update only this supported locale catalogue.
@@ -5789,6 +5896,8 @@ live:
     year_range_invalid: From-year must be less than or equal to to-year.
 locales:
   cli:
+    allow_identical:
+      recorded: locales.cli.allow_identical.recorded
     audit:
       file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
       file_ok: '%{locale_file}: ok'
