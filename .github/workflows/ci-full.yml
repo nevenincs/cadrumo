@@ -1,20 +1,21 @@
-# Nightly full-conformance lane for Cadrumo.
+# Full-conformance lane for Cadrumo (dispatch-only).
 # The per-push ci.yml is budgeted at a ten-minute wall (operator directive
-# 2026-07-20), so the slow, push-frequency-insensitive proofs live here and
-# still gate main every day: the nitpicky warnings-as-errors docs build, the
-# locked-graph CVE audit, and the pre-commit hook replay, plus the same
-# lint/type/unit surface as per-push CI so a nightly red is diagnosable
-# without cross-referencing another workflow's history. Free compute on the
-# self-hosted fleet; the schedule fires when the runners are idle.
+# 2026-07-20), so the slow, push-frequency-insensitive proofs live here: the
+# nitpicky warnings-as-errors docs build, the locked-graph CVE audit, and the
+# pre-commit hook replay, plus the same lint/type/unit surface as per-push CI
+# so a red here is diagnosable without cross-referencing another workflow's
+# history.
+#
+# NO schedule trigger (operator ruling 2026-07-21: the project is not
+# developed continuously; cadence is manual, no standing compute). The
+# operator or coordinator dispatches this lane before a release, before
+# promoting evidence, or whenever a full-surface verdict is wanted. Formerly
+# ci-nightly.yml; renamed when the schedule was retired.
 
-name: Cadrumo CI Nightly
+name: Cadrumo CI Full
 
 on:
   workflow_dispatch:
-  schedule:
-    # 02:30 UTC: outside the operator's working hours, after any evening
-    # campaign pushes have settled.
-    - cron: "30 2 * * *"
 
 concurrency:
   group: ${{ github.workflow }}
@@ -24,8 +25,8 @@ permissions:
   contents: read
 
 jobs:
-  cadrumo-nightly-full:
-    name: Cadrumo / nightly full conformance / Python 3.13
+  cadrumo-full-conformance:
+    name: Cadrumo / full conformance / Python 3.13
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 120
 
@@ -96,7 +97,7 @@ jobs:
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
         # module-to-stub correspondence, and CLI reference drift/conformance)
-        # plus doc8 and interrogate. Multi-minute by design; nightly cadence.
+        # plus doc8 and interrogate. Multi-minute by design; dispatch cadence.
         run: just docs-check
 
       - name: Audit dependencies for known CVEs
@@ -115,7 +116,7 @@ jobs:
         # Formerly the S335 gate in durable-maintenance-gates.yml (retired;
         # this step is its replacement, landed in the same commit). The vault
         # audit carries a standing backlog of status-token drift, so a red
-        # verdict here is visibility, not a nightly failure; flip this to
+        # verdict here is visibility, not a lane failure; flip this to
         # blocking once `vault check all` is green at HEAD.
         # Reproduce and fix locally:
         #   uv run --no-sync vaultspec-core vault check all --fix
@@ -124,8 +125,7 @@ jobs:
 
       - name: Ledger + storage roundtrip suite
         # Formerly the S336 gate in durable-maintenance-gates.yml (retired;
-        # this step is its replacement, landed in the same commit, on a
-        # strictly tighter cadence — nightly instead of weekly).
+        # this step is its replacement, landed in the same commit).
         # ===================================================================
         # ||  DO NOT DEPRECATE OR REMOVE THIS STEP WITHOUT AN EXPLICIT
         # ||  REPLACEMENT. The ledger + storage roundtrip suite is the

@@ -1,25 +1,21 @@
-# Monthly code-health report (issue #416)
+# Code-health report (issue #416), dispatch-only.
 #
 # The workflow runs `just audit-health-report`, the composed shadowing,
 # duplication, import-layering, and complexity dashboard (`dev/audit/report.py`),
-# each month. Both the text and the JSON output remain in the job logs
+# on demand (operator ruling 2026-07-21: no schedules, no standing compute). Both the text and the JSON output remain in the job logs
 # (zero Actions-artifact posture; the storage quota is broken on the Free
 # plan and every other workflow already carries the same rule).
 #
-# This workflow is deliberately non-blocking. The scheduled diagnostic dashboard
+# This workflow is deliberately non-blocking. The diagnostic dashboard
 # combines import-layering, shadowing, duplication, and complexity signals.
 # The main continuous integration (CI) workflow enforces every declared
-# `.importlinter` contract through `just check-imports`. The monthly workflow
-# records and displays a diagnostic failure without causing the scheduled job
-# to fail.
+# `.importlinter` contract through `just check-imports`; this workflow
+# records and displays a diagnostic failure without failing the job.
 
 name: Cadrumo Code Health Report
 
 on:
   workflow_dispatch:
-  schedule:
-    # 06:00 UTC on the 1st of every month.
-    - cron: '0 6 1 * *'
 
 concurrency:
   group: ${{ github.workflow }}
@@ -30,7 +26,7 @@ permissions:
 
 jobs:
   health-report:
-    name: Monthly code-health report (informational)
+    name: Code-health report (informational)
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
 
