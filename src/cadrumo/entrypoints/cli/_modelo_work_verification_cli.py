@@ -68,7 +68,17 @@ from ._modelo_rendering import (
     verification_report_notices,
     verification_report_payload,
 )
-from ._modelo_work_options import _ModeloOpt, _PeriodOpt, _RevisionOpt, _YearOpt
+from ._modelo_work_options import (
+    _ActorOpt,
+    _BucketIdOpt,
+    _CalculationRevisionIdArg,
+    _ModeloOpt,
+    _PeriodOpt,
+    _RevisionOpt,
+    _RevisionSelectorOpt,
+    _WorkUnitIdOpt,
+    _YearOpt,
+)
 
 
 # KWARGS-ANY-RATIONALE-CLI-DI-RESOLVERS: resolve_revision_for_cli is an injected
@@ -127,18 +137,12 @@ def _register_work_verify_command(
     @work_app.command("verify", help=tr("cli.app.modelo.work.verify_help"))
     def work_verify(
         ctx: typer.Context,
-        calculation_revision_id: Annotated[
-            str | None,
-            typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
-        ] = None,
+        calculation_revision_id: _CalculationRevisionIdArg = None,
         modelo: _ModeloOpt = None,
         year: _YearOpt = None,
         period: _PeriodOpt = None,
         revision: _RevisionOpt = None,
-        work_unit_id: Annotated[
-            str | None,
-            typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
-        ] = None,
+        work_unit_id: _WorkUnitIdOpt = None,
         select: Annotated[
             ModeloVerifySelector,
             typer.Option(
@@ -146,14 +150,8 @@ def _register_work_verify_command(
                 help=tr("cli.app.modelo.work.verify_selector_help", default="Draft revision selector."),
             ),
         ] = ModeloVerifySelector.CURRENT,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
-        actor: Annotated[
-            str | None,
-            typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-        ] = None,
+        bucket_id: _BucketIdOpt = None,
+        actor: _ActorOpt = None,
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -466,33 +464,15 @@ def _register_work_file_command(
     @work_app.command("file", help=tr("cli.app.modelo.work.file_help"))
     def work_file(
         ctx: typer.Context,
-        calculation_revision_id: Annotated[
-            str | None,
-            typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
-        ] = None,
+        calculation_revision_id: _CalculationRevisionIdArg = None,
         modelo: _ModeloOpt = None,
         year: _YearOpt = None,
         period: _PeriodOpt = None,
         revision: _RevisionOpt = None,
-        work_unit_id: Annotated[
-            str | None,
-            typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
-        ] = None,
-        select: Annotated[
-            str,
-            typer.Option(
-                "--select",
-                help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector."),
-            ),
-        ] = ModeloCalculationRevisionSelector.CURRENT.value,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
-        actor: Annotated[
-            str | None,
-            typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-        ] = None,
+        work_unit_id: _WorkUnitIdOpt = None,
+        select: _RevisionSelectorOpt = ModeloCalculationRevisionSelector.CURRENT.value,
+        bucket_id: _BucketIdOpt = None,
+        actor: _ActorOpt = None,
         notes: Annotated[
             str | None,
             typer.Option("--notes", help=tr("cli.app.modelo.work.notes_help")),

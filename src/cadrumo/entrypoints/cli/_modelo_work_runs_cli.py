@@ -51,6 +51,14 @@ from ._modelo_cli_support import (
     validate_work_unit_id,
 )
 from ._modelo_payloads import WorkflowRunPayload, WorkResumeResult, WorkRunsResult
+from ._modelo_work_options import (
+    _BucketIdOpt,
+    _ModeloOpt,
+    _PeriodOpt,
+    _RevisionOpt,
+    _WorkUnitIdOpt,
+    _YearOpt,
+)
 
 _DRAFT_RECALCULATE_COMMAND = "aeat app modelo work calculate"
 _VERIFICATION_REPORT_LIST_COMMAND = (
@@ -200,30 +208,15 @@ def register_work_run_commands(
                 ),
             ),
         ] = None,
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-        ] = None,
-        year: Annotated[
-            int | None,
-            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-        ] = None,
-        revision: Annotated[
-            str | None,
-            typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
+        modelo: _ModeloOpt = None,
+        year: _YearOpt = None,
+        period: _PeriodOpt = None,
+        revision: _RevisionOpt = None,
         select: Annotated[
             str | None,
             typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help")),
         ] = None,
-        work_unit_id: Annotated[
-            str | None,
-            typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
-        ] = None,
+        work_unit_id: _WorkUnitIdOpt = None,
         calculation_revision_id: Annotated[
             str | None,
             typer.Option(
@@ -231,10 +224,7 @@ def register_work_run_commands(
                 help=tr("cli.app.modelo.work.calculation_revision_id_help"),
             ),
         ] = None,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
+        bucket_id: _BucketIdOpt = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
         """Surface workflow-resume preconditions and resumable context.
