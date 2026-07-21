@@ -125,7 +125,7 @@ checkout.
   privately instead, per `SECURITY.md`."
 - Note (not a defect): README, `docs/index.md`, `docs/updates.md`, and
   `pyproject.toml`'s author entry all consistently point at
-  `github.com/wgergely/aeat`, while the current `origin` remote and `gh repo
+  `github.com/operator/aeat`, while the current `origin` remote and `gh repo
   view` both resolve to `nevenincs/aeat`. This is a deliberate, consistent
   choice across every doc surface (not a one-off typo), most plausibly the
   intended eventual/canonical public URL versus the current interim hosting

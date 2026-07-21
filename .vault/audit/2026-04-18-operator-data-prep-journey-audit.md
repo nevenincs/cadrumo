@@ -64,7 +64,7 @@ Terminal scrolls 247 `RawTransaction` JSON records past his eyes. The command co
 
 ★ **DP3 — `aeat financial ingest` does not persist.** The command parses the CSV and prints the records to stdout, then exits. There is no `--persist` flag. The catalogue stays empty. Kent has to write a Python script to push the records into `TransactionCatalogue` — which is impossible for a non-developer autónomo.
 
-(This is wall #14 from the first-file audit, already tracked as [#216](https://github.com/wgergely/aeat/issues/216). Restating because it is the load-bearing blocker for this entire scene onwards. Every data-prep wall downstream is moot until this closes.)
+(This is wall #14 from the first-file audit, already tracked as [#216](https://github.com/operator/aeat/issues/216). Restating because it is the load-bearing blocker for this entire scene onwards. Every data-prep wall downstream is moot until this closes.)
 
 Assume, for the rest of the scenes, that #216 ships and `aeat financial ingest --persist` works.
 
@@ -164,7 +164,7 @@ He runs `aeat financial txs list --unclassified` → 14 rows. `aeat financial in
 
 **There is no single readiness command.** There is no "Q1 2026 is 94% prepared; 14 transactions awaiting classification; 3 invoices unmatched; 2 categories unassigned; click here to continue." He cannot tell whether "done" is close or far.
 
-★ **DP12 — No per-period readiness report.** `aeat pipeline status --period 2026Q1` is tracked as a future surface in EPIC [#238](https://github.com/wgergely/aeat/issues/238), not built. Until it ships, Kent joins disparate queries in his head.
+★ **DP12 — No per-period readiness report.** `aeat pipeline status --period 2026Q1` is tracked as a future surface in EPIC [#238](https://github.com/operator/aeat/issues/238), not built. Until it ships, Kent joins disparate queries in his head.
 
 ### scene 12 — deductibility
 
@@ -176,7 +176,7 @@ The `ProportionalityRule` on `suministros_home_office_luz` is `USAGE_RATIO_HOME_
 
 No code in `src/aeat/domain/financial/` produces this composition. No `Transaction.deductible_amount`. No `Transaction.deductible_iva`. No `aeat financial compute-deductible` command.
 
-★ **DP13 — No service computes deductible amounts from proportionality + VAT rules.** The rules exist as data; the arithmetic is unimplemented. The T6 aggregation step ([#218](https://github.com/wgergely/aeat/issues/218)) is supposed to take classified+categorised transactions and produce casilla-level numbers — but DP13 is a prerequisite: without knowing what each transaction's deductible portion *is*, aggregation has nothing to sum.
+★ **DP13 — No service computes deductible amounts from proportionality + VAT rules.** The rules exist as data; the arithmetic is unimplemented. The T6 aggregation step ([#218](https://github.com/operator/aeat/issues/218)) is supposed to take classified+categorised transactions and produce casilla-level numbers — but DP13 is a prerequisite: without knowing what each transaction's deductible portion *is*, aggregation has nothing to sum.
 
 ### scene 13 — the simple case fails anyway
 
@@ -198,19 +198,19 @@ Even the trivial case — a fully-deductible, fixed-amount recurring expense —
 
 | # | Wall | Tracked |
 |---|---|---|
-| DP1 | No "start here" data-prep entry-point | [#260](https://github.com/wgergely/aeat/issues/260) — `aeat financial prepare` walkthrough |
-| DP2 | No per-period, per-modelo data-inventory checklist | [#261](https://github.com/wgergely/aeat/issues/261) — `aeat financial requires` |
-| DP3 | `aeat financial ingest` doesn't persist | [#216](https://github.com/wgergely/aeat/issues/216) |
-| DP4 | No path from PDF invoice to `Invoice` record | [#254](https://github.com/wgergely/aeat/issues/254) — EPIC: PDF invoice ingestion (LLM + wizard + bulk) |
-| DP5 | `GMAIL` / `GOOGLE_DRIVE` sources are enum-only; no fetcher | [#262](https://github.com/wgergely/aeat/issues/262) — Gmail + Drive invoice fetcher |
-| DP6 | `classify` cannot assign a `SpendingCategory` | [#266](https://github.com/wgergely/aeat/issues/266) **CLOSED** (PR #288) |
-| DP7 | No place to configure user-specific usage ratios | [#259](https://github.com/wgergely/aeat/issues/259) — profile usage ratios |
-| DP8 | Three proportionality concepts conflated in UX | Subsumed by [#257](https://github.com/wgergely/aeat/issues/257) — its `proportionality_applied` + `vat_treatment_applied` + `trace` fields on `aeat financial txs show` *are* the unified surface |
-| DP9 | VAT classification engine unwired to CLI | [#255](https://github.com/wgergely/aeat/issues/255) — wire `classify_vat` to CLI |
-| DP10 | `classified_by = "rule:<id>"` has no producer | [#256](https://github.com/wgergely/aeat/issues/256) — EPIC: rule-based auto-classify |
-| DP11 | No period scoping on catalogue CLI | [#263](https://github.com/wgergely/aeat/issues/263) — `aeat financial txs list --period` |
-| DP12 | No per-period readiness report | [#238](https://github.com/wgergely/aeat/issues/238) — pipeline health dashboard |
-| DP13 | No deductibility computation service | [#257](https://github.com/wgergely/aeat/issues/257) — `compute_deductible` service |
+| DP1 | No "start here" data-prep entry-point | [#260](https://github.com/operator/aeat/issues/260) — `aeat financial prepare` walkthrough |
+| DP2 | No per-period, per-modelo data-inventory checklist | [#261](https://github.com/operator/aeat/issues/261) — `aeat financial requires` |
+| DP3 | `aeat financial ingest` doesn't persist | [#216](https://github.com/operator/aeat/issues/216) |
+| DP4 | No path from PDF invoice to `Invoice` record | [#254](https://github.com/operator/aeat/issues/254) — EPIC: PDF invoice ingestion (LLM + wizard + bulk) |
+| DP5 | `GMAIL` / `GOOGLE_DRIVE` sources are enum-only; no fetcher | [#262](https://github.com/operator/aeat/issues/262) — Gmail + Drive invoice fetcher |
+| DP6 | `classify` cannot assign a `SpendingCategory` | [#266](https://github.com/operator/aeat/issues/266) **CLOSED** (PR #288) |
+| DP7 | No place to configure user-specific usage ratios | [#259](https://github.com/operator/aeat/issues/259) — profile usage ratios |
+| DP8 | Three proportionality concepts conflated in UX | Subsumed by [#257](https://github.com/operator/aeat/issues/257) — its `proportionality_applied` + `vat_treatment_applied` + `trace` fields on `aeat financial txs show` *are* the unified surface |
+| DP9 | VAT classification engine unwired to CLI | [#255](https://github.com/operator/aeat/issues/255) — wire `classify_vat` to CLI |
+| DP10 | `classified_by = "rule:<id>"` has no producer | [#256](https://github.com/operator/aeat/issues/256) — EPIC: rule-based auto-classify |
+| DP11 | No period scoping on catalogue CLI | [#263](https://github.com/operator/aeat/issues/263) — `aeat financial txs list --period` |
+| DP12 | No per-period readiness report | [#238](https://github.com/operator/aeat/issues/238) — pipeline health dashboard |
+| DP13 | No deductibility computation service | [#257](https://github.com/operator/aeat/issues/257) — `compute_deductible` service |
 
 **All thirteen walls are tracked.** Nine new issues (#254–#263) were filed between this audit's original draft and its publication and close the "untracked" gaps the audit had flagged. DP8's "zero unified surface" concern is already answered by #257's `aeat financial txs show` design (explicit composition trace + rule + VAT treatment alongside the numeric answer). DP6 (#266) landed via PR #288 on the same day this audit was written — the "single largest hidden wall" is already closed.
 
@@ -245,22 +245,22 @@ The gap is systematic. Someone built the data layer with great care and then sto
 
 This section was drafted before the follow-up issues (#254–#263, #266) were filed. Retained here as the audit's historical proposals — every proposal has since been filed or closed:
 
-- **DP6** — *Kent assigns a spending category.* Filed as [#266](https://github.com/wgergely/aeat/issues/266), closed by PR [#288](https://github.com/wgergely/aeat/pull/288).
-- **DP4** — *Kent ingests PDF invoices end-to-end.* Filed as EPIC [#254](https://github.com/wgergely/aeat/issues/254).
-- **DP9** — *Kent asks the tool to classify VAT.* Filed as [#255](https://github.com/wgergely/aeat/issues/255).
-- **DP10** — *Kent writes rules that auto-classify his transactions.* Filed as EPIC [#256](https://github.com/wgergely/aeat/issues/256).
-- **DP13** — *Kent sees how much of each expense is deductible.* Filed as [#257](https://github.com/wgergely/aeat/issues/257); also covers DP8's "unified surface" concern via `proportionality_applied + vat_treatment_applied + trace` on `aeat financial txs show`.
-- **DP7** — *Kent configures his own usage ratios.* Filed as [#259](https://github.com/wgergely/aeat/issues/259).
-- **DP1** — *`aeat financial prepare` walkthrough.* Filed as [#260](https://github.com/wgergely/aeat/issues/260).
-- **DP2** — *`aeat financial requires` checklist.* Filed as [#261](https://github.com/wgergely/aeat/issues/261).
-- **DP5** — *Gmail / Drive attachment fetcher.* Filed as [#262](https://github.com/wgergely/aeat/issues/262).
-- **DP11** — *Period scoping on catalogue CLI.* Filed as [#263](https://github.com/wgergely/aeat/issues/263).
+- **DP6** — *Kent assigns a spending category.* Filed as [#266](https://github.com/operator/aeat/issues/266), closed by PR [#288](https://github.com/operator/aeat/pull/288).
+- **DP4** — *Kent ingests PDF invoices end-to-end.* Filed as EPIC [#254](https://github.com/operator/aeat/issues/254).
+- **DP9** — *Kent asks the tool to classify VAT.* Filed as [#255](https://github.com/operator/aeat/issues/255).
+- **DP10** — *Kent writes rules that auto-classify his transactions.* Filed as EPIC [#256](https://github.com/operator/aeat/issues/256).
+- **DP13** — *Kent sees how much of each expense is deductible.* Filed as [#257](https://github.com/operator/aeat/issues/257); also covers DP8's "unified surface" concern via `proportionality_applied + vat_treatment_applied + trace` on `aeat financial txs show`.
+- **DP7** — *Kent configures his own usage ratios.* Filed as [#259](https://github.com/operator/aeat/issues/259).
+- **DP1** — *`aeat financial prepare` walkthrough.* Filed as [#260](https://github.com/operator/aeat/issues/260).
+- **DP2** — *`aeat financial requires` checklist.* Filed as [#261](https://github.com/operator/aeat/issues/261).
+- **DP5** — *Gmail / Drive attachment fetcher.* Filed as [#262](https://github.com/operator/aeat/issues/262).
+- **DP11** — *Period scoping on catalogue CLI.* Filed as [#263](https://github.com/operator/aeat/issues/263).
 
 ### refinements to existing tracked issues
 
-- **[#217](https://github.com/wgergely/aeat/issues/217) bulk classify**: scope should include `--category` assignment (now covered by #266) and confirm rule format covers category + VAT category + proportionality override.
-- **[#218](https://github.com/wgergely/aeat/issues/218) T6 aggregation**: explicit dependency on DP6 (#266, closed) and DP13 (#257). T6 cannot sum until per-transaction category + deductible amounts exist.
-- **[#238](https://github.com/wgergely/aeat/issues/238) pipeline status**: acceptance should include categorisation coverage + deductibility-computation coverage, not only unclassified count.
+- **[#217](https://github.com/operator/aeat/issues/217) bulk classify**: scope should include `--category` assignment (now covered by #266) and confirm rule format covers category + VAT category + proportionality override.
+- **[#218](https://github.com/operator/aeat/issues/218) T6 aggregation**: explicit dependency on DP6 (#266, closed) and DP13 (#257). T6 cannot sum until per-transaction category + deductible amounts exist.
+- **[#238](https://github.com/operator/aeat/issues/238) pipeline status**: acceptance should include categorisation coverage + deductibility-computation coverage, not only unclassified count.
 
 ---
 

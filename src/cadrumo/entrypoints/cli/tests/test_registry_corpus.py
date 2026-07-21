@@ -100,7 +100,7 @@ def test_citations_list_ignores_legacy_normatives_root_override(tmp_path: Path) 
                 "articulos": [],
                 "tags": [],
                 "last_reviewed_at": "2026-04-12",
-                "reviewed_by": "wgergely",
+                "reviewed_by": "operator",
             },
         ),
         encoding="utf-8",

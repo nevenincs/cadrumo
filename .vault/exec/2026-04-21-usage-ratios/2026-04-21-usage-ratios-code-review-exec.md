@@ -18,7 +18,7 @@ Mandatory Phase-5 Verify artefact for #259. Six commits on `feature/259-usage-ra
 
 ## Verdict
 
-**Approved.** Zero critical or high-severity findings reached the merge tip. Every must-fix surfaced during audits was addressed in the subsequent hardening commit. One follow-up issue was carved out ([#310](https://github.com/wgergely/aeat/issues/310) — concurrent-writer data loss) with ADR acknowledgement and a clear deferral rationale.
+**Approved.** Zero critical or high-severity findings reached the merge tip. Every must-fix surfaced during audits was addressed in the subsequent hardening commit. One follow-up issue was carved out ([#310](https://github.com/operator/aeat/issues/310) — concurrent-writer data loss) with ADR acknowledgement and a clear deferral rationale.
 
 ## Rounds executed
 

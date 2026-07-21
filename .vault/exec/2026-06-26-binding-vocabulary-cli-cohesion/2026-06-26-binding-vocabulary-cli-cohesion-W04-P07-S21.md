@@ -57,9 +57,9 @@ No plan step check was run in this pass. The plan file is clean, but S21's targe
 - The stale blocker is cleared in the current HEAD/worktree: S21's implementation targets are clean except the shared root locale catalogues, whose current diff only adds `prior_filing_observations_changed` keys and does not touch the bindings vocabulary surface.
 - `uv run --no-sync aeat app modelo bindings --help` exposes `list` and `resolve`; no `preview` subcommand is present.
 - Source-only stale-command search over `src/aeat/entrypoints/cli`, `storage_write_policy.py`, `core/errors/_registry.py`, `operator_surface/_help.py`, and `src/aeat/locales` found no `bindings preview`, `modelo.bindings.preview`, `calc pull --compute`, `pull --compute`, or `config.google.sync.calc.pull_compute` hit.
-- `uv run --no-sync pytest --collect-only -q` wrote full output to `C:\Users\hello\AppData\Local\Temp\aeat-d9-current-collect-retry-20260704.log` and completed clean: `12276/14908 tests collected (2632 deselected) in 109.26s`.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-docconf-20260704.log`: `58 passed`.
-- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-jsonschema-20260704.log`: `140 passed`.
+- `uv run --no-sync pytest --collect-only -q` wrote full output to `<operator-home>\AppData\Local\Temp\aeat-d9-current-collect-retry-20260704.log` and completed clean: `12276/14908 tests collected (2632 deselected) in 109.26s`.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` wrote `<operator-home>\AppData\Local\Temp\aeat-d9-vocab-docconf-20260704.log`: `58 passed`.
+- `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py` wrote `<operator-home>\AppData\Local\Temp\aeat-d9-vocab-jsonschema-20260704.log`: `140 passed`.
 - `uv run --no-sync python -m aeat.locales audit` reports `ok` for `ca.yml`, `en.yml`, `es.yml`, and `hu.yml`.
 
 This retry supplies the missing clean-gate evidence for checking `W04.P07.S21`.

@@ -30,7 +30,7 @@ Both decisions are resolved autonomously via the audit-grounded decision rules i
 ### audit method
 
 - `Grep` for `PORTAL_HTML_PROBE|MANUAL_LLM_DRAFT|XSD_WIRE` across `src/aeat/`.
-- `gh issue list --state all --search "PORTAL_HTML_PROBE OR MANUAL_LLM_DRAFT OR XSD_WIRE OR SchemaSource" --repo wgergely/aeat`.
+- `gh issue list --state all --search "PORTAL_HTML_PROBE OR MANUAL_LLM_DRAFT OR XSD_WIRE OR SchemaSource" --repo operator/aeat`.
 - `git branch -r` filtered for schema/portal/llm-draft/xsd-related branch names.
 
 ### evidence
@@ -49,7 +49,7 @@ Vault-doc references — 3 historical docs:
 
 GitHub state:
 
-- Open issues actively planning the slots: **0** in `wgergely/aeat`.
+- Open issues actively planning the slots: **0** in `operator/aeat`.
 - Closed issues referencing the slots: 1 (`#9`, the original 2025-era schema-extraction research issue, closed and historical).
 - EPIC `#475` references the slots only as items "to-be-decided" by this audit; not actively planning use.
 - Active branches: 0. The only schema-related branch (`origin/feature/7-portal-catalogue`) is the portals catalogue feature, unrelated to the `PORTAL_HTML_PROBE` extractor type.

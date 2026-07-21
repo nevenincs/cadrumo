@@ -14,7 +14,7 @@ related:
 
 ## status
 
-accepted — `aeat review queue` CLI and `ReviewItem` subtypes verified in `src/cadrumo/application/review/` at HEAD; bumped via issue #367. Sub-EPIC of [#202](https://github.com/wgergely/aeat/issues/202) (review umbrella) and direct fulfilment of [#232](https://github.com/wgergely/aeat/issues/232).
+accepted — `aeat review queue` CLI and `ReviewItem` subtypes verified in `src/cadrumo/application/review/` at HEAD; bumped via issue #367. Sub-EPIC of [#202](https://github.com/operator/aeat/issues/202) (review umbrella) and direct fulfilment of [#232](https://github.com/operator/aeat/issues/232).
 
 ## context
 

@@ -40,8 +40,8 @@ occurred.
 
 - `scoop install libreoffice`
 - `scoop reset libreoffice`
-- `scoop shim add soffice C:\Users\hello\scoop\apps\libreoffice\current\LibreOffice\program\soffice.exe`
-- `scoop shim add libreoffice C:\Users\hello\scoop\apps\libreoffice\current\LibreOffice\program\soffice.exe`
+- `scoop shim add soffice <operator-home>\scoop\apps\libreoffice\current\LibreOffice\program\soffice.exe`
+- `scoop shim add libreoffice <operator-home>\scoop\apps\libreoffice\current\LibreOffice\program\soffice.exe`
 - `uv lock`
 - `uv sync --all-extras`
 - Live project API smoke: synthetic XLSX inputs `12` and `30` recalculated to workbook output `42` through `run_workbook_with_libreoffice`.

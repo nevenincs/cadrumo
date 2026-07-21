@@ -8,7 +8,7 @@ title: Filing Complementaria / Amendment Engine — Plan
 related:
   - "[[2026-04-13-filing-complementaria-research]]"
   - "[[2026-04-13-filing-complementaria-adr]]"
-issue: wgergely/aeat#93
+issue: operator/aeat#93
 ---
 
 # implementation plan: filing complementaria

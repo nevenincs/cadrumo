@@ -19,9 +19,9 @@
 - **Expected:** A list of provider CLIs visible on PATH; "only checks whether each provider executable is discoverable".
 - **Actual:**
   ```
-  claude	available	C:\Users\hello\.local\bin\claude.EXE
-  antigravity	available	C:\Users\hello\AppData\Local\agy\bin\agy.EXE
-  codex	available	C:\Users\hello\AppData\Roaming\npm\codex.CMD
+  claude	available	<operator-home>\.local\bin\claude.EXE
+  antigravity	available	<operator-home>\AppData\Local\agy\bin\agy.EXE
+  codex	available	<operator-home>\AppData\Roaming\npm\codex.CMD
   ollama-vision	unavailable	Ollama is not reachable at http://127.0.0.1	start Ollama (ollama serve) and ensure it listens on aeat_llm_ollama_chat_url
   ```
 - **Verdict:** OK. Matches the page well. The `unavailable` row names the exact fix (start Ollama). Note: the page lists `claude`, `antigravity`, `codex` but the live output also surfaces `ollama-vision` — a small, harmless mismatch with the documented list.

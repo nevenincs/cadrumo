@@ -1,6 +1,6 @@
 ---
 name: schema-extraction-adr
-description: Architecture Decision Record for programmatic AEAT modelo schema extraction (PDF/HTML → typed pydantic v2 model), wgergely/aeat#9
+description: Architecture Decision Record for programmatic AEAT modelo schema extraction (PDF/HTML → typed pydantic v2 model), operator/aeat#9
 type: adr
 tags:
   - "#adr"

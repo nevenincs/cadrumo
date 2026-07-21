@@ -32,4 +32,4 @@ related:
 
 ## Notes
 
-- Twenty-five unrelated review-adapter tests cannot open their local encrypted fixture because the shared live-store master key at `C:\Users\hello\AppData\Local\aeat\live-store-v2\secret` mismatches. The same failure occurs with single-worker execution before Period-path assertions; this step does not alter that store or classify it as a typed-period defect.
+- Twenty-five unrelated review-adapter tests cannot open their local encrypted fixture because the shared live-store master key at `<operator-home>\AppData\Local\aeat\live-store-v2\secret` mismatches. The same failure occurs with single-worker execution before Period-path assertions; this step does not alter that store or classify it as a typed-period defect.

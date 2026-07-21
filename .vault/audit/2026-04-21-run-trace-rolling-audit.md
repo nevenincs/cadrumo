@@ -261,6 +261,6 @@ document keyed to the triggering date and event, not appended here.
 
 ### PR status at seal
 
-- `https://github.com/wgergely/aeat/pull/140` — `OPEN` · `MERGEABLE`
+- `https://github.com/operator/aeat/pull/140` — `OPEN` · `MERGEABLE`
 - Rolling audit log: `.vault/audit/2026-04-21-run-trace-rolling-audit.md`
 - Ready for final squash-merge.

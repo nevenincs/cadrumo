@@ -33,7 +33,7 @@ The revised research and ADR now:
 
 ## Verification
 
-- `python C:\Users\hello\.codex\plugins\cache\openai-curated\github\b1986b3d3da5bb8a04d3cb1e69af5a29bb5c2c04\skills\gh-address-comments\scripts\fetch_comments.py` -> identified 4 unresolved actionable PR #136 review threads; all four are addressed in the updated research / ADR text
+- `python <operator-home>\.codex\plugins\cache\openai-curated\github\b1986b3d3da5bb8a04d3cb1e69af5a29bb5c2c04\skills\gh-address-comments\scripts\fetch_comments.py` -> identified 4 unresolved actionable PR #136 review threads; all four are addressed in the updated research / ADR text
 - `uv run pytest tests/test_docs.py -q` -> passed (`4 passed`)
 - `uv run pytest src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_authenticator.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/auth/test_certificate.py src/aeat/adapters/outbound/aeat/adapters/outbound/aeat/browser/test_session.py src/aeat/entrypoints/cli/browser/test_health.py tests/test_docs.py -q` -> passed (`84 passed`)
 - `uv run ruff check .` -> passed

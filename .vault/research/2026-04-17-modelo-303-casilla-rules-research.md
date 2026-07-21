@@ -16,7 +16,7 @@ related:
 
 Date: 2026-04-17
 Branch: `feature/183-modelo-303-formulas`
-Issue: wgergely/aeat#183
+Issue: operator/aeat#183
 Parent PR: #182 (engine + Modelo 130 wave 1)
 
 ## Question

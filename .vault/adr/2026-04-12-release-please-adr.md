@@ -8,7 +8,7 @@ title: Release-please LOCAL-only autorelease — ADR
 related:
   - "[[2026-04-12-release-please-research]]"
   - "[[2026-04-12-release-please-plan]]"
-issue: wgergely/aeat#60
+issue: operator/aeat#60
 status: accepted
 ---
 

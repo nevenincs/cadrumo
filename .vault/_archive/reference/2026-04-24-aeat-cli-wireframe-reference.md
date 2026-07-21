@@ -5637,7 +5637,7 @@ FAIL: Parse error in ./aeat-export-2026Q1.pdf at line 47: unexpected token 'CLAV
     aeat advanced diagnostics portal-drift report \
         --modelo 303 --period 2026Q1 \
         --fixture var/audit/portal-drift/reports/2026-04-24T15-02-11Z.json
-    gh issue create --repo wgergely/aeat --template portal-drift.md --body-file var/audit/portal-drift/reports/2026-04-24T15-02-11Z.json
+    gh issue create --repo operator/aeat --template portal-drift.md --body-file var/audit/portal-drift/reports/2026-04-24T15-02-11Z.json
 
 Exit 10. Category: system_failure.
 ```

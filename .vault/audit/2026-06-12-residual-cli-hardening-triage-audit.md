@@ -43,7 +43,7 @@ Key checks:
 - `vaultspec-core vault plan status .vault/plan/2026-06-10-cli-envelope-notice-standardisation-plan.md`: 25 of 25 complete, `exec_missing_ids: []`.
 - `vaultspec-core vault plan check .vault/plan/2026-06-10-cli-envelope-notice-standardisation-plan.md`: passed with only existing `PLAN022`.
 
-The local `C:\Users\hello\AppData\Local\Temp` volume was nearly full, so the
+The local `<operator-home>\AppData\Local\Temp` volume was nearly full, so the
 green pytest runs used workspace-local `--basetemp` directories on `Y:`.
 
 One workflow-redesign stale row from the setup cluster was safely closed:

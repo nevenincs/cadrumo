@@ -10,7 +10,7 @@ published_at = 2012-10-30
 effective_from = 2012-10-31
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Ley 7/2012 DA 1ª — introduce la disposición adicional decimoctava de la Ley 58/2003 LGT que establece la obligación de información sobre bienes y derechos situados en el extranjero (origen normativo del Modelo 720)."
 required_text = [
     "Modificación de la Ley 58/2003",
@@ -29,7 +29,7 @@ published_at = 2003-12-18
 effective_from = 2004-07-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Disposicion adicional decimoctava de la Ley General Tributaria: obligacion de informacion sobre bienes y derechos situados en el extranjero (origen del Modelo 720)."
 required_text = [
     "bienes y derechos situados en el extranjero",
@@ -49,7 +49,7 @@ published_at = 2007-09-05
 effective_from = 2007-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Reglamento General de Gestion e Inspeccion (RGAT) art 42 bis: obligacion de informar sobre cuentas en entidades financieras situadas en el extranjero (Modelo 720, seccion de cuentas)."
 required_text = [
     "Obligación de informar acerca de cuentas en entidades financieras situadas en el extranjero",
@@ -69,7 +69,7 @@ published_at = 2007-09-05
 effective_from = 2007-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RGAT art 42 ter: obligacion de informar sobre valores, derechos, seguros y rentas depositados, gestionados u obtenidos en el extranjero (Modelo 720, seccion de valores)."
 required_text = [
     "valores",
@@ -89,7 +89,7 @@ published_at = 2007-09-05
 effective_from = 2007-12-31
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RGAT art 54 bis: obligacion de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero (Modelo 720, seccion de inmuebles)."
 required_text = [
     "Obligación de informar sobre bienes inmuebles y derechos sobre bienes inmuebles situados en el extranjero",
@@ -108,7 +108,7 @@ published_at = 2013-01-30
 effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprueba el modelo 720 'Declaracion informativa de bienes y derechos situados en el extranjero' y aprueba sus disenos fisicos y logicos."
 required_text = [
     "Aprobación del Modelo 720",
@@ -128,7 +128,7 @@ published_at = 2013-01-30
 effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Obligados a presentar el modelo 720: personas fisicas y juridicas residentes en territorio espanol con cuentas, valores, o inmuebles en el extranjero por encima de los umbrales de 50.000 EUR por categoria, asi como entidades en regimen de atribucion de rentas y otros sujetos previstos."
 required_text = [
     "Obligados a presentar el modelo 720",
@@ -148,7 +148,7 @@ published_at = 2013-01-30
 effective_from = 2013-02-01
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Plazo de presentacion del Modelo 720: entre el 1 de enero y el 31 de marzo del ano siguiente al ejercicio al que se refiera la informacion."
 required_text = [
     "Plazo de presentación del modelo 720",

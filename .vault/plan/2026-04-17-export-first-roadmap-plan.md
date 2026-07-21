@@ -10,7 +10,7 @@ related:
 ---
 # export-first-roadmap-plan
 
-Concrete GitHub operations to execute the export-first ADR. Each row is a single atomic operation against the `wgergely/aeat` repository. Execution is gated on explicit user approval for each group.
+Concrete GitHub operations to execute the export-first ADR. Each row is a single atomic operation against the `operator/aeat` repository. Execution is gated on explicit user approval for each group.
 
 ## group A — label taxonomy additions (7 new labels, no-risk)
 

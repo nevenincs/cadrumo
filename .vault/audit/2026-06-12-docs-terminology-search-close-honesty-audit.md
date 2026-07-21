@@ -20,7 +20,7 @@ Fresh-context close review over the docs terminology search campaign before stru
 ## Verified Complete
 
 - Plan/exec consistency: the plan has 32 step rows and the exec directory has 32 matching step records. Before this S32 closeout, only `W05.P14.S32` remains open.
-- Upstream prerequisite: `W01.P01.S01` tracks upstream vaultspec-rag issue `https://github.com/wgergely/vaultspec-rag/issues/185` and upstream link-back comment `https://github.com/wgergely/vaultspec-rag/issues/185#issuecomment-4687704833`.
+- Upstream prerequisite: `W01.P01.S01` tracks upstream vaultspec-rag issue `https://github.com/operator/vaultspec-rag/issues/185` and upstream link-back comment `https://github.com/operator/vaultspec-rag/issues/185#issuecomment-4687704833`.
 - Handbook foundation: the bundled Terminology Handbook compiles and now carries 115 concepts, including the S31 self-hosted architectural concepts.
 - Search compilation surfaces: concept cards, casilla projection, CLI projection, target resolution, wrangling, sweep, relevance data, synonym mining, held-out miss-rate, and unified records pass the `src/aeat/terminology` plus `dev/docs/terminology` test slice.
 - Curation honesty: the ratchet remains clean at 75 draft concepts and 75 empty short descriptions against the 75/75 baseline.

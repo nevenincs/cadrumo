@@ -12,7 +12,7 @@ related:
 
 # `deadline-engine` Code Review
 
-Mandatory code review for issue wgergely/aeat#38 conducted on
+Mandatory code review for issue operator/aeat#38 conducted on
 2026-04-12 at the close of the vaultspec-execute cycle. The reviewer
 audited every file modified or added by the feature branch
 `feature/38-deadline-engine` against the project mandates (CLAUDE.md,
