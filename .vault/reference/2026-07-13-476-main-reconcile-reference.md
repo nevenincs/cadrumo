@@ -7,8 +7,6 @@ modified: '2026-07-13'
 related: []
 ---
 
-
-
 # `476-main-reconcile` reference: `merge conflict inventory and reconciliation map for the 476 rename merge`
 
 Read-only preparation for merging `chore/eliminate-shims` (the 476 rename

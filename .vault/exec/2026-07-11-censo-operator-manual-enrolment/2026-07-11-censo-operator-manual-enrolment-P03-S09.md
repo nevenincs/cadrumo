@@ -9,39 +9,6 @@ related:
   - "[[2026-07-11-censo-operator-manual-enrolment-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #exec) and one feature tag.
-     Replace censo-operator-manual-enrolment with a kebab-case feature tag, e.g. #foo-bar.
-     Additional tags may be appended below the required pair.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     step_id is the originating Step's canonical identifier, e.g. S01.
-     The S09 and 2026-07-11-censo-operator-manual-enrolment-plan placeholders are machine-filled by
-     `vaultspec-core vault add exec`; do not fill them by hand.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar-plan]]' and link the
-     parent plan.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - NEVER reference file paths in the body. If you must name a source file,
-       class, or function, use inline backtick code: `src/module.py`. -->
-
-<!-- STEP RECORD:
-     This file represents one Step from the originating plan. Identified
-     by its canonical leaf identifier (S##) and ancestor display path.
-     The Pin that operator-entered censal facts are never stamped AEAT-verified: nothing writes the aeat_censo_read or aeat_censo_derived source tags, so the calendar verified-key set stays empty and ## Scope
-
-- `src/aeat/application/user_profile/tests/test_censo_sync.py` placeholders below are machine-filled
-     by `vaultspec-core vault add exec` from the originating Step row;
-     do not fill them by hand. -->
-
 # Pin that operator-entered censal facts are never stamped AEAT-verified: nothing writes the aeat_censo_read or aeat_censo_derived source tags, so the calendar verified-key set stays empty
 
 ## Scope

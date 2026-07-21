@@ -16,16 +16,6 @@ related:
   - '[[2026-05-19-modelo-130-relation-regression-plan]]'
 ---
 
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the
-       related: field above.
-     - The related: field carries the AUTHORISING documents
-       (ADR, research, reference, prior plan) for every Step in
-       this plan. Steps inherit this chain; per-row reference
-       footers do not exist.
-     - NEVER use [[wiki-links]] or markdown links in the
-       document body. -->
-
 # `iva-compensation-chain` `remediation` plan
 
 Repair the Modelo 303 and Modelo 390 IVA compensation chain so it follows the current AEAT record-design fields, resolves previous-quarter carry-forward values through the registry runtime, and keeps the legal and source grounding declared through the resource system.

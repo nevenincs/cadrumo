@@ -7,8 +7,6 @@ modified: '2026-07-12'
 related: []
 ---
 
-
-
 # `license-posture` research: `dependency-chain licence sweep and licence posture reassessment`
 
 A sweep of the complete dependency chain — the Python engine's core and
