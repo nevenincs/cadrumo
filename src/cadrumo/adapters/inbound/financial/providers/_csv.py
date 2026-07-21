@@ -323,24 +323,14 @@ class CsvProvider(FinancialProvider):
                 raise InvalidFinancialSourceError(
                     f"CSV row {source_row_index} could not be parsed: {resolve_error_message(exc)}",
                 ) from exc
-            built = build_raw_transaction(
+            yield build_provider_row(
                 provider=self,
                 path=path,
                 source_sha256=source_sha256,
                 source_row_index=source_row_index,
-                provider_transaction_id=parsed.provider_transaction_id,
-                booked_date=parsed.booked_date,
-                value_date=parsed.value_date,
-                amount=parsed.amount,
-                currency=parsed.currency,
-                counterparty=parsed.counterparty,
-                description=parsed.description,
+                parsed=parsed,
                 raw_fields=raw_fields,
             )
-            if parsed.direction is not None:
-                yield ParsedLedgerRow(raw=built.raw, direction=parsed.direction)
-            else:
-                yield built
 
     def _load_rows(
         self,
@@ -553,6 +543,44 @@ def _parse_tabular_transaction_row(
         description=description,
         counterparty=counterparty,
     )
+
+
+def build_provider_row(
+    *,
+    provider: FinancialProvider,
+    path: Path,
+    source_sha256: str,
+    source_row_index: int,
+    parsed: ParsedTabularTransactionRow,
+    raw_fields: Mapping[str, str],
+) -> ParsedLedgerRow:
+    """Emit the ledger row for one parsed tabular bank-layout row.
+
+    Shared post-parse tail for the CSV and spreadsheet providers. Delegates to
+    :func:`build_raw_transaction` for the magnitude/provenance
+    :class:`~domain.transactions.RawTransaction` and its sign-derived
+    direction, then overrides the flow with ``parsed.direction`` when the
+    layout carried an explicit direction column. The direction-at-parse-boundary
+    contract is unchanged: the sign is consumed exactly once, at the adapter
+    boundary.
+    """
+    built = build_raw_transaction(
+        provider=provider,
+        path=path,
+        source_sha256=source_sha256,
+        source_row_index=source_row_index,
+        provider_transaction_id=parsed.provider_transaction_id,
+        booked_date=parsed.booked_date,
+        value_date=parsed.value_date,
+        amount=parsed.amount,
+        currency=parsed.currency,
+        counterparty=parsed.counterparty,
+        description=parsed.description,
+        raw_fields=raw_fields,
+    )
+    if parsed.direction is not None:
+        return ParsedLedgerRow(raw=built.raw, direction=parsed.direction)
+    return built
 
 
 def _value_from_aliases(
