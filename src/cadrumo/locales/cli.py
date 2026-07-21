@@ -58,6 +58,19 @@ RegistryRootOpt = Annotated[
     ),
 ]
 
+_LocaleArg = Annotated[
+    OutputLanguage,
+    typer.Argument(help=tr("cli.locales.modelo.locale_help", default="Locale code to update.")),
+]
+_ModeloIdArg = Annotated[
+    str,
+    typer.Argument(help=tr("cli.locales.modelo.modelo_help", default="Modelo id to update.")),
+]
+_RevisionIdArg = Annotated[
+    str,
+    typer.Argument(help=tr("cli.locales.modelo.revision_help", default="Revision id to update.")),
+]
+
 
 @app.command("audit")
 def audit(ctx: typer.Context) -> None:
@@ -269,18 +282,9 @@ def modelo_scaffold(
 
 @modelo_app.command("set", help=tr("cli.locales.modelo.set_help", default="Set one modelo schema translation."))
 def modelo_set_value(
-    locale: Annotated[
-        OutputLanguage,
-        typer.Argument(help=tr("cli.locales.modelo.locale_help", default="Locale code to update.")),
-    ],
-    modelo_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.locales.modelo.modelo_help", default="Modelo id to update.")),
-    ],
-    revision_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.locales.modelo.revision_help", default="Revision id to update.")),
-    ],
+    locale: _LocaleArg,
+    modelo_id: _ModeloIdArg,
+    revision_id: _RevisionIdArg,
     field: Annotated[
         ModeloLocaleFieldKind,
         typer.Argument(help=tr("cli.locales.modelo.field_help", default="Translation field to update.")),
@@ -308,18 +312,9 @@ def modelo_set_value(
     help=tr("cli.locales.modelo.remove_help", default="Remove one modelo schema translation."),
 )
 def modelo_remove_value(
-    locale: Annotated[
-        OutputLanguage,
-        typer.Argument(help=tr("cli.locales.modelo.locale_help", default="Locale code to update.")),
-    ],
-    modelo_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.locales.modelo.modelo_help", default="Modelo id to update.")),
-    ],
-    revision_id: Annotated[
-        str,
-        typer.Argument(help=tr("cli.locales.modelo.revision_help", default="Revision id to update.")),
-    ],
+    locale: _LocaleArg,
+    modelo_id: _ModeloIdArg,
+    revision_id: _RevisionIdArg,
     field: Annotated[
         ModeloLocaleFieldKind,
         typer.Argument(help=tr("cli.locales.modelo.field_help", default="Translation field to remove.")),
