@@ -263,22 +263,37 @@ def _prune_orphan_defs(schema: dict[str, object]) -> dict[str, object]:
         return schema
     remaining = dict(defs)
     while True:
-        body = dict(schema)
-        body["$defs"] = remaining
-        serialized = json.dumps({key: value for key, value in body.items() if key != "$defs"})
-        referenced = {name for name in remaining if f'"#/$defs/{name}"' in serialized}
-        # A kept def may reference another def; keep transitively-reachable ones.
-        frontier = set(referenced)
-        while frontier:
-            name = frontier.pop()
-            payload = json.dumps(remaining.get(name, {}))
-            for candidate in remaining:
-                if candidate not in referenced and f'"#/$defs/{candidate}"' in payload:
-                    referenced.add(candidate)
-                    frontier.add(candidate)
+        referenced = _reachable_def_names(schema, remaining)
         if referenced == set(remaining):
             break
         remaining = {name: value for name, value in remaining.items() if name in referenced}
+    return _schema_with_defs(schema, remaining)
+
+
+def _reachable_def_names(schema: dict[str, object], remaining: dict[str, object]) -> set[str]:
+    """Return the ``$defs`` names still reachable from the schema body (mark phase).
+
+    A name is reachable when its ``#/$defs/<name>`` anchor appears in the non-``$defs``
+    body, or, transitively, in a def that is itself reachable — a kept def may
+    reference another def.
+    """
+    body = dict(schema)
+    body["$defs"] = remaining
+    serialized = json.dumps({key: value for key, value in body.items() if key != "$defs"})
+    referenced = {name for name in remaining if f'"#/$defs/{name}"' in serialized}
+    frontier = set(referenced)
+    while frontier:
+        name = frontier.pop()
+        payload = json.dumps(remaining.get(name, {}))
+        for candidate in remaining:
+            if candidate not in referenced and f'"#/$defs/{candidate}"' in payload:
+                referenced.add(candidate)
+                frontier.add(candidate)
+    return referenced
+
+
+def _schema_with_defs(schema: dict[str, object], remaining: dict[str, object]) -> dict[str, object]:
+    """Return ``schema`` carrying the surviving ``$defs`` (sweep phase), or dropping it when empty."""
     pruned = dict(schema)
     if remaining:
         pruned["$defs"] = remaining

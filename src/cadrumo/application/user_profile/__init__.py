@@ -88,6 +88,7 @@ See Also:
 
 from __future__ import annotations
 
+import importlib
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -270,182 +271,143 @@ _DOMAIN_RECORD_NAMES: frozenset[str] = frozenset(
 )
 
 
+#: Re-exported name -> owning module (dotted, relative to this package, resolved
+#: through :func:`importlib.import_module`). Every branch of the former PEP-562
+#: ``__getattr__`` name-resolution ladder is one row here; the domain records
+#: resolve through the domain package's public facade, every other row through
+#: an intra-package private submodule.
+_LAZY_EXPORTS: dict[str, str] = {
+    name: module
+    for module, names in (
+        ("._commands", tuple(_COMMAND_NAMES)),
+        ("...domain.user_profile", tuple(_DOMAIN_RECORD_NAMES)),
+        ("._lifecycle", ("ProfileLifecycleService",)),
+        ("._censo_errors", ("CensoSyncError",)),
+        ("._censo_sync", ("CENSO_DERIVED_SOURCE_TAG", "CENSO_SOURCE_TAG", "CensoSyncService")),
+        (
+            "._projections",
+            (
+                "facts_to_values",
+                "projection_for_taxpayer",
+                "record_to_path_values",
+                "record_to_values",
+                "snapshot_to_values",
+            ),
+        ),
+        ("._preflight", ("ProfilePreflightService",)),
+        ("._validation", ("ProfileValidationService",)),
+        (
+            "._bundle",
+            (
+                "UnsupportedBundleSchemaVersionError",
+                "deserialize_profile_bundle",
+                "serialize_profile_bundle",
+                "validate_bundle_payload",
+            ),
+        ),
+        (
+            "._bundle_export",
+            (
+                "PreparedProfileExport",
+                "ProfileBundleExportPurpose",
+                "ProfileBundleExportRequest",
+                "ProfileBundleExportResult",
+                "ProfileBundleExportTarget",
+                "ProfileBundleExportTransport",
+                "bundle_data_categories",
+                "export_profile_bundle",
+                "prepare_profile_export",
+                "publish_prepared_export",
+                "reconcile_prepared_exports",
+            ),
+        ),
+        (
+            "._bundle_encryption",
+            (
+                "EncryptedProfileBundleError",
+                "EncryptedProfileBundleExport",
+                "decrypt_profile_bundle_with_passphrase",
+                "encrypt_profile_bundle_for_passphrase",
+            ),
+        ),
+        (
+            "._custody",
+            (
+                "CustodyPassphraseChangeResult",
+                "CustodyRecoverResult",
+                "CustodyRecoveryEnrollmentResult",
+                "CustodyRecoveryStatus",
+                "CustodyRecoveryVerification",
+                "change_passphrase",
+                "create_recovery_code",
+                "inspect_recovery_status",
+                "recover_secret_store",
+                "recovery_wrap_path",
+                "rotate_recovery_code",
+                "verify_recovery_code",
+            ),
+        ),
+        ("._filing_baseline", ("missing_filing_baseline_flags",)),
+        ("._completeness", ("iva_regime_required",)),
+        ("._keys_validation", ("list_profile_key_records", "validate_profile_values")),
+        ("._language_resolver", ("resolve_profile_output_language_hint",)),
+        ("._profile_pointer_transaction", ("active_profile_pointer_transaction",)),
+        (
+            "._orchestration",
+            (
+                "ProfileAlreadyRegisteredError",
+                "ProfileLogoutOverrideError",
+                "build_lifecycle_service",
+                "delete_profile_with_lifecycle_span",
+                "fact_value",
+                "logout_active_profile",
+                "profile_create_storage_span",
+                "profile_storage_session",
+                "reactivate_profile_with_lifecycle_span",
+                "refuse_duplicate_label",
+                "register_active_profile",
+                "remove_active_profile",
+                "remove_profile_bucket_directory",
+                "rename_profile",
+                "require_registered_label",
+                "select_profile",
+                "select_profile_with_lifecycle_span",
+                "set_active_field",
+                "set_active_fields",
+            ),
+        ),
+        (
+            "._repository",
+            (
+                "USER_PROFILE_SNAPSHOT_NAMESPACE",
+                "USER_PROFILE_VALUE_NAMESPACE",
+                "UserProfileLifecycleRepository",
+                "UserProfileSnapshotRepository",
+                "user_profile_snapshot_object_key",
+                "user_profile_value_object_key",
+            ),
+        ),
+        ("._profile_repository", ("ProfileRepository", "TAX_ID_FACT_PATH")),
+        (
+            "._capabilities",
+            ("CapabilityDecision", "CapabilitySource", "resolve_active_capability", "resolve_capability"),
+        ),
+        ("._integrity", ("ProfileIntegrityError",)),
+        (
+            "._custody_carry",
+            ("carried_namespace_definitions", "restore_carried_objects", "serialize_carried_objects"),
+        ),
+    )
+    for name in names
+}
+
+
 def __getattr__(name: str):
     """Lazy-import every re-exported name to keep the boundary light."""
-    if name in _COMMAND_NAMES:
-        from . import _commands
-
-        return getattr(_commands, name)
-    if name in _DOMAIN_RECORD_NAMES:
-        from ...domain import user_profile as _domain_user_profile
-
-        return getattr(_domain_user_profile, name)
-    if name == "ProfileLifecycleService":
-        from ._lifecycle import ProfileLifecycleService
-
-        return ProfileLifecycleService
-    if name in ("CensoSyncError",):
-        from . import _censo_errors
-
-        return getattr(_censo_errors, name)
-    if name in (
-        "CENSO_DERIVED_SOURCE_TAG",
-        "CENSO_SOURCE_TAG",
-        "CensoSyncService",
-    ):
-        from . import _censo_sync
-
-        return getattr(_censo_sync, name)
-    if name in (
-        "facts_to_values",
-        "projection_for_taxpayer",
-        "record_to_path_values",
-        "record_to_values",
-        "snapshot_to_values",
-    ):
-        from . import _projections
-
-        return getattr(_projections, name)
-    if name == "ProfilePreflightService":
-        from ._preflight import ProfilePreflightService
-
-        return ProfilePreflightService
-    if name == "ProfileValidationService":
-        from ._validation import ProfileValidationService
-
-        return ProfileValidationService
-    if name in (
-        "UnsupportedBundleSchemaVersionError",
-        "deserialize_profile_bundle",
-        "serialize_profile_bundle",
-        "validate_bundle_payload",
-    ):
-        from . import _bundle
-
-        return getattr(_bundle, name)
-    if name in (
-        "PreparedProfileExport",
-        "ProfileBundleExportPurpose",
-        "ProfileBundleExportRequest",
-        "ProfileBundleExportResult",
-        "ProfileBundleExportTarget",
-        "ProfileBundleExportTransport",
-        "bundle_data_categories",
-        "export_profile_bundle",
-        "prepare_profile_export",
-        "publish_prepared_export",
-        "reconcile_prepared_exports",
-    ):
-        from . import _bundle_export
-
-        return getattr(_bundle_export, name)
-    if name in (
-        "EncryptedProfileBundleError",
-        "EncryptedProfileBundleExport",
-        "decrypt_profile_bundle_with_passphrase",
-        "encrypt_profile_bundle_for_passphrase",
-    ):
-        from . import _bundle_encryption
-
-        return getattr(_bundle_encryption, name)
-    if name in (
-        "CustodyPassphraseChangeResult",
-        "CustodyRecoverResult",
-        "CustodyRecoveryEnrollmentResult",
-        "CustodyRecoveryStatus",
-        "CustodyRecoveryVerification",
-        "change_passphrase",
-        "create_recovery_code",
-        "inspect_recovery_status",
-        "recover_secret_store",
-        "recovery_wrap_path",
-        "rotate_recovery_code",
-        "verify_recovery_code",
-    ):
-        from . import _custody
-
-        return getattr(_custody, name)
-    if name == "missing_filing_baseline_flags":
-        from ._filing_baseline import missing_filing_baseline_flags
-
-        return missing_filing_baseline_flags
-    if name == "iva_regime_required":
-        from ._completeness import iva_regime_required
-
-        return iva_regime_required
-    if name in ("list_profile_key_records", "validate_profile_values"):
-        from . import _keys_validation
-
-        return getattr(_keys_validation, name)
-    if name == "resolve_profile_output_language_hint":
-        from ._language_resolver import resolve_profile_output_language_hint
-
-        return resolve_profile_output_language_hint
-    if name == "active_profile_pointer_transaction":
-        from ._profile_pointer_transaction import active_profile_pointer_transaction
-
-        return active_profile_pointer_transaction
-    if name in (
-        "ProfileAlreadyRegisteredError",
-        "ProfileLogoutOverrideError",
-        "build_lifecycle_service",
-        "delete_profile_with_lifecycle_span",
-        "fact_value",
-        "logout_active_profile",
-        "profile_create_storage_span",
-        "profile_storage_session",
-        "reactivate_profile_with_lifecycle_span",
-        "refuse_duplicate_label",
-        "register_active_profile",
-        "remove_active_profile",
-        "remove_profile_bucket_directory",
-        "rename_profile",
-        "require_registered_label",
-        "select_profile",
-        "select_profile_with_lifecycle_span",
-        "set_active_field",
-        "set_active_fields",
-    ):
-        from . import _orchestration
-
-        return getattr(_orchestration, name)
-    if name in (
-        "USER_PROFILE_SNAPSHOT_NAMESPACE",
-        "USER_PROFILE_VALUE_NAMESPACE",
-        "UserProfileLifecycleRepository",
-        "UserProfileSnapshotRepository",
-        "user_profile_snapshot_object_key",
-        "user_profile_value_object_key",
-    ):
-        from . import _repository
-
-        return getattr(_repository, name)
-    if name in ("ProfileRepository", "TAX_ID_FACT_PATH"):
-        from . import _profile_repository
-
-        return getattr(_profile_repository, name)
-    if name in (
-        "CapabilityDecision",
-        "CapabilitySource",
-        "resolve_active_capability",
-        "resolve_capability",
-    ):
-        from . import _capabilities
-
-        return getattr(_capabilities, name)
-    if name == "ProfileIntegrityError":
-        from ._integrity import ProfileIntegrityError
-
-        return ProfileIntegrityError
-    if name in (
-        "carried_namespace_definitions",
-        "restore_carried_objects",
-        "serialize_carried_objects",
-    ):
-        from . import _custody_carry
-
-        return getattr(_custody_carry, name)
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    module_path = _LAZY_EXPORTS.get(name)
+    if module_path is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    return getattr(importlib.import_module(module_path, __name__), name)
 
 
 __all__ = [
