@@ -9,6 +9,16 @@
         "-m",
         "vaultspec_core.mcp_server.app"
       ]
+    },
+    "vaultspec-rag": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "vaultspec-rag[mcp]",
+        "python",
+        "-m",
+        "vaultspec_rag.server"
+      ]
     }
   }
 }

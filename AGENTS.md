@@ -87,6 +87,7 @@ You MUST respect these rules at all times:
 @.codex/rules/vaultspec-discovery.builtin.md
 @.codex/rules/vaultspec-dry-run-discipline.builtin.md
 @.codex/rules/vaultspec-plan-editing-discipline.builtin.md
+@.codex/rules/vaultspec-rag.builtin.md
 @.codex/rules/vaultspec-system.builtin.md
 @.codex/rules/vaultspec.builtin.md
 @.codex/rules/verification-grounding-needs-oracle-evidence.md
