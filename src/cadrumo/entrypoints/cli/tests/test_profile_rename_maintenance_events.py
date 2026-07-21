@@ -83,16 +83,19 @@ def test_cli_rename_co_emits_profile_renamed_and_bucket_renamed() -> None:
     assert event.payload["new_label"] == "beta"
 
 
-def test_cli_rename_of_non_active_profile_is_refused_loudly_and_changes_nothing() -> None:
-    """Renaming a profile that does not own the active session refuses loudly.
+def test_cli_rename_of_non_active_profile_targets_its_own_bucket_and_never_leaks_into_active() -> None:
+    """Renaming a profile that does not own the active session relabels
+    the TARGET bucket and lands its audit events there — never in the
+    active bucket.
 
-    The per-bucket storage runtime refuses a database route that does
-    not match the active bucket session, so a rename of a non-active
-    profile cannot proceed (the operator switches first). This pin
-    guarantees the refusal stays loud — and that no maintenance event
-    leaks into the ACTIVE bucket's history for a rename that never
-    happened, which is exactly what an active-bucket-bound event
-    repository default would have written.
+    ``BucketMaintenanceService.rename`` opens a storage session scoped
+    to the target ``bucket_id`` and binds the maintenance event
+    repository to that bucket, so a non-active rename resolves the
+    target's per-bucket engine directly (the operator does not have to
+    switch first). The load-bearing safety property is that the two
+    rename events (``PROFILE_RENAMED`` + ``BUCKET_RENAMED``) land in the
+    renamed bucket's OWN history and NONE leaks into the ACTIVE bucket,
+    which an active-bucket-bound default repository would have written.
     """
 
     create_profile_via_cli("alpha")
@@ -104,15 +107,26 @@ def test_cli_rename_of_non_active_profile_is_refused_loudly_and_changes_nothing(
     assert alpha_pointer.bucket_id != bravo_pointer.bucket_id
 
     result = invoke_cached_cli(("config", "profile", "rename", "alpha", "gamma"))
-    assert result.exit_code != 0, f"expected refusal, got: {result.output}"
+    assert result.exit_code == 0, f"non-active rename failed: {result.output}"
 
-    # The refused rename must not have moved the label.
-    assert read_profile_bucket("alpha") is not None
-    assert read_profile_bucket("gamma") is None
+    # The label moved on the target's own (stable) bucket; identity is unchanged.
+    assert read_profile_bucket("alpha") is None
+    gamma_pointer = read_profile_bucket("gamma")
+    assert gamma_pointer is not None
+    assert gamma_pointer.bucket_id == alpha_pointer.bucket_id
 
+    # Both rename events land in the renamed bucket's OWN history.
+    target_history = _bucket_history(alpha_pointer.bucket_id)
+    target_kinds = {event.event_type for event in target_history.events.values()}
+    assert BucketEventType.PROFILE_RENAMED in target_kinds
+    assert BucketEventType.BUCKET_RENAMED in target_kinds
+
+    # The safety property: no rename event leaks into the ACTIVE bucket.
     active_history = _bucket_history(bravo_pointer.bucket_id)
     foreign_rename_events = [
-        event for event in active_history.events.values() if event.event_type is BucketEventType.BUCKET_RENAMED
+        event
+        for event in active_history.events.values()
+        if event.event_type in (BucketEventType.BUCKET_RENAMED, BucketEventType.PROFILE_RENAMED)
     ]
     assert foreign_rename_events == [], "the active bucket must not carry another bucket's rename event"
 
