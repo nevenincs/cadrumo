@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Prove exact sandbox labels work through switch while sandbox use and bare names are absent
 
 ## Scope
