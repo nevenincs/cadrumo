@@ -121,6 +121,45 @@ def _load_snapshot(modelo: str, period: Period):
         ) from exc
 
 
+def _pull_operator_edits_for_command(
+    *,
+    modelo: str,
+    period: str,
+    year: int,
+    spreadsheet_id: str,
+) -> tuple[str, RegistrySnapshot, PullResult]:
+    """Resolve the active profile, credentials, and snapshot, then pull operator edits.
+
+    Shared by the ``pull`` and ``compute`` commands: each surface refuses on the
+    same :class:`GoogleAuthError` / :class:`OutboundStorageError` boundaries with
+    identical translated messages, so the resolution is one implementation.
+    """
+    from ....adapters.outbound.google import pull_operator_edits
+
+    try:
+        active = resolve_active_profile()
+    except GoogleAuthError as exc:
+        raise _google_refusal(exc) from exc
+
+    try:
+        credentials, _ = _resolve_credentials_and_root(active)
+    except (GoogleAuthError, OutboundStorageError) as exc:
+        raise _google_refusal(exc) from exc
+
+    snapshot = _load_snapshot(modelo, _filing_period_or_refusal(modelo=modelo, period=period, year=year))
+
+    try:
+        result: PullResult = pull_operator_edits(
+            snapshot,
+            spreadsheet_id=spreadsheet_id,
+            credentials=credentials,
+        )
+    except (GoogleAuthError, OutboundStorageError) as exc:
+        raise _google_refusal(exc) from exc
+
+    return active, snapshot, result
+
+
 @calc_app.command("export", help=tr("cli.config.google.sync.calc.export_help"))
 def google_sync_calc_export(
     ctx: typer.Context,
@@ -379,28 +418,12 @@ def google_sync_calc_pull(
     ),
 ) -> None:
     """Read operator-edited cells back from a workbook into typed records."""
-    from ....adapters.outbound.google import pull_operator_edits
-
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    try:
-        credentials, _ = _resolve_credentials_and_root(active)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    snapshot = _load_snapshot(modelo, _filing_period_or_refusal(modelo=modelo, period=period, year=year))
-
-    try:
-        result: PullResult = pull_operator_edits(
-            snapshot,
-            spreadsheet_id=spreadsheet_id,
-            credentials=credentials,
-        )
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
+    active, snapshot, result = _pull_operator_edits_for_command(
+        modelo=modelo,
+        period=period,
+        year=year,
+        spreadsheet_id=spreadsheet_id,
+    )
 
     populated_operator = [e for e in result.operator_edits if e.value is not None]
     populated_bindings = [e for e in result.binding_edits if e.value is not None]
@@ -521,31 +544,14 @@ def google_sync_calc_compute(
     ),
 ) -> None:
     """Compute casilla values from a workbook's operator edits; persist nothing."""
-    from ....adapters.outbound.google import (
-        compute_from_pull,
-        pull_operator_edits,
+    from ....adapters.outbound.google import compute_from_pull
+
+    active, snapshot, result = _pull_operator_edits_for_command(
+        modelo=modelo,
+        period=period,
+        year=year,
+        spreadsheet_id=spreadsheet_id,
     )
-
-    try:
-        active = resolve_active_profile()
-    except GoogleAuthError as exc:
-        raise _google_refusal(exc) from exc
-
-    try:
-        credentials, _ = _resolve_credentials_and_root(active)
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
-
-    snapshot = _load_snapshot(modelo, _filing_period_or_refusal(modelo=modelo, period=period, year=year))
-
-    try:
-        result: PullResult = pull_operator_edits(
-            snapshot,
-            spreadsheet_id=spreadsheet_id,
-            credentials=credentials,
-        )
-    except (GoogleAuthError, OutboundStorageError) as exc:
-        raise _google_refusal(exc) from exc
 
     if result.metadata_match != "matches":
         raise CliRefusedBoundaryError(
