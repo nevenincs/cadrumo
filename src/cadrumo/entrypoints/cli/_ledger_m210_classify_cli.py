@@ -118,15 +118,40 @@ class M210LedgerClassifyOptions:
         """
         if not self.requested:
             return None
+        required = self._require_complete_options()
+        self._require_incoming_transaction(
+            transaction_repository=transaction_repository,
+            transaction_id=transaction_id,
+        )
+        return self._build_classification(required)
+
+    def _require_complete_options(self) -> tuple[str, str, str, M210PayerMode]:
+        """Return the four required M210 options, refusing an incomplete selection."""
         tipo_renta_code = self.tipo_renta_code
         gross_income_amount = self.gross_income_amount
         applicable_rate = self.applicable_rate
         payer_mode = self.payer_mode
         if tipo_renta_code is None or gross_income_amount is None or applicable_rate is None or payer_mode is None:
             raise _bad(tr("cli.ledger.classify.m210_required_options"))
+        return tipo_renta_code, gross_income_amount, applicable_rate, payer_mode
+
+    @staticmethod
+    def _require_incoming_transaction(
+        *,
+        transaction_repository: TransactionCatalogueRepository,
+        transaction_id: str,
+    ) -> None:
+        """Refuse when the selected transaction is absent or not incoming."""
         transaction = transaction_repository.load().get(transaction_id)
         if transaction is None or transaction.direction is not TransactionDirection.INCOMING:
             raise _bad(tr("cli.ledger.classify.m210_incoming_only"))
+
+    def _build_classification(
+        self,
+        required: tuple[str, str, str, M210PayerMode],
+    ) -> M210IncomeClassification:
+        """Parse the numeric options and build the typed classification."""
+        tipo_renta_code, gross_income_amount, applicable_rate, payer_mode = required
         try:
             parsed_gross_income_amount = _parse_decimal(
                 gross_income_amount,

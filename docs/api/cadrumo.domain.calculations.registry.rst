@@ -74,6 +74,7 @@ Submodules
    cadrumo.domain.calculations.registry._renta_web_open_oracle
    cadrumo.domain.calculations.registry._retenciones_bindings
    cadrumo.domain.calculations.registry._runtime_graph
+   cadrumo.domain.calculations.registry._scenario_filing_period
    cadrumo.domain.calculations.registry._scenarios
    cadrumo.domain.calculations.registry._schedules
    cadrumo.domain.calculations.registry._schema

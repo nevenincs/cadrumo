@@ -705,6 +705,139 @@ def _route_resolved_binding(
         channels.decimal_values[binding_id] = _decimal_value(binding_id, value)
 
 
+@dataclass(frozen=True, slots=True)
+class _ProfileBindingSelection:
+    """Profile bindings the source mesh must resolve, plus the date-consumed set."""
+
+    bindings: tuple[DataBindingDefinition, ...]
+    formula_date_consumed: frozenset[BindingId]
+
+
+@dataclass(frozen=True, slots=True)
+class _ProfileFacts:
+    """The bucket's resolved profile fact index plus its record fingerprint."""
+
+    fact_index: dict[str, UserProfileFactValue]
+    fingerprint: str
+
+
+def _is_calculation_only_profile_binding(binding: DataBindingDefinition) -> bool:
+    selector = binding.selector
+    return not any(
+        (
+            getattr(selector, "xsd_path", None),
+            getattr(selector, "xsd_attribute", None),
+            getattr(selector, "dictionary_field", None),
+        )
+    )
+
+
+def _is_relevant_profile_binding(
+    binding: DataBindingDefinition,
+    *,
+    formula_consumed: set[BindingId],
+    formula_date_consumed: set[BindingId],
+    bound_casilla_binding_ids: set[BindingId],
+) -> bool:
+    return binding.source == BindingSourceKind.PROFILE and (
+        binding.id in formula_consumed
+        or binding.id in formula_date_consumed
+        or binding.id in bound_casilla_binding_ids
+        or _is_calculation_only_profile_binding(binding)
+    )
+
+
+def _select_profile_bindings(snapshot: RegistrySnapshot) -> _ProfileBindingSelection:
+    """Select the ``source = "profile"`` bindings the source mesh must resolve.
+
+    A profile binding matters to the calculation source mesh when a formula
+    consumes it, when it feeds a ``bound`` NUMERIC input casilla (e.g. M303
+    casilla 65), or when it is a calculation-only selector. The latter has no
+    XSD/dictionary export address: M202's INCN applicability fact and M036's
+    censo event are registry-owned profile inputs even though neither is read
+    by a numeric formula. Identity/export-layout bindings (NIF, display name,
+    and similar) retain an export address and must not be pushed through a
+    calculation channel.
+    """
+    formula_consumed: set[BindingId] = set()
+    formula_date_consumed: set[BindingId] = set()
+    for formula in snapshot.revision.formulas:
+        formula_consumed.update(expression_binding_refs(formula.expression))
+        formula_date_consumed.update(expression_date_binding_refs(formula.expression))
+    _numeric_casilla_data_types = {"decimal", "money", "integer", "ratio"}
+    bound_casilla_binding_ids: set[BindingId] = {
+        casilla.binding
+        for casilla in snapshot.revision.casillas
+        if casilla.binding is not None and casilla.data_type in _numeric_casilla_data_types
+    }
+    bindings = tuple(
+        binding
+        for binding in snapshot.revision.bindings
+        if _is_relevant_profile_binding(
+            binding,
+            formula_consumed=formula_consumed,
+            formula_date_consumed=formula_date_consumed,
+            bound_casilla_binding_ids=bound_casilla_binding_ids,
+        )
+    )
+    return _ProfileBindingSelection(bindings=bindings, formula_date_consumed=frozenset(formula_date_consumed))
+
+
+def _load_profile_facts(
+    snapshot: RegistrySnapshot,
+    *,
+    bucket_id: str,
+    profile_record: object | None,
+    schema: ProfileSchemaDefinition | None,
+) -> _ProfileFacts | None:
+    """Load and derive the bucket's profile fact index, or ``None`` when absent."""
+    record = profile_record
+    if record is None:
+        from ..user_profile import UserProfileLifecycleRepository
+
+        try:
+            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
+        except ProfileNotFoundError:
+            return None
+    profile_record_fingerprint = _profile_record_fingerprint(record)
+    resolved_schema = schema if schema is not None else load_user_profile_schema()
+    fact_index = _profile_fact_index(record, resolved_schema)
+    _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
+    _inject_derived_family_facts(fact_index, snapshot.filing_year)
+    _inject_derived_anualidades_eligibility_facts(fact_index, snapshot.filing_year)
+    _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
+    _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
+    _inject_derived_state_attribution_facts(fact_index)
+    return _ProfileFacts(fact_index=fact_index, fingerprint=profile_record_fingerprint)
+
+
+def _resolve_profile_binding_channels(
+    bindings: tuple[DataBindingDefinition, ...],
+    fact_index: Mapping[str, UserProfileFactValue],
+    *,
+    caller_binding_ids: frozenset[BindingId],
+    formula_date_consumed: frozenset[BindingId],
+    enum_bindings: frozenset[BindingId],
+) -> _ResolvedBindingChannels:
+    """Resolve each selected binding into the Decimal / enum / date engine channels."""
+    channels = _ResolvedBindingChannels()
+    for binding in bindings:
+        binding_id = binding.id
+        if binding_id in caller_binding_ids:
+            continue
+        value = _resolve_one(binding, fact_index)
+        if value is None:
+            continue
+        _route_resolved_binding(
+            binding_id,
+            value,
+            is_date_channel=binding_id in formula_date_consumed,
+            is_enum_channel=binding_id in enum_bindings or binding.typed_enum is not None,
+            channels=channels,
+        )
+    return channels
+
+
 def resolve_profile_sourced_bindings(
     snapshot: RegistrySnapshot,
     *,
@@ -744,91 +877,29 @@ def resolve_profile_sourced_bindings(
         :func:`expression_date_binding_refs`:
             Identifies profile bindings consumed by date-aware formula ops.
     """
-    # A profile binding matters to the calculation source mesh when a formula
-    # consumes it, when it feeds a ``bound`` NUMERIC input casilla (e.g. M303
-    # casilla 65), or when it is a calculation-only selector. The latter has no
-    # XSD/dictionary export address: M202's INCN applicability fact and M036's
-    # censo event are registry-owned profile inputs even though neither is read
-    # by a numeric formula. Identity/export-layout bindings (NIF, display name,
-    # and similar) retain an export address and must not be pushed through a
-    # calculation channel.
-    formula_consumed: set[BindingId] = set()
-    formula_date_consumed: set[BindingId] = set()
-    for formula in snapshot.revision.formulas:
-        formula_consumed.update(expression_binding_refs(formula.expression))
-        formula_date_consumed.update(expression_date_binding_refs(formula.expression))
-    _numeric_casilla_data_types = {"decimal", "money", "integer", "ratio"}
-    bound_casilla_binding_ids: set[BindingId] = {
-        casilla.binding
-        for casilla in snapshot.revision.casillas
-        if casilla.binding is not None and casilla.data_type in _numeric_casilla_data_types
-    }
-
-    def is_calculation_only_profile_binding(binding: DataBindingDefinition) -> bool:
-        selector = binding.selector
-        return not any(
-            (
-                getattr(selector, "xsd_path", None),
-                getattr(selector, "xsd_attribute", None),
-                getattr(selector, "dictionary_field", None),
-            )
-        )
-
-    profile_bindings = [
-        binding
-        for binding in snapshot.revision.bindings
-        if binding.source == BindingSourceKind.PROFILE
-        and (
-            binding.id in formula_consumed
-            or binding.id in formula_date_consumed
-            or binding.id in bound_casilla_binding_ids
-            or is_calculation_only_profile_binding(binding)
-        )
-    ]
-    if not profile_bindings:
+    selection = _select_profile_bindings(snapshot)
+    if not selection.bindings:
         return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
-
-    record = profile_record
-    if record is None:
-        from ..user_profile import UserProfileLifecycleRepository
-
-        try:
-            record = UserProfileLifecycleRepository(bucket_id=bucket_id).load(bucket_id)
-        except ProfileNotFoundError:
-            return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
-    profile_record_fingerprint = _profile_record_fingerprint(record)
-
-    resolved_schema = schema if schema is not None else load_user_profile_schema()
-    fact_index = _profile_fact_index(record, resolved_schema)
-    _inject_derived_marriage_facts(fact_index, snapshot.filing_year)
-    _inject_derived_family_facts(fact_index, snapshot.filing_year)
-    _inject_derived_anualidades_eligibility_facts(fact_index, snapshot.filing_year)
-    _inject_derived_autonomic_deduccion_facts(fact_index, snapshot.filing_year)
-    _inject_derived_minimo_descendientes_facts(fact_index, snapshot)
-    _inject_derived_state_attribution_facts(fact_index)
-    enum_bindings = enum_consumed_binding_ids(snapshot.revision)
-
-    channels = _ResolvedBindingChannels()
-    for binding in profile_bindings:
-        binding_id = binding.id
-        if binding_id in caller_binding_ids:
-            continue
-        value = _resolve_one(binding, fact_index)
-        if value is None:
-            continue
-        _route_resolved_binding(
-            binding_id,
-            value,
-            is_date_channel=binding_id in formula_date_consumed,
-            is_enum_channel=binding_id in enum_bindings or binding.typed_enum is not None,
-            channels=channels,
-        )
-
+    facts = _load_profile_facts(
+        snapshot,
+        bucket_id=bucket_id,
+        profile_record=profile_record,
+        schema=schema,
+    )
+    if facts is None:
+        return CalculationSourceResolution(resolver_id=_PROFILE_RESOLVER_ID, owned_sources=_PROFILE_OWNED_SOURCES)
+    channels = _resolve_profile_binding_channels(
+        selection.bindings,
+        facts.fact_index,
+        caller_binding_ids=caller_binding_ids,
+        formula_date_consumed=selection.formula_date_consumed,
+        enum_bindings=enum_consumed_binding_ids(snapshot.revision),
+    )
     decimal_values = channels.decimal_values
     enum_values = channels.enum_values
     date_values = channels.date_values
     sourced = tuple(sorted(set(decimal_values) | set(enum_values) | set(date_values)))
-    fingerprint = profile_record_fingerprint if sourced else None
+    fingerprint = facts.fingerprint if sourced else None
     return CalculationSourceResolution(
         resolver_id=_PROFILE_RESOLVER_ID,
         owned_sources=_PROFILE_OWNED_SOURCES,

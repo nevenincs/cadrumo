@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Annotated
+
 import typer
 
 from ....core.i18n import tr
@@ -45,6 +47,42 @@ def _retention_override(
     return enabled, normalized_reason
 
 
+_YesOpt = Annotated[bool, typer.Option("--yes", help=tr("cli.config.reset.yes_help"))]
+_OverrideRetentionOpt = Annotated[
+    bool,
+    typer.Option(
+        "--override-retention",
+        help=tr(
+            "cli.config.reset.override_retention_help",
+            default="Approve deletion despite a recorded legal-retention blocker.",
+        ),
+    ),
+]
+_ReasonOpt = Annotated[
+    str | None,
+    typer.Option(
+        "--reason",
+        help=tr(
+            "cli.config.reset.reason_help",
+            default="Required audit reason for a retention override.",
+        ),
+    ),
+]
+
+
+def _require_yes_and_override(
+    yes: bool,
+    override_retention: bool,
+    reason: str | None,
+) -> tuple[bool, str | None]:
+    """Refuse without ``--yes``, then validate the retention-override pairing."""
+    if not yes:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.reset.requires_yes",
+        )
+    return _retention_override(enabled=override_retention, reason=reason)
+
+
 def _operation_lines(operation: ConfigResetOperationPayload) -> tuple[str, ...]:
     lines = [
         f"operation_id\t{operation.operation_id}",
@@ -82,37 +120,12 @@ def _operation_lines(operation: ConfigResetOperationPayload) -> tuple[str, ...]:
 )
 def config_reset_start(
     ctx: typer.Context,
-    yes: bool = typer.Option(
-        False,
-        "--yes",
-        help=tr("cli.config.reset.yes_help"),
-    ),
-    override_retention: bool = typer.Option(
-        False,
-        "--override-retention",
-        help=tr(
-            "cli.config.reset.override_retention_help",
-            default="Approve deletion despite a recorded legal-retention blocker.",
-        ),
-    ),
-    reason: str | None = typer.Option(
-        None,
-        "--reason",
-        help=tr(
-            "cli.config.reset.reason_help",
-            default="Required audit reason for a retention override.",
-        ),
-    ),
+    yes: _YesOpt = False,
+    override_retention: _OverrideRetentionOpt = False,
+    reason: _ReasonOpt = None,
 ) -> None:
     """Start and execute one new reset operation."""
-    if not yes:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.reset.requires_yes",
-        )
-    override_retention, reason = _retention_override(
-        enabled=override_retention,
-        reason=reason,
-    )
+    override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
     from ....application.config_reset import start_config_reset
 
     operation = start_config_reset(
@@ -177,37 +190,12 @@ def config_reset_resume(
             default="Exact reset operation id; omit for the sole incomplete operation.",
         ),
     ),
-    yes: bool = typer.Option(
-        False,
-        "--yes",
-        help=tr("cli.config.reset.yes_help"),
-    ),
-    override_retention: bool = typer.Option(
-        False,
-        "--override-retention",
-        help=tr(
-            "cli.config.reset.override_retention_help",
-            default="Approve deletion despite a recorded legal-retention blocker.",
-        ),
-    ),
-    reason: str | None = typer.Option(
-        None,
-        "--reason",
-        help=tr(
-            "cli.config.reset.reason_help",
-            default="Required audit reason for a retention override.",
-        ),
-    ),
+    yes: _YesOpt = False,
+    override_retention: _OverrideRetentionOpt = False,
+    reason: _ReasonOpt = None,
 ) -> None:
     """Roll one exact incomplete journal forward."""
-    if not yes:
-        raise CliRefusedBoundaryError(
-            translated_message="cli.config.reset.requires_yes",
-        )
-    override_retention, reason = _retention_override(
-        enabled=override_retention,
-        reason=reason,
-    )
+    override_retention, reason = _require_yes_and_override(yes, override_retention, reason)
     from ....application.config_reset import (
         config_reset_status,
         resume_config_reset,

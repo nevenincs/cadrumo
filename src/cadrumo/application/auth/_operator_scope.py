@@ -28,6 +28,7 @@ from ._operator_results import (
 )
 
 if TYPE_CHECKING:
+    from ...adapters.persistence.storage.master_key import BucketSession
     from ..workflow import WorkflowState
 
 _AUTH_OPERATOR_SETTINGS_SCOPE_FIELDS = (
@@ -93,6 +94,50 @@ def _canonical_storage_root(root: Path) -> str:
     return os.path.normcase(str(root.expanduser().resolve(strict=False)))
 
 
+def _is_explicitly_routed(
+    settings: Settings | None,
+    *,
+    ambient_settings: Settings,
+    ambient_storage_root: str,
+) -> bool:
+    """Report whether ``settings`` explicitly routes to a non-ambient storage root or profile.
+
+    An explicit route is a caller-set storage root that differs from the
+    ambient root, or a caller-set active profile that differs from the
+    ambient profile.
+    """
+    if settings is None:
+        return False
+    return (
+        "cadrumo_local_storage_root" in settings.model_fields_set
+        and _canonical_storage_root(settings.cadrumo_local_storage_root) != ambient_storage_root
+    ) or (
+        "cadrumo_active_profile" in settings.model_fields_set
+        and settings.cadrumo_active_profile != ambient_settings.cadrumo_active_profile
+    )
+
+
+def _can_reuse_active_session(
+    active_session: BucketSession | None,
+    *,
+    bucket_id: str,
+    target_storage_root: str,
+    ambient_storage_root: str,
+    explicitly_routed: bool,
+) -> bool:
+    """Report whether the current bucket session already serves the target.
+
+    Reuse requires the same bucket. A session with a recorded storage root
+    reuses only on an exact root match; a session without one reuses only when
+    the caller did not explicitly route and the ambient root matches the target.
+    """
+    if active_session is None or active_session.bucket_id != bucket_id:
+        return False
+    if active_session.storage_root is not None:
+        return _canonical_storage_root(active_session.storage_root) == target_storage_root
+    return not explicitly_routed and ambient_storage_root == target_storage_root
+
+
 @contextmanager
 def active_profile_storage_span(
     settings: Settings | None = None,
@@ -104,15 +149,10 @@ def active_profile_storage_span(
 
     ambient_settings = load_settings()
     ambient_storage_root = _canonical_storage_root(ambient_settings.cadrumo_local_storage_root)
-    explicitly_routed = settings is not None and (
-        (
-            "cadrumo_local_storage_root" in settings.model_fields_set
-            and _canonical_storage_root(settings.cadrumo_local_storage_root) != ambient_storage_root
-        )
-        or (
-            "cadrumo_active_profile" in settings.model_fields_set
-            and settings.cadrumo_active_profile != ambient_settings.cadrumo_active_profile
-        )
+    explicitly_routed = _is_explicitly_routed(
+        settings,
+        ambient_settings=ambient_settings,
+        ambient_storage_root=ambient_storage_root,
     )
     with auth_operator_settings_scope(settings) as resolved_settings:
         target_storage_root = _canonical_storage_root(resolved_settings.cadrumo_local_storage_root)
@@ -122,20 +162,12 @@ def active_profile_storage_span(
                 yield None
             return
         active_session = current_active_bucket_session()
-        if (
-            active_session is not None
-            and active_session.bucket_id == bucket_id
-            and (
-                (
-                    active_session.storage_root is not None
-                    and _canonical_storage_root(active_session.storage_root) == target_storage_root
-                )
-                or (
-                    active_session.storage_root is None
-                    and not explicitly_routed
-                    and ambient_storage_root == target_storage_root
-                )
-            )
+        if _can_reuse_active_session(
+            active_session,
+            bucket_id=bucket_id,
+            target_storage_root=target_storage_root,
+            ambient_storage_root=ambient_storage_root,
+            explicitly_routed=explicitly_routed,
         ):
             with nullcontext():
                 yield bucket_id

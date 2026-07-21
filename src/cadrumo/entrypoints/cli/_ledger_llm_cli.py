@@ -460,6 +460,169 @@ def _emit_llm_single_classify(
     _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines)
 
 
+def _validate_classify_llm_options(
+    *,
+    classification: BusinessClassification | None,
+    from_csv: str | None,
+    reject: bool,
+    apply: bool,
+    transaction_id: str | None,
+    provider: LLMProvider | None,
+) -> None:
+    """Reject the manual-override combination, the reject/apply conflict, a missing id, and an unavailable provider.
+
+    A provider is checked for PATH availability only when one is named. With
+    ``--read-evidence`` and no ``--llm``, a scanned/image invoice is read on-host
+    by the local vision model, which needs no subprocess provider; a text-layer
+    read with no provider is refused instructively downstream by the application.
+    """
+    if classification is not None or from_csv is not None:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_exclusive",
+                default="--llm cannot be combined with --classification or --from-csv; "
+                "the manual path is the explicit operator override.",
+            ),
+        )
+    if reject and apply:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.reject_apply_exclusive",
+                default="--reject cannot be combined with --apply: reject records a declined "
+                "suggestion, apply records an accepted one.",
+            ),
+        )
+    if transaction_id is None:
+        raise _bad(
+            tr(
+                "cli.ledger.classify.id_required",
+                default="A transaction id is required when --from-csv is not provided.",
+            ),
+        )
+    if provider is not None and not is_llm_provider_available(provider):
+        # Instructive refusal: name the provider and the CLI it needs on PATH,
+        # never a crash. The subprocess backend shells to a local CLI binary.
+        raise _bad(
+            tr(
+                "cli.ledger.classify.llm_provider_unavailable",
+                provider=provider.value,
+                default=(
+                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
+                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
+                    "or run 'aeat app ledger providers' to list usable providers."
+                ),
+            ),
+        )
+
+
+def _render_classify_llm_preview(
+    ctx: typer.Context,
+    *,
+    suggestion: LLMClassificationSuggestion,
+    provider: LLMProvider | None,
+) -> None:
+    """Emit the non-persisting stage-1 classify suggestion. Approve = --apply, reject = --reject."""
+    from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
+
+    suggest_result = LedgerClassifyLlmSuggestResult.model_validate(
+        {
+            "llm": True,
+            "persisted": False,
+            "transaction_id": suggestion.transaction_id,
+            "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
+            "classification": suggestion.classification.value,
+            "category": suggestion.category.value if suggestion.category is not None else None,
+            "confidence": format(suggestion.confidence, "f"),
+            "reason": suggestion.reason,
+            "provenance": suggestion.provenance,
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+        f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
+        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
+        f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}",
+        f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
+        tr("cli.ledger.classify.llm_review_hint"),
+    ]
+    notices: list[Notice] = []
+    if suggestion.recommends_split:
+        notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
+        notices.append(notice)
+        lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
+    _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines, notices=notices)
+
+
+def _saturate_derived_values(
+    suggestion: LLMSaturatedSuggestion,
+) -> tuple[str | None, str | None, str | None, str | None]:
+    """Return the formatted ``(iva_category, iva_rate, taxable_base, iva_amount)`` display values."""
+    return (
+        suggestion.iva_category.value if suggestion.iva_category is not None else None,
+        format(suggestion.iva_rate, "f") if suggestion.iva_rate is not None else None,
+        format(suggestion.taxable_base, "f") if suggestion.taxable_base is not None else None,
+        format(suggestion.iva_amount, "f") if suggestion.iva_amount is not None else None,
+    )
+
+
+def _render_saturate_llm_preview(
+    ctx: typer.Context,
+    *,
+    suggestion: LLMSaturatedSuggestion,
+    provider: LLMProvider | None,
+) -> None:
+    """Emit the non-persisting saturated classify suggestion (model picks IVA category, system derives numbers)."""
+    from ._ledger_llm_payloads import LedgerClassifyLlmSaturateResult
+
+    iva_category_value, iva_rate_value, taxable_base_value, iva_amount_value = _saturate_derived_values(suggestion)
+    derived_fields = {
+        "iva_category": iva_category_value,
+        "iva_rate": iva_rate_value,
+        "taxable_base": taxable_base_value,
+        "iva_amount": iva_amount_value,
+        "rate_derivable": suggestion.rate_derivable,
+        "derivation_note": suggestion.derivation_note or None,
+    }
+    classify_result = LedgerClassifyLlmSaturateResult.model_validate(
+        {
+            "llm": True,
+            "persisted": False,
+            "transaction_id": suggestion.transaction_id,
+            "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
+            "classification": suggestion.classification.value,
+            "category": suggestion.category.value if suggestion.category is not None else None,
+            "confidence": format(suggestion.confidence, "f"),
+            "reason": suggestion.reason,
+            "provenance": suggestion.provenance,
+            **derived_fields,
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+        f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
+        f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
+        f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
+    ]
+    if suggestion.rate_derivable:
+        lines.extend(
+            [
+                f"{tr('cli.ledger.labels.taxable_base')}\t{taxable_base_value}",
+                f"{tr('cli.ledger.labels.iva_rate')}\t{iva_rate_value}",
+                f"{tr('cli.ledger.labels.iva_amount')}\t{iva_amount_value}",
+            ],
+        )
+    elif suggestion.iva_category is not None:
+        lines.append(f"{tr('cli.ledger.classify.saturate_non_derivable')}\t{suggestion.derivation_note}")
+    lines.append(f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}")
+    lines.append(tr("cli.ledger.classify.llm_review_hint"))
+    notices: list[Notice] = []
+    if suggestion.recommends_split:
+        notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
+        notices.append(notice)
+        lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
+    _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
+
+
 def ledger_classify_llm(
     ctx: typer.Context,
     *,
@@ -487,49 +650,14 @@ def ledger_classify_llm(
     unchanged. ``--llm`` is mutually exclusive with the manual
     ``--classification`` / ``--from-csv`` override.
     """
-    from ._ledger_llm_payloads import LedgerClassifyLlmSuggestResult
-
-    if classification is not None or from_csv is not None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --from-csv; "
-                "the manual path is the explicit operator override.",
-            ),
-        )
-    if reject and apply:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.reject_apply_exclusive",
-                default="--reject cannot be combined with --apply: reject records a declined "
-                "suggestion, apply records an accepted one.",
-            ),
-        )
-    if transaction_id is None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
-            ),
-        )
-    # A provider is checked for PATH availability only when one is named. With
-    # --read-evidence and no --llm, a scanned/image invoice is read on-host by the
-    # local vision model, which needs no subprocess provider; a text-layer read with
-    # no provider is refused instructively downstream by the application.
-    if provider is not None and not is_llm_provider_available(provider):
-        # Instructive refusal: name the provider and the CLI it needs on PATH,
-        # never a crash. The subprocess backend shells to a local CLI binary.
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_provider_unavailable",
-                provider=provider.value,
-                default=(
-                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
-                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
-                ),
-            ),
-        )
+    _validate_classify_llm_options(
+        classification=classification,
+        from_csv=from_csv,
+        reject=reject,
+        apply=apply,
+        transaction_id=transaction_id,
+        provider=provider,
+    )
 
     state = _state()
     transaction_repository = _tx_repo(state)
@@ -566,34 +694,7 @@ def ledger_classify_llm(
         return
 
     if not apply:
-        # Suggest (preview) — persist nothing. Approve = --apply, reject = --reject.
-        suggest_result = LedgerClassifyLlmSuggestResult.model_validate(
-            {
-                "llm": True,
-                "persisted": False,
-                "transaction_id": suggestion.transaction_id,
-                "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
-                "classification": suggestion.classification.value,
-                "category": suggestion.category.value if suggestion.category is not None else None,
-                "confidence": format(suggestion.confidence, "f"),
-                "reason": suggestion.reason,
-                "provenance": suggestion.provenance,
-            },
-        )
-        lines = [
-            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
-            f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
-            f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
-            f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}",
-            f"{tr('cli.ledger.classify.llm_reason_label')}\t{suggestion.reason}",
-            tr("cli.ledger.classify.llm_review_hint"),
-        ]
-        notices: list[Notice] = []
-        if suggestion.recommends_split:
-            notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
-            notices.append(notice)
-            lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
-        _emit_envelope(ctx, command="ledger.classify", result=suggest_result, lines=lines, notices=notices)
+        _render_classify_llm_preview(ctx, suggestion=suggestion, provider=provider)
         return
 
     try:
@@ -643,43 +744,14 @@ def ledger_saturate_llm(
     recorded as a declined audit event and the row is left unchanged. Manual
     ``classify`` flags remain the explicit per-field override.
     """
-    from ._ledger_llm_payloads import LedgerClassifyLlmSaturateResult
-
-    if classification is not None or from_csv is not None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_exclusive",
-                default="--llm cannot be combined with --classification or --from-csv; "
-                "the manual path is the explicit operator override.",
-            ),
-        )
-    if reject and apply:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.reject_apply_exclusive",
-                default="--reject cannot be combined with --apply: reject records a declined "
-                "suggestion, apply records an accepted one.",
-            ),
-        )
-    if transaction_id is None:
-        raise _bad(
-            tr(
-                "cli.ledger.classify.id_required",
-                default="A transaction id is required when --from-csv is not provided.",
-            ),
-        )
-    if provider is not None and not is_llm_provider_available(provider):
-        raise _bad(
-            tr(
-                "cli.ledger.classify.llm_provider_unavailable",
-                provider=provider.value,
-                default=(
-                    f"LLM provider {provider.value!r} is unavailable: its CLI is not on PATH. "
-                    f"Install the {provider.value!r} CLI and ensure it is on PATH, "
-                    "or run 'aeat app ledger providers' to list usable providers."
-                ),
-            ),
-        )
+    _validate_classify_llm_options(
+        classification=classification,
+        from_csv=from_csv,
+        reject=reject,
+        apply=apply,
+        transaction_id=transaction_id,
+        provider=provider,
+    )
 
     state = _state()
     transaction_repository = _tx_repo(state)
@@ -716,57 +788,9 @@ def ledger_saturate_llm(
         return
 
     iva_category_value = suggestion.iva_category.value if suggestion.iva_category is not None else None
-    iva_rate_value = format(suggestion.iva_rate, "f") if suggestion.iva_rate is not None else None
-    taxable_base_value = format(suggestion.taxable_base, "f") if suggestion.taxable_base is not None else None
-    iva_amount_value = format(suggestion.iva_amount, "f") if suggestion.iva_amount is not None else None
-    derived_fields = {
-        "iva_category": iva_category_value,
-        "iva_rate": iva_rate_value,
-        "taxable_base": taxable_base_value,
-        "iva_amount": iva_amount_value,
-        "rate_derivable": suggestion.rate_derivable,
-        "derivation_note": suggestion.derivation_note or None,
-    }
 
     if not apply:
-        classify_result = LedgerClassifyLlmSaturateResult.model_validate(
-            {
-                "llm": True,
-                "persisted": False,
-                "transaction_id": suggestion.transaction_id,
-                "provider": suggestion.provider.value if suggestion.provider is not None else "local-vision",
-                "classification": suggestion.classification.value,
-                "category": suggestion.category.value if suggestion.category is not None else None,
-                "confidence": format(suggestion.confidence, "f"),
-                "reason": suggestion.reason,
-                "provenance": suggestion.provenance,
-                **derived_fields,
-            },
-        )
-        lines = [
-            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
-            f"{tr('cli.ledger.classify.llm_suggestion_label')}\t{suggestion.classification.value}",
-            f"{tr('cli.ledger.labels.category_id')}\t{suggestion.category.value if suggestion.category else ''}",
-            f"{tr('cli.ledger.labels.iva_category')}\t{iva_category_value or ''}",
-        ]
-        if suggestion.rate_derivable:
-            lines.extend(
-                [
-                    f"{tr('cli.ledger.labels.taxable_base')}\t{taxable_base_value}",
-                    f"{tr('cli.ledger.labels.iva_rate')}\t{iva_rate_value}",
-                    f"{tr('cli.ledger.labels.iva_amount')}\t{iva_amount_value}",
-                ],
-            )
-        elif suggestion.iva_category is not None:
-            lines.append(f"{tr('cli.ledger.classify.saturate_non_derivable')}\t{suggestion.derivation_note}")
-        lines.append(f"{tr('cli.ledger.classify.llm_confidence_label')}\t{format(suggestion.confidence, 'f')}")
-        lines.append(tr("cli.ledger.classify.llm_review_hint"))
-        notices: list[Notice] = []
-        if suggestion.recommends_split:
-            notice = split_recommendation_notice(suggestion.transaction_id, provider=provider)
-            notices.append(notice)
-            lines.append(f"{tr('cli.ledger.classify.split_recommended_label')}\t{notice.suggestion}")
-        _emit_envelope(ctx, command="ledger.classify", result=classify_result, lines=lines, notices=notices)
+        _render_saturate_llm_preview(ctx, suggestion=suggestion, provider=provider)
         return
 
     try:

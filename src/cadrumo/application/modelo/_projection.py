@@ -17,6 +17,7 @@ the compared registry snapshots, and returns either a
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal, InvalidOperation
 
@@ -33,6 +34,7 @@ from ...domain.calculations.registry import (
     CasillaId,
     FormulaId,
     LegalRefId,
+    RegistrySnapshot,
     RegistrySnapshotError,
     RegistryValidationError,
     RelationId,
@@ -343,20 +345,22 @@ def _m130_quarter_revisions(year: int) -> dict[Period, CalculationRevision]:
     return m130_quarters
 
 
-def project_modelo_100_from_m130(
-    *,
-    year: int,
-    ccaa: str,
-    casilla_overrides: Mapping[CasillaId, str] | None = None,
-    binding_overrides: Mapping[BindingId, str] | None = None,
-) -> ModeloProjectServiceResult:
-    """Project annual Modelo 100 values from quarterly M130 revisions.
+@dataclass(frozen=True, slots=True)
+class _M130AnnualProjection:
+    """Annualised Modelo 130 aggregates that feed the Modelo 100 projection."""
 
-    The service reads stored :class:`CalculationRevision` rows, uses the latest
-    cumulative Modelo 130 figures for annual income, sums casilla 19 as the paid
-    instalment relation, resolves the annual :class:`RegistrySnapshot`, and
-    returns a :class:`ModeloProjectServiceResult` without writing a new revision.
-    """
+    m130_quarters: dict[Period, CalculationRevision]
+    quarters_filed: int
+    total_rendimiento_neto: Decimal
+    total_ingresos: Decimal
+    total_gastos: Decimal
+    total_pagos_fraccionados: Decimal
+    projected_rendimiento_neto: Decimal
+    is_extrapolated: bool
+
+
+def _m130_annual_projection(year: int) -> _M130AnnualProjection:
+    """Read the stored Modelo 130 quarters and annualise the cumulative basis."""
     m130_quarters = _m130_quarter_revisions(year)
     quarters_filed = len(m130_quarters)
     # Modelo 130 casillas 01/02/03 are year-to-date cumulative (their registry
@@ -397,7 +401,6 @@ def project_modelo_100_from_m130(
         ),
         Decimal("0"),
     )
-
     if latest_ordinal < 4:
         projected_rendimiento_neto = (total_rendimiento_neto * Decimal(4) / Decimal(latest_ordinal)).quantize(
             Decimal("0.01"),
@@ -406,17 +409,22 @@ def project_modelo_100_from_m130(
     else:
         projected_rendimiento_neto = total_rendimiento_neto
         is_extrapolated = False
-
-    authority = resources().modelos.authority
-    m100_snapshot = authority.snapshot(Modelo.M100.value, filing_year=year, period="0A")
-    extra_inputs = validate_casilla_input_ids(
-        m100_snapshot.revision,
-        _decimal_overrides(
-            casilla_overrides or {},
-            translated_message="cli.app.modelo.work.casilla_not_decimal",
-        ),
+    return _M130AnnualProjection(
+        m130_quarters=m130_quarters,
+        quarters_filed=quarters_filed,
+        total_rendimiento_neto=total_rendimiento_neto,
+        total_ingresos=total_ingresos,
+        total_gastos=total_gastos,
+        total_pagos_fraccionados=total_pagos_fraccionados,
+        projected_rendimiento_neto=projected_rendimiento_neto,
+        is_extrapolated=is_extrapolated,
     )
 
+
+def _parse_projection_binding_overrides(
+    binding_overrides: Mapping[BindingId, str] | None,
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+    """Split caller binding overrides into the Decimal and enum channels."""
     extra_bindings: dict[BindingId, Decimal] = {}
     extra_enum_bindings: dict[BindingId, str] = {}
     for raw_key, value in (binding_overrides or {}).items():
@@ -425,21 +433,15 @@ def project_modelo_100_from_m130(
             extra_bindings[key] = Decimal(value)
         except (InvalidOperation, ValueError):
             extra_enum_bindings[key] = value
+    return extra_bindings, extra_enum_bindings
 
-    m100_inputs: dict[CasillaId, Decimal] = {
-        _M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: projected_rendimiento_neto,
-        **extra_inputs,
-    }
-    m100_relations: dict[RelationId, Decimal] = {
-        _relation_id(
-            f"renta-{year}-rel-130-pagos-fraccionados",
-            surface="project modelo 100 generated relation id",
-        ): total_pagos_fraccionados,
-        _relation_id(
-            f"renta-{year}-rel-131-pagos-fraccionados",
-            surface="project modelo 100 generated relation id",
-        ): Decimal("0"),
-    }
+
+def _verb_baseline_projection_bindings(
+    year: int,
+    ccaa: str,
+    declared_binding_ids: set[BindingId],
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
+    """Build the verb-supplied baseline projection bindings, filtered to declared ids."""
     retenciones_binding_ids = (
         _binding_id(
             f"renta-{year}-modelo-111-retenciones-periodicas",
@@ -499,7 +501,6 @@ def project_modelo_100_from_m130(
             surface="project modelo 100 generated binding id",
         ): ccaa,
     }
-    declared_binding_ids = {binding.id for binding in m100_snapshot.revision.bindings}
     verb_baseline_bindings = {
         binding_id: value for binding_id, value in verb_baseline_bindings.items() if binding_id in declared_binding_ids
     }
@@ -508,28 +509,94 @@ def project_modelo_100_from_m130(
         for binding_id, value in verb_baseline_enum_bindings.items()
         if binding_id in declared_binding_ids
     }
+    return verb_baseline_bindings, verb_baseline_enum_bindings
 
+
+def _profile_projection_bindings(
+    m100_snapshot: RegistrySnapshot,
+    *,
+    m100_inputs: Mapping[CasillaId, Decimal],
+    extra_bindings: Mapping[BindingId, Decimal],
+    extra_enum_bindings: Mapping[BindingId, str],
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, date], dict[BindingId, str]]:
+    """Resolve the active bucket's profile-sourced projection bindings (empty when no bucket)."""
     from ...core import resolve_active_bucket_id
 
-    profile_decimal_bindings: dict[BindingId, Decimal] = {}
-    profile_date_bindings: dict[BindingId, date] = {}
-    profile_enum_bindings: dict[BindingId, str] = {}
     bucket_id = resolve_active_bucket_id()
-    if bucket_id is not None:
-        input_bound_binding_ids = {
-            casilla.binding
-            for casilla in m100_snapshot.revision.casillas
-            if casilla.id in m100_inputs and casilla.binding is not None
-        }
-        caller_owned = set(extra_bindings) | set(extra_enum_bindings) | input_bound_binding_ids
-        profile_result = resolve_profile_sourced_bindings(
-            m100_snapshot,
-            bucket_id=bucket_id,
-            caller_binding_ids=frozenset(caller_owned),
-        )
-        profile_decimal_bindings = dict(profile_result.binding_values)
-        profile_date_bindings = dict(profile_result.date_binding_values)
-        profile_enum_bindings = dict(profile_result.enum_binding_values)
+    if bucket_id is None:
+        return {}, {}, {}
+    input_bound_binding_ids = {
+        casilla.binding
+        for casilla in m100_snapshot.revision.casillas
+        if casilla.id in m100_inputs and casilla.binding is not None
+    }
+    caller_owned = set(extra_bindings) | set(extra_enum_bindings) | input_bound_binding_ids
+    profile_result = resolve_profile_sourced_bindings(
+        m100_snapshot,
+        bucket_id=bucket_id,
+        caller_binding_ids=frozenset(caller_owned),
+    )
+    return (
+        dict(profile_result.binding_values),
+        dict(profile_result.date_binding_values),
+        dict(profile_result.enum_binding_values),
+    )
+
+
+def project_modelo_100_from_m130(
+    *,
+    year: int,
+    ccaa: str,
+    casilla_overrides: Mapping[CasillaId, str] | None = None,
+    binding_overrides: Mapping[BindingId, str] | None = None,
+) -> ModeloProjectServiceResult:
+    """Project annual Modelo 100 values from quarterly M130 revisions.
+
+    The service reads stored :class:`CalculationRevision` rows, uses the latest
+    cumulative Modelo 130 figures for annual income, sums casilla 19 as the paid
+    instalment relation, resolves the annual :class:`RegistrySnapshot`, and
+    returns a :class:`ModeloProjectServiceResult` without writing a new revision.
+    """
+    annual = _m130_annual_projection(year)
+
+    authority = resources().modelos.authority
+    m100_snapshot = authority.snapshot(Modelo.M100.value, filing_year=year, period="0A")
+    extra_inputs = validate_casilla_input_ids(
+        m100_snapshot.revision,
+        _decimal_overrides(
+            casilla_overrides or {},
+            translated_message="cli.app.modelo.work.casilla_not_decimal",
+        ),
+    )
+
+    extra_bindings, extra_enum_bindings = _parse_projection_binding_overrides(binding_overrides)
+
+    m100_inputs: dict[CasillaId, Decimal] = {
+        _M100_RENDIMIENTO_NETO_PROJECTED_CASILLA: annual.projected_rendimiento_neto,
+        **extra_inputs,
+    }
+    m100_relations: dict[RelationId, Decimal] = {
+        _relation_id(
+            f"renta-{year}-rel-130-pagos-fraccionados",
+            surface="project modelo 100 generated relation id",
+        ): annual.total_pagos_fraccionados,
+        _relation_id(
+            f"renta-{year}-rel-131-pagos-fraccionados",
+            surface="project modelo 100 generated relation id",
+        ): Decimal("0"),
+    }
+    declared_binding_ids = {binding.id for binding in m100_snapshot.revision.bindings}
+    verb_baseline_bindings, verb_baseline_enum_bindings = _verb_baseline_projection_bindings(
+        year,
+        ccaa,
+        declared_binding_ids,
+    )
+    profile_decimal_bindings, profile_date_bindings, profile_enum_bindings = _profile_projection_bindings(
+        m100_snapshot,
+        m100_inputs=m100_inputs,
+        extra_bindings=extra_bindings,
+        extra_enum_bindings=extra_enum_bindings,
+    )
 
     merged_bindings = {**verb_baseline_bindings, **profile_decimal_bindings, **extra_bindings}
     merged_enum_bindings = {**verb_baseline_enum_bindings, **profile_enum_bindings, **extra_enum_bindings}
@@ -562,16 +629,17 @@ def project_modelo_100_from_m130(
     return ModeloProjectServiceResult(
         year=year,
         ccaa=ccaa,
-        quarters_filed=quarters_filed,
+        quarters_filed=annual.quarters_filed,
         quarters_available=tuple(
-            period.registry_token for period in sorted(m130_quarters, key=lambda period: period.quarter_ordinal or 0)
+            period.registry_token
+            for period in sorted(annual.m130_quarters, key=lambda period: period.quarter_ordinal or 0)
         ),
-        is_extrapolated=is_extrapolated,
+        is_extrapolated=annual.is_extrapolated,
         m130_accumulated=ModeloProjectM130Accumulated(
-            ingresos=total_ingresos,
-            gastos=total_gastos,
-            rendimiento_neto=total_rendimiento_neto,
-            pagos_fraccionados=total_pagos_fraccionados,
+            ingresos=annual.total_ingresos,
+            gastos=annual.total_gastos,
+            rendimiento_neto=annual.total_rendimiento_neto,
+            pagos_fraccionados=annual.total_pagos_fraccionados,
         ),
         casilla_observations=tuple(
             ModeloProjectionCasillaObservation(

@@ -57,6 +57,70 @@ class ConfigResetJournalIncompleteError(ConfigResetJournalError):
     """Raised when a new operation would overlap an incomplete reset."""
 
 
+def _require_target_present(
+    operation: ConfigResetOperation,
+    *,
+    operation_id: str,
+    bucket_id: str,
+) -> ConfigResetTarget:
+    target = next(
+        (candidate for candidate in operation.targets if candidate.bucket_id == bucket_id),
+        None,
+    )
+    if target is None:
+        raise ConfigResetJournalOwnershipError(
+            f"reset operation {operation_id} does not contain target {bucket_id}",
+        )
+    return target
+
+
+def _require_owned_fingerprint(
+    target: ConfigResetTarget,
+    *,
+    operation_id: str,
+    bucket_id: str,
+    expected_fingerprint: str,
+) -> None:
+    fingerprint = target.fingerprint
+    if not target.exists_at_snapshot or fingerprint is None or fingerprint.digest != expected_fingerprint:
+        raise ConfigResetJournalOwnershipError(
+            f"reset operation {operation_id} does not own fingerprint for target {bucket_id}",
+        )
+
+
+def _require_approved_retention(
+    target: ConfigResetTarget,
+    *,
+    operation_id: str,
+    bucket_id: str,
+) -> None:
+    retention = target.retention
+    if retention is None or (retention.blocks_erase and not retention.override_approved):
+        raise ConfigResetJournalOwnershipError(
+            f"reset operation {operation_id} has no approved retention decision for target {bucket_id}",
+        )
+
+
+def _require_deleting_marker(
+    target: ConfigResetTarget,
+    *,
+    operation_id: str,
+    bucket_id: str,
+    expected_fingerprint: str,
+) -> None:
+    marker = target.deletion_marker
+    if (
+        marker is None
+        or marker.operation_id != operation_id
+        or marker.bucket_id != bucket_id
+        or marker.fingerprint != expected_fingerprint
+        or target.phase not in {ConfigResetTargetPhase.DELETING, ConfigResetTargetPhase.DELETED}
+    ):
+        raise ConfigResetJournalOwnershipError(
+            f"reset operation {operation_id} has no deleting marker for target {bucket_id}",
+        )
+
+
 class ConfigResetJournalRepository:
     """Persist credential-free journals as atomic individual files.
 
@@ -192,35 +256,20 @@ class ConfigResetJournalRepository:
         deletion marker in the ``deleting`` or ``deleted`` phase.
         """
         operation = self.load(operation_id)
-        target = next(
-            (candidate for candidate in operation.targets if candidate.bucket_id == bucket_id),
-            None,
+        target = _require_target_present(operation, operation_id=operation_id, bucket_id=bucket_id)
+        _require_owned_fingerprint(
+            target,
+            operation_id=operation_id,
+            bucket_id=bucket_id,
+            expected_fingerprint=expected_fingerprint,
         )
-        if target is None:
-            raise ConfigResetJournalOwnershipError(
-                f"reset operation {operation_id} does not contain target {bucket_id}",
-            )
-        fingerprint = target.fingerprint
-        if not target.exists_at_snapshot or fingerprint is None or fingerprint.digest != expected_fingerprint:
-            raise ConfigResetJournalOwnershipError(
-                f"reset operation {operation_id} does not own fingerprint for target {bucket_id}",
-            )
-        retention = target.retention
-        if retention is None or (retention.blocks_erase and not retention.override_approved):
-            raise ConfigResetJournalOwnershipError(
-                f"reset operation {operation_id} has no approved retention decision for target {bucket_id}",
-            )
-        marker = target.deletion_marker
-        if (
-            marker is None
-            or marker.operation_id != operation_id
-            or marker.bucket_id != bucket_id
-            or marker.fingerprint != expected_fingerprint
-            or target.phase not in {ConfigResetTargetPhase.DELETING, ConfigResetTargetPhase.DELETED}
-        ):
-            raise ConfigResetJournalOwnershipError(
-                f"reset operation {operation_id} has no deleting marker for target {bucket_id}",
-            )
+        _require_approved_retention(target, operation_id=operation_id, bucket_id=bucket_id)
+        _require_deleting_marker(
+            target,
+            operation_id=operation_id,
+            bucket_id=bucket_id,
+            expected_fingerprint=expected_fingerprint,
+        )
         return target
 
     def _ensure_root(self) -> None:

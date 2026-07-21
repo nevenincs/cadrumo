@@ -106,6 +106,7 @@ if TYPE_CHECKING:  # pragma: no cover - import-cycle guard
     from ...domain.buckets import BucketEventHistoryRepositoryProtocol
     from ...domain.retention import RetentionFloorAssessment
     from ...domain.user_profile import UserProfilePortableExport
+    from .._bucket_deletion_contracts import BucketDeletionFingerprint
 
 
 _RENAME_PAYLOAD_VERSION = 1
@@ -396,6 +397,36 @@ class BucketMaintenanceService:
         Returns:
             :class:`DeleteBucketResult`: The result of the delete operation.
         """
+        self._refuse_unconfirmed_or_active(command)
+        assessment = self.assess_deletion(AssessBucketDeletionCommand(bucket_id=command.bucket_id))
+        self._verify_reset_ownership(command)
+        absent = self._absent_target_result(command, assessment)
+        if absent is not None:
+            return absent
+        fingerprint, retention, previous_label = self._enforced_deletion_context(command, assessment)
+        override_used = self._enforce_retention_floor(command, retention)
+        latest_safe_erase_date = retention.latest_safe_erase_date
+        delete_profile_with_lifecycle_span(command.bucket_id)
+        event, occurred_at = self._deletion_event(command, previous_label, fingerprint, override_used, retention)
+        self._route_deletion_event(command, event)
+        remove_profile_bucket_directory(command.bucket_id)
+        return DeleteBucketResult(
+            bucket_id=command.bucket_id,
+            previous_label=previous_label,
+            occurred_at=occurred_at,
+            retention_override_used=override_used,
+            latest_safe_erase_date=latest_safe_erase_date,
+            deletion_fingerprint=fingerprint.digest,
+            reset_operation_id=command.reset_operation_id,
+        )
+
+    @staticmethod
+    def _refuse_unconfirmed_or_active(command: DeleteBucketCommand) -> None:
+        """Refuse an unconfirmed erase or one that targets the active bucket.
+
+        Both refusals are service-boundary contracts, not CLI ergonomics — a
+        programmatic caller observes the same guarantees.
+        """
         from ...core import resolve_active_bucket_id
 
         if not command.confirmed:
@@ -408,38 +439,73 @@ class BucketMaintenanceService:
                 translated_message="application.bucket_maintenance.errors.delete_active_bucket",
                 context={"bucket_id": command.bucket_id},
             )
-        assessment = self.assess_deletion(AssessBucketDeletionCommand(bucket_id=command.bucket_id))
-        if command.reset_operation_id is not None and command.expected_deletion_fingerprint is not None:
-            try:
-                ConfigResetJournalRepository().verify_deletion_ownership(
-                    operation_id=command.reset_operation_id,
-                    bucket_id=command.bucket_id,
-                    expected_fingerprint=command.expected_deletion_fingerprint,
-                )
-            except ConfigResetJournalError as exc:
-                raise BucketDeleteRefusedError(
-                    "reset journal does not own the requested bucket deletion",
-                    context={
-                        "bucket_id": command.bucket_id,
-                        "reset_operation_id": command.reset_operation_id,
-                        "expected_fingerprint": command.expected_deletion_fingerprint,
-                    },
-                ) from exc
-        if not assessment.exists:
-            if command.reset_operation_id is not None and command.expected_deletion_fingerprint is not None:
-                return DeleteBucketResult(
-                    bucket_id=command.bucket_id,
-                    occurred_at=now(),
-                    deletion_fingerprint=command.expected_deletion_fingerprint,
-                    reset_operation_id=command.reset_operation_id,
-                    already_absent=True,
-                )
-            from ...domain.user_profile import ProfileNotFoundError
 
-            raise ProfileNotFoundError(
-                translated_message="application.user_profile.errors.no_active_profile_selected",
-                context={"bucket_id": command.bucket_id},
+    @staticmethod
+    def _verify_reset_ownership(command: DeleteBucketCommand) -> None:
+        """Verify the external reset journal owns a reset-driven deletion.
+
+        Only runs when the caller supplies both an operation identifier and an
+        expected fingerprint; otherwise this is not a reset-owned deletion and
+        no ownership evidence is demanded.
+        """
+        if command.reset_operation_id is None or command.expected_deletion_fingerprint is None:
+            return
+        try:
+            ConfigResetJournalRepository().verify_deletion_ownership(
+                operation_id=command.reset_operation_id,
+                bucket_id=command.bucket_id,
+                expected_fingerprint=command.expected_deletion_fingerprint,
             )
+        except ConfigResetJournalError as exc:
+            raise BucketDeleteRefusedError(
+                "reset journal does not own the requested bucket deletion",
+                context={
+                    "bucket_id": command.bucket_id,
+                    "reset_operation_id": command.reset_operation_id,
+                    "expected_fingerprint": command.expected_deletion_fingerprint,
+                },
+            ) from exc
+
+    @staticmethod
+    def _absent_target_result(
+        command: DeleteBucketCommand,
+        assessment: BucketDeletionAssessment,
+    ) -> DeleteBucketResult | None:
+        """Return the already-absent result, or ``None`` when the target exists.
+
+        An already-absent target is accepted only when the caller supplies an
+        operation identifier and expected fingerprint that match a durable
+        deleting marker in the external reset journal; otherwise the missing
+        bucket is refused.
+        """
+        if assessment.exists:
+            return None
+        if command.reset_operation_id is not None and command.expected_deletion_fingerprint is not None:
+            return DeleteBucketResult(
+                bucket_id=command.bucket_id,
+                occurred_at=now(),
+                deletion_fingerprint=command.expected_deletion_fingerprint,
+                reset_operation_id=command.reset_operation_id,
+                already_absent=True,
+            )
+        from ...domain.user_profile import ProfileNotFoundError
+
+        raise ProfileNotFoundError(
+            translated_message="application.user_profile.errors.no_active_profile_selected",
+            context={"bucket_id": command.bucket_id},
+        )
+
+    @staticmethod
+    def _enforced_deletion_context(
+        command: DeleteBucketCommand,
+        assessment: BucketDeletionAssessment,
+    ) -> tuple[BucketDeletionFingerprint, RetentionFloorAssessment, str]:
+        """Extract the erase context, refusing on a post-assessment fingerprint drift.
+
+        An expected-fingerprint mismatch is refused before any lifecycle
+        mutation. Returns the deletion fingerprint, retention assessment, and
+        previous label for the subsequent tombstone and event.
+        """
         fingerprint = assessment.fingerprint
         retention = assessment.retention
         assert fingerprint is not None
@@ -459,9 +525,17 @@ class BucketMaintenanceService:
             )
         previous_label = assessment.label
         assert previous_label is not None
-        override_used = self._enforce_retention_floor(command, retention)
-        latest_safe_erase_date = retention.latest_safe_erase_date
-        delete_profile_with_lifecycle_span(command.bucket_id)
+        return fingerprint, retention, previous_label
+
+    @staticmethod
+    def _deletion_event(
+        command: DeleteBucketCommand,
+        previous_label: str,
+        fingerprint: BucketDeletionFingerprint,
+        override_used: bool,
+        retention: RetentionFloorAssessment,
+    ) -> tuple[BucketEvent, datetime]:
+        """Build the ``BUCKET_DELETED`` event and its ``occurred_at`` stamp."""
         occurred_at = now()
         payload: dict[str, str] = {"previous_label": previous_label}
         if command.reset_operation_id is not None:
@@ -474,6 +548,7 @@ class BucketMaintenanceService:
             # append-only audit trail explains why the record was destroyed early.
             payload["retention_override"] = "true"
             payload["retention_override_reason"] = command.retention_override_reason or ""
+            latest_safe_erase_date = retention.latest_safe_erase_date
             if latest_safe_erase_date is not None:
                 payload["retention_safe_erase_date"] = latest_safe_erase_date.isoformat()
         event = BucketEvent(
@@ -495,6 +570,17 @@ class BucketMaintenanceService:
             payload_version=_DELETE_PAYLOAD_VERSION,
             payload=payload,
         )
+        return event, occurred_at
+
+    def _route_deletion_event(self, command: DeleteBucketCommand, event: BucketEvent) -> None:
+        """Route the deletion event, honouring the reset-owned no-ambient-route rule.
+
+        Ordinary deletion writes through the injected repository or the default
+        repository bound to the active bucket. Reset-owned deletion uses only an
+        explicitly injected event repository; otherwise its external reset
+        journal remains the surviving ownership evidence and no ambient
+        post-delete event route is opened.
+        """
         if command.reset_operation_id is None:
             repository = self._event_repository or BucketEventHistoryRepository()
             repository.save(append_bucket_event(repository.load(), event))
@@ -502,16 +588,6 @@ class BucketMaintenanceService:
             self._event_repository.save(
                 append_bucket_event(self._event_repository.load(), event),
             )
-        remove_profile_bucket_directory(command.bucket_id)
-        return DeleteBucketResult(
-            bucket_id=command.bucket_id,
-            previous_label=previous_label,
-            occurred_at=occurred_at,
-            retention_override_used=override_used,
-            latest_safe_erase_date=latest_safe_erase_date,
-            deletion_fingerprint=fingerprint.digest,
-            reset_operation_id=command.reset_operation_id,
-        )
 
     def assess_deletion(
         self,

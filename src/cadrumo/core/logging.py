@@ -397,6 +397,16 @@ def _prepare_log_directory(log_file: Path) -> str | None:
     return None
 
 
+def _install_secret_scrubbing_filters() -> None:
+    """Attach one :class:`SecretScrubbingFilter` to the root logger and each handler."""
+    root_logger = logging.getLogger()
+    if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in root_logger.filters):
+        root_logger.addFilter(SecretScrubbingFilter())
+    for handler in root_logger.handlers:
+        if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in handler.filters):
+            handler.addFilter(SecretScrubbingFilter())
+
+
 def configure_logging() -> None:
     """Configure the project-wide diagnostic logging defaults.
 
@@ -493,12 +503,7 @@ def configure_logging() -> None:
     # the import is safe because configure_logging() runs after both
     # modules finish loading.
     _install_run_context_record_factory()
-    root_logger = logging.getLogger()
-    if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in root_logger.filters):
-        root_logger.addFilter(SecretScrubbingFilter())
-    for handler in root_logger.handlers:
-        if not any(isinstance(active_filter, SecretScrubbingFilter) for active_filter in handler.filters):
-            handler.addFilter(SecretScrubbingFilter())
+    _install_secret_scrubbing_filters()
 
     _CONFIGURED = True
 

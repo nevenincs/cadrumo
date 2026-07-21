@@ -26,6 +26,7 @@ from ...application.modelo import ModeloReconciliationEvidenceKind, ModeloReconc
 from ...core.i18n import tr
 from ...domain.modelos import WorkUnit
 from ._common import _emit_envelope
+from ._modelo_work_options import _ActorOpt, _BucketIdOpt, _ModeloOpt, _PeriodOpt, _RevisionOpt, _YearOpt
 
 _require_active_profile: Callable[[], None] | None = None
 _resolve_work_unit_for_cli: Callable[..., WorkUnit] | None = None
@@ -175,12 +176,6 @@ _WorkUnitIdArg = Annotated[
         ),
     ),
 ]
-_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
-_YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
-_PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
-_RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
-_BucketIdOpt = Annotated[str | None, typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help"))]
-_ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
 _KindOpt = Annotated[
     ModeloReconciliationEvidenceKind | None,
     typer.Option(

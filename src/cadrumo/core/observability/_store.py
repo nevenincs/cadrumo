@@ -522,12 +522,27 @@ def prune_run_traces(
     effective_max_total_bytes = max_total_bytes if max_total_bytes is not None else cfg.cadrumo_runs_max_total_bytes
     cutoff = now() - timedelta(days=effective_retention_days)
     base = runs_dir(cfg)
-    removed = 0
     try:
         entries = tuple(base.iterdir())
     except OSError:
         _logger.debug("prune_run_traces: runs directory not enumerable at %s", base, exc_info=True)
         return 0
+    removed_by_age, survivors = _prune_run_dirs_by_age(entries, cutoff=cutoff)
+    removed_by_size = _prune_run_dirs_by_size(survivors, max_total_bytes=effective_max_total_bytes)
+    return removed_by_age + removed_by_size
+
+
+def _prune_run_dirs_by_age(
+    entries: tuple[Path, ...],
+    *,
+    cutoff: datetime,
+) -> tuple[int, list[tuple[float, Path]]]:
+    """Remove run directories older than ``cutoff``; return (removed, survivors).
+
+    Survivors carry their mtime for the subsequent size-bound pass. Best-effort:
+    a directory that cannot be stat'd or removed is logged and skipped.
+    """
+    removed = 0
     survivors: list[tuple[float, Path]] = []
     for entry in entries:
         try:
@@ -542,12 +557,25 @@ def prune_run_traces(
             removed += 1
         except OSError:
             _logger.debug("prune_run_traces: could not prune run directory %s", entry, exc_info=True)
+    return removed, survivors
 
+
+def _prune_run_dirs_by_size(
+    survivors: list[tuple[float, Path]],
+    *,
+    max_total_bytes: int,
+) -> int:
+    """Remove oldest survivors until the store fits under ``max_total_bytes``.
+
+    The newest run directory is never size-pruned, so the trace whose save
+    triggered the prune survives even when it alone exceeds the ceiling.
+    """
     survivors.sort()  # oldest mtime first
     sized = [(entry, _run_dir_total_bytes(entry)) for _, entry in survivors]
     total_bytes = sum(size for _, size in sized)
+    removed = 0
     for entry, size in sized[:-1]:  # the newest directory is never size-pruned
-        if total_bytes <= effective_max_total_bytes:
+        if total_bytes <= max_total_bytes:
             break
         try:
             shutil.rmtree(entry)

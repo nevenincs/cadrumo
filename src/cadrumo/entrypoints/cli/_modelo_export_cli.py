@@ -39,6 +39,14 @@ from ._modelo_cli_support import (
     validate_work_unit_id,
 )
 from ._modelo_payloads import ModeloExportPayload
+from ._modelo_work_options import (
+    _BucketIdOpt,
+    _ModeloOpt,
+    _PeriodOpt,
+    _RegistryRevisionOpt,
+    _RevisionSelectorOpt,
+    _YearOpt,
+)
 
 
 def _local_export_evidence_notice(result: ModeloExportResult) -> Notice:
@@ -128,33 +136,12 @@ def register_export_commands(
                 ),
             ),
         ] = None,
-        modelo: Annotated[
-            str | None,
-            typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-        ] = None,
-        year: Annotated[
-            int | None,
-            typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-        ] = None,
-        period: Annotated[
-            str | None,
-            typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-        ] = None,
-        registry_revision: Annotated[
-            str | None,
-            typer.Option("--registry-revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
-        select: Annotated[
-            str,
-            typer.Option(
-                "--select",
-                help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector."),
-            ),
-        ] = ModeloCalculationRevisionSelector.CURRENT.value,
+        modelo: _ModeloOpt = None,
+        year: _YearOpt = None,
+        period: _PeriodOpt = None,
+        registry_revision: _RegistryRevisionOpt = None,
+        bucket_id: _BucketIdOpt = None,
+        select: _RevisionSelectorOpt = ModeloCalculationRevisionSelector.CURRENT.value,
         output: Annotated[
             Path | None,
             typer.Option(

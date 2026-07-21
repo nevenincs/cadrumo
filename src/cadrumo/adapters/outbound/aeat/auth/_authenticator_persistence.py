@@ -55,6 +55,27 @@ class PersistedSessionMetadata(BaseModel):
         return value
 
 
+# Ordered (substring, reason-code) rules for persisted-session refusals. The
+# declaration order is specificity order: the first substring found in the
+# lowered reason wins, mirroring the original if-ladder exactly.
+_REASON_CODE_RULES: Final[tuple[tuple[str, str], ...]] = (
+    ("hash does not match", "storage_hash_mismatch"),
+    ("past its idle deadline", "idle_deadline_expired"),
+    ("different certificate thumbprint", "certificate_thumbprint_mismatch"),
+    ("different certificate subject", "certificate_subject_mismatch"),
+    ("different certificate nif", "certificate_nif_mismatch"),
+    ("failed live verification", "live_verification_failed"),
+    ("could not be resumed", "resume_failed"),
+    ("storage_state missing", "storage_state_missing"),
+    ("storage_state is malformed", "storage_state_malformed"),
+    ("storage_state root", "storage_state_root_invalid"),
+    ("cookies array", "storage_state_cookies_missing"),
+    ("origins array", "storage_state_origins_missing"),
+    ("metadata is malformed", "metadata_malformed"),
+    ("schema version", "schema_version_unsupported"),
+)
+
+
 def persisted_session_reason_code(reason: str) -> str:
     """Map a detailed persisted-session refusal reason to a non-sensitive code.
 
@@ -63,34 +84,9 @@ def persisted_session_reason_code(reason: str) -> str:
     certificate subjects, logical storage paths, or browser-session contents.
     """
     reason_lower = reason.lower()
-    if "hash does not match" in reason_lower:
-        return "storage_hash_mismatch"
-    if "past its idle deadline" in reason_lower:
-        return "idle_deadline_expired"
-    if "different certificate thumbprint" in reason_lower:
-        return "certificate_thumbprint_mismatch"
-    if "different certificate subject" in reason_lower:
-        return "certificate_subject_mismatch"
-    if "different certificate nif" in reason_lower:
-        return "certificate_nif_mismatch"
-    if "failed live verification" in reason_lower:
-        return "live_verification_failed"
-    if "could not be resumed" in reason_lower:
-        return "resume_failed"
-    if "storage_state missing" in reason_lower:
-        return "storage_state_missing"
-    if "storage_state is malformed" in reason_lower:
-        return "storage_state_malformed"
-    if "storage_state root" in reason_lower:
-        return "storage_state_root_invalid"
-    if "cookies array" in reason_lower:
-        return "storage_state_cookies_missing"
-    if "origins array" in reason_lower:
-        return "storage_state_origins_missing"
-    if "metadata is malformed" in reason_lower:
-        return "metadata_malformed"
-    if "schema version" in reason_lower:
-        return "schema_version_unsupported"
+    for needle, code in _REASON_CODE_RULES:
+        if needle in reason_lower:
+            return code
     return "invalid_persisted_session"
 
 

@@ -105,12 +105,12 @@ def test_embedded_symbols_resolve_to_private_defining_files_not_the_facade() -> 
     import importlib
     import inspect
 
-    resolved = {
-        symbol_name: Path(
-            inspect.getsourcefile(inspect.unwrap(getattr(importlib.import_module(facade_module), symbol_name)))
-        )
-        for facade_module, symbol_name in _EMBEDDED_SCHEMA_CORE_SYMBOLS
-    }
+    resolved: dict[str, Path] = {}
+    for facade_module, symbol_name in _EMBEDDED_SCHEMA_CORE_SYMBOLS:
+        symbol = inspect.unwrap(getattr(importlib.import_module(facade_module), symbol_name))
+        source_file = inspect.getsourcefile(symbol)
+        assert source_file is not None, (facade_module, symbol_name)
+        resolved[symbol_name] = Path(source_file)
 
     assert resolved["Period"].name == "_period.py", resolved["Period"]
     assert resolved["TaxDomain"].name == "_tax_domain.py", resolved["TaxDomain"]

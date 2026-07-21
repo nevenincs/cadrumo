@@ -83,7 +83,7 @@ jobs:
           free -m
 
       - name: Cadrumo immutable-cohort packaging campaign
-        # Machine-aware sizing (.github/README.md): the workstation's 24
+        # Machine-aware sizing (.github/ci-control-plane.md): the workstation's 24
         # logical CPUs are shared by THREE runners, so the preflight pytest
         # gets an explicit 8 workers (never -n auto) and the lane pool keeps 3
         # (its lanes are venv/disk-bound, not CPU-wide).
@@ -184,7 +184,7 @@ jobs:
       # steps — the Windows leg alone spent 3.9 measured minutes duplicating
       # them.
       - name: Cadrumo host-portable packaging campaign
-        # Machine-aware sizing (.github/README.md): this Windows runner shares
+        # Machine-aware sizing (.github/ci-control-plane.md): this Windows runner shares
         # the workstation's 24 logical CPUs with two WSL runners — explicit 8
         # pytest workers, and lane concurrency 2 (its venv installs are
         # disk-bound and the box carries co-resident jobs).
@@ -274,7 +274,7 @@ jobs:
       # steps — the Windows leg alone spent 3.9 measured minutes duplicating
       # them.
       - name: Cadrumo host-portable packaging campaign
-        # Machine-aware sizing (.github/README.md): the 6-core MacBook hosts
+        # Machine-aware sizing (.github/ci-control-plane.md): the 6-core MacBook hosts
         # THREE runners — 2 pytest workers and 2 concurrent lanes per leg.
         env:
           CADRUMO_TEST_WORKERS: "2"

@@ -24,7 +24,13 @@ from ._modelo_manager import (
     ModeloLocaleFieldKind,
     ModeloLocaleManager,
 )
-from .manager import LocaleAuditResult, LocaleError, LocaleManager
+from .manager import (
+    LocaleAuditResult,
+    LocaleError,
+    LocaleFileAudit,
+    LocaleManager,
+    LocalePlaceholderMismatch,
+)
 
 app = typer.Typer(name="locales", help=tr("cli.locales.app_help"), no_args_is_help=True)
 modelo_app = typer.Typer(
@@ -66,33 +72,43 @@ def audit(ctx: typer.Context) -> None:
 def _echo_audit(result: LocaleAuditResult) -> None:
     """Render a structured manager audit without owning validation policy."""
     for file_result in result.files:
-        if file_result.ok:
-            typer.echo(tr("locales.cli.audit.file_ok", locale_file=file_result.locale_file))
-            continue
-        if file_result.codebase_missing or file_result.codebase_extra:
-            typer.echo(
-                tr(
-                    "locales.cli.audit.file_drift",
-                    locale_file=file_result.locale_file,
-                    missing_count=len(file_result.codebase_missing),
-                    extra_count=len(file_result.codebase_extra),
-                ),
-            )
-        for key in file_result.codebase_missing:
-            typer.echo(tr("locales.cli.audit.key_missing", key=key))
-        for key in file_result.codebase_extra:
-            typer.echo(tr("locales.cli.audit.key_extra", key=key))
-        for key in file_result.inter_locale_missing:
-            typer.echo(f"inter-locale missing file={file_result.locale_file} key={key}")
-        for violation in file_result.scalar_violations:
-            typer.echo(
-                f"non-string leaf file={violation.locale_file} key={violation.key} type={violation.value_type}",
-            )
+        _echo_file_audit(file_result)
     for mismatch in result.placeholder_mismatches:
-        rendered_variants = ", ".join(
-            f"{variant.locale_file}={sorted(variant.placeholders)!r}" for variant in mismatch.variants
+        _echo_placeholder_mismatch(mismatch)
+
+
+def _echo_file_audit(file_result: LocaleFileAudit) -> None:
+    """Echo one catalogue's key-set and scalar findings."""
+    if file_result.ok:
+        typer.echo(tr("locales.cli.audit.file_ok", locale_file=file_result.locale_file))
+        return
+    if file_result.codebase_missing or file_result.codebase_extra:
+        typer.echo(
+            tr(
+                "locales.cli.audit.file_drift",
+                locale_file=file_result.locale_file,
+                missing_count=len(file_result.codebase_missing),
+                extra_count=len(file_result.codebase_extra),
+            ),
         )
-        typer.echo(f"placeholder mismatch key={mismatch.key} {rendered_variants}")
+    for key in file_result.codebase_missing:
+        typer.echo(tr("locales.cli.audit.key_missing", key=key))
+    for key in file_result.codebase_extra:
+        typer.echo(tr("locales.cli.audit.key_extra", key=key))
+    for key in file_result.inter_locale_missing:
+        typer.echo(f"inter-locale missing file={file_result.locale_file} key={key}")
+    for violation in file_result.scalar_violations:
+        typer.echo(
+            f"non-string leaf file={violation.locale_file} key={violation.key} type={violation.value_type}",
+        )
+
+
+def _echo_placeholder_mismatch(mismatch: LocalePlaceholderMismatch) -> None:
+    """Echo one placeholder-parity mismatch row across catalogues."""
+    rendered_variants = ", ".join(
+        f"{variant.locale_file}={sorted(variant.placeholders)!r}" for variant in mismatch.variants
+    )
+    typer.echo(f"placeholder mismatch key={mismatch.key} {rendered_variants}")
 
 
 @app.command("scaffold")

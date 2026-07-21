@@ -32,7 +32,6 @@ from ._base import (
     InvalidFinancialSourceError,
     ParsedLedgerRow,
     ProviderValidation,
-    build_raw_transaction,
     coerce_cell_text,
     default_currency,
 )
@@ -45,6 +44,7 @@ from ._csv import (
     _layout_score,
     _parse_tabular_transaction_row,
     _row_is_blank,
+    build_provider_row,
 )
 
 _logger = get_logger(__name__)
@@ -169,24 +169,14 @@ class XlsxProvider(FinancialProvider):
                     raise InvalidFinancialSourceError(
                         f"worksheet row {source_row_index} could not be parsed: {exc}",
                     ) from exc
-                built = build_raw_transaction(
+                yield build_provider_row(
                     provider=self,
                     path=path,
                     source_sha256=source_sha256,
                     source_row_index=source_row_index,
-                    provider_transaction_id=parsed.provider_transaction_id,
-                    booked_date=parsed.booked_date,
-                    value_date=parsed.value_date,
-                    amount=parsed.amount,
-                    currency=parsed.currency,
-                    counterparty=parsed.counterparty,
-                    description=parsed.description,
+                    parsed=parsed,
                     raw_fields=raw_fields,
                 )
-                if parsed.direction is not None:
-                    yield ParsedLedgerRow(raw=built.raw, direction=parsed.direction)
-                else:
-                    yield built
         finally:
             workbook.close()
 

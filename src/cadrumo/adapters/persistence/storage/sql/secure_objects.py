@@ -1016,35 +1016,17 @@ class SecureObjectRepository:
         source_event_id: str | None,
         expected_revision_id: str | None,
     ) -> None:
-        previous_revision_id: str | None = None
-        previous_payload_hash: str | None = None
-        previous_revision_ancestor_ids: tuple[str, ...] = ()
-        row_id = session.execute(
-            select(_orm.SecureObjectRow.id).where(
-                _orm.SecureObjectRow.namespace == namespace,
-                _orm.SecureObjectRow.object_key == key,
-            ),
-        ).scalar_one_or_none()
-        if row_id is not None:
-            previous_metadata = session.execute(
-                select(
-                    _orm.SecureObjectRow.revision_id,
-                    _orm.SecureObjectRow.revision_ancestor_ids,
-                    _orm.SecureObjectRow.payload_hash,
-                ).where(_orm.SecureObjectRow.id == row_id),
-            ).one()
-            previous_revision_id = previous_metadata.revision_id
-            previous_revision_ancestor_ids = self._parse_revision_ancestor_ids(previous_metadata.revision_ancestor_ids)
-            # The stored plaintext hash is always present from birth; the payload
-            # column is now AEAD wire bytes, so there is no plaintext to fall back
-            # on (and hashing the ciphertext would be meaningless).
-            previous_payload_hash = previous_metadata.payload_hash
-        elif expected_revision_id is not None and expected_revision_id != ABSENT_SECURE_OBJECT_REVISION_ID:
-            raise self._revision_conflict(
-                namespace=namespace,
-                expected_revision_id=expected_revision_id,
-                current_revision_id=None,
-            )
+        (
+            row_id,
+            previous_revision_id,
+            previous_revision_ancestor_ids,
+            previous_payload_hash,
+        ) = self._load_previous_secure_object_metadata(
+            session,
+            namespace=namespace,
+            key=key,
+            expected_revision_id=expected_revision_id,
+        )
         # Encrypt the payload explicitly, binding the row identity into the AEAD
         # associated data so the ciphertext is valid only for this exact
         # (namespace, object_key, schema_version) row. ``key`` matches the value
@@ -1056,46 +1038,17 @@ class SecureObjectRepository:
             associated_data=secure_object_payload_aad(namespace, object_key_digest, schema_version),
         )
         try:
-            if row_id is None:
-                row = _orm.SecureObjectRow(
-                    namespace=namespace,
-                    object_key=key,
-                    classification=classification.value,
-                    schema_version=schema_version,
-                    written_at=written_at,
-                    payload=payload_wire,
-                )
-                session.add(row)
-                session.flush()
-                row_id = row.id
-            else:
-                update_stmt = update(_orm.SecureObjectRow).where(_orm.SecureObjectRow.id == row_id)
-                if expected_revision_id is not None:
-                    update_stmt = update_stmt.where(_orm.SecureObjectRow.revision_id == expected_revision_id)
-                # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
-                # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``;
-                # a DML UPDATE always yields a rowcount-bearing result.
-                result = cast(
-                    _RowcountResult,
-                    session.execute(
-                        update_stmt.values(
-                            classification=classification.value,
-                            schema_version=schema_version,
-                            written_at=written_at,
-                            payload=payload_wire,
-                        ),
-                    ),
-                )
-                if expected_revision_id is not None and result.rowcount != 1:
-                    current_revision_id = session.execute(
-                        select(_orm.SecureObjectRow.revision_id).where(_orm.SecureObjectRow.id == row_id),
-                    ).scalar_one_or_none()
-                    raise self._revision_conflict(
-                        namespace=namespace,
-                        expected_revision_id=expected_revision_id,
-                        current_revision_id=current_revision_id,
-                    )
-                session.flush()
+            row_id = self._upsert_secure_object_row(
+                session,
+                row_id,
+                namespace=namespace,
+                key=key,
+                classification=classification,
+                schema_version=schema_version,
+                written_at=written_at,
+                payload_wire=payload_wire,
+                expected_revision_id=expected_revision_id,
+            )
             write_revision_metadata(
                 session,
                 row_id=int(row_id),
@@ -1125,6 +1078,111 @@ class SecureObjectRepository:
                 },
                 translated_message="errors.fail.fail_storage_secure_object_upsert",
             ) from exc
+
+    def _load_previous_secure_object_metadata(
+        self,
+        session: Session,
+        *,
+        namespace: str,
+        key: str | bytes,
+        expected_revision_id: str | None,
+    ) -> tuple[int | None, str | None, tuple[str, ...], str | None]:
+        """Load the existing row's revision metadata for a save.
+
+        Returns ``(row_id, previous_revision_id, previous_revision_ancestor_ids,
+        previous_payload_hash)``; ``row_id`` is ``None`` when no row exists.
+        Raises a revision conflict when a compare-and-swap write expects an
+        existing revision but the row is absent.
+        """
+        row_id = session.execute(
+            select(_orm.SecureObjectRow.id).where(
+                _orm.SecureObjectRow.namespace == namespace,
+                _orm.SecureObjectRow.object_key == key,
+            ),
+        ).scalar_one_or_none()
+        if row_id is not None:
+            previous_metadata = session.execute(
+                select(
+                    _orm.SecureObjectRow.revision_id,
+                    _orm.SecureObjectRow.revision_ancestor_ids,
+                    _orm.SecureObjectRow.payload_hash,
+                ).where(_orm.SecureObjectRow.id == row_id),
+            ).one()
+            previous_revision_ancestor_ids = self._parse_revision_ancestor_ids(previous_metadata.revision_ancestor_ids)
+            # The stored plaintext hash is always present from birth; the payload
+            # column is now AEAD wire bytes, so there is no plaintext to fall back
+            # on (and hashing the ciphertext would be meaningless).
+            return (
+                row_id,
+                previous_metadata.revision_id,
+                previous_revision_ancestor_ids,
+                previous_metadata.payload_hash,
+            )
+        if expected_revision_id is not None and expected_revision_id != ABSENT_SECURE_OBJECT_REVISION_ID:
+            raise self._revision_conflict(
+                namespace=namespace,
+                expected_revision_id=expected_revision_id,
+                current_revision_id=None,
+            )
+        return None, None, (), None
+
+    def _upsert_secure_object_row(
+        self,
+        session: Session,
+        row_id: int | None,
+        *,
+        namespace: str,
+        key: str | bytes,
+        classification: SensitivityClass,
+        schema_version: int,
+        written_at: datetime,
+        payload_wire: bytes,
+        expected_revision_id: str | None,
+    ) -> int:
+        """Insert a new secure-object row or update the existing one, returning its id.
+
+        Raises a revision conflict when a compare-and-swap update matches no row.
+        """
+        if row_id is None:
+            row = _orm.SecureObjectRow(
+                namespace=namespace,
+                object_key=key,
+                classification=classification.value,
+                schema_version=schema_version,
+                written_at=written_at,
+                payload=payload_wire,
+            )
+            session.add(row)
+            session.flush()
+            return row.id
+        update_stmt = update(_orm.SecureObjectRow).where(_orm.SecureObjectRow.id == row_id)
+        if expected_revision_id is not None:
+            update_stmt = update_stmt.where(_orm.SecureObjectRow.revision_id == expected_revision_id)
+        # CAST-RATIONALE-SECURE-OBJECTS-SQLALCHEMY-CURSOR-UPDATE:
+        # SQLAlchemy types ``Session.execute()`` as ``Result[Any]``;
+        # a DML UPDATE always yields a rowcount-bearing result.
+        result = cast(
+            _RowcountResult,
+            session.execute(
+                update_stmt.values(
+                    classification=classification.value,
+                    schema_version=schema_version,
+                    written_at=written_at,
+                    payload=payload_wire,
+                ),
+            ),
+        )
+        if expected_revision_id is not None and result.rowcount != 1:
+            current_revision_id = session.execute(
+                select(_orm.SecureObjectRow.revision_id).where(_orm.SecureObjectRow.id == row_id),
+            ).scalar_one_or_none()
+            raise self._revision_conflict(
+                namespace=namespace,
+                expected_revision_id=expected_revision_id,
+                current_revision_id=current_revision_id,
+            )
+        session.flush()
+        return row_id
 
     def _revision_conflict(
         self,

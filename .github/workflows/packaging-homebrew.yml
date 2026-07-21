@@ -53,7 +53,7 @@ jobs:
     name: Cadrumo / ${{ matrix.label }} / Homebrew source install
     strategy:
       fail-fast: false
-      # Machine-aware load (.github/README.md): THREE of the four legs live on
+      # Machine-aware load (.github/ci-control-plane.md): THREE of the four legs live on
       # the one 6-core MacBook (ARM native, Rosetta Intel, colima linux-arm64);
       # unbounded, they co-land and thrash the laptop. Two at a time keeps the
       # worst co-residency at two Mac legs (or one Mac + the workstation leg).
@@ -232,7 +232,7 @@ jobs:
           BREW_PATH: ${{ matrix.brew }}
           MATRIX_ID: ${{ matrix.id }}
           # brew build-from-source parallelism, sized per leg to the machine
-          # share (machine-aware sizing, .github/README.md).
+          # share (machine-aware sizing, .github/ci-control-plane.md).
           HOMEBREW_MAKE_JOBS: ${{ matrix.make_jobs }}
         run: |
           uv run --no-project python dev/packaging/smoke_homebrew.py \

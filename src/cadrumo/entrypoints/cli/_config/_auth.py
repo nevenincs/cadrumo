@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from pathlib import Path
 
 import typer
@@ -14,6 +15,45 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 
 auth_app = typer.Typer(name="auth", help=tr("cli.config.auth.help"), no_args_is_help=True)
+
+
+def _run_provider_auth_operation[AuthResultT](
+    operation: Callable[..., AuthResultT],
+    *,
+    provider: str | None,
+    all_providers: bool,
+) -> AuthResultT:
+    """Run a provider-scoped auth operation, mapping backend refusals to CLI boundaries.
+
+    ``logout`` and ``reset`` share the exact refusal fan-out: an unknown provider,
+    no active bucket, an operation-scope conflict, and an unconfigured provider each
+    map to the same translated boundary message for both verbs.
+    """
+    from ....application.auth import (
+        AuthConfigureNoActiveBucketError,
+        AuthOperationScopeConflictError,
+        AuthProviderNotConfiguredError,
+    )
+
+    try:
+        return operation(provider=provider, all_providers=all_providers)
+    except KeyError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.unknown_provider",
+            context={"provider": provider or ""},
+        ) from exc
+    except AuthConfigureNoActiveBucketError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="cli.config.auth.no_active_bucket",
+        ) from exc
+    except AuthOperationScopeConflictError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="application.auth.operator.errors.scope_conflict",
+        ) from exc
+    except AuthProviderNotConfiguredError as exc:
+        raise _CliRefusedBoundaryError(
+            translated_message="application.auth.operator.errors.provider_not_configured",
+        ) from exc
 
 
 @auth_app.command("providers", help=tr("cli.config.auth.providers_help"))
@@ -277,32 +317,13 @@ def auth_logout(
 ) -> None:
     """Terminate local auth sessions without removing provider configuration."""
     _activate_subcommand_output_language(ctx, output_language)
-    from ....application.auth import (
-        AuthConfigureNoActiveBucketError,
-        AuthOperationScopeConflictError,
-        AuthProviderNotConfiguredError,
-        logout_operator_auth,
-    )
+    from ....application.auth import logout_operator_auth
 
-    try:
-        result = logout_operator_auth(provider=provider, all_providers=all_providers)
-    except KeyError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider or ""},
-        ) from exc
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
-    except AuthOperationScopeConflictError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="application.auth.operator.errors.scope_conflict",
-        ) from exc
-    except AuthProviderNotConfiguredError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="application.auth.operator.errors.provider_not_configured",
-        ) from exc
+    result = _run_provider_auth_operation(
+        logout_operator_auth,
+        provider=provider,
+        all_providers=all_providers,
+    )
     from .._config_payloads import AuthLogoutPayload
 
     payload = AuthLogoutPayload.model_validate(result.model_dump(mode="json"))
@@ -342,32 +363,13 @@ def auth_reset(
         raise _CliRefusedBoundaryError(
             translated_message="cli.config.auth.reset_requires_yes",
         )
-    from ....application.auth import (
-        AuthConfigureNoActiveBucketError,
-        AuthOperationScopeConflictError,
-        AuthProviderNotConfiguredError,
-        reset_operator_auth,
-    )
+    from ....application.auth import reset_operator_auth
 
-    try:
-        result = reset_operator_auth(provider=provider, all_providers=all_providers)
-    except KeyError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.unknown_provider",
-            context={"provider": provider or ""},
-        ) from exc
-    except AuthConfigureNoActiveBucketError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.auth.no_active_bucket",
-        ) from exc
-    except AuthOperationScopeConflictError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="application.auth.operator.errors.scope_conflict",
-        ) from exc
-    except AuthProviderNotConfiguredError as exc:
-        raise _CliRefusedBoundaryError(
-            translated_message="application.auth.operator.errors.provider_not_configured",
-        ) from exc
+    result = _run_provider_auth_operation(
+        reset_operator_auth,
+        provider=provider,
+        all_providers=all_providers,
+    )
     from .._config_payloads import AuthResetPayload
 
     payload = AuthResetPayload.model_validate(result.model_dump(mode="json"))

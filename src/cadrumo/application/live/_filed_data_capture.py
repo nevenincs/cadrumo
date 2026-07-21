@@ -31,10 +31,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable
+from dataclasses import dataclass, field
 from pathlib import Path
+from typing import TypedDict
 
 from ...adapters.outbound.aeat.sede import (
     Declaracion,
+    DeclaracionesRegisterSession,
     FiledDeclaracionObservation,
     FiledDeclaracionObservationStore,
     capture_previous_filing_observations,
@@ -145,6 +148,112 @@ async def _await_filed_register_walk(
         ) from exc
 
 
+async def _walk_or_failure_row(
+    register: DeclaracionesRegisterSession,
+    *,
+    modelo: str,
+    year: int,
+    timeout_ms: int,
+    failures: list[FiledDataCaptureFailureRow],
+) -> tuple[Declaracion, ...] | None:
+    """Walk one modelo/year register query, recording a failure row on error.
+
+    Shared bulk-path arm behind :func:`list_filed_data_bulk` and
+    :func:`capture_filed_data_bulk`: on any walk failure the exception is folded
+    into ``failures`` as a :class:`FiledDataCaptureFailureRow` and ``None`` is
+    returned so the caller can skip the pair.
+    """
+    try:
+        return await _await_filed_register_walk(
+            register.walk(modelo=modelo, ejercicio=year),
+            modelo=modelo,
+            year=year,
+            timeout_ms=timeout_ms,
+        )
+    except Exception as exc:
+        failures.append(filed_data_capture_failure_row(modelo=modelo, year=year, error=exc))
+        return None
+
+
+class _CaptureReportFields(TypedDict):
+    """Deduped report fields shared by every filed-declaration capture report."""
+
+    captured_count: int
+    observation_paths: tuple[str, ...]
+    artefact_refs: tuple[str, ...]
+    justificante_metadata_count: int
+    justificante_csvs: tuple[str, ...]
+    filing_evidence_stamped_count: int
+    filing_record_ids: tuple[str, ...]
+    filing_evidence_conflict_count: int
+    filing_evidence_conflict_record_ids: tuple[str, ...]
+    casilla_count: int
+
+
+@dataclass(slots=True)
+class _CaptureAccumulator:
+    """Mutable accumulator for one filed-declaration capture run.
+
+    Holds the persisted-artefact ledgers shared by the single-shot, bulk, and
+    source capture paths. :meth:`absorb` folds one captured observation into the
+    run (persist manifest, collect artefact refs, enrol justificante evidence,
+    stamp filing records); :meth:`capture_report_fields` projects the deduped
+    report fields every capture report shares. The ``dict.fromkeys`` dedup
+    ordering is preserved verbatim so report values stay byte-identical.
+    """
+
+    observation_paths: list[str] = field(default_factory=list)
+    artefact_refs: list[str] = field(default_factory=list)
+    justificante_csvs: list[str] = field(default_factory=list)
+    filing_record_ids: list[str] = field(default_factory=list)
+    conflicting_filing_record_ids: list[str] = field(default_factory=list)
+    observations_for_calculation: list[FiledDeclaracionObservation] = field(default_factory=list)
+    justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]] = field(default_factory=dict)
+    casilla_count: int = 0
+
+    def absorb(
+        self,
+        observation: FiledDeclaracionObservation,
+        *,
+        store: FiledDeclaracionObservationStore,
+        bucket_id: str,
+        output_root: Path,
+    ) -> None:
+        """Persist one captured observation and fold its artefacts into the run."""
+        manifest_path = store.persist_observation(observation)
+        self.observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
+        self.artefact_refs.extend(
+            storage_ref
+            for artefact in observation.artefacts
+            for storage_ref in (artefact.storage_ref,)
+            if storage_ref is not None
+        )
+        enrollment = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
+        self.justificante_csvs.extend(enrollment.justificante_csvs)
+        self.justificante_csvs_by_observation[_filed_observation_identity_key(observation)] = (
+            enrollment.justificante_csvs
+        )
+        self.filing_record_ids.extend(enrollment.filing_record_ids)
+        self.conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
+        self.casilla_count += len(observation.casillas)
+        self.observations_for_calculation.append(observation)
+
+    def capture_report_fields(self) -> _CaptureReportFields:
+        """Return the deduped report fields shared by every filed-capture report."""
+        return {
+            "captured_count": len(self.observation_paths),
+            "observation_paths": tuple(self.observation_paths),
+            "artefact_refs": tuple(self.artefact_refs),
+            "justificante_metadata_count": len(tuple(dict.fromkeys(self.justificante_csvs))),
+            "justificante_csvs": tuple(dict.fromkeys(self.justificante_csvs)),
+            "filing_evidence_stamped_count": len(tuple(dict.fromkeys(self.filing_record_ids))),
+            "filing_record_ids": tuple(dict.fromkeys(self.filing_record_ids)),
+            "filing_evidence_conflict_count": len(tuple(dict.fromkeys(self.conflicting_filing_record_ids))),
+            "filing_evidence_conflict_record_ids": tuple(dict.fromkeys(self.conflicting_filing_record_ids)),
+            "casilla_count": self.casilla_count,
+        }
+
+
 async def list_filed_data(
     *,
     modelo: str,
@@ -239,15 +348,14 @@ async def list_filed_data_bulk(
         ) as register,
     ):
         for code, year in query_pairs:
-            try:
-                declarations = await _await_filed_register_walk(
-                    register.walk(modelo=code, ejercicio=year),
-                    modelo=code,
-                    year=year,
-                    timeout_ms=walk_timeout_ms,
-                )
-            except Exception as exc:
-                failures.append(filed_data_capture_failure_row(modelo=code, year=year, error=exc))
+            declarations = await _walk_or_failure_row(
+                register,
+                modelo=code,
+                year=year,
+                timeout_ms=walk_timeout_ms,
+                failures=failures,
+            )
+            if declarations is None:
                 continue
             rows.extend(filed_data_listing_row(declaration) for declaration in declarations)
 
@@ -281,14 +389,7 @@ async def capture_filed_data(
     session, settings = await active_verified_session()
     walk_timeout_ms = settings.cadrumo_live_filed_register_walk_timeout_ms
     store = FiledDeclaracionObservationStore(output_root)
-    observation_paths: list[str] = []
-    artefact_refs: list[str] = []
-    justificante_csvs: list[str] = []
-    filing_record_ids: list[str] = []
-    conflicting_filing_record_ids: list[str] = []
-    observations_for_calculation: list[FiledDeclaracionObservation] = []
-    justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]] = {}
-    casilla_count = 0
+    accumulator = _CaptureAccumulator()
     bucket_id = require_active_bucket_id()
 
     async with (
@@ -315,27 +416,11 @@ async def capture_filed_data(
                 declaration,
                 artefact_sink=store.persist_artefact,
             )
-            manifest_path = store.persist_observation(observation)
-            observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
-            artefact_refs.extend(
-                storage_ref
-                for artefact in observation.artefacts
-                for storage_ref in (artefact.storage_ref,)
-                if storage_ref is not None
-            )
-            enrollment = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
-            justificante_csvs.extend(enrollment.justificante_csvs)
-            justificante_csvs_by_observation[_filed_observation_identity_key(observation)] = (
-                enrollment.justificante_csvs
-            )
-            filing_record_ids.extend(enrollment.filing_record_ids)
-            conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
-            casilla_count += len(observation.casillas)
-            observations_for_calculation.append(observation)
+            accumulator.absorb(observation, store=store, bucket_id=bucket_id, output_root=output_root)
 
     finalization = finalize_filed_capture(
-        tuple(observations_for_calculation),
-        justificante_csvs_by_observation=justificante_csvs_by_observation,
+        tuple(accumulator.observations_for_calculation),
+        justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
         policy=FiledCaptureFailurePolicy.FAIL_FAST,
     )
     calculation_observation_keys = finalization.calculation_observation_keys
@@ -344,16 +429,7 @@ async def capture_filed_data(
         output_root=str(output_root),
         modelo=modelo,
         year=year,
-        captured_count=len(observation_paths),
-        observation_paths=tuple(observation_paths),
-        artefact_refs=tuple(artefact_refs),
-        justificante_metadata_count=len(tuple(dict.fromkeys(justificante_csvs))),
-        justificante_csvs=tuple(dict.fromkeys(justificante_csvs)),
-        filing_evidence_stamped_count=len(tuple(dict.fromkeys(filing_record_ids))),
-        filing_record_ids=tuple(dict.fromkeys(filing_record_ids)),
-        filing_evidence_conflict_count=len(tuple(dict.fromkeys(conflicting_filing_record_ids))),
-        filing_evidence_conflict_record_ids=tuple(dict.fromkeys(conflicting_filing_record_ids)),
-        casilla_count=casilla_count,
+        **accumulator.capture_report_fields(),
         calculation_observation_count=len(calculation_observation_keys),
         calculation_observation_keys=tuple(calculation_observation_keys),
     )
@@ -382,15 +458,8 @@ async def capture_filed_data_bulk(
 
     resolved_modelos = modelos if modelos is not None else tuple(str(m.id) for m in resources().modelos.all())
     store = FiledDeclaracionObservationStore(output_root)
-    observation_paths: list[str] = []
-    artefact_refs: list[str] = []
-    justificante_csvs: list[str] = []
-    filing_record_ids: list[str] = []
-    conflicting_filing_record_ids: list[str] = []
-    observations_for_calculation: list[FiledDeclaracionObservation] = []
-    justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]] = {}
+    accumulator = _CaptureAccumulator()
     failures: list[FiledDataCaptureFailureRow] = []
-    casilla_count = 0
     query_pairs: list[tuple[str, int]] = []
     for code in resolved_modelos:
         for year in range(year_to, year_from - 1, -1):
@@ -437,18 +506,17 @@ async def capture_filed_data_bulk(
         ) as register,
     ):
         for code, year in query_pairs:
-            try:
-                declarations = await _await_filed_register_walk(
-                    register.walk(modelo=code, ejercicio=year),
-                    modelo=code,
-                    year=year,
-                    timeout_ms=walk_timeout_ms,
-                )
-            except Exception as exc:
-                failures.append(filed_data_capture_failure_row(modelo=code, year=year, error=exc))
+            declarations = await _walk_or_failure_row(
+                register,
+                modelo=code,
+                year=year,
+                timeout_ms=walk_timeout_ms,
+                failures=failures,
+            )
+            if declarations is None:
                 continue
             if limit is not None:
-                remaining = limit - len(observation_paths)
+                remaining = limit - len(accumulator.observation_paths)
                 if remaining <= 0:
                     break
                 declarations = declarations[:remaining]
@@ -468,29 +536,13 @@ async def capture_filed_data_bulk(
                         ),
                     )
                     continue
-                manifest_path = store.persist_observation(observation)
-                observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
-                artefact_refs.extend(
-                    storage_ref
-                    for artefact in observation.artefacts
-                    for storage_ref in (artefact.storage_ref,)
-                    if storage_ref is not None
-                )
-                enrollment = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
-                justificante_csvs.extend(enrollment.justificante_csvs)
-                justificante_csvs_by_observation[_filed_observation_identity_key(observation)] = (
-                    enrollment.justificante_csvs
-                )
-                filing_record_ids.extend(enrollment.filing_record_ids)
-                conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
-                casilla_count += len(observation.casillas)
-                observations_for_calculation.append(observation)
-            if limit is not None and len(observation_paths) >= limit:
+                accumulator.absorb(observation, store=store, bucket_id=bucket_id, output_root=output_root)
+            if limit is not None and len(accumulator.observation_paths) >= limit:
                 break
 
     finalization = finalize_filed_capture(
-        tuple(observations_for_calculation),
-        justificante_csvs_by_observation=justificante_csvs_by_observation,
+        tuple(accumulator.observations_for_calculation),
+        justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
         policy=FiledCaptureFailurePolicy.BEST_EFFORT,
     )
     calculation_observation_keys = finalization.calculation_observation_keys
@@ -500,17 +552,8 @@ async def capture_filed_data_bulk(
         modelos=tuple(resolved_modelos),
         year_from=year_from,
         year_to=year_to,
-        captured_count=len(observation_paths),
         failed_count=len(failures),
-        observation_paths=tuple(observation_paths),
-        artefact_refs=tuple(artefact_refs),
-        justificante_metadata_count=len(tuple(dict.fromkeys(justificante_csvs))),
-        justificante_csvs=tuple(dict.fromkeys(justificante_csvs)),
-        filing_evidence_stamped_count=len(tuple(dict.fromkeys(filing_record_ids))),
-        filing_record_ids=tuple(dict.fromkeys(filing_record_ids)),
-        filing_evidence_conflict_count=len(tuple(dict.fromkeys(conflicting_filing_record_ids))),
-        filing_evidence_conflict_record_ids=tuple(dict.fromkeys(conflicting_filing_record_ids)),
-        casilla_count=casilla_count,
+        **accumulator.capture_report_fields(),
         calculation_observation_count=len(calculation_observation_keys),
         calculation_observation_keys=tuple(calculation_observation_keys),
         failures=tuple(failures),
@@ -541,14 +584,7 @@ async def capture_source_filed_data(
         period=period.registry_token,
     )
     store = FiledDeclaracionObservationStore(output_root)
-    observation_paths: list[str] = []
-    artefact_refs: list[str] = []
-    justificante_csvs: list[str] = []
-    filing_record_ids: list[str] = []
-    conflicting_filing_record_ids: list[str] = []
-    observations_for_calculation: list[FiledDeclaracionObservation] = []
-    justificante_csvs_by_observation: dict[tuple[str, int, str, str], tuple[str, ...]] = {}
-    casilla_count = 0
+    accumulator = _CaptureAccumulator()
     seen: set[tuple[str, int, str, str]] = set()
     bucket_id = require_active_bucket_id()
 
@@ -584,25 +620,11 @@ async def capture_source_filed_data(
         if key in seen:
             continue
         seen.add(key)
-        manifest_path = store.persist_observation(observation)
-        observation_paths.append(capture_report_path(manifest_path, output_root=output_root))
-        artefact_refs.extend(
-            storage_ref
-            for artefact in observation.artefacts
-            for storage_ref in (artefact.storage_ref,)
-            if storage_ref is not None
-        )
-        enrollment = enroll_filed_justificante_evidence(observation, store=store, bucket_id=bucket_id)
-        justificante_csvs.extend(enrollment.justificante_csvs)
-        justificante_csvs_by_observation[_filed_observation_identity_key(observation)] = enrollment.justificante_csvs
-        filing_record_ids.extend(enrollment.filing_record_ids)
-        conflicting_filing_record_ids.extend(enrollment.conflicting_filing_record_ids)
-        casilla_count += len(observation.casillas)
-        observations_for_calculation.append(observation)
+        accumulator.absorb(observation, store=store, bucket_id=bucket_id, output_root=output_root)
 
     finalization = finalize_filed_capture(
-        tuple(observations_for_calculation),
-        justificante_csvs_by_observation=justificante_csvs_by_observation,
+        tuple(accumulator.observations_for_calculation),
+        justificante_csvs_by_observation=accumulator.justificante_csvs_by_observation,
         policy=FiledCaptureFailurePolicy.FAIL_FAST,
     )
     calculation_observation_keys = finalization.calculation_observation_keys
@@ -612,16 +634,7 @@ async def capture_source_filed_data(
         target_modelo=modelo,
         target_year=year,
         target_period=period,
-        captured_count=len(observation_paths),
-        observation_paths=tuple(observation_paths),
-        artefact_refs=tuple(artefact_refs),
-        justificante_metadata_count=len(tuple(dict.fromkeys(justificante_csvs))),
-        justificante_csvs=tuple(dict.fromkeys(justificante_csvs)),
-        filing_evidence_stamped_count=len(tuple(dict.fromkeys(filing_record_ids))),
-        filing_record_ids=tuple(dict.fromkeys(filing_record_ids)),
-        filing_evidence_conflict_count=len(tuple(dict.fromkeys(conflicting_filing_record_ids))),
-        filing_evidence_conflict_record_ids=tuple(dict.fromkeys(conflicting_filing_record_ids)),
-        casilla_count=casilla_count,
+        **accumulator.capture_report_fields(),
         calculation_observation_count=len(calculation_observation_keys),
         calculation_observation_keys=tuple(calculation_observation_keys),
     )

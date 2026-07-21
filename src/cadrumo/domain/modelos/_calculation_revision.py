@@ -199,6 +199,92 @@ def _canonical_row_binding_values(
     return dict(sorted(canonical.items()))
 
 
+def _base_revision_id_payload(
+    *,
+    work_unit_id: str,
+    input_values_by_casilla_id: Mapping[CasillaId, str],
+    binding_overrides: Mapping[BindingId, str],
+    casilla_values: Mapping[CasillaId, Decimal],
+    source_transaction_ids: Sequence[str],
+) -> dict[str, object]:
+    """Build the always-present payload keys for the revision-id hash."""
+    return {
+        "work_unit_id": work_unit_id.strip(),
+        "inputs": dict(
+            sorted(
+                (_validated_casilla_id(k, surface="input_values_by_casilla_id"), v.strip())
+                for k, v in input_values_by_casilla_id.items()
+            ),
+        ),
+        "overrides": dict(
+            sorted(
+                (_validated_binding_id(k, surface="binding_overrides"), v.strip()) for k, v in binding_overrides.items()
+            ),
+        ),
+        "outputs": _outputs_for_hash_from_mapping(casilla_values),
+        "source_transaction_ids": tuple(sorted(item.strip() for item in source_transaction_ids)),
+    }
+
+
+def _m210_revision_id_payload(
+    m210_official_tipo_renta_code: str | None,
+    m210_gross_income_source_mode: M210GrossIncomeSourceMode | None,
+) -> dict[str, object]:
+    """Build the optional Modelo 210 payload keys, validating the official code."""
+    parts: dict[str, object] = {}
+    if m210_official_tipo_renta_code is not None:
+        code = m210_official_tipo_renta_code.strip()
+        if code not in M210_TIPO_RENTA_CODE_PROJECTION:
+            raise ModeloValidationError(
+                f"m210_official_tipo_renta_code must be a registry-projected Modelo 210 code, got {code!r}",
+            )
+        parts["m210_official_tipo_renta_code"] = code
+    if m210_gross_income_source_mode is not None:
+        parts["m210_gross_income_source_mode"] = m210_gross_income_source_mode.value
+    return parts
+
+
+def _borrador_revision_id_payload(
+    borrador_snapshot_id: str | None,
+    bindings_sourced_from_borrador: Sequence[BindingId],
+) -> dict[str, object]:
+    """Build the optional borrador snapshot / sourced-binding payload keys."""
+    parts: dict[str, object] = {}
+    normalized_borrador_snapshot_id = borrador_snapshot_id.strip() if borrador_snapshot_id else None
+    normalized_borrador_bindings = tuple(
+        sorted(
+            _validated_binding_id(item, surface="bindings_sourced_from_borrador")
+            for item in bindings_sourced_from_borrador
+        ),
+    )
+    if normalized_borrador_snapshot_id is not None:
+        parts["borrador_snapshot_id"] = normalized_borrador_snapshot_id
+    if normalized_borrador_bindings:
+        parts["bindings_sourced_from_borrador"] = normalized_borrador_bindings
+    return parts
+
+
+def _source_issues_revision_id_payload(
+    source_issues: Sequence[CalculationSourceIssue],
+) -> dict[str, object]:
+    """Build the optional unresolved-source-issue payload key."""
+    canonical_source_issues = tuple(
+        sorted(
+            (
+                issue.reason,
+                issue.binding_source.value,
+                issue.source_ref or "",
+                issue.resolver_id or "",
+                issue.message,
+            )
+            for issue in source_issues
+        )
+    )
+    if canonical_source_issues:
+        return {"source_issues": canonical_source_issues}
+    return {}
+
+
 def derive_calculation_revision_id(
     *,
     work_unit_id: str,
@@ -236,22 +322,13 @@ def derive_calculation_revision_id(
     verification. It participates in identity so distinct resolution outcomes
     cannot collapse to one revision.
     """
-    payload: dict[str, object] = {
-        "work_unit_id": work_unit_id.strip(),
-        "inputs": dict(
-            sorted(
-                (_validated_casilla_id(k, surface="input_values_by_casilla_id"), v.strip())
-                for k, v in input_values_by_casilla_id.items()
-            ),
-        ),
-        "overrides": dict(
-            sorted(
-                (_validated_binding_id(k, surface="binding_overrides"), v.strip()) for k, v in binding_overrides.items()
-            ),
-        ),
-        "outputs": _outputs_for_hash_from_mapping(casilla_values),
-        "source_transaction_ids": tuple(sorted(item.strip() for item in source_transaction_ids)),
-    }
+    payload: dict[str, object] = _base_revision_id_payload(
+        work_unit_id=work_unit_id,
+        input_values_by_casilla_id=input_values_by_casilla_id,
+        binding_overrides=binding_overrides,
+        casilla_values=casilla_values,
+        source_transaction_ids=source_transaction_ids,
+    )
     if relation_overrides:
         payload["relation_overrides"] = dict(
             sorted(
@@ -259,15 +336,9 @@ def derive_calculation_revision_id(
                 for k, v in relation_overrides.items()
             ),
         )
-    if m210_official_tipo_renta_code is not None:
-        code = m210_official_tipo_renta_code.strip()
-        if code not in M210_TIPO_RENTA_CODE_PROJECTION:
-            raise ModeloValidationError(
-                f"m210_official_tipo_renta_code must be a registry-projected Modelo 210 code, got {code!r}",
-            )
-        payload["m210_official_tipo_renta_code"] = code
-    if m210_gross_income_source_mode is not None:
-        payload["m210_gross_income_source_mode"] = m210_gross_income_source_mode.value
+    payload.update(
+        _m210_revision_id_payload(m210_official_tipo_renta_code, m210_gross_income_source_mode),
+    )
     raw_row_bindings: dict[object, object] = {
         binding_id: rows for binding_id, rows in (row_binding_values or {}).items()
     }
@@ -277,34 +348,13 @@ def derive_calculation_revision_id(
     )
     if canonical_row_bindings:
         payload["row_binding_values"] = canonical_row_bindings
-    normalized_borrador_snapshot_id = borrador_snapshot_id.strip() if borrador_snapshot_id else None
-    normalized_borrador_bindings = tuple(
-        sorted(
-            _validated_binding_id(item, surface="bindings_sourced_from_borrador")
-            for item in bindings_sourced_from_borrador
-        ),
+    payload.update(
+        _borrador_revision_id_payload(borrador_snapshot_id, bindings_sourced_from_borrador),
     )
-    if normalized_borrador_snapshot_id is not None:
-        payload["borrador_snapshot_id"] = normalized_borrador_snapshot_id
-    if normalized_borrador_bindings:
-        payload["bindings_sourced_from_borrador"] = normalized_borrador_bindings
     canonical_rows = _canonical_detail_rows(tuple(detail_rows))
     if canonical_rows:
         payload["detail_rows"] = canonical_rows
-    canonical_source_issues = tuple(
-        sorted(
-            (
-                issue.reason,
-                issue.binding_source.value,
-                issue.source_ref or "",
-                issue.resolver_id or "",
-                issue.message,
-            )
-            for issue in source_issues
-        )
-    )
-    if canonical_source_issues:
-        payload["source_issues"] = canonical_source_issues
+    payload.update(_source_issues_revision_id_payload(source_issues))
     return content_hash_hex(payload)
 
 

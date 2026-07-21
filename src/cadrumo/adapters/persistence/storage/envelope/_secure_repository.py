@@ -248,20 +248,16 @@ class SecureBoundRepository[T: BaseModel]:
     # Enumeration
     # ------------------------------------------------------------------
 
-    def iter_ids(self) -> Iterator[str]:
-        """Yield every persisted identifier in storage order.
+    def _iter_validated_envelopes(self) -> Iterator[Envelope[BaseModel]]:
+        """Yield each row's classification/version-validated envelope in storage order.
 
-        Order is the secure-object storage order (the ``object_key`` digest
-        order), not the natural-id order: a caller that needs a specific
-        order sorts the result itself. Streams one identifier at a time
-        rather than buffering and sorting the whole namespace in memory.
-
-        Fail-closed:
+        Shared scan behind :meth:`iter_ids` and :meth:`iter_records`:
+        ``list_records`` → ``model_validate_json`` → classification check →
+        version check. Fail-closed:
         :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
-        scans the
-        whole namespace and raises ``SecureObjectUnreadableError`` if any row
-        is unreadable, so a full consumption (``tuple(...)``) never yields a
-        readable subset past a corrupt row.
+        scans the whole namespace and raises ``SecureObjectUnreadableError`` if
+        any row is unreadable, so a full consumption never yields a readable
+        subset past a corrupt row.
         """
         envelope_cls = self._envelope_cls()
         for record in self._objects.list_records(
@@ -280,6 +276,24 @@ class SecureBoundRepository[T: BaseModel]:
                     f"{self.namespace} iterator row is at version "
                     f"{envelope.schema_version}; consumer expects {self.schema_version}",
                 )
+            yield envelope
+
+    def iter_ids(self) -> Iterator[str]:
+        """Yield every persisted identifier in storage order.
+
+        Order is the secure-object storage order (the ``object_key`` digest
+        order), not the natural-id order: a caller that needs a specific
+        order sorts the result itself. Streams one identifier at a time
+        rather than buffering and sorting the whole namespace in memory.
+
+        Fail-closed:
+        :meth:`adapters.persistence.storage.SecureObjectRepository.list_records`
+        scans the
+        whole namespace and raises ``SecureObjectUnreadableError`` if any row
+        is unreadable, so a full consumption (``tuple(...)``) never yields a
+        readable subset past a corrupt row.
+        """
+        for envelope in self._iter_validated_envelopes():
             # Safe: same rationale as the load() path — envelope was validated by
             # model_validate_json against Envelope[self.payload_type] == Envelope[T].
             # Future improvement: eliminate via generic ClassVar alias
@@ -309,23 +323,7 @@ class SecureBoundRepository[T: BaseModel]:
         ``SecureObjectUnreadableError`` if any row is unreadable before this
         generator yields a readable subset on full consumption.
         """
-        envelope_cls = self._envelope_cls()
-        for record in self._objects.list_records(
-            self.namespace,
-            expected_class=self.sensitivity,
-            max_supported_version=self.schema_version,
-        ):
-            envelope = envelope_cls.model_validate_json(record.payload.decode("utf-8"))
-            if envelope.classification is not self.sensitivity:
-                raise ClassificationError(
-                    f"{self.namespace} iterator row has classification "
-                    f"{envelope.classification}; consumer expected {self.sensitivity}",
-                )
-            if envelope.schema_version != self.schema_version:
-                raise EnvelopeVersionError(
-                    f"{self.namespace} iterator row is at version "
-                    f"{envelope.schema_version}; consumer expects {self.schema_version}",
-                )
+        for envelope in self._iter_validated_envelopes():
             yield cast(T, envelope.payload)  # CAST-RATIONALE-SECURE-REPOSITORY-ITER
 
     # ------------------------------------------------------------------

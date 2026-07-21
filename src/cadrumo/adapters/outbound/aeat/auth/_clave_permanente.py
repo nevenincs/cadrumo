@@ -45,7 +45,6 @@ See Also:
 from __future__ import annotations
 
 import json
-import time
 from collections.abc import Awaitable, Callable, Mapping
 from datetime import datetime
 from pathlib import Path
@@ -83,6 +82,7 @@ from ._providers import (
     ClavePermanenteLoginAssertionDetail,
     ClavePermanenteSessionDetail,
 )
+from ._session_probe import run_authenticated_landing_probe
 
 if TYPE_CHECKING:
     from .....core.config import Settings
@@ -240,57 +240,32 @@ class ClavePermanenteAuthProvider:
             target_path=target_path,
         )
         attempted_at = now()
-        start = time.perf_counter()
-        status_code = 0
-        landing_url: str | None = None
-        session_cookie_present = False
-        error_message: str | None = None
-        page: BrowserPageLike | None = None
-        try:
-            page = await context.new_page()
-            response = await page.goto(probe_url, timeout=self._navigation_timeout_ms)
-            if response is not None:
-                status_code = int(response.status)
-                landing_url = getattr(page, "url", None)
-                if (
-                    200 <= status_code < 400
-                    and landing_url
-                    and self._is_authenticated_aeat_landing(landing_url=landing_url, target_path=target_path)
-                ):
-                    session_cookie_present = True
-        except Exception as exc:
-            error_message = f"{type(exc).__name__}: {exc}"
-            log.warning(
-                "ClavePermanenteAuthProvider.verify: probe navigation failed for %s",
-                probe_url,
-                exc_info=True,
-            )
-        finally:
-            if page is not None:
-                try:
-                    await page.close()
-                except Exception as _exc:
-                    log.debug(
-                        "ClavePermanenteAuthProvider.verify: page.close suppressed: %s",
-                        _exc,
-                        exc_info=True,
-                    )
-
-        elapsed_ms = int((time.perf_counter() - start) * 1000)
-        is_valid = session_cookie_present and bool(session.identity_nif)
+        outcome = await run_authenticated_landing_probe(
+            context,
+            probe_url=probe_url,
+            target_path=target_path,
+            navigation_timeout_ms=self._navigation_timeout_ms,
+            is_authenticated_landing=self._authenticated_landing_predicate,
+            on_landing=None,
+            log_label="ClavePermanenteAuthProvider.verify",
+        )
+        is_valid = outcome.session_cookie_present and bool(session.identity_nif)
         return AeatLoginAssertion(
             target_url=probe_url,
             is_valid=is_valid,
             identity_nif=session.identity_nif,
-            status_code=status_code,
-            elapsed_ms=elapsed_ms,
+            status_code=outcome.status_code,
+            elapsed_ms=outcome.elapsed_ms,
             attempted_at=attempted_at,
-            error_message=error_message,
+            error_message=outcome.error_message,
             assertion_detail=ClavePermanenteLoginAssertionDetail(
-                session_cookie_present=session_cookie_present,
-                landing_url=landing_url,
+                session_cookie_present=outcome.session_cookie_present,
+                landing_url=outcome.landing_url,
             ),
         )
+
+    def _authenticated_landing_predicate(self, landing_url: str, target_path: str) -> bool:
+        return self._is_authenticated_aeat_landing(landing_url=landing_url, target_path=target_path)
 
     def describe(self) -> AuthProviderDescription:
         """Return the provider's :class:`core.AuthProviderDescription`.
@@ -621,6 +596,50 @@ class ClavePermanenteAuthProvider:
 
         session_like = await self._resolve_browser_session()
         self._browser_session = session_like
+        context, storage_state, landing_url = await self._capture_fresh_login_state(
+            session_like,
+            dni_nie=dni_nie,
+            password=password,
+            target_path=target_path,
+            selector_url=selector_url,
+        )
+
+        authenticated_at = now()
+        idle_deadline = authenticated_at + AEAT_SESSION_IDLE_TTL
+        await self._persist_fresh_session(
+            storage_state_path,
+            context=context,
+            session_like=session_like,
+            storage_state=storage_state,
+            dni_nie=dni_nie,
+            authenticated_at=authenticated_at,
+            idle_deadline=idle_deadline,
+            landing_url=landing_url,
+        )
+
+        session = self._fresh_login_session(
+            dni_nie=dni_nie,
+            authenticated_at=authenticated_at,
+            idle_deadline=idle_deadline,
+            storage_state_path=storage_state_path,
+            landing_url=landing_url,
+        )
+        self._browser_session = session_like
+        self._context = context
+        self._active_session = session
+        log.info("ClavePermanenteAuthProvider: authenticated landing=%s", landing_url)
+        return session
+
+    async def _capture_fresh_login_state(
+        self,
+        session_like: BrowserSessionLike,
+        *,
+        dni_nie: str,
+        password: str,
+        target_path: str,
+        selector_url: str,
+    ) -> tuple[BrowserContextLike, Mapping[str, object], str | None]:
+        """Drive the fresh Cl@ve Permanente login page to a captured storage state."""
         context: BrowserContextLike | None = None
         page: BrowserPageLike | None = None
         try:
@@ -664,9 +683,21 @@ class ClavePermanenteAuthProvider:
             session_closed = await self._close_browser_session(session_like)
             self._browser_session = None if session_closed else session_like
             raise
+        return context, storage_state, landing_url
 
-        authenticated_at = now()
-        idle_deadline = authenticated_at + AEAT_SESSION_IDLE_TTL
+    async def _persist_fresh_session(
+        self,
+        storage_state_path: Path,
+        *,
+        context: BrowserContextLike,
+        session_like: BrowserSessionLike,
+        storage_state: Mapping[str, object],
+        dni_nie: str,
+        authenticated_at: datetime,
+        idle_deadline: datetime,
+        landing_url: str | None,
+    ) -> None:
+        """Persist the captured session, cleaning up owned resources on failure."""
         try:
             metadata = ClavePermanenteSessionMetadata(
                 identity_nif=dni_nie,
@@ -690,19 +721,6 @@ class ClavePermanenteAuthProvider:
             session_closed = await self._close_browser_session(session_like)
             self._browser_session = None if session_closed else session_like
             raise
-
-        session = self._fresh_login_session(
-            dni_nie=dni_nie,
-            authenticated_at=authenticated_at,
-            idle_deadline=idle_deadline,
-            storage_state_path=storage_state_path,
-            landing_url=landing_url,
-        )
-        self._browser_session = session_like
-        self._context = context
-        self._active_session = session
-        log.info("ClavePermanenteAuthProvider: authenticated landing=%s", landing_url)
-        return session
 
     async def _resume_locked(
         self,

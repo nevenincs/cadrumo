@@ -737,6 +737,131 @@ def _source_provenance_refs(
     )
 
 
+@dataclass(frozen=True, slots=True)
+class _CallerOverrideReconciliation:
+    """Reconciliation of caller overrides against the merged source resolution.
+
+    Carries the values the trusted-mesh calculate call and the diagnostics
+    surface consume after caller ``--binding`` / ``--relation`` overrides have
+    been folded into the mesh-resolved relation channel and the unresolved /
+    advisory sets have been narrowed to exclude the caller-resolved ids. The
+    diagnostics filtering is set-identical to the pre-extraction inline algebra
+    (no-silent-under-declaration).
+    """
+
+    merged_relation_values: dict[RelationId, Decimal]
+    unresolved_relation_ids: tuple[RelationId, ...]
+    unresolved_binding_ids: tuple[BindingId, ...]
+    source_diagnostics: tuple[CalculationSourceDiagnostic, ...]
+
+
+def _caller_relation_values_from_bindings(
+    revision: ModeloRevision,
+    target_period: str,
+    caller_binding_values: Mapping[BindingId, Decimal],
+) -> dict[RelationId, Decimal]:
+    """Project caller --binding overrides of relation target bindings into relation values.
+
+    A caller --binding override of a relation's target binding also resolves that
+    relation for formula operands (relation-only formulas such as M100 0604),
+    scoped to the relation's declared target periods.
+    """
+    return {
+        relation.id: _calculated_decimal(caller_binding_values[relation.target_binding])
+        for relation in revision.relations
+        if relation.target_binding in caller_binding_values
+        and (not relation.target_periods or target_period in relation.target_periods)
+    }
+
+
+def _caller_resolved_source_diagnostics(
+    source_resolution: CalculationSourceResolution,
+    *,
+    caller_resolved_relation_ids: frozenset[RelationId],
+    caller_binding_ids: frozenset[BindingId],
+    detail_row_binding_values: Mapping[BindingId, Decimal],
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Drop advisories whose relation or binding a caller override resolved (set-identical)."""
+    return tuple(
+        diagnostic
+        for diagnostic in source_resolution.diagnostics
+        if (diagnostic.relation_id is None or diagnostic.relation_id not in caller_resolved_relation_ids)
+        and (
+            diagnostic.binding_id is None
+            or (
+                diagnostic.binding_id not in caller_binding_ids
+                and diagnostic.binding_id not in detail_row_binding_values
+            )
+        )
+    )
+
+
+def _reconcile_caller_overrides(
+    *,
+    revision: ModeloRevision,
+    target_period: str,
+    source_resolution: CalculationSourceResolution,
+    caller_binding_values: Mapping[BindingId, Decimal],
+    caller_relation_values: Mapping[RelationId, Decimal],
+    detail_row_binding_values: Mapping[BindingId, Decimal],
+) -> _CallerOverrideReconciliation:
+    """Fold caller overrides into the relation channel and narrow the unresolved / advisory sets.
+
+    A caller ``--binding`` override of a relation's target binding resolves that
+    relation for formula operands, and a caller ``--binding`` / ``--relation``
+    override of an automatically-carried prior value resolves the corresponding
+    unresolved binding / relation and drops its advisory. This helper carries the
+    caller-override carve-out algebra that used to live inline in
+    :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`;
+    the diagnostics filtering stays set-identical.
+    """
+    caller_relation_values_from_bindings = _caller_relation_values_from_bindings(
+        revision,
+        target_period,
+        caller_binding_values,
+    )
+    # Feed the relation-resolver's resolved relation_values onto the engine's
+    # first-class relation channel so computed casillas that reference
+    # ``{ relation = ... }`` operands fire. A caller --binding override of a
+    # relation's target binding also resolves that relation for formula operands;
+    # this keeps the public binding override contract aligned with relation-only
+    # formulas such as M100 0604. A caller --relation override remains the most
+    # explicit value and wins last.
+    merged_relation_values = {
+        **source_resolution.relation_values,
+        **caller_relation_values_from_bindings,
+        **dict(caller_relation_values or {}),
+    }
+    caller_relation_ids = frozenset((caller_relation_values or {}).keys())
+    caller_resolved_relation_ids = caller_relation_ids | frozenset(caller_relation_values_from_bindings)
+    unresolved_relation_ids = tuple(
+        relation_id
+        for relation_id in source_resolution.unresolved_relation_ids
+        if relation_id not in caller_resolved_relation_ids
+    )
+    # A caller --binding override of an expected-but-missing binding RESOLVES it,
+    # so drop it from the unresolved set and its advisory (mirrors the relation
+    # caller-override carve-out above).
+    caller_binding_ids = frozenset(caller_binding_values)
+    unresolved_binding_ids = tuple(
+        binding_id
+        for binding_id in source_resolution.unresolved_binding_ids
+        if binding_id not in caller_binding_ids and binding_id not in detail_row_binding_values
+    )
+    source_diagnostics = _caller_resolved_source_diagnostics(
+        source_resolution,
+        caller_resolved_relation_ids=caller_resolved_relation_ids,
+        caller_binding_ids=caller_binding_ids,
+        detail_row_binding_values=detail_row_binding_values,
+    )
+    return _CallerOverrideReconciliation(
+        merged_relation_values=merged_relation_values,
+        unresolved_relation_ids=unresolved_relation_ids,
+        unresolved_binding_ids=unresolved_binding_ids,
+        source_diagnostics=source_diagnostics,
+    )
+
+
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     work_unit_id: str,
     *,
@@ -880,53 +1005,13 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         casilla_inputs=casilla_inputs or {},
         bound_inputs=backend_source_inputs,
     )
-    caller_binding_values = binding_values or {}
-    target_period = work_unit.period.registry_token
-    caller_relation_values_from_bindings = {
-        relation.id: _calculated_decimal(caller_binding_values[relation.target_binding])
-        for relation in snapshot.revision.relations
-        if relation.target_binding in caller_binding_values
-        and (not relation.target_periods or target_period in relation.target_periods)
-    }
-    # Feed the relation-resolver's resolved relation_values onto the engine's
-    # first-class relation channel so computed casillas that reference
-    # ``{ relation = ... }`` operands fire. A caller --binding override of a
-    # relation's target binding also resolves that relation for formula operands;
-    # this keeps the public binding override contract aligned with relation-only
-    # formulas such as M100 0604. A caller --relation override remains the most
-    # explicit value and wins last.
-    merged_relation_values = {
-        **source_resolution.relation_values,
-        **caller_relation_values_from_bindings,
-        **dict(relation_values or {}),
-    }
-    caller_relation_ids = frozenset((relation_values or {}).keys())
-    caller_resolved_relation_ids = caller_relation_ids | frozenset(caller_relation_values_from_bindings)
-    unresolved_relation_ids = tuple(
-        relation_id
-        for relation_id in source_resolution.unresolved_relation_ids
-        if relation_id not in caller_resolved_relation_ids
-    )
-    # A caller --binding override of an expected-but-missing binding RESOLVES it,
-    # so drop it from the unresolved set and its advisory (mirrors the relation
-    # caller-override carve-out above).
-    caller_binding_ids = frozenset(caller_binding_values)
-    unresolved_binding_ids = tuple(
-        binding_id
-        for binding_id in source_resolution.unresolved_binding_ids
-        if binding_id not in caller_binding_ids and binding_id not in detail_row_binding_values
-    )
-    source_diagnostics = tuple(
-        diagnostic
-        for diagnostic in source_resolution.diagnostics
-        if (diagnostic.relation_id is None or diagnostic.relation_id not in caller_resolved_relation_ids)
-        and (
-            diagnostic.binding_id is None
-            or (
-                diagnostic.binding_id not in caller_binding_ids
-                and diagnostic.binding_id not in detail_row_binding_values
-            )
-        )
+    reconciliation = _reconcile_caller_overrides(
+        revision=snapshot.revision,
+        target_period=work_unit.period.registry_token,
+        source_resolution=source_resolution,
+        caller_binding_values=binding_values or {},
+        caller_relation_values=relation_values or {},
+        detail_row_binding_values=detail_row_binding_values,
     )
     revision = _calculate_modelo_revision_with_trusted_mesh_sources(
         work_unit_id,
@@ -944,12 +1029,12 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         ledger_preflight_transaction_repository=transaction_repository,
         enum_binding_values=enum_binding_values,
         borrador_snapshot_id=borrador_snapshot_id,
-        relation_values=merged_relation_values,
-        unresolved_relation_ids=unresolved_relation_ids,
-        unresolved_binding_ids=unresolved_binding_ids,
+        relation_values=reconciliation.merged_relation_values,
+        unresolved_relation_ids=reconciliation.unresolved_relation_ids,
+        unresolved_binding_ids=reconciliation.unresolved_binding_ids,
         source_transaction_ids=tuple(source_resolution.source_transaction_ids),
         source_provenance=_source_provenance_refs(source_resolution),
-        source_issues=_unrouted_source_issues(source_diagnostics),
+        source_issues=_unrouted_source_issues(reconciliation.source_diagnostics),
         filing_period_date=filing_period_date,
         work_unit_repository=wu_repo,
         calculation_repository=calculation_repository,
@@ -966,7 +1051,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         filing_year=work_unit.filing_year,
         bucket_id=work_unit.bucket_id,
     )
-    source_diagnostics = source_diagnostics + advisory_diagnostics
+    source_diagnostics = reconciliation.source_diagnostics + advisory_diagnostics
     return BucketAggregationCalculationResult(
         revision=revision,
         source_diagnostics=source_diagnostics,

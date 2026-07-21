@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from enum import StrEnum
 from pathlib import Path
+from typing import Annotated
 
 import typer
 
@@ -407,10 +408,15 @@ catalogue_app = typer.Typer(
 )
 
 
-def _catalogue_invoice_payload(invoice) -> dict[str, object]:
+def _catalogue_invoice_shared_fields(invoice) -> dict[str, object]:
+    """Project the rich :class:`Invoice` identity/total fields shared by every operator surface.
+
+    The single home for the invoice-derived payload fields both the catalogue
+    verbs (:func:`_catalogue_invoice_payload`) and the evidence-confirm verb
+    render, so the two surfaces cannot drift.
+    """
     return {
         "invoice_id": invoice.invoice_id,
-        "bucket_id": invoice.bucket_id,
         "kind": invoice.kind.value,
         "invoice_number": invoice.invoice_number,
         "issued_at": invoice.issued_at.isoformat(),
@@ -424,6 +430,13 @@ def _catalogue_invoice_payload(invoice) -> dict[str, object]:
         "payment_status": invoice.payment_status.value,
         "linked_transaction_ids": list(invoice.linked_transaction_ids),
         "notes": invoice.notes,
+    }
+
+
+def _catalogue_invoice_payload(invoice) -> dict[str, object]:
+    return {
+        **_catalogue_invoice_shared_fields(invoice),
+        "bucket_id": invoice.bucket_id,
         "operation_type": None if invoice.operation_type is None else invoice.operation_type.value,
     }
 
@@ -443,44 +456,46 @@ def _catalogue_invoice_lines(invoice) -> list[str]:
     ]
 
 
-@catalogue_app.command(
-    "create",
-    help=tr(
-        "cli.app.ledger.invoice.catalogue.create_help",
-        default="Create a linkable reconciliation invoice in the catalogue.",
-    ),
-)
-def catalogue_create(
-    ctx: typer.Context,
-    kind: InvoiceKindOption = typer.Option(
-        ...,
+# Shared Typer option aliases for the two catalogue entry verbs (``create`` and
+# ``wizard``), which carry a byte-identical 11-option signature. Declaring them
+# once keeps the ``cli.app.ledger.invoice.*`` help keys in one home so ``--help``
+# renders identically for both verbs from one ``tr`` lookup.
+_CatalogueKindOpt = Annotated[
+    InvoiceKindOption,
+    typer.Option(
         "--kind",
         help=tr(
             "cli.app.ledger.invoice.kind_help",
             default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
         ),
     ),
-    counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
-    counterparty_name: str = typer.Option(..., "--counterparty-name"),
-    invoice_number: str = typer.Option(..., "--invoice-number"),
-    invoice_date: str = typer.Option(
-        ...,
+]
+_CatalogueCounterpartyNifOpt = Annotated[str, typer.Option("--counterparty-nif")]
+_CatalogueCounterpartyNameOpt = Annotated[str, typer.Option("--counterparty-name")]
+_CatalogueInvoiceNumberOpt = Annotated[str, typer.Option("--invoice-number")]
+_CatalogueInvoiceDateOpt = Annotated[
+    str,
+    typer.Option(
         "--invoice-date",
         help=tr("cli.app.ledger.invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
     ),
-    taxable_base: str = typer.Option(..., "--taxable-base"),
-    iva_rate: str | None = typer.Option(None, "--iva-rate"),
-    currency: str = typer.Option(DEFAULT_CURRENCY, "--currency"),
-    country_code: str = typer.Option(
-        "ES",
+]
+_CatalogueTaxableBaseOpt = Annotated[str, typer.Option("--taxable-base")]
+_CatalogueIvaRateOpt = Annotated[str | None, typer.Option("--iva-rate")]
+_CatalogueCurrencyOpt = Annotated[str, typer.Option("--currency")]
+_CatalogueCountryCodeOpt = Annotated[
+    str,
+    typer.Option(
         "--country-code",
         help=tr(
             "cli.app.ledger.invoice.catalogue.country_code_help",
             default="Counterparty ISO 3166-1 alpha-2 country code.",
         ),
     ),
-    operation_type: str | None = typer.Option(
-        None,
+]
+_CatalogueOperationTypeOpt = Annotated[
+    str | None,
+    typer.Option(
         "--operation-type",
         help=tr(
             "cli.app.ledger.invoice.operation_type_help",
@@ -491,7 +506,30 @@ def catalogue_create(
             ),
         ),
     ),
-    notes: str = typer.Option("", "--notes"),
+]
+_CatalogueNotesOpt = Annotated[str, typer.Option("--notes")]
+
+
+@catalogue_app.command(
+    "create",
+    help=tr(
+        "cli.app.ledger.invoice.catalogue.create_help",
+        default="Create a linkable reconciliation invoice in the catalogue.",
+    ),
+)
+def catalogue_create(
+    ctx: typer.Context,
+    kind: _CatalogueKindOpt,
+    counterparty_nif: _CatalogueCounterpartyNifOpt,
+    counterparty_name: _CatalogueCounterpartyNameOpt,
+    invoice_number: _CatalogueInvoiceNumberOpt,
+    invoice_date: _CatalogueInvoiceDateOpt,
+    taxable_base: _CatalogueTaxableBaseOpt,
+    iva_rate: _CatalogueIvaRateOpt = None,
+    currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
+    country_code: _CatalogueCountryCodeOpt = "ES",
+    operation_type: _CatalogueOperationTypeOpt = None,
+    notes: _CatalogueNotesOpt = "",
 ) -> None:
     """Create a rich linkable invoice in the reconciliation catalogue.
 
@@ -553,46 +591,17 @@ def catalogue_create(
 )
 def catalogue_wizard(
     ctx: typer.Context,
-    kind: InvoiceKindOption = typer.Option(
-        ...,
-        "--kind",
-        help=tr(
-            "cli.app.ledger.invoice.kind_help",
-            default="Invoice kind: issued (a customer owes us) or received (we owe a vendor).",
-        ),
-    ),
-    counterparty_nif: str = typer.Option(..., "--counterparty-nif"),
-    counterparty_name: str = typer.Option(..., "--counterparty-name"),
-    invoice_number: str = typer.Option(..., "--invoice-number"),
-    invoice_date: str = typer.Option(
-        ...,
-        "--invoice-date",
-        help=tr("cli.app.ledger.invoice.invoice_date_help", default="Invoice date (YYYY-MM-DD)."),
-    ),
-    taxable_base: str = typer.Option(..., "--taxable-base"),
-    iva_rate: str | None = typer.Option(None, "--iva-rate"),
-    currency: str = typer.Option(DEFAULT_CURRENCY, "--currency"),
-    country_code: str = typer.Option(
-        "ES",
-        "--country-code",
-        help=tr(
-            "cli.app.ledger.invoice.catalogue.country_code_help",
-            default="Counterparty ISO 3166-1 alpha-2 country code.",
-        ),
-    ),
-    operation_type: str | None = typer.Option(
-        None,
-        "--operation-type",
-        help=tr(
-            "cli.app.ledger.invoice.operation_type_help",
-            default=(
-                "M349 operation type: E entrega, S servicios, T triangular,"
-                " R rectificación, A adquisición bienes, I adquisición servicios,"
-                " M miscelánea."
-            ),
-        ),
-    ),
-    notes: str = typer.Option("", "--notes"),
+    kind: _CatalogueKindOpt,
+    counterparty_nif: _CatalogueCounterpartyNifOpt,
+    counterparty_name: _CatalogueCounterpartyNameOpt,
+    invoice_number: _CatalogueInvoiceNumberOpt,
+    invoice_date: _CatalogueInvoiceDateOpt,
+    taxable_base: _CatalogueTaxableBaseOpt,
+    iva_rate: _CatalogueIvaRateOpt = None,
+    currency: _CatalogueCurrencyOpt = DEFAULT_CURRENCY,
+    country_code: _CatalogueCountryCodeOpt = "ES",
+    operation_type: _CatalogueOperationTypeOpt = None,
+    notes: _CatalogueNotesOpt = "",
 ) -> None:
     """Guided manual-entry invoice creation for when extraction is unavailable.
 

@@ -7,7 +7,6 @@ to obtain snapshots and evaluate formulas against official AEAT workbooks.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -20,6 +19,7 @@ from ....core.time import now
 from ._authority import ValidatedRegistryAuthority
 from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._ids import CasillaId, RelationId, WorkbookOutputId
+from ._scenario_filing_period import hydrate_scenario_filing_period
 from ._workbook_parity import (
     SyntheticInputSet,
     WorkbookArtefactReport,
@@ -65,17 +65,7 @@ class ParityScenario(ParityTapeModel):
     @model_validator(mode="before")
     @classmethod
     def _hydrate_filing_period(cls, data: object) -> object:
-        if not isinstance(data, Mapping) or "filing_period" in data:
-            return data
-        filing_year = data.get("filing_year")
-        period = data.get("period")
-        if not isinstance(filing_year, int) or not isinstance(period, str):
-            return data
-        try:
-            filing_period = Period.from_year_and_code(filing_year, period)
-        except ValueError:
-            return data
-        return {**data, "filing_period": filing_period}
+        return hydrate_scenario_filing_period(data)
 
     @model_validator(mode="after")
     def _validate_scenario(self) -> ParityScenario:

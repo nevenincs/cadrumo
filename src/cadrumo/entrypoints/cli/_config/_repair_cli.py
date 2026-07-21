@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 
@@ -32,6 +33,23 @@ from ....core.i18n import tr
 from ....core.logging import default_log_file_path as _default_log_file_path
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+
+if TYPE_CHECKING:
+    from ....application.workflow import WorkflowStateResetFingerprint
+    from .._config_payloads import WorkflowFingerprintPayload
+
+
+def _workflow_fingerprint_payload(fingerprint: WorkflowStateResetFingerprint) -> WorkflowFingerprintPayload:
+    """Project an encrypted-workflow reset fingerprint into its typed CLI payload."""
+    from .._config_payloads import WorkflowFingerprintPayload
+
+    return WorkflowFingerprintPayload(
+        schema_version=fingerprint.schema_version,
+        written_at=fingerprint.written_at.isoformat() if fingerprint.written_at is not None else None,
+        byte_length=fingerprint.byte_length,
+        reason_class=fingerprint.reason_class,
+        recovered_bucket_id=fingerprint.recovered_bucket_id or None,
+    )
 
 
 def register_repair_maintenance_commands(repair_app: typer.Typer) -> None:
@@ -180,7 +198,7 @@ def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
         ),
     ) -> None:
         """Clear saved interrupted-command progress after summarising the saved record."""
-        from .._config_payloads import RepairResetProgressResult, WorkflowFingerprintPayload
+        from .._config_payloads import RepairResetProgressResult
 
         if not dry_run and not yes:
             raise _CliRefusedBoundaryError(translated_message="cli.config.repair.reset_progress_requires_yes")
@@ -200,13 +218,7 @@ def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
             progress_schema_version = fingerprint.schema_version if fingerprint.schema_version is not None else "<none>"
             saved_at = fingerprint.written_at.isoformat() if fingerprint.written_at is not None else "<none>"
             stored_bytes = fingerprint.byte_length if fingerprint.byte_length is not None else "<none>"
-            fp = WorkflowFingerprintPayload(
-                schema_version=fingerprint.schema_version,
-                written_at=fingerprint.written_at.isoformat() if fingerprint.written_at is not None else None,
-                byte_length=fingerprint.byte_length,
-                reason_class=fingerprint.reason_class,
-                recovered_bucket_id=fingerprint.recovered_bucket_id or None,
-            )
+            fp = _workflow_fingerprint_payload(fingerprint)
             result = RepairResetProgressResult(dry_run=True, fingerprint=fp)
             lines = (
                 "dry_run\ttrue",
@@ -221,13 +233,7 @@ def _register_repair_reset_progress_command(repair_app: typer.Typer) -> None:
         progress_schema_version = fingerprint.schema_version if fingerprint.schema_version is not None else "<none>"
         saved_at = fingerprint.written_at.isoformat() if fingerprint.written_at is not None else "<none>"
         stored_bytes = fingerprint.byte_length if fingerprint.byte_length is not None else "<none>"
-        fp = WorkflowFingerprintPayload(
-            schema_version=fingerprint.schema_version,
-            written_at=fingerprint.written_at.isoformat() if fingerprint.written_at is not None else None,
-            byte_length=fingerprint.byte_length,
-            reason_class=fingerprint.reason_class,
-            recovered_bucket_id=fingerprint.recovered_bucket_id or None,
-        )
+        fp = _workflow_fingerprint_payload(fingerprint)
         result = RepairResetProgressResult(dry_run=False, fingerprint=fp)
         lines = (
             "dry_run\tfalse",

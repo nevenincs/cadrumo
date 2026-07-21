@@ -239,12 +239,31 @@ async def first_visible_locator(
     )
 
 
+def nif_check_operation_tail(expected: Mapping[str, object]) -> tuple[RemoteOperation, ...]:
+    """Build the shared per-NIF check + discard-session operation tail.
+
+    Both the GROI and NIF/IVA sede drivers close their planned-operation
+    sequence identically: one ``check-nif-<NIF>`` browser action per declared
+    NIF (normalised to upper-case and sorted so the operation labels the
+    remote-state guard pre-flight sees on the driverless oracle path match what
+    the live driver emits), followed by one ``discard-session`` action. Each
+    driver prepends its own URL/form prologue and appends this tail.
+    """
+    tail: list[RemoteOperation] = [
+        RemoteOperation(kind="browser_action", action=f"check-nif-{nif}")
+        for nif in sorted(str(key).strip().upper() for key in expected)
+    ]
+    tail.append(RemoteOperation(kind="browser_action", action="discard-session"))
+    return tuple(tail)
+
+
 __all__ = [
     "_LocateHelper",
     "_SedeCheckerModel",
     "assert_query_browser_action_for",
     "first_visible_locator",
     "make_locate_helper",
+    "nif_check_operation_tail",
     "normalize_response_text",
     "registry_failure_message",
     "require_playwright_page",

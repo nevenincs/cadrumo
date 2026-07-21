@@ -21,6 +21,7 @@ from ._errors import RegistrySnapshotError, RegistryValidationError
 from ._formula_runtime import RegistryCalculationEntry, RegistryCalculationResult, calculate_registry_snapshot
 from ._ids import BindingId, CasillaId, LegalRefId, RelationId, SourceRefId
 from ._runtime_graph import expression_binding_refs
+from ._scenario_filing_period import hydrate_scenario_filing_period
 
 ScenarioStatus = Literal["match", "mismatch"]
 
@@ -73,17 +74,7 @@ class RegistryCalculationScenario(RegistryScenarioModel):
     @model_validator(mode="before")
     @classmethod
     def _hydrate_filing_period(cls, data: object) -> object:
-        if not isinstance(data, Mapping) or "filing_period" in data:
-            return data
-        filing_year = data.get("filing_year")
-        period = data.get("period")
-        if not isinstance(filing_year, int) or not isinstance(period, str):
-            return data
-        try:
-            filing_period = Period.from_year_and_code(filing_year, period)
-        except ValueError:
-            return data
-        return {**data, "filing_period": filing_period}
+        return hydrate_scenario_filing_period(data)
 
     @model_validator(mode="after")
     def _validate_scenario(self) -> RegistryCalculationScenario:

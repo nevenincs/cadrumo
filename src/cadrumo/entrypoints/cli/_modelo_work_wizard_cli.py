@@ -42,7 +42,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Any
 
 import typer
 
@@ -65,6 +65,16 @@ from ...domain.calculations.registry import InputKind, RegistrySnapshotError, Re
 from ...domain.user_profile import ProfileNotFoundError
 from ._modelo_cli_support import MISSING_INPUT_TRANSLATED_MESSAGES, work_calculate_input_bundle_from_cli
 from ._modelo_rendering import advisory_notice, calculation_revision_lines, calculation_revision_payload
+from ._modelo_work_options import (
+    _ActorOpt,
+    _BucketIdOpt,
+    _ModeloOpt,
+    _PeriodOpt,
+    _RevisionOpt,
+    _WizardOutputLanguageOpt,
+    _WorkUnitIdArg,
+    _YearOpt,
+)
 from ._modelo_work_wizard_payloads import WizardPromptedCasillaPayload, WorkWizardResult
 
 if TYPE_CHECKING:
@@ -113,15 +123,6 @@ class _WizardStep:
     source_refs: tuple[str, ...]
 
 
-_WorkUnitIdArg = Annotated[str | None, typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help"))]
-_ModeloOpt = Annotated[str | None, typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help"))]
-_YearOpt = Annotated[int | None, typer.Option("--year", help=tr("cli.app.modelo.work.year_help"))]
-_PeriodOpt = Annotated[str | None, typer.Option("--period", help=tr("cli.app.modelo.work.period_help"))]
-_RevisionOpt = Annotated[str | None, typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help"))]
-_BucketIdOpt = Annotated[str | None, typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help"))]
-_ActorOpt = Annotated[str | None, typer.Option("--by", help=tr("cli.app.modelo.work.actor_help"))]
-
-
 # KWARGS-ANY-RATIONALE-cli: resolve_work_unit_for_cli is a CLI resolver callback injected by the command registrar
 def register_work_wizard_commands(
     work_app: typer.Typer,
@@ -153,10 +154,7 @@ def register_work_wizard_commands(
         revision: _RevisionOpt = None,
         bucket_id: _BucketIdOpt = None,
         actor: _ActorOpt = None,
-        output_language_opt: Annotated[
-            OutputLanguage | None,
-            typer.Option("--output-language", help=tr("cli.app.modelo.work.output_language_help")),
-        ] = None,
+        output_language_opt: _WizardOutputLanguageOpt = None,
     ) -> None:
         """Walk the resolved work unit's outstanding manual inputs one at a time.
 

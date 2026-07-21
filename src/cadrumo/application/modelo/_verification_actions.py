@@ -32,6 +32,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass
 from datetime import datetime
 from decimal import Decimal
 from pathlib import Path
@@ -53,8 +54,11 @@ from ...domain.calculations.registry import (
     CasillaDefinition,
     CasillaId,
     CasillaObservation,
+    DataBindingDefinition,
     InputKind,
+    LegalRefId,
     RegistrySnapshot,
+    SourceRefId,
     derive_modelo_202_modality,
 )
 from ...domain.deadlines import TaxpayerProfile
@@ -63,6 +67,7 @@ from ...domain.modelos import (
     CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
+    CalculationSourceIssue,
     LedgerFilingEvidence,
     LedgerFilingSnapshot,
     ManualFactBasisEntry,
@@ -557,6 +562,48 @@ def _append_model_specific_findings(
     findings.extend(m210_agrupacion_renta_verification_findings(work_unit=work_unit, revision=target))
 
 
+@dataclass(frozen=True, slots=True)
+class _VerificationRepositories:
+    """Resolved repository ports for one verification run."""
+
+    calculation: CalculationRevisionCatalogueRepositoryProtocol
+    work_unit: WorkUnitCatalogueRepositoryProtocol
+    verification: VerificationReportCatalogueRepositoryProtocol
+    filing: ModeloRecordCatalogueRepositoryProtocol
+    observation: CalculationObservationRepository
+    bucket_event: BucketEventHistoryRepositoryProtocol
+    run: WorkflowRunRepository
+
+
+def _resolve_verification_repositories(
+    *,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol | None,
+    verification_repository: VerificationReportCatalogueRepositoryProtocol | None,
+    filing_repository: ModeloRecordCatalogueRepositoryProtocol | None,
+    calculation_observation_repository: CalculationObservationRepository | None,
+    bucket_event_repository: BucketEventHistoryRepositoryProtocol | None,
+) -> _VerificationRepositories:
+    """Default every unset verification repository port and derive the workflow-run store."""
+    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
+    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
+    vr_repo = verification_repository or VerificationReportCatalogueRepository()
+    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
+    obs_repo = calculation_observation_repository or CalculationObservationRepository()
+    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
+    _secure_objects = bv_repo.secure_object_repository if isinstance(bv_repo, BucketEventHistoryRepository) else None
+    run_repo = WorkflowRunRepository(objects=_secure_objects)
+    return _VerificationRepositories(
+        calculation=cr_repo,
+        work_unit=wu_repo,
+        verification=vr_repo,
+        filing=fr_repo,
+        observation=obs_repo,
+        bucket_event=bv_repo,
+        run=run_repo,
+    )
+
+
 def verify_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -638,14 +685,21 @@ def verify_modelo_revision(
         :class:`~cadrumo.application.modelo.ModeloCrossPeriodCleanStateError`: A
             required cross-period dependency has a blocking clean-state finding.
     """
-    cr_repo = calculation_repository or CalculationRevisionCatalogueRepository()
-    wu_repo = work_unit_repository or WorkUnitCatalogueRepository()
-    vr_repo = verification_repository or VerificationReportCatalogueRepository()
-    fr_repo = filing_repository or ModeloRecordCatalogueRepository()
-    obs_repo = calculation_observation_repository or CalculationObservationRepository()
-    bv_repo = bucket_event_repository or BucketEventHistoryRepository()
-    _secure_objects = bv_repo.secure_object_repository if isinstance(bv_repo, BucketEventHistoryRepository) else None
-    run_repo = WorkflowRunRepository(objects=_secure_objects)
+    repos = _resolve_verification_repositories(
+        calculation_repository=calculation_repository,
+        work_unit_repository=work_unit_repository,
+        verification_repository=verification_repository,
+        filing_repository=filing_repository,
+        calculation_observation_repository=calculation_observation_repository,
+        bucket_event_repository=bucket_event_repository,
+    )
+    cr_repo = repos.calculation
+    wu_repo = repos.work_unit
+    vr_repo = repos.verification
+    fr_repo = repos.filing
+    obs_repo = repos.observation
+    bv_repo = repos.bucket_event
+    run_repo = repos.run
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
@@ -1001,31 +1055,58 @@ def _m369_unresolved_oss_source_finding(
     oss_bindings = tuple(binding for binding in snapshot.revision.bindings if binding.source is _OSS_AGGREGATION_SOURCE)
     if not oss_bindings:
         return None
-    legal_refs = tuple(sorted({ref for binding in oss_bindings for ref in binding.legal_refs}))
-    source_refs = tuple(sorted({ref for binding in oss_bindings for ref in binding.source_refs}))
+    legal_refs, source_refs = _oss_binding_grounding(oss_bindings)
     unrouted_issues = tuple(
         issue
         for issue in target.source_issues
         if issue.binding_source is _OSS_AGGREGATION_SOURCE and issue.reason == "unrouted_observation"
     )
     if unrouted_issues:
-        unrouted_source_refs = ", ".join(issue.source_ref or "unidentified OSS source" for issue in unrouted_issues)
-        return ModeloVerificationFinding(
-            kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-            severity=ModeloVerificationFindingSeverity.BLOCKING,
-            message=(
-                "Modelo 369 has OSS/IOSS observations that no declared aggregation binding consumes; "
-                f"unrouted source references: {unrouted_source_refs}"
-            ),
-            next_action=(
-                "Correct the OSS/IOSS invoice classification or add its law-grounded registry binding, rerun "
-                "`aeat app modelo work calculate`, then rerun verification."
-            ),
-            legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
-            source_refs=source_refs,
-        )
+        return _unrouted_oss_source_finding(unrouted_issues, legal_refs=legal_refs, source_refs=source_refs)
     if any(ref.binding_source is _OSS_AGGREGATION_SOURCE for ref in target.source_provenance):
         return None
+    return _missing_oss_evidence_finding(legal_refs=legal_refs, source_refs=source_refs)
+
+
+def _oss_binding_grounding(
+    oss_bindings: tuple[DataBindingDefinition, ...],
+) -> tuple[tuple[LegalRefId, ...], tuple[SourceRefId, ...]]:
+    """Collect the sorted legal_refs / source_refs declared across the OSS bindings."""
+    legal_refs = tuple(sorted({ref for binding in oss_bindings for ref in binding.legal_refs}))
+    source_refs = tuple(sorted({ref for binding in oss_bindings for ref in binding.source_refs}))
+    return legal_refs, source_refs
+
+
+def _unrouted_oss_source_finding(
+    unrouted_issues: tuple[CalculationSourceIssue, ...],
+    *,
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
+) -> ModeloVerificationFinding:
+    """Build the blocking finding for OSS observations no aggregation binding consumes."""
+    unrouted_source_refs = ", ".join(issue.source_ref or "unidentified OSS source" for issue in unrouted_issues)
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message=(
+            "Modelo 369 has OSS/IOSS observations that no declared aggregation binding consumes; "
+            f"unrouted source references: {unrouted_source_refs}"
+        ),
+        next_action=(
+            "Correct the OSS/IOSS invoice classification or add its law-grounded registry binding, rerun "
+            "`aeat app modelo work calculate`, then rerun verification."
+        ),
+        legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
+        source_refs=source_refs,
+    )
+
+
+def _missing_oss_evidence_finding(
+    *,
+    legal_refs: tuple[LegalRefId, ...],
+    source_refs: tuple[SourceRefId, ...],
+) -> ModeloVerificationFinding:
+    """Build the blocking finding for a declared-OSS revision with no persisted OSS evidence."""
     return ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,

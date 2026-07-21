@@ -36,7 +36,7 @@ from collections.abc import Mapping
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, NoReturn
-from urllib.parse import urlsplit
+from urllib.parse import SplitResult, urlsplit
 
 from pydantic import ValidationError
 
@@ -140,6 +140,57 @@ def _require_exact_active_certificate_session(
             "verify() requires the exact active certificate-bound session",
             translated_message="adapters.auth.authenticator.errors.capture_requires_active_session",
         )
+
+
+def _final_resource_matches(final: SplitResult | None) -> bool:
+    """Return ``True`` when the probe's final URL is pinned to the canonical resource."""
+    if final is None:
+        return False
+    canonical = urlsplit(AEAT_CERTIFICATE_PROTECTED_URL)
+    return (
+        final.scheme == canonical.scheme
+        and final.netloc == canonical.netloc
+        and final.path == canonical.path
+    )
+
+
+def _build_certificate_login_assertion(
+    session: AeatSession,
+    *,
+    status_code: int,
+    response_successful: bool,
+    final_url: str | None,
+    error_message: str | None,
+    elapsed_ms: int,
+    attempted_at: datetime,
+) -> AeatLoginAssertion:
+    """Build the login assertion from a completed protected-resource probe.
+
+    The assertion is valid only when the probe succeeded, the final scheme,
+    host, and path remain pinned to the canonical certificate resource, and the
+    session carries an identity NIF. A successful response that drifted off the
+    canonical resource is stamped ``protected_resource_mismatch``.
+    """
+    final = urlsplit(final_url) if final_url is not None else None
+    final_resource_matches = _final_resource_matches(final)
+    is_valid = response_successful and final_resource_matches and bool(session.identity_nif)
+    if response_successful and not final_resource_matches and error_message is None:
+        error_message = "protected_resource_mismatch"
+    serialized_final_url = final._replace(query="", fragment="").geturl() if final is not None else None
+    return AeatLoginAssertion(
+        target_url=AEAT_CERTIFICATE_PROTECTED_URL,
+        is_valid=is_valid,
+        identity_nif=session.identity_nif,
+        status_code=status_code,
+        elapsed_ms=elapsed_ms,
+        attempted_at=attempted_at,
+        error_message=error_message,
+        assertion_detail=CertificateLoginAssertionDetail(
+            final_url=serialized_final_url,
+            response_successful=response_successful,
+            parsed_subject=session.certificate_subject,
+        ),
+    )
 
 
 # ── Authenticator ───────────────────────────────────────────────────────────
@@ -307,65 +358,75 @@ class AeatAuthenticator:
                     if self._browser_session is not None or self._context is not None:
                         raise
 
-            cert = self.load_certificate()
-            nif = extract_nif_from_subject(cert)
+            return await self._fresh_login_locked()
 
-            session_like = await self._resolve_browser_session()
-            self._browser_session = session_like
-            try:
-                context = await session_like.create_context(
-                    provisioner=CertificateContextProvisioner(cert),
-                )
-                self._context = context
-            except Exception:
-                if await self._close_browser_session(session_like):
-                    self._browser_session = None
-                raise
+    async def _fresh_login_locked(self) -> AeatSession:
+        """Run the fresh certificate-backed browser login under the held lock.
 
-            storage_state_path = self._resolve_storage_state_path()
-            provisional_at = now()
-            provisional_session = AeatSession(
-                authenticated_at=provisional_at,
-                idle_deadline=provisional_at + AEAT_SESSION_IDLE_TTL,
-                storage_state_path=storage_state_path,
-                identity_nif=nif,
-                provider_detail=CertificateSessionDetail(
-                    certificate_thumbprint=cert.sha256_thumbprint,
-                    certificate_subject=cert.subject,
-                ),
+        Called from :meth:`authenticate` after a persisted-session resume has
+        been skipped or invalidated; the caller already holds the lifecycle
+        work barrier and the instance lock, and has cleared the active-session
+        and owned-resource guards.
+        """
+        cert = self.load_certificate()
+        nif = extract_nif_from_subject(cert)
+
+        session_like = await self._resolve_browser_session()
+        self._browser_session = session_like
+        try:
+            context = await session_like.create_context(
+                provisioner=CertificateContextProvisioner(cert),
             )
-            assertion = await self._run_login_probe(context, provisional_session)
-            if not assertion.is_valid:
-                await self._teardown_failed_attempt(context, session_like)
-                raise AeatLoginAssertionError(
-                    "fresh AEAT authentication did not produce a valid login assertion; "
-                    f"status={assertion.status_code} error={assertion.error_message!r}",
-                    translated_message="adapters.auth.authenticator.errors.assertion_failed",
-                )
-
-            authenticated_at = assertion.attempted_at
-            session = provisional_session.model_copy(
-                update={
-                    "authenticated_at": authenticated_at,
-                    "idle_deadline": authenticated_at + AEAT_SESSION_IDLE_TTL,
-                },
-            )
-            self._browser_session = session_like
             self._context = context
-            self._active_session = session
-            try:
-                await self._capture_storage_state_locked(session)
-            except Exception:  # AeatLoginAssertionError/OSError/PlaywrightError; cleanup + re-raise
-                await self._drop_context()
-                if await self._close_browser_session(session_like):
-                    self._browser_session = None
-                self._active_session = None
-                raise
-            log.info(
-                "AeatAuthenticator: authenticated thumbprint=%s",
-                session.certificate_thumbprint,
+        except Exception:
+            if await self._close_browser_session(session_like):
+                self._browser_session = None
+            raise
+
+        storage_state_path = self._resolve_storage_state_path()
+        provisional_at = now()
+        provisional_session = AeatSession(
+            authenticated_at=provisional_at,
+            idle_deadline=provisional_at + AEAT_SESSION_IDLE_TTL,
+            storage_state_path=storage_state_path,
+            identity_nif=nif,
+            provider_detail=CertificateSessionDetail(
+                certificate_thumbprint=cert.sha256_thumbprint,
+                certificate_subject=cert.subject,
+            ),
+        )
+        assertion = await self._run_login_probe(context, provisional_session)
+        if not assertion.is_valid:
+            await self._teardown_failed_attempt(context, session_like)
+            raise AeatLoginAssertionError(
+                "fresh AEAT authentication did not produce a valid login assertion; "
+                f"status={assertion.status_code} error={assertion.error_message!r}",
+                translated_message="adapters.auth.authenticator.errors.assertion_failed",
             )
-            return session
+
+        authenticated_at = assertion.attempted_at
+        session = provisional_session.model_copy(
+            update={
+                "authenticated_at": authenticated_at,
+                "idle_deadline": authenticated_at + AEAT_SESSION_IDLE_TTL,
+            },
+        )
+        self._browser_session = session_like
+        self._context = context
+        self._active_session = session
+        try:
+            await self._capture_storage_state_locked(session)
+        except Exception:  # AeatLoginAssertionError/OSError/PlaywrightError; cleanup + re-raise
+            await self._drop_context()
+            if await self._close_browser_session(session_like):
+                self._browser_session = None
+            self._active_session = None
+            raise
+        log.info(
+            "AeatAuthenticator: authenticated thumbprint=%s",
+            session.certificate_thumbprint,
+        )
+        return session
 
     async def reauthenticate(self, session: AeatSession) -> AeatSession:
         """Drop the current context and re-run :meth:`authenticate`.
@@ -692,31 +753,14 @@ class AeatAuthenticator:
                     log.debug("AeatAuthenticator: probe page.close suppressed: %s", _exc, exc_info=True)
 
         elapsed_ms = int((time.perf_counter() - start) * 1000)
-        final = urlsplit(final_url) if final_url is not None else None
-        canonical = urlsplit(AEAT_CERTIFICATE_PROTECTED_URL)
-        final_resource_matches = (
-            final is not None
-            and final.scheme == canonical.scheme
-            and final.netloc == canonical.netloc
-            and final.path == canonical.path
-        )
-        is_valid = response_successful and final_resource_matches and bool(session.identity_nif)
-        if response_successful and not final_resource_matches and error_message is None:
-            error_message = "protected_resource_mismatch"
-        serialized_final_url = final._replace(query="", fragment="").geturl() if final is not None else None
-        return AeatLoginAssertion(
-            target_url=AEAT_CERTIFICATE_PROTECTED_URL,
-            is_valid=is_valid,
-            identity_nif=session.identity_nif,
+        return _build_certificate_login_assertion(
+            session,
             status_code=status_code,
+            response_successful=response_successful,
+            final_url=final_url,
+            error_message=error_message,
             elapsed_ms=elapsed_ms,
             attempted_at=attempted_at,
-            error_message=error_message,
-            assertion_detail=CertificateLoginAssertionDetail(
-                final_url=serialized_final_url,
-                response_successful=response_successful,
-                parsed_subject=session.certificate_subject,
-            ),
         )
 
     async def _capture_storage_state_locked(self, session: AeatSession) -> Path:
