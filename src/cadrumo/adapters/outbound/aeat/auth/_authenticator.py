@@ -147,11 +147,7 @@ def _final_resource_matches(final: SplitResult | None) -> bool:
     if final is None:
         return False
     canonical = urlsplit(AEAT_CERTIFICATE_PROTECTED_URL)
-    return (
-        final.scheme == canonical.scheme
-        and final.netloc == canonical.netloc
-        and final.path == canonical.path
-    )
+    return final.scheme == canonical.scheme and final.netloc == canonical.netloc and final.path == canonical.path
 
 
 def _build_certificate_login_assertion(
