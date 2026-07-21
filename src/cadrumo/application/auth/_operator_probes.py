@@ -33,6 +33,24 @@ if TYPE_CHECKING:
     from ..workflow import WorkflowState
 
 
+def _classify_identity_alignment(profile_tax_id: str, provider_identity: str) -> str:
+    """Classify a Cl@ve Móvil identity against the active profile tax id.
+
+    The single home for the five-way alignment ladder shared by the live
+    identity-state probe and ``_auth_configure_result``. Inputs are the
+    already-normalised (stripped, upper-cased) tax id and provider identity.
+    """
+    if not profile_tax_id and not provider_identity:
+        return "profile_tax_id_missing_and_clave_identity_missing"
+    if not profile_tax_id:
+        return "profile_tax_id_missing"
+    if not provider_identity:
+        return "clave_identity_missing"
+    if profile_tax_id == provider_identity:
+        return "matches"
+    return "mismatch"
+
+
 def _live_auth_identity_state(
     provider_kind: AuthProviderKind | None,
     *,
@@ -53,16 +71,7 @@ def _live_auth_identity_state(
         _log.debug("profile tax-id probe failed; treating as empty", exc_info=True)
         profile_tax_id = ""
     provider_identity = unwrap_optional_secret(settings.cadrumo_clave_movil_dni_nie).strip().upper()
-    if not profile_tax_id and not provider_identity:
-        alignment = "profile_tax_id_missing_and_clave_identity_missing"
-    elif not profile_tax_id:
-        alignment = "profile_tax_id_missing"
-    elif not provider_identity:
-        alignment = "clave_identity_missing"
-    elif profile_tax_id == provider_identity:
-        alignment = "matches"
-    else:
-        alignment = "mismatch"
+    alignment = _classify_identity_alignment(profile_tax_id, provider_identity)
     return bool(profile_tax_id), bool(provider_identity), alignment
 
 
@@ -282,6 +291,54 @@ def _probe_configured_provider(
     return _ProviderProbeOutcome()
 
 
+def _resolved_probe_certificate_path(
+    certificate_path: str,
+    *,
+    configured_certificate_path: Path | None,
+) -> str:
+    """Resolve the effective probe path: the caller's argument, else the configured path."""
+    return (certificate_path or "").strip() or (
+        str(configured_certificate_path) if configured_certificate_path is not None else ""
+    )
+
+
+def _classify_bundle_health(bundle_health: object) -> _ProviderProbeOutcome:
+    """Map a certificate-bundle health verdict to its probe outcome.
+
+    ``EXPIRED`` classifies an already-lapsed bundle distinctly from a
+    ``CRITICAL``/``WARN`` expiring one; every other severity is ``ok``.
+    """
+    from ...adapters.outbound.aeat.auth.certificate import CertificateHealthSeverity
+
+    severity = bundle_health.severity
+    if severity is CertificateHealthSeverity.EXPIRED:
+        return _ProviderProbeOutcome(
+            result=ProviderProbeResult.EXPIRED,
+            summary=tr(
+                "application.auth.operator.probe.certificate_expired",
+                days=abs(bundle_health.days_until_expiry),
+            ),
+            days_until_expiry=bundle_health.days_until_expiry,
+        )
+    if severity is CertificateHealthSeverity.CRITICAL or severity is CertificateHealthSeverity.WARN:
+        return _ProviderProbeOutcome(
+            result=ProviderProbeResult.EXPIRING,
+            summary=tr(
+                "application.auth.operator.probe.certificate_expiring",
+                days=bundle_health.days_until_expiry,
+            ),
+            days_until_expiry=bundle_health.days_until_expiry,
+        )
+    return _ProviderProbeOutcome(
+        result=ProviderProbeResult.OK,
+        summary=tr(
+            "application.auth.operator.probe.certificate_ok",
+            days=bundle_health.days_until_expiry,
+        ),
+        days_until_expiry=bundle_health.days_until_expiry,
+    )
+
+
 def _probe_certificate_bundle(
     certificate_path: str,
     *,
@@ -299,19 +356,16 @@ def _probe_certificate_bundle(
     but otherwise well-formed bundle must classify as ``expired``, never
     ``corrupt``.
     """
-    from ...adapters.outbound.aeat.auth.certificate import (
-        CertificateError,
-        CertificateHealthSeverity,
-    )
+    from ...adapters.outbound.aeat.auth.certificate import CertificateError
     from ...adapters.outbound.aeat.auth.certificate import (
         health as evaluate_certificate_health,
     )
 
     resolved_settings = settings or load_settings()
     credentials = certificate_credentials or unnamed_certificate_credentials(resolved_settings)
-    configured_certificate_path = credentials.certificate_path
-    raw = (certificate_path or "").strip() or (
-        str(configured_certificate_path) if configured_certificate_path is not None else ""
+    raw = _resolved_probe_certificate_path(
+        certificate_path,
+        configured_certificate_path=credentials.certificate_path,
     )
     if not raw:
         return _ProviderProbeOutcome(
@@ -360,33 +414,7 @@ def _probe_certificate_bundle(
                 error=str(exc),
             ),
         )
-    severity = bundle_health.severity
-    if severity is CertificateHealthSeverity.EXPIRED:
-        return _ProviderProbeOutcome(
-            result=ProviderProbeResult.EXPIRED,
-            summary=tr(
-                "application.auth.operator.probe.certificate_expired",
-                days=abs(bundle_health.days_until_expiry),
-            ),
-            days_until_expiry=bundle_health.days_until_expiry,
-        )
-    if severity is CertificateHealthSeverity.CRITICAL or severity is CertificateHealthSeverity.WARN:
-        return _ProviderProbeOutcome(
-            result=ProviderProbeResult.EXPIRING,
-            summary=tr(
-                "application.auth.operator.probe.certificate_expiring",
-                days=bundle_health.days_until_expiry,
-            ),
-            days_until_expiry=bundle_health.days_until_expiry,
-        )
-    return _ProviderProbeOutcome(
-        result=ProviderProbeResult.OK,
-        summary=tr(
-            "application.auth.operator.probe.certificate_ok",
-            days=bundle_health.days_until_expiry,
-        ),
-        days_until_expiry=bundle_health.days_until_expiry,
-    )
+    return _classify_bundle_health(bundle_health)
 
 
 def _probe_clave_movil_identity(*, settings: Settings | None = None) -> _ProviderProbeOutcome:
