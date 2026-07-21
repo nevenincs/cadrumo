@@ -37,7 +37,6 @@ import sys
 import textwrap
 from collections.abc import Iterator
 from pathlib import Path
-from typing import cast
 
 import pytest
 
@@ -74,16 +73,26 @@ def _error_document(output: str) -> dict[str, object]:
     raise AssertionError(f"no JSON document found in output:\n{output}")
 
 
+def _object_member(document: dict[str, object], key: str) -> dict[str, object]:
+    """Return a JSON-object member of ``document``, re-keyed for string lookup.
+
+    ``json.loads`` yields untyped mappings, so rebuilding the member here gives
+    callers a ``dict[str, object]`` they can index by name.
+    """
+    value = document[key]
+    assert isinstance(value, dict), f"{key!r} is not a JSON object: {value!r}"
+    return {str(name): member for name, member in value.items()}
+
+
 def _assert_shared_spine(document: dict[str, object]) -> dict[str, object]:
     assert document["schema_version"] == ENVELOPE_SCHEMA_VERSION
     assert document["status"] == "error"
     assert "command" in document
     assert document["notices"] == []
-    error = document["error"]
-    assert isinstance(error, dict)
+    error = _object_member(document, "error")
     for field in ("code", "category", "message", "suggestion", "retryable", "context"):
         assert field in error, f"error member missing {field!r}"
-    return cast("dict[str, object]", error)
+    return error
 
 
 def test_json_usage_error_emits_shared_spine_document() -> None:
@@ -119,8 +128,7 @@ def test_json_boundary_refusal_emits_shared_spine_document() -> None:
     assert result.exit_code == 2, result.output
     error = _assert_shared_spine(_error_document(result.output))
     assert error["code"] == "REFUSED_CLI_BOUNDARY"
-    context = error["context"]
-    assert isinstance(context, dict)
+    context = _object_member(error, "context")
     assert context["option"] == "--reason"
 
 
