@@ -32,7 +32,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 # The option string we assert must appear in every target command's help.
 _OPTION_FLAG = "--output-language"
-_CHOICE_LIST = f"[{'|'.join(SUPPORTED_OUTPUT_LANGUAGES)}]"
+# The pipe-joined accepted-value set the enum metavar surfaces. Asserting the
+# choice enumeration itself (not the surrounding bracket glyph, which Click owns
+# and rendered as ``[...]`` on older releases and ``<...>`` from click 8.4.x)
+# keeps the gate pinned to the real capability: the accepted values are surfaced.
+_CHOICE_LIST = "|".join(SUPPORTED_OUTPUT_LANGUAGES)
 _AUTH_COMMANDS = (
     ("config", "auth", "logout"),
     ("config", "auth", "reset"),

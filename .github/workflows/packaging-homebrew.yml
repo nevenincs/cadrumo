@@ -53,15 +53,17 @@ jobs:
     name: Cadrumo / ${{ matrix.label }} / Homebrew source install
     strategy:
       fail-fast: false
+      # Machine-aware load (.github/README.md): THREE of the four legs live on
+      # the one 6-core MacBook (ARM native, Rosetta Intel, colima linux-arm64);
+      # unbounded, they co-land and thrash the laptop. Two at a time keeps the
+      # worst co-residency at two Mac legs (or one Mac + the workstation leg).
+      max-parallel: 2
       matrix:
         include:
-          # macos-intel and linux-arm64 are EXCISED pending self-hosted MacBook
-          # avenues per operator ruling 2026-07-21 (no hosted/cloud runners,
-          # ever): a Rosetta /usr/local-prefix runner will carry the Intel row
-          # and a docker arm64 runner the linux-arm64 row — the matrix legs
-          # return when those runners register. Removing (not label-queuing)
-          # keeps lane runs completing instead of hanging on absent labels;
-          # their homebrew-* readiness rows stay honestly red meanwhile.
+          # All four legs are self-hosted (operator ruling 2026-07-21: no
+          # hosted/cloud runners, ever). per-leg make_jobs feeds
+          # HOMEBREW_MAKE_JOBS: brew's build-from-source parallelism is sized
+          # to the machine share, not the whole box.
           - id: macos-arm64
             label: macOS arm64
             runner: [self-hosted, macOS, ARM64]
@@ -69,6 +71,7 @@ jobs:
             expected_arch: arm64
             brew: /opt/homebrew/bin/brew
             row_id: homebrew-macos-arm64
+            make_jobs: "2"
           - id: linux-x86_64
             label: Linux x86_64
             runner: [self-hosted, Linux, X64]
@@ -76,6 +79,7 @@ jobs:
             expected_arch: x86_64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             row_id: homebrew-linux-x86-64
+            make_jobs: "8"
           # Restored per operator MacBook-avenue provisioning 2026-07-21:
           # gw-macbook-linux-arm (colima arm64 container on the ARM MacBook)
           # and macbook-neo-intel (Rosetta x64 runner + /usr/local Intel brew).
@@ -86,6 +90,7 @@ jobs:
             expected_arch: x86_64
             brew: /usr/local/bin/brew
             row_id: homebrew-macos-x86-64
+            make_jobs: "2"
           - id: linux-arm64
             label: Linux arm64
             runner: [self-hosted, Linux, ARM64]
@@ -93,6 +98,7 @@ jobs:
             expected_arch: aarch64
             brew: /home/linuxbrew/.linuxbrew/bin/brew
             row_id: homebrew-linux-arm64
+            make_jobs: "2"
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 90
     # Release-asset transport: evidence rides the run's own draft release, so
@@ -225,6 +231,9 @@ jobs:
         env:
           BREW_PATH: ${{ matrix.brew }}
           MATRIX_ID: ${{ matrix.id }}
+          # brew build-from-source parallelism, sized per leg to the machine
+          # share (machine-aware sizing, .github/README.md).
+          HOMEBREW_MAKE_JOBS: ${{ matrix.make_jobs }}
         run: |
           uv run --no-project python dev/packaging/smoke_homebrew.py \
             --formula "$CADRUMO_S24_ROOT/tap-snapshot/Formula/cadrumo.rb" \

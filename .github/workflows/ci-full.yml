@@ -86,13 +86,15 @@ jobs:
       - name: Test (unit)
         # No junit artifact (zero Actions-artifact posture); the durations
         # profile lives in the job log.
-        run: uv run pytest --durations=100
+        # -n 8, never -n auto: three runners share this machine's 24 logical
+        # CPUs (machine-aware sizing, .github/README.md).
+        run: uv run pytest --durations=100 -n 8
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
 
       - name: Tooling and workflow conformance gates
         # Dev-tree ceiling raised over the 300 s ini default: real install/
         # harness tests legitimately run 300-900 s (see ci.yml).
-        run: uv run --no-sync pytest -q --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
+        run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
 
       - name: Documentation conformance
         # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
@@ -138,7 +140,7 @@ jobs:
         # ===================================================================
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live tests are skipped.
         run: |
-          uv run --no-sync pytest \
+          uv run --no-sync pytest -n 8 \
             src/cadrumo/tests/test_roundtrip_coverage.py \
             src/cadrumo/application/ledger/tests \
             src/cadrumo/adapters/persistence/storage \

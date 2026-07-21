@@ -83,6 +83,13 @@ jobs:
           free -m
 
       - name: Cadrumo immutable-cohort packaging campaign
+        # Machine-aware sizing (.github/README.md): the workstation's 24
+        # logical CPUs are shared by THREE runners, so the preflight pytest
+        # gets an explicit 8 workers (never -n auto) and the lane pool keeps 3
+        # (its lanes are venv/disk-bound, not CPU-wide).
+        env:
+          CADRUMO_TEST_WORKERS: "8"
+          CADRUMO_PACKAGING_LANE_CONCURRENCY: "3"
         run: |
           ( while true; do echo "[resources $(date -u +%H:%M:%S)] $(df -h --output=avail / | tail -1 | tr -d ' ') free disk, $(free -m | sed -n 2p | awk '{print $7}') MiB avail mem"; sleep 60; done ) &
           sampler=$!
@@ -177,6 +184,13 @@ jobs:
       # steps — the Windows leg alone spent 3.9 measured minutes duplicating
       # them.
       - name: Cadrumo host-portable packaging campaign
+        # Machine-aware sizing (.github/README.md): this Windows runner shares
+        # the workstation's 24 logical CPUs with two WSL runners — explicit 8
+        # pytest workers, and lane concurrency 2 (its venv installs are
+        # disk-bound and the box carries co-resident jobs).
+        env:
+          CADRUMO_TEST_WORKERS: "8"
+          CADRUMO_PACKAGING_LANE_CONCURRENCY: "2"
         run: just packaging-smoke
 
       - name: Checkpoint packaging evidence
@@ -260,6 +274,11 @@ jobs:
       # steps — the Windows leg alone spent 3.9 measured minutes duplicating
       # them.
       - name: Cadrumo host-portable packaging campaign
+        # Machine-aware sizing (.github/README.md): the 6-core MacBook hosts
+        # THREE runners — 2 pytest workers and 2 concurrent lanes per leg.
+        env:
+          CADRUMO_TEST_WORKERS: "2"
+          CADRUMO_PACKAGING_LANE_CONCURRENCY: "2"
         run: just packaging-smoke
 
       - name: Checkpoint packaging evidence

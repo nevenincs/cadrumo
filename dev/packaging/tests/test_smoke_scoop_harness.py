@@ -132,8 +132,8 @@ def test_final_cleanup_routes_every_uninstall_through_the_retry_helper() -> None
     assert "cleanup retained the staged Scoop app" in finally_body
 
 
-def _run_uninstall_retry(interpreter: str, *, app_root: Path, stub_dir: Path) -> subprocess.CompletedProcess[str]:
-    """Drive the SHIPPED retry helper against a real scoop stub on PATH."""
+def _run_uninstall_retry(interpreter: str, *, app_root: Path, scoop_bin_dir: Path) -> subprocess.CompletedProcess[str]:
+    """Drive the SHIPPED retry helper against a real scripted scoop on PATH."""
     driver = f"""
 $source = Get-Content -Raw -LiteralPath '{_SCRIPT}'
 $tokens = $null; $errors = $null
@@ -145,7 +145,7 @@ foreach ($name in @('Stop-ProcessesUnderPath', 'Invoke-ScoopUninstallWithRetry')
     }}, $true)[0]
     Invoke-Expression $fn.Extent.Text
 }}
-$env:Path = '{stub_dir}' + [System.IO.Path]::PathSeparator + $env:Path
+$env:Path = '{scoop_bin_dir}' + [System.IO.Path]::PathSeparator + $env:Path
 $ErrorActionPreference = 'Stop'
 $retryArguments = @{{
     PackageName = 'cadrumo-s20-acquisition'
@@ -165,22 +165,22 @@ Write-Output "RESULT=$result"
     )
 
 
-def _write_stub_scoop(stub_dir: Path, app_root: Path, *, succeed_on_attempt: int) -> Path:
-    """Write a real ``scoop`` stub: fails with the app retained until attempt N."""
-    stub_dir.mkdir(parents=True, exist_ok=True)
-    script = stub_dir / "scoop_stub.py"
+def _write_scripted_scoop(scoop_bin_dir: Path, app_root: Path, *, succeed_on_attempt: int) -> Path:
+    """Write a real ``scoop`` substitute: fails with the app retained until attempt N."""
+    scoop_bin_dir.mkdir(parents=True, exist_ok=True)
+    script = scoop_bin_dir / "scoop_script.py"
     script.write_text(
         f"""
 import json, shutil, sys
 from pathlib import Path
 
-stub_dir = Path({str(stub_dir)!r})
+scoop_bin_dir = Path({str(scoop_bin_dir)!r})
 app_root = Path({str(app_root)!r})
 succeed_on = {succeed_on_attempt}
-counter = stub_dir / "attempts.txt"
+counter = scoop_bin_dir / "attempts.txt"
 attempt = int(counter.read_text() or "0") + 1 if counter.is_file() else 1
 counter.write_text(str(attempt))
-with (stub_dir / "calls.log").open("a", encoding="utf-8") as log:
+with (scoop_bin_dir / "calls.log").open("a", encoding="utf-8") as log:
     log.write(json.dumps(sys.argv[1:]) + "\\n")
 if sys.argv[1] != "uninstall":
     raise SystemExit(2)
@@ -193,13 +193,13 @@ raise SystemExit(1)
         encoding="utf-8",
     )
     if sys.platform.startswith("win"):
-        launcher = stub_dir / "scoop.cmd"
+        launcher = scoop_bin_dir / "scoop.cmd"
         launcher.write_text(
             f'@echo off\r\n"{sys.executable}" "{script}" %*\r\nexit /b %errorlevel%\r\n',
             encoding="utf-8",
         )
     else:
-        launcher = stub_dir / "scoop"
+        launcher = scoop_bin_dir / "scoop"
         launcher.write_text(f'#!/bin/sh\nexec "{sys.executable}" "{script}" "$@"\n', encoding="utf-8")
         launcher.chmod(launcher.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
     return launcher
@@ -275,13 +275,13 @@ def test_uninstall_retry_reruns_until_windows_releases_the_handle(tmp_path: Path
         return  # structural contract asserted above; no interpreter on this host
     app_root = tmp_path / "apps" / "cadrumo-s20-acquisition"
     (app_root / "0.2.1").mkdir(parents=True)
-    stub_dir = tmp_path / "stub"
-    _write_stub_scoop(stub_dir, app_root, succeed_on_attempt=3)
-    completed = _run_uninstall_retry(interpreter, app_root=app_root, stub_dir=stub_dir)
+    scoop_bin_dir = tmp_path / "scoop"
+    _write_scripted_scoop(scoop_bin_dir, app_root, succeed_on_attempt=3)
+    completed = _run_uninstall_retry(interpreter, app_root=app_root, scoop_bin_dir=scoop_bin_dir)
     assert completed.returncode == 0, completed.stderr
     assert "RESULT=True" in completed.stdout
     assert not app_root.exists()
-    calls = (stub_dir / "calls.log").read_text(encoding="utf-8").splitlines()
+    calls = (scoop_bin_dir / "calls.log").read_text(encoding="utf-8").splitlines()
     # Every retry RE-RAN uninstall (scoop auto-repairs after a failure).
     assert len(calls) == 3
     assert all('"uninstall"' in call for call in calls)
@@ -294,13 +294,13 @@ def test_uninstall_retry_stays_fail_loud_when_the_app_never_releases(tmp_path: P
         return  # structural contract asserted above; no interpreter on this host
     app_root = tmp_path / "apps" / "cadrumo-s20-acquisition"
     (app_root / "0.2.1").mkdir(parents=True)
-    stub_dir = tmp_path / "stub"
-    _write_stub_scoop(stub_dir, app_root, succeed_on_attempt=99)
-    completed = _run_uninstall_retry(interpreter, app_root=app_root, stub_dir=stub_dir)
+    scoop_bin_dir = tmp_path / "scoop"
+    _write_scripted_scoop(scoop_bin_dir, app_root, succeed_on_attempt=99)
+    completed = _run_uninstall_retry(interpreter, app_root=app_root, scoop_bin_dir=scoop_bin_dir)
     assert completed.returncode == 0, completed.stderr
     assert "RESULT=False" in completed.stdout
     assert app_root.exists()
-    calls = (stub_dir / "calls.log").read_text(encoding="utf-8").splitlines()
+    calls = (scoop_bin_dir / "calls.log").read_text(encoding="utf-8").splitlines()
     assert len(calls) == 3
 
 

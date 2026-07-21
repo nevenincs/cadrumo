@@ -44,8 +44,16 @@ from . import proof_cache
 _UTF_8: Final[str] = "utf-8"
 _QUICK_PROOF_KIND: Final[str] = "quick-core-install"
 _COHORT_DIR: Final[str] = "var/packaging-smoke-cohort/python"
+# Lane concurrency is sized against the PHYSICAL MACHINE, not "a runner": the
+# fleet is six runners on two machines (three per box), so a CI leg must
+# assume two co-resident jobs. Workflows pass the per-leg value via the env
+# below; the default serves an uncontended local run.
 _DEFAULT_WORKERS: Final[int] = 3
 _WORKERS_ENV: Final[str] = "CADRUMO_PACKAGING_LANE_CONCURRENCY"
+# Explicit xdist worker count for the preflight pytest pass. Unset means the
+# local default (pyproject addopts' -n auto); CI legs MUST set it because
+# -n auto grabs every logical CPU of a machine shared by up to three jobs.
+_TEST_WORKERS_ENV: Final[str] = "CADRUMO_TEST_WORKERS"
 
 
 @dataclass(frozen=True)
@@ -123,11 +131,35 @@ def _worker_count(requested: int | None) -> int:
     return _DEFAULT_WORKERS
 
 
+def _test_worker_count(requested: int | None) -> int | None:
+    """Resolve the preflight pytest worker count: CLI flag, then env, else None.
+
+    ``None`` keeps the local default (addopts ``-n auto``); a resolved value
+    becomes an explicit ``-n N`` so a machine shared by co-resident CI jobs is
+    never over-subscribed.
+    """
+    if requested is not None:
+        return max(0, requested)
+    env_value = os.environ.get(_TEST_WORKERS_ENV)
+    if env_value is not None:
+        return max(0, int(env_value))
+    return None
+
+
 def main(argv: list[str] | None = None) -> int:
     """Build the cohort once, run the profile's lanes concurrently, then the serial oracles."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--profile", choices=sorted(_PROFILES), required=True)
     parser.add_argument("--max-workers", type=int, default=None)
+    parser.add_argument(
+        "--test-workers",
+        type=int,
+        default=None,
+        help=(
+            "Explicit xdist worker count for the preflight pytest pass "
+            f"(default: {_TEST_WORKERS_ENV} env, else the local -n auto)."
+        ),
+    )
     parser.add_argument(
         "--skip-preflight",
         action="store_true",
@@ -167,11 +199,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if not args.skip_preflight:
         _run_step([sys.executable, "-m", "dev.packaging.dependency_surface"], repo_root, "dependency-surface")
+        preflight_argv = [sys.executable, "-m", "pytest", "dev/packaging/tests", "-q", "--timeout=900"]
+        test_workers = _test_worker_count(args.test_workers)
+        if test_workers is not None:
+            preflight_argv += ["-n", str(test_workers)]
         _run_step(
             # The dev tree's real install/harness tests legitimately exceed
             # the product suite's 300 s ini ceiling; 900 s still kills a
             # genuine wedge in minutes.
-            [sys.executable, "-m", "pytest", "dev/packaging/tests", "-q", "--timeout=900"],
+            preflight_argv,
             repo_root,
             "preflight-tests",
         )

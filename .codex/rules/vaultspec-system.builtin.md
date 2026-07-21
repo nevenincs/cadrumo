@@ -31,6 +31,14 @@ times.
   if necessary for clarity or if requested by the user. Do not edit comments that are
   separate from the code you are changing. *NEVER* describe changes through comments.
 
+- **Code Stands Alone:** The `.vault/` corpus and the `.vaultspec/` harness are
+  removable development scaffolding, not part of the codebase. Never embed references to
+  the project's own development records - `.vault/` document stems, plan/ADR/audit
+  identifiers, Step ids, wiki-links, or harness paths - in source code, comments,
+  docstrings, tests, configuration, or user-facing documentation. The reference
+  direction is one-way: vault documents cite code by locator; code never cites the
+  vault. Opt-in git commit trailers are the only sanctioned linkage channel.
+
 - **Proactiveness:** Fulfill the user's request thoroughly. When adding features or
   fixing bugs, add focused tests and run the relevant linters and quality checks.
 
@@ -173,7 +181,10 @@ times.
   `adr/`, `audit/`, `exec/`, `plan/`, `reference/`, and `research/`. Auto-generated
   feature indexes live in `.vault/index/`; they regenerate as a side effect of the
   `create` and `edit` tools, or manually via `vaultspec-core vault feature index` when
-  working through the CLI, and are never authored by hand.
+  working through the CLI, and are never authored by hand. The `.vault/` and
+  `.vaultspec/` trees are removable development scaffolding layered over the codebase,
+  never part of it: vault documents cite code by locator, and code never references them
+  (see the Code Stands Alone mandate).
 
 **Orient first.** In a project with no session context, orient with the `status` tool
 (CLI: `vaultspec-core status`) before invoking any pipeline skill. Read the in-flight

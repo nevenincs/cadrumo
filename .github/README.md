@@ -15,6 +15,30 @@ standing invariants, each enforced by a conformance gate in the test tree:
 4. **Evidence honesty.** Only `packaging-smoke.yml` mints promotable
    `DistributionEvidence`; `publish-release.yml` Gate 2 pins that workflow
    path, so no other lane can enter promotion.
+5. **Machine-aware load.** No lane sizes itself as if it owns the machine
+   (`dev/packaging/tests/test_machine_aware_load.py`); see the topology below.
+
+## Fleet topology and load sizing
+
+Six runners, but only **two physical machines** — a runner label is NOT a
+machine, and up to three jobs can co-reside on one box:
+
+| Machine | Cores | Runners on it |
+| --- | --- | --- |
+| gw-workstation (Ryzen 5900X, 12C/24T) | 24 logical | `gw-workstation-win` (Windows X64), `gw-workstation-wsl` + `gw-workstation-wsl-2` (Linux X64 containers) |
+| MacBook (Apple silicon) | 6 | `macbook-neo` (macOS ARM64), `macbook-neo-intel` (macOS X64 via Rosetta), `gw-macbook-linux-arm` (Linux ARM64 via colima, VM capped at 4 CPUs) |
+
+**Sizing rule:** the sum of co-resident workers must fit the machine's CPUs —
+size every parallel knob for worst-case co-residency (3 jobs/machine), never
+for the whole box. Concretely: workstation lanes get explicit `-n 8`
+(24 / 3); MacBook lanes get `-n 2` (6 / 3); `pytest -n auto` is banned in any
+CI invocation (it grabs every logical CPU); the packaging campaign's lane
+pool and preflight pytest are sized per leg via
+`CADRUMO_PACKAGING_LANE_CONCURRENCY` / `CADRUMO_TEST_WORKERS`; the Homebrew
+matrix carries `max-parallel: 2` (three of its four legs live on the MacBook)
+and per-leg `HOMEBREW_MAKE_JOBS`. Local development keeps `-n auto` — the
+rule binds surfaces that can run CONCURRENTLY with other jobs on a shared
+machine.
 
 ## Change-class tiers
 
