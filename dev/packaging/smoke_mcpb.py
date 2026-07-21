@@ -113,14 +113,54 @@ def _run_concurrent_launches(
 
 
 def _npx_argv(npx: Path) -> list[str]:
-    """Return a directly executable NPX argv on POSIX and Windows."""
+    r"""Return a directly executable NPX argv on POSIX and Windows.
+
+    A Windows ``npx.cmd`` is a shim whose real interpreter layout depends on
+    the install kind: a native Node install (and setup-node's tool cache)
+    keeps ``node.exe`` and npm's ``npx-cli.js`` beside the shim, while an
+    npm-global-prefix directory (``npm prefix --global``, e.g.
+    ``%APPDATA%\\npm``) holds ONLY shims — its ``node.exe`` lives with the
+    Node installation and ``npx-cli.js`` with that installation's bundled npm
+    (or under ``npm root --global`` when npm itself was installed globally).
+    Probe the beside layout first, then fall back to the PATH-resolved node's
+    installation, then to the npm global root, refusing with every probed
+    path named.
+    """
     if npx.suffix.casefold() not in {".cmd", ".bat", ".ps1"}:
         return [str(npx)]
-    node = npx.parent / "node.exe"
-    cli = npx.parent / "node_modules" / "npm" / "bin" / "npx-cli.js"
-    if not node.is_file() or not cli.is_file():
-        raise SystemExit(f"could not resolve node+npx-cli beside {npx}")
-    return [str(node), str(cli)]
+    probed: list[Path] = []
+    nodes: list[Path] = []
+    for candidate in (npx.parent / "node.exe", *(Path(which) for which in (shutil.which("node"),) if which)):
+        if candidate in nodes:
+            continue
+        if candidate.is_file():
+            nodes.append(candidate)
+        else:
+            probed.append(candidate)
+    for node in nodes:
+        cli = node.parent / "node_modules" / "npm" / "bin" / "npx-cli.js"
+        if cli.is_file():
+            return [str(node), str(cli)]
+        probed.append(cli)
+    npm = shutil.which("npm")
+    if nodes and npm is not None:
+        completed = subprocess.run(  # noqa: S603 - fixed installed tool command
+            [npm, "root", "--global"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=60,
+        )
+        global_root = completed.stdout.strip()
+        if completed.returncode == 0 and global_root:
+            cli = Path(global_root) / "npm" / "bin" / "npx-cli.js"
+            if cli.is_file():
+                return [str(nodes[0]), str(cli)]
+            probed.append(cli)
+    raise SystemExit(
+        f"could not resolve a node interpreter with npm's npx-cli.js for the shim {npx}; probed: "
+        + ", ".join(str(path) for path in probed),
+    )
 
 
 def _resolve_mcpb_value(
