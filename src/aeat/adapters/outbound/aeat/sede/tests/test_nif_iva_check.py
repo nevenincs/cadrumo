@@ -11,19 +11,12 @@ Live navigation tests live behind ``@pytest.mark.aeat_live`` and require
 
 from __future__ import annotations
 
-from urllib.parse import urlsplit
-
 import pytest
-from pydantic import AnyUrl, ValidationError
+from pydantic import ValidationError
 
 from ......core.config import Settings
-from ......domain.calculations.registry import (
-    RegistryValidationError,
-    RemoteOperation,
-    assert_remote_operation_allowed,
-)
+from ......domain.calculations.registry import RegistryValidationError
 from .._nif_iva_check import (
-    _READ_GUARD_POLICY,
     DEFAULT_NIF_IVA_TIMEOUT_MS,
     NifIvaCheckResult,
     NifIvaCheckSedeDriver,
@@ -165,22 +158,3 @@ def test_auth_gate_detector_rejects_non_aeat_hosts() -> None:
 
     assert not is_aeat_auth_gate_redirect("https://example.com/erro4033.html")
     assert not is_aeat_auth_gate_redirect("")
-
-
-def test_nif_iva_read_guard_admits_sibling_load_balancer_host() -> None:
-    """A NIF-IVA verification dispatched to a sibling www{n} host under the AEAT apex is allowed."""
-    drifted = f"{_AEAT.domains.www12}{urlsplit(_AEAT.oracles.nif_iva_verification).path}"
-    result = assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="http", method="GET", url=AnyUrl(drifted)),
-    )
-    assert result.decision == "allowed"
-
-
-def test_nif_iva_read_guard_refuses_non_aeat_host() -> None:
-    """Widening to the AEAT apex suffix must not admit an off-AEAT host."""
-    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
-        assert_remote_operation_allowed(
-            _READ_GUARD_POLICY,
-            RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
-        )

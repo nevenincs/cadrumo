@@ -408,7 +408,7 @@ def aggregate_iva_ledger_observations_from_repositories(
         period=period,
         prorrata_apportionment=prorrata_apportionment,
     )
-    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
+    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_stubs(
         partition.out_of_window,
     )
     return result.model_copy(

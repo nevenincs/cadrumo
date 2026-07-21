@@ -1,6 +1,6 @@
 """Every command classifies from the declared risk table, coherently.
 
-Proves the declared risk model:
+Proves the ADR ``mcp-protocol-hardening`` H3 model as it was actually decided:
 the destructive / handoff / live-write axes are DECLARED per command in the risk
 table, not inferred from a leaf-name heuristic; :func:`classify_command` reads the
 declared row; read_only and idempotent derive from the manifest mutability;

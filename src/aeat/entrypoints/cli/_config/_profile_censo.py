@@ -30,7 +30,6 @@ import typer
 
 from ....core.errors import resolve_error_message
 from ....core.i18n import tr
-from ....core.json_contract import Notice, NoticeSeverity
 from .._app_live_auth_preflight import _emit_live_auth_preflight
 from .._common import _emit_envelope
 from .._errors import CliRefusedBoundaryError, decorate_typer_app
@@ -169,40 +168,6 @@ def _calendar_summary_after_apply(*, bucket_id: str, profile_id: str) -> dict[st
     }
 
 
-def _dropped_censo_fields_notice(dropped_fields: tuple[str, ...]) -> Notice | None:
-    """Advise when this pull drops censo fields the prior snapshot carried.
-
-    Non-blocking: the capture always proceeds (a legitimate field removal
-    — the operator closed their home office so AEAT drops the
-    ``vivienda_office.*`` fields — must be respected). But a partial pull
-    can also silently drop fields, and a dropped ``vivienda_office`` field
-    stops the home-office deduction ratio resolving, so the delta is
-    surfaced as a warning naming the exact dropped keys. Fires only on a
-    field DROP (present-in-prior, absent-in-new), never on a value change,
-    so merely updating a value triggers nothing. Returns ``None`` when
-    nothing was dropped.
-    """
-    if not dropped_fields:
-        return None
-    joined = ", ".join(dropped_fields)
-    message = tr(
-        "cli.config.profile.censo.dropped_fields_notice",
-        dropped_fields=joined,
-        default=(
-            f"AEAT's censo no longer reports fields your last snapshot carried: {joined}. "
-            "If you did not change or close these registrations, this may be a partial pull — "
-            "re-run the censo pull or re-enter the values; the home-office deduction ratio may "
-            "stop resolving."
-        ),
-    )
-    return Notice(
-        severity=NoticeSeverity.WARNING,
-        code="config.profile.censo.dropped_fields",
-        message=message,
-        context={"dropped_fields": joined},
-    )
-
-
 def _register_censo_refresh(censo_app: typer.Typer) -> None:
     """Register the censo pull transport command."""
 
@@ -229,32 +194,21 @@ def _register_censo_refresh(censo_app: typer.Typer) -> None:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
         service = _build_service(bucket_id)
         try:
-            outcome = asyncio.run(service.refresh_censo_from_sede(profile_id=profile_id))
+            snapshot = asyncio.run(service.refresh_censo_from_sede(profile_id=profile_id))
         except CensoNotAvailableError as exc:
             raise CliRefusedBoundaryError(resolve_error_message(exc)) from exc
-        snapshot = outcome.snapshot
         typed_refresh = CensoRefreshResult(
             snapshot_id=snapshot.snapshot_id,
             profile_id=snapshot.profile_id,
             captured_at=snapshot.captured_at.isoformat(),
             facts=dict(snapshot.censo_facts),
         )
-        dropped_notice = _dropped_censo_fields_notice(outcome.dropped_fields)
         lines = [
             f"snapshot_id\t{snapshot.snapshot_id}",
             f"captured_at\t{snapshot.captured_at.isoformat()}",
             f"facts\t{len(snapshot.censo_facts)}",
         ]
-        notices = [dropped_notice] if dropped_notice is not None else None
-        if dropped_notice is not None:
-            lines.append(f"dropped_fields\t{dropped_notice.message}")
-        _emit_envelope(
-            ctx,
-            command="config.profile.censo.pull",
-            result=typed_refresh,
-            lines=lines,
-            notices=notices,
-        )
+        _emit_envelope(ctx, command="config.profile.censo.pull", result=typed_refresh, lines=lines)
 
 
 def _register_censo_show(censo_app: typer.Typer) -> None:

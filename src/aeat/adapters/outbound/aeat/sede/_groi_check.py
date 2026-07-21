@@ -99,9 +99,6 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     evidence_tier="executable_parity_evidence",
     classification="integration_test_service",
     allowed_hosts=(_GROI_HOST,),
-    # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer
-    # dispatch is tolerated, not refused; success detection is unchanged.
-    allowed_host_suffixes=(_EXTERNAL.aeat.domains.host_suffix,),
     allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.consult_oracle_browser_action_patterns,
     synthetic_data_allowed=False,
     requires_authentication=True,

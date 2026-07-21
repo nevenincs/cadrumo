@@ -114,9 +114,7 @@ class TestHappyPath:
         assert result.final_stage is WorkflowStage.DONE
         assert result.resumed_from == prior_run_id
 
-    @pytest.mark.parametrize(
-        "bad_resumed_from", ("not-hex", "ABCDEF0123456789", "abcdef012345678", "abcdef01234567890")
-    )
+    @pytest.mark.parametrize("bad_resumed_from", ("not-hex", "ABCDEF0123456789", "abcdef012345678", "abcdef01234567890"))
     def test_run_for_period_rejects_malformed_resumed_from(self, bad_resumed_from: str) -> None:
         """``run_for_period`` rejects a ``resumed_from`` whose shape is not the
         16-character lowercase hex run id produced by the engine itself."""

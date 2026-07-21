@@ -629,7 +629,8 @@ def _resolve_confirmed_invoice_date(invoice_date: date | None, draft: InvoiceDra
         if parsed is not None:
             return parsed
     raise PurchaseInvoiceEvidenceInputError(
-        "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date override was supplied",
+        "cannot confirm an invoice: invoice_date could not be extracted and no --invoice-date "
+        "override was supplied",
         suggestion="aeat app ledger evidence extract --evidence-id <id>",
     )
 

@@ -98,7 +98,7 @@ async def _call(
 ) -> mcp_types.CallToolResult:
     server = build_server(build_tool_descriptors(), persona=persona, telemetry=telemetry)
     async with connect(server, elicitation_callback=elicit) as session:
-        # Clear the block-first-mutation identity gate with a real
+        # Clear the block-first-mutation identity gate (ADR I2) with a real
         # whoami identity read so these serving-path gate tests reach the
         # confirm / faithfulness gate under test rather than the identity gate.
         # whoami is a read-only console tool that emits no telemetry, so record

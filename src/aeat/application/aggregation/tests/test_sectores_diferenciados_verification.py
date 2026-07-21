@@ -3,9 +3,11 @@
 No bundled AEAT worked-example oracle for a two-sector differentiated-sectors
 prorrata ships in ``src/aeat/_data/corpus/manual_oracles/`` (that pool carries
 only the WHOLE-ENTITY Modelo 303 prorrata-general regularización example and
-unrelated modelos). Per the ``no-tautological-calculation-tests`` rule, this
-verification uses a hand-constructed register with structural anti-tautology
-assertions rather than numbers hand-computed from the substrate formula under
+unrelated modelos). Per the ``prorrata-sectores-diferenciados`` ADR and the
+``no-tautological-calculation-tests`` rule, this verification therefore uses the
+ADR's hand-constructed-register alternative with STRUCTURAL anti-tautology
+assertions — the same way the interruption (S09) and especial (S15) mechanisms
+were proven — rather than numbers hand-computed from the substrate formula under
 test.
 
 The verification composes the whole differentiated-sectors lifecycle end to end:
@@ -14,7 +16,7 @@ The verification composes the whole differentiated-sectors lifecycle end to end:
    (:func:`settle_sector_definitive`), giving distinct percentages with a
    >50-point spread (comercio 90 %, arrendamiento 20 %) plus a common-use 40 %.
 2. Seed each 2026 provisional from that sector's prior definitive
-   (:func:`seed_sector_carried_definitive_from_register`) — proving the
+   (:func:`seed_sector_carried_definitive_from_register`) — proving the S19
    lifecycle carries each sector's own definitive forward.
 3. Persist the seeded 2026 register (per-sector entries + common entry + sector
    definitions) and aggregate a 2026 ledger carrying one purchase per sector plus

@@ -6,7 +6,7 @@ from enum import StrEnum
 
 import pytest
 from pydantic import ValidationError
-from sqlalchemy import String, create_engine, inspect
+from sqlalchemy import create_engine, inspect
 
 from ..adapters.persistence.storage.sql import SecureObjectRow, ensure_quarantine_table
 from ..domain.calculations.registry import WorkbookKind, WorkbookRunnerAvailability
@@ -36,16 +36,13 @@ _WORKBOOK_KIND_VALUES: frozenset[str] = frozenset(
 def test_secure_object_hash_columns_are_reflected_as_fixed_length_varchar() -> None:
     """The live secure_objects table exposes fixed-width revision/hash metadata."""
     engine = create_engine("sqlite:///:memory:")
-    SecureObjectRow.metadata.create_all(engine)
+    SecureObjectRow.__table__.create(engine)
 
     reflected = {column["name"]: column["type"] for column in inspect(engine).get_columns("secure_objects")}
 
-    lengths: dict[str, int | None] = {}
-    for name in _SECURE_OBJECT_HASH_COLUMNS:
-        column_type = reflected[name]
-        assert isinstance(column_type, String)
-        lengths[name] = column_type.length
-    assert lengths == {name: 64 for name in _SECURE_OBJECT_HASH_COLUMNS}
+    assert {name: reflected[name].length for name in _SECURE_OBJECT_HASH_COLUMNS} == {
+        name: 64 for name in _SECURE_OBJECT_HASH_COLUMNS
+    }
 
 
 def test_secure_object_quarantine_preserves_fixed_length_hash_columns() -> None:
@@ -54,20 +51,21 @@ def test_secure_object_quarantine_preserves_fixed_length_hash_columns() -> None:
 
     ensure_quarantine_table(engine)
 
-    reflected = {column["name"]: column["type"] for column in inspect(engine).get_columns("secure_objects_quarantine")}
-    lengths: dict[str, int | None] = {}
-    for name in _SECURE_OBJECT_HASH_COLUMNS:
-        column_type = reflected[name]
-        assert isinstance(column_type, String)
-        lengths[name] = column_type.length
-    assert lengths == {name: 64 for name in _SECURE_OBJECT_HASH_COLUMNS}
+    reflected = {
+        column["name"]: column["type"] for column in inspect(engine).get_columns("secure_objects_quarantine")
+    }
+    assert {name: reflected[name].length for name in _SECURE_OBJECT_HASH_COLUMNS} == {
+        name: 64 for name in _SECURE_OBJECT_HASH_COLUMNS
+    }
 
 
 def test_workbook_kind_public_enum_exposes_closed_classification_vocabulary() -> None:
     """Workbook reports expose a closed StrEnum vocabulary to callers."""
     assert issubclass(WorkbookKind, StrEnum)
     assert frozenset(member.value for member in WorkbookKind) == _WORKBOOK_KIND_VALUES
-    assert {member.value: str(member) for member in WorkbookKind} == {value: value for value in _WORKBOOK_KIND_VALUES}
+    assert {member.value: str(member) for member in WorkbookKind} == {
+        value: value for value in _WORKBOOK_KIND_VALUES
+    }
 
 
 def test_workbook_runner_availability_accepts_only_declared_engines() -> None:
@@ -88,11 +86,9 @@ def test_workbook_runner_availability_accepts_only_declared_engines() -> None:
     assert libreoffice.engine == "libreoffice-headless"
     assert excel.engine == "excel-com"
     with pytest.raises(ValidationError):
-        WorkbookRunnerAvailability.model_validate(
-            {
-                "status": "available",
-                "engine": "libreoffice",
-                "executable": "libreoffice",
-                "detail": "unsupported short engine name",
-            }
+        WorkbookRunnerAvailability(
+            status="available",
+            engine="libreoffice",
+            executable="libreoffice",
+            detail="unsupported short engine name",
         )

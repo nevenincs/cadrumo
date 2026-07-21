@@ -202,7 +202,7 @@ def aggregate_renta_income_ledger_from_repositories(
     cumulative_end = resolved_period.end_date
     partition = repository.partition_by_date_range(cumulative_start, cumulative_end)
     result = aggregate_renta_income_ledger(partition.in_window, bucket_id=bucket_id, period=period)
-    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
+    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_stubs(
         partition.out_of_window,
     )
     return result.model_copy(
@@ -302,7 +302,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
         return aggregate_renta_m100_income_ledger(repository.load(), bucket_id=bucket_id, period=period)
     partition = repository.partition_by_date_range(period.start_date, period.end_date)
     result = aggregate_renta_m100_income_ledger(partition.in_window, bucket_id=bucket_id, period=period)
-    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
+    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_stubs(
         partition.out_of_window,
     )
     return result.model_copy(

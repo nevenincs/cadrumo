@@ -239,10 +239,6 @@ def _file_negative_2t_period(*, redeme_enrolled: bool, period: str = _REFUND_PER
         calculation_repository=calc_repo,
         filing_repository=filing_repo,
         bucket_event_repository=event_repo,
-        settings=Settings(
-            aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-            aeat_clave_movil_dni_nie=SecretStr(_TAX_ID),
-        ),
         clock=_VERIFY_AT,
     )
     assert verification.granted_verificado_completo is True

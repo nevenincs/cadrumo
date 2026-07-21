@@ -49,24 +49,12 @@ if TYPE_CHECKING:
 DIAGNOSTIC_NAMESPACE: Final[str] = "aeat.outbound.aeat.auth.clave_permanente.diagnostics"
 
 
-def clave_permanente_auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:
+def clave_permanente_auth_browser_action_policy(settings: Settings):
     """Build the remote-state guard policy for Cl@ve Permanente browser actions.
 
     Mirrors the Cl@ve Móvil policy shape but scopes the allowed action
     patterns to the Permanente login form (username fill, password fill,
-    authenticate) since there is no QR/push/representation-gate surface to allow.
-    The final action is labelled ``authenticate`` rather than ``submit``: it is
-    the Cl@ve IdP login-form submit (``#enviar_login``), an authentication step,
-    not an AEAT tax filing, so the write-token block (which the label ``submit``
-    lexically tripped) does not apply to it.
-
-    Unlike Móvil — which stays on AEAT sede hosts throughout — the Permanente
-    password form is submitted on Spain's Cl@ve national identity-provider page
-    (``clave.gob.es``; the observed login host is ``se-pasarela.clave.gob.es``).
-    The Cl@ve apex is therefore declared as a host SUFFIX under the explicit
-    ``allows_gov_idp_hosts`` opt-in (a narrow, sanctioned government-IdP
-    allowance, distinct from the AEAT-host predicate), alongside the AEAT apex
-    suffix so a ``www{n}`` load-balancer sibling is tolerated like Móvil.
+    submit) since there is no QR/push/representation-gate surface to allow.
     """
     external = settings.external_constants()
     return RemoteStateGuardPolicy(
@@ -76,16 +64,12 @@ def clave_permanente_auth_browser_action_policy(settings: Settings) -> RemoteSta
         allowed_hosts=(
             urlsplit(external.aeat.domains.sede).netloc,
             urlsplit(external.aeat.domains.www6).netloc,
-        ),
-        allowed_host_suffixes=(
-            external.aeat.domains.host_suffix,
             urlsplit(external.aeat.domains.clave).netloc,
         ),
-        allows_gov_idp_hosts=True,
         allowed_browser_action_patterns=(
             "clave-permanente-fill-username",
             "clave-permanente-fill-password",
-            "clave-permanente-authenticate",
+            "clave-permanente-submit",
         ),
         synthetic_data_allowed=False,
         requires_authentication=True,

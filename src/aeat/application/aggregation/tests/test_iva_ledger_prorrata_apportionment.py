@@ -27,7 +27,6 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import (
     Period,
     ProrrataProvisionalProvenance,
@@ -268,12 +267,7 @@ def test_general_prorrata_register_reduces_deducible_cuota_without_reducing_base
     assert apportioned_values[_DEVENGADO_CUOTA_BINDING] == baseline_values[_DEVENGADO_CUOTA_BINDING]
 
 
-def _seed_register(
-    objects: SecureObjectRepository,
-    *,
-    regime: ProrrataRegisterRegime,
-    percentage: Decimal,
-) -> None:
+def _seed_register(objects: object, *, regime: ProrrataRegisterRegime, percentage: Decimal) -> None:
     ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         ProrrataRegister(
             entries=(
@@ -290,7 +284,7 @@ def _seed_register(
 
 
 def test_general_regime_apportionment_is_byte_identical_to_pre_especial(tmp_path: Path) -> None:
-    """The GENERAL path stays the flat `cuota * percentage` behaviour.
+    """The GENERAL path stays the flat `cuota * percentage` behaviour after S12.
 
     The deducible cuota is pinned to the exact pre-especial value
     (10.50 * 80% = 8.400): the regime-aware branch must not perturb a single
@@ -431,7 +425,7 @@ def test_especial_all_common_reduces_to_general_byte_identical(tmp_path: Path) -
     assert especial_bytes == general_bytes
 
 
-# --- Sectores diferenciados (LIVA arts. 9.1.c / 101) --------------------------
+# --- Sectores diferenciados (LIVA arts. 9.1.c / 101, W03.P04.S18) -------------
 
 
 def _sectored_purchase(provider_id: str, sector_id: str | None) -> Transaction:
@@ -560,7 +554,7 @@ def test_each_input_routes_to_its_own_sector_percentage(tmp_path: Path) -> None:
     and a common-use purchase (art. 104.Dos common 50%) each contribute their own
     apportioned cuota. The declared-sector percentages must each bite on their
     own input, not a single whole-entity percentage across all three. The exact
-    figure is an oracle claim proven in the verification test; here the
+    figure is an oracle claim proven in the S20 verification test; here the
     structural claim is that the three percentages are applied independently.
     """
     revision = resources().modelos.get("303").revisions["2009-y-siguientes"]

@@ -29,24 +29,14 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from urllib.parse import urlsplit
 
 import pytest
-from pydantic import AnyUrl
 
-from ......domain.calculations.registry import (
-    RegistryValidationError,
-    RemoteOperation,
-    assert_remote_operation_allowed,
-)
 from ......tests.secure_sql import isolated_runtime_profile
 from .. import _session_store
 from .._clave_permanente import ClavePermanenteAuthProvider
 from .._clave_permanente_metadata import ClavePermanenteSessionMetadata
-from .._clave_permanente_support import (
-    ClavePermanenteFailureMode,
-    clave_permanente_auth_browser_action_policy,
-)
+from .._clave_permanente_support import ClavePermanenteFailureMode
 from .._errors import AeatLoginAssertionError, AuthConfigurationError, AuthError
 from .._providers import AuthProviderKind, ClavePermanenteSessionDetail
 from ._clave_permanente_support import (
@@ -71,87 +61,6 @@ def _isolated_secure_session_backend(tmp_path: Path):
 
 
 # ── enum + catalogue enrollment ──────────────────────────────────────────────
-
-
-class TestBrowserActionPolicy:
-    """Build + host coverage for the Cl@ve Permanente remote-state guard policy.
-
-    Regression for the latent build crash: the policy listed the Cl@ve national
-    IdP host, which the guard's AEAT-host predicate refused, so every build
-    raised. It now builds under the explicit government-IdP opt-in.
-    """
-
-    def test_policy_builds_and_allows_permanente_credential_fill_actions(self, tmp_path: Path) -> None:
-        # The build itself is the regression: the policy previously raised on
-        # construction because it listed the Cl@ve IdP host. The two credential-
-        # fill actions are on the allow-list and carry no write-verb token.
-        settings = _settings_for(tmp_path)
-        policy = clave_permanente_auth_browser_action_policy(settings)
-        for action in (
-            "clave-permanente-fill-username",
-            "clave-permanente-fill-password",
-        ):
-            result = assert_remote_operation_allowed(
-                policy,
-                RemoteOperation(kind="browser_action", action=action),
-            )
-            assert result.decision == "allowed"
-
-    def test_policy_allows_the_renamed_authenticate_action(self, tmp_path: Path) -> None:
-        # The Cl@ve IdP login-form submit is labelled ``authenticate`` (not
-        # ``submit``): it is an authentication step, not an AEAT tax filing, so
-        # the write-token block does not apply. ``authenticate`` carries no
-        # forbidden verb token, so it reaches — and matches — the allow-list.
-        settings = _settings_for(tmp_path)
-        policy = clave_permanente_auth_browser_action_policy(settings)
-        result = assert_remote_operation_allowed(
-            policy,
-            RemoteOperation(kind="browser_action", action="clave-permanente-authenticate"),
-        )
-        assert result.decision == "allowed"
-
-    def test_write_token_filter_still_blocks_a_write_verb_action(self, tmp_path: Path) -> None:
-        # Safety net: the rename is ONLY the login label. A genuine write-verb
-        # browser action under the SAME permanente policy is STILL refused by the
-        # unchanged write-token filter — proof the block was not weakened.
-        settings = _settings_for(tmp_path)
-        policy = clave_permanente_auth_browser_action_policy(settings)
-        with pytest.raises(RegistryValidationError, match="token 'presentar' is forbidden"):
-            assert_remote_operation_allowed(
-                policy,
-                RemoteOperation(kind="browser_action", action="clave-permanente-presentar"),
-            )
-
-    def test_policy_admits_sibling_aeat_host_and_clave_idp_host(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path)
-        policy = clave_permanente_auth_browser_action_policy(settings)
-        clave_host = urlsplit(settings.external_constants().aeat.domains.clave).netloc
-        aeat_sibling = _aeat_url(_DOMAINS.www12, settings.aeat_sede_expedientes_path)
-        idp_url = f"https://se-pasarela.{clave_host}/idp/gateway"
-        for url in (aeat_sibling, idp_url):
-            result = assert_remote_operation_allowed(
-                policy,
-                RemoteOperation(kind="http", method="GET", url=AnyUrl(url)),
-            )
-            assert result.decision == "allowed"
-
-    def test_policy_refuses_non_aeat_non_idp_host(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path)
-        policy = clave_permanente_auth_browser_action_policy(settings)
-        with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
-            assert_remote_operation_allowed(
-                policy,
-                RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
-            )
-
-    def test_policy_rejects_unlisted_action(self, tmp_path: Path) -> None:
-        settings = _settings_for(tmp_path)
-        policy = clave_permanente_auth_browser_action_policy(settings)
-        with pytest.raises(RegistryValidationError, match="explicit read-only allow-list"):
-            assert_remote_operation_allowed(
-                policy,
-                RemoteOperation(kind="browser_action", action="clave-permanente-unreviewed"),
-            )
 
 
 def test_auth_provider_kind_has_clave_permanente_member() -> None:

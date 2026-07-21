@@ -4,7 +4,8 @@ The expected membership is taken from an external authority — the bundled
 consolidated LIVA art. 104.Tres (``ley-37-1992-art-104.html#a104``), which
 enumerates exactly six operations excluded from both terms of the prorrata
 ratio (reglas 1.º-6.º) — not from a re-run of the code under test. The
-auto-derived / operator-declared partition keeps only the two
+auto-derived / operator-declared partition follows ADR
+``2026-07-07-prorrata-art104-tres-exclusions`` decision D1: only the two
 judgment exclusions (foreign PE, non-habitual inmobiliario/financiero) are
 operator-declared.
 """

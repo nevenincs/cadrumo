@@ -860,22 +860,10 @@ def main() -> None:
     """
     import sys
 
-    from ...adapters.outbound.aeat.auth import operator_progress_sink
-
     _apply_language_argv_to_environment(sys.argv[1:])
     _localise_help_section_headers()
-    # Route the Cl@ve auth-wait progress banner (which carries the AEAT
-    # verification code the operator must confirm in their Cl@ve app) to
-    # stderr, so a headless operator sees it during the wait instead of
-    # having to read the runtime log. stderr keeps the stdout JSON envelope
-    # pure; the code is non-secret operator guidance, not a credential.
-    with _ensure_help_render_width(), operator_progress_sink(_emit_operator_progress):
+    with _ensure_help_render_width():
         app(prog_name="aeat")
-
-
-def _emit_operator_progress(banner: str) -> None:
-    """Write an operator progress banner to stderr, keeping stdout pure."""
-    typer.echo(banner, err=True)
 
 
 __all__ = [

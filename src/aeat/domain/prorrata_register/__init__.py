@@ -482,16 +482,14 @@ class ProrrataRegister(BaseModel):
             key=lambda entry: entry.ejercicio,
             reverse=True,
         )[:3]
-        con_volumes = [
-            entry.definitive_volume_con_derecho for entry in active if entry.definitive_volume_con_derecho is not None
-        ]
-        sin_volumes = [
-            entry.definitive_volume_sin_derecho for entry in active if entry.definitive_volume_sin_derecho is not None
-        ]
-        if len(con_volumes) != len(active) or len(sin_volumes) != len(active):
-            raise ProrrataRegisterValidationError("settled prorrata entry is missing definitive volume evidence")
-        summed_con = sum(con_volumes, Decimal("0"))
-        summed_sin = sum(sin_volumes, Decimal("0"))
+        summed_con = sum(
+            (entry.definitive_volume_con_derecho for entry in active),
+            Decimal("0"),
+        )
+        summed_sin = sum(
+            (entry.definitive_volume_sin_derecho for entry in active),
+            Decimal("0"),
+        )
         return ThreeActiveYearsAggregate(
             contributing_ejercicios=tuple(entry.ejercicio for entry in active),
             summed_volume_con_derecho=summed_con,
@@ -501,16 +499,13 @@ class ProrrataRegister(BaseModel):
 
 __all__ = [
     "PRORRATA_REGISTER_SCHEMA_VERSION",
-    "ProrrataProvisionalProvenance",
     "ProrrataProvisionalResolution",
     "ProrrataRegister",
     "ProrrataRegisterEntry",
     "ProrrataRegisterError",
-    "ProrrataRegisterRegime",
     "ProrrataRegisterRepositoryProtocol",
     "ProrrataRegisterValidationError",
     "SectorDefinition",
-    "SectorDiferenciadoLetra",
     "ThreeActiveYearsAggregate",
     "resolve_provisional_percentage",
 ]

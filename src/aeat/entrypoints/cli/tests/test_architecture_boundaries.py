@@ -85,7 +85,11 @@ def _modelo_cli_modules() -> tuple[Path, ...]:
 
 
 def _production_modelo_cli_modules() -> tuple[Path, ...]:
-    return tuple(path for path in _modelo_cli_modules() if path.name not in {_MODELO_LEGACY_ROOT, _MODELO_PAYLOADS})
+    return tuple(
+        path
+        for path in _modelo_cli_modules()
+        if path.name not in {_MODELO_LEGACY_ROOT, _MODELO_PAYLOADS}
+    )
 
 
 def _tree_for_path(path: Path, source_tree_ast: Mapping[Path, ast.AST]) -> ast.AST:

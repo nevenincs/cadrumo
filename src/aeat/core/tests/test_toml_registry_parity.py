@@ -115,13 +115,8 @@ def test_read_toml_reproduces_known_revision_values_including_date_and_inline_ta
     parsed = read_toml(_REVISION_PATH, error_factory=ValueError)
     assert parsed == _EXPECTED_REVISION
 
-    revisions = parsed["revisions"]
-    assert isinstance(revisions, dict)
-    revisions_by_id: dict[str, object] = {str(key): value for key, value in revisions.items()}
-    revision = revisions_by_id["2025-02-03-y-siguientes"]
-    assert isinstance(revision, dict)
-    revision_values: dict[str, object] = {str(key): value for key, value in revision.items()}
-    valid_from = revision_values["valid_from"]
+    revision = parsed["revisions"]["2025-02-03-y-siguientes"]  # type: ignore[index]
+    valid_from = revision["valid_from"]
     assert isinstance(valid_from, date)
     assert not hasattr(valid_from, "hour"), "valid_from must be a local date, not a datetime"
 

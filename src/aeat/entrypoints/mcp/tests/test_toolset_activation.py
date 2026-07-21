@@ -1,6 +1,6 @@
 """Runtime toolset activation widens the advertised surface, gate-invariant.
 
-Proves dynamic toolsets: the ``toolsets``
+Proves the ADR ``mcp-progressive-discovery`` P3 dynamic toolsets: the ``toolsets``
 meta-tool lists the domain groups and activates/deactivates one, activation adds
 that group's per-verb tools to the advertised ``tools/list`` (rebuilt per call)
 while the orientation core stays, a hard cap bounds simultaneous activations, an

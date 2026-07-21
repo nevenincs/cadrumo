@@ -72,6 +72,7 @@ def test_all_token_expansion_is_sorted_and_deduplicated(catalogue: Apoderamiento
     assert list(expanded) == sorted(expanded)
 
 
+
 @pytest.mark.parametrize("raw_tokens", ((ALL_TOKEN,), (ALL_TOKEN, "IVA")))
 def test_parse_scope_tokens_expands_all_token_without_duplicates(
     catalogue: ApoderamientosCatalogue,

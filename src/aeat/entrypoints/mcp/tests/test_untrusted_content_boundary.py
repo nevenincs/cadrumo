@@ -1,6 +1,6 @@
 """H7 conformance gate: no raw portal markup relays into a tool result.
 
-The security policy makes the untrusted-external-content
+ADR ``2026-07-08-mcp-protocol-hardening`` H7 makes the untrusted-external-content
 boundary a contract. AEAT portal HTML / justificante text is untrusted input to
 the model (a prompt-injection vector), so the live-family (``app.live.*``) pull
 verbs relay their observations only through TYPED envelope fields — a

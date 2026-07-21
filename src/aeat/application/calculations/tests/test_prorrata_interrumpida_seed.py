@@ -4,9 +4,10 @@ The art. 105.Cinco resumption seed is the GLOBAL percentage over the AGGREGATE
 volumes of the last three activo años naturales, skipping the interruption gap -
 NOT the average of the three years' definitive percentages, and NOT the three
 calendar years. This is a hand-constructed multi-year register whose expected
-figure is derived from the independently-stated volumes: the global percentage
-differs from the percentage-average, so the two assertions together prove the
-mechanism is not the percentage-average shortcut.
+figure is derived from the independently-stated volumes (per the art-105.Cinco
+ADR): the global percentage differs from the percentage-average, so the two
+assertions together prove the mechanism is not the percentage-average shortcut
+the ADR forbids.
 
 The register (whole-entity, one differentiated sector = None):
 
@@ -82,10 +83,7 @@ def test_seed_is_the_global_percentage_not_the_average_of_the_three_definitives(
     """
     register = _genuine_gap_register()
     active = [entry for entry in register.entries if not entry.interrupted]
-    percentages = [entry.definitive_percentage for entry in active]
-    assert all(percentage is not None for percentage in percentages)
-    definitive_percentages = [percentage for percentage in percentages if percentage is not None]
-    average_of_definitives = sum(definitive_percentages, Decimal("0")) / Decimal(len(definitive_percentages))
+    average_of_definitives = sum((entry.definitive_percentage for entry in active), Decimal("0")) / Decimal(len(active))
 
     seed, _diagnostic = build_interrumpida_tres_ultimos_seed(register, ejercicio=2024)
 

@@ -88,9 +88,7 @@ def test_validate_m145_communication_record_reports_missing_required_casilla_wit
         )
         result = validate_m145_communication_record(record.communication_record_id, bucket_id=runtime.bucket_id)
 
-    issue = next(
-        issue for issue in result.issues if issue.kind is M145CommunicationValidationIssueKind.MISSING_REQUIRED
-    )
+    issue = next(issue for issue in result.issues if issue.kind is M145CommunicationValidationIssueKind.MISSING_REQUIRED)
     assert result.valid is False
     assert issue.casilla_id == missing.id
     assert issue.data_type == missing.data_type

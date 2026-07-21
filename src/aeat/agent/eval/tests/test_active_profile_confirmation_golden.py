@@ -156,7 +156,7 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
     Cross-checks ``_CONFIRMATION_COMMAND`` and ``_MUTATING_COMMANDS`` against the REAL MCP
     tool-descriptor classification and confirmation gate (the same authority the ``PreToolUse``
     gate reads via ``entrypoints.mcp._hitl.confirmation_for_tool``), so neither declared set is
-    an invented label. Under the declared-risk model the
+    an invented label. Under the H3 declared-risk model (ADR ``mcp-protocol-hardening``) the
     ``config profile`` family is ``LOCAL_STATE_MUTATING`` at whole-family granularity (it also
     owns ``create``/``edit``/``delete``), so ``config.profile.status`` is non-read-only like the
     mutating leaves; the risk table carries only the destructive/handoff/live-write axes, so the
@@ -181,7 +181,8 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
     for command in _MUTATING_COMMANDS:
         assert command in by_key, f"'{command}' is not an exposed MCP tool"
         assert not command_classification(command).read_only, (
-            f"'{command}' is declared mutating in this scenario but the live manifest classifies it read-only"
+            f"'{command}' is declared mutating in this scenario but the live manifest classifies "
+            "it read-only"
         )
 
 

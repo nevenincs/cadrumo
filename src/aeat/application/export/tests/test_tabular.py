@@ -177,7 +177,9 @@ def test_export_error_locale_keys_present_in_catalogue(locale_key: str, locale_c
     text = (locale_dir / f"{locale_code}.yml").read_text(encoding=UTF_8_ENCODING)
     data = yaml.safe_load(text)
     value = data.get("errors", {}).get("refused", {}).get(locale_key)
-    assert value, f"locale {locale_code!r}: 'errors.refused.{locale_key}' key is missing or empty in {locale_code}.yml"
+    assert value, (
+        f"locale {locale_code!r}: 'errors.refused.{locale_key}' key is missing or empty in {locale_code}.yml"
+    )
 
 
 # ---------------------------------------------------------------------------

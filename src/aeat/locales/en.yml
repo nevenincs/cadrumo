@@ -291,7 +291,6 @@ adapters:
         failed.
       session_expired_nav_failed: The AEAT declarations register did not load; your
         session has likely expired. Run 'aeat config auth test' and retry.
-      notifications_bad_landing: 'The AEAT notifications page did not load correctly; your session may have expired or AEAT is under maintenance. Run ''aeat config auth status'' and retry. Do not treat this as an empty inbox.'
 aggregation:
   grouping:
     errors:
@@ -2932,7 +2931,6 @@ cli:
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile
         snapshot_id_help: Specific snapshot id (prefixes accepted)
-        dropped_fields_notice: 'AEAT''s censo no longer reports fields your last snapshot carried: {dropped_fields}. If you did not change or close these registrations, this may be a partial pull — re-run the censo pull or re-enter the values; the home-office deduction ratio may stop resolving.'
       create_epilog: 'Minimal freelancer profile: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Initialize a new active profile.

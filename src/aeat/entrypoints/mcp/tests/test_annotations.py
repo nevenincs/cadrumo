@@ -35,7 +35,7 @@ def test_every_descriptor_has_full_annotation_coverage() -> None:
 
 
 def test_open_world_hint_covers_exactly_the_sede_family_over_the_real_surface() -> None:
-    # The openWorldHint is derived from the single
+    # ADR mcp-protocol-hardening H3: the openWorldHint is derived from the single
     # classification authority and is set for exactly the AEAT-sede-interacting
     # verbs (the ``app.live.*`` subtree and any ``pull*`` leaf) and no local verb.
     descriptors = build_tool_descriptors()
@@ -106,7 +106,8 @@ def _confirm_tier_command_keys() -> frozenset[str]:
     return frozenset(
         descriptor.command_key
         for descriptor in build_tool_descriptors()
-        if confirmation_for_tool(command_key=descriptor.command_key) is ConfirmationPolicy.CONFIRM
+        if confirmation_for_tool(command_key=descriptor.command_key)
+        is ConfirmationPolicy.CONFIRM
     )
 
 

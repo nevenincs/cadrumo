@@ -86,10 +86,6 @@ _READ_GUARD_POLICY = RemoteStateGuardPolicy(
     evidence_tier="official_source_guidance",
     classification="authenticated_read_surface",
     allowed_hosts=(_WALLET_HOST, _WALLET_RUNTIME_HOST, _SEDE_HOST),
-    # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer
-    # dispatch (an authenticated pull landing on a sibling host) is tolerated,
-    # not refused; success detection stays on the wallet path/content.
-    allowed_host_suffixes=(_EXTERNAL.aeat.domains.host_suffix,),
     allowed_read_post_paths=(_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,),
     allowed_browser_action_patterns=_EXTERNAL.aeat.live_safety.wallet_browser_action_patterns,
     synthetic_data_allowed=False,

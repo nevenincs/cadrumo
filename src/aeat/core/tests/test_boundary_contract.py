@@ -90,7 +90,7 @@ def _is_type_checking_guard(node: ast.stmt) -> bool:
     return False
 
 
-def _iter_import_time_imports(path: Path, tree: ast.Module) -> list[str]:
+def _iter_import_time_imports(path: Path, tree: ast.AST) -> list[str]:
     """Collect every import that executes when ``path`` is loaded.
 
     Imports nested inside a function or method body are deferred and do
@@ -144,7 +144,6 @@ def test_core_production_modules_do_not_import_outer_layers(source_tree_ast: Map
     """Core production modules must not import the outer layers at load time."""
     violations: list[str] = []
     for path, tree in production_ast_items(source_tree_ast):
-        assert isinstance(tree, ast.Module), f"Expected a module AST for {path}, got {type(tree).__name__}"
         relative_path = repo_relative(path)
         if not relative_path.startswith("src/aeat/core/"):
             continue

@@ -1,9 +1,9 @@
 """Anti-dormant proof: the operator ingress makes especial + sectores fire.
 
-The especial and sectores apportionment engines
+The W02 especial and W03 sectores apportionment engines
 (:func:`~application.aggregation._iva_ledger._apply_especial_apportionment`,
 :func:`~application.aggregation._iva_ledger._apply_sector_apportionment`) were
-verified end-to-end — but those verifications seed
+verified end-to-end in W02.P03.S15 / W03.P04.S20 — but those verifications seed
 the register through the RAW adapter (``ProrrataRegisterRepository(...).save``),
 not through any operator surface. The campaign-close honesty review
 (``2026-07-08-iva-prorrata-complexity-audit``) found the engines therefore fire
@@ -37,7 +37,6 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import (
     Period,
     ProrrataProvisionalProvenance,
@@ -118,10 +117,7 @@ def _purchase(
     )
 
 
-def _save_txns(
-    objects: SecureObjectRepository,
-    txns: tuple[Transaction, ...],
-) -> TransactionCatalogueRepository:
+def _save_txns(objects: object, txns: tuple[Transaction, ...]) -> TransactionCatalogueRepository:
     tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=objects)
     tx_repo.save(TransactionCatalogue.from_transactions(txns))
     return tx_repo

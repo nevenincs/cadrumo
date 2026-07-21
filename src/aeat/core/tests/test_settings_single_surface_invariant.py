@@ -169,7 +169,6 @@ def _is_string_with_aeat_format_template(node: ast.expr) -> bool:
 
 def _violations_in(path: Path, tree: ast.AST) -> list[tuple[int, str, str]]:
     """Return (lineno, key, snippet) tuples for AEAT-prefixed env reads."""
-    assert isinstance(tree, ast.Module), f"Expected a module AST for {path}, got {type(tree).__name__}"
     constants = _collect_aeat_string_bindings(tree)
     aliases = _collect_environ_aliases(tree)
     violations: list[tuple[int, str, str]] = []

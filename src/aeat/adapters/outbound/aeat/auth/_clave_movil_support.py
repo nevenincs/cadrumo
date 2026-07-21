@@ -10,9 +10,6 @@ from __future__ import annotations
 
 import hashlib
 import re
-from collections.abc import Callable, Iterator
-from contextlib import contextmanager
-from contextvars import ContextVar
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 from urllib.parse import urlsplit
@@ -49,11 +46,6 @@ def auth_browser_action_policy(settings: Settings) -> RemoteStateGuardPolicy:
             urlsplit(external.aeat.domains.www6).netloc,
             urlsplit(external.aeat.domains.www12).netloc,
         ),
-        # Widen to any subdomain under the AEAT apex so a ``www{n}`` load-balancer
-        # dispatch (auth choreography landing on a sibling host beyond the
-        # enumerated www6/www12) is tolerated, not refused; the closed
-        # action-pattern set stays the sole action gate.
-        allowed_host_suffixes=(external.aeat.domains.host_suffix,),
         allowed_browser_action_patterns=external.aeat.live_safety.auth_browser_action_patterns,
         synthetic_data_allowed=False,
         requires_authentication=True,
@@ -186,52 +178,13 @@ def diagnostic_fingerprint(value: object) -> str:
     return f"sha256:{digest}"
 
 
-_OPERATOR_PROGRESS_SINK: ContextVar[Callable[[str], None] | None] = ContextVar(
-    "_aeat_auth_operator_progress_sink",
-    default=None,
-)
-"""Active operator progress sink for the current context, or ``None`` when unset."""
-
-
-@contextmanager
-def operator_progress_sink(sink: Callable[[str], None]) -> Iterator[None]:
-    """Arm an operator-facing progress sink for the current context.
-
-    While armed, :func:`render_progress_banner` routes its already-built
-    operator banner — the "approve in your Cl@ve app / verification code:
-    XXX" prompt — to ``sink`` in addition to the runtime log, so a headless
-    operator sees the verification code they must confirm *during* the Cl@ve
-    wait instead of only in the log file. The sink is unset (``None``) in
-    production and tests unless a caller (the CLI entry point) arms it, so the
-    banner path pays a single :meth:`ContextVar.get` when no sink is
-    installed. Mirrors the capture-sink idiom in
-    :mod:`core.observability._capture`.
-
-    The banner is non-secret operator guidance (a challenge code the operator
-    confirms), not a credential; it is emitted only to this operator channel,
-    never folded into a machine-readable result.
-    """
-    token = _OPERATOR_PROGRESS_SINK.set(sink)
-    try:
-        yield
-    finally:
-        _OPERATOR_PROGRESS_SINK.reset(token)
-
-
 def render_progress_banner(
     *,
     verification_code: str | None,
     timeout_seconds: int,
     used_non_qr_fallback: bool,
 ) -> None:
-    """Log the operator-facing progress banner for a fresh Cl@ve attempt.
-
-    Always records the banner to the runtime log. When an operator progress
-    sink is armed for the current context (see :func:`operator_progress_sink`),
-    the same banner is additionally handed to that sink so a headless operator
-    sees the verification code during the wait rather than having to read the
-    log file.
-    """
+    """Log the operator-facing progress banner for a fresh Cl@ve attempt."""
     lines = [
         "",
         "-------------------------------------------------------------",
@@ -266,9 +219,6 @@ def render_progress_banner(
     )
     banner = "\n".join(lines)
     log.info("auth.waiting_banner banner=%r", banner)
-    sink = _OPERATOR_PROGRESS_SINK.get()
-    if sink is not None:
-        sink(banner)
 
 
 __all__ = [
@@ -281,7 +231,6 @@ __all__ = [
     "classify_identity",
     "diagnostic_fingerprint",
     "extract_verification_code_from_html",
-    "operator_progress_sink",
     "render_progress_banner",
     "url_diagnostic",
 ]

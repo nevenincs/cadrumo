@@ -43,7 +43,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, cast, override
+from typing import Annotated, override
 
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator, model_validator
 
@@ -177,7 +177,7 @@ def _validated_row_binding_index(value: object, *, surface: str) -> str:
 
 
 def _canonical_row_binding_values(
-    row_binding_values: Mapping[object, object],
+    row_binding_values: Mapping[BindingId, Mapping[str, str]],
     *,
     surface: str,
 ) -> dict[BindingId, dict[str, str]]:
@@ -252,12 +252,7 @@ def derive_calculation_revision_id(
                 for k, v in relation_overrides.items()
             ),
         )
-    # CAST-RATIONALE-ROW-BINDING-HASH: canonicalizer validates untyped boundary values before hashing.
-    canonical_row_bindings = _canonical_row_binding_values(
-        # CAST-RATIONALE-ROW-BINDING-HASH-VALUE: canonicalizer validates untyped boundary values before hashing.
-        cast(Mapping[object, object], row_binding_values or {}),
-        surface="row_binding_values",
-    )
+    canonical_row_bindings = _canonical_row_binding_values(row_binding_values or {}, surface="row_binding_values")
     if canonical_row_bindings:
         payload["row_binding_values"] = canonical_row_bindings
     normalized_borrador_snapshot_id = borrador_snapshot_id.strip() if borrador_snapshot_id else None
@@ -624,12 +619,7 @@ class CalculationRevision(BaseModel):
             return {}
         if not isinstance(value, Mapping):
             raise ModeloValidationError("row_binding_values must be a binding -> row-index mapping")
-        # CAST-RATIONALE-ROW-BINDING-VALIDATOR: canonicalizer validates untyped Pydantic input at this boundary.
-        return _canonical_row_binding_values(
-            # CAST-RATIONALE-ROW-BINDING-VALIDATOR-VALUE: Pydantic boundary input.
-            cast(Mapping[object, object], value),
-            surface="row_binding_values",
-        )
+        return _canonical_row_binding_values(value, surface="row_binding_values")
 
     def _require_set(self, *names: str) -> None:
         for name in names:

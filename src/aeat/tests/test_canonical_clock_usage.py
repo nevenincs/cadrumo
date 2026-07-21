@@ -39,7 +39,6 @@ _TEST_INFRA_MODULES: frozenset[Path] = frozenset(
     },
 )
 
-
 def _is_excluded(path: Path) -> bool:
     if path in _TEST_INFRA_MODULES:
         return True
@@ -112,7 +111,6 @@ def _collect_violations(source_tree_ast: Mapping[Path, ast.AST]) -> list[str]:
         parents = _parent_map(tree)
         for node in ast.walk(tree):
             if _is_datetime_now_utc_call(node) and not _is_documented_now_fallback(node, parents):
-                assert isinstance(node, ast.Call)
                 violations.append(f"{repo_relative(path)}:{node.lineno}")
     return violations
 

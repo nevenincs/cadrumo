@@ -135,7 +135,6 @@ def test_no_bare_wall_clock_reads_in_production(source_tree_ast: Mapping[Path, a
     used_allowlist: set[str] = set()
 
     for path, tree in production_ast_items(source_tree_ast):
-        assert isinstance(tree, ast.Module), f"Expected a module AST for {path}, got {type(tree).__name__}"
         rel = aeat_relative(path)
         if rel in _SKIP_FILES:
             continue

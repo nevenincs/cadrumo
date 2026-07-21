@@ -107,11 +107,7 @@ def test_two_sectors_carry_distinct_prior_definitives() -> None:
     assert comercio_seed.provisional_percentage == Decimal("90")
     assert arrendamiento_seed.provisional_percentage == Decimal("30")
     assert comercio_seed.provisional_percentage != arrendamiento_seed.provisional_percentage
-    comercio_percentage = comercio_seed.provisional_percentage
-    arrendamiento_percentage = arrendamiento_seed.provisional_percentage
-    assert comercio_percentage is not None
-    assert arrendamiento_percentage is not None
-    assert (comercio_percentage - arrendamiento_percentage) > Decimal("50")
+    assert (comercio_seed.provisional_percentage - arrendamiento_seed.provisional_percentage) > Decimal("50")
 
 
 def test_sector_without_prior_definitive_returns_none_never_defaults() -> None:

@@ -9,8 +9,6 @@ hardcoded prose.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 import pytest
 
 from .._elicitation import (
@@ -129,7 +127,7 @@ def test_refusal_messages_interpolate_the_command() -> None:
 
 # --- H8: no secret ever rides an MCP elicitation channel -------------------
 #
-# The policy records the decided stance: secrets
+# ADR 2026-07-08-mcp-protocol-hardening H8 records the decided stance: secrets
 # (certificate passphrases, tokens, API keys, PINs) are entered ONLY through the
 # local CLI (`aeat config auth certificate secret set`) into encrypted storage;
 # no secret ever rides any MCP channel, form or URL. The console's sole
@@ -163,14 +161,14 @@ def _name_requests_secret(name: str) -> bool:
     return bool(segments & _SECRET_SEGMENTS)
 
 
-def _schema_field_names(schema: Mapping[str, object]) -> set[str]:
+def _schema_field_names(schema: dict[str, object]) -> set[str]:
     properties = schema.get("properties")
     if not isinstance(properties, dict):
         return set()
     return {str(name) for name in properties}
 
 
-def _schema_requests_secret(schema: Mapping[str, object]) -> bool:
+def _schema_requests_secret(schema: dict[str, object]) -> bool:
     return any(_name_requests_secret(name) for name in _schema_field_names(schema))
 
 
@@ -180,11 +178,11 @@ def test_confirmation_schema_asks_only_a_boolean_and_no_secret() -> None:
     for command_key in (_HANDOFF, _NON_HANDOFF_DESTRUCTIVE, "ledger.add"):
         schema = confirmation_request(command_key=command_key).requested_schema
         assert _schema_field_names(schema) == {"confirm"}
-        properties = schema.get("properties")
+        properties = schema["properties"]
         assert isinstance(properties, dict)
-        confirm_field = properties.get("confirm")
+        confirm_field = properties["confirm"]
         assert isinstance(confirm_field, dict)
-        assert confirm_field.get("type") == "boolean"
+        assert confirm_field["type"] == "boolean"
         assert not _schema_requests_secret(schema), f"{command_key} elicitation schema requests a secret-like field"
 
 

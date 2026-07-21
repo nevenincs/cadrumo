@@ -20,7 +20,9 @@ See Also:
         Source-kind token governing the casilla-44 binding.
     :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
         Live resolver that materialises the grounded binding after calculation.
-        Deferral rationale and the accepted cross-period regularización model.
+    ``2026-06-19-silent-zero-base-aggregation-adr`` and
+    ``2026-07-05-cross-period-prorrata-adr``
+        Deferral rationale and accepted cross-period regularización model.
 """
 
 from __future__ import annotations

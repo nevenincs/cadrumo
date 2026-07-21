@@ -47,9 +47,7 @@ _GUARDED_ROOTS = (
 )
 
 
-def test_production_secure_object_namespace_literals_match_the_registry(
-    source_tree_ast: Mapping[Path, ast.AST],
-) -> None:
+def test_production_secure_object_namespace_literals_match_the_registry(source_tree_ast: Mapping[Path, ast.AST]) -> None:
     registry_values = _registry_namespace_values()
     offences: list[str] = []
     for path, tree in _iter_guarded_production_sources(source_tree_ast):

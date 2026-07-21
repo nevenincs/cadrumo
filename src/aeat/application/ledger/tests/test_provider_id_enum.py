@@ -74,7 +74,5 @@ def test_unknown_ledger_provider_reports_known_enum_values() -> None:
         _resolve_financial_provider("bank-json", Path("statement.json"))
 
     assert exc_info.value.translated_message == "errors.transaction.unknown_ledger_provider"
-    context = exc_info.value.context
-    assert context is not None
-    assert context["provider"] == "bank-json"
-    assert context["providers"] == ", ".join(provider.value for provider in LedgerProviderID)
+    assert exc_info.value.context["provider"] == "bank-json"
+    assert exc_info.value.context["providers"] == ", ".join(provider.value for provider in LedgerProviderID)

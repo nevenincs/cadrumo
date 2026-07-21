@@ -32,8 +32,6 @@ This file pins:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
-
 import pytest
 from pydantic import ValidationError
 
@@ -93,7 +91,7 @@ _PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
 def _binding(
     *,
     source: str | BindingSourceKind,
-    selector: Mapping[str, object],
+    selector: dict[str, object],
     binding_id: str = "test-binding",
 ) -> DataBindingDefinition:
     """Build a minimal DataBindingDefinition for the gate to validate."""
@@ -112,7 +110,7 @@ def _binding(
 def _assert_selector_refused_at_construction(
     *,
     source: str,
-    selector: Mapping[str, object],
+    selector: dict[str, object],
     binding_id: str,
     expected_substrings: tuple[str, ...],
 ) -> None:

@@ -101,7 +101,7 @@ def _declared_live_write(command_key: str) -> Iterator[None]:
     """Declare ``command_key`` a live-write in the risk table for the test body.
 
     A live-write BLOCK now fires from the DECLARED risk table, not a leaf-name
-    heuristic: no real command declares
+    heuristic (ADR ``mcp-protocol-hardening`` H3): no real command declares
     ``live_write`` (never-submit is enforced as "no such tool exists"), so a test
     that exercises the defensive BLOCK branch must supply a declared live-write
     row and restore the table after - test data, not a mocked behaviour.
@@ -120,7 +120,7 @@ def _declared_live_write(command_key: str) -> Iterator[None]:
 async def _call_tool(name: str, arguments: Mapping[str, object]) -> mcp_types.CallToolResult:
     server = build_server(build_tool_descriptors(), persona=None)
     async with connect(server) as session:
-        # Clear the block-first-mutation identity gate through the public identity read.
+        # Clear the block-first-mutation identity gate (ADR mcp-identity-linked-operation
         # I2) with a real whoami identity read, so this confirmation-gate proof reaches
         # the CONFIRM tier under test rather than the identity gate in front of it.
         await session.call_tool("aeat_whoami", {})
@@ -197,7 +197,8 @@ def test_hypothetical_live_write_leaf_blocks_unconditionally() -> None:
     Proves eval-catalogue category 8(c): if a live-write verb ever entered the
     exposed command set, the gate refuses it outright rather than falling through
     to CONFIRM - the strongest tier, requiring no human approval loop to bypass.
-    The BLOCK derives from the DECLARED ``live_write`` axis, which forces the command non-read-only
+    The BLOCK derives from the DECLARED ``live_write`` axis (ADR
+    ``mcp-protocol-hardening`` H3), which forces the command non-read-only
     whatever its family mutability, so the outcome does not depend on getting the
     mutability classification right.
     """

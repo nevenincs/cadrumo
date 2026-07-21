@@ -94,14 +94,18 @@ def test_wizard_catalogue_materializes_bounded_dynamic_choice_keys() -> None:
             for member in EntityType
         },
         *{
-            f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{member.value.replace('_', '-')}.label"
+            "wizard.setup.taxpayer-type.irpf-income-categories.choices."
+            f"{member.value.replace('_', '-')}.label"
             for member in IrpfIncomeCategory
         },
         *{
             f"wizard.setup.residence.fiscal-residency.choices.{member.value.replace('_', '-')}.label"
             for member in FiscalResidency
         },
-        *{f"wizard.setup.profile.output-language.choices.{language}.label" for language in SUPPORTED_OUTPUT_LANGUAGES},
+        *{
+            f"wizard.setup.profile.output-language.choices.{language}.label"
+            for language in SUPPORTED_OUTPUT_LANGUAGES
+        },
     }
 
     assert expected <= keys
@@ -288,7 +292,9 @@ def test_namespace_init_modules_document_intent_without_reexports(module_name: s
     """Namespace package roots must document intent and expose no public aggregation API."""
     module = importlib.import_module(module_name)
 
-    assert "namespace" in (module.__doc__ or "").lower(), f"{module_name} must document its namespace-container intent"
+    assert "namespace" in (module.__doc__ or "").lower(), (
+        f"{module_name} must document its namespace-container intent"
+    )
     probe = subprocess.run(  # noqa: S603 - static module list under this test's control.
         [
             sys.executable,

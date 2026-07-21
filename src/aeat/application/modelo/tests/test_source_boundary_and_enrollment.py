@@ -36,7 +36,6 @@ from ....adapters.persistence.storage.sql import SecureObjectRepository
 from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import ModeloRevision
-from ....domain.modelos import Modelo184MemberRow
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
 from ...aggregation import DEFERRED_SOURCE_KINDS, ForeignAssetClass, ForeignAssetIngestObservation
@@ -241,11 +240,8 @@ def test_s08_atribucion_member_profile_source_resolves_m184_rows(
         "1": "6000",
         "2": "4000",
     }
-    detail_rows = result.revision.detail_rows
-    assert all(isinstance(row, Modelo184MemberRow) for row in detail_rows)
-    member_rows = tuple(row for row in detail_rows if isinstance(row, Modelo184MemberRow))
-    assert [row.nif for row in member_rows] == ["11111111A", "22222222B"]
-    assert [row.importe for row in member_rows] == [Decimal("6000"), Decimal("4000")]
+    assert [row.nif for row in result.revision.detail_rows] == ["11111111A", "22222222B"]
+    assert [row.importe for row in result.revision.detail_rows] == [Decimal("6000"), Decimal("4000")]
 
 
 def test_s08_atribucion_member_missing_base_emits_source_issue_not_zero(
@@ -281,7 +277,9 @@ def test_s08_atribucion_member_missing_base_emits_source_issue_not_zero(
         )
 
     source_issues = [
-        d for d in result.source_diagnostics if d.source_kind == "atribucion_member" and d.reason == "source_issue"
+        d
+        for d in result.source_diagnostics
+        if d.source_kind == "atribucion_member" and d.reason == "source_issue"
     ]
     assert len(source_issues) == 1
     assert "base_imponible_assigned" in source_issues[0].message

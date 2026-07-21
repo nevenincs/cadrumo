@@ -78,7 +78,7 @@ from ._clave_movil import (
     ClaveMovilConfigurationError,
     ClaveMovilFailureMode,
 )
-from ._clave_movil_support import classify_identity, operator_progress_sink
+from ._clave_movil_support import classify_identity
 from ._clave_permanente import (
     ClavePermanenteAuthProvider,
     ClavePermanenteFailureMode,
@@ -186,7 +186,6 @@ __all__ = [
     "extract_nif_from_subject",
     "health",
     "load_certificate",
-    "operator_progress_sink",
     "preload_into_browser_context",
     "restrict_file_permissions",
     "select_provider",

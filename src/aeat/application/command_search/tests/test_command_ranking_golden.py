@@ -17,8 +17,6 @@ requires a model download. The run reports which mode was exercised.
 
 from __future__ import annotations
 
-from collections.abc import Callable
-
 import pytest
 
 from ....entrypoints.mcp import build_tool_descriptors
@@ -34,7 +32,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
 @pytest.fixture(scope="module")
-def ranker() -> Callable[[str], list[str]]:
+def ranker():
     """Build the live descriptor set and its command index once for the module."""
     descriptors = build_tool_descriptors()
     index = build_command_search_index(descriptors)
@@ -45,7 +43,7 @@ def ranker() -> Callable[[str], list[str]]:
     return rank
 
 
-def test_import_a_bank_statement_ranks_ledger_import_first(ranker: Callable[[str], list[str]]) -> None:
+def test_import_a_bank_statement_ranks_ledger_import_first(ranker) -> None:
     ranked = ranker("import a bank statement")
     assert ranked, "the query matched no commands"
     assert ranked[0] == "ledger.import", f"expected ledger.import first, got {ranked[:5]}"
@@ -53,13 +51,13 @@ def test_import_a_bank_statement_ranks_ledger_import_first(ranker: Callable[[str
     assert ranked[0] != "modelo.review_package.import_feedback"
 
 
-def test_file_my_quarterly_vat_surfaces_quickfile_in_the_top_hits(ranker: Callable[[str], list[str]]) -> None:
+def test_file_my_quarterly_vat_surfaces_quickfile_in_the_top_hits(ranker) -> None:
     ranked = ranker("file my quarterly VAT")
     assert ranked, "the query matched no commands"
     assert "quickfile" in ranked[:5], f"expected quickfile in the top 5, got {ranked[:5]}"
 
 
-def test_outcome_phrasing_reaches_the_composite_quickfile_chain(ranker: Callable[[str], list[str]]) -> None:
+def test_outcome_phrasing_reaches_the_composite_quickfile_chain(ranker) -> None:
     # A second outcome-phrased homonym the lexical-only index missed: the literal
     # verb tokens of "do my taxes" appear in no command, yet the aliases route it
     # to the one-command filing chain.

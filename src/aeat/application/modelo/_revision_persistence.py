@@ -435,9 +435,7 @@ def _settled_prorrata_register_entry(
     return ProrrataRegisterEntry(
         ejercicio=work_unit.filing_year,
         regime=regime,
-        definitive_percentage=definitive_percentage,
-        definitive_volume_con_derecho=volumen_con_derecho,
-        definitive_volume_sin_derecho=volumen_sin_derecho,
+        **settlement_fields,
     )
 
 

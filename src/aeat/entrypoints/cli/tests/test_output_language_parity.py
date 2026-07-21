@@ -121,12 +121,8 @@ def _assert_output_language_effective(args: Sequence[str]) -> None:
     """
     leaf_en = invoke_cached_cli([*args, "--output-language", "en"])
     leaf_hu = invoke_cached_cli([*args, "--output-language", "hu"])
-    assert leaf_en.exit_code == 0, (
-        f"`{' '.join(args)} --output-language en` exited {leaf_en.exit_code}:\n{leaf_en.output}"
-    )
-    assert leaf_hu.exit_code == 0, (
-        f"`{' '.join(args)} --output-language hu` exited {leaf_hu.exit_code}:\n{leaf_hu.output}"
-    )
+    assert leaf_en.exit_code == 0, f"`{' '.join(args)} --output-language en` exited {leaf_en.exit_code}:\n{leaf_en.output}"
+    assert leaf_hu.exit_code == 0, f"`{' '.join(args)} --output-language hu` exited {leaf_hu.exit_code}:\n{leaf_hu.output}"
     assert leaf_en.output != leaf_hu.output, (
         f"`{' '.join(args)}` output is identical under `--output-language en` and `hu`; "
         f"the flag is accepted but INEFFECTIVE (output not routed through tr()).\n"
@@ -144,7 +140,9 @@ def _assert_output_language_effective(args: Sequence[str]) -> None:
 # ``--output-language`` must produce different output per locale. These are the
 # anchors for the ineffective-flag regression gate; ``config auth status`` runs
 # without an active profile so it is driveable in the sessionless test harness.
-_OUTPUT_LANGUAGE_EFFECTIVE_COMMANDS = (("config", "auth", "status"),)
+_OUTPUT_LANGUAGE_EFFECTIVE_COMMANDS = (
+    ("config", "auth", "status"),
+)
 
 
 def test_output_language_is_effective_not_just_accepted() -> None:

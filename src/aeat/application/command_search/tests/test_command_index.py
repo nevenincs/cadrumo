@@ -1,6 +1,6 @@
 """The command index bridges vocabulary a token-overlap scorer cannot.
 
-Proves the FTS5 discovery spine: the index
+Proves the ADR ``mcp-progressive-discovery`` P2 discovery spine: the FTS5 index
 recalls a command through Spanish stemming and diacritics folding where an exact
 token-overlap match misses it; per-column BM25 weighting ranks a key-tier hit
 above the same token buried in the help tier; and the degraded (no-FTS5) mode
@@ -90,7 +90,7 @@ def test_ranks_the_named_command_first_for_a_direct_query() -> None:
 
 
 def test_key_tier_outranks_the_same_token_in_the_help_tier() -> None:
-    # Per-column BM25 weighting: a shared token that lands in a
+    # Per-column BM25 weighting (ADR P2/S07): a shared token that lands in a
     # command's KEY tier must outrank the same token buried in another command's
     # HELP tier, so a homonym in a low-value column no longer wins.
     docs = (

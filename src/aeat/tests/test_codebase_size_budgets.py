@@ -82,7 +82,7 @@ _MODULE_LINE_LIMIT_OVERRIDES = {
     # then regrew past the ceiling from the disk-cache hardening/perf commits
     # (`21f3875c90`, `17919422a6`, `1f848d087c`). Load-bearing registry compiler;
     # re-pinned to present size pending an owner split pass rather than a
-    # same-pass extraction.
+    # same-pass extraction (2026-07-08 gate-drift-reconciliation P05.S26).
     "src/aeat/domain/calculations/registry/_loader.py": 1306,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_queries.py": 1331,  # SPLIT-CANDIDATE
     "src/aeat/domain/calculations/registry/_ledger_bindings.py": 1400,  # SPLIT-CANDIDATE

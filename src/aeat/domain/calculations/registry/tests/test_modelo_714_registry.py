@@ -357,20 +357,18 @@ def test_modelo_714_art31_joint_limit_calculates_from_same_year_m100_relations()
     assert result.values[_PATRIMONIO_TOTAL_CUOTA_INTEGRA_CASILLA] == Decimal("4000.00")
 
     entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
-    assert (
-        _M714_REL_100_BASE_IMPONIBLE_GENERAL
-        in entries_by_target[_PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA].operand_refs
-    )
-    assert (
-        _M714_REL_100_BASE_IMPONIBLE_AHORRO in entries_by_target[_PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA].operand_refs
-    )
-    assert (
-        _M714_REL_100_CUOTA_INTEGRA_ESTATAL in entries_by_target[_PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA].operand_refs
-    )
-    assert (
-        _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA
-        in entries_by_target[_PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA].operand_refs
-    )
+    assert _M714_REL_100_BASE_IMPONIBLE_GENERAL in entries_by_target[
+        _PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA
+    ].operand_refs
+    assert _M714_REL_100_BASE_IMPONIBLE_AHORRO in entries_by_target[
+        _PATRIMONIO_IRPF_BASES_IMPONIBLES_CASILLA
+    ].operand_refs
+    assert _M714_REL_100_CUOTA_INTEGRA_ESTATAL in entries_by_target[
+        _PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA
+    ].operand_refs
+    assert _M714_REL_100_CUOTA_INTEGRA_AUTONOMICA in entries_by_target[
+        _PATRIMONIO_IRPF_CUOTAS_INTEGRAS_CASILLA
+    ].operand_refs
 
 
 def test_modelo_714_snapshot_builds_for_2021_event_period() -> None:

@@ -1193,16 +1193,16 @@ def _collect_cell_constraints(
             continue
         if address is None:
             continue
-        constraints.append(
-            SheetCellConstraint(
-                address=address,
-                sign=casilla.constraints.sign,
-                min_value=casilla.constraints.min_value,
-                max_value=casilla.constraints.max_value,
-                legal_refs=tuple(casilla.constraints.legal_refs),
-                casilla_id=casilla.id,
-            ),
-        )
+            constraints.append(
+                SheetCellConstraint(
+                    address=address,
+                    sign=casilla.constraints.sign,
+                    min_value=casilla.constraints.min_value,
+                    max_value=casilla.constraints.max_value,
+                    legal_refs=tuple(casilla.constraints.legal_refs),
+                    casilla_id=casilla.id,
+                ),
+            )
     return tuple(constraints)
 
 

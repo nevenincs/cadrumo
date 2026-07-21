@@ -366,9 +366,7 @@ def test_register_sector_definitions_declare_partition() -> None:
     assert register.is_sectorized is True
     assert register.sector_ids() == ("comercio", "arrendamiento")
     assert register.sector_definition_for("arrendamiento") is arrendamiento
-    arrendamiento_definition = register.sector_definition_for("arrendamiento")
-    assert arrendamiento_definition is not None
-    assert arrendamiento_definition.letra is SectorDiferenciadoLetra.A
+    assert register.sector_definition_for("arrendamiento").letra is SectorDiferenciadoLetra.A
     assert register.sector_definition_for("unknown") is None
 
 

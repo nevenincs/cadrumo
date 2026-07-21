@@ -237,7 +237,7 @@ def test_help_section_headers_localise_to_hungarian(tmp_path: Path) -> None:
 
     The option *descriptions* already localise via the env promotion; this pins
     the residual framework-owned ``Options`` panel title (the section header) to
-    the resolved locale.
+    the resolved locale, closing the S332 gap.
     """
     result = _run_console(
         ["--language", "hu", "config", "auth", "status", "--help"],

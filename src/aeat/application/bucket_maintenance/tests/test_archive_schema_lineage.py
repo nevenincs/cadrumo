@@ -1,6 +1,7 @@
 """Sealed-archive version gate: ceiling with a durability floor.
 
-Companion to the storage-substrate and bundle lineage gates: the sealed-archive import
+Companion to the storage-substrate and bundle lineage gates
+(``2026-07-08-released-data-durability-adr``): the sealed-archive import
 gate distinguishes an archive exported by a newer application (upgrade the
 application) from one below the durability floor (predates the guarantee).
 
@@ -10,8 +11,8 @@ range gate only and nothing transforms an older archive layout on restore.
 The floor-equals-current tripwire below is what keeps that honest: an
 archive-version bump that holds the floor without landing a version-aware
 reader would pass the range gate green while restore misreads the old
-layout, which is exactly the silent-stranding failure the durability policy
-prevents.
+layout, which is exactly the silent-stranding failure the durability ADR
+exists to prevent.
 """
 
 from __future__ import annotations
@@ -42,17 +43,15 @@ def test_floor_matches_the_regime_expected_floor() -> None:
     archives) or — because the archive tier has no upgrade dispatch — land a
     version-aware reader plus an old-archive restorability test. Post-flip
     the expected floor becomes the frozen released value, and this same
-    assertion demands the floor stay pinned there.
+    assertion demands the floor stay pinned there
+    (``2026-07-09-compatibility-lifecycle-adr``).
     """
-    assert (
-        expected_floor(
-            COMPATIBILITY_REGIME,
-            "archive",
-            _ARCHIVE_SCHEMA_VERSION,
-            RELEASED_FORMAT_FLOORS,
-        )
-        == _ARCHIVE_DURABILITY_FLOOR
-    ), (
+    assert expected_floor(
+        COMPATIBILITY_REGIME,
+        "archive",
+        _ARCHIVE_SCHEMA_VERSION,
+        RELEASED_FORMAT_FLOORS,
+    ) == _ARCHIVE_DURABILITY_FLOOR, (
         "archive durability floor diverges from the regime-expected floor: while "
         "pre-release it must equal the current archive version (the archive tier has "
         "no upgrade dispatch, so a lower floor has no mechanism behind it); either "

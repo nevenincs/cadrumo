@@ -47,18 +47,6 @@ def _prorrata_list() -> dict[str, object]:
     return _json(result)
 
 
-def _prorrata_entries() -> list[dict[str, object]]:
-    """Return the list response's JSON objects after proving their wire shape."""
-
-    raw_entries = _prorrata_list()["entries"]
-    assert isinstance(raw_entries, list)
-    entries: list[dict[str, object]] = []
-    for raw_entry in raw_entries:
-        assert isinstance(raw_entry, dict)
-        entries.append({str(key): value for key, value in raw_entry.items()})
-    return entries
-
-
 def test_elect_especial_persists_especial_register_entry() -> None:
     result = _invoke(
         [
@@ -83,8 +71,9 @@ def test_elect_especial_persists_especial_register_entry() -> None:
     # The election reaches the persisted register read back through the list
     # verb: a subsequent live aggregation would read this ESPECIAL entry and
     # fire the art. 106 apportionment.
-    entries = _prorrata_entries()
-    assert len(entries) == 1
+    listing = _prorrata_list()
+    entries = listing["entries"]
+    assert isinstance(entries, list) and len(entries) == 1
     assert entries[0]["ejercicio"] == 2025
     assert entries[0]["regime"] == ProrrataRegisterRegime.ESPECIAL.value
     assert entries[0]["provisional_percentage"] == "60"
@@ -106,8 +95,8 @@ def test_elect_general_persists_general_register_entry() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-    entries = _prorrata_entries()
-    assert len(entries) == 1
+    entries = _prorrata_list()["entries"]
+    assert isinstance(entries, list) and len(entries) == 1
     assert entries[0]["regime"] == ProrrataRegisterRegime.GENERAL.value
     assert entries[0]["provisional_percentage"] == "75"
 
@@ -132,8 +121,8 @@ def test_elect_especial_for_sector_scopes_the_entry() -> None:
     assert result.exit_code == 0, result.output
     payload = _json(result)
     assert payload["entry"]["sector_id"] == "alquiler"
-    entries = _prorrata_entries()
-    assert len(entries) == 1
+    entries = _prorrata_list()["entries"]
+    assert isinstance(entries, list) and len(entries) == 1
     assert entries[0]["sector_id"] == "alquiler"
     assert entries[0]["regime"] == ProrrataRegisterRegime.ESPECIAL.value
 

@@ -36,7 +36,7 @@ from ....core import Modelo, ProrrataProvisionalProvenance
 from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
 from ....tests.registry_observations import registry_grounded_modelo_observation
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository, CrossPeriodCleanStateBlocker, observation_key_for_token
 from .. import evaluate_carried_prior_definitiva_seed
 
@@ -77,7 +77,7 @@ def _save_prior_prorrata_observation(
     )
 
 
-def _remove_stamped_revision_id_from_saved_observation(profile: TestRuntimeProfile) -> None:
+def _remove_stamped_revision_id_from_saved_observation(profile: object) -> None:
     namespace = CalculationObservationRepository.namespace
     object_key = observation_key_for_token(Modelo.M303.value, _PRIOR_YEAR, _SETTLEMENT_PERIOD)
 

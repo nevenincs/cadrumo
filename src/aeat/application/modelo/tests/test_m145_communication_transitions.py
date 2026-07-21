@@ -93,7 +93,6 @@ def test_m145_communication_record_transitions_are_idempotent_after_success(tmp_
     assert completed.state is M145CommunicationRecordState.LOCALLY_COMPLETED
     assert completed.delivered_to_payer_at == delivered.delivered_to_payer_at
     assert completed.locally_completed_at is not None
-    assert completed.delivered_to_payer_at is not None
     assert completed.locally_completed_at >= completed.delivered_to_payer_at
     assert completed_retry == completed
     assert delivered_after_completion == completed

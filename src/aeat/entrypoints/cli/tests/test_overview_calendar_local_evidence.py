@@ -38,9 +38,9 @@ from ._overview_calendar_support import (
     isolated_calendar_backend,
 )
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
 _SECOND_PROFILE_ID = "22222222-2222-4222-8222-222222222222"
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 @pytest.fixture(autouse=True)

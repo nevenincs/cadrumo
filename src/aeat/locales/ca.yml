@@ -323,7 +323,6 @@ adapters:
       session_expired_nav_failed: El registre de declaracions d'AEAT no s'ha carregat;
         la sessió probablement ha caducat. Executeu 'aeat config auth test' i torneu-ho
         a intentar.
-      notifications_bad_landing: 'La pàgina de notificacions de l''AEAT no s''ha carregat correctament; la vostra sessió pot haver caducat o l''AEAT està en manteniment. Executeu ''aeat config auth status'' i torneu-ho a provar. No ho interpreteu com una safata buida.'
 aggregation:
   grouping:
     errors:
@@ -3142,7 +3141,6 @@ cli:
         refresh_help: Descarrega d'AEAT l'últim cens i desa un snapshot
         show_help: Mostra l'últim cens informat per AEAT per a aquest perfil
         snapshot_id_help: Id de snapshot concret (s'accepten prefixos)
-        dropped_fields_notice: 'El cens de l''AEAT ja no inclou camps que tenia la teva darrera instantania: {dropped_fields}. Si no has canviat ni donat de baixa aquestes dades, pot tractar-se d''una descarrega parcial: torna a executar la descarrega del cens o reintrodueix els valors; la proporcio d''afectacio de l''habitatge podria deixar de resoldre''s.'
       create_epilog: 'Perfil mínim per a autònom: --entity-type natural_person --tax-id
         <NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicialitza un perfil actiu nou.

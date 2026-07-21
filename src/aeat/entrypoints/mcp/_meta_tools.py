@@ -321,7 +321,10 @@ def gate_refusal(*, persona: AgentPersona | None, descriptor: McpToolDescriptor)
         return f"refused: {descriptor.command_key!r} is outside the active persona {persona.value!r}'s tool scope"
     if persona is not None and is_handoff_denied(persona=persona, command_key=descriptor.command_key):
         return handoff_denial_message(persona=persona, command_key=descriptor.command_key)
-    if confirmation_for_tool(command_key=descriptor.command_key) is ConfirmationPolicy.BLOCK:
+    if (
+        confirmation_for_tool(command_key=descriptor.command_key)
+        is ConfirmationPolicy.BLOCK
+    ):
         return "refused: AEAT live-write is permanently forbidden"
     return None
 
@@ -403,7 +406,7 @@ def manage_toolsets(
                 active.discard(toolset)
                 changed = True
 
-    group_payload: tuple[dict[str, object], ...] = tuple(
+    group_payload = tuple(
         {
             "toolset": group.toolset.value,
             "member_count": member_counts[group.toolset],

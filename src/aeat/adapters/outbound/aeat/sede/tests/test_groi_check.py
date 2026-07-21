@@ -16,17 +16,11 @@ from __future__ import annotations
 from urllib.parse import urlsplit
 
 import pytest
-from pydantic import AnyUrl, ValidationError
+from pydantic import ValidationError
 
 from ......core.config import Settings
-from ......domain.calculations.registry import (
-    GROI_ORACLE_ID,
-    RegistryValidationError,
-    RemoteOperation,
-    assert_remote_operation_allowed,
-)
+from ......domain.calculations.registry import GROI_ORACLE_ID, RegistryValidationError
 from .._groi_check import (
-    _READ_GUARD_POLICY,
     DEFAULT_GROI_TIMEOUT_MS,
     GroiNifVerdict,
     GroiResult,
@@ -214,23 +208,3 @@ def test_groi_response_samples_parse_to_expected_verdict(expected_verdict: str, 
 
     body_text = Path(fixture_path).read_text(encoding="utf-8")
     assert extract_verdict_from_response_text(body_text) == expected_verdict
-
-
-def test_groi_read_guard_admits_sibling_load_balancer_host() -> None:
-    """A GROI check dispatched to a sibling www{n} host under the AEAT apex is allowed."""
-    aeat = Settings.external_constants().aeat
-    drifted = f"{aeat.domains.www12}{urlsplit(aeat.oracles.groi_check).path}"
-    result = assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="http", method="GET", url=AnyUrl(drifted)),
-    )
-    assert result.decision == "allowed"
-
-
-def test_groi_read_guard_refuses_non_aeat_host() -> None:
-    """Widening to the AEAT apex suffix must not admit an off-AEAT host."""
-    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
-        assert_remote_operation_allowed(
-            _READ_GUARD_POLICY,
-            RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
-        )

@@ -105,10 +105,8 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         assert authorised.provisional_provenance is ProrrataProvisionalProvenance.AEAT_AUTORIZADA
         assert authorised.authorisation_reference == "AEAT-AUTH-2024-0007"
         assert loaded.is_sectorized is True
-        sector_definition = loaded.sector_definition_for("arrendamiento")
-        assert sector_definition is not None
-        assert sector_definition.letra is SectorDiferenciadoLetra.A
-        assert sector_definition.member_activity_codes == ("6820",)
+        assert loaded.sector_definition_for("arrendamiento").letra is SectorDiferenciadoLetra.A
+        assert loaded.sector_definition_for("arrendamiento").member_activity_codes == ("6820",)
         # The art. 105.Cinco interrupted (sin operaciones) marker crosses the
         # encrypted boundary: an inactive ejercicio carries no percentage/volume.
         interrupted = loaded.entry_for(2023)

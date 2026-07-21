@@ -14,7 +14,7 @@ from urllib.parse import urlparse
 from pydantic import AnyUrl, BaseModel, Field, field_validator, model_validator
 
 from ....core import STRICT_FROZEN_CONFIG
-from ._aeat_hosts import first_aeat_host, is_aeat_host, is_sanctioned_gov_idp_host
+from ._aeat_hosts import first_aeat_host, is_aeat_host
 from ._errors import RegistryValidationError
 from ._schema import LiveCrossReferenceDecision
 
@@ -142,20 +142,16 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
     requires_authentication: bool
     requires_aeat_authorization: bool
     forbidden_actions: tuple[str, ...] = Field(default_factory=tuple)
-    allows_gov_idp_hosts: bool = False
 
     @model_validator(mode="after")
     def _validate_policy(self) -> RemoteStateGuardPolicy:
         # Each predicate group raises in the same order as before; the phases are
         # evidence-tier consistency, allowed-hosts presence, authentication
-        # consistency, synthetic-data consistency, then the government-IdP opt-in
-        # gate (a sanctioned non-AEAT identity-provider host is admitted only for
-        # an explicit opt-in authenticated-read policy).
+        # consistency, then synthetic-data consistency.
         self._validate_evidence_tier()
         self._validate_allowed_hosts_presence()
         self._validate_authentication_consistency()
         self._validate_synthetic_data_consistency()
-        self._validate_gov_idp_hosts()
         return self
 
     def _validate_evidence_tier(self) -> None:
@@ -205,33 +201,6 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
                     f"on AEAT host {aeat_host!r}; synthetic data is prohibited on AEAT-hosted surfaces",
                 )
 
-    def _validate_gov_idp_hosts(self) -> None:
-        # The field validators admit sanctioned government-IdP hosts syntactically
-        # but DEFER the policy-level decision here: an IdP host/suffix is legal only
-        # on an explicit opt-in (``allows_gov_idp_hosts``) authenticated-read policy.
-        # Default false + no IdP entry = every existing policy is unchanged; a
-        # non-AEAT, non-IdP host is already refused at the field-validator stage.
-        idp_entries = tuple(
-            entry
-            for entry in (*self.allowed_hosts, *self.allowed_host_suffixes)
-            if is_sanctioned_gov_idp_host(entry) and not _is_aeat_host(entry)
-        )
-        if self.allows_gov_idp_hosts:
-            if self.classification != "authenticated_read_surface":
-                raise RegistryValidationError(
-                    "government-IdP host opt-in requires an authenticated_read_surface policy, "
-                    f"got classification {self.classification!r}",
-                )
-            if not self.requires_authentication:
-                raise RegistryValidationError(
-                    "government-IdP host opt-in requires requires_authentication = true",
-                )
-        elif idp_entries:
-            raise RegistryValidationError(
-                f"policy {self.id!r} lists sanctioned government-IdP host(s) {idp_entries!r} "
-                "without the allows_gov_idp_hosts opt-in",
-            )
-
     @field_validator("allowed_hosts")
     @classmethod
     def _validate_hosts(cls, value: tuple[str, ...]) -> tuple[str, ...]:
@@ -239,14 +208,8 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
             parsed = urlparse(f"https://{host}")
             if not parsed.hostname or parsed.hostname != host.lower():
                 raise RegistryValidationError(f"invalid allowed host {host!r}")
-            if _is_aeat_host(host):
-                continue
-            # A sanctioned government-IdP host is syntactically admitted here and
-            # gated on the opt-in flag in the model phase (_validate_gov_idp_hosts);
-            # every other non-AEAT host is refused exactly as before.
-            if is_sanctioned_gov_idp_host(host):
-                continue
-            raise RegistryValidationError(f"allowed host is not an AEAT host: {host!r}")
+            if not _is_aeat_host(host):
+                raise RegistryValidationError(f"allowed host is not an AEAT host: {host!r}")
         return value
 
     @field_validator("allowed_host_suffixes")
@@ -255,18 +218,14 @@ class RemoteStateGuardPolicy(RemoteStateGuardModel):
         # A host suffix widens the exact-host allow-list to any subdomain
         # under an AEAT-owned apex, so AEAT's ``www{n}`` load-balancer
         # dispatch (www1/www2/www6/www12/sede) is not refused. The suffix
-        # itself MUST still be an AEAT-owned host — or a sanctioned
-        # government-IdP apex, deferred to the model-phase opt-in gate — so the
-        # widening cannot admit an arbitrary non-AEAT surface.
+        # itself MUST still be an AEAT-owned host so the widening cannot
+        # admit a non-AEAT surface.
         for suffix in value:
             parsed = urlparse(f"https://{suffix}")
             if not parsed.hostname or parsed.hostname != suffix.lower():
                 raise RegistryValidationError(f"invalid allowed host suffix {suffix!r}")
-            if _is_aeat_host(suffix):
-                continue
-            if is_sanctioned_gov_idp_host(suffix):
-                continue
-            raise RegistryValidationError(f"allowed host suffix is not an AEAT host: {suffix!r}")
+            if not _is_aeat_host(suffix):
+                raise RegistryValidationError(f"allowed host suffix is not an AEAT host: {suffix!r}")
         return value
 
     @field_validator("allowed_read_post_paths")
@@ -447,7 +406,10 @@ def _host_within_policy(policy: RemoteStateGuardPolicy, host: str) -> bool:
     normalized = host.lower()
     if normalized in policy.allowed_hosts:
         return True
-    return any(normalized == suffix or normalized.endswith(f".{suffix}") for suffix in policy.allowed_host_suffixes)
+    return any(
+        normalized == suffix or normalized.endswith(f".{suffix}")
+        for suffix in policy.allowed_host_suffixes
+    )
 
 
 def _blocked(policy: RemoteStateGuardPolicy, reason: str) -> RemoteStateGuardResult:

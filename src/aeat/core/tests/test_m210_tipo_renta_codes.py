@@ -1,7 +1,7 @@
 """Tests for the official Modelo 210 tipo-de-renta code axis and projection.
 
 Grounds the code-to-:class:`~aeat.core.TipoRentaIrnr` projection declared in
-:mod:`aeat.core._irnr` against the M210 IRNR implementation decision: the
+:mod:`aeat.core._irnr` against the m210-irnr-phase-2-engine ADR (Slice A): the
 code list is the bundled Orden EHA/3316/2010 HOJA INFORMATIVA 210, and only the
 rate-concept-grounded codes are declared (the fetch-gated special-rate codes are
 absent by design, not by omission).
@@ -69,7 +69,7 @@ _EXPECTED_CONCEPT = {
 # a possible non-bundled special letter, NOT cánones proper), reaseguros 19
 # (Art. 25.1.e), navegación 20 (Art. 25.1.d), imposición complementaria 27
 # (Art. 19.2), and premios de loterías 31 (D.A. 5ª) — special rates absent from
-# the initial extract.
+# the Phase-1 extract.
 _FETCH_GATED_CODES = frozenset({"13", "19", "20", "27", "31"})
 
 

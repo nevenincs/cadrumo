@@ -1,6 +1,6 @@
 """The supervised call runtime bounds and terminates a hung CLI call.
 
-Proves the contract with REAL subprocesses (no
+Proves the ADR ``mcp-protocol-hardening`` H1 contract with REAL subprocesses (no
 mocks): a fast command completes and reports its output; a command that exceeds
 its tier ceiling is terminated - promptly, not waited out - and reports
 ``timed_out``; a process that spawns a child is killed as a tree, not left with a

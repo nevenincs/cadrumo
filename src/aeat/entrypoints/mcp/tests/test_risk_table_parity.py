@@ -1,6 +1,7 @@
 """No mutating command escapes the declared risk table (the H3 no-silent-default gate).
 
-The safety guarantee of the declared risk model: every command whose family mutates local state carries EXACTLY ONE declared
+The safety guarantee of the declared risk model (ADR ``mcp-protocol-hardening``
+H3): every command whose family mutates local state carries EXACTLY ONE declared
 risk row, so a new mutating verb cannot slip in unclassified and auto-approve -
 the failure mode the leaf-name frozensets had. This gate fails the build the
 moment a mutating-family command has no row, and it fails if a row references a

@@ -95,7 +95,7 @@ def _ensure_result_schemas_registered(
     failures: list[SchemaModuleLoadFailure] = []
     for package_name in payload_packages or _PAYLOAD_PACKAGES:
         try:
-            package = importlib.import_module(package_name)  # nosem
+            package = importlib.import_module(package_name)
         except Exception as exc:
             failures.append(SchemaModuleLoadFailure(module=package_name, error=f"{type(exc).__name__}: {exc}"))
             continue
@@ -103,7 +103,7 @@ def _ensure_result_schemas_registered(
             if "payload" in module_info.name and not module_info.ispkg:
                 module_name = f"{package_name}.{module_info.name}"
                 try:
-                    importlib.import_module(module_name)  # nosem
+                    importlib.import_module(module_name)
                 except Exception as exc:
                     failures.append(SchemaModuleLoadFailure(module=module_name, error=f"{type(exc).__name__}: {exc}"))
     return tuple(failures)

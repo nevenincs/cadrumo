@@ -33,11 +33,8 @@ def test_modelo_303_cash_accounting_casillas_are_bound_as_a_four_box_set(revisio
         binding = bindings[binding_id]
         assert binding.source == BindingSourceKind.LEDGER_IVA_AGGREGATION
         selector = selector_as_dict(binding)
-        treatments = selector.get("cash_accounting_treatments")
-        assert isinstance(treatments, tuple)
-        assert all(isinstance(treatment, str) for treatment in treatments)
-        assert treatments == cash_treatments
-        assert "none" not in treatments
+        assert tuple(selector["cash_accounting_treatments"]) == cash_treatments
+        assert "none" not in selector["cash_accounting_treatments"]
 
     assert "ley-37-1992:art-75" in casillas["62"].legal_refs
     assert "ley-37-1992:art-163-terdecies" in casillas["63"].legal_refs

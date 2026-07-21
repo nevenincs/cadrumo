@@ -32,7 +32,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _SUBPROCESS_TIMEOUT_SECONDS = 60
 
 _PROBE_CONFTEST = (
-    "from aeat.tests._worker_count_hook import resolve_auto_num_workers as pytest_xdist_auto_num_workers\n"
+    "from aeat.tests._worker_count_hook import resolve_auto_num_workers as "
+    "pytest_xdist_auto_num_workers\n"
 )
 _PROBE_TEST = """
 import os

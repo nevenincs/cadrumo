@@ -20,7 +20,7 @@ from .. import (
     BusinessClassification,
     ClassificationHistoryEntry,
     DecisionProvenance,
-    OutOfWindowTransactionIndexEntry,
+    OutOfWindowTransactionStub,
     OutOfWindowTransactionSummary,
     RawProvenance,
     RawTransaction,
@@ -908,7 +908,7 @@ def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
     """The diagnostics-only summary is structurally incapable of leaking decrypted facts.
 
     ``OutOfWindowTransactionSummary`` collapses N out-of-window
-    ``OutOfWindowTransactionIndexEntry`` rows into one summary carrying ONLY the
+    ``OutOfWindowTransactionStub`` rows into one summary carrying ONLY the
     excluded-row count and the filing-date span. This pins that guarantee
     structurally -- the declared field set is exactly
     ``{count, min_filing_date, max_filing_date}`` -- so a future field
@@ -922,12 +922,12 @@ def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
         "max_filing_date",
     }
 
-    index_entries = (
-        OutOfWindowTransactionIndexEntry(transaction_id="a" * 40, filing_date=date(2026, 1, 5)),
-        OutOfWindowTransactionIndexEntry(transaction_id="b" * 40, filing_date=date(2026, 3, 20)),
-        OutOfWindowTransactionIndexEntry(transaction_id="c" * 40, filing_date=date(2026, 2, 1)),
+    stubs = (
+        OutOfWindowTransactionStub(transaction_id="a" * 40, filing_date=date(2026, 1, 5)),
+        OutOfWindowTransactionStub(transaction_id="b" * 40, filing_date=date(2026, 3, 20)),
+        OutOfWindowTransactionStub(transaction_id="c" * 40, filing_date=date(2026, 2, 1)),
     )
-    summary = OutOfWindowTransactionSummary.from_index_entries(index_entries)
+    summary = OutOfWindowTransactionSummary.from_stubs(stubs)
 
     assert summary is not None
     assert summary.count == 3
@@ -936,6 +936,6 @@ def test_out_of_window_transaction_summary_carries_no_decrypted_field() -> None:
     assert summary.model_dump().keys() == {"count", "min_filing_date", "max_filing_date"}
 
 
-def test_out_of_window_transaction_summary_is_none_for_empty_index_entries() -> None:
+def test_out_of_window_transaction_summary_is_none_for_empty_stubs() -> None:
     """An empty out-of-window set collapses to ``None``, not a zero-count summary."""
-    assert OutOfWindowTransactionSummary.from_index_entries(()) is None
+    assert OutOfWindowTransactionSummary.from_stubs(()) is None

@@ -16,7 +16,9 @@ See Also:
         Registry selector contract that declares the source casilla set.
     :class:`~application.calculations._prorrata_regularizacion.ProrrataRegularizacionSourceResolver`
         Downstream resolver that consumes these materialised values.
-        Calculation-order context for this seam.
+    ``2026-07-06-cross-period-prorrata-audit`` and
+    ``2026-07-06-cross-period-prorrata-plan``
+        S45 review and W07.P11 calculation-order plan context.
 """
 
 from __future__ import annotations
@@ -32,7 +34,7 @@ import pytest
 from ....core import Period
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos import WorkUnit, derive_work_unit_id
 from .._calculation_source_staging import (
     _PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS,
     materialise_prorrata_regularizacion_current_year_values,
@@ -79,13 +81,13 @@ def _work_unit(*, revision_id: str) -> WorkUnit:
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
-            modelo=ModeloCode("303"),
+            modelo="303",
             filing_year=_FILING_YEAR,
             period=_PERIOD,
             revision_id=revision_id,
         ),
         bucket_id=_BUCKET_ID,
-        modelo=ModeloCode("303"),
+        modelo="303",
         filing_year=_FILING_YEAR,
         period=_PERIOD,
         revision_id=revision_id,

@@ -8,20 +8,14 @@ from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import AnyUrl
 
 from ......core import Period
 from ......core.config import Settings
 from ......core.external_constants import UTF_8_ENCODING
-from ......domain.calculations.registry import (
-    RegistryValidationError,
-    RemoteOperation,
-    assert_remote_operation_allowed,
-)
+from ......domain.calculations.registry import RegistryValidationError
 from ...browser import Profile, opened_browser_page, shared_playwright_runtime
 from .._errors import SedeNavigationError, SedeParseError
 from .._iva_compensation_wallet import (
-    _READ_GUARD_POLICY,
     IVA_COMPENSATION_WALLET_URL,
     PRE303_PRESENTATION_SERVICE_URL,
     _assert_read_browser_action,
@@ -629,22 +623,3 @@ def test_parse_spanish_decimal_whitespace_only_cell_raises_with_translated_messa
     assert exc.translated_message is not None
     assert exc.translated_message != "adapters.sede.errors.iva_wallet_empty_amount_cell"
     assert len(exc.translated_message) > 10
-
-
-def test_wallet_read_guard_admits_sibling_load_balancer_host() -> None:
-    """An authenticated wallet pull dispatched to a sibling www{n} host is allowed."""
-    drifted = f"{_EXTERNAL.aeat.domains.www12}{_EXTERNAL.aeat.sede_paths.iva_compensation_wallet}"
-    result = assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="http", method="GET", url=AnyUrl(drifted)),
-    )
-    assert result.decision == "allowed"
-
-
-def test_wallet_read_guard_refuses_non_aeat_host() -> None:
-    """Widening to the AEAT apex suffix must not admit an off-AEAT host."""
-    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
-        assert_remote_operation_allowed(
-            _READ_GUARD_POLICY,
-            RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
-        )

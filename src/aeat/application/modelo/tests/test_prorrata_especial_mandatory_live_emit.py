@@ -1,11 +1,12 @@
 """Anti-dormant proof: the LIVA art. 103.Dos.2 +10% advisory fires on the live path.
 
-The mandatory-especial builder
+The S13 mandatory-especial builder
 (:func:`~application.calculations.build_prorrata_especial_mandatory_advisory`)
-shipped with zero production callers — a dormant advisory now wired into the live
+shipped with zero production callers — a dormant advisory the
+``2026-07-08-iva-prorrata-complexity-audit`` flagged. S21 wires it into the live
 Modelo 303 settlement collector
 (:func:`~application.modelo._prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`)
-with a real +10% check where both regime totals are
+per the binding ADR (Option A: real +10% check where both regime totals are
 honestly computable, a classify-to-enable PROMPT for the general filer whose
 especial total is not yet derivable).
 
@@ -23,11 +24,11 @@ proving the emit is not dormant.
 
 See Also:
     :mod:`~application.modelo._prorrata_regularizacion_advisory`
-        Collector carrying the settlement branch under test.
+        Collector carrying the S21 settlement branch under test.
     :func:`~application.aggregation.compute_annual_deducible_totals_by_regime`
         The dual-regime annual totals helper the branch consumes.
     :func:`~application.calculations.build_prorrata_especial_mandatory_advisory`
-        The +10% comparison/message owner, consumed verbatim.
+        The S13 +10% comparison/message owner, consumed verbatim.
 """
 
 from __future__ import annotations
@@ -58,8 +59,7 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
-from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from ...aggregation._source_mesh import CalculationSourceDiagnostic
+from ....tests.secure_sql import isolated_runtime_profile
 from ...calculations import CalculationObservationRepository
 from ...prorrata_register import ProrrataRegisterRepository, ProrrataRegisterService
 from .._calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
@@ -127,7 +127,7 @@ def _purchase(
     )
 
 
-def _save_txns(profile: TestRuntimeProfile, txns: tuple[Transaction, ...]) -> None:
+def _save_txns(profile, txns: tuple[Transaction, ...]) -> None:
     repo = TransactionCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository)
     repo.save(TransactionCatalogue.from_transactions(txns))
 
@@ -148,7 +148,7 @@ def _declare(regime: ProrrataRegisterRegime, *, percentage: Decimal, sector_id: 
     )
 
 
-def _collect(period_token: str = _SETTLEMENT_PERIOD) -> tuple[CalculationSourceDiagnostic, ...]:
+def _collect(period_token: str = _SETTLEMENT_PERIOD) -> tuple:
     return collect_prorrata_regularizacion_diagnostics(
         _revision(),
         {},
@@ -160,7 +160,7 @@ def _collect(period_token: str = _SETTLEMENT_PERIOD) -> tuple[CalculationSourceD
     )
 
 
-def _especial_diagnostics(diagnostics: tuple[CalculationSourceDiagnostic, ...]) -> list[CalculationSourceDiagnostic]:
+def _especial_diagnostics(diagnostics: tuple) -> list:
     return [
         d for d in diagnostics if d.reason in {"prorrata_especial_obligatoria", "prorrata_especial_check_unavailable"}
     ]
@@ -202,7 +202,7 @@ def test_fires_for_fully_classified_general_bucket_with_breach(tmp_path: Path) -
     assert diagnostic.reason == "prorrata_especial_obligatoria"
     assert diagnostic.source_kind == "prorrata_especial_mandatory"
     assert str(_EJERCICIO) in diagnostic.message
-    # Both regime totals ride in the verbatim message, and the general total
+    # Both regime totals ride in the verbatim S13 message, and the general total
     # genuinely exceeds the especial total (a real breach, law-derived).
     amounts = _parenthesised_amounts(diagnostic.message)
     assert len(amounts) == 2

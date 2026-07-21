@@ -96,21 +96,12 @@ def _create_modelo_117_work_unit() -> str:
 
 def _calculate_args(work_unit_id: str) -> list[str]:
     return [
-        "app",
-        "modelo",
-        "work",
-        "calculate",
-        work_unit_id,
-        "--casilla",
-        "03=190.00",
-        "--casilla",
-        "06=0.00",
-        "--casilla",
-        "08=0.00",
-        "--casilla",
-        "10=0.00",
-        "--output-language",
-        "en",
+        "app", "modelo", "work", "calculate", work_unit_id,
+        "--casilla", "03=190.00",
+        "--casilla", "06=0.00",
+        "--casilla", "08=0.00",
+        "--casilla", "10=0.00",
+        "--output-language", "en",
     ]
 
 
@@ -138,7 +129,9 @@ def test_work_calculate_warns_but_computes_unauthorized_modelo_117(
     assert json_result.exit_code == 0, json_result.output
     payload = unwrap_schema_envelope(json_result.output)
     notices = unwrap_envelope_notices(json_result.output)
-    advisory = next(notice for notice in notices if notice["code"] == "modelo.work.calculate.unauthorized_backend")
+    advisory = next(
+        notice for notice in notices if notice["code"] == "modelo.work.calculate.unauthorized_backend"
+    )
 
     assert payload["saved"] is True
     assert payload["casilla_values"]["11"] == "190.00"

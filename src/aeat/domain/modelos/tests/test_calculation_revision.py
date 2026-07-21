@@ -387,7 +387,7 @@ def test_calculation_revision_normalises_row_binding_values() -> None:
     from datetime import UTC, datetime
 
     created = datetime(2026, 7, 5, 10, 0, 0, tzinfo=UTC)
-    row_binding_values = {"modelo-720-asset-row-class": {"2": "V", "1": "C"}}
+    row_binding_values = {"modelo-720-asset-row-class": {2: "V", "1": "C"}}
     revision_id = derive_calculation_revision_id(
         work_unit_id="a" * 64,
         input_values_by_casilla_id={},

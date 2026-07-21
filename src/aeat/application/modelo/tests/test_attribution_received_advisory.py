@@ -1,6 +1,7 @@
 """Behaviour + anti-tautology coverage for the M100 attribution-received advisory.
 
-The advisory guards the manual cross-bucket régimen-de-atribución handoff:
+The advisory guards the manual cross-bucket régimen-de-atribución handoff decided
+in the ``2026-07-09-m184-socio-attribution-handoff-adr`` addendum (decision (a)):
 casilla 1577 stays relation-canonical, so a non-blocking advisory surfaces when the
 ``attribution_received`` profile facts and the atribución casilla disagree. The
 anti-tautology test flips exactly one input at a time and asserts the finding count
@@ -18,8 +19,6 @@ from ....core import Modelo, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import RegistrySnapshot
 from ....domain.modelos import (
-    ModeloCode,
-    ModeloVerificationFinding,
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
     WorkUnit,
@@ -34,7 +33,6 @@ _CLOCK = datetime(2026, 7, 9, tzinfo=UTC)
 _CASILLA_1577 = "1577"
 _BASE = Decimal("58100.00")
 _FILING_YEAR = 2024
-_M100_CODE = ModeloCode(Modelo.M100.value)
 
 
 @pytest.fixture(scope="module")
@@ -42,7 +40,7 @@ def snapshot() -> RegistrySnapshot:
     return resources().modelos.authority.snapshot("100", filing_year=_FILING_YEAR, period="0A")
 
 
-def _work_unit(modelo: ModeloCode = _M100_CODE, *, filing_year: int = _FILING_YEAR) -> WorkUnit:
+def _work_unit(modelo: str = Modelo.M100.value, *, filing_year: int = _FILING_YEAR) -> WorkUnit:
     bucket_id = "attribution-advisory-bucket"
     period = Period.from_year_and_code(filing_year, "0A")
     revision_id = "r" + "0" * 63
@@ -85,12 +83,7 @@ def _received_facts(*, year: int = _FILING_YEAR, base: Decimal = _BASE, index: i
     )
 
 
-def _run(
-    snapshot: RegistrySnapshot,
-    *,
-    facts: tuple[UserProfileFact, ...],
-    casilla_1577: Decimal | None,
-) -> tuple[ModeloVerificationFinding, ...]:
+def _run(snapshot: RegistrySnapshot, *, facts: tuple[UserProfileFact, ...], casilla_1577: Decimal | None) -> tuple:
     casilla_values = {} if casilla_1577 is None else {_CASILLA_1577: casilla_1577}
     return _attribution_received_omission_advisory_findings(
         work_unit=_work_unit(),
@@ -124,7 +117,6 @@ def test_casilla_present_no_facts_fires_capture_advisory(snapshot: RegistrySnaps
     # every locale, as does the Modelo 184 provenance reference in the next_action.
     assert _CASILLA_1577 in finding.message
     assert "attribution_received" in finding.message
-    assert finding.next_action is not None
     assert "184" in finding.next_action
 
 
@@ -144,7 +136,7 @@ def test_facts_for_other_year_do_not_count(snapshot: RegistrySnapshot) -> None:
 
 def test_non_m100_modelo_is_scoped_out(snapshot: RegistrySnapshot) -> None:
     findings = _attribution_received_omission_advisory_findings(
-        work_unit=_work_unit(ModeloCode(Modelo.M130.value)),
+        work_unit=_work_unit(Modelo.M130.value),
         snapshot=snapshot,
         casilla_values={},
         profile_record=_profile(*_received_facts()),

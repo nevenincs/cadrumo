@@ -35,9 +35,7 @@ def test_modelo_validation_rejects_construct_without_official_source_evidence() 
     """The revision validator must route constructs through evidence-tier checks."""
 
     catalogues = minimal_catalogues()
-    layout_only_source = catalogues.sources[REFERENCE_SOURCE_ID].model_copy(
-        update={"evidence_tier": "layout_authority"}
-    )
+    layout_only_source = catalogues.sources[REFERENCE_SOURCE_ID].model_copy(update={"evidence_tier": "layout_authority"})
     casilla = minimal_casilla()
     construct = ConstructDefinition(
         id="construct.without-guidance",

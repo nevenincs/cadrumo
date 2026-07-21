@@ -1,10 +1,10 @@
-"""Structured tool-result summaries stay within a size budget.
+"""Structured tool-result summaries stay within a size budget (ADR H4).
 
 Structured output double-emits (text + structuredContent, ~2x tokens), so a verb
 whose structured result is very large inflates every call. This gate bounds the
 per-verb output-schema size - the static proxy for the structured content a verb
 emits - so a newly-added bulky result shape trips the budget and must move its
-bulk arrays to a ``resource_link`` rather than inlining them.
+bulk arrays to a ``resource_link`` (the H4 posture) rather than inlining them.
 
 The gate is intentionally static (it reads the registered output schemas, no CLI
 run), so it is a cheap always-on lock; the runtime resource-link thinning of a
@@ -44,8 +44,5 @@ def test_no_verb_output_schema_exceeds_the_size_budget() -> None:
 
 def test_the_budget_would_flag_a_hypothetically_oversized_schema() -> None:
     # Anti-tautology: a synthetic oversized schema trips the check, proving teeth.
-    huge: dict[str, object] = {
-        "type": "object",
-        "properties": {f"field_{i}": {"type": "string"} for i in range(4000)},
-    }
+    huge = {"type": "object", "properties": {f"field_{i}": {"type": "string"} for i in range(4000)}}
     assert _schema_size(huge) > _OUTPUT_SCHEMA_BUDGET_CHARS

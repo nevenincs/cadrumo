@@ -35,7 +35,6 @@ import os
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
-from typing import Any
 
 from pydantic_settings import SettingsConfigDict
 
@@ -68,14 +67,14 @@ class _EnvFileFreeSettings(Settings):
     model_config = SettingsConfigDict(env_file=None)
 
 
-def settings_without_env_file(**overrides: Any) -> Settings:
+def settings_without_env_file() -> Settings:
     """Construct a :class:`~aeat.core.config.Settings` that never reads the real ``.env`` file.
 
     Equivalent at runtime to ``Settings(_env_file=None)`` — see
     :class:`_EnvFileFreeSettings` for why this factory exists instead of the
     raw keyword form.
     """
-    return _EnvFileFreeSettings(**overrides)
+    return _EnvFileFreeSettings()
 
 
 @contextmanager

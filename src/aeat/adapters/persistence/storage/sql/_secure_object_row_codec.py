@@ -36,7 +36,6 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from datetime import datetime
-from typing import Protocol, cast
 
 from sqlalchemy import bindparam, text, update
 from sqlalchemy.orm import Session
@@ -56,22 +55,6 @@ from ._secure_object_records import SecureObjectBatchLoadItem, SecureObjectRecor
 from ._secure_object_schema import build_revision_ancestor_ids
 
 _log = get_logger(__name__)
-
-
-class _SecureObjectListRawRow(Protocol):
-    """Typed SQL projection consumed by the batch-list decode boundary."""
-
-    id: int
-    object_key: str | bytes
-    classification: str
-    schema_version: int
-    written_at: datetime
-    payload: bytes
-    revision_id: str | None
-    previous_revision_id: str | None
-    payload_hash: str | None
-    ciphertext_hash: str | None
-    previous_payload_hash: str | None
 
 
 def write_revision_metadata(
@@ -227,17 +210,15 @@ def secure_object_list_item_from_raw_row(
     reason instead of raising, so a caller iterating many rows can attribute a
     failure to its own row and keep inspecting the rest.
     """
-    # CAST-RATIONALE-SECURE-OBJECT-RAW-ROW: SQL row tuples are structurally validated by this codec.
-    row = cast(_SecureObjectListRawRow, raw)
-    row_id = int(row.id)
+    row_id = int(raw.id)
     # ``object_key`` is a HashedLookup digest. Keep the bytes surface
     # stable for diagnostics and raw mirror consumers.
-    _raw_ok = row.object_key
+    _raw_ok = raw.object_key
     object_key = _raw_ok.encode(UTF_8_ENCODING) if isinstance(_raw_ok, str) else bytes(_raw_ok)
-    classification_str = str(row.classification)
-    schema_version = int(row.schema_version)
-    written_at = row.written_at
-    payload_wire = bytes(row.payload)
+    classification_str = str(raw.classification)
+    schema_version = int(raw.schema_version)
+    written_at = raw.written_at
+    payload_wire = bytes(raw.payload)
     try:
         classification = SensitivityClass(classification_str)
     except ValueError:
@@ -312,11 +293,11 @@ def secure_object_list_item_from_raw_row(
         object_key=object_key,
         schema_version=schema_version,
         written_at=written_at,
-        revision_id=row.revision_id,
-        previous_revision_id=row.previous_revision_id,
-        payload_hash=row.payload_hash,
-        ciphertext_hash=row.ciphertext_hash,
-        previous_payload_hash=row.previous_payload_hash,
+        revision_id=raw.revision_id,
+        previous_revision_id=raw.previous_revision_id,
+        payload_hash=raw.payload_hash,
+        ciphertext_hash=raw.ciphertext_hash,
+        previous_payload_hash=raw.previous_payload_hash,
     ):
         return SecureObjectUnreadable(
             namespace=namespace,

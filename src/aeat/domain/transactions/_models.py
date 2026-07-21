@@ -1334,7 +1334,7 @@ class TransactionCatalogue(BaseModel):
         return iter(self.transactions.values())
 
 
-class OutOfWindowTransactionIndexEntry(BaseModel):
+class OutOfWindowTransactionStub(BaseModel):
     """A catalogue transaction outside a requested date window, undecrypted.
 
     Carries ONLY the two plaintext, non-sensitive facts a period-scoped
@@ -1369,12 +1369,12 @@ class OutOfWindowTransactionSummary(BaseModel):
     max_filing_date: date
 
     @classmethod
-    def from_index_entries(cls, index_entries: Iterable[OutOfWindowTransactionIndexEntry]) -> Self | None:
-        """Build a summary from plaintext date-index entries, or ``None`` when empty."""
-        materialized = tuple(index_entries)
+    def from_stubs(cls, stubs: Iterable[OutOfWindowTransactionStub]) -> Self | None:
+        """Build a summary from row-level plaintext stubs, or ``None`` when empty."""
+        materialized = tuple(stubs)
         if not materialized:
             return None
-        filing_dates = tuple(entry.filing_date for entry in materialized)
+        filing_dates = tuple(stub.filing_date for stub in materialized)
         return cls(
             count=len(materialized),
             min_filing_date=min(filing_dates),
@@ -1394,14 +1394,14 @@ class LedgerDatePartition(BaseModel):
     ``in_window`` is a real, fully decrypted :class:`TransactionCatalogue`
     scoped to ``[start, end]`` -- every regulated classifier gate runs over it
     unchanged. ``out_of_window`` is the plaintext-only remainder
-    (:class:`OutOfWindowTransactionIndexEntry` rows): transactions the catalogue
+    (:class:`OutOfWindowTransactionStub` rows): transactions the catalogue
     holds outside the window, reported without decryption so a caller can
     still surface a period-exclusion diagnostic for them.
 
     ``out_of_window_summary`` is the compact diagnostics-channel replacement:
     count plus filing-date span, with no decrypted fields and no row-level
     allocation requirement. During the migration, callers may see either the
-    row-level index entries, the summary, or both.
+    row-level stubs, the summary, or both.
 
     ``index_complete`` records whether the partition was served from a
     complete plaintext date index (``True``) or from a full-scan fallback
@@ -1414,6 +1414,6 @@ class LedgerDatePartition(BaseModel):
     model_config = _STRICT_FROZEN
 
     in_window: TransactionCatalogue
-    out_of_window: tuple[OutOfWindowTransactionIndexEntry, ...] = ()
+    out_of_window: tuple[OutOfWindowTransactionStub, ...] = ()
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
     index_complete: bool

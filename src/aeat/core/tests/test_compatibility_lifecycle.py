@@ -3,10 +3,10 @@
 The mechanism is DORMANT today (``COMPATIBILITY_REGIME`` is
 ``PRE_RELEASE``), yet its post-release teeth are proven now by feeding the
 pure predicates synthetic ``RELEASED`` inputs — no global is mutated and no
-monkeypatching is used, following the no-patching constraint for their
-lineage gates. Every fact the predicates judge on is an
+monkeypatching is used, per the no-patching constraint the durability ADRs
+set for their lineage gates. Every fact the predicates judge on is an
 explicit parameter, so a released regime is exercisable without flipping the
-one-way constant.
+one-way constant (``2026-07-09-compatibility-lifecycle-adr``).
 """
 
 from __future__ import annotations

@@ -248,7 +248,7 @@ def test_schema_coverage_gate_passes_on_the_real_command_set() -> None:
     assert len(schemas) == len(keys)
 
 
-# --- Provider enum + one-of identifier fidelity --------------------------------
+# --- P03.S16/S17: provider enum + one-of identifier fidelity -------------------
 
 
 def test_ledger_import_provider_renders_as_a_json_enum() -> None:

@@ -229,7 +229,9 @@ def test_modelo_232_workflow_surfaces_are_snapshot_gated_and_construct_scoped() 
 def test_committed_modelo_232_deadline_window_is_november_following_ejercicio() -> None:
     modelo, _ = _load_modelo_232()
     windows_by_year = {
-        window.filing_year: window for revision in modelo.revisions.values() for window in revision.deadline_windows
+        window.filing_year: window
+        for revision in modelo.revisions.values()
+        for window in revision.deadline_windows
     }
     cases = (
         (2016, date(2017, 11, 1), date(2017, 11, 30)),

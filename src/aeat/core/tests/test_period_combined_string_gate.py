@@ -108,23 +108,6 @@ ALLOWLIST: tuple[AllowlistRule, ...] = (
         reason="justificante parser tests preserve external PDF fixture filenames",
     ),
     AllowlistRule(
-        path=_path(r"^src/aeat/adapters/inbound/declaracion/tests/test_parser_boundary_m131_current_year\.py$"),
-        reason="parser boundary test preserves the committed synthetic justificante filename",
-    ),
-    AllowlistRule(
-        path=_path(
-            r"^src/aeat/(?:"
-            r"application/calculations/tests/test_prorrata_regularizacion|"
-            r"application/modelo/tests/test_prorrata_regularizacion_source_timing|"
-            r"application/modelo/tests/test_review_package(?:_collab_audit|_counter_sign|_feedback|_recipient_encryption|_review_only_workspace|_signing)?|"
-            r"application/overview/tests/test_data_prep|"
-            r"entrypoints/cli/tests/test_modelo_review_package_verb"
-            r")\.py$"
-        ),
-        reason="test-only WorkUnit display labels are paired with typed Period values; no period parsing depends on the label",
-        pattern_names=frozenset({"year-qualified quarterly token"}),
-    ),
-    AllowlistRule(
         path=_path(r"^src/aeat/adapters/inbound/pdf/tests/test_scrub\.py$"),
         reason="inbound parser and scrub tests preserve external justificante/PDF fixture filenames",
     ),

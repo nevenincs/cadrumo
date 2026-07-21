@@ -2,8 +2,9 @@
 
 The ``work verify`` and ``work file`` CLI paths emit one info Notice per socio
 carrying the attributed base plus the ``attribution_received`` fact keys the
-socio records on their own workspace: the cross-bucket value is handed over by
-hand, not auto-flowed. The helper stays
+socio records on their own workspace (per the
+``2026-07-09-m184-socio-attribution-handoff-adr`` addendum, decision (a): the
+cross-bucket value is handed over by hand, not auto-flowed). The helper stays
 silent for any revision without Modelo 184 member rows, so a non-M184 filing —
 or an M184 with no socios — never emits a spurious handoff.
 """
@@ -55,12 +56,8 @@ def _revision(*detail_rows: ModeloDetailRow) -> CalculationRevision:
 
 def test_handoff_emits_one_info_notice_per_socio() -> None:
     revision = _revision(
-        Modelo184MemberRow(
-            nif="12345678A", nombre="Ana Socia", porcentaje=Decimal("60.00"), importe=Decimal("58100.00")
-        ),
-        Modelo184MemberRow(
-            nif="87654321B", nombre="Beto Comunero", porcentaje=Decimal("40.00"), importe=Decimal("38700.00")
-        ),
+        Modelo184MemberRow(nif="12345678A", nombre="Ana Socia", porcentaje=Decimal("60.00"), importe=Decimal("58100.00")),
+        Modelo184MemberRow(nif="87654321B", nombre="Beto Comunero", porcentaje=Decimal("40.00"), importe=Decimal("38700.00")),
     )
 
     notices = m184_socio_handoff_notices(revision)
@@ -74,7 +71,7 @@ def test_handoff_emits_one_info_notice_per_socio() -> None:
     assert first.context["nombre"] == "Ana Socia"
     assert first.context["base_imponible_attributed"] == "58100.00"
     # The message carries nif/nombre/importe; the suggestion carries the exact
-    # socio-side fold-in command onto the relation-canonical casilla 1577, as
+    # socio-side fold-in command onto the relation-canonical casilla 1577 (ADR
     # decision (a): the cross-bucket value enters via a manual --binding override).
     assert "58100.00" in first.message
     assert "Ana Socia" in first.message

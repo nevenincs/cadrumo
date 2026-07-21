@@ -133,29 +133,6 @@ class CensoApplyResult(BaseModel):
     seeded_home_office_categories: tuple[str, ...] = Field(default_factory=tuple)
 
 
-class CensoRefreshOutcome(BaseModel):
-    """Result of a censo refresh: the captured snapshot plus dropped-field delta.
-
-    ``dropped_fields`` names every censo path the prior ACTIVE snapshot
-    carried that the freshly captured snapshot does **not** — a strict
-    set difference (present-in-prior minus present-in-new), never a
-    value change. It is empty when there was no prior snapshot or the new
-    snapshot is a superset of it.
-
-    A non-empty ``dropped_fields`` is a *non-blocking* signal: the capture
-    always proceeds (a legitimate field removal — the operator genuinely
-    closing their home office so AEAT drops ``vivienda_office.*`` — must be
-    respected), but a partial pull can also silently drop fields, so the
-    CLI surfaces the delta as an operator advisory. The domain computes the
-    delta; the CLI presents it through the typed ``Notice`` channel.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    snapshot: CensoSnapshot
-    dropped_fields: tuple[str, ...] = Field(default_factory=tuple)
-
-
 CensoFactSource = Callable[[], Mapping[str, str]]
 """Callable returning the AEAT-side censo facts for one refresh.
 
@@ -200,15 +177,8 @@ class CensoSyncService:
         profile_id: str,
         source_url: str,
         fact_source: CensoFactSource,
-    ) -> CensoRefreshOutcome:
-        """Capture fresh censo facts as the new ACTIVE snapshot and return the :class:`CensoRefreshOutcome`.
-
-        The outcome carries the captured :class:`CensoSnapshot` plus the
-        set of censo paths the prior ACTIVE snapshot carried that the new
-        one drops (see :class:`CensoRefreshOutcome`). The prior snapshot is
-        read *before* capture supersedes it; the capture always proceeds so
-        a legitimate field removal is respected, and the dropped-field delta
-        is surfaced by the caller as a non-blocking advisory.
+    ) -> CensoSnapshot:
+        """Fetch fresh censo facts, capture them as the new ACTIVE snapshot, and return the :class:`CensoSnapshot`.
 
         Raises :exc:`CensoNotAvailableError` when ``fact_source``
         returns an empty mapping — AEAT publishes no censo for the
@@ -221,7 +191,6 @@ class CensoSyncService:
                 translated_message="errors.censo.sede_no_censo",
                 context={"profile_id": profile_id},
             )
-        prior = self._snapshots.latest_active(profile_id=profile_id)
         snapshot = self._snapshots.capture(
             profile_id=profile_id,
             captured_at=now(),
@@ -233,31 +202,26 @@ class CensoSyncService:
             profile_id=profile_id,
             snapshot_id=snapshot.snapshot_id,
         )
-        return CensoRefreshOutcome(
-            snapshot=snapshot,
-            dropped_fields=_dropped_censo_fields(prior, facts),
-        )
+        return snapshot
 
     async def refresh_censo_from_sede(
         self,
         *,
         profile_id: str,
-    ) -> CensoRefreshOutcome:
+    ) -> CensoSnapshot:
         """Drive the live G313 Playwright fetch and persist the snapshot.
 
         Acquires (or refreshes) an authenticated :class:`AeatSession`,
         navigates to the documented G313 launcher, parses the response
         into a :class:`CensoFactSet`, projects it into the dotted
-        snapshot mapping, and captures the ACTIVE snapshot.
+        snapshot mapping, and captures via :meth:`refresh_censo`.
 
         Args:
             profile_id: The profile id the captured censo snapshot is
                 scoped to.
 
         Returns:
-            The :class:`CensoRefreshOutcome` for the profile — the
-            persisted :class:`CensoSnapshot` plus the paths the prior
-            ACTIVE snapshot carried that this pull drops.
+            The persisted :class:`CensoSnapshot` for the profile.
 
         Raises:
             CensoNotAvailableError: when AEAT publishes no censo for
@@ -285,7 +249,6 @@ class CensoSyncService:
                 translated_message="errors.censo.sede_g313_no_censo",
                 context={"profile_id": profile_id},
             )
-        prior = self._snapshots.latest_active(profile_id=profile_id)
         snapshot = self._snapshots.capture(
             profile_id=profile_id,
             captured_at=now(),
@@ -297,10 +260,7 @@ class CensoSyncService:
             profile_id=profile_id,
             snapshot_id=snapshot.snapshot_id,
         )
-        return CensoRefreshOutcome(
-            snapshot=snapshot,
-            dropped_fields=_dropped_censo_fields(prior, facts),
-        )
+        return snapshot
 
     def show_censo(
         self,
@@ -533,22 +493,6 @@ class CensoSyncService:
         )
 
 
-def _dropped_censo_fields(
-    prior: CensoSnapshot | None,
-    new_facts: Mapping[str, str],
-) -> tuple[str, ...]:
-    """Return the censo paths ``prior`` carried that ``new_facts`` drops.
-
-    A strict set difference (present-in-prior minus present-in-new): a
-    path whose value merely *changed* is present in both and is therefore
-    NOT a drop. Empty when there is no prior snapshot (first pull) or the
-    new facts are a superset of the prior ones.
-    """
-    if prior is None:
-        return ()
-    return tuple(sorted(set(prior.censo_facts) - set(new_facts)))
-
-
 def _raw_afectacion_ratio(censo_facts: Mapping[str, str]) -> Decimal | None:
     total_raw = censo_facts.get("vivienda_office.total_m2")
     office_raw = censo_facts.get("vivienda_office.office_m2")
@@ -648,6 +592,5 @@ __all__ = [
     "CensoFactSource",
     "CensoFieldComparison",
     "CensoProfileComparison",
-    "CensoRefreshOutcome",
     "CensoSyncService",
 ]

@@ -3,11 +3,11 @@
 No bundled AEAT *Manual práctico IVA* prorrata-ESPECIAL worked-example oracle
 ships in the corpus (only the general-prorrata regularización oracle
 ``modelo-303-prorrata-general-regularizacion.json`` exists). Per the
-prorrata-especial policy, this verification therefore uses a hand-constructed
+prorrata-especial ADR, this verification therefore uses a hand-constructed
 per-ejercicio register plus a ledger scenario driven end-to-end through the
 PRODUCTION aggregation path (``aggregate_iva_ledger_observations_from_repositories``
 + ``resolve_iva_ledger_binding_values``). Expected values are derived from the
-LIVA art. 106.Uno reglas grounded verbatim in the bundled corpus,
+LIVA art. 106.Uno reglas (grounded verbatim in the bundled corpus by W02.P03.S10),
 never hand-computed from the ``deductible_percentage_for`` substrate under test.
 
 The anti-tautology proof (mirroring the art-105.Cinco global-vs-average test):
@@ -39,7 +39,6 @@ import pytest
 
 from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.resources import resources
 from ....domain.calculations.registry import BindingId
@@ -103,7 +102,7 @@ def _classified_purchase(provider_id: str, classification: InputClassification):
     )
 
 
-def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegime) -> None:
+def _seed_register(objects: object, regime: ProrrataRegisterRegime) -> None:
     ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         ProrrataRegister(
             entries=(
@@ -119,7 +118,7 @@ def _seed_register(objects: SecureObjectRepository, regime: ProrrataRegisterRegi
     )
 
 
-def _deducible_cuota(objects: SecureObjectRepository) -> Decimal:
+def _deducible_cuota(objects: object) -> Decimal:
     from ....domain.transactions import TransactionCatalogue
 
     revision = resources().modelos.get("303").revisions["2009-y-siguientes"]

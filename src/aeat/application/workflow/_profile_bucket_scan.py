@@ -322,8 +322,7 @@ def _compact_manifest_error(exc: BaseException) -> str:
     # (e.g. TOMLDecodeError) rather than the storage-layer envelope.
     root = exc.__cause__ if isinstance(exc, StorageValidationError) and exc.__cause__ is not None else exc
     message = str(root).splitlines()[0] if str(root) else type(root).__name__
-    error_name = "TOMLDecodeError" if type(root).__name__ == "TomlParsingError" else type(root).__name__
-    return f"{error_name}: {message}"
+    return f"{type(root).__name__}: {message}"
 
 
 def _resolve_root(root: Path | None) -> Path:

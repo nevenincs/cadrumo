@@ -1,6 +1,7 @@
 """End-to-end read-side schema upgrade through the secure-object repository.
 
-Proves the durability contract on the real substrate: a row
+Proves the durability contract of the
+``2026-07-08-released-data-durability-adr`` on the real substrate: a row
 written under an older ``schema_version`` decrypts under its written
 version and is chain-upgraded to the consumer's current version on read —
 through the real repository, real engine, real crypto, and the real

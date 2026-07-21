@@ -63,7 +63,7 @@ def test_search_ranks_a_named_verb_above_a_mention() -> None:
 
 
 def test_search_results_carry_the_input_schema_so_they_are_actionable() -> None:
-    # A search hit is self-sufficient: it carries the per-verb input
+    # ADR P2: a search hit is self-sufficient - it carries the per-verb input
     # schema, so a model can call ``execute`` in one further round-trip without a
     # separate schema lookup.
     descriptors = build_tool_descriptors()
@@ -106,7 +106,7 @@ def _declared_live_write(command_key: str) -> Iterator[None]:
     """Declare ``command_key`` a live-write in the risk table for the test body.
 
     A live-write BLOCK now fires from the DECLARED risk table, not a leaf-name
-    heuristic: no real command declares live_write
+    heuristic (ADR mcp-protocol-hardening H3): no real command declares live_write
     (never-submit is enforced as "no such tool exists"), so a test that exercises
     the defensive BLOCK branch must supply a declared live-write row and restore
     the table after - test data, not a mocked behaviour.

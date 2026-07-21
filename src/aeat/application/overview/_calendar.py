@@ -654,6 +654,7 @@ def _modelo_record_calendar_event_date(record: ModeloRecord, evidence: OverviewC
     return record.filed_at.date()
 
 
+
 def _calendar_entry_from_obligation(
     obligation: _ModeloDeadline,
     *,

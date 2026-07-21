@@ -39,18 +39,3 @@ def test_emit_envelope_text_path_redacts_lines_through_common_renderer(capsys: p
     output = capsys.readouterr().out
     assert _PROFILE_ID not in output
     assert f"profile={CLI_PROFILE_ID_PLACEHOLDER}" in output
-
-
-def test_operator_progress_banner_goes_to_stderr_not_stdout(capsys: pytest.CaptureFixture[str]) -> None:
-    """The Cl@ve auth-wait banner (carrying the verification code) is the
-    operator channel the CLI arms; it must land on stderr so the stdout JSON
-    envelope stays pure. Exercises the exact sink the ``aeat`` entry point
-    installs via ``operator_progress_sink``."""
-
-    from .. import _emit_operator_progress
-
-    _emit_operator_progress("AEAT page verification code: YLL")
-
-    captured = capsys.readouterr()
-    assert "YLL" in captured.err
-    assert "YLL" not in captured.out

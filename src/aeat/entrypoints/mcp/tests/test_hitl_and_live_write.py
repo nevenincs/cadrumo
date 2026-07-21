@@ -23,7 +23,7 @@ def _declared_live_write(command_key: str) -> Iterator[None]:
     """Declare ``command_key`` a live-write in the risk table for the test body.
 
     A live-write BLOCK now fires from the DECLARED risk table, not a leaf-name
-    heuristic: no real command declares
+    heuristic (ADR ``mcp-protocol-hardening`` H3): no real command declares
     ``live_write`` (never-submit is enforced as "no such tool exists"), so a test
     that exercises the defensive BLOCK branch must supply a declared live-write
     row and restore the table after - test data, not a mocked behaviour.

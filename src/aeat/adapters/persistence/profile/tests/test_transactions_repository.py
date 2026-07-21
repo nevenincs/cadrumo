@@ -134,8 +134,12 @@ def test_partition_fallback_matches_complete_index_partition(runtime_profile: Te
 
     assert fallback.index_complete is False
     assert dict(fallback.in_window.transactions) == dict(complete.in_window.transactions)
-    assert {(row.transaction_id, row.filing_date) for row in fallback.out_of_window} == {
-        (row.transaction_id, row.filing_date) for row in complete.out_of_window
+    assert {
+        (row.transaction_id, row.filing_date)
+        for row in fallback.out_of_window
+    } == {
+        (row.transaction_id, row.filing_date)
+        for row in complete.out_of_window
     }
     assert set(fallback.in_window.transactions) | {row.transaction_id for row in fallback.out_of_window} == {
         q1_a.transaction_id,

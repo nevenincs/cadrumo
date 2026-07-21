@@ -456,7 +456,7 @@ class _MemoizedTransactionCatalogueRepository:
     four of the five ledger resolvers (IVA, M130/M100 income, M130 gasto,
     impatriado) call :meth:`partition_by_date_range`, which decrypts only the
     in-window subset and reports the out-of-window remainder as plaintext
-    index entries -- the M130 income and gasto resolvers request the IDENTICAL
+    stubs -- the M130 income and gasto resolvers request the IDENTICAL
     cumulative window in one calculate invocation, so
     ``_partition_catalogues`` memoization is load-bearing here, not
     incidental. :class:`LedgerRentaExpenseAggregationSourceResolver` (the

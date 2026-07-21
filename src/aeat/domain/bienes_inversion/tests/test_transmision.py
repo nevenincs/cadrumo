@@ -22,7 +22,8 @@ See Also:
         Register-wide projection that folds disposal computes into casilla 43.
     :func:`~application.calculations.build_bienes_inversion_transmision_advisory`
         Application diagnostic that surfaces art. 110 projected values.
-        Governing capital-goods regularización design.
+    ``2026-07-01-iva-bienes-inversion-regularizacion-adr``
+        Governing capital-goods regularización design record.
 """
 
 from __future__ import annotations

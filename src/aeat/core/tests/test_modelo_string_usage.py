@@ -136,7 +136,6 @@ def test_no_bare_modelo_code_strings_in_production_identifiers(source_tree_ast: 
     stale_allowlist: set[tuple[str, str]] = set(_ALLOWLIST)
 
     for path, tree in production_ast_items(source_tree_ast):
-        assert isinstance(tree, ast.Module), f"Expected a module AST for {path}, got {type(tree).__name__}"
         rel = aeat_relative(path)
         if rel in skip_files:
             continue

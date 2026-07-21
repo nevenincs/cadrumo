@@ -14,8 +14,6 @@ catalogue the agent reads first is emitted by ``aeat app contract --format json`
 from __future__ import annotations
 
 from collections.abc import Iterator
-
-# nosemgrep: python.lang.compatibility.python37.python37-compatibility-importlib2
 from importlib.resources.abc import Traversable
 from typing import TYPE_CHECKING
 

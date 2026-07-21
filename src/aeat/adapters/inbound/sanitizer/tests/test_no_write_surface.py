@@ -84,6 +84,7 @@ def _public_python_files() -> list[Path]:
     return candidates
 
 
+
 class TestPublicSurfaceCarriesNoForbiddenVerb:
     """No public function / class name in the sanitiser carries a banned verb."""
 

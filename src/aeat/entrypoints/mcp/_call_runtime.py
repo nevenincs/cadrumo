@@ -139,7 +139,7 @@ def run_supervised(
     else:
         start_new_session = True
 
-    process = subprocess.Popen(  # noqa: S603  # nosem
+    process = subprocess.Popen(  # noqa: S603 - fixed argv (our CLI), no shell
         list(argv),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,

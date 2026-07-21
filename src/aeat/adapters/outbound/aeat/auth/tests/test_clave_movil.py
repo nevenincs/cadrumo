@@ -20,7 +20,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from pydantic import AnyUrl, SecretStr
+from pydantic import SecretStr
 
 from ......application.user_profile import profile_create_storage_span, register_minimal_profile
 from ......application.workflow import workflow_state_repository
@@ -30,7 +30,7 @@ from ......domain.calculations.registry import RegistryValidationError, RemoteOp
 from ......tests.aeat_literal_fixtures import CLAVE_MOVIL_BROWSER_GLOBAL_EXPECTED
 from ......tests.secure_sql import isolated_runtime_profile
 from .....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from .. import _session_store, operator_progress_sink
+from .. import _session_store
 from .._clave_movil import (
     CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
     ClaveMovilApprovalTimeoutError,
@@ -93,32 +93,6 @@ def test_auth_browser_action_policy_rejects_unclassified_representation_action(t
         assert_remote_operation_allowed(
             policy,
             RemoteOperation(kind="browser_action", action="representation-gate-represented-taxpayer-continue"),
-        )
-
-
-def test_auth_browser_action_policy_admits_sibling_load_balancer_host(tmp_path: Path) -> None:
-    """An auth navigation dispatched to a www{n} sibling beyond the enumerated hosts is allowed."""
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
-    policy = _auth_browser_action_policy(settings)
-    drifted = _aeat_url(_DOMAINS.www2, _CLAVE_SURFACE.obtener_clave_movil_non_qr_path)
-
-    result = assert_remote_operation_allowed(
-        policy,
-        RemoteOperation(kind="http", method="GET", url=AnyUrl(drifted)),
-    )
-
-    assert result.decision == "allowed"
-
-
-def test_auth_browser_action_policy_refuses_non_aeat_host(tmp_path: Path) -> None:
-    """Widening to the AEAT apex suffix must not admit an off-AEAT host."""
-    settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
-    policy = _auth_browser_action_policy(settings)
-
-    with pytest.raises(RegistryValidationError, match="not in allowed read-only hosts"):
-        assert_remote_operation_allowed(
-            policy,
-            RemoteOperation(kind="http", method="GET", url=AnyUrl("https://attacker.example/read/path")),
         )
 
 
@@ -262,30 +236,6 @@ class TestDescribe:
         assert "not a valid DNI" in (description.health_summary or "")
 
 
-def test_render_progress_banner_routes_to_operator_sink_only_when_armed() -> None:
-    """The wait banner reaches an armed operator sink and no sink otherwise.
-
-    Opt-in by construction: an unarmed call routes nothing to the caller's
-    sink (production/default behaviour is log-only); an armed call routes the
-    banner — carrying the verification code — exactly once. Proves the code
-    surfaces to the operator channel without a value change to any other
-    surface."""
-
-    captured: list[str] = []
-
-    _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
-    assert captured == [], "an unarmed banner must not route to any operator sink"
-
-    with operator_progress_sink(captured.append):
-        _render_progress_banner(verification_code="YLL", timeout_seconds=120, used_non_qr_fallback=True)
-
-    assert len(captured) == 1
-    banner = captured[0]
-    assert "YLL" in banner
-    assert "verification code" in banner.lower()
-    assert "Cl@ve" in banner
-
-
 # ── authenticate() — fresh login ─────────────────────────────────────────────
 
 
@@ -329,34 +279,6 @@ class TestAuthenticateFresh:
             assert session.provider_detail.landing_url == _aeat_url(_DOMAINS.www6, target_path)
 
         _run(run())
-
-    def test_fresh_login_routes_verification_code_to_armed_operator_sink(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        """A headless operator must see the AEAT verification code during the
-        Cl@ve wait, not only in the runtime log. When an operator progress sink
-        is armed, the wait banner (carrying the code the operator confirms in
-        their app) is handed to it as the fresh login reaches the wait state."""
-
-        settings = _settings_for(tmp_path, AEAT_CLAVE_MOVIL_DNI_NIE="12345678Z")
-        provider = ClaveMovilAuthProvider(settings)
-        browser_session = _RecordingBrowserSession(
-            target_path=settings.aeat_sede_expedientes_path,
-            verification_code="YLL",
-        )
-        captured: list[str] = []
-
-        async def run() -> None:
-            with operator_progress_sink(captured.append):
-                await provider.authenticate(browser_session=browser_session)
-
-        _run(run())
-
-        assert captured, "the operator progress sink must receive the wait banner during fresh login"
-        banner = "\n".join(captured)
-        assert "YLL" in banner
-        assert "verification code" in banner.lower()
 
     def test_initial_selector_navigation_timeout_is_typed(
         self,

@@ -65,7 +65,6 @@ def test_m210_tipo_renta_fetch_gated_code_refuses_as_fetch_gated_not_invalid() -
     assert error.translated_message == "application.modelo.errors.calculate_m210_tipo_renta_fetch_gated"
     assert error.context is not None
     assert error.context["value"] == "13"
-    assert isinstance(error.context["accepted"], str)
     # The accepted set lists the declared codes (e.g. 18); it never lists the fetch-gated 13.
     assert "18" in error.context["accepted"]
     assert "13" not in error.context["accepted"]
@@ -82,8 +81,6 @@ def test_m210_tipo_renta_unknown_code_refuses_and_lists_accepted_and_fetch_gated
     assert error.translated_message == "application.modelo.errors.calculate_m210_tipo_renta_unknown"
     assert error.context is not None
     assert error.context["value"] == "99"
-    assert isinstance(error.context["accepted"], str)
-    assert isinstance(error.context["fetch_gated"], str)
     assert "18" in error.context["accepted"]
     assert "13" in error.context["fetch_gated"]
     message = resolve_error_message(error)

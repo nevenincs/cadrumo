@@ -15,7 +15,9 @@ See Also:
         mesh by this slice.
     :mod:`~application.calculations.tests.test_prorrata_regularizacion_source_resolver`
         Resolver-isolation tests for the same ``prorrata_regularizacion`` source.
-        The enrollment policy governing the promotion.
+    ``2026-07-06-cross-period-prorrata-plan`` and
+    ``2026-07-06-cross-period-prorrata-audit``
+        W07 enrollment and campaign-close records that govern the promotion.
 """
 
 from __future__ import annotations
@@ -32,7 +34,7 @@ from ....adapters.persistence.profile.prorrata_register import ProrrataRegisterR
 from ....core import BindingSourceKind, Period, ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from ....core.resources import bundled_path, resources
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos import WorkUnit, derive_work_unit_id
 from ....domain.prorrata_register import ProrrataRegister, ProrrataRegisterEntry
 from ....tests.registry_observations import registry_grounded_modelo_observation
 from ....tests.secure_sql import isolated_runtime_profile
@@ -48,7 +50,6 @@ _BUCKET_ID = "88888888-8888-4888-8888-888888888888"
 _FILING_YEAR = 2025
 _PRIOR_YEAR = _FILING_YEAR - 1
 _PERIOD = Period.from_year_and_code(_FILING_YEAR, "4T")
-_M303_CODE = ModeloCode("303")
 _CREATED_AT = datetime(2026, 1, 20, 9, 0, tzinfo=UTC)
 _M303_BINDING_ID = "modelo-303-prorrata-regularizacion-casilla-44"
 _M390_BINDING_ID = "modelo-390-prorrata-regularizacion-anual"
@@ -85,7 +86,7 @@ def _oracle_expected(casilla_id: CasillaId) -> Decimal:
 def _work_unit(
     *,
     revision_id: str,
-    modelo: ModeloCode = _M303_CODE,
+    modelo: str = "303",
     period: Period = _PERIOD,
 ) -> WorkUnit:
     return WorkUnit(
@@ -190,7 +191,7 @@ def test_source_mesh_resolves_m390_prorrata_binding_from_m303_source_periods(
     """The M390 binding consumes stamped Modelo 303 source-period observations."""
     period = Period.from_year_and_code(_FILING_YEAR, "0A")
     snapshot = resources().modelos.authority.snapshot("390", filing_year=_FILING_YEAR, period="0A")
-    work_unit = _work_unit(revision_id=snapshot.revision.id, modelo=ModeloCode("390"), period=period)
+    work_unit = _work_unit(revision_id=snapshot.revision.id, modelo="390", period=period)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         ProrrataRegisterRepository(bucket_id=_BUCKET_ID).save(_register_with_carried_prior())

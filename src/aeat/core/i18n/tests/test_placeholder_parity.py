@@ -71,7 +71,7 @@ _SKIP_FILE_STEMS = frozenset({"manager", "_ast_scanner", "test_parity", "conftes
 # localisation while preserving Typer's own ``{command_path}`` /
 # ``{help_option}`` positional tokens, which Typer ``.format()``s itself when
 # it renders the help footer. Verified: the footer renders fully at runtime
-# with both tokens filled by Typer. These are localised-prose surfaces
+# with both tokens filled by Typer (S332). These are localised-prose surfaces
 # with a downstream ``.format()`` owner, not half-rendered operator strings.
 _DOWNSTREAM_FORMAT_PASSTHROUGH: frozenset[tuple[str, str]] = frozenset(
     {

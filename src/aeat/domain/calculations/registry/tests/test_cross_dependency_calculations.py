@@ -922,8 +922,6 @@ def _renta_2024_relation_observed_value(
         return m131_quarterly_amounts[period_index]
     if relation_id == "renta-2024-rel-130-pagos-fraccionados":
         return m130_quarterly_amounts[period_index]
-    if relation_id == "renta-2024-rel-131-rendimiento-neto-modulos":
-        return Decimal("0")
     if relation_id in {
         "renta-2024-rel-111-retenciones-trimestrales",
         "renta-2024-rel-111-retenciones-mensuales",

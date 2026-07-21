@@ -1,4 +1,4 @@
-"""Regression for the Modelo 303 ``verification_source`` snapshot-resolution failure.
+"""Regression for the Modelo 303 ``verification_source`` snapshot-resolution failure (CDC W09.P41.S341).
 
 A persona-simulation round observed a Modelo 303 registry-build failure whose
 signature was the extraction-profile round-trip gate refusing the profile with
@@ -134,7 +134,8 @@ def test_m303_round_trip_gate_still_fires_on_the_partial_shape() -> None:
     )
 
     assert any("verification_source is not set" in error for error in errors), (
-        f"round-trip gate must refuse a corpus_round_trip_verified profile with no verification_source; got {errors!r}"
+        f"round-trip gate must refuse a corpus_round_trip_verified profile with no "
+        f"verification_source; got {errors!r}"
     )
 
 

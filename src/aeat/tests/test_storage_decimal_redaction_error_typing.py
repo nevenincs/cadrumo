@@ -338,7 +338,9 @@ def test_error_envelope_roundtrip_for_core_error_classes(error_name: str, expect
     from ..core.errors import DecimalFormatError, RedactionError, build_error_envelope
 
     err = (
-        DecimalFormatError("test decimal format") if error_name == "decimal" else RedactionError("test redaction error")
+        DecimalFormatError("test decimal format")
+        if error_name == "decimal"
+        else RedactionError("test redaction error")
     )
     envelope = build_error_envelope(err)
     assert envelope.code == expected_code

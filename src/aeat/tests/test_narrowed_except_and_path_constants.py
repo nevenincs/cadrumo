@@ -63,7 +63,10 @@ def test_schedules_resolver_accepts_registry_dotted_profile_paths() -> None:
     profile = _Profile(iva_regime=_Regime("monthly"), entity_type="legal_entity")
 
     assert _schedules._resolve_profile_fact(profile, _schedules._IVA_REGIME_PATH) == "monthly"
-    assert _schedules._resolve_profile_fact(profile, _schedules._TAXPAYER_ENTITY_TYPE_PATH) == "legal_entity"
+    assert (
+        _schedules._resolve_profile_fact(profile, _schedules._TAXPAYER_ENTITY_TYPE_PATH)
+        == "legal_entity"
+    )
 
 
 # ---------------------------------------------------------------------------

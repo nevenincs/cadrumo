@@ -89,9 +89,7 @@ def test_bucket_busy_payload_carries_bucket_id_and_pid() -> None:
         pytest.param(RecoveryUnavailableError(bucket_id="bucket-001"), id="recovery-unavailable"),
     ),
 )
-def test_bucket_id_payload_carries_bucket_id(
-    error: BucketAlreadyPresentError | BucketLockedError | RecoveryUnavailableError,
-) -> None:
+def test_bucket_id_payload_carries_bucket_id(error: BucketError) -> None:
     assert error.bucket_id == "bucket-001"
     assert error.context == {"bucket_id": "bucket-001"}
 

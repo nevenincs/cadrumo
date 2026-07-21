@@ -402,14 +402,16 @@ class CalculationSourceDiagnostic(BaseModel):
 
     @model_validator(mode="after")
     def _validate_out_of_window_summary(self) -> Self:
-        count = self.out_of_window_count
-        min_filing_date = self.out_of_window_min_filing_date
-        max_filing_date = self.out_of_window_max_filing_date
-        if count is None and min_filing_date is None and max_filing_date is None:
+        summary_fields = (
+            self.out_of_window_count,
+            self.out_of_window_min_filing_date,
+            self.out_of_window_max_filing_date,
+        )
+        if all(value is None for value in summary_fields):
             return self
-        if count is None or min_filing_date is None or max_filing_date is None:
+        if any(value is None for value in summary_fields):
             raise SourceMeshError("aggregation.source_mesh.errors.out_of_window_summary_incomplete")
-        if max_filing_date < min_filing_date:
+        if self.out_of_window_max_filing_date < self.out_of_window_min_filing_date:
             raise SourceMeshError("aggregation.source_mesh.errors.out_of_window_summary_date_span_invalid")
         return self
 

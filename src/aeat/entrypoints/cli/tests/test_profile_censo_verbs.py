@@ -262,30 +262,6 @@ def test_apply_emits_censo_applied_bucket_event() -> None:
     assert payload["profile_id"] == active
 
 
-def test_pull_dropped_fields_notice_fires_on_drop_and_is_silent_otherwise() -> None:
-    """The censo pull handler surfaces a non-blocking WARNING Notice when
-    the pull drops fields the prior snapshot carried, and no notice when it
-    drops nothing. Exercises the exact production helper the ``pull`` verb
-    folds into its envelope; a full live pull is prohibited (no AEAT), but
-    the notice construction is the operator-facing surface under test."""
-
-    from ....core.json_contract import NoticeSeverity
-    from .._config._profile_censo import _dropped_censo_fields_notice
-
-    assert _dropped_censo_fields_notice(()) is None
-
-    notice = _dropped_censo_fields_notice(
-        ("vivienda_office.office_m2", "vivienda_office.total_m2"),
-    )
-    assert notice is not None
-    assert notice.severity is NoticeSeverity.WARNING
-    assert notice.code == "config.profile.censo.dropped_fields"
-    assert "vivienda_office.office_m2" in notice.message
-    assert "vivienda_office.total_m2" in notice.message
-    assert notice.context is not None
-    assert notice.context["dropped_fields"] == "vivienda_office.office_m2, vivienda_office.total_m2"
-
-
 def test_rejected_subverb_returns_nonzero() -> None:
     """Typer must refuse an undeclared subverb (e.g. 'diff' is not in
     {refresh, show, compare, apply}). Without this regression a typo

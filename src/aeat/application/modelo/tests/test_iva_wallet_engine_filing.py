@@ -189,10 +189,6 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
             calculation_repository=calc_repo,
             filing_repository=filing_repo,
             bucket_event_repository=event_repo,
-            settings=Settings(
-                aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-                aeat_clave_movil_dni_nie=SecretStr(taxpayer_nif),
-            ),
             clock=datetime(2026, 4, 15, 9, 0, 0, tzinfo=UTC),
         )
         assert verification.granted_verificado_completo is True

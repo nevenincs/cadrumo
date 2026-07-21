@@ -362,7 +362,10 @@ def test_modelo_390_declares_prorrata_regularizacion_annual_field() -> None:
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     bindings = {binding.id: binding for binding in revision.bindings}
     export_fields = {
-        field.id: field for layout in revision.export_layouts for record in layout.records for field in record.fields
+        field.id: field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
     }
 
     casilla = casillas[_M390_PRORRATA_REGULARIZACION_CASILLA]
@@ -400,7 +403,10 @@ def test_modelo_390_declares_bienes_inversion_regularizacion_annual_field() -> N
     casillas = {casilla.id: casilla for casilla in revision.casillas}
     bindings = {binding.id: binding for binding in revision.bindings}
     export_fields = {
-        field.id: field for layout in revision.export_layouts for record in layout.records for field in record.fields
+        field.id: field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
     }
 
     casilla = casillas[_M390_BIENES_INVERSION_REGULARIZACION_CASILLA]
@@ -433,7 +439,9 @@ def test_modelo_390_declares_bienes_inversion_regularizacion_annual_field() -> N
 def test_modelo_390_prorrata_regularizacion_is_in_annual_deducible_formula() -> None:
     modelo, _ = _load_modelo_390()
     revision = modelo.revisions["2010-y-siguientes"]
-    formula = next(item for item in revision.formulas if item.target_casilla_id == _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA)
+    formula = next(
+        item for item in revision.formulas if item.target_casilla_id == _M390_CUOTA_DEDUCIBLE_TOTAL_CASILLA
+    )
 
     assert _M390_PRORRATA_REGULARIZACION_CASILLA in set(expression_casilla_refs(formula.expression))
     assert _M390_BIENES_INVERSION_REGULARIZACION_CASILLA in set(expression_casilla_refs(formula.expression))

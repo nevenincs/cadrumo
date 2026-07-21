@@ -327,7 +327,6 @@ adapters:
       session_expired_nav_failed: El registro de declaraciones de AEAT no se cargó;
         la sesión probablemente ha expirado. Ejecute 'aeat config auth test' y vuelva
         a intentarlo.
-      notifications_bad_landing: 'La página de notificaciones de la AEAT no se cargó correctamente; su sesión puede haber caducado o la AEAT está en mantenimiento. Ejecute ''aeat config auth status'' y vuelva a intentarlo. No lo interprete como una bandeja vacía.'
 aggregation:
   grouping:
     errors:
@@ -3179,7 +3178,6 @@ cli:
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
         show_help: Muestra el último censo informado por AEAT para este perfil
         snapshot_id_help: Id de snapshot concreto (se aceptan prefijos)
-        dropped_fields_notice: 'El censo de la AEAT ya no incluye campos que tenia tu ultima instantanea: {dropped_fields}. Si no has cambiado ni dado de baja estos datos, puede tratarse de una descarga parcial: vuelve a ejecutar la descarga del censo o reintroduce los valores; la proporcion de afectacion de la vivienda podria dejar de resolverse.'
       create_epilog: 'Perfil mínimo para autónomo: --entity-type natural_person --tax-id
         <DNI/NIE/NIF> --irpf-income-categories actividad_economica --quiet --accept-defaults'
       create_help: Inicializa un nuevo perfil activo.

@@ -10,7 +10,7 @@ The D3 ``orden_aplicabilidad`` gate lives in its sibling module
 
 from __future__ import annotations
 
-from collections.abc import Collection, Iterable
+from collections.abc import Iterable
 from datetime import date, timedelta
 
 from ....core import M210_TIPO_RENTA_CODE_PROJECTION
@@ -67,11 +67,7 @@ def validate_informative_class_invariant(modelo: ModeloDefinition) -> list[str]:
     return failures
 
 
-def validate_m210_tipo_renta_code_projection_parity(
-    modelo: ModeloDefinition,
-    *,
-    projected_codes: Collection[str] | None = None,
-) -> list[str]:
+def validate_m210_tipo_renta_code_projection_parity(modelo: ModeloDefinition) -> list[str]:
     """Enforce bidirectional parity between the registry code set and the core projection.
 
     The official Modelo 210 tipo-de-renta code axis is declared in two places
@@ -88,11 +84,9 @@ def validate_m210_tipo_renta_code_projection_parity(
         modelo: The :class:`ModeloDefinition` to check. Only revisions carrying
             an ``m210-tipo-renta-code-`` parameter are inspected; every other
             modelo is a no-op.
-        projected_codes: Optional code set used for the comparison. When omitted,
-            the shipped core projection is used.
     """
     failures: list[str] = []
-    projected = set(M210_TIPO_RENTA_CODE_PROJECTION if projected_codes is None else projected_codes)
+    projected = set(M210_TIPO_RENTA_CODE_PROJECTION)
     for revision in modelo.revisions.values():
         for parameter in revision.parameters:
             if not parameter.id.startswith(_M210_TIPO_RENTA_CODE_PARAMETER_PREFIX):

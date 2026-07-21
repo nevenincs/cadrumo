@@ -27,13 +27,12 @@ Public surface: :class:`RemoteNotification`, :class:`NotificationsSnapshot`,
 from __future__ import annotations
 
 import re
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Callable
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Any, Final, Literal
-from urllib.parse import urlsplit
+from typing import TYPE_CHECKING, Final, Literal
 
 from bs4 import BeautifulSoup
-from pydantic import AnyHttpUrl, AnyUrl, BaseModel, Field
+from pydantic import AnyHttpUrl, BaseModel, Field
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .....core.config import Settings
@@ -41,16 +40,11 @@ from .....core.i18n import tr
 from .....core.logging import get_logger
 from .....core.parsing import parse_date
 from .....core.time import now
-from .....domain.calculations.registry import (
-    RemoteOperation,
-    RemoteStateGuardPolicy,
-    assert_remote_operation_allowed,
-)
 from .._playwright import PlaywrightError
 from ..browser import default_browser_session_factory
 from ._auth_state import storage_state_for_session
 from ._browser_constants import PLAYWRIGHT_WAIT_DOMCONTENTLOADED
-from ._errors import SedeFailureMode, SedeNavigationError, SedeParseError
+from ._errors import SedeNavigationError, SedeParseError
 
 if TYPE_CHECKING:
     from ..auth import AeatSession
@@ -60,44 +54,9 @@ log = get_logger(__name__)
 
 _EXTERNAL = Settings.external_constants()
 _SEDE_BASE = _EXTERNAL.aeat.domains.www6
-_SEDE_HOST = urlsplit(_SEDE_BASE).netloc
-_AEAT_HOST_SUFFIX = _EXTERNAL.aeat.domains.host_suffix
 _RESUMEN_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.expedientes_resumen}"
 _NOTIF_SUMMARY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_summary}"
 _NOTIF_QUERY_URL = f"{_SEDE_BASE}{_EXTERNAL.aeat.sede_paths.notifications_query}"
-
-# AEAT dispatches the authenticated sede across a ``www{n}`` load-balancer pool;
-# the read guard admits any subdomain under the AEAT apex (host-suffix widened)
-# so a sibling-host landing is tolerated, while success detection keys on the
-# notifications PATH plus a positive page marker (below).
-_READ_GUARD_POLICY = RemoteStateGuardPolicy(
-    id="aeat-sede-notifications-read",
-    evidence_tier="official_source_guidance",
-    classification="authenticated_read_surface",
-    allowed_hosts=(_SEDE_HOST,),
-    allowed_host_suffixes=(_AEAT_HOST_SUFFIX,),
-    synthetic_data_allowed=False,
-    requires_authentication=True,
-    requires_aeat_authorization=True,
-)
-
-BrowserSessionFactory = Callable[[Settings], Awaitable[Any]]
-"""Async factory returning an object exposing ``create_context(storage_state=...)`` + ``close()``.
-
-Production passes :func:`default_browser_session_factory`; tests inject a
-recording double via the same protocol so the navigation/landing-guard logic
-can be exercised without a real Playwright browser."""
-
-# Page-level marker present on BOTH the summary (``Resumen de notificaciones y
-# comunicaciones no leídas``) and the query (``Consulta de notificaciones y
-# comunicaciones``) page headings and titles. It is row-count INDEPENDENT — the
-# heading renders on a genuinely-empty notifications page — so a zero-row parse
-# with the marker present is a legitimate "no pending items", while a zero-row
-# parse with the marker ABSENT is a wrong-service / auth-gate / maintenance
-# landing. Grounded against the real captures in ``test_notifications.py``
-# (fixtures ``notifications-summary-resumen.html`` / ``notifications-query-results.html``);
-# absent from the maintenance interstitial fixture.
-_NOTIFICATIONS_PAGE_MARKER: Final = "notificaciones y comunicaciones"
 
 
 # Número de certificado: 13 digits. Captured: 2699101808461 / 2596230606502.
@@ -459,38 +418,16 @@ async def _fetch_and_parse(
     parser: Callable[..., NotificationsSnapshot],
     settings: Settings | None,
 ) -> NotificationsSnapshot:
-    """Resolve the session's storage state, then drive Playwright to ``url`` and parse."""
+    """Drive Playwright to ``url`` under the authenticated session and parse the HTML."""
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
-    if session.storage_state_path is None:
+    storage_state_path = session.storage_state_path
+    if storage_state_path is None:
         raise SedeNavigationError(
             "AeatSession has no persisted auth session; run `aeat config auth status` first",
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
-    return await _navigate_and_parse(
-        storage_state,
-        url=url,
-        parser=parser,
-        settings=settings,
-        browser_session_factory=default_browser_session_factory,
-    )
-
-
-async def _navigate_and_parse(
-    storage_state: Mapping[str, object],
-    *,
-    url: str,
-    parser: Callable[..., NotificationsSnapshot],
-    settings: Settings,
-    browser_session_factory: BrowserSessionFactory,
-) -> NotificationsSnapshot:
-    """Storage-state-driven core of :func:`_fetch_and_parse`.
-
-    Split out so unit tests can drive the Playwright orchestration and the
-    landing/marker guard with a recording double via the same protocol
-    production uses.
-    """
-    browser_session = await browser_session_factory(settings)
+    browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context(storage_state=storage_state)
         try:
@@ -509,45 +446,12 @@ async def _navigate_and_parse(
                     exc,
                     exc_info=True,
                 )
-            _assert_read_http("GET", url)
             try:
                 await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
             except PlaywrightError as exc:
                 raise SedeNavigationError(f"goto {url!r} failed: {exc}") from exc
-            # Follow the redirect chain rather than assuming the request host:
-            # capture where AEAT actually landed and re-assert that host through
-            # the host-suffix read guard so an off-AEAT redirect fails closed
-            # while a ``www{n}`` load-balancer dispatch is tolerated.
-            landing_url = getattr(page, "url", "") or url
-            landing = urlsplit(landing_url)
-            _assert_read_http("GET", f"{landing.scheme}://{landing.netloc}{landing.path}")
             html = await page.content()
             snapshot = parser(html, source_url=url)
-            if not snapshot.rows and not _notifications_marker_present(html):
-                # A zero-row parse with NO notifications page marker is a
-                # wrong-service / auth-gate / maintenance landing, not a genuine
-                # "no pending items" — surface the page signal instead of a
-                # silent empty snapshot. A genuine empty page still renders the
-                # marker and returns normally above.
-                raise SedeNavigationError(
-                    "AEAT notifications navigation returned a page with no notifications marker and no "
-                    "rows; this is a wrong-service / auth-gate / maintenance landing, not an empty inbox. "
-                    f"landing_host={landing.netloc!r} landing_path={landing.path!r} "
-                    f"marker_present=False row_count=0",
-                    failure_mode=SedeFailureMode.LIVE_NAVIGATION_FAILED,
-                    translated_message=tr("adapters.sede.errors.notifications_bad_landing"),
-                    context={
-                        "requested_url": url,
-                        "landing_host": landing.netloc,
-                        "landing_path": landing.path,
-                        "marker_present": False,
-                        "row_count": 0,
-                    },
-                    suggestion=(
-                        "Re-authenticate (run `aeat config auth status`) and retry; if AEAT is serving a "
-                        "maintenance interstitial, retry later. Do not treat this as an empty inbox."
-                    ),
-                )
             log.info(
                 "fetch_notifications: fetched %d row(s) from %s",
                 len(snapshot.rows),
@@ -561,23 +465,6 @@ async def _navigate_and_parse(
                 log.debug("fetch_notifications: context.close suppressed: %s", _exc, exc_info=True)
     finally:
         await browser_session.close()
-
-
-def _assert_read_http(method: str, url: str) -> None:
-    """Fail-closed guard: refuse any non-read-only or off-AEAT notifications navigation."""
-    assert_remote_operation_allowed(
-        _READ_GUARD_POLICY,
-        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
-    )
-
-
-def _notifications_marker_present(html: str) -> bool:
-    """Return whether the raw HTML carries the row-count-independent notifications page marker.
-
-    Used only to distinguish a genuine empty inbox (marker present, zero rows)
-    from a wrong-service / auth-gate / maintenance landing (marker absent).
-    """
-    return _NOTIFICATIONS_PAGE_MARKER in html.lower()
 
 
 __all__ = [

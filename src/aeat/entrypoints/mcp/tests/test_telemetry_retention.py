@@ -1,4 +1,4 @@
-"""Retention sweep for per-session telemetry trajectory files.
+"""Retention sweep for per-session telemetry trajectory files (ADR H6).
 
 Proves :func:`prune_telemetry` bounds the telemetry directory by age and by
 count and NEVER removes the newest N sessions, and that

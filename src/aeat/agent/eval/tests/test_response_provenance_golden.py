@@ -301,7 +301,8 @@ def test_runner_rejects_expected_computed_response_rows_without_formula_id(
     )
     expected = set(scenario.expected_computed_casillas)
     stripped = tuple(
-        {**dict(obs), "formula_id": None} if str(obs["casilla_id"]) in expected else dict(obs) for obs in observations
+        {**dict(obs), "formula_id": None} if str(obs["casilla_id"]) in expected else dict(obs)
+        for obs in observations
     )
 
     result = run_golden_scenario(

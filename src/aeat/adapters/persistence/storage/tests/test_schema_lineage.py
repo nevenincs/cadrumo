@@ -1,6 +1,7 @@
 """Schema-lineage policy: version ceilings and the upgrade-chain gate.
 
-The completeness gate here is the anti-stranding tripwire: every registered secure-object
+The completeness gate here is the anti-stranding tripwire decided by the
+``2026-07-08-released-data-durability-adr``: every registered secure-object
 namespace must carry a complete upgrade chain from the durability floor to
 its current declared ``schema_version``. Today every namespace sits at
 version 1 and the chain is vacuously complete; the moment a namespace bumps
@@ -37,21 +38,19 @@ def test_floor_matches_the_regime_expected_floor() -> None:
     that current version — the floors-chase-current pre-release posture — so
     every stored row sits at or above the floor with no pre-current shape to
     tolerate. Post-flip the expected floor becomes the frozen released value
-    and this assertion demands the floor stay pinned there.
+    and this assertion demands the floor stay pinned there
+    (``2026-07-09-compatibility-lifecycle-adr``).
     """
     current = max(
         (definition.schema_version for definition in STORAGE_NAMESPACE_REGISTRY.namespaces),
         default=SECURE_OBJECT_DURABILITY_FLOOR,
     )
-    assert (
-        expected_floor(
-            COMPATIBILITY_REGIME,
-            "secure_object",
-            current,
-            RELEASED_FORMAT_FLOORS,
-        )
-        == SECURE_OBJECT_DURABILITY_FLOOR
-    )
+    assert expected_floor(
+        COMPATIBILITY_REGIME,
+        "secure_object",
+        current,
+        RELEASED_FORMAT_FLOORS,
+    ) == SECURE_OBJECT_DURABILITY_FLOOR
 
 
 def test_every_registered_namespace_upgrade_chain_is_complete() -> None:

@@ -190,12 +190,8 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
         _FOURTH_QUARTER_INPUT_IVA,
         definitive_percentage,
     )
-    fourth_quarter_deductible = fourth_quarter.deductible_amount
-    regularizacion_value = projection.modelo_303_casilla_44_value
-    definitive_deduction = result.deduccion_definitiva
-    assert fourth_quarter_deductible is not None
-    assert regularizacion_value is not None
-    assert definitive_deduction is not None
-    assert fourth_quarter_deductible == _MANUAL_FOURTH_QUARTER_CURRENT_DEDUCTION
-    assert regularizacion_value + fourth_quarter_deductible == (_MANUAL_FOURTH_QUARTER_NET_DEDUCTION)
-    assert definitive_deduction + fourth_quarter_deductible == _MANUAL_ANNUAL_DEDUCTION
+    assert fourth_quarter.deductible_amount == _MANUAL_FOURTH_QUARTER_CURRENT_DEDUCTION
+    assert projection.modelo_303_casilla_44_value + fourth_quarter.deductible_amount == (
+        _MANUAL_FOURTH_QUARTER_NET_DEDUCTION
+    )
+    assert result.deduccion_definitiva + fourth_quarter.deductible_amount == _MANUAL_ANNUAL_DEDUCTION

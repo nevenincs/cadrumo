@@ -86,7 +86,6 @@ def _collect_quantize_violations(source_tree_ast: Mapping[Path, ast.AST]) -> lis
             continue
         for node in ast.walk(tree):
             if _is_cent_quantize_call(node):
-                assert isinstance(node, ast.Call)
                 violations.append(f"{repo_relative(path)}:{node.lineno}")
     return violations
 
@@ -99,7 +98,6 @@ def _collect_decimal_str_violations(source_tree_ast: Mapping[Path, ast.AST]) -> 
             continue
         for node in ast.walk(tree):
             if _is_decimal_str_call(node):
-                assert isinstance(node, ast.Call)
                 violations.append(f"{repo_relative(path)}:{node.lineno}")
     return violations
 

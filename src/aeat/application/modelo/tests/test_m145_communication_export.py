@@ -84,7 +84,6 @@ def test_export_m145_communication_record_renders_registry_fixed_width_payload(t
     assert result.payload.startswith(b"<T145010>")
     assert result.payload.endswith(b"</T145010>")
     assert _payload_slice(result.payload, nif) == b"12345678Z"
-    assert first_surname.length is not None
     assert _payload_slice(result.payload, first_surname) == b"Garcia" + (b" " * (first_surname.length - 6))
     assert _payload_slice(result.payload, birth_year) == b"1981"
 

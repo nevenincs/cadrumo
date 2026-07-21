@@ -1,6 +1,6 @@
 """H5 conformance gate: the declared MCP localization boundary.
 
-The localization policy rules the boundary
+ADR ``2026-07-08-mcp-protocol-hardening`` H5 rules the localization boundary
 explicitly, so the next audit does not read English tool descriptions as locale
 drift and the locale-parity gates know where their remit stops:
 

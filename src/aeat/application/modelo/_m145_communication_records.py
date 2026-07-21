@@ -34,7 +34,7 @@ from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from hashlib import sha256
-from typing import Annotated, cast
+from typing import Annotated
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -215,12 +215,7 @@ class M145CommunicationCreateCommand(BaseModel):
     @classmethod
     def _validate_field_value_keys(cls, value: object) -> object:
         if isinstance(value, Mapping):
-            # CAST-RATIONALE-M145-FIELD-MAPPING: validator immediately checks every key and value shape.
-            return validated_casilla_id_map(
-                # CAST-RATIONALE-M145-FIELD-MAPPING-VALUE: validator immediately checks every key and value shape.
-                cast(Mapping[object, object], value),
-                surface="m145 communication field_values",
-            )
+            return validated_casilla_id_map(value, surface="m145 communication field_values")
         return value
 
 
@@ -332,7 +327,8 @@ def _m145_communication_record_ambiguous_prefix(
         len(full_ids),
     )
     return M145CommunicationRecordAmbiguousError(
-        f"Modelo 145 communication record prefix {communication_record_id!r} is ambiguous; matches {list(full_ids)!r}",
+        f"Modelo 145 communication record prefix {communication_record_id!r} "
+        f"is ambiguous; matches {list(full_ids)!r}",
         context={"communication_record_id": communication_record_id, "match_count": len(full_ids)},
     )
 
@@ -682,7 +678,8 @@ def _encode_fixed_width_value(value: str, *, field: ExportFieldDefinition, encod
     if not pad_character:
         if len(raw) != field.length:
             raise M145CommunicationRecordExportError(
-                f"Modelo 145 export field {field.id!r} must encode exactly {field.length} bytes; got {len(raw)}",
+                f"Modelo 145 export field {field.id!r} must encode exactly {field.length} bytes; "
+                f"got {len(raw)}",
                 context={
                     "export_field_id": field.id,
                     "length": field.length,

@@ -1,4 +1,4 @@
-"""The block-first-mutation identity gate.
+"""The block-first-mutation identity gate (ADR I2 / I4).
 
 Proves the pure decision logic directly (SDK-independent) and the wired gate
 through the real built ``Server`` (SDK-gated, never skipped): an unconfirmed
@@ -228,7 +228,7 @@ def test_a_whoami_read_clears_the_gate_on_the_direct_path() -> None:
 
 
 def test_a_harness_load_read_clears_the_gate_on_the_direct_path() -> None:
-    # The harness.load identity read carries the block, so loading
+    # ADR I2 refinement: harness.load carries the identity block (P02), so loading
     # the floor clears the gate - the subsequent first mutation is not identity-
     # refused (it refuses instead at the confirmation route, a distinct text).
     from .._server import build_server

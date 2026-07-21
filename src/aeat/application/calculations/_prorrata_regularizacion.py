@@ -765,8 +765,7 @@ def _source_period_feed_from_observations(
     if len(cuota_values) == len(regularised_periods):
         values[_CUOTA_DEDUCIBLE_TOTAL_ID] = sum(cuota_values, Decimal("0"))
 
-    settlement_period = next(reversed(periods), None)
-    settlement_values = observed_by_period.get(settlement_period) if settlement_period is not None else None
+    settlement_values = observed_by_period.get(periods[-1])
     if settlement_values is not None:
         for casilla_id in (_VOLUMEN_CON_DERECHO_ID, _VOLUMEN_TOTAL_ID, _PORCENTAJE_ID):
             value = settlement_values.get(casilla_id)

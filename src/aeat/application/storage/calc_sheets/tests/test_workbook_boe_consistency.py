@@ -88,7 +88,9 @@ def _fixed_width_layout_casilla_slots(layout: ExportLayoutDefinition) -> set[str
 
 
 @pytest.mark.parametrize(("modelo", "year", "period", "on"), _COVERED)
-def test_fichero_boe_and_workbook_share_computed_export_surface(modelo: str, year: int, period: str, on: date) -> None:
+def test_fichero_boe_and_workbook_share_computed_export_surface(
+    modelo: str, year: int, period: str, on: date
+) -> None:
     snapshot = resources().modelos.authority.snapshot(modelo, filing_year=year, period=period, on=on)
     revision = snapshot.revision
     by_id = {casilla.id: casilla for casilla in revision.casillas}

@@ -476,12 +476,7 @@ class IdentityStateProtocol(Protocol):
     runner's docstring documents), mirroring :class:`FaithfulnessCheckFn`.
     """
 
-    @property
-    def identity_confirmed(self) -> bool: ...
-
     def record_identity_read(self) -> None: ...  # pragma: no cover - protocol
-
-    def rearm(self) -> None: ...  # pragma: no cover - protocol
 
 
 class IdentityGateRefusalFn(Protocol):

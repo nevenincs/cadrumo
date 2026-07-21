@@ -52,8 +52,6 @@ _M303_SYNTHETIC_CLOSURE_CASES: tuple[tuple[CasillaId, str, CasillaId, str, str],
         "Orden HAC/819/2024 art. 1 §6: box 71 = box 69 - box 70 + box 109; c70=0 and c109=0",
     ),
 )
-
-
 @pytest.mark.parametrize(
     "pdf_stem,year,period",
     _M303_2023_ONWARDS_PARAMS,

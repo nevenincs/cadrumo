@@ -82,8 +82,6 @@ _M100_CLOSURE_ASSERTION_CASILLAS: tuple[CasillaId, ...] = (
     _casilla_id("0585"),
     _casilla_id("0586"),
 )
-
-
 def _parse_m100_corpus(year: int, label: str) -> dict[CasillaId, object]:
     """Parse one M100 annual corpus specimen for verification-chain consumers.
 

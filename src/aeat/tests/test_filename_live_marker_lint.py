@@ -128,7 +128,9 @@ def test_lint_flags_live_module_without_marker_or_banner(tmp_path: Path) -> None
     """A ``test_live_*`` module with neither the live marker nor a banner is flagged."""
     offender = tmp_path / "test_live_offender.py"
     offender.write_text(
-        "import pytest\n\npytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n\n\ndef test_x() -> None:\n    pass\n",
+        "import pytest\n\n"
+        "pytestmark = [pytest.mark.unit, pytest.mark.hex_core]\n\n\n"
+        "def test_x() -> None:\n    pass\n",
         encoding="utf-8",
     )
     assert _live_filename_violation(offender) is not None

@@ -72,7 +72,7 @@ from ....core.time import now, validate_utc_aware
 from ....domain.transactions import (
     LedgerDatePartition,
     LedgerStorageError,
-    OutOfWindowTransactionIndexEntry,
+    OutOfWindowTransactionStub,
     OutOfWindowTransactionSummary,
     StoredTransactionDriftError,
     Transaction,
@@ -450,7 +450,7 @@ class TransactionCatalogueRepository:
         ids are decrypted through one targeted batch
         :meth:`~adapters.persistence.storage.SecureObjectRepository.load_many`;
         out-of-window ids are reported as plaintext
-        :class:`~domain.transactions.OutOfWindowTransactionIndexEntry` rows (id +
+        :class:`~domain.transactions.OutOfWindowTransactionStub` rows (id +
         filing date only, never decrypted). On a completeness MISMATCH -- a
         stale or partially-synced index -- this falls back to a full
         :meth:`load` and partitions the result in memory, so correctness never
@@ -484,14 +484,14 @@ class TransactionCatalogueRepository:
             # correctness never depends on index freshness.
             full_catalogue = self.load()
             in_window: list[Transaction] = []
-            out_of_window: list[OutOfWindowTransactionIndexEntry] = []
+            out_of_window: list[OutOfWindowTransactionStub] = []
             for transaction in full_catalogue.values():
                 filing_date = _filing_date(transaction)
                 if start <= filing_date <= end:
                     in_window.append(transaction)
                 else:
                     out_of_window.append(
-                        OutOfWindowTransactionIndexEntry(
+                        OutOfWindowTransactionStub(
                             transaction_id=transaction.transaction_id,
                             filing_date=filing_date,
                         ),
@@ -508,7 +508,7 @@ class TransactionCatalogueRepository:
             return LedgerDatePartition(
                 in_window=TransactionCatalogue.from_transactions(in_window),
                 out_of_window=tuple(out_of_window),
-                out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window),
+                out_of_window_summary=OutOfWindowTransactionSummary.from_stubs(out_of_window),
                 index_complete=False,
             )
 
@@ -517,8 +517,8 @@ class TransactionCatalogueRepository:
         }
         transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
 
-        out_of_window_index_entries = tuple(
-            OutOfWindowTransactionIndexEntry(transaction_id=transaction_id, filing_date=filing_date)
+        out_of_window_stubs = tuple(
+            OutOfWindowTransactionStub(transaction_id=transaction_id, filing_date=filing_date)
             for transaction_id, filing_date in sorted(index_rows.items())
             if transaction_id not in in_window_ids
         )
@@ -528,12 +528,12 @@ class TransactionCatalogueRepository:
             start.isoformat(),
             end.isoformat(),
             len(transactions),
-            len(out_of_window_index_entries),
+            len(out_of_window_stubs),
         )
         return LedgerDatePartition(
             in_window=TransactionCatalogue.from_transactions(transactions),
-            out_of_window=out_of_window_index_entries,
-            out_of_window_summary=OutOfWindowTransactionSummary.from_index_entries(out_of_window_index_entries),
+            out_of_window=out_of_window_stubs,
+            out_of_window_summary=OutOfWindowTransactionSummary.from_stubs(out_of_window_stubs),
             index_complete=True,
         )
 
@@ -587,7 +587,7 @@ class TransactionCatalogueRepository:
                     _orm.TransactionDateIndexRow.filing_date,
                 ).where(_orm.TransactionDateIndexRow.bucket_id == self._bucket_id),
             ).all()
-            return {str(transaction_id): filing_date for transaction_id, filing_date in rows}
+            return dict(rows)
 
     def rebuild_date_index(self) -> int:
         """Rebuild this bucket's plaintext date index from the encrypted catalogue.

@@ -17,7 +17,9 @@ See Also:
     :mod:`~application.modelo._bienes_inversion_advisory`
         Earlier advisory wiring that kept casilla 43 visible before hard
         source-mesh promotion.
-        The M303 live enrollment policy.
+    ``2026-07-01-iva-bienes-inversion-regularizacion-adr`` and
+    ``2026-07-06-cross-period-prorrata-audit``
+        Decision and close-review records governing the M303 live enrollment.
 """
 
 from __future__ import annotations
@@ -33,7 +35,7 @@ from ....core import BindingSourceKind, Period
 from ....core.resources import resources
 from ....domain.bienes_inversion import BienInversionIvaRecord, BienInversionKind
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
-from ....domain.modelos import ModeloCode, WorkUnit, derive_work_unit_id
+from ....domain.modelos import WorkUnit, derive_work_unit_id
 from ....tests.secure_sql import isolated_runtime_profile
 from .._calculation_actions import _resolve_bucket_source_mesh
 
@@ -56,13 +58,13 @@ def _work_unit(*, revision_id: str) -> WorkUnit:
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
             bucket_id=_BUCKET_ID,
-            modelo=ModeloCode("303"),
+            modelo="303",
             filing_year=_FILING_YEAR,
             period=_PERIOD,
             revision_id=revision_id,
         ),
         bucket_id=_BUCKET_ID,
-        modelo=ModeloCode("303"),
+        modelo="303",
         filing_year=_FILING_YEAR,
         period=_PERIOD,
         revision_id=revision_id,
