@@ -584,8 +584,7 @@ class FileFallbackMasterKeyProvider:
             # passphrase vs `aeat config profile create NAME` for absent
             # material).
             raise _master_key_passphrase_mismatch_error(
-                "passphrase did not unlock the master key; verify the passphrase or run "
-                "`aeat config recover`.",
+                "passphrase did not unlock the master key; verify the passphrase or run `aeat config recover`.",
             ) from exc
 
     def _mint_new(self, passphrase: bytes) -> bytes:
