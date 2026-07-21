@@ -238,7 +238,8 @@ class ProfileBundleExportJournalRepository:
         if not self._validate_existing_root():
             raise ProfileBundleExportJournalError("profile export journal directory was not created")
         try:
-            os.chmod(self._root, _DIRECTORY_MODE)
+            # Private directory mode; Semgrep's generic file-mode rule is inverted here.
+            os.chmod(self._root, _DIRECTORY_MODE)  # nosemgrep
         except OSError as exc:
             raise ProfileBundleExportJournalError(
                 "cannot restrict profile export journal directory permissions",
