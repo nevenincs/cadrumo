@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#agent-harness'
-date: '2026-07-15'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-30-agent-harness-W01-P01-S55]]'
   - '[[2026-06-30-agent-harness-W01-P01-summary]]'
@@ -21,6 +21,7 @@ related:
   - '[[2026-06-30-agent-harness-W05-P11-summary]]'
   - '[[2026-06-30-agent-harness-W05-P12-summary]]'
   - '[[2026-06-30-agent-harness-W05-P13-summary]]'
+  - '[[2026-06-30-agent-harness-adr]]'
   - '[[2026-06-30-agent-harness-audit]]'
   - '[[2026-06-30-agent-harness-plan]]'
   - '[[2026-06-30-agent-harness-research]]'
@@ -59,6 +60,8 @@ Auto-generated index of all documents tagged with `#agent-harness`.
 ## Documents
 
 ### adr
+
+- `2026-06-30-agent-harness-adr` - `agent-harness` adr: `AEAT CLI agent-harness framework` | (**status:** `accepted`)
 
 ### audit
 
