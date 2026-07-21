@@ -175,43 +175,55 @@ jobs:
         with:
           node-version: "22"
 
+      # The pin must be REAL: resolve the npm-global installed shim by ABSOLUTE
+      # path (never `Get-Command claude`, which PATH-resolved the operator's
+      # native auto-updating claude.exe over the npm pin on the self-hosted
+      # runner) and refuse loudly when --version drifts from the pin.
       - name: Install pinned Claude Code client
         shell: powershell
         run: |
           node --version
           npm --version
-          npm install --global "@anthropic-ai/claude-code@2.1.211"
+          $pin = "2.1.211"
+          npm install --global "@anthropic-ai/claude-code@$pin"
           if ($LASTEXITCODE -ne 0) {
             throw "Claude Code installation failed"
           }
-          $claude = (Get-Command claude -ErrorAction Stop).Source
-          & $claude --version
+          $npmPrefix = (npm prefix --global | Out-String).Trim()
+          if ($LASTEXITCODE -ne 0 -or -not $npmPrefix) {
+            throw "npm global prefix is unresolvable"
+          }
+          $claude = Join-Path $npmPrefix "claude.cmd"
+          if (-not (Test-Path -LiteralPath $claude -PathType Leaf)) {
+            throw "pinned Claude Code shim not found at $claude"
+          }
+          $version = (& $claude --version | Out-String).Trim()
           if ($LASTEXITCODE -ne 0) {
             throw "Claude Code is not callable"
           }
+          if ($version -notmatch [regex]::Escape($pin)) {
+            throw "Claude Code version drift: expected $pin, got $version"
+          }
           "CADRUMO_CLAUDE_EXECUTABLE=$claude" | Add-Content -LiteralPath $env:GITHUB_ENV
 
-      # The live-tool-usage gate ALWAYS runs: --run-claude-session drives a real
-      # Claude Code headless session in which the model makes the live MCP tool
-      # call, and the smoke reads the JSON output programmatically and asserts the
-      # grounded result. smoke_plugin_install resolves credentials from
-      # ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN, OR the self-hosted runner's
-      # subscription-authenticated Claude login (this fleet's posture - no API key
-      # per operator ruling), and refuses instructively when none is present.
-      - name: Install plugin and perform live-tool-usage tax work through Claude
+      # NO live-model session in CI: the real-client capture is doctrinally an
+      # OPERATOR-LOCAL step (post-release-distribution P02.S09; the 2026-07-19
+      # ADR rules real-client legs the operator tail; standing no-CI-API-key
+      # ruling), and a headless subscription session is nondeterministic. The
+      # smoke degrades cleanly without --run-claude-session: client_session
+      # records not_requested while the deterministic protocol MCP oracle and
+      # cohort byte-verification still run and gate.
+      - name: Install plugin and run the deterministic protocol oracle
         shell: powershell
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
           uv sync --frozen
           uv run --no-sync python `
             -m dev.packaging.smoke_plugin_install `
             --claude "$env:CADRUMO_CLAUDE_EXECUTABLE" `
             --cohort-dir "$env:CADRUMO_CLAUDE_ROOT/cohort" `
-            --evidence-dir "$env:CADRUMO_CLAUDE_ROOT/plugin-evidence" `
-            --run-claude-session
+            --evidence-dir "$env:CADRUMO_CLAUDE_ROOT/plugin-evidence"
           if ($LASTEXITCODE -ne 0) {
-            throw "Claude plugin live-tool-usage tax oracle failed"
+            throw "Claude plugin protocol oracle failed"
           }
 
       - name: Build and perform grounded tax work through MCPB runtime

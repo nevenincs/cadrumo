@@ -56,7 +56,7 @@ jobs:
   # ---------------------------------------------------------------------------
   operator-preflight:
     name: Operator opt-in and prerequisite check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Require explicit operator opt-in
         env:
@@ -110,7 +110,7 @@ jobs:
   validate:
     name: Validate immutable tested cohort (no rebuild)
     needs: operator-preflight
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     permissions:
       actions: read
       contents: read
@@ -210,8 +210,10 @@ jobs:
           mkdir -p "$RELEASE_COHORT_DIR"
           tar -xzf "$EVIDENCE_DOWNLOAD/rows-raw/packaging/cadrumo-release-cohort.tar.gz" \
             -C "$RELEASE_COHORT_DIR"
+          # debug-* assets are failure diagnostics, never rows; a promoted run
+          # is green, but a re-run attempt's draft may retain attempt-1 debris.
           find "$EVIDENCE_DOWNLOAD/rows-raw" -name '*.json' ! -name 'evidence-manifest.json' \
-            -exec cp {} "$EVIDENCE_DOWNLOAD/rows/" \;
+            ! -name 'debug-*' -exec cp {} "$EVIDENCE_DOWNLOAD/rows/" \;
 
       - name: Guard the PyPI destination against overwrite and emit the version
         id: validate
@@ -248,7 +250,7 @@ jobs:
     # A dry_run dispatch validates everything (Gate 1+2) and skips this publish
     # job, so the pre-arming diagnostic value survives on the single authority.
     if: ${{ inputs.dry_run != true }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     environment: release
     permissions:
       id-token: write
@@ -302,7 +304,7 @@ jobs:
               --pattern '*.json' \
               --download-dir "$EVIDENCE_FINAL_DIR/$4"
             find "$EVIDENCE_FINAL_DIR/$4" -name '*.json' ! -name 'evidence-manifest.json' \
-              -exec cp {} "$EVIDENCE_FINAL_DIR/attach/" \;
+              ! -name 'debug-*' -exec cp {} "$EVIDENCE_FINAL_DIR/attach/" \;
             cp "$EVIDENCE_FINAL_DIR/$4/evidence-manifest.json" \
               "$EVIDENCE_FINAL_DIR/attach/evidence-manifest-$4.json"
           }

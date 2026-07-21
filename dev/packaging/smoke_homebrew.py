@@ -11,6 +11,7 @@ import platform
 import re
 import shutil
 import subprocess
+import sys
 import threading
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -19,6 +20,8 @@ from typing import Final, override
 
 _UTF_8: Final[str] = "utf-8"
 _FORMULA_NAME: Final[str] = "cadrumo"
+CLEANUP_STATE_NAME: Final[str] = "homebrew-cleanup-state.json"
+_CLEANUP_STATE_SCHEMA: Final[str] = "cadrumo.packaging.homebrew-cleanup-state.v1"
 _RELEASE_ARTIFACT = re.compile(
     r'(?P<url_prefix>\s+url ")(?P<base>https://[^"]+/releases/download/v[^/"]+)'
     r'/(?P<filename>[^/"]+\.tar\.gz)"(?P<separator>\r?\n)'
@@ -225,8 +228,16 @@ def run_homebrew_smoke(
     tap_name: str,
     brew_path: Path,
     repo_root: Path,
+    retain_install: bool = False,
 ) -> Path:
-    """Run audit, source install, formula test, installed oracles, and cleanup."""
+    """Run audit, source install, formula test, installed oracles, and cleanup.
+
+    With ``retain_install`` the uninstall/untap cleanup is DEFERRED: the keg
+    stays installed so a later step can mint the distribution-evidence row
+    against the real installed executables, and the recorded cleanup state
+    (``homebrew-cleanup-state.json`` in the run root) drives
+    ``--cleanup-state`` afterwards.
+    """
     formula_source = formula_path.resolve(strict=True)
     cohort = cohort_dir.resolve(strict=True)
     brew = brew_path.expanduser().absolute()
@@ -511,119 +522,41 @@ def run_homebrew_smoke(
         server.server_close()
         server_thread.join(timeout=5)
 
-        def cleanup_lines(arguments: list[str], *, label: str) -> set[str]:
-            completed = subprocess.run(  # noqa: S603
-                [str(brew), *arguments],
-                cwd=run_root,
-                check=False,
-                capture_output=True,
-                text=True,
-                encoding=_UTF_8,
-                errors="strict",
+        if retain_install:
+            # The workflow's later emit step hashes the INSTALLED executables
+            # (the mint-time isolation proof), so the keg must survive this
+            # process. Record everything the deferred cleanup needs; the
+            # workflow runs `--cleanup-state` after the row is minted.
+            state_path = run_root / CLEANUP_STATE_NAME
+            _write_json(
+                state_path,
+                cleanup_state_document(
+                    brew=brew,
+                    tap_name=tap_name,
+                    tap_registered=tap_registered,
+                    installed_prefix=installed_prefix,
+                    preexisting_formulae=preexisting_formulae,
+                    preexisting_taps=preexisting_taps,
+                ),
             )
-            (logs / f"{label}.log").write_text(
-                f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
-                encoding=_UTF_8,
+            cleanup = {
+                "deferred_for_emit": True,
+                "cleanup_state": str(state_path),
+                "errors": cleanup_errors,
+            }
+        else:
+            deferred_errors, cleanup = _run_brew_cleanup(
+                brew=brew,
+                run_root=run_root,
+                logs=logs,
+                tap_name=tap_name,
+                preexisting_formulae=preexisting_formulae,
+                preexisting_taps=preexisting_taps,
+                tap_registered=tap_registered,
+                installed_prefix=installed_prefix,
             )
-            if completed.returncode != 0:
-                cleanup_errors.append(
-                    f"cleanup command failed ({completed.returncode}): {[str(brew), *arguments]!r}",
-                )
-                return set()
-            return {line.strip() for line in completed.stdout.splitlines() if line.strip()}
-
-        current_formulae = cleanup_lines(
-            ["list", "--formula"],
-            label="brew-list-before-cleanup",
-        )
-        new_formulae = current_formulae - preexisting_formulae
-        if installed_prefix is not None or _FORMULA_NAME in new_formulae:
-            completed = subprocess.run(  # noqa: S603
-                [str(brew), "uninstall", "--force", _FORMULA_NAME],
-                cwd=run_root,
-                check=False,
-                capture_output=True,
-                text=True,
-                encoding=_UTF_8,
-                errors="strict",
-            )
-            (logs / "brew-uninstall-cadrumo.log").write_text(
-                f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
-                encoding=_UTF_8,
-            )
-            if completed.returncode != 0:
-                cleanup_errors.append("failed to uninstall staged cadrumo formula")
-        remaining_new = (
-            cleanup_lines(
-                ["list", "--formula"],
-                label="brew-list-dependencies",
-            )
-            - preexisting_formulae
-        )
-        for formula in sorted(remaining_new, reverse=True):
-            completed = subprocess.run(  # noqa: S603
-                [str(brew), "uninstall", "--force", "--ignore-dependencies", formula],
-                cwd=run_root,
-                check=False,
-                capture_output=True,
-                text=True,
-                encoding=_UTF_8,
-                errors="strict",
-            )
-            (logs / f"brew-uninstall-{formula.replace('@', '_')}.log").write_text(
-                f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
-                encoding=_UTF_8,
-            )
-            if completed.returncode != 0:
-                cleanup_errors.append(f"failed to uninstall smoke dependency {formula}")
-
-        current_taps = cleanup_lines(
-            ["tap"],
-            label="brew-taps-before-cleanup",
-        )
-        if tap_registered or tap_name in current_taps - preexisting_taps:
-            completed = subprocess.run(  # noqa: S603
-                [str(brew), "untap", tap_name],
-                cwd=run_root,
-                check=False,
-                capture_output=True,
-                text=True,
-                encoding=_UTF_8,
-                errors="strict",
-            )
-            (logs / "brew-untap.log").write_text(
-                f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
-                encoding=_UTF_8,
-            )
-            if completed.returncode != 0:
-                cleanup_errors.append(f"failed to remove staged tap {tap_name}")
-
-        retained_formulae = (
-            cleanup_lines(
-                ["list", "--formula"],
-                label="brew-list-after",
-            )
-            - preexisting_formulae
-        )
-        retained_taps = (
-            cleanup_lines(
-                ["tap"],
-                label="brew-taps-after",
-            )
-            - preexisting_taps
-        )
-        if retained_formulae:
-            cleanup_errors.append(f"cleanup retained formulae: {sorted(retained_formulae)!r}")
-        if retained_taps:
-            cleanup_errors.append(f"cleanup retained taps: {sorted(retained_taps)!r}")
-        if installed_prefix is not None and installed_prefix.exists():
-            cleanup_errors.append(f"cleanup retained installed prefix: {installed_prefix}")
-        cleanup = {
-            "retained_formulae": sorted(retained_formulae),
-            "retained_taps": sorted(retained_taps),
-            "installed_prefix_absent": installed_prefix is None or not installed_prefix.exists(),
-            "errors": cleanup_errors,
-        }
+            cleanup_errors.extend(deferred_errors)
+            cleanup["errors"] = cleanup_errors
         if evidence and not cleanup_errors:
             evidence["status"] = "passed"
             evidence["completed_at"] = datetime.now(UTC).isoformat()
@@ -649,6 +582,194 @@ def run_homebrew_smoke(
     return run_root / "homebrew-evidence.json"
 
 
+def cleanup_state_document(
+    *,
+    brew: Path,
+    tap_name: str,
+    tap_registered: bool,
+    installed_prefix: Path | None,
+    preexisting_formulae: set[str],
+    preexisting_taps: set[str],
+) -> dict[str, object]:
+    """Return the deferred-cleanup state a ``--retain-install`` run records."""
+    return {
+        "schema": _CLEANUP_STATE_SCHEMA,
+        "brew": str(brew),
+        "tap_name": tap_name,
+        "tap_registered": tap_registered,
+        "installed_prefix": None if installed_prefix is None else str(installed_prefix),
+        "preexisting_formulae": sorted(preexisting_formulae),
+        "preexisting_taps": sorted(preexisting_taps),
+    }
+
+
+def _run_brew_cleanup(
+    *,
+    brew: Path,
+    run_root: Path,
+    logs: Path,
+    tap_name: str,
+    preexisting_formulae: set[str],
+    preexisting_taps: set[str],
+    tap_registered: bool,
+    installed_prefix: Path | None,
+) -> tuple[list[str], dict[str, object]]:
+    """Uninstall everything the smoke added and report what survived.
+
+    Removes the staged formula, every newly-appeared dependency formula, and
+    the staged tap, comparing against the recorded pre-smoke sets; returns the
+    accumulated cleanup errors plus the honest retained-state summary.
+    """
+    cleanup_errors: list[str] = []
+
+    def cleanup_lines(arguments: list[str], *, label: str) -> set[str]:
+        completed = subprocess.run(  # noqa: S603
+            [str(brew), *arguments],
+            cwd=run_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding=_UTF_8,
+            errors="strict",
+        )
+        (logs / f"{label}.log").write_text(
+            f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
+            encoding=_UTF_8,
+        )
+        if completed.returncode != 0:
+            cleanup_errors.append(
+                f"cleanup command failed ({completed.returncode}): {[str(brew), *arguments]!r}",
+            )
+            return set()
+        return {line.strip() for line in completed.stdout.splitlines() if line.strip()}
+
+    current_formulae = cleanup_lines(
+        ["list", "--formula"],
+        label="brew-list-before-cleanup",
+    )
+    new_formulae = current_formulae - preexisting_formulae
+    if installed_prefix is not None or _FORMULA_NAME in new_formulae:
+        completed = subprocess.run(  # noqa: S603
+            [str(brew), "uninstall", "--force", _FORMULA_NAME],
+            cwd=run_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding=_UTF_8,
+            errors="strict",
+        )
+        (logs / "brew-uninstall-cadrumo.log").write_text(
+            f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
+            encoding=_UTF_8,
+        )
+        if completed.returncode != 0:
+            cleanup_errors.append("failed to uninstall staged cadrumo formula")
+    remaining_new = (
+        cleanup_lines(
+            ["list", "--formula"],
+            label="brew-list-dependencies",
+        )
+        - preexisting_formulae
+    )
+    for formula in sorted(remaining_new, reverse=True):
+        completed = subprocess.run(  # noqa: S603
+            [str(brew), "uninstall", "--force", "--ignore-dependencies", formula],
+            cwd=run_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding=_UTF_8,
+            errors="strict",
+        )
+        (logs / f"brew-uninstall-{formula.replace('@', '_')}.log").write_text(
+            f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
+            encoding=_UTF_8,
+        )
+        if completed.returncode != 0:
+            cleanup_errors.append(f"failed to uninstall smoke dependency {formula}")
+
+    current_taps = cleanup_lines(
+        ["tap"],
+        label="brew-taps-before-cleanup",
+    )
+    if tap_registered or tap_name in current_taps - preexisting_taps:
+        completed = subprocess.run(  # noqa: S603
+            [str(brew), "untap", tap_name],
+            cwd=run_root,
+            check=False,
+            capture_output=True,
+            text=True,
+            encoding=_UTF_8,
+            errors="strict",
+        )
+        (logs / "brew-untap.log").write_text(
+            f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}\n",
+            encoding=_UTF_8,
+        )
+        if completed.returncode != 0:
+            cleanup_errors.append(f"failed to remove staged tap {tap_name}")
+
+    retained_formulae = (
+        cleanup_lines(
+            ["list", "--formula"],
+            label="brew-list-after",
+        )
+        - preexisting_formulae
+    )
+    retained_taps = (
+        cleanup_lines(
+            ["tap"],
+            label="brew-taps-after",
+        )
+        - preexisting_taps
+    )
+    if retained_formulae:
+        cleanup_errors.append(f"cleanup retained formulae: {sorted(retained_formulae)!r}")
+    if retained_taps:
+        cleanup_errors.append(f"cleanup retained taps: {sorted(retained_taps)!r}")
+    if installed_prefix is not None and installed_prefix.exists():
+        cleanup_errors.append(f"cleanup retained installed prefix: {installed_prefix}")
+    cleanup: dict[str, object] = {
+        "retained_formulae": sorted(retained_formulae),
+        "retained_taps": sorted(retained_taps),
+        "installed_prefix_absent": installed_prefix is None or not installed_prefix.exists(),
+    }
+    return cleanup_errors, cleanup
+
+
+def run_deferred_cleanup(state_path: Path) -> int:
+    """Run the deferred uninstall/untap recorded by a ``--retain-install`` smoke.
+
+    Loads the recorded pre-smoke formula/tap sets and performs the exact same
+    cleanup the smoke would have run inline, writing a
+    ``homebrew-cleanup-result.json`` next to the state file; a cleanup error
+    exits non-zero so the workflow step surfaces it.
+    """
+    resolved_state = state_path.resolve(strict=True)
+    state = json.loads(resolved_state.read_text(encoding=_UTF_8))
+    if state.get("schema") != _CLEANUP_STATE_SCHEMA:
+        raise SystemExit(f"unrecognised cleanup state schema in {resolved_state}: {state.get('schema')!r}")
+    run_root = resolved_state.parent
+    logs = run_root / "logs"
+    logs.mkdir(exist_ok=True)
+    installed_prefix_text = state.get("installed_prefix")
+    cleanup_errors, cleanup = _run_brew_cleanup(
+        brew=Path(str(state["brew"])),
+        run_root=run_root,
+        logs=logs,
+        tap_name=str(state["tap_name"]),
+        preexisting_formulae={str(name) for name in state["preexisting_formulae"]},
+        preexisting_taps={str(name) for name in state["preexisting_taps"]},
+        tap_registered=bool(state["tap_registered"]),
+        installed_prefix=None if installed_prefix_text is None else Path(str(installed_prefix_text)),
+    )
+    cleanup["errors"] = cleanup_errors
+    _write_json(run_root / "homebrew-cleanup-result.json", cleanup)
+    for error in cleanup_errors:
+        print(f"cleanup error: {error}")
+    return 1 if cleanup_errors else 0
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--formula", required=True, type=Path)
@@ -661,12 +782,36 @@ def _parser() -> argparse.ArgumentParser:
         type=Path,
         default=Path(__file__).resolve().parents[2],
     )
+    parser.add_argument(
+        "--retain-install",
+        action="store_true",
+        help=(
+            "Defer the uninstall/untap cleanup so a later step can mint the "
+            "distribution-evidence row against the real installed executables; "
+            "run --cleanup-state on the recorded state afterwards."
+        ),
+    )
     return parser
 
 
-def main() -> int:
-    """Execute the real Homebrew smoke lifecycle."""
-    args = _parser().parse_args()
+def _cleanup_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Run the deferred Homebrew smoke cleanup.")
+    parser.add_argument(
+        "--cleanup-state",
+        required=True,
+        type=Path,
+        help="homebrew-cleanup-state.json written by a --retain-install smoke run.",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Execute the real Homebrew smoke lifecycle (or its deferred cleanup)."""
+    arguments = sys.argv[1:] if argv is None else argv
+    if "--cleanup-state" in arguments:
+        cleanup_args = _cleanup_parser().parse_args(arguments)
+        return run_deferred_cleanup(cleanup_args.cleanup_state)
+    args = _parser().parse_args(arguments)
     evidence = run_homebrew_smoke(
         formula_path=args.formula,
         cohort_dir=args.cohort_dir,
@@ -674,6 +819,7 @@ def main() -> int:
         tap_name=args.tap_name,
         brew_path=args.brew,
         repo_root=args.repo_root,
+        retain_install=args.retain_install,
     )
     print(evidence)
     return 0

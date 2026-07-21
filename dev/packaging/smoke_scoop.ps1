@@ -51,25 +51,112 @@ function Invoke-Native {
         [string]$OutputPath
     )
 
-    if ($OutputPath) {
-        $output = @(& $FilePath @ArgumentList 2>&1)
-        $exitCode = $LASTEXITCODE
-        $output | Set-Content -LiteralPath $OutputPath -Encoding UTF8
-        if ($exitCode -ne 0) {
-            $output | Select-Object -Last 200 | ForEach-Object {
-                [Console]::Error.WriteLine([string]$_)
+    # Native stderr is DATA here: uv (invoked by the Scoop manifest's
+    # installer) writes informational lines like "Using CPython ...
+    # interpreter at" to stderr while exiting 0. Under the script-wide
+    # $ErrorActionPreference = "Stop", Windows PowerShell 5.1 turns the FIRST
+    # merged (2>&1) stderr line into a terminating NativeCommandError even
+    # though the command succeeded. Scope Continue around the invocation and
+    # gate success on the exit code alone; the merged output — stderr
+    # included — stays captured for the failure detail, never silenced.
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
+    try {
+        if ($OutputPath) {
+            $output = @(& $FilePath @ArgumentList 2>&1)
+            $exitCode = $LASTEXITCODE
+            $output | ForEach-Object { [string]$_ } |
+                Set-Content -LiteralPath $OutputPath -Encoding UTF8
+            if ($exitCode -ne 0) {
+                $output | Select-Object -Last 200 | ForEach-Object {
+                    [Console]::Error.WriteLine([string]$_)
+                }
+                throw "command failed with exit code ${exitCode}: $FilePath $($ArgumentList -join ' ')"
             }
-            throw "command failed with exit code ${exitCode}: $FilePath $($ArgumentList -join ' ')"
+            return
         }
-        return
-    }
 
-    & $FilePath @ArgumentList 2>&1 | ForEach-Object {
-        [Console]::Out.WriteLine([string]$_)
+        & $FilePath @ArgumentList 2>&1 | ForEach-Object {
+            [Console]::Out.WriteLine([string]$_)
+        }
+        if ($LASTEXITCODE -ne 0) {
+            throw "command failed with exit code ${LASTEXITCODE}: $FilePath $($ArgumentList -join ' ')"
+        }
     }
-    if ($LASTEXITCODE -ne 0) {
-        throw "command failed with exit code ${LASTEXITCODE}: $FilePath $($ArgumentList -join ' ')"
+    finally {
+        $ErrorActionPreference = $previousPreference
     }
+}
+
+function Stop-ProcessesUnderPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Root
+    )
+
+    # A child of the exercised venv (a lingering python/MCP subprocess, or a
+    # scanner holding an open handle through it) can outlive the oracle and
+    # block `scoop uninstall` with "it may be in use". Reap every process
+    # whose image path is rooted under the staged app before uninstalling.
+    # Separator-anchored prefix: a bare StartsWith would also match a SIBLING
+    # directory sharing the name prefix (scoop\apps\python vs python-foo) and
+    # reap an unrelated process on the shared runner.
+    $normalizedRoot = [System.IO.Path]::GetFullPath($Root).TrimEnd(
+        [System.IO.Path]::DirectorySeparatorChar,
+        [System.IO.Path]::AltDirectorySeparatorChar
+    ) + [System.IO.Path]::DirectorySeparatorChar
+    $reaped = @()
+    foreach ($process in @(Get-Process -ErrorAction SilentlyContinue)) {
+        $imagePath = $null
+        try { $imagePath = $process.Path } catch { continue }
+        if (-not $imagePath) { continue }
+        $normalizedImage = [System.IO.Path]::GetFullPath($imagePath)
+        if ($normalizedImage.StartsWith($normalizedRoot, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $reaped += "$($process.Id):$($process.ProcessName)"
+            try { Stop-Process -Id $process.Id -Force -ErrorAction Stop } catch { }
+        }
+    }
+    if ($reaped.Count -gt 0) {
+        # Console, not the output stream: these helpers return values through
+        # the pipeline, and a pipelined progress line would corrupt them.
+        [Console]::Out.WriteLine("reaped processes still rooted under ${Root}: $($reaped -join ', ')")
+        Start-Sleep -Seconds 2
+    }
+}
+
+function Invoke-ScoopUninstallWithRetry {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$PackageName,
+
+        [Parameter(Mandatory = $true)]
+        [string]$AppRoot,
+
+        [string[]]$ExtraArguments = @(),
+
+        [int]$SettleSeconds = 4
+    )
+
+    # Windows may hold handles on the exercised venv briefly after the oracle;
+    # a failed `scoop uninstall` then AUTO-REPAIRS (relinks `current` and
+    # recreates the shims), so every retry must RE-RUN uninstall, never merely
+    # re-check. The bounded loop only buys Windows time to release handles —
+    # the caller's retained-app assertions stay fail-loud.
+    for ($attempt = 1; $attempt -le 3; $attempt++) {
+        Stop-ProcessesUnderPath -Root $AppRoot
+        & scoop uninstall $PackageName @ExtraArguments
+        if ($LASTEXITCODE -eq 0 -and -not (Test-Path -LiteralPath $AppRoot)) {
+            return $true
+        }
+        if ($attempt -lt 3) {
+            [Console]::Out.WriteLine(
+                "scoop uninstall attempt $attempt left $PackageName present " +
+                "(exit $LASTEXITCODE); retrying after handle settle"
+            )
+            Start-Sleep -Seconds $SettleSeconds
+        }
+    }
+    return (-not (Test-Path -LiteralPath $AppRoot))
 }
 
 function Get-ScoopRoot {
@@ -498,8 +585,10 @@ function Invoke-HostSmoke {
         $cleanupErrors = [System.Collections.Generic.List[string]]::new()
         $newScoopApps = @()
         if ($installed -or (Test-Path -LiteralPath $appRoot)) {
-            & scoop uninstall $PackageName --purge
-            if ($LASTEXITCODE -ne 0) {
+            if (-not (Invoke-ScoopUninstallWithRetry `
+                        -PackageName $PackageName `
+                        -AppRoot $appRoot `
+                        -ExtraArguments @("--purge"))) {
                 $cleanupErrors.Add("failed to remove staged Scoop app $PackageName")
             }
         }
@@ -518,8 +607,10 @@ function Invoke-HostSmoke {
                 ForEach-Object { $_.Name }
         )
         foreach ($newScoopApp in $newScoopApps) {
-            & scoop uninstall $newScoopApp --purge
-            if ($LASTEXITCODE -ne 0) {
+            if (-not (Invoke-ScoopUninstallWithRetry `
+                        -PackageName $newScoopApp `
+                        -AppRoot (Join-Path $appsRoot $newScoopApp) `
+                        -ExtraArguments @("--purge"))) {
                 $cleanupErrors.Add(
                     "failed to remove Scoop app installed by the smoke run: $newScoopApp"
                 )
