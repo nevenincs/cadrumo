@@ -153,31 +153,8 @@ class DefaultBrowserSession:
         async with self._close_lock:
             if self._session_closed and self._playwright_stopped:
                 return
-            session_error: BaseException | None = None
-            stop_error: Exception | None = None
-            if not self._session_closed:
-                try:
-                    await self._session.close()
-                except BaseException as exc:
-                    session_error = exc
-                else:
-                    self._session_closed = True
-            if not self._playwright_stopped:
-                try:
-                    await self._playwright.stop()
-                except Exception as exc:  # Playwright stop() exception surface is undocumented
-                    stop_error = exc
-                    _log_teardown_failure(
-                        message="default_browser_session: playwright stop failed",
-                        resource=_PLAYWRIGHT_RUNTIME_LABEL,
-                        exc=exc,
-                        warning=True,
-                    )
-                else:
-                    self._playwright_stopped = True
-                    # A stopped Playwright runtime has reaped every browser it
-                    # owns even when Browser.close() raised first.
-                    self._session_closed = True
+            session_error = await self._close_browser_session()
+            stop_error = await self._stop_playwright_runtime()
             if session_error is not None:
                 if stop_error is not None:
                     session_error.add_note(
@@ -187,6 +164,37 @@ class DefaultBrowserSession:
                 raise session_error
             if stop_error is not None:
                 raise stop_error
+
+    async def _close_browser_session(self) -> BaseException | None:
+        """Close the browser session once, recording success; return the error if it raised."""
+        if self._session_closed:
+            return None
+        try:
+            await self._session.close()
+        except BaseException as exc:
+            return exc
+        self._session_closed = True
+        return None
+
+    async def _stop_playwright_runtime(self) -> Exception | None:
+        """Stop the Playwright runtime once, recording success; return the error if it raised."""
+        if self._playwright_stopped:
+            return None
+        try:
+            await self._playwright.stop()
+        except Exception as exc:  # Playwright stop() exception surface is undocumented
+            _log_teardown_failure(
+                message="default_browser_session: playwright stop failed",
+                resource=_PLAYWRIGHT_RUNTIME_LABEL,
+                exc=exc,
+                warning=True,
+            )
+            return exc
+        self._playwright_stopped = True
+        # A stopped Playwright runtime has reaped every browser it
+        # owns even when Browser.close() raised first.
+        self._session_closed = True
+        return None
 
 
 async def default_browser_session_factory(settings: Settings) -> DefaultBrowserSession:

@@ -31,7 +31,8 @@ of the ledger import surface and refuses OFX sources with the
 from __future__ import annotations
 
 from collections.abc import Iterable, Iterator
-from datetime import datetime
+from dataclasses import dataclass
+from datetime import date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Protocol, override, runtime_checkable
@@ -96,6 +97,33 @@ class _OfxStatementLike(Protocol):
     curdef: object
     account: _OfxAccountLike
     transactions: Iterable[_OfxTransactionLike]
+
+
+@dataclass(frozen=True, slots=True)
+class _ParsedOfxRow:
+    """One OFX transaction's parsed fields, ready to project to a raw transaction."""
+
+    transaction_id: str
+    counterparty: str | None
+    memo: str
+    trntype: str
+    description: str
+    posted_at: object
+    amount: Decimal
+    booked_date: date
+
+
+def _resolve_statement_context(statement: _OfxStatementLike) -> tuple[str, str]:
+    """Return the ``(currency, account_id)`` context for one OFX statement block."""
+    currency = (getattr(statement, "curdef", None) or default_currency()).strip().upper()
+    account = statement.account
+    account_id = (getattr(account, "acctid", None) or "account") if account is not None else "account"
+    return currency, account_id
+
+
+def _stripped_attr(source: object, attr: str) -> str:
+    """Return ``source.attr`` coerced to a stripped string (empty when absent/None)."""
+    return (getattr(source, attr, None) or "").strip()
 
 
 class OfxProvider(FinancialProvider):
@@ -169,58 +197,86 @@ class OfxProvider(FinancialProvider):
         source_sha256 = self._compute_sha256(source_bytes)
         source_row_index = 0
         for statement in self._load_statements(path):
-            currency = (getattr(statement, "curdef", None) or default_currency()).strip().upper()
-            account = statement.account
-            account_id = (getattr(account, "acctid", None) or "account") if account is not None else "account"
+            currency, account_id = _resolve_statement_context(statement)
             for transaction in statement.transactions:
                 source_row_index += 1
-                try:
-                    transaction_id = (getattr(transaction, "fitid", None) or "").strip()
-                    if not transaction_id:
-                        transaction_id = synthesize_transaction_id(
-                            provider_name=f"{self.name}-{account_id}",
-                            source_sha256=source_sha256,
-                            source_row_index=source_row_index,
-                        )
-                    counterparty = (getattr(transaction, "name", None) or "").strip() or None
-                    memo = (getattr(transaction, "memo", None) or "").strip()
-                    trntype = (getattr(transaction, "trntype", None) or "").strip().upper()
-                    description = memo or counterparty or trntype or "OFX transaction"
-                    posted_at = getattr(transaction, "dtposted", None)
-                    amount = coerce_decimal(getattr(transaction, "trnamt", None), default=Decimal("0")) or Decimal("0")
-                    booked_date = parse_date_value(posted_at, day_first=False)
-                except (ValueError, FinancialValidationError) as exc:
-                    _logger.warning(
-                        "ofx_provider: parse error transaction=%d source=<input-ofx>",
-                        source_row_index,
-                        exc_info=True,
-                    )
-                    raise InvalidFinancialSourceError(
-                        f"OFX transaction {source_row_index} could not be parsed: {exc}",
-                    ) from exc
+                parsed = self._parse_ofx_row(
+                    transaction,
+                    account_id=account_id,
+                    source_sha256=source_sha256,
+                    source_row_index=source_row_index,
+                )
                 raw_fields = {
                     "ACCTID": str(account_id),
-                    "TRNTYPE": trntype,
-                    "DTPOSTED": posted_at.isoformat() if isinstance(posted_at, datetime) else "",
+                    "TRNTYPE": parsed.trntype,
+                    "DTPOSTED": parsed.posted_at.isoformat() if isinstance(parsed.posted_at, datetime) else "",
                     "TRNAMT": str(getattr(transaction, "trnamt", "")),
                     "FITID": getattr(transaction, "fitid", None) or "",
-                    "NAME": counterparty or "",
-                    "MEMO": memo,
+                    "NAME": parsed.counterparty or "",
+                    "MEMO": parsed.memo,
                 }
                 yield build_raw_transaction(
                     provider=self,
                     path=path,
                     source_sha256=source_sha256,
                     source_row_index=source_row_index,
-                    provider_transaction_id=transaction_id,
-                    booked_date=booked_date,
+                    provider_transaction_id=parsed.transaction_id,
+                    booked_date=parsed.booked_date,
                     value_date=None,
-                    amount=amount,
+                    amount=parsed.amount,
                     currency=currency,
-                    counterparty=counterparty,
-                    description=description,
+                    counterparty=parsed.counterparty,
+                    description=parsed.description,
                     raw_fields=raw_fields,
                 )
+
+    def _parse_ofx_row(
+        self,
+        transaction: _OfxTransactionLike,
+        *,
+        account_id: str,
+        source_sha256: str,
+        source_row_index: int,
+    ) -> _ParsedOfxRow:
+        """Parse one OFX transaction into typed fields, refusing a malformed row.
+
+        Raises:
+            InvalidFinancialSourceError: When the transaction cannot be parsed.
+        """
+        try:
+            transaction_id = _stripped_attr(transaction, "fitid")
+            if not transaction_id:
+                transaction_id = synthesize_transaction_id(
+                    provider_name=f"{self.name}-{account_id}",
+                    source_sha256=source_sha256,
+                    source_row_index=source_row_index,
+                )
+            counterparty = _stripped_attr(transaction, "name") or None
+            memo = _stripped_attr(transaction, "memo")
+            trntype = _stripped_attr(transaction, "trntype").upper()
+            description = memo or counterparty or trntype or "OFX transaction"
+            posted_at = getattr(transaction, "dtposted", None)
+            amount = coerce_decimal(getattr(transaction, "trnamt", None), default=Decimal("0")) or Decimal("0")
+            booked_date = parse_date_value(posted_at, day_first=False)
+        except (ValueError, FinancialValidationError) as exc:
+            _logger.warning(
+                "ofx_provider: parse error transaction=%d source=<input-ofx>",
+                source_row_index,
+                exc_info=True,
+            )
+            raise InvalidFinancialSourceError(
+                f"OFX transaction {source_row_index} could not be parsed: {exc}",
+            ) from exc
+        return _ParsedOfxRow(
+            transaction_id=transaction_id,
+            counterparty=counterparty,
+            memo=memo,
+            trntype=trntype,
+            description=description,
+            posted_at=posted_at,
+            amount=amount,
+            booked_date=booked_date,
+        )
 
     def _load_statements(self, path: Path) -> tuple[_OfxStatementLike, ...]:
         """Parse and spec-validate every statement block exposed by an OFX file.
