@@ -100,8 +100,12 @@ jobs:
         # default addopts' `-m unit` deselected the integration-marked
         # workflow gates from the packaging preflight invocation, so this is
         # their one per-push home; `not serial` leaves the installed-oracles
-        # pass to the packaging campaign that builds its cohort.
-        run: uv run --no-sync pytest -q -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
+        # pass to the packaging campaign that builds its cohort. The dev tree
+        # carries real install/harness tests that legitimately run 300-900 s,
+        # so this invocation raises the per-test ceiling above the product
+        # suite's 300 s ini default (slowest product test: 58.7 s measured);
+        # 900 s still kills a genuine wedge in minutes.
+        run: uv run --no-sync pytest -q --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
 
   cadrumo-unit:
     name: Cadrumo / unit suite / Python 3.13
@@ -139,12 +143,8 @@ jobs:
         # --durations keeps a rolling public profile of the suite's heaviest
         # tests in the job log, so the next budget pass is measured, not
         # guessed (no completed CI unit run existed to profile this redesign).
-        run: uv run pytest --junitxml=junit.xml --durations=50
+        # No junit artifact: the repo's posture is zero Actions-artifact
+        # storage (quota-broken; the release-asset transport exists precisely
+        # to avoid it), and the profile lives in the job log.
+        run: uv run pytest --durations=50
         # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: test-results-unit
-          path: junit.xml

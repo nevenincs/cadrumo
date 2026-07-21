@@ -168,7 +168,10 @@ def main(argv: list[str] | None = None) -> int:
     if not args.skip_preflight:
         _run_step([sys.executable, "-m", "dev.packaging.dependency_surface"], repo_root, "dependency-surface")
         _run_step(
-            [sys.executable, "-m", "pytest", "dev/packaging/tests", "-q"],
+            # The dev tree's real install/harness tests legitimately exceed
+            # the product suite's 300 s ini ceiling; 900 s still kills a
+            # genuine wedge in minutes.
+            [sys.executable, "-m", "pytest", "dev/packaging/tests", "-q", "--timeout=900"],
             repo_root,
             "preflight-tests",
         )

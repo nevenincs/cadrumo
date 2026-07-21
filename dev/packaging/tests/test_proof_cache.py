@@ -36,10 +36,12 @@ def scoped_repo(tmp_path: Path) -> Path:
     """A real git repo carrying one committed file in the proof scope."""
     repo = tmp_path / "repo"
     (repo / "src").mkdir(parents=True)
+    (repo / "dev" / "packaging").mkdir(parents=True)
     (repo / "src" / "module.py").write_text("VALUE = 1\n", encoding=_UTF_8)
+    (repo / "dev" / "packaging" / "smoke_probe.py").write_text("PROBE = 1\n", encoding=_UTF_8)
     (repo / "pyproject.toml").write_text('[project]\nname = "sample"\n', encoding=_UTF_8)
     _git(repo, "init", "--quiet")
-    _git(repo, "-c", "user.email=proof@test", "-c", "user.name=proof", "add", "--", "src", "pyproject.toml")
+    _git(repo, "-c", "user.email=proof@test", "-c", "user.name=proof", "add", "--", "src", "dev", "pyproject.toml")
     _git(repo, "-c", "user.email=proof@test", "-c", "user.name=proof", "commit", "--quiet", "-m", "seed")
     return repo
 
@@ -61,12 +63,29 @@ def test_fingerprint_tracks_committed_scope_content(scoped_repo: Path) -> None:
     assert second != first
 
 
+def test_strengthened_prober_invalidates_carried_proofs(scoped_repo: Path) -> None:
+    """A committed probe change under dev/packaging changes the fingerprint.
+
+    A proof minted by a weaker prober must never keep satisfying pushes the
+    strengthened probe would fail, so the prober is part of the proof scope.
+    """
+    before = source_fingerprint(scoped_repo)
+    assert before is not None
+    (scoped_repo / "dev" / "packaging" / "smoke_probe.py").write_text("PROBE = 2\n", encoding=_UTF_8)
+    assert source_fingerprint(scoped_repo) is None
+    _git(scoped_repo, "-c", "user.email=proof@test", "-c", "user.name=proof", "add", "--", "dev")
+    _git(scoped_repo, "-c", "user.email=proof@test", "-c", "user.name=proof", "commit", "--quiet", "-m", "probe")
+    after = source_fingerprint(scoped_repo)
+    assert after is not None
+    assert after != before
+
+
 def test_out_of_scope_drift_keeps_the_fingerprint(scoped_repo: Path) -> None:
     """Docs/vault-style drift outside the wheel scope never invalidates a proof."""
     baseline = source_fingerprint(scoped_repo)
     (scoped_repo / "NOTES.md").write_text("out of scope\n", encoding=_UTF_8)
     assert source_fingerprint(scoped_repo) == baseline
-    assert "src" in PROOF_SCOPE_PATHS and "uv.lock" in PROOF_SCOPE_PATHS
+    assert {"src", "packaging", "dev/packaging", "pyproject.toml", "uv.lock"} <= set(PROOF_SCOPE_PATHS)
 
 
 def test_record_then_lookup_roundtrip_with_provenance(scoped_repo: Path, tmp_path: Path) -> None:

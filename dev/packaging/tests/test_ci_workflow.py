@@ -68,13 +68,13 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # default `-m unit` addopts deselects the integration-marked workflow
     # pins from the packaging preflight invocation, so this is their home.
     assert (
-        'pytest -q -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests'
-        in static_commands
+        'pytest -q --timeout=900 -m "unit or (integration and not serial)"'
+        " dev/packaging/tests dev/quality/tests dev/release/tests" in static_commands
     )
 
     unit = document["jobs"]["cadrumo-unit"]
     unit_commands = "\n".join(str(step.get("run", "")) for step in unit["steps"])
-    assert "uv run pytest --junitxml=junit.xml" in unit_commands
+    assert "uv run pytest --durations=50" in unit_commands
 
 
 def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
@@ -107,9 +107,29 @@ def test_nightly_workflow_carries_every_slow_conformance_surface() -> None:
     assert "just docs-check" in commands
     assert "pip-audit --strict" in commands
     assert "just check-pre-commit" in commands
-    assert "uv run pytest --junitxml=junit.xml" in commands
+    assert "uv run pytest --durations=100" in commands
     assert "uv run --no-sync aeat app registry verify" in commands
     assert _prohibited_aeat_product_forms(_NIGHTLY_WORKFLOW.read_text(encoding="utf-8")) == ()
+
+
+def test_ci_lanes_use_no_actions_artifact_storage() -> None:
+    """CI enrolls in the repo's zero-Actions-artifact posture.
+
+    The packaging workflows are already banned from artifact actions by the
+    transport conformance gate; the CI lanes carry the same rule here — the
+    storage quota is broken on the Free plan, and the duration profile lives
+    in the job log, so an `if: always()` junit upload is both a quota risk
+    and a policy inconsistency.
+    """
+    for path in (_WORKFLOW, _NIGHTLY_WORKFLOW):
+        document = yaml.safe_load(path.read_text(encoding="utf-8"))
+        offending = [
+            str(step.get("uses"))
+            for job in document["jobs"].values()
+            for step in job["steps"]
+            if "upload-artifact" in str(step.get("uses", "")) or "download-artifact" in str(step.get("uses", ""))
+        ]
+        assert offending == [], f"{path.name} uses Actions artifact storage: {offending}"
 
 
 def test_ci_workflow_does_not_materialise_operator_dotenv() -> None:
