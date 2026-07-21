@@ -65,7 +65,7 @@ Settings field `aeat_usage_ratios_path` in `src/aeat/config.py`; default `var/fi
 
 ## Deferred work
 
-- **Concurrent-writer data loss** → [issue #310](https://github.com/wgergely/aeat/issues/310). The ADR originally documented this as "last writer wins", but the rolling audit showed whole keys can vanish under parallel `set-ratio` invocations. Not in scope for #259; will block #214 (setup wizard) work if Kent scripts parallel sets.
+- **Concurrent-writer data loss** → [issue #310](https://github.com/operator/aeat/issues/310). The ADR originally documented this as "last writer wins", but the rolling audit showed whole keys can vanish under parallel `set-ratio` invocations. Not in scope for #259; will block #214 (setup wizard) work if Kent scripts parallel sets.
 - **Multi-year registries** — `ELIGIBLE_USAGE_RATIO_CATEGORIES` is derived from `CATEGORY_PROFILES_2025` at module load. A future multi-year refactor must re-derive per-year.
 - **i18n wiring** — the entire `src/aeat/entrypoints/cli/` tree is English-only; `AEAT_OUTPUT_LANGUAGE` has zero readers project-wide. #259 matches the sibling convention. A dedicated EPIC should localise the CLI layer as a coordinated effort.
 - **Shared atomic-save helper** — `save_usage_ratios` mirrors `invoices/_service.py` and `transactions/_service.py`. Three near-identical implementations; extraction was below the threshold for #259 and deliberately declined by the ADR.

@@ -52,7 +52,7 @@ related:
 - Authoritative plan status remains open at `W04.P07.S21`: `23/27` complete, `exec_missing_ids=[]`.
 - Current collect-only gate is still red:
   `uv run --no-sync pytest --collect-only -q` wrote full output to
-  `C:\Users\hello\AppData\Local\Temp\aeat-d9-retry-collect-20260704.log` and exited `2`
+  `<operator-home>\AppData\Local\Temp\aeat-d9-retry-collect-20260704.log` and exited `2`
   (`12148/14851 tests collected`, `2703 deselected`, `8 errors`).
 - The collect blocker is still the non-authored untracked Modelo 145 scaffold:
   `modelo 145 revision 2012-01-31-y-siguientes: revision must declare official workbook parity coverage`
@@ -79,7 +79,7 @@ related:
     (`21 passed`)
 - Collect-only remained red in the observed tree:
   `uv run --no-sync pytest --collect-only -q` wrote full output to
-  `C:\Users\hello\AppData\Local\Temp\aeat-d9-current-collect-20260704.log` and exited `2`
+  `<operator-home>\AppData\Local\Temp\aeat-d9-current-collect-20260704.log` and exited `2`
   (`12127/14834 tests collected`, `2707 deselected`, `8 errors`).
 - The remaining S24 blocker is the non-authored untracked Modelo 145 scaffold:
   `modelo 145 revision 2012-01-31-y-siguientes: revision must declare official workbook parity coverage`
@@ -90,18 +90,18 @@ related:
 
 - The stale M145 collect-only blocker is cleared in the current worktree:
   `uv run --no-sync pytest --collect-only -q` wrote full output to
-  `C:\Users\hello\AppData\Local\Temp\aeat-d9-current-collect-retry-20260704.log`
+  `<operator-home>\AppData\Local\Temp\aeat-d9-current-collect-retry-20260704.log`
   and completed clean: `12276/14908 tests collected (2632 deselected) in 109.26s`.
 - The locale blocker is cleared:
   `uv run --no-sync python -m aeat.locales audit` reports `ok` for `ca.yml`, `en.yml`,
   `es.yml`, and `hu.yml`.
 - W04.P07 conformance gates are green:
   - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`
-    wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-docconf-20260704.log`: `58 passed`.
+    wrote `<operator-home>\AppData\Local\Temp\aeat-d9-vocab-docconf-20260704.log`: `58 passed`.
   - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`
-    wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-jsonschema-20260704.log`: `140 passed`.
+    wrote `<operator-home>\AppData\Local\Temp\aeat-d9-vocab-jsonschema-20260704.log`: `140 passed`.
   - `uv run --no-sync pytest -q -m integration src/aeat/entrypoints/cli/tests/test_output_language_parity.py src/aeat/entrypoints/cli/tests/test_language_flag_help_honesty.py`
-    wrote `C:\Users\hello\AppData\Local\Temp\aeat-d9-vocab-locale-honesty-20260704.log`: `21 passed`.
+    wrote `<operator-home>\AppData\Local\Temp\aeat-d9-vocab-locale-honesty-20260704.log`: `21 passed`.
 - Source-only stale-command search over the operator surfaces found no `bindings preview`,
   `modelo.bindings.preview`, `calc pull --compute`, `pull --compute`, or
   `config.google.sync.calc.pull_compute` hit.

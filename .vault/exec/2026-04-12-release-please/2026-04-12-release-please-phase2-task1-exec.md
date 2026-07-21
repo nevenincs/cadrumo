@@ -8,7 +8,7 @@ title: release-please phase-2 task-1 — justfile release recipes
 related:
   - "[[2026-04-12-release-please-plan]]"
   - "[[2026-04-12-release-please-adr]]"
-issue: wgergely/aeat#60
+issue: operator/aeat#60
 ---
 
 # exec: release-please phase-2 task-1
@@ -28,7 +28,7 @@ cross-platform recipe pattern.
   exists (already `.gitignore`-covered via the blanket `var/`
   entry), and run
   `npx --yes release-please@16 release-pr --dry-run --debug`
-  against `wgergely/aeat` on `main`, teeing the output to
+  against `operator/aeat` on `main`, teeing the output to
   `var/release/release-please.log`.
 - `release-apply` — both OS variants require clean tree on `main`
   and the presence of the dry-run log, then print a numbered

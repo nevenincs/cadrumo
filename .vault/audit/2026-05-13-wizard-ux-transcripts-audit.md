@@ -556,34 +556,34 @@ $ aeat
 
 --- exit 0 ---
 
-# sandbox tmp: C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1
+# sandbox tmp: <operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1
 # AEAT_OUTPUT_LANGUAGE=es
 # AEAT_SECRET_STORE_BACKEND=unsecured
 # AEAT_ALLOW_UNENCRYPTED=1
-# AEAT_DATABASE_URL=sqlite:///C:/Users/hello/AppData/Local/Temp/aeat-ux-es-dh1_dww1/aeat.db
-# AEAT_TOKEN_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\tokens
-# AEAT_RUNS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\runs
-# AEAT_FINANCIAL_TXS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\txs
-# AEAT_INVOICES_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\invoices
-# AEAT_DRAFTS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\drafts
-# AEAT_SECRET_STORE_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\secrets
-# AEAT_BLOB_STORE_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\blobs
-# AEAT_AUDIT_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\audit
-# AEAT_SUBMISSIONS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\submissions
-# AEAT_INBOX_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\inbox
-# AEAT_INBOX_PDF_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\inbox\pdfs
-# AEAT_WORKFLOW_RUNS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\workflow-runs
-# AEAT_STATUS_CACHE_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\status-cache
-# AEAT_FILING_HISTORY_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\filing-history
-# AEAT_LEDGERS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\ledgers
-# AEAT_ATTACHMENTS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\attachments
-# AEAT_LLM_CACHE_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\llm-cache
-# AEAT_LLM_USAGE_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\llm-usage
-# AEAT_JUSTIFICANTES_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\justificantes
-# AEAT_SUBMISSION_BROWSER_TRACE_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\browser-traces
-# AEAT_STATUS_BROWSER_TRACE_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\browser-traces
-# AEAT_STORAGE_BACKUP_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\backups
-# AEAT_USAGE_RATIOS_PATH=C:\Users\hello\AppData\Local\Temp\aeat-ux-es-dh1_dww1\usage-ratios.json
+# AEAT_DATABASE_URL=sqlite:///<operator-home>/AppData/Local/Temp/aeat-ux-es-dh1_dww1/aeat.db
+# AEAT_TOKEN_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\tokens
+# AEAT_RUNS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\runs
+# AEAT_FINANCIAL_TXS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\txs
+# AEAT_INVOICES_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\invoices
+# AEAT_DRAFTS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\drafts
+# AEAT_SECRET_STORE_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\secrets
+# AEAT_BLOB_STORE_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\blobs
+# AEAT_AUDIT_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\audit
+# AEAT_SUBMISSIONS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\submissions
+# AEAT_INBOX_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\inbox
+# AEAT_INBOX_PDF_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\inbox\pdfs
+# AEAT_WORKFLOW_RUNS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\workflow-runs
+# AEAT_STATUS_CACHE_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\status-cache
+# AEAT_FILING_HISTORY_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\filing-history
+# AEAT_LEDGERS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\ledgers
+# AEAT_ATTACHMENTS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\attachments
+# AEAT_LLM_CACHE_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\llm-cache
+# AEAT_LLM_USAGE_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\llm-usage
+# AEAT_JUSTIFICANTES_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\justificantes
+# AEAT_SUBMISSION_BROWSER_TRACE_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\browser-traces
+# AEAT_STATUS_BROWSER_TRACE_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\browser-traces
+# AEAT_STORAGE_BACKUP_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\backups
+# AEAT_USAGE_RATIOS_PATH=<operator-home>\AppData\Local\Temp\aeat-ux-es-dh1_dww1\usage-ratios.json
 
 ===============================================================================
 ### B1. `aeat config status` (empty sandbox)
@@ -677,22 +677,22 @@ activity	design
 ## SCENARIO C — Interactive setup (es, pipe-driven)
 
 ```text
-# sandbox tmp: C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_
+# sandbox tmp: <operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_
 # AEAT_OUTPUT_LANGUAGE=es
 # AEAT_SECRET_STORE_BACKEND=unsecured
 # AEAT_ALLOW_UNENCRYPTED=1
-# AEAT_DATABASE_URL=sqlite:///C:/Users/hello/AppData/Local/Temp/aeat-ux-c-3i6ihc4_/aeat.db
-# AEAT_TOKEN_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\tokens
-# AEAT_RUNS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\runs
-# AEAT_FINANCIAL_TXS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\txs
-# AEAT_INVOICES_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\invoices
-# AEAT_DRAFTS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\drafts
-# AEAT_SECRET_STORE_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\secrets
-# AEAT_BLOB_STORE_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\blobs
-# AEAT_AUDIT_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\audit
-# AEAT_LEDGERS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\ledgers
-# AEAT_ATTACHMENTS_DIR=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\attachments
-# AEAT_USAGE_RATIOS_PATH=C:\Users\hello\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\usage-ratios.json
+# AEAT_DATABASE_URL=sqlite:///<operator-home>/AppData/Local/Temp/aeat-ux-c-3i6ihc4_/aeat.db
+# AEAT_TOKEN_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\tokens
+# AEAT_RUNS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\runs
+# AEAT_FINANCIAL_TXS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\txs
+# AEAT_INVOICES_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\invoices
+# AEAT_DRAFTS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\drafts
+# AEAT_SECRET_STORE_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\secrets
+# AEAT_BLOB_STORE_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\blobs
+# AEAT_AUDIT_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\audit
+# AEAT_LEDGERS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\ledgers
+# AEAT_ATTACHMENTS_DIR=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\attachments
+# AEAT_USAGE_RATIOS_PATH=<operator-home>\AppData\Local\Temp\aeat-ux-c-3i6ihc4_\usage-ratios.json
 
 ### section: profile  (title: Identidad del perfil)
 --- question: tax-id (widget=TEXT, profile_key='tax.id', required=True)

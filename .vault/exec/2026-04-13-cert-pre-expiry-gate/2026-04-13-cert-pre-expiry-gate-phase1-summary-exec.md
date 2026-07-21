@@ -13,7 +13,7 @@ related:
 
 # Phase 1 Summary — Certificate Pre-Expiry Gate (#94)
 
-Implements wgergely/aeat#94 on branch `feature/94-cert-pre-expiry-gate`.
+Implements operator/aeat#94 on branch `feature/94-cert-pre-expiry-gate`.
 
 ## Shipped artefacts
 

@@ -10,7 +10,7 @@ published_at = 2007-10-11
 effective_from = 2007-10-12
 review_status = "reviewed"
 reviewed_at = 2026-07-03
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Orden EHA/3021/2007 articulo 1: aprueba el modelo 182 'Impuesto sobre la Renta de las Personas Fisicas, Impuesto sobre la Renta de no Residentes e Impuesto sobre Sociedades. Declaracion informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas'. Es la orden habilitante del modelo 182 y de sus disenos de registro."
 required_text = [
     "Aprobación del modelo 182",
@@ -29,7 +29,7 @@ published_at = 2007-10-11
 effective_from = 2007-10-12
 review_status = "reviewed"
 reviewed_at = 2026-07-03
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Orden EHA/3021/2007 articulo 5: plazo de presentacion del modelo 182. La declaracion informativa de donativos, donaciones y aportaciones recibidas y disposiciones realizadas se presenta en el mes de enero de cada ano, en relacion con las operaciones del ano natural inmediato anterior."
 required_text = [
     "Plazo de presentación",

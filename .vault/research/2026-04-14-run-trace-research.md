@@ -16,7 +16,7 @@ related:
 
 ## context
 
-Issue [#99](https://github.com/wgergely/aeat/issues/99) targets the gap between
+Issue [#99](https://github.com/operator/aeat/issues/99) targets the gap between
 the workflow engine's local `run_id` and the rest of the project. Today only
 `aeat.application.workflow._models.compute_run_id` exists; nothing in
 `aeat.adapters.outbound.aeat.export`, `aeat.application.sync`, `aeat.inbox`, `aeat.status` propagates a run

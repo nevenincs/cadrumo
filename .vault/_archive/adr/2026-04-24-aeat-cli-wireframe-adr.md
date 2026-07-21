@@ -1962,7 +1962,7 @@ Documentation updates required by the excision:
 ### Tracking-issue skeleton
 
 The following is the literal body for a new GitHub issue to open on
-`wgergely/aeat`. Every bracketed placeholder must be filled in by the person
+`operator/aeat`. Every bracketed placeholder must be filled in by the person
 opening the issue. The issue is a prerequisite for approving this ADR.
 
 ```text

@@ -2,7 +2,7 @@
 
 Rows are built through the real evidence authority (real cohort on disk, real
 captured subprocess transcripts — the same fixtures as the emitter tests) and
-carry genuine gw-workstation-style machine metadata; the scrub must remove it,
+carry genuine hostname-style machine metadata; the scrub must remove it,
 keep every non-leaking field intact, revalidate through the strict schema, and
 fail closed — never pass silently — on a leak shape it cannot rewrite.
 """
@@ -49,7 +49,7 @@ from dev.packaging.evidence_scrub import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
-_HOSTNAME = "gw-workstation"
+_HOSTNAME = "build-host-example"
 _USERNAME = "gwuser"
 _TOKENS = (_HOSTNAME, _USERNAME)
 _HOME = f"C:\\Users\\{_USERNAME}"

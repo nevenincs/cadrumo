@@ -20,7 +20,7 @@ related:
 > producing a standalone audit doc. Wave 70 stream 4 flagged the
 > contract gap. This doc is reconstructed from the four stream
 > reports captured at execution time (see
-> `C:\Users\hello\AppData\Local\Temp\claude\...\tasks\a*.output`).
+> `<operator-home>\AppData\Local\Temp\claude\...\tasks\a*.output`).
 
 ## Scope
 
@@ -55,7 +55,7 @@ Wave 65d ADR deferral section named an artefact path but no GitHub
 issue. Wave 66 H1 flagged as "structurally soft". Confirmed in wave
 68 stream 4.
 
-**Closure**: wave 68c (`fe8fa85`) filed [issue #313](https://github.com/wgergely/aeat/issues/313).
+**Closure**: wave 68c (`fe8fa85`) filed [issue #313](https://github.com/operator/aeat/issues/313).
 
 ### H3 (stream 4) — Modelo 131 production `_CITATIONS` stale
 
@@ -73,7 +73,7 @@ flagged for 115/180 production `_CITATIONS`.
   **Closure**: wave 68b (`fe8fa85`) added both tables.
 - **M2 (stream 4)**: Wave 64 stream 2 L2 (9 uncovered sub_op chains)
   tagged "wave 65e+" but dropped silently. **Closure**: wave 68c
-  filed [issue #314](https://github.com/wgergely/aeat/issues/314).
+  filed [issue #314](https://github.com/operator/aeat/issues/314).
 
 ## LOW findings
 

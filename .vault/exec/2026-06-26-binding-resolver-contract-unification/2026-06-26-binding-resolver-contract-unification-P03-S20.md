@@ -45,7 +45,7 @@ related:
 - Current focused M720 service run remains red:
   `uv run --no-sync pytest -q -n 0 src/aeat/application/aggregation/tests/test_per_modelo_service.py -k "foreign_asset or foreign_assets or m720 or 720"`
   wrote full output to
-  `C:\Users\hello\AppData\Local\Temp\aeat-d9-retry-foreign-assets-20260704.log`
+  `<operator-home>\AppData\Local\Temp\aeat-d9-retry-foreign-assets-20260704.log`
   and exited `1` (`1 failed`, `1 passed`, `22 deselected`).
 - The exact M720 row-projection test now fails before reaching its equality assertions because
   registry authority load still sees the non-authored untracked Modelo 145 scaffold, which lacks

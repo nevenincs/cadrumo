@@ -14,7 +14,7 @@ related:
 
 # Plan: Certificate Pre-Expiry Health Check + Workflow Gate
 
-Issue: wgergely/aeat#94. Branch: `feature/94-cert-pre-expiry-gate`.
+Issue: operator/aeat#94. Branch: `feature/94-cert-pre-expiry-gate`.
 
 ## Phase 1 — Model + evaluator in `aeat.adapters.outbound.aeat.auth`
 

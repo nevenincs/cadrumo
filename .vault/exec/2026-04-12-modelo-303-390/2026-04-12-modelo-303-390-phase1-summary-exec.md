@@ -17,7 +17,7 @@ related:
 
 # modelo-303-390 phase1 summary
 
-Issue: wgergely/aeat#62
+Issue: operator/aeat#62
 Branch: `feature/62-modelo-303-390`
 Pipeline: research → ADR → plan → task execution → code review
 → commit → PR.

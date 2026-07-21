@@ -9,7 +9,7 @@ related:
   - "[[2026-04-13-filing-complementaria-research]]"
   - "[[2026-04-12-filing-draft-engine-adr]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
-issue: wgergely/aeat#93
+issue: operator/aeat#93
 ---
 
 # adr: filing complementaria | (**status:** `accepted`)

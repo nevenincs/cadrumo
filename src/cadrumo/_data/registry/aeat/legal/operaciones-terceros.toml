@@ -10,7 +10,7 @@ published_at = 2007-09-05
 effective_from = 2008-01-01
 review_status = "reviewed"
 reviewed_at = 2026-05-27
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "RGAT art 31: obligacion de informar sobre las operaciones con terceras personas. Base reglamentaria del Modelo 347 (declaracion anual de operaciones con terceras personas, umbral de 3.005,06 EUR / contraparte / ejercicio)."
 required_text = [
     "deberán presentar una declaración anual relativa a sus operaciones",
@@ -30,7 +30,7 @@ published_at = 2008-10-22
 effective_from = 2008-10-23
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Aprueba el modelo 347 'Declaracion anual de operaciones con terceras personas', formato electronico, ajustado a los disenos logicos del anexo."
 required_text = [
     "Aprobación del modelo 347",
@@ -50,7 +50,7 @@ published_at = 2008-10-22
 effective_from = 2008-10-23
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Plazo de presentacion del Modelo 347: durante el mes de febrero de cada ano en relacion con las operaciones realizadas durante el ano natural anterior."
 required_text = [
     "Plazo de presentación del modelo 347",
@@ -71,7 +71,7 @@ published_at = 2025-12-12
 effective_from = 2025-12-13
 review_status = "reviewed"
 reviewed_at = 2026-05-06
-reviewed_by = "wgergely"
+reviewed_by = "operator"
 notes = "Articulo 1 de la Orden HAC/1431/2025: modificacion de la Orden EHA/3012/2008 que aprobo el Modelo 347; ajusta los disenos logicos del anexo aplicables al ejercicio 2025 y siguientes."
 required_text = [
     "Modificación de la Orden EHA/3012/2008",

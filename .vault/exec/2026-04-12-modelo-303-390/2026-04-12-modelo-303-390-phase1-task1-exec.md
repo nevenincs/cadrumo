@@ -15,7 +15,7 @@ related:
 
 # modelo-303-390 phase1 task1
 
-Issue: wgergely/aeat#62
+Issue: operator/aeat#62
 Branch: `feature/62-modelo-303-390`
 
 ## Work performed

@@ -37,6 +37,6 @@ and `vault plan check` reports only the existing `PLAN022` ordering warning.
 - `uv run --no-sync vaultspec-core vault plan status .vault/plan/2026-06-10-cli-envelope-notice-standardisation-plan.md` - 25 of 25 complete; status still warns that older checked rows lack exec records.
 - `uv run --no-sync vaultspec-core vault plan check .vault/plan/2026-06-10-cli-envelope-notice-standardisation-plan.md` - passed with only `PLAN022`.
 
-The local `C:\Users\hello\AppData\Local\Temp` volume was nearly full during
+The local `<operator-home>\AppData\Local\Temp` volume was nearly full during
 verification, so the green pytest runs used a workspace-local `--basetemp` on
 the `Y:` volume.

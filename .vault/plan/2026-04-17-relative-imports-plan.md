@@ -16,7 +16,7 @@ phase chore: lint config + mechanical codemod + docs update +
 verification. No persistence, no schema, no domain logic.
 
 Branch: `feature/162-relative-imports`
-Issue: wgergely/aeat#162
+Issue: operator/aeat#162
 
 ## Phase 1 — relative-imports rollout
 
