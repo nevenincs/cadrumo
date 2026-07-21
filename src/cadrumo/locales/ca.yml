@@ -833,14 +833,14 @@ application:
       amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind}
         no està legalment disponible per al model {modelo}, exercici {filing_year},
         període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
-      amendment_registry_root_missing: Registry root %{registry_root} is missing;
-        amendment overrides cannot be validated.
-      amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
-        filing year %{filing_year}, period %{period} could not be resolved; amendment
-        overrides cannot be validated.
-      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are
-        not declared in registry modelo %{modelo}, filing year %{filing_year}, period
-        %{period}: %{casillas}.'
+      amendment_registry_root_missing: L'arrel del registre %{registry_root} no existeix;
+        no es poden validar les sobreescriptures de la rectificació.
+      amendment_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
+        del registre per al model %{modelo}, exercici %{filing_year}, període %{period};
+        no es poden validar les sobreescriptures de la rectificació.
+      amendment_unknown_casillas: 'Les sobreescriptures de la rectificació apunten
+        a ids de casella no declarats al model de registre %{modelo}, exercici %{filing_year},
+        període %{period}: %{casillas}.'
       amendment_verification_refused_missing_casillas: 'L''esmena és incompleta: falten
         identificadors de casella requerits al mapa corregit.'
       amendment_verification_refused_no_snapshot: El registre no té una instantània
@@ -904,13 +904,14 @@ application:
         aquesta casella per al selector de membre.
       calculate_text_input_empty: El valor de --casilla correspon a una casella de
         text i no pot estar buit.
-      calculation_registry_root_missing: Registry root %{registry_root} is missing;
-        modelo calculation cannot continue.
+      calculation_registry_root_missing: L'arrel del registre %{registry_root} no
+        existeix; el càlcul del model no pot continuar.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_not_found: No s'ha trobat cap revisió de càlcul amb id=%{calculation_revision_id}.
-      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
+      caller_casilla_source_binding_conflict: 'Les entrades de casella aportades no
+        poden sobreescriure caselles vinculades a una font derivada del dipòsit (caselles
+        vinculades a font): %{casillas}.'
       computed_casilla_binding_conflict: 'Les entrades procedents del bucket apunten
         a caselles calculades i no es poden sobreescriure amb binding extern. Caselles
         afectades: %{computed}.'
@@ -948,46 +949,52 @@ application:
         requereix un evidence_reference_id no buit.
       external_filing_no_casilla_values: La importació de declaració externa requereix
         com a mínim un valor de casella; el mapatge aportat és buit.
-      external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
-        already exists in the catalogue; an identical import was already recorded.
+      external_import_duplicate_revision: La revisió de càlcul %{calculation_revision_id}
+        ja existeix al catàleg; ja s'havia registrat una importació idèntica.
       external_import_justificante_mismatch: L'evidència d'importació externa %{evidence_reference_id}
         no coincideix amb el modelo %{modelo}, exercici %{filing_year}, període %{period}.
       external_import_justificante_missing: L'evidència d'importació externa %{evidence_reference_id}
         (%{evidence_kind}) no està registrada com a artefacte de justificant persistent.
-      external_import_registry_root_missing: Registry root %{registry_root} is missing;
-        imported casilla ids cannot be validated.
-      external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
-        filing year %{filing_year}, period %{period} could not be resolved; imported
-        casilla ids cannot be validated.
+      external_import_registry_root_missing: L'arrel del registre %{registry_root}
+        no existeix; no es poden validar els ids de casella importats.
+      external_import_registry_snapshot_unresolved: No s'ha pogut resoldre la instantània
+        del registre per al model %{modelo}, exercici %{filing_year}, període %{period};
+        no es poden validar els ids de casella importats.
       external_import_tax_id_missing: L'evidència d'importació externa %{evidence_reference_id}
         (%{evidence_kind}) requereix el NIF del contribuent abans de vincular-se a
         un artefacte de justificant.
-      external_import_unknown_casillas: 'External-filing import carries casilla ids
-        that are not declared in registry modelo %{modelo}, filing year %{filing_year},
-        period %{period}: %{casillas}.'
+      external_import_unknown_casillas: 'La importació de presentació externa conté
+        ids de casella no declarats al model de registre %{modelo}, exercici %{filing_year},
+        període %{period}: %{casillas}.'
       filing_record_not_found: No s'ha trobat cap declaració registrada amb id=%{filing_record_id}.
-      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
-        compensation conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_backend_casilla_conflict: L'entrada de casella del backend per a
+        la compensació prèvia del Model 303 entra en conflicte amb la decisió de conciliació
+        de la cartera de compensació d'IVA.
       iva_wallet_blocked: 'IVA wallet reconciliation is blocked for Modelo 303 (%{divergence}):
         %{reason}'
-      iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
-        conflicts with the IVA wallet reconciliation decision.
-      iva_wallet_caller_casilla_conflict: Caller casilla input for Modelo 303 prior
-        compensation conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_caller_binding_conflict: El binding aportat per a la compensació
+        prèvia del Model 303 entra en conflicte amb la decisió de conciliació de la
+        cartera de compensació d'IVA.
+      iva_wallet_caller_casilla_conflict: L'entrada de casella aportada per a la compensació
+        prèvia del Model 303 entra en conflicte amb la decisió de conciliació de la
+        cartera de compensació d'IVA.
       iva_wallet_not_seeded: 'El càlcul del Model 303 requereix un historial de compensació
         IVA inicialitzat. Per a la primera declaració d''un perfil nou, inicialitza
         el saldo d''obertura amb zero: `aeat app modelo iva-wallet seed --filing-year
         YEAR --period PERIOD --amount 0 --confirm`.'
       iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
         selected amount.
-      iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
-        does not match the persisted decision.
-      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
-        does not match work unit %{filing_year}/%{period}.
-      iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
-        without the work-unit taxpayer identity.
-      iva_wallet_taxpayer_mismatch: IVA wallet reconciliation taxpayer does not match
-        the Modelo 303 work unit.
+      iva_wallet_supplied_decision_mismatch: La decisió de conciliació de la cartera
+        de compensació d'IVA aportada no coincideix amb la decisió persistida.
+      iva_wallet_target_mismatch: El destí %{target_year}/%{target_period} de la decisió
+        de la cartera de compensació d'IVA no coincideix amb la unitat de treball
+        %{filing_year}/%{period}.
+      iva_wallet_taxpayer_identity_missing: La conciliació de la cartera de compensació
+        d'IVA no pot continuar sense la identitat del contribuent de la unitat de
+        treball.
+      iva_wallet_taxpayer_mismatch: El contribuent de la conciliació de la cartera
+        de compensació d'IVA no coincideix amb el de la unitat de treball del Model
+        303.
       iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
         %{decision_type}.'
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
@@ -1176,8 +1183,8 @@ application:
         (ley-35-2006:dt-12).
       dt12a_reduccion_possible: 'DT_12A_REDUCCION_POSSIBLE: casilla %{ingreso_id}
         = %{ingreso_value} but casilla %{reduccion_id} (reduccion trabajo) is zero.'
-      iva_wallet_next_action: Review the IVA wallet reconciliation decision before
-        verifying or exporting this Modelo 303.
+      iva_wallet_next_action: Revisa la decisió de conciliació de la cartera de compensació
+        d'IVA abans de verificar o exportar aquest Model 303.
       m210_baseline_tipo_deferred:
         next_action: 'El tipus de gravamen b tipo_renta={tipo_renta} està ajornat
           a una Fase futura sota la task #229 (corpus BOE pendent). Establiu profile.country_of_fiscal_residence
@@ -1498,7 +1505,8 @@ application:
         d''identitat per presentar models. Afegeix aquests flags a la mateixa ordre
         i torna-la a executar: %{missing_flags}.'
       persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
-        requires supplied_question_ids — edit is a patch, not a full rewrite.
+        requereix supplied_question_ids — l'edició és un pedaç, no una reescriptura
+        completa.
       persist_patch_unknown_question_id: El pedaç de l'assistent referència un id
         de pregunta desconegut.
       profile_flag_required: L'assistent requereix --profile NAME (sense valor per
@@ -2894,16 +2902,17 @@ cli:
           list_help: List accepted apoderado scopes
         status_help: Show active apoderado configuration
       certificate:
-        check_help: Check expiry and rotation health for every registered certificate
-          source
-        help: Manage named certificate sources for the certificate auth provider
+        check_help: Comprova la caducitat i l'estat de rotació de cada font de certificat
+          registrada
+        help: Gestiona fonts de certificat amb nom per al proveïdor d'autenticació
+          per certificat
         list_help: List every registered certificate source
         register:
-          file_help: Path to the PKCS#12 (.p12/.pfx) bundle
+          file_help: Camí al paquet PKCS#12 (.p12/.pfx)
           friendly_name_help: Optional human-readable label distinct from --name
-          name_help: Identifier for this certificate source (for example, personal
-            or apoderado-acme)
-        register_help: Register or re-point a named certificate source
+          name_help: Identificador d'aquesta font de certificat (per exemple, personal
+            o apoderado-acme)
+        register_help: Registra o redirigeix una font de certificat amb nom
         remove:
           name_help: Registered certificate source to remove
         remove_help: Remove a registered certificate source
@@ -2919,7 +2928,7 @@ cli:
           set_help: Estableix (o rota) la contrasenya d'una font de certificat registrada
         select:
           name_help: Registered certificate source to activate
-        select_help: Select the active certificate source
+        select_help: Selecciona la font de certificat activa
       configure_help: Configurar el proveïdor d'autenticació actiu
       diagnostics:
         help: Inspecciona els diagnòstics d'autenticació xifrats.
@@ -3173,19 +3182,19 @@ cli:
           executa `aeat config google folder set <id>` primer
     init:
       activity_help: Econòmic activity description (e.g. 761.1, programador)
-      auth_provider_help: Authentication provider ID to use for the profile
-      certificate_password_env_help: Environment variable name containing the certificate
-        password
+      auth_provider_help: Id del proveïdor d'autenticació que cal usar per al perfil
+      certificate_password_env_help: Nom de la variable d'entorn que conté la contrasenya
+        del certificat
       certificate_path_help: Path to the .p12 or .pfx certificate file
       drafts_dir_help: Directory to store local filing drafts
-      dry_run_help: Report changes without modifying the configuration
+      dry_run_help: Informa dels canvis sense modificar la configuració
       from_help: Source profile ID to import settings from
       help: Inicialitza un perfil actiu nou.
       iva_regime_help: IVA regime (general, simplificado, exento, etc.)
       manuals_root_help: Root directory for AEAT technical manuals
       non_interactive_help: Run without prompting for user input
       output_language_help: Primary language for CLI output (en, es, ca)
-      profile_name_help: Unique identifier for this configuration profile
+      profile_name_help: Identificador únic d'aquest perfil de configuració
       quiet_help: Amaga el missatge d'èxit després d'inicialitzar
       submissions_dir_help: Directory to store submitted filing receipts
       success:
@@ -3536,7 +3545,8 @@ cli:
       integrity_attribution_help: Agrupa les files d'objectes segurs no desxifrables
         per metadades segures.
       integrity_help: Comprovar la integritat dels objectes segurs i del registre.
-      integrity_namespace_help: Restrict the integrity probe to one namespace.
+      integrity_namespace_help: Restringeix la comprovació d'integritat a un sol espai
+        de noms.
       integrity_objects_help: Comprova la verificació d'etiquetes AES-256-GCM en un
         espai de noms (o en tots).
       integrity_registry_help: Executa la validació completa del registre (la comprovació
@@ -4527,7 +4537,7 @@ cli:
         profile_rename: Reanomenar un perfil de contribuent.
         profile_show: Mostrar les dades del perfil actiu.
         profile_status: Mostrar l'estat del perfil actiu.
-        profile_switch: Switch to a profile and make it the active one.
+        profile_switch: Canvia a un perfil i converteix-lo en l'actiu.
         reset_resume: Reprèn una operació de reinici incompleta.
         reset_start: Inicia un reinici irreversible nou de tots els perfils emmagatzemats
           localment.
@@ -5728,10 +5738,10 @@ errors:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,
       no per un problema de dades emmagatzemades. Consulteu els registres de diagnòstic
       per veure què ha fallat.
-    internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
-      close the active session before re-entering.'
-    internal_master_key_type: 'Internal error: master-key operation received a value
-      of the wrong type.'
+    internal_master_key_reentrant: 'Error intern: el proveïdor de la clau mestra s''ha
+      invocat de manera reentrant; tanca la sessió activa abans de tornar a entrar-hi.'
+    internal_master_key_type: 'Error intern: l''operació de clau mestra ha rebut un
+      valor de tipus incorrecte.'
     internal_observability_run_context_missing: 'Error intern: s''ha intentat registrar
       un esdeveniment de telemetria fora d''un context d''execució actiu.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
@@ -6016,8 +6026,8 @@ errors:
     refused_outbound_storage_validation: Els paràmetres de l'operació d'emmagatzematge
       no han superat la validació.
     refused_output_format: El format de sortida sol·licitat no és compatible.
-    refused_pension_reduccion_computation: A pension reducción computation input violated
-      a numèric pre-condition. Correct the supplied amounts.
+    refused_pension_reduccion_computation: Una entrada del càlcul de reducció fiscal
+      per pensions ha incomplert una condició numèrica; corregeix els imports indicats.
     refused_profile_already_exists: Ja existeix un perfil amb aquestes dades.
     refused_profile_asset_validation: Un registre d'actiu del perfil no ha superat
       la validació.
@@ -6096,9 +6106,9 @@ errors:
     refused_wizard_validation: Una resposta de l'assistent no ha superat la validació.
       Corregeix el valor indicat.
     refused_workflow_aborted: El flux de treball s'ha cancel·lat.
-    refused_workflow_input_mismatch: The workflow input request does not match the
-      calculation revision. Run aeat app modelo work calculate to produce a fresh
-      revision.
+    refused_workflow_input_mismatch: La sol·licitud d'entrada del flux de treball
+      no coincideix amb la revisió de càlcul. Executa `aeat app modelo work calculate`
+      per generar una revisió nova.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
     submission_preflight_auth_describe_failed: El proveïdor d'autenticació no s'ha
       pogut descriure ({cause_type}).
@@ -6290,7 +6300,7 @@ profile:
       el vostre territori.
     not_configured: No hi ha cap perfil de residència fiscal configurat per a RENTA.
   keys:
-    description: Profile configuration keys and their descriptions
+    description: Claus de configuració del perfil i les seves descripcions
     tax:
       id: Tax identifier (NIF/NIE/CIF)
   validation:
