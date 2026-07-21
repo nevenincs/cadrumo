@@ -24,7 +24,10 @@
     "cli.review.labels.id": "universal abbreviation (ID), identical across locales",
     "topic.sii.title": "official AEAT system acronym (Suministro Inmediato de Informacion), never Catalanised",
     "topic.verifactu.title": "official AEAT system brand name (VERI*FACTU), never Catalanised",
-    "untranslated_pending": "The ca locale still mirrors en for keys captured in this slice. A\nfollow-up translation pass replaces the English strings with real\nCatalan translations and removes entries from this allowlist.\n"
+    "untranslated_pending": "The ca locale still mirrors en for keys captured in this slice. A\nfollow-up translation pass replaces the English strings with real\nCatalan translations and removes entries from this allowlist.\n",
+    "wizard.choices.general": "identical word in Catalan (General)",
+    "wizard.choices.irpf": "AEAT tax name (IRPF), never Catalanised",
+    "wizard.choices.iva": "AEAT tax name (IVA), never Catalanised"
   },
   "es": {
     "application.filing.review.stale_reasons.unknown": "pure %{reason} placeholder passthrough, no literal words to translate",
