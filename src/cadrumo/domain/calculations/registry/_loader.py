@@ -996,40 +996,25 @@ def _collect_registry_tree_fingerprints_for_cache(
     """
     import time
 
-    now = time.time()
+    started = time.time()
     bundled = use_cache and is_bundled_registry_root(resolved)
     ttl = BUNDLED_REGISTRY_FINGERPRINT_TTL_SECONDS if bundled else MUTABLE_REGISTRY_FINGERPRINT_TTL_SECONDS
 
-    if bundled and resolved in _registry_fingerprint_cache:
-        cached_time, _cached_directories, cached_val = _registry_fingerprint_cache[resolved]
-        if now - cached_time < ttl:
-            return cached_val
+    if bundled:
+        # Bundled trees short-circuit BEFORE the walk: passing no directory
+        # fingerprints is what skips it entirely rather than recomputing it only
+        # to compare against the cached copy.
+        hit = _live_cached_fingerprints(resolved, now=started, ttl=ttl, directory_fingerprints=None)
+        if hit is not None:
+            return hit
 
     directory_fingerprints = _collect_registry_directory_fingerprints(resolved)
-    if use_cache and resolved in _registry_fingerprint_cache:
-        cached_time, cached_directories, cached_val = _registry_fingerprint_cache[resolved]
-        if now - cached_time < ttl:
-            if cached_directories == directory_fingerprints:
-                return cached_val
-            _registry_fingerprint_cache.pop(resolved, None)
+    if use_cache:
+        hit = _live_cached_fingerprints(resolved, now=started, ttl=ttl, directory_fingerprints=directory_fingerprints)
+        if hit is not None:
+            return hit
 
-    legal_dir = resolved / "legal"
-    modelos_dir = resolved / "modelos"
-    fingerprints: list[_RegistryPathFingerprint] = list(directory_fingerprints)
-    authorization_dir = resolved / "authorization.d"
-    if authorization_dir.is_dir():
-        for fragment in sorted(authorization_dir.glob("*.toml")):
-            fingerprints.append(_toml_fingerprint(fragment))
-    for path in sorted(legal_dir.glob("*.toml")):
-        fingerprints.append(_toml_fingerprint(path))
-    for path in sorted(modelos_dir.glob("*.toml")):
-        fingerprints.append(_toml_fingerprint(path))
-    if modelos_dir.is_dir():
-        for entry in sorted(modelos_dir.iterdir()):
-            fingerprints.extend(_modelo_directory_fingerprints(entry))
-    schema_path = resolved / "user_profile" / "schema.toml"
-    if schema_path.is_file():
-        fingerprints.append(_toml_fingerprint(schema_path))
+    fingerprints = (*directory_fingerprints, *_registry_source_fingerprints(resolved))
 
     refreshed_directory_fingerprints = _collect_registry_directory_fingerprints(resolved)
     if refreshed_directory_fingerprints != directory_fingerprints:
@@ -1038,18 +1023,93 @@ def _collect_registry_tree_fingerprints_for_cache(
             f"{resolved}: registry directory changed during cache fingerprinting; "
             "retry after concurrent registry writes settle",
         )
-    res = tuple(fingerprints)
-    # The bundled tree is read-only package data, so its TTL bounds how often we
-    # redo the expensive walk rather than how stale the observation may be: stamp
-    # it at walk COMPLETION so the full window is available to callers. Stamping
-    # at walk start instead charges the walk's own cost (~1s idle, several times
-    # that on a loaded machine) against the window, which on a busy host can
-    # consume it entirely and defeat the cache exactly when it is worth most. A
-    # mutable authoring tree keeps the conservative start stamp: there the TTL is
-    # a staleness bound on a tree that can change under us.
-    stamped = time.time() if bundled else now
-    _registry_fingerprint_cache[resolved] = (stamped, refreshed_directory_fingerprints, res)
-    return res
+    _store_registry_fingerprints(
+        resolved,
+        directory_fingerprints=refreshed_directory_fingerprints,
+        fingerprints=fingerprints,
+        walk_started=started,
+        bundled=bundled,
+    )
+    return fingerprints
+
+
+def _live_cached_fingerprints(
+    resolved: Path,
+    *,
+    now: float,
+    ttl: float,
+    directory_fingerprints: _RegistryPathFingerprints | None,
+) -> _RegistryPathFingerprints | None:
+    """Return the cached fingerprints when the entry is still live, else ``None``.
+
+    ``directory_fingerprints`` is ``None`` for the pre-walk bundled
+    short-circuit, where the entry's own age is the only question. When it is
+    supplied, a live entry must ALSO agree with the freshly walked directory
+    fingerprints; a disagreement means the tree's layout changed under the entry,
+    so it is evicted rather than served. An entry that has merely aged out is
+    left in place for the caller to overwrite.
+    """
+    entry = _registry_fingerprint_cache.get(resolved)
+    if entry is None:
+        return None
+    cached_time, cached_directories, cached_value = entry
+    if now - cached_time >= ttl:
+        return None
+    if directory_fingerprints is None or cached_directories == directory_fingerprints:
+        return cached_value
+    _registry_fingerprint_cache.pop(resolved, None)
+    return None
+
+
+def _registry_source_fingerprints(resolved: Path) -> tuple[_RegistryPathFingerprint, ...]:
+    """Fingerprint every catalogue TOML the loader will subsequently re-open.
+
+    Ordering is part of the cache key, so the sequence here (authorization
+    fragments, legal, single-file modelos, directory-mode modelos, user-profile
+    schema) is load-bearing and must not be reordered.
+    """
+    fingerprints: list[_RegistryPathFingerprint] = []
+    authorization_dir = resolved / "authorization.d"
+    if authorization_dir.is_dir():
+        for fragment in sorted(authorization_dir.glob("*.toml")):
+            fingerprints.append(_toml_fingerprint(fragment))
+    for path in sorted((resolved / "legal").glob("*.toml")):
+        fingerprints.append(_toml_fingerprint(path))
+    modelos_dir = resolved / "modelos"
+    for path in sorted(modelos_dir.glob("*.toml")):
+        fingerprints.append(_toml_fingerprint(path))
+    if modelos_dir.is_dir():
+        for entry in sorted(modelos_dir.iterdir()):
+            fingerprints.extend(_modelo_directory_fingerprints(entry))
+    schema_path = resolved / "user_profile" / "schema.toml"
+    if schema_path.is_file():
+        fingerprints.append(_toml_fingerprint(schema_path))
+    return tuple(fingerprints)
+
+
+def _store_registry_fingerprints(
+    resolved: Path,
+    *,
+    directory_fingerprints: _RegistryPathFingerprints,
+    fingerprints: _RegistryPathFingerprints,
+    walk_started: float,
+    bundled: bool,
+) -> None:
+    """Record the freshly walked fingerprints, stamped for their TTL window.
+
+    The bundled tree is read-only package data, so its TTL bounds how often we
+    redo the expensive walk rather than how stale the observation may be: stamp
+    it at walk COMPLETION so the full window is available to callers. Stamping at
+    walk start instead charges the walk's own cost (~1s idle, several times that
+    on a loaded machine) against the window, which on a busy host can consume it
+    entirely and defeat the cache exactly when it is worth most. A mutable
+    authoring tree keeps the conservative start stamp: there the TTL is a
+    staleness bound on a tree that can change under us.
+    """
+    import time
+
+    stamped = time.time() if bundled else walk_started
+    _registry_fingerprint_cache[resolved] = (stamped, directory_fingerprints, fingerprints)
 
 
 def _collect_registry_directory_fingerprints(resolved: Path) -> _RegistryPathFingerprints:
