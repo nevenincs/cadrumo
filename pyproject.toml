@@ -393,6 +393,7 @@ dev = [
   "complexipy>=3.3.0",
   "vulture>=2.16",
   "sphinxcontrib-mermaid>=1.0",
+  "pytest-timeout>=2.3.1",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
@@ -494,6 +495,12 @@ convention = "google"
 "dev/packaging/smoke_browser.py" = ["S603"]
 "dev/packaging/smoke_core.py" = ["S603"]
 "dev/packaging/smoke_docker.py" = ["S603"]
+# The campaign driver fans the fixed lane-registry argv (sys.executable -m
+# dev.packaging.*) out over a worker pool; no untrusted input reaches it.
+"dev/packaging/campaign.py" = ["S603"]
+# The shard-plugin gate collect-probes via `sys.executable -m pytest` with a
+# fixed argv over in-test-authored sample modules.
+"dev/quality/tests/test_shard.py" = ["S603"]
 # The release audit-state gate resolves `gh` via `shutil.which` (or accepts an
 # explicit resolved path for tests) before invoking it with a fixed argv;
 # ruff's S603 heuristic cannot see the resolved-executable contract.
@@ -819,6 +826,12 @@ testpaths = ["src/cadrumo", "dev/packaging/tests/test_installed_oracles.py"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
 addopts = "-n auto --dist=loadfile --tb=short -m 'unit' --strict-markers --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity"
+# Per-test wall ceiling: a deadlocked test fails in minutes with a stack dump
+# instead of wedging the whole run for hours (the CI unit lane sat 3-5.5h
+# wedged with idle workers on every recent run). pytest-timeout picks the
+# signal method where available (Linux) and falls back to thread elsewhere.
+# 300 s is a ceiling, not a target; no legitimate unit test approaches it.
+timeout = 300
 asyncio_mode = "strict"
 markers = [
   "unit: deterministic offline tests scoped to one owner; owned local processes are allowed, external networks and services are not",
