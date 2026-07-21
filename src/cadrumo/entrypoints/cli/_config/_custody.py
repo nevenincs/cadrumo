@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from ....adapters.persistence.storage import SecretStoreError
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from .._common import _emit_envelope
@@ -23,6 +24,47 @@ def select_profile_pointer(pointer: ProfileBucketPointer) -> None:
     from ....application.user_profile import select_profile_with_lifecycle_span
 
     select_profile_with_lifecycle_span(pointer.bucket_id)
+
+
+def _settings_has_explicit_output_language() -> bool:
+    """Return whether the operator pinned a supported output language explicitly."""
+    from ....core.config import load_settings
+    from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
+
+    try:
+        settings = load_settings()
+    except (AttributeError, KeyError, ValueError):
+        return False
+    if "cadrumo_output_language" not in settings.model_fields_set:
+        return False
+    raw = str(getattr(settings.cadrumo_output_language, "value", settings.cadrumo_output_language)).strip().lower()
+    return raw in SUPPORTED_OUTPUT_LANGUAGES
+
+
+def _pin_render_language_to_target_bucket(ctx: typer.Context, *, bucket_id: str) -> None:
+    """Pin the render locale to the failed switch target's bucket hint.
+
+    A switch that cannot unlock its target renders the storage/master-key
+    refusal at the CLI boundary AFTER the lifecycle span has unwound and
+    restored the previous active profile, so the active-profile language
+    resolver would otherwise localise the target's failure in the SOURCE
+    profile's language. The target's output-language hint is a plaintext,
+    bucket-local file readable without the (corrupt) DEK, so it can pin the
+    render locale to the target the operator was switching to. Skipped when
+    the operator supplied an explicit language.
+    """
+    if _settings_has_explicit_output_language():
+        return
+
+    from ....application.user_profile import resolve_profile_output_language_hint
+    from ....core.config import override_settings
+    from ....core.i18n import clear_output_language_cache
+
+    language = resolve_profile_output_language_hint(bucket_id)
+    if language is None:
+        return
+    ctx.with_resource(override_settings(cadrumo_output_language=language))
+    clear_output_language_cache()
 
 
 def _resolve_switch_target(
@@ -85,7 +127,13 @@ def _register_switch_command(
                 )
         else:
             pointer = _resolve_switch_target(name, resolve_profile_by_label=resolve_profile_by_label)
-        select_profile_pointer(pointer)
+        try:
+            select_profile_pointer(pointer)
+        except SecretStoreError:
+            # The target could not be unlocked (e.g. a corrupt bucket DEK);
+            # render the refusal in the target's own output language.
+            _pin_render_language_to_target_bucket(ctx, bucket_id=pointer.bucket_id)
+            raise
         from .._config_payloads import ConfigSwitchResult
 
         result = ConfigSwitchResult(active_profile=pointer.label)
