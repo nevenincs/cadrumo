@@ -5,6 +5,7 @@ tags:
 date: '2026-07-21'
 modified: '2026-07-21'
 related:
+  - '[[2026-07-21-ci-discipline-reference]]'
   - '[[2026-07-20-ci-speed-redesign-adr]]'
   - '[[2026-07-20-release-asset-transport-adr]]'
   - '[[2026-07-04-release-readiness-gate-adr]]'
