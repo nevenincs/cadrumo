@@ -40,6 +40,50 @@ _CLIENT_PROMPT: Final[str] = (
     "Call the Cadrumo cadrumo_harness_load MCP tool exactly once. "
     "Do not use Bash or any other tool. Then say only connected."
 )
+# Markers a FAILED tool call leaves in the client debug log. The session runs
+# exactly one tool (the prompt forbids others), so any error marker in the
+# log belongs to that call; unknown future shapes fail closed at the session
+# stdout is_error layer.
+_TOOL_ERROR_MARKERS: Final[tuple[str, ...]] = (
+    '"is_error":true',
+    '"is_error": true',
+    '"isError":true',
+    '"isError": true',
+    "tool_use_error",
+    "Error calling tool",
+    "Tool call failed",
+)
+
+
+def _tool_result_verdict(debug_text: str, session_stdout: str) -> str:
+    """Return the decisive tool-result excerpt, refusing an ERRORED tool call.
+
+    A DISPATCHED call is not a SUCCESSFUL one: the live capture that motivated
+    this gate connected, dispatched ``cadrumo_harness_load``, received the
+    retired-aeat-state refusal as a tool ERROR — and still recorded
+    ``status="passed"``, the concealment shape
+    ``no-silent-under-declaration`` forbids. Two layers decide: any tool-error
+    marker in the debug log refuses with the surrounding excerpt named, and
+    the ``-p --output-format json`` session document's ``is_error`` must be
+    false. On success the excerpt after the final tool dispatch is returned
+    so the session evidence records the decisive result, not just dispatch.
+    """
+    for marker in _TOOL_ERROR_MARKERS:
+        index = debug_text.find(marker)
+        if index != -1:
+            excerpt = debug_text[max(0, index - 240) : index + 240].strip()
+            raise SystemExit(
+                f"Claude client session tool call ERRORED (marker {marker!r} in debug log): ...{excerpt}...",
+            )
+    try:
+        session_document = json.loads(session_stdout)
+    except json.JSONDecodeError:
+        session_document = None
+    if isinstance(session_document, dict) and session_document.get("is_error"):
+        result_text = str(session_document.get("result"))[:400]
+        raise SystemExit(f"Claude client session reported is_error=true: {result_text}")
+    dispatch_index = debug_text.rfind(f"tool={_CLIENT_TOOL_NAME}")
+    return debug_text[dispatch_index : dispatch_index + 400].strip()
 
 
 def _sha256(path: Path) -> str:
@@ -274,12 +318,16 @@ def _run_optional_claude_session(
     tool_called = f"tool={_CLIENT_TOOL_NAME}" in debug_text
     if not connected or not tool_called:
         raise SystemExit("Claude client session did not prove plugin MCP connection and harness tool use")
+    # Dispatch alone is not proof: the tool RESULT must have succeeded, and
+    # the decisive excerpt rides the evidence (no-silent-under-declaration).
+    tool_result_excerpt = _tool_result_verdict(debug_text, record["stdout"])
     return {
         "connected": connected,
         "duration_seconds": record["duration_seconds"],
         "model": model,
         "status": "passed",
         "tool_called": _CLIENT_TOOL_NAME,
+        "tool_result_excerpt": tool_result_excerpt,
     }
 
 
