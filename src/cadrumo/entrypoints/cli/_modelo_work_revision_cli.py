@@ -39,7 +39,18 @@ from ._modelo_rendering import (
     calculation_revision_payload,
     short_id,
 )
-from ._modelo_work_options import _ModeloOpt, _PeriodOpt, _RevisionOpt, _WorkUnitIdArg, _YearOpt
+from ._modelo_work_options import (
+    _BucketIdOpt,
+    _CalculationRevisionIdArg,
+    _ModeloOpt,
+    _PeriodOpt,
+    _RegistryRevisionOpt,
+    _RevisionOpt,
+    _RevisionSelectorOpt,
+    _WorkUnitIdArg,
+    _WorkUnitIdOpt,
+    _YearOpt,
+)
 
 
 @dataclass(frozen=True)
@@ -93,10 +104,7 @@ def _register_work_revisions_command(work_app: typer.Typer, deps: _WorkRevisionC
         year: _YearOpt = None,
         period: _PeriodOpt = None,
         revision: _RevisionOpt = None,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
+        bucket_id: _BucketIdOpt = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
         """List persisted :class:`CalculationRevision` rows for an optional :class:`WorkUnit`."""
@@ -148,32 +156,14 @@ def _register_work_revision_command(work_app: typer.Typer, deps: _WorkRevisionCo
     @work_app.command("revision", help=tr("cli.app.modelo.work.revision_show_help"))
     def work_revision(
         ctx: typer.Context,
-        calculation_revision_id: Annotated[
-            str | None,
-            typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
-        ] = None,
+        calculation_revision_id: _CalculationRevisionIdArg = None,
         modelo: _ModeloOpt = None,
         year: _YearOpt = None,
         period: _PeriodOpt = None,
-        registry_revision: Annotated[
-            str | None,
-            typer.Option("--registry-revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
-        work_unit_id: Annotated[
-            str | None,
-            typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
-        ] = None,
-        select: Annotated[
-            str,
-            typer.Option(
-                "--select",
-                help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector."),
-            ),
-        ] = ModeloCalculationRevisionSelector.CURRENT.value,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
+        registry_revision: _RegistryRevisionOpt = None,
+        work_unit_id: _WorkUnitIdOpt = None,
+        select: _RevisionSelectorOpt = ModeloCalculationRevisionSelector.CURRENT.value,
+        bucket_id: _BucketIdOpt = None,
         verbose: Annotated[
             bool,
             typer.Option(
@@ -243,32 +233,14 @@ def _register_work_observations_command(work_app: typer.Typer, deps: _WorkRevisi
     )
     def work_observations(
         ctx: typer.Context,
-        calculation_revision_id: Annotated[
-            str | None,
-            typer.Argument(help=tr("cli.app.modelo.work.calculation_revision_id_help")),
-        ] = None,
+        calculation_revision_id: _CalculationRevisionIdArg = None,
         modelo: _ModeloOpt = None,
         year: _YearOpt = None,
         period: _PeriodOpt = None,
-        registry_revision: Annotated[
-            str | None,
-            typer.Option("--registry-revision", help=tr("cli.app.modelo.work.revision_help")),
-        ] = None,
-        work_unit_id: Annotated[
-            str | None,
-            typer.Option("--work-unit-id", help=tr("cli.app.modelo.work.work_unit_id_help")),
-        ] = None,
-        select: Annotated[
-            str,
-            typer.Option(
-                "--select",
-                help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector."),
-            ),
-        ] = ModeloCalculationRevisionSelector.CURRENT.value,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
+        registry_revision: _RegistryRevisionOpt = None,
+        work_unit_id: _WorkUnitIdOpt = None,
+        select: _RevisionSelectorOpt = ModeloCalculationRevisionSelector.CURRENT.value,
+        bucket_id: _BucketIdOpt = None,
         output_language: OutputLanguageOpt = None,
     ) -> None:
         """Show observation provenance for one stored :class:`CalculationRevision`.
