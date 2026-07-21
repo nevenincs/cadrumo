@@ -289,6 +289,11 @@ def _platform_resource_body(
                 f"Homebrew resource closure has an unsupported target subset for "
                 f"{resource.name}: {sorted(resource.platforms)!r}",
             )
+    if len(platform_targets) < 2:
+        # A single-architecture platform (macOS is ARM-only) has no split to
+        # emit: every applicable resource already went out above, and running
+        # the loop below would emit each of them a second time.
+        return "".join(blocks)
     for architecture, suffix in (("arm", "arm64"), ("intel", "x86_64")):
         target = f"{platform}-{suffix}"
         selected_resources = tuple(
