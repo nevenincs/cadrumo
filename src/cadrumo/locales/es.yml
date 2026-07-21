@@ -408,7 +408,8 @@ aggregation:
       source_kinds_mismatch: Los tipos de fuente no coinciden con la taxonomia aceptada.
   source_mesh:
     errors:
-      ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
+      ambiguous_source_disposition: 'Error interno: un tipo de fuente de vinculación
+        está en más de un estado de la malla de fuentes, o en ninguno.'
       binding_source_mismatch: source_kind y binding_source se refieren a familias
         de origen de binding distintas.
       duplicate_binding_owner: 'Error interno: propietario de vinculación duplicado
@@ -417,7 +418,8 @@ aggregation:
         duplicado en la malla de fuentes.'
       duplicate_relation_owner: 'Error interno: propietario de relación duplicado
         en la malla de fuentes.'
-      duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
+      duplicate_row_binding_owner: 'Error interno: propietario de vinculación de fila
+        duplicado en la malla de fuentes.'
       out_of_window_summary_date_span_invalid: La fecha máxima de presentación de
         un resumen fuera de ventana no puede ser anterior a su fecha mínima.
       out_of_window_summary_incomplete: Un resumen fuera de ventana debe establecer
@@ -430,16 +432,22 @@ aggregation:
       relation_provenance_incomplete: La procedencia de la relación debe incluir modelo
         origen, ejercicio, periodos, casillas, referencias legales y referencias de
         origen.
-      row_binding_index_invalid: aggregation.source_mesh.errors.row_binding_index_invalid
-      row_binding_value_invalid: aggregation.source_mesh.errors.row_binding_value_invalid
+      row_binding_index_invalid: 'Error interno: el índice de fila de la vinculación
+        debe ser mayor o igual que 1.'
+      row_binding_value_invalid: 'Error interno: el valor decimal de la vinculación
+        de fila no es válido.'
       source_transaction_ids_blank: Los identificadores de transacción del mallado
         de fuentes no pueden contener blancos.
       source_transaction_ids_duplicate: Los identificadores de transacción del mallado
         de fuentes deben ser únicos.
-      unresolved_binding_ids_blank: aggregation.source_mesh.errors.unresolved_binding_ids_blank
-      unresolved_binding_ids_duplicate: aggregation.source_mesh.errors.unresolved_binding_ids_duplicate
-      unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
-      unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
+      unresolved_binding_ids_blank: 'Error interno: los ids de vinculación sin resolver
+        no pueden estar en blanco.'
+      unresolved_binding_ids_duplicate: 'Error interno: los ids de vinculación sin
+        resolver no pueden estar duplicados.'
+      unresolved_relation_ids_blank: 'Error interno: los ids de relación sin resolver
+        no pueden estar en blanco.'
+      unresolved_relation_ids_duplicate: 'Error interno: los ids de relación sin resolver
+        no pueden estar duplicados.'
 application:
   auth:
     acquisition_lock:
@@ -618,19 +626,28 @@ application:
         requiere confirmación explícita.
       archive_schema_version_from_future: La versión de esquema del archivo {archive_schema_version}
         es más reciente de lo que admite esta aplicación (hasta {max_supported}).
-      delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
-      delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
-      import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
+      delete_active_bucket: No se puede eliminar el bucket activo; cambia primero
+        a otro perfil con aeat config switch NAME.
+      delete_not_confirmed: Esta operación es destructiva. Vuelve a ejecutar con --yes
+        para confirmar.
+      import_bucket_collision: Ya existe un bucket con el id {bucket_id}; usa --force-replace
+        para sobrescribirlo.
       import_missing_filing_baseline: 'El perfil del archivo de bucket no tiene campos
         de identidad para presentar: %{missing_flags}. Repara el perfil de origen
         y vuelve a exportarlo.'
-      import_payload_invalid: application.bucket_maintenance.errors.import_payload_invalid
-      import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
-      import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
-      import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      import_payload_invalid: El contenido del archivo de perfil no es válido o está
+        dañado.
+      import_recovery_passphrase_required: Este archivo incluye un sobre de recuperación
+        cifrado; indica la frase de contraseña de recuperación para importarlo.
+      import_recovery_wrap_invalid: La frase de contraseña de recuperación indicada
+        no pudo desenvolver el sobre cifrado.
+      import_recovery_wrap_missing: El archivo declara un sobre de recuperación pero
+        no contiene sus bytes; el archivo está incompleto o dañado.
       restore_not_archived: El bucket no está archivado (dado de baja); no hay nada
         que recuperar.
-      unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
+      unsupported_archive_schema_version: La versión de esquema del archivo {archive_schema_version}
+        es anterior a la admitida por esta aplicación; no puede restaurarse sin una
+        migración.
   calculations:
     iva_compensation:
       errors:
@@ -676,15 +693,19 @@ application:
       errors:
         active_profile_load_failed: 'No se pudo cargar el perfil activo de presentación:
           %{reason}.'
-        ambiguous_casilla_schema: application.filing.runtime.errors.ambiguous_casilla_schema
+        ambiguous_casilla_schema: 'Error interno: el esquema de casillas en tiempo
+          de ejecución es ambiguo (ids de casilla.id duplicados o referencias de fórmula
+          colgantes).'
         blank_modelo_selection: La selección de modelos solicitada no puede contener
           identificadores vacios.
-        filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
+        filing_year_period_mismatch: 'Error interno: el ejercicio de declaración no
+          coincide con el periodo indicado.'
         filing_year_period_pair: filing_year y period deben indicarse juntos.
         modelo_not_in_registry: El modelo %{modelo} no está presente en el registro
           de cálculo.
         modelo_revision_missing: El modelo %{modelo} no tiene revisiones.
-        period_type: application.filing.runtime.errors.period_type
+        period_type: 'Error interno: se requiere un objeto Period para el proveedor
+          de esquema en tiempo de ejecución; se recibió {period_type}.'
         provider_year_missing: El modelo %{modelo} revisión %{revision} no tiene ejercicio
           de proveedor.
         registry_empty: La raíz del registro %{registry_root_name} no tiene definiciones
@@ -841,14 +862,14 @@ application:
       amendment_kind_not_permitted: 'El tipo de rectificación solicitado {requested_kind}
         no está legalmente disponible para el modelo {modelo}, ejercicio {filing_year},
         período {period}. Tipos aceptados para este período: {accepted_kinds}.'
-      amendment_registry_root_missing: Registry root %{registry_root} is missing;
-        amendment overrides cannot be validated.
-      amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
-        filing year %{filing_year}, period %{period} could not be resolved; amendment
-        overrides cannot be validated.
-      amendment_unknown_casillas: 'Amendment overrides target casilla ids that are
-        not declared in registry modelo %{modelo}, filing year %{filing_year}, period
-        %{period}: %{casillas}.'
+      amendment_registry_root_missing: Falta la raíz del registro {registry_root};
+        no se pueden validar las sobrescrituras de rectificación.
+      amendment_registry_snapshot_unresolved: No se pudo resolver el snapshot de registro
+        para el modelo {modelo}, ejercicio {filing_year}, periodo {period}; no se
+        pueden validar las sobrescrituras de rectificación.
+      amendment_unknown_casillas: 'Las sobrescrituras de rectificación apuntan a ids
+        de casilla no declarados en el registro para el modelo {modelo}, ejercicio
+        {filing_year}, periodo {period}: {casillas}.'
       amendment_verification_refused_missing_casillas: 'La enmienda está incompleta:
         faltan identificadores de casilla requeridos en el mapa corregido.'
       amendment_verification_refused_no_snapshot: El registro no tiene una instantánea
@@ -913,10 +934,10 @@ application:
         reserva esta casilla para el selector de miembro.
       calculate_text_input_empty: El valor de --casilla corresponde a una casilla
         de texto y no puede estar vacío.
-      calculation_registry_root_missing: Registry root %{registry_root} is missing;
-        modelo calculation cannot continue.
-      calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
-        filing year %{filing_year}, period %{period} could not be resolved.
+      calculation_registry_root_missing: Falta la raíz del registro {registry_root};
+        el cálculo del modelo no puede continuar.
+      calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
+        registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period}.
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
       caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
         bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
@@ -944,7 +965,8 @@ application:
       export_operator_profile_missing: La exportación necesita el nombre del operador
         del perfil activo, pero no existe un perfil persistido; completa identity.surnames
         e identity.name antes de exportar.
-      export_output_path_invalid: application.modelo.errors.export_output_path_invalid
+      export_output_path_invalid: 'La ruta de salida de exportación no es válida:
+        {output_path} ({reason}).'
       export_period_unmappable: La unidad de trabajo %{work_unit_id} contiene el periodo
         %{period}, que no se puede asignar a un periodo de registro.
       export_revision_state_refused: La revisión de cálculo %{calculation_revision_id}
@@ -957,48 +979,51 @@ application:
         requiere un evidence_reference_id no vacío.
       external_filing_no_casilla_values: La importación de declaración externa requiere
         al menos un valor de casilla; el mapeo aportado está vacío.
-      external_import_duplicate_revision: Calculation revision %{calculation_revision_id}
-        already exists in the catalogue; an identical import was already recorded.
+      external_import_duplicate_revision: La revisión de cálculo %{calculation_revision_id}
+        ya existe en el catálogo; ya se había registrado una importación idéntica.
       external_import_justificante_mismatch: La evidencia de importación externa %{evidence_reference_id}
         no coincide con el modelo %{modelo}, ejercicio %{filing_year}, periodo %{period}.
       external_import_justificante_missing: La evidencia de importación externa %{evidence_reference_id}
         (%{evidence_kind}) no está registrada como artefacto de justificante persistido.
-      external_import_registry_root_missing: Registry root %{registry_root} is missing;
-        imported casilla ids cannot be validated.
-      external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
-        filing year %{filing_year}, period %{period} could not be resolved; imported
-        casilla ids cannot be validated.
+      external_import_registry_root_missing: Falta la raíz del registro {registry_root};
+        no se pueden validar los ids de casilla importados.
+      external_import_registry_snapshot_unresolved: No se pudo resolver el snapshot
+        de registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period};
+        no se pueden validar los ids de casilla importados.
       external_import_tax_id_missing: La evidencia de importación externa %{evidence_reference_id}
         (%{evidence_kind}) requiere el NIF del contribuyente antes de vincularse a
         un artefacto de justificante.
-      external_import_unknown_casillas: 'External-filing import carries casilla ids
-        that are not declared in registry modelo %{modelo}, filing year %{filing_year},
-        period %{period}: %{casillas}.'
+      external_import_unknown_casillas: 'La importación de la declaración externa
+        contiene ids de casilla no declarados en el registro para el modelo {modelo},
+        ejercicio {filing_year}, periodo {period}: {casillas}.'
       filing_record_not_found: No existe ninguna declaración registrada con id=%{filing_record_id}.
-      iva_wallet_backend_casilla_conflict: Backend casilla input for Modelo 303 prior
-        compensation conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_backend_casilla_conflict: El valor de casilla del backend para la
+        compensación previa del Modelo 303 entra en conflicto con la decisión de conciliación
+        de la cartera de IVA.
       iva_wallet_blocked: 'La conciliación del saldo IVA está bloqueada para el Modelo
         303 (%{divergence}): %{reason}'
-      iva_wallet_caller_binding_conflict: Caller binding for Modelo 303 prior compensation
-        conflicts with the IVA wallet reconciliation decision.
-      iva_wallet_caller_casilla_conflict: Caller casilla input for Modelo 303 prior
-        compensation conflicts with the IVA wallet reconciliation decision.
+      iva_wallet_caller_binding_conflict: El binding aportado por el operador entra
+        en conflicto con la decisión de conciliación de la cartera de IVA para la
+        compensación previa del Modelo 303.
+      iva_wallet_caller_casilla_conflict: El valor de casilla aportado por el operador
+        entra en conflicto con la decisión de conciliación de la cartera de IVA para
+        la compensación previa del Modelo 303.
       iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
         IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
         el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
         YEAR --period PERIOD --amount 0 --confirm`.'
-      iva_wallet_selected_amount_missing: IVA wallet reconciliation decision has no
-        selected amount.
-      iva_wallet_supplied_decision_mismatch: Supplied IVA wallet reconciliation decision
-        does not match the persisted decision.
-      iva_wallet_target_mismatch: IVA wallet decision target %{target_year}/%{target_period}
-        does not match work unit %{filing_year}/%{period}.
-      iva_wallet_taxpayer_identity_missing: IVA wallet reconciliation cannot continue
-        without the work-unit taxpayer identity.
-      iva_wallet_taxpayer_mismatch: IVA wallet reconciliation taxpayer does not match
-        the Modelo 303 work unit.
-      iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
-        %{decision_type}.'
+      iva_wallet_selected_amount_missing: La decisión de conciliación de la cartera
+        de IVA no tiene un importe seleccionado.
+      iva_wallet_supplied_decision_mismatch: La decisión de conciliación de la cartera
+        de IVA aportada no coincide con la decisión persistida.
+      iva_wallet_target_mismatch: El objetivo de la decisión de cartera de IVA %{target_year}/%{target_period}
+        no coincide con la unidad de trabajo %{filing_year}/%{period}.
+      iva_wallet_taxpayer_identity_missing: La conciliación de la cartera de IVA no
+        puede continuar sin la identidad del contribuyente de la unidad de trabajo.
+      iva_wallet_taxpayer_mismatch: El contribuyente de la conciliación de la cartera
+        de IVA no coincide con la unidad de trabajo del Modelo 303.
+      iva_wallet_unsupported_decision_type: 'Tipo de decisión de cartera de IVA no
+        admitido: %{decision_type}.'
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
         %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
         %{period}` before calculating.'
@@ -1129,8 +1154,8 @@ application:
         casilla %{casilla_id} en el cálculo del M100, por ejemplo mediante `aeat app
         modelo work calculate ... --binding %{casilla_id}=%{total_base}`, para que
         la renta del régimen de atribución quede declarada.
-      cross_casilla_invariant_next_action: Ensure all casillas required by predicate
-        %{predicate_id} are non-zero before verifying.
+      cross_casilla_invariant_next_action: Asegúrate de que todas las casillas requeridas
+        por el predicado %{predicate_id} sean distintas de cero antes de verificar.
       cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
         %{expression}'
       cross_period_dependency_unclean: 'la dependencia entre períodos no está limpia:
@@ -1292,8 +1317,8 @@ application:
       modelo_714_cuota_integra_implica_total_cuota_integra: La cuota íntegra es positiva
         pero la cuota íntegra total es cero; revise la transcripción de la cuota íntegra
         total.
-      registry_snapshot_unresolved: registry snapshot for modelo=%{modelo} filing_year=%{filing_year}
-        period=%{period} could not be resolved
+      registry_snapshot_unresolved: no se pudo resolver el snapshot de registro para
+        el modelo=%{modelo} ejercicio=%{filing_year} periodo=%{period}
       representante_fiscal_required:
         next_action: Designe un representante fiscal en España estableciendo profile.representante_fiscal_nif
           mediante el comando `aeat config profile edit`. El TRLIRNR Art. 10 exige
@@ -1511,8 +1536,9 @@ application:
       edit_missing_filing_baseline: 'Esta edición dejaría incompletos los datos de
         identidad para presentar modelos. Añade estos flags al mismo comando y vuelve
         a ejecutarlo: %{missing_flags}.'
-      persist_answers_edit_requires_supplied_question_ids: persist_answers(mode='edit')
-        requires supplied_question_ids — edit is a patch, not a full rewrite.
+      persist_answers_edit_requires_supplied_question_ids: 'persist_answers(mode=''edit'')
+        requiere supplied_question_ids: la edición es un parche, no una reescritura
+        completa.'
       persist_patch_unknown_question_id: El parche del asistente referencia un id
         de pregunta desconocido.
       profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
@@ -2921,15 +2947,16 @@ cli:
           list_help: Listar los ámbitos de apoderado aceptados
         status_help: Mostrar la configuración de apoderado activa
       certificate:
-        check_help: Check expiry and rotation health for every registered certificate
-          source
-        help: Manage named certificate sources for the certificate auth provider
+        check_help: Comprueba la caducidad y el estado de rotación de cada fuente
+          de certificado registrada
+        help: Gestiona fuentes de certificado con nombre para el proveedor de autenticación
+          por certificado
         list_help: List every registered certificate source
         register:
-          file_help: Path to the PKCS#12 (.p12/.pfx) bundle
+          file_help: Ruta al paquete PKCS#12 (.p12/.pfx)
           friendly_name_help: Optional human-readable label distinct from --name
-          name_help: Identifier for this certificate source (for example, personal
-            or apoderado-acme)
+          name_help: Identificador de esta fuente de certificado (por ejemplo, personal
+            o apoderado-acme)
         register_help: Register or re-point a named certificate source
         remove:
           name_help: Registered certificate source to remove
@@ -2947,7 +2974,7 @@ cli:
             registrada
         select:
           name_help: Registered certificate source to activate
-        select_help: Select the active certificate source
+        select_help: Selecciona la fuente de certificado activa
       configure_help: Configurar el proveedor de autenticación activo
       diagnostics:
         help: Inspecciona los diagnósticos de autenticación cifrados.
@@ -3204,19 +3231,19 @@ cli:
           `aeat config google folder set <id>` primero
     init:
       activity_help: Economic activity description (e.g. 761.1, programador)
-      auth_provider_help: Authentication provider ID to use for the profile
-      certificate_password_env_help: Environment variable name containing the certificate
-        password
-      certificate_path_help: Path to the .p12 or .pfx certificate file
+      auth_provider_help: Id del proveedor de autenticación a usar para el perfil
+      certificate_password_env_help: Nombre de la variable de entorno que contiene
+        la contraseña del certificado
+      certificate_path_help: Ruta al archivo de certificado .p12 o .pfx
       drafts_dir_help: Directory to store local filing drafts
-      dry_run_help: Report changes without modifying the configuration
+      dry_run_help: Informa de los cambios sin modificar la configuración
       from_help: Source profile ID to import settings from
       help: Inicializa un nuevo perfil activo.
       iva_regime_help: IVA regime (general, simplificado, exento, etc.)
       manuals_root_help: Root directory for AEAT technical manuals
-      non_interactive_help: Run without prompting for user input
+      non_interactive_help: Ejecuta sin pedir datos al operador
       output_language_help: Primary language for CLI output (en, es, ca)
-      profile_name_help: Unique identifier for this configuration profile
+      profile_name_help: Identificador único de este perfil de configuración
       quiet_help: Oculta el mensaje de éxito después de inicializar
       submissions_dir_help: Directory to store submitted filing receipts
       success:
@@ -3571,7 +3598,8 @@ cli:
       integrity_attribution_help: Agrupa las filas de objetos seguros no descifrables
         por metadatos seguros.
       integrity_help: Comprobar la integridad de los objetos seguros y del registro.
-      integrity_namespace_help: Restrict the integrity probe to one namespace.
+      integrity_namespace_help: Restringe la comprobación de integridad a un único
+        espacio de nombres.
       integrity_objects_help: Comprueba la verificación de etiquetas AES-256-GCM en
         un espacio de nombres (o en todos).
       integrity_registry_help: Ejecuta la validación completa del registro (la comprobación
@@ -4568,7 +4596,7 @@ cli:
         profile_rename: Renombrar un perfil de contribuyente.
         profile_show: Mostrar los datos del perfil activo.
         profile_status: Mostrar el estado del perfil activo.
-        profile_switch: Switch to a profile and make it the active one.
+        profile_switch: Cambia a un perfil y lo convierte en el activo.
         reset_resume: Continúa una operación de reinicio incompleta.
         reset_start: Inicia un nuevo reinicio irreversible de todos los perfiles locales.
         reset_status: Muestra el estado de una operación de reinicio sin modificar
@@ -5000,7 +5028,8 @@ cli:
 core:
   profile:
     errors:
-      output_language_type: core.profile.errors.output_language_type
+      output_language_type: El idioma de salida del perfil debe ser un código de idioma
+        admitido en formato texto.
       registration_duplicate_callable: La implementación de respuestas de proyecto
         se registró dos veces con distintos invocables; debe registrarse exactamente
         una vez.
@@ -5584,7 +5613,8 @@ errors:
       de revisiones de cálculo.
     fail_modelo_filing_record_persistence: No se pudo guardar o leer el catálogo de
       declaraciones registradas.
-    fail_modelo_locale_manager: errors.fail.fail_modelo_locale_manager
+    fail_modelo_locale_manager: 'Error interno: la gestión de traducciones locales
+      de esquemas de modelo ha fallado.'
     fail_modelo_verification_report_persistence: No se pudo guardar o leer el catálogo
       de informes de verificación.
     fail_modelo_work_unit_persistence: No se pudo guardar o leer el catálogo de unidades
@@ -5702,7 +5732,8 @@ errors:
       de integridad (hash, tamaño o etiqueta).
     integrity_outbound_storage_corruption: Un fichero de metadatos sidecar contiene
       un campo con un tipo inesperado; el objeto de almacenamiento está corrupto.
-    integrity_period: errors.integrity.integrity_period
+    integrity_period: 'Error interno: no se pudo construir un periodo válido a partir
+      del año y el código indicados.'
     integrity_portals_portal_integrity: El registro de portales de la AEAT infringe
       una invariante estructural.
     integrity_profile_answer_type: Un campo de respuesta de perfil recibió un tipo
@@ -5772,10 +5803,10 @@ errors:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
       no por un problema de datos almacenados. Consulte los registros de diagnóstico
       para ver qué falló.
-    internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
-      close the active session before re-entering.'
-    internal_master_key_type: 'Internal error: master-key operation received a value
-      of the wrong type.'
+    internal_master_key_reentrant: 'Error interno: el proveedor de clave maestra se
+      invocó de forma reentrante; cierra la sesión activa antes de volver a entrar.'
+    internal_master_key_type: 'Error interno: la operación de clave maestra recibió
+      un valor de tipo incorrecto.'
     internal_observability_run_context_missing: 'Error interno: se intentó registrar
       un evento de telemetría fuera de un contexto de ejecución activo.'
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
@@ -5850,15 +5881,24 @@ errors:
       Fundamento: instrucciones AEAT Brexit IVA NIF-IVA / Modelo 349.'
     modelo_ambiguous_semantic_role_casilla: Mas de una casilla usa el rol semantico
       %{semantic_role}; usa el casilla.id canónico exacto.
-    modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
-    modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
-    modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
-    modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
-    modelo_calculate_input: errors.refused.modelo_calculate_input
-    modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
-    modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
-    modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
-    modelo_calculate_text_input: errors.refused.modelo_calculate_text_input
+    modelo_calculate_binding_input: La sobrescritura de --binding indicada no se pudo
+      resolver para la revisión activa.
+    modelo_calculate_casilla_input: La sobrescritura de casilla indicada no se pudo
+      resolver para la revisión activa.
+    modelo_calculate_decimal_input: El valor de sobrescritura de cálculo indicado
+      no tiene forma decimal.
+    modelo_calculate_detail_rows: Las filas de detalle indicadas incumplen las condiciones
+      de cálculo del modelo.
+    modelo_calculate_input: El valor de entrada de cálculo del modelo indicado por
+      el operador no es válido.
+    modelo_calculate_relation_input: La sobrescritura de --relation indicada no se
+      pudo resolver para la revisión activa.
+    modelo_calculate_semantic_role: La revisión del registro no declara el rol semántico
+      requerido por el atajo.
+    modelo_calculate_shortcut_input: Las entradas agrupadas del atajo de cálculo están
+      incompletas.
+    modelo_calculate_text_input: El valor de sobrescritura de --casilla indicado no
+      es válido para una casilla de texto.
     modelo_calculation_revision_selector_ambiguous: El selector de revisión de cálculo
       coincide con más de una revisión; refine el selector.
     modelo_calculation_revision_selector_state: La revisión de cálculo seleccionada
@@ -5874,7 +5914,7 @@ errors:
       o selecciona un perfil y vuelve a intentarlo.
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
-    modelo_revision_pick: errors.refused.modelo_revision_pick
+    modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
     modelo_work_period_token: Periodo de modelo no válido.
     modelo_work_registry_year_mismatch: La revisión de registro seleccionada no cubre
       el ejercicio fiscal solicitado.
@@ -6061,8 +6101,9 @@ errors:
     refused_outbound_storage_validation: Los parámetros de la operación de almacenamiento
       no superaron la validación.
     refused_output_format: El formato de salida solicitado no es compatible.
-    refused_pension_reduccion_computation: A pension reducción computation input violated
-      a numeric pre-condition. Correct the supplied amounts.
+    refused_pension_reduccion_computation: La comprobación de la reducción de un plan
+      de pensiones (DT 12ª LIRPF) recibió un importe que incumple una condición numérica.
+      Corrige los importes indicados.
     refused_profile_already_exists: Ya existe un perfil con esos datos.
     refused_profile_asset_validation: Un registro de activo del perfil no superó la
       validación.
@@ -6144,9 +6185,9 @@ errors:
     refused_wizard_validation: Una respuesta del asistente no superó la validación.
       Corrige el valor indicado.
     refused_workflow_aborted: El flujo de trabajo se canceló.
-    refused_workflow_input_mismatch: The workflow input request does not match the
-      calculation revision. Run aeat app modelo work calculate to produce a fresh
-      revision.
+    refused_workflow_input_mismatch: La solicitud de entrada del flujo de trabajo
+      no coincide con la revisión de cálculo. Ejecuta aeat app modelo work calculate
+      para generar una revisión nueva.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
     submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
@@ -6233,7 +6274,8 @@ live:
     expediente_not_found: No se encontró el expediente solicitado en la AEAT.
     iva_history_modelo_303_only: El historial de IVA solo está disponible para el
       Modelo 303.
-    target_period_year_mismatch: live.errors.target_period_year_mismatch
+    target_period_year_mismatch: El año objetivo no coincide con el ejercicio del
+      periodo objetivo.
     year_range_invalid: El rango de ejercicios indicado no es válido.
 locales:
   cli:
@@ -6339,7 +6381,7 @@ profile:
       territorio.
     not_configured: No hay ningún perfil de residencia fiscal configurado para RENTA.
   keys:
-    description: Profile configuration keys and their descriptions
+    description: Claves de configuración del perfil y sus descripciones
     tax:
       id: Identificador fiscal (NIF/CIF/DNI/NIE)
   validation:
@@ -6564,7 +6606,7 @@ wizard:
       title: Capacidades de servicios
     certificate:
       path:
-        prompt: Enter the path to your digital certificate (.p12, .pfx)
+        prompt: Introduce la ruta a tu certificado digital (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -7188,11 +7230,11 @@ wizard:
       tax_id_present: 'Identificación fiscal: comprobación de que el perfil tiene
         un DNI, NIE, NIF o CIF.'
   test:
-    description: Test your configuration and connectivity
+    description: Prueba tu configuración y conectividad
     example:
       choices:
         'yes':
-          description: Select this to confirm
+          description: Selecciona esto para confirmar
           label: Sí
       help: Example help text for testing
       prompt: Example test question
