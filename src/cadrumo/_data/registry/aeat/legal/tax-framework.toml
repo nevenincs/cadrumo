@@ -235,10 +235,36 @@ reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "Ley 40/2015 art. 38: la sede electrónica de las Administraciones Públicas."
 required_text = ["La sede electrónica es aquella dirección electrónica, disponible"]
 
+[sources."aeat-calendario-contribuyente-2023"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2023.pdf"
+sha256 = "4c3810a801129ea6651fd09de84ea628db9c984ec02b19d3c9fca6c7737a8eac"
+bytes = 1899520
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2023_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-calendario-contribuyente-2024"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2024.pdf"
+sha256 = "76b75bd6e6d71168879b23868f80b80d13b7b32eb3420db463e591b38d1a3c04"
+bytes = 2185216
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2024_es_es.pdf"
+review_status = "reviewed"
+
 [sources."aeat-calendario-contribuyente-2025"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
-kind = "instructions"
+kind = "manual_pdf"
 corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2025.pdf"
 sha256 = "dfdcae8889ab5fecffa368e235d933676c8a479915e09b107734f8339eed0f50"
 bytes = 2206696
@@ -246,6 +272,19 @@ retrieved_at = 2026-07-01
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Calendario_Contribuyente/Anyos_anteriores/Calendario_del_contribuyente_2025_es_es.pdf"
+review_status = "reviewed"
+
+[sources."aeat-calendario-contribuyente-2026"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/calendars/files/calendario-contribuyente-2026.pdf"
+sha256 = "8bc91454ece63a0139f1c0948637239a8c7b2b20fe17dd534b266cb46c0e631b"
+bytes = 2327753
+retrieved_at = 2026-07-21
+applies_from = 2026-01-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/calendario-contribuyente/calendario-contribuyente-2026.html"
 review_status = "reviewed"
 
 [sources."aeat-calendario-contribuyente-2026-hasta-2-marzo"]

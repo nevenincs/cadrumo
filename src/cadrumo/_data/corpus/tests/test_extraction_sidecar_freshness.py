@@ -23,6 +23,7 @@ _CORPUS_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "corpus"
 _MANUAL_CORPUS_TEXT_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_corpus_text"
 _CORPUS_TEXT_SUFFIX = ".corpus_text.json"
 _PART_SUFFIX = re.compile(r"\.part-\d+$")
+_SUPPORTED_CALENDAR_YEARS = range(2023, 2027)
 
 
 def _sha256_of(path: Path) -> str:
@@ -157,3 +158,27 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
 
     assert sidecars, f"no manual corpus text sidecars found under {_MANUAL_CORPUS_TEXT_ROOT}"
     assert not failures, f"{len(failures)} stale or malformed manual PDF sidecars:\n" + "\n".join(failures[:20])
+
+
+def test_supported_taxpayer_calendars_ship_pdf_corpus_text() -> None:
+    """Every supported campaign year ships its official calendar PDF and text sidecar."""
+    calendar_root = _CORPUS_ROOT / "aeat_official" / "calendars" / "files"
+    calendar_sidecar_root = _MANUAL_CORPUS_TEXT_ROOT / "aeat_official" / "calendars" / "files"
+    missing: list[str] = []
+
+    for year in _SUPPORTED_CALENDAR_YEARS:
+        pdf_name = f"calendario-contribuyente-{year}.pdf"
+        pdf_path = calendar_root / pdf_name
+        sidecar_path = calendar_sidecar_root / f"{pdf_name}{_CORPUS_TEXT_SUFFIX}"
+        if not pdf_path.is_file():
+            missing.append(pdf_path.relative_to(_REPO_ROOT).as_posix())
+        if not sidecar_path.is_file():
+            missing.append(sidecar_path.relative_to(_REPO_ROOT).as_posix())
+            continue
+
+        sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        expected_title = f"calendario del contribuyente {year}"
+        if expected_title not in sidecar["normalised_text"]:
+            missing.append(f"{sidecar_path.relative_to(_REPO_ROOT).as_posix()}: missing {expected_title!r}")
+
+    assert not missing, "supported taxpayer calendar corpus artifacts are missing:\n" + "\n".join(missing)
