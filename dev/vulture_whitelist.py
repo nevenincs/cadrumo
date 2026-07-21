@@ -21,6 +21,11 @@ consumed in the body:
 * ``source_citation`` — a keyword-only parameter on
   ``dev.docs.terminology_handbook._curation.set_language_field`` kept as part of the public
   curation API signature.
+* ``sentences`` — the positional argument of ``StaticEmbeddingModel.encode`` on
+  the model2vec Protocol stub
+  (:mod:`cadrumo.application.corpus_search._model_loader`). The stub body is
+  ``...`` and callers invoke ``encode(texts)`` positionally; the name is the
+  model2vec ``StaticModel.encode`` keyword and is part of the structural type.
 
 Vulture marks a name "used" when it appears in a whitelist file. Referencing
 each name once here clears the false positive while leaving every other
@@ -59,3 +64,8 @@ def _reduce_ex(protocol: object) -> None:
 def _set_language_field(source_citation: object) -> None:
     """Mirror ``set_language_field`` keyword-only API parameter."""
     source_citation  # noqa: B018
+
+
+def _encode(sentences: object) -> None:
+    """Mirror ``StaticEmbeddingModel.encode`` positional parameter."""
+    sentences  # noqa: B018
