@@ -143,8 +143,10 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert formula.count("  on_linux do\n") == 1
     assert '    resource "secretstorage" do' in formula
     assert '    resource "jeepney" do' in formula
-    assert '    on_intel do\n      resource "greenlet" do' in formula
+    # macOS Intel is unsupported (ARM-only macOS): greenlet is Linux-common
+    # and no architecture-conditional block remains on the macOS side.
     assert '    resource "greenlet" do' in formula
+    assert "on_intel do" not in formula
     assert '    on_arm do\n      resource "greenlet" do' not in formula
 
 

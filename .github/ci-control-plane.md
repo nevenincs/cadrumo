@@ -30,7 +30,7 @@ machine, and up to three jobs can co-reside on one box:
 | Machine | Cores | Runners on it |
 | --- | --- | --- |
 | Windows/WSL build host (Ryzen 5900X, 12C/24T) | 24 logical | the Windows runner (Windows X64), plus two Linux X64 container runners |
-| macOS build host (Apple silicon) | 6 | the macOS ARM64 runner, the macOS X64 runner (via Rosetta), and a Linux ARM64 runner (via colima, VM capped at 4 CPUs) |
+| macOS build host (Apple silicon) | 6 | the macOS ARM64 runner and a Linux ARM64 runner (via colima, VM capped at 4 CPUs) |
 
 **Sizing rule:** the sum of co-resident workers must fit the machine's CPUs —
 size every parallel knob for worst-case co-residency (3 jobs/machine), never
@@ -39,7 +39,7 @@ for the whole box. Concretely: workstation lanes get explicit `-n 8`
 CI invocation (it grabs every logical CPU); the packaging campaign's lane
 pool and preflight pytest are sized per leg via
 `CADRUMO_PACKAGING_LANE_CONCURRENCY` / `CADRUMO_TEST_WORKERS`; the Homebrew
-matrix carries `max-parallel: 2` (three of its four legs live on the MacBook)
+matrix carries `max-parallel: 2` (two of its three legs live on the MacBook)
 and per-leg `HOMEBREW_MAKE_JOBS`. Local development keeps `-n auto` — the
 rule binds surfaces that can run CONCURRENTLY with other jobs on a shared
 machine.
