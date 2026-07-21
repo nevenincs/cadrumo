@@ -32,7 +32,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, Annotated, Any
+from typing import TYPE_CHECKING, Any
 
 import typer
 
@@ -65,6 +65,7 @@ from ._modelo_work_options import (
     _ModeloOpt,
     _PeriodOpt,
     _RevisionOpt,
+    _WizardOutputLanguageOpt,
     _WorkUnitIdArg,
     _YearOpt,
 )
@@ -116,10 +117,7 @@ def register_amend_wizard_commands(
         revision: _RevisionOpt = None,
         bucket_id: _BucketIdOpt = None,
         actor: _ActorOpt = None,
-        output_language_opt: Annotated[
-            OutputLanguage | None,
-            typer.Option("--output-language", help=tr("cli.app.modelo.work.output_language_help")),
-        ] = None,
+        output_language_opt: _WizardOutputLanguageOpt = None,
     ) -> None:
         """Walk the resolved work unit's current AEAT-attested filing through a guided amendment.
 
