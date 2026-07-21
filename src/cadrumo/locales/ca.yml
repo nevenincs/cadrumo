@@ -865,7 +865,7 @@ application:
       calculate_casilla_unknown: --casilla %{key} no és un casilla.id canònic d'aquesta
         revisió. Usa `aeat app modelo casillas <MODELO>` per llistar els casilla.id
         vàlids.
-      calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
+      calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no és decimal:
         %{value}'
       calculate_detail_casilla_unsupported: La casella %{key} identifica un camp de
         detall de perceptor/immoble del Model 180, no una casella decimal escalar.
@@ -1067,7 +1067,7 @@ application:
       work_unit_not_found: No s'ha trobat cap unitat de treball de modelo amb id=%{work_unit_id}.
       work_unit_revision_divergence: La unitat de treball %{work_unit_id} es va crear
         amb la revisió de registre %{work_unit_revision}, però la revisió determinada
-        per llei per al model %{modelo} %{filing_year} %{period} ara es %{law_revision}.
+        per llei per al model %{modelo} %{filing_year} %{period} ara és %{law_revision}.
         Torneu a crear la unitat de treball per vincular-la a la revisió actual.
       workflow_gate_no_pending_obligation: 'No hi ha cap obligació de presentació
         pendent per a aquest model/període en la data actual (la finestra d''obligació
@@ -1099,7 +1099,7 @@ application:
         declarat cap aportació del treballador a un pla d''ocupació ni contribució
         empresarial. Confirmeu que la reducció està recolzada per una contribució
         vinculada a l''ocupador que doni dret a l''increment de 8500 EUR; en cas contrari,
-        el límit aplicable es %{sublimit}.'
+        el límit aplicable és %{sublimit}.'
       attribution_received_uncaptured: 'la casella %{casilla_id} del règim d''atribució
         del M100 declara una base atribuïda (modelo=100 year=%{filing_year} value=%{casilla_value}
         EUR) però cap fet attribution_received no la fonamenta per a aquest exercici:
@@ -1755,7 +1755,7 @@ cli:
         percentage_help: Percentatge de deducció d'ús comú 0-100 (LIVA art. 106.Uno
           regla 3.a / art. 104.Dos).
         provenance_help: Origen del percentatge provisional segons LIVA art. 105.
-        provenance_not_electable: 'L''origen {provenance!r} no es declarable per l''operador;
+        provenance_not_electable: 'L''origen {provenance!r} no és declarable per l''operador;
           acceptats: {accepted}. El percentatge d''interrupció de l''art. 105.Cinco
           es calcula des del registre.'
         reference_help: Referència de l'autorització de l'AEAT (art. 105.Dos) o de
@@ -3452,7 +3452,7 @@ cli:
         prune_dry_run_help: Mostra una previsualització de quins sandboxes es descartarien
           sense descartar-los.
         prune_help: Descarta tots els sandboxes alhora.
-        prune_requires_yes: Descartar tots els sandboxes es destructiu. Torna a executar
+        prune_requires_yes: Descartar tots els sandboxes és destructiu. Torna a executar
           'aeat config profile sandbox prune --yes' per confirmar.
         prune_skipped_active_info: S'ha omès el sandbox actiu %{names}; canvia a un
           altre perfil i torna a executar 'aeat config profile sandbox prune --yes'
@@ -3751,8 +3751,8 @@ cli:
         %{namespaces}.'
       secure_objects_unreadable: '%{unreadable} fila(es) il·legible(s), %{readable}
         fila(es) llegible(s)'
-      state_backend_readable: L'emmagatzematge d'estat del flux de treball es llegible.
-      state_backend_unreadable: L'emmagatzematge d'estat del flux de treball no es
+      state_backend_readable: L'emmagatzematge d'estat del flux de treball és llegible.
+      state_backend_unreadable: L'emmagatzematge d'estat del flux de treball no és
         llegible.
       venv_in_sync: L'entorn virtual està sincronitzat.
       venv_stale: L'entorn virtual està desactualitzat.
@@ -3843,7 +3843,7 @@ cli:
         exclusively_non_deductible sense deducció; common al percentatge general de
         prorrata); només rellevant per a operacions suportades en un bucket amb prorrata
         especial.'
-      input_classification_inert: '--input-classification es inert per a l''exercici
+      input_classification_inert: '--input-classification és inert per a l''exercici
         {ejercicio}: no s''aplica cap elecció de prorrata especial, de manera que
         l''input es dedueix al percentatge general. Classificar tots els inputs de
         l''exercici també habilita la comprovació de prorrata especial obligatòria
@@ -3988,7 +3988,7 @@ cli:
       irpf_category_help: 'Id de categoria d''IRPF. Usa aeat app ledger categories.
         Factures professionals cobrades netes usen actividad_economica; lloguers pagats
         nets usen arrendamiento_local/arrendamiento_vivienda_afecto. Royalties/SGAE:
-        art. 25.4 pot ser capital mobiliario quan el contribuent no es l''autor; usa
+        art. 25.4 pot ser capital mobiliario quan el contribuent no és l''autor; usa
         actividad_economica només per activitat per compte propi sota LIRPF art. 27.'
       iva_amount_help: Import d'IVA
       iva_category_help: Categoria d'IVA explícita per a aquesta transacció (p. ex.
@@ -4003,7 +4003,7 @@ cli:
       llm_help: Demana a un proveïdor LLM local (claude/antigravity/codex) que classifiqui
         la transacció; vista prèvia per defecte, persisteix amb --apply.
       llm_provider_unavailable: 'El proveïdor LLM ''{provider}'' no està disponible:
-        el seu CLI no es al PATH. Instal-la el CLI de ''{provider}'' i assegura''t
+        el seu CLI no és al PATH. Instal-la el CLI de ''{provider}'' i assegura''t
         que sigui al PATH, o executa ''aeat app ledger providers'' per llistar els
         proveïdors disponibles.'
       llm_reason_label: motiu
@@ -4689,7 +4689,7 @@ cli:
       year_help: Any de declaració (p. ex. 2026).
     status:
       drafts_empty: No s'han trobat esborranys de declaracions desats.
-      drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; es
+      drafts_empty_with_work_units: No hi ha esborranys de declaracions desats; és
         normal i no afecta les teves unitats de treball de models mostrades a sota.
       drafts_present: '%{count} esborrany(s) de declaracions desats existeixen en
         aquest emmagatzematge local. Un espai buit acabat de crear normalment en té
@@ -4712,7 +4712,7 @@ cli:
         csv - importar moviments bancaris.'
       next_landing_command: '  aeat --help - tornar a la guia de comandes.'
       next_modelo_210_unsupported_command: '  aeat app modelo describe 210 - El Modelo
-        210 es visible per descobriment IRNR, però la creació local de treballs encara
+        210 és visible per descobriment IRNR, però la creació local de treballs encara
         no està suportada; presenta per AEAT Sede G320.'
       next_modelo_work_command: '  aeat app modelo work create - iniciar una declaració
         de model a partir de les dades del teu llibre.'
@@ -4935,7 +4935,7 @@ cli:
       tagline: Flux fiscal espanyol local-first per a autònoms.
       welcome_no_profile: Benvingut. Encara no hi ha cap perfil actiu configurat;
         comenceu per la configuració.
-      welcome_profile: Benvingut de nou. El perfil actiu es `%{profile}`.
+      welcome_profile: Benvingut de nou. El perfil actiu és `%{profile}`.
     language_help: Idioma de la sortida i del text d'ajuda (en, es, ca, hu).
     profile_help: Nom del perfil actiu.
     quiet_help: Mostra només els errors.
@@ -5173,7 +5173,7 @@ errors:
       assignat.
     bound_input_smuggled_without_binding_value: 'Error intern: casella d''entrada
       vinculada passada sense valor de vinculació.'
-    bound_projection_inconsistent: 'Error intern: la projecció vinculada es inconsistent.'
+    bound_projection_inconsistent: 'Error intern: la projecció vinculada és inconsistent.'
     bracket_negative_base: El paràmetre escalonat {parameter_id} no accepta una base
       negativa {base}.
     bracket_no_coverage: El paràmetre escalonat {parameter_id} no té cap tram que
@@ -5955,7 +5955,7 @@ errors:
     refused_iva_compensation_decimal_parse: 'Refusat: l''import de compensació d''IVA
       no s''ha pogut interpretar com a decimal.'
     refused_iva_compensation_year_range: 'Refusat: l''exercici de compensació d''IVA
-      es fora del rang acceptat.'
+      és fora del rang acceptat.'
     refused_iva_wallet_reconciliation_invariant: Les entrades de conciliació de la
       cartera IVA incompleixen un invariant obligatori. Comproveu la configuració
       d'antiguitat de la cartera i torneu-ho a intentar.
@@ -6031,7 +6031,7 @@ errors:
       perfil. Selecciona un règim admès.
     refused_profile_inventory_validation: Un llibre d'inventari del perfil no ha superat
       la validació.
-    refused_profile_label_ambiguous: 'Refusat: l''etiqueta del perfil es ambigua.'
+    refused_profile_label_ambiguous: 'Refusat: l''etiqueta del perfil és ambigua.'
     refused_profile_lifo_forbidden: La valoració d'existències pel mètode LIFO no
       està admesa fiscalment. Fes servir FIFO, preu mitjà ponderat o cost mitjà.
     refused_profile_logout_override: El tancament de sessió no pot canviar un perfil
