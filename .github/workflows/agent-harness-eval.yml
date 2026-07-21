@@ -51,7 +51,7 @@ jobs:
 
       - name: Cadrumo agent-harness eval surface
         # -n 8, never -n auto: three runners share this machine's 24 logical
-        # CPUs (machine-aware sizing, .github/README.md).
+        # CPUs (machine-aware sizing, .github/ci-control-plane.md).
         run: >-
           uv run --no-sync pytest -n 8
           src/cadrumo/agent
