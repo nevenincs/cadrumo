@@ -8,12 +8,18 @@ workflow cannot provide: it fires even when a job fails, cancels, or times out.
 
 ## Fleet
 
-| Runner name           | Platform | Location                                              | Script               |
-| --------------------- | -------- | ----------------------------------------------------- | -------------------- |
-| `gw-workstation-win`  | Windows  | `C:\actions-runner`                                   | `cleanup-windows.ps1`|
-| `gw-workstation-wsl`  | Linux    | docker container `cadrumo-runner-linux`               | `cleanup-linux.sh`   |
-| `gw-workstation-wsl-2`| Linux    | docker container `cadrumo-runner-linux-2`             | `cleanup-linux.sh`   |
-| `macbook-neo`         | macOS    | `~/actions-runner` (ssh `gergely.wootsch@gergelys-macbook-neo`) | `cleanup-macos.sh` |
+Runners are identified here by role, not by machine name — host names are
+operator-identifying and are kept out of committed text (gated by
+`dev/packaging/tests/test_doc_privacy.py`). Substitute your own host wherever a
+`<...>` placeholder appears.
+
+| Role                    | Labels                       | Platform | Location                                  | Script               |
+| ----------------------- | ---------------------------- | -------- | ----------------------------------------- | -------------------- |
+| Windows build host      | `self-hosted, Windows, X64`  | Windows  | `C:\actions-runner`                       | `cleanup-windows.ps1`|
+| Linux container runner  | `self-hosted, Linux, X64`    | Linux    | docker container `cadrumo-runner-linux`   | `cleanup-linux.sh`   |
+| Linux container runner 2| `self-hosted, Linux, X64`    | Linux    | docker container `cadrumo-runner-linux-2` | `cleanup-linux.sh`   |
+| macOS build host        | `self-hosted, macOS, ARM64`  | macOS    | `~/actions-runner`                        | `cleanup-macos.sh`   |
+| Linux ARM container     | `self-hosted, Linux, ARM64`  | Linux    | colima container `cadrumo-runner-mac-arm` | `cleanup-linux.sh`   |
 
 The two Linux runners are docker containers that mount the host docker socket,
 so the smoke suite's nested containers create anonymous volumes and dangling
@@ -52,7 +58,7 @@ Every hook, in order:
 - Never touches the reused checkout's `.venv`.
 - Never touches named docker volumes (`cadrumo-runner-state*`) or the running
   runner containers — docker `prune` only removes **unreferenced** objects.
-- Never touches real financial data (`C:\Users\hello\AppData\Local\aeat`).
+- Never touches real financial data (`%LOCALAPPDATA%\aeat`).
 - Never touches the operator's real Homebrew packages — only `cadrumo-smoke*`.
 - **Always exits 0.** A cleanup failure logs a note and is swallowed; it can
   never redden a green build.
@@ -69,7 +75,7 @@ run at most once every 6h via marker files in `<work-root>/.hygiene/`.
 The hook is enabled per runner by adding the environment variable to the runner
 root's `.env` file and restarting the runner service.
 
-### Windows (`gw-workstation-win`)
+### Windows build host
 
 ```powershell
 # copy the script into the runner root (out of the reused checkout tree)
@@ -108,10 +114,10 @@ for c in cadrumo-runner-linux cadrumo-runner-linux-2; do
 done
 ```
 
-### macOS (`macbook-neo`)
+### macOS build host
 
 ```bash
-ssh gergely.wootsch@gergelys-macbook-neo '
+ssh <macos-build-host> '
   cp ~/actions-runner/cleanup-macos.sh ~/actions-runner/cleanup-macos.sh 2>/dev/null || true
   chmod +x ~/actions-runner/cleanup-macos.sh
   grep -q ACTIONS_RUNNER_HOOK_JOB_COMPLETED ~/actions-runner/.env 2>/dev/null || \
@@ -120,7 +126,7 @@ ssh gergely.wootsch@gergelys-macbook-neo '
   cd ~/actions-runner && ./svc.sh stop && ./svc.sh start'
 ```
 
-(Copy `cleanup-macos.sh` to the runner root first, e.g. `scp dev/runners/cleanup-macos.sh gergely.wootsch@gergelys-macbook-neo:~/actions-runner/`.)
+(Copy `cleanup-macos.sh` to the runner root first, e.g. `scp dev/runners/cleanup-macos.sh <macos-build-host>:~/actions-runner/`.)
 
 ## Restart discipline
 

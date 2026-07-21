@@ -10,7 +10,7 @@ related:
 
 # `desktop-capture-harness` reference: `Claude Desktop MSIX launch, isolation, and auth empirical model`
 
-Empirical grounding gathered on the host `gw-workstation` on 2026-07-21 with non-destructive probes. Every claim below was observed, not assumed; the operator's running Desktop instance was left untouched throughout.
+Empirical grounding gathered on the Windows build host on 2026-07-21 with non-destructive probes. Every claim below was observed, not assumed; the operator's running Desktop instance was left untouched throughout.
 
 ## App identity
 
