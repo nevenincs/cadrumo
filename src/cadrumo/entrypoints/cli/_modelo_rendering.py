@@ -644,8 +644,11 @@ _FORMULA_COMPARISON_SYMBOLS: dict[str, str] = {
 
 #: Formula operation code -> (translation key, English default) for the
 #: localised operation labels. Every ``add``/``sum`` family member shares the
-#: single sum label; each remaining operation maps to its own leaf.
-_FORMULA_OPERATION_LABELS: dict[str, tuple[str, str]] = {
+#: single sum label; each remaining operation maps to its own leaf. Named as a
+#: ``_LOCALE_KEYS`` registry so the locale scaffold's AST scanner discovers the
+#: keys for parity — they are selected from this table rather than passed to
+#: ``tr()`` as literals at the call site.
+_FORMULA_OPERATION_LABEL_LOCALE_KEYS: dict[str, tuple[str, str]] = {
     "add": ("cli.app.modelo.work.formula_operation_sum", "sum"),
     "sum": ("cli.app.modelo.work.formula_operation_sum", "sum"),
     "previous_period_sum": ("cli.app.modelo.work.formula_operation_sum", "sum"),
@@ -670,7 +673,7 @@ def _formula_operation_label(operation: str) -> str:
         return symbol
     if operation.startswith("lookup_"):
         return tr("cli.app.modelo.work.formula_operation_lookup", default="lookup")
-    entry = _FORMULA_OPERATION_LABELS.get(operation)
+    entry = _FORMULA_OPERATION_LABEL_LOCALE_KEYS.get(operation)
     if entry is None:
         return tr("cli.app.modelo.work.formula_operation_calculation", default="calculation")
     key, default = entry
