@@ -387,6 +387,7 @@ cache/
 .vault/logs/
 .vaultspec/*.lock
 .vaultspec/_snapshots/
+.vaultspec/mcp-ownership.json
 .vaultspec/providers.json
 /.gitignore.lock
 /.mcp.json.lock
