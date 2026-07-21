@@ -37,6 +37,7 @@ def test_homebrew_workflow_declares_every_generated_target_row() -> None:
         ("macos-arm64", ("self-hosted", "macOS", "ARM64"), "Darwin", "arm64"),
         ("linux-x86_64", ("self-hosted", "Linux", "X64"), "Linux", "x86_64"),
         ("linux-arm64", ("self-hosted", "Linux", "ARM64"), "Linux", "aarch64"),
+        ("macos-intel", ("self-hosted", "macOS", "X64"), "Darwin", "x86_64"),
     }
     assert job["strategy"]["fail-fast"] is False
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Homebrew release row")
@@ -91,15 +92,15 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     job = document["jobs"]["cadrumo-homebrew-acquisition"]
     rows = job["strategy"]["matrix"]["include"]
     # macos-intel / linux-arm64 rows return with their self-hosted runners
-    # (operator ruling 2026-07-21); REQUIRED_DISTRIBUTION_ROWS is untouched.
-    # linux-arm64 restored 2026-07-21 on the self-hosted gw-macbook-linux-arm
-    # runner (colima arm64 container on the ARM MacBook); macos-intel returns
-    # once the operator's Intel-brew install lands (runner already online),
-    # and readiness stays honestly red on that one unmintable row meanwhile.
+    # All four homebrew rows run on the self-hosted fleet (operator MacBook
+    # avenues completed 2026-07-21): gw-macbook-linux-arm carries linux-arm64,
+    # macbook-neo-intel (Rosetta x64 + /usr/local Intel brew) carries
+    # macos-intel. Zero hosted runners, per the absolute spend mandate.
     assert {row["row_id"] for row in rows} == {
         "homebrew-macos-arm64",
         "homebrew-linux-x86-64",
         "homebrew-linux-arm64",
+        "homebrew-macos-x86-64",
     }
 
     steps = job["steps"]
