@@ -272,3 +272,50 @@ def test_event_failure_keeps_target_published_and_reconcile_emits_pending_event(
         assert len(reconciled) == 1
         assert repository.list() == ()
         assert len(_export_events(bucket_id)) == event_count_before + 1
+
+
+def test_export_journal_directory_is_owner_only_on_posix(tmp_path: Path) -> None:
+    """The export-journal root lands owner-only (0o700) outside bucket storage.
+
+    The directory can name the sensitive cleartext bundle's target identity and
+    digest, so its mode is the tightest a traversable directory allows. The
+    assertion is POSIX-only; Windows makes no ACL guarantee.
+    """
+    import os
+    import stat
+    from datetime import UTC, datetime
+
+    from .._bundle_export_operation import (
+        ProfileBundleExportJournalRepository,
+        ProfileBundleExportOperation,
+        ProfileBundleExportOperationStatus,
+    )
+
+    repository = ProfileBundleExportJournalRepository(storage_root=tmp_path)
+    occurred_at = datetime(2026, 1, 1, tzinfo=UTC)
+    operation = ProfileBundleExportOperation(
+        operation_id="a" * 64,
+        status=ProfileBundleExportOperationStatus.PREPARED,
+        profile_id="bucket-1",
+        display_name="Example Filer",
+        target_identity="portable.json",
+        destination="portable.json",
+        staged_path="portable.json.staged",
+        content_sha256="b" * 64,
+        purpose=ProfileBundleExportPurpose.PORTABLE_TRANSFER,
+        transport=ProfileBundleExportTransport.CLEARTEXT_LOCAL,
+        bundle_schema_version=1,
+        data_categories=(),
+        started_at=occurred_at,
+        updated_at=occurred_at,
+        event_occurred_at=occurred_at,
+    )
+
+    repository.save(operation)
+
+    root = repository.root
+    assert root.is_dir()
+    assert root == tmp_path / "profile-export-operations"
+    assert tmp_path / "buckets" not in root.parents
+    if os.name != "nt":
+        assert stat.S_IMODE(root.stat().st_mode) == 0o700

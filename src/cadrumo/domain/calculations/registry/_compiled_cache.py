@@ -37,6 +37,7 @@ from __future__ import annotations
 import hashlib
 import hmac
 import importlib
+import inspect
 import logging
 import os
 import pickle
@@ -65,21 +66,31 @@ _LOGGER = logging.getLogger(__name__)
 
 _REGISTRY_TREE_CACHE_SCHEMA_VERSION = "legal-parameter-refs-v1"
 
-_EMBEDDED_SCHEMA_CORE_MODULES = (
-    # Cross-package core modules whose TYPES are EMBEDDED in the pickled compiled
+_EMBEDDED_SCHEMA_CORE_SYMBOLS = (
+    # Cross-package core TYPES that are EMBEDDED in the pickled compiled
     # (modelos, catalogues) objects. The registry-package hash below covers the
     # schema MODELS and the compiler/resolvers, but the compiled objects also
     # embed core primitives defined OUTSIDE the registry package -- a change to
     # one of these (a new BindingSourceKind member, a BindingAggregation field,
     # a SensitivityClass value, a Period/TaxDomain shape) alters the pickled
     # object semantics without touching any registry module, so it must be in
-    # the key too. Extend this tuple when a new core type becomes embedded in
-    # the compiled objects; `test_embedded_schema_core_modules_all_resolve`
-    # guards it against drift to a non-existent module.
-    "cadrumo.core.aggregation",  # BindingSourceKind / BindingAggregation / BindingTypedEnumKind
-    "cadrumo.core.classification",  # SensitivityClass
-    "cadrumo.core._period",  # Period
-    "cadrumo.core._tax_domain",  # TaxDomain
+    # the key too.
+    #
+    # Each entry is a ``(public_module, symbol)`` pair, NOT a raw defining-module
+    # path: ``service-imports-via-top-level-reexports`` /
+    # ``dynamic-import-targets-the-public-facade`` bind an importlib target to the
+    # owning package's PUBLIC facade, never a private ``_submodule``. Period and
+    # TaxDomain are re-exported at the ``cadrumo.core`` facade, so we name the
+    # facade and let :func:`inspect.getsourcefile` on the symbol locate the TRUE
+    # defining file (``_period.py`` / ``_tax_domain.py``) to hash -- the
+    # invalidation follows the definition, not the facade's ``__init__``. Extend
+    # this tuple when a new core type becomes embedded in the compiled objects;
+    # `test_embedded_schema_core_modules_all_resolve` guards it against drift to a
+    # symbol that no longer resolves to a real source file.
+    ("cadrumo.core.aggregation", "BindingSourceKind"),  # + BindingAggregation / BindingTypedEnumKind (same file)
+    ("cadrumo.core.classification", "SensitivityClass"),
+    ("cadrumo.core", "Period"),  # defined in cadrumo.core._period, re-exported at the facade
+    ("cadrumo.core", "TaxDomain"),  # defined in cadrumo.core._tax_domain, re-exported at the facade
 )
 
 
@@ -98,14 +109,20 @@ def _compute_loader_code_fingerprint() -> str:
 
     * every registry-package module (excluding its tests) -- the schema models,
       the compiler, and the resolvers; and
-    * the cross-package core modules whose types are embedded in the compiled
-      objects (:data:`_EMBEDDED_SCHEMA_CORE_MODULES`).
+    * the cross-package core types embedded in the compiled objects
+      (:data:`_EMBEDDED_SCHEMA_CORE_SYMBOLS`). Each is named by its PUBLIC facade
+      module plus symbol; the facade is imported, the symbol resolved, and
+      :func:`inspect.getsourcefile` locates the symbol's TRUE defining file to
+      hash -- so a change to the private module that DEFINES the type (e.g.
+      ``core/_period.py``) invalidates the cache even though the key names only
+      the public facade (``cadrumo.core``).
 
     Any change to either surface yields a new key, so pre-change caches can never
     be served. Best-effort per surface: an unreadable registry tree (e.g. a
     zip-imported install) falls back to the interpreter version + bytecode cache
-    tag; an unresolvable core module folds in a stable marker so the key stays
-    deterministic and distinct rather than crashing.
+    tag; a core symbol that cannot be imported, resolved, or located on disk
+    folds in a stable marker so the key stays deterministic and distinct rather
+    than crashing.
     """
     hasher = hashlib.sha256()
     try:
@@ -120,17 +137,21 @@ def _compute_loader_code_fingerprint() -> str:
         hasher.update(sys.version.encode("utf-8"))
         hasher.update((sys.implementation.cache_tag or "").encode("utf-8"))
 
-    for module_name in _EMBEDDED_SCHEMA_CORE_MODULES:
+    for facade_module, symbol_name in _EMBEDDED_SCHEMA_CORE_SYMBOLS:
+        marker = f"{facade_module}:{symbol_name}"
         try:
-            module = importlib.import_module(module_name)
-            module_file = getattr(module, "__file__", None)
-            if module_file is None:
-                hasher.update(f"unresolved:{module_name}".encode())
+            module = importlib.import_module(facade_module)
+            # Unwrap so a decorated callable resolves to its underlying source;
+            # a class/enum has no ``__wrapped__`` and is returned unchanged.
+            symbol = inspect.unwrap(getattr(module, symbol_name))
+            source_file = inspect.getsourcefile(symbol)
+            if source_file is None:
+                hasher.update(f"unresolved:{marker}".encode())
                 continue
-            hasher.update(module_name.encode("utf-8"))
-            hasher.update(Path(module_file).read_bytes())
-        except (OSError, ImportError):
-            hasher.update(f"unresolved:{module_name}".encode())
+            hasher.update(marker.encode("utf-8"))
+            hasher.update(Path(source_file).read_bytes())
+        except (OSError, ImportError, AttributeError, TypeError):
+            hasher.update(f"unresolved:{marker}".encode())
     return hasher.hexdigest()
 
 

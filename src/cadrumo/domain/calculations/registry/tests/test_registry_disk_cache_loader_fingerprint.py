@@ -20,7 +20,7 @@ import pytest
 from .....core.resources import bundled_path
 from .....tests.env_scope import scoped_env_var
 from .._compiled_cache import (
-    _EMBEDDED_SCHEMA_CORE_MODULES,
+    _EMBEDDED_SCHEMA_CORE_SYMBOLS,
     _LOADER_CODE_FINGERPRINT,
     _encode_frame,
     _registry_disk_cache_key,
@@ -69,21 +69,54 @@ def test_loader_code_fingerprint_is_a_stable_nonempty_sha256() -> None:
 
 
 def test_embedded_schema_core_modules_all_resolve() -> None:
-    """Every declared embedded-schema core module resolves to a real source file.
+    """Every declared embedded-schema core symbol resolves to a real source file.
 
-    Guards the explicit ``_EMBEDDED_SCHEMA_CORE_MODULES`` list against drift to a
-    typo'd or removed module: a name that no longer resolves would silently fold
-    an ``unresolved:`` marker into the fingerprint instead of the module's real
-    source, defeating the invalidation this list exists to provide.
+    Guards the explicit ``_EMBEDDED_SCHEMA_CORE_SYMBOLS`` list against drift to a
+    typo'd facade, a symbol removed from a facade, or a symbol that no longer
+    carries source: any of these would silently fold an ``unresolved:`` marker
+    into the fingerprint instead of the definition's real source, defeating the
+    invalidation this list exists to provide. Each entry is a
+    ``(public_module, symbol)`` pair; the symbol's TRUE defining file is located
+    via :func:`inspect.getsourcefile`, so the private module that DEFINES the
+    type is what gets hashed even though the pair names the public facade.
     """
     import importlib
+    import inspect
 
-    assert _EMBEDDED_SCHEMA_CORE_MODULES, "the embedded-schema core-module list must not be empty"
-    for module_name in _EMBEDDED_SCHEMA_CORE_MODULES:
-        module = importlib.import_module(module_name)
-        module_file = getattr(module, "__file__", None)
-        assert module_file is not None, module_name
-        assert Path(module_file).is_file(), module_name
+    assert _EMBEDDED_SCHEMA_CORE_SYMBOLS, "the embedded-schema core-symbol list must not be empty"
+    for facade_module, symbol_name in _EMBEDDED_SCHEMA_CORE_SYMBOLS:
+        module = importlib.import_module(facade_module)
+        symbol = inspect.unwrap(getattr(module, symbol_name))
+        source_file = inspect.getsourcefile(symbol)
+        assert source_file is not None, (facade_module, symbol_name)
+        assert Path(source_file).is_file(), (facade_module, symbol_name)
+
+
+def test_embedded_symbols_resolve_to_private_defining_files_not_the_facade() -> None:
+    """Period and TaxDomain hash their private DEFINING files, not the facade __init__.
+
+    Anti-regression proof for the facade-target fix: naming the public
+    ``cadrumo.core`` facade must NOT collapse the fingerprint onto
+    ``core/__init__.py`` (which would silently defeat invalidation when
+    ``_period.py`` / ``_tax_domain.py`` change). Asserts the resolved source-file
+    set includes the actual private defining modules, so a future facade-only
+    hash cannot sneak in.
+    """
+    import importlib
+    import inspect
+
+    resolved = {
+        symbol_name: Path(
+            inspect.getsourcefile(inspect.unwrap(getattr(importlib.import_module(facade_module), symbol_name)))
+        )
+        for facade_module, symbol_name in _EMBEDDED_SCHEMA_CORE_SYMBOLS
+    }
+
+    assert resolved["Period"].name == "_period.py", resolved["Period"]
+    assert resolved["TaxDomain"].name == "_tax_domain.py", resolved["TaxDomain"]
+    # The facade re-export must not have flattened the target onto core/__init__.py.
+    assert resolved["Period"].name != "__init__.py"
+    assert resolved["TaxDomain"].name != "__init__.py"
 
 
 def test_loader_fingerprint_incorporates_embedded_core_module_source() -> None:

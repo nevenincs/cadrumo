@@ -238,7 +238,8 @@ class ConfigResetJournalRepository:
         if not self._validate_existing_root():
             raise ConfigResetJournalError("reset journal directory was not created")
         try:
-            os.chmod(self._root, _DIRECTORY_MODE)
+            # Private directory mode; Semgrep's generic file-mode rule is inverted here.
+            os.chmod(self._root, _DIRECTORY_MODE)  # nosemgrep
         except OSError as exc:
             raise ConfigResetJournalError("cannot restrict reset journal directory permissions") from exc
 
