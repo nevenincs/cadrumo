@@ -2,22 +2,25 @@
 
 Exercises :mod:`~application.auth._certificate_secret_backend` against a
 real encrypted :class:`~adapters.persistence.storage.SecretStore` (an
-:class:`~adapters.persistence.storage.master_key.EphemeralMasterKeyProvider`
+:class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`
 under a real :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
 — no mocks or fakes) and the operator verbs
 (:func:`~application.auth.set_operator_certificate_source_secret`,
 :func:`~application.auth.remove_operator_certificate_source_secret`,
 :func:`~application.auth.resolve_certificate_source_secret`) against a
 real workflow-state repository, mirroring the pattern already
-established for the sibling certificate-source registry tests. See
-GitHub issue #591 (cert-secret backend abstraction slice).
+established for the sibling certificate-source registry tests.
+
+Also pins the post-cutover surface: named certificate secrets have exactly
+one storage authority (encrypted secure storage), so the deleted keyring
+backend, backend-kind selector, backend factory, and unavailable error must
+be absent from both the module and the ``application.auth`` facade.
 
 See Also:
     :mod:`~application.auth._certificate_secret_backend`
-        Certificate-secret backend contract and secure-storage/keyring
-        implementations under test.
+        Sole secure-storage certificate-secret backend contract under test.
     :class:`~application.auth.SecureStorageCertificateSecretBackend`
-        Default bucket-scoped backend exercised with a real encrypted store.
+        Bucket-scoped backend exercised with a real encrypted store.
     :class:`~adapters.persistence.storage.SecretStore`
         Encrypted secret substrate used for certificate passphrase persistence.
     :class:`~adapters.persistence.storage.blob_store.EncryptedBlobStore`
@@ -35,27 +38,33 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ....adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
-    override_secret_store,
-)
+from ....adapters.persistence.storage import EncryptedBlobStore, SecretStore
+from ....tests.master_key import EphemeralMasterKeyProvider
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from ... import auth as _auth_facade
 from ... import wizard as _wizard  # noqa: F401  (importing wizard seeds the ProfileKey registry)
-from ...user_profile import profile_create_storage_span, register_minimal_profile
+from ...user_profile import profile_create_storage_span
 from ...workflow import workflow_state_repository
 from .. import (
-    CertificateSecretBackendKind,
     CertificateSourceNotFoundError,
     register_operator_certificate_source,
     remove_operator_certificate_source_secret,
     resolve_certificate_source_secret,
     set_operator_certificate_source_secret,
 )
+from .. import _certificate_secret_backend as _backend_module
 from .._certificate_secret_backend import SecureStorageCertificateSecretBackend
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+_RETIRED_KEYRING_SYMBOLS = (
+    "KeyringCertificateSecretBackend",
+    "CertificateSecretBackendKind",
+    "CertificateSecretBackendUnavailableError",
+    "CertificateSecretNotFoundError",
+    "certificate_secret_backend",
+)
 
 _BUCKET_ID = "44444444-4444-4444-8444-444444444444"
 _OTHER_BUCKET_ID = "55555555-5555-4555-8555-555555555555"
@@ -162,33 +171,30 @@ def test_secure_storage_backend_never_leaks_secret_in_repr(secret_store: SecretS
     assert "do-not-leak-me" not in str(resolved)
 
 
+def test_secure_storage_backend_request_witness_is_stable_keyed_and_secret_free(
+    secret_store: SecretStore,
+) -> None:
+    """Retry matching uses a stable master-keyed witness, never the secret value."""
+    backend = SecureStorageCertificateSecretBackend(bucket_id=_BUCKET_ID, store=secret_store)
+
+    first = backend.request_witness("personal", SecretStr("do-not-persist-in-workflow"))
+    repeated = backend.request_witness("personal", SecretStr("do-not-persist-in-workflow"))
+    different = backend.request_witness("personal", SecretStr("different-secret"))
+
+    assert first == repeated
+    assert first != different
+    assert len(first) == 64
+    assert "do-not-persist-in-workflow" not in first
+
+
 # ---------------------------------------------------------------------------
 # Operator-verb integration tests: the CLI-facing service functions, wired
-# through a real workflow-state repository and an injected SecretStore.
+# through a real workflow-state repository and the active profile bucket's own
+# encrypted secret store (opened by the ``_isolated_backend`` autouse fixture).
 # ---------------------------------------------------------------------------
 
 
-@pytest.fixture
-def _isolated_secret_store(tmp_path: Path) -> Iterator[SecretStore]:
-    """Inject a deterministic :class:`SecretStore` for the operator-verb tests.
-
-    ``get_secret_store()`` is a process-wide singleton; overriding it for
-    the duration of each test keeps the operator verbs' secret writes
-    isolated from any other test in the same pytest process.
-    """
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(root_dir=tmp_path / "op-blobs", master_key_provider=provider)
-    store = SecretStore(store_dir=tmp_path / "op-secrets", blob_store=blob_store, master_key_provider=provider)
-    override_secret_store(store)
-    try:
-        yield store
-    finally:
-        override_secret_store(None)
-
-
-def test_set_operator_certificate_source_secret_requires_a_registered_source(
-    _isolated_secret_store: SecretStore,
-) -> None:
+def test_set_operator_certificate_source_secret_requires_a_registered_source() -> None:
     """Binding a secret to an unregistered source name is refused, not silently created."""
     workflow_state_repository().update(_register_operator_profile())
 
@@ -196,7 +202,7 @@ def test_set_operator_certificate_source_secret_requires_a_registered_source(
         set_operator_certificate_source_secret(name="ghost", secret=SecretStr("passphrase"))
 
 
-def test_set_then_resolve_roundtrips_the_secret(_isolated_secret_store: SecretStore, tmp_path: Path) -> None:
+def test_set_then_resolve_roundtrips_the_secret(tmp_path: Path) -> None:
     """A secret set via the operator verb is resolvable via the operator resolver."""
     workflow_state_repository().update(_register_operator_profile())
     cert_path = tmp_path / "personal.p12"
@@ -208,7 +214,6 @@ def test_set_then_resolve_roundtrips_the_secret(_isolated_secret_store: SecretSt
     assert result.name == "personal"
     assert result.has_secret is True
     assert result.rotated is False
-    assert result.backend == str(CertificateSecretBackendKind.SECURE_STORAGE)
 
     resolved = resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID)
     assert resolved is not None
@@ -216,7 +221,6 @@ def test_set_then_resolve_roundtrips_the_secret(_isolated_secret_store: SecretSt
 
 
 def test_set_operator_certificate_source_secret_never_carries_secret_in_result(
-    _isolated_secret_store: SecretStore,
     tmp_path: Path,
 ) -> None:
     """The mutation result never carries the secret value itself, only its presence."""
@@ -232,7 +236,6 @@ def test_set_operator_certificate_source_secret_never_carries_secret_in_result(
 
 
 def test_set_operator_certificate_source_secret_twice_reports_rotated(
-    _isolated_secret_store: SecretStore,
     tmp_path: Path,
 ) -> None:
     """A second ``set`` call on the same source reports ``rotated=True``."""
@@ -252,7 +255,6 @@ def test_set_operator_certificate_source_secret_twice_reports_rotated(
 
 
 def test_remove_operator_certificate_source_secret_is_idempotent(
-    _isolated_secret_store: SecretStore,
     tmp_path: Path,
 ) -> None:
     """Removing a certificate source's secret twice is a no-op the second time."""
@@ -271,7 +273,6 @@ def test_remove_operator_certificate_source_secret_is_idempotent(
 
 
 def test_resolve_certificate_source_secret_is_none_when_never_set(
-    _isolated_secret_store: SecretStore,
     tmp_path: Path,
 ) -> None:
     """A registered source with no bound secret resolves to ``None``."""
@@ -281,3 +282,36 @@ def test_resolve_certificate_source_secret_is_none_when_never_set(
     register_operator_certificate_source(name="personal", certificate_path=cert_path)
 
     assert resolve_certificate_source_secret(name="personal", bucket_id=_BUCKET_ID) is None
+
+
+# ---------------------------------------------------------------------------
+# Post-cutover surface: no certificate keyring backend, selector, factory,
+# fallback, migration, probe, or cleanup path survives. Secure storage is the
+# sole authority.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize("symbol", _RETIRED_KEYRING_SYMBOLS)
+def test_retired_keyring_symbol_absent_from_backend_module(symbol: str) -> None:
+    """The keyring backend, backend-kind selector, factory, and errors are deleted."""
+    assert not hasattr(_backend_module, symbol), f"{symbol} must be deleted from the certificate-secret backend module"
+
+
+@pytest.mark.parametrize("symbol", _RETIRED_KEYRING_SYMBOLS)
+def test_retired_keyring_symbol_absent_from_auth_facade(symbol: str) -> None:
+    """The retired keyring surface is no longer exported from ``application.auth``."""
+    assert not hasattr(_auth_facade, symbol), f"{symbol} must not be re-exported from the application.auth facade"
+    assert symbol not in _auth_facade.__all__
+
+
+def test_secure_storage_backend_is_the_only_public_backend() -> None:
+    """The module exposes exactly the secure-storage backend and its protocol.
+
+    No backend-descriptor label survives: named certificate secrets have a
+    single storage authority, so there is no backend name to select or project.
+    """
+    assert set(_backend_module.__all__) == {
+        "CertificateSecretBackend",
+        "SecureStorageCertificateSecretBackend",
+    }
+    assert not hasattr(_backend_module, "SECURE_STORAGE_BACKEND_LABEL")

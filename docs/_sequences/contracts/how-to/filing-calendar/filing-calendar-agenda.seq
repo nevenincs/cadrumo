@@ -1,0 +1,8 @@
+@step Rank obligations around today.
+aeat --format json app overview agenda --allow-incomplete
+@step Rank obligations around another reference date.
+aeat --format json app overview agenda --date 2026-04-15 --allow-incomplete
+@step Widen the upcoming window to 30 days.
+@result aeat --format json app overview agenda --date 2026-04-15 --horizon 30 --allow-incomplete
+@expect result.horizon_days == 30
+@expect exit_code == 0

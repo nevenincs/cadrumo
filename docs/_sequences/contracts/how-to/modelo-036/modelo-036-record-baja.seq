@@ -1,0 +1,2 @@
+@step Record the baja you filed at the sede, with the sede receipt number.
+@static aeat app modelo m036 baja --declared-on 2026-12-31 --sede-justificante <acuse>

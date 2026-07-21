@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#m303-iva-resultado-chain'
 date: '2026-06-01'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-28-codebase-solidification-plan]]'
 ---

@@ -34,7 +34,7 @@ _SRC_ROOT = SRC_CADRUMO
 _CLOCK_MODULE = _SRC_ROOT / "core" / "time" / "_clock.py"
 _TEST_INFRA_MODULES: frozenset[Path] = frozenset(
     {
-        _SRC_ROOT / "adapters" / "persistence" / "storage" / "envelope" / "_repository_test_suite.py",
+        _SRC_ROOT / "adapters" / "persistence" / "storage" / "envelope" / "tests" / "_repository_contract_support.py",
         _SRC_ROOT / "tests" / "secure_sql.py",
     },
 )

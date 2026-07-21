@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterator
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -16,7 +16,6 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.submission import SubmissionRepository
 from ....core import Period
 from ....core.config import Settings
 from ....core.resources import resources
@@ -34,7 +33,7 @@ from ....domain.calculations.registry import (
     relation_source_requirements,
     validated_casilla_id,
 )
-from ....domain.deadlines import DeadlineEngine, IVARegime, TaxpayerProfile
+from ....domain.deadlines import IVARegime, TaxpayerProfile
 from ....domain.modelos import (
     CalculationRevision,
     CalculationRevisionState,
@@ -47,24 +46,12 @@ from ....domain.modelos import (
     WorkUnit,
     upsert_work_unit,
 )
-from ....domain.submission import SubmissionEngine
-from ....domain.transactions import TransactionCatalogue
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.registry_observations import registry_grounded_observations
 from ....tests.secure_sql import isolated_runtime_profile
-from ...auth import AuthProviderDescription, AuthProviderKind
 from ...calculations import CalculationObservationRepository
-from ...filing import (
-    approve_draft,
-    build_draft,
-    build_runtime_schema_provider,
-    filing_profile_from_taxpayer,
-)
 from ...user_profile import UserProfileLifecycleRepository
 from ...workflow import (
-    DeadlineEngineAdapter,
-    ModeloInputs,
-    RegistryModeloDraftProtocol,
     WorkflowAbortReason,
     WorkflowEngine,
     WorkflowPurpose,
@@ -90,7 +77,7 @@ from .. import (
     mark_revision_verificado_completo,
     verify_modelo_revision,
 )
-from .._workflow_gate import workflow_period_for_work_unit
+from .._workflow_gate import build_revision_workflow_engine, workflow_period_for_work_unit
 from .justificante_metadata import persist_justificante_metadata
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -131,7 +118,6 @@ __all__ = [
     "VERIFY_PERIOD",
     "VERIFY_REVISION",
     "VERIFY_YEAR",
-    "AuthProvider",
     "BucketEventObjectType",
     "BucketEventType",
     "CalculationRevisionNotFoundError",
@@ -506,107 +492,10 @@ def _canonical_work_unit_period(work_unit: WorkUnit) -> Period:
     return workflow_period_for_work_unit(work_unit)
 
 
-class _RevisionInputsProvider:
-    def __init__(self, *, revision: CalculationRevision, work_unit: WorkUnit) -> None:
-        self._revision = revision
-        self._modelo = work_unit.modelo
-        self._period = _canonical_work_unit_period(work_unit)
-
-    def load_inputs(
-        self,
-        *,
-        modelo: str,
-        period: Period,
-        profile: TaxpayerProfile,
-    ) -> ModeloInputs:
-        del profile
-        assert modelo == self._modelo
-        assert period == self._period
-        return {
-            **dict(self._revision.input_values_by_casilla_id),
-            **dict(self._revision.binding_overrides),
-            **dict(self._revision.relation_overrides),
-        }
-
-
-class _RevisionDraftBuilder:
-    def __init__(self, *, work_unit: WorkUnit, actor: str, clock: datetime) -> None:
-        self._work_unit = work_unit
-        self._actor = actor
-        self._clock = clock
-        self._schema_provider = build_runtime_schema_provider(
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-            modelos=(work_unit.modelo,),
-        )
-
-    def build(
-        self,
-        *,
-        modelo: str,
-        period: Period,
-        profile: TaxpayerProfile,
-        inputs: ModeloInputs,
-        fail_on_warning: bool = False,
-    ) -> RegistryModeloDraftProtocol:
-        draft = build_draft(
-            modelo=modelo,
-            period=period,
-            profile=filing_profile_from_taxpayer(profile),
-            inputs=inputs,
-            schema_provider=self._schema_provider,
-            fail_on_warning=fail_on_warning,
-        )
-        return approve_draft(
-            draft,
-            bucket_id=self._work_unit.bucket_id,
-            approved_by=self._actor,
-            schema_provider=self._schema_provider,
-            transaction_catalogue=TransactionCatalogue(),
-            approved_at=self._clock,
-        )
-
-
-class _DeadlineWindowChecker:
-    def __init__(self, *, profile: TaxpayerProfile, engine: DeadlineEngine) -> None:
-        self._profile = profile
-        self._engine = engine
-
-    def is_window_open(self, modelo: str, period: Period, today: date) -> bool:
-        schedule = self._engine.compute(self._profile, period.filing_year, today=today)
-        return any(
-            obligation.modelo == modelo
-            and obligation.period == period
-            and obligation.opens_on <= today <= obligation.closes_on
-            for obligation in schedule.obligations
-        )
-
-
-@dataclass
-class _AuthProvider:
-    available: bool = True
-    kind: AuthProviderKind = AuthProviderKind.CERTIFICATE
-    describe_calls: int = 0
-
-    def describe(self) -> AuthProviderDescription:
-        self.describe_calls += 1
-        return AuthProviderDescription(
-            kind=self.kind,
-            label="Workflow test certificate",
-            configured=True,
-            available=self.available,
-            identity_nif="X1234567L",
-            subject="CN=Workflow Test",
-            expires_on=date(2027, 1, 15),
-            health_severity="OK" if self.available else "ERROR",
-        )
-
-
 @dataclass
 class _WorkflowGate:
     engine: WorkflowEngine
     profile: TaxpayerProfile
-    auth_provider: _AuthProvider = field(default_factory=_AuthProvider)
 
 
 def _workflow_gate(
@@ -614,31 +503,16 @@ def _workflow_gate(
     revision: CalculationRevision,
     work_unit: WorkUnit,
     clock: datetime,
-    auth_provider: _AuthProvider | None = None,
 ) -> _WorkflowGate:
     profile = _workflow_profile()
-    deadline_engine = DeadlineEngine()
-    provider = auth_provider or _AuthProvider()
-    submission_engine = SubmissionEngine(
-        auth_provider=provider,
-        deadline_checker=_DeadlineWindowChecker(profile=profile, engine=deadline_engine),
-        settings=Settings(),
-        repository=SubmissionRepository(),
-    )
     return _WorkflowGate(
         profile=profile,
-        auth_provider=provider,
-        engine=WorkflowEngine(
-            deadline_engine=DeadlineEngineAdapter(deadline_engine),
-            filing_draft_builder=_RevisionDraftBuilder(
-                work_unit=work_unit,
-                actor="operator-A",
-                clock=clock,
-            ),
-            submission_engine=submission_engine,
-            session=None,
-            certificate_bundle=None,
-            inputs_provider=_RevisionInputsProvider(revision=revision, work_unit=work_unit),
+        engine=build_revision_workflow_engine(
+            revision=revision,
+            work_unit=work_unit,
+            profile=profile,
+            actor="operator-A",
+            clock=clock,
             settings=Settings(),
         ),
     )
@@ -656,7 +530,6 @@ def _file_revision(
     filing_repository: ModeloRecordCatalogueRepository,
     bucket_event_repository: BucketEventHistoryRepository,
     clock: datetime,
-    auth_provider: _AuthProvider | None = None,
 ):
     _seed_clean_cross_period_sources(
         work_unit,
@@ -669,7 +542,6 @@ def _file_revision(
         revision=revision,
         work_unit=work_unit,
         clock=clock,
-        auth_provider=auth_provider,
     )
     return file_modelo_revision(
         calculation_revision_id,
@@ -697,7 +569,6 @@ def _verify_revision(
     bucket_event_repository: BucketEventHistoryRepository,
     filing_repository: ModeloRecordCatalogueRepository | None = None,
     clock: datetime,
-    auth_provider: _AuthProvider | None = None,
 ):
     _seed_clean_cross_period_sources(
         work_unit,
@@ -710,7 +581,6 @@ def _verify_revision(
         revision=revision,
         work_unit=work_unit,
         clock=clock,
-        auth_provider=auth_provider,
     )
     return verify_modelo_revision(
         calculation_revision_id,
@@ -737,7 +607,6 @@ def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository):
     )
 
 
-AuthProvider = _AuthProvider
 DEFAULT_130_BASELINE_INPUTS = _DEFAULT_130_BASELINE_INPUTS
 DEFAULT_130_BINDING_VALUES = _DEFAULT_130_BINDING_VALUES
 DEFAULT_180_BINDING_VALUES = _DEFAULT_180_BINDING_VALUES

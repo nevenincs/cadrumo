@@ -1,0 +1,336 @@
+# Clean Homebrew acquisition gate for every platform/architecture row emitted
+# by packaging/homebrew/generate.py. Each job consumes one already-tested
+# immutable Python cohort and source-builds the exact same tap snapshot.
+
+name: Cadrumo Homebrew Acquisition
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful Cadrumo Packaging Smoke run containing the tested cohort
+        required: true
+        type: string
+      source_commit:
+        description: Full commit SHA that produced the tested cohort
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.source_run_id }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  # Single-creator topology: exactly ONE job creates the run's evidence draft
+  # (drafts reserve no tag ref, so concurrent creates across the matrix would
+  # mint duplicates — cli/cli#4270); the matrix legs are upload-only.
+  create-evidence-draft:
+    name: Cadrumo / create evidence draft
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Create the run's evidence draft (create-if-absent)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+        run: |
+          # --target is THIS run's commit (the run<->release binding verify
+          # re-checks); the consumed smoke commit is recorded in run-context.
+          if ! gh release view "$EVIDENCE_TAG" --repo "$GITHUB_REPOSITORY" --json isDraft >/dev/null 2>&1; then
+            gh release create "$EVIDENCE_TAG" --repo "$GITHUB_REPOSITORY" --draft --target "$GITHUB_SHA" \
+              --title "EVIDENCE (non-release): homebrew run ${GITHUB_RUN_ID}" \
+              --notes "Machine evidence transport. Not a Cadrumo release."
+          fi
+
+  cadrumo-homebrew-acquisition:
+    needs: create-evidence-draft
+    name: Cadrumo / ${{ matrix.label }} / Homebrew source install
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macos-intel and linux-arm64 are EXCISED pending self-hosted MacBook
+          # avenues per operator ruling 2026-07-21 (no hosted/cloud runners,
+          # ever): a Rosetta /usr/local-prefix runner will carry the Intel row
+          # and a docker arm64 runner the linux-arm64 row — the matrix legs
+          # return when those runners register. Removing (not label-queuing)
+          # keeps lane runs completing instead of hanging on absent labels;
+          # their homebrew-* readiness rows stay honestly red meanwhile.
+          - id: macos-arm64
+            label: macOS arm64
+            runner: [self-hosted, macOS, ARM64]
+            expected_os: Darwin
+            expected_arch: arm64
+            brew: /opt/homebrew/bin/brew
+            row_id: homebrew-macos-arm64
+          - id: linux-x86_64
+            label: Linux x86_64
+            runner: [self-hosted, Linux, X64]
+            expected_os: Linux
+            expected_arch: x86_64
+            brew: /home/linuxbrew/.linuxbrew/bin/brew
+            row_id: homebrew-linux-x86-64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    # Release-asset transport: evidence rides the run's own draft release, so
+    # the uploader matrix job needs contents:write (job-level only).
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Initialize current-run evidence root
+        id: initialize
+        env:
+          MATRIX_ID: ${{ matrix.id }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          root="${RUNNER_TEMP}/cadrumo-s24-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}-${MATRIX_ID}"
+          rm -rf "$root"
+          mkdir -p "$root"
+          echo "CADRUMO_S24_ROOT=$root" >> "$GITHUB_ENV"
+          jq -n \
+            --arg source_commit "$SOURCE_COMMIT" \
+            --arg source_run_id "$SOURCE_RUN_ID" \
+            --arg matrix_id "$MATRIX_ID" \
+            --arg run_id "$GITHUB_RUN_ID" \
+            --arg run_attempt "$GITHUB_RUN_ATTEMPT" \
+            '{
+              schema: "cadrumo.packaging.homebrew-workflow.v1",
+              status: "initialized",
+              source_commit: $source_commit,
+              source_run_id: $source_run_id,
+              matrix_id: $matrix_id,
+              github_run_id: $run_id,
+              github_run_attempt: $run_attempt
+            }' > "$root/run-context.json"
+          echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      - name: Verify declared Homebrew release row
+        env:
+          BREW_PATH: ${{ matrix.brew }}
+          EXPECTED_ARCH: ${{ matrix.expected_arch }}
+          EXPECTED_OS: ${{ matrix.expected_os }}
+        run: |
+          test "$(uname -s)" = "$EXPECTED_OS"
+          test "$(uname -m)" = "$EXPECTED_ARCH"
+          test -x "$BREW_PATH"
+          "$BREW_PATH" --version
+
+      - name: Verify source workflow identity
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          [[ "$SOURCE_COMMIT" =~ ^[0-9a-fA-F]{40}$ ]]
+          [[ "$SOURCE_RUN_ID" =~ ^[1-9][0-9]*$ ]]
+          run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${SOURCE_RUN_ID}")"
+          test "$(jq -r .name <<<"$run_json")" = "Cadrumo Packaging Smoke"
+          test "$(jq -r .path <<<"$run_json")" = ".github/workflows/packaging-smoke.yml"
+          test "$(jq -r .conclusion <<<"$run_json")" = "success"
+          test "$(jq -r .head_branch <<<"$run_json")" = "main"
+          event="$(jq -r .event <<<"$run_json")"
+          if [ "$event" = "workflow_dispatch" ]; then
+            # Dispatch-only full campaign (ci-speed redesign, 2026-07-20): a
+            # dispatch run is trusted only when its commit is verified on main
+            # history via the compare API - equal-or-stronger than the former
+            # push-event pin, which trusted the push router.
+            ancestry="$(gh api "repos/${GITHUB_REPOSITORY}/compare/main...$(jq -r .head_sha <<<"$run_json")" --jq .status)"
+            test "$ancestry" = "identical" -o "$ancestry" = "behind"
+          else
+            test "$event" = "push"
+          fi
+          test "$(jq -r .head_repository.full_name <<<"$run_json")" = "$GITHUB_REPOSITORY"
+          source_commit_lower="$(printf '%s' "$SOURCE_COMMIT" | tr '[:upper:]' '[:lower:]')"
+          test "$(jq -r .head_sha <<<"$run_json")" = "$source_commit_lower"
+
+      - name: Checkout tested source commit
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      # The acquisition lanes consume the LINUX-built python cohort (wheels are
+      # py3-none-any; parity with the pre-transport unsuffixed artifact) plus
+      # the sealed full release cohort, both hash-verified against the smoke
+      # run's sealed evidence manifest and the Actions API run record.
+      - name: Download and verify the tested cohorts from the smoke evidence draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release verify \
+            --tag "evidence-smoke-${SOURCE_RUN_ID}" \
+            --expect-run-id "$SOURCE_RUN_ID" \
+            --expect-workflow ".github/workflows/packaging-smoke.yml" \
+            --pattern "cadrumo-python-cohort-linux.tar.gz" \
+            --pattern "cadrumo-release-cohort.tar.gz" \
+            --download-dir "$CADRUMO_S24_ROOT/download"
+          mkdir -p "$CADRUMO_S24_ROOT/cohort" "$CADRUMO_S24_ROOT/release-cohort"
+          tar -xzf "$CADRUMO_S24_ROOT/download/cadrumo-python-cohort-linux.tar.gz" \
+            -C "$CADRUMO_S24_ROOT/cohort"
+          tar -xzf "$CADRUMO_S24_ROOT/download/cadrumo-release-cohort.tar.gz" \
+            -C "$CADRUMO_S24_ROOT/release-cohort"
+
+      - name: Verify and generate the cohort-bound tap snapshot
+        run: |
+          uv run --no-project --with packaging python -m dev.packaging.python_cohort verify \
+            --cohort-dir "$CADRUMO_S24_ROOT/cohort"
+          version="$(jq -r .version "$CADRUMO_S24_ROOT/cohort/python-cohort.json")"
+          uv run --no-project --with packaging python packaging/homebrew/generate.py \
+            --cohort-dir "$CADRUMO_S24_ROOT/cohort" \
+            --lock uv.lock \
+            --version "$version" \
+            --release-base-url \
+              "https://github.com/nevenincs/cadrumo/releases/download/v${version}" \
+            --output-dir "$CADRUMO_S24_ROOT/tap-snapshot"
+
+      # --retain-install defers the smoke's uninstall/untap: the emit step
+      # below hashes the INSTALLED executables (the mint-time isolation
+      # proof), so the keg must still exist when the row is minted. The
+      # deferred cleanup runs right after the emit, from the recorded state.
+      - name: Audit install and exercise Cadrumo through Homebrew
+        env:
+          BREW_PATH: ${{ matrix.brew }}
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          uv run --no-project python dev/packaging/smoke_homebrew.py \
+            --formula "$CADRUMO_S24_ROOT/tap-snapshot/Formula/cadrumo.rb" \
+            --cohort-dir "$CADRUMO_S24_ROOT/cohort" \
+            --evidence-dir "$CADRUMO_S24_ROOT/evidence" \
+            --tap-name "cadrumo-smoke/${MATRIX_ID}" \
+            --brew "$BREW_PATH" \
+            --repo-root "$GITHUB_WORKSPACE" \
+            --retain-install
+
+      # Mint the sanctioned homebrew-<os>-<arch> row from the real captured oracle
+      # JSONs (the smoke wrote tax/mcp-evidence.json host-visible), bound to THE
+      # immutable release cohort verified and extracted above. No re-run.
+      - name: Emit the sanctioned Homebrew distribution-evidence record
+        env:
+          ROW_ID: ${{ matrix.row_id }}
+        run: |
+          tax="$(find "$CADRUMO_S24_ROOT/evidence" -name tax-evidence.json -print -quit)"
+          mcp="$(find "$CADRUMO_S24_ROOT/evidence" -name mcp-evidence.json -print -quit)"
+          if [[ -z "$tax" || -z "$mcp" ]]; then
+            echo "homebrew oracle evidence JSONs not found under $CADRUMO_S24_ROOT/evidence" >&2
+            exit 1
+          fi
+          uv run --no-project --with packaging --with pydantic --with mcp \
+            python -m dev.packaging.distribution_evidence_emit \
+            --row-id "$ROW_ID" \
+            --release-cohort-dir "$CADRUMO_S24_ROOT/release-cohort" \
+            --tax-evidence "$tax" \
+            --mcp-evidence "$mcp" \
+            --acquisition-mechanism brew \
+            --acquisition-source "nevenincs/cadrumo" \
+            --destination-kind homebrew-cellar \
+            --destination-locator "${{ matrix.id }}" \
+            --distribution-evidence-dir "$CADRUMO_S24_ROOT/distribution-install-readiness"
+
+      # Diagnostics must survive the runner workspace: on failure,
+      # push the brew-install log and the harness failure detail to the lane's
+      # own draft under debug-* asset names. Upload-only: the draft is
+      # guaranteed by needs: create-evidence-draft (a create here would race
+      # the other legs into duplicate drafts). debug-* assets are outside the
+      # promotable row namespace: none are .json row files, and the publish
+      # gates additionally exclude debug-* from row aggregation.
+      - name: Upload build-failure diagnostics to the run's evidence draft
+        if: failure() && steps.initialize.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          staging=$(mktemp -d)
+          install_log="$(find "$CADRUMO_S24_ROOT/evidence" -path '*/logs/brew-install.log' -print -quit 2>/dev/null || true)"
+          if [ -n "$install_log" ]; then
+            cp "$install_log" "$staging/debug-brew-install-${MATRIX_ID}-${GITHUB_RUN_ID}.log"
+          fi
+          if [ -d "$CADRUMO_S24_ROOT/evidence" ]; then
+            tar -czf "$staging/debug-homebrew-diagnostics-${MATRIX_ID}-${GITHUB_RUN_ID}.tar.gz" \
+              -C "$CADRUMO_S24_ROOT" evidence
+          fi
+          if [ -z "$(ls -A "$staging")" ]; then
+            echo "no diagnostics found to upload"
+            exit 0
+          fi
+          gh release upload "$EVIDENCE_TAG" "$staging"/* --clobber
+
+      # Deferred cleanup from --retain-install: runs after the emit (which
+      # needed the live keg) and even when earlier steps failed, so the
+      # self-hosted runner never accumulates smoke formulae/taps.
+      - name: Clean up the retained Homebrew install
+        if: always() && steps.initialize.outputs.ready == 'true'
+        run: |
+          state="$(find "$CADRUMO_S24_ROOT/evidence" -name homebrew-cleanup-state.json -print -quit 2>/dev/null || true)"
+          if [[ -n "$state" ]]; then
+            uv run --no-project python dev/packaging/smoke_homebrew.py --cleanup-state "$state"
+          else
+            echo "no retained Homebrew install to clean up"
+          fi
+
+      # All four matrix legs publish distinct asset names to the ONE draft
+      # evidence-homebrew-<run_id> created by the create-evidence-draft job;
+      # the legs are upload-only (single-creator topology).
+      - name: Publish Homebrew evidence to the run's evidence draft
+        if: always() && steps.initialize.outputs.ready == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+          MATRIX_ID: ${{ matrix.id }}
+        run: |
+          rows=("$CADRUMO_S24_ROOT"/distribution-install-readiness/*.json)
+          if [ -e "${rows[0]}" ]; then
+            gh release upload "$EVIDENCE_TAG" "${rows[@]}" --clobber
+          fi
+          # The downloaded cohorts already live on the smoke draft; exclude
+          # them from the per-leg bundle to avoid duplicate hundred-MB uploads.
+          tar --exclude=./cohort --exclude=./release-cohort --exclude=./download \
+            -czf "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" -C "$CADRUMO_S24_ROOT" .
+          gh release upload "$EVIDENCE_TAG" "cadrumo-homebrew-acquisition-${MATRIX_ID}.tar.gz" --clobber
+
+  # Terminal seal for the ONE homebrew draft: runs only when every matrix leg
+  # succeeded, so a sealed manifest always covers a fully green acquisition.
+  seal-evidence-manifest:
+    name: Cadrumo / seal evidence manifest
+    needs: cadrumo-homebrew-acquisition
+    runs-on: [self-hosted, Linux, X64]
+    permissions:
+      contents: write
+    steps:
+      # The seal only needs the helper at the workflow's own ref (the helper
+      # and workflow version move together), not the tested source commit.
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+      - name: Emit and upload the sealed evidence manifest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-homebrew-${{ github.run_id }}
+        run: |
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release emit-manifest \
+            --tag "$EVIDENCE_TAG" --output evidence-manifest.json
+          gh release upload "$EVIDENCE_TAG" evidence-manifest.json --clobber

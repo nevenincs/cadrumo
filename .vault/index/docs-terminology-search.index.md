@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-terminology-search'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-10-docs-terminology-search-W01-P01-S01]]'
   - '[[2026-06-10-docs-terminology-search-W01-P01-S02]]'
@@ -51,6 +51,29 @@ related:
   - '[[2026-06-15-docs-terminology-search-adr]]'
   - '[[2026-06-15-docs-terminology-search-audit]]'
   - '[[2026-06-15-docs-terminology-search-plan]]'
+  - '[[2026-07-13-docs-terminology-search-W01-P01-S01]]'
+  - '[[2026-07-13-docs-terminology-search-W01-P01-S02]]'
+  - '[[2026-07-13-docs-terminology-search-W01-P01-S03]]'
+  - '[[2026-07-13-docs-terminology-search-W02-P02-S04]]'
+  - '[[2026-07-13-docs-terminology-search-W02-P02-S05]]'
+  - '[[2026-07-13-docs-terminology-search-W02-P02-S06]]'
+  - '[[2026-07-13-docs-terminology-search-W02-P02-S07]]'
+  - '[[2026-07-13-docs-terminology-search-W03-P03-S08]]'
+  - '[[2026-07-13-docs-terminology-search-W03-P03-S09]]'
+  - '[[2026-07-13-docs-terminology-search-W04-P04-S10]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P05-S11]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P05-S12]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P05-S13]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P06-S14]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P06-S15]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P06-S16]]'
+  - '[[2026-07-13-docs-terminology-search-W05-P06-S17]]'
+  - '[[2026-07-13-docs-terminology-search-adr]]'
+  - '[[2026-07-13-docs-terminology-search-audit]]'
+  - '[[2026-07-13-docs-terminology-search-plan]]'
+  - '[[2026-07-13-docs-terminology-search-research]]'
+  - '[[2026-07-15-docs-terminology-search-adr]]'
+  - '[[2026-07-15-docs-terminology-search-audit]]'
 ---
 
 # `docs-terminology-search` feature index
@@ -63,6 +86,8 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 
 - `2026-06-10-docs-terminology-search-adr` - `docs-terminology-search` adr: `terminology handbook and precompiled docs search` | (**status:** `accepted`)
 - `2026-06-15-docs-terminology-search-adr` - `docs-terminology-search` adr: `glossary enrolment policy and committed-artifact boundary` | (**status:** `accepted`)
+- `2026-07-13-docs-terminology-search-adr` - `docs-terminology-search` adr: `next wave: upstream hook wiring, corpus coverage, and the rung-2 gate` | (**status:** `accepted`)
+- `2026-07-15-docs-terminology-search-adr` - `docs-terminology-search` adr: `precompiled search-result contract: destinations and representation` | (**status:** `accepted`)
 
 ### audit
 
@@ -74,6 +99,8 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-12-docs-terminology-search-rung2-adjudication-audit` - `docs-terminology-search` audit: `rung-2 adjudication`
 - `2026-06-14-docs-terminology-search-audit` - `docs-terminology-search` audit: `RAG corpus completion and Ctrl-K backend wiring`
 - `2026-06-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `search corpus performance and result-quality drive`
+- `2026-07-13-docs-terminology-search-audit` - `docs-terminology-search` audit: `campaign close honesty review`
+- `2026-07-15-docs-terminology-search-audit` - `docs-terminology-search` audit: `D7/D8 controller iconography and re-ranking honesty review`
 
 ### exec
 
@@ -109,12 +136,31 @@ Auto-generated index of all documents tagged with `#docs-terminology-search`.
 - `2026-06-10-docs-terminology-search-W05-P13-S30` - Build the held-out real-query miss-rate harness over the compiled mapping and adjudicate the deferred rung-2 static term-embedding matrix on measurements, persisting the adjudication in the vault (ADR D6 deferral gate)
 - `2026-06-10-docs-terminology-search-W05-P14-S31` - Enrol this epic's own architectural vocabulary (Terminology Handbook, sweep, projection, relevance mapping, preprocess hook, laundering, record kinds) as Handbook concepts so build teams cross-reference the ADR definitions through the shipped surface, and keep ADR decision ids D1-D9 cited in every exec record (operator mandate)
 - `2026-06-10-docs-terminology-search-W05-P14-S32` - Run the campaign honesty review before structural completion is declared and promote the three ADR codification candidates (terminology-single-declaration, terminology-scaffold-preserve-contract, shipped-search-licence-clean) through the codify phase
+- `2026-07-13-docs-terminology-search-W01-P01-S01` - Generate the coverage report: derive the candidate query surface from calc-grade casilla labels/sections and legal-catalogue provision vocabulary, list every derivable target with no inbound relevance entry, and commit the report
+- `2026-07-13-docs-terminology-search-W01-P01-S02` - Run the held-out golden queries through the shipped relevance mapping with the miss-rate machinery and commit the baseline miss-rate report
+- `2026-07-13-docs-terminology-search-W01-P01-S03` - Inventory the synonym candidate queue (mined, unratified) and commit the inventory with a ratify-or-clear disposition per candidate
+- `2026-07-13-docs-terminology-search-W02-P02-S04` - Implement the upstream-schema adapter: serialize the repo PreprocessOutput to the upstream PreprocOutput JSON contract behind a python -m entry point, with unit tests against the pinned schema major
+- `2026-07-13-docs-terminology-search-W02-P02-S05` - Author the preprocess rule file for the four corpus source kinds and add the strict preprocess-check repo gate test
+- `2026-07-13-docs-terminology-search-W02-P02-S06` - Prove per-kind parity: preprocess run-one output text equals the committed sidecar text for a representative source of each kind, asserted by a committed test
+- `2026-07-13-docs-terminology-search-W02-P02-S07` - Re-scoped cutover (ADR Update 1): exclude the extracted sidecars from the dev index via .vaultragignore, retarget the terminology resolver path rules to source-file paths, correct the stale preprocess docstring to describe the sidecars' product-payload role, keep the hook-vs-sidecar parity gate as a permanent lock, and prove an equal-or-superset sweep target set - one explicit-path commit
+- `2026-07-13-docs-terminology-search-W03-P03-S08` - Author the widened query vocabulary from the coverage report through the Handbook enrolment surfaces, keeping the synonym ratification ratchet
+- `2026-07-13-docs-terminology-search-W03-P03-S09` - Run incremental reindex then the widened sweep through the resident service, wrangle through the typed resolution, and land the widened relevance mapping as a reviewed committed diff
+- `2026-07-13-docs-terminology-search-W04-P04-S10` - Re-run the held-out miss-rate over the widened mapping, commit the measurement, and apply the ADR D3 gate: implement rung 2 only above the ten-percent top-five miss line, else record the standing baseline
+- `2026-07-13-docs-terminology-search-W05-P05-S11` - Declare the closed ResultDisplayClass StrEnum and the single derivation function (record kind + concept domain + page path prefix to class) beside the unified record, with a unit gate proving every projected record maps to exactly one class
+- `2026-07-13-docs-terminology-search-W05-P05-S12` - Ship display_class in the injected Pagefind meta and replace the per-kind base-weight table with the one declared per-class user-first table (facts, modelo, casilla, cli, user docs, technical last), updating kind_base_weight consumers and tests
+- `2026-07-13-docs-terminology-search-W05-P05-S13` - Gate the weight table: its ordering matches the ADR D8 ladder verbatim and every display class carries exactly one weight, failing on any unmapped class
+- `2026-07-13-docs-terminology-search-W05-P06-S14` - Render one hand-authored inline-SVG icon and class-scoped styling per display class in the shared search controller card row (box, document, terminal, code, question mark), reading the shipped display_class meta only, never re-deriving it in JS
+- `2026-07-13-docs-terminology-search-W05-P06-S15` - Consume the shipped per-class weights in the compose ladder unchanged and extend the Playwright palette-ranking gate with the two new ordering assertions: casilla above cli on a mixed query, and how-to page above api stub on a mixed query
+- `2026-07-13-docs-terminology-search-W05-P06-S16` - Coordinate the controller edits with the in-flight palette-host extraction owner: diff cadrumo-docs.js before editing, land via explicit-pathspec commits, and verify icons render on both hosts (Ctrl-K dialog and search page) once the extraction lands
+- `2026-07-13-docs-terminology-search-W05-P06-S17` - Emit display_class as data-pagefind-meta on the generated and built pages so directory-indexed full-text page hits carry a ranking weight, completing the D8 user-documentation-above-technical ordering for full-text results, gated by a browser assertion that a how-to page outranks an api stub on a mixed query
 
 ### plan
 
 - `2026-06-10-docs-terminology-search-plan` - `docs-terminology-search` `terminology handbook and precompiled docs search epic` plan
 - `2026-06-15-docs-terminology-search-plan` - `docs-terminology-search` plan: grounding and glossary follow-up
+- `2026-07-13-docs-terminology-search-plan` - `docs-terminology-search` plan
 
 ### research
 
 - `2026-06-10-docs-terminology-search-research` - `docs-terminology-search` research: `precompiled docs terminology search backend`
+- `2026-07-13-docs-terminology-search-research` - `docs-terminology-search` research: `corpus-derived precompiled search status and next wave`

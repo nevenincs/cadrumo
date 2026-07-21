@@ -16,6 +16,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 from defusedxml import ElementTree
+from dev.docs.i18n import TARGET_LANGUAGES
 
 CANONICAL_DOCS_BASE_URL = "https://cadrumo.neve.md/docs"
 CANONICAL_SITE_DOMAIN = "cadrumo.neve.md"
@@ -97,9 +98,9 @@ def _site_build_environment() -> dict[str, str]:
     """Return the deployment-specific strict docs build environment."""
     return {
         **os.environ,
-        "AEAT_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
-        "AEAT_DOCS_JOBS": "1",
-        "AEAT_DOCS_PAGEFIND_MODE": "pages",
+        "CADRUMO_DOCS_BASE_URL": CANONICAL_DOCS_BASE_URL,
+        "CADRUMO_DOCS_JOBS": "1",
+        "CADRUMO_DOCS_PAGEFIND_MODE": "pages",
     }
 
 
@@ -127,6 +128,11 @@ def _validate_site_artifacts(html_root: Path) -> None:
         raise SystemExit(f"Docs build is not deployable; required artifacts are missing: {joined}")
     try:
         sitemap = ElementTree.parse(html_root / "sitemap.xml")
+    except OSError as exc:
+        raise SystemExit(
+            f"Docs build did not produce a sitemap at {html_root / 'sitemap.xml'}; "
+            "set CADRUMO_DOCS_BASE_URL so the build writes one.",
+        ) from exc
     except ElementTree.ParseError as exc:
         raise SystemExit("Docs build sitemap is not valid XML.") from exc
     locations = [(element.text or "").strip() for element in sitemap.iter() if element.tag.endswith("loc")]
@@ -142,6 +148,87 @@ def _validate_site_artifacts(html_root: Path) -> None:
     index_chunks = [chunk for chunk in pagefind_index.rglob("*.pf_index") if chunk.stat().st_size > 0]
     if not index_chunks:
         raise SystemExit("Docs build Pagefind index has no substantive generated index data.")
+
+
+def _localized_languages() -> tuple[str, ...]:
+    """Return the per-language deploy roots (the docs translation targets).
+
+    Derived from the shared ``TARGET_LANGUAGES`` (OutputLanguage minus English),
+    so the deploy matrix never re-lists the language set. English is the default
+    site root (``/``) and is not a localized subdirectory.
+    """
+    return TARGET_LANGUAGES
+
+
+def _language_site_url(language: str) -> str:
+    """Return the canonical deploy URL for one localized site root."""
+    return f"{CANONICAL_DOCS_BASE_URL}/{language}"
+
+
+def _language_build_command(language: str, out_dir: Path) -> list[str]:
+    """Return the build-driver command for one localized user-scope site root.
+
+    Reuses the ``dev.docs.build`` driver's ``--language`` and ``--out-dir`` flags
+    (no duplicated build logic): a strict user-scope build of the operator surface
+    in ``language``, written into ``out_dir`` instead of the English root.
+    """
+    return [
+        sys.executable,
+        "-m",
+        "dev.docs.build",
+        "--strict",
+        "--scope",
+        "user",
+        "--language",
+        language,
+        "--out-dir",
+        str(out_dir),
+    ]
+
+
+def _language_build_environment(language: str) -> dict[str, str]:
+    """Return the deploy build environment for one localized site root.
+
+    The shared deployment environment (serial workers, page-only Pagefind
+    contract) with the canonical base URL pointed at the language's own root so
+    the per-language sitemap and canonical/OpenGraph URLs are correct.
+    """
+    return {**_site_build_environment(), "CADRUMO_DOCS_BASE_URL": _language_site_url(language)}
+
+
+def _build_language_roots(repo_root: Path, html_root: Path) -> None:
+    """Build each localized site root into its subdirectory under the English root.
+
+    ``/es/``, ``/ca/``, ``/hu/`` are user-scope builds written beside the English
+    root at ``html_root/<language>``; each carries its own Pagefind index. The full
+    English autodoc site at ``html_root`` is untouched.
+    """
+    for language in _localized_languages():
+        out_dir = html_root / language
+        try:
+            _run(
+                _language_build_command(language, out_dir),
+                cwd=repo_root,
+                env=_language_build_environment(language),
+                stream_output=True,
+            )
+        except SystemExit as exc:
+            raise SystemExit(
+                f"Localized docs build for {language!r} failed; refusing to publish ({exc.code}).",
+            ) from exc
+
+
+def _validate_language_roots(html_root: Path) -> None:
+    """Require every localized site root to carry its page and its own Pagefind index."""
+    for language in _localized_languages():
+        root = html_root / language
+        index = root / "index.html"
+        if not index.is_file():
+            raise SystemExit(f"Localized site root {language!r} is missing its rendered index page: {index}")
+        pagefind_index = root / "pagefind" / "index"
+        index_chunks = [chunk for chunk in pagefind_index.rglob("*.pf_index") if chunk.stat().st_size > 0]
+        if not index_chunks:
+            raise SystemExit(f"Localized site root {language!r} has no substantive Pagefind index data.")
 
 
 def _aws_base_command(aws: str) -> list[str]:
@@ -375,6 +462,7 @@ def _verify_public_delivery(target: DeploymentTarget) -> None:
     """Require the canonical, legacy, missing, and private-origin responses."""
     checks = (
         (f"{CANONICAL_DOCS_BASE_URL}/", 200),
+        *tuple((f"{_language_site_url(language)}/", 200) for language in _localized_languages()),
         (_LEGACY_DOCS_URL, 308),
         (f"{CANONICAL_DOCS_BASE_URL}/{_MISSING_DOCS_PATH}", 404),
         (f"https://{target.bucket}.s3.{STACK_REGION}.amazonaws.com/docs/index.html", 403),
@@ -392,8 +480,7 @@ def _verify_public_delivery(target: DeploymentTarget) -> None:
     actual_location = legacy_headers.get("location") if legacy_headers is not None else None
     if actual_location != expected_location:
         raise SystemExit(
-            "Legacy redirect check failed: "
-            f"expected Location {expected_location!r}, received {actual_location!r}.",
+            f"Legacy redirect check failed: expected Location {expected_location!r}, received {actual_location!r}.",
         )
 
 
@@ -420,7 +507,9 @@ def _publish(aws: str, repo_root: Path) -> int:
     target = _stack_target(aws, repo_root)
     _verify_distribution_alias(aws, repo_root, target.distribution_id)
     html_root = _build_site(repo_root)
+    _build_language_roots(repo_root, html_root)
     _validate_site_artifacts(html_root)
+    _validate_language_roots(html_root)
     _sync_site(aws, repo_root, html_root, target.bucket)
     _invalidate_site(aws, repo_root, target.distribution_id)
     _verify_public_delivery(target)

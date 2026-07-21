@@ -10,7 +10,6 @@ import pytest
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import Period
 from ....core.config import override_settings
 from ....domain.calculations.registry import CasillaId, validated_casilla_id
@@ -24,7 +23,9 @@ from ....domain.transactions import (
     TransactionCatalogue,
     TransactionDirection,
 )
+from ....tests.filing import build_registry_filing_draft_from_decimals
 from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
 from .. import (
     ModeloApprovalStaleReason,
     approval_stale_reasons,
@@ -32,7 +33,6 @@ from .. import (
     build_runtime_schema_provider,
     compute_current_approval_basis,
 )
-from ..testing import build_registry_filing_draft_from_decimals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -61,16 +61,6 @@ _MODELO_130_BINDING_INPUTS = {
     "modelo-130-pagos-fraccionados-anteriores": "250.00",
     "modelo-130-resultados-negativos-anteriores": "0.00",
 }
-
-
-@pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path):
-    with override_settings(cadrumo_local_storage_root=tmp_path) as settings:
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
 
 
 def test_compute_current_approval_basis_refuses_missing_runtime_session(tmp_path: Path) -> None:

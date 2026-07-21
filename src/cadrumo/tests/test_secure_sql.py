@@ -8,7 +8,12 @@ from pathlib import Path
 
 import pytest
 
-from ..adapters.persistence.storage import has_active_bucket_session
+from ..adapters.persistence.storage import (
+    MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE,
+    MODELO_WORK_UNIT_CATALOGUE_NAMESPACE,
+    WORKFLOW_STATE_NAMESPACE,
+    has_active_bucket_session,
+)
 from ..adapters.persistence.storage.bucket import read_manifest
 from ..adapters.persistence.storage.master_key import BucketSession, activate_session
 from ..adapters.persistence.storage.runtime import StorageRuntimeReadinessCode, inspect_storage_runtime
@@ -157,23 +162,32 @@ def test_isolated_cli_runtime_profile_routes_workflow_and_modelo_repositories_to
 ) -> None:
     from ..adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-    from ..application.workflow import workflow_state_repository
+    from ..application.workflow import WorkflowState, workflow_state_repository
 
     with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_CONTROL_BUCKET_ID) as profile:
-        workflow_state_repository().update(lambda state: state)
+        workflow_repository = workflow_state_repository()
+        workflow_repository.save(WorkflowState())
         work_units = WorkUnitCatalogueRepository()
         revisions = CalculationRevisionCatalogueRepository()
 
         work_units.save(work_units.load())
         revisions.save(revisions.load())
 
-        active_bucket = workflow_state_repository().load().active_profile_bucket_id()
+        active_bucket = workflow_repository.load().active_profile_bucket_id()
         database_path = profile.paths.db_dir / "cadrumo.db"
 
     assert active_bucket == _CONTROL_BUCKET_ID
     assert work_units.bucket_id == _CONTROL_BUCKET_ID
     assert revisions.bucket_id == _CONTROL_BUCKET_ID
-    assert _secure_object_row_count(database_path) == 3
+    assert _secure_object_namespaces(database_path) == tuple(
+        sorted(
+            (
+                WORKFLOW_STATE_NAMESPACE.namespace,
+                MODELO_CALCULATION_REVISION_CATALOGUE_NAMESPACE.namespace,
+                MODELO_WORK_UNIT_CATALOGUE_NAMESPACE.namespace,
+            ),
+        ),
+    )
     assert not has_active_bucket_session()
 
 
@@ -190,3 +204,13 @@ def _control_session() -> BucketSession:
 def _secure_object_row_count(database_path: Path) -> int:
     with sqlite3.connect(database_path) as connection:
         return int(connection.execute("SELECT COUNT(*) FROM secure_objects").fetchone()[0])
+
+
+def _secure_object_namespaces(database_path: Path) -> tuple[str, ...]:
+    with sqlite3.connect(database_path) as connection:
+        return tuple(
+            str(row[0])
+            for row in connection.execute(
+                "SELECT namespace FROM secure_objects ORDER BY namespace",
+            )
+        )

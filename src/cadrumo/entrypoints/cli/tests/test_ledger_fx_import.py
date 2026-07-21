@@ -10,7 +10,6 @@ value_in_eur; EUR rows remain unconverted (native).
 from __future__ import annotations
 
 import csv
-import json
 from collections.abc import Iterator, Sequence
 from pathlib import Path
 from typing import Any
@@ -20,13 +19,15 @@ from click.testing import Result
 
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import resolve_active_bucket_id
 from ....core.config import override_settings
 from ....tests import FIXTURES_DIR
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from .envelope_helpers import unwrap_cli_result as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -42,10 +43,6 @@ def _import_statement(source: Path, *, json_format: bool = False) -> Result:
     if json_format:
         args = ["--format", "json", *args]
     return _invoke(args)
-
-
-def _json_result(result: Result) -> dict[str, Any]:
-    return json.loads(result.output)["result"]
 
 
 def _ledger_rows() -> list[dict[str, Any]]:

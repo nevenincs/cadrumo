@@ -3,10 +3,9 @@ tags:
   - "#research"
   - "#calc-verification"
 date: "2026-04-21"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-21-real-pdf-import-umbrella-research]]"
-  - "[[2026-04-21-declaracion-extractor-adr]]"
   - "[[2026-04-21-casilla-schema-completeness-adr]]"
 ---
 

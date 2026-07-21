@@ -37,8 +37,7 @@ from collections.abc import Awaitable, Callable, Sequence
 from datetime import date
 from typing import Protocol, runtime_checkable
 
-from ...application.auth import AuthProviderDescription
-from ...core import Period
+from ...core import AuthProviderDescription, Period
 from ...domain.deadlines import Schedule, TaxpayerProfile
 
 # ``ModeloInputs`` and its element aliases have a single canonical
@@ -107,6 +106,7 @@ class SubmissionEngineProtocol(Protocol):
         *,
         today: date,
         skip_deadline_window: bool = False,
+        skip_auth_readiness: bool = False,
     ) -> None:
         """Run preflight gates against ``draft``; raise on failure.
 
@@ -115,6 +115,12 @@ class SubmissionEngineProtocol(Protocol):
         and :attr:`WorkflowPurpose.FILE`: VERIFY is calendar-independent,
         while FILE is a local mark-as-filed path whose obligation existence
         has already been enforced by the deadline stage.
+
+        ``skip_auth_readiness`` skips the auth-provider readiness gate. Both
+        workflow purposes are local (the app never performs an actual AEAT
+        submission), so auth is not required to complete the local
+        build/verify/file/export flow; only live/AEAT-touching callers keep
+        the gate enabled.
         """
         ...
 
@@ -133,7 +139,7 @@ class CertificateBundleProtocol(Protocol):
     def describe(self) -> AuthProviderDescription:
         """Return the current auth-provider description; raise on failure.
 
-        Returns an :class:`AuthProviderDescription` with the provider's
+        Returns a :class:`core.AuthProviderDescription` with the provider's
         configured and available state.
         """
         ...

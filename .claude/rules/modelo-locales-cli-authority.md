@@ -7,7 +7,7 @@ trigger: always_on
 
 ## Rule
 
-Manage modelo schema-local translation TOML only through `python -m aeat.locales modelo ...`; never hand-edit registry-local `locales/*.toml` files for routine scaffold, set, remove, audit, or coverage work.
+Manage modelo schema-local translation TOML only through `python -m cadrumo.locales modelo ...`; never hand-edit registry-local `locales/*.toml` files for routine scaffold, set, remove, audit, or coverage work.
 
 ## Why
 
@@ -15,10 +15,10 @@ The accepted ADR `2026-06-11-modelo-locales-cli-adr` makes the modelo locale CLI
 
 ## How
 
-- Good: run `python -m aeat.locales modelo coverage en 130 2019-y-siguientes` before and after translation work to record per-modelo progress.
-- Good: run `python -m aeat.locales modelo scaffold ca 303 2023-y-siguientes` to align a selected schema-local catalogue without overwriting translated leaves.
-- Good: run `python -m aeat.locales modelo set hu 130 2019-y-siguientes labels 01 "Bevételek"` to update one translated leaf after registry-key validation.
+- Good: run `python -m cadrumo.locales modelo coverage en 130 2019-y-siguientes` before and after translation work to record per-modelo progress.
+- Good: run `python -m cadrumo.locales modelo scaffold ca 303 2023-y-siguientes` to align a selected schema-local catalogue without overwriting translated leaves.
+- Good: run `python -m cadrumo.locales modelo set hu 130 2019-y-siguientes labels 01 "Bevételek"` to update one translated leaf after registry-key validation.
 - Good: leave Spanish schema-local TOML absent unless a future ADR explicitly changes the fallback model; the official Spanish `CasillaDefinition.label` remains the legal source.
-- Bad: opening `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/locales/en.toml` in an editor to add or remove keys by hand.
+- Bad: opening `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/locales/en.toml` in an editor to add or remove keys by hand.
 - Bad: treating scaffold placeholders whose value equals the schema key as completed translations.
 - Bad: moving official Spanish schema labels into locale TOML or replacing schema `label` values with translated operator-facing text.

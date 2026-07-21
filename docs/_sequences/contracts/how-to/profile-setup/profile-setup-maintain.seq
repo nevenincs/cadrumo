@@ -1,0 +1,15 @@
+@setup aeat config profile create bruno-2026 --quiet --accept-defaults --entity-type natural_person --tax-id 22222222J --name "Bruno" --surnames "Martin Ruiz" --irpf-income-categories actividad_economica --activity "diseno grafico" --iva-regime GENERAL --tax-residence-ccaa madrid
+@step Edit a fact with the flags you want to change.
+aeat config profile edit bruno-2026 --quiet --address-postcode 28013
+@step Rename the profile; the active-profile pointer follows the rename.
+aeat config profile rename bruno-2026 bruno-real
+@step Duplicate it to start a second profile from the same facts.
+aeat config profile duplicate bruno-real bruno-copy
+@step Delete the duplicate; deletion is local and irreversible.
+aeat config profile delete bruno-copy --yes
+@step Select the retained profile before exporting it.
+aeat config switch bruno-real
+@step Export the profile to a portable cleartext JSON file.
+@result aeat --format json config profile export bruno-real --to bruno-real-profile.json --cleartext-local
+@expect result.schema_version == 3
+@expect exit_code == 0

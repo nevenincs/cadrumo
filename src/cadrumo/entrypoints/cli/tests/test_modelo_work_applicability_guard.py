@@ -1,6 +1,6 @@
 """End-to-end CLI verification for the ``work create`` applicability guard.
 
-Round-4 finding M4: ``modelo work create --modelo 202`` succeeded for a
+Previously ``modelo work create --modelo 202`` succeeded for a
 natural person with no guard — the operator could provision a work unit
 for a modelo their taxpayer model positively excludes, and the engine
 would then be asked to run an Impuesto sobre Sociedades cuota for a
@@ -24,22 +24,15 @@ against the real persisted profile.
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _create_natural_person() -> None:
@@ -101,7 +94,7 @@ def _create_non_resident_irnr_natural_person() -> None:
 
 
 def test_work_create_refuses_modelo_202_for_a_natural_person(
-    _isolated_cli_backend: Path,
+    _isolated_cli_backend: Path,  # noqa: F811
 ) -> None:
     """M4: a natural person is refused a Modelo 202 work unit.
 
@@ -128,7 +121,7 @@ def test_work_create_refuses_modelo_202_for_a_natural_person(
 
 
 def test_work_create_refuses_modelo_100_for_a_legal_entity(
-    _isolated_cli_backend: Path,
+    _isolated_cli_backend: Path,  # noqa: F811
 ) -> None:
     """M4: a sociedad limitada is refused a Modelo 100 work unit.
 
@@ -151,7 +144,7 @@ def test_work_create_refuses_modelo_100_for_a_legal_entity(
 
 
 def test_work_create_refuses_modelo_130_for_non_resident_irnr(
-    _isolated_cli_backend: Path,
+    _isolated_cli_backend: Path,  # noqa: F811
 ) -> None:
     """A declared IRNR non-resident is refused the resident-IRPF M130 work unit."""
 
@@ -172,7 +165,7 @@ def test_work_create_refuses_modelo_130_for_non_resident_irnr(
 
 
 def test_work_create_refuses_modelo_100_for_non_resident_irnr(
-    _isolated_cli_backend: Path,
+    _isolated_cli_backend: Path,  # noqa: F811
 ) -> None:
     """A declared IRNR non-resident is refused the resident-IRPF M100 work unit."""
 
@@ -193,7 +186,7 @@ def test_work_create_refuses_modelo_100_for_non_resident_irnr(
 
 
 def test_work_create_allow_not_applicable_bypasses_the_guard(
-    _isolated_cli_backend: Path,
+    _isolated_cli_backend: Path,  # noqa: F811
 ) -> None:
     """The ``--allow-not-applicable`` escape hatch lets an operator with
     a genuine reason override the refusal; the bypass is recorded in the
@@ -218,7 +211,7 @@ def test_work_create_allow_not_applicable_bypasses_the_guard(
 
 
 def test_work_create_allows_an_applicable_modelo(
-    _isolated_cli_backend: Path,
+    _isolated_cli_backend: Path,  # noqa: F811
 ) -> None:
     """The guard does not over-block: a modelo that applies to the
     profile is created normally. An autónomo en estimación directa owes

@@ -3,17 +3,17 @@
 The AEAT fichero "Tipo de declaración" encodes the *result disposition* of an
 autoliquidación (a ingresar / a compensar / a devolver / negativa). For Modelo
 303 a negative result is, by default, a credit carried forward (compensación,
-``C``). The current accepted ADR treats inscription in the Registro de
-devolución mensual (REDEME) as the standing monthly-devolución disposition
-policy for eligible negative periods; a non-REDEME taxpayer may explicitly
-request devolución (``D``) only in the last filing period of the year.
+``C``). Inscription in the Registro de devolución mensual (REDEME) is treated
+as the standing monthly-devolución disposition policy for eligible negative
+periods; a non-REDEME taxpayer may explicitly request devolución (``D``) only
+in the last filing period of the year.
 
 This module is the ONE place that determination is made. The export header
 composer and the cross-period carry persistence both read the disposition from
 :func:`resolve_modelo_result_disposition`, so the fichero ``D`` the operator
 submits and the cross-period carry the next period reads can never disagree (a
 period requested as devolución is excluded from compensación carry - never
-both). It reuses the codified per-modelo result→code derivation
+both). It reuses the per-modelo result→code derivation
 (:func:`~core.derive_result_disposition`) and the REDEME/last-period
 eligibility gate (:func:`~domain.iva.refund_disposition_available`); it does
 not duplicate either.
@@ -69,7 +69,7 @@ from ...domain.modelos import CalculationRevision, WorkUnit
 from ._action_errors import ModeloRefundElectionNotEligibleError
 
 #: Provisional fallback "Tipo de declaración" disposition for a modelo that
-#: declares the header but has no codified, diseño-grounded result-disposition
+#: declares the header but has no diseño-grounded result-disposition
 #: spec. ``INGRESO`` ("I") is wrong for a credit/zero result, so a new modelo
 #: MUST be added to the spec rather than relying on it. Mirrors the export
 #: fallback constant — kept here because the resolver is the disposition authority.
@@ -92,10 +92,10 @@ def resolve_modelo_result_disposition(
     lawful. The work unit fixes the modelo, filing year, and registry revision
     against which the revision's ``casilla_values`` are validated.
 
-    Computes the modelo's base disposition from its final-result casilla via the
-    codified :func:`~core.derive_result_disposition`, then — for a Modelo 303
-    credit (``C``) — applies the refund election: the current accepted ADR treats
-    a taxpayer inscribed in the Registro de devolución mensual (REDEME) as
+    Computes the modelo's base disposition from its final-result casilla via
+    :func:`~core.derive_result_disposition`, then — for a Modelo 303
+    credit (``C``) — applies the refund election: a taxpayer inscribed in the
+    Registro de devolución mensual (REDEME) is treated as
     requesting devolución (``D``) for eligible negative periods under a standing
     monthly-devolución disposition policy; a non-REDEME taxpayer who explicitly
     elects ``DEVOLVER`` requests devolución for the negative *last* period of the
@@ -105,8 +105,8 @@ def resolve_modelo_result_disposition(
 
     ``refund_election`` is the operator's per-filing opt-in (default
     :attr:`~domain.iva.RefundElection.COMPENSAR`, the non-regressive
-    carry-forward). It is orthogonal to the standing REDEME inscription: the
-    accepted ADR treats REDEME as the standing policy that resolves eligible
+    carry-forward). It is orthogonal to the standing REDEME inscription: REDEME
+    is treated as the standing policy that resolves eligible
     negative periods to devolución regardless of this flag, while a non-REDEME
     taxpayer resolves to devolución only when both the period is eligible AND the
     operator elects ``DEVOLVER``. An election of ``DEVOLVER`` for an ineligible
@@ -266,8 +266,9 @@ def _apply_modelo_303_refund_election(
     Two independent paths resolve to devolución (Tipo de declaración ``D``; Ley
     37/1992 art. 116):
 
-    * **Standing REDEME election** — the current accepted ADR treats a taxpayer
-      inscribed in the Registro de devolución mensual (art. 30 RD 1624/1992) as
+    * **Standing REDEME election** — a taxpayer
+      inscribed in the Registro de devolución mensual (art. 30 RD 1624/1992) is
+      treated as
       requesting devolución for each eligible negative period. The inscription is
       the standing monthly-devolución disposition policy; this flag does not gate
       it.

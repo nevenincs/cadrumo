@@ -1,8 +1,6 @@
 """Recipient feedback-package round trip: reviewer notes back to the originator.
 
-This module closes the "import/feedback-package round trip" item left open on
-issue #421 (`2026-07-04-recipient-encryption-adr` and its follow-up slices):
-the recipient (accountant/gestor) who received a review package via
+The recipient (accountant/gestor) who received a review package via
 :func:`~application.modelo.encrypt_review_package_for_recipient` /
 :func:`~application.modelo.decrypt_review_package_for_recipient` now has a
 SYMMETRIC path back to the originator (the taxpayer) -- a small structured
@@ -60,7 +58,7 @@ from typing import TYPE_CHECKING
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
 from ...core.identity import BucketId
 from ...core.time import now as _utc_now
@@ -81,7 +79,7 @@ if TYPE_CHECKING:
 _FEEDBACK_PACKAGE_VERSION = 1
 
 
-class ReviewPackageFeedbackError(AeatError):
+class ReviewPackageFeedbackError(CadrumoError):
     """Base error for review-package feedback round-trip failures."""
 
 

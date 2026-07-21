@@ -3,10 +3,8 @@ tags:
   - "#audit"
   - "#vault-health-baseline"
 date: "2026-05-19"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-05-19-code-duplication-sweep-plan]]"
-  - "[[2026-05-19-code-duplication-sweep-audit]]"
 ---
 
 # vault-health-baseline audit: baseline vault check before duplication-sweep cleanup

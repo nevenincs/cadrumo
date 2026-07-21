@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#profile-lifecycle-disaster'
 date: '2026-05-19'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-19-profile-lifecycle-disaster-axis-a-session-activation-research]]"
   - "[[2026-05-19-profile-lifecycle-disaster-research]]"
@@ -142,13 +142,13 @@ Project mandates that bind every recommendation below:
   Only forward-only ``git add <explicit-paths>`` + ``git commit``.
 - Locale-via-CLI: every operator-facing string flows through
   ``tr()`` to the four locale catalogues; edits go through
-  ``python -m aeat.locales scaffold`` + ``audit``.
+  ``python -m cadrumo.locales scaffold`` + ``audit``.
 - Settings-not-naked-env: production reads through pydantic-settings
   ``Settings`` only; ``Settings`` reads env exactly once at
   construction.
 - CLI root contract: exactly ``aeat config`` and ``aeat app``. No
   third surface. Engineer verbs live under
-  ``python -m aeat.diagnostics``.
+  ``aeat config repair``.
 - Cascade-closure ADR remains in vault as historical context; its
   closure claim is rescinded (see synthesis audit). Its individual
   decisions on operator vocabulary, NIST passphrase floor, AST
@@ -239,7 +239,7 @@ that asks "is profile X registered?" or "what is the active
 bucket id?" calls ``resolve_active_bucket_id()`` or
 ``read_profile_bucket(name)``. Inline duplicates are forbidden.
 The test ``_test_no_classvar_state.py`` pattern is extended with
-a second AST guard that asserts no module under ``src/aeat/``
+a second AST guard that asserts no module under ``src/cadrumo/``
 re-implements the precedence-chain parse outside the canonical
 helpers.
 
@@ -301,7 +301,7 @@ short-circuits before any state read.
 ### Ruling 5 — `CliUnexpectedBoundaryError` retires as a runtime escape
 
 Twenty of twenty-eight failure modes route to this generic
-catch-all today. Every concrete ``AeatError`` subclass on the
+catch-all today. Every concrete ``CadrumoError`` subclass on the
 boundary now maps to a named ``CliRefusedBoundaryError`` with a
 locale-keyed message and a concrete ``suggestion`` field pointing
 at a verb that actually resolves the state when called. The
@@ -309,13 +309,13 @@ error-registry catalogues at
 ``core/errors/registry/_adapters.py`` and ``_application.py``
 add entries for every error class that lacks one. Unknown
 exception propagation hits a structural test gate that fails CI
-when any ``AeatError`` subclass lacks a registry entry.
+when any ``CadrumoError`` subclass lacks a registry entry.
 
 The eliminated catch-all behaviour does not collapse: a top-level
 ``except Exception`` survives in the entrypoint for genuinely
 unexpected exceptions, but it logs to stderr, emits a structured
 exit code, and points the operator at
-``python -m aeat.diagnostics report`` rather than at the welded-
+``aeat config repair`` rather than at the welded-
 shut ``aeat config repair`` family.
 
 ### Ruling 6 — `aeat config repair` family is rewritten as bootstrap-exempt + state-free
@@ -336,18 +336,18 @@ load-then-delete pattern.
 (read last N lines via seek-from-end) rather than a full file
 load. The MemoryError under normal log sizes retires.
 
-### Ruling 7 — The stale `aeat.domain.vat` import retires
+### Ruling 7 — The stale English IVA package import retires
 
-``aeat.application.aggregation._iva_ledger``, ``_oss_ioss``,
+``cadrumo.application.aggregation._iva_ledger``, ``_oss_ioss``,
 ``_prorrata``, and ``test_iva_ledger`` retarget from the
-non-existent ``aeat.domain.vat`` to the actual
-``aeat.domain.iva`` module that survives the recent
+non-existent English IVA package to the actual
+``cadrumo.domain.iva`` module that survives the recent
 spanish-stem-terminology-authority rename. This is the F11
 finding; the import retire lifts the residual import error that
 defers the F7 10-minute hang.
 
 A second structural-gate test enforces:
-``python -c "import aeat"`` must succeed. The gate prevents a
+``python -c "import cadrumo"`` must succeed. The gate prevents a
 future rename from re-introducing a console-script-only import
 failure.
 
@@ -376,7 +376,7 @@ provisioner.
 
 The four cleanup rulings (--version fast-path,
 ``CliUnexpectedBoundaryError`` elimination, ``repair`` family
-rewrite, ``aeat.domain.vat`` import retire) are required for the
+rewrite, English IVA package import retirement) are required for the
 operator experience to clear the fumbler-testimony quality bar.
 They are not optional polish; the failure-mode catalogue (Axis E)
 documents each as a structural contributor to the disaster.
@@ -410,8 +410,8 @@ pain point. No regression on the three bright spots the fumbler
 identified (NIF checksum validation, empty-NIF rejection,
 non-TTY interactive refusal).
 
-The trunk-wide ``aeat.domain.vat`` import retire (Ruling 7)
-likely breaks tests authored against ``aeat.domain.iva``'s old
+The trunk-wide English IVA package import retirement (Ruling 7)
+likely breaks tests authored against ``cadrumo.domain.iva``'s old
 ``_invoice_classification`` symbol map; those tests get migrated
 in the same commit as the production rename. No parallel chain;
 both sides flip together.

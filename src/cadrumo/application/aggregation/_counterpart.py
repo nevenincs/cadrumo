@@ -1,14 +1,9 @@
 """Modelo 347/349 counterpart aggregation for informativa declarations.
 
 Used by :mod:`~application.aggregation._service`, the per-modelo
-aggregation service. This is not the live calculate source mesh: standalone
-``CounterpartObservation`` rows are currently operator-supplied to the aggregate
-surface, while calculation-facing source values use
-:class:`~application.aggregation.CalculationSourceResolution`.
-When a modelo revision declares only one counterpart source family, the
-calculation resolver narrows the active
-:class:`~domain.calculations.registry.ModeloRevision` view before projecting
-the registry binding values.
+aggregation service. This is an operator preview surface, not the live
+calculation source mesh: standalone ``CounterpartObservation`` rows are
+operator-supplied, while calculation uses enrolled repository-backed sources.
 
 Modelo 347 covers annual operations with third parties whose total exceeds the
 declaration floor. Modelo 349 covers intra-EU operations by member-state
@@ -20,8 +15,7 @@ for consumers that need the 347 threshold decision.
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
-from datetime import date
+from collections.abc import Mapping
 from decimal import Decimal
 from types import MappingProxyType
 
@@ -30,43 +24,14 @@ from pydantic import BaseModel, Field, InstanceOf, field_validator, model_valida
 from ...core import M347_THRESHOLD_EUR, STRICT_FROZEN_CONFIG, Modelo, Period
 from ...core.aggregation import (
     COUNTERPART_SOURCE_KINDS,
-    BindingSourceKind,
     CounterpartSourceKind,
     OperationKind347,
     OperationKind349,
     counterpart_source_kind,
 )
-from ...domain.calculations.registry import (
-    CounterpartAggregationObservation,
-    ModeloRevision,
-    resolve_counterpart_binding_values,
-)
 from ._grouping import filter_observations_for_modelo, group_and_collect_names
-from ._source_mesh import CalculationSourceContext, CalculationSourceProvenance, CalculationSourceResolution
 
 _CANONICAL_SOURCE_KINDS = COUNTERPART_SOURCE_KINDS
-_OWNED_SOURCES: tuple[BindingSourceKind, ...] = (
-    BindingSourceKind.LEDGER_TRANSACTION,
-    BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-)
-_OWNED_SOURCE_SET = frozenset(_OWNED_SOURCES)
-_M349_CLAVE_BY_OPERATION_KIND: Mapping[str, str] = MappingProxyType(
-    {
-        OperationKind349.INTRA_DELIVERY.value: "E",
-        OperationKind349.INTRA_ACQUISITION.value: "A",
-        OperationKind349.INTRA_SERVICE_OUT.value: "S",
-        OperationKind349.INTRA_SERVICE_IN.value: "I",
-        OperationKind349.TRIANGULAR.value: "T",
-    },
-)
-_M349_PAYABLE_SUMMARY_BINDING_MIRRORS: Mapping[str, str] = MappingProxyType(
-    {
-        "iva-349-declarante-numero-operadores-adquisicion": "iva-349-declarante-numero-operadores",
-        "iva-349-declarante-importe-operaciones-adquisicion": "iva-349-declarante-importe-operaciones",
-        "iva-349-declarante-numero-rectificaciones-adquisicion": "iva-349-declarante-numero-rectificaciones",
-        "iva-349-declarante-importe-rectificaciones-adquisicion": "iva-349-declarante-importe-rectificaciones",
-    },
-)
 
 
 def _validate_source_kind(value: str) -> CounterpartSourceKind:
@@ -288,59 +253,6 @@ def aggregate_counterpart_349(
     return _aggregate_for_modelo(observations, modelo=Modelo.M349.value, period=period)
 
 
-class CounterpartAggregationSourceResolver:
-    """Resolve counterpart-source bindings from operator-supplied 347/349 observations.
-
-    The resolver is deliberately repository-free: it wraps the existing
-    ``CounterpartObservation`` aggregate surface and emits the source-mesh
-    envelope used by calculation once a caller supplies those observations.
-    """
-
-    resolver_id = "counterpart_aggregation"
-    owned_sources = _OWNED_SOURCES
-
-    def __init__(self, *, observations: Iterable[CounterpartObservation] = ()) -> None:
-        self._observations = tuple(observations)
-
-    def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
-        active_sources = _counterpart_sources_for_revision(context)
-        if not active_sources:
-            return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
-
-        selected_observations = _selected_counterpart_observations(
-            context=context,
-            observations=self._observations,
-            active_sources=active_sources,
-        )
-        aggregation = _aggregate_counterpart_for_context(context, selected_observations)
-        registry_observations = _registry_observations_from_counterpart_aggregation(aggregation)
-        active_revision = _revision_with_active_counterpart_bindings(context.revision, active_sources)
-        binding_values = resolve_counterpart_binding_values(active_revision, registry_observations)
-        return CalculationSourceResolution(
-            resolver_id=self.resolver_id,
-            owned_sources=self.owned_sources,
-            binding_values=_m349_declarante_summary_union(
-                context=context,
-                binding_values=binding_values,
-                target_binding_ids=frozenset(binding.id for binding in active_revision.bindings),
-            ),
-            source_transaction_ids=tuple(
-                sorted(
-                    observation.source_object_id
-                    for observation in selected_observations
-                    if observation.source_kind is BindingSourceKind.LEDGER_TRANSACTION
-                ),
-            ),
-            provenance=tuple(
-                CalculationSourceProvenance(
-                    source_kind=observation.source_kind.value,
-                    source_ref=f"{observation.source_kind.value}:{observation.source_object_id}",
-                )
-                for observation in selected_observations
-            ),
-        )
-
-
 def _counterpart_readiness_for_modelo(
     *,
     modelo: str,
@@ -368,112 +280,6 @@ def _counterpart_readiness_for_modelo(
     }
 
 
-def _counterpart_sources_for_revision(context: CalculationSourceContext) -> frozenset[BindingSourceKind]:
-    sources: set[BindingSourceKind] = set()
-    for binding in context.revision.bindings:
-        try:
-            source = BindingSourceKind(binding.source)
-        except ValueError:
-            continue
-        if source in _OWNED_SOURCE_SET:
-            sources.add(source)
-    return frozenset(sources)
-
-
-def _revision_with_active_counterpart_bindings(
-    revision: ModeloRevision,
-    active_sources: frozenset[BindingSourceKind],
-) -> ModeloRevision:
-    return revision.model_copy(
-        update={
-            "bindings": tuple(binding for binding in revision.bindings if binding.source in active_sources),
-        },
-    )
-
-
-def _aggregate_counterpart_for_context(
-    context: CalculationSourceContext,
-    observations: tuple[CounterpartObservation, ...],
-) -> CounterpartAggregation:
-    if str(context.modelo) == Modelo.M347.value:
-        return aggregate_counterpart_347(observations, period=context.period)
-    if str(context.modelo) == Modelo.M349.value:
-        return aggregate_counterpart_349(observations, period=context.period)
-    return CounterpartAggregation(
-        modelo=str(context.modelo),
-        period=context.period,
-        rollups=(),
-        total_counterparties=0,
-        total_taxable_base=Decimal("0"),
-        total_invoice_total=Decimal("0"),
-    )
-
-
-def _selected_counterpart_observations(
-    *,
-    context: CalculationSourceContext,
-    observations: tuple[CounterpartObservation, ...],
-    active_sources: frozenset[BindingSourceKind],
-) -> tuple[CounterpartObservation, ...]:
-    modelo_kinds = _MODELO_KIND_CATALOGUE.get(str(context.modelo), frozenset())
-    return tuple(
-        observation
-        for observation in observations
-        if observation.source_kind in active_sources and observation.operation_kind in modelo_kinds
-    )
-
-
-def _registry_observations_from_counterpart_aggregation(
-    aggregation: CounterpartAggregation,
-) -> tuple[CounterpartAggregationObservation, ...]:
-    return tuple(_registry_observation_from_counterpart_rollup(aggregation, rollup) for rollup in aggregation.rollups)
-
-
-def _registry_observation_from_counterpart_rollup(
-    aggregation: CounterpartAggregation,
-    rollup: CounterpartRollup,
-) -> CounterpartAggregationObservation:
-    return CounterpartAggregationObservation(
-        source_kind=rollup.source_kind,
-        source_id=f"{rollup.source_kind.value}:{rollup.counterparty_nif}:{rollup.operation_kind}",
-        party_tax_id=rollup.counterparty_nif,
-        country_code=rollup.counterparty_country,
-        transaction_date=_period_representative_date(aggregation.period),
-        base_amount=rollup.total_taxable_base,
-        invoice_total_amount=rollup.total_invoice_total,
-        intracommunity_clave=_m349_clave_for_operation_kind(rollup.operation_kind),
-        party_legal_name=rollup.counterparty_name or None,
-    )
-
-
-def _period_representative_date(period: Period) -> date:
-    if period.has_date_span():
-        return period.start_date
-    return date(period.filing_year, 1, 1)
-
-
-def _m349_clave_for_operation_kind(operation_kind: str) -> str | None:
-    return _M349_CLAVE_BY_OPERATION_KIND.get(operation_kind)
-
-
-def _m349_declarante_summary_union(
-    *,
-    context: CalculationSourceContext,
-    binding_values: dict[str, Decimal],
-    target_binding_ids: frozenset[str],
-) -> dict[str, Decimal]:
-    if str(context.modelo) != Modelo.M349.value:
-        return binding_values
-    merged = dict(binding_values)
-    for payable_binding, public_binding in _M349_PAYABLE_SUMMARY_BINDING_MIRRORS.items():
-        if payable_binding not in binding_values:
-            continue
-        if public_binding not in target_binding_ids:
-            continue
-        merged[public_binding] = merged.get(public_binding, Decimal("0")) + binding_values[payable_binding]
-    return merged
-
-
 def declarable_counterparty_nifs_347(aggregation: CounterpartAggregation) -> frozenset[str]:
     """Return counterparties whose full Modelo 347 total exceeds the declaration floor."""
     totals: dict[str, Decimal] = {}
@@ -490,7 +296,6 @@ def declarable_for_347(aggregation: CounterpartAggregation, *, counterparty_nif:
 __all__ = [
     "COUNTERPART_MODELO_KIND_CATALOGUE",
     "CounterpartAggregation",
-    "CounterpartAggregationSourceResolver",
     "CounterpartObservation",
     "CounterpartRollup",
     "OperationKind347",

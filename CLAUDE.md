@@ -15,7 +15,7 @@ You MUST respect these rules at all times:
 @.claude/rules/aeat-locales-cli.md
 @.claude/rules/aeat-pytest-background-capture.md
 @.claude/rules/aeat-quality-gates.md
-@.claude/rules/aeat-rag-discovery.md
+@.claude/rules/aeat-rag-discovery-mandatory.md
 @.claude/rules/aeat-registry-authority-flow.md
 @.claude/rules/aeat-roundtrip-discipline.md
 @.claude/rules/aeat-safety-legal-gates.md
@@ -31,6 +31,7 @@ You MUST respect these rules at all times:
 @.claude/rules/binding-source-kind-single-taxonomy.md
 @.claude/rules/binding-validation-single-contract.md
 @.claude/rules/binding-values-carry-provenance.md
+@.claude/rules/cadrumo-product-authority-names.md
 @.claude/rules/calculation-source-canonical-mechanism.md
 @.claude/rules/carried-observations-stamp-their-revision.md
 @.claude/rules/casilla-grounding-corrects-actividades-default-by-section.md
@@ -83,11 +84,8 @@ You MUST respect these rules at all times:
 @.claude/rules/uncommitted-wip-is-not-orphaned.md
 @.claude/rules/vaultspec-archive-discipline.builtin.md
 @.claude/rules/vaultspec-cli.builtin.md
-@.claude/rules/vaultspec-codify.builtin.md
-@.claude/rules/vaultspec-discovery.builtin.md
 @.claude/rules/vaultspec-dry-run-discipline.builtin.md
 @.claude/rules/vaultspec-plan-editing-discipline.builtin.md
-@.claude/rules/vaultspec-rag.builtin.md
 @.claude/rules/vaultspec-system.builtin.md
 @.claude/rules/vaultspec.builtin.md
 @.claude/rules/verification-grounding-needs-oracle-evidence.md

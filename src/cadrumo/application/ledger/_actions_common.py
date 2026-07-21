@@ -27,6 +27,7 @@ from ...adapters.persistence.profile.modelos_calculation import CalculationRevis
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.profile.usage_ratios import load_usage_ratios
+from ...adapters.persistence.storage import TRANSACTION_CATALOGUE_NAMESPACE
 from ...core.time import coerce_utc_aware
 from ...domain.attachments import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments import AttachmentStoreProtocol as _AttachmentStoreProtocol
@@ -46,7 +47,6 @@ from ...domain.modelos import (
     WorkUnitCatalogueRepositoryProtocol,
 )
 from ...domain.transactions import (
-    TX_BUCKET_NAMESPACE,
     BucketTransactionRef,
     Transaction,
     TransactionCatalogue,
@@ -426,18 +426,16 @@ def _verify_purchase_invoice_evidence(
 
     1. A :class:`PurchaseInvoiceEvidence` record minted by ``aeat app ledger
        evidence add`` (PDF/image evidence registered into the dedicated evidence
-       store). This is the path the receipt-OCR/PDF-evidence ADR's acceptance
-       criterion requires — an id produced by ``evidence add`` must be accepted by
-       ``aeat app ledger attach`` in the same shell session (ADR
-       ``2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence``, 2026-05-14
-       amendment).
+       store) — an id produced by ``evidence add`` must be accepted by
+       ``aeat app ledger attach`` in the same shell session.
     2. An imported received-invoice id in the rich :class:`InvoiceCatalogue`
        (bucket match plus :attr:`InvoiceKind.RECEIVED`), written only by the
        invoice-import flows.
 
     Ids minted by ``aeat app ledger invoice add`` (slim operator invoice records)
-    are deliberately NOT a valid evidence reference per the ledger-invoice
-    unification ADR's store split; they are refused with an instructive message.
+    are deliberately NOT a valid evidence reference, because that store is
+    kept split from the evidence store; they are refused with an instructive
+    message.
     """
     evidence_id = command.purchase_invoice_evidence_id
     if evidence_id is None:
@@ -598,7 +596,7 @@ def _require_transaction(catalogue: TransactionCatalogue, transaction_id: str) -
     if transaction is None:
         raise TransactionNotFoundError(
             f"transaction not found: {transaction_id}",
-            context={"namespace": TX_BUCKET_NAMESPACE, "transaction_id": transaction_id},
+            context={"namespace": TRANSACTION_CATALOGUE_NAMESPACE.namespace, "transaction_id": transaction_id},
         )
     return transaction
 

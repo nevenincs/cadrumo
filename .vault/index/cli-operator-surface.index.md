@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-operator-surface'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
   - '[[2026-06-10-cli-operator-surface-W01-P01-S01]]'
@@ -77,7 +77,7 @@ Auto-generated index of all documents tagged with `#cli-operator-surface`.
 
 ### adr
 
-- `2026-06-10-cli-operator-surface-adr` - `cli-operator-surface` adr: `operator surface verb, lifecycle, and honesty decisions` | (**status:** `accepted` -- operator approval with caveats recorded 2026-06-10)
+- `2026-06-10-cli-operator-surface-adr` - `cli-operator-surface` adr: `operator surface verb, lifecycle, and honesty decisions` | (**status:** `accepted`)
 
 ### audit
 

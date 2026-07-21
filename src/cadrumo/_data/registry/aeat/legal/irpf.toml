@@ -658,6 +658,172 @@ required_text = [
     "rendimiento neto de módulos de\u00a02024",
 ]
 
+[legal."orden-hfp-1359-2023:da-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#disposicion-adicional-primera"
+document_id = "BOE-A-2023-25882"
+section = "disposición adicional primera"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-15
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Reduccion general del 5 por ciento del rendimiento neto de modulos para 2024, aplicable tambien para cuantificar el rendimiento neto a efectos de los pagos fraccionados (M131) de 2024 (apartado 3)."
+required_text = [
+    "Reducción en 2024 del rendimiento neto calculado por el método de estimación objetiva",
+    "podrán reducir el rendimiento neto de módulos obtenido en 2024 en un 5 por ciento",
+    "Esta reducción se tendrá en cuenta para cuantificar el rendimiento neto a efectos de los pagos fraccionados correspondientes a 2024",
+]
+
+[legal."orden-hfp-1359-2023:instruccion-2-2-a"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-ii-instruccion-2-2-a"
+document_id = "BOE-A-2023-25882"
+section = "Anexo II, instrucción 2.2.a) Minoración por incentivos al empleo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-15
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 2a: minoracion por incentivos al empleo. El rendimiento neto previo se minora en el coeficiente de minoracion (incremento del modulo personal asalariado x 0,40, mas el coeficiente por tramos del numero de unidades restante) multiplicado por el rendimiento anual por unidad del modulo personal asalariado. Cross-checked byte-identical against the AEAT Manual practico de Renta 2024, Parte 1."
+required_text = [
+    "2.2 Fase 2: Rendimiento neto minorado.",
+    "El rendimiento neto previo se minorará en el importe de los incentivos al empleo y la inversión",
+    "a) Minoración por incentivos al empleo.",
+    "Si la diferencia resultase positiva, a ésta se aplicará el coeficiente 0,40",
+]
+
+[legal."orden-hfp-1359-2023:instruccion-2-2-b"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-ii-instruccion-2-2-b"
+document_id = "BOE-A-2023-25882"
+section = "Anexo II, instrucción 2.2.b) Minoración por incentivos a la inversión"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-15
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 2a: minoracion por incentivos a la inversion. Son deducibles las cantidades que, en concepto de amortizacion del inmovilizado material o intangible afecto a la actividad, correspondan a la depreciacion efectiva, calculada segun la tabla de amortizacion de la propia orden (coeficiente lineal maximo, minimo derivado del periodo maximo, o cualquier coeficiente intermedio). El primer slice del motor no modela un registro de bienes de inversion por elemento; la minoracion se recoge como un importe declarado por el operador, grounded en esta instruccion, y se resta del rendimiento neto previo junto con la minoracion por incentivos al empleo."
+required_text = [
+    "b) Minoración por incentivos a la inversión.",
+    "Serán deducibles las cantidades que, en concepto de amortización del inmovilizado, material o intangible, correspondan a la depreciación efectiva",
+    "El coeficiente de amortización lineal máximo.",
+]
+
+[legal."orden-hfp-1359-2023:instruccion-2-3-b-3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-ii-instruccion-2-3-b-3"
+document_id = "BOE-A-2023-25882"
+section = "Anexo II, instrucción 2.3.b.3) Índice corrector de exceso"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-15
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector de exceso. Cuando el rendimiento neto minorado supera la cuantia tabulada para la actividad, al exceso sobre dicha cuantia se le aplica el indice 1,30. Cross-checked byte-identical against the AEAT Manual practico de Renta 2024, Parte 1 (cuantia 30.586,03 euros, epigrafe 673.1)."
+required_text = [
+    "b.3) Índice corrector de exceso:",
+    "al exceso sobre dichas cuantías se le aplicará el índice 1,30",
+]
+
+[legal."orden-hfp-1359-2023:anexo-ii-instruccion-2-3-incompatibilidades"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-ii-instruccion-2-3-incompatibilidades"
+document_id = "BOE-A-2023-25882"
+section = "Anexo II, instrucción 2.3 Fase 3: Rendimiento neto de módulos — Incompatibilidades entre los índices correctores"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-15
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 3a: incompatibilidades entre los indices correctores. El indice corrector para empresas de pequena dimension (b.1) nunca se aplica a las actividades que tienen asignados los indices correctores especiales (a.2 transporte por autotaxis, a.3 transporte urbano colectivo, a.4 transporte de mercancias por carretera y servicios de mudanzas, a.5), y cuando resulte aplicable el indice b.1 tampoco se aplica el indice corrector de exceso (b.3); el indice corrector de temporada (b.2) y el de inicio de nuevas actividades (b.4) son a su vez incompatibles entre si. El motor de modulos M131 2024 (0003-modulos-engine.toml, m131_resolve_modulos_indices_generales) aplica los cuatro indices generales (b.1, b.2, b.4, b.3) en el orden de la propia Orden y hace cumplir estructuralmente las tres incompatibilidades, en paralelo al motor 2025 grounded en orden-hac-1347-2024:anexo-ii-instruccion-2-3-incompatibilidades."
+required_text = [
+    "Incompatibilidades entre los índices correctores:",
+    "En ningún caso será aplicable el índice corrector para empresas de pequeña dimensión (b.1) a las actividades para las que están previstos los índices correctores especiales enumerados en las letras a.2), a.3), a.4) y a.5).",
+    "Cuando resulte aplicable el índice corrector para empresas de pequeña dimensión (b.1) no se aplicará el índice corrector de exceso (b.3).",
+]
+
+[legal."orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-1"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-ii-instruccion-2-3-b-1"
+document_id = "BOE-A-2023-25882"
+section = "Anexo II, instrucción 2.3.b.1) Índice corrector para empresas de pequeña dimensión"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-15
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector para empresas de pequena dimension. Se aplica el indice que corresponda (0,70/0,75/0,80 segun la poblacion del municipio, o 0,90 si ademas hay personal asalariado hasta 2 trabajadores) cuando concurren todas las circunstancias: titular persona fisica, un solo local, no mas de un vehiculo afecto de hasta 1.000 kg, y sin personal asalariado (salvo el supuesto de hasta 2 trabajadores del indice 0,90). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.1)."
+required_text = [
+    "b.1) Índice corrector para empresas de pequeña dimensión:",
+    "Titular persona física.",
+    "Sin personal asalariado.",
+]
+
+[legal."orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-ii-instruccion-2-3-b-2"
+document_id = "BOE-A-2023-25882"
+section = "Anexo II, instrucción 2.3.b.2) Índice corrector de temporada"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-15
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector de temporada. Cuando la actividad tenga la consideracion de actividad de temporada (se desarrolla habitualmente solo ciertos dias del ano, continuos o alternos, sin exceder de 180 dias por ano) se aplica el indice 1,50 (hasta 60 dias), 1,35 (de 61 a 120 dias) o 1,25 (de 121 a 180 dias). Incompatible con el indice corrector por inicio de nuevas actividades (b.4). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.2)."
+required_text = [
+    "b.2) Índice corrector de temporada:",
+    "Tendrán la consideración de actividades de temporada las que habitualmente sólo se desarrollen durante ciertos días del año",
+]
+
+[legal."orden-hfp-1359-2023:anexo-ii-instruccion-2-3-b-4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "orden"
+corpus_ref = "corpus/normatives/html/orden-hfp-1359-2023.html#anexo-ii-instruccion-2-3-b-4"
+document_id = "BOE-A-2023-25882"
+section = "Anexo II, instrucción 2.3.b.4) Índice corrector por inicio de nuevas actividades"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-25882"
+published_at = 2023-12-21
+effective_from = 2024-01-01
+effective_to = 2024-12-31
+review_status = "reviewed"
+reviewed_at = 2026-07-15
+reviewed_by = "agent-authored from bundled orden-hfp-1359-2023.html; operator to re-stamp"
+notes = "Fase 3a: indice corrector por inicio de nuevas actividades. El contribuyente que inicie una nueva actividad a partir del 1 de enero de 2023, que no sea de temporada, no ejercida previamente bajo otra titularidad, y realizada en local exclusivo, aplica el indice 0,80 (primer ejercicio) / 0,90 (segundo ejercicio), o 0,60 / 0,70 si el contribuyente tiene una discapacidad de grado igual o superior al 33 por ciento. Incompatible con el indice corrector de temporada (b.2). Cross-checked byte-identical against the bundled orden-hfp-1359-2023.html (Anexo II, instruccion 2.3.b.4)."
+required_text = [
+    "b.4) Índice corrector por inicio de nuevas actividades.",
+    "Que se trate de nuevas actividades cuyo ejercicio se inicie a partir del 1 de enero de 2023.",
+]
+
 [legal."real-decreto-ley-7-2024:art-11"]
 evidence_tier = "legal_authority"
 authority = "boe"

@@ -1,0 +1,62 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "status"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile\tdocs-sequence-sandbox\nprofile_id\t<profile-id>\nidentity.tax_id\tsha256:1c9f9632\nactivities.description\tdocumentation examples\niva.regime\tGENERAL\ntax_residence.ccaa\t<unset>\nNext step: `aeat app overview status`\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "repair",
+        "profile"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "config.repair.profile",
+        "notices": [],
+        "result": {
+          "after": null,
+          "before": {
+            "active_profile": "<profile-id>",
+            "missing_required": [],
+            "next_action": "aeat app overview status",
+            "profile_present_keys": 6,
+            "profile_record_error": "",
+            "profile_record_present": true,
+            "profile_total_keys": 76,
+            "registered_bucket": true,
+            "repairable_by_clearing_pointer": false,
+            "source": "pointer",
+            "status": "ready"
+          },
+          "cleared_pointer": false,
+          "dry_run": true
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "troubleshooting-active-profile"
+}

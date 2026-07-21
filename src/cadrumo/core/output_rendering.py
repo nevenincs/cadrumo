@@ -31,11 +31,11 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from ..core import STRICT_FROZEN_CONFIG
-from .errors import AeatError
+from .errors import CadrumoError
 from .redaction import redact_for_cli_output, redact_structured_for_cli_output
 
 
-class OutputRenderingError(AeatError):
+class OutputRenderingError(CadrumoError):
     """Raised when command output cannot be rendered safely.
 
     Used after payload normalization when a value still cannot be serialized as
@@ -44,7 +44,7 @@ class OutputRenderingError(AeatError):
     """
 
 
-class OutputFormatRefusedError(AeatError):
+class OutputFormatRefusedError(CadrumoError):
     """Raised when a command requests an unsupported :class:`OutputFormat`."""
 
 
@@ -122,9 +122,9 @@ def reveal_cli_identifiers_opt_in() -> bool:
     """Resolve the profile/bucket identifier reveal opt-out at the output boundary.
 
     Reading :func:`cadrumo.core.config.load_settings` here keeps the policy
-    decision at the central success-output privacy boundary (per the
-    centralized-output-redaction ADR) and keeps the pure redaction module free
-    of a Settings dependency. Default off preserves the paste-safe placeholder
+    decision at the central success-output privacy boundary and keeps the
+    pure redaction module free of a Settings dependency. Default off
+    preserves the paste-safe placeholder
     behaviour; an operator sets ``CADRUMO_CLI_REVEAL_IDENTIFIERS=1`` to opt out.
     Both success-output emitters — :func:`render_command_output` and the JSON
     envelope :func:`cadrumo.core.json_contract.emit_json_success` — consult this

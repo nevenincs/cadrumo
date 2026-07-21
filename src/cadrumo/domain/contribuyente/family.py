@@ -29,6 +29,7 @@ from ...core.external_constants import (
     MINIMO_MENOR_TRES_MAX_AGE,
 )
 from ...core.parsing import parse_iso8601_date
+from ...core.time import today_madrid
 from ._errors import ProfileValidationError
 
 # Comunidad de Madrid "Por nacimiento o adopción de hijos" deducción autonómica
@@ -152,7 +153,7 @@ class DescendantInfo(BaseModel):
             return self
         if self.adoption_date < self.birth_date:
             raise ProfileValidationError(f"adoption_date {self.adoption_date} must be ≥ birth_date {self.birth_date}")
-        today = date.today()
+        today = today_madrid()
         if self.adoption_date > today:
             raise ProfileValidationError(
                 f"adoption_date {self.adoption_date} must not be in the future (today={today})",
@@ -410,7 +411,7 @@ class RentaFamilyProfile(BaseModel):
         subsections above and no birth/adoption-date cutoff for descendientes;
         Art. 61's temporal rules are scoped to a mid-year death (norma 4ª) and
         to ascendientes' half-period residency (norma 5ª), neither of which
-        applies here (see ADR ``modelo-100-minimo-descendientes-engine``).
+        applies here.
 
         *birth_order_amounts* and *menor_tres_supplement* are registry
         ``money`` parameters the caller resolves per filing year; this domain
@@ -476,7 +477,7 @@ class RentaFamilyProfile(BaseModel):
         ``0.5`` under custodia compartida). The registry formula multiplies this
         weighted count by the per-child cuantía (721,70 € for 2023+ entries), so
         the per-descendant prorrateo the registry schema cannot express is
-        embedded here — the Python/registry split the ADR mandates.
+        computed here in Python and passed to the registry as a resolved value.
         """
         total = Decimal("0")
         for descendant in self.descendientes:

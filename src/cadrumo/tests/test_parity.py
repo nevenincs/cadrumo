@@ -78,6 +78,167 @@ def test_locale_integrity(manager):
         pytest.fail("\n".join(errors))
 
 
+def test_english_catalogue_distinguishes_product_prose_cli_and_identity_headings(
+    manager: LocaleManager,
+) -> None:
+    """English copy follows the contextual product and executable naming contract."""
+    data = manager.load_locale(manager.locales_dir / "en.yml")
+
+    assert _leaf(data, "adapters", "google", "calc_sheets", "errors", "foreign_spreadsheet_not_owned") == (
+        "The Google Sheet is not marked as owned by this Cadrumo profile."
+    )
+    assert _leaf(data, "adapters", "google", "oauth_flow", "errors", "profile_state_unresolved") == (
+        "Google OAuth cannot resolve the selected Cadrumo profile state."
+    )
+    assert _leaf(data, "adapters", "google", "profile_binding", "errors", "no_active_profile") == (
+        "No active Cadrumo profile is bound for Google OAuth."
+    )
+    assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
+        "Google Drive vault folder {vault_folder_name} belongs to the former product and cannot be used; "
+        "use the Cadrumo vault instead."
+    )
+    assert _leaf(data, "cli", "config", "passphrase", "current_passphrase_prompt") == (
+        "Current Cadrumo secret-store passphrase: "
+    )
+    assert _leaf(data, "cli", "config", "passphrase", "confirm_new_passphrase_prompt") == (
+        "Confirm new Cadrumo secret-store passphrase: "
+    )
+    assert _leaf(data, "cli", "config", "passphrase", "new_passphrase_prompt") == (
+        "New Cadrumo secret-store passphrase: "
+    )
+    assert _leaf(data, "cli", "config", "google", "profile_help") == (
+        "Cadrumo profile name override (default = active profile on workflow state)"
+    )
+
+    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
+        "'{command}' needs a human confirmation, and this client does not support elicitation. "
+        "Run it from a client that can ask you questions, or run the equivalent Cadrumo CLI (`aeat`) command "
+        "directly in a terminal."
+    )
+    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
+        "CADRUMO - local-first workflow for Spanish tax work with AEAT"
+    )
+    assert _leaf(data, "cli", "root", "landing", "headline") == "CADRUMO Tax Assistant"
+
+
+def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings(
+    manager: LocaleManager,
+) -> None:
+    """Spanish copy follows the contextual product and executable naming contract."""
+    data = manager.load_locale(manager.locales_dir / "es.yml")
+
+    assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
+        "La carpeta vault de Google Drive {vault_folder_name} pertenece al producto anterior y no se puede usar; "
+        "usa la carpeta vault de Cadrumo."
+    )
+    assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
+        "La clasificación '%{value}' la asigna Cadrumo automáticamente y no puede establecerse a mano. "
+        "Elige una de: BUSINESS, PERSONAL, MIXED, u omite --classification para dejar la fila sin clasificar."
+    )
+    assert _leaf(data, "cli", "ledger", "classify", "system_state_not_assignable") == (
+        "La clasificación '%{value}' la asigna Cadrumo automáticamente y no puede establecerse a mano. "
+        "Elige una de: BUSINESS, PERSONAL, MIXED."
+    )
+    assert _leaf(data, "mcp", "call", "timeout") == (
+        "'{command}' supero el limite de tiempo del nivel {tier} ({seconds}s) y se cancelo. "
+        "Reintentalo o ejecuta el comando aeat equivalente directamente en un terminal."
+    )
+    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
+        "'{command}' requiere confirmación humana y este cliente no admite la función de preguntas (elicitation). "
+        "Ejecútalo desde un cliente que pueda hacerte preguntas, o ejecuta el comando equivalente de Cadrumo CLI "
+        "(`aeat`) "
+        "directamente en un terminal."
+    )
+    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
+        "CADRUMO, herramienta de declaraciones fiscales con la AEAT."
+    )
+    assert _leaf(data, "cli", "root", "landing", "headline") == "Asistente fiscal CADRUMO"
+
+
+def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings(
+    manager: LocaleManager,
+) -> None:
+    """Catalan copy follows the contextual product and executable naming contract."""
+    data = manager.load_locale(manager.locales_dir / "ca.yml")
+
+    assert _leaf(data, "adapters", "google", "calc_sheets", "errors", "foreign_spreadsheet_not_owned") == (
+        "El full de Google no està marcat com a propietat d'aquest perfil Cadrumo."
+    )
+    assert _leaf(data, "adapters", "google", "oauth_flow", "errors", "profile_state_unresolved") == (
+        "Google OAuth no pot resoldre l'estat del perfil Cadrumo seleccionat."
+    )
+    assert _leaf(data, "adapters", "google", "profile_binding", "errors", "no_active_profile") == (
+        "No hi ha cap perfil Cadrumo actiu enllaçat per a Google OAuth."
+    )
+    assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
+        "La carpeta vault de Google Drive {vault_folder_name} pertany al producte anterior i no es pot utilitzar; "
+        "usa la carpeta vault de Cadrumo."
+    )
+    assert _leaf(data, "cli", "config", "passphrase", "current_passphrase_prompt") == (
+        "Contrasenya actual del magatzem secret Cadrumo: "
+    )
+    assert _leaf(data, "cli", "config", "passphrase", "confirm_new_passphrase_prompt") == (
+        "Confirma la nova contrasenya del magatzem secret Cadrumo: "
+    )
+    assert _leaf(data, "cli", "config", "passphrase", "new_passphrase_prompt") == (
+        "Nova contrasenya del magatzem secret Cadrumo: "
+    )
+    assert _leaf(data, "cli", "config", "google", "profile_help") == (
+        "Perfil Cadrumo a usar (per defecte = perfil actiu de l'estat de flux)"
+    )
+    assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
+        "La classificació '%{value}' l'assigna Cadrumo automàticament i no es pot establir a mà. "
+        "Tria'n una: BUSINESS, PERSONAL, MIXED, o omet --classification per deixar la fila sense classificar."
+    )
+    assert _leaf(data, "cli", "ledger", "classify", "system_state_not_assignable") == (
+        "La classificació '%{value}' l'assigna Cadrumo automàticament i no es pot establir a mà. "
+        "Tria'n una: BUSINESS, PERSONAL, MIXED."
+    )
+    assert _leaf(data, "mcp", "call", "timeout") == (
+        "'{command}' ha superat el limit de temps del nivell {tier} ({seconds}s) i s'ha cancel.lat. "
+        "Torna-ho a provar o executa l'ordre aeat equivalent en un terminal."
+    )
+    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
+        "'{command}' requereix confirmació humana i aquest client no admet la funció de preguntes (elicitation). "
+        "Executa'l des d'un client que pugui fer-te preguntes, o executa l'ordre equivalent de Cadrumo CLI "
+        "(`aeat`) directament en un terminal."
+    )
+    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
+        "CADRUMO, eina de declaracions fiscals amb l'AEAT."
+    )
+    assert _leaf(data, "cli", "root", "landing", "headline") == "Assistent fiscal CADRUMO"
+
+
+def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headings(
+    manager: LocaleManager,
+) -> None:
+    """Hungarian copy follows the contextual product and executable naming contract."""
+    data = manager.load_locale(manager.locales_dir / "hu.yml")
+
+    assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
+        "A Google Drive vault mappa {vault_folder_name} az elozo termekhez tartozik es nem hasznalhato; "
+        "hasznalja a Cadrumo vault mappat."
+    )
+    assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
+        "A(z) '%{value}' besorolást a Cadrumo automatikusan állítja be, kézzel nem adható meg. "
+        "Válassz egyet: BUSINESS, PERSONAL, MIXED, vagy hagyd ki a --classification kapcsolót, "
+        "hogy a sor besorolatlan maradjon."
+    )
+    assert _leaf(data, "cli", "ledger", "classify", "system_state_not_assignable") == (
+        "A(z) '%{value}' besorolást a Cadrumo automatikusan állítja be, kézzel nem adható meg. "
+        "Válassz egyet: BUSINESS, PERSONAL, MIXED."
+    )
+    assert _leaf(data, "mcp", "elicitation", "refusal", "no_channel") == (
+        "A(z) '{command}' emberi megerősítést igényel, és ez a kliens nem támogatja a kérdezés "
+        "(elicitation) funkciót. Futtasd olyan kliensből, amely tud kérdezni, vagy futtasd a megfelelő "
+        "Cadrumo CLI (`aeat`) parancsot közvetlenül a terminálban."
+    )
+    assert _leaf(data, "cli", "operator_surface", "help", "root", "heading") == (
+        "CADRUMO - helyi-alapú spanyol adóügyi munkafolyamat az AEAT hatósággal"
+    )
+    assert _leaf(data, "cli", "root", "landing", "headline") == "CADRUMO Adóasszisztens"
+
+
 def test_set_locale_value_updates_one_leaf(tmp_path: Path):
     """The locale CLI write path updates a concrete leaf in a real YAML file."""
 
@@ -172,8 +333,8 @@ def test_set_locale_value_falls_back_for_multiline_scalar_that_looks_like_a_key(
     assert _leaf(data, "cli", "app", "modelo", "work", "next_action") == "Run aeat app modelo work calculate."
 
 
-def test_set_locale_value_canonicalizes_product_identity(tmp_path: Path):
-    """Locale maintenance writes the canonical product display and human CLI."""
+def test_set_locale_value_canonicalizes_human_cli_without_rewriting_product_prose(tmp_path: Path):
+    """Locale maintenance preserves product prose while canonicalizing the human CLI."""
     locales_dir = tmp_path / "locales"
     locales_dir.mkdir()
     locale_path = locales_dir / "en.yml"
@@ -188,7 +349,7 @@ def test_set_locale_value_canonicalizes_product_identity(tmp_path: Path):
 
     data = temp_manager.load_locale(locale_path)
     assert _leaf(data, "cli", "root", "next_action") == (
-        "CADRUMO prepares the draft; run aeat app modelo work calculate."
+        "Cadrumo prepares the draft; run aeat app modelo work calculate."
     )
 
 
@@ -215,7 +376,7 @@ def test_canonicalize_product_identity_references_handles_folded_help_copy(tmp_p
     for locale in ("ca", "en"):
         data = temp_manager.load_locale(locales_dir / f"{locale}.yml")
         assert _leaf(data, "cli", "root", "next_action") == (
-            "CADRUMO prepares tax forms for AEAT. Run aeat app modelo work calculate or aeat manual fetch."
+            "Cadrumo prepares tax forms for AEAT. Run aeat app modelo work calculate or aeat manual fetch."
         )
         assert _leaf(data, "product", "machine_names") == (
             "Install cadrumo; launch cadrumo-mcp; read cadrumo://status."
@@ -247,12 +408,8 @@ def test_canonicalize_product_identity_cli_selects_only_one_supported_locale(tmp
     assert result.exit_code == 0, result.output
     assert "1 locale catalogue(s)" in result.output
     en_data = manager.load_locale(locales_dir / "en.yml")
-    assert _leaf(en_data, "product", "guidance") == (
-        "CADRUMO works with AEAT; run aeat app overview status."
-    )
-    assert {
-        locale: (locales_dir / f"{locale}.yml").read_bytes() for locale in sibling_bytes
-    } == sibling_bytes
+    assert _leaf(en_data, "product", "guidance") == ("Cadrumo works with AEAT; run aeat app overview status.")
+    assert {locale: (locales_dir / f"{locale}.yml").read_bytes() for locale in sibling_bytes} == sibling_bytes
 
 
 def test_canonicalize_product_identity_cli_rejects_invalid_locale_without_writing(tmp_path: Path) -> None:
@@ -295,9 +452,7 @@ def test_canonicalize_product_identity_cli_omission_updates_every_catalogue(tmp_
     assert "4 locale catalogue(s)" in result.output
     for locale in OutputLanguage:
         data = manager.load_locale(locales_dir / f"{locale.value}.yml")
-        assert _leaf(data, "product", "guidance") == (
-            "CADRUMO works with AEAT; run aeat config profile status."
-        )
+        assert _leaf(data, "product", "guidance") == ("Cadrumo works with AEAT; run aeat config profile status.")
 
 
 def test_set_locale_value_appends_missing_leaf_under_existing_parent(tmp_path: Path):
@@ -458,6 +613,44 @@ def test_ast_scanner_collects_translation_key_kwargs(tmp_path: Path) -> None:
     )
 
     assert "cli.app.modelo.work.sal_reserva_not_decimal" in scan_source_tree(tmp_path)
+
+
+def test_ast_scanner_resolves_aliased_translator_import(tmp_path: Path) -> None:
+    """An aliased ``tr`` import (``from ... import tr as _tr``) declares live keys.
+
+    The underscore-aliased module-level import convention
+    (``from cadrumo.core.i18n import tr as _tr``) is used across the CLI surface.
+    The scanner must resolve the alias and treat ``_tr("dotted.key")`` as a live
+    translation call; otherwise the key is invisible and its genuinely-live
+    catalogue entry is wrongly reported as an orphan.
+    """
+
+    (tmp_path / "aliased_surface.py").write_text(
+        "from cadrumo.core.i18n import tr as _tr\n\ndef render() -> str:\n    return _tr('cli.root.verbose_help')\n",
+        encoding="utf-8",
+    )
+
+    assert "cli.root.verbose_help" in scan_source_tree(tmp_path)
+
+
+def test_ast_scanner_ignores_unaliased_unrelated_call(tmp_path: Path) -> None:
+    """A call to a same-named function that is NOT the translator alias is ignored.
+
+    Anti-vacuity for the alias resolver: a bare ``_tr`` name that was never
+    imported as an alias of ``tr`` must not have its argument harvested as a
+    locale key.
+    """
+
+    (tmp_path / "unrelated_surface.py").write_text(
+        "def _tr(value: str) -> str:\n"
+        "    return value\n"
+        "\n"
+        "def render() -> str:\n"
+        "    return _tr('cli.root.not_a_real_locale_key')\n",
+        encoding="utf-8",
+    )
+
+    assert "cli.root.not_a_real_locale_key" not in scan_source_tree(tmp_path)
 
 
 def test_ast_scanner_collects_locale_key_constant_registries(tmp_path: Path) -> None:

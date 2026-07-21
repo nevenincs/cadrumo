@@ -17,8 +17,6 @@ See Also:
         Secure-object factory reached only when runtime storage is requested.
     :mod:`~adapters.persistence.profile._filing_runtime`
         Adapter-layer sibling helper with the same bucket-resolution shape.
-    ``2026-06-04-secure-storage-production-hardening-w12-p26-s210-review-audit``
-        Review record that accepted this helper and its real-behavior coverage.
 """
 
 from __future__ import annotations
@@ -28,8 +26,8 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import StorageValidationError
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core.config import override_settings
+from ....tests.secure_sql import isolated_storage_root as _isolated_storage  # noqa: F401 - autouse fixture
 from .._runtime_repository import (
     resolve_application_filing_bucket_id,
     secure_objects_for_application_filing_bucket,
@@ -40,16 +38,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _EXPLICIT_BUCKET_ID = "2f85f149-2df7-41b7-b569-aae0b3d0998d"
 _ACTIVE_BUCKET_ID = "34245238-a76d-4ebf-a515-8e5af83cfc0c"
-
-
-@pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path):
-    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
-        dispose_engine(settings)
-        try:
-            yield
-        finally:
-            dispose_engine(settings)
 
 
 @pytest.mark.parametrize(

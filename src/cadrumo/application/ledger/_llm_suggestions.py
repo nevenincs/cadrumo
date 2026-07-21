@@ -8,7 +8,7 @@ are application-layer contracts only; classifier engines and prompt parsing live
 in :mod:`~domain.transactions`, while persistence and audit events are handled
 by the application services that consume these records.
 
-The contracts preserve the review loop required by the LLM ADRs: a suggestion
+The contracts preserve the review loop: a suggestion
 is not persisted until the operator applies it, a rejection records an audit
 event without mutating the transaction, and regulated euro amounts / IVA rates
 are derived by the system rather than emitted by the model.

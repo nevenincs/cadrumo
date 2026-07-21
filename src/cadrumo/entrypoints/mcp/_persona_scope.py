@@ -1,14 +1,13 @@
 """Persona-scoped tool boundary over the operator-surface manifest.
 
-Implements decision D1 of the ``2026-07-01-agent-harness-adr``: a runtime
-``PreToolUse``-layer partition that filters the exposed MCP tool set by the
-active operator persona's declared ``(family, mutability)`` ceiling. The
+A runtime ``PreToolUse``-layer partition that filters the exposed MCP tool set
+by the active operator persona's declared ``(family, mutability)`` ceiling. The
 per-persona declaration in this module is a typed mapping from
 :class:`AgentPersona` to a coarse set of mounted-command-family ``child``
 tokens plus an :class:`~application.operator_surface.OperatorMutability`
 ceiling - derived from each persona document's "Tool scope" section under
 ``src/cadrumo/_data/agent/personas/``. It is deliberately NOT a per-tool
-allowlist: per D1, a second tool-shaped artifact would duplicate the
+allowlist: a second tool-shaped artifact would duplicate the
 manifest's own ``(family, mutability)`` data and could itself drift between
 builds, contrary to ``aeat-registry-authority-flow``'s single-authority
 discipline.
@@ -16,8 +15,7 @@ discipline.
 :func:`is_tool_in_persona_scope` reads the live
 :func:`~application.operator_surface.build_operator_surface_manifest`
 on every call - never a frozen snapshot - so a manifest change (a family
-added, removed, or re-mounted by the in-flight Track-1 ``#1`` manifest-
-completeness brief) is picked up automatically. Correctness of the
+added, removed, or re-mounted) is picked up automatically. Correctness of the
 per-persona declaration against the live manifest is proven separately by
 the build-time pinning test in ``tests/test_persona_scope.py``, not by this
 module.
@@ -35,13 +33,12 @@ before the global HITL gate runs).
 
 Family granularity and the handoff deny rules: the manifest's own boundary is
 the mounted-command-family ``child`` token, not the individual verb, and the
-scope filter stays at that granularity (three personas - ``modelo-preparer``,
-``verifier``, and ``reconciler`` - all declare ``families={"modelo"}``).
-What IS verb-granular is the irreversible boundary: per decision R6(iii) of
-the ``2026-07-02-agent-harness-refoundation-adr``, :data:`PERSONA_HANDOFF_DENIALS`
-structurally denies the filing-handoff leaves (``export``, the record marker
-``file``) to every modelo-lifecycle persona except the ``verifier``, which
-D3 of the ``2026-07-01-agent-harness-adr`` made the sole owner of the
+scope filter stays at that granularity (three personas - ``cadrumo-modelo-preparer``,
+``cadrumo-verifier``, and ``cadrumo-reconciler`` - all declare ``families={"modelo"}``).
+What IS verb-granular is the irreversible boundary:
+:data:`PERSONA_HANDOFF_DENIALS` structurally denies the filing-handoff leaves
+(``export``, the record marker ``file``) to every modelo-lifecycle persona
+except the ``verifier``, which is the sole owner of the
 irreversible artefact. The preparer/verifier split for NON-handoff verbs
 (e.g. the verifier calling ``modelo.work.create``) remains prose-level
 persona discipline; the deny rules close exactly the boundary whose breach
@@ -67,7 +64,7 @@ _STRICT_FROZEN = ConfigDict(frozen=True, strict=True, validate_assignment=True, 
 
 #: The environment variable that selects the active MCP session persona. Absent
 #: or empty means the session is un-personified and keeps the full, unscoped
-#: tool surface - the pre-D1 behaviour is preserved for any caller that does
+#: tool surface, preserved for any caller that does
 #: not opt into a persona boundary.
 PERSONA_ENV_VAR = "CADRUMO_MCP_PERSONA"
 
@@ -88,13 +85,13 @@ class AgentPersona(StrEnum):
     the same token.
     """
 
-    COORDINATOR = "coordinator"
-    ONBOARDING = "onboarding"
-    LEDGER_GROOMER = "ledger-groomer"
-    CLASSIFIER = "classifier"
-    MODELO_PREPARER = "modelo-preparer"
-    VERIFIER = "verifier"
-    RECONCILER = "reconciler"
+    COORDINATOR = "cadrumo-coordinator"
+    ONBOARDING = "cadrumo-onboarding"
+    LEDGER_GROOMER = "cadrumo-ledger-groomer"
+    CLASSIFIER = "cadrumo-classifier"
+    MODELO_PREPARER = "cadrumo-modelo-preparer"
+    VERIFIER = "cadrumo-verifier"
+    RECONCILER = "cadrumo-reconciler"
 
 
 class PersonaToolScope(BaseModel):
@@ -118,10 +115,9 @@ class PersonaToolScope(BaseModel):
     mutability_ceiling: OperatorMutability
 
 
-# Declared per D1 of `2026-07-01-agent-harness-adr`: one typed persona ->
-# (family set, mutability ceiling) mapping, derived from each persona
-# document's "Tool scope" section. This stays coarse at the mounted-command-
-# family boundary (the manifest's own granularity, per the
+# One typed persona -> (family set, mutability ceiling) mapping, derived from
+# each persona document's "Tool scope" section. This stays coarse at the
+# mounted-command-family boundary (the manifest's own granularity, per the
 # `MountedCommandFamily.commands` docstring: "a contract summary ... not a
 # replacement for live command-tree traversal") so a new verb added to an
 # already-scoped family never needs this mapping edited - only a new family
@@ -141,8 +137,8 @@ class PersonaToolScope(BaseModel):
 #
 # modelo-preparer / verifier / reconciler: all scope to the `modelo` family,
 # which already covers work-unit creation/calculation, verification, export,
-# the filing-record marker, and the `reconcile` subgroup - no family grant is
-# pending on the in-flight `#1` manifest-completeness brief today.
+# the filing-record marker, and the `reconcile` subgroup - no further family
+# grant is pending.
 PERSONA_TOOL_SCOPES: tuple[PersonaToolScope, ...] = (
     PersonaToolScope(
         persona=AgentPersona.COORDINATOR,
@@ -213,7 +209,7 @@ def live_family_mutability() -> dict[str, OperatorMutability]:
     Reads :func:`~application.operator_surface.build_operator_surface_manifest`
     fresh on every call rather than caching a snapshot, so a manifest change
     (a family added, removed, or re-mounted) is observed immediately - the
-    single-authority discipline D1 requires.
+    single-authority discipline this module requires.
 
     Returns:
         A mapping of family child token to its :class:`OperatorMutability`.
@@ -228,7 +224,7 @@ def live_family_mutability() -> dict[str, OperatorMutability]:
 def is_tool_in_persona_scope(*, persona: AgentPersona, command_key: str) -> bool:
     """Return whether ``command_key`` is in ``persona``'s live-manifest-checked scope.
 
-    The ``PreToolUse``-layer partition D1 mandates: a command key is in scope
+    The ``PreToolUse``-layer partition: a command key is in scope
     only when (1) its projected family child token is one of the persona's
     declared ``families``, and (2) that family's *live* manifest mutability is
     at or below the persona's declared ``mutability_ceiling``. A family absent
@@ -250,8 +246,7 @@ def is_tool_in_persona_scope(*, persona: AgentPersona, command_key: str) -> bool
     return _MUTABILITY_RANK[family_mutability] <= _MUTABILITY_RANK[scope.mutability_ceiling]
 
 
-# Per-verb handoff deny rules (refoundation ADR R6(iii), closing the
-# 2026-07-01 ADR's D3 caveat structurally): within the shared `modelo` family,
+# Per-verb handoff deny rules: within the shared `modelo` family,
 # only the VERIFIER may produce the irreversible filing artefacts - the export
 # and the record marker. The preparer builds, the reconciler acts after the
 # human files; neither owns the handoff. Personas outside the modelo family
@@ -262,7 +257,7 @@ PERSONA_HANDOFF_DENIALS: frozenset[AgentPersona] = frozenset(
 
 
 #: The mounted-command family that owns the irreversible filing handoff. The
-#: R6(iii) denial is specifically the *modelo* filing boundary (its ``export``
+#: denial is specifically the *modelo* filing boundary (its ``export``
 #: and record-marker ``file`` leaves), so the deny check is scoped to this
 #: family. Without the family guard the bare leaf-name match would also fire on
 #: an unrelated ``<family>.export`` / ``<family>.file`` verb (e.g. a future
@@ -316,7 +311,7 @@ def active_persona(env: Mapping[str, str] | None = None) -> AgentPersona | None:
     against real dict inputs without touching process environment state;
     defaults to ``os.environ`` for the live server). An absent or blank value
     returns ``None``, which callers MUST treat as "unscoped" - the full tool
-    surface, matching pre-D1 behaviour, so an un-personified session (a
+    surface, so an un-personified session (a
     direct developer connection, a session that predates the persona
     boundary) is never accidentally narrowed.
 

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#y-siguientes-verification'
-date: '2026-07-05'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-03-y-siguientes-verification-audit]]'
 ---

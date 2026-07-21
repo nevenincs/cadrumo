@@ -14,7 +14,6 @@ from collections import Counter, defaultdict
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import cast
 
 from pydantic import BaseModel
 
@@ -665,6 +664,17 @@ class RegistryQueryService:
         period: str | None,
         as_of: date | None,
     ) -> tuple[ModeloDefinition, ModeloRevision, int | None, str | None]:
+        if as_of is not None:
+            # The unscoped path resolves the latest revision by period and has no
+            # filing-year context to gate an as_of date against a revision's
+            # validity window, so honouring the argument here is impossible.
+            # Refuse explicitly rather than accept-and-ignore (the accepted-parameter
+            # lie this contract closes); the *_for_scope queries honour as_of.
+            raise RegistryValidationError(
+                "as_of point-in-time selection is not honoured by the unscoped period query, "
+                "which resolves the latest revision by period; resolve with an explicit filing "
+                "year so the as_of date is gated against each revision's validity window.",
+            )
         definition = self._authority.validate_modelo(modelo.strip())
         if period is None:
             revision = max(definition.revisions.values(), key=lambda item: (item.valid_from, str(item.id)))
@@ -902,7 +912,9 @@ def _public_selector(source: str, selector: object) -> BindingSelectorQueryProje
     )
 
 
-def _public_mapping(value: Mapping[str, object]) -> dict[str, object]:
+def _public_mapping(value: object) -> dict[str, object]:
+    if not isinstance(value, Mapping):
+        raise RegistryValidationError(f"unsupported public mapping value {value!r}")
     return {str(key): _public_value(item) for key, item in value.items()}
 
 
@@ -927,9 +939,7 @@ def _public_value(value: object) -> object:
     if isinstance(value, tuple):
         return tuple(_public_value(item) for item in value)
     if isinstance(value, Mapping):
-        # CAST-RATIONALE-TOML-STR-KEYS: all registry and pydantic mappings use str keys;
-        # isinstance(value, Mapping) erases the key type; cast restores it.
-        return _public_mapping(cast("Mapping[str, object]", value))
+        return _public_mapping(value)
     return value
 
 

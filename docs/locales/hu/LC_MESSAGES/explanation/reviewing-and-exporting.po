@@ -1,0 +1,114 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: 2026-07-18 13:20+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../explanation/reviewing-and-exporting.md:1
+msgid "Reviewing your numbers and producing the upload file"
+msgstr "Számai áttekintése és a feltöltési fájl előállítása"
+
+#: ../../explanation/reviewing-and-exporting.md:3
+msgid ""
+"This page covers the two outputs the tool produces once a calculation is "
+"complete - a spreadsheet for you to review, and the exact file the AEAT "
+"portal accepts - and why they are separate things."
+msgstr ""
+"Ez az oldal a két kimenetről szól, amelyet az eszköz előállít, amint egy "
+"számítás elkészült (egy táblázatról, amelyet Ön áttekint, és a pontos "
+"fájlról, amelyet az AEAT portálja elfogad), és arról, miért különálló "
+"dolgok."
+
+#: ../../explanation/reviewing-and-exporting.md:7
+msgid "Why there are two outputs, not one"
+msgstr "Miért van két kimenet, nem egy"
+
+#: ../../explanation/reviewing-and-exporting.md:9
+msgid ""
+"The first output is for you. Before you commit to any numbers, you want "
+"to see how each total was reached and adjust a figure if something looks "
+"off. Your calculation is laid out in Google Sheets with a live formula "
+"behind every total, so a corrected input recomputes everything that "
+"depends on it in front of you, and your reviewed edits pull back into the"
+" tool against the exact calculation the sheet was built from. The offline"
+" `.xlsx` the tool can also produce is a fixed keepsake of the calculation"
+" and its evidence, not a review surface. The walkthrough is [Review "
+"calculations with Google Sheets](../how-to/review-with-google-sheets.md)."
+msgstr ""
+"Az első kimenet Önnek szól. Mielőtt bármely szám mellett elkötelezné "
+"magát, látni szeretné, hogyan érték el az egyes összegeket, és módosítana"
+" egy értéket, ha valami eltérőnek tűnik. A számítása a Google Sheetsben "
+"van kifejtve, minden összeg mögött egy élő formulával, így egy kijavított"
+" bemenet Ön előtt újraszámol mindent, ami tőle függ, a felülvizsgált "
+"szerkesztései pedig visszahúzódnak az eszközbe pontosan azzal a "
+"számítással szemben, amelyből a táblázat épült. Az offline `.xlsx`, "
+"amelyet az eszköz szintén elő tud állítani, a számítás és a bizonyítéka "
+"rögzített emléke, nem áttekintési felület. A végigjárás a [Számítások "
+"áttekintése a Google Sheetsszel](../how-to/review-with-google-sheets.md)."
+
+#: ../../explanation/reviewing-and-exporting.md:19
+msgid ""
+"The second output is for the machine on the other end. AEAT accepts "
+"uploads only in one precise text format, with every value at a fixed "
+"position, rejected if it differs by a character. The tool builds that "
+"file from your reviewed calculation on your own computer - generating the"
+" file and submitting it are separate acts, and the tool never submits for"
+" you. When it writes the file it reports a fingerprint of the exact "
+"contents, so you can later prove which file you uploaded. The steps are "
+"in [Upload your exported modelo at the AEAT portal](../how-to/file-at-"
+"aeat.md)."
+msgstr ""
+"A második kimenet a másik végen lévő gépnek szól. Az AEAT csak egyetlen "
+"pontos szövegformátumban fogad el feltöltéseket, minden értékkel "
+"rögzített pozícióban, és elutasítja, ha akár egy karakterrel is eltér. Az"
+" eszköz ezt a fájlt a felülvizsgált számításából építi az Ön saját gépén:"
+" a fájl előállítása és a beküldése különálló cselekmények, és az eszköz "
+"sosem nyújt be Ön helyett. Amikor kiírja a fájlt, jelentést ad a pontos "
+"tartalom ujjlenyomatáról, így később bizonyíthatja, melyik fájlt töltötte"
+" fel. A lépések a [Töltse fel az exportált modelóját az AEAT portálján"
+"](../how-to/file-at-aeat.md) oldalon vannak."
+
+#: ../../explanation/reviewing-and-exporting.md:28
+msgid ""
+"One is a review surface; the other is a delivery format. Keeping them "
+"apart is what lets each be good at what it does."
+msgstr ""
+"Az egyik áttekintési felület; a másik szállítási formátum. Az, hogy "
+"különtartja őket, teszi lehetővé, hogy mindegyik jó legyen abban, amit "
+"csinál."
+
+#: ../../explanation/reviewing-and-exporting.md:31
+msgid "Where this sits in your filing"
+msgstr "Hol helyezkedik el ez a bevallásában"
+
+#: ../../explanation/reviewing-and-exporting.md:33
+msgid ""
+"These outputs come after the completeness check described in [Editing and"
+" verifying a calculation](editing-and-verifying.md) - review and export "
+"are worth doing only once the modelo is complete. Producing the upload "
+"file is not the same as filing it; what happens after you have the file "
+"is covered in [Recording a filing, and why the tool never files for "
+"you](recording-a-filing-and-the-boundary.md)."
+msgstr ""
+"Ezek a kimenetek a [Egy számítás szerkesztése és ellenőrzése](editing-"
+"and-verifying.md) oldalon leírt teljességi ellenőrzés után jönnek: az "
+"áttekintést és az exportálást csak akkor érdemes elvégezni, amikor a "
+"modelo már teljes. A feltöltési fájl előállítása nem ugyanaz, mint a "
+"benyújtása; hogy mi történik, miután megvan a fájl, azt a [Bevallás "
+"rögzítése, és miért nem nyújt be sosem az eszköz Ön helyett](recording-a"
+"-filing-and-the-boundary.md) ismerteti."
+

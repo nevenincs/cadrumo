@@ -1,0 +1,2 @@
+@step Create the taxpayer profile with the identity and activity-start facts.
+@static aeat config profile create ana --quiet --entity-type natural_person --tax-id 12345678Z --name "Ana" --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01

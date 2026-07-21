@@ -1,0 +1,1 @@
+@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130-2026-1T.boe

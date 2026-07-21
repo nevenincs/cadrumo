@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-truth-registry'
-date: '2026-06-15'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-17'
 related:
   - '[[2026-05-03-calculation-truth-registry-pending-adr]]'
   - '[[2026-05-03-calculation-truth-registry-phase5-step1-exec]]'
@@ -38,7 +38,6 @@ related:
   - '[[2026-05-03-calculation-truth-registry-phase5-step8-review-audit]]'
   - '[[2026-05-03-calculation-truth-registry-phase5-step9-exec]]'
   - '[[2026-05-03-calculation-truth-registry-phase5-step9-review-audit]]'
-  - '[[2026-05-03-calculation-truth-registry-rebuild-plan]]'
   - '[[2026-05-04-calculation-authority-evidence-tiering-adr]]'
   - '[[2026-05-04-calculation-authority-evidence-tiering-research]]'
   - '[[2026-05-04-calculation-truth-registry-legal-grounding-review-audit]]'
@@ -238,6 +237,20 @@ related:
   - '[[2026-05-07-calculation-truth-registry-phase0b-coverage-exec]]'
   - '[[2026-05-08-modelo-100-bulk-segmentation-audit]]'
   - '[[2026-05-08-modelo-directory-segmentation-adr]]'
+  - '[[2026-07-12-calculation-truth-registry-P01-S01]]'
+  - '[[2026-07-12-calculation-truth-registry-P01-S02]]'
+  - '[[2026-07-12-calculation-truth-registry-P01-summary]]'
+  - '[[2026-07-12-calculation-truth-registry-P02-S03]]'
+  - '[[2026-07-12-calculation-truth-registry-audit]]'
+  - '[[2026-07-12-calculation-truth-registry-plan]]'
+  - '[[2026-07-12-calculation-truth-registry-reference]]'
+  - '[[2026-07-14-calculation-truth-registry-P01-S01]]'
+  - '[[2026-07-14-calculation-truth-registry-P01-S02]]'
+  - '[[2026-07-14-calculation-truth-registry-P02-S03]]'
+  - '[[2026-07-14-calculation-truth-registry-P02-S04]]'
+  - '[[2026-07-14-calculation-truth-registry-P02-S05]]'
+  - '[[2026-07-14-calculation-truth-registry-audit]]'
+  - '[[2026-07-14-calculation-truth-registry-plan]]'
 ---
 
 # `calculation-truth-registry` feature index
@@ -252,7 +265,7 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-05-04-calculation-authority-evidence-tiering-adr` - `calculation-truth-registry` adr: `Calculation authority evidence tiering` | (**status:** `accepted`)
 - `2026-05-04-live-filing-data-capture-adr` - `calculation-truth-registry` adr: `Live filed-declaration data capture` | (**status:** `accepted`)
 - `2026-05-06-modelo-chain-tier-passage-adr` - `modelo-chain-tier-passage` adr: `Three-tier passage spec for modelo linkage-chain implementation work` | (**status:** `accepted`)
-- `2026-05-08-modelo-directory-segmentation-adr` - modelo-directory-segmentation-adr
+- `2026-05-08-modelo-directory-segmentation-adr` - modelo-directory-segmentation-adr | (**status:** `accepted`)
 
 ### audit
 
@@ -351,6 +364,8 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-05-06-registry-authority-cache-review-audit` - `calculation-truth-registry` Code Review
 - `2026-05-07-calculation-truth-registry-coverage-audit` - `calculation-truth-registry` Code Review
 - `2026-05-08-modelo-100-bulk-segmentation-audit` - modelo-100-bulk-segmentation-audit
+- `2026-07-12-calculation-truth-registry-audit` - `calculation-truth-registry` audit: `legacy rebuild plan tracking audit`
+- `2026-07-14-calculation-truth-registry-audit` - `calculation-truth-registry` audit: `Modelo-wave family disposition ledger`
 
 ### exec
 
@@ -482,14 +497,25 @@ Auto-generated index of all documents tagged with `#calculation-truth-registry`.
 - `2026-05-06-calculation-truth-registry-phase4-renta-personal-family-profile-bindings-exec` - `calculation-truth-registry` `phase-4` `renta-personal-family-profile-bindings`
 - `2026-05-06-calculation-truth-registry-renta-difficult-justification-expenses-exec` - `calculation-truth-registry` `renta difficult justification expenses`
 - `2026-05-07-calculation-truth-registry-phase0b-coverage-exec` - `calculation-truth-registry` `Phase 0B` `Coverage Audit Gate`
+- `2026-07-12-calculation-truth-registry-P01-S01` - Classify each legacy unchecked item against current source, accepted decisions, and recorded execution evidence
+- `2026-07-12-calculation-truth-registry-P01-S02` - Publish the disposition ledger distinguishing delivered, superseded, blocked, and genuinely actionable registry work
+- `2026-07-12-calculation-truth-registry-P01-summary` - `calculation-truth-registry` `P01` summary
+- `2026-07-12-calculation-truth-registry-P02-S03` - Write the canonical registry implementation backlog from the classified residual ledger
+- `2026-07-14-calculation-truth-registry-P01-S01` - Author the Modelo 131 2024 modulos-engine formula, parameter, and casilla fragments mirroring the 2025 and 2026 revisions
+- `2026-07-14-calculation-truth-registry-P01-S02` - Land the Modelo 131 2024 export-roundtrip, historical date-axis, and live-filed-data-parser behaviour tests the legacy plan's own sub-bullets still list open
+- `2026-07-14-calculation-truth-registry-P02-S03` - Build the Modelo 100 capital gains and losses calculation chain against BOE/AEAT worked examples
+- `2026-07-14-calculation-truth-registry-P02-S04` - Build the Modelo 100 base reductions, minimums, and bracket calculation chain against BOE/AEAT worked examples
+- `2026-07-14-calculation-truth-registry-P02-S05` - Build the CCAA deduction and final-settlement calculation chain closing Modelo 100's Wave 21 residual scope
 
 ### plan
 
-- `2026-05-03-calculation-truth-registry-rebuild-plan` - `calculation-truth-registry` `teardown-rebuild` plan
+- `2026-07-12-calculation-truth-registry-plan` - `calculation-truth-registry` `legacy-backlog reconciliation` plan
+- `2026-07-14-calculation-truth-registry-plan` - `calculation-truth-registry` plan
 
 ### reference
 
 - `2026-05-05-modelo-100-renta-source-dependency-reference` - `modelo-100-renta` reference: source families and dependency boundaries
+- `2026-07-12-calculation-truth-registry-reference` - `calculation-truth-registry` reference: `legacy unchecked-item classification index`
 
 ### research
 

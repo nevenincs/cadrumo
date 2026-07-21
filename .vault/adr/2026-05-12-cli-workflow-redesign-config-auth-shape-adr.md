@@ -1,29 +1,27 @@
 ---
 tags:
-  - '#adr'
-  - '#cli-workflow-redesign'
+  - "#adr"
+  - "#cli-workflow-redesign"
 date: '2026-05-12'
-modified: '2026-07-03'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-auth-shape-research]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
   - "[[2026-04-18-auth-protocol-adr]]"
-  - "[[2026-04-21-auth-cli-adr]]"
-  - "[[2026-05-08-google-oauth-adr]]"
+  - '[[2026-07-16-protected-browser-certificate-auth-research]]'
+supersedes:
+  - '2026-04-21-auth-cli-adr'
+modified: '2026-07-17'
 ---
-
 # `cli-workflow-redesign` adr: `Config auth command surface` | (**status:** `accepted`)
 
 ## CLI Backend Boundary
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
 
-CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+CLI logging and error handling MUST use the central facilities: `cadrumo.core.logging.get_logger(__name__)`, `cadrumo.core.logging.SecretScrubbingFilter`, `cadrumo.core.errors.CadrumoError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `cadrumo.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
 
-CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
+CLI output MUST use the established emitters, including `cadrumo.entrypoints.cli._common._emit`, `cadrumo.entrypoints.cli._schemas.emit_json_success`, and `cadrumo.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 ## Problem Statement
 
 The historical auth surface lives under `aeat setup auth`, while the redesigned
@@ -38,11 +36,10 @@ or live submission semantics.
 
 ## Considerations
 
-- Implemented AEAT Sede auth providers are `certificate` and `clave_movil`.
-- `clave_pin`, `clave_permanente`, and `dnie_pkcs` are recognized as future
-  provider slots but have no auth provider implementation.
-- Portal catalogue entries for Cl@ve PIN, Cl@ve Permanente, and DNIe are not
-  provider implementations.
+- Implemented AEAT Sede auth providers are `certificate`, `clave_movil`, and
+  `clave_permanente`.
+- `clave_pin` and `dnie_pkcs` are reserved catalogue slots with no runtime
+  provider implementation. A reserved slot is not an engineering commitment.
 - Google OAuth is not AEAT Sede authentication; the Google OAuth ADR places it
   under `aeat config google`.
 - Apoderado and representative identity selection are assigned to the
@@ -73,9 +70,11 @@ Place AEAT Sede auth configuration and session maintenance under:
 aeat config auth
 ```
 
-Implementation mandate: expose the subcommand grammar below, keep certificate
-and Cl@ve Móvil as implemented providers, make reserved providers fail closed,
-and remove setup-auth command paths without aliases or shims.
+Implementation mandate: expose the subcommand grammar below; keep certificate,
+Cl@ve Móvil, and Cl@ve Permanente as implemented providers; make reserved
+providers fail closed; and remove setup-auth command paths without aliases or
+shims. `AUTH_PROVIDER_CATALOGUE` is the single operator-facing inventory for
+implemented and reserved provider ids.
 
 The command tree is:
 
@@ -98,8 +97,11 @@ locks, or events.
 bucket. `--provider` narrows status to one provider.
 
 `test` verifies auth/session readiness for the current bucket. It verifies
-certificate and Cl@ve Móvil readiness through their respective backend
-implementations. It must not perform live AEAT submission.
+certificate, Cl@ve Móvil, and Cl@ve Permanente readiness through their
+respective provider implementations. Certificate authentication is valid only
+after the production browser reaches the exact protected AEAT resource; a
+direct TLS or mTLS handshake is not an alternate proof. It must not perform
+live AEAT submission.
 
 `clear` clears provider configuration, sessions, and/or locks for the current
 bucket. `--provider` narrows the operation to one provider. `--all` applies to
@@ -109,11 +111,11 @@ Implemented providers:
 
 - `certificate`
 - `clave_movil`
+- `clave_permanente`
 
 Reserved provider slots:
 
 - `clave_pin`
-- `clave_permanente`
 - `dnie_pkcs`
 
 Google OAuth remains under `aeat config google`, not `aeat config auth`.

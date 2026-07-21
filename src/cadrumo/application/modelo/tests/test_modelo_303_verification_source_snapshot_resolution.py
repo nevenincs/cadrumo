@@ -1,24 +1,22 @@
 """Regression for the Modelo 303 ``verification_source`` snapshot-resolution failure.
 
-A persona-simulation round observed a Modelo 303 registry-build failure whose
-signature was the extraction-profile round-trip gate refusing the profile with
-*"sets corpus_round_trip_verified = true but verification_source is not set"*.
-The root cause was the pre-hardening registry loader cache serving a **partial**
-view of a revision fragment while peer agents wrote registry TOML in the shared
-worktree: a mid-write ``extraction_profiles`` fragment could be read with
-``corpus_round_trip_verified = true`` already present but ``verification_source``
-not yet written, tripping the round-trip gate at snapshot build.
+A Modelo 303 registry-build failure could surface with the extraction-profile
+round-trip gate refusing the profile with *"sets corpus_round_trip_verified =
+true but verification_source is not set"*. The root cause was the registry
+loader cache serving a **partial** view of a revision fragment while a
+concurrent write was in flight: a mid-write ``extraction_profiles`` fragment
+could be read with ``corpus_round_trip_verified = true`` already present but
+``verification_source`` not yet written, tripping the round-trip gate at
+snapshot build.
 
-Commit ``688ed6713`` ("fix(registry): harden loader cache against concurrent
-writes") closed that root cause: the registry-tree fingerprint now recursively
-covers every ``revisions/**/*.toml`` fragment (so an ``extraction_profiles``
-fragment edit invalidates the cache), and a concurrent directory change during
+The registry-tree fingerprint now recursively covers every
+``revisions/**/*.toml`` fragment (so an ``extraction_profiles`` fragment edit
+invalidates the cache), and a concurrent directory change during
 fingerprinting fails loudly with *"retry after concurrent registry writes
-settle"* rather than serving a partial. The M303 verification_source failure is
-therefore a **verify-close**: it no longer reproduces at HEAD.
+settle"* rather than serving a partial.
 
 These tests pin the closed state at the application-facing resolution boundary
-(the path the persona's verify flow used):
+(the path the verify flow uses):
 
 * ``test_m303_snapshot_resolves_extraction_profile_verification_source`` proves
   the committed M303 data, resolved through the production
@@ -118,9 +116,7 @@ def test_m303_public_registry_validation_still_refuses_the_partial_shape() -> No
             )
         }
     )
-    partial_modelo = modelo.model_copy(
-        update={"revisions": {**modelo.revisions, revision_id: partial_revision}}
-    )
+    partial_modelo = modelo.model_copy(update={"revisions": {**modelo.revisions, revision_id: partial_revision}})
 
     with pytest.raises(RegistryValidationError, match="verification_source is not set"):
         RegistryValidator(authority.catalogues, source_root=authority.source_root).validate_modelo(partial_modelo)

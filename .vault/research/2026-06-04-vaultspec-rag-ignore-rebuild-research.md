@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#vaultspec-rag-ignore-rebuild'
 date: '2026-06-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-01-semantic-cluster-hardening-audit]]'
 ---

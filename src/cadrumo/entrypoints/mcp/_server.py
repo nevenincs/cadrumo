@@ -6,10 +6,11 @@ refuses with the install hint and a non-zero exit instead of raising a raw
 ``ModuleNotFoundError`` - the same graceful-degradation contract the Google,
 browser, and Anthropic integrations follow. The tool list, annotations, and the
 forbidden-live-write block are sourced from the SDK-independent core in this
-package; ``call_tool`` runs the deterministic CLI in a subprocess and returns its
-JSON envelope as structured content. Alongside the per-verb tools the server
+package; ``call_tool`` runs the deterministic CLI - warm in-process for local
+verbs, a supervised subprocess for the AEAT-sede family (``_run_tool``) - and
+returns its JSON envelope as structured content. Alongside the per-verb tools the server
 advertises the ``search`` / ``execute`` meta-tools and the ``harness.load`` floor
-tool (the universal operating-layer channel of ADR R4), and serves the operating
+tool (the universal operating-layer channel), and serves the operating
 layer through real ``resources`` handlers - the concrete ``cadrumo://`` skill / rule
 / persona set, the three ``cadrumo://<kind>/{name}`` templates, and a ``read``
 resolver - and through real ``prompts`` handlers: the guided-workflow catalogue
@@ -17,7 +18,7 @@ and each prompt's embedded skill / rules, derived from ``_prompts.py``.
 :func:`build_server` owns that registration and is unit-tested against the real
 SDK without the stdio transport.
 
-Per D1 of ``2026-07-01-agent-harness-adr``, the server also enforces the
+The server also enforces the
 persona-scoped tool boundary declared in ``_persona_scope.py``:
 :func:`serve` resolves the active persona once, at startup, from the
 ``CADRUMO_MCP_PERSONA`` environment variable via
@@ -26,8 +27,8 @@ active, ``_list_tools`` advertises only that persona's in-scope tools
 (:func:`filter_descriptors_for_persona`) and ``_call_tool`` refuses an
 out-of-scope call (:func:`persona_scope_refusal`) before the global HITL
 ``confirmation_for_tool`` gate runs. An unset/blank env var preserves the
-full, unscoped tool surface - pre-D1 behaviour - for any un-personified
-session. See ``_persona_scope.py``'s module docstring for the known
+full, unscoped tool surface for any un-personified session. See
+``_persona_scope.py``'s module docstring for the known
 family-granularity limitation (the three modelo-lifecycle personas share one
 manifest family and are not distinguished by this gate).
 """
@@ -40,11 +41,13 @@ import os
 import sys
 import time
 import uuid
+from functools import partial
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as distribution_version
 from typing import TYPE_CHECKING
 
-from ...core import PRODUCT_IDENTITY
-from ...core.external_constants import UTF_8_ENCODING
-from ._call_runtime import CallTier, run_supervised, tier_for, timeout_seconds
+from ...core import PRODUCT_IDENTITY, FormerProductStateError
+from ._call_runtime import serving_capacity_limiter
 from ._completions import complete_prompt_argument
 from ._corpus_tools import (
     CORPUS_SEARCH_TOOL,
@@ -84,10 +87,12 @@ from ._identity_gate import (
     identity_elicitation_echo,
     identity_gate_refusal,
 )
-from ._input_schema import cli_argv_for
 from ._meta_tools import (
+    ToolRunner,
+    ToolRunOutcome,
     build_command_search_index,
     describe_command,
+    gate_refusal,
     manage_toolsets,
     meta_execute,
     search_commands_response,
@@ -95,13 +100,13 @@ from ._meta_tools import (
 from ._persona_scope import (
     AgentPersona,
     active_persona,
-    handoff_denial_message,
     is_handoff_denied,
     is_tool_in_persona_scope,
 )
 from ._prompts import PromptNotFoundError, build_prompt_catalogue, prompt_document
 from ._resources import (
     BUCKET_SCOPED_RESOURCE_KINDS,
+    HarnessResourceKind,
     HarnessResourceNotFoundError,
     list_harness_resource_templates,
     list_harness_resources,
@@ -124,6 +129,11 @@ from ._terminology_tools import (
 )
 from ._tools import McpToolDescriptor, build_tool_descriptors
 from ._toolsets import Toolset, command_keys_for_toolsets
+from ._transport import (
+    SubprocessToolOutcome,
+    _run_subprocess_tool,
+    _run_tool,
+)
 
 if TYPE_CHECKING:
     # Typing-only: the MCP SDK is an optional runtime dependency (``cadrumo[agent]``),
@@ -132,23 +142,26 @@ if TYPE_CHECKING:
     # annotations, `from __future__ import annotations`); they exist solely so
     # the standalone (non-nested) functions below can declare their true SDK
     # return/parameter types instead of the placeholder ``object``.
+    from collections.abc import Callable
+
     from mcp.server import Server
     from mcp.server.models import InitializationOptions
     from mcp.types import ContentBlock, Tool
 
 _INSTALL_HINT = "the MCP server requires the agent extra: pip install 'cadrumo[agent]'"
-_SERVER_NAME = "cadrumo"
+_REQUIRED_VERSION_ENV = f"{PRODUCT_IDENTITY.environment_prefix}MCP_REQUIRED_VERSION"
+_RUNTIME_COHORT = (PRODUCT_IDENTITY.distribution, *PRODUCT_IDENTITY.companion_distributions)
 
 # The two meta-tools that reach the long-tail verb surface outside the curated
 # toolsets. They are advertised alongside the per-verb tools and are never
 # persona-scoped away (``execute`` applies the persona gate internally).
 _META_SEARCH_TOOL = "search"
 _META_EXECUTE_TOOL = "execute"
-# The toolset-activation meta-tool (ADR mcp-progressive-discovery P3): activating
+# The toolset-activation meta-tool: activating
 # a domain toolset adds its per-verb tools to the advertised surface (within the
 # active persona's scope) and emits tools/list_changed for clients that honour it.
 _META_TOOLSETS_TOOL = "toolsets"
-# The per-command descriptor meta-tool (ADR mcp-progressive-discovery P2/S10):
+# The per-command descriptor meta-tool:
 # returns one command's full shape by key - schema, annotations, confirmation
 # tier, declared risk, owning toolset, and reachable personas - so a model can
 # inspect a verb fully before spending an ``execute`` round-trip on it.
@@ -166,6 +179,43 @@ def emit_missing_sdk_refusal() -> None:
     raise SystemExit(3)
 
 
+def enforce_required_runtime_cohort() -> None:
+    """Refuse when a plugin requires a different or incomplete installed cohort.
+
+    Direct standalone use leaves ``CADRUMO_MCP_REQUIRED_VERSION`` unset and is
+    unaffected. Distribution integrations set it to their own release version,
+    binding the client surface to one complete installed root-plus-data cohort.
+    """
+    required = os.environ.get(_REQUIRED_VERSION_ENV, "").strip()
+    if not required:
+        return
+
+    observed: dict[str, str] = {}
+    missing: list[str] = []
+    for distribution in _RUNTIME_COHORT:
+        try:
+            observed[distribution] = distribution_version(distribution)
+        except PackageNotFoundError:
+            missing.append(distribution)
+
+    mismatched = {name: installed for name, installed in observed.items() if installed != required}
+    if not missing and not mismatched:
+        return
+
+    details: list[str] = []
+    if missing:
+        details.append(f"missing: {', '.join(missing)}")
+    if mismatched:
+        rendered = ", ".join(f"{name}={installed}" for name, installed in sorted(mismatched.items()))
+        details.append(f"version mismatch: {rendered}")
+    sys.stderr.write(
+        "Cadrumo MCP runtime cohort does not satisfy the installed integration: "
+        f"required {required}; {'; '.join(details)}. "
+        f"Install cadrumo[agent]=={required} with both exact-version data companions.\n",
+    )
+    raise SystemExit(4)
+
+
 def serve() -> None:
     """Run the ``cadrumo-mcp`` stdio server, or refuse if the SDK is not installed.
 
@@ -174,6 +224,7 @@ def serve() -> None:
     :func:`~entrypoints.mcp._persona_scope.active_persona` error
     regardless of whether the optional SDK is installed.
     """
+    enforce_required_runtime_cohort()
     persona = active_persona()
     surface_mode = resolve_surface_mode(os.environ.get(SURFACE_ENV_VAR))
     try:
@@ -261,65 +312,6 @@ def build_sdk_tools(descriptors: tuple[McpToolDescriptor, ...]) -> list[Tool]:
             ),
         )
     return tools
-
-
-def _timeout_refusal_envelope(*, command_key: str, tier: CallTier, timeout_s: float) -> dict[str, object]:
-    """Build the localized timed-out refusal envelope for a hung CLI call."""
-    from ...core.i18n import tr
-
-    message = tr(
-        "mcp.call.timeout",
-        command=command_key,
-        tier=tier.value,
-        seconds=int(timeout_s),
-        default=(
-            "'{command}' exceeded the {tier}-tier time limit ({seconds}s) and was cancelled. "
-            "Retry, or run the equivalent Cadrumo command directly in a terminal for a long operation."
-        ),
-    )
-    return {"status": "error", "refusal": message, "timed_out": True}
-
-
-def _run_subprocess_tool(
-    descriptor: McpToolDescriptor,
-    arguments: dict[str, object],
-) -> tuple[dict[str, object], bool]:
-    """Run one tool's CLI command under the supervised runtime and return (envelope, is_error).
-
-    The argv is reconstructed from the descriptor's per-verb input schema and the
-    named ``arguments`` the client supplied - positional arguments in CLI order,
-    then options - so the retired ``{args: [string]}`` bag has no path back in.
-
-    The call runs through :func:`~entrypoints.mcp._call_runtime.run_supervised`
-    with a per-tier wall-clock ceiling derived from the command's annotations
-    (ADR ``mcp-protocol-hardening`` H1): a hung call is terminated together with
-    its whole process tree (a live pull spawns a browser child) and returns an
-    instructive, localized timed-out refusal rather than hanging the MCP call.
-
-    ``stdin`` is isolated to ``DEVNULL`` inside the runtime. Over the stdio
-    transport the server's own stdin IS the MCP client pipe; without this
-    isolation the spawned CLI child inherits that pipe and any read from it
-    blocks forever. Output is decoded as UTF-8 explicitly (the CLI always emits
-    UTF-8; the platform default is cp1252 on Windows, which would mojibake every
-    accented character for the LLM client), with ``errors="replace"`` matching the
-    CLI's own emit-side fallback.
-    """
-    tier = tier_for(
-        read_only=descriptor.annotations.read_only_hint,
-        open_world=descriptor.annotations.open_world_hint,
-    )
-    timeout_s = timeout_seconds(tier)
-    argv = [PRODUCT_IDENTITY.cli_executable, *cli_argv_for(descriptor.verb_schema, arguments)]
-    result = run_supervised(argv, timeout_s=timeout_s, encoding=UTF_8_ENCODING)
-    if result.timed_out:
-        return (_timeout_refusal_envelope(command_key=descriptor.command_key, tier=tier, timeout_s=timeout_s), True)
-    raw = result.stdout.strip() or result.stderr.strip()
-    try:
-        envelope = json.loads(raw)
-    except json.JSONDecodeError:
-        return ({"status": "error", "raw": raw}, True)
-    is_error = envelope.get("status") == "error" or result.returncode != 0
-    return (envelope, is_error)
 
 
 def build_meta_sdk_tools() -> list[Tool]:
@@ -470,8 +462,10 @@ def _record_telemetry(
     tool_name: str,
     command_key: str = "",
     route: str = "",
+    transport: str = "",
     is_error: bool = False,
     duration_ms: int = 0,
+    executable_text: str = "",
     arguments_text: str = "",
     result_text: str = "",
 ) -> None:
@@ -481,11 +475,86 @@ def _record_telemetry(
             tool_name=tool_name,
             command_key=command_key,
             route=route,
+            transport=transport,
             is_error=is_error,
             duration_ms=duration_ms,
+            executable_text=executable_text,
             arguments_text=arguments_text,
             result_text=result_text,
         )
+
+
+def _refused_tool_outcome(refusal: str) -> ToolRunOutcome:
+    """Return the common typed error outcome for a refused dispatch."""
+    return ToolRunOutcome(envelope={"status": "error", "refusal": refusal}, is_error=True)
+
+
+def _meta_execute_call_outcome(
+    arguments: dict[str, object],
+    *,
+    descriptors: tuple[McpToolDescriptor, ...],
+    persona: AgentPersona | None,
+    run: ToolRunner,
+) -> tuple[str | None, dict[str, object], dict[str, object], tuple[ResourceLinkRef, ...], bool]:
+    """Run and thin one meta-execute call without depending on MCP SDK result types."""
+    raw_args = arguments.get("arguments", {})
+    exec_args = dict(raw_args) if isinstance(raw_args, dict) else {}
+    command_key = str(arguments.get("command_key", "") or "")
+    outcome = meta_execute(command_key, exec_args, descriptors=descriptors, persona=persona, run=run)
+    if outcome.refused is not None:
+        return outcome.refused, {}, {}, (), True
+    envelope = outcome.envelope or {}
+    thinned_envelope, links = thin_envelope(command_key, envelope)
+    return None, envelope, thinned_envelope, links, outcome.is_error
+
+
+async def _run_offloop_with_progress[T](
+    server: Server,
+    work: Callable[[], T],
+) -> T:
+    """Run blocking subprocess work off the event loop, heart-beating progress.
+
+    The supervised call blocks (Popen.communicate); a worker thread keeps
+    pings, concurrent calls, and cancellation flowing on direct and ``execute``
+    paths. When the client supplied a progress token, an elapsed-seconds
+    heartbeat is sent every few seconds until the call completes, so a slow
+    pull looks alive rather than hung; a client that sent no token still gets
+    the off-loop run.
+    """
+    import anyio
+    from anyio.to_thread import run_sync
+
+    limiter = serving_capacity_limiter()
+    progress_token = None
+    with contextlib.suppress(LookupError, AttributeError):
+        meta = server.request_context.meta
+        progress_token = getattr(meta, "progressToken", None) if meta is not None else None
+
+    if progress_token is None:
+        return await run_sync(work, limiter=limiter)
+
+    holder: dict[str, T] = {}
+
+    async def _work() -> None:
+        holder["result"] = await run_sync(work, limiter=limiter)
+        task_group.cancel_scope.cancel()
+
+    async def _heartbeat() -> None:
+        elapsed = 0
+        while True:
+            await anyio.sleep(5)
+            elapsed += 5
+            with contextlib.suppress(Exception):
+                await server.request_context.session.send_progress_notification(
+                    progress_token=progress_token,
+                    progress=float(elapsed),
+                    total=None,
+                )
+
+    async with anyio.create_task_group() as task_group:
+        task_group.start_soon(_heartbeat)
+        task_group.start_soon(_work)
+    return holder["result"]
 
 
 def build_server(
@@ -548,24 +617,24 @@ def build_server(
     )
     by_name = {descriptor.name: descriptor for descriptor in descriptors}
     # command-key -> descriptor: the resource read handler resolves a bulk
-    # resource (ADR H4) by re-running its owning read verb's descriptor as a
+    # resource by re-running its owning read verb's descriptor as a
     # supervised subprocess (which carries the active bucket session the server
     # process lacks), then returns that verb's bulk field.
     by_command_key = {descriptor.command_key: descriptor for descriptor in descriptors}
-    # The advertised per-verb surface (ADR mcp-progressive-discovery P1): CORE
-    # (default) advertises only the persona-scoped orientation slice up front;
-    # FULL advertises the whole persona-scoped set (the pre-ADR flat surface).
-    # ``by_name`` above still spans EVERY descriptor, so a verb outside the
-    # advertised surface stays reachable through the ``execute`` meta-tool and a
-    # direct call by name - it is discovered, not listed.
+    # The advertised per-verb surface: CORE (default) advertises only the
+    # persona-scoped orientation slice up front; FULL advertises the whole
+    # persona-scoped set (the previous flat surface). ``by_name`` above still
+    # spans EVERY descriptor, so a verb outside the advertised surface stays
+    # reachable through the ``execute`` meta-tool and a direct call by name -
+    # it is discovered, not listed.
     meta_tools = build_meta_sdk_tools()
-    # The hybrid command-search index backing the ``search`` meta-tool, built once
-    # over the FULL descriptor set (ADR mcp-progressive-discovery P2) so discovery
-    # reaches every verb, not only the advertised surface.
+    # The hybrid command-search index backing the ``search`` meta-tool, built
+    # once over the FULL descriptor set so discovery reaches every verb, not
+    # only the advertised surface.
     command_index = build_command_search_index(descriptors)
-    # Per-session toolset activation state (ADR mcp-progressive-discovery P3). The
-    # advertised surface is the orientation core PLUS the persona-scoped verbs of
-    # any active toolset; activating a toolset emits ``tools/list_changed``.
+    # Per-session toolset activation state. The advertised surface is the
+    # orientation core PLUS the persona-scoped verbs of any active toolset;
+    # activating a toolset emits ``tools/list_changed``.
     active_toolsets: set[Toolset] = set()
 
     def _advertised_tools() -> list[Tool]:
@@ -580,23 +649,22 @@ def build_server(
         return build_sdk_tools((*advertised, *activated))
 
     floor_tool = build_harness_floor_tool()
-    # Identity tool (ADR I1): the always-on read-only ``whoami`` that reports the
+    # Identity tool: the always-on read-only ``whoami`` that reports the
     # active taxpayer. Like the floor and grounding tools it is a console tool,
     # advertised on every session and never persona-scoped away, so an agent can
     # always confirm WHO is active before a mutating command.
     whoami_tool = build_whoami_tool()
-    # Grounding tools (ADR R3): read-only search over the bundled legal corpus
+    # Grounding tools: read-only search over the bundled legal corpus
     # and the taxpayer-facing terminology handbook. Always advertised (never
     # persona-scoped away) — every persona benefits from grounding its narration
     # in authoritative text, and neither tool mutates state.
     grounding_tools = [build_corpus_search_tool(), build_terminology_search_tool()]
 
-    # Per-session serving-path gates (ADR R6) and telemetry (ADR R7): the
-    # grounding window accumulates this session's tool-result JSON in memory
+    # Per-session serving-path gates and telemetry accumulate tool-result JSON in memory
     # only; the telemetry writer (injected by the stdio runner; None in unit
     # builds) records payload-free per-call rows.
     window = SessionGroundingWindow()
-    # Per-session identity-read state (ADR I2): armed until an identity read has
+    # Per-session identity-read state: armed until an identity read has
     # occurred, re-armed on a profile switch. Shared by the direct and execute
     # paths below so the block-first-mutation gate is byte-identical on both.
     identity_state = SessionIdentityState()
@@ -604,14 +672,16 @@ def build_server(
     def _gated_subprocess_run(
         descriptor: McpToolDescriptor,
         arguments: dict[str, object],
-    ) -> tuple[dict[str, object], bool]:
+    ) -> ToolRunOutcome:
         """The sync gate suite shared by the meta-execute path.
 
         A sync callable cannot elicit, so the degradation matrix runs with
         ``client_supports_elicitation=False``: handoff-tier CONFIRM refuses
         (fail-closed), non-handoff CONFIRM proceeds under the client's
         annotation-driven confirmation. Faithfulness and telemetry match the
-        direct path.
+        direct path. The dispatch transport - warm in-process for local verbs,
+        supervised subprocess for the AEAT-sede family - is chosen by
+        :func:`_run_tool`, so meta-execute and the direct path share it.
         """
         key = descriptor.command_key
         identity_refusal = identity_gate_refusal(key, state=identity_state)
@@ -619,12 +689,12 @@ def build_server(
             _record_telemetry(
                 telemetry, tool_name=descriptor.name, command_key=key, route="identity_block", is_error=True
             )
-            return ({"status": "error", "refusal": identity_refusal}, True)
+            return _refused_tool_outcome(identity_refusal)
         policy = confirmation_for_tool(command_key=key)
         route = resolve_confirm_route(policy=policy, command_key=key, client_supports_elicitation=False)
         if route in (ConfirmRoute.REFUSE_BLOCKED, ConfirmRoute.REFUSE_NO_CHANNEL):
             _record_telemetry(telemetry, tool_name=descriptor.name, command_key=key, route=route.value, is_error=True)
-            return ({"status": "error", "refusal": refusal_message(route, command_key=key)}, True)
+            return _refused_tool_outcome(refusal_message(route, command_key=key))
         arguments_json = json.dumps(arguments, ensure_ascii=False, sort_keys=True)
         faith = arguments_faithfulness(arguments_json=arguments_json, window=window, blocking=is_handoff_command(key))
         if faith.blocks:
@@ -636,9 +706,11 @@ def build_server(
                 is_error=True,
                 arguments_text=arguments_json,
             )
-            return ({"status": "error", "refusal": advisory_line(faith)}, True)
+            return _refused_tool_outcome(advisory_line(faith))
         started = time.monotonic()
-        envelope, is_error = _run_subprocess_tool(descriptor, arguments)
+        outcome = _run_tool(descriptor, arguments)
+        envelope = outcome.envelope
+        is_error = outcome.is_error
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
         window.record(envelope_json)
         _record_telemetry(
@@ -646,77 +718,47 @@ def build_server(
             tool_name=descriptor.name,
             command_key=key,
             route=route.value,
+            transport=outcome.transport.value,
             is_error=is_error,
             duration_ms=int((time.monotonic() - started) * 1000),
+            executable_text=outcome.executable,
             arguments_text=arguments_json,
             result_text=envelope_json,
         )
-        return (envelope, is_error)
+        return ToolRunOutcome(envelope=envelope, is_error=is_error)
 
-    server: Server = Server(_SERVER_NAME)
+    server: Server = Server(PRODUCT_IDENTITY.mcp_server)
 
     async def _run_tool_with_progress(
         descriptor: McpToolDescriptor,
         arguments: dict[str, object],
-    ) -> tuple[dict[str, object], bool]:
-        """Run the CLI subprocess off the event loop, heart-beating progress.
+    ) -> SubprocessToolOutcome:
+        """Run one direct per-verb call through the shared off-loop wrapper.
 
-        The supervised call blocks (Popen.communicate); running it in a worker
-        thread keeps the event loop responsive for the whole - possibly
-        minutes-long - live pull. When the client supplied a progress token
-        (ADR ``mcp-protocol-hardening`` H1) an elapsed-seconds heartbeat is sent
-        every few seconds until the call completes, so a slow pull looks alive
-        rather than hung; a client that sent no token still gets the off-loop run.
+        The transport (warm in-process for local verbs, supervised subprocess for
+        the AEAT-sede family) is chosen by :func:`_run_tool`; either way the
+        blocking work runs off the event loop so the session keeps serving.
         """
-        import anyio
-        from anyio.to_thread import run_sync
-
-        progress_token = None
-        with contextlib.suppress(LookupError, AttributeError):
-            meta = server.request_context.meta
-            progress_token = getattr(meta, "progressToken", None) if meta is not None else None
-
-        if progress_token is None:
-            return await run_sync(_run_subprocess_tool, descriptor, arguments)
-
-        holder: dict[str, tuple[dict[str, object], bool]] = {}
-
-        async def _work() -> None:
-            holder["result"] = await run_sync(_run_subprocess_tool, descriptor, arguments)
-            task_group.cancel_scope.cancel()
-
-        async def _heartbeat() -> None:
-            elapsed = 0
-            while True:
-                await anyio.sleep(5)
-                elapsed += 5
-                with contextlib.suppress(Exception):
-                    await server.request_context.session.send_progress_notification(
-                        progress_token=progress_token,
-                        progress=float(elapsed),
-                        total=None,
-                    )
-
-        async with anyio.create_task_group() as task_group:
-            task_group.start_soon(_heartbeat)
-            task_group.start_soon(_work)
-        return holder["result"]
+        return await _run_offloop_with_progress(
+            server,
+            partial(_run_tool, descriptor, arguments),
+        )
 
     @server.list_tools()
     async def _list_tools() -> list[Tool]:
         # The harness.load floor tool is advertised first and is never persona-scoped
-        # away: per ADR R4 it is the universal operating-layer channel that must reach
+        # away: it is the universal operating-layer channel that must reach
         # any client, including a minimal tools-only one. The whoami identity tool and
-        # the grounding tools follow for the same always-available reason (ADR I1, R3):
+        # the grounding tools follow for the same always-available reason:
         # an agent must always be able to confirm the active taxpayer and ground its
         # narration, whatever the persona. The per-verb surface is the orientation core
-        # plus any active toolset (rebuilt per call so a toolset activation is reflected
-        # — ADR mcp-progressive-discovery P1/P3).
+        # plus any active toolset (rebuilt per call so a toolset activation is
+        # reflected).
         return [floor_tool, whoami_tool, *grounding_tools, *_advertised_tools(), *meta_tools]
 
     @server.call_tool()
     async def _call_tool(name: str, arguments: dict[str, object]) -> CallToolResult:
-        # A console identity read (whoami / harness.load) clears the gate (ADR I2):
+        # A console identity read (whoami / harness.load) clears the gate:
         # both surface the active-identity block, so either proves the agent has
         # seen who is active. These carry no registry command key, so record here
         # rather than in identity_gate_refusal (which keys off command keys).
@@ -816,25 +858,22 @@ def build_server(
                 isError=outcome.refused is not None,
             )
         if name == _META_EXECUTE_TOOL:
-            raw_args = arguments.get("arguments", {})
-            exec_args = dict(raw_args) if isinstance(raw_args, dict) else {}
-            outcome = meta_execute(
-                str(arguments.get("command_key", "") or ""),
-                exec_args,
-                descriptors=descriptors,
-                persona=persona,
-                run=_gated_subprocess_run,
+            refusal, envelope, thinned_envelope, links, is_error = await _run_offloop_with_progress(
+                server,
+                partial(
+                    _meta_execute_call_outcome,
+                    arguments,
+                    descriptors=descriptors,
+                    persona=persona,
+                    run=_gated_subprocess_run,
+                ),
             )
-            if outcome.refused is not None:
-                return CallToolResult(content=[TextContent(type="text", text=outcome.refused)], isError=True)
-            envelope = outcome.envelope or {}
-            # ADR H4: thin the executed verb's bulk arrays here too, so the meta
-            # `execute` path and the direct-call path emit one identical shape.
-            thinned_envelope, links = thin_envelope(str(arguments.get("command_key", "") or ""), envelope)
+            if refusal is not None:
+                return CallToolResult(content=[TextContent(type="text", text=refusal)], isError=True)
             return CallToolResult(
                 content=[TextContent(type="text", text=json.dumps(envelope, indent=2)), *_resource_links(links)],
                 structuredContent=thinned_envelope,
-                isError=outcome.is_error,
+                isError=is_error,
             )
         descriptor = by_name.get(name)
         if descriptor is None:
@@ -842,14 +881,13 @@ def build_server(
         key = command_key_for_tool(name, command_keys=[d.command_key for d in descriptors])
         if key is None:
             return CallToolResult(content=[TextContent(type="text", text=f"unmapped tool: {name}")], isError=True)
-        scope_refusal = persona_scope_refusal(persona=persona, command_key=key)
-        if scope_refusal is not None:
-            return CallToolResult(content=[TextContent(type="text", text=scope_refusal)], isError=True)
-        if persona is not None and is_handoff_denied(persona=persona, command_key=key):
-            return CallToolResult(
-                content=[TextContent(type="text", text=handoff_denial_message(persona=persona, command_key=key))],
-                isError=True,
-            )
+        # The persona-scope, handoff-denial, and permanent live-write gate is
+        # composed EXACTLY ONCE, by the single shared :func:`gate_refusal` the
+        # ``execute`` meta-path also runs, so a refused call carries one refusal
+        # and the two entry points cannot compose divergent (or doubled) refusals.
+        gate = gate_refusal(persona=persona, descriptor=descriptor)
+        if gate is not None:
+            return CallToolResult(content=[TextContent(type="text", text=gate)], isError=True)
         identity_refusal = identity_gate_refusal(key, state=identity_state)
         if identity_refusal is not None:
             _record_telemetry(telemetry, tool_name=name, command_key=key, route="identity_block", is_error=True)
@@ -869,7 +907,7 @@ def build_server(
         route_label = route.value
         if route is ConfirmRoute.ELICIT:
             request = confirmation_request(command_key=key)
-            # Name the active-taxpayer LABEL in the human-facing prompt (ADR I4)
+            # Name the active-taxpayer LABEL in the human-facing prompt
             # so the person approving a destructive/handoff verb sees whose data
             # it touches and can catch an Erik/Erika mismatch at the gate.
             echo = identity_elicitation_echo(active_profile_label=build_whoami_identity().active_profile)
@@ -909,7 +947,9 @@ def build_server(
                 isError=True,
             )
         started = time.monotonic()
-        envelope, is_error = await _run_tool_with_progress(descriptor, arguments)
+        outcome = await _run_tool_with_progress(descriptor, arguments)
+        envelope = outcome.envelope
+        is_error = outcome.is_error
         envelope_json = json.dumps(envelope, ensure_ascii=False, sort_keys=True)
         window.record(envelope_json)
         _record_telemetry(
@@ -917,12 +957,14 @@ def build_server(
             tool_name=name,
             command_key=key,
             route=route_label,
+            transport=outcome.transport.value,
             is_error=is_error,
             duration_ms=int((time.monotonic() - started) * 1000),
+            executable_text=outcome.executable,
             arguments_text=arguments_json,
             result_text=envelope_json,
         )
-        # ADR H4: move the verb's declared bulk arrays out of structuredContent to
+        # Move the verb's declared bulk arrays out of structuredContent to
         # resource_link URIs a resources-capable client fetches on demand; the text
         # content still carries the full envelope for a client without resources.
         thinned_envelope, links = thin_envelope(key, envelope)
@@ -933,7 +975,7 @@ def build_server(
         content.extend(_resource_links(links))
         return CallToolResult(content=content, structuredContent=thinned_envelope, isError=is_error)
 
-    # Guided-workflow prompt channel (ADR R4): the slash-command surface a client
+    # Guided-workflow prompt channel: the slash-command surface a client
     # renders for the USER. The catalogue and each prompt's embedded skill (plus
     # the operating rules for orientation) are derived from the shipped harness in
     # ``_prompts.py``; ``get`` returns the operating brief as a user message
@@ -978,7 +1020,7 @@ def build_server(
         )
         return GetPromptResult(description=document.prompt.description, messages=messages)
 
-    # Operating-layer resource channel (ADR R4): the concrete ``cadrumo://`` resource
+    # Operating-layer resource channel: the concrete ``cadrumo://`` resource
     # set and the three ``cadrumo://<kind>/{name}`` templates are derived from the
     # shipped harness tree in ``_resources.py``; ``read`` resolves a URI to the
     # document text as ``text/markdown``.
@@ -1006,8 +1048,8 @@ def build_server(
             for template in list_harness_resource_templates()
         ]
 
-    async def _resolve_bulk_resource(kind: object, identity: str, uri: str) -> str:
-        """Resolve a bucket-scoped resource by re-running its owning read verb (ADR H4).
+    async def _resolve_bulk_resource(kind: HarnessResourceKind, identity: str, uri: str) -> str:
+        """Resolve a bucket-scoped resource by re-running its owning read verb.
 
         The bulk arrays a verb thins (calculation observations, evidence rows) live
         in ENCRYPTED bucket state the session-less server process cannot read, so
@@ -1026,7 +1068,9 @@ def build_server(
         resolver_args: dict[str, object] = {}
         if resolution.id_arg is not None:
             resolver_args[resolution.id_arg] = identity
-        envelope, is_error = await run_sync(_run_subprocess_tool, descriptor, resolver_args)
+        outcome = await run_sync(_run_subprocess_tool, descriptor, resolver_args, limiter=serving_capacity_limiter())
+        envelope = outcome.envelope
+        is_error = outcome.is_error
         result = envelope.get("result")
         if is_error or not isinstance(result, dict):
             raise ValueError(f"could not resolve resource {uri}")
@@ -1052,9 +1096,9 @@ def build_server(
             raise ValueError(str(exc)) from exc
         return [ReadResourceContents(content=content.text, mime_type=content.ref.mime_type)]
 
-    # Argument autocompletion for the guided-workflow prompts (ADR
-    # mcp-progressive-discovery P5): a client completing a prompt argument
-    # (filing year, period) gets the accepted values from the typed axes.
+    # Argument autocompletion for the guided-workflow prompts: a client
+    # completing a prompt argument (filing year, period) gets the accepted
+    # values from the typed axes.
     @server.completion()
     async def _complete(ref: object, argument: CompletionArgument, context: object) -> Completion | None:
         from mcp.types import PromptReference
@@ -1071,8 +1115,7 @@ def server_initialization_options(server: Server) -> InitializationOptions:
     """Build the negotiated initialization options for ``server``.
 
     Declares ``tools.listChanged`` because the console emits
-    ``tools/list_changed`` when a toolset is activated (ADR
-    ``mcp-progressive-discovery`` P3). Centralised so production
+    ``tools/list_changed`` when a toolset is activated. Centralised so production
     (:func:`_run_server`) and the capability-posture conformance test negotiate
     the SAME capability set and cannot drift.
     """
@@ -1096,7 +1139,18 @@ def _run_server(
     import anyio
     from mcp.server.stdio import stdio_server
 
-    telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
+    # Telemetry is diagnostics, never a startup dependency: resolving its
+    # directory needs the storage root, and on a machine carrying retired
+    # former-product state that resolution REFUSES. The refusal must surface
+    # instructively on the tool calls that actually need storage - not kill
+    # the server before it can speak the protocol. Serve without telemetry
+    # and put one line on stderr (the client's MCP log) naming why.
+    telemetry: SessionTelemetryWriter | None
+    try:
+        telemetry = SessionTelemetryWriter(session_id=f"mcp-{uuid.uuid4().hex[:12]}")
+    except FormerProductStateError as error:
+        telemetry = None
+        sys.stderr.write(f"cadrumo MCP serving without telemetry (storage root unavailable): {error}\n")
     server: Server = build_server(descriptors, persona=persona, telemetry=telemetry, surface_mode=surface_mode)
 
     async def _amain() -> None:

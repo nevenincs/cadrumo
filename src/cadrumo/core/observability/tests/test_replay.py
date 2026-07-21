@@ -27,12 +27,12 @@ from pathlib import Path
 
 import pytest
 
-from ...config import PROJECT_ROOT, Settings, override_settings
+from ...config import Settings, override_settings
 from .. import (
     AeatCorpusDriftError,
-    AeatObservabilityError,
     ArgumentRecord,
     ArgumentSource,
+    CadrumoObservabilityError,
     RunOutcome,
     RunTrace,
     compute_corpus_sha256,
@@ -64,7 +64,7 @@ class TestReplayRun:
         tmp_path: Path,
     ) -> None:
         with override_settings(cadrumo_runs_dir=str(tmp_path)):
-            current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
+            current_corpus = compute_corpus_sha256(Settings())
             trace = _build_trace("0123456789abcdef", corpus_sha256=current_corpus)
             save_trace(trace)
             result = replay_run(trace.run_id)
@@ -95,7 +95,7 @@ class TestReplayRun:
     ) -> None:
         """Replay must refuse traces captured with the removed write flag."""
         with override_settings(cadrumo_runs_dir=str(tmp_path)):
-            current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
+            current_corpus = compute_corpus_sha256(Settings())
             legacy_trace = RunTrace(
                 run_id="aaaabbbbccccdddd",
                 started_at=datetime(2026, 4, 14, tzinfo=UTC),
@@ -111,12 +111,11 @@ class TestReplayRun:
                 outcome=RunOutcome.OK,
             )
             save_trace(legacy_trace)
-            with pytest.raises(AeatObservabilityError, match="removed flag"):
+            with pytest.raises(CadrumoObservabilityError, match="removed flag"):
                 replay_run(legacy_trace.run_id)
 
     def test_replay_of_propagated_via_env_var(self, tmp_path: Path) -> None:
         """The re-entered run context must label its trace with ``replay_of``."""
-        from ...config import PROJECT_ROOT as _PROJECT_ROOT
         from ...config import Settings as _Settings
         from .. import (
             compute_corpus_sha256 as _compute_corpus_sha256,
@@ -127,7 +126,7 @@ class TestReplayRun:
         from .._store import load_trace
 
         with override_settings(cadrumo_runs_dir=tmp_path):
-            current_corpus = _compute_corpus_sha256(_PROJECT_ROOT / ".vault", _Settings())
+            current_corpus = _compute_corpus_sha256(_Settings())
             original = RunTrace(
                 run_id="1111222233334444",
                 started_at=datetime(2026, 4, 14, tzinfo=UTC),
@@ -199,12 +198,12 @@ class TestReplayEndToEndBooleanFlag:
             # A fresh workflow-runs dir so list has nothing to render.
             cadrumo_workflow_runs_dir=tmp_path / "workflow-runs",
         ):
-            current_corpus = compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings())
+            current_corpus = compute_corpus_sha256(Settings())
             recorded = RunTrace(
                 run_id="deadbeefcafe0001",
                 started_at=datetime(2026, 4, 14, tzinfo=UTC),
                 finished_at=datetime(2026, 4, 14, 0, 0, 1, tzinfo=UTC),
-                entrypoint="cadrumo workflow list",
+                entrypoint="aeat workflow list",
                 # NOTE: ``name="json"`` here matches how the real
                 # wrapped command (cli/workflow/list_cmd.py) builds its
                 # arguments dict — using the CLI flag spelling as the
@@ -237,9 +236,6 @@ class TestEnvFileFingerprint:
 
         from .._fingerprint import compute_corpus_sha256 as _compute_corpus_sha256
 
-        vault_dir = tmp_path / ".vault"
-        vault_dir.mkdir()
-        (vault_dir / "replay-corpus-note.md").write_text("fingerprint baseline\n", encoding="utf-8")
         env_dir = tmp_path / "env"
         env_dir.mkdir()
         env_file = env_dir / ".env"
@@ -249,16 +245,16 @@ class TestEnvFileFingerprint:
         settings = Settings()
 
         env_file.write_text("FOO=1\n", encoding="utf-8")
-        h1 = _compute_corpus_sha256(vault_dir, settings, env_path=env_file)
+        h1 = _compute_corpus_sha256(settings, env_path=env_file)
 
         env_file.write_text("FOO=2\n", encoding="utf-8")
-        h2 = _compute_corpus_sha256(vault_dir, settings, env_path=env_file)
+        h2 = _compute_corpus_sha256(settings, env_path=env_file)
 
         assert h1 != h2, ".env edit must change corpus_sha256"
 
         # Missing .env must still produce a stable non-empty hash.
         env_file.unlink()
-        h3 = _compute_corpus_sha256(vault_dir, settings, env_path=env_file)
+        h3 = _compute_corpus_sha256(settings, env_path=env_file)
         assert h3 != h1 and h3 != h2
         assert len(h3) == 64
         # Deterministic: missing .env hashes the empty-string digest.
@@ -274,7 +270,7 @@ class TestArgvReconstruction:
         ] = (
             (
                 "positional-first",
-                "cadrumo inbox ack",
+                "aeat inbox ack",
                 (
                     ArgumentRecord(name="notificacion_id", value="N-42", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="by", value="gw", source=ArgumentSource.FLAG),
@@ -293,13 +289,13 @@ class TestArgvReconstruction:
             ),
             (
                 "underscore-flag",
-                "cadrumo workflow list",
+                "aeat workflow list",
                 (ArgumentRecord(name="as_json", value="True", source=ArgumentSource.FLAG),),
                 ("workflow", "list", "--as-json"),
             ),
             (
                 "false-bool-skipped",
-                "cadrumo inbox list",
+                "aeat inbox list",
                 (
                     ArgumentRecord(name="unread", value="False", source=ArgumentSource.FLAG),
                     ArgumentRecord(name="modelo", value="130", source=ArgumentSource.FLAG),
@@ -308,13 +304,13 @@ class TestArgvReconstruction:
             ),
             (
                 "true-bool-bare",
-                "cadrumo workflow show",
+                "aeat workflow show",
                 (ArgumentRecord(name="json", value="True", source=ArgumentSource.FLAG),),
                 ("workflow", "show", "--json"),
             ),
             (
                 "leading-dash-value",
-                "cadrumo sync resolve-divergence",
+                "aeat sync resolve-divergence",
                 (
                     ArgumentRecord(name="record_id", value="R-42", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="notes", value="--urgent", source=ArgumentSource.FLAG),
@@ -323,7 +319,7 @@ class TestArgvReconstruction:
             ),
             (
                 "env-default-skipped",
-                "cadrumo run show",
+                "aeat run show",
                 (
                     ArgumentRecord(name="run_id", value="abc", source=ArgumentSource.POSITIONAL),
                     ArgumentRecord(name="cadrumo_runs_dir", value="var/runs", source=ArgumentSource.ENV),
@@ -353,7 +349,7 @@ class TestArgvReconstruction:
                 cli_flag="--json",
             ),
         )
-        argv = _argv_from_arguments("cadrumo workflow show", args)
+        argv = _argv_from_arguments("aeat workflow show", args)
         assert argv == ["workflow", "show", "--json"]
         # Also exercises the False path with override.
         args_false = (
@@ -364,7 +360,7 @@ class TestArgvReconstruction:
                 cli_flag="--json",
             ),
         )
-        argv_false = _argv_from_arguments("cadrumo workflow show", args_false)
+        argv_false = _argv_from_arguments("aeat workflow show", args_false)
         # False-bool override still gets skipped, not re-emitted.
         assert argv_false == ["workflow", "show"]
 

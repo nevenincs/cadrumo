@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
 import pytest
 
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from .envelope_helpers import unwrap_cli_result as _json
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -22,12 +21,12 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
     with (
         isolated_profile_storage_root(tmp_path=tmp_path),
         override_settings(
-            aeat_auth_provider=None,
-            aeat_certificate_path=None,
-            aeat_certificate_password_secret=None,
-            aeat_clave_movil_dni_nie=None,
-            aeat_clave_movil_dni_fecha=None,
-            aeat_clave_movil_nie_soporte=None,
+            cadrumo_auth_provider=None,
+            cadrumo_certificate_path=None,
+            cadrumo_certificate_password_secret=None,
+            cadrumo_clave_movil_dni_nie=None,
+            cadrumo_clave_movil_dni_fecha=None,
+            cadrumo_clave_movil_nie_soporte=None,
         ),
     ):
         yield
@@ -35,16 +34,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
 
 def _invoke(args: list[str]):
     return invoke_cached_cli(args)
-
-
-def _json(result) -> dict[str, Any]:
-    payload = json.loads(result.output)
-    if isinstance(payload, dict) and "result" in payload and "schema_version" in payload:
-        inner = payload["result"]
-        assert isinstance(inner, dict), result.output
-        return inner
-    assert isinstance(payload, dict), result.output
-    return payload
 
 
 def _create_active_profile() -> None:

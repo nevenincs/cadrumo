@@ -289,13 +289,13 @@ number = "07"
 casilla_id = "28"
 number = "28"
 
-# Régimen-simplificado de IVA módulos engine inputs (2026-07-01-modelo-303-
-# regimen-simplificado-adr, Phase 2). The epígrafe IAE plus the three módulo
-# unit-count casillas are operator-declared manual inputs to the modulos-IVA
-# cuota-devengada computation (LIVA art. 123.Dos.1 + Orden HAC/1347/2024 Anexo I
-# instrucciones apartado 2.1). They enter the calculation closure as expression
-# operands of the modulos formulas, so — like the M131 estimación-objetiva
-# modulos-*-unidades inputs (#516) — they belong in the completeness manifest.
+# Régimen-simplificado de IVA módulos engine inputs. The epígrafe IAE plus the
+# three módulo unit-count casillas are operator-declared manual inputs to the
+# modulos-IVA cuota-devengada computation (LIVA art. 123.Dos.1 + Orden
+# HAC/1347/2024 Anexo I instrucciones apartado 2.1). They enter the calculation
+# closure as expression operands of the modulos formulas, so — like the M131
+# estimación-objetiva modulos-*-unidades inputs — they belong in the
+# completeness manifest.
 # The two internal_only computed casillas they feed (modulos-iva-cuota-devengada /
 # -derivada) are correctly absent: derive_calculation_completeness_casillas drops
 # internal_only casillas from the single-segment manifest, matching the export

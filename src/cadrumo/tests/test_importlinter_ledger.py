@@ -28,11 +28,19 @@ _IMPORTLINTER = REPO_ROOT / ".importlinter"
 _SOURCE_ROOT = REPO_ROOT / "src"
 
 _CONTRACT_RE = re.compile(r"^\[importlinter:contract:(?P<contract>[^\]]+)\]$")
-_IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>aeat\.[\w.*]+)\s*->\s*(?P<target>aeat\.[\w.*]+)\s*$")
+_IGNORE_EDGE_RE = re.compile(r"^\s*(?P<source>cadrumo\.[\w.*]+)\s*->\s*(?P<target>cadrumo\.[\w.*]+)\s*$")
 
-_APPLICATION_TO_ADAPTERS_BASELINE = 840  # filing-amendment repository ports-inversion increment (+4)
-_APPLICATION_SOURCE_MODULE_BASELINE = 78  # prorrata register application adapter pin
-_DOMAIN_TO_ADAPTERS_BASELINE = 70  # filing-amendment repository domain roundtrip test increment (+1)
+_APPLICATION_TO_ADAPTERS_BASELINE = 199  # reconciled live ceiling; this ratchet may decrease but not grow
+_APPLICATION_SOURCE_WILDCARD_BASELINE = (
+    78  # reconciled live ceiling for application edges targeting cadrumo.adapters.**; may only decrease
+)
+_DOMAIN_TO_ADAPTERS_BASELINE = 2  # reconciled live ceiling for test-only carveouts; may only decrease
+_SANCTIONED_DOMAIN_TO_ADAPTERS_TEST_PAIRS = frozenset(
+    {
+        ("cadrumo.domain.tests.**", "cadrumo.adapters.**"),
+        ("cadrumo.domain.**.tests.**", "cadrumo.adapters.**"),
+    },
+)
 
 
 @dataclass(frozen=True)
@@ -77,6 +85,14 @@ def layered_edges(ignore_edges: tuple[IgnoreEdge, ...]) -> tuple[IgnoreEdge, ...
     return tuple(edge for edge in ignore_edges if edge.contract == "layered")
 
 
+def test_ignore_ledger_inventory_is_non_vacuous(
+    ignore_edges: tuple[IgnoreEdge, ...],
+    layered_edges: tuple[IgnoreEdge, ...],
+) -> None:
+    assert ignore_edges, "parsed ignore ledger is empty; parser/config prefix drift may have made ratchets vacuous"
+    assert layered_edges, "parsed layered ledger is empty; contract-name/config drift may have made ratchets vacuous"
+
+
 def _resolve_module_path(module: str) -> Path:
     wildcard_index = module.find(".*")
     if wildcard_index != -1:
@@ -110,11 +126,11 @@ def test_application_to_adapters_pin_count_does_not_grow(layered_edges: tuple[Ig
         for edge in application_adapter_edges
         if edge.source == "cadrumo.application.**" and edge.target == "cadrumo.adapters.**"
     )
-    source_module_edges = tuple(edge for edge in application_adapter_edges if edge.target == "cadrumo.adapters.**")
+    source_wildcard_edges = tuple(edge for edge in application_adapter_edges if edge.target == "cadrumo.adapters.**")
 
     assert not blanket_edges
     assert len(application_adapter_edges) <= _APPLICATION_TO_ADAPTERS_BASELINE
-    assert len(source_module_edges) <= _APPLICATION_SOURCE_MODULE_BASELINE
+    assert len(source_wildcard_edges) <= _APPLICATION_SOURCE_WILDCARD_BASELINE
 
 
 def test_domain_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreEdge, ...]) -> None:
@@ -123,7 +139,10 @@ def test_domain_to_adapters_pin_count_does_not_grow(layered_edges: tuple[IgnoreE
         for edge in layered_edges
         if edge.source.startswith("cadrumo.domain.") and edge.target.startswith("cadrumo.adapters")
     )
+    observed_pairs = {(edge.source, edge.target) for edge in domain_adapter_edges}
+    unexpected_pairs = observed_pairs - _SANCTIONED_DOMAIN_TO_ADAPTERS_TEST_PAIRS
 
+    assert not unexpected_pairs, f"unexpected layered domain -> adapters ignore pairs: {sorted(unexpected_pairs)}"
     assert len(domain_adapter_edges) <= _DOMAIN_TO_ADAPTERS_BASELINE
 
 

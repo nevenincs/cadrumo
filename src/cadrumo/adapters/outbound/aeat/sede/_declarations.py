@@ -129,19 +129,19 @@ DEFAULT_VER_CLICK_TIMEOUT_MS: int = 5_000
 
 
 def _get_navigation_timeout_ms() -> int:
-    return load_settings().aeat_browser_navigation_timeout_ms
+    return load_settings().cadrumo_browser_navigation_timeout_ms
 
 
 def _get_form_interaction_timeout_ms() -> int:
-    return load_settings().aeat_browser_form_interaction_timeout_ms
+    return load_settings().cadrumo_browser_form_interaction_timeout_ms
 
 
 def _get_buscar_settle_ms() -> int:
-    return load_settings().aeat_browser_buscar_settle_ms
+    return load_settings().cadrumo_browser_buscar_settle_ms
 
 
 def _get_ver_click_timeout_ms() -> int:
-    return load_settings().aeat_browser_ver_click_timeout_ms
+    return load_settings().cadrumo_browser_ver_click_timeout_ms
 
 
 # AEAT dispatches the authenticated sede surface across a ``www{n}``
@@ -332,10 +332,7 @@ async def _open_register_page(
         )
     from .....core import require_active_bucket_id
 
-    profile = Profile(
-        name=require_active_bucket_id(),
-        storage_state_path=storage_state_path,
-    )
+    profile = Profile(name=require_active_bucket_id())
     if playwright is not None:
         async with _opened_browser_session(playwright, settings, profile, storage_state) as (page, context):
             yield page, context

@@ -1,0 +1,2 @@
+@step Supply a registry relation value during calculation.
+@static aeat app modelo work calculate --modelo 100 --year 2026 --period 0A --relation <relation-id>=<decimal>

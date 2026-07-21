@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_123/files/01-123-orden-eha-3435-2007-ejercicio-2024-y-siguientes-190-kb-xls.xls",
   "source_sha256": "85ffe058c1728a50d11d3c6fcfe03f77e172e0458b53920a620aa434d66d07b4",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

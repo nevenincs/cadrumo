@@ -38,7 +38,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from ...adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
@@ -76,6 +75,7 @@ from ...domain.modelos import (
     TransactionRevisionParticipation,
     VerificationCompletenessStatus,
     VerificationReport,
+    VerificationReportCatalogue,
     VerificationReportCatalogueRepositoryProtocol,
     WorkUnit,
     WorkUnitCatalogueRepositoryProtocol,
@@ -87,9 +87,7 @@ from ...domain.modelos import (
 )
 from ..aggregation import (
     MISSING_DEDUCTIBLE_VAT_EVIDENCE_SOURCE_KIND,
-    CalculationSourceContext,
     CalculationSourceDiagnostic,
-    OssIossLedgerSourceResolver,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
     missing_evidence_advisory_observations,
@@ -432,7 +430,6 @@ def _collect_verification_gate_findings(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     verification_repository: VerificationReportCatalogueRepositoryProtocol,
     transaction_repository: TransactionCatalogueRepository | None,
-    invoice_repository: InvoiceCatalogueRepository | None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None,
     cross_period_expected_member_sets: Iterable[CrossPeriodExpectedMemberSet],
 ) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
@@ -441,7 +438,6 @@ def _collect_verification_gate_findings(
         target=target,
         profile=workflow_profile,
         transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
     )
     incomplete_modality_finding = _modelo_202_incomplete_modality_finding(
         work_unit=work_unit,
@@ -491,6 +487,76 @@ def _collect_verification_gate_findings(
     return findings, resolved_casilla_ids, missing_required_casilla_ids
 
 
+def _existing_granting_verification_report(
+    catalogue: VerificationReportCatalogue,
+    calculation_revision_id: str,
+) -> VerificationReport | None:
+    """Return the granting verification report for a locked revision, or ``None``.
+
+    Used by the idempotent re-verify no-op: a revision that has transitioned out
+    of ``BORRADOR`` (``VERIFICADO_COMPLETO`` / ``PRESENTADO``) was granted
+    verification, so exactly one granting :class:`VerificationReport` exists for
+    it; ``None`` flags an inconsistent state (a non-draft revision with no
+    granting report) that the caller refuses rather than papering over.
+    """
+    for report in catalogue.reports.values():
+        if report.calculation_revision_id == calculation_revision_id and report.granted_verificado_completo:
+            return report
+    return None
+
+
+def _build_verification_report(
+    *,
+    calculation_revision_id: str,
+    findings: Iterable[ModeloVerificationFinding],
+    resolved_casilla_ids: Iterable[CasillaId],
+    missing_required_casilla_ids: Iterable[CasillaId],
+    completeness: VerificationCompletenessStatus,
+    granted: bool,
+    actor: str,
+    run_at: datetime,
+) -> VerificationReport:
+    """Build the immutable, content-addressed verification report."""
+    frozen_findings = tuple(findings)
+    verified_by = actor.strip()
+    return VerificationReport(
+        verification_report_id=derive_verification_report_id(
+            calculation_revision_id=calculation_revision_id,
+            completeness_status=completeness,
+            findings=frozen_findings,
+            verified_by=verified_by,
+        ),
+        calculation_revision_id=calculation_revision_id,
+        completeness_status=completeness,
+        findings=frozen_findings,
+        resolved_casilla_ids=tuple(resolved_casilla_ids),
+        missing_required_casilla_ids=tuple(missing_required_casilla_ids),
+        run_at=run_at,
+        verified_by=verified_by,
+        granted_verificado_completo=granted,
+    )
+
+
+def _append_model_specific_findings(
+    findings: list[ModeloVerificationFinding],
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    work_unit_repository: WorkUnitCatalogueRepositoryProtocol,
+    calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
+) -> None:
+    """Append cross-model and detail-row verification findings in one place."""
+    findings.extend(
+        m303_m349_intracom_reconcile_findings(
+            work_unit=work_unit,
+            target=target,
+            work_unit_repository=work_unit_repository,
+            calculation_repository=calculation_repository,
+        ),
+    )
+    findings.extend(m210_agrupacion_renta_verification_findings(work_unit=work_unit, revision=target))
+
+
 def verify_modelo_revision(
     calculation_revision_id: str,
     *,
@@ -500,7 +566,6 @@ def verify_modelo_revision(
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol | None = None,
     filing_repository: ModeloRecordCatalogueRepositoryProtocol | None = None,
     transaction_repository: TransactionCatalogueRepository | None = None,
-    invoice_repository: InvoiceCatalogueRepository | None = None,
     verification_repository: VerificationReportCatalogueRepositoryProtocol | None = None,
     bucket_event_repository: BucketEventHistoryRepositoryProtocol | None = None,
     iva_compensation_decision_repository: IvaWalletDecisionRepository | None = None,
@@ -543,9 +608,6 @@ def verify_modelo_revision(
         transaction_repository: Optional
             :class:`TransactionCatalogueRepository` used for transaction-evidence
             advisories.
-        invoice_repository: Optional :class:`InvoiceCatalogueRepository` used
-            to reconstruct legacy Modelo 369 OSS source resolution before the
-            revision can be treated as filing-grade.
         verification_repository: Optional verification-report repository port.
         bucket_event_repository: Optional bucket-event history repository port.
         iva_compensation_decision_repository: Optional IVA-wallet decision
@@ -584,7 +646,6 @@ def verify_modelo_revision(
     bv_repo = bucket_event_repository or BucketEventHistoryRepository()
     _secure_objects = bv_repo.secure_object_repository if isinstance(bv_repo, BucketEventHistoryRepository) else None
     run_repo = WorkflowRunRepository(objects=_secure_objects)
-
     revisions = cr_repo.load()
     target = revisions.get(calculation_revision_id)
     if target is None:
@@ -593,6 +654,20 @@ def verify_modelo_revision(
             context={"calculation_revision_id": calculation_revision_id},
         )
     if target.state is not CalculationRevisionState.BORRADOR:
+        # Idempotent re-verify (single-subject-mutation-is-idempotent-guarded): a
+        # revision that has already been verified-and-granted (VERIFICADO_COMPLETO,
+        # or PRESENTADO after filing) is LOCKED — its content, and therefore its
+        # verification outcome, cannot change — so a retry returns the existing
+        # granting VerificationReport as a clean no-op: no re-run of the
+        # verification gates, no duplicate report (the report id is clock-free —
+        # derive_verification_report_id folds the outcome, not run_at), and no
+        # second lifecycle event. The CLI surfaces the no-op as an info Notice.
+        # A non-draft revision with no granting report is an inconsistent state,
+        # so it falls through to the hard refusal below rather than fabricating
+        # one. Mirrors the re-file no-op in file_modelo_revision.
+        existing = _existing_granting_verification_report(vr_repo.load(), calculation_revision_id)
+        if existing is not None:
+            return existing
         raise CalculationRevisionStateError(
             f"calculation revision {calculation_revision_id!r} is in state "
             f"{target.state.value!r}; only DRAFT revisions can be verified",
@@ -624,23 +699,15 @@ def verify_modelo_revision(
         calculation_repository=cr_repo,
         verification_repository=vr_repo,
         transaction_repository=transaction_repository,
-        invoice_repository=invoice_repository,
         iva_compensation_decision_repository=iva_compensation_decision_repository,
         cross_period_expected_member_sets=cross_period_expected_member_sets,
     )
-    findings.extend(
-        m303_m349_intracom_reconcile_findings(
-            work_unit=work_unit,
-            target=target,
-            work_unit_repository=wu_repo,
-            calculation_repository=cr_repo,
-        ),
-    )
-    findings.extend(
-        m210_agrupacion_renta_verification_findings(
-            work_unit=work_unit,
-            revision=target,
-        ),
+    _append_model_specific_findings(
+        findings,
+        work_unit=work_unit,
+        target=target,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
     )
     completeness, granted = _classify_verification_outcome(
         findings=findings,
@@ -648,22 +715,15 @@ def verify_modelo_revision(
     )
 
     now = clock or _utc_now()
-    report_id = derive_verification_report_id(
+    report = _build_verification_report(
         calculation_revision_id=calculation_revision_id,
-        completeness_status=completeness,
-        findings=tuple(findings),
-        verified_by=actor.strip(),
-    )
-    report = VerificationReport(
-        verification_report_id=report_id,
-        calculation_revision_id=calculation_revision_id,
-        completeness_status=completeness,
-        findings=tuple(findings),
-        resolved_casilla_ids=tuple(resolved_casilla_ids),
-        missing_required_casilla_ids=tuple(missing_required_casilla_ids),
+        findings=findings,
+        resolved_casilla_ids=resolved_casilla_ids,
+        missing_required_casilla_ids=missing_required_casilla_ids,
+        completeness=completeness,
+        granted=granted,
+        actor=actor,
         run_at=now,
-        verified_by=actor.strip(),
-        granted_verificado_completo=granted,
     )
 
     if granted:
@@ -711,7 +771,7 @@ def verify_modelo_revision(
         repository=bv_repo,
         work_unit=work_unit,
         target=target,
-        report_id=report_id,
+        report_id=report.verification_report_id,
         calculation_revision_id=calculation_revision_id,
         completeness=completeness,
         granted=granted,
@@ -925,7 +985,6 @@ def _m369_unresolved_oss_source_finding(
     work_unit: WorkUnit,
     target: CalculationRevision,
     snapshot: RegistrySnapshot,
-    invoice_repository: InvoiceCatalogueRepository | None,
 ) -> ModeloVerificationFinding | None:
     """Block Modelo 369 verification when its OSS source remained unresolved.
 
@@ -965,57 +1024,6 @@ def _m369_unresolved_oss_source_finding(
             legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
             source_refs=source_refs,
         )
-    if not target.source_resolution_assessed:
-        legacy_resolution = OssIossLedgerSourceResolver(invoice_repository=invoice_repository).resolve(
-            CalculationSourceContext(
-                bucket_id=work_unit.bucket_id,
-                modelo=str(work_unit.modelo),
-                filing_year=work_unit.filing_year,
-                period=work_unit.period,
-                revision=snapshot.revision,
-            ),
-        )
-        legacy_diagnostics = tuple(
-            diagnostic
-            for diagnostic in legacy_resolution.diagnostics
-            if diagnostic.source_kind == _OSS_AGGREGATION_SOURCE.value
-            and diagnostic.reason in {"unrouted_observation", "storage_degraded"}
-        )
-        if legacy_diagnostics:
-            legacy_refs = ", ".join(diagnostic.source_ref or diagnostic.reason for diagnostic in legacy_diagnostics)
-            return ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    "Modelo 369 legacy OSS/IOSS source resolution cannot be confirmed; "
-                    f"recalculate before verification (sources: {legacy_refs})"
-                ),
-                next_action=(
-                    "Rerun `aeat app modelo work calculate` to persist current OSS/IOSS source resolution, "
-                    "then rerun verification."
-                ),
-                legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
-                source_refs=source_refs,
-            )
-        if any(ref.binding_source is _OSS_AGGREGATION_SOURCE for ref in target.source_provenance) and any(
-            diagnostic.source_kind == _OSS_AGGREGATION_SOURCE.value and diagnostic.reason == "oss_no_live_source"
-            for diagnostic in legacy_resolution.diagnostics
-        ):
-            return ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-                severity=ModeloVerificationFindingSeverity.BLOCKING,
-                message=(
-                    "Modelo 369 legacy OSS/IOSS source evidence is no longer available for verification; "
-                    "recalculate before verification."
-                ),
-                next_action=(
-                    "Restore or classify the OSS/IOSS issued invoice evidence, rerun "
-                    "`aeat app modelo work calculate`, "
-                    "then rerun verification."
-                ),
-                legal_refs=legal_refs or WORKFLOW_GATE_LEGAL_REFS,
-                source_refs=source_refs,
-            )
     if any(ref.binding_source is _OSS_AGGREGATION_SOURCE for ref in target.source_provenance):
         return None
     return ModeloVerificationFinding(
@@ -1040,7 +1048,6 @@ def _collect_revision_verification_findings(
     target: CalculationRevision,
     profile: TaxpayerProfile,
     transaction_repository: TransactionCatalogueRepository | None,
-    invoice_repository: InvoiceCatalogueRepository | None,
 ) -> tuple[list[ModeloVerificationFinding], list[CasillaId], list[CasillaId]]:
     """Build the verification finding list for one calculation revision.
 
@@ -1118,7 +1125,6 @@ def _collect_revision_verification_findings(
         work_unit=work_unit,
         target=target,
         snapshot=snapshot,
-        invoice_repository=invoice_repository,
     )
     if oss_source_finding is not None:
         findings.append(oss_source_finding)

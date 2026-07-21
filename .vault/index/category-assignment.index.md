@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#category-assignment'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-18-category-assignment-cli-adr]]'
   - '[[2026-04-18-category-assignment-cli-plan]]'
@@ -22,7 +22,7 @@ Auto-generated index of all documents tagged with `#category-assignment`.
 
 ### adr
 
-- `2026-04-18-category-assignment-cli-adr` - category-assignment-cli-adr
+- `2026-04-18-category-assignment-cli-adr` - category-assignment-cli-adr | (**status:** `accepted`)
 
 ### audit
 

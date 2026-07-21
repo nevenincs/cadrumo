@@ -2,11 +2,11 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hfp-1284-2023.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hfp-1284-2023.html",
   "source_sha256": "e0539c65dd6549863ff069b29dc0dc50067d46cdfe9e7d012814bf9935c73eff",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",
-  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412",
   "units": [
     {
       "text": "Uno. Se aprueba el modelo 430, «Impuesto sobre las Primas de Seguros. Autoliquidación», que figura en el anexo de la presente orden.\nDos. El número identificativo que habrá de figurar en dicho modelo será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 430.\nTres. El citado modelo estará disponible exclusivamente en formato electrónico y su presentación se realizará por vía electrónica, de acuerdo con las condiciones generales y el procedimiento establecido en el artículo cuarto de esta orden.",

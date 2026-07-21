@@ -31,13 +31,14 @@ from ....application.live import (
     VerifyService,
     VerifySurface,
 )
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 from .._app_live import (
     _iva_remote_state_capture_lines,
     _live_iva_evidence_pull_command_timeout_ms,
@@ -161,6 +162,7 @@ def test_live_auth_preflight_lines_redact_active_profile_identifier() -> None:
 
     assert "auth_active_profile=<profile-id>" in lines
     assert "auth_persisted_session_state=live" in lines
+    assert all(not line.startswith("auth_certificate_backend=") for line in lines)
     assert all("operator-private-profile-id" not in line for line in lines)
 
 
@@ -328,9 +330,9 @@ class TestReadOnlyStructuralInvariants:
 class TestIvaRemoteStateCliSurface:
     def test_evidence_pull_command_watchdog_budget_scales_with_year_span(self) -> None:
         with override_settings(
-            aeat_clave_movil_timeout_ms=120_000,
-            aeat_live_iva_surface_timeout_ms=180_000,
-            aeat_live_iva_cli_watchdog_timeout_ms=240_000,
+            cadrumo_clave_movil_timeout_ms=120_000,
+            cadrumo_live_iva_surface_timeout_ms=180_000,
+            cadrumo_live_iva_cli_watchdog_timeout_ms=240_000,
         ):
             one_year = _live_iva_evidence_pull_command_timeout_ms(year_from=2026, year_to=2026)
             five_years = _live_iva_evidence_pull_command_timeout_ms(year_from=2022, year_to=2026)

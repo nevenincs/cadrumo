@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#ledger-amount-direction'
 date: '2026-06-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-10-ledger-amount-direction-plan]]'
   - '[[2026-06-10-ledger-amount-direction-adr]]'

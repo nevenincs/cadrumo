@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#pdf-sanitizer'
 date: '2026-04-25'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-25-pdf-sanitizer-adr]]"
   - "[[2026-04-25-pdf-sanitizer-research]]"

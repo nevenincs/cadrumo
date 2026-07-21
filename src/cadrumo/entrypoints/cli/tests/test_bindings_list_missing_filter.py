@@ -27,15 +27,12 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import (
-    profile_create_storage_span,
-    register_minimal_profile,
-    set_active_fields,
-)
+from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -56,6 +53,7 @@ _RESOLVED_BINDING_IDS = frozenset(
         "renta-2025-profile-declaration-type",
         "renta-2025-profile-taxpayer-birth-date",
         "renta-2025-profile-family-minor-children-in-unit",
+        "renta-2025-profile-has-economic-activity",
         "renta-2025-profile-anualidades-sin-minimo-descendientes",
         "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
         "renta-2025-profile-unidad-familiar-otros-miembros-base",

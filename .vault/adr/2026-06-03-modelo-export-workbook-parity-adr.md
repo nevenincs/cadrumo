@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-export-workbook-parity'
 date: '2026-06-03'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-03-modelo-export-evidence-parity-research]]"
   - "[[2026-06-03-modelo-export-evidence-parity-adr]]"

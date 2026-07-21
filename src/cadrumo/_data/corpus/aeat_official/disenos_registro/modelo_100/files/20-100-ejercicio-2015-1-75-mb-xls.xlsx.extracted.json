@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_100/files/20-100-ejercicio-2015-1-75-mb-xls.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/20-100-ejercicio-2015-1-75-mb-xls.xlsx",
   "source_sha256": "72a18429ede37dcf2f92dcdbee6efff99d6f47d9d9006c73a1d6203bdc2dcafd",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

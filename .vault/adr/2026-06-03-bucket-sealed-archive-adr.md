@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#bucket-sealed-archive'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-03-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
@@ -24,7 +24,7 @@ implementation Step can open.
 
 The format must satisfy four constraints. (1) The plaintext header
 `ExportArchiveHeader` (already implemented at
-`src/aeat/adapters/persistence/storage/bucket/_export_header.py`)
+`src/cadrumo/adapters/persistence/storage/bucket/_export_header.py`)
 sits at a known archive position so an importer can validate the
 bucket identity and manifest digest before touching the encrypted
 payload. (2) The encrypted payload carries the serialised
@@ -42,7 +42,7 @@ archives.
 The codebase's secure-storage stack already provides every
 cryptographic primitive the format needs. The envelope encryption
 that wraps every secure-object record (`Envelope[T]` from
-`aeat.adapters.persistence.storage.envelope`) is the right pattern
+`cadrumo.adapters.persistence.storage.envelope`) is the right pattern
 for wrapping the serialised bundle: AES-GCM, versioned, classified.
 The KDF parameters in the bucket manifest (`ManifestKdfParams`)
 provide the password-derived key material a recovery wrap rehydrates.
@@ -103,7 +103,7 @@ header carries a signature-free identity (`bucket_id`,
 `manifest_digest`) that the importer cross-checks against the
 sealed payload's integrity tag. A wrong-bucket archive raises
 `BucketImportError` from the existing
-`aeat.domain.buckets._errors` catalogue.
+`cadrumo.domain.buckets._errors` catalogue.
 
 The recovery wrap MUST be optional. An operator who exports for
 backup on the same host uses the bucket's currently-active KEK to
@@ -134,7 +134,7 @@ archive.aeat-bucket.tar.gz
 ```
 
 Three new modules land under
-`src/aeat/adapters/persistence/storage/bucket/`:
+`src/cadrumo/adapters/persistence/storage/bucket/`:
 
 - `_sealed_archive_writer.py` exposing
   `write_sealed_archive(target_path, header, payload_envelope,
@@ -247,7 +247,7 @@ amended.
   **Rule:** Any module that writes members into a sealed-archive
   tar via `tarfile.TarInfo` MUST use the
   `_normalised_tarinfo(name, instant)` helper from
-  `aeat.adapters.persistence.storage.bucket._sealed_archive_writer`,
+  `cadrumo.adapters.persistence.storage.bucket._sealed_archive_writer`,
   never construct `TarInfo` directly. The helper pins timestamps,
   mode, and ownership so two same-bucket exports differ only in
   the header's `created_at` field. Held until the writer lands and

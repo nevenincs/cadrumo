@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#registry-loader-boundary'
 date: '2026-06-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-02-registry-hardening-next-work-plan]]"
 ---

@@ -13,8 +13,8 @@ See Also:
         Canonical readiness projection consumed by status and test results.
     :class:`application.workflow.WorkflowState`
         Encrypted state envelope carrying the persisted
-        :class:`application.auth.AuthState`.
-    :class:`application.auth.AuthProviderDescription`
+        :class:`application.workflow.AuthState`.
+    :class:`core.AuthProviderDescription`
         Provider-readiness description that feeds provider catalogue output.
     :class:`application.auth.AuthenticatedAeatSessionResult`
         Live-session result consumed by :class:`AuthLoginResult`.
@@ -25,27 +25,27 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ._catalogue import AuthProviderListing
 
 
-class AuthProviderReservedError(AeatError, ValueError):
+class AuthProviderReservedError(CadrumoError, ValueError):
     """Raised when a known provider slot is reserved but not implemented."""
 
 
-class AuthConfigureNoActiveBucketError(AeatError):
+class AuthConfigureNoActiveBucketError(CadrumoError):
     """Raised when auth configuration runs before an active profile bucket exists."""
 
 
-class AuthConfigureDanglingActiveProfileError(AeatError, ValueError):
+class AuthConfigureDanglingActiveProfileError(CadrumoError, ValueError):
     """Raised when the active-profile pointer does not resolve to a registered bucket."""
 
 
-class AuthLoginNotEnabledError(AeatError):
+class AuthLoginNotEnabledError(CadrumoError):
     """Raised when pytest invokes ``auth login`` without the live-test opt-in enabled."""
 
 
-class AuthLoginPreconditionError(AeatError):
+class AuthLoginPreconditionError(CadrumoError):
     """Raised when ``auth login`` cannot proceed because the configured provider is unusable."""
 
 
@@ -61,7 +61,7 @@ class AuthConfigureResult(BaseModel):
     """Result of configuring an auth provider in workflow state.
 
     The provider selection has already been written to
-    :class:`application.auth.AuthState` inside
+    :class:`application.workflow.AuthState` inside
     :class:`application.workflow.WorkflowState` when this result is
     returned.
 
@@ -185,7 +185,6 @@ class LiveAuthPreflightReport(BaseModel):
     nie_soporte_configured: bool | None = None
     certificate_path_configured: bool | None = None
     certificate_file_present: bool | None = None
-    certificate_backend: str = ""
     persisted_session_present: bool = False
     persisted_session_expired: bool | None = None
     persisted_session_state: str = ""
@@ -212,30 +211,55 @@ class AuthLoginResult(BaseModel):
     verification_status: str = ""
 
 
-class AuthClearResult(BaseModel):
-    """Result of clearing local auth metadata and persisted state.
+class AuthOperationScopeConflictError(CadrumoError, ValueError):
+    """Raised when ``--provider`` and ``--all`` are requested together."""
 
-    Reports the local side effects after
-    :func:`application.auth.clear_operator_auth` resets
-    :class:`application.auth.AuthState`, deletes persisted sessions, and
-    removes acquisition locks for the requested provider scope.
-    """
+
+class AuthCleanupInProgressError(CadrumoError):
+    """Raised when a non-resume auth mutation meets durable cleanup intent."""
+
+
+class CertificateSecretMutationInProgressError(CadrumoError):
+    """Raised when another auth mutation meets durable certificate-secret intent."""
+
+
+class AuthProviderNotConfiguredError(CadrumoError, ValueError):
+    """Raised when an auth operation has neither an explicit nor configured provider."""
+
+
+class AuthLogoutResult(BaseModel):
+    """Secret-free result of terminating local auth sessions."""
 
     model_config = _STRICT_FROZEN
 
+    bucket_id: str
+    providers: tuple[str, ...]
     removed_sessions: int
-    cleared_workflow_state: bool
+    cleared_session_state: bool
+
+
+class AuthResetResult(BaseModel):
+    """Secret-free result of removing local provider auth configuration."""
+
+    model_config = _STRICT_FROZEN
+
+    bucket_id: str
+    providers: tuple[str, ...]
+    removed_sessions: int
+    cleared_provider_configuration: bool
     cleared_locks: int
+    removed_certificate_sources: int
+    removed_certificate_secrets: int
 
 
-class CertificateSourceNotFoundError(AeatError, KeyError):
+class CertificateSourceNotFoundError(CadrumoError, KeyError):
     """Raised when an operator names a certificate source that is not registered."""
 
 
 class CertificateSourcePayload(BaseModel):
     """One registered certificate source, operator-facing.
 
-    Projects :class:`application.auth.CertificateSourceRecord` for the
+    Projects :class:`application.workflow.CertificateSourceRecord` for the
     ``certificate register`` / ``certificate list`` verbs. Never carries
     certificate passwords or key material — only the filesystem
     reference already stored in workflow state.
@@ -277,7 +301,8 @@ class CertificateSourceCheckEntry(BaseModel):
     :func:`application.auth.probe_provider_configuration` runs for the
     single-certificate provider path (``ok`` / ``expiring`` / ``expired`` /
     ``corrupt`` / ``unreadable`` / ``file_missing``), applied per named
-    source in :class:`application.auth.AuthState.certificate_sources`
+    source in the ``certificate_sources`` registry on
+    :class:`application.workflow.AuthState`
     rather than only the active ``certificate_path``. Never carries
     certificate passwords or key material.
 
@@ -326,9 +351,11 @@ class CertificateSourceSecretMutationResult(BaseModel):
     """Result of setting, rotating, or removing a named certificate source's secret.
 
     Never carries the secret value itself — only whether one is now
-    registered, which backend holds it, and whether the call rotated an
-    existing secret (``rotated``) or set one for the first time. Mirrors
-    the ``sensitive-financial-data-secure-storage-only`` and
+    registered and whether the call rotated an existing secret
+    (``rotated``) or set one for the first time. Named certificate secrets
+    have exactly one storage authority — encrypted secure storage — so no
+    backend descriptor is reported. Mirrors the
+    ``sensitive-financial-data-secure-storage-only`` and
     ``no-silent-under-declaration`` disciplines: the secret's *presence*
     is observable, its *value* never is.
     """
@@ -336,24 +363,28 @@ class CertificateSourceSecretMutationResult(BaseModel):
     model_config = _STRICT_FROZEN
 
     name: str
-    backend: str = ""
     has_secret: bool = False
     rotated: bool = False
     removed: bool = False
 
 
 __all__ = [
-    "AuthClearResult",
+    "AuthCleanupInProgressError",
     "AuthConfigureDanglingActiveProfileError",
     "AuthConfigureNoActiveBucketError",
     "AuthConfigureResult",
     "AuthLoginNotEnabledError",
     "AuthLoginPreconditionError",
     "AuthLoginResult",
+    "AuthLogoutResult",
+    "AuthOperationScopeConflictError",
+    "AuthProviderNotConfiguredError",
     "AuthProviderReservedError",
     "AuthProvidersReport",
+    "AuthResetResult",
     "AuthStatusResult",
     "AuthTestResult",
+    "CertificateSecretMutationInProgressError",
     "CertificateSourceCheckEntry",
     "CertificateSourceCheckReport",
     "CertificateSourceListResult",

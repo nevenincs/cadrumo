@@ -1,7 +1,7 @@
 """Provider adapter contract for the LLM outbound subpackage.
 
 Defines the normalized request and response shapes that every concrete provider
-adapter (Anthropic, OpenAI, Gemini, local, deterministic) consumes and produces,
+adapter (Anthropic, OpenAI, Gemini, and local) consumes and produces,
 so the higher-level :class:`~adapters.outbound.llm.LLMClient` can stay
 provider-agnostic. Adapters live in sibling modules under
 :mod:`adapters.outbound.llm._providers`.

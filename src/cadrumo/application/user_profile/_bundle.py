@@ -18,27 +18,21 @@ their owning repositories; import saves those records through the target
 bucket's repository save paths so the target bucket re-encrypts them
 under its own data-encryption key.
 
-The bundle version gate is a ceiling with a durability floor: a version
-above :data:`BUNDLE_SCHEMA_VERSION` was written by a newer application
-and is refused; a version at or above :data:`BUNDLE_DURABILITY_FLOOR` is
-readable exactly when the per-hop chain in
-:data:`BUNDLE_PAYLOAD_UPGRADERS` reaches the current version. The floor
-starts at the current version (no released bundles exist below it) and
-moves forward only through a superseding accepted ADR
-(``2026-07-08-released-data-durability-adr``). Callers must provision and
-collision-check the target bucket and hold the appropriate bucket
-session before deserialising; this module performs schema-version
-validation and typed repository writes.
+The bundle version gate accepts the current schema exactly. A version above
+:data:`BUNDLE_SCHEMA_VERSION` is identified as written by a newer
+application; any pre-current version is unsupported and is never migrated
+or tolerated implicitly. Callers must provision and collision-check the
+target bucket and hold the appropriate bucket session before deserialising;
+this module performs schema-version validation and typed repository writes.
 """
 
 from __future__ import annotations
 
 import json
-from collections.abc import Callable, Mapping
 from typing import TYPE_CHECKING, Final
 
 from ...adapters.persistence.storage import STORAGE_NAMESPACE_REGISTRY, StorageCustodyProfile
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 if TYPE_CHECKING:
     from ...domain.user_profile import (
@@ -51,37 +45,16 @@ if TYPE_CHECKING:
 #: Current bundle write version. Every export stamps this.
 BUNDLE_SCHEMA_VERSION: Final[int] = 3
 
-#: Oldest bundle version the import path keeps readable. Starts at the
-#: current version (no released bundles exist below it); moves forward only
-#: through a superseding accepted ADR.
-BUNDLE_DURABILITY_FLOOR: Final[int] = 3
-
-#: One-hop raw-payload upgraders keyed by ``from_version``: each transforms
-#: the parsed JSON mapping of a version-N bundle into the version-N+1 shape
-#: (including restamping ``bundle_schema_version``) BEFORE strict pydantic
-#: validation — the raw mapping is the one sanctioned pre-validation
-#: boundary. Empty while the floor equals the current version; a version
-#: bump MUST land its hop here in the same change or the lineage gate fails.
-BUNDLE_PAYLOAD_UPGRADERS: Mapping[int, Callable[[dict[str, object]], dict[str, object]]] = {}
-
-#: Versions the import path accepts: the complete floor-to-current range.
-SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset(
-    range(BUNDLE_DURABILITY_FLOOR, BUNDLE_SCHEMA_VERSION + 1),
-)
-
 
 def validate_bundle_payload(
     raw_json: bytes | str,
     *,
     expected_written_version: int | None = None,
 ) -> UserProfilePortableExport:
-    """Parse, chain-upgrade, and strictly validate a serialized bundle payload.
+    """Parse and strictly validate a current-version bundle payload.
 
-    Reads the payload's own ``bundle_schema_version``, refuses a future
-    version (above :data:`BUNDLE_SCHEMA_VERSION`) or one below
-    :data:`BUNDLE_DURABILITY_FLOOR`, chain-upgrades an older supported
-    payload hop by hop through :data:`BUNDLE_PAYLOAD_UPGRADERS`, and
-    validates the result against the current strict
+    Reads the payload's own ``bundle_schema_version``, refuses any version
+    other than :data:`BUNDLE_SCHEMA_VERSION`, and validates the result against the current strict
     :class:`~cadrumo.domain.user_profile.UserProfilePortableExport` model.
 
     Args:
@@ -89,13 +62,12 @@ def validate_bundle_payload(
             or the plaintext export text).
         expected_written_version: When set, the version a transport envelope
             declared for this payload; a payload whose own stamped version
-            differs is refused before any upgrade runs.
+            differs is refused before model validation.
 
     Raises:
         UnsupportedBundleSchemaVersionError: When the payload does not carry
-            an integer ``bundle_schema_version``, the version is outside the
-            floor-to-current range, an upgrade hop is unregistered, or the
-            stamped version contradicts ``expected_written_version``.
+            an integer ``bundle_schema_version``, the version is not current,
+            or the stamped version contradicts ``expected_written_version``.
     """
     from ...domain.user_profile import UserProfilePortableExport
 
@@ -112,7 +84,7 @@ def validate_bundle_payload(
             f"bundle payload is stamped bundle_schema_version {written_version} but its "
             f"transport envelope declares {expected_written_version}",
         )
-    supported = ",".join(str(version) for version in sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS))
+    supported = str(BUNDLE_SCHEMA_VERSION)
     if written_version > BUNDLE_SCHEMA_VERSION:
         raise UnsupportedBundleSchemaVersionError(
             f"bundle_schema_version {written_version} was written by a newer application; "
@@ -123,32 +95,18 @@ def validate_bundle_payload(
             },
             translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
         )
-    if written_version < BUNDLE_DURABILITY_FLOOR:
+    if written_version != BUNDLE_SCHEMA_VERSION:
         raise UnsupportedBundleSchemaVersionError(
-            f"bundle_schema_version {written_version!r} is not supported; "
-            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
+            f"bundle_schema_version {written_version!r} is not supported; supported version: {BUNDLE_SCHEMA_VERSION}",
             context={
                 "bundle_schema_version": str(written_version),
                 "supported_versions": supported,
             },
             translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
         )
-    for hop in range(written_version, BUNDLE_SCHEMA_VERSION):
-        upgrader = BUNDLE_PAYLOAD_UPGRADERS.get(hop)
-        if upgrader is None:
-            raise UnsupportedBundleSchemaVersionError(
-                f"bundle_schema_version {written_version} has no registered upgrade "
-                f"from version {hop}; the payload is supported but this build cannot upgrade it",
-                context={
-                    "bundle_schema_version": str(written_version),
-                    "missing_from_version": str(hop),
-                },
-                translated_message="application.user_profile.errors.unsupported_bundle_schema_version",
-            )
-        payload = upgrader(payload)
     # JSON-mode validation: the strict model accepts JSON arrays as tuple
-    # fields only on the json path, so the (possibly upgraded) mapping is
-    # re-serialized rather than validated as python objects.
+    # fields only on the JSON path, so the exact-current mapping is
+    # re-serialized rather than validated as Python objects.
     return UserProfilePortableExport.model_validate_json(json.dumps(payload))
 
 
@@ -323,8 +281,8 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
     """Import financial-history objects from ``bundle`` into ``target_bucket_id``.
 
     Validates ``bundle.bundle_schema_version`` against
-    ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS`` before any writes; only the
-    current v3 shape is accepted.
+    :data:`BUNDLE_SCHEMA_VERSION` before any writes; only the current v3
+    shape is accepted.
 
     Saves work units, ledger transactions, calculation revisions, and
     filing records into the target bucket via the standard repository
@@ -344,13 +302,12 @@ def deserialize_profile_bundle(bundle: UserProfilePortableExport, *, target_buck
 
     Raises:
         UnsupportedBundleSchemaVersionError: When
-            ``bundle.bundle_schema_version`` is not in
-            ``SUPPORTED_BUNDLE_SCHEMA_VERSIONS``.
+            ``bundle.bundle_schema_version`` is not current.
     """
-    if bundle.bundle_schema_version not in SUPPORTED_BUNDLE_SCHEMA_VERSIONS:
+    if bundle.bundle_schema_version != BUNDLE_SCHEMA_VERSION:
         raise UnsupportedBundleSchemaVersionError(
             f"bundle_schema_version {bundle.bundle_schema_version!r} is not supported; "
-            f"supported versions: {sorted(SUPPORTED_BUNDLE_SCHEMA_VERSIONS)}",
+            f"supported version: {BUNDLE_SCHEMA_VERSION}",
         )
 
     # The five typed financial-history categories restore through their typed
@@ -437,5 +394,5 @@ def _import_filing_records(bundle: UserProfilePortableExport, *, target_bucket_i
     repo.save(catalogue)
 
 
-class UnsupportedBundleSchemaVersionError(AeatError):
+class UnsupportedBundleSchemaVersionError(CadrumoError):
     """Raised when a bundle carries an unsupported ``bundle_schema_version``."""

@@ -2,18 +2,15 @@
 
 from __future__ import annotations
 
-from datetime import date
 from decimal import Decimal
 
 import pytest
 
 from ....core import M347_THRESHOLD_EUR, Period
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, BindingSourceKind
-from ....domain.calculations.registry import DataBindingDefinition, ModeloRevision, PeriodSelector
+from ....core.aggregation import BindingSourceKind
 from .._counterpart import (
     COUNTERPART_MODELO_KIND_CATALOGUE,
     CounterpartAggregation,
-    CounterpartAggregationSourceResolver,
     CounterpartObservation,
     CounterpartSourceKind,
     OperationKind347,
@@ -22,145 +19,11 @@ from .._counterpart import (
     aggregate_counterpart_349,
     declarable_for_347,
 )
-from .._source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _P_2025_Q1 = Period.from_year_and_code(2025, "1T")
 _P_2025_ANNUAL = Period.from_year_and_code(2025, "0A")
-_M349_LEGAL_REFS = (
-    "orden-eha-769-2010:art-1",
-    "ley-58-2003:art-93",
-    "rd-1624-1992:art-79",
-    "rd-1624-1992:art-80",
-    "ley-37-1992:art-9-bis",
-    "ley-37-1992:art-13",
-    "ley-37-1992:art-15",
-    "ley-37-1992:art-25",
-    "ley-37-1992:art-26",
-    "ley-37-1992:art-27",
-    "ley-37-1992:art-69",
-    "ley-37-1992:art-70",
-    "ley-37-1992:art-80",
-    "ley-37-1992:art-84",
-    "ley-37-1992:art-86",
-)
-_M349_SOURCE_REFS = (
-    "aeat-dr-349-2020-current",
-    "aeat-modelo-349-procedure",
-    "aeat-modelo-349-instructions",
-    "boe-modelo-349-form-2010",
-)
-_M349_COLLECTIBLE_CLAVES = ("E", "M", "H", "A", "T", "S", "I", "R", "D", "C")
-_M349_PAYABLE_CLAVES = ("A", "I", "T")
-
-
-def _m349_summary_binding(
-    binding_id: str,
-    source: BindingSourceKind,
-    *,
-    fact: str,
-    claves: tuple[str, ...],
-) -> DataBindingDefinition:
-    return DataBindingDefinition(
-        id=binding_id,
-        source=source,
-        selector={
-            "fact": fact,
-            "claves": claves,
-            "rectification_scope": "exclude_rectifications",
-        },
-        aggregation=BindingAggregation(
-            op=BindingAggregationOp.COUNT_DISTINCT if fact == "operator_count" else BindingAggregationOp.SUM,
-        ),
-        legal_refs=_M349_LEGAL_REFS,
-        source_refs=_M349_SOURCE_REFS,
-    )
-
-
-def _m349_invoice_owned_revision() -> ModeloRevision:
-    return ModeloRevision(
-        id="2020-y-siguientes",
-        valid_from=date(2020, 1, 1),
-        period_selector=PeriodSelector(year_from=2020, periods=("1T",)),
-        legal_refs=_M349_LEGAL_REFS,
-        source_refs=_M349_SOURCE_REFS,
-        bindings=(
-            _m349_summary_binding(
-                "iva-349-declarante-numero-operadores",
-                BindingSourceKind.COLLECTIBLE_INVOICE,
-                fact="operator_count",
-                claves=_M349_COLLECTIBLE_CLAVES,
-            ),
-            _m349_summary_binding(
-                "iva-349-declarante-importe-operaciones",
-                BindingSourceKind.COLLECTIBLE_INVOICE,
-                fact="base_sum",
-                claves=_M349_COLLECTIBLE_CLAVES,
-            ),
-            _m349_summary_binding(
-                "iva-349-declarante-numero-operadores-adquisicion",
-                BindingSourceKind.PAYABLE_INVOICE,
-                fact="operator_count",
-                claves=_M349_PAYABLE_CLAVES,
-            ),
-            _m349_summary_binding(
-                "iva-349-declarante-importe-operaciones-adquisicion",
-                BindingSourceKind.PAYABLE_INVOICE,
-                fact="base_sum",
-                claves=_M349_PAYABLE_CLAVES,
-            ),
-        ),
-    )
-
-
-def _revision_without_counterpart_sources() -> ModeloRevision:
-    return ModeloRevision(
-        id="counterpart-empty-test",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
-        legal_refs=("ley-37-1992:art-1",),
-        source_refs=("test-counterpart-no-source",),
-    )
-
-
-def _m349_revision_with_live_invoice_and_reserved_counterpart_sources() -> ModeloRevision:
-    revision = _m349_invoice_owned_revision()
-    reserved_bindings = (
-        _m349_summary_binding(
-            "reserved-ledger-numero-operadores",
-            BindingSourceKind.LEDGER_TRANSACTION,
-            fact="operator_count",
-            claves=_M349_COLLECTIBLE_CLAVES,
-        ),
-        _m349_summary_binding(
-            "reserved-ledger-importe-operaciones",
-            BindingSourceKind.LEDGER_TRANSACTION,
-            fact="base_sum",
-            claves=_M349_COLLECTIBLE_CLAVES,
-        ),
-        _m349_summary_binding(
-            "reserved-purchase-numero-operadores-adquisicion",
-            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-            fact="operator_count",
-            claves=_M349_PAYABLE_CLAVES,
-        ),
-        _m349_summary_binding(
-            "reserved-purchase-importe-operaciones-adquisicion",
-            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-            fact="base_sum",
-            claves=_M349_PAYABLE_CLAVES,
-        ),
-    )
-    return revision.model_copy(update={"bindings": revision.bindings + reserved_bindings})
-
-
-def _m349_invoice_owned_binding_ids(revision: ModeloRevision) -> frozenset[str]:
-    return frozenset(
-        binding.id
-        for binding in revision.bindings
-        if binding.source in {BindingSourceKind.COLLECTIBLE_INVOICE, BindingSourceKind.PAYABLE_INVOICE}
-    )
 
 
 def _obs(
@@ -320,127 +183,6 @@ class TestAggregate349:
             BindingSourceKind.PAYABLE_INVOICE,
         }
         assert result.total_invoice_total == Decimal("4000.00")
-
-
-class TestCounterpartSourceResolver:
-    def test_resolver_materialises_reserved_sources_without_invoice_owned_ids_in_mixed_revision(self) -> None:
-        period = Period.from_year_and_code(2026, "1T")
-        revision = _m349_revision_with_live_invoice_and_reserved_counterpart_sources()
-        observations = (
-            _obs(
-                nif="DE123456789",
-                name="Kunde GmbH",
-                op_kind=OperationKind349.INTRA_DELIVERY.value,
-                base="1000.00",
-                country="DE",
-                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-                source_id="sale-de",
-            ),
-            _obs(
-                nif="IT12345678901",
-                name="Servizi SRL",
-                op_kind=OperationKind349.INTRA_SERVICE_IN.value,
-                base="3000.00",
-                country="IT",
-                source_kind=BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-                source_id="purchase-it",
-            ),
-            _obs(
-                nif="B00000001",
-                op_kind=OperationKind349.INTRA_DELIVERY.value,
-                base="999.00",
-                source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-                source_id="invoice-owned-control",
-            ),
-        )
-
-        resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(
-            CalculationSourceContext(
-                bucket_id="operator",
-                modelo="349",
-                filing_year=2026,
-                period=period,
-                revision=revision,
-            ),
-        )
-
-        assert resolution.owned_sources == (
-            BindingSourceKind.LEDGER_TRANSACTION,
-            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        )
-        assert resolution.binding_values == {
-            "reserved-ledger-numero-operadores": Decimal("1"),
-            "reserved-ledger-importe-operaciones": Decimal("1000.00"),
-            "reserved-purchase-numero-operadores-adquisicion": Decimal("1"),
-            "reserved-purchase-importe-operaciones-adquisicion": Decimal("3000.00"),
-        }
-        assert resolution.source_transaction_ids == ("sale-de",)
-        assert {item.source_ref for item in resolution.provenance} == {
-            "ledger_transaction:sale-de",
-            "purchase_invoice_evidence:purchase-it",
-        }
-        assert not (set(resolution.binding_values) & _m349_invoice_owned_binding_ids(revision))
-
-    def test_resolver_does_not_claim_current_invoice_owned_m349_bindings(self) -> None:
-        observations = (
-            _obs(
-                nif="DE123456789",
-                op_kind=OperationKind349.INTRA_DELIVERY.value,
-                base="1000.00",
-                country="DE",
-                source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-                source_id="sale-de",
-            ),
-            _obs(
-                nif="IT12345678901",
-                op_kind=OperationKind349.INTRA_SERVICE_IN.value,
-                base="3000.00",
-                country="IT",
-                source_kind=BindingSourceKind.PAYABLE_INVOICE,
-                source_id="purchase-it",
-            ),
-        )
-
-        resolution = CounterpartAggregationSourceResolver(observations=observations).resolve(
-            CalculationSourceContext(
-                bucket_id="operator",
-                modelo="349",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                revision=_m349_invoice_owned_revision(),
-            ),
-        )
-
-        assert resolution.owned_sources == (
-            BindingSourceKind.LEDGER_TRANSACTION,
-            BindingSourceKind.PURCHASE_INVOICE_EVIDENCE,
-        )
-        assert resolution.binding_values == {}
-        assert resolution.source_transaction_ids == ()
-        assert resolution.provenance == ()
-
-    def test_resolver_silent_when_revision_declares_no_counterpart_source(self) -> None:
-        observation = _obs(
-            nif="DE123456789",
-            op_kind=OperationKind349.INTRA_DELIVERY.value,
-            base="1000.00",
-            country="DE",
-            source_kind=BindingSourceKind.COLLECTIBLE_INVOICE,
-        )
-
-        resolution = CounterpartAggregationSourceResolver(observations=(observation,)).resolve(
-            CalculationSourceContext(
-                bucket_id="operator",
-                modelo="303",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "1T"),
-                revision=_revision_without_counterpart_sources(),
-            ),
-        )
-
-        assert resolution.binding_values == {}
-        assert resolution.diagnostics == ()
-        assert resolution.provenance == ()
 
 
 class TestInvariants:

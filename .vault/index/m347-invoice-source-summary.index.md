@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m347-invoice-source-summary'
-date: '2026-07-04'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-04-m347-invoice-source-summary-audit]]'
 ---

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#calculation-truth-registry'
 date: '2026-05-03'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-03-calculation-truth-inventory-research]]'
   - '[[2026-05-03-external-tax-definition-engines-reference]]'
@@ -11,7 +11,6 @@ related:
   - '[[2026-04-27-modelo-100-renta-full-calc-research]]'
   - '[[2026-04-29-m100-per-ano-test-parity-research]]'
   - '[[2026-05-05-modelo-100-renta-source-dependency-reference]]'
-  - '[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]'
 ---
 
 # `calculation-truth-registry` adr: `Central AEAT legal calculation registry` | (**status:** `accepted`)
@@ -57,8 +56,8 @@ development-process notes.
 This ADR proposes the following concrete architecture.
 
 1. Create one authoritative AEAT registry inside the existing legal calculation
-   boundary, under `src/aeat/domain/calculations/registry/`, with
-   `aeat.domain.calculations` remaining the public calculation authority.
+   boundary, under `src/cadrumo/domain/calculations/registry/`, with
+   `cadrumo.domain.calculations` remaining the public calculation authority.
 2. Store registry definitions as reviewed TOML under `registry/aeat/modelos/`
    and shared legal/source catalogues under `registry/aeat/legal/`.
 3. Treat `ModeloDefinition` as the parent object, `ModeloRevision` as the
@@ -450,7 +449,7 @@ The registry implementation should live under the existing calculation domain
 instead of creating a second legal authority:
 
 ```text
-src/aeat/domain/calculations/
+src/cadrumo/domain/calculations/
   __init__.py
   _registry.py
   registry/
@@ -478,10 +477,9 @@ src/aeat/domain/calculations/
     _cli.py
 ```
 
-The current `src/aeat/domain/calculations/_registry.py` is not retained as a
-parallel registry. It is either migrated into the new registry facade or kept
-only as a compatibility facade that delegates to validated `RegistrySnapshot`
-objects. The public package `aeat.domain.calculations` must expose one
+The retired flat registry module is absent. The package at
+`src/cadrumo/domain/calculations/registry/` is the sole authority for validated `RegistrySnapshot`
+objects. The public package `cadrumo.domain.calculations` must expose one
 filing-grade calculation authority.
 
 `_schema.py` is the Python-side schema authority. It defines strict frozen
@@ -630,10 +628,9 @@ modules.
 
 Python modules:
 
-- Registry code lives under `src/aeat/domain/calculations/registry/`.
-- `src/aeat/domain/calculations/_registry.py` may remain only as the public
-  compatibility facade for validated snapshots; it cannot own independent
-  ruleset truth.
+- Registry code lives under `src/cadrumo/domain/calculations/registry/`.
+- No flat registry module, compatibility facade, or independent ruleset truth
+  is retained beside `src/cadrumo/domain/calculations/registry/`.
 - Module names are lowercase snake-case private modules: `_schema.py`,
   `_schema_export.py`, `_loader.py`, `_sources.py`, `_legal.py`,
   `_temporal.py`, `_validate.py`, `_resolve.py`, `_snapshot.py`,
@@ -927,7 +924,7 @@ The following decisions are proposed for review:
 | D16 | Modelo 100/Renta requires a dedicated aggregation phase under the same central registry. | It is one modelo, but its Renta universe has yearly schemas, source families, CCAA law, anexos, rental/amortization logic, and live filed-data observations that must be reconciled before normal per-modelo completion. |
 | D17 | There are no relaxed runtime modes for registry validity. | The system is legally binding; incomplete or provisional definitions must fail before execution. |
 | D18 | `_schema.py` is the Python-side schema authority. | The authored file format is serialization; strict Pydantic models define the programmatic contract. |
-| D19 | The implementation lives under `src/aeat/domain/calculations/registry/`. | Reuses the existing calculation-domain authority and prevents a second central registry. |
+| D19 | The implementation lives under `src/cadrumo/domain/calculations/registry/`. | Reuses the existing calculation-domain authority and prevents a second central registry. |
 | D20 | Shared legal/source catalogues are authoritative; modelo files reference ids only. | Prevents duplicated BOE, AEAT manual, and source metadata from drifting inside per-model files. |
 | D21 | Incomplete modelos can have evidence catalogue entries but cannot emit snapshots. | Reconciles corpus inventory work with fail-hard legal execution. |
 | D22 | Cross-model dependencies are declared as typed relations. | Makes annual summaries and previous-period dependencies explicit and traceable. |
@@ -1091,22 +1088,22 @@ deleted during implementation:
 
 | Current surface | Required disposition |
 | --- | --- |
-| `src/aeat/domain/calculations/_registry.py` | Migrate into the registry facade or delegate to validated snapshots only. |
-| `src/aeat/domain/formulas/__init__.py` public `Engine`, `Ruleset`, and `get_registry` exports | Quarantine as runtime internals; filing-grade callers must use registry snapshots. |
-| `src/aeat/application/verification/_verify.py` raw `Ruleset` and `Engine` path | Refactor to consume `RegistrySnapshot`; missing rulesets are fatal for filing workflows. |
-| `src/aeat/application/filing/_review.py` `no-ruleset` review state | Remove from filing-grade approval paths; invalid registry blocks review approval. |
-| `src/aeat/domain/filing/_builders/modelo_130.py` | Remove calculation ownership; builder assembles registry-backed outputs only. |
-| `src/aeat/domain/filing/_builders/modelo_303.py` | Remove calculation ownership; builder assembles registry-backed outputs only. |
-| `src/aeat/domain/filing/_builders/modelo_390.py` | Remove calculation ownership; annual summary inputs come through typed relations. |
-| `src/aeat/entrypoints/cli/casillas.py` hydrate `--write` | Delete or convert to read-only corpus inspection outside filing workflows. |
-| `src/aeat/domain/casillas/catalogue.py` `save_casillas` | Delete for authoritative data or quarantine as non-authoritative research import. |
-| `src/aeat/domain/schema/_cache.py` write cache | Quarantine from registry truth; cache cannot feed filing-grade definitions. |
-| `src/aeat/adapters/inbound/schema/_fetch.py` placeholder extraction | Keep only as evidence acquisition/review aid; it cannot write authoritative registry definitions. |
-| `src/aeat/adapters/outbound/aeat/export/_formats/_generate.py` | Delete or quarantine; export layouts must be reviewed registry data backed by official sources. |
+| Retired flat calculation registry | Deleted; all consumers use the validated registry package. |
+| `src/cadrumo/domain/calculations/__init__.py` public `Engine`, `Ruleset`, and `get_registry` exports | Quarantine as runtime internals; filing-grade callers must use registry snapshots. |
+| `src/cadrumo/application/verification/_verify.py` raw `Ruleset` and `Engine` path | Refactor to consume `RegistrySnapshot`; missing rulesets are fatal for filing workflows. |
+| `src/cadrumo/application/filing/_review.py` `no-ruleset` review state | Remove from filing-grade approval paths; invalid registry blocks review approval. |
+| `src/cadrumo/domain/filing/_builders/modelo_130.py` | Remove calculation ownership; builder assembles registry-backed outputs only. |
+| `src/cadrumo/domain/filing/_builders/modelo_303.py` | Remove calculation ownership; builder assembles registry-backed outputs only. |
+| `src/cadrumo/domain/filing/_builders/modelo_390.py` | Remove calculation ownership; annual summary inputs come through typed relations. |
+| `src/cadrumo/entrypoints/cli/casillas.py` hydrate `--write` | Delete or convert to read-only corpus inspection outside filing workflows. |
+| `src/cadrumo/domain/casillas/catalogue.py` `save_casillas` | Delete for authoritative data or quarantine as non-authoritative research import. |
+| `src/cadrumo/domain/schema/_cache.py` write cache | Quarantine from registry truth; cache cannot feed filing-grade definitions. |
+| `src/cadrumo/adapters/inbound/schema/_fetch.py` placeholder extraction | Keep only as evidence acquisition/review aid; it cannot write authoritative registry definitions. |
+| `src/cadrumo/adapters/outbound/aeat/export/_formats/_generate.py` | Delete or quarantine; export layouts must be reviewed registry data backed by official sources. |
 
 ## Implementation Direction
 
-Create `src/aeat/domain/calculations/registry/`, with strict schema models that
+Create `src/cadrumo/domain/calculations/registry/`, with strict schema models that
 load all legal calculation configuration into immutable runtime objects:
 
 - `ModeloDefinition`
@@ -1153,9 +1150,9 @@ surfaces that cannot silently update authoritative registry files.
 Preserve normative and manual corpora as evidence catalogues. The registry must
 reference those catalogues by stable ids instead of embedding citation strings
 ad hoc in formula code. Source validation should extend or reuse
-`aeat.core.corpus_manifest` and the manual manifest hash checks instead of
+`cadrumo.core.corpus_manifest` and the manual manifest hash checks instead of
 creating a weaker parallel integrity mechanism. Legal validation must preserve
-the known-bad citation blocklist in `aeat.domain.modelos._citation_registry`.
+the known-bad citation blocklist in `cadrumo.domain.modelos._citation_registry`.
 
 Add import-contract tests that prevent application, filing, review, export, and
 CLI code from importing old formula rulesets or filing builders as filing-grade

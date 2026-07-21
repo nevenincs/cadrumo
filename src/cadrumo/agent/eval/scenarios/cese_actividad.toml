@@ -14,7 +14,7 @@ name = "cese-actividad-obligation-tail"
 modelo = "303"
 filing_year = 2024
 period = "4T"
-skill_name = "cese-actividad"
+skill_name = "cadrumo-cese-actividad"
 provenance_required = true
 expected_computed_casillas = ["64", "66"]
 

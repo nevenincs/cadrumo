@@ -32,17 +32,18 @@ path: whichever is unavailable or insufficient, the operator-facing
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from .envelope_helpers import require_schema_envelope as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -80,11 +81,6 @@ def _line_value(output: str, key: str) -> str:
         if sep and head.strip() == key:
             return tail.strip()
     raise AssertionError(f"no {key!r} line in CLI output:\n{output}")
-
-
-def _json_result(output: str) -> dict[str, object]:
-    envelope = json.loads(output)
-    return envelope["result"]
 
 
 def test_wizard_creates_invoice_from_provided_fields() -> None:

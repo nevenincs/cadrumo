@@ -16,12 +16,12 @@ enforce the stored digest on read.
 from __future__ import annotations
 
 import json
-import os
 import typing
 from collections.abc import Iterator, Mapping
 from datetime import datetime
 from pathlib import Path
 
+from ....core.atomic_write import atomic_write_hardened_bytes, atomic_write_text
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.hashing import sha256_hex
 from ....core.logging import get_logger
@@ -182,10 +182,21 @@ class LocalFileSystemProvider:
     ) -> ProviderObjectMetadata:
         """Atomically write the object and its sidecar, returning :class:`ProviderObjectMetadata`.
 
-        Atomicity guarantee: the payload file is written to a ``.tmp``
-        sibling and renamed into place. The sidecar is written
-        afterwards; on sidecar-write failure the payload is removed so
-        no orphaned object lingers without metadata.
+        Atomicity guarantee: the payload file is written through
+        :func:`~cadrumo.core.atomic_write.atomic_write_hardened_bytes` (the
+        master-key ``O_EXCL`` + mode ``0o600`` + fsync pattern) rather than
+        the standard tier. The payload here is already-encrypted ciphertext
+        (encryption and classification stay above this provider layer), but
+        the 2026-05-30 security-paths audit flagged the sidecar's plaintext
+        ``content_hash``/``byte_length`` metadata as a size-channel
+        inference aid against the encrypted blob set, so the object file is
+        hardened defence-in-depth even though its own content is opaque.
+        The sidecar is written afterwards through
+        :func:`~cadrumo.core.atomic_write.atomic_write_text` (standard
+        tier), closing the crash window where a torn sidecar write could
+        leave a committed object with missing or corrupted metadata; on
+        sidecar-write failure the payload is removed so no orphaned object
+        lingers without metadata.
         """
         namespace_clean = _validate_namespace(namespace)
         hmac_clean = _validate_hmac(object_key_hmac)
@@ -210,20 +221,16 @@ class LocalFileSystemProvider:
 
         target_path = namespace_dir / _filename(hmac_clean, label_clean)
         sidecar_path = namespace_dir / _sidecar_filename(hmac_clean, label_clean)
-        tmp_path = target_path.with_suffix(target_path.suffix + ".tmp")
 
         try:
-            tmp_path.write_bytes(payload)
-            os.replace(tmp_path, target_path)
+            atomic_write_hardened_bytes(target_path, payload)
         except PermissionError as exc:
-            tmp_path.unlink(missing_ok=True)
             raise OutboundStoragePermissionError(
                 f"cannot write object payload to {target_path}: {exc}",
                 context={"path": str(target_path)},
                 translated_message="adapters.outbound.storage.local.errors.payload_write_permission",
             ) from None
         except OSError as exc:
-            tmp_path.unlink(missing_ok=True)
             if is_windows_long_path_error(exc):
                 raise OutboundStoragePathTooLongError(
                     f"cannot write object payload to {target_path}: path exceeds the Windows MAX_PATH ceiling ({exc})",
@@ -246,7 +253,7 @@ class LocalFileSystemProvider:
             "written_at": written_at.isoformat(),
         }
         try:
-            sidecar_path.write_text(json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
+            atomic_write_text(sidecar_path, json.dumps(sidecar_payload, sort_keys=True), encoding=UTF_8_ENCODING)
         except OSError as exc:
             target_path.unlink(missing_ok=True)
             if is_windows_long_path_error(exc):

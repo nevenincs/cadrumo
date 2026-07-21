@@ -1,0 +1,736 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "docs-sequence-sandbox",
+        "--quiet",
+        "--irpf-income-categories",
+        "actividad_economica",
+        "--activity-start-date",
+        "2026-01-01"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tdocs-sequence-sandbox\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "overview",
+        "backlog",
+        "--allow-incomplete"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "overview.backlog",
+        "notices": [
+          {
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "038": "applicability_undetermined",
+              "111": "applicability_undetermined",
+              "115": "applicability_undetermined",
+              "117": "applicability_undetermined",
+              "121": "applicability_undetermined",
+              "122": "applicability_undetermined",
+              "123": "applicability_undetermined",
+              "126": "applicability_undetermined",
+              "128": "applicability_undetermined",
+              "136": "applicability_undetermined",
+              "140": "applicability_undetermined",
+              "143": "applicability_undetermined",
+              "156": "applicability_undetermined",
+              "165": "applicability_undetermined",
+              "179": "applicability_undetermined",
+              "180": "applicability_undetermined",
+              "181": "applicability_undetermined",
+              "182": "applicability_undetermined",
+              "185": "applicability_undetermined",
+              "186": "applicability_undetermined",
+              "187": "applicability_undetermined",
+              "188": "applicability_undetermined",
+              "189": "applicability_undetermined",
+              "190": "applicability_undetermined",
+              "193": "applicability_undetermined",
+              "194": "applicability_undetermined",
+              "210": "applicability_undetermined",
+              "216": "applicability_undetermined",
+              "220": "applicability_undetermined",
+              "222": "applicability_undetermined",
+              "231": "applicability_undetermined",
+              "232": "applicability_undetermined",
+              "233": "applicability_undetermined",
+              "234": "applicability_undetermined",
+              "238": "applicability_undetermined",
+              "270": "applicability_undetermined",
+              "280": "applicability_undetermined",
+              "289": "applicability_undetermined",
+              "296": "applicability_undetermined",
+              "308": "applicability_undetermined",
+              "309": "applicability_undetermined",
+              "322": "applicability_undetermined",
+              "341": "applicability_undetermined",
+              "345": "applicability_undetermined",
+              "347": "applicability_undetermined",
+              "349": "applicability_undetermined",
+              "353": "applicability_undetermined",
+              "360": "applicability_undetermined",
+              "361": "applicability_undetermined",
+              "369": "applicability_undetermined",
+              "379": "applicability_undetermined",
+              "380": "applicability_undetermined",
+              "490": "applicability_undetermined",
+              "576": "applicability_undetermined",
+              "592": "applicability_undetermined",
+              "604": "applicability_undetermined",
+              "720": "applicability_undetermined",
+              "721": "applicability_undetermined",
+              "763": "applicability_undetermined",
+              "848": "applicability_undetermined"
+            },
+            "message": "60 filing obligation(s) could not be positively scoped for this profile and may be under-reported: 038, 111, 115, 117, 121, 122, 123, 126, 128, 136, 140, 143, 156, 165, 179, 180, 181, 182, 185, 186, 187, 188, 189, 190, 193, 194, 210, 216, 220, 222, 231, 232, 233, 234, 238, 270, 280, 289, 296, 308, 309, 322, 341, 345, 347, 349, 353, 360, 361, 369, 379, 380, 490, 576, 592, 604, 720, 721, 763, 848. Investigate each with 'aeat app overview explain <modelo>'.",
+            "severity": "info",
+            "suggestion": "aeat app overview explain 038"
+          }
+        ],
+        "result": {
+          "as_of": "2026-04-01",
+          "completeness": {
+            "computable_modelos": [
+              "130",
+              "303",
+              "390"
+            ],
+            "defaulted_keys": [
+              "art109_activity_income_withholding_ge_70pct",
+              "does_intracomunitario",
+              "has_employees",
+              "irpf.estimation_regime",
+              "pays_capital_income_with_retencion",
+              "pays_professionals_with_retencion",
+              "pays_rent_with_retencion",
+              "third_party_transactions_above_347_threshold"
+            ],
+            "defaulted_modelos": [
+              "130"
+            ],
+            "explicitly_set_keys": [
+              "iva.regime"
+            ]
+          },
+          "generated_at": "2026-04-01T09:00:00Z",
+          "incomplete_reason": null,
+          "items": [
+            {
+              "adjusted_closes_on": "2026-01-30",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-01-30",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "130",
+                "period": "2025 4T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_refs": [],
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "130",
+              "opens_on": "2026-01-01",
+              "payment_cutoff_on": "2026-01-27",
+              "period": "2025 4T",
+              "recovery": {
+                "legal_ref": "ley-58-2003:art-27.2",
+                "next_command": "aeat app modelo work --help",
+                "recargo_band": {
+                  "id": "completed_months_2",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 2,
+                  "min_completed_months": 2,
+                  "surcharge_pct": "3.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2026-01-30",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-01-30",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "303",
+                "period": "2025 4T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_refs": [],
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "303",
+              "opens_on": "2026-01-01",
+              "payment_cutoff_on": null,
+              "period": "2025 4T",
+              "recovery": {
+                "legal_ref": "ley-58-2003:art-27.2",
+                "next_command": "aeat app modelo work --help",
+                "recargo_band": {
+                  "id": "completed_months_2",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 2,
+                  "min_completed_months": 2,
+                  "surcharge_pct": "3.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2026-01-30",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-01-30",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "390",
+                "period": "2025 0A",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_refs": [],
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "390",
+              "opens_on": "2026-01-01",
+              "payment_cutoff_on": null,
+              "period": "2025 0A",
+              "recovery": {
+                "legal_ref": "ley-58-2003:art-27.2",
+                "next_command": "aeat app modelo work --help",
+                "recargo_band": {
+                  "id": "completed_months_2",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 2,
+                  "min_completed_months": 2,
+                  "surcharge_pct": "3.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            }
+          ],
+          "late_count": 3,
+          "range": {
+            "from_date": "2025-04-01",
+            "to_date": "2026-04-01"
+          },
+          "taxpayer_model_declared": true,
+          "warnings": [
+            {
+              "affected_modelos": [
+                "130"
+              ],
+              "code": "art109_activity_income_withholding_ge_70pct",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset"
+            },
+            {
+              "affected_modelos": [
+                "349"
+              ],
+              "code": "does_intracomunitario",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.intracomunitario_unset"
+            },
+            {
+              "affected_modelos": [
+                "111",
+                "190"
+              ],
+              "code": "has_employees",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.has_employees_unset"
+            },
+            {
+              "affected_modelos": [
+                "131"
+              ],
+              "code": "irpf.estimation_regime",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.estimacion_objetiva_unset"
+            },
+            {
+              "affected_modelos": [
+                "123",
+                "193"
+              ],
+              "code": "pays_capital_income_with_retencion",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.retencion_capital_unset"
+            },
+            {
+              "affected_modelos": [
+                "111",
+                "190"
+              ],
+              "code": "pays_professionals_with_retencion",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.retencion_profesionales_unset"
+            },
+            {
+              "affected_modelos": [
+                "115",
+                "180"
+              ],
+              "code": "pays_rent_with_retencion",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.retencion_arrendamientos_unset"
+            },
+            {
+              "affected_modelos": [
+                "347"
+              ],
+              "code": "third_party_transactions_above_347_threshold",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.terceros_threshold_unset"
+            }
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "overview",
+        "backlog",
+        "--from",
+        "2026-01-01",
+        "--to",
+        "2026-06-30",
+        "--allow-incomplete"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "overview.backlog",
+        "notices": [
+          {
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "038": "applicability_undetermined",
+              "111": "applicability_undetermined",
+              "115": "applicability_undetermined",
+              "117": "applicability_undetermined",
+              "121": "applicability_undetermined",
+              "122": "applicability_undetermined",
+              "123": "applicability_undetermined",
+              "126": "applicability_undetermined",
+              "128": "applicability_undetermined",
+              "136": "applicability_undetermined",
+              "140": "applicability_undetermined",
+              "143": "applicability_undetermined",
+              "156": "applicability_undetermined",
+              "165": "applicability_undetermined",
+              "179": "applicability_undetermined",
+              "180": "applicability_undetermined",
+              "181": "applicability_undetermined",
+              "182": "applicability_undetermined",
+              "185": "applicability_undetermined",
+              "186": "applicability_undetermined",
+              "187": "applicability_undetermined",
+              "188": "applicability_undetermined",
+              "189": "applicability_undetermined",
+              "190": "applicability_undetermined",
+              "193": "applicability_undetermined",
+              "194": "applicability_undetermined",
+              "210": "applicability_undetermined",
+              "216": "applicability_undetermined",
+              "220": "applicability_undetermined",
+              "222": "applicability_undetermined",
+              "231": "applicability_undetermined",
+              "232": "applicability_undetermined",
+              "233": "applicability_undetermined",
+              "234": "applicability_undetermined",
+              "238": "applicability_undetermined",
+              "270": "applicability_undetermined",
+              "280": "applicability_undetermined",
+              "289": "applicability_undetermined",
+              "296": "applicability_undetermined",
+              "308": "applicability_undetermined",
+              "309": "applicability_undetermined",
+              "322": "applicability_undetermined",
+              "341": "applicability_undetermined",
+              "345": "applicability_undetermined",
+              "347": "applicability_undetermined",
+              "349": "applicability_undetermined",
+              "353": "applicability_undetermined",
+              "360": "applicability_undetermined",
+              "361": "applicability_undetermined",
+              "369": "applicability_undetermined",
+              "379": "applicability_undetermined",
+              "380": "applicability_undetermined",
+              "490": "applicability_undetermined",
+              "576": "applicability_undetermined",
+              "592": "applicability_undetermined",
+              "604": "applicability_undetermined",
+              "720": "applicability_undetermined",
+              "721": "applicability_undetermined",
+              "763": "applicability_undetermined",
+              "848": "applicability_undetermined"
+            },
+            "message": "60 filing obligation(s) could not be positively scoped for this profile and may be under-reported: 038, 111, 115, 117, 121, 122, 123, 126, 128, 136, 140, 143, 156, 165, 179, 180, 181, 182, 185, 186, 187, 188, 189, 190, 193, 194, 210, 216, 220, 222, 231, 232, 233, 234, 238, 270, 280, 289, 296, 308, 309, 322, 341, 345, 347, 349, 353, 360, 361, 369, 379, 380, 490, 576, 592, 604, 720, 721, 763, 848. Investigate each with 'aeat app overview explain <modelo>'.",
+            "severity": "info",
+            "suggestion": "aeat app overview explain 038"
+          }
+        ],
+        "result": {
+          "as_of": "2026-04-01",
+          "completeness": {
+            "computable_modelos": [
+              "100",
+              "130",
+              "303",
+              "390"
+            ],
+            "defaulted_keys": [
+              "art109_activity_income_withholding_ge_70pct",
+              "does_intracomunitario",
+              "has_employees",
+              "irpf.estimation_regime",
+              "pays_capital_income_with_retencion",
+              "pays_professionals_with_retencion",
+              "pays_rent_with_retencion",
+              "third_party_transactions_above_347_threshold"
+            ],
+            "defaulted_modelos": [
+              "130"
+            ],
+            "explicitly_set_keys": [
+              "iva.regime"
+            ]
+          },
+          "generated_at": "2026-04-01T09:00:00Z",
+          "incomplete_reason": null,
+          "items": [
+            {
+              "adjusted_closes_on": "2026-01-30",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-01-30",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "130",
+                "period": "2025 4T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_refs": [],
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "130",
+              "opens_on": "2026-01-01",
+              "payment_cutoff_on": "2026-01-27",
+              "period": "2025 4T",
+              "recovery": {
+                "legal_ref": "ley-58-2003:art-27.2",
+                "next_command": "aeat app modelo work --help",
+                "recargo_band": {
+                  "id": "completed_months_2",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 2,
+                  "min_completed_months": 2,
+                  "surcharge_pct": "3.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2026-01-30",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-01-30",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "303",
+                "period": "2025 4T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_refs": [],
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "303",
+              "opens_on": "2026-01-01",
+              "payment_cutoff_on": null,
+              "period": "2025 4T",
+              "recovery": {
+                "legal_ref": "ley-58-2003:art-27.2",
+                "next_command": "aeat app modelo work --help",
+                "recargo_band": {
+                  "id": "completed_months_2",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 2,
+                  "min_completed_months": 2,
+                  "surcharge_pct": "3.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
+            {
+              "adjusted_closes_on": "2026-01-30",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-01-30",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "390",
+                "period": "2025 0A",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_refs": [],
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "390",
+              "opens_on": "2026-01-01",
+              "payment_cutoff_on": null,
+              "period": "2025 0A",
+              "recovery": {
+                "legal_ref": "ley-58-2003:art-27.2",
+                "next_command": "aeat app modelo work --help",
+                "recargo_band": {
+                  "id": "completed_months_2",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 2,
+                  "min_completed_months": 2,
+                  "surcharge_pct": "3.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "business_day",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            }
+          ],
+          "late_count": 3,
+          "range": {
+            "from_date": "2026-01-01",
+            "to_date": "2026-06-30"
+          },
+          "taxpayer_model_declared": true,
+          "warnings": [
+            {
+              "affected_modelos": [
+                "130"
+              ],
+              "code": "art109_activity_income_withholding_ge_70pct",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.art109_activity_income_withholding_ge_70pct_unset"
+            },
+            {
+              "affected_modelos": [
+                "349"
+              ],
+              "code": "does_intracomunitario",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.intracomunitario_unset"
+            },
+            {
+              "affected_modelos": [
+                "111",
+                "190"
+              ],
+              "code": "has_employees",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.has_employees_unset"
+            },
+            {
+              "affected_modelos": [
+                "131"
+              ],
+              "code": "irpf.estimation_regime",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.estimacion_objetiva_unset"
+            },
+            {
+              "affected_modelos": [
+                "123",
+                "193"
+              ],
+              "code": "pays_capital_income_with_retencion",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.retencion_capital_unset"
+            },
+            {
+              "affected_modelos": [
+                "111",
+                "190"
+              ],
+              "code": "pays_professionals_with_retencion",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.retencion_profesionales_unset"
+            },
+            {
+              "affected_modelos": [
+                "115",
+                "180"
+              ],
+              "code": "pays_rent_with_retencion",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.retencion_arrendamientos_unset"
+            },
+            {
+              "affected_modelos": [
+                "347"
+              ],
+              "code": "third_party_transactions_above_347_threshold",
+              "fix_command": "aeat config profile edit",
+              "message": "cli.overview.warning.terceros_threshold_unset"
+            }
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "filing-calendar-backlog"
+}

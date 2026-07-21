@@ -3,12 +3,18 @@ generated: true
 tags:
   - '#index'
   - '#cli-persona-testimonials'
-date: '2026-07-06'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-20-cli-persona-testimonials-audit]]'
   - '[[2026-05-20-cli-persona-testimonials-research]]'
   - '[[2026-05-21-cli-persona-testimonials-audit]]'
+  - '[[2026-05-21-cli-persona-testimonials-plan]]'
+  - '[[2026-05-22-cli-persona-testimonials-P04-S01]]'
+  - '[[2026-05-22-cli-persona-testimonials-P04-S02]]'
+  - '[[2026-05-22-cli-persona-testimonials-P05-S01]]'
+  - '[[2026-05-22-cli-persona-testimonials-P05-S02]]'
+  - '[[2026-05-22-cli-persona-testimonials-P06-S04]]'
   - '[[2026-06-04-cli-persona-testimonials-adr]]'
   - '[[2026-06-30-cli-persona-testimonials-W01-P01-S01]]'
   - '[[2026-06-30-cli-persona-testimonials-W01-P01-S02]]'
@@ -72,6 +78,11 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 
 ### exec
 
+- `2026-05-22-cli-persona-testimonials-P04-S01` - P04.S01 - work-unit metadata declaration inputs
+- `2026-05-22-cli-persona-testimonials-P04-S02` - P04.S02 - profile bindings and estimacion-directa channel
+- `2026-05-22-cli-persona-testimonials-P05-S01` - P05.S01 - profile display names and UUID identity
+- `2026-05-22-cli-persona-testimonials-P05-S02` - P05.S02 - CLI UX polish cluster
+- `2026-05-22-cli-persona-testimonials-P06-S04` - P06.S04 - Modelo 200 casilla 00592 registry drift
 - `2026-06-30-cli-persona-testimonials-W01-P01-S01` - Inventory persona roots transcripts summaries and closeout gaps
 - `2026-06-30-cli-persona-testimonials-W01-P01-S02` - Reconcile testimonial closeout ledger against the vault audit trail
 - `2026-06-30-cli-persona-testimonials-W01-P01-S03` - Record the current campaign tracker as the canonical wave schedule
@@ -113,6 +124,7 @@ Auto-generated index of all documents tagged with `#cli-persona-testimonials`.
 
 ### plan
 
+- `2026-05-21-cli-persona-testimonials-plan` - `cli-persona-testimonials` initial remediation plan
 - `2026-06-30-cli-persona-testimonials-plan` - `cli-persona-testimonials` plan
 
 ### research

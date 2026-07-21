@@ -1,0 +1,168 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "create",
+        "bruno-2026",
+        "--quiet",
+        "--accept-defaults",
+        "--entity-type",
+        "natural_person",
+        "--tax-id",
+        "22222222J",
+        "--name",
+        "Bruno",
+        "--surnames",
+        "Martin Ruiz",
+        "--irpf-income-categories",
+        "actividad_economica",
+        "--activity",
+        "diseno grafico",
+        "--iva-regime",
+        "GENERAL",
+        "--tax-residence-ccaa",
+        "madrid"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": "Profile\tbruno-2026\nStatus\tcreated\nActive profile\tbruno-2026\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "edit",
+        "bruno-2026",
+        "--quiet",
+        "--address-postcode",
+        "28013"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "Profile\tbruno-2026\nStatus\tupdated\nNext\taeat app modelo work create\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "rename",
+        "bruno-2026",
+        "bruno-real"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile_id\t<profile-id>\nprevious_display_name\tbruno-2026\ndisplay_name\tbruno-real\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "duplicate",
+        "bruno-real",
+        "bruno-copy"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "source_profile_id\t<profile-id>\ntarget_profile_id\t<profile-id>\ndisplay_name\tbruno-copy\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "profile",
+        "delete",
+        "bruno-copy",
+        "--yes"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "profile_id\t<profile-id>\ndisplay_name\tbruno-copy\nstatus\ttombstoned\nactive_profile\t<none>\nnotice\tThe deleted profile was the active one; the active-profile pointer has been cleared. Run aeat config switch NAME or aeat config profile create NAME to resume work.\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "config",
+        "switch",
+        "bruno-real"
+      ],
+      "captures": [],
+      "envelope": null,
+      "envelope_source": null,
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": "active_profile\tbruno-real\n"
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "config",
+        "profile",
+        "export",
+        "bruno-real",
+        "--to",
+        "bruno-real-profile.json",
+        "--cleartext-local"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "bruno-real",
+        "command": "config.profile.export",
+        "notices": [
+          {
+            "code": "config.profile.export.cleartext_sensitive_bundle",
+            "context": {
+              "out": "bruno-real-profile.json"
+            },
+            "message": "This bundle is UNENCRYPTED and contains sensitive financial data: the raw tax id (not redacted), names/surnames, the full ledger, calculation revisions, and filing records. It was written to bruno-real-profile.json. Use it only for local/SAR handling; do not email, sync, or transfer it. Delete it after that local/SAR handling is complete. Use 'aeat config profile export --encrypt' for an AEAD-encrypted structured transfer bundle. It is NOT a full backup: attachment evidence bytes, AEAT captures, and the audit trail are excluded. Use the encrypted recovery archive for a complete backup.",
+            "severity": "warning",
+            "suggestion": null
+          }
+        ],
+        "result": {
+          "display_name": "bruno-real",
+          "out": "bruno-real-profile.json",
+          "profile_id": "<profile-id>",
+          "schema_version": 3
+        },
+        "schema_version": "2",
+        "status": "warning"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "profile-setup-maintain"
+}

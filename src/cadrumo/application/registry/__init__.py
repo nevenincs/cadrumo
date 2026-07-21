@@ -63,7 +63,6 @@ from ...core.resources import bundled_path as _bundled_path
 # Importing the renta package registers the first-slice routing
 # cross-domain snapshot check required by Modelo 100 snapshots.
 from ...domain import renta as _renta_snapshot_checks  # noqa: F401 - snapshot-check registration side effect
-from ...domain.calculations.registry import CORPUS_SOURCES_INSTALL_HINT as CORPUS_SOURCES_INSTALL_HINT
 from ...domain.calculations.registry import AeatNifIvaCheckerOracle as _AeatNifIvaCheckerOracle
 from ...domain.calculations.registry import CasillaId as _CasillaId
 from ...domain.calculations.registry import (
@@ -137,7 +136,6 @@ from ...domain.calculations.registry import (
 from ...domain.calculations.registry import undeclared_casilla_ids as _undeclared_casilla_ids
 from ...domain.calculations.registry import validated_casilla_id as _validated_casilla_id
 from ...domain.calculations.registry import verify_legal_catalogue as _verify_legal_catalogue
-from ...domain.calculations.registry import verify_source_catalogue as _verify_source_catalogue
 from ...domain.calculations.registry import (
     verify_workbook_backend as _verify_workbook_backend,
 )
@@ -389,22 +387,6 @@ def verify_registry_tree(registry_root: Path, *, source_root: Path) -> RegistryT
         revision_details=_revision_details(modelos),
         verified=True,
     )
-
-
-def absent_corpus_companion_binaries(registry_root: Path, *, source_root: Path) -> tuple[str, ...]:
-    """Return the loud advisory for corpus source binaries absent from tree and companion.
-
-    Loads the shared source catalogue for ``registry_root`` and resolves every
-    cited corpus binary against ``source_root`` and the optional ``cadrumo_data``
-    companion. An empty tuple means every declared binary is present and
-    byte-integrity verifiable; a non-empty tuple is the loud advisory the
-    split-install path surfaces, naming the missing set and the
-    ``cadrumo[corpus-sources]`` install hint. The ``aeat app registry``
-    verification verbs consult this to refuse instructively when the companion
-    is required and absent.
-    """
-    authority = _ValidatedRegistryAuthority.load(registry_root, source_root=source_root)
-    return _verify_source_catalogue(source_root, authority.catalogues.sources)
 
 
 def _typed_oracle_environment(environment: str) -> _OracleEnvironment:
@@ -679,7 +661,6 @@ def _load_filed_observation(path: Path):
 
 
 __all__ = [
-    "CORPUS_SOURCES_INSTALL_HINT",
     "BindingDiff",
     "CasillaDiff",
     "FiledStateVerificationReport",
@@ -712,7 +693,6 @@ __all__ = [
     "RegistryTopicProjection",
     "RegistryTreeReport",
     "RenumberedCasilla",
-    "absent_corpus_companion_binaries",
     "audit_registry_oracles",
     "diff_registry_revisions",
     "inspect_registry_tree",

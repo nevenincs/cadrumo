@@ -16,6 +16,9 @@ Submodules
    cadrumo.application.user_profile._aggregate
    cadrumo.application.user_profile._bundle
    cadrumo.application.user_profile._bundle_encryption
+   cadrumo.application.user_profile._bundle_export
+   cadrumo.application.user_profile._bundle_export_contracts
+   cadrumo.application.user_profile._bundle_export_operation
    cadrumo.application.user_profile._capabilities
    cadrumo.application.user_profile._censo_errors
    cadrumo.application.user_profile._censo_sync
@@ -30,8 +33,8 @@ Submodules
    cadrumo.application.user_profile._lifecycle
    cadrumo.application.user_profile._orchestration
    cadrumo.application.user_profile._preflight
+   cadrumo.application.user_profile._profile_pointer_transaction
    cadrumo.application.user_profile._profile_repository
    cadrumo.application.user_profile._projections
    cadrumo.application.user_profile._repository
-   cadrumo.application.user_profile._testing
    cadrumo.application.user_profile._validation

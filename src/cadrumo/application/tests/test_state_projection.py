@@ -29,7 +29,6 @@ import pytest
 from pydantic import SecretStr
 
 from ...adapters.persistence.storage.bucket import (
-    BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
     provision_bucket_directory,
@@ -40,7 +39,9 @@ from ...core import Period
 from ...core.config import SecretStoreBackend, override_settings
 from ...domain.categories import SpendingCategory
 from ...domain.transactions import BusinessClassification, TransactionDirection
+from ...domain.user_profile import UserProfileStatus
 from ...tests.secure_sql import dev_test_database_password
+from ...tests.user_profile import register_minimal_profile
 from ..auth import inspect_operator_auth
 from ..auth import test_operator_auth as probe_operator_auth
 from ..ledger import ManualLedgerTransactionCommand, create_manual_transaction
@@ -51,7 +52,6 @@ from ..state_projection import (
     build_operator_state_projection,
     modelo_requires_ledger_preflight,
 )
-from ..user_profile import register_minimal_profile
 from ..wizard import WIZARD_FLOWS
 from ..workflow import WorkflowState, workflow_state_repository
 
@@ -136,7 +136,7 @@ def _stage_profile_manifest(root: Path, bucket_id: str) -> None:
             ),
             recovery_enrolled=False,
             schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )
 
@@ -640,7 +640,7 @@ def test_auth_readiness_drops_certificate_path_after_switching_provider(tmp_path
     ``configure --provider clave_movil``, the projection's
     ``certificate_path`` must be empty — the certificate path is a
     certificate-provider field and must not leak beside a different
-    active provider (persona-fleet finding G1).
+    active provider.
     """
 
     from ..auth import configure_operator_auth
@@ -667,8 +667,7 @@ def test_auth_readiness_health_severity_is_populated_for_a_configured_provider()
 
     The Cl@ve backend reports a ``health_summary`` but no severity; the
     projection must derive a coherent token so ``health_severity`` is
-    never silently empty for a configured provider (persona-fleet
-    finding G4).
+    never silently empty for a configured provider.
     """
 
     from ..auth import configure_operator_auth

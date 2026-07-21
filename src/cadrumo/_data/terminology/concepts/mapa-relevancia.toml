@@ -11,12 +11,8 @@ updated_at = 2026-06-12
 
 [language.es]
 short_description = "El dato comprometido que asocia cada termino barrido con destinos documentales rankeados."
-definition = "Archivo de datos laundered que materializa los resultados del barrido RAG como mapeos de termino a destino: identificadores de registro, tipo de superficie, destino y peso normalizado. En ADR D6 y D8, este mapa es comprometido porque CI y el build offline no ejecutan RAG, y sus targets deben resolver contra la documentacion actual."
+definition = "Archivo de datos laundered que materializa los resultados del barrido RAG como mapeos de termino a destino: identificadores de registro, tipo de superficie, destino y peso normalizado. El mapa se compromete al repositorio porque CI y el build offline no ejecutan RAG, y sus targets deben resolver contra la documentacion actual."
 scope_note = "El mapa no contiene vectores, pesos sparse, snippets ni rutas de hits crudos."
-
-[language.es.source]
-citation = "2026-06-10-docs-terminology-search-adr, decisiones D6 y D8."
-authority = "vaultspec"
 
 [[language.es.term]]
 label = "mapa de relevancia"

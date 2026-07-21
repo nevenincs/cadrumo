@@ -17,9 +17,12 @@ Flag derivation per question kind:
 * ``CHECKBOX`` → repeated ``--<question-id>`` option that accumulates
   a ``list[str]``.
 
-The closure accepts a ``Prompter`` injection through the keyword-only
-``_prompter`` parameter (not exposed as a Typer option) so tests can
-drive the flow without questionary interaction.
+An interactive walk prompts through
+:meth:`~cadrumo.application.wizard.QuestionaryPrompter.from_ambient_app_session`,
+so the prompts render against whatever IO the ambient ``prompt_toolkit``
+app session declares. Outside such a session — every production ``aeat``
+invocation — that session declares no IO, so the prompter binds to
+process stdio and applies the full non-TTY / no-console refusal.
 """
 
 from __future__ import annotations
@@ -32,7 +35,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
 if TYPE_CHECKING:
-    from ...core.errors import AeatError
+    from ...core.errors import CadrumoError
     from ..workflow import WorkflowState
 
 import contextlib
@@ -51,9 +54,8 @@ from ._errors import WizardMissingFlagError
 from ._models import WizardFlow, WizardQuestion, WizardWidget
 from ._persistence import WizardPersistMode
 from ._prompter import (
-    Prompter,
+    CanonicalAnswerPrompter,
     QuestionaryPrompter,
-    ScriptedPrompter,
     WizardEditUnsupportedConsoleError,
     WizardUnsupportedConsoleError,
 )
@@ -590,8 +592,8 @@ def _scripted_from_canonical(
     canonical: dict[str, str],
     *,
     force_visible: frozenset[str] = frozenset(),
-) -> ScriptedPrompter:
-    """Build a ``ScriptedPrompter`` driven by the canonical-token dict.
+) -> CanonicalAnswerPrompter:
+    """Build a non-interactive prompter driven by the canonical-token dict.
 
     The scripted answer queue must match ``run_flow``'s question
     sequence exactly. Visibility is therefore evaluated with the same
@@ -612,7 +614,7 @@ def _scripted_from_canonical(
             value = canonical.get(question.id, question.default or "")
             answers.append(value)
             running[question.id] = value
-    return ScriptedPrompter(answers)
+    return CanonicalAnswerPrompter(answers)
 
 
 def _canonical_from_flag_value(question: WizardQuestion, value: object) -> str | None:
@@ -801,7 +803,6 @@ def _run_full_flow(
     flow: WizardFlow,
     canonical: dict[str, str],
     *,
-    _prompter: Prompter | None,
     quiet: bool,
     accept_defaults: bool,
     profile_name: str,
@@ -861,7 +862,7 @@ def _run_full_flow(
             force_visible=explicit_question_ids,
         )
     else:
-        active = _prompter if _prompter is not None else QuestionaryPrompter()
+        active = QuestionaryPrompter.from_ambient_app_session()
         try:
             answers = run_flow(flow, active, defaults=canonical)
         except WizardUnsupportedConsoleError as exc:
@@ -935,8 +936,8 @@ def _enter_requested_output_language(kwargs: dict[str, object], language_stack: 
         language_stack.enter_context(override_settings(cadrumo_output_language=requested_language))
 
 
-def _render_error_inside_language_override(exc: AeatError) -> None:
-    """Freeze a translated AEAT error message before locale overrides unwind."""
+def _render_error_inside_language_override(exc: CadrumoError) -> None:
+    """Freeze a translated Cadrumo error message before locale overrides unwind."""
     translated_key = exc.translated_message
     if not isinstance(translated_key, str) or not translated_key:
         return
@@ -1083,7 +1084,6 @@ def _run_wizard_persistence_path(
     canonical: dict[str, str],
     explicit_flags: dict[str, str],
     *,
-    _prompter: Prompter | None,
     quiet: bool,
     accept_defaults: bool,
     profile_name: str,
@@ -1097,7 +1097,6 @@ def _run_wizard_persistence_path(
     return _run_full_flow(
         flow,
         canonical,
-        _prompter=_prompter,
         quiet=quiet,
         accept_defaults=accept_defaults,
         profile_name=profile_name,
@@ -1204,13 +1203,13 @@ def _emit_wizard_success(
         payload["active_profile"] = profile_name
     if json_output_requested():
         command_path = "config.profile.create" if mode == "create" else "config.profile.edit"
-        # Populate the envelope-spine active_profile identity anchor (ADR
-        # mcp-identity-linked-operation I3). The wizard emits through
-        # emit_json_success directly rather than the CLI _emit_envelope funnel
-        # that resolves the active label, so it must supply the label itself. On
-        # create the newly-created profile IS the active one, so its name is the
-        # label; on edit the active profile is not necessarily the edited one, so
-        # the spine stays null (the label is not the wizard's to assert there).
+        # Populate the envelope-spine active_profile identity anchor. The
+        # wizard emits through emit_json_success directly rather than the
+        # CLI _emit_envelope funnel that resolves the active label, so it
+        # must supply the label itself. On create the newly-created
+        # profile IS the active one, so its name is the label; on edit
+        # the active profile is not necessarily the edited one, so the
+        # spine stays null (the label is not the wizard's to assert there).
         active_profile = profile_name if mode == "create" else None
         emit_json_success(command_path, payload, notices=notices, active_profile=active_profile)
         return
@@ -1232,7 +1231,6 @@ def _execute_wizard_command(
     flow: WizardFlow,
     mode: WizardPersistMode,
     *,
-    _prompter: Prompter | None,
     kwargs: dict[str, object],
 ) -> None:
     """Run the wizard command body after Typer has parsed dynamic flags."""
@@ -1251,7 +1249,6 @@ def _execute_wizard_command(
             mode,
             canonical,
             explicit_flags,
-            _prompter=_prompter,
             quiet=quiet,
             accept_defaults=accept_defaults,
             profile_name=profile_name,
@@ -1277,8 +1274,7 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
 
     The returned closure carries one parameter per question in the
     flow (typed and annotated for Typer to derive a CLI flag) plus the
-    three mode flags. Tests can pass a custom prompter through the
-    keyword-only ``_prompter`` slot (not surfaced as a Typer option).
+    three mode flags.
 
     ``mode`` binds the closure to a single wizard verb. ``"create"``
     refuses a name that already has a manifest; ``"edit"`` refuses a
@@ -1290,10 +1286,10 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
     mode_params = _mode_parameters(flow)
     parameters = (*mode_params, *question_params)
 
-    def _command(*, _prompter: Prompter | None = None, **kwargs: object) -> None:
+    def _command(**kwargs: object) -> None:
         import contextlib
 
-        from ...core.errors import AeatError
+        from ...core.errors import CadrumoError
 
         with contextlib.ExitStack() as _language_stack:
             # When the operator supplies `--output-language` on the
@@ -1307,8 +1303,8 @@ def build_wizard_command(flow: WizardFlow, *, mode: WizardPersistMode) -> Callab
             # default. The override unwinds when the command returns.
             _enter_requested_output_language(kwargs, _language_stack)
             try:
-                _execute_wizard_command(flow, mode, _prompter=_prompter, kwargs=kwargs)
-            except AeatError as exc:
+                _execute_wizard_command(flow, mode, kwargs=kwargs)
+            except CadrumoError as exc:
                 # Pre-render translated_message INSIDE the override so the
                 # error boundary's renderer (which runs after the ExitStack
                 # unwinds) sees the already-localised string. Without this

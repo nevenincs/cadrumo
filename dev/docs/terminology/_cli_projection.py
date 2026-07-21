@@ -1,4 +1,4 @@
-"""CLI-surface projection compiler for the docs search index (ADR D4).
+"""CLI-surface projection compiler for the docs search index.
 
 Projects the live ``aeat`` Typer/Click command tree into strict search
 records the offline docs search and the Ctrl-K command palette surface as
@@ -43,6 +43,7 @@ from pydantic import Field
 
 from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, UTF_8_ENCODING, OutputLanguage
 
+from ..cli_reference import cli_reference_page_for_command
 from ._search_record import SearchRecordBase, SearchRecordKind
 
 __all__ = [
@@ -72,7 +73,7 @@ class _CommandPayload(TypedDict):
 
 
 class CliSurfaceRecord(SearchRecordBase):
-    """A search record for one live ``aeat`` leaf command (ADR D4).
+    """A search record for one live ``aeat`` leaf command.
 
     Identity is the full command path (e.g. ``aeat app modelo calculate``).
     The four-language ``descriptions`` map carries the command's help text
@@ -87,12 +88,13 @@ class CliSurfaceRecord(SearchRecordBase):
     registry_key: str = Field(min_length=1, max_length=240)
     #: The top-level command family (``app`` or ``config``).
     family: str = Field(min_length=1, max_length=64)
-    #: The CLI-reference page anchor, e.g. ``cli/app.html#aeat-app-ledger-add``.
+    #: The CLI-reference page anchor, e.g.
+    #: ``cli/app/ledger.html#aeat-app-ledger-add``.
     target: str = Field(min_length=1, max_length=320)
 
 
 class CliOptionRecord(SearchRecordBase):
-    """A search record for one option or argument of a leaf command (ADR D4).
+    """A search record for one option or argument of a leaf command.
 
     Identity is the owning command path plus the option's surface name(s).
     The four-language ``descriptions`` map carries the option help resolved
@@ -134,11 +136,12 @@ class CliProjectionStats:
 def _command_anchor(command_path: str) -> str:
     r"""Return the Sphinx section-slug anchor for a command heading.
 
-    ``dev/docs/cli_reference.py`` renders each leaf command as an RST
-    section whose heading is the command path wrapped in double backticks,
-    on the family page. Sphinx derives the in-page anchor by lower-casing
-    the heading text and joining its alphanumeric runs with hyphens, so
-    ``aeat app ledger add`` becomes ``aeat-app-ledger-add``.
+    ``dev/docs/cli_reference.py`` renders each leaf command as an RST section
+    whose heading is the command path wrapped in double backticks (the page it
+    lands on is decided by :func:`cli_reference_page_for_command`, not by this
+    slug). Sphinx derives the in-page anchor by lower-casing the heading text
+    and joining its alphanumeric runs with hyphens, so ``aeat app ledger add``
+    becomes ``aeat-app-ledger-add``.
 
     Args:
         command_path: The full space-joined command path.
@@ -158,17 +161,26 @@ def _command_anchor(command_path: str) -> str:
     return "".join(slug_chars).strip("-")
 
 
-def _command_target(family: str, command_path: str) -> str:
+def _command_target(command_path: tuple[str, ...]) -> str:
     """Return the CLI-reference page anchor for a command.
 
+    The page is resolved through :func:`cli_reference_page_for_command`, the
+    single routing authority the CLI-reference generator itself renders against,
+    so a deep link always lands on the page that carries the command's section:
+    a group page (``cli/app/ledger.html``) for a grouped command, the family
+    landing page (``cli/config.html``) for a leaf mounted directly on the
+    family. Deriving the page here rather than hardcoding ``cli/<family>.html``
+    is what keeps this in lock-step with a future page-layout change.
+
     Args:
-        family: The top-level command family (``app`` / ``config``).
-        command_path: The full space-joined command path.
+        command_path: The full command path tuple including the leading
+            executable token, e.g. ``("aeat", "app", "ledger", "add")``.
 
     Returns:
-        A page+anchor string, e.g. ``cli/app.html#aeat-app-ledger-add``.
+        A page+anchor string, e.g. ``cli/app/ledger.html#aeat-app-ledger-add``.
     """
-    return f"cli/{family}.html#{_command_anchor(command_path)}"
+    page_stem = cli_reference_page_for_command(command_path)
+    return f"{page_stem}.html#{_command_anchor(' '.join(command_path))}"
 
 
 # ---------------------------------------------------------------------------
@@ -252,7 +264,7 @@ def _walk_tree_for_language(language: OutputLanguage) -> list[_CommandPayload]:
     if result.returncode != 0:
         # BROAD-EXCEPT-RATIONALE-SUBPROCESS-GUARD:
         # subprocess invocation failure surfaced as RuntimeError for build
-        # diagnostics; not on the operator-facing AeatError contract.
+        # diagnostics; not on the operator-facing CadrumoError contract.
         raise RuntimeError(
             f"CLI tree walk subprocess failed for language {language.value!r} "
             f"(exit {result.returncode}):\n{result.stderr}",
@@ -352,7 +364,7 @@ def project_cli_search_records() -> tuple[
         path = tuple(entry["path"])
         command_path = " ".join(path)
         family = entry["family"]
-        target = _command_target(family, command_path)
+        target = _command_target(path)
         registry_key = _normalise_path(path)
 
         command_help = _command_help_map(path, by_language)

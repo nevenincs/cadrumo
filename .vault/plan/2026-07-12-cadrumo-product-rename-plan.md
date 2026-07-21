@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-13'
+modified: '2026-07-17'
 tier: L4
 related:
   - '[[2026-07-12-cadrumo-product-rename-research]]'
@@ -50,13 +50,18 @@ Establish path ownership and explicit product-versus-authority classification be
 
 Create and test the single CADRUMO identity authority.
 
-- [ ] `W01.P02.S05` - Add the immutable canonical CADRUMO tuple and authority-boundary vocabulary; `src/cadrumo/core/product_identity.py`.
+- [x] `W01.P02.S05` - Add the immutable canonical CADRUMO tuple and authority-boundary vocabulary; `src/cadrumo/core/product_identity.py`.
 - [x] `W01.P02.S06` - Expose the public product identity through the package facade; `src/cadrumo/core/__init__.py`.
 - [x] `W01.P02.S07` - Add contract tests proving the canonical tuple and rejecting former product aliases; `src/cadrumo/core/tests/test_product_identity.py`.
 - [x] `W01.P02.S08` - Codify that CADRUMO names the product and AEAT names the authority; `.vaultspec/rules/cadrumo-product-authority-names.md`.
-- [ ] `W01.P02.S86` - Reconcile the binding CADRUMO product, aeat human CLI, and AEAT authority naming contract; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vaultspec/rules/cadrumo-product-authority-names.md; generated provider naming rules; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py`.
-- [x] `W01.P02.S87` - Remediate the authority-lock review and reopen contradicted downstream acceptance contracts; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vault/audit/2026-07-13-cadrumo-product-rename-authority-lock-audit.md; .vault/exec/2026-07-12-cadrumo-product-rename/2026-07-12-cadrumo-product-rename-W01-P02-S87.md`.
-- [x] `W01.P02.S90` - Repair mixed-commit drift and restore the binding CADRUMO display contract; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py; src/cadrumo/tests/test_parity.py; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S90 execution record`.
+- [x] `W01.P02.S86` - Reconcile the binding CADRUMO product, aeat human CLI, and AEAT authority naming contract; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vaultspec/rules/cadrumo-product-authority-names.md; generated provider naming rules; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py`.
+- [x] `W01.P02.S87` - Remediate the S86 naming-authority review and retire stale all-caps repair lanes; `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; .vault/adr/2026-07-13-product-rename-adr.md; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; .vault/audit/2026-07-13-cadrumo-product-rename-s86-restored-authority-audit.md; S86, S87, S90, and S93 execution records; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py`.
+- [x] `W01.P02.S90` - Retire the historical exact-all-caps repair lane under the contextual casing authority; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S90 execution record`.
+- [x] `W01.P02.S93` - Retire the historical all-caps regression lane under the contextual casing authority; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S93 execution record`.
+- [x] `W01.P02.S94` - Correct S87 cross-carried S37 closure chronology and accepted Stage-A history; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S87, S37, S94, S96, and S97 execution records`.
+- [x] `W01.P02.S95` - Repair the 9cb authority regression while preserving reciprocal ADR supersession; `.vault/adr/2026-07-12-cadrumo-product-rename-adr.md; .vault/adr/2026-07-12-cadrumo-cli-executable-adr.md; src/cadrumo/core/product_identity.py; src/cadrumo/core/tests/test_product_identity.py; .vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S95 execution record`.
+- [x] `W01.P02.S96` - Document the whole-ADR supersession attempt later corrected to preserve the accepted Stage-A role; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S96 execution record`.
+- [x] `W01.P02.S97` - Document the historical-only note later corrected to preserve the accepted Stage-A role; `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md; S97 execution record`.
 
 ## Wave `W02` - move runtime and persistence at one breaking boundary
 
@@ -97,7 +102,7 @@ Make the CADRUMO distribution expose the sole human `aeat` command and the
 distinct `cadrumo-mcp` command.
 
 - [x] `W03.P05.S24` - Rename root metadata, package selection, extras, and URLs to CADRUMO; `expose `aeat` and `cadrumo-mcp` scripts; `pyproject.toml`.
-- [ ] `W03.P05.S25` - Bind CLI program identity to `aeat` and its version and help product surfaces to CADRUMO; `src/cadrumo/entrypoints/cli and direct CLI structural tests`.
+- [x] `W03.P05.S25` - Bind CLI program identity to `aeat` and its version and help product surfaces to CADRUMO; `src/cadrumo/entrypoints/cli and direct CLI structural tests`.
 - [x] `W03.P05.S26` - Rename MCP executable refusal and install hints; `src/cadrumo/entrypoints/mcp executable/refusal modules and focused real tests`.
 - [x] `W03.P05.S27` - Update the optional-extra authority and every directly generated runtime install remedy to current `cadrumo[...]` metadata, with real degradation tests; `src/cadrumo/core/_optional_extras.py; optional-extra consumers, error registries, agent/MCP/search/corpus degradation surfaces and direct tests`.
 
@@ -119,10 +124,10 @@ Move the companion projects and shared namespace coherently.
 Regenerate dependency state and prove clean installed artifacts.
 
 - [x] `W03.P07.S36` - Regenerate all root and companion dependency records after metadata converges; `uv.lock`.
-- [ ] `W03.P07.S37` - Update the slim-wheel clean-install probe to CADRUMO names; `dev/packaging/smoke_core.py`.
-- [ ] `W03.P07.S38` - Update the extras clean-install probe to CADRUMO names; `dev/packaging/smoke_extras.py`.
-- [ ] `W03.P07.S39` - Update the Docker clean-install probe to CADRUMO names; `dev/packaging/smoke_docker.py`.
-- [ ] `W03.P07.S40` - Update the split-companion install probe and wheel globs; `dev/packaging/smoke_split_install.py`.
+- [x] `W03.P07.S37` - Update the slim-wheel clean-install probe to CADRUMO names; `dev/packaging/smoke_core.py`.
+- [x] `W03.P07.S38` - Update the extras clean-install probe to CADRUMO names; `dev/packaging/smoke_extras.py`.
+- [x] `W03.P07.S39` - Update the Docker clean-install probe to CADRUMO names; `dev/packaging/smoke_docker.py`.
+- [x] `W03.P07.S40` - Update the split-companion install probe and wheel globs; `dev/packaging/smoke_split_install.py`.
 - [x] `W03.P07.S41` - Build and inspect the root wheel for only cadrumo import members; `local root wheel artifact`.
 - [x] `W03.P07.S42` - Build and inspect both companion wheels for disjoint cadrumo_data members; `local companion wheel artifacts`.
 
@@ -134,9 +139,9 @@ Depends on locally installable W03 artifacts; generator authorities land before 
 
 Project CADRUMO across MCP server, tools, resources, and client behavior.
 
-- [ ] `W04.P08.S43` - Rename server, tool prefixes, subprocess argv, and product environment names while retaining authority language; `src/cadrumo/entrypoints/mcp/_server.py`.
+- [x] `W04.P08.S43` - Rename server, tool prefixes, subprocess argv, and product environment names while retaining authority language; `src/cadrumo/entrypoints/mcp/_server.py`.
 - [x] `W04.P08.S44` - Rename MCP resource URI schemes; `src/cadrumo/entrypoints/mcp/_resources.py`.
-- [ ] `W04.P08.S45` - Rename MCP prompts and product-facing tool copy; `src/cadrumo/entrypoints/mcp/_prompts.py`.
+- [x] `W04.P08.S45` - Rename MCP prompts and product-facing tool copy; `src/cadrumo/entrypoints/mcp/_prompts.py`.
 - [x] `W04.P08.S46` - Update MCP allowlists and recompute tool-name budgets; `src/cadrumo/entrypoints/mcp tests`.
 - [x] `W04.P08.S47` - Prove a real CADRUMO client initialize, list, call, and shutdown handshake; `src/cadrumo/entrypoints/mcp/tests/test_client_handshake.py`.
 
@@ -144,18 +149,18 @@ Project CADRUMO across MCP server, tools, resources, and client behavior.
 
 Change plugin generation authorities before regenerating and validating marketplace output.
 
-- [ ] `W04.P09.S48` - Rename plugin identity, distribution pin, command, source path, metadata, and environment interpolation; `src/cadrumo/agent/_workspace.py`.
-- [ ] `W04.P09.S49` - Update generator tests for plugins/cadrumo and pinned CADRUMO launcher output; `src/cadrumo/agent/tests`.
-- [ ] `W04.P09.S50` - Regenerate the marketplace manifest and CADRUMO plugin subtree from the changed authority; `packaging/marketplace generated output`.
-- [ ] `W04.P09.S51` - Validate the regenerated marketplace and plugin with the live strict Claude validator; `packaging/marketplace validation evidence`.
+- [x] `W04.P09.S48` - Rename plugin identity, distribution pin, command, source path, metadata, and environment interpolation; `src/cadrumo/agent/_workspace.py`.
+- [x] `W04.P09.S49` - Update generator tests for plugins/cadrumo and pinned CADRUMO launcher output; `src/cadrumo/agent/tests`.
+- [x] `W04.P09.S50` - Regenerate the marketplace manifest and CADRUMO plugin subtree from the changed authority; `packaging/marketplace generated output`.
+- [x] `W04.P09.S51` - Validate the regenerated marketplace and plugin with the live strict Claude validator; `packaging/marketplace validation evidence`.
 
 ### Phase `W04.P10` - rename or retire MCPB explicitly
 
 Keep the secondary bundle honest under the CADRUMO identity or explicitly retire it.
 
-- [ ] `W04.P10.S52` - Rename the secondary bundle manifest identity and executable; `packaging/mcpb/manifest.json`.
-- [ ] `W04.P10.S53` - Emit cadrumo.mcpb and CADRUMO diagnostics without overstating installability; `packaging/mcpb/build.py`.
-- [ ] `W04.P10.S54` - Prove manifest validation, bundle members, and honest signing behavior; `packaging/mcpb/tests/test_build.py`.
+- [x] `W04.P10.S52` - Rename the secondary bundle manifest identity and executable; `packaging/mcpb/manifest.json`.
+- [x] `W04.P10.S53` - Emit cadrumo.mcpb and CADRUMO diagnostics without overstating installability; `packaging/mcpb/build.py`.
+- [x] `W04.P10.S54` - Prove manifest validation, bundle members, and honest signing behavior; `packaging/mcpb/tests/test_build.py`.
 
 ## Wave `W05` - converge developer, release, locale, and documentation surfaces
 
@@ -165,39 +170,41 @@ Depends on authoritative runtime and generator identities from W01 through W04.
 
 Converge developer automation, CI, release tooling, and external publication gates.
 
-- [ ] `W05.P11.S55` - Update developer recipes, release URLs, companion paths, and rollback commands; `justfile`.
+- [x] `W05.P11.S55` - Update developer recipes, release URLs, companion paths, and rollback commands; `justfile`.
 - [x] `W05.P11.S56` - Rename manual publish choices, builders, filename guards, and Trusted Publisher expectations; `.github/workflows/publish.yml`.
-- [ ] `W05.P11.S57` - Rename packaging smoke labels, commands, and evidence artifacts; `.github/workflows/packaging-smoke.yml`.
-- [ ] `W05.P11.S58` - Retarget CI source paths and named product jobs; `.github/workflows/ci.yml`.
+- [x] `W05.P11.S57` - Rename packaging smoke labels, commands, and evidence artifacts; `.github/workflows/packaging-smoke.yml`.
+- [x] `W05.P11.S58` - Retarget CI source paths and named product jobs; `.github/workflows/ci.yml`.
 - [x] `W05.P11.S59` - Retarget agent-harness evaluation to cadrumo-mcp; `.github/workflows/agent-harness-eval.yml`.
 - [x] `W05.P11.S60` - Update release-readiness project-name parsing and real behavior tests; `dev/release`.
-- [ ] `W05.P11.S61` - Block publication until all three PyPI Trusted Publishers and remaining reservation evidence are confirmed; `issue #476 release gate evidence`.
+- [x] `W05.P11.S61` - Block publication until all three PyPI Trusted Publishers and remaining reservation evidence are confirmed; `issue #476 release gate evidence`.
 
 ### Phase `W05.P12` - regenerate locale-owned product copy
 
 Update product copy through locale authorities while preserving AEAT counterparty language.
 
-- [ ] `W05.P12.S62` - Bind command-help invocations to `aeat` and product copy to CADRUMO while preserving AEAT counterparty language; `src/cadrumo entrypoint help authorities`.
-- [ ] `W05.P12.S63` - Update English product locale messages through the locales CLI; `English locale catalogue`.
-- [ ] `W05.P12.S64` - Update Spanish product locale messages through the locales CLI; `Spanish locale catalogue`.
-- [ ] `W05.P12.S65` - Update Catalan product locale messages through the locales CLI; `Catalan locale catalogue`.
-- [ ] `W05.P12.S66` - Update Hungarian product locale messages through the locales CLI; `Hungarian locale catalogue`.
-- [ ] `W05.P12.S67` - Regenerate locale scaffold output and pass locale parity checks; `generated locale scaffold`.
+- [x] `W05.P12.S62` - Bind command-help invocations to `aeat` and product copy to CADRUMO while preserving AEAT counterparty language; `src/cadrumo entrypoint help authorities`.
+- [x] `W05.P12.S63` - Update English product locale messages through the locales CLI; `English locale catalogue`.
+- [x] `W05.P12.S64` - Update Spanish product locale messages through the locales CLI; `Spanish locale catalogue`.
+- [x] `W05.P12.S65` - Update Catalan product locale messages through the locales CLI; `Catalan locale catalogue`.
+- [x] `W05.P12.S66` - Update Hungarian product locale messages through the locales CLI; `Hungarian locale catalogue`.
+- [x] `W05.P12.S67` - Regenerate locale scaffold output and pass locale parity checks; `generated locale scaffold`.
 - [x] `W05.P12.S88` - Add safe per-locale selection to product-identity canonicalization; `src/cadrumo locale manager, CLI, and cohesive tests`.
 - [x] `W05.P12.S89` - Correct locale scalar and placeholder parity through the locale CLI; `English, Spanish, Catalan, and Hungarian locale catalogues`.
+- [x] `W05.P12.S91` - Enforce locale scalar and placeholder parity in the production audit; `locale manager, shared interpolation grammar, and cohesive audit tests`.
+- [x] `W05.P12.S92` - Remediate formatter-field extraction and strict interpolation postconditions; `shared i18n grammar, locale audit, cohesive renderer and audit tests`.
 
 ### Phase `W05.P13` - rewrite active documentation through the mandated workflow
 
 Update active user-facing documentation and regenerate derived references.
 
-- [ ] `W05.P13.S68` - Rewrite product branding, badges, install commands, and authority-qualified prose; `README.md`.
-- [ ] `W05.P13.S69` - Rewrite release, publication, rollback, and old-state cutover instructions; `RELEASING.md`.
-- [ ] `W05.P13.S70` - Rewrite active user guides with `aeat` invocations, CADRUMO product prose, and preserved AEAT authority language; `docs/how-to`.
-- [ ] `W05.P13.S71` - Rewrite active explanation and reference pages with the product-authority boundary; `docs/explanation and docs/reference`.
-- [ ] `W05.P13.S72` - Update documentation site identity, titles, marks, and generated API configuration; `docs/conf.py and docs/_static product assets`.
-- [ ] `W05.P13.S73` - Update release templates, checklist, and current verification proofs; `docs release and verification surfaces`.
-- [ ] `W05.P13.S74` - Regenerate API references and documentation indexes from CADRUMO source authorities; `generated documentation surfaces`.
-- [ ] `W05.P13.S75` - Render and inspect the complete documentation site for stale product identity and broken references; `built documentation site`.
+- [x] `W05.P13.S68` - Rewrite product branding, badges, install commands, and authority-qualified prose; `README.md`.
+- [x] `W05.P13.S69` - Rewrite release, publication, rollback, and old-state cutover instructions; `RELEASING.md`.
+- [x] `W05.P13.S70` - Rewrite active user guides with `aeat` invocations, CADRUMO product prose, and preserved AEAT authority language; `docs/how-to`.
+- [x] `W05.P13.S71` - Rewrite active explanation and reference pages with the product-authority boundary; `docs/explanation and docs/reference`.
+- [x] `W05.P13.S72` - Update documentation site identity, titles, marks, and generated API configuration; `docs/conf.py and docs/_static product assets`.
+- [x] `W05.P13.S73` - Update release templates, checklist, and current verification proofs; `docs release and verification surfaces`.
+- [x] `W05.P13.S74` - Regenerate API references and documentation indexes from CADRUMO source authorities; `generated documentation surfaces`.
+- [x] `W05.P13.S75` - Render and inspect the complete documentation site for stale product identity and broken references; `built documentation site`.
 
 ## Wave `W06` - run residue audit, formal review, and epic closure
 
@@ -208,21 +215,21 @@ Depends on all implementation Waves and distinguishes valid AEAT authority uses 
 Prove CADRUMO behavior and classify every retained `aeat` occurrence by
 contract and referent.
 
-- [ ] `W06.P14.S76` - Audit remaining `aeat` tokens and classify each as the sole CLI, authority, historical evidence, immutable corpus, or defect; `repository rename residue report`.
+- [x] `W06.P14.S76` - Audit remaining `aeat` tokens and classify each as the sole CLI, authority, historical evidence, immutable corpus, or defect; `repository rename residue report`.
 - [x] `W06.P14.S77` - Prove no `aeat` import root, second human CLI alias, dual environment reader, namespace fallback, or state migration remains; `compatibility absence gate`.
-- [ ] `W06.P14.S78` - Run focused runtime, persistence, CLI, MCP, agent, and packaging tests with real behavior; `CADRUMO feature test surface`.
-- [ ] `W06.P14.S79` - Run installed-wheel, split-companion, Docker, MCP handshake, locale, and documentation gates; `CADRUMO artifact acceptance surface`.
-- [ ] `W06.P14.S80` - Run the path-scoped feature-surface quality gate for every file owned by issue #476; `feature-surface gate evidence`.
+- [x] `W06.P14.S78` - Run focused runtime, persistence, CLI, MCP, agent, and packaging tests with real behavior; `CADRUMO feature test surface`.
+- [x] `W06.P14.S79` - Run installed-wheel, split-companion, Docker, MCP handshake, locale, and documentation gates; `CADRUMO artifact acceptance surface`.
+- [x] `W06.P14.S80` - Run the path-scoped feature-surface quality gate for every file owned by issue #476; `feature-surface gate evidence`.
 
 ### Phase `W06.P15` - obtain independent formal review and close
 
 Resolve review findings, reverify, audit ownership, and close the Epic association.
 
-- [ ] `W06.P15.S81` - Perform the mandatory vaultspec formal code review for safety, intent, architecture, and quality; `CADRUMO rename change set`.
-- [ ] `W06.P15.S82` - Resolve every actionable formal-review finding without introducing compatibility shims; `formal review remediation set`.
-- [ ] `W06.P15.S83` - Rerun affected focused and artifact gates after review remediation; `post-review verification evidence`.
-- [ ] `W06.P15.S84` - Confirm every edited path is owned, every unrelated dirty path remains untouched, and commits use explicit pathspecs; `shared-worktree delivery audit`.
-- [ ] `W06.P15.S85` - Close issue #476 and the chore-476 restructure execution association only after all Steps and external release gates are complete; `Epic project-management association`.
+- [x] `W06.P15.S81` - Perform the mandatory vaultspec formal code review for safety, intent, architecture, and quality; `CADRUMO rename change set`.
+- [x] `W06.P15.S82` - Resolve every actionable formal-review finding without introducing compatibility shims; `formal review remediation set`.
+- [x] `W06.P15.S83` - Rerun affected focused and artifact gates after review remediation; `post-review verification evidence`.
+- [x] `W06.P15.S84` - Confirm every edited path is owned, every unrelated dirty path remains untouched, and commits use explicit pathspecs; `shared-worktree delivery audit`.
+- [x] `W06.P15.S85` - Close issue #476 and the chore-476 restructure execution association only after all Steps and external release gates are complete; `Epic project-management association`.
 
 ## Parallelization
 

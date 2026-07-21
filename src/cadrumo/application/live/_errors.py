@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import ClaveMovilApprovalTimeoutError
@@ -29,7 +29,7 @@ class LiveIvaAcquisitionFailureMode(StrEnum):
     UNKNOWN = "unknown"
 
 
-class LiveApplicationError(AeatError):
+class LiveApplicationError(CadrumoError):
     """Raised when live AEAT read orchestration fails."""
 
 

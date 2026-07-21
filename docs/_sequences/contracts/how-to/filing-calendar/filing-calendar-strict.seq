@@ -1,0 +1,2 @@
+@step Generate a strict calendar window (refuses while a profile check such as censo.enrolment_unverified is unresolved).
+@static aeat app overview calendar --from 2026-01-01 --to 2026-12-31

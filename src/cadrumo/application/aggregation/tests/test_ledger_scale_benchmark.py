@@ -344,7 +344,7 @@ def scale_bucket() -> Iterator[SecureObjectRepository]:
     import tempfile
 
     with (
-        tempfile.TemporaryDirectory(prefix="aeat-scale-bench-") as tmp_dir,
+        tempfile.TemporaryDirectory(prefix="cadrumo-scale-bench-") as tmp_dir,
         isolated_runtime_profile(tmp_path=Path(tmp_dir), bucket_id=_BUCKET_ID) as profile,
     ):
         _seed_scale_ledger(profile.repository)
@@ -508,6 +508,7 @@ def test_single_transaction_save_reports_write_path_latency(scale_bucket: Secure
     )
 
 
+@pytest.mark.serial
 def test_iva_quarterly_aggregation_partitioned_p95_latency(
     scale_bucket: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,

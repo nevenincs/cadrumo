@@ -46,9 +46,9 @@ def test_non_tty_refused_error_blank_suggestion_stripped() -> None:
     """A blank suggestion is stripped to empty string on the instance."""
 
     exc = NonTtyRefusedError("   ")
-    # suggestion attr stores the original; AeatError(suggestion=...) receives None
+    # suggestion attr stores the original; CadrumoError(suggestion=...) receives None
     assert exc.suggestion == "   "
-    # AeatError.suggestion kwarg carries the stripped value or None
+    # CadrumoError.suggestion kwarg carries the stripped value or None
     assert exc.args == ()
 
 
@@ -68,3 +68,33 @@ def test_refused_cli_non_tty_locale_key_resolves() -> None:
         f"Key {_NON_TTY_LOCALE_KEY!r} was not substituted in the locale catalogue; got {resolved!r}"
     )
     assert len(resolved) > 10, f"Key {_NON_TTY_LOCALE_KEY!r} resolved to suspiciously short string: {resolved!r}"
+
+
+# ---------------------------------------------------------------------------
+# contract-C: secure-input refusal keys resolve to real operator-facing copy
+# ---------------------------------------------------------------------------
+
+
+_SECURE_INPUT_REFUSAL_KEYS = (
+    "cli.config.custody.errors.non_interactive_secret_required",
+    "cli.config.custody.errors.secrets_stdin_invalid_json",
+    "cli.config.custody.errors.secrets_stdin_missing_fields",
+    "cli.config.custody.errors.secrets_stdin_too_large",
+    "cli.config.recovery.errors.interactive_terminal_required",
+    "cli.config.recovery.errors.retype_mismatch",
+    "cli.config.recover.errors.recovery_code_rejected",
+)
+
+
+@pytest.mark.parametrize("key", _SECURE_INPUT_REFUSAL_KEYS)
+def test_secure_input_refusal_keys_resolve(key: str) -> None:
+    """Every custody secure-input refusal key resolves to non-placeholder copy.
+
+    These are the localized TTY / bounded-stdin refusals the custody verbs
+    raise through :class:`CliRefusedBoundaryError`; a missing key would ship a
+    raw catalogue path to the operator at the exact moment they are locked out.
+    """
+
+    resolved = tr(key)
+    assert key not in resolved, f"Key {key!r} was not substituted in the locale catalogue; got {resolved!r}"
+    assert len(resolved) > 10, f"Key {key!r} resolved to suspiciously short string: {resolved!r}"

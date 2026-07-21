@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cross-domain-continuity'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-19-profile-lifecycle-disaster-adr]]"
   - "[[2026-05-29-cross-domain-continuity-audit]]"
@@ -156,7 +156,7 @@ tautological and the test must be rewritten.
 - Version 2: facts + work units + ledger + revisions + filings (this ADR).
 
 A constant `SUPPORTED_BUNDLE_SCHEMA_VERSIONS: frozenset[int] = frozenset({1, 2})`
-lives at the import boundary in `src/aeat/application/user_profile/`. The import
+lives at the import boundary in `src/cadrumo/application/user_profile/`. The import
 path validates `bundle.bundle_schema_version in SUPPORTED_BUNDLE_SCHEMA_VERSIONS`
 before any further parsing. An unsupported version raises `CliRefusedBoundaryError`
 with a user-readable message naming the received version and the supported range.
@@ -212,8 +212,8 @@ silently dropping fields.
 **D4 (versioned schema):** An unvalidated `bundle_schema_version` field is a
 documentation field, not a safety gate. The import path must validate it before
 parsing to prevent a newer-version bundle from being silently misread.
-Version-1 backward compatibility is preserved at zero cost because the new fields
-default to empty tuples.
+Only the current bundle schema is accepted. New tuple fields are explicit in
+that schema; older bundles are refused rather than silently interpreted.
 
 **D5 (profile-id-first idempotency):** The current label-based check is fragile:
 labels are mutable (`profile rename`), and the same operator can legitimately have
@@ -225,15 +225,15 @@ races in the concurrent agent setting.
 
 ## Consequences
 
-- `UserProfilePortableExport` in `src/aeat/domain/user_profile/_values.py`
+- `UserProfilePortableExport` in `src/cadrumo/domain/user_profile/_values.py`
   gains four optional tuple fields and bumps `bundle_schema_version` default to 2.
-- The export service in `src/aeat/application/user_profile/` must query the
+- The export service in `src/cadrumo/application/user_profile/` must query the
   `SecureObjectRepository` for all four financial-history categories and populate
   the bundle fields.
 - The import service must validate `bundle_schema_version`, preserve `profile_id`,
   run the two-tier collision guard, and write each domain object via the standard
   repository save path (which re-encrypts under the new bucket's DEK).
-- `src/aeat/entrypoints/cli/_config/__init__.py` import verb: the fresh-UUID-mint
+- `src/cadrumo/entrypoints/cli/_config/__init__.py` import verb: the fresh-UUID-mint
   path is removed; the collision check is replaced by the two-tier guard; the
   `--label` option is retained for the label-collision recovery path.
 - The `SUPPORTED_BUNDLE_SCHEMA_VERSIONS` constant must be updated whenever a new

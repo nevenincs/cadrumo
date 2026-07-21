@@ -37,7 +37,7 @@ That running record needs a true starting point. The first time you use the tool
 
 People make mistakes with an opening balance, so there's a correction path. You can fix a wrong opening balance after the fact. One guard protects you: the tool refuses to change the basis of a period you've already completed and marked as filed. Rewriting a figure that a filed return already relied on would quietly change that return after the fact, so the correction is refused and names the filing that's in the way. If you hit that, the figure is locked because a filing already used it - which is exactly when you'd want it locked.
 
-To see the figures a calculation is using, read [Review and supply calculation inputs](../how-to/review-calculation-values.md). The whole cycle - seeding the opening balance, a credit quarter, the carry, and the annual summary - is demonstrated live in [The IVA year](../tutorials/iva-lifecycle.md); for the yearly IVA summary alone, see [Prepare the annual Modelo 390 IVA summary](../how-to/modelo-390.md).
+To see the figures a calculation is using, read [Review and supply calculation inputs](../how-to/review-calculation-values.md). The whole cycle - seeding the opening balance, a credit quarter, the carry, and the annual summary - is demonstrated live in [The IVA year](../how-to/iva-lifecycle.md); for the yearly IVA summary alone, see [Prepare the annual Modelo 390 IVA summary](../how-to/modelo-390.md).
 
 ## The annual income-tax return pulls the year together
 
@@ -59,6 +59,6 @@ This division is the point. The tool removes the re-typing and the arithmetic; y
 
 ## Where this sits in the journey
 
-This page covered the connections between filings - why later forms depend on earlier ones and how figures carry forward. The [Understanding the AEAT pipeline](index.md) overview maps where this fits among the other concepts. To go a level down into how a single period's figures are built from your records, read [How your records become tax figures](from-records-to-figures.md).
+This page covered the connections between filings - why later forms depend on earlier ones and how figures carry forward. The [how-it-works overview](index.md) maps where this fits among the other concepts. To go a level down into how a single period's figures are built from your records, read [How your records become tax figures](from-records-to-figures.md).
 
 Once your figures are settled - including the ones carried in from earlier filings - the next concept is checking and sharing them. Continue with [Reviewing your numbers and producing the upload file](reviewing-and-exporting.md).

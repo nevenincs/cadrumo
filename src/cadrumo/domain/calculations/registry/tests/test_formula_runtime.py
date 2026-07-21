@@ -123,9 +123,8 @@ def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_orde
         binding_values={
             _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
             _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
-            # C03 (rendimiento neto) was converted from computed to
-            # bound by a parallel campaign; supply the actividad-
-            # economica cumulative binding value so the bound
+            # C03 (rendimiento neto) is bound, not computed; supply the
+            # actividad-economica cumulative binding value so the bound
             # casilla resolves.
             "modelo-130-actividad-economica-rendimiento-neto-cumulative": Decimal("6000"),
         },
@@ -155,9 +154,8 @@ def test_registry_formula_runtime_rejects_inputs_for_computed_casillas(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
     # C04 (Total ingresos) is a computed casilla in the M130 1T
-    # snapshot; previously C03 was used but a parallel campaign
-    # changed C03 to input_kind="bound" via an actividad-economica
-    # cumulative-rendimiento-neto binding.
+    # snapshot; C03 is input_kind="bound" via an actividad-economica
+    # cumulative-rendimiento-neto binding, not computed.
     with pytest.raises(RegistryValidationError, match="computed registry casillas cannot be supplied"):
         calculate_registry_snapshot(
             committed_modelo_130_snapshot,

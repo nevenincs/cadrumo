@@ -22,12 +22,16 @@ from pathlib import Path
 
 import pytest
 
-from ....core import BucketPointer, resolve_active_bucket_id, write_pointer
+from ....core import BucketPointer, pointer_path, read_pointer, resolve_active_bucket_id, write_pointer
 from ....core.config import override_settings
 from ....core.errors import NoActiveProfileError, get_registered_error_code
+from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.secure_sql import isolated_runtime_profile
+from ... import wizard as _wizard  # noqa: F401
+from ...user_profile import UserProfileLifecycleRepository
 from .._models import WorkflowState
 from .._profile_bucket_scan import resolve_profile_bucket
+from .._profile_health import assess_active_profile_health, repair_active_profile_pointer
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -83,6 +87,57 @@ def test_active_profile_record_logs_missing_secure_record(tmp_path: Path, caplog
     assert bucket_id not in caplog.text
 
 
+def test_label_override_resolves_real_record_and_masks_dangling_pointer_repair(tmp_path: Path) -> None:
+    """Canonicalize an override label before secure reads while preserving pointer precedence."""
+
+    bucket_id = "51c1fa97-28e1-4700-ac1e-ed7cf094d37b"
+    dangling_id = "62d2ab08-39f2-4811-bd2a-fe48fd105e4a"
+    record = UserProfileRecord(
+        profile_id=bucket_id,
+        display_name="Operator",
+        facts=(UserProfileFact(path="identity.tax_id", value="12345678Z"),),
+    )
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id, label="Operator") as profile:
+        UserProfileLifecycleRepository(bucket_id=bucket_id, objects=profile.repository).save(record)
+        write_pointer(profile.storage_root, BucketPointer(bucket_id=dangling_id, schema_version=1))
+        target = pointer_path(profile.storage_root)
+        dangling_bytes = target.read_bytes()
+
+        with override_settings(cadrumo_active_profile="operator"):
+            state = WorkflowState()
+            assert state.active_profile_bucket_id() == bucket_id
+            assert state.active_profile_record() == record
+
+            protected_health = assess_active_profile_health(state)
+            protected_repair = repair_active_profile_pointer(clear_active=True, confirmed=True)
+
+            assert protected_health.active_profile == bucket_id
+            assert protected_health.source == "env_override"
+            assert protected_health.status == "ready"
+            assert protected_health.registered_bucket is True
+            assert protected_health.profile_record_present is True
+            assert protected_health.repairable_by_clearing_pointer is False
+            assert protected_repair.dry_run is True
+            assert protected_repair.cleared_pointer is False
+            assert target.read_bytes() == dangling_bytes
+
+        with override_settings(cadrumo_active_profile=None):
+            exposed_health = assess_active_profile_health()
+            repaired = repair_active_profile_pointer(clear_active=True, confirmed=True)
+
+        assert exposed_health.active_profile == dangling_id
+        assert exposed_health.source == "pointer"
+        assert exposed_health.status == "dangling_pointer"
+        assert exposed_health.repairable_by_clearing_pointer is True
+        assert repaired.before == exposed_health
+        assert repaired.dry_run is False
+        assert repaired.cleared_pointer is True
+        assert repaired.after is not None
+        assert repaired.after.status == "none"
+        assert read_pointer(profile.storage_root) is None
+
+
 def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     """Write a real live bucket manifest at ``<root>/buckets/<bucket_id>/``.
 
@@ -91,13 +146,13 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     materialises it.
     """
     from ....adapters.persistence.storage.bucket import (
-        BucketLifecycleStatus,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
         write_manifest,
     )
     from ....adapters.persistence.storage.master_key import KdfParams
+    from ....domain.user_profile import UserProfileStatus
 
     provision_bucket_directory(root, bucket_id)
     write_manifest(
@@ -110,7 +165,7 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
             schema_version=1,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )
 
@@ -118,13 +173,13 @@ def _write_live_bucket(root: Path, *, bucket_id: str, label: str) -> None:
 def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
     """Write a real tombstoned bucket manifest at ``<root>/buckets/<bucket_id>/``."""
     from ....adapters.persistence.storage.bucket import (
-        BucketLifecycleStatus,
         BucketManifest,
         bucket_paths,
         provision_bucket_directory,
         write_manifest,
     )
     from ....adapters.persistence.storage.master_key import KdfParams
+    from ....domain.user_profile import UserProfileStatus
 
     provision_bucket_directory(root, bucket_id)
     write_manifest(
@@ -137,7 +192,7 @@ def _tombstone_bucket(root: Path, *, bucket_id: str, label: str) -> None:
             kdf_params=KdfParams.default().to_manifest_params(),
             recovery_enrolled=False,
             schema_version=1,
-            status=BucketLifecycleStatus.TOMBSTONED,
+            status=UserProfileStatus.TOMBSTONED,
         ),
     )
 

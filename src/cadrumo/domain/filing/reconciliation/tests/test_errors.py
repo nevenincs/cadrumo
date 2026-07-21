@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.errors import AeatError
+from .....core.errors import CadrumoError
 from .._errors import (
     ReconciliationDeclaracionParseError,
     ReconciliationDriftError,
@@ -21,11 +21,11 @@ from .._errors import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_reconciliation_error_is_an_aeat_error() -> None:
-    """The base reconciliation error inherits from AeatError so the
+def test_reconciliation_error_is_an_cadrumo_error() -> None:
+    """The base reconciliation error inherits from CadrumoError so the
     error-registry boundary can resolve it through the typed-error path."""
 
-    assert issubclass(ReconciliationError, AeatError)
+    assert issubclass(ReconciliationError, CadrumoError)
 
 
 def test_reconciliation_declaracion_parse_error_is_a_reconciliation_error() -> None:
@@ -33,7 +33,7 @@ def test_reconciliation_declaracion_parse_error_is_a_reconciliation_error() -> N
     reconciliation error hierarchy."""
 
     assert issubclass(ReconciliationDeclaracionParseError, ReconciliationError)
-    assert issubclass(ReconciliationDeclaracionParseError, AeatError)
+    assert issubclass(ReconciliationDeclaracionParseError, CadrumoError)
 
 
 def test_reconciliation_drift_error_is_a_reconciliation_error() -> None:
@@ -41,12 +41,12 @@ def test_reconciliation_drift_error_is_a_reconciliation_error() -> None:
     up through the reconciliation error hierarchy."""
 
     assert issubclass(ReconciliationDriftError, ReconciliationError)
-    assert issubclass(ReconciliationDriftError, AeatError)
+    assert issubclass(ReconciliationDriftError, CadrumoError)
 
 
 def test_reconciliation_error_carries_translated_message() -> None:
     """Reconciliation errors round-trip the translated_message key
-    through AeatError so the rendering boundary sees a tr() key, not
+    through CadrumoError so the rendering boundary sees a tr() key, not
     a hardcoded English string."""
 
     exc = ReconciliationDriftError(

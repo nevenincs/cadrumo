@@ -12,6 +12,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage import SecureObjectRepository
 from ....core import M210GrossIncomeSourceMode, M210PayerMode, Period
 from ....core.resources import resources
 from ....domain.calculations.registry import load_modelo_directory
@@ -20,7 +21,7 @@ from ....domain.modelos import Modelo210AgrupacionRentaRow
 from ....domain.transactions import BusinessClassification, M210IncomeClassification, TransactionDirection
 from ....domain.user_profile import UserProfileFact, UserProfileRecord
 from ....tests.env_scope import ready_clave_settings
-from ....tests.secure_sql import isolated_runtime_profile
+from ....tests.secure_sql import isolated_injected_secure_object_repository, isolated_runtime_profile
 from ...ledger import (
     ManualLedgerTransactionCommand,
     ManualLedgerTransactionPatch,
@@ -118,7 +119,7 @@ def _annual_evidence_row() -> Modelo210AgrupacionRentaRow:
     )
 
 
-def _seed_m210_profile(*, objects: object) -> None:
+def _seed_m210_profile(*, objects: SecureObjectRepository) -> None:
     UserProfileLifecycleRepository(bucket_id=_BUCKET_ID, objects=objects).save(
         UserProfileRecord(
             profile_id=_BUCKET_ID,
@@ -132,6 +133,67 @@ def _seed_m210_profile(*, objects: object) -> None:
             updated_at=_CLOCK,
         )
     )
+
+
+def test_bucket_calculation_uses_injected_transaction_store_over_distinct_ambient_store(tmp_path: Path) -> None:
+    """The public source mesh reads the injected store, never a same-bucket ambient store."""
+    with isolated_runtime_profile(tmp_path=tmp_path / "ambient", bucket_id=_BUCKET_ID) as runtime:  # noqa: SIM117
+        with isolated_injected_secure_object_repository(
+            tmp_path=tmp_path / "injected",
+            bucket_id=_BUCKET_ID,
+            database_name="m210-injected.db",
+        ) as injected_objects:
+            injected_transaction_repository = TransactionCatalogueRepository(
+                bucket_id=_BUCKET_ID,
+                objects=injected_objects,
+            )
+            injected_event_repository = BucketEventHistoryRepository(objects=injected_objects)
+            injected_id = _create_income(
+                label="injected-store-only",
+                source_jurisdiction="ES",
+                classification=_classification("01", Decimal("1234.56")),
+                transaction_repository=injected_transaction_repository,
+                event_repository=injected_event_repository,
+            )
+
+            ambient_transaction_repository = TransactionCatalogueRepository(
+                bucket_id=_BUCKET_ID,
+                objects=runtime.repository,
+            )
+            assert ambient_transaction_repository.exists() is False
+            _seed_m210_profile(objects=runtime.repository)
+            work_repository = WorkUnitCatalogueRepository(objects=runtime.repository)
+            calculation_repository = CalculationRevisionCatalogueRepository(objects=runtime.repository)
+            ambient_event_repository = BucketEventHistoryRepository(objects=runtime.repository)
+            snapshot = resources().modelos.authority.snapshot("210", filing_year=2025, period="0A")
+            work_unit = create_work_unit(
+                bucket_id=_BUCKET_ID,
+                modelo="210",
+                filing_year=2025,
+                period=_PERIOD,
+                revision_id=snapshot.revision.id,
+                repository=work_repository,
+                clock=_CLOCK,
+            )
+
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+                work_unit.work_unit_id,
+                actor="operator",
+                casilla_inputs={},
+                text_casilla_inputs={"tipo_renta": "general"},
+                m210_official_tipo_renta_code="01",
+                m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+                work_unit_repository=work_repository,
+                calculation_repository=calculation_repository,
+                bucket_event_repository=ambient_event_repository,
+                transaction_repository=injected_transaction_repository,
+                clock=_CLOCK,
+            ).revision
+
+            assert revision.casilla_values["rendimientos_integros"] == Decimal("1234.56")
+            assert revision.source_transaction_ids == (injected_id,)
+            assert {source.source_ref for source in revision.source_provenance} == {f"transaction:{injected_id}"}
+            assert ambient_transaction_repository.exists() is False
 
 
 def test_secure_store_keeps_explicit_classification_and_source_mutation_changes_admission(tmp_path: Path) -> None:

@@ -6,14 +6,9 @@ through :class:`BucketEventHistoryRepository`.
 
 from __future__ import annotations
 
-from typing import cast
-
 import click
 import typer
-import typer._click.types as typer_click_types
 
-from ....application.config_reset import CONFIG_RESET_SCOPE_CLI_VALUES as _CONFIG_RESET_SCOPE_CLI_VALUES
-from ....application.config_reset import parse_config_reset_scope as _parse_config_reset_scope
 from ....application.operator_surface import build_help_document as _build_help_document
 from ....application.operator_surface import render_help_text as _render_help_text
 from ....application.wizard import build_wizard_command as _build_wizard_command
@@ -22,14 +17,14 @@ from ....application.workflow import read_profile_bucket as _read_profile_bucket
 from ....application.workflow import resolve_profile_bucket as _resolve_profile_bucket
 from ....core import Period as _Period
 from ....core import resolve_active_bucket_id as _resolve_active_bucket_id
-from ....core.errors import AeatError as _AeatError
+from ....core.errors import CadrumoError as _CadrumoError
 from ....core.external_constants import OutputLanguage as _OutputLanguage
 from ....core.i18n import SUPPORTED_OUTPUT_LANGUAGES as _SUPPORTED_OUTPUT_LANGUAGES
 from ....core.i18n import tr
 from ....core.logging import get_logger as _get_logger
 from ....core.wizard_catalogue import get_setup_flow as _get_setup_flow
 from .._command_suggestions import CadrumoTyperGroup as _CadrumoTyperGroup
-from .._common import _emit, _emit_envelope
+from .._common import _emit_envelope
 from .._common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .._errors import command_error_boundary as _command_error_boundary
@@ -45,25 +40,17 @@ from ._descendiente import register_descendiente_commands
 from ._errors import ConfigBoundaryError as _ConfigBoundaryError
 from ._profile_bundle import register_profile_bundle_commands
 from ._profile_readiness import (
-    _assert_profile_record_present,
     _emit_profile_record_missing,
     _emit_profile_record_unreadable,
     _read_profile_record,
 )
 from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import register_repair_profile_command
+from ._reset_cli import register_reset_commands
 from ._sandbox import register_sandbox_commands
+from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
 
 _log = _get_logger(__name__)
-
-# CAST-RATIONALE-CONFIG-RESET-SCOPE-CHOICE: typer vendors its own copy of click, so
-# click.Choice is a click.types.ParamType while typer.Option's click_type expects
-# typer._click.types.ParamType. They are the same object at runtime (the vendored
-# click), so the cast only bridges the static type duality — no Any escape.
-_CONFIG_RESET_SCOPE_CHOICE: typer_click_types.ParamType = cast(
-    typer_click_types.ParamType,
-    click.Choice(_CONFIG_RESET_SCOPE_CLI_VALUES),
-)
 
 _wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
 _wizard_edit_command = _build_wizard_command(_get_setup_flow(), mode="edit")
@@ -98,8 +85,16 @@ def config_root(
 ) -> None:
     """Render config-level workflow help when requested."""
     if help_ or ctx.invoked_subcommand is None:
+        from .._config_payloads import ConfigRootResult
+
         document = _build_help_document("config")
-        _emit(ctx, document, _render_help_text(document).splitlines())
+        result = ConfigRootResult.model_validate(document.model_dump(mode="json"))
+        _emit_envelope(
+            ctx,
+            command="root.config",
+            result=result,
+            lines=_render_help_text(document).splitlines(),
+        )
         raise typer.Exit()
 
 
@@ -309,7 +304,7 @@ def config_profile_show(
             label=pointer.label,
         )
         raise typer.Exit(code=2) from exc
-    except _AeatError as exc:
+    except _CadrumoError as exc:
         _emit_profile_record_unreadable(
             ctx,
             profile_id=pointer.bucket_id,
@@ -872,8 +867,7 @@ def config_profile_rename(
     The verb routes through :class:`BucketMaintenanceService` so the
     operator invocation co-emits ``BUCKET_RENAMED`` (maintenance verb)
     alongside the ``PROFILE_RENAMED`` lifecycle event the inner
-    single-writer primitive emits, per the composition ADR's two-event
-    audit contract.
+    single-writer primitive emits, giving the audit trail both events.
     """
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.bucket_maintenance import (
@@ -930,7 +924,7 @@ def config_profile_rename(
     "logout",
     help=tr(
         "cli.config.profile.logout_help",
-        default="Sign out of the active profile by clearing the pointer file.",
+        default="Close the active profile storage session and clear its local pointer.",
     ),
 )
 def config_profile_logout(
@@ -942,7 +936,7 @@ def config_profile_logout(
         help=tr("cli.config.auth.output_language_help"),
     ),
 ) -> None:
-    """Clear the active-profile pointer so subsequent verbs refuse without an explicit unlock."""
+    """Close active storage, discard in-memory keys, and clear the profile pointer."""
     _activate_subcommand_output_language(ctx, output_language)
     from ....application.user_profile import logout_active_profile
 
@@ -1021,30 +1015,25 @@ def config_status(
         )
         raise typer.Exit(code=2)
     if profile_health.status in {"missing_profile_record", "profile_record_unreadable"}:
-        result = ConfigStatusResult(
+        result, lines = _unavailable_profile_record_status(
             active_profile=active_profile,
-            registered_profile=True,
-            profile_record_present=False,
-            configured=False,
+            status=profile_health.status,
             profile_record_error=profile_health.profile_record_error,
+            next_action=profile_health.next_action,
         )
-        lines = [
-            f"profile\t{active_profile}",
-            f"readiness\t{profile_health.status}",
-            "registered_profile\tpresent",
-            (
-                "profile_record\tunreadable"
-                if profile_health.status == "profile_record_unreadable"
-                else "profile_record\tmissing"
-            ),
-        ]
-        if profile_health.profile_record_error:
-            lines.append(f"profile_record_error\t{profile_health.profile_record_error}")
-        lines.append(f"next_action\t{profile_health.next_action}")
         _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
         raise typer.Exit(code=2)
     state = workflow_state_repository().load()
     record = state.active_profile_record()
+    if record is None:
+        result, lines = _unavailable_profile_record_status(
+            active_profile=active_profile,
+            status="missing_profile_record",
+            profile_record_error=None,
+            next_action=profile_health.next_action,
+        )
+        _emit_envelope(ctx, command="config.profile.status", result=result, lines=lines)
+        raise typer.Exit(code=2)
     values = record_to_path_values(record)
     if profile_health.status == "incomplete":
         result = ConfigStatusResult(
@@ -1139,56 +1128,6 @@ def config_status(
     del projection
 
 
-@app.command("reset", help=tr("cli.config.reset.help"))
-def config_reset(
-    ctx: typer.Context,
-    scope: str | None = typer.Option(
-        None,
-        "--scope",
-        click_type=_CONFIG_RESET_SCOPE_CHOICE,
-        help=tr("cli.config.reset.scope_help"),
-    ),
-    yes: bool = typer.Option(False, "--yes", help=tr("cli.config.reset.yes_help")),
-) -> None:
-    """Reset operator-entered configuration scopes."""
-    from ....application.config_reset import reset_config
-
-    if scope is None:
-        # The most destructive scope (`all`, a full wipe) must never be an
-        # implied default: one forgotten flag next to `--yes` would erase
-        # every profile, session, and stored row. The refusal names the
-        # accepted set per the CLI-boundary rule (never a bare "missing").
-        accepted = ", ".join(_CONFIG_RESET_SCOPE_CLI_VALUES)
-        raise _CliRefusedBoundaryError(
-            f"config reset requires an explicit --scope; accepted scopes: {accepted}. "
-            "The full wipe is `--scope all` and is never implied.",
-            context={"accepted_scopes": accepted},
-        )
-    if not yes:
-        raise _CliRefusedBoundaryError(
-            translated_message="cli.config.reset.requires_yes",
-        )
-    from .._config_payloads import ConfigResetResult
-
-    scope_enum = _parse_config_reset_scope(scope)
-    report = reset_config(scope_enum, confirmed=True)
-    result = ConfigResetResult(
-        scope=report.scope.value,
-        removed_profile_ids=list(report.removed_profile_ids),
-        removed_auth_session=report.removed_auth_session,
-    )
-    _emit_envelope(
-        ctx,
-        command="config.reset",
-        result=result,
-        lines=(
-            f"scope\t{report.scope.value}",
-            f"removed_profiles\t{len(report.removed_profile_ids)}",
-            f"removed_auth\t{report.removed_auth_session}",
-        ),
-    )
-
-
 from ._capabilities_cli import register as _register_profile_capabilities
 from ._check_cli import register as _register_config_check
 
@@ -1196,9 +1135,6 @@ _register_profile_capabilities(profile_app)
 _register_config_check(app)
 register_profile_bundle_commands(
     profile_app,
-    profile_state=_profile_state,
-    resolve_profile_by_label=_resolve_profile_by_label,
-    resolve_active_profile_pointer=_resolve_active_profile_pointer,
     atomic_create_profile=_atomic_create_profile,
 )
 
@@ -1218,13 +1154,13 @@ register_custody_commands(
     app,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,
     resolve_profile_by_label=_resolve_profile_by_label,
-    assert_profile_record_present=_assert_profile_record_present,
 )
 register_descendiente_commands(
     profile_app,
     resolve_active_profile_pointer=_resolve_active_profile_pointer,
 )
 register_sandbox_commands(profile_app)
+register_reset_commands(app)
 app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
@@ -1253,6 +1189,7 @@ __all__ = [
     "register_profile_bundle_commands",
     "register_repair_maintenance_commands",
     "register_repair_profile_command",
+    "register_reset_commands",
     "register_sandbox_commands",
     "repair_app",
     "tr",

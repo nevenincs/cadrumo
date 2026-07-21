@@ -41,7 +41,7 @@ class SubmissionStatus(StrEnum):
 
     Values are retained for historical records imported from AEAT,
     even though live AEAT submission is now permanently forbidden.
-    Member names and values mirror the AEAT Sede labels per ADR A7.2.
+    Member names and values mirror the AEAT Sede labels.
 
     Attributes:
         PENDIENTE_DE_PRESENTAR: Filing recorded but no attempt has run.

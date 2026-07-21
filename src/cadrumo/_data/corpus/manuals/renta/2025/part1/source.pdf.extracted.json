@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/manuals/renta/2025/part1/source.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf",
   "source_sha256": "60e6b2d71c97d93a9e0943e6ff8c886f4dd6d3741a797cb8001dcbcadfb33528",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

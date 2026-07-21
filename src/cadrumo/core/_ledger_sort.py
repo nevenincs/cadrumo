@@ -1,11 +1,10 @@
 """Closed sort axes for the ``aeat app ledger list`` surface.
 
-The ledger-interface-contract ADR (D5) adds a stable, operator-selectable
-sort to ``ledger list``. The two axes are declared here in ``core/`` — the
-innermost hexagonal ring — so the Typer boundary can render the
-accepted-value ``Choice([...])`` from the enum directly
-(``aeat-architecture-boundaries``), production code routes on enum members,
-and tests assert against members rather than raw strings.
+``ledger list`` exposes a stable, operator-selectable sort. The two axes are
+declared here in ``core/`` — the innermost hexagonal ring — so the Typer
+boundary can render the accepted-value ``Choice([...])`` from the enum
+directly, production code routes on enum members, and tests assert against
+members rather than raw strings.
 
 :class:`LedgerSortField` selects the projection axis and
 :class:`LedgerSortOrder` selects the direction. The CLI parser and the

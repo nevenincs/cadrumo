@@ -1,6 +1,6 @@
 """Live subagent-persona harness: drive the real console, capture the trajectory.
 
-The measurement substrate ADR R7 decides: capabilities are measured by LIVE
+Capabilities are measured by LIVE
 subagent personas — a language-model (or scripted) driver plays a harness
 persona over a REAL MCP client session against the REAL ``cadrumo-mcp`` server,
 and every ``tools/call`` round-trip, narration, and elicitation exchange is

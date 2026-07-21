@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-iva-compensation-wallet'
 date: '2026-05-26'
-modified: '2026-07-03'
+modified: '2026-07-16'
 related:
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-research]]'
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-adr]]'
@@ -11,7 +11,7 @@ related:
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-adr]]'
   - '[[2026-04-17-aeat-access-gate-adr]]'
   - '[[2026-04-17-session-persistence-adr]]'
-  - '[[2026-04-16-live-cert-auth-adr]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 ---
 
 # `live-iva-compensation-wallet` adr: `read-only live auth diagnostics and acquisition boundary` | (**status:** `accepted`)

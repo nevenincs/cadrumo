@@ -1,4 +1,4 @@
-"""Gates over the committed term-target relevance data (ADR D6 / D8).
+"""Gates over the committed term-target relevance data.
 
 The relevance data (``src/cadrumo/_data/terminology/relevance/relevance.json``) is
 the precompiled RAG output that SHIPS so CI and the docs build -- which have no
@@ -146,8 +146,10 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     if concept_match:
         return target in concept_targets
 
-    # Casilla namespace: search.html?q=<modelo>+<number>
-    casilla_match = re.fullmatch(r"search\.html\?q=(?P<modelo>[^+]+)\+.+", target)
+    # Casilla namespace: the per-modelo reference page plus the casilla anchor
+    # (_generated/casillas/<modelo>.html#casilla-<slug>). The query-string
+    # hand-off is retired; the target is now a real page+anchor.
+    casilla_match = re.fullmatch(r"_generated/casillas/(?P<modelo>[A-Za-z0-9-]+)\.html#casilla-[a-z0-9-]+", target)
     if casilla_match:
         return casilla_match.group("modelo") in casilla_modelos
 
@@ -160,8 +162,12 @@ def _target_resolves(target: str, surfaces: _BuildSurfaces) -> bool:
     if api_match:
         return _module_exists(api_match.group("dotted"))
 
-    # CLI reference family page: cli/<family>.html(#anchor)?
-    cli_match = re.fullmatch(r"cli/(?P<family>[a-z0-9-]+)\.html(?:#[a-z0-9-]+)?", target)
+    # CLI reference page: the family landing page (cli/<family>.html) for a leaf
+    # mounted directly on the family, or the verb-group page
+    # (cli/<family>/<group>.html) for a grouped command — the two page shapes
+    # cli_reference_page_for_command emits (D4 per-group split), each with an
+    # optional #anchor deep-linking to the command's section.
+    cli_match = re.fullmatch(r"cli/(?P<family>[a-z0-9-]+)(?:/[a-z0-9-]+)?\.html(?:#[a-z0-9-]+)?", target)
     if cli_match:
         return cli_match.group("family") in {"app", "config"}
 
@@ -254,7 +260,7 @@ def test_drift_gate_actually_rejects_a_stale_target(build_surfaces: _BuildSurfac
     pass on stale data.
     """
     assert not _target_resolves("_generated/glossary.html#term-this-concept-does-not-exist", build_surfaces)
-    assert not _target_resolves("search.html?q=000+99999", build_surfaces)
+    assert not _target_resolves("_generated/casillas/000.html#casilla-99999", build_surfaces)
     assert not _target_resolves("api/cadrumo.module.that.is.not.real.html", build_surfaces)
     # A real one resolves (sanity: the check is not refusing everything).
     real_concept_target = next(iter(build_surfaces["concept_targets"]))

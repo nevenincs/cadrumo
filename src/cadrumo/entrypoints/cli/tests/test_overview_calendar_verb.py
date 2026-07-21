@@ -20,11 +20,7 @@ from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogu
 from ....adapters.persistence.storage import SensitivityClass
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ....application.live import ExpedientesCapture, ExpedientesService, NotificationsService
-from ....application.user_profile import (
-    profile_create_storage_span,
-    profile_storage_session,
-    register_minimal_profile,
-)
+from ....application.user_profile import profile_create_storage_span, profile_storage_session
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
@@ -36,6 +32,7 @@ from ....domain.modelos import (
     upsert_filing_record,
 )
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.user_profile import register_minimal_profile
 from .._overview import _calendar_shift_reason_text, _live_censo_verified_profile_keys
 from ._overview_calendar_support import (
     _SOURCE_URL,

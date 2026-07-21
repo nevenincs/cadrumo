@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#m303-refund-fichero-block'
 date: '2026-06-25'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S11'
 related:
   - "[[2026-06-24-m303-refund-fichero-block-plan]]"

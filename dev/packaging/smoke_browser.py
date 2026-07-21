@@ -6,8 +6,11 @@ import argparse
 import os
 from pathlib import Path
 
+from .python_cohort import (
+    assert_installed_cohort,
+    load_python_cohort,
+)
 from .smoke_core import (
-    _build_wheel,
     _executable,
     _install_wheel,
     _manifest_path,
@@ -45,8 +48,8 @@ def _browser_env(work_dir: Path) -> dict[str, str]:
     storage_root.mkdir(parents=True, exist_ok=True)
     return {
         **os.environ,
-        "AEAT_BROWSER_CHANNEL": "chromium",
-        "AEAT_BROWSER_HEADLESS": "true",
+        "CADRUMO_BROWSER_CHANNEL": "chromium",
+        "CADRUMO_BROWSER_HEADLESS": "true",
         "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
         "CADRUMO_OUTPUT_LANGUAGE": "en",
         "PLAYWRIGHT_BROWSERS_PATH": str(browser_cache),
@@ -98,7 +101,13 @@ thread.start()
 
 
 async def main():
-    browser_session = await default_browser_session_factory(load_settings())
+    settings = load_settings()
+    if settings.cadrumo_browser_channel != "chromium" or settings.cadrumo_browser_headless is not True:
+        raise SystemExit(
+            "browser smoke did not resolve canonical Chromium/headless settings: "
+            f"channel={settings.cadrumo_browser_channel!r} headless={settings.cadrumo_browser_headless!r}"
+        )
+    browser_session = await default_browser_session_factory(settings)
     try:
         context = await browser_session.create_context()
         try:
@@ -134,6 +143,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--python", default="3.13", help="Python interpreter/version for the fresh venv.")
     parser.add_argument("--work-dir", help="Empty directory for wheel, venv, and browser smoke artifacts.")
     parser.add_argument(
+        "--cohort-dir",
+        required=True,
+        type=Path,
+        help="Directory containing the prebuilt immutable Python cohort.",
+    )
+    parser.add_argument(
         "--with-deps",
         action="store_true",
         help="Pass --with-deps to Playwright install; intended for Linux container/CI lanes.",
@@ -146,12 +161,27 @@ def main(argv: list[str] | None = None) -> int:
     env = _browser_env(work_dir)
     print(f"browser packaging smoke work dir: {work_dir}", flush=True)
 
-    print("building wheel", flush=True)
-    wheel = _build_wheel(repo_root, work_dir, uv)
+    cohort = load_python_cohort(args.cohort_dir)
+    wheel = cohort.root_wheel
+    print("using supplied immutable Python cohort", flush=True)
     _assert_browser_extra_metadata(wheel)
 
-    print("installing wheel[browser] into fresh venv", flush=True)
-    venv = _install_wheel(repo_root, work_dir, wheel, uv, args.python, extras=("browser",))
+    print("installing exact cohort with wheel[browser] into fresh venv", flush=True)
+    venv = _install_wheel(
+        repo_root,
+        work_dir,
+        wheel,
+        uv,
+        args.python,
+        extras=("browser",),
+        companion_wheels=cohort.companion_wheels,
+    )
+    assert_installed_cohort(
+        _venv_python(venv),
+        cohort,
+        root_artifact=wheel,
+        cwd=work_dir,
+    )
     _assert_browser_imports(work_dir, venv)
 
     print("provisioning Playwright Chromium", flush=True)
@@ -165,6 +195,8 @@ def main(argv: list[str] | None = None) -> int:
         lane="browser-wheel",
         artifacts={
             "wheel": _manifest_path(work_dir, wheel),
+            "data_wheel_manuals": _manifest_path(work_dir, cohort.manuals_wheel),
+            "data_wheel_official": _manifest_path(work_dir, cohort.official_wheel),
             "venv": _manifest_path(work_dir, venv),
             "playwright_browsers": _manifest_path(work_dir, Path(env["PLAYWRIGHT_BROWSERS_PATH"])),
         },
@@ -176,7 +208,11 @@ def main(argv: list[str] | None = None) -> int:
             "Playwright Chromium provisioning",
             "localhost browser health smoke",
         ),
-        details={"python": args.python, "with_deps": args.with_deps},
+        details={
+            "cohort_version": cohort.version,
+            "python": args.python,
+            "with_deps": args.with_deps,
+        },
     )
 
     print(f"browser packaging smoke passed: {wheel}", flush=True)

@@ -15,7 +15,7 @@ from ....domain.filing import (
     ModeloValueKind,
 )
 from ....domain.submission import ModeloDraftStatus
-from .._testing_registry import build_registry_filing_draft, build_registry_filing_draft_from_decimals
+from ....tests.filing import build_registry_filing_draft, build_registry_filing_draft_from_decimals
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 

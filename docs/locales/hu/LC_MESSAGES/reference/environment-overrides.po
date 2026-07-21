@@ -1,0 +1,2384 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 16:41+0200\n"
+"PO-Revision-Date: 2026-07-18 13:20+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../reference/environment-overrides.md:5
+msgid "Environment overrides"
+msgstr "Környezeti felülírások"
+
+#: ../../reference/environment-overrides.md:7
+msgid ""
+"This page covers every environment variable the application reads, "
+"generated from the live settings model. Environment overrides are "
+"advanced deployment and development configuration: every user workflow "
+"works without them through prompts, command flags, and `aeat config` "
+"commands. Set an override only when you administer a deployment and know "
+"why the default does not fit."
+msgstr ""
+"Ez az oldal minden környezeti változót ismertet, amelyet az alkalmazás "
+"olvas, az élő beállításmodellből generálva. A környezeti felülírások "
+"haladó telepítési és fejlesztési konfigurációt jelentenek: minden "
+"felhasználói munkafolyamat működik nélkülük is, kérdéseken, "
+"parancskapcsolókon és `aeat config` parancsokon keresztül. Csak akkor "
+"állítson be egy felülírást, ha egy telepítést adminisztrál, és tudja, "
+"miért nem illik az alapértelmezés."
+
+#: ../../reference/environment-overrides.md:13
+msgid ""
+"An annotated template with the same variables lives at `env/.env.example`"
+" in the repository; the runtime also reads them from `env/.env`. A value "
+"set in the process environment wins over the `.env` file."
+msgstr ""
+"Egy annotált sablon ugyanezekkel a változókkal a tároló "
+"`env/.env.example` fájljában található; a futásidő az `env/.env` fájlból "
+"is olvassa őket. A folyamatkörnyezetben beállított érték felülírja a "
+"`.env` fájlt."
+
+#: ../../reference/environment-overrides.md
+msgid "Variable"
+msgstr "Változó"
+
+#: ../../reference/environment-overrides.md
+msgid "Type"
+msgstr "Típus"
+
+#: ../../reference/environment-overrides.md
+msgid "Default"
+msgstr "Alapértelmezés"
+
+#: ../../reference/environment-overrides.md
+msgid "What it controls"
+msgstr "Amit vezérel"
+
+#: ../../reference/environment-overrides.md
+msgid "`AEAT_AUTHORITATIVE_LANGUAGE_AEAT_TERMS`"
+msgstr "`AEAT_AUTHORITATIVE_LANGUAGE_AEAT_TERMS`"
+
+#: ../../reference/environment-overrides.md
+msgid "str"
+msgstr "str"
+
+#: ../../reference/environment-overrides.md
+msgid "`es`"
+msgstr "`es`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Authoritative language for domain terminology (modelos, registry "
+"definitions, references)."
+msgstr ""
+"A domain-terminológia (modelók, registry-definíciók, hivatkozások) "
+"hiteles nyelve."
+
+#: ../../reference/environment-overrides.md
+msgid "`AEAT_BASE_URL`"
+msgstr "`AEAT_BASE_URL`"
+
+#: ../../reference/environment-overrides.md
+msgid "(derived)"
+msgstr "(derived)"
+
+#: ../../reference/environment-overrides.md
+msgid "AEAT sede electrónica base URL"
+msgstr "AEAT sede electrónica alap-URL"
+
+#: ../../reference/environment-overrides.md
+msgid "`AEAT_CLAVE_PERMANENTE_SEDE_ACCESS_URL_TEMPLATE`"
+msgstr "`AEAT_CLAVE_PERMANENTE_SEDE_ACCESS_URL_TEMPLATE`"
+
+#: ../../reference/environment-overrides.md
+#, python-brace-format
+msgid ""
+"URL template for AEAT's auth-method selector page used by the Cl@ve "
+"Permanente login flow. `{target}` is replaced with the URL-encoded target"
+" path. The default template is sourced from the external constants "
+"registry."
+msgstr ""
+"URL-sablon az AEAT hitelesítésimód-választó oldalához, amelyet a Cl@ve "
+"Permanente bejelentkezési folyamat használ. A `{target}` helyére az URL-"
+"kódolt célútvonal kerül. Az alapértelmezett sablon a külső konstansok "
+"registryjéből származik."
+
+#: ../../reference/environment-overrides.md
+msgid "`AEAT_CLAVE_SEDE_ACCESS_URL_TEMPLATE`"
+msgstr "`AEAT_CLAVE_SEDE_ACCESS_URL_TEMPLATE`"
+
+#: ../../reference/environment-overrides.md
+#, python-brace-format
+msgid ""
+"URL template for AEAT's auth-method selector page. `{target}` is replaced"
+" with the URL-encoded target path. The default template is sourced from "
+"the external constants registry."
+msgstr ""
+"URL-sablon az AEAT hitelesítésimód-választó oldalához. A `{target}` "
+"helyére az URL-kódolt célútvonal kerül. Az alapértelmezett sablon a külső"
+" konstansok registryjéből származik."
+
+#: ../../reference/environment-overrides.md
+msgid "`AEAT_MANUALS_ROOT`"
+msgstr "`AEAT_MANUALS_ROOT`"
+
+#: ../../reference/environment-overrides.md
+msgid "Path"
+msgstr "Path"
+
+#: ../../reference/environment-overrides.md
+msgid "Root directory for the structured AEAT Manual práctico corpus"
+msgstr "A strukturált AEAT Manual práctico korpusz gyökérkönyvtára"
+
+#: ../../reference/environment-overrides.md
+msgid "`AEAT_NORMATIVES_ROOT`"
+msgstr "`AEAT_NORMATIVES_ROOT`"
+
+#: ../../reference/environment-overrides.md
+msgid "Root directory for the bundled legal normatives corpus"
+msgstr "A beépített jogi normatívák korpuszának gyökérkönyvtára"
+
+#: ../../reference/environment-overrides.md
+msgid "`AEAT_SEDE_EXPEDIENTES_PATH`"
+msgstr "`AEAT_SEDE_EXPEDIENTES_PATH`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"AEAT Sede path for 'Mis expedientes' — the default post-auth target used "
+"by Cl@ve Móvil login and the expedientes reader."
+msgstr ""
+"AEAT Sede útvonal a „Mis expedientes” oldalhoz — az alapértelmezett "
+"hitelesítés utáni cél, amelyet a Cl@ve Móvil bejelentkezés és az "
+"expedientes-olvasó használ."
+
+#: ../../reference/environment-overrides.md
+msgid "`AEAT_STATUS_DETAIL_URL_TEMPLATE`"
+msgstr "`AEAT_STATUS_DETAIL_URL_TEMPLATE`"
+
+#: ../../reference/environment-overrides.md
+#, python-brace-format
+msgid ""
+"URL path template for an expediente detail page. Must contain "
+"'{expediente_id}'. Override only when AEAT changes the corresponding "
+"route."
+msgstr ""
+"URL-útvonalsablon egy expediente részletező oldalához. Tartalmaznia kell "
+"a '{expediente_id}' elemet. Csak akkor írja felül, ha az AEAT "
+"megváltoztatja a megfelelő útvonalat."
+
+#: ../../reference/environment-overrides.md
+msgid "`AEAT_STATUS_NOTIFICACIONES_PATH`"
+msgstr "`AEAT_STATUS_NOTIFICACIONES_PATH`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"URL path for the 'Mis notificaciones' listing page. Joined against "
+"aeat_base_url. Override only when AEAT changes the corresponding route."
+msgstr ""
+"URL-útvonal a „Mis notificaciones” listaoldalhoz. Az aeat_base_url mögé "
+"fűzve. Csak akkor írja felül, ha az AEAT megváltoztatja a megfelelő "
+"útvonalat."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_ACTIVE_PROFILE`"
+msgstr "`CADRUMO_ACTIVE_PROFILE`"
+
+#: ../../reference/environment-overrides.md
+msgid "unset"
+msgstr "beállítatlan"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Per-shell override for the active operator profile. When set, wins over "
+"the <cadrumo-root>/active-profile pointer file in the active-profile "
+"precedence chain. Leave unset for normal installs; the pointer file is "
+"the canonical default."
+msgstr ""
+"Per-shell felülírás az aktív operátori profilhoz. Ha be van állítva, "
+"felülírja a <cadrumo-root>/active-profile mutatófájlt az aktív-profil "
+"precedencialáncban. Normál telepítéseknél hagyja beállítatlanul; a "
+"mutatófájl a kanonikus alapértelmezés."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_ALLOW_UNENCRYPTED`"
+msgstr "`CADRUMO_ALLOW_UNENCRYPTED`"
+
+#: ../../reference/environment-overrides.md
+msgid "empty"
+msgstr "üres"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Hostile-named opt-out gate for the unsecured backend. Must be set to the "
+"literal '1' (env var: CADRUMO_ALLOW_UNENCRYPTED=1) to use "
+"cadrumo_secret_store_backend=unsecured. The unsecured backend is intended"
+" for testing / educational / throwaway scenarios only and provides ZERO "
+"confidentiality. The substrate refuses to load an operator profile that "
+"carries a real NIF/NIE/CIF while running in unsecured mode."
+msgstr ""
+"Ellenségesen elnevezett kilépőkapu a nem biztonságos backendhez. A "
+"literál '1' értékre kell állítani (env var: CADRUMO_ALLOW_UNENCRYPTED=1) "
+"a cadrumo_secret_store_backend=unsecured használatához. A nem biztonságos"
+" backend csak teszt / oktatási / eldobható forgatókönyvekre szolgál, és "
+"NULLA bizalmasságot nyújt. A szubsztrátum elutasít egy olyan operátori "
+"profil betöltését, amely valós NIF/NIE/CIF-et hordoz, miközben nem "
+"biztonságos módban fut."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_ATTACHMENTS_DIR`"
+msgstr "`CADRUMO_ATTACHMENTS_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Root directory for the attachment byte and manifest store"
+msgstr "A csatolmánybájt- és kézirat-tároló gyökérkönyvtára"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_AUDIT_DIR`"
+msgstr "`CADRUMO_AUDIT_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory for the governed audit sink (redacted, classification-aware)"
+msgstr "A szabályozott auditgyűjtő könyvtára (kitakart, osztályozástudatos)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_AUTH_CERTIFICATE_LOCK_TTL_S`"
+msgstr "`CADRUMO_AUTH_CERTIFICATE_LOCK_TTL_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "int"
+msgstr "int"
+
+#: ../../reference/environment-overrides.md
+msgid "`180`"
+msgstr "`180`"
+
+#: ../../reference/environment-overrides.md
+msgid "Acquisition lock TTL (seconds) for certificate-backed AEAT auth flows"
+msgstr ""
+"Beszerzési zár TTL (másodperc) a tanúsítványalapú AEAT-hitelesítési "
+"folyamatokhoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_AUTH_CLAVE_MOVIL_LOCK_BUFFER_S`"
+msgstr "`CADRUMO_AUTH_CLAVE_MOVIL_LOCK_BUFFER_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "`90`"
+msgstr "`90`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Headroom (seconds) added to ``cadrumo_clave_movil_timeout_ms`` for the "
+"acquisition lock TTL"
+msgstr ""
+"A ``cadrumo_clave_movil_timeout_ms`` értékéhez hozzáadott ráhagyás "
+"(másodperc) a beszerzési zár TTL-jéhez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_AUTH_PROVIDER`"
+msgstr "`CADRUMO_AUTH_PROVIDER`"
+
+#: ../../reference/environment-overrides.md
+msgid "AuthProviderKind"
+msgstr "AuthProviderKind"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Default auth provider for `aeat config auth status` / `test` when "
+"--provider is omitted. When None, the CLI auto-selects the first "
+"configured provider from the canonical registry order."
+msgstr ""
+"Alapértelmezett hitelesítési szolgáltató az `aeat config auth status` / "
+"`test` parancshoz, amikor a --provider elmarad. Ha None, a CLI "
+"automatikusan az első konfigurált szolgáltatót választja a kanonikus "
+"registry-sorrendből."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_AUTH_TIMEOUT_MS`"
+msgstr "`CADRUMO_AUTH_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`30000`"
+msgstr "`30000`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Playwright navigation timeout for protected AEAT authentication in "
+"milliseconds"
+msgstr ""
+"Playwright navigációs időkorlát a védett AEAT-hitelesítéshez, "
+"ezredmásodpercben"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_AUTHORITATIVE_LANGUAGE_PROJECT_DOCS`"
+msgstr "`CADRUMO_AUTHORITATIVE_LANGUAGE_PROJECT_DOCS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`en`"
+msgstr "`en`"
+
+#: ../../reference/environment-overrides.md
+msgid "Authoritative language for internal code and documentation"
+msgstr "A belső kód és dokumentáció hiteles nyelve"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BLOB_STORE_DIR`"
+msgstr "`CADRUMO_BLOB_STORE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Directory containing the encrypted blob store (content-addressed, "
+"classification-aware)"
+msgstr ""
+"A titkosított blob-tárolót tartalmazó könyvtár (tartalomcímzett, "
+"osztályozástudatos)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_BUSCAR_SETTLE_MS`"
+msgstr "`CADRUMO_BROWSER_BUSCAR_SETTLE_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`3000`"
+msgstr "`3000`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Settle delay (ms) after the AEAT 'Buscar' button before reading the "
+"results table"
+msgstr ""
+"Beállási késleltetés (ms) az AEAT „Buscar” gombja után, az eredménytábla "
+"beolvasása előtt"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_CHANNEL`"
+msgstr "`CADRUMO_BROWSER_CHANNEL`"
+
+#: ../../reference/environment-overrides.md
+msgid "`chrome`"
+msgstr "`chrome`"
+
+#: ../../reference/environment-overrides.md
+msgid "Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge')"
+msgstr ""
+"A használandó Playwright böngészőcsatorna (pl. 'chrome', 'chromium', "
+"'msedge')"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_CLOSE_TIMEOUT_MS`"
+msgstr "`CADRUMO_BROWSER_CLOSE_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`5000`"
+msgstr "`5000`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Best-effort timeout (ms) for Playwright browser context/session cleanup "
+"during AEAT live auth and read flows. Cleanup must not leave a command "
+"hanging after the primary operation has already failed or timed out."
+msgstr ""
+"Legjobb szándékú időkorlát (ms) a Playwright "
+"böngészőkontextus/-munkamenet takarításához az AEAT élő hitelesítés és "
+"olvasási folyamatai során. A takarítás nem hagyhat egy parancsot "
+"függőben, miután az elsődleges művelet már meghiúsult vagy túllépte az "
+"időkorlátot."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS`"
+msgstr "`CADRUMO_BROWSER_FORM_INTERACTION_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`10000`"
+msgstr "`10000`"
+
+#: ../../reference/environment-overrides.md
+msgid "Timeout for individual form interactions (fill/click/wait) in milliseconds"
+msgstr ""
+"Időkorlát az egyes űrlapinterakciókhoz (kitöltés/kattintás/várakozás), "
+"ezredmásodpercben"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_HEADLESS`"
+msgstr "`CADRUMO_BROWSER_HEADLESS`"
+
+#: ../../reference/environment-overrides.md
+msgid "bool"
+msgstr "bool"
+
+#: ../../reference/environment-overrides.md
+msgid "`true`"
+msgstr "`true`"
+
+#: ../../reference/environment-overrides.md
+msgid "Run browser in headless mode"
+msgstr "A böngésző futtatása fej nélküli módban"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_LOCALE`"
+msgstr "`CADRUMO_BROWSER_LOCALE`"
+
+#: ../../reference/environment-overrides.md
+msgid "`es-ES`"
+msgstr "`es-ES`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default browser locale passed to Playwright context (BCP-47 tag)"
+msgstr ""
+"A Playwright kontextusnak átadott alapértelmezett böngészőlokál (BCP-47 "
+"címke)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS`"
+msgstr "`CADRUMO_BROWSER_NAVIGATION_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default Playwright navigation timeout (milliseconds) for AEAT sede pages"
+msgstr ""
+"Alapértelmezett Playwright navigációs időkorlát (ezredmásodperc) az AEAT "
+"sede-oldalakhoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS`"
+msgstr "`CADRUMO_BROWSER_SELECTOR_PROBE_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`2500`"
+msgstr "`2500`"
+
+#: ../../reference/environment-overrides.md
+msgid "Selector visibility probe timeout (ms) used by GROI/NIF-IVA check stages"
+msgstr ""
+"Szelektor-láthatósági szonda időkorlátja (ms), amelyet a GROI/NIF-IVA "
+"ellenőrzési szakaszok használnak"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_TIMEZONE`"
+msgstr "`CADRUMO_BROWSER_TIMEZONE`"
+
+#: ../../reference/environment-overrides.md
+msgid "`Europe/Madrid`"
+msgstr "`Europe/Madrid`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default IANA timezone string passed to Playwright context"
+msgstr "A Playwright kontextusnak átadott alapértelmezett IANA-időzónakarakterlánc"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS`"
+msgstr "`CADRUMO_BROWSER_VER_CLICK_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`15000`"
+msgstr "`15000`"
+
+#: ../../reference/environment-overrides.md
+msgid "Timeout (ms) for the AEAT declarations 'Ver' button click and navigation"
+msgstr ""
+"Időkorlát (ms) az AEAT-bevallások „Ver” gombjának kattintásához és "
+"navigációjához"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_VIEWPORT_HEIGHT`"
+msgstr "`CADRUMO_BROWSER_VIEWPORT_HEIGHT`"
+
+#: ../../reference/environment-overrides.md
+msgid "`900`"
+msgstr "`900`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default Playwright viewport height (px) for AEAT sede sessions"
+msgstr ""
+"Alapértelmezett Playwright nézetablak-magasság (px) az AEAT sede-"
+"munkamenetekhez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BROWSER_VIEWPORT_WIDTH`"
+msgstr "`CADRUMO_BROWSER_VIEWPORT_WIDTH`"
+
+#: ../../reference/environment-overrides.md
+msgid "`1366`"
+msgstr "`1366`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default Playwright viewport width (px) for AEAT sede sessions"
+msgstr ""
+"Alapértelmezett Playwright nézetablak-szélesség (px) az AEAT sede-"
+"munkamenetekhez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BUCKET_DEFAULT_IDLE_LOCK_MINUTES`"
+msgstr "`CADRUMO_BUCKET_DEFAULT_IDLE_LOCK_MINUTES`"
+
+#: ../../reference/environment-overrides.md
+msgid "`15`"
+msgstr "`15`"
+
+#: ../../reference/environment-overrides.md
+msgid "Fallback idle-lock window (minutes) when a bucket manifest omits the value"
+msgstr ""
+"Tartalék tétlenségi zárolási ablak (perc), amikor egy bucket-kézirat "
+"elhagyja az értéket"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_BUCKET_LOCK_POLL_INTERVAL_S`"
+msgstr "`CADRUMO_BUCKET_LOCK_POLL_INTERVAL_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "float"
+msgstr "float"
+
+#: ../../reference/environment-overrides.md
+msgid "`0.1`"
+msgstr "`0.1`"
+
+#: ../../reference/environment-overrides.md
+msgid "Polling interval (seconds) for bucket lockfile acquisition retries"
+msgstr ""
+"Lekérdezési időköz (másodperc) a bucket-zárolófájl beszerzésének "
+"újrapróbálkozásaihoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CALC_SHEETS_RECALC_DELAY_S`"
+msgstr "`CADRUMO_CALC_SHEETS_RECALC_DELAY_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "`2.0`"
+msgstr "`2.0`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Delay (seconds) waiting for Google Sheets server-side recalculation "
+"between parity polls"
+msgstr ""
+"Késleltetés (másodperc) a Google Sheets szerveroldali újraszámolására "
+"várva a paritáslekérdezések között"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CERT_CRITICAL_DAYS`"
+msgstr "`CADRUMO_CERT_CRITICAL_DAYS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`14`"
+msgstr "`14`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Critical threshold (days) for the certificate pre-expiry gate: "
+"certificates with <= this many days remaining are CRITICAL and must be "
+"renewed before authenticated AEAT work continues"
+msgstr ""
+"Kritikus küszöb (nap) a tanúsítvány lejárat előtti kapujához: a "
+"legfeljebb ennyi nap hátralévő idejű tanúsítványok KRITIKUSAK, és meg "
+"kell újítani őket, mielőtt a hitelesített AEAT-munka folytatódna"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CERT_WARN_DAYS`"
+msgstr "`CADRUMO_CERT_WARN_DAYS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`60`"
+msgstr "`60`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Warning threshold (days) for the certificate pre-expiry gate: "
+"certificates with <= this many days remaining are surfaced as WARN"
+msgstr ""
+"Figyelmeztetési küszöb (nap) a tanúsítvány lejárat előtti kapujához: a "
+"legfeljebb ennyi nap hátralévő idejű tanúsítványok FIGYELMEZTETÉSként "
+"jelennek meg"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CERTIFICATE_FRIENDLY_NAME`"
+msgstr "`CADRUMO_CERTIFICATE_FRIENDLY_NAME`"
+
+#: ../../reference/environment-overrides.md
+msgid "Optional human-readable label for the certificate"
+msgstr "Opcionális, ember által olvasható címke a tanúsítványhoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CERTIFICATE_PASSWORD_SECRET`"
+msgstr "`CADRUMO_CERTIFICATE_PASSWORD_SECRET`"
+
+#: ../../reference/environment-overrides.md
+msgid "SecretStr"
+msgstr "SecretStr"
+
+#: ../../reference/environment-overrides.md
+msgid "(secret)"
+msgstr "(secret)"
+
+#: ../../reference/environment-overrides.md
+msgid "PKCS#12 passphrase (env only, never logged or persisted)"
+msgstr "PKCS#12 jelmondat (csak env, sosem naplózva vagy megőrizve)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CERTIFICATE_PATH`"
+msgstr "`CADRUMO_CERTIFICATE_PATH`"
+
+#: ../../reference/environment-overrides.md
+msgid "Filesystem path to the operator's PKCS#12 (.p12/.pfx) bundle"
+msgstr "Fájlrendszerútvonal az operátor PKCS#12 (.p12/.pfx) csomagjához"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CLAVE_MOVIL_DNI_FECHA`"
+msgstr "`CADRUMO_CLAVE_MOVIL_DNI_FECHA`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"DNI validity / expiry date (YYYY-MM-DD) used by the non-QR Cl@ve Móvil "
+"fallback form. Applies when the configured identity is a DNI."
+msgstr ""
+"DNI érvényességi / lejárati dátum (YYYY-MM-DD), amelyet a nem QR-alapú "
+"Cl@ve Móvil tartalék űrlap használ. Akkor alkalmazandó, ha a konfigurált "
+"azonosság egy DNI."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CLAVE_MOVIL_DNI_NIE`"
+msgstr "`CADRUMO_CLAVE_MOVIL_DNI_NIE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Taxpayer DNI/NIE for `aeat config auth configure --provider clave_movil`."
+" Used to stamp the persisted session with the operator's identity and to "
+"pre-fill the non-QR fallback form. AEAT-regulated personal identifier "
+"under Spanish tax law; typed as SecretStr to prevent leakage through repr"
+" / model_dump / ValidationError."
+msgstr ""
+"Adózói DNI/NIE az `aeat config auth configure --provider clave_movil` "
+"parancshoz. A megőrzött munkamenet megbélyegzésére szolgál az operátor "
+"azonosságával, és a nem QR-alapú tartalék űrlap előkitöltésére. AEAT "
+"által szabályozott személyes azonosító a spanyol adójog szerint; "
+"SecretStr típusú, hogy megelőzze a szivárgást a repr / model_dump / "
+"ValidationError révén."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CLAVE_MOVIL_NIE_SOPORTE`"
+msgstr "`CADRUMO_CLAVE_MOVIL_NIE_SOPORTE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"NIE support number (número de soporte) used by the non-QR Cl@ve Móvil "
+"fallback form. Applies when the configured identity is a NIE. AEAT-"
+"regulated personal identifier; typed as SecretStr to prevent leakage."
+msgstr ""
+"NIE támogatási szám (número de soporte), amelyet a nem QR-alapú Cl@ve "
+"Móvil tartalék űrlap használ. Akkor alkalmazandó, ha a konfigurált "
+"azonosság egy NIE. AEAT által szabályozott személyes azonosító; SecretStr"
+" típusú a szivárgás megelőzésére."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CLAVE_MOVIL_TIMEOUT_MS`"
+msgstr "`CADRUMO_CLAVE_MOVIL_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`120000`"
+msgstr "`120000`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Maximum time (milliseconds) the Cl@ve Móvil provider waits for AEAT "
+"browser-side authentication completion before aborting. Production runs "
+"must fail fast enough for an operator to retry deliberately rather than "
+"leaving a pending request dangling."
+msgstr ""
+"Maximális idő (ezredmásodperc), ameddig a Cl@ve Móvil szolgáltató az AEAT"
+" böngészőoldali hitelesítés befejezésére vár, mielőtt megszakítaná. A "
+"produkciós futásoknak elég gyorsan kell meghiúsulniuk ahhoz, hogy egy "
+"operátor szándékosan újrapróbálkozhasson, ahelyett, hogy egy függő "
+"kérelmet lógva hagyna."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CLAVE_PERMANENTE_DNI_NIE`"
+msgstr "`CADRUMO_CLAVE_PERMANENTE_DNI_NIE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Taxpayer DNI/NIE for `aeat config auth configure --provider "
+"clave_permanente`. Used as the Cl@ve IdP login username and to stamp the "
+"persisted session with the operator's identity. AEAT-regulated personal "
+"identifier under Spanish tax law; typed as SecretStr to prevent leakage "
+"through repr / model_dump / ValidationError."
+msgstr ""
+"Adózói DNI/NIE az `aeat config auth configure --provider "
+"clave_permanente` parancshoz. A Cl@ve IdP bejelentkezési "
+"felhasználónévként szolgál, és a megőrzött munkamenet megbélyegzésére az "
+"operátor azonosságával. AEAT által szabályozott személyes azonosító a "
+"spanyol adójog szerint; SecretStr típusú, hogy megelőzze a szivárgást a "
+"repr / model_dump / ValidationError révén."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CLAVE_PERMANENTE_PASSWORD`"
+msgstr "`CADRUMO_CLAVE_PERMANENTE_PASSWORD`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Cl@ve Permanente password for the DNI/NIE + password login form. Same "
+"treatment as the certificate passphrase: env var only, never stored in a "
+"committed env file, never logged."
+msgstr ""
+"Cl@ve Permanente jelszó a DNI/NIE + jelszó bejelentkezési űrlaphoz. "
+"Ugyanaz a kezelés, mint a tanúsítvány jelmondatánál: csak env var, sosem "
+"tárolva egy commitolt env fájlban, sosem naplózva."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS`"
+msgstr "`CADRUMO_CLAVE_PERMANENTE_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`60000`"
+msgstr "`60000`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Maximum time (milliseconds) the Cl@ve Permanente provider waits for the "
+"AEAT/Cl@ve IdP login form round-trip to complete before aborting. Routine"
+" Cl@ve Permanente login is headless-automatable (DNI/NIE + password, no "
+"SMS), so this window is shorter than the human-in-the-loop Cl@ve Móvil "
+"timeout."
+msgstr ""
+"Maximális idő (ezredmásodperc), ameddig a Cl@ve Permanente szolgáltató az"
+" AEAT/Cl@ve IdP bejelentkezési űrlap körfordulójának befejezésére vár, "
+"mielőtt megszakítaná. A rutin Cl@ve Permanente bejelentkezés fej nélkül "
+"automatizálható (DNI/NIE + jelszó, SMS nélkül), így ez az ablak rövidebb,"
+" mint az emberi közreműködésű Cl@ve Móvil időkorlát."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CLAVE_PREFER_NON_QR`"
+msgstr "`CADRUMO_CLAVE_PREFER_NON_QR`"
+
+#: ../../reference/environment-overrides.md
+msgid "`false`"
+msgstr "`false`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"When true, the Cl@ve Móvil provider uses the non-QR fallback (DNI/NIE + "
+"contraste) rather than the QR code. This still requires operator-mediated"
+" completion in Cl@ve."
+msgstr ""
+"Ha igaz, a Cl@ve Móvil szolgáltató a nem QR-alapú tartalékot (DNI/NIE + "
+"contraste) használja a QR-kód helyett. Ez továbbra is operátor által "
+"közvetített befejezést igényel a Cl@ve-ban."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CLI_REVEAL_IDENTIFIERS`"
+msgstr "`CADRUMO_CLI_REVEAL_IDENTIFIERS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Reveal raw profile and bucket identifiers in CLI success output instead "
+"of the paste-safe ``<profile-id>`` / ``<bucket-id>`` placeholders. "
+"Default off keeps the centralised-output-redaction policy (profile/bucket"
+" UUIDs are redacted so diagnostics are safe to paste into shared notes). "
+"A multi-client gestor who must disambiguate which bucket a command "
+"addressed sets ``CADRUMO_CLI_REVEAL_IDENTIFIERS=1`` to opt out. This only"
+" un-redacts the opaque profile/bucket UUIDs; NIF/NIE/CIF tax identities, "
+"bearer tokens, URLs, and secure-object keys stay redacted "
+"unconditionally."
+msgstr ""
+"A nyers profil- és bucket-azonosítók felfedése a CLI sikeres kimenetében "
+"a beillesztésbiztos ``<profile-id>`` / ``<bucket-id>`` helyőrzők helyett."
+" Az alapértelmezett kikapcsolt állapot megtartja a központosított "
+"kimenet-kitakarási szabályt (a profil/bucket UUID-k ki vannak takarva, "
+"így a diagnosztika biztonságosan beilleszthető megosztott jegyzetekbe). "
+"Egy több ügyfeles gestor, akinek egyértelműsítenie kell, melyik bucketet "
+"címezte egy parancs, a ``CADRUMO_CLI_REVEAL_IDENTIFIERS=1`` beállítással "
+"léphet ki ebből. Ez csak az átlátszatlan profil/bucket UUID-ket fedi fel;"
+" a NIF/NIE/CIF adóazonosságok, a bearer tokenek, az URL-ek és a secure-"
+"object kulcsok feltétel nélkül kitakarva maradnak."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_CORPUS_TEXT_CACHE_DIR`"
+msgstr "`CADRUMO_CORPUS_TEXT_CACHE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Directory for the registry corpus source-text validation cache "
+"(normalised text keyed by content fingerprint)"
+msgstr ""
+"A registry-korpusz forrásszöveg-validálási gyorsítótárának könyvtára "
+"(normalizált szöveg tartalmi lenyomat szerint kulcsolva)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_DATABASE_URL`"
+msgstr "`CADRUMO_DATABASE_URL`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"SQLAlchemy URL for the primary persistence backend. When empty, the model"
+" validator resolves the URL through the active-profile precedence chain "
+"to ``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-"
+"id>/db/cadrumo.db``; with no active profile it derives a root-level "
+"fallback at ``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` so the "
+"URL is never empty when the storage root is set. Tests that need a "
+"deterministic location supply this field explicitly; production reads the"
+" computed value."
+msgstr ""
+"SQLAlchemy URL az elsődleges perzisztencia-backendhez. Ha üres, a "
+"modellvalidátor az aktív-profil precedencialáncon keresztül a "
+"``sqlite:///<cadrumo_local_storage_root>/buckets/<bucket-"
+"id>/db/cadrumo.db`` értékre oldja fel az URL-t; aktív profil nélkül "
+"gyökérszintű tartalékot származtat a "
+"``sqlite:///<cadrumo_local_storage_root>/cadrumo.db`` helyen, így az URL "
+"sosem üres, ha a tárolási gyökér be van állítva. Azok a tesztek, "
+"amelyeknek determinisztikus helyre van szükségük, kifejezetten megadják "
+"ezt a mezőt; a produkció a kiszámított értéket olvassa."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_DEADLINE_DUE_SOON_DAYS`"
+msgstr "`CADRUMO_DEADLINE_DUE_SOON_DAYS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Days before an obligation's closes_on date that flag "
+"ObligationStatus.DUE_SOON in the deadline engine"
+msgstr ""
+"Az a napszám egy kötelezettség closes_on dátuma előtt, amely "
+"ObligationStatus.DUE_SOON állapotot jelöl a határidőmotorban"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_DEV_TEST_DATABASE_PASSWORD`"
+msgstr "`CADRUMO_DEV_TEST_DATABASE_PASSWORD`"
+
+#: ../../reference/environment-overrides.md
+msgid "Development/test-only password used by secure-storage subprocess tests."
+msgstr ""
+"Csak fejlesztési/tesztcélú jelszó, amelyet a secure-storage alfolyamat-"
+"tesztek használnak."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_DRAFT_FAIL_ON_WARNING`"
+msgstr "`CADRUMO_DRAFT_FAIL_ON_WARNING`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"If true, build_draft raises FilingValidationError when any WARNING- or "
+"ERROR-severity finding is produced"
+msgstr ""
+"Ha igaz, a build_draft FilingValidationError kivételt vet, amikor bármely"
+" WARNING- vagy ERROR-súlyosságú megállapítás keletkezik"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_DRAFTS_DIR`"
+msgstr "`CADRUMO_DRAFTS_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where filing drafts are written as JSON files"
+msgstr "Az a könyvtár, ahová a bevallási piszkozatok JSON-fájlként íródnak"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED`"
+msgstr "`CADRUMO_EVIDENCE_CLOUD_UPLOAD_PERMITTED`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Whether this deployment permits transmitting evidence to a cloud model at"
+" all. Default off: evidence reading is on-host only. When True, a per-"
+"invocation operator consent acknowledgement is still required for each "
+"cloud read."
+msgstr ""
+"Hogy ez a telepítés egyáltalán engedélyezi-e bizonyíték felhő-modellnek "
+"való továbbítását. Alapértelmezésben kikapcsolt: a bizonyíték-olvasás "
+"csak gépen belüli. Ha True, minden felhőolvasáshoz továbbra is "
+"invokációnkénti operátori beleegyezési nyugtázás szükséges."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_EVIDENCE_GESTOR_MODE`"
+msgstr "`CADRUMO_EVIDENCE_GESTOR_MODE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Gestor/professional deployment flag. When True, cloud evidence upload is "
+"categorically refused regardless of "
+"cadrumo_evidence_cloud_upload_permitted or per-invocation consent."
+msgstr ""
+"Gestor/professzionális telepítési kapcsoló. Ha True, a felhőbe való "
+"bizonyítékfeltöltés kategorikusan elutasított, függetlenül a "
+"cadrumo_evidence_cloud_upload_permitted értékétől vagy az invokációnkénti"
+" beleegyezéstől."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_FALLBACK_LANGUAGES`"
+msgstr "`CADRUMO_FALLBACK_LANGUAGES`"
+
+#: ../../reference/environment-overrides.md
+msgid "`es,en`"
+msgstr "`es,en`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Comma-separated fallback chain consulted when the target language is "
+"missing."
+msgstr ""
+"Vesszővel elválasztott tartaléklánc, amelyet akkor konzultálnak, amikor a"
+" célnyelv hiányzik."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_FILE_LOCK_RETRY_BACKOFF_S`"
+msgstr "`CADRUMO_FILE_LOCK_RETRY_BACKOFF_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "`0.05`"
+msgstr "`0.05`"
+
+#: ../../reference/environment-overrides.md
+msgid "Sleep interval (seconds) between non-blocking file-lock acquire attempts"
+msgstr ""
+"Alvási időköz (másodperc) a nem blokkoló fájlzár-beszerzési kísérletek "
+"között"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_FILE_LOCK_TIMEOUT_S`"
+msgstr "`CADRUMO_FILE_LOCK_TIMEOUT_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "`30.0`"
+msgstr "`30.0`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default exclusive file-lock acquisition timeout (seconds)"
+msgstr "Alapértelmezett kizárólagos fájlzár-beszerzési időkorlát (másodperc)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_FILING_HISTORY_ARCHIVE_HTML`"
+msgstr "`CADRUMO_FILING_HISTORY_ARCHIVE_HTML`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"If true, archive fetched detail-page HTML under "
+"<cadrumo_filing_history_dir>/pages/"
+msgstr ""
+"Ha igaz, a lekért részletező oldalak HTML-jét a "
+"<cadrumo_filing_history_dir>/pages/ alá archiválja"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_FILING_HISTORY_CACHE_TTL_S`"
+msgstr "`CADRUMO_FILING_HISTORY_CACHE_TTL_S`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"TTL in seconds for per-expediente filing-history cache entries (default "
+"15 min)"
+msgstr ""
+"TTL másodpercben az expediente-nkénti bevallási előzmény gyorsítótár-"
+"bejegyzésekhez (alapértelmezés 15 perc)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_FILING_HISTORY_DIR`"
+msgstr "`CADRUMO_FILING_HISTORY_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where the persisted ModeloHistory JSON file lives"
+msgstr "Az a könyvtár, ahol a megőrzött ModeloHistory JSON-fájl él"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_FINANCIAL_TXS_DIR`"
+msgstr "`CADRUMO_FINANCIAL_TXS_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where the transaction catalogue JSON file is stored"
+msgstr "Az a könyvtár, ahol a tranzakciókatalógus JSON-fájlja tárolódik"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_FORCE_COLOR`"
+msgstr "`CADRUMO_FORCE_COLOR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Force ANSI colour output even when stdout is not a TTY. Operators set "
+"this when piping Cadrumo output through a terminal renderer (less -R, gh "
+"actions, etc.). Defaults to False; the should_use_color() helper consults"
+" this and the standard NO_COLOR convention through Settings rather than "
+"reading os.environ directly."
+msgstr ""
+"ANSI-színkimenet kényszerítése akkor is, amikor az stdout nem TTY. Az "
+"operátorok akkor állítják be ezt, amikor a Cadrumo kimenetét egy "
+"terminálmegjelenítőn keresztül vezetik át (less -R, gh actions stb.). "
+"Alapértelmezésben False; a should_use_color() segédfüggvény ezt és a "
+"szabványos NO_COLOR konvenciót a Settingsen keresztül konzultálja, nem "
+"közvetlenül az os.environ olvasásával."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
+msgstr "`CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Drive folder ID under which `cadrumo-vault/` is created and used. "
+"Required when cadrumo_storage_provider_kind=google_drive. Operator "
+"obtains this from the Cloud Console / Drive web UI; the app creates "
+"`cadrumo-vault/` lazily on first probe."
+msgstr ""
+"A Drive-mappa azonosítója, amely alatt a `cadrumo-vault/` létrejön és "
+"használatba kerül. Kötelező, amikor "
+"cadrumo_storage_provider_kind=google_drive. Az operátor ezt a Cloud "
+"Console-ból / a Drive webes felületéből szerzi be; az alkalmazás lazán, "
+"az első szondázáskor hozza létre a `cadrumo-vault/` mappát."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME`"
+msgstr "`CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME`"
+
+#: ../../reference/environment-overrides.md
+msgid "`cadrumo-vault`"
+msgstr "`cadrumo-vault`"
+
+#: ../../reference/environment-overrides.md
+msgid "Folder name created under the Google Drive root for the Cadrumo vault"
+msgstr "A Google Drive gyökere alatt a Cadrumo-tár számára létrehozott mappa neve"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S`"
+msgstr "`CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "`300`"
+msgstr "`300`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Clock-skew buffer (seconds) before nominal expiry when refreshing Google "
+"access tokens"
+msgstr ""
+"Óraeltérés-ráhagyás (másodperc) a névleges lejárat előtt a Google-"
+"hozzáférési tokenek frissítésekor"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_INBOX_ALERT_LEAD_DAYS`"
+msgstr "`CADRUMO_INBOX_ALERT_LEAD_DAYS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`7`"
+msgstr "`7`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Lead window (days) for notification deadline reporting: surface "
+"CRITICAL/HIGH notifications whose appeal_deadline falls within the next N"
+" days"
+msgstr ""
+"Előrejelzési ablak (nap) az értesítési határidők jelentéséhez: azon "
+"KRITIKUS/MAGAS értesítések felszínre hozása, amelyek appeal_deadline "
+"dátuma a következő N napon belülre esik"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_INBOX_DIR`"
+msgstr "`CADRUMO_INBOX_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where the persisted Inbox JSON file lives"
+msgstr "Az a könyvtár, ahol a megőrzött Inbox JSON-fájl él"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_INBOX_PDF_DIR`"
+msgstr "`CADRUMO_INBOX_PDF_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where downloaded notification PDFs are stored"
+msgstr "Az a könyvtár, ahol a letöltött értesítési PDF-ek tárolódnak"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_INVOICES_DIR`"
+msgstr "`CADRUMO_INVOICES_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where the invoice catalogue JSON file is stored"
+msgstr "Az a könyvtár, ahol a számlakatalógus JSON-fájlja tárolódik"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_IVA_CATALOGUE_ROOT`"
+msgstr "`CADRUMO_IVA_CATALOGUE_ROOT`"
+
+#: ../../reference/environment-overrides.md
+msgid "Root directory for the hand-reviewed IVA taxonomy catalogue"
+msgstr "A kézzel áttekintett IVA-taxonómiakatalógus gyökérkönyvtára"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_JUSTIFICANTE_PARSER_BACKEND`"
+msgstr "`CADRUMO_JUSTIFICANTE_PARSER_BACKEND`"
+
+#: ../../reference/environment-overrides.md
+msgid "JustificanteParserBackendSetting"
+msgstr "JustificanteParserBackendSetting"
+
+#: ../../reference/environment-overrides.md
+msgid "`pdfplumber`"
+msgstr "`pdfplumber`"
+
+#: ../../reference/environment-overrides.md
+msgid "Parser backend for `cadrumo.adapters.inbound.justificante`"
+msgstr "Elemző backend a `cadrumo.adapters.inbound.justificante` számára"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_JUSTIFICANTES_DIR`"
+msgstr "`CADRUMO_JUSTIFICANTES_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where parsed justificante PDFs and metadata are stored"
+msgstr ""
+"Az a könyvtár, ahol az elemzett justificante PDF-ek és metaadatok "
+"tárolódnak"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LIBREOFFICE_EXECUTABLE`"
+msgstr "`CADRUMO_LIBREOFFICE_EXECUTABLE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Optional explicit path to the soffice / libreoffice binary used by the "
+"workbook-parity scanner. When None the scanner resolves it from PATH."
+msgstr ""
+"Opcionális, kifejezett útvonal a soffice / libreoffice binárishoz, "
+"amelyet a munkafüzet-paritás szkenner használ. Ha None, a szkenner a "
+"PATH-ból oldja fel."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS`"
+msgstr "`CADRUMO_LIVE_FILED_REGISTER_WALK_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Timeout (ms) for one AEAT filed-declaration register query for a single "
+"modelo/year. Bulk filed-history reads use this per-query budget so one "
+"slow modelo cannot block all later modelos from returning typed failures."
+msgstr ""
+"Időkorlát (ms) egyetlen AEAT benyújtottbevallás-registry lekérdezéshez "
+"egyetlen modelóra/évre. A tömeges benyújtott előzmény olvasások ezt a "
+"lekérdezésenkénti keretet használják, így egyetlen lassú modelo nem tudja"
+" megakadályozni, hogy minden későbbi modelo típusos hibákat adjon vissza."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS`"
+msgstr "`CADRUMO_LIVE_IVA_CANCELLATION_DRAIN_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`250`"
+msgstr "`250`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Drain delay (ms) after a bounded live IVA read surface is cancelled, "
+"giving Playwright browser tasks time to report cancellation-only errors "
+"before the loop handler is restored."
+msgstr ""
+"Ürítési késleltetés (ms) egy korlátozott élő IVA-olvasási felület "
+"megszakítása után, időt adva a Playwright böngészőfeladatoknak, hogy "
+"jelentsék a csak megszakítási hibákat, mielőtt a cikluskezelő visszaáll."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LIVE_IVA_CLI_WATCHDOG_TIMEOUT_MS`"
+msgstr "`CADRUMO_LIVE_IVA_CLI_WATCHDOG_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`240000`"
+msgstr "`240000`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Top-level CLI watchdog timeout (ms) for the combined read-only IVA "
+"remote-state command. This must exceed the normal auth and surface "
+"budgets but remain below operator shell/tool timeouts so the CLI can "
+"cancel and clean up inside its own process."
+msgstr ""
+"Legfelső szintű CLI-őrkutya időkorlát (ms) a kombinált, csak olvasható "
+"IVA távoli-állapot parancshoz. Ennek meg kell haladnia a normál "
+"hitelesítési és felületi kereteket, de a rendszerhéj/eszköz időkorlátjai "
+"alatt kell maradnia, hogy a CLI a saját folyamatán belül megszakíthasson "
+"és takaríthasson."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS`"
+msgstr "`CADRUMO_LIVE_IVA_DECLARATION_CAPTURE_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Timeout (ms) for one Modelo 303 filed-declaration observation inside a "
+"combined live IVA filed-history read. Must be lower than the outer live "
+"IVA surface timeout so partial filed-history failures can return a "
+"structured report before the whole surface is cancelled."
+msgstr ""
+"Időkorlát (ms) egyetlen Modelo 303 benyújtottbevallás-megfigyeléshez egy "
+"kombinált élő IVA benyújtott előzmény olvasáson belül. Alacsonyabbnak "
+"kell lennie a külső élő IVA-felület időkorlátjánál, hogy a részleges "
+"benyújtott előzmény hibák strukturált jelentést adhassanak vissza, "
+"mielőtt az egész felület megszakadna."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS`"
+msgstr "`CADRUMO_LIVE_IVA_SURFACE_TIMEOUT_MS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`180000`"
+msgstr "`180000`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Outer timeout (ms) for each live IVA read surface inside a combined "
+"remote-state acquisition. Individual browser stages have their own "
+"shorter timeouts; this bounds the whole filed-history or wallet/cartera "
+"surface."
+msgstr ""
+"Külső időkorlát (ms) minden élő IVA-olvasási felülethez egy kombinált "
+"távoli-állapot beszerzésen belül. Az egyes böngészőszakaszoknak saját, "
+"rövidebb időkorlátjaik vannak; ez az egész benyújtott előzmény vagy "
+"pénztárca/cartera felületet korlátozza."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LIVE_TESTS_ENABLED`"
+msgstr "`CADRUMO_LIVE_TESTS_ENABLED`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Opt-in flag (set to '1') to run @pytest.mark.aeat_live tests against real"
+" external services"
+msgstr ""
+"Beleegyezési kapcsoló ('1' értékre állítva) a @pytest.mark.aeat_live "
+"tesztek valós külső szolgáltatásokkal szembeni futtatásához"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LIVE_TESTS_GOOGLE`"
+msgstr "`CADRUMO_LIVE_TESTS_GOOGLE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Opt-in flag (set to '1') to run @pytest.mark.aeat_live Google (OAuth / "
+"Drive) tests against real Google services"
+msgstr ""
+"Beleegyezési kapcsoló ('1' értékre állítva) a @pytest.mark.aeat_live "
+"Google (OAuth / Drive) tesztek valós Google-szolgáltatásokkal szembeni "
+"futtatásához"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_ANTHROPIC_API_KEY`"
+msgstr "`CADRUMO_LLM_ANTHROPIC_API_KEY`"
+
+#: ../../reference/environment-overrides.md
+msgid "Anthropic API key (env only, never logged)"
+msgstr "Anthropic API-kulcs (csak env, sosem naplózva)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_CACHE_DIR`"
+msgstr "`CADRUMO_LLM_CACHE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory for on-disk LLM cache entries"
+msgstr "Könyvtár a lemezen lévő LLM-gyorsítótár-bejegyzésekhez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_CACHE_MAX_RECORDS`"
+msgstr "`CADRUMO_LLM_CACHE_MAX_RECORDS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Maximum number of LLM response-cache entries retained; oldest excess "
+"entries are pruned"
+msgstr ""
+"A megtartott LLM-válaszgyorsítótár-bejegyzések maximális száma; a "
+"legrégebbi feleslegek eltávolításra kerülnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_CACHE_RETENTION_DAYS`"
+msgstr "`CADRUMO_LLM_CACHE_RETENTION_DAYS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`30`"
+msgstr "`30`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Retention window in days for on-disk LLM response-cache entries; older "
+"entries are pruned"
+msgstr ""
+"Megőrzési ablak napokban a lemezen lévő LLM-válaszgyorsítótár-"
+"bejegyzésekhez; a régebbi bejegyzések eltávolításra kerülnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_DEFAULT_MAX_TOKENS`"
+msgstr "`CADRUMO_LLM_DEFAULT_MAX_TOKENS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`1024`"
+msgstr "`1024`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default maximum output tokens when an LLM request omits ``max_tokens``"
+msgstr ""
+"Alapértelmezett maximális kimeneti token, amikor egy LLM-kérés elhagyja a"
+" ``max_tokens`` értéket"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_DEFAULT_TEMPERATURE`"
+msgstr "`CADRUMO_LLM_DEFAULT_TEMPERATURE`"
+
+#: ../../reference/environment-overrides.md
+msgid "`0.0`"
+msgstr "`0.0`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default sampling temperature when an LLM request omits ``temperature``"
+msgstr ""
+"Alapértelmezett mintavételi hőmérséklet, amikor egy LLM-kérés elhagyja a "
+"``temperature`` értéket"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_DEFAULT_TIMEOUT_S`"
+msgstr "`CADRUMO_LLM_DEFAULT_TIMEOUT_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default timeout for LLM provider calls in seconds"
+msgstr "Alapértelmezett időkorlát az LLM-szolgáltatói hívásokhoz, másodpercben"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_GEMINI_API_KEY`"
+msgstr "`CADRUMO_LLM_GEMINI_API_KEY`"
+
+#: ../../reference/environment-overrides.md
+msgid "Google Gemini API key (optional)"
+msgstr "Google Gemini API-kulcs (opcionális)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_GEMINI_GENERATE_CONTENT_TEMPLATE`"
+msgstr "`CADRUMO_LLM_GEMINI_GENERATE_CONTENT_TEMPLATE`"
+
+#: ../../reference/environment-overrides.md
+#, python-brace-format
+msgid "`https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`"
+msgstr "`https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent`"
+
+#: ../../reference/environment-overrides.md
+#, python-brace-format
+msgid ""
+"Google Gemini generateContent endpoint template (``{model}`` is "
+"substituted)"
+msgstr ""
+"Google Gemini generateContent végpontsablon (a ``{model}`` "
+"behelyettesítésre kerül)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_MAX_RETRIES`"
+msgstr "`CADRUMO_LLM_MAX_RETRIES`"
+
+#: ../../reference/environment-overrides.md
+msgid "`3`"
+msgstr "`3`"
+
+#: ../../reference/environment-overrides.md
+msgid "Maximum retry attempts for retryable LLM failures"
+msgstr "Maximális újrapróbálkozási kísérletek az újrapróbálható LLM-hibákhoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_MODEL`"
+msgstr "`CADRUMO_LLM_MODEL`"
+
+#: ../../reference/environment-overrides.md
+msgid "`claude-sonnet-4-6`"
+msgstr "`claude-sonnet-4-6`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default LLM model identifier"
+msgstr "Alapértelmezett LLM-modellazonosító"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_OLLAMA_CHAT_URL`"
+msgstr "`CADRUMO_LLM_OLLAMA_CHAT_URL`"
+
+#: ../../reference/environment-overrides.md
+msgid "`http://127.0.0.1:11434/api/chat`"
+msgstr "`http://127.0.0.1:11434/api/chat`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Local Ollama /api/chat endpoint; override for non-localhost Ollama "
+"deployments"
+msgstr ""
+"Helyi Ollama /api/chat végpont; írja felül a nem localhost Ollama-"
+"telepítésekhez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_OLLAMA_NUM_CTX`"
+msgstr "`CADRUMO_LLM_OLLAMA_NUM_CTX`"
+
+#: ../../reference/environment-overrides.md
+msgid "`8192`"
+msgstr "`8192`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Ollama context window (num_ctx) for local requests. The vision read sends"
+" the full registry allow-list prompt plus the encoded invoice image, "
+"which exceeds Ollama's 4096 default; 8192 fits the prompt + image + "
+"output with headroom and still runs on consumer hardware"
+msgstr ""
+"Ollama kontextusablak (num_ctx) a helyi kérésekhez. A vizuális olvasás "
+"elküldi a teljes registry-engedélylista promptot plusz a kódolt "
+"számlaképet, ami meghaladja az Ollama 4096-os alapértelmezését; a 8192 "
+"illeszkedik a prompthoz + képhez + kimenethez ráhagyással, és még mindig "
+"fut fogyasztói hardveren"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_OLLAMA_VISION_MODEL`"
+msgstr "`CADRUMO_LLM_OLLAMA_VISION_MODEL`"
+
+#: ../../reference/environment-overrides.md
+msgid "`qwen2.5vl:3b`"
+msgstr "`qwen2.5vl:3b`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Local Ollama vision model used to read scanned/image evidence on-host "
+"(the default, gestor-allowed posture); must be a multimodal model pulled "
+"into the local Ollama runtime. Default qwen2.5vl:3b (~3 GB) is document"
+"/OCR-grade and runs on normal consumer hardware (modest GPU or CPU); "
+"override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for CPU-only/low-"
+"memory hardware"
+msgstr ""
+"Helyi Ollama vizuális modell, amelyet a beolvasott/kép-bizonyíték gépen "
+"belüli olvasására használnak (az alapértelmezett, gestor által "
+"engedélyezett beállítás); multimodális modellnek kell lennie, amelyet a "
+"helyi Ollama futtatókörnyezetbe húztak. Az alapértelmezett qwen2.5vl:3b "
+"(~3 GB) dokumentum-/OCR-minőségű, és normál fogyasztói hardveren fut "
+"(szerény GPU vagy CPU); írja felül qwen2.5vl:7b-re egy 8 GB+ GPU-hoz, "
+"vagy moondreamre a csak CPU-s / alacsony memóriájú hardverhez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_OPENAI_API_KEY`"
+msgstr "`CADRUMO_LLM_OPENAI_API_KEY`"
+
+#: ../../reference/environment-overrides.md
+msgid "OpenAI API key (optional)"
+msgstr "OpenAI API-kulcs (opcionális)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_OPENAI_CHAT_COMPLETIONS_URL`"
+msgstr "`CADRUMO_LLM_OPENAI_CHAT_COMPLETIONS_URL`"
+
+#: ../../reference/environment-overrides.md
+msgid "`https://api.openai.com/v1/chat/completions`"
+msgstr "`https://api.openai.com/v1/chat/completions`"
+
+#: ../../reference/environment-overrides.md
+msgid "OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies"
+msgstr ""
+"OpenAI Chat Completions végpont; írja felül az OpenAI-kompatibilis "
+"proxykhoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_PROVIDER`"
+msgstr "`CADRUMO_LLM_PROVIDER`"
+
+#: ../../reference/environment-overrides.md
+msgid "LLMProviderSetting"
+msgstr "LLMProviderSetting"
+
+#: ../../reference/environment-overrides.md
+msgid "`ANTHROPIC`"
+msgstr "`ANTHROPIC`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default LLM provider name"
+msgstr "Alapértelmezett LLM-szolgáltató neve"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_RUN_TELEMETRY_DIR`"
+msgstr "`CADRUMO_LLM_RUN_TELEMETRY_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory for append-only local LLM run-timing telemetry logs"
+msgstr "Könyvtár a csak hozzáfűzhető helyi LLM-futásidőzítési telemetrianaplókhoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_RUN_TELEMETRY_MAX_RECORDS`"
+msgstr "`CADRUMO_LLM_RUN_TELEMETRY_MAX_RECORDS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Maximum number of local LLM run-telemetry records retained; oldest excess"
+" records are pruned"
+msgstr ""
+"A megtartott helyi LLM-futástelemetria-rekordok maximális száma; a "
+"legrégebbi feleslegek eltávolításra kerülnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_RUN_TELEMETRY_RETENTION_DAYS`"
+msgstr "`CADRUMO_LLM_RUN_TELEMETRY_RETENTION_DAYS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Retention window in days for local LLM run-telemetry records; older "
+"records are pruned"
+msgstr ""
+"Megőrzési ablak napokban a helyi LLM-futástelemetria-rekordokhoz; a "
+"régebbi rekordok eltávolításra kerülnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_USAGE_DIR`"
+msgstr "`CADRUMO_LLM_USAGE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory for append-only LLM usage JSONL logs"
+msgstr "Könyvtár a csak hozzáfűzhető LLM-használati JSONL-naplókhoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_USAGE_MAX_RECORDS`"
+msgstr "`CADRUMO_LLM_USAGE_MAX_RECORDS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Maximum number of LLM usage records retained; oldest excess records are "
+"pruned"
+msgstr ""
+"A megtartott LLM-használati rekordok maximális száma; a legrégebbi "
+"feleslegek eltávolításra kerülnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_USAGE_RETENTION_DAYS`"
+msgstr "`CADRUMO_LLM_USAGE_RETENTION_DAYS`"
+
+#: ../../reference/environment-overrides.md
+msgid "Retention window in days for LLM usage records; older records are pruned"
+msgstr ""
+"Megőrzési ablak napokban az LLM-használati rekordokhoz; a régebbi "
+"rekordok eltávolításra kerülnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LLM_VISION_READ_TIMEOUT_S`"
+msgstr "`CADRUMO_LLM_VISION_READ_TIMEOUT_S`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Per-request timeout for the on-host local vision read; larger than the "
+"general LLM timeout because a local vision model on consumer hardware "
+"(CPU or a modest GPU) can take one to several minutes to read an invoice"
+msgstr ""
+"Kérésenkénti időkorlát a gépen belüli helyi vizuális olvasáshoz; nagyobb "
+"az általános LLM-időkorlátnál, mert egy helyi vizuális modell fogyasztói "
+"hardveren (CPU vagy szerény GPU) egy-több percig is olvashat egy számlát"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LOCAL_STORAGE_ROOT`"
+msgstr "`CADRUMO_LOCAL_STORAGE_ROOT`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Root directory for the LocalFileSystemProvider backend. Each namespace "
+"becomes a subdirectory; each object is a `<hmac_prefix_8>--<label>.bin` "
+"file paired with a `.meta.json` sidecar. The default is installed-run "
+"aware: a source checkout resolves to `PROJECT_ROOT/var/storage`, while an"
+" installed distribution roots at the platform user-data directory "
+"(`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` or "
+"`~/Library/Application Support/cadrumo/storage`) so the encrypted store "
+"never lands inside a virtualenv or uv cache. An explicit "
+"`CADRUMO_LOCAL_STORAGE_ROOT` override wins over the derived default."
+msgstr ""
+"A LocalFileSystemProvider backend gyökérkönyvtára. Minden névtér egy "
+"alkönyvtárrá válik; minden objektum egy `<hmac_prefix_8>--<label>.bin` "
+"fájl, egy `.meta.json` sidecarral párosítva. Az alapértelmezés "
+"telepítettfutás-tudatos: egy forráskód-kicsekkolás a "
+"`PROJECT_ROOT/var/storage` helyre oldódik fel, míg egy telepített "
+"terjesztés a platform felhasználói adatkönyvtárában gyökerezik "
+"(`%LOCALAPPDATA%/cadrumo/storage`, `$XDG_DATA_HOME/cadrumo/storage` vagy "
+"`~/Library/Application Support/cadrumo/storage`), így a titkosított "
+"tároló sosem kerül egy virtualenv vagy uv-gyorsítótár belsejébe. Egy "
+"kifejezett `CADRUMO_LOCAL_STORAGE_ROOT` felülírás felülírja a "
+"származtatott alapértelmezést."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LOG_DIR`"
+msgstr "`CADRUMO_LOG_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Diagnostic-log root directory. The ``None`` default here is a "
+"placeholder: when the field is not explicitly set, the model validator "
+"roots it at ``<cadrumo_local_storage_root>/logs`` so the diagnostic log "
+"lives under the one state root that ``CADRUMO_LOCAL_STORAGE_ROOT`` "
+"scopes, isolating each workspace's log. An explicit ``CADRUMO_LOG_DIR`` "
+"override wins over the derived default."
+msgstr ""
+"A diagnosztikai napló gyökérkönyvtára. A ``None`` alapértelmezés itt "
+"helyőrző: amikor a mező nincs kifejezetten beállítva, a modellvalidátor a"
+" ``<cadrumo_local_storage_root>/logs`` helyre gyökerezteti, így a "
+"diagnosztikai napló az alatt az egy állapotgyökér alatt él, amelyet a "
+"``CADRUMO_LOCAL_STORAGE_ROOT`` határol, elszigetelve minden munkaterület "
+"naplóját. Egy kifejezett ``CADRUMO_LOG_DIR`` felülírás felülírja a "
+"származtatott alapértelmezést."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LOG_FILE_BACKUP_COUNT`"
+msgstr "`CADRUMO_LOG_FILE_BACKUP_COUNT`"
+
+#: ../../reference/environment-overrides.md
+msgid "`5`"
+msgstr "`5`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Number of rotated cadrumo.log backups retained by the rotating file "
+"handler"
+msgstr ""
+"A forgó fájlkezelő által megtartott elforgatott cadrumo.log biztonsági "
+"másolatok száma"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LOG_FILE_LEVEL`"
+msgstr "`CADRUMO_LOG_FILE_LEVEL`"
+
+#: ../../reference/environment-overrides.md
+msgid "`DEBUG`"
+msgstr "`DEBUG`"
+
+#: ../../reference/environment-overrides.md
+msgid "Log level for the file handler installed by ``cadrumo.core.logging``"
+msgstr "A ``cadrumo.core.logging`` által telepített fájlkezelő naplószintje"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LOG_FILE_MAX_BYTES`"
+msgstr "`CADRUMO_LOG_FILE_MAX_BYTES`"
+
+#: ../../reference/environment-overrides.md
+msgid "`10485760`"
+msgstr "`10485760`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Size cap (bytes) for cadrumo.log before the rotating file handler rolls "
+"over; default 10 MiB"
+msgstr ""
+"Méretkorlát (bájt) a cadrumo.log fájlhoz, mielőtt a forgó fájlkezelő "
+"átfordul; alapértelmezés 10 MiB"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LOG_LEVEL`"
+msgstr "`CADRUMO_LOG_LEVEL`"
+
+#: ../../reference/environment-overrides.md
+msgid "Optional default CLI log level override: quiet, default, verbose, or debug"
+msgstr ""
+"Opcionális alapértelmezett CLI-naplószint felülírás: quiet, default, "
+"verbose vagy debug"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LOG_ROOT_LEVEL`"
+msgstr "`CADRUMO_LOG_ROOT_LEVEL`"
+
+#: ../../reference/environment-overrides.md
+msgid "Root logger level installed by ``cadrumo.core.logging``"
+msgstr "A ``cadrumo.core.logging`` által telepített gyökérnaplózó szintje"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_LOG_STDERR_LEVEL`"
+msgstr "`CADRUMO_LOG_STDERR_LEVEL`"
+
+#: ../../reference/environment-overrides.md
+msgid "`ERROR`"
+msgstr "`ERROR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Log level for the stderr handler installed by ``cadrumo.core.logging``"
+msgstr "A ``cadrumo.core.logging`` által telepített stderr-kezelő naplószintje"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_M210_ENGINE_LIVE`"
+msgstr "`CADRUMO_M210_ENGINE_LIVE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Gate the M210 IRNR engine, which currently covers only TRLIRNR Art. 25 "
+"letters a, b, and f. When False (default) `aeat app modelo work create "
+"--modelo 210` emits the Path-B refusal stub. When True the stub guard is "
+"skipped and the engine path runs (irnr_resolve_tipo_gravamen dispatch + "
+"representante-fiscal predicate + cuota composition)."
+msgstr ""
+"Az M210 IRNR-motor kapuja, amely jelenleg csak a TRLIRNR 25. cikkének a),"
+" b) és f) betűit fedi le. Amikor False (alapértelmezés), az `aeat app "
+"modelo work create --modelo 210` a Path-B elutasítási csonkot bocsátja "
+"ki. Amikor True, a csonkőr átugrik, és a motorútvonal fut "
+"(irnr_resolve_tipo_gravamen diszpécselés + representante-fiscal "
+"predikátum + cuota-kompozíció)."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_MANUALS_HTTP_TIMEOUT_S`"
+msgstr "`CADRUMO_MANUALS_HTTP_TIMEOUT_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "`60.0`"
+msgstr "`60.0`"
+
+#: ../../reference/environment-overrides.md
+msgid "HTTP timeout (seconds) for AEAT manual PDF downloads"
+msgstr "HTTP-időkorlát (másodperc) az AEAT-kézikönyv PDF-letöltéseihez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_MANUALS_REVIEW_REQUIRED`"
+msgstr "`CADRUMO_MANUALS_REVIEW_REQUIRED`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"When True, manual corpus verification rejects any Manual/Section/Rule "
+"record missing definition-review metadata; when False the rejection is "
+"downgraded to a warning"
+msgstr ""
+"Amikor True, a kézikönyvkorpusz-verifikáció elutasít minden "
+"Manual/Section/Rule rekordot, amelyből hiányzik a definíció-áttekintési "
+"metaadat; amikor False, az elutasítás figyelmeztetéssé fokozódik le"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_MCP_SERVING_CONCURRENCY`"
+msgstr "`CADRUMO_MCP_SERVING_CONCURRENCY`"
+
+#: ../../reference/environment-overrides.md
+msgid "`4`"
+msgstr "`4`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Maximum MCP tool calls dispatched off the event loop at once. Bounds the "
+"supervised subprocess spawn and the warm in-process worker pool so a "
+"burst cannot thrash the host; the previous anyio default admitted 40. A "
+"conservative small default suits the single-operator desktop client; "
+"raise it for a multi-client host."
+msgstr ""
+"Az eseményhurokról egyszerre indított MCP-eszközhívások maximális száma. "
+"Korlátozza a felügyelt alfolyamatok indítását és a meleg, folyamaton "
+"belüli munkavégző-készletet, hogy egy hirtelen terhelés ne terhelje túl a"
+" gazdagépet; a korábbi anyio-alapértelmezés 40-et engedett. A "
+"konzervatív, kis alapértelmezés az egy kezelős asztali klienshez illik; "
+"többklienses gazdagéphez emelje meg."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_MCP_WARM_CAPTURE_WAIT_SECONDS`"
+msgstr "`CADRUMO_MCP_WARM_CAPTURE_WAIT_SECONDS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`5.0`"
+msgstr "`5.0`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"How long a warm in-process MCP call waits for the stdout-capture lock "
+"before degrading to the supervised subprocess transport. Bounds the blast"
+" radius of a slow or hung in-process verb: a call never queues forever "
+"behind the capture. Comfortably covers a normal warm call's sub-second-"
+"to-low-single-digit hold."
+msgstr ""
+"Ameddig egy meleg, folyamaton belüli MCP-hívás a stdout-rögzítési zárra "
+"vár, mielőtt a felügyelt alfolyamat-transzportra fokozódna le. Korlátozza"
+" egy lassú vagy beragadt folyamaton belüli ige hatósugarát: egy hívás "
+"soha nem áll be örökre a rögzítés mögé. Bőven lefedi egy normál meleg "
+"hívás jellemzően másodperc alatti, legfeljebb néhány másodperces "
+"tartását."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_MCP_WEDGE_THRESHOLD_SECONDS`"
+msgstr "`CADRUMO_MCP_WEDGE_THRESHOLD_SECONDS`"
+
+#: ../../reference/environment-overrides.md
+msgid "`180.0`"
+msgstr "`180.0`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"When a warm in-process call has held the stdout-capture lock past this "
+"many seconds the warm transport is declared wedged and subsequent "
+"READ/MUTATE calls route straight to the supervised subprocess (a warning "
+"Notice names the wedge) until the wedged worker completes. Defaults to "
+"the MUTATE tier ceiling, the longest an in-process call may legitimately "
+"run."
+msgstr ""
+"Amikor egy meleg, folyamaton belüli hívás ennyi másodpercen túl tartotta "
+"a stdout-rögzítési zárat, a meleg transzport beragadtnak minősül, és a "
+"rákövetkező READ/MUTATE hívások közvetlenül a felügyelt alfolyamathoz "
+"irányítódnak (egy figyelmeztető Notice nevezi meg a beragadást), amíg a "
+"beragadt munkavégző be nem fejeződik. Alapértelmezése a MUTATE szint "
+"felső korlátja, ameddig egy folyamaton belüli hívás jogszerűen futhat."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_OUTPUT_LANGUAGE`"
+msgstr "`CADRUMO_OUTPUT_LANGUAGE`"
+
+#: ../../reference/environment-overrides.md
+msgid "OutputLanguage"
+msgstr "OutputLanguage"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Target ISO 639-1 language code for user-facing content. Invalid values "
+"coerce to None and fall back to the default."
+msgstr ""
+"Cél ISO 639-1 nyelvkód a felhasználónak szóló tartalomhoz. Az érvénytelen"
+" értékek None-ná kényszerülnek, és az alapértelmezésre esnek vissza."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_PROXY_BYPASS`"
+msgstr "`CADRUMO_PROXY_BYPASS`"
+
+#: ../../reference/environment-overrides.md
+msgid "Comma-separated list of domains to bypass the proxy"
+msgstr "Vesszővel elválasztott domainek listája a proxy megkerüléséhez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_PROXY_PASSWORD_SECRET`"
+msgstr "`CADRUMO_PROXY_PASSWORD_SECRET`"
+
+#: ../../reference/environment-overrides.md
+msgid "Password for proxy authentication"
+msgstr "Jelszó a proxy-hitelesítéshez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_PROXY_URL`"
+msgstr "`CADRUMO_PROXY_URL`"
+
+#: ../../reference/environment-overrides.md
+msgid "Proxy URL (e.g., 'http://proxy.example.com:8080')"
+msgstr "Proxy URL (pl. 'http://proxy.example.com:8080')"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_PROXY_USERNAME`"
+msgstr "`CADRUMO_PROXY_USERNAME`"
+
+#: ../../reference/environment-overrides.md
+msgid "Username for proxy authentication"
+msgstr "Felhasználónév a proxy-hitelesítéshez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_RATE_LIMIT_DELAY_SECONDS`"
+msgstr "`CADRUMO_RATE_LIMIT_DELAY_SECONDS`"
+
+#: ../../reference/environment-overrides.md
+msgid "Minimum delay between AEAT requests in seconds"
+msgstr "Minimális késleltetés az AEAT-kérések között, másodpercben"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_REGISTRY_DISK_CACHE_DIR`"
+msgstr "`CADRUMO_REGISTRY_DISK_CACHE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Override for the cross-process registry disk-pickle directory. When "
+"unset, production derives <cadrumo_local_storage_root>/cache/registry and"
+" pytest runs share the host temp directory for the immutable bundled-root"
+" pickle. Set only by test isolation to redirect the cache onto a test-"
+"owned directory, so a test asserting exclusive pickle state never races "
+"sibling pytest-xdist workers."
+msgstr ""
+"Felülírás a folyamatközi registry-lemezpickle könyvtárhoz. Ha "
+"beállítatlan, a produkció a <cadrumo_local_storage_root>/cache/registry "
+"értéket származtatja, a pytest-futások pedig a gazdagép temp könyvtárát "
+"osztják meg a megváltoztathatatlan beépített-gyökér pickle-höz. Csak a "
+"tesztizoláció állítja be, hogy a gyorsítótárat egy teszt tulajdonában "
+"lévő könyvtárra irányítsa át, így egy kizárólagos pickle-állapotot állító"
+" teszt sosem versenyez a szomszédos pytest-xdist munkásokkal."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_REGISTRY_DISK_CACHE_MAX_ENTRIES`"
+msgstr "`CADRUMO_REGISTRY_DISK_CACHE_MAX_ENTRIES`"
+
+#: ../../reference/environment-overrides.md
+msgid "`8`"
+msgstr "`8`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Maximum number of registry disk-cache pickles retained per cache "
+"directory; after each write the oldest excess pickles are pruned (best-"
+"effort) so accumulated per-fingerprint pickles cannot grow without bound."
+msgstr ""
+"A gyorsítótár-könyvtáronként megtartott registry-lemezgyorsítótár-pickle-"
+"ök maximális száma; minden írás után a legrégebbi feleslegek "
+"eltávolításra kerülnek (legjobb szándékkal), így a felhalmozott "
+"fingerprintenkénti pickle-ök nem növekedhetnek korlátlanul."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_REGISTRY_PARITY_STORE_DIR`"
+msgstr "`CADRUMO_REGISTRY_PARITY_STORE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where registry parity tape artifacts are archived by default"
+msgstr ""
+"Az a könyvtár, ahová a registry-paritásszalag műtárgyai alapértelmezésben"
+" archiválódnak"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_REPLAY_ACTIVE`"
+msgstr "`CADRUMO_REPLAY_ACTIVE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Subprocess-IPC marker carrying the original run_id when a CLI invocation "
+"is a replay re-entry"
+msgstr ""
+"Alfolyamat-IPC jelölő, amely az eredeti run_idet hordozza, amikor egy "
+"CLI-invokáció visszajátszási újrabelépés"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_RUNS_DIR`"
+msgstr "`CADRUMO_RUNS_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Directory where run traces and JSONL event logs are persisted (one "
+"subdirectory per run_id, containing trace.json + events.jsonl)"
+msgstr ""
+"Az a könyvtár, ahol a futásnyomok és a JSONL-eseménynaplók megőrződnek "
+"(egy alkönyvtár run_idenként, amely trace.json + events.jsonl fájlt "
+"tartalmaz)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_RUNS_MAX_TOTAL_BYTES`"
+msgstr "`CADRUMO_RUNS_MAX_TOTAL_BYTES`"
+
+#: ../../reference/environment-overrides.md
+msgid "`268435456`"
+msgstr "`268435456`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Trace-store byte cap; after age pruning, remove oldest runs but always "
+"retain the newest"
+msgstr ""
+"A nyomtár bájtkorlátja; a kor szerinti nyesés után a legrégebbi futásokat"
+" távolítja el, de a legújabbat mindig megtartja"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_RUNS_RETENTION_DAYS`"
+msgstr "`CADRUMO_RUNS_RETENTION_DAYS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Retention window in days for per-run trace directories; older run "
+"directories are pruned"
+msgstr ""
+"Megőrzési ablak napokban a futásonkénti nyomkönyvtárakhoz; a régebbi "
+"futáskönyvtárak eltávolításra kerülnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_SECRET_PASSPHRASE`"
+msgstr "`CADRUMO_SECRET_PASSPHRASE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Passphrase that derives the encrypted-secret-store master key. Default "
+"None — the master-key loader refuses operation on None or empty value to "
+"preserve fail-closed behaviour. Operator-facing env var is "
+"CADRUMO_SECRET_PASSPHRASE."
+msgstr ""
+"Jelmondat, amely a titkosított-titok-tároló mesterkulcsát származtatja. "
+"Alapértelmezés None — a mesterkulcs-betöltő elutasítja a működést None "
+"vagy üres értéken, hogy megőrizze a fail-closed viselkedést. Az "
+"operátornak szóló env var a CADRUMO_SECRET_PASSPHRASE."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_SECRET_STORE_BACKEND`"
+msgstr "`CADRUMO_SECRET_STORE_BACKEND`"
+
+#: ../../reference/environment-overrides.md
+msgid "SecretStoreBackend"
+msgstr "SecretStoreBackend"
+
+#: ../../reference/environment-overrides.md
+msgid "`auto`"
+msgstr "`auto`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Master-key backend for the secret store. auto = OS keychain when "
+"available, encrypted file fallback otherwise. keyring = OS keychain only "
+"(refuses to fall back). file = encrypted file only (required for CI / "
+"headless). unsecured = testing-only mode with a published deterministic "
+"key; requires cadrumo_allow_unencrypted=true and refuses real NIFs."
+msgstr ""
+"Mesterkulcs-backend a titok-tárolóhoz. auto = OS-kulcstartó, ha elérhető,"
+" egyébként titkosított fájl tartalék. keyring = csak OS-kulcstartó "
+"(elutasítja a visszaesést). file = csak titkosított fájl (CI-hez / fej "
+"nélkülihez szükséges). unsecured = csak teszt mód közzétett "
+"determinisztikus kulccsal; cadrumo_allow_unencrypted=true értéket "
+"igényel, és elutasítja a valós NIF-eket."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_SECRET_STORE_DIR`"
+msgstr "`CADRUMO_SECRET_STORE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Directory for the encrypted secret-store master-key file and ciphertext "
+"records"
+msgstr ""
+"Könyvtár a titkosított titok-tároló mesterkulcs-fájljához és a "
+"titkosítottszöveg-rekordokhoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_STATUS_CACHE_DIR`"
+msgstr "`CADRUMO_STATUS_CACHE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory for the short-lived AEAT status-page cache"
+msgstr "Könyvtár a rövid életű AEAT állapotoldal-gyorsítótárhoz"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_STATUS_CACHE_TTL_S`"
+msgstr "`CADRUMO_STATUS_CACHE_TTL_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "TTL in seconds for status cache entries (default 15 min)"
+msgstr ""
+"TTL másodpercben az állapotgyorsítótár-bejegyzésekhez (alapértelmezés 15 "
+"perc)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_STORAGE_BACKUP_DIR`"
+msgstr "`CADRUMO_STORAGE_BACKUP_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where the storage layer writes database backups"
+msgstr "Az a könyvtár, ahová a tárolási réteg adatbázis-biztonsági mentéseket ír"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_STORAGE_PROVIDER_KIND`"
+msgstr "`CADRUMO_STORAGE_PROVIDER_KIND`"
+
+#: ../../reference/environment-overrides.md
+msgid "`local_filesystem`"
+msgstr "`local_filesystem`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Backend for `cadrumo.adapters.outbound.storage`. Accepted values: "
+"local_filesystem (default), google_drive, in_memory. google_drive "
+"additionally requires cadrumo_google_drive_root_folder_id and a per-"
+"profile registered OAuth client + token via `aeat config google`."
+msgstr ""
+"Backend a `cadrumo.adapters.outbound.storage` számára. Elfogadott "
+"értékek: local_filesystem (alapértelmezés), google_drive, in_memory. A "
+"google_drive ezenfelül cadrumo_google_drive_root_folder_id értéket és egy"
+" profilonként bejegyzett OAuth-klienst + tokent igényel az `aeat config "
+"google` parancson keresztül."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_STRICT_SECURITY`"
+msgstr "`CADRUMO_STRICT_SECURITY`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Raise instead of warn when AEAT credential artifact permission hardening "
+"fails"
+msgstr ""
+"Kivétel dobása figyelmeztetés helyett, amikor az AEAT hitelesítőadat-"
+"műtárgy jogosultság-megerősítése meghiúsul"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_SUBMISSIONS_DIR`"
+msgstr "`CADRUMO_SUBMISSIONS_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where ModeloPresentado JSON audit records are persisted"
+msgstr "Az a könyvtár, ahol a ModeloPresentado JSON-auditrekordok megőrződnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_TELEMETRY_ENDPOINT`"
+msgstr "`CADRUMO_TELEMETRY_ENDPOINT`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Remote telemetry collector URL, consumed by HttpTelemetrySink when a call"
+" site opts into real transmission. Unset means no dial target."
+msgstr ""
+"Távoli telemetriagyűjtő URL, amelyet a HttpTelemetrySink fogyaszt, amikor"
+" egy hívási hely a valós továbbításra jelentkezik. A beállítatlan azt "
+"jelenti, hogy nincs tárcsázási cél."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_TELEMETRY_GESTOR_MODE`"
+msgstr "`CADRUMO_TELEMETRY_GESTOR_MODE`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Gestor/professional deployment flag. When True, remote telemetry emission"
+" is categorically refused regardless of cadrumo_telemetry_opt_in, "
+"cadrumo_telemetry_tier, or per-invocation consent."
+msgstr ""
+"Gestor/professzionális telepítési kapcsoló. Ha True, a távoli telemetria "
+"kibocsátása kategorikusan elutasított, függetlenül a "
+"cadrumo_telemetry_opt_in, a cadrumo_telemetry_tier értékétől vagy az "
+"invokációnkénti beleegyezéstől."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_TELEMETRY_OPT_IN`"
+msgstr "`CADRUMO_TELEMETRY_OPT_IN`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Whether this deployment permits transmitting remote telemetry at all. "
+"Default off: all telemetry stays local. When True, a per-invocation "
+"operator consent acknowledgement is still required for each emit, and "
+"cadrumo_telemetry_tier must not be 'off'."
+msgstr ""
+"Hogy ez a telepítés egyáltalán engedélyezi-e távoli telemetria "
+"továbbítását. Alapértelmezésben kikapcsolt: minden telemetria helyben "
+"marad. Ha True, minden kibocsátáshoz továbbra is invokációnkénti "
+"operátori beleegyezési nyugtázás szükséges, és a cadrumo_telemetry_tier "
+"nem lehet 'off'."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_TELEMETRY_TIER`"
+msgstr "`CADRUMO_TELEMETRY_TIER`"
+
+#: ../../reference/environment-overrides.md
+msgid "TelemetryTier"
+msgstr "TelemetryTier"
+
+#: ../../reference/environment-overrides.md
+msgid "`off`"
+msgstr "`off`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Remote telemetry tier: 'off' (no remote emission regardless of opt-in), "
+"'crash_only' (error/outcome counters only), or 'full' (counters plus "
+"timing percentiles). Only remote_allowed=True metric keys are ever "
+"eligible for transmission at any tier."
+msgstr ""
+"Távoli telemetriaszint: 'off' (nincs távoli kibocsátás a beleegyezéstől "
+"függetlenül), 'crash_only' (csak hiba-/kimenetszámlálók), vagy 'full' "
+"(számlálók plusz időzítési percentilisek). Csak a remote_allowed=True "
+"metrikakulcsok jogosultak valaha is továbbításra bármely szinten."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_TOKEN_DIR`"
+msgstr "`CADRUMO_TOKEN_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Directory for cached authentication token and lock files. The "
+"``PROJECT_ROOT`` default here is a placeholder: when the field is not "
+"explicitly set, the model validator roots it at "
+"``<cadrumo_local_storage_root>/tokens`` so every profile store, token and"
+" lock files included, lives under one state root. An explicit "
+"``CADRUMO_TOKEN_DIR`` override wins over the derived default."
+msgstr ""
+"Könyvtár a gyorsítótárazott hitelesítési token- és zárolófájlokhoz. A "
+"``PROJECT_ROOT`` alapértelmezés itt helyőrző: amikor a mező nincs "
+"kifejezetten beállítva, a modellvalidátor a "
+"``<cadrumo_local_storage_root>/tokens`` helyre gyökerezteti, így minden "
+"profiltároló, a token- és zárolófájlokkal együtt, egy állapotgyökér alatt"
+" él. Egy kifejezett ``CADRUMO_TOKEN_DIR`` felülírás felülírja a "
+"származtatott alapértelmezést."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_USAGE_RATIOS_PATH`"
+msgstr "`CADRUMO_USAGE_RATIOS_PATH`"
+
+#: ../../reference/environment-overrides.md
+msgid "User-configured per-category usage ratio overrides"
+msgstr ""
+"Felhasználó által konfigurált, kategóriánkénti használati arány "
+"felülírások"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_VALIDATION_VERDICT_CACHE_DIR`"
+msgstr "`CADRUMO_VALIDATION_VERDICT_CACHE_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Directory for the persistent registry-validation verdict cache (a "
+"fingerprint-keyed proof that validate_registry ran green, so a matching "
+"immutable tree skips runtime re-validation)"
+msgstr ""
+"A tartós registry-validációs ítélet-gyorsítótár könyvtára (egy "
+"ujjlenyomatra kulcsolt bizonyíték arról, hogy a validate_registry zölden "
+"lefutott, így egy egyező, változtathatatlan fa kihagyja a futásidejű "
+"újravalidálást)"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`"
+msgstr "`CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Opt-in diagnostic capture directory for the IVA compensation wallet "
+"(cartera) read. The ``None`` default disables capture and is the only "
+"production posture: with it unset the wallet read path is byte-for-byte "
+"unchanged. When set via ``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`` the read "
+"dumps the full captured page tree — main document, every popup page, "
+"every child frame, and per-page screenshots — to this directory so AEAT "
+"DOM drift on the cartera surface can be diagnosed offline against real "
+"evidence. The capture may contain live taxpayer amounts; it is written "
+"only to this operator-chosen directory and must never be committed or "
+"reused as a fixture without sanitisation."
+msgstr ""
+"Beleegyezéses diagnosztikai rögzítési könyvtár az IVA-kompenzációs "
+"pénztárca (cartera) olvasásához. A ``None`` alapértelmezés letiltja a "
+"rögzítést, és ez az egyetlen produkciós beállítás: ha beállítatlan, a "
+"pénztárca-olvasási útvonal bájtról bájtra változatlan. Amikor a "
+"``CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR`` révén beállítják, az olvasás a "
+"teljes rögzített oldalfát — a fődokumentumot, minden felugró oldalt, "
+"minden gyermek-keretet és az oldalankénti képernyőképeket — ebbe a "
+"könyvtárba dumpolja, így az AEAT DOM-eltérése a cartera-felületen offline"
+" diagnosztizálható valós bizonyítékkal szemben. A rögzítés élő adózói "
+"összegeket tartalmazhat; csak ebbe az operátor által választott "
+"könyvtárba íródik, és sosem szabad commitolni vagy fixtúraként "
+"újrafelhasználni fertőtlenítés nélkül."
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_WALLET_DIAGNOSTIC_RETENTION_DAYS`"
+msgstr "`CADRUMO_WALLET_DIAGNOSTIC_RETENTION_DAYS`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Retention window in days for wallet diagnostic dump files; when the opt-"
+"in dump directory is configured, dump files older than this are pruned"
+msgstr ""
+"Megőrzési ablak napokban a pénztárca-diagnosztikai dumpfájlokhoz; amikor "
+"a beleegyezéses dumpkönyvtár konfigurálva van, az ennél régebbi "
+"dumpfájlok eltávolításra kerülnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_WORKBOOK_PARITY_LIBREOFFICE_TIMEOUT_S`"
+msgstr "`CADRUMO_WORKBOOK_PARITY_LIBREOFFICE_TIMEOUT_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "`120`"
+msgstr "`120`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Subprocess timeout (seconds) for the LibreOffice binary XLS conversion "
+"fall-back"
+msgstr ""
+"Alfolyamat-időkorlát (másodperc) a LibreOffice bináris XLS-konverziós "
+"tartalékához"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_WORKBOOK_PARITY_PER_FILE_TIMEOUT_S`"
+msgstr "`CADRUMO_WORKBOOK_PARITY_PER_FILE_TIMEOUT_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "`15.0`"
+msgstr "`15.0`"
+
+#: ../../reference/environment-overrides.md
+msgid "Default per-file timeout (seconds) for workbook-parity scans"
+msgstr ""
+"Alapértelmezett fájlonkénti időkorlát (másodperc) a munkafüzet-paritás "
+"szkennelésekhez"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_WORKBOOK_PARITY_RECALC_TIMEOUT_S`"
+msgstr "`CADRUMO_WORKBOOK_PARITY_RECALC_TIMEOUT_S`"
+
+#: ../../reference/environment-overrides.md
+msgid "Subprocess timeout (seconds) when forcing workbook recalculation"
+msgstr ""
+"Alfolyamat-időkorlát (másodperc) a munkafüzet-újraszámolás "
+"kényszerítésekor"
+
+#: ../../reference/environment-overrides.md
+msgid "`CADRUMO_WORKFLOW_RUNS_DIR`"
+msgstr "`CADRUMO_WORKFLOW_RUNS_DIR`"
+
+#: ../../reference/environment-overrides.md
+msgid "Directory where WorkflowResult JSON audit records are persisted"
+msgstr "Az a könyvtár, ahol a WorkflowResult JSON-auditrekordok megőrződnek"
+
+#: ../../reference/environment-overrides.md
+msgid "`FINANCIAL_BASE_CURRENCY`"
+msgstr "`FINANCIAL_BASE_CURRENCY`"
+
+#: ../../reference/environment-overrides.md
+msgid "`EUR`"
+msgstr "`EUR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Fallback ISO 4217 currency used when a financial source omits a per-row "
+"currency"
+msgstr ""
+"Tartalék ISO 4217 pénznem, amelyet akkor használnak, amikor egy pénzügyi "
+"forrás elhagyja a soronkénti pénznemet"
+
+#: ../../reference/environment-overrides.md
+msgid "`FINANCIAL_DEFAULT_CSV_ENCODING`"
+msgstr "`FINANCIAL_DEFAULT_CSV_ENCODING`"
+
+#: ../../reference/environment-overrides.md
+msgid "`utf-8`"
+msgstr "`utf-8`"
+
+#: ../../reference/environment-overrides.md
+msgid "Preferred encoding attempted first when decoding financial CSV sources"
+msgstr ""
+"Előnyben részesített kódolás, amelyet elsőként próbálnak a pénzügyi CSV-"
+"források dekódolásakor"
+
+#: ../../reference/environment-overrides.md
+msgid "`NO_COLOR`"
+msgstr "`NO_COLOR`"
+
+#: ../../reference/environment-overrides.md
+msgid ""
+"Disable ANSI colour output regardless of TTY state. Mirrors the widely-"
+"adopted no-color.org convention via the NO_COLOR environment variable; "
+"pydantic-settings reads NO_COLOR (uppercased field name) out of "
+"os.environ on Settings() instantiation, so the no-color convention is "
+"honoured without per-call-site os.environ reads."
+msgstr ""
+"ANSI-színkimenet letiltása a TTY-állapottól függetlenül. A széles körben "
+"elfogadott no-color.org konvenciót tükrözi a NO_COLOR környezeti változón"
+" keresztül; a pydantic-settings a NO_COLOR-t (nagybetűs mezőnév) az "
+"os.environből olvassa a Settings() példányosításakor, így a no-color "
+"konvenció hívási helyenkénti os.environ olvasások nélkül érvényesül."
+
+#: ../../reference/environment-overrides.md
+msgid "`SITE_HEALTH_PROBE_URL`"
+msgstr "`SITE_HEALTH_PROBE_URL`"
+
+#: ../../reference/environment-overrides.md
+msgid "AEAT Sede URL the site-health probe navigates to"
+msgstr "Az AEAT Sede URL, amelyre a webhely-egészség szonda navigál"
+
+#: ../../reference/environment-overrides.md
+msgid "`SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT`"
+msgstr "`SITE_HEALTH_RATE_LIMIT_RETRY_AFTER_DEFAULT`"
+
+#: ../../reference/environment-overrides.md
+msgid "Fallback Retry-After seconds when a 429/503 omits the header"
+msgstr "Tartalék Retry-After másodpercek, amikor egy 429/503 elhagyja a fejlécet"
+
+#: ../../reference/environment-overrides.md:180
+msgid ""
+"Secrets are never printed by the application and are marked `(secret)` "
+"above. Defaults marked `(derived)` are computed from the storage root or "
+"project location at runtime."
+msgstr ""
+"A titkokat az alkalmazás sosem nyomtatja ki, és fent `(secret)` "
+"jelöléssel vannak ellátva. A `(derived)` jelöléssel ellátott "
+"alapértelmezések a tárolási gyökérből vagy a projekt helyéből számítódnak"
+" ki futásidőben."
+
+#~ msgid ""
+#~ "Total on-disk size cap (bytes) for"
+#~ " the per-run trace store; after "
+#~ "the age-based prune, oldest run "
+#~ "directories are removed until the store"
+#~ " fits under this ceiling (the newest"
+#~ " run directory is always kept)"
+#~ msgstr ""
+#~ "Teljes lemezméret-korlát (bájt) a "
+#~ "futásonkénti nyomtárolóhoz; a kor alapú "
+#~ "metszés után a legrégebbi futáskönyvtárak "
+#~ "eltávolításra kerülnek, amíg a tároló e"
+#~ " plafon alá nem fér (a legújabb "
+#~ "futáskönyvtár mindig megmarad)"
+

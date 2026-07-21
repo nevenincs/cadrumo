@@ -3,13 +3,12 @@ tags:
   - '#plan'
   - '#docs-architecture'
 date: '2026-05-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L4
 related:
   - '[[2026-05-30-docs-architecture-research]]'
   - '[[2026-05-30-docs-architecture-adr]]'
   - '[[2026-05-30-docs-sphinx-build-adr]]'
-  - '[[2026-05-30-docs-cli-conformance-adr]]'
 ---
 
 # `docs-architecture` `documentation epic` plan

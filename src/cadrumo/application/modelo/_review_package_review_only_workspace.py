@@ -1,8 +1,6 @@
 """Review-only workspace mode for a decrypted, recipient-encrypted review package.
 
-This module closes the "review-only *workspace* mode" item left open on
-issue #421 (`2026-07-04-recipient-encryption-adr` and its follow-up slices):
-distinct from the per-package ``review_only`` flag carried by
+Distinct from the per-package ``review_only`` flag carried by
 :class:`~application.modelo.RecipientEncryptedPackage` (which only tags
 the sealed envelope's disposition), this module materialises a recovered
 package into a typed, read-only workspace view and enforces -- structurally,
@@ -46,13 +44,13 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.time import now as _utc_now
 from ._review_package import ReviewPackageManifest
 from ._review_package_recipient_encryption import RecipientDecryptedPackage
 
 
-class ReviewOnlyWorkspaceError(AeatError):
+class ReviewOnlyWorkspaceError(CadrumoError):
     """Base error for review-only workspace failures."""
 
 

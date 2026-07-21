@@ -12,4 +12,4 @@
 modelo = "714"
 renta_years = [2023, 2024]
 evidence_class = "calculation"
-enrolling_test = "src/aeat/application/calculations/tests/test_modelo_714_patrimonio_joint_limit_calculation.py"
+enrolling_test = "src/cadrumo/application/calculations/tests/test_modelo_714_patrimonio_joint_limit_calculation.py"

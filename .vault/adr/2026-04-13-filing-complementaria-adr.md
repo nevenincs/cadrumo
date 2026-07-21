@@ -3,13 +3,12 @@ tags:
   - "#adr"
   - "#filing-complementaria"
 date: '2026-04-13'
-modified: '2026-07-10'
+modified: '2026-07-17'
 title: Filing Complementaria / Amendment Engine — ADR
 related:
   - "[[2026-04-13-filing-complementaria-research]]"
   - "[[2026-04-12-filing-draft-engine-adr]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
-  - "[[2026-04-12-submission-engine-adr]]"
 issue: wgergely/aeat#93
 ---
 
@@ -38,7 +37,7 @@ The legal surface is not uniform:
 
 The feature introduces a separate strict schema rooted in
 `FilingAmendment`, `CasillaDelta`, and `CasillaChange` under
-`src/aeat/application/filing/_complementaria.py`. The amendment record references the
+`src/cadrumo/application/filing/_complementaria.py`. The amendment record references the
 original filing and stores the delta as an audit-focused object, while the
 existing `FilingDraft` remains the absolute-value representation used by the
 builder and validator stack.

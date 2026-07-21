@@ -14,11 +14,12 @@ from typing import Any
 
 import pytest
 
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -111,7 +112,7 @@ def test_config_check_flags_opted_in_capability_with_missing_dependency() -> Non
 def test_every_google_write_verb_refuses_when_google_export_disabled(argv: list[str]) -> None:
     """Every Google-write CLI leaf is gated on google_export, not just `export`.
 
-    Closes honesty-review finding H1: with the capability off, each Drive/Sheets
+    With the capability off, each Drive/Sheets
     write verb refuses with the capability message *before* any Google call.
     """
     off = invoke_cached_cli(["config", "profile", "capabilities", "set", "google_export", "off"])

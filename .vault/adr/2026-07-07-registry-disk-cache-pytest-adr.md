@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#registry-disk-cache-pytest'
 date: '2026-07-07'
-modified: '2026-07-10'
-related: []
+modified: '2026-07-17'
+related:
+  - '[[2026-07-10-registry-disk-cache-pytest-research]]'
 ---
 
 # `registry-disk-cache-pytest` adr: `enable the registry disk cache under pytest for the bundled root only` | (**status:** `accepted`)
@@ -177,7 +178,7 @@ sharing.
 
 A subsequent re-grounding of this decision (before the reviewer gate) found the
 gate change above, while correct, was NOT delivering its measured win in a real
-multi-worker run: `src/aeat/conftest.py`'s `_isolate_registry_caches` fixture is
+multi-worker run: `src/cadrumo/conftest.py`'s `_isolate_registry_caches` fixture is
 `scope="session", autouse=True` and unconditionally purged EVERY
 `aeat_registry_*.pkl` at session start. Under pytest-xdist, `scope="session"`
 means "per worker process" -- there is no single controlling session spanning
@@ -288,7 +289,7 @@ codebase's own local-execution discipline documents; a later honesty
 review traced it to a distinct, real defect in
 `test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions`
 itself, which materialised its throwaway scratch module directly inside
-the real, AST-walked `src/aeat/domain/calculations/registry/tests/`
+the real, AST-walked `src/cadrumo/domain/calculations/registry/tests/`
 directory -- under heavier concurrent load its write/run/unlink window
 raced a sibling worker's AST scan of that same directory (exactly the
 directory `test_public_api_boundaries` also scans), surfacing as a

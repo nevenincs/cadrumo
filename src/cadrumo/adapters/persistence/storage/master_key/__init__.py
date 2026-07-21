@@ -2,15 +2,14 @@
 
 Public surface for at-rest key custody. Re-exports the provider family
 (:class:`MasterKeyProvider`, :class:`KeyringMasterKeyProvider`,
-:class:`FileFallbackMasterKeyProvider`,
-:class:`UnsecuredMasterKeyProvider`, and
-:class:`EphemeralMasterKeyProvider`), the
+:class:`FileFallbackMasterKeyProvider`, and
+:class:`UnsecuredMasterKeyProvider`), the
 :func:`get_master_key_provider` resolver, and the
 :func:`activate_master_key_provider` / :func:`activate_session`
 context managers that bind unlocked key material to the active bucket
-session. :class:`NoActiveBucketSessionError` and
-:func:`suspend_active_session` expose the same session boundary to
-tests and bootstrap flows.
+session. :class:`NoActiveBucketSessionError`,
+:func:`close_active_bucket_session`, and :func:`suspend_active_session`
+expose the same session boundary to callers, tests, and bootstrap flows.
 
 KDF and file-custody helpers are exported through :class:`KdfParams`,
 :func:`derive_kek_with_params`, the Argon2id cost constants, the
@@ -39,6 +38,7 @@ from __future__ import annotations
 from ._active_session import (
     NoActiveBucketSessionError,
     activate_session,
+    close_active_bucket_session,
     current_active_bucket_session,
     get_active_master_key,
     has_active_bucket_session,
@@ -46,10 +46,10 @@ from ._active_session import (
 )
 from ._bucket_session import BucketSession
 from ._dek_wrap import WrappedDek, unwrap_dek, wrap_dek
+from ._errors import MasterKeyReentrantError
 from ._idle_timeout import evaluate_idle
 from ._kdf_params import KdfParams
 from ._master_key import (
-    EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
@@ -72,6 +72,7 @@ from ._master_key_derivation import (
     ARGON2_TIME_COST,
     derive_kek_with_params,
 )
+from ._provider_session import exit_provider_session
 from ._recovery import (
     RecoveryKey,
     WrappedMasterKey,
@@ -85,9 +86,19 @@ from ._recovery import (
 )
 from ._recovery_facade import (
     MintedRecovery,
+    RecoveryEnrollmentMode,
+    RecoveryEnrollmentOutcome,
+    RecoveryLifecycleStatus,
+    RecoveryRecoverOutcome,
+    RecoveryVerifyOutcome,
     load_recovery_envelope,
     mint_recovery_envelope,
     open_session_from_recovery,
+    recovery_create,
+    recovery_recover,
+    recovery_rotate,
+    recovery_status,
+    recovery_verify,
     save_recovery_envelope,
     unwrap_recovery_envelope,
     verify_recovery_mnemonic,
@@ -99,15 +110,20 @@ __all__ = [
     "ARGON2_PARALLELISM",
     "ARGON2_TIME_COST",
     "BucketSession",
-    "EphemeralMasterKeyProvider",
     "FileFallbackMasterKeyProvider",
     "KdfParams",
     "KeyringMasterKeyProvider",
     "MasterKeyProvider",
+    "MasterKeyReentrantError",
     "MintedRecovery",
     "NoActiveBucketSessionError",
+    "RecoveryEnrollmentMode",
+    "RecoveryEnrollmentOutcome",
     "RecoveryKey",
+    "RecoveryLifecycleStatus",
     "RecoveryRecord",
+    "RecoveryRecoverOutcome",
+    "RecoveryVerifyOutcome",
     "UnsecuredMasterKeyProvider",
     "WrappedDek",
     "WrappedMasterKey",
@@ -115,11 +131,13 @@ __all__ = [
     "activate_session",
     "atomic_write_secure_bytes",
     "bucket_dek_path",
+    "close_active_bucket_session",
     "current_active_bucket_session",
     "decode_mnemonic",
     "derive_kek_with_params",
     "encode_mnemonic",
     "evaluate_idle",
+    "exit_provider_session",
     "generate_recovery_key",
     "get_active_master_key",
     "get_master_key_provider",
@@ -131,6 +149,11 @@ __all__ = [
     "mint_recovery_envelope",
     "open_session_from_recovery",
     "read_wrapped_bucket_dek",
+    "recovery_create",
+    "recovery_recover",
+    "recovery_rotate",
+    "recovery_status",
+    "recovery_verify",
     "refuse_unsecured_with_real_nif",
     "save_recovery_envelope",
     "save_wrapped_master_key",

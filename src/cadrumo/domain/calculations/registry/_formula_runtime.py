@@ -400,10 +400,10 @@ def calculate_registry_snapshot[InputKey, InputValue, TextInputKey, TextInputVal
                         source_refs=tuple(formula.source_refs),
                         # UnresolvedFormulaOutcomeError.context is always a str-keyed,
                         # str-valued mapping (its constructor only accepts
-                        # Mapping[str, str]); the inherited AeatError.context attribute
+                        # Mapping[str, str]); the inherited CadrumoError.context attribute
                         # is declared dict[str, object] | None for the general error
                         # hierarchy, so re-stringify here rather than narrowing the
-                        # shared base attribute for every AeatError subclass.
+                        # shared base attribute for every CadrumoError subclass.
                         context={str(key): str(value) for key, value in (exc.context or {}).items()},
                     ),
                 )
@@ -1193,9 +1193,8 @@ def _evaluate_m303_resolve_modulos_iva_cuota_devengada(expression: FormulaExpres
     two Orden annexes carry distinct per-activity module sets and distinct
     euro figures, so they are two coefficient parameters, never conflated).
 
-    An untabled epígrafe (bounded first-slice per the
-    ``2026-07-01-modelo-303-regimen-simplificado-adr``) or a blank epígrafe
-    resolves to ``Decimal('0')`` — this op feeds an internal-only
+    An untabled epígrafe (a deliberately bounded first-slice coverage set) or
+    a blank epígrafe resolves to ``Decimal('0')`` — this op feeds an internal-only
     advisory-support casilla, never the filed casilla 48 directly, so a zero
     here means "the table-driven engine has no coverage for this activity",
     not "the cuota is zero". The ``advisory_when_computed_diverges``

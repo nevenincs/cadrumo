@@ -1,6 +1,6 @@
 """The ``cadrumo_corpus_search`` grounding tool: hybrid search over the legal corpus.
 
-ADR R3's grounding surface reaches the model as a read-only console tool that
+The grounding surface reaches the model as a read-only console tool that
 searches the bundled BOE/AEAT corpus and returns grounded hits — each carrying
 its ``corpus_ref``, title, a verbatim snippet, the fused relevance score, and
 a ``cadrumo://corpus/{ref}`` URI a resources-capable client can read to pull the

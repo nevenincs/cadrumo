@@ -1,13 +1,13 @@
 [project]
 name = "cadrumo"
-version = "0.2.0"
-description = "Cadrumo: a deterministic Spanish tax calculation engine and agent harness that turns your financial records into modelo data, ready for you to file with the AEAT. Independent software; not affiliated with the AEAT."
+version = "0.2.1"
+description = "Cadrumo is a deterministic Spanish tax calculation CLI and MCP server that turns local financial records into checked, exportable modelo filing artifacts. Independent software; not affiliated with AEAT."
 readme = "README.md"
 requires-python = ">=3.13"
 license = "Apache-2.0"
 # Explicit so the wheel/sdist always carry the Apache §4(d) attribution chain
 # (dist-info/licenses/{LICENSE,NOTICE}), independent of hatchling's default
-# license-file globs (license-posture ADR).
+# license-file globs.
 license-files = ["LICENSE", "NOTICE"]
 authors = [
   { name = "wgergely" },
@@ -22,12 +22,16 @@ classifiers = [
 ]
 
 dependencies = [
-  # NOTE: capability-gated optional integrations live in
-  # [project.optional-dependencies], not here, so a bare `pip install cadrumo`
-  # stays lean. `anthropic` (Anthropic-API LLM provider), the `google-*`
-  # stack (Drive/Sheets export), and `playwright*` (live AEAT browser) are
-  # all lazily imported — the core CLI builds without them — and map to the
-  # `anthropic`, `google`, and `browser` extras below.
+  # The command-bearing distribution is complete by default. The two data
+  # companions are separate files only to stay below the package-index
+  # per-file cap; they are exact-version runtime dependencies because the CLI
+  # and MCP server cannot perform grounded tax work without both corpus slices.
+  "cadrumo-data-manuals==0.2.1",
+  "cadrumo-data-official==0.2.1",
+  # Capability-gated integrations live in [project.optional-dependencies].
+  # `anthropic` (Anthropic-API LLM provider), the `google-*` stack
+  # (Drive/Sheets export), and `playwright*` (live AEAT browser) are lazily
+  # imported and map to the `anthropic`, `google`, and `browser` extras below.
   # Argon2id KDF for the file-fallback master-key provider's
   # passphrase-to-KEK derivation. OWASP-current top-tier
   # password-hashing primitive; ships pre-built wheels for
@@ -35,8 +39,12 @@ dependencies = [
   "argon2-cffi>=23.1.0,<26",
   # HTML parsing for status readers.
   "beautifulsoup4>=4.12,<5",
+  # Direct first-party imports (CadrumoTyperGroup command suggestions,
+  # wizard prompt types, click context helpers). typer>=0.26 no longer
+  # declares click, so the dependency must be explicit here.
+  "click>=8.1,<9",
   # PKCS#12 parsing for client-certificate auth.
-  "cryptography>=47.0.0,<48",
+  "cryptography>=48.0.1,<49",
   # XML parsing.
   "defusedxml>=0.7.1,<1",
   # HTTP client
@@ -71,9 +79,8 @@ dependencies = [
   "rich>=14.2.0,<16",
   # Rust-backed TOML parser for the registry/profile-schema read boundary
   # (`core/_toml.py`). ~2.4x faster than stdlib tomllib on the ~16k-fragment
-  # registry tree with proven byte-identical output (see
-  # `registry-toml-parser` ADR); zero transitive dependencies, MIT license,
-  # prebuilt wheels including win_amd64.
+  # registry tree with proven byte-identical output; zero transitive
+  # dependencies, MIT license, prebuilt wheels including win_amd64.
   "rtoml>=0.13.0,<1",
   # Persistence
   "sqlalchemy>=2.0.36,<3",
@@ -106,11 +113,11 @@ workbook-windows = [
 # Each extra maps to an operator-facing capability/feature. All are lazily
 # imported, so `pip install cadrumo` (no extras) builds and runs the core CLI; the
 # feature refuses with an install hint when its extra is absent (graceful
-# degradation, per `dependency-provisioning` ADR). `cadrumo config check` reports
+# degradation). `cadrumo config check` reports
 # which extras are importable.
 #
 # Google Drive + Sheets export (the `google_export` capability). OAuth Desktop
-# flow (ADR `2026-05-08-google-oauth-adr`): loopback IP + PKCE via
+# flow: loopback IP + PKCE via
 # google-auth-oauthlib's InstalledAppFlow; the storage provider drives Drive v3
 # / Sheets v4 through the discovery client. google-auth-httplib2 is intentionally
 # NOT pinned — transport is satisfied by `requests` (transitive via google-auth).
@@ -132,9 +139,9 @@ anthropic = [
 ]
 # OFX/QFX bank-statement import. ofxtools is the maintained, strict OFX-spec
 # parser (ships py.typed), but it is GPL-3.0-only; gating it behind this extra
-# keeps the CORE dependency closure free of strong copyleft (license-posture
-# ADR). Lazily imported behind `require_optional_extra(OFX_EXTRA)`; an OFX
-# source without the extra refuses with the `pip install cadrumo[ofx]` hint.
+# keeps the CORE dependency closure free of strong copyleft. Lazily imported
+# behind `require_optional_extra(OFX_EXTRA)`; an OFX source without the extra
+# refuses with the `pip install cadrumo[ofx]` hint.
 ofx = [
   "ofxtools>=1.1,<2",
 ]
@@ -143,7 +150,7 @@ ofx = [
 # `src/cadrumo/_data/agent/` and is read with no extra dependency. This extra gates
 # the optional MCP server runtime reached by the `cadrumo-mcp` console script. No
 # model weights or credentials are ever bundled (per the product-packaging and
-# secure-storage ADRs).
+# secure storage).
 agent = [
   "mcp>=1.12,<2",
   # The stdio MCP server (`cadrumo.entrypoints.mcp._server`) imports anyio directly
@@ -169,25 +176,9 @@ search = [
   "snowballstemmer>=2.2,<4",
   "numpy>=1.26,<3",
 ]
-# Corpus source binaries (official AEAT PDF/XLS/XLSX) as TWO sub-cap companion
-# distributions, each exact-version-locked to this package. The binaries split
-# along the corpus directory seam — `cadrumo-data-manuals` ships `corpus/manuals`,
-# `cadrumo-data-official` ships `corpus/aeat_official` + `corpus/normatives` — so
-# each wheel stays under PyPI's 100 MB per-file cap and no size grant is needed;
-# together they cover every corpus source binary. The slim core wheel excludes
-# these binaries (the wheel excludes below); without BOTH companions the
-# registry integrity gate surfaces a loud advisory and the `cadrumo app registry`
-# verification verbs refuse with this extra's install hint. With them installed,
-# source verification is byte-identical to a full checkout. Reviewed data ships
-# as an artifact — never fetched at install or run time (product-packaging ADR).
-corpus-sources = [
-  "cadrumo-data-manuals==0.2.0",
-  "cadrumo-data-official==0.2.0",
-]
-# Convenience aggregate: every optional integration at once. `corpus-sources`
-# is deliberately excluded until the two data companions are published on PyPI
-# (both are sub-cap and need no size grant; see RELEASING.md) — including it now
-# would make `cadrumo[all]` unresolvable.
+# Convenience aggregate: every capability-gated integration at once. The corpus
+# companions need no entry here because every command-bearing install requires
+# them through the base dependency closure.
 all = [
   "cadrumo[google]",
   "cadrumo[browser]",
@@ -201,13 +192,40 @@ all = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+# Deny-by-default. Without an explicit target, hatchling packs every
+# non-gitignored path into the sdist — which meant publishing the project's own
+# development harness (the `.vault/` record, `.vaultspec/`, `.claude/`, `dev/`)
+# inside the product's source distribution. The sdist carries what is needed to
+# build the wheel and nothing else; anything absent from this list is not shipped.
+[tool.hatch.build.targets.sdist]
+include = [
+  "src/cadrumo",
+  "pyproject.toml",
+  "README.md",
+  "CHANGELOG.md",
+  "LICENSE",
+  "NOTICE",
+  "THIRD_PARTY_NOTICES.md",
+  "SECURITY.md",
+  "PRIVACY.md",
+]
+exclude = [
+  "src/cadrumo/tests",
+  "src/cadrumo/tests/**",
+  "src/cadrumo/**/tests",
+  "src/cadrumo/**/tests/**",
+  "src/cadrumo/_data/corpus/**/*.pdf",
+  "src/cadrumo/_data/corpus/**/*.docx",
+  "src/cadrumo/_data/corpus/**/*.xls",
+  "src/cadrumo/_data/corpus/**/*.xlsx",
+  "src/cadrumo/_data/corpus/**/*.zip",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/cadrumo"]
 # Test modules and fixtures serve no installed consumer: the suites run from
-# the repo tree, and nothing in the wheel imports `cadrumo.tests` at module load
-# (the one production-space reference, `envelope/_repository_test_suite.py`,
-# imports the harness function-locally and is exercised only by excluded test
-# modules). The data-budget ADR sheds this payload from the distribution.
+# the repo tree, and nothing in the wheel imports `cadrumo.tests` at module load.
+# This payload is shed from the distribution to bound its size.
 exclude = [
   "src/cadrumo/tests",
   "src/cadrumo/tests/**",
@@ -217,13 +235,15 @@ exclude = [
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain and the opt-in `cadrumo app registry` verification verbs at runtime.
   # They ship in the two `cadrumo-data-manuals` / `cadrumo-data-official` companion
-  # distributions (installed together via the `cadrumo[corpus-sources]` extra)
+  # distributions (installed as mandatory base dependencies)
   # under a mirrored `cadrumo_data/_data/corpus` tree; the corpus locator resolves
   # either root. Every derived surface the
   # grounding search and legal gates read at runtime — extracted text
-  # (`*.extracted.md`/`.json`), normative html, registry, terminology — stays in
-  # this wheel. Excluding only the source binaries keeps the slim `cadrumo` wheel
-  # under PyPI's 100 MB cap with no file-size grant on the critical path.
+  # (`*.extracted.md`/`.json`), normative html, registry, terminology, and the
+  # manual-PDF corpus text sidecars (`_data/manual_corpus_text/`, ~7.4 MB
+  # compressed, generated by dev/packaging/extract_manual_corpus_text.py) — stays
+  # in this wheel. Excluding only the source binaries keeps the slim `cadrumo`
+  # wheel under PyPI's 100 MB cap with no file-size grant on the critical path.
   "src/cadrumo/_data/corpus/**/*.pdf",
   "src/cadrumo/_data/corpus/**/*.docx",
   "src/cadrumo/_data/corpus/**/*.xls",
@@ -259,10 +279,10 @@ explicit = true
 torch = [
     {index = "pytorch-cu130", marker = "sys_platform == 'linux' or sys_platform == 'win32'"},
 ]
-# The two data companions are not yet on PyPI, so the dev resolver builds each
-# from its in-repo project. uv sources never reach the published wheel metadata:
-# an installed `cadrumo[corpus-sources]` still resolves the bare
-# `cadrumo-data-manuals==0.2.0` / `cadrumo-data-official==0.2.0` pins from the index.
+# The two data companions are not yet on PyPI, so the development resolver builds
+# each from its in-repo project. These source overrides never reach published wheel
+# metadata, whose mandatory dependencies resolve the exact-version companion
+# distributions from the configured package index.
 cadrumo-data-manuals = { path = "packaging/cadrumo_data_manuals" }
 cadrumo-data-official = { path = "packaging/cadrumo_data_official" }
 
@@ -298,12 +318,8 @@ dev = [
   "pytest-asyncio>=1.0.0",
   # Coverage measurement + fail-under gate for unit tests.
   "pytest-cov>=6.0.0",
-  # httpx wire-shape assertions for unit tests; banned in live files.
-  "pytest-httpx>=0.35.0",
   # Live browser harness.
   "pytest-playwright>=0.6.0",
-  # Per-test retries for genuinely flaky live endpoints; live only, opt-in per test.
-  "pytest-rerunfailures>=15.0",
   # Parallel unit suite via opt-in `uv run pytest -n auto -m unit`.
   "pytest-xdist>=3.6.0",
   # pytest-xdist's `-n auto` calls psutil.cpu_count; pin so `uv sync` restores
@@ -316,10 +332,6 @@ dev = [
   # Used only to generate synthetic fixture PDFs in tests.
   "reportlab>=4.4.10",
   "ruff>=0.15.12",
-  # Snapshot diffing for registry behaviour.
-  "syrupy>=4.7.0",
-  # Wall-clock control for deadline/expedientes tests; banned in live files.
-  "time-machine>=2.16.0",
   "ty>=0.0.1a1",
   # Vault tooling — contributor-only; not imported by src/cadrumo/. vaultspec-rag
   # carries the [mcp] extra here (demoted from the base dependency set): it is
@@ -337,7 +349,6 @@ dev = [
   "sphinx-design>=0.6",
   "sphinx-notfound-page>=1.1",
   "sphinxext-opengraph>=0.9",
-  "sphinx-sitemap>=2.6",
   # Hover tooltip cards on :term: cross-references. With hoverxref_roles=["term"],
   # every :term: reference to a generated glossary entry shows the definition on
   # hover - the curated short description surfaces without a page load. The
@@ -356,6 +367,12 @@ dev = [
   # with a filesystem watcher and a livereload websocket so edits to docs/ and
   # the src/cadrumo/ docstring surface refresh the browser without a manual rebuild.
   "sphinx-autobuild>=2024.10",
+  # Documentation localization (`just docs-gettext` / `docs-langs`): sphinx-intl
+  # manages the per-language `.po` catalogues under docs/locales/ from the
+  # gettext POT templates, and babel parses catalogue statistics
+  # (translated / fuzzy / untranslated) for the all-languages completeness gate.
+  "sphinx-intl>=2.3",
+  "babel>=2.16",
   # Documentation conformance enforcement: docstring presence/style,
   # signature-vs-docstring accuracy, and RST formatting.
   "pydoclint>=0.6",
@@ -376,6 +393,7 @@ dev = [
   "complexipy>=3.3.0",
   "vulture>=2.16",
   "sphinxcontrib-mermaid>=1.0",
+  "pytest-timeout>=2.3.1",
 ]
 
 # ── Ruff ─────────────────────────────────────────────────────────────────────
@@ -472,14 +490,26 @@ convention = "google"
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
 "dev/docs/build.py" = ["S603"]
+"dev/docs/i18n.py" = ["S603"]
 "dev/docs/serve.py" = ["S603"]
 "dev/packaging/smoke_browser.py" = ["S603"]
 "dev/packaging/smoke_core.py" = ["S603"]
 "dev/packaging/smoke_docker.py" = ["S603"]
+# The campaign driver fans the fixed lane-registry argv (sys.executable -m
+# dev.packaging.*) out over a worker pool; no untrusted input reaches it.
+"dev/packaging/campaign.py" = ["S603"]
+# The shard-plugin gate collect-probes via `sys.executable -m pytest` with a
+# fixed argv over in-test-authored sample modules.
+"dev/quality/tests/test_shard.py" = ["S603"]
 # The release audit-state gate resolves `gh` via `shutil.which` (or accepts an
 # explicit resolved path for tests) before invoking it with a fixed argv;
 # ruff's S603 heuristic cannot see the resolved-executable contract.
 "dev/release/readiness.py" = ["S603"]
+# The evidence-release transport helper resolves `gh` the same way as
+# readiness.py (shutil.which or an explicit test-stub path) and builds a fixed
+# argv; its tests drive a real explicit-path stub executable.
+"dev/packaging/evidence_release.py" = ["S603"]
+"dev/packaging/tests/test_evidence_release.py" = ["S603"]
 # The gate's own tests invoke a real explicit-path stub executable plus
 # `sys.executable` against a controlled, in-test-authored driver script; no
 # untrusted input reaches subprocess. Long CHANGELOG.md/merge-marker fixture
@@ -617,6 +647,12 @@ convention = "google"
 # literal argv (no user/untrusted input), in an isolated subprocess so the
 # build's package imports and global state do not leak into the test process.
 "dev/docs/tests/test_docs_build.py" = ["S603"]
+"dev/docs/tests/test_docs_localization.py" = ["S603"]
+"dev/docs/tests/test_docs_language_switcher.py" = ["S603"]
+# The built-site resolvability sweep runs sphinx via `sys.executable -m sphinx`
+# with a fixed, literal argv (no user/untrusted input), in an isolated
+# subprocess, exactly as the docs build gate above.
+"dev/docs/tests/test_built_site_resolvability_sweep.py" = ["S603"]
 # The cadrumo-data distribution gate builds the two companion wheels with the
 # trusted `uv` build driver and enumerates corpus binaries via `git ls-files`
 # (partial paths resolved from PATH by design), mirroring the src/cadrumo
@@ -683,7 +719,7 @@ convention = "google"
 "src/cadrumo/tests/test_narrowed_except_and_path_constants.py" = ["S105", "S106"]
 # OAuth / mTLS / clave-pin fixture authoring uses literal credential
 # shape examples (e.g., the example access_token "ya29.fake-bearer"
-# documented in the AEAT auth ADR); they are not real credentials.
+# documented alongside the AEAT auth adapter); they are not real credentials.
 "src/cadrumo/adapters/outbound/aeat/auth/_fixtures.py" = ["S105", "S106"]
 # Test modules under master_key/ exercise the passphrase-rejection paths
 # with literal short / weak / sentinel passphrases as assertion inputs.
@@ -697,12 +733,15 @@ convention = "google"
 # without shell=True") is a heuristic ban that does not recognise our
 # controlled-argv pattern; granted per-file.
 "dev/docs/cli_reference.py" = ["S603", "F401"]
+"dev/docs/cli_tree.py" = ["S603"]
+"dev/docs/tests/test_cli_tree.py" = ["S603"]
 "dev/docs/terminology/_cli_projection.py" = ["S603"]
 "dev/docs/tests/test_cli_reference_conformance.py" = ["F401"]
 "src/cadrumo/entrypoints/cli/tests/test_cold_start_wizard_registration.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_help_without_secrets.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_json_error_contract.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_config_custody_profile_lifecycle.py" = ["S603"]
+"src/cadrumo/entrypoints/cli/tests/test_config_recovery_lifecycle.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_lazy_command_tree.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_live_read_subgroups.py" = ["S603"]
 "src/cadrumo/entrypoints/cli/tests/test_root_fallback_write_guard.py" = ["S603"]
@@ -726,7 +765,7 @@ convention = "google"
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
 # Lock the project into pytest-only testing.
 "unittest".msg = "Project is pytest-only. Use pytest primitives — fixtures, parametrise, tmp_path. See src/cadrumo/tests/README.md."
-"unittest.mock".msg = "Mocks are banned in live tests and discouraged in unit tests. Use real objects or fakes-as-classes. See src/cadrumo/tests/README.md."
+"unittest.mock".msg = "Mocks are banned. Exercise real objects and explicit production seams. See src/cadrumo/tests/README.md."
 "mock".msg = "Third-party 'mock' is banned for the same reason as unittest.mock. See src/cadrumo/tests/README.md."
 
 # The relative-imports mandate is enforced by the custom
@@ -783,13 +822,19 @@ search_path = ["src", "stubs"]
 
 # ── Pytest ───────────────────────────────────────────────────────────────────
 [tool.pytest.ini_options]
-testpaths = ["src/cadrumo"]
+testpaths = ["src/cadrumo", "dev/packaging/tests/test_installed_oracles.py"]
 pythonpath = ["src"]
 python_files = ["test_*.py"]
 addopts = "-n auto --dist=loadfile --tb=short -m 'unit' --strict-markers --ignore=src/cadrumo/domain/calculations/registry/tests/workbook_parity"
+# Per-test wall ceiling: a deadlocked test fails in minutes with a stack dump
+# instead of wedging the whole run for hours (the CI unit lane sat 3-5.5h
+# wedged with idle workers on every recent run). pytest-timeout picks the
+# signal method where available (Linux) and falls back to thread elsewhere.
+# 300 s is a ceiling, not a target; no legitimate unit test approaches it.
+timeout = 300
 asyncio_mode = "strict"
 markers = [
-  "unit: deterministic tests with no external I/O",
+  "unit: deterministic offline tests scoped to one owner; owned local processes are allowed, external networks and services are not",
   "integration: deterministic in-process tests that cross architectural layers",
   "aeat_live: opt-in tests that read from a real external service; see src/cadrumo/tests/README.md",
   "hex_domain: exercises domain.* business model and computation",
@@ -860,6 +905,7 @@ skips = ["*/test_*.py", "**/conftest.py"]
 [tool.doc8]
 ignore-path = [
   "docs/_build",
+  "docs/_generated",
   "docs/_inventories",
   "docs/api",
   "docs/cli",
@@ -945,6 +991,9 @@ ignore_decorators = [
 # distributions with no importable code the scanner can see; the corpus locator
 # reaches their shared `cadrumo_data` namespace package dynamically through
 # `importlib.resources` (the corpus-binary resolution seam).
-DEP002 = ["cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "formulas", "python-dotenv", "rich", "tzdata"]
+# `model2vec`: the optional search loader imports this module deliberately
+# through `importlib` so a bare-core installation retains lexical-only search;
+# deptry cannot observe that capability-gated dynamic import.
+DEP002 = ["cadrumo", "cadrumo-data-manuals", "cadrumo-data-official", "formulas", "model2vec", "python-dotenv", "rich", "tzdata"]
 DEP003 = ["click", "pydantic_core"]
 DEP004 = ["pytest", "reportlab"]

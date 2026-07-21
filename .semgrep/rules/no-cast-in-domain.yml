@@ -1,7 +1,7 @@
 rules:
   - id: no-cast-in-domain-application
     message: |
-      `cast()` is discouraged in src/aeat/domain/ and src/aeat/application/.
+      `cast()` is discouraged in src/cadrumo/domain/ and src/cadrumo/application/.
       Prefer `isinstance` narrowing, a `TYPE_CHECKING` import guard, or a
       typed pydantic validator. If the cast bridges an external untyped
       API, push it to the adapter boundary. Genuinely irreducible casts
@@ -13,6 +13,10 @@ rules:
       - python
     paths:
       include:
-        - "/src/aeat/domain/"
-        - "/src/aeat/application/"
+        - "src/cadrumo/domain/**"
+        - "src/cadrumo/application/**"
+      exclude:
+        - "src/cadrumo/**/tests/**"
+        - "src/cadrumo/**/test_*.py"
+        - "src/cadrumo/**/_test_*.py"
     pattern: cast(...)

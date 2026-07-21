@@ -1,0 +1,8 @@
+@step Import the quarter's movements so there is something to review.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Inspect selected ledger rows for a period.
+aeat app ledger review --filter period=1T --filter year=2026
+@step Report aggregate ledger anomalies across periods.
+@result aeat --format json app ledger check
+@expect result.ready == false
+@expect exit_code == 0

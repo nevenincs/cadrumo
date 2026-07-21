@@ -1,0 +1,2 @@
+@step Pull the receipt and reconcile it against the local record in one step.
+@static aeat app modelo reconcile pull --modelo 303 --year 2026 --period 1T

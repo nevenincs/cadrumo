@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-lifecycle-tutorials'
-date: '2026-07-13'
-modified: '2026-07-13'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-13-docs-lifecycle-tutorials-P01-S01]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-P01-S02]]'
@@ -24,6 +24,7 @@ related:
   - '[[2026-07-13-docs-lifecycle-tutorials-P05-S16]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-P05-S17]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-P05-S18]]'
+  - '[[2026-07-13-docs-lifecycle-tutorials-P05-S19]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-adr]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-audit]]'
   - '[[2026-07-13-docs-lifecycle-tutorials-plan]]'
@@ -64,6 +65,7 @@ Auto-generated index of all documents tagged with `#docs-lifecycle-tutorials`.
 - `2026-07-13-docs-lifecycle-tutorials-P05-S16` - Run the documented-command conformance gate and the Sphinx nitpicky build gate
 - `2026-07-13-docs-lifecycle-tutorials-P05-S17` - Run the mandated fresh-context campaign-close honesty review
 - `2026-07-13-docs-lifecycle-tutorials-P05-S18` - Retire the three stray project-management files from the docs root (ADRS.md, USERDOCS-KICKOFF-BRIEF.md, HARNESS-USERDOCS-KICKOFF-BRIEF.md) per docs-architecture ADR clause 3a
+- `2026-07-13-docs-lifecycle-tutorials-P05-S19` - Replay both lifecycle tutorials end-to-end against a sandbox profile and reconcile the narrated figures with real command output
 
 ### plan
 

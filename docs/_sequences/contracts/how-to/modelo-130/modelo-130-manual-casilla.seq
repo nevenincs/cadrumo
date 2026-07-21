@@ -1,0 +1,11 @@
+:seed: autonomo-irpf-2026
+@step Open the Modelo 130 draft for the first quarter.
+aeat --format json app modelo work create --modelo 130 --year 2026 --period 1T
+@capture work_unit_id result.work_unit_id
+@step Calculate, supplying casilla 06 by hand alongside the first-period bindings.
+aeat --format json app modelo work calculate {work_unit_id} --casilla 06=100.00 --binding modelo-130-resultados-negativos-anteriores=0 --binding modelo-130-pagos-fraccionados-anteriores=0 --binding irpf.previous_year_economic_activity_net_income=0
+@capture calculation_revision_id result.calculation_revision_id
+@step Review the saved calculation and confirm casilla 06 holds your value.
+@result aeat --format json app modelo work revision {calculation_revision_id}
+@expect result.casilla_values.06 == "100.00"
+@expect exit_code == 0

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#docs-brand'
-date: '2026-07-13'
-modified: '2026-07-13'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-13-docs-brand-audit]]'
 ---

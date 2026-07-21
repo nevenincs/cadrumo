@@ -1,0 +1,302 @@
+# Clean Scoop acquisition gate for the immutable Cadrumo Python cohort.
+# The clean acquisition runs inside a disposable Windows container. Runs on
+# the self-hosted fleet ONLY (operator mandate 2026-07-21: no hosted/cloud
+# runners, ever — expense control is absolute). The self-hosted Windows host
+# does not currently run docker in Windows-container mode, so this leg fails
+# fast and free at its docker-mode preflight until a container-mode window is
+# scheduled or the harness is adapted; the preflight must not be weakened.
+
+name: Cadrumo Scoop Acquisition
+
+on:
+  workflow_dispatch:
+    inputs:
+      source_run_id:
+        description: Successful Cadrumo Packaging Smoke workflow run containing the tested cohort
+        required: true
+        type: string
+      source_commit:
+        description: Full commit SHA that produced the tested cohort
+        required: true
+        type: string
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.source_run_id }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  cadrumo-scoop-acquisition:
+    name: Cadrumo / Windows / x64 / Scoop Container
+    runs-on: [self-hosted, Windows, X64]
+    timeout-minutes: 90
+    # Release-asset transport: evidence rides the run's own draft release, so
+    # this uploader job (and only this job) needs contents:write.
+    permissions:
+      actions: read
+      contents: write
+
+    steps:
+      - name: Initialize current-run evidence root
+        id: initialize
+        shell: powershell
+        env:
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          $root = Join-Path `
+            $env:RUNNER_TEMP `
+            "cadrumo-s20-$env:GITHUB_RUN_ID-$env:GITHUB_RUN_ATTEMPT"
+          if (Test-Path -LiteralPath $root) {
+            Remove-Item -LiteralPath $root -Recurse -Force
+          }
+          New-Item -ItemType Directory -Force -Path $root | Out-Null
+          "CADRUMO_S20_ROOT=$root" | Add-Content -LiteralPath $env:GITHUB_ENV
+          [ordered]@{
+            schema = "cadrumo.packaging.scoop-workflow.v2"
+            status = "initialized"
+            github_run_id = $env:GITHUB_RUN_ID
+            github_run_attempt = $env:GITHUB_RUN_ATTEMPT
+            source_run_id = $env:SOURCE_RUN_ID
+            source_commit = $env:SOURCE_COMMIT
+            initialized_at = [DateTimeOffset]::UtcNow.ToString("O")
+          } |
+            ConvertTo-Json |
+            Set-Content -LiteralPath (Join-Path $root "run-context.json") -Encoding UTF8
+          "ready=true" | Add-Content -LiteralPath $env:GITHUB_OUTPUT
+
+      - name: Verify declared Windows container release row
+        shell: powershell
+        run: |
+          if ($env:PROCESSOR_ARCHITECTURE -ne "AMD64") {
+            throw "Scoop release row requires AMD64; got $env:PROCESSOR_ARCHITECTURE"
+          }
+          if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
+            throw "docker is unavailable"
+          }
+          $serverOs = (docker version --format "{{.Server.Os}}").Trim()
+          if ($serverOs -ne "windows") {
+            throw "Docker must run Windows containers; got '$serverOs'"
+          }
+
+      - name: Verify source workflow identity
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_COMMIT: ${{ inputs.source_commit }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          if ($env:SOURCE_COMMIT -notmatch "^[0-9a-fA-F]{40}$") {
+            throw "source_commit must be one full Git commit SHA"
+          }
+          if ($env:SOURCE_RUN_ID -notmatch "^[1-9][0-9]*$") {
+            throw "source_run_id must be one positive workflow run id"
+          }
+          $headers = @{
+            Accept = "application/vnd.github+json"
+            Authorization = "Bearer $env:GH_TOKEN"
+            "X-GitHub-Api-Version" = "2022-11-28"
+          }
+          $run = Invoke-RestMethod `
+            -Headers $headers `
+            -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/actions/runs/$env:SOURCE_RUN_ID"
+          if ($run.name -ne "Cadrumo Packaging Smoke") {
+            throw "source run is not the Cadrumo Packaging Smoke workflow"
+          }
+          if ($run.path -ne ".github/workflows/packaging-smoke.yml") {
+            throw "source run does not use the packaging-smoke workflow authority"
+          }
+          if ($run.conclusion -ne "success") {
+            throw "source packaging run did not succeed"
+          }
+          if ($run.head_branch -ne "main") {
+            throw "source packaging run must target main"
+          }
+          if ($run.event -eq "workflow_dispatch") {
+            # The full campaign is dispatch-only (ci-speed redesign,
+            # 2026-07-20): a dispatch run is trusted only when its commit is
+            # verified on main history via the compare API - equal-or-stronger
+            # than the former push-event pin, which trusted the push router.
+            $ancestry = Invoke-RestMethod `
+              -Headers $headers `
+              -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/compare/main...$($run.head_sha)"
+            if ($ancestry.status -ne "identical" -and $ancestry.status -ne "behind") {
+              throw "dispatch-event source run commit is not on main history"
+            }
+          }
+          elseif ($run.event -ne "push") {
+            throw "source packaging run must be a push or dispatch run on main"
+          }
+          if ($run.head_repository.full_name -ne $env:GITHUB_REPOSITORY) {
+            throw "source packaging run does not belong to this repository"
+          }
+          if ($run.head_sha -ne $env:SOURCE_COMMIT.ToLowerInvariant()) {
+            throw "source packaging run commit does not match source_commit"
+          }
+
+      - name: Checkout tested source commit
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.source_commit }}
+          persist-credentials: false
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: "0.11.29"
+          python-version: "3.13"
+          enable-cache: true
+
+      # The acquisition lanes consume the LINUX-built python cohort (wheels are
+      # py3-none-any; parity with the pre-transport unsuffixed artifact) plus
+      # the sealed full release cohort, both hash-verified against the smoke
+      # run's sealed evidence manifest and the Actions API run record.
+      # shell pinned to pwsh 7: setup actions rewrite PSModulePath for pwsh,
+      # which breaks Windows PowerShell 5.1 module auto-loading.
+      - name: Download and verify the tested cohorts from the smoke evidence draft
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN_ID: ${{ inputs.source_run_id }}
+        run: |
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release verify `
+            --tag "evidence-smoke-$env:SOURCE_RUN_ID" `
+            --expect-run-id "$env:SOURCE_RUN_ID" `
+            --expect-workflow ".github/workflows/packaging-smoke.yml" `
+            --pattern "cadrumo-python-cohort-linux.tar.gz" `
+            --pattern "cadrumo-release-cohort.tar.gz" `
+            --download-dir "$env:CADRUMO_S20_ROOT/download"
+          if ($LASTEXITCODE -ne 0) { throw "evidence draft verification failed" }
+          New-Item -ItemType Directory -Force "$env:CADRUMO_S20_ROOT/cohort" | Out-Null
+          tar -xzf "$env:CADRUMO_S20_ROOT/download/cadrumo-python-cohort-linux.tar.gz" `
+            -C "$env:CADRUMO_S20_ROOT/cohort"
+          if ($LASTEXITCODE -ne 0) { throw "python cohort extraction failed" }
+          New-Item -ItemType Directory -Force "$env:CADRUMO_S20_ROOT/release-cohort" | Out-Null
+          tar -xzf "$env:CADRUMO_S20_ROOT/download/cadrumo-release-cohort.tar.gz" `
+            -C "$env:CADRUMO_S20_ROOT/release-cohort"
+          if ($LASTEXITCODE -ne 0) { throw "release cohort extraction failed" }
+
+      - name: Generate cohort-bound Scoop source manifest
+        shell: powershell
+        run: |
+          $version = uv run --no-project python -c `
+            "import pathlib,tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"
+          if ($LASTEXITCODE -ne 0 -or -not $version) {
+            throw "could not resolve the tested source version"
+          }
+          $output = Join-Path $env:CADRUMO_S20_ROOT "source-manifest.json"
+          uv run --no-project --with packaging python packaging/scoop/generate.py `
+            --cohort-dir "$env:CADRUMO_S20_ROOT/cohort" `
+            --version $version.Trim() `
+            --release-base-url "https://github.com/nevenincs/cadrumo/releases/download/v$($version.Trim())" `
+            --output $output
+          if ($LASTEXITCODE -ne 0) {
+            throw "Scoop source manifest generation failed"
+          }
+
+      - name: Stage token-free container harness
+        shell: powershell
+        run: |
+          $harness = Join-Path $env:CADRUMO_S20_ROOT "harness"
+          $packaging = Join-Path $harness "dev/packaging"
+          New-Item -ItemType Directory -Force -Path $packaging | Out-Null
+          Copy-Item -LiteralPath "dev/__init__.py" -Destination (Join-Path $harness "dev/__init__.py")
+          Copy-Item `
+            -LiteralPath "dev/packaging/__init__.py" `
+            -Destination (Join-Path $packaging "__init__.py")
+          foreach ($file in @(
+            "smoke_scoop.ps1",
+            "installed_tax_oracle.py",
+            "installed_mcp_oracle.py"
+          )) {
+            Copy-Item `
+              -LiteralPath (Join-Path "dev/packaging" $file) `
+              -Destination (Join-Path $packaging $file)
+          }
+
+      - name: Install and exercise Cadrumo inside a Windows container
+        shell: powershell
+        run: |
+          & "$env:CADRUMO_S20_ROOT/harness/dev/packaging/smoke_scoop.ps1" `
+            -Mode Container `
+            -ContainerImage mcr.microsoft.com/windows/servercore:ltsc2022 `
+            -CohortDir "$env:CADRUMO_S20_ROOT/cohort" `
+            -ManifestPath "$env:CADRUMO_S20_ROOT/source-manifest.json" `
+            -EvidenceDir "$env:CADRUMO_S20_ROOT/evidence" `
+            -AppName cadrumo-s20-acquisition `
+            -TimeoutMinutes 60
+
+      # The container mounts the evidence dir writable, so the oracle JSONs land
+      # host-visible here. The verified full release cohort was already
+      # extracted alongside the python cohort; mint the sanctioned flat
+      # distribution-evidence record for the scoop row from the real captured
+      # oracle JSONs (no re-run, no fabrication).
+      - name: Emit the sanctioned Scoop distribution-evidence record
+        shell: powershell
+        run: |
+          $evidenceRoot = "$env:CADRUMO_S20_ROOT/evidence"
+          $tax = (Get-ChildItem -Path $evidenceRoot -Recurse -Filter tax-evidence.json | Select-Object -First 1).FullName
+          $mcp = (Get-ChildItem -Path $evidenceRoot -Recurse -Filter mcp-evidence.json | Select-Object -First 1).FullName
+          if (-not $tax -or -not $mcp) {
+            throw "scoop oracle evidence JSONs not found under $evidenceRoot"
+          }
+          $scoop = Get-Content -LiteralPath (Join-Path $evidenceRoot "scoop-evidence.json") -Raw | ConvertFrom-Json
+          $locator = if ($scoop.installed_prefix) { [string]$scoop.installed_prefix } else { "cadrumo" }
+          $source = if ($scoop.bucket_url) { [string]$scoop.bucket_url } else { "scoop-bucket" }
+          uv run --no-project --with packaging --with pydantic --with mcp `
+            python -m dev.packaging.distribution_evidence_emit `
+            --row-id scoop-windows-x86-64 `
+            --release-cohort-dir "$env:CADRUMO_S20_ROOT/release-cohort" `
+            --tax-evidence $tax `
+            --mcp-evidence $mcp `
+            --acquisition-mechanism scoop `
+            --acquisition-source $source `
+            --destination-kind scoop-install `
+            --destination-locator $locator `
+            --distribution-evidence-dir "$env:CADRUMO_S20_ROOT/distribution-install-readiness"
+          if ($LASTEXITCODE -ne 0) {
+            throw "distribution-evidence emission failed"
+          }
+
+      # Publish this run's outputs to its own evidence draft: the flat scoop
+      # row (predictable {row_id}-{evidence_id}.json basename, uniform with the
+      # python and homebrew rows), the acquisition bundle, and the sealed
+      # evidence manifest covering every uploaded asset.
+      - name: Publish Scoop evidence to the run's evidence draft and seal it
+        if: always() && steps.initialize.outputs.ready == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVIDENCE_TAG: evidence-scoop-${{ github.run_id }}
+        run: |
+          # Single creator, create-if-absent (an unconditional create on a
+          # re-run attempt would mint a DUPLICATE draft — cli/cli#4270).
+          # --target is THIS run's commit (the run<->release binding verify
+          # re-checks); the consumed smoke commit is recorded in run-context.
+          gh release view $env:EVIDENCE_TAG --json isDraft *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $env:EVIDENCE_TAG --draft --target $env:GITHUB_SHA `
+              --title "EVIDENCE (non-release): scoop run $env:GITHUB_RUN_ID" `
+              --notes "Machine evidence transport. Not a Cadrumo release."
+            if ($LASTEXITCODE -ne 0) { throw "evidence draft creation failed" }
+          }
+          $rows = @(Get-ChildItem "$env:CADRUMO_S20_ROOT/distribution-install-readiness" -Filter *.json -ErrorAction SilentlyContinue)
+          foreach ($row in $rows) {
+            gh release upload $env:EVIDENCE_TAG $row.FullName --clobber
+            if ($LASTEXITCODE -ne 0) { throw "row upload failed: $($row.Name)" }
+          }
+          # The downloaded cohorts already live on the smoke draft; bundling
+          # them again would re-upload hundreds of MB of duplicate bytes.
+          tar --exclude=./cohort --exclude=./release-cohort --exclude=./download `
+            -czf cadrumo-scoop-acquisition-evidence.tar.gz -C $env:CADRUMO_S20_ROOT .
+          if ($LASTEXITCODE -ne 0) { throw "acquisition bundle archiving failed" }
+          gh release upload $env:EVIDENCE_TAG cadrumo-scoop-acquisition-evidence.tar.gz --clobber
+          if ($LASTEXITCODE -ne 0) { throw "acquisition bundle upload failed" }
+          uv run --no-project --with pydantic python -m dev.packaging.evidence_release emit-manifest `
+            --tag $env:EVIDENCE_TAG --output evidence-manifest.json
+          if ($LASTEXITCODE -ne 0) { throw "evidence manifest emission failed" }
+          gh release upload $env:EVIDENCE_TAG evidence-manifest.json --clobber
+          if ($LASTEXITCODE -ne 0) { throw "evidence manifest upload failed" }

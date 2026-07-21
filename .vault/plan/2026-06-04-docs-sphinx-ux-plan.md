@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#docs-sphinx-ux'
 date: '2026-06-04'
-modified: '2026-07-03'
+modified: '2026-07-15'
 tier: L3
 related:
   - '[[2026-06-04-docs-sphinx-ux-adr]]'
@@ -53,7 +53,7 @@ Create the trust-first brand assets and CSS layer that make the Sphinx site visi
 Pause implementation until a human reviewer accepts or redirects the logo, palette, typography, and trust posture.
 
 - [x] `W01.P06.S17` - prepare the brand review packet; `docs/_build/html`.
-- [ ] `W01.P06.S18` - obtain explicit human approval for brand direction; `human brand review gate`.
+- [x] `W01.P06.S18` - obtain explicit human approval for brand direction; `human brand review gate`.
 - [x] `W01.P06.S19` - incorporate approved brand feedback; `docs/_static`.
 
 ## Wave `W02` - navigation and reference approval
@@ -64,27 +64,27 @@ Implement the visible route and generated-reference wrappers after the visual di
 
 Turn the first documentation viewport into a compact task router while preserving Sphinx toctree structure.
 
-- [ ] `W02.P03.S07` - replace the first-page route list with a scannable task grid; `docs/index.md`.
-- [ ] `W02.P03.S08` - make safety and responsibility routes visually persistent; `docs/index.md`.
-- [ ] `W02.P03.S09` - preserve hidden toctrees while exposing visible route labels; `docs/index.md`.
+- [x] `W02.P03.S07` - replace the first-page route list with a scannable task grid; `docs/index.md`.
+- [x] `W02.P03.S08` - make safety and responsibility routes visually persistent; `docs/index.md`.
+- [x] `W02.P03.S09` - preserve hidden toctrees while exposing visible route labels; `docs/index.md`.
 
 ### Phase `W02.P04` - wrap generated references
 
 Reduce generated API and CLI mental load through curated wrappers and generator changes instead of manual output edits.
 
-- [ ] `W02.P04.S10` - add a curated API boundary overview; `docs/api/index.md`.
-- [ ] `W02.P04.S11` - retarget the API toctree entry to the curated overview; `docs/index.md`.
-- [ ] `W02.P04.S12` - separate operator CLI routes from schema registry detail; `src/aeat/entrypoints/cli/_doc_reference.py`.
-- [ ] `W02.P04.S13` - update CLI reference conformance expectations; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
+- [x] `W02.P04.S10` - add a curated API boundary overview; `docs/api/index.md`.
+- [x] `W02.P04.S11` - retarget the API toctree entry to the curated overview; `docs/index.md`.
+- [x] `W02.P04.S12` - separate operator CLI routes from schema registry detail; `src/aeat/entrypoints/cli/_doc_reference.py`.
+- [x] `W02.P04.S13` - update CLI reference conformance expectations; `src/aeat/entrypoints/cli/test_doc_reference_conformance.py`.
 
 ### Phase `W02.P07` - approve navigation readability
 
 Pause after route and reference wrapper changes until a human reviewer accepts the cognitive-load and readability tradeoffs.
 
-- [ ] `W02.P07.S20` - prepare the route and reference review packet; `docs/_build/html`.
-- [ ] `W02.P07.S21` - obtain explicit human approval for navigation readability; `human navigation review gate`.
-- [ ] `W02.P07.S22` - incorporate approved route feedback; `docs/index.md`.
-- [ ] `W02.P07.S23` - incorporate approved reference feedback; `src/aeat/entrypoints/cli/_doc_reference.py`.
+- [x] `W02.P07.S20` - prepare the route and reference review packet from a fresh local site build (docs/_build/html is a gitignored, re-derivable artifact, not a persisted deliverable); `docs/_build/html`.
+- [x] `W02.P07.S21` - obtain explicit human approval for navigation readability; `human navigation review gate`.
+- [x] `W02.P07.S22` - incorporate approved route feedback; `docs/index.md`.
+- [x] `W02.P07.S23` - incorporate approved reference feedback; `dev/docs/cli_reference.py`.
 
 ## Wave `W03` - rendered-site approval
 
@@ -94,17 +94,17 @@ Build the real HTML documentation and require explicit human approval of visual 
 
 Build and inspect the real HTML output so the decision is validated against the generated documentation tree.
 
-- [ ] `W03.P05.S14` - run docs dependency and stub drift gates; `docs conformance lane`.
-- [ ] `W03.P05.S15` - build the rendered HTML documentation; `docs/_build/html`.
-- [ ] `W03.P05.S16` - inspect desktop and mobile rendered UX; `docs/_build/html`.
+- [x] `W03.P05.S14` - run docs dependency and stub drift gates; `docs conformance lane`.
+- [x] `W03.P05.S15` - build the rendered HTML documentation; `docs/_build/html`.
+- [x] `W03.P05.S16` - inspect desktop and mobile rendered UX; `docs/_build/html`.
 
 ### Phase `W03.P08` - approve rendered experience
 
 Close the UX pass only after a human reviewer accepts the actual desktop and mobile rendered documentation.
 
-- [ ] `W03.P08.S24` - prepare the final rendered approval packet; `docs/_build/html`.
-- [ ] `W03.P08.S25` - obtain explicit human approval for rendered experience; `human final review gate`.
-- [ ] `W03.P08.S26` - record approved follow-up UX issues; `.vault/exec/2026-06-04-docs-sphinx-ux`.
+- [x] `W03.P08.S24` - prepare the final rendered approval packet; `docs/_build/html`.
+- [x] `W03.P08.S25` - obtain explicit human approval for rendered experience; `human final review gate`.
+- [x] `W03.P08.S26` - record approved follow-up UX issues; `.vault/exec/2026-06-04-docs-sphinx-ux`.
 
 ## Parallelization
 

@@ -14,7 +14,7 @@ S538 invariant-guard classification note
 All :class:`ValueError` raises in this module appear inside Pydantic v2
 ``@field_validator`` / ``@model_validator`` methods. Pydantic wraps these into
 :class:`pydantic.ValidationError` automatically; raising any other exception
-type (including :class:`core.errors.AeatError`) would bypass that wrapping
+type (including :class:`core.errors.CadrumoError`) would bypass that wrapping
 and surface as an uncaught internal exception. These guards are therefore
 **developer-surface-only invariants** and must remain :class:`ValueError`. They
 are NOT operator-facing errors and do not require ``translated_message``.
@@ -22,12 +22,12 @@ are NOT operator-facing errors and do not require ``translated_message``.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ...core import BindingSourceKind
+from ...core.logging import LogExtra
 
 
 class RootSurfaceName(StrEnum):
@@ -268,14 +268,16 @@ class OperatorSurfaceLogFields(BaseModel):
     lifecycle: str
     source_kind_count: int
 
-    def as_extra(self) -> Mapping[str, object]:
-        """Return a logging ``extra`` payload with stable field names."""
-        return {
-            "contract_name": self.contract_name,
-            "root_count": self.root_count,
-            "lifecycle": self.lifecycle,
-            "source_kind_count": self.source_kind_count,
-        }
+    def as_extra(self) -> LogExtra:
+        """Return a typed logging ``extra`` payload with stable field names."""
+        return LogExtra(
+            {
+                "contract_name": self.contract_name,
+                "root_count": self.root_count,
+                "lifecycle": self.lifecycle,
+                "source_kind_count": self.source_kind_count,
+            }
+        )
 
 
 class OperatorSurfaceContract(BaseModel):

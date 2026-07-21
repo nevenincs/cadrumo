@@ -19,21 +19,24 @@ See Also:
 
 from __future__ import annotations
 
-import asyncio
 import json
-from collections.abc import Callable
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from datetime import datetime
+from importlib import import_module
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from urllib.parse import urlsplit
 
 from pydantic import BaseModel, ConfigDict, Field, SecretStr, SkipValidation, ValidationError
 
-from ...core import STRICT_FROZEN_CONFIG
-from ...core.errors import AeatError
+from ...core import STRICT_FROZEN_CONFIG, AuthProviderKind
+from ...core.async_cleanup import AsyncResourceCleanupError, close_async_resources
+from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.time import now, validate_utc_aware
-from . import AuthProviderKind, select_provider
+from ..auth_credentials import ActiveCertificateCredentials
+from . import select_provider
 from ._acquisition_lock import (
     AuthAcquisitionLockRecord,
     AuthAcquisitionLockStatus,
@@ -41,7 +44,13 @@ from ._acquisition_lock import (
     auth_lock_ttl_seconds,
     clear_auth_acquisition_lock,
 )
+from ._operator_scope import (
+    active_profile_storage_span,
+    assert_auth_recovery_not_in_progress,
+    auth_mutation_span,
+)
 from ._protocols import SessionStoreProtocol
+from ._workflow_repository import workflow_state_repository as _workflow_state_repository
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import (
@@ -52,42 +61,45 @@ if TYPE_CHECKING:
     from ...core.config import Settings
     from . import AuthProvider
 
-    ProviderFactory = Callable[
-        [AuthProviderKind, Settings, BrowserSessionFactory | None],
-        AuthProvider,
-    ]
-
 _logger = get_logger(__name__)
 
-# Injected at wiring time (see configure_session_store below).
-# The concrete implementation is adapters/outbound/aeat/auth/_session_store.
-_session_store_impl: SessionStoreProtocol | None = None
+
+@runtime_checkable
+class _TargetedAuthProvider(Protocol):
+    """Provider extension for Cl@ve flows that accept a requested live target."""
+
+    async def authenticate_for_target(
+        self,
+        *,
+        target_url: str | None = None,
+    ) -> AeatSession: ...
+
+    async def verify_for_target(
+        self,
+        session: AeatSession,
+        *,
+        target_url: str | None = None,
+    ) -> AeatLoginAssertion: ...
 
 
-def configure_session_store(store: SessionStoreProtocol) -> None:
-    """Register the concrete session store at wiring time.
+@runtime_checkable
+class _PersistedTargetProbeProvider(_TargetedAuthProvider, Protocol):
+    """Cl@ve provider extension with a direct persisted-session probe."""
 
-    Called by the entrypoints layer (or test fixtures) to bind the concrete
-    adapter implementation before any session function is invoked.
-    """
-    global _session_store_impl
-    _session_store_impl = store
+    async def probe_persisted_session(
+        self,
+        *,
+        target_url: str | None = None,
+    ) -> tuple[AeatSession, AeatLoginAssertion]: ...
 
 
 def _get_session_store() -> SessionStoreProtocol:
-    if _session_store_impl is None:
-        # Lazily import the concrete adapter implementation on first call.
-        # This import runs at runtime (not TYPE_CHECKING), so it is not hidden.
-        # The module-scope import was removed to break the import-time cycle.
-        from ...adapters.outbound.aeat.auth import _session_store as _impl
-
-        # CAST-RATIONALE-MODULE-AS-PROTOCOL:
-        # _session_store module satisfies SessionStoreProtocol structurally;
-        # mypy cannot verify module-object protocol conformance without an
-        # explicit cast.
-        configure_session_store(cast(SessionStoreProtocol, _impl))
-    assert _session_store_impl is not None
-    return _session_store_impl
+    """Return the sole encrypted outbound session-store implementation."""
+    outbound_auth = import_module("cadrumo.adapters.outbound.aeat.auth")
+    session_store = outbound_auth.session_store
+    if not isinstance(session_store, SessionStoreProtocol):
+        raise TypeError("outbound auth session store does not implement SessionStoreProtocol")
+    return session_store
 
 
 def _invalid_assertion_diagnostic(assertion: AeatLoginAssertion) -> str:
@@ -120,11 +132,11 @@ class StorageStatePaths(BaseModel):
     storage_state: Path
 
 
-class CorruptAuthSessionError(AeatError):
+class CorruptAuthSessionError(CadrumoError):
     """Raised when persisted session metadata cannot be parsed."""
 
 
-class AuthSessionUnavailableError(AeatError):
+class AuthSessionUnavailableError(CadrumoError):
     """Raised when no verified active AEAT session can be supplied."""
 
 
@@ -137,7 +149,7 @@ class SessionDeserializationError(AuthSessionUnavailableError):
     """
 
 
-class AuthProfileIdentityMismatchError(AeatError):
+class AuthProfileIdentityMismatchError(CadrumoError):
     """Raised when the active profile identity cannot own the requested auth session."""
 
 
@@ -176,11 +188,14 @@ class PersistedAuthSession(BaseModel):
 _STEM_BY_KIND: dict[AuthProviderKind, str] = {
     AuthProviderKind.CERTIFICATE: "storage",
     AuthProviderKind.CLAVE_MOVIL: "clave-movil-storage",
+    AuthProviderKind.CLAVE_PERMANENTE: "clave-permanente-storage",
 }
 
 
 def storage_state_paths(
     kind: AuthProviderKind | None = None,
+    *,
+    bucket_id: str | None = None,
 ) -> StorageStatePaths:
     """Return the logical storage-state identifier for ``kind``.
 
@@ -192,7 +207,7 @@ def storage_state_paths(
 
     resolved = kind or AuthProviderKind.CERTIFICATE
     stem = _STEM_BY_KIND[resolved]
-    storage_state = aeat_auth_session_storage_state_path(require_active_bucket_id(), stem)
+    storage_state = aeat_auth_session_storage_state_path(bucket_id or require_active_bucket_id(), stem)
     return StorageStatePaths(storage_state=storage_state)
 
 
@@ -201,16 +216,20 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
 
     Returns a :class:`PersistedAuthSession`.
     """
-    if kind is None and settings.aeat_auth_provider is not None:
-        kind = AuthProviderKind(settings.aeat_auth_provider.value)
+    if kind is None and settings.cadrumo_auth_provider is not None:
+        kind = settings.cadrumo_auth_provider
     if kind is not None:
+        if kind not in _STEM_BY_KIND:
+            # A provider without a persisted-session stem holds no reusable
+            # session, so there is nothing to load (and no stem to resolve).
+            return None
         paths = storage_state_paths(kind)
         if not _get_session_store().exists(paths.storage_state):
             _logger.debug("load_persisted_session: no session metadata found for provider %s", kind.value)
             return None
         return _parse_single(paths.storage_state, kind)
 
-    for candidate in AuthProviderKind:
+    for candidate in _STEM_BY_KIND:
         paths = storage_state_paths(candidate)
         if _get_session_store().exists(paths.storage_state):
             return _parse_single(paths.storage_state, candidate)
@@ -218,17 +237,44 @@ def load_persisted_session(settings: Settings, kind: AuthProviderKind | None = N
     return None
 
 
-def delete_persisted_session(settings: Settings, kind: AuthProviderKind | None = None) -> list[Path]:
-    """Remove persisted encrypted sessions for ``kind`` or every supported provider."""
+def delete_persisted_session(
+    settings: Settings,
+    kind: AuthProviderKind | None = None,
+    *,
+    bucket_id: str | None = None,
+) -> list[Path]:
+    """Remove persisted encrypted sessions for ``kind`` or every session-bearing provider.
+
+    A ``kind`` of ``None`` sweeps every provider that actually persists a browser
+    session (the ``_STEM_BY_KIND`` set). Reserved catalogue slots are not
+    :class:`AuthProviderKind` members and therefore never enter this storage
+    loop; operator ``--all`` scope may name them for idempotent configuration
+    cleanup without manufacturing session paths for unsupported providers.
+    """
     removed: list[Path] = []
-    kinds = [kind] if kind is not None else list(AuthProviderKind)
+    kinds = [kind] if kind is not None else list(_STEM_BY_KIND)
     for candidate_kind in kinds:
-        paths = storage_state_paths(candidate_kind)
+        if candidate_kind not in _STEM_BY_KIND:
+            continue
+        paths = storage_state_paths(candidate_kind, bucket_id=bucket_id)
         if not _get_session_store().delete(paths.storage_state):
             continue
         _logger.debug("delete_persisted_session: removed auth session %s", paths.storage_state)
         removed.append(paths.storage_state)
     return removed
+
+
+def persisted_session_exists(
+    settings: Settings,
+    kind: AuthProviderKind,
+    *,
+    bucket_id: str | None = None,
+) -> bool:
+    """Return whether ``kind`` has persisted session state in ``bucket_id``."""
+    del settings
+    if kind not in _STEM_BY_KIND:
+        return False
+    return _get_session_store().exists(storage_state_paths(kind, bucket_id=bucket_id).storage_state)
 
 
 async def require_verified_aeat_session(
@@ -262,16 +308,15 @@ async def require_verified_aeat_session(
         settings=settings,
         browser_session_factory=default_browser_session_factory,
     )
-    try:
-        refreshed_session, assertion = await _probe_existing_session(provider, target_url=target_url)
-    except AuthSessionUnavailableError:
-        raise
-    except Exception as exc:
-        raise AuthSessionUnavailableError(
-            translated_message="application.auth.sessions.errors.verify_failed",
-        ) from exc
-    finally:
-        await _close_provider(provider)
+    async with _provider_lifecycle(provider):
+        try:
+            refreshed_session, assertion = await _probe_existing_session(provider, target_url=target_url)
+        except AuthSessionUnavailableError:
+            raise
+        except Exception as exc:
+            raise AuthSessionUnavailableError(
+                translated_message="application.auth.sessions.errors.verify_failed",
+            ) from exc
 
     if not bool(getattr(assertion, "is_valid", False)):
         raise AuthSessionUnavailableError(
@@ -290,7 +335,38 @@ async def ensure_authenticated_aeat_session(
     operation: str = "auth-ensure-session",
     target_url: str | None = None,
     browser_session_factory: BrowserSessionFactory | None = None,
-    provider_factory: ProviderFactory | None = None,
+    certificate_credentials: ActiveCertificateCredentials | None = None,
+) -> AuthenticatedAeatSessionResult:
+    """Serialize and fail-close the central live-session writer."""
+    with active_profile_storage_span(settings) as bucket_id:
+        if bucket_id is None:
+            raise AuthSessionUnavailableError(
+                translated_message="application.auth.sessions.errors.no_session",
+            )
+        with auth_mutation_span(settings=settings, bucket_id=bucket_id):
+            assert_auth_recovery_not_in_progress(_workflow_state_repository().load())
+            return await _ensure_authenticated_aeat_session_locked(
+                settings,
+                kind=kind,
+                fresh=fresh,
+                reset_lock=reset_lock,
+                operation=operation,
+                target_url=target_url,
+                browser_session_factory=browser_session_factory,
+                certificate_credentials=certificate_credentials,
+            )
+
+
+async def _ensure_authenticated_aeat_session_locked(
+    settings: Settings,
+    *,
+    kind: AuthProviderKind | None = None,
+    fresh: bool = False,
+    reset_lock: bool = False,
+    operation: str = "auth-ensure-session",
+    target_url: str | None = None,
+    browser_session_factory: BrowserSessionFactory | None = None,
+    certificate_credentials: ActiveCertificateCredentials | None = None,
 ) -> AuthenticatedAeatSessionResult:
     """Return a verified AEAT session, authenticating only when required.
 
@@ -321,7 +397,7 @@ async def ensure_authenticated_aeat_session(
             provider_kind,
             target_url=target_url,
             browser_session_factory=browser_session_factory,
-            provider_factory=provider_factory,
+            certificate_credentials=certificate_credentials,
         )
         if reused is not None:
             session, assertion = reused
@@ -347,7 +423,7 @@ async def ensure_authenticated_aeat_session(
                 provider_kind,
                 target_url=target_url,
                 browser_session_factory=browser_session_factory,
-                provider_factory=provider_factory,
+                certificate_credentials=certificate_credentials,
             )
             if reused is not None:
                 session, assertion = reused
@@ -367,13 +443,13 @@ async def ensure_authenticated_aeat_session(
             settings,
             provider_kind,
             browser_session_factory=browser_session_factory,
-            provider_factory=provider_factory,
+            certificate_credentials=certificate_credentials,
         )
-        try:
-            session = await provider.authenticate(target_url=target_url)
-            assertion = await provider.verify(session, target_url=target_url)
-        finally:
-            await _close_provider(provider)
+        async with _provider_lifecycle(provider):
+            session, assertion = await _authenticate_and_verify_provider(
+                provider,
+                target_url=target_url,
+            )
         if not bool(getattr(assertion, "is_valid", False)):
             from ...adapters.outbound.aeat.auth import AeatLoginAssertionError
 
@@ -473,8 +549,8 @@ def _session_metadata_datetime(value: object, *, field: str) -> datetime:
 def _resolve_provider_kind(settings: Settings, kind: AuthProviderKind | None) -> AuthProviderKind:
     if kind is not None:
         return kind
-    if settings.aeat_auth_provider is not None:
-        return AuthProviderKind(settings.aeat_auth_provider.value)
+    if settings.cadrumo_auth_provider is not None:
+        return settings.cadrumo_auth_provider
     return AuthProviderKind.CERTIFICATE
 
 
@@ -491,7 +567,7 @@ def _assert_active_profile_identity_matches_provider(
     """Fail closed before live auth can bind one taxpayer's session to another profile."""
     if provider_kind is not AuthProviderKind.CLAVE_MOVIL:
         return None
-    provider_identity = _normalise_tax_identity(settings.aeat_clave_movil_dni_nie)
+    provider_identity = _normalise_tax_identity(settings.cadrumo_clave_movil_dni_nie)
     if not provider_identity:
         raise AuthProfileIdentityMismatchError(
             translated_message="application.auth.sessions.errors.clave_identity_missing",
@@ -563,21 +639,20 @@ async def _try_probe_verified_session(
     *,
     target_url: str | None,
     browser_session_factory: BrowserSessionFactory | None,
-    provider_factory: ProviderFactory | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
 ) -> tuple[AeatSession, AeatLoginAssertion] | None:
     provider = _build_provider(
         settings,
         kind,
         browser_session_factory=browser_session_factory,
-        provider_factory=provider_factory,
+        certificate_credentials=certificate_credentials,
     )
-    try:
-        session, assertion = await _probe_existing_session(provider, target_url=target_url)
-    except Exception as exc:
-        _logger.debug("ensure_authenticated_aeat_session: persisted probe failed: %s", exc, exc_info=True)
-        return None
-    finally:
-        await _close_provider(provider)
+    async with _provider_lifecycle(provider):
+        try:
+            session, assertion = await _probe_existing_session(provider, target_url=target_url)
+        except Exception as exc:
+            _logger.debug("ensure_authenticated_aeat_session: persisted probe failed: %s", exc, exc_info=True)
+            return None
     if bool(getattr(assertion, "is_valid", False)):
         return session, assertion
     return None
@@ -588,10 +663,8 @@ def _build_provider(
     kind: AuthProviderKind,
     *,
     browser_session_factory: BrowserSessionFactory | None,
-    provider_factory: ProviderFactory | None,
+    certificate_credentials: ActiveCertificateCredentials | None,
 ) -> AuthProvider:
-    if provider_factory is not None:
-        return provider_factory(kind, settings, browser_session_factory)
     if browser_session_factory is None:
         from ...adapters.outbound.aeat.browser import default_browser_session_factory
 
@@ -600,6 +673,7 @@ def _build_provider(
         kind,
         settings=settings,
         browser_session_factory=browser_session_factory,
+        certificate_credentials=certificate_credentials,
     )
 
 
@@ -608,25 +682,46 @@ async def _probe_existing_session(
     *,
     target_url: str | None = None,
 ) -> tuple[AeatSession, AeatLoginAssertion]:
-    probe = getattr(provider, "probe_persisted_session", None)
-    if probe is not None:
-        return await probe(target_url=target_url)
-    session = await provider.authenticate(target_url=target_url)
-    assertion = await provider.verify(session, target_url=target_url)
+    if provider.kind is AuthProviderKind.CLAVE_MOVIL:
+        if not isinstance(provider, _PersistedTargetProbeProvider):
+            raise TypeError("clave movil provider lacks persisted-session probing")
+        return await provider.probe_persisted_session(
+            target_url=target_url,
+        )
+    return await _authenticate_and_verify_provider(provider, target_url=target_url)
+
+
+async def _authenticate_and_verify_provider(
+    provider: AuthProvider,
+    *,
+    target_url: str | None,
+) -> tuple[AeatSession, AeatLoginAssertion]:
+    """Authenticate and verify without weakening certificate target authority."""
+    if provider.kind is AuthProviderKind.CERTIFICATE:
+        session = await provider.authenticate()
+        assertion = await provider.verify(session)
+        return session, assertion
+    if not isinstance(provider, _TargetedAuthProvider):
+        raise TypeError("non-certificate auth provider lacks target-aware authentication")
+    targeted_provider = provider
+    session = await targeted_provider.authenticate_for_target(target_url=target_url)
+    assertion = await targeted_provider.verify_for_target(session, target_url=target_url)
     return session, assertion
 
 
-async def _close_provider(provider: AuthProvider) -> None:
-    close = getattr(provider, "close", None)
-    if close is None:
-        return
+@asynccontextmanager
+async def _provider_lifecycle(provider: AuthProvider) -> AsyncGenerator[None]:
+    """Close ``provider`` without hiding a primary auth failure."""
     try:
-        result = close()
-    except Exception:  # BROAD-EXCEPT-RATIONALE-SESSION-PROVIDER-CLOSE-TEARDOWN
-        _logger.warning("provider close raised", exc_info=True)
-        return
-    if asyncio.iscoroutine(result):
+        yield
+    finally:
         try:
-            await result
-        except Exception:  # BROAD-EXCEPT-RATIONALE-SESSION-PROVIDER-CLOSE-TEARDOWN
-            _logger.warning("provider async close raised", exc_info=True)
+            await close_async_resources(
+                provider,
+                task_name="cadrumo-auth-provider-close",
+                close_attempts=2,
+            )
+        except AsyncResourceCleanupError as cleanup_error:
+            raise AuthSessionUnavailableError(
+                translated_message="application.auth.sessions.errors.provider_close_failed",
+            ) from cleanup_error

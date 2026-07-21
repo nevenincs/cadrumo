@@ -15,15 +15,15 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from datetime import datetime
-from typing import Final
+from typing import Final, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG
+from .....core.config import AEAT_CERTIFICATE_PROTECTED_URL
 from ._errors import AeatLoginAssertionError
-from .certificate import HandshakeResult
 
-AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 1
+AEAT_STORAGE_STATE_SCHEMA_VERSION: Final[int] = 2
 """Schema version for certificate-auth :class:`PersistedSessionMetadata` records."""
 
 
@@ -31,21 +31,28 @@ class PersistedSessionMetadata(BaseModel):
     """Certificate-auth metadata stored inside the encrypted session envelope.
 
     The fields bind a captured Playwright storage state to the certificate
-    identity that produced it. :class:`HandshakeResult` preserves the verified
-    AEAT handshake details, while ``storage_state_sha256`` lets resume checks
+    identity that produced it. ``protected_resource_url`` records the sole
+    successful browser proof, while ``storage_state_sha256`` lets resume checks
     reject metadata that no longer matches the encrypted storage-state payload.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: int = Field(default=AEAT_STORAGE_STATE_SCHEMA_VERSION, ge=1)
+    schema_version: Literal[2] = AEAT_STORAGE_STATE_SCHEMA_VERSION
     certificate_thumbprint: str = Field(min_length=1)
     certificate_subject: str = Field(min_length=1)
     certificate_nif: str = Field(min_length=1)
     authenticated_at: datetime
     idle_deadline: datetime
     storage_state_sha256: str = Field(min_length=64, max_length=64)
-    handshake: HandshakeResult
+    protected_resource_url: str = AEAT_CERTIFICATE_PROTECTED_URL
+
+    @field_validator("protected_resource_url")
+    @classmethod
+    def _protected_resource_is_canonical(cls, value: str) -> str:
+        if value != AEAT_CERTIFICATE_PROTECTED_URL:
+            raise ValueError("persisted certificate proof must use the canonical protected resource")
+        return value
 
 
 def persisted_session_reason_code(reason: str) -> str:
@@ -64,6 +71,8 @@ def persisted_session_reason_code(reason: str) -> str:
         return "certificate_thumbprint_mismatch"
     if "different certificate subject" in reason_lower:
         return "certificate_subject_mismatch"
+    if "different certificate nif" in reason_lower:
+        return "certificate_nif_mismatch"
     if "failed live verification" in reason_lower:
         return "live_verification_failed"
     if "could not be resumed" in reason_lower:

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m390-iva-carry-boxes'
-date: '2026-06-21'
-modified: '2026-06-28'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-21-m390-iva-carry-boxes-adr]]'
 ---
@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#m390-iva-carry-boxes`.
 
 ### adr
 
-- `2026-06-21-m390-iva-carry-boxes-adr` - `m390-iva-carry-boxes` adr: `Modelo 390 boxes 97 and 662 are one FIFO carry partition, not two independent period sums` | (**status:** `proposed`)
+- `2026-06-21-m390-iva-carry-boxes-adr` - `m390-iva-carry-boxes` adr: `Modelo 390 boxes 97 and 662 are one FIFO carry partition, not two independent period sums` | (**status:** `accepted`)

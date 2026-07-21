@@ -1,13 +1,13 @@
 """CLI command for ``aeat app agent``.
 
 Materialises the shipped operator harness into an operator-chosen directory in
-the Claude-native layout (ADR R4): ``.claude/skills/<name>/SKILL.md``,
+the Claude-native layout: ``.claude/skills/<name>/SKILL.md``,
 ``.claude/agents/<persona>.md``, ``.claude/rules/<rule>.md``, and a root
 ``CLAUDE.md`` importing every rule. This is the optional Claude-native mirror of
 the operating layer - the MCP console is the primary, client-agnostic channel.
-The written tree is the operator's own end-user workspace, never the repository's
-vaultspec developer ``.claude/`` tree. It writes only reviewed harness markdown -
-no secrets, no tax data - and computes no value.
+The written tree is the operator's own end-user workspace, never the
+repository's own developer ``.claude/`` tree. It writes only reviewed harness
+markdown - no secrets, no tax data - and computes no value.
 
 A child of ``app`` (the CLI root surface stays pinned to ``config`` and ``app``).
 """

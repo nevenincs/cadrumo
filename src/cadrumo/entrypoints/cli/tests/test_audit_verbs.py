@@ -1,4 +1,4 @@
-"""CLI surface tests for `aeat app modelo audit {show, check, export, replay}`.
+"""CLI surface tests for `aeat app modelo audit {show, check, export}`.
 
 The four verbs are the ratified audit surface from the evidence-bundle
 contract. These real-behavior tests drive each verb through the Typer
@@ -18,12 +18,12 @@ import pytest
 from click.testing import Result
 
 from ....application.evidence import EvidenceBundleService
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
-from ....core.i18n import tr
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -139,29 +139,28 @@ def test_audit_export_refuses_when_output_path_missing() -> None:
     assert result.exit_code != 0, result.output
 
 
-def test_audit_replay_reports_verification_state_without_mutation() -> None:
-    """Replay is a reproducibility tool — it must never contact AEAT, and
-    must not mutate the bundle. Two consecutive replays produce identical
-    verification states."""
+def test_audit_replay_command_is_removed() -> None:
+    """`modelo audit replay` was retired: it was `check` under a second, weaker
+    name. Invoking it must fail as an unknown command."""
 
     bundle_id = _seed_bundle()
-    first = _invoke(["app", "modelo", "audit", "replay", bundle_id])
-    assert first.exit_code == 0, first.output
-
-    second = _invoke(["app", "modelo", "audit", "replay", bundle_id])
-    assert second.exit_code == 0, second.output
-
-    first_state = next(line for line in first.output.splitlines() if line.startswith("verification_state\t"))
-    second_state = next(line for line in second.output.splitlines() if line.startswith("verification_state\t"))
-    assert first_state == second_state
+    result = _invoke(["app", "modelo", "audit", "replay", bundle_id])
+    assert result.exit_code != 0, result.output
 
 
-def test_audit_workflow_end_to_end_show_check_export_replay(tmp_path: Path) -> None:
+def test_audit_replay_result_schema_is_not_registered() -> None:
+    """The retired replay leaf's result schema (`modelo.audit.replay`) must no
+    longer be a registered output schema."""
+
+    from .._schemas import SCHEMA_REGISTRY
+
+    assert "modelo.audit.replay" not in SCHEMA_REGISTRY
+
+
+def test_audit_workflow_end_to_end_show_check_export(tmp_path: Path) -> None:
     """Drive the full ratified audit workflow over a single bundle:
-    show → check → export → replay. The four verbs share a state-free
-    contract — each reads from the persisted bundle catalogue, so the
-    sequence is order-independent and the verification state observed
-    by `check` matches the one observed by `replay`."""
+    show → check → export. The verbs share a state-free contract — each reads
+    from the persisted bundle catalogue, so the sequence is order-independent."""
 
     bundle_id = _seed_bundle()
     output = tmp_path / "bundle-e2e.zip"
@@ -189,20 +188,12 @@ def test_audit_workflow_end_to_end_show_check_export_replay(tmp_path: Path) -> N
     with zipfile.ZipFile(output) as archive:
         assert "manifest.json" in archive.namelist()
 
-    replay = _invoke(["app", "modelo", "audit", "replay", bundle_id])
-    assert replay.exit_code == 0, replay.output
-
-    check_state = next(line for line in check.output.splitlines() if line.startswith("verification_state\t"))
-    replay_state = next(line for line in replay.output.splitlines() if line.startswith("verification_state\t"))
-    assert check_state == replay_state
-
 
 def test_audit_help_text_uses_accepted_vocabulary() -> None:
     """Each audit verb's help text must use the operator vocabulary
-    bundle / manifest / evidence / replay / verification (or their
-    Spanish equivalents in the default locale: paquete / manifiesto
-    / evidencia / reproducir / verificar) — and must never imply live
-    AEAT submission or remote contact."""
+    bundle / manifest / evidence / verification (or their Spanish equivalents
+    in the default locale: paquete / manifiesto / evidencia / verificar) — and
+    must never imply live AEAT submission or remote contact."""
 
     forbidden_en = ("submit ", "submission", "send to aeat", "upload to aeat", "live filing", "telematic")
     forbidden_es = ("enviar a aeat", "subir a aeat", "presentar telemáticamente")
@@ -211,7 +202,6 @@ def test_audit_help_text_uses_accepted_vocabulary() -> None:
         "show": (("evidence", "evidencia"), ("bundle", "paquete"), ("manifest", "manifiesto", "manifest")),
         "check": (("verify", "verificar", "reverificar"), ("bundle", "paquete")),
         "export": (("bundle", "paquete"), ("manifest", "manifiesto")),
-        "replay": (("bundle", "paquete"), ("aeat",)),
     }
 
     # A forbidden term is only a violation when it *asserts* a live path.
@@ -237,30 +227,13 @@ def test_audit_help_text_uses_accepted_vocabulary() -> None:
                 idx = normalised.find(bad, idx + 1)
 
 
-def test_audit_replay_help_disclaims_aeat_contact() -> None:
-    """The evidence-bundle contract mandates replay never contacts AEAT.
-
-    The replay help text must say so explicitly in every shipped locale
-    so operators never assume replay re-submits or re-verifies against
-    AEAT-side state. Asserted at the translation source: Typer bakes
-    ``help=`` strings at import, so a rendered ``--help`` is locked to a
-    single import-time locale and cannot cover every shipped one —
-    ``tr`` renders each locale's `replay_help` value directly."""
-
-    disclaimer_word = {"es": "nunca", "en": "never"}
-    for locale, word in disclaimer_word.items():
-        help_text = tr("cli.app.modelo.audit.replay_help", locale=locale).lower()
-        assert word in help_text and "aeat" in help_text, (locale, help_text)
-
-
 def test_audit_verbs_refuse_without_active_profile() -> None:
-    """All four audit verbs route through `_active_bucket_id`, which raises
-    when no active profile bucket exists. Each verb must surface that
-    refusal at the CLI boundary rather than crashing or emitting a
-    half-built payload."""
+    """The audit verbs route through `_active_bucket_id`, which raises when no
+    active profile bucket exists. Each verb must surface that refusal at the CLI
+    boundary rather than crashing or emitting a half-built payload."""
 
     workflow_state_repository().reset_workflow_state()
 
-    for verb in ("show", "check", "replay"):
+    for verb in ("show", "check"):
         result = _invoke(["app", "modelo", "audit", verb, "0" * 64])
         assert result.exit_code != 0, (verb, result.output)

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-19-1991-art-31.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-19-1991-art-31.html",
   "source_sha256": "4b7899dfbb25dbcd125c55e8513a474540c7c78556e5c59cc2d56b7d19e88052",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

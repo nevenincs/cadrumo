@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#iva-prorrata-complexity'
 date: '2026-07-08'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-07-08-iva-prorrata-complexity-audit]]'
   - '[[2026-07-07-prorrata-especial-adr]]'
@@ -12,19 +12,19 @@ related:
   - '[[2026-07-06-cross-period-prorrata-research]]'
 ---
 
-# `iva-prorrata-complexity` adr: `art-103.Dos.2 mandatory-especial advisory emit audience` | (**status:** `proposed`)
+# `iva-prorrata-complexity` adr: `art-103.Dos.2 mandatory-especial advisory emit audience` | (**status:** `accepted`)
 
 ## Problem Statement
 
 The LIVA art. 103.Dos.2 +10% mandatory-especial advisory
 (`build_prorrata_especial_mandatory_advisory`,
-`src/aeat/application/calculations/_prorrata_regularizacion.py`, W02.P03.S13) is
+`src/cadrumo/application/calculations/_prorrata_regularizacion.py`, W02.P03.S13) is
 built and unit-tested but never emitted on the live Modelo 303 settlement path —
 a dormant advisory. The 2026-07-08 campaign audit found the live emit is not a
 wiring step because of two blockers. First, the comparison needs the ejercicio's
 whole-year deducible cuota total under BOTH regimes, and the live collector
 (`collect_prorrata_regularizacion_diagnostics`,
-`src/aeat/application/modelo/_prorrata_regularizacion_advisory.py`) holds only
+`src/cadrumo/application/modelo/_prorrata_regularizacion_advisory.py`) holds only
 the declared regime's per-period `casilla_values`. Second — the audience
 problem this ADR decides — the obligation targets a filer computing under
 GENERAL prorrata, but a general-regime bucket carries no per-input
@@ -35,7 +35,7 @@ only fire confirmatorily for an already-especial bucket, inverting the
 obligation's purpose.
 
 The statutory text, verbatim from the bundled consolidated LIVA
-(`src/aeat/_data/corpus/normatives/html/ley-37-1992.html`, `#a103`, redaction
+(`src/cadrumo/_data/corpus/normatives/html/ley-37-1992.html`, `#a103`, redaction
 Ley 28/2014 in force 01/01/2015): "Dos. La regla de prorrata especial será
 aplicable en los siguientes supuestos: 1.º Cuando los sujetos pasivos opten por
 la aplicación de dicha regla en los plazos y forma que se determinen
@@ -153,7 +153,7 @@ S21 implements exactly this; the coordinator builds it as scoped here.
 **New aggregation helper (the plumbing ruling).** The dual-regime totals ARE
 needed — but only on the check branch, and as one aggregation plus two
 apportionment passes, not two aggregations. A public helper in
-`src/aeat/application/aggregation/` (exported through the package `__all__`
+`src/cadrumo/application/aggregation/` (exported through the package `__all__`
 per `service-imports-via-top-level-reexports`), e.g.
 `compute_annual_deducible_totals_by_regime(bucket_id=..., ejercicio=...,
 revision=...)`, that: builds the ejercicio's annual window via the canonical
@@ -192,7 +192,7 @@ ejercicio y, en su caso, ejecute 'app ledger prorrata elect-especial
 
 **Typed reason axis.** Two new members on the
 `CalculationSourceDiagnosticReason` Literal in
-`src/aeat/application/aggregation/_source_mesh.py`:
+`src/cadrumo/application/aggregation/_source_mesh.py`:
 `"prorrata_especial_obligatoria"` and
 `"prorrata_especial_check_unavailable"`.
 
@@ -209,20 +209,20 @@ tests are unchanged; the builder remains the single comparison/message owner.
 without an especial election; after S21 the classification also enables the
 settlement art-103.Dos.2 check for a general bucket, so that message is updated
 to say so. This IS a `tr()` locale change: it MUST be made via `python -m
-aeat.locales set` for all four catalogues (en/es/ca/hu), never by hand-editing
+cadrumo.locales set` for all four catalogues (en/es/ca/hu), never by hand-editing
 the `.yml` files, and `test_parity` plus the translation-honesty gate must stay
 green (`aeat-locales-cli`; a locale gap already bit this campaign).
 
-**Files changed:** `src/aeat/application/aggregation/_iva_ledger.py` (or a new
-sibling module) plus `src/aeat/application/aggregation/__init__.py` (helper +
-export), `src/aeat/application/aggregation/_source_mesh.py` (reason members),
-`src/aeat/application/modelo/_prorrata_regularizacion_advisory.py` (branch),
-`src/aeat/entrypoints/cli/_ledger.py` locale-key default text plus
-`src/aeat/locales/{en,es,ca,hu}.yml` via the locales CLI, plus tests. No
+**Files changed:** `src/cadrumo/application/aggregation/_iva_ledger.py` (or a new
+sibling module) plus `src/cadrumo/application/aggregation/__init__.py` (helper +
+export), `src/cadrumo/application/aggregation/_source_mesh.py` (reason members),
+`src/cadrumo/application/modelo/_prorrata_regularizacion_advisory.py` (branch),
+`src/cadrumo/entrypoints/cli/_ledger.py` locale-key default text plus
+`src/cadrumo/locales/{en,es,ca,hu}.yml` via the locales CLI, plus tests. No
 registry TOML change, no new CLI verb, no new Notice code.
 
 **Anti-dormant test shape** (in
-`src/aeat/application/modelo/tests/test_prorrata_regularizacion_advisory.py`
+`src/cadrumo/application/modelo/tests/test_prorrata_regularizacion_advisory.py`
 or a sibling module; real repositories via `isolated_runtime_profile`,
 law-derived scenarios per the S15 oracle pattern — spreads derived from the
 art. 106 reglas, never from the substrate under test):

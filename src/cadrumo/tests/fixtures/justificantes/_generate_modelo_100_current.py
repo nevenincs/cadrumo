@@ -25,8 +25,8 @@ See Also:
         Shared expected casilla set that mirrors this generator's rows.
     :func:`~domain.calculations.registry.validated_casilla_id`
         Core casilla-id validator used to keep render-row keys canonical.
-    ``2026-07-05-modelo-130-100-continuity-audit``
-        Current-year declaration coverage that makes casilla 0604 load-bearing.
+
+Current-year declaration coverage makes casilla 0604 load-bearing.
 """
 
 from __future__ import annotations

@@ -218,9 +218,9 @@ def _check_narration_faithfulness(
     only decides whether a ``blocks`` verdict fails the scenario.
 
     An advisory (non-blocking) unfaithful check is INTENTIONALLY not appended to
-    ``failures`` - ADR Q4 makes it a warning, not a scenario failure, everywhere
-    except the irreversible handoff step. Only a ``blocks`` verdict (the handoff
-    step's narration citing an ungrounded numeric) fails the scenario.
+    ``failures``: it is a warning, not a scenario failure, everywhere except the
+    irreversible handoff step. Only a ``blocks`` verdict (the handoff step's
+    narration citing an ungrounded numeric) fails the scenario.
     """
     for check in narration_faithfulness_checks:
         if not check.blocks:
@@ -228,7 +228,7 @@ def _check_narration_faithfulness(
         failures.append(
             f"{scenario.modelo} {scenario.period} narration at step '{check.step}' cites "
             f"value(s) {', '.join(check.flagged_values)} absent from the tool result on the "
-            "irreversible handoff step - hard-blocked per ADR Q4 faithfulness enforcement",
+            "irreversible handoff step - hard-blocked by faithfulness enforcement",
         )
 
 
@@ -343,7 +343,7 @@ def run_golden_scenario(
         RESPONSE payload's own observations carry that same provenance (when a
         live response was dispatched), no injected narration-faithfulness check
         hard-blocks (an advisory-only unfaithful check does not fail the
-        scenario; ADR Q4), and every injected confirmation-gate check resolved
+        scenario), and every injected confirmation-gate check resolved
         the tier the workflow relies on.
     """
     failures: list[str] = []
@@ -661,7 +661,7 @@ def check_contradiction_scenario(
         failures.append(
             f"trajectory continues with mutating verb(s) {', '.join(offending)} after the signalled "
             f"contradiction at '{scenario.must_halt_after}' — the operator must stop and report a "
-            "readiness-vs-blocking-surface disagreement, never retry past it (operator-lifecycle-ordering)",
+            "readiness-vs-blocking-surface disagreement, never retry past it (cadrumo-operator-lifecycle-ordering)",
         )
 
     return ContradictionVerdict(

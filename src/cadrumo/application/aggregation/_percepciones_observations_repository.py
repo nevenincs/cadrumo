@@ -5,7 +5,7 @@ DISTINCTLY. Modelo 190 casilla ``decl.total-percepciones`` ("Número total de
 percepciones … Número de registros de tipo 2", AEAT Diseño de Registros) is the
 count of DISTINCT (perceptor NIF, clave, subclave) type-2 records on the annual
 declaration — a perceptor paid under two claves files two percepciones — NOT the
-distinct-NIF perceptor count (that is RET-1's ``perceptor_count`` for Modelo
+distinct-NIF perceptor count (that is the ``perceptor_count`` for Modelo
 180/193) and NOT the sum of the quarterly Modelo 111 perceptor counts. The
 validated distinct-count primitive (the ``percepcion_count`` withholding fact)
 already exists; what it lacked was a persisted, calc-mesh-readable per-perceptor
@@ -27,21 +27,20 @@ The namespace, schema version, object-key grammar, and custody disposition are
 declared by
 :data:`adapters.persistence.storage.WITHHOLDING_OBSERVATIONS_NAMESPACE`.
 
-ADR ``2026-06-25-modelo-190-percepciones-count-adr``. Producers (the
-pull/aggregate entrypoints) write here through one shared helper; the P03
-calc-mesh resolver reads here and calls the distinct-count primitive. This is the
-percepciones counterpart of :mod:`._retencion_observations_repository` (the
-perceptores store); the two stores are intentionally distinct — different distinct
-keys (NIF+clave+subclave vs NIF), different models, different modelos.
+Producers (the pull/aggregate entrypoints) write here through one shared
+helper; the calc-mesh resolver reads here and calls the distinct-count
+primitive. This is the percepciones counterpart of
+:mod:`._retencion_observations_repository` (the perceptores store); the two
+stores are intentionally distinct — different distinct keys (NIF+clave+subclave
+vs NIF), different models, different modelos.
 
-This module was renamed from ``_withholding_observations_repository.py`` per the
-``import-centralization`` ADR ruling 4: the "withholding" stem collided with the
-project's Spanish-stem naming convention (``retencion`` already names the
-sibling Modelo 180/193 store), so this module — and the repository symbols it
-owns locally — follow the ``percepciones`` stem instead. The
-:class:`~domain.calculations.registry.WithholdingObservation` domain
-type it wraps is an unrelated, widely shared registry taxonomy type and is
-out of scope for this rename.
+This module follows the ``percepciones`` stem rather than ``withholding``: the
+"withholding" stem collided with the project's Spanish-stem naming convention
+(``retencion`` already names the sibling Modelo 180/193 store), so this module
+— and the repository symbols it owns locally — use the ``percepciones`` stem
+instead. The :class:`~domain.calculations.registry.WithholdingObservation`
+domain type it wraps is an unrelated, widely shared registry taxonomy type and
+is out of scope for that naming choice.
 """
 
 from __future__ import annotations
@@ -205,7 +204,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
         DROPPED a percepción must not leave the stale row behind — otherwise the
         next calculate's distinct count is inflated by a percepción no longer
         declared (a silent over-count). An empty ``observations`` clears the
-        window (the operator declared none); the P03 resolver surfaces a
+        window (the operator declared none); the resolver surfaces a
         no-silent advisory when it then reads empty.
         """
         replace_observation_window(
@@ -229,7 +228,7 @@ class PercepcionObservationRepository(SecureBoundRepository[_PercepcionObservati
 
         The result covers one ``(modelo, filing_year, period)`` window.
 
-        The calc-mesh percepciones-count resolver (P03) folds these through the
+        The calc-mesh percepciones-count resolver folds these through the
         validated distinct-count primitive. An empty tuple means no per-perceptor
         records were persisted for the window — the resolver MUST surface a
         no-silent advisory rather than materialising a silent zero.
@@ -263,8 +262,8 @@ def persist_percepcion_observations(
 
     Factoring the persist behind a single application helper makes store
     completeness STRUCTURAL rather than per-entrypoint discipline a future
-    producer could forget (an unwritten producer -> an incomplete store -> the
-    exact pull!=calculate divergence #28 fixes). Writes to the active bucket's
+    producer could forget (an unwritten producer -> an incomplete store -> a
+    pull!=calculate divergence). Writes to the active bucket's
     encrypted store with SET-REPLACE semantics so pull and calculate read one
     source.
     """

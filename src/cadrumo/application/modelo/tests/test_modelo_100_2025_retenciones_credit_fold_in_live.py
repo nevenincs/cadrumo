@@ -440,8 +440,8 @@ def _calculate_m111_administrador_quarter(
 
     Seeds a single ``WORK_INCOME_DIRECTOR`` (clave E) retención observation for the
     quarter and runs the LIVE M111 calculate. The administrador retención folds into
-    the single trabajo block (casillas 01/02/03) via the art. 101.2 binding selector
-    landed in #539, so c03 (trabajo retenciones) carries the withheld amount and the
+    the single trabajo block (casillas 01/02/03) via the art. 101.2 binding selector,
+    so c03 (trabajo retenciones) carries the withheld amount and the
     total-retenciones formula rolls it into c28. Returns the produced c28.
     """
     period = Period.from_year_and_code(_YEAR, period_code)
@@ -498,11 +498,11 @@ def test_m100_2025_director_administrador_retencion_credits_into_trabajo_casilla
 ) -> None:
     """E2E/2025: a director's suffered administrador retención credits M100 casilla 0596.
 
-    This proves the full cross-modelo director credit chain that issue #540 asks about,
-    end to end on the LIVE calculate path:
+    This proves the full cross-modelo director credit chain end to end on the
+    LIVE calculate path:
 
       administrador retención (``WORK_INCOME_DIRECTOR``, clave E)
-        -> M111 casilla 03 (trabajo retenciones, via the art. 101.2 binding selector, #539)
+        -> M111 casilla 03 (trabajo retenciones, via the art. 101.2 binding selector)
         -> M111 casilla 28 (total-retenciones formula)
         -> M100 casilla 0596 (retenciones por rendimientos del trabajo soportadas,
            relation_prefill fold summed over the four quarters).

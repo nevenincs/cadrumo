@@ -1,0 +1,2 @@
+@step List the provider CLIs visible on the path.
+@static aeat app ledger providers

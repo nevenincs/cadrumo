@@ -3,13 +3,13 @@ tags:
   - '#adr'
   - '#m390-iva-carry-boxes'
 date: '2026-06-21'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-21-m303-carry-reconciliation-adr]]"
   - "[[2026-06-21-redeme-company-refund-research]]"
 ---
 
-# `m390-iva-carry-boxes` adr: `Modelo 390 boxes 97 and 662 are one FIFO carry partition, not two independent period sums` | (**status:** `proposed`)
+# `m390-iva-carry-boxes` adr: `Modelo 390 boxes 97 and 662 are one FIFO carry partition, not two independent period sums` | (**status:** `accepted`)
 
 ## Problem Statement
 

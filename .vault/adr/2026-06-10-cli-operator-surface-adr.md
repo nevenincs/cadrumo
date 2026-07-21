@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#cli-operator-surface'
 date: '2026-06-10'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-10-cli-operator-surface-research]]'
   - '[[2026-06-10-cli-operator-surface-audit]]'
   - '[[2026-06-10-cli-operator-crud-matrix-audit]]'
   - '[[2026-06-10-aeat-cli-userdocs-hardening-audit]]'
-  - '[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]'
   - '[[2026-05-14-ledger-transaction-lifecycle-adr]]'
   - '[[2026-06-02-ledger-operator-hardening-adr]]'
   - '[[2026-06-04-modelo-addressing-ux-adr]]'
@@ -114,7 +113,7 @@ honesty pass):
   exception; they are not AEAT surfaces.
 - The ledger lifecycle already carries a generic state-transition primitive
   (`_transition_manual_transaction_lifecycle` in
-  `src/aeat/application/ledger/_actions_lifecycle.py`) that can target any state.
+  `src/cadrumo/application/ledger/_actions_lifecycle.py`) that can target any state.
   No `ACTIVE`-targeting public action or CLI verb calls it; the inverse the prior
   ADR promised is one caller away, not a new subsystem.
 - The modelo-addressing-ux ADR already solved the content-addressed-id-churn shape
@@ -158,9 +157,9 @@ alternatives.
 **Context.** The human action "change to another taxpayer profile" has no human
 verb. `aeat config profile switch` and `aeat config profile use` are retired
 (`_RETIRED_VERBS` at
-`src/aeat/entrypoints/cli/tests/test_config_profile_surface_inventory.py`); the
+`src/cadrumo/entrypoints/cli/tests/test_config_profile_surface_inventory.py`); the
 surviving door is `aeat config unlock NAME`, registered in
-`src/aeat/entrypoints/cli/_config/_custody.py`, which names the storage-layer act
+`src/cadrumo/entrypoints/cli/_config/_custody.py`, which names the storage-layer act
 of unsealing an encrypted bucket session, not the operator's intent. The userdocs
 campaign was forced to write "switch by unlocking" -- a gloss that exists only
 because the verb and the intent diverged.
@@ -271,7 +270,7 @@ behind a sealed calculation).
 ### D3 -- Stable operator lineage handle for ledger rows across edits (F3)
 
 **Context.** Correcting a field on a transaction changes its id: the
-transaction-id derivation in `src/aeat/domain/transactions/_models.py` keys on the
+transaction-id derivation in `src/cadrumo/domain/transactions/_models.py` keys on the
 provider identifier and verbatim narrative and "therefore changes when a
 transaction is edited". An operator who recorded `history <old-id>`, then fixed a
 typo, finds the old handle dead -- the correction the CLI invited destroyed the
@@ -348,7 +347,7 @@ reconciled.
 
 **Context (original, superseded above).** The same operator learns two period vocabularies. Modelo surfaces
 accept `0A / 1T-4T / 01-12`; ledger surfaces accept `2026Q1 / 2026-03 / 2026` via
-`_PERIOD_RE` / `_canonical_period` in `src/aeat/entrypoints/cli/_common.py`. A
+`_PERIOD_RE` / `_canonical_period` in `src/cadrumo/entrypoints/cli/_common.py`. A
 quarter is `1T` in one place and `2026Q1` in another, with no conversion and no
 cross-acceptance. The ledger grammar predates and has no governing ADR.
 
@@ -455,7 +454,7 @@ enforceable across sessions).
 **Context.** The root `--language` flag silently fails for help text. `aeat
 --language en config profile create --help` renders Spanish; only setting
 `AEAT_OUTPUT_LANGUAGE` before the process starts changes help-text language. The
-flag is declared `is_eager=True` in `src/aeat/entrypoints/cli/__init__.py`, so it
+flag is declared `is_eager=True` in `src/cadrumo/entrypoints/cli/__init__.py`, so it
 resolves after the import-time `tr(...)` calls have already rendered every help
 string. The environment variable wins because it is read before import.
 
@@ -516,7 +515,7 @@ warning is the residual floor, not the target).
 
 **Context.** Several record-creating verbs have no read-back. `aeat app modelo
 m036` exposes exactly `alta / modificacion / baja`
-(`src/aeat/entrypoints/cli/_modelo_m036_cli.py`), and the application layer
+(`src/cadrumo/entrypoints/cli/_modelo_m036_cli.py`), and the application layer
 exposes only `record_m036_declaration` with no list / view public surface -- the
 `list_declarations` verb the census-sync ADR's landing plan named was never built.
 After recording an M036 declaration there is no list, view, edit, or delete; the
@@ -567,7 +566,7 @@ lifecycle-semantics decision near the safety boundary, not a read-back surface).
 
 **Context.** "Am I ready to file this?" demands a registry-internal handle. `aeat
 config profile preflight` declares `revision_id: str = typer.Option(...)` in
-`src/aeat/entrypoints/cli/_config/__init__.py` with no default, so `--revision-id`
+`src/cadrumo/entrypoints/cli/_config/__init__.py` with no default, so `--revision-id`
 is mandatory; answering a readiness question forces the operator to first run
 `modelo describe`, read out an internal revision id, and paste it back.
 

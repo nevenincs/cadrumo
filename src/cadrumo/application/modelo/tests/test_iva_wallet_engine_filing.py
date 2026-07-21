@@ -10,7 +10,8 @@ import pytest
 from pydantic import SecretStr
 
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
-from ....core.config import AuthProviderKindSetting, Settings
+from ....core import AuthProviderKind
+from ....core.config import Settings
 from ....domain.modelos import CalculationRevisionState, ModeloRecordStatus
 from ...calculations import (
     CalculationObservationRepository,
@@ -97,8 +98,8 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             filing_repository=filing_repo,
             bucket_event_repository=event_repo,
             settings=Settings(
-                aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-                aeat_clave_movil_dni_nie=SecretStr(taxpayer_nif),
+                cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
+                cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
             ),
             clock=datetime(2026, 7, 15, 9, 0, 0, tzinfo=UTC),
         )
@@ -113,8 +114,8 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             filing_repository=filing_repo,
             bucket_event_repository=event_repo,
             settings=Settings(
-                aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-                aeat_clave_movil_dni_nie=SecretStr(taxpayer_nif),
+                cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
+                cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
             ),
             clock=datetime(2026, 7, 15, 10, 0, 0, tzinfo=UTC),
         )
@@ -194,8 +195,8 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
             filing_repository=filing_repo,
             bucket_event_repository=event_repo,
             settings=Settings(
-                aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-                aeat_clave_movil_dni_nie=SecretStr(taxpayer_nif),
+                cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
+                cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
             ),
             clock=datetime(2026, 4, 15, 9, 0, 0, tzinfo=UTC),
         )
@@ -210,8 +211,8 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
             filing_repository=filing_repo,
             bucket_event_repository=event_repo,
             settings=Settings(
-                aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-                aeat_clave_movil_dni_nie=SecretStr(taxpayer_nif),
+                cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
+                cadrumo_clave_movil_dni_nie=SecretStr(taxpayer_nif),
             ),
             clock=datetime(2026, 4, 15, 10, 0, 0, tzinfo=UTC),
         )

@@ -98,8 +98,9 @@ def test_config_repair_cli_redacts_active_profile_identifier() -> None:
     _assert_no_sensitive_output(text.output)
 
     payload = json.loads(payload_result.output)
-    assert payload["setup"]["active_profile"] == "<profile-id>"
-    summaries = "\n".join(str(row.get("summary", "")) for row in payload["checks"])
+    result = payload["result"]
+    assert result["setup"]["active_profile"] == "<profile-id>"
+    summaries = "\n".join(str(row.get("summary", "")) for row in result["checks"])
     _assert_no_sensitive_output(summaries)
 
 

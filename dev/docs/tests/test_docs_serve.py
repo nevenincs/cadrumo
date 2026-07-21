@@ -1,7 +1,8 @@
 """Unit gate for the live-reloading documentation server.
 
-Asserts that :func:`dev.docs.serve.serve_command` watches both documentation
-surfaces (the narrative corpus and the ``src/cadrumo`` docstring source) and that
+Asserts that :func:`dev.docs.serve.serve_command` serves the narrative corpus and
+scopes the ``src/cadrumo`` docstring-source watch to full scope (user scope, the
+preview default, loads no autodoc so it is not watched), and that
 the self-regenerated trees are excluded from the watch set so a rebuild cannot
 loop on its own output; and that the start-idempotent running-server awareness
 (:func:`dev.docs.serve.resolve_target` and its probe/state helpers) attaches to
@@ -46,14 +47,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
-def test_serve_command_watches_docs_and_autodoc_source() -> None:
-    """The command serves docs/ and watches the src/cadrumo docstring surface."""
-    command = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False)
-    assert command[1:3] == ["-m", "sphinx_autobuild"]
-    assert str(_REPO_ROOT / "docs") in command
-    assert str(_REPO_ROOT / "docs" / "_build" / "html") in command
-    watch_index = command.index("--watch")
-    assert command[watch_index + 1] == str(_REPO_ROOT / "src" / "cadrumo")
+def test_serve_command_scopes_the_autodoc_source_watch() -> None:
+    """User scope (the default) serves docs/ only; full scope also watches the app source.
+
+    The preview loop defaults to user scope, which loads no autodoc, so the
+    ``src/cadrumo`` docstring source is NOT watched — watching it would only
+    trigger rebuilds that render nothing new. Full scope restores the autodoc
+    source watch so a docstring edit rebuilds its API page.
+    """
+    user = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False)
+    assert user[1:3] == ["-m", "sphinx_autobuild"]
+    assert str(_REPO_ROOT / "docs") in user
+    assert str(_REPO_ROOT / "docs" / "_build" / "html") in user
+    assert "--watch" not in user  # user scope does not watch the (unrendered) app source
+
+    full = serve_command(_REPO_ROOT, host="127.0.0.1", port=8000, open_browser=False, scope="full")
+    watch_index = full.index("--watch")
+    assert full[watch_index + 1] == str(_REPO_ROOT / "src" / "cadrumo")
 
 
 def test_serve_command_excludes_self_regenerated_trees() -> None:
@@ -189,14 +199,19 @@ def test_ipv6_relay_bridges_to_the_ipv4_listener(sphinx_http_server: int) -> Non
     import urllib.request
 
     relay = start_ipv6_relay(sphinx_http_server)
-    if relay is None:
-        pytest.skip("IPv6 is unavailable on this host")
     try:
+        if relay is None:
+            # IPv6 loopback is unavailable on this host: start_ipv6_relay
+            # returned its documented IPv4-only fallback without raising, so
+            # there is no [::1] listener to bridge and the dual-stack fetch
+            # below does not apply. The fallback contract is what we assert here.
+            return
         with urllib.request.urlopen(f"http://[::1]:{sphinx_http_server}/", timeout=3) as response:
             assert response.status == 200
             assert _looks_like_sphinx(response.read().decode("utf-8", "replace"))
     finally:
-        relay.close()
+        if relay is not None:
+            relay.close()
 
 
 # ── State file round-trip ─────────────────────────────────────────────────────

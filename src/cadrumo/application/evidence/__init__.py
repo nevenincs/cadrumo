@@ -3,7 +3,7 @@
 The evidence bundle is a bucket-scoped, work-unit-bound
 :class:`EvidenceBundle` manifest plus :class:`EvidenceRecordRef` records
 used to package the provenance of a modelo calculation, verification, or
-filing for offline replay and audit handoff. Bundles are durable
+filing for offline inspection and audit handoff. Bundles are durable
 artifacts stored inside the active bucket; they are not the source of
 relational truth.
 
@@ -23,25 +23,22 @@ Verbs supported by the operator surface (`aeat app modelo audit ...`):
     show     - render the bundle's manifest and referenced records
     check    - re-verify the bundle's integrity (report-only)
     export   - write a ZIP archive with the manifest emitted last
-    replay   - evidence-case replay (never contacts AEAT)
 
 Bucket events emitted by mutating operations:
     modelo.audit.verified  - a fresh verify-pass completed
     modelo.audit.exported  - a ZIP was successfully written
-    modelo.audit.replayed  - an evidence-case replay completed
 
-Replay never contacts AEAT and never performs live submission. Export
-refuses on failed verification unless ``--force-incomplete`` is
+The audit surface never contacts AEAT and never performs live submission.
+Export refuses on failed verification unless ``--force-incomplete`` is
 explicitly passed at the operator boundary.
 
 See Also:
     :class:`EvidenceBundleService`
-        Build, verify, export, and replay service for audit bundles.
+        Build, verify, and export service for audit bundles.
     :class:`EvidenceBundleRepository`
         Encrypted bucket-local repository for bundle manifests.
     :class:`EvidenceBundleVerificationReport`
-        Integrity-check summary emitted by ``check``, ``export``, and
-        ``replay`` flows.
+        Integrity-check summary emitted by ``check`` and ``export`` flows.
     :class:`BundleVerificationState`
         Closed verification state vocabulary for bundle manifests.
     :class:`application.ledger.PurchaseInvoiceEvidence`

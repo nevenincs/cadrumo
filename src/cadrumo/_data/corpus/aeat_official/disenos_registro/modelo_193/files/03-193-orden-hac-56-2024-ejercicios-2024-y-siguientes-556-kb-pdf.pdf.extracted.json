@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_193/files/03-193-orden-hac-56-2024-ejercicios-2024-y-siguientes-556-kb-pdf.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_193/files/03-193-orden-hac-56-2024-ejercicios-2024-y-siguientes-556-kb-pdf.pdf",
   "source_sha256": "1eae714c75eb6be7d412e48141ced46d3dc7e6701473a54b21f81027c211461b",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

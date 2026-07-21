@@ -130,77 +130,25 @@ def _infer_binding_source(payload: object) -> object:
     return data
 
 
-class DeferredSourceTarget(NamedTuple):
-    """The governed promotion target of a deferred binding source kind.
-
-    A deferred kind has no live mesh resolver yet, so it produces a standing
-    calculate-path advisory rather than a silent blank. Re-ratification per the
-    deferrals ADR replaces the former free-prose deferral comments with this
-    structured annotation so the deferral set is governed, not merely
-    enumerated: every deferred kind names the decision that owns it and the
-    condition that promotes it, and a kind whose trigger has fired but which
-    remains deferred is a mechanically-detectable finding at the swarm-audit
-    cadence.
-
-    Members:
-        owning_adr: The decision-record stem that ratifies this deferral and its
-            promotion target.
-        trigger: The condition under which the kind should be promoted to a live
-            mesh binding (a dependency for the IVA kinds; a per-modelo review
-            for the informativa detail-row kinds, which carry no promotion date).
-        promotion_depends_on: For a kind gated on another source kind landing,
-            the source kind it waits on. ``None`` for kinds whose trigger is a
-            human review rather than a mechanical source-kind dependency. When a
-            named dependency has itself been promoted out of the deferred set,
-            this kind's trigger has fired.
-    """
-
-    owning_adr: str
-    trigger: str
-    promotion_depends_on: BindingSourceKind | None = None
-
-
-# Source kinds that are explicitly deferred — no mesh resolver is built yet, but
-# they are known to the system and must produce a standing advisory on
-# source_diagnostics rather than a silent blank. The S26 boundary gate (in
-# _calculation_actions) accepts them without flagging them as unknown-novel
-# sources, and the S08 safety net emits the advisory while keeping them off the
-# manual_sources allowlist. Each carries a typed promotion target (owning ADR +
-# trigger) per the deferrals re-ratification; ``DEFERRED_SOURCE_KINDS`` is
-# derived from the mapping so the membership set and its governance cannot drift.
-DEFERRED_SOURCE_KIND_TARGETS: Mapping[BindingSourceKind, DeferredSourceTarget] = MappingProxyType(
+# Source kinds that are explicitly deferred — known to the closed taxonomy, but
+# no mesh resolver is built yet. A deferred kind must produce a standing
+# advisory on source_diagnostics rather than a silent blank: the boundary gate
+# (in _calculation_actions) accepts it without flagging it as an unknown-novel
+# source, and the safety net (``collect_unhandled_source_diagnostics``) emits the
+# advisory. A deferred kind is never on the ``manual_sources`` allowlist, which
+# would suppress that advisory.
+#
+# All three are Sheets-pull-only informativa detail-row producers (M232
+# operaciones vinculadas, M360 IVA refunds, M182 donativos): they need a row
+# taxonomy, an evidence shape, and a detail-record fold before a resolver can
+# exist.
+DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
     {
-        # Informativa detail-row kinds (Sheets-pull-only, no resolver design):
-        # re-ratified with no promotion date; the review trigger is the modelo's
-        # next hardening campaign or an operator filing need, whichever comes
-        # first, and promotion requires its own grounded design ADR.
-        BindingSourceKind.RELATED_PARTY_OPERATION: DeferredSourceTarget(
-            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
-            trigger=(
-                "No promotion date. Review at M232's next hardening campaign or an operator filing need; "
-                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
-            ),
-        ),
-        BindingSourceKind.REFUND_OPERATION: DeferredSourceTarget(
-            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
-            trigger=(
-                "No promotion date. Review at M360's next hardening campaign or an operator filing need; "
-                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
-            ),
-        ),
-        BindingSourceKind.DONATIVO_DONOR: DeferredSourceTarget(
-            owning_adr="2026-07-02-arch-remediation-source-kind-deferrals-adr",
-            trigger=(
-                "No promotion date. Review at M182's next hardening campaign or an operator filing need; "
-                "promotion needs its own grounded ADR (row taxonomy, evidence shape, detail-record fold)."
-            ),
-        ),
+        BindingSourceKind.RELATED_PARTY_OPERATION,
+        BindingSourceKind.REFUND_OPERATION,
+        BindingSourceKind.DONATIVO_DONOR,
     },
 )
-
-# Derived so the membership set and its governance annotations cannot diverge:
-# every deferred kind is a key in DEFERRED_SOURCE_KIND_TARGETS.
-DEFERRED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(DEFERRED_SOURCE_KIND_TARGETS)
 
 # Source kinds reserved-undeclared: a member that exists in the closed taxonomy
 # but carries no registry binding and no resolver yet (counterpart / invoice-shaped
@@ -217,8 +165,7 @@ RESERVED_SOURCE_KINDS: frozenset[BindingSourceKind] = frozenset(
 class CallerOverrideDisposition(StrEnum):
     """Whether the calculate path permits a caller override of a source's value.
 
-    The override disposition axis of the caller-override precedence ladder
-    (aggregation-taxonomy ADR ruling D2).
+    The override disposition axis of the caller-override precedence ladder.
 
     Members:
         LOCK: Deterministic bucket-owned resolvers (the ledger aggregations and
@@ -251,8 +198,8 @@ class CallerOverridePrecedenceTier(NamedTuple):
     disposition: CallerOverrideDisposition
 
 
-#: The calculate-path caller-override precedence ladder as ordered tier data
-#: (aggregation-taxonomy ADR ruling D2), lowest-precedence tier first. The
+#: The calculate-path caller-override precedence ladder as ordered tier data,
+#: lowest-precedence tier first. The
 #: guard's lock and carry source sets are the unions of the LOCK- and
 #: CARRY-disposition tiers (see :func:`precedence_ladder_sources`). This encodes
 #: the override DISPOSITION axis only; the merge OVERLAY order (profile < mesh
@@ -1037,7 +984,6 @@ def _claim_relation(owners: dict[RelationId, str], relation_id: RelationId, reso
 __all__ = [
     "CALLER_OVERRIDE_PRECEDENCE_LADDER",
     "DEFERRED_SOURCE_KINDS",
-    "DEFERRED_SOURCE_KIND_TARGETS",
     "RESERVED_SOURCE_KINDS",
     "BindingSourceDisposition",
     "BorradorSourceProvenance",
@@ -1048,7 +994,6 @@ __all__ = [
     "CalculationSourceResolution",
     "CallerOverrideDisposition",
     "CallerOverridePrecedenceTier",
-    "DeferredSourceTarget",
     "ModeloSourceResolver",
     "RowBindingKey",
     "RowBindingValue",

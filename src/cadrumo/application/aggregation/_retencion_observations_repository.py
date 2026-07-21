@@ -24,9 +24,9 @@ The namespace, schema version, object-key grammar, and custody disposition are
 declared by
 :data:`adapters.persistence.storage.RETENCION_OBSERVATIONS_NAMESPACE`.
 
-ADR ``2026-06-24-retenciones-perceptor-count-adr``. Producers (the pull/aggregate
-entrypoints) write here through one shared helper; the P02 calc-mesh resolver
-reads here and calls the distinct-count primitive.
+Producers (the pull/aggregate entrypoints) write here through one shared
+helper; the calc-mesh resolver reads here and calls the distinct-count
+primitive.
 """
 
 from __future__ import annotations
@@ -185,9 +185,9 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
         key-tuple, then writes the supplied set. A re-pull where the operator
         DROPPED a perceptor must not leave the stale row behind — otherwise the
         next calculate's distinct count is inflated by a perceptor no longer
-        declared (a silent over-count, the inverse of the bug RET-1 fixes). An
-        empty ``observations`` clears the window (the operator declared none);
-        the P02 resolver raises a no-silent
+        declared (a silent over-count, the inverse of the pull≠calculate
+        divergence this store closes). An empty ``observations`` clears the
+        window (the operator declared none); the resolver raises a no-silent
         :class:`~._errors.AggregationValidationError` when a declaring revision
         then reads an empty store, before a zero perceptor count can be filed.
         """
@@ -210,7 +210,7 @@ class RetencionObservationRepository(SecureBoundRepository[_RetencionObservation
     ) -> tuple[RetencionObservation, ...]:
         """Return every persisted per-perceptor observation for one (modelo, filing_year, period).
 
-        The calc-mesh perceptor-count resolver (P02) folds these through the
+        The calc-mesh perceptor-count resolver folds these through the
         validated distinct-count primitive. An empty tuple means no per-perceptor
         records were persisted for the window — the resolver MUST fail loudly
         rather than materialising a zero count.
@@ -247,8 +247,8 @@ def persist_retencion_observations(
 
     Factoring the persist behind a single application helper makes store
     completeness STRUCTURAL rather than per-entrypoint discipline a future
-    producer could forget (an unwritten producer -> an incomplete store -> the exact
-    pull≠calculate divergence RET-1 fixes). Writes to the active bucket's encrypted
+    producer could forget (an unwritten producer -> an incomplete store -> a
+    pull≠calculate divergence). Writes to the active bucket's encrypted
     store with SET-REPLACE semantics so pull and calculate read one source.
     aggregate_per_modelo stays pure — persistence is the entrypoint's job, not the
     aggregator's (aeat-architecture-boundaries).

@@ -3,10 +3,11 @@ tags:
   - '#plan'
   - '#censo-operator-manual-enrolment'
 date: '2026-07-11'
-modified: '2026-07-11'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-07-11-censo-operator-manual-enrolment-adr]]'
+  - '[[2026-07-12-censo-operator-manual-enrolment-research]]'
 ---
 
 # `censo-operator-manual-enrolment` plan
@@ -22,11 +23,11 @@ Delete the dead live-censo scrape chain and the censo pull/compare/apply CLI fam
 
 Sweep every surface that cites the retired verbs or deleted modules: generated CLI reference, locale catalogues, how-to docs and API stubs, agent-harness skills, the pull-and-file rule source, and derived baselines.
 
-- [ ] `P02.S03` - Purge the retired verb family from the generated CLI reference generator and its conformance tests, and from the storage write-policy allowlist if enrolled; `dev/docs/cli_reference.py, dev/docs/tests/test_cli_reference_conformance.py, src/aeat/application/storage_write_policy.py, docs/cli/config.rst, docs/cli/schemas.rst`.
+- [x] `P02.S03` - Purge the retired verb family from the generated CLI reference generator and its conformance tests, and from the storage write-policy allowlist if enrolled; `dev/docs/cli_reference.py, dev/docs/tests/test_cli_reference_conformance.py, src/aeat/application/storage_write_policy.py, docs/cli/config.rst, docs/cli/schemas.rst`.
 - [x] `P02.S04` - Remove the dead censo pull/compare/apply locale key subtree through the locales CLI (keeping the operator-manual advisory strings) and confirm scaffold --check is clean; `src/aeat/locales/en.yml, src/aeat/locales/es.yml, src/aeat/locales/ca.yml, src/aeat/locales/hu.yml`.
-- [ ] `P02.S05` - Rewrite the censo how-to docs to the operator-manual config profile edit path, drop the retired verbs from filing-calendar, modelo-036, and read-live-aeat-data guides, and regenerate the API stubs so no orphan _censo rst remains; `docs/how-to/censo-update.md, docs/how-to/filing-calendar.md, docs/how-to/modelo-036.md, docs/how-to/read-live-aeat-data.md, docs/api/`.
+- [x] `P02.S05` - Rewrite the censo how-to docs to the operator-manual config profile edit path, drop the retired verbs from filing-calendar, modelo-036, and read-live-aeat-data guides, and regenerate the API stubs so no orphan _censo rst remains; `docs/how-to/censo-update.md, docs/how-to/filing-calendar.md, docs/how-to/modelo-036.md, docs/how-to/read-live-aeat-data.md, docs/api/`.
 - [x] `P02.S06` - Re-author the inicio-actividad and cese-actividad agent skills onto the operator-manual censo mirror so the rule-surface conformance gate stays green; `src/aeat/_data/agent/skills/inicio-actividad/SKILL.md, src/aeat/_data/agent/skills/cese-actividad/SKILL.md`.
-- [ ] `P02.S07` - Update the aeat-cli-pull-and-file-standard rule source (it cites censo pull as a worked example), propagate with vaultspec-core sync, and prune stale terminology relevance rows and complexity-baseline entries for deleted modules; `.vaultspec/rules/rules/project/aeat-cli-pull-and-file-standard.md, src/aeat/_data/terminology/relevance/relevance.json, dev/audit/complexity_baseline.json`.
+- [x] `P02.S07` - Update the aeat-cli-pull-and-file-standard rule source (it cites censo pull as a worked example), propagate with vaultspec-core sync, and prune stale terminology relevance rows and complexity-baseline entries for deleted modules; `.vaultspec/rules/rules/project/aeat-cli-pull-and-file-standard.md, src/aeat/_data/terminology/relevance/relevance.json, dev/audit/complexity_baseline.json`.
 
 ### Phase `P03` - preserve posture and verify
 
@@ -34,7 +35,7 @@ Pin the honest end state with regressions (calendar enrolment_unverified posture
 
 - [x] `P03.S08` - Pin the calendar censo.enrolment_unverified posture with a regression: the warning is present and strict projection refuses for modelos 100/130/303/390 when censo is unverified; `src/aeat/application/overview/tests/`.
 - [x] `P03.S09` - Pin that operator-entered censal facts are never stamped AEAT-verified: nothing writes the aeat_censo_read or aeat_censo_derived source tags, so the calendar verified-key set stays empty; `src/aeat/application/user_profile/tests/test_censo_sync.py`.
-- [ ] `P03.S10` - Run the full gate battery (collect-only, ruff, documented-command conformance, rule-surface conformance, locales and apidocs scaffold checks) and record the honest reconciliation of the superseded g313 plan as an exec note without fabricating completion; `src/aeat, .vault/exec/2026-07-11-censo-operator-manual-enrolment/`.
+- [x] `P03.S10` - Run the full gate battery (collect-only, ruff, documented-command conformance, rule-surface conformance, locales and apidocs scaffold checks) and record the honest reconciliation of the superseded g313 plan as an exec note without fabricating completion; `src/aeat, .vault/exec/2026-07-11-censo-operator-manual-enrolment/`.
 
 ### Phase `P04` - re-seat afectacion ratio and delete the snapshot substrate
 

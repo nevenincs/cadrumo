@@ -3,11 +3,11 @@ tags:
   - '#adr'
   - '#m303-synthetic-generator-primitive-spec'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - "[[2026-06-03-synthetic-fixture-primitive-encoding-discipline-adr]]"
-  - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
+  - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - '[[2026-06-04-m303-synthetic-generator-primitive-spec-research]]'
 ---
 
@@ -32,7 +32,7 @@ engine recomputes `iva.cuota-devengada-total` (c27) and
 `iva.cuota-deducible-total` (c45) via the existing formulas.
 
 To land Route A, the synthetic-PDF generator
-(`src/aeat/tests/fixtures/justificantes/_generate.py`) must print those
+(`src/cadrumo/tests/fixtures/justificantes/_generate.py`) must print those
 primitive line items on the M303 fixture pages so the parser has
 something to extract. Today's `_draw_modelo_303_corpus` prints only the
 form-page totals (boxes 27/29/45 and the downstream chain 46/64/66/69/71).
@@ -114,7 +114,7 @@ remediation of the existing single-rate-equivalent corpus.
 ## Generator changes
 
 The implementation is concentrated in three locations within
-`src/aeat/tests/fixtures/justificantes/_generate.py`:
+`src/cadrumo/tests/fixtures/justificantes/_generate.py`:
 
 ### 1. `_Modelo303CorpusFixture` dataclass — add primitive fields
 
@@ -292,12 +292,12 @@ verification-chain reds were not the real green.
 
 Single atomic commit per the engine-and-fixture co-landing rule:
 
-- `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml` (profile patterns: remove 27/45, add primitive ids).
-- `src/aeat/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml` (legacy profile patterns: same shape).
-- `src/aeat/tests/fixtures/justificantes/_generate.py` (dataclass + helper + per-fixture instantiation + drawing).
-- Regenerate the 15 M303 corpus PDFs by running `uv run python src/aeat/tests/fixtures/justificantes/_generate.py`.
+- `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml` (profile patterns: remove 27/45, add primitive ids).
+- `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes/extraction_profiles/0001-modelo-303-declaracion-pdf.toml` (legacy profile patterns: same shape).
+- `src/cadrumo/tests/fixtures/justificantes/_generate.py` (dataclass + helper + per-fixture instantiation + drawing).
+- Regenerate the 15 M303 corpus PDFs by running `uv run python src/cadrumo/tests/fixtures/justificantes/_generate.py`.
 - Update each fixture's sidecar JSON if the sidecar declares per-casilla expected values (verify whether the sidecars carry expected casilla values; if so, they need the new primitive entries).
-- Add the anti-tautology test as `src/aeat/adapters/inbound/declaracion/test_m303_primitive_anti_tautology.py`.
+- Add the anti-tautology test as `src/cadrumo/adapters/inbound/declaracion/test_m303_primitive_anti_tautology.py`.
 
 Estimated change footprint: ~80-100 LOC across the generator + ~20 LOC
 profile changes + ~50 LOC anti-tautology test + binary fixture
@@ -339,7 +339,7 @@ split into base/cuota pairs:
 `soportado_interiores_base + soportado_interiores_cuota`.
 
 The actual M303 registry casillas (verified in
-`src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml`
+`src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/casillas/0001-casillas.part-001.toml`
 and the parallel 2009-y-siguientes file) are single-leaf cuota IDs:
 
 - `iva.repercutido.general` — one Decimal, `input_kind = "bound"`

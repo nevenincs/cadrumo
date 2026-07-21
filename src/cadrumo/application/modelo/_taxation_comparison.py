@@ -12,12 +12,11 @@ revision is persisted. The caller supplies all inputs explicitly via a
 formula engine evaluates both paths and returns a typed
 :class:`TaxationComparisonResult`.
 
-Scope honesty (ADR ``2026-07-01-tributacion-conjunta-individual-adr``): the
-individual run reuses the *single* input set assembled for the unidad familiar
-and only flips ``declaration_type`` to 1, so it faithfully models a
-**single-earner** household. It does not compute two separate spouse returns; a
-genuine two-earner individual comparison requires a per-spouse income axis that
-is absent at HEAD (the deferred second slice). Every result therefore carries
+Scope honesty: the individual run reuses the *single* input set assembled for
+the unidad familiar and only flips ``declaration_type`` to 1, so it faithfully
+models a **single-earner** household. It does not compute two separate spouse
+returns; a genuine two-earner individual comparison requires a per-spouse
+income axis that does not yet exist. Every result therefore carries
 ``individual_branch_single_earner_only`` and an
 ``individual_branch_caveat`` so no surface presents the individual figure as
 authoritative for a two-earner couple.
@@ -76,15 +75,14 @@ _DECLARATION_TYPE_BINDING_SUFFIX = "profile-declaration-type"
 _CUOTA_RESULTANTE_ROLE = "irpf_cuota_resultante_autoliquidacion"  # casilla 0595
 _RESULTADO_ROLE = "irpf_cuota_diferencial"  # casilla 0610
 
-#: Honesty scope caveat for the individual filing branch (ADR
-#: ``2026-07-01-tributacion-conjunta-individual-adr``). The individual run
+#: Honesty scope caveat for the individual filing branch. The individual run
 #: reuses the *single* input set assembled for the unidad familiar and merely
 #: flips ``declaration_type`` to 1, so it faithfully models only a **single-earner**
 #: household. It does NOT compute two separate spouse returns (each on that
 #: spouse's own income); a genuine two-earner individual comparison requires a
-#: per-spouse income attribution axis that does not exist at HEAD. Surfacing this
+#: per-spouse income attribution axis that does not yet exist. Surfacing this
 #: statement keeps the comparator from presenting an unfaithful two-earner figure
-#: as authoritative (``no-silent-under-declaration`` / ``aeat-safety-legal-gates``).
+#: as authoritative.
 INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT = (
     "The individual-mode figure is a single-return computation over the unidad "
     "familiar's combined inputs and is faithful only for a single-earner household. "
@@ -142,14 +140,13 @@ class TaxationComparisonResult(BaseModel):
     recommendation: TaxationRecommendation
     recommendation_reason: str
 
-    # Honesty scope (ADR 2026-07-01): the individual branch reuses the unidad
-    # familiar's single input set, so it is faithful only for a single-earner
-    # household. ``individual_branch_single_earner_only`` is always True in this
-    # first slice; a genuine two-earner individual comparison (two separate
-    # spouse returns) requires a per-spouse income axis absent at HEAD, tracked
-    # as the deferred second slice. ``individual_branch_caveat`` carries the
-    # operator-facing disclosure so no surface presents the individual figure as
-    # authoritative for a two-earner couple.
+    # Honesty scope: the individual branch reuses the unidad familiar's single
+    # input set, so it is faithful only for a single-earner household.
+    # ``individual_branch_single_earner_only`` is always True today; a genuine
+    # two-earner individual comparison (two separate spouse returns) requires a
+    # per-spouse income axis that does not yet exist. ``individual_branch_caveat``
+    # carries the operator-facing disclosure so no surface presents the
+    # individual figure as authoritative for a two-earner couple.
     individual_branch_single_earner_only: bool = True
     individual_branch_caveat: str = INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
 

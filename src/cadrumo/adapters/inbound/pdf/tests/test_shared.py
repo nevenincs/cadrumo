@@ -14,7 +14,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....core.errors import AeatError
+from .....core.errors import CadrumoError
 from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .. import ExtractedCasilla, PdfModeloImportError
 
@@ -108,13 +108,13 @@ class TestExtractedCasillaShape:
 
 
 class TestPdfModeloImportError:
-    """The shared error root inherits from :class:`AeatError`."""
+    """The shared error root inherits from :class:`CadrumoError`."""
 
-    def test_is_aeat_error(self) -> None:
-        assert issubclass(PdfModeloImportError, AeatError)
+    def test_is_cadrumo_error(self) -> None:
+        assert issubclass(PdfModeloImportError, CadrumoError)
 
-    def test_can_be_caught_as_aeat_error(self) -> None:
-        with pytest.raises(AeatError, match=r"test"):
+    def test_can_be_caught_as_cadrumo_error(self) -> None:
+        with pytest.raises(CadrumoError, match=r"test"):
             raise PdfModeloImportError("test")
 
     def test_can_be_caught_as_pdf_filing_import_error(self) -> None:

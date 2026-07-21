@@ -1,0 +1,406 @@
+# Duplication dispositions
+#
+# One recorded disposition per observed clone group in the production tree
+# (`src/cadrumo`). The clone COUNT is advisory debt, not an elimination mandate:
+# per ADR 2026-07-15-cli-authority-verb-conformance-adr and the
+# 2026-07-16-cli-authority-verb-conformance-duplication-authority-audit, jscpd
+# output identifies candidates for semantic inspection, never a consolidation
+# verdict. This file records the honest disposition of each candidate.
+#
+# Every `[[group]]` carries exactly one `classification`:
+#   * cluster-owned     - the group belongs to a named actionable cluster
+#                         already tracked by the campaign plan; `owner` names
+#                         the cluster and its plan phase.
+#   * intentional       - a recorded intentional non-consolidation: either an
+#                         ADR "Intentional non-consolidations" entry or a
+#                         constraint-divergent pair the substitutability
+#                         pre-filter excludes; `rationale` cites why.
+#   * advisory-residue  - low-value structural duplication left as VISIBLE
+#                         advisory debt. NOT an elimination mandate; recorded so
+#                         the count is honest rather than hidden.
+#   * actionable        - a real substitutable redeclaration resolved in this
+#                         commit; `rationale` names the fix.
+#
+# `where` uses paths relative to `src/cadrumo/` with jscpd line spans.
+
+[meta]
+generated_from = "just audit-duplication (jscpd@4.2.0)"
+observed_groups = 65
+duplicated_pct = "0.41"
+files_analyzed = 1255
+source_root = "src/cadrumo"
+count_is_advisory = true
+governing_adr = "2026-07-15-cli-authority-verb-conformance-adr"
+governing_audit = "2026-07-16-cli-authority-verb-conformance-duplication-authority-audit"
+
+[summary]
+cluster_owned = 18
+intentional = 15
+advisory_residue = 32
+actionable = 1
+
+# ---------------------------------------------------------------------------
+# cluster-owned: tracked by a named actionable cluster in the campaign plan
+# ---------------------------------------------------------------------------
+
+[[group]]
+classification = "cluster-owned"
+owner = "Active profile, logout, and reset (W02.P04/P05, W04.P11)"
+where = ["entrypoints/cli/_config/_reset_cli.py [179-202]", "entrypoints/cli/_config/_reset_cli.py [84-107]"]
+rationale = "Repeated reset-confirmation/teardown block inside the reset CLI; owned by the profile-logout-reset authority consolidation."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Authentication custody (W02.P06)"
+where = ["entrypoints/cli/_config/_auth.py [353-371]", "entrypoints/cli/_config/_auth.py [288-306]"]
+rationale = "Repeated auth logout/reset emit block; owned by the typed auth logout/reset separation."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Registry resolution and projections (W03.P25.S254-S257)"
+where = ["domain/calculations/registry/_queries.py [249-281]", "domain/calculations/registry/_queries.py [203-235]"]
+rationale = "Scoped/unscoped query report construction repeats; the cluster produces one typed resolved context and shares only substitutable projections."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Registry resolution and projections (W03.P25.S254-S257)"
+where = ["domain/calculations/registry/_queries.py [367-399]", "domain/calculations/registry/_queries.py [318-350]"]
+rationale = "Second scoped/unscoped projection-construction repeat in the same query authority; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Registry resolution and projections (W03.P25.S254-S257)"
+where = ["domain/calculations/registry/_queries.py [636-660]", "domain/calculations/registry/_queries.py [500-524]"]
+rationale = "Third projection-construction repeat in the query authority; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "LLM review workflow (W03.P24.S250-S253)"
+where = ["entrypoints/cli/_ledger_llm_cli.py [581-607]", "entrypoints/cli/_ledger_llm_cli.py [413-437]"]
+rationale = "Suggest/apply/reject/split routing is distributed across the LLM CLI; the cluster consolidates it into one typed application workflow."
+
+[[group]]
+classification = "cluster-owned"
+owner = "LLM review workflow (W03.P24.S250-S253)"
+where = ["entrypoints/cli/_ledger_llm_cli.py [611-649]", "entrypoints/cli/_ledger_llm_cli.py [208-246]"]
+rationale = "Second distributed LLM-review routing block; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "LLM review workflow (W03.P24.S250-S253)"
+where = ["entrypoints/cli/_ledger_llm_cli.py [651-680]", "entrypoints/cli/_ledger_llm_cli.py [487-516]"]
+rationale = "Third distributed LLM-review routing block; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "LLM review workflow (W03.P24.S250-S253)"
+where = ["entrypoints/cli/_ledger_llm_cli.py [694-705]", "entrypoints/cli/_ledger_llm_cli.py [518-529]"]
+rationale = "Fourth distributed LLM-review routing block; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Ledger evidence (W03.P08)"
+where = ["entrypoints/cli/_ledger_business_invoice_cli.py [413-427]", "entrypoints/cli/_ledger_evidence_cli.py [570-584]"]
+rationale = "Invoice-vs-evidence CLI emit overlap; owned by the evidence-attachment authority consolidation (invoice linking stays invoice-only atomic)."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Ledger evidence (W03.P08)"
+where = ["entrypoints/cli/_ledger_business_invoice_cli.py [554-611]", "entrypoints/cli/_ledger_business_invoice_cli.py [453-504]"]
+rationale = "Repeated invoice attach/link block within the business-invoice CLI; same ledger-evidence cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Filed observation capture (W03.P23.S247-S249)"
+where = ["application/live/_filed_data_capture.py [453-461]", "application/live/_filed_data_capture.py [350-358]"]
+rationale = "Selection/ordering/persistence is split across the capture module; the cluster moves it to one persistence authority + typed finalizer."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Filed observation capture (W03.P23.S247-S249)"
+where = ["application/live/_filed_data_capture.py [463-475]", "application/live/_filed_data_capture.py [276-288]"]
+rationale = "Second capture selection/persistence repeat; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Filed observation capture (W03.P23.S247-S249)"
+where = ["application/live/_filed_data_capture.py [500-519]", "application/live/_filed_data_capture.py [300-319]"]
+rationale = "Third capture selection/persistence repeat; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Filed observation capture (W03.P23.S247-S249)"
+where = ["application/live/_filed_data_capture.py [540-557]", "application/live/_filed_data_capture.py [385-403]"]
+rationale = "Fourth capture selection/persistence repeat; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Filed observation capture (W03.P23.S247-S249)"
+where = ["application/live/_filed_data_capture.py [574-586]", "application/live/_filed_data_capture.py [416-428]"]
+rationale = "Fifth capture selection/persistence repeat; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Filed observation capture (W03.P23.S247-S249)"
+where = ["application/live/_filed_data_capture.py [612-622]", "application/live/_filed_data_capture.py [452-459]"]
+rationale = "Sixth capture selection/persistence repeat; same cluster."
+
+[[group]]
+classification = "cluster-owned"
+owner = "Filed observation capture (W03.P23.S247-S249)"
+where = ["application/live/_filed_data_capture.py [686-702]", "application/live/_filed_data_capture.py [415-431]"]
+rationale = "Seventh capture selection/persistence repeat; same cluster."
+
+# ---------------------------------------------------------------------------
+# intentional: recorded intentional non-consolidation / constraint-divergent
+# ---------------------------------------------------------------------------
+
+[[group]]
+classification = "intentional"
+where = ["adapters/outbound/aeat/sede/_groi_check.py [209-219]", "adapters/outbound/aeat/sede/_nif_iva_check.py [238-248]"]
+rationale = "ADR intentional non-consolidation: GROI and NIF validation retain different identifier rules; the shared shape is the sede check scaffold, not one authority."
+
+[[group]]
+classification = "intentional"
+where = ["domain/calculations/registry/_aeat_nif_iva_oracle.py [22-50]", "domain/calculations/registry/_groi_oracle.py [41-69]"]
+rationale = "ADR intentional non-consolidation: the GROI/NIF oracle pair validates distinct identifier rules; constraint-divergent."
+
+[[group]]
+classification = "intentional"
+where = ["application/modelo/_review_package_recipient_registry.py [53-70]", "application/modelo/_review_package_recipient_replay_guard.py [48-66]"]
+rationale = "ADR intentional non-consolidation: recipient registry manages authorized recipients while the replay guard prevents repeated processing; distinct authorities."
+
+[[group]]
+classification = "intentional"
+where = ["adapters/inbound/financial/providers/_csv.py [324-345]", "adapters/inbound/financial/providers/_xlsx.py [170-190]"]
+rationale = "Constraint-divergent import transports: CSV and XLSX parse different source formats; the shared block is row projection, not a substitutable authority."
+
+[[group]]
+classification = "intentional"
+where = ["application/aggregation/_renta_gasto_ledger.py [34-49]", "application/aggregation/_renta_income_ledger.py [34-49]"]
+rationale = "Per-family ledger-aggregation resolvers bind distinct binding source kinds (gasto vs income); constraint-divergent per calculation-source-canonical-mechanism."
+
+[[group]]
+classification = "intentional"
+where = ["application/aggregation/_impatriado_income_ledger.py [40-69]", "application/aggregation/_renta_income_ledger.py [34-63]"]
+rationale = "Per-family ledger-aggregation resolvers bind distinct source kinds (impatriado vs renta income); constraint-divergent per the source-kind taxonomy."
+
+[[group]]
+classification = "intentional"
+where = ["entrypoints/cli/_modelo_work_verification_cli.py [72-78]", "entrypoints/cli/_modelo_work_wizard_cli.py [117-121]"]
+rationale = "Shared Typer option declarations (_ModeloOpt/_YearOpt/_PeriodOpt/_RevisionOpt); ADR intentional: Typer templates share presentation structure without becoming one command."
+
+[[group]]
+classification = "intentional"
+where = ["entrypoints/cli/_modelo_work_revision_payloads.py [49-66]", "entrypoints/cli/_modelo_work_wizard_payloads.py [57-74]"]
+rationale = "Sibling payload models sharing field structure across distinct typed payloads; Typer/schema presentation structure, not one authority."
+
+[[group]]
+classification = "intentional"
+where = ["entrypoints/cli/_modelo_work_revision_cli.py [43-50]", "entrypoints/cli/_modelo_work_wizard_cli.py [116-121]"]
+rationale = "Shared Typer option-declaration block across modelo-work sibling commands; ADR intentional presentation structure."
+
+[[group]]
+classification = "intentional"
+where = ["entrypoints/cli/_modelo_work_lifecycle_cli.py [56-63]", "entrypoints/cli/_modelo_work_wizard_cli.py [116-123]"]
+rationale = "Shared Typer option-declaration block across modelo-work sibling commands; ADR intentional presentation structure."
+
+[[group]]
+classification = "intentional"
+where = ["entrypoints/cli/_modelo_work_calculate_cli.py [70-79]", "entrypoints/cli/_modelo_work_wizard_cli.py [113-122]"]
+rationale = "Shared Typer option-declaration block across modelo-work sibling commands; ADR intentional presentation structure."
+
+[[group]]
+classification = "intentional"
+where = ["entrypoints/cli/_modelo_reconcile_cli.py [177-184]", "entrypoints/cli/_modelo_work_wizard_cli.py [116-125]"]
+rationale = "Shared Typer option-declaration block across modelo sibling commands; ADR intentional presentation structure."
+
+[[group]]
+classification = "intentional"
+where = ["entrypoints/cli/_modelo_amend_wizard_cli.py [76-89]", "entrypoints/cli/_modelo_work_wizard_cli.py [113-126]"]
+rationale = "Amend wizard shares the work-wizard interactive question structure; ADR intentional: the wizard gathers/validates input before invoking, distinct operator intent."
+
+[[group]]
+classification = "intentional"
+where = ["entrypoints/cli/_modelo_amend_wizard_cli.py [110-135]", "entrypoints/cli/_modelo_work_wizard_cli.py [147-170]"]
+rationale = "Second amend-vs-work wizard question-block overlap; ADR intentional interactive-wizard presentation structure."
+
+[[group]]
+classification = "intentional"
+where = ["entrypoints/cli/_modelo_amend_wizard_cli.py [152-174]", "entrypoints/cli/_modelo_work_wizard_cli.py [187-209]"]
+rationale = "Third amend-vs-work wizard question-block overlap; ADR intentional interactive-wizard presentation structure."
+
+# ---------------------------------------------------------------------------
+# advisory-residue: low-value duplication left as visible debt (not a mandate)
+# ---------------------------------------------------------------------------
+
+[[group]]
+classification = "advisory-residue"
+where = ["adapters/persistence/storage/envelope/_secure_repository.py [312-329]", "adapters/persistence/storage/envelope/_secure_repository.py [266-283]"]
+rationale = "Repeated envelope read/decrypt shaping within one repository; low-value structural residue, no divergent policy."
+
+[[group]]
+classification = "advisory-residue"
+where = ["adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py [128-142]", "adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py [87-101]"]
+rationale = "Repeated pdfplumber extraction block within one backend; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_config/_repair_cli.py [220-231]", "entrypoints/cli/_config/_repair_cli.py [199-210]"]
+rationale = "Repeated repair emit block within one CLI module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_config/_google_sync_calc.py [529-550]", "entrypoints/cli/_config/_google_sync_calc.py [384-405]"]
+rationale = "Repeated Sheets sync assembly block within one module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["domain/calculations/registry/_parity_tapes.py [62-81]", "domain/calculations/registry/_scenarios.py [70-89]"]
+rationale = "Parity-tape and scenario fixtures share a construction shape; test-support residue, not production policy."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_prorrata_register_cli.py [275-303]", "entrypoints/cli/_prorrata_register_cli.py [211-239]"]
+rationale = "Repeated prorrata register emit block within one CLI module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_modelo_work_verification_cli.py [121-131]", "entrypoints/cli/_modelo_work_verification_cli.py [81-91]"]
+rationale = "Repeated verification emit/payload block within one CLI module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_modelo_work_verification_cli.py [460-470]", "entrypoints/cli/_modelo_work_verification_cli.py [81-131]"]
+rationale = "Repeated verification emit block within one CLI module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_modelo_work_verification_cli.py [471-486]", "entrypoints/cli/_modelo_work_verification_cli.py [132-147]"]
+rationale = "Repeated verification emit block within one CLI module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_modelo_work_revision_cli.py [166-182]", "entrypoints/cli/_modelo_work_verification_cli.py [480-496]"]
+rationale = "Sibling modelo-work command emit blocks overlap; low-value residue, distinct command intents."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_modelo_work_revision_cli.py [249-277]", "entrypoints/cli/_modelo_work_revision_cli.py [154-182]"]
+rationale = "Repeated revision emit block within one CLI module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_modelo_work_lifecycle_cli.py [528-542]", "entrypoints/cli/_modelo_work_lifecycle_cli.py [161-175]"]
+rationale = "Repeated lifecycle emit block within one CLI module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_modelo_m036_cli.py [182-194]", "entrypoints/cli/_modelo_m036_cli.py [154-166]"]
+rationale = "Repeated M036 emit block within one CLI module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_modelo_export_cli.py [127-143]", "entrypoints/cli/_modelo_work_runs_cli.py [199-215]"]
+rationale = "Export and work-runs CLI emit blocks overlap; low-value residue, distinct command intents."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_modelo_audit_cli.py [205-225]", "entrypoints/cli/_modelo_audit_cli.py [104-124]"]
+rationale = "Repeated audit emit block within one CLI module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/_ledger_list.py [303-311]", "entrypoints/cli/_ledger_review_cli.py [69-80]"]
+rationale = "Ledger list and review CLI share a small read-shaping block; low-value residue, read-only discovery vs decision workflow stay distinct."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/registry.py [189-206]", "entrypoints/cli/registry.py [137-154]"]
+rationale = "Repeated _metric_line(...) report-projection list within the registry CLI; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/registry.py [280-302]", "entrypoints/cli/registry.py [156-178]"]
+rationale = "Second repeated metric-line projection list within the registry CLI; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/registry.py [354-385]", "entrypoints/cli/registry.py [156-179]"]
+rationale = "Third repeated metric-line projection list within the registry CLI; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/registry.py [534-557]", "entrypoints/cli/registry.py [353-378]"]
+rationale = "Fourth repeated metric-line projection list within the registry CLI; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["entrypoints/cli/registry.py [613-638]", "entrypoints/cli/registry.py [533-559]"]
+rationale = "Fifth repeated metric-line projection list within the registry CLI; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["domain/modelos/_row_models.py [373-389]", "domain/modelos/_row_models.py [322-338]"]
+rationale = "Sibling row-model field blocks share structure; low-value residue, distinct typed rows."
+
+[[group]]
+classification = "advisory-residue"
+where = ["domain/attachments/_service.py [129-170]", "domain/attachments/_service.py [61-104]"]
+rationale = "Repeated attachment put/read shaping within one service; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["application/registry/__init__.py [370-388]", "application/registry/__init__.py [332-350]"]
+rationale = "Repeated facade projection block within the registry application package; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["application/overview/_calendar_models.py [309-321]", "application/overview/_calendar_models.py [168-180]"]
+rationale = "Sibling calendar-model field blocks share structure; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["application/modelo/_external_import_actions.py [307-325]", "application/modelo/_revision_persistence.py [572-592]"]
+rationale = "Import-action and revision-persistence share a small persistence-shaping block; low-value residue, distinct write paths."
+
+[[group]]
+classification = "advisory-residue"
+where = ["application/modelo/_calculation_source_staging.py [254-267]", "application/modelo/_calculation_source_staging.py [180-193]"]
+rationale = "Repeated source-staging block within one module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["application/live/_remote_state_models.py [71-83]", "application/live/_remote_state_models.py [34-48]"]
+rationale = "Sibling remote-state model field blocks share structure; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["application/live/_remote_state_models.py [121-135]", "application/live/_remote_state_models.py [34-48]"]
+rationale = "Second remote-state model field-block overlap; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["application/ledger/_models.py [240-251]", "application/ledger/_models.py [92-103]"]
+rationale = "Sibling ledger-model field blocks share structure; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["locales/cli.py [294-309]", "locales/cli.py [255-270]"]
+rationale = "Repeated locale-CLI emit block within one module; low-value residue."
+
+[[group]]
+classification = "advisory-residue"
+where = ["application/diagnostics_run_health.py [663-670]", "application/diagnostics_run_health.py [571-577]"]
+rationale = "Repeated health-metric shaping block within one module; low-value residue."
+
+# ---------------------------------------------------------------------------
+# actionable: resolved in this commit (below jscpd's min-lines/min-tokens
+# floor, so absent from the 65-group inventory, but a real substitutable
+# redeclaration confirmed by direct inspection)
+# ---------------------------------------------------------------------------
+
+[[group]]
+classification = "actionable"
+where = ["entrypoints/cli/_ledger_classify_cli.py [24-26]", "entrypoints/cli/_ledger_support.py [35-39]"]
+rationale = "_TransactionRepo Protocol (single `bucket_id: str` property) was redeclared byte-identically in _ledger_classify_cli.py. Substitutable (identical shape). Fixed: deleted the local redeclaration and imported the canonical protocol from ._ledger_support, matching _ledger.py."

@@ -1,4 +1,4 @@
-"""Modelo 210 IRNR España-Francia convenio ceiling resolution (Slice D).
+"""Modelo 210 IRNR España-Francia convenio ceiling resolution.
 
 Grounds the Spain-France double-taxation treaty (CDI firmado 10-10-1995, en vigor
 01-07-1997, BOE-A-1997-12729) dividend and interest source-state ceilings against

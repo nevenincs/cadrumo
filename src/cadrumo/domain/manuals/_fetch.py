@@ -213,7 +213,7 @@ def _stream_to_file(url: str, destination: Path) -> tuple[str, int]:
         "GET",
         url,
         follow_redirects=True,
-        timeout=load_settings().aeat_manuals_http_timeout_s,
+        timeout=load_settings().cadrumo_manuals_http_timeout_s,
     ) as response:
         response.raise_for_status()
         with destination.open("wb") as out:

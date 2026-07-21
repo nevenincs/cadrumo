@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-35-2006-art-93.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-93.html",
   "source_sha256": "33a1ad56d7598497a2ba8312bd9ff8f8367a76a5d7d283c30442b46dcc4f1456",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

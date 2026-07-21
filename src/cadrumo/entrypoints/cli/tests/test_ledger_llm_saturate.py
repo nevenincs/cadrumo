@@ -1,19 +1,9 @@
-"""Real-behavior CLI tests for ``aeat app ledger classify --llm --saturate``.
+"""Real-behavior CLI tests for operator-initiated ledger saturation.
 
-Exercises the stage-2 saturation surface end to end against the real CLI, real
-application + domain derivation, and real SQLite persistence in an isolated
-storage root. Determinism comes from dependency injection — a concrete
-:class:`LLMClassifier` (returning a fixed response that includes an
-``iva_category``) registered through the production
-:func:`register_classifier` registry — never a mock or monkeypatch.
+Successful provider execution requires a live external provider and is not
+simulated here. These cases exercise the deterministic fallback where the
+operator supplies the IVA category directly:
 
-Coverage for the saturate contract (llm-ledger-classification decision):
-
-* preview (``--saturate`` without ``--apply``) derives the rate / base / amount
-  from the model-selected IVA category and persists nothing;
-* apply (``--saturate --apply``) persists the derived substrate with
-  ``classified_by = llm:<model>`` and the gross==base+iva invariant holds;
-* a non-derivable IVA category surfaces an operator-facing note and no numbers;
 * ``--saturate`` without ``--llm`` but WITH ``--iva-category`` derives the
   substrate operator-initiated, stamped ``derived:iva-category`` — the F2
   fallback for when the model declines or the operator already knows the
@@ -25,38 +15,28 @@ Coverage for the saturate contract (llm-ledger-classification decision):
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator, Sequence
 from decimal import Decimal
 from pathlib import Path
-from typing import Any
 
 import pytest
 from click.testing import Result
 
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.categories import SpendingCategory
 from ....domain.iva import IvaCategory
-from ....domain.transactions import (
-    BusinessClassification,
-    LLMClassificationResponse,
-    Transaction,
-    register_classifier,
-)
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from .envelope_helpers import unwrap_cli_result as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-def _json_result(result: Result) -> dict[str, Any]:
-    return json.loads(result.output)["result"]
 
 
 @pytest.fixture(autouse=True)
@@ -70,57 +50,6 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
             lambda state: register_minimal_profile(state, profile_id="00000000-0000-4000-8000-000000000000")
         )
         yield
-
-
-class _SaturatingClassifier:
-    """Concrete classifier returning a fixed response carrying an IVA category."""
-
-    def __init__(
-        self,
-        *,
-        iva_category: IvaCategory = IvaCategory.DOMESTIC_GENERAL_21,
-        model: str = "sat-1",
-    ) -> None:
-        self._iva_category = iva_category
-        self._model = model
-
-    @property
-    def decided_by(self) -> str:
-        return f"llm:claude:{self._model}"
-
-    def classify(self, transaction: Transaction, *, evidence_text: str | None = None) -> LLMClassificationResponse:
-        return LLMClassificationResponse(
-            classification=BusinessClassification.BUSINESS,
-            confidence=Decimal("0.92"),
-            reason="business expense with a domestic supplier",
-            category=SpendingCategory.MANUTENCION_DIETAS_NACIONAL,
-            iva_category=self._iva_category,
-        )
-
-
-@pytest.fixture
-def _saturating_claude() -> Iterator[None]:
-    register_classifier("claude", lambda **_kwargs: _SaturatingClassifier())
-    try:
-        yield
-    finally:
-        from ....domain.transactions import build_claude_classifier
-
-        register_classifier("claude", build_claude_classifier)
-
-
-@pytest.fixture
-def _non_derivable_claude() -> Iterator[None]:
-    register_classifier(
-        "claude",
-        lambda **_kwargs: _SaturatingClassifier(iva_category=IvaCategory.INTRA_COMMUNITY_SUPPLY),
-    )
-    try:
-        yield
-    finally:
-        from ....domain.transactions import build_claude_classifier
-
-        register_classifier("claude", build_claude_classifier)
 
 
 def _import_one_transaction(tmp_path: Path) -> str:
@@ -142,102 +71,6 @@ def _row_by_id(transaction_id: str) -> dict[str, object]:
     assert listed.exit_code == 0, listed.output
     rows = _json_result(listed)["rows"]
     return {r["transaction_id"]: r for r in rows}[transaction_id]
-
-
-def test_saturate_preview_derives_substrate_and_persists_nothing(tmp_path: Path, _saturating_claude: None) -> None:
-    tx = _import_one_transaction(tmp_path)
-
-    result = _invoke(
-        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--saturate"],
-    )
-    assert result.exit_code == 0, result.output
-    payload = _json_result(result)
-    assert payload["persisted"] is False
-    assert payload["iva_category"] == IvaCategory.DOMESTIC_GENERAL_21.value
-    assert payload["rate_derivable"] is True
-    assert payload["taxable_base"] == "100.00"
-    assert payload["iva_rate"] == "0.21"
-    assert payload["iva_amount"] == "21.00"
-
-    # Nothing persisted.
-    assert _row_by_id(tx)["business_classification"] == "NOT_YET_PROCESSED"
-    assert _row_by_id(tx)["taxable_base"] is None
-
-
-def test_saturate_apply_persists_derived_substrate_with_llm_provenance(
-    tmp_path: Path,
-    _saturating_claude: None,
-) -> None:
-    tx = _import_one_transaction(tmp_path)
-
-    result = _invoke(
-        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--saturate", "--apply"],
-    )
-    assert result.exit_code == 0, result.output
-    payload = _json_result(result)
-    # D1: --saturate --apply is a single-transaction mutation and emits the
-    # canonical quintet; llm provenance rides on transaction.classified_by, not a
-    # top-level `persisted`/`iva_category` flag. The model-selected IVA category's
-    # effect is verified through the persisted substrate (row checks below).
-    assert payload["transaction"]["classified_by"] == "llm:claude:sat-1"
-    assert payload["review_status"]
-
-    row = _row_by_id(tx)
-    assert row["business_classification"] == "BUSINESS"
-    assert row["classified_by"] == "llm:claude:sat-1"
-    assert Decimal(str(row["taxable_base"])) == Decimal("100.00")
-    assert Decimal(str(row["iva_rate"])) == Decimal("0.21")
-    assert Decimal(str(row["iva_amount"])) == Decimal("21.00")
-
-
-def test_saturate_non_derivable_category_surfaces_note_no_numbers(tmp_path: Path, _non_derivable_claude: None) -> None:
-    tx = _import_one_transaction(tmp_path)
-
-    result = _invoke(
-        ["--format", "json", "app", "ledger", "classify", tx, "--llm", "claude", "--saturate"],
-    )
-    assert result.exit_code == 0, result.output
-    payload = _json_result(result)
-    assert payload["iva_category"] == IvaCategory.INTRA_COMMUNITY_SUPPLY.value
-    assert payload["rate_derivable"] is False
-    assert payload["taxable_base"] is None
-    assert payload["derivation_note"]
-
-
-def test_saturate_apply_then_manual_override_wins(tmp_path: Path, _saturating_claude: None) -> None:
-    """Manual classify is the explicit per-field override and flips provenance."""
-    tx = _import_one_transaction(tmp_path)
-    applied = _invoke(
-        ["app", "ledger", "classify", tx, "--llm", "claude", "--saturate", "--apply"],
-    )
-    assert applied.exit_code == 0, applied.output
-    assert _row_by_id(tx)["classified_by"] == "llm:claude:sat-1"
-
-    # The operator overrides the saturated IVA substrate by hand; manual wins.
-    override = _invoke(
-        [
-            "app",
-            "ledger",
-            "classify",
-            tx,
-            "--classification",
-            "BUSINESS",
-            "--iva-category",
-            IvaCategory.DOMESTIC_REDUCED_10.value,
-            "--taxable-base",
-            "110.00",
-            "--iva-rate",
-            "0.10",
-            "--iva-amount",
-            "11.00",
-        ],
-    )
-    assert override.exit_code == 0, override.output
-
-    row = _row_by_id(tx)
-    assert row["classified_by"] == "manual"
-    assert Decimal(str(row["taxable_base"])) == Decimal("110.00")
-    assert Decimal(str(row["iva_amount"])) == Decimal("11.00")
 
 
 def test_saturate_without_llm_is_refused(tmp_path: Path) -> None:

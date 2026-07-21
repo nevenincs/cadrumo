@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -11,7 +12,7 @@ from textwrap import dedent
 
 import pytest
 
-from ....adapters.persistence.storage.master_key import RecoveryRecord
+from ....core.config import load_settings
 from ....core.paths import PROJECT_ROOT
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -70,6 +71,7 @@ def _run_cadrumo(
     *,
     passphrase: str | None = None,
     extra_env: dict[str, str] | None = None,
+    stdin_payload: str | None = None,
 ) -> subprocess.CompletedProcess[str]:
     env = _env()
     if extra_env:
@@ -78,6 +80,7 @@ def _run_cadrumo(
         [sys.executable, "-c", _CLI_HARNESS, str(storage_root), passphrase or "", *args],
         cwd=Path(__file__).parents[3],
         env=env,
+        input=stdin_payload,
         text=True,
         encoding="utf-8",
         errors="replace",
@@ -150,8 +153,8 @@ def test_profile_create_provisions_file_custody_and_unlock_reopens_it(tmp_path: 
     assert "config.init" not in _combined_output(retired)
 
 
-def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
-    """Root custody verbs use the profile lifecycle session path."""
+def test_profile_logout_is_the_only_strong_logout_before_switch(tmp_path: Path) -> None:
+    """Strong profile logout replaces the duplicate root lock door."""
 
     created = _run_cadrumo(
         tmp_path,
@@ -177,9 +180,13 @@ def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
     )
     assert created.returncode == 0, _combined_output(created)
 
-    locked = _run_cadrumo(tmp_path, ("config", "lock"))
-    assert locked.returncode == 0, _combined_output(locked)
-    assert "locked_profile\t" in locked.stdout
+    logged_out = _run_cadrumo(tmp_path, ("config", "profile", "logout"))
+    assert logged_out.returncode == 0, _combined_output(logged_out)
+    assert "logged_out_profile\t" in logged_out.stdout
+
+    removed_lock = _run_cadrumo(tmp_path, ("config", "lock"))
+    assert removed_lock.returncode != 0
+    assert "No such command 'lock'" in _combined_output(removed_lock)
 
     missing_default = _run_cadrumo(tmp_path, ("config", "switch"))
     assert missing_default.returncode != 0
@@ -196,8 +203,14 @@ def test_config_lock_switch_drive_profile_lifecycle(tmp_path: Path) -> None:
     assert "active_profile\tcustody" in switched_default.stdout
 
 
-def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path) -> None:
-    """First-class custody verbs recover the same encrypted profile under rotated passphrases."""
+def test_config_passphrase_change_round_trips_file_custody(tmp_path: Path) -> None:
+    """`config passphrase change` rotates access to the same encrypted profile.
+
+    The three passphrases ride one bounded ``--secrets-stdin`` JSON object —
+    never ``argv`` — and the profile stays readable only under the rotated
+    passphrase afterwards. (The recovery-code lifecycle round-trip lives in
+    ``test_config_recovery_lifecycle.py``.)
+    """
 
     created = _run_cadrumo(
         tmp_path,
@@ -223,88 +236,61 @@ def test_config_recovery_and_rekey_verbs_round_trip_file_custody(tmp_path: Path)
     )
     assert created.returncode == 0, _combined_output(created)
 
-    enrolled = _run_cadrumo(tmp_path, ("config", "show-recovery"))
-    assert enrolled.returncode == 0, _combined_output(enrolled)
-    recovery_line = next(line for line in enrolled.stdout.splitlines() if line.startswith("recovery_key\t"))
-    recovery_key = recovery_line.split("\t", 1)[1]
-    assert len(recovery_key.split()) == 24
-    recovery_path = tmp_path / "secrets" / "master.recovery.key"
-    assert recovery_path.is_file()
-    recovery_document = recovery_path.read_text(encoding="utf-8")
-    recovery_record = RecoveryRecord.model_validate_json(recovery_document)
-    assert recovery_record.mnemonic_word_count == 24
-    assert recovery_record.hkdf_info == "aeat.recovery-key.master-wrap.v1"
-    assert recovery_key not in recovery_document
-    bucket_dir = next((tmp_path / "buckets").iterdir())
-    manifest = tomllib.loads((bucket_dir / "manifest.toml").read_text(encoding="utf-8"))
-    assert manifest["recovery_enrolled"] is True
-
-    verified = _run_cadrumo(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
-    assert verified.returncode == 0, _combined_output(verified)
-    assert "verified\tyes" in verified.stdout
-
-    rejected = _run_cadrumo(tmp_path, ("config", "verify-recovery", "--recovery-key", "not a valid recovery key"))
-    assert rejected.returncode == 2, _combined_output(rejected)
-    assert "verified\tno" in rejected.stdout
-
+    # Match the child harness's resolution through the sanctioned settings
+    # accessor (no direct environment read): the dev/test password field's
+    # effective value, environment-overridable via its Settings source.
+    provisioning_passphrase = load_settings().cadrumo_dev_test_database_password.get_secret_value()
     rotated_value = "correct horse battery staple"
-    rekeyed = _run_cadrumo(
+    changed = _run_cadrumo(
         tmp_path,
-        (
-            "config",
-            "rekey",
-            "--new-passphrase",
-            rotated_value,
-            "--confirm-new-passphrase",
-            rotated_value,
+        ("config", "passphrase", "change", "--secrets-stdin"),
+        stdin_payload=json.dumps(
+            {
+                "current_passphrase": provisioning_passphrase,
+                "new_passphrase": rotated_value,
+                "new_passphrase_confirmation": rotated_value,
+            },
         ),
     )
-    assert rekeyed.returncode == 0, _combined_output(rekeyed)
-    assert "rekeyed\tyes" in rekeyed.stdout
+    assert changed.returncode == 0, _combined_output(changed)
+    assert "changed\tyes" in changed.stdout
+    assert rotated_value not in changed.stdout
 
-    verified_after_rekey = _run_cadrumo(tmp_path, ("config", "verify-recovery", "--recovery-key", recovery_key))
-    assert verified_after_rekey.returncode == 0, _combined_output(verified_after_rekey)
-    assert "verified\tyes" in verified_after_rekey.stdout
-
-    shown_after_rekey = _run_cadrumo(
+    shown_after_change = _run_cadrumo(
         tmp_path,
         ("config", "profile", "show"),
         passphrase=rotated_value,
     )
-    assert shown_after_rekey.returncode == 0, _combined_output(shown_after_rekey)
-    assert "display_name\tcustody" in shown_after_rekey.stdout
+    assert shown_after_change.returncode == 0, _combined_output(shown_after_change)
+    assert "display_name\tcustody" in shown_after_change.stdout
 
-    recovered_value = "fresh recovery passphrase"
-    recovered = _run_cadrumo(
+    wrong_current = _run_cadrumo(
         tmp_path,
-        (
-            "config",
-            "recover",
-            "--recovery-key",
-            recovery_key,
-            "--new-passphrase",
-            recovered_value,
-            "--confirm-new-passphrase",
-            recovered_value,
+        ("config", "passphrase", "change", "--secrets-stdin"),
+        stdin_payload=json.dumps(
+            {
+                "current_passphrase": "not the current passphrase",
+                "new_passphrase": "irrelevant next value",
+                "new_passphrase_confirmation": "irrelevant next value",
+            },
         ),
         passphrase=rotated_value,
     )
-    assert recovered.returncode == 0, _combined_output(recovered)
-    assert "recovered\tyes" in recovered.stdout
+    assert wrong_current.returncode == 2, _combined_output(wrong_current)
 
-    shown_after_recover = _run_cadrumo(
+    still_shown = _run_cadrumo(
         tmp_path,
         ("config", "profile", "show"),
-        passphrase=recovered_value,
+        passphrase=rotated_value,
     )
-    assert shown_after_recover.returncode == 0, _combined_output(shown_after_recover)
-    assert "display_name\tcustody" in shown_after_recover.stdout
+    assert still_shown.returncode == 0, _combined_output(still_shown)
+    assert "display_name\tcustody" in still_shown.stdout
 
 
 def test_config_help_exposes_first_class_custody_verbs(tmp_path: Path) -> None:
     """The accepted custody verbs are mounted under the config root."""
 
-    for verb in ("lock", "switch", "rekey", "recover", "show-recovery", "verify-recovery"):
+    for verb in ("switch", "passphrase", "recover", "recovery"):
         help_result = _run_cadrumo(tmp_path, ("config", verb, "--help"))
         assert help_result.returncode == 0, _combined_output(help_result)
         assert verb in _combined_output(help_result)

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#determinism-replay-residual'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L2
 related:
   - '[[2026-07-01-determinism-replay-residual-adr]]'

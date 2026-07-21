@@ -8,13 +8,13 @@ from typing import Any
 
 import pytest
 
+from ......tests.master_key import EphemeralMasterKeyProvider
 from ...errors import DecryptionError
 from ._secure_objects_support import (
     UTC,
     Base,
     ClassificationError,
     EnvelopeVersionError,
-    EphemeralMasterKeyProvider,
     Path,
     SecureObjectRecord,
     SecureObjectRepository,
@@ -273,8 +273,8 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
             payload=payload,
         )
         with sqlite3.connect(db_path) as con:
-            (stored_key,) = con.execute(
-                "SELECT object_key FROM secure_objects WHERE namespace = ?",
+            stored_key, revision_id = con.execute(
+                "SELECT object_key, revision_id FROM secure_objects WHERE namespace = ?",
                 (namespace,),
             ).fetchone()
 
@@ -292,6 +292,7 @@ def test_secure_object_record_roundtrip_preserves_full_record_fields(tmp_path: P
             schema_version=3,
             written_at=written_at,
             payload=payload,
+            revision_id=revision_id,
         )
 
 
@@ -382,7 +383,7 @@ def test_secure_object_record_schema_version_mutation_breaks_roundtrip(tmp_path:
 
 
 def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) -> None:
-    """A row below the consumer's current version refuses when no upgrade chain is registered."""
+    """A row below the consumer's current version is never migrated implicitly."""
 
     with _ephemeral_secure_repo(tmp_path, "record-older-schema.db") as (_db_path, _engine, repo):
         namespace = "cadrumo-test.record.older-schema"
@@ -404,12 +405,11 @@ def test_secure_object_record_older_schema_version_is_refused(tmp_path: Path) ->
                 max_supported_version=3,
             )
 
-        assert raised.value.translated_message == "errors.storage.namespace.schema_upgrade_path_missing"
+        assert raised.value.translated_message == "errors.storage.namespace.schema_version_unsupported"
         assert raised.value.context == {
             "namespace": namespace,
             "schema_version": 2,
             "expected": 3,
-            "missing_from_version": 2,
         }
 
 

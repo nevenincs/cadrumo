@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#retenciones-perceptor-count'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-24-retenciones-perceptor-count-plan]]"
 ---

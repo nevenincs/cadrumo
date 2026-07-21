@@ -1,23 +1,21 @@
 """Atomic read/write IO for the plaintext bucket manifest.
 
-The manifest sits at ``<bucket-dir>/manifest.toml``. Writes use the
-write-then-rename pattern (tmp sibling, ``os.replace``) so a crash mid-write
-can never surface as a torn read; reads round-trip through the strict
-pydantic v2 :class:`BucketManifest` record so an unknown key or a torn
-payload fails closed at the boundary.
+The manifest sits at ``<bucket-dir>/manifest.toml``. Writes go through
+:func:`~cadrumo.core.atomic_write.atomic_write_text` (standard tier) so a
+crash mid-write can never surface as a torn read; reads round-trip through
+the strict pydantic v2 :class:`BucketManifest` record so an unknown key or a
+torn payload fails closed at the boundary.
 """
 
 from __future__ import annotations
 
 import base64
-import os
 from datetime import datetime
 from pathlib import Path
 
 from .....core import parse_toml_text
+from .....core.atomic_write import atomic_write_text
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .....core.locks import fsync_parent_dir
-from .....core.logging import get_logger
 from .._namespace_registry import BUCKET_MANIFEST_FILENAME
 from ..errors import StorageValidationError
 from ._errors import BucketValidationError
@@ -26,7 +24,6 @@ from ._manifest import BucketManifest
 
 MISSING_BUCKET_MANIFEST_MESSAGE = "bucket manifest is missing"
 _BUCKET_VALIDATION_MESSAGE_KEY = "errors.integrity.integrity_storage_bucket_validation"
-_log = get_logger(__name__)
 
 
 def manifest_path(paths: BucketPaths) -> Path:
@@ -101,27 +98,28 @@ def _serialise_manifest(manifest: BucketManifest) -> str:
 def write_manifest(paths: BucketPaths, manifest: BucketManifest) -> None:
     """Atomically write the manifest under ``<bucket-dir>/manifest.toml``.
 
-    Uses a write-then-rename pattern: the payload is staged under a
-    ``.tmp`` sibling, ``fsync``-ed, and renamed in place via
-    :func:`os.replace`, after which the parent directory is ``fsync``-ed too.
-    A crash mid-write leaves either the previous good manifest or the new good
-    manifest, never a torn intermediate; the ``fsync`` pair makes that
-    guarantee survive a hard power loss (matching the rotation atomic-write
-    path), so a half-flushed tmp file can no longer become a zero-length
+    Delegates to :func:`~cadrumo.core.atomic_write.atomic_write_text`
+    (standard tier): the payload is staged at a tempfile sibling, ``fsync``-ed,
+    and renamed in place via :func:`os.replace`, after which the parent
+    directory is ``fsync``-ed too. A crash mid-write leaves either the
+    previous good manifest or the new good manifest, never a torn
+    intermediate; the ``fsync`` pair makes that guarantee survive a hard
+    power loss, so a half-flushed tempfile can no longer become a zero-length
     manifest on reboot.
+
+    A missing bucket directory is refused rather than silently created --
+    the atomic-write helper creates its target's parent directory by
+    default, but ``write_manifest`` must never provision an un-provisioned
+    bucket; :func:`~cadrumo.application.user_profile` (or the equivalent
+    bucket-provisioning call site) owns directory creation.
     """
     target = manifest_path(paths)
-    tmp = target.with_suffix(target.suffix + ".tmp")
     payload = _serialise_manifest(manifest)
     try:
-        with open(tmp, "w", encoding=_UTF_8_ENCODING) as handle:
-            handle.write(payload)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(tmp, target)
-        fsync_parent_dir(target)
+        if not target.parent.is_dir():
+            raise FileNotFoundError(target.parent)
+        atomic_write_text(target, payload, encoding=_UTF_8_ENCODING)
     except OSError as exc:
-        _unlink_tmp_manifest(tmp)
         raise manifest_validation_error("bucket manifest cannot be written") from exc
 
 
@@ -154,15 +152,6 @@ def read_manifest(paths: BucketPaths) -> BucketManifest:
     if "status" not in payload:
         raise manifest_validation_error("bucket manifest is missing required lifecycle status")
     return BucketManifest.model_validate(payload)
-
-
-def _unlink_tmp_manifest(tmp: Path) -> None:
-    try:
-        tmp.unlink()
-    except FileNotFoundError:
-        _log.debug("bucket manifest temp cleanup skipped because temp file is absent")
-    except OSError as exc:
-        _log.debug("bucket manifest temp cleanup failed error_type=%s", type(exc).__name__)
 
 
 __all__ = [

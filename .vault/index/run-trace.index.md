@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#run-trace'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-14-run-trace-adr]]'
   - '[[2026-04-14-run-trace-phase1-summary-exec]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#run-trace`.
 
 ### adr
 
-- `2026-04-14-run-trace-adr` - run-trace observability ADR
+- `2026-04-14-run-trace-adr` - run-trace observability ADR | (**status:** `accepted`)
 
 ### audit
 

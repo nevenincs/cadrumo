@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 
 from pydantic import AnyUrl, Field
 
+from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings
 from .....core.errors import SiteHealthError
 from .....core.i18n import tr
@@ -325,9 +326,11 @@ async def collect_groi_observations(
             context={"stage": "unknown", "cause_type": type(exc).__name__},
         ) from exc
     finally:
-        if context is not None:
-            await context.close()
-        await browser_session.close()
+        await close_async_resources(
+            context,
+            browser_session,
+            task_name="cadrumo-groi-check-close",
+        )
 
 
 async def _open_groi_form(page: Page, *, timeout_ms: int) -> None:

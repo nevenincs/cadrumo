@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-1023-2021-modelo-714.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-1023-2021-modelo-714.html",
   "source_sha256": "d82448c53ad5aad75fc3c59616864356378b980443853942ebcf62971aa73a8d",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

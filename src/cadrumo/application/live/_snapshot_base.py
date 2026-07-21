@@ -36,7 +36,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from datetime import datetime
 from enum import StrEnum
-from typing import Any, Protocol, runtime_checkable
+from typing import Protocol, runtime_checkable
 
 from pydantic import BaseModel
 
@@ -48,28 +48,28 @@ from ...adapters.persistence.storage import (
     secure_object_repository_for_bucket,
 )
 from ...adapters.persistence.storage.sql import SecureObjectRecord, SecureObjectRepository
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.time import now
 from ._errors import LiveApplicationInputError
 
 
-class SnapshotNotFoundError(AeatError, KeyError):
+class SnapshotNotFoundError(CadrumoError, KeyError):
     """Shared base for per-service snapshot-lookup-miss errors.
 
-    Inherits from both :class:`cadrumo.core.errors.AeatError` and
+    Inherits from both :class:`cadrumo.core.errors.CadrumoError` and
     :class:`KeyError` so the class is enrolled in the ``ERROR_REGISTRY``
-    via the ``AeatError.__init_subclass__`` hook while preserving the
-    mapping-style lookup-miss type. ``AeatError`` is listed first so MRO
+    via the ``CadrumoError.__init_subclass__`` hook while preserving the
+    mapping-style lookup-miss type. ``CadrumoError`` is listed first so MRO
     routes ``__init__`` through
-    ``AeatError.__init__`` (which accepts the structured
+    ``CadrumoError.__init__`` (which accepts the structured
     ``suggestion=`` / ``context=`` kwargs) rather than ``KeyError``'s
     C-level constructor.
 
     Per-service subclasses (BorradorSnapshotNotFoundError,
     ExpedientesSnapshotNotFoundError, NotificationsSnapshotNotFoundError,
     and future siblings) inherit from this base alongside
-    :class:`cadrumo.core.errors.AeatError` so callers can either catch the
+    :class:`cadrumo.core.errors.CadrumoError` so callers can either catch the
     domain-specific class name or the shared parent.
     """
 
@@ -111,8 +111,7 @@ class SnapshotRepository[TPayload: BaseModel](Protocol):
     def save(self, snapshot: TPayload) -> None: ...
 
 
-_CanonicalScalar = str | int | float | bool | None
-_CanonicalValue = _CanonicalScalar | list[Any] | dict[str, Any]
+type _CanonicalValue = str | int | float | bool | None | list[_CanonicalValue] | dict[str, _CanonicalValue]
 
 
 def derive_snapshot_id_from_json(parts: dict[str, _CanonicalValue]) -> str:
@@ -169,7 +168,7 @@ def enforce_snapshot_state_invariants(
         raise LiveApplicationInputError("discarded snapshots require discarded_at and discarded_by")
 
 
-class SnapshotService[TPayload: BaseModel](ABC):
+class SnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
     """Abstract lifecycle service base for stateful bucket-scoped snapshots.
 
     Subclasses bind ``TPayload`` to their concrete Pydantic snapshot model and
@@ -195,20 +194,16 @@ class SnapshotService[TPayload: BaseModel](ABC):
 
     # ---- subclass hooks ----------------------------------------------------
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: abstract hook accepts **kwargs to
-    # let concrete subclasses pass caller-specific arguments without a shared set.
     @abstractmethod
-    def _derive_snapshot_id(self, **kwargs: Any) -> str:
-        """Derive a content-addressed id from capture kwargs."""
+    def _derive_snapshot_id(self, capture: TCapture) -> str:
+        """Derive a content-addressed id from a typed capture request."""
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: abstract hook accepts **kwargs to
-    # let concrete subclasses pass caller-specific arguments without a shared set.
     @abstractmethod
-    def _build_active_payload(self, *, snapshot_id: str, **kwargs: Any) -> TPayload:
+    def _build_active_payload(self, *, snapshot_id: str, capture: TCapture) -> TPayload:
         """Construct an ACTIVE snapshot payload for fresh captures."""
 
     @abstractmethod
-    def _payload_axis_key(self, payload: TPayload) -> tuple[Any, ...]:
+    def _payload_axis_key(self, payload: TPayload) -> tuple[object, ...]:
         """Return the domain axis tuple used for supersession matching."""
 
     @abstractmethod
@@ -229,10 +224,7 @@ class SnapshotService[TPayload: BaseModel](ABC):
 
     # ---- template methods --------------------------------------------------
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: template method threads
-    # subclass-specific keyword arguments through the abstract hook contract;
-    # concrete subclasses expose a typed wrapper that calls into this base.
-    def _capture_with_lifecycle(self, **kwargs: Any) -> TPayload:
+    def _capture_with_lifecycle(self, capture: TCapture) -> TPayload:
         """Template method: subclasses expose a typed ``capture`` wrapper.
 
         The base intentionally does not place ``capture`` on itself with
@@ -243,10 +235,10 @@ class SnapshotService[TPayload: BaseModel](ABC):
         conflict while preserving the operator-facing keyword-only
         signatures on each service.
         """
-        snapshot_id = self._derive_snapshot_id(**kwargs)
+        snapshot_id = self._derive_snapshot_id(capture)
         if self._repository.exists(snapshot_id):
             return self._repository.load(snapshot_id)
-        candidate = self._build_active_payload(snapshot_id=snapshot_id, **kwargs)
+        candidate = self._build_active_payload(snapshot_id=snapshot_id, capture=capture)
         active_snapshot = self._latest_active_for_axis(candidate)
         if active_snapshot is not None and self._payload_captured_at(active_snapshot) > self._payload_captured_at(
             candidate,
@@ -301,7 +293,7 @@ class SnapshotService[TPayload: BaseModel](ABC):
         )
 
 
-class StatelessSnapshotService[TPayload: BaseModel](ABC):
+class StatelessSnapshotService[TPayload: BaseModel, TCapture: BaseModel](ABC):
     """Append-only base for stateless snapshot services with per-call buckets.
 
     Subclasses inject a ``repository_factory`` that returns a fresh
@@ -332,24 +324,18 @@ class StatelessSnapshotService[TPayload: BaseModel](ABC):
             )
         return repository
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: abstract hook accepts **kwargs to
-    # let concrete subclasses pass caller-specific arguments without a shared set.
     @abstractmethod
-    def _derive_snapshot_id(self, **kwargs: Any) -> str: ...
+    def _derive_snapshot_id(self, capture: TCapture) -> str: ...
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-PAYLOAD: abstract hook accepts **kwargs to
-    # let concrete subclasses pass caller-specific arguments without a shared set.
     @abstractmethod
-    def _build_payload(self, *, snapshot_id: str, bucket_id: str, **kwargs: Any) -> TPayload: ...
+    def _build_payload(self, *, snapshot_id: str, bucket_id: str, capture: TCapture) -> TPayload: ...
 
-    # KWARGS-ANY-RATIONALE-SNAPSHOT-DISPATCH: template method threads
-    # subclass-specific keyword arguments through the abstract hook contract.
-    def _capture_stateless(self, *, bucket_id: str, **kwargs: Any) -> TPayload:
+    def _capture_stateless(self, *, bucket_id: str, capture: TCapture) -> TPayload:
         repository = self._repository_for(bucket_id)
-        snapshot_id = self._derive_snapshot_id(**kwargs)
+        snapshot_id = self._derive_snapshot_id(capture)
         if repository.exists(snapshot_id):
             return repository.load(snapshot_id)
-        payload = self._build_payload(snapshot_id=snapshot_id, bucket_id=repository.bucket_id, **kwargs)
+        payload = self._build_payload(snapshot_id=snapshot_id, bucket_id=repository.bucket_id, capture=capture)
         repository.save(payload)
         return payload
 

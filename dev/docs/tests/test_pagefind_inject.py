@@ -225,7 +225,7 @@ def test_sorted_by_weight_returns_only_injected_cards(tmp_path: Path) -> None:
     """A weight-sorted Pagefind search returns ONLY the injected records.
 
     This is the load-bearing mechanism the Ctrl-K palette relies on to surface
-    term cards above the full-text pages (ADR D5): the injected records carry a
+    term cards above the full-text pages: the injected records carry a
     ``weight`` sort key, the docs pages do not, so a search sorted by ``weight``
     drops the pages and returns the term/casilla/CLI cards ordered by tier
     weight (concept 1.0 first). Without this the concept record is buried under

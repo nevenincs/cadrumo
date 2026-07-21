@@ -3,10 +3,10 @@ tags:
   - '#audit'
   - '#casilla-reference-ambiguity-hardening'
 date: '2026-06-24'
-modified: '2026-06-28'
+modified: '2026-07-17'
 related:
   - '[[2026-05-20-registry-casilla-identity-adr]]'
-  - '[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]'
+  - '[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]'
 ---
 
 # `casilla-reference-ambiguity-hardening` audit

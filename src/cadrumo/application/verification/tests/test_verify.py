@@ -493,6 +493,11 @@ def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> 
     }
     binding_values = {
         "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+        # The fixture exercises the estimación directa "normal" regime branch
+        # (the sibling binding above), which the rendimiento-neto formula only
+        # reaches when the taxpayer has economic activity; keep the two
+        # bindings consistent so the es-normal input is not dead.
+        "renta-2025-profile-has-economic-activity": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-2025-profile-declaration-type": Decimal("1"),
         "renta-2025-profile-family-minor-children-in-unit": Decimal("0"),
@@ -505,9 +510,9 @@ def test_m100_2025_registry_policy_reports_independently_grounded_fraction() -> 
         "renta-2025-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count": Decimal("0"),
         # Childless profile: Art. 58/61 LIRPF mínimo por descendientes aggregate
-        # is zero (modelo-100-minimo-descendientes-engine decision record, Option A).
+        # is zero.
         "renta-2025-profile-minimo-descendientes-estatal": Decimal("0"),
-        # Parte autonómica (#593): non-Madrid profile mirrors the estatal zero.
+        # Parte autonómica: non-Madrid profile mirrors the estatal zero.
         "renta-2025-profile-minimo-descendientes-autonomico": Decimal("0"),
     }
 

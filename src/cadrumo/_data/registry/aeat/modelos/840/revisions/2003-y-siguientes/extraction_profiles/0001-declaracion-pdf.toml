@@ -1,5 +1,5 @@
 # label_patterns grounded against the AEAT-published printed form PDF at
-# src/aeat/_data/corpus/aeat_official/forms/modelo_840/files/
+# src/cadrumo/_data/corpus/aeat_official/forms/modelo_840/files/
 #   01-840-modelo-declaracion-iae-alta-variacion-baja-pdf.pdf
 # (source_ref: boe-modelo-840-2003-form).
 # pdfplumber extracts casilla-number prefixed labels: "14Ejercicio:" and

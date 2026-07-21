@@ -163,17 +163,15 @@ class UserProfilePortableExport(BaseModel):
     attempting to parse ``profile``. Increment it when the serialised shape
     changes in a backward-incompatible way.
 
-    Version 3 is the only supported shape (this is a pre-beta project with no
-    released bundles; earlier shapes are deleted, not bridged — see
-    ``no-legacy-compatibility``). It carries ``profile`` plus the
-    financial-history fields ``work_units``, ``ledger_transactions``,
-    ``calculation_revisions``, and ``filing_records``. It also declares the v3
-    generic secure-object carry surface and coverage manifest; those fields
-    default empty until the transport-aware serialise/deserialise phases populate
-    them.
+    Version 3 is the only supported shape; earlier shapes are refused, not
+    bridged. It carries ``profile`` plus the financial-history fields
+    ``work_units``, ``ledger_transactions``, ``calculation_revisions``, and
+    ``filing_records``. It also declares the v3 generic secure-object carry
+    surface and coverage manifest; those fields default empty until the
+    transport-aware serialise/deserialise phases populate them.
 
-    Encrypted-material blobs are NOT included (ADR D2: strip encrypted
-    material; re-encrypt under recipient bucket DEK on import).
+    Encrypted-material blobs are NOT included: the export strips encrypted
+    material and re-encrypts it under the recipient bucket's DEK on import.
     """
 
     model_config = _STRICT_FROZEN

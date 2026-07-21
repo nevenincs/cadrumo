@@ -1,12 +1,16 @@
 """CLI integration tests for ``aeat config auth certificate ...``.
 
 Exercises the real Typer command tree against a real profile bucket and
-real encrypted secure-object storage — no mocks. See GitHub issue #591
-(multi-cert source resolution and expiry/rotation awareness slices).
+real encrypted secure-object storage — no mocks. Covers multi-cert source
+resolution and expiry/rotation awareness.
 """
 
 from __future__ import annotations
 
+import json
+import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -17,15 +21,17 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
+from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from .....adapters.persistence.storage import (
-    EncryptedBlobStore,
-    EphemeralMasterKeyProvider,
-    SecretStore,
     activate_master_key_provider,
     get_master_key_provider,
-    override_secret_store,
+    secure_object_repository_for_active_bucket,
 )
-from .....core.config import override_settings
+from .....application.auth import resolve_certificate_source_secret
+from .....application.user_profile import profile_storage_session
+from .....application.workflow import workflow_state_repository
+from .....core import resolve_active_bucket_id
+from .....domain.buckets import BucketEvent, BucketEventType
 from .....tests.cli_runner import invoke_typer_app
 from .....tests.secure_sql import isolated_profile_storage_root
 from ... import app as root_app
@@ -37,6 +43,7 @@ from ... import app as root_app
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.serial]
 
 _CERT_SECRET = "correct-horse-battery-staple"  # noqa: S105 - synthetic test fixture, not a secret
+_ROTATED_CERT_SECRET = "rotated-horse-battery-staple"  # noqa: S105 - synthetic test fixture
 
 
 def _create_profile() -> None:
@@ -63,6 +70,49 @@ def _create_profile() -> None:
         ],
     )
     assert create.exit_code == 0, f"profile create failed: {create.output}"
+
+
+@contextmanager
+def _blocking_certificate_secret_event_commit(db_path: Path) -> Iterator[None]:
+    trigger_name = "fail_cli_certificate_secret_event_finalize"
+    with sqlite3.connect(db_path) as connection:
+        connection.execute(
+            f"""
+            CREATE TRIGGER {trigger_name}
+            BEFORE UPDATE ON secure_objects
+            WHEN OLD.namespace = 'cadrumo.domain.buckets.event_history'
+            BEGIN
+                SELECT RAISE(ABORT, 'CLI certificate secret event finalize blocked');
+            END
+            """,
+        )
+        connection.commit()
+    try:
+        yield
+    finally:
+        with sqlite3.connect(db_path) as connection:
+            connection.execute(f"DROP TRIGGER IF EXISTS {trigger_name}")
+            connection.commit()
+
+
+def _active_bucket_id() -> str:
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    return bucket_id
+
+
+def _certificate_secret_events(
+    *,
+    bucket_id: str,
+    event_type: BucketEventType,
+) -> tuple[BucketEvent, ...]:
+    with profile_storage_session(bucket_id):
+        objects = secure_object_repository_for_active_bucket()
+        return tuple(
+            event
+            for event in BucketEventHistoryRepository(objects=objects).load().events.values()
+            if event.event_type is event_type
+        )
 
 
 def test_certificate_register_requires_active_profile(tmp_path: Path) -> None:
@@ -190,7 +240,7 @@ def test_certificate_remove_unregistered_name_is_a_no_op(tmp_path: Path) -> None
         assert "removed\tFalse" in result.output
 
 
-# ── certificate check (expiry/rotation awareness, GitHub issue #591) ────────
+# ── certificate check (expiry/rotation awareness) ───────────────────────────
 
 
 def _build_pkcs12(
@@ -272,8 +322,26 @@ def test_certificate_check_reports_ok_and_expiring_per_source(tmp_path: Path) ->
                     str(expiring_cert),
                 ],
             )
-            with override_settings(aeat_certificate_password_secret=_CERT_SECRET):
-                checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+            invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secrets-stdin"],
+                input=json.dumps({"secret": _CERT_SECRET}),
+            )
+            invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "apoderado-acme",
+                    "--secrets-stdin",
+                ],
+                input=json.dumps({"secret": _CERT_SECRET}),
+            )
+            checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
 
         assert checked.exit_code == 0, f"check failed: {checked.output}"
         assert "personal" in checked.output
@@ -300,8 +368,21 @@ def test_certificate_check_reports_expired_certificate(tmp_path: Path) -> None:
                 root_app,
                 ["config", "auth", "certificate", "register", "--name", "expired-cert", "--file", str(expired_cert)],
             )
-            with override_settings(aeat_certificate_password_secret=_CERT_SECRET):
-                checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
+            invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "expired-cert",
+                    "--secrets-stdin",
+                ],
+                input=json.dumps({"secret": _CERT_SECRET}),
+            )
+            checked = invoke_typer_app(root_app, ["config", "auth", "certificate", "check"])
 
         assert checked.exit_code == 0, f"check failed: {checked.output}"
         assert "\texpired\t" in checked.output
@@ -322,25 +403,7 @@ def test_certificate_check_with_no_registered_sources_reports_none(tmp_path: Pat
 # ── certificate secret set/remove (per-source secret backend, #591 slice) ───
 
 
-@pytest.fixture
-def _isolated_secret_store(tmp_path: Path):
-    """Inject a deterministic :class:`SecretStore` for the secret-verb CLI tests.
-
-    ``get_secret_store()`` is a process-wide singleton; overriding it for
-    the duration of each test keeps the CLI verbs' secret writes isolated
-    from any other test in the same pytest process.
-    """
-    provider = EphemeralMasterKeyProvider()
-    blob_store = EncryptedBlobStore(root_dir=tmp_path / "cli-secret-blobs", master_key_provider=provider)
-    store = SecretStore(store_dir=tmp_path / "cli-secrets", blob_store=blob_store, master_key_provider=provider)
-    override_secret_store(store)
-    try:
-        yield store
-    finally:
-        override_secret_store(None)
-
-
-def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path, _isolated_secret_store) -> None:
+def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
 
@@ -348,7 +411,8 @@ def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path, _is
             # Invoke through the ROOT app (production path); see #211.
             result = invoke_typer_app(
                 root_app,
-                ["config", "auth", "certificate", "secret", "set", "--name", "ghost", "--secret", _CERT_SECRET],
+                ["config", "auth", "certificate", "secret", "set", "--name", "ghost", "--secrets-stdin"],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
 
         assert result.exit_code != 0, result.output
@@ -356,7 +420,7 @@ def test_certificate_secret_set_requires_a_registered_source(tmp_path: Path, _is
         assert "Refused" in result.output, result.output
 
 
-def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_secret_store) -> None:
+def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path) -> None:
     """Setting a secret, rotating it, then removing it never leaks the secret value in output."""
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
@@ -370,7 +434,8 @@ def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_
             )
             first_set = invoke_typer_app(
                 root_app,
-                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secret", _CERT_SECRET],
+                ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secrets-stdin"],
+                input=json.dumps({"secret": _CERT_SECRET}),
             )
             second_set = invoke_typer_app(
                 root_app,
@@ -382,9 +447,9 @@ def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_
                     "set",
                     "--name",
                     "personal",
-                    "--secret",
-                    "a-rotated-passphrase",
+                    "--secrets-stdin",
                 ],
+                input=json.dumps({"secret": "a-rotated-passphrase"}),
             )
             removed = invoke_typer_app(
                 root_app,
@@ -410,7 +475,284 @@ def test_certificate_secret_set_then_remove_roundtrip(tmp_path: Path, _isolated_
         assert "removed\tFalse" in removed_again.output
 
 
-def test_certificate_secret_set_unknown_backend_refuses(tmp_path: Path, _isolated_secret_store) -> None:
+def test_certificate_secret_set_cli_resumes_failed_event_commit_as_set_once(
+    tmp_path: Path,
+) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        _create_profile()
+        bucket_id = _active_bucket_id()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+        db_path = storage_root / "buckets" / bucket_id / "db" / "cadrumo.db"
+
+        with activate_master_key_provider(get_master_key_provider()):
+            registered = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
+            )
+            assert registered.exit_code == 0, registered.output
+
+            with _blocking_certificate_secret_event_commit(db_path):
+                failed = invoke_typer_app(
+                    root_app,
+                    [
+                        "config",
+                        "auth",
+                        "certificate",
+                        "secret",
+                        "set",
+                        "--name",
+                        "personal",
+                        "--secrets-stdin",
+                    ],
+                    input=json.dumps({"secret": _CERT_SECRET}),
+                )
+
+            assert failed.exit_code != 0, failed.output
+            assert "Traceback" not in failed.output
+            assert _CERT_SECRET not in failed.output
+            with profile_storage_session(bucket_id):
+                pending = workflow_state_repository().load().auth.certificate_secret_mutation_intent
+                resolved = resolve_certificate_source_secret(name="personal", bucket_id=bucket_id)
+            assert pending is not None
+            assert pending.event_kind.value == "set"
+            assert pending.prior_present is False
+            assert resolved is not None
+            assert resolved.get_secret_value() == _CERT_SECRET
+            assert (
+                _certificate_secret_events(
+                    bucket_id=bucket_id,
+                    event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET,
+                )
+                == ()
+            )
+
+            mismatched = invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "personal",
+                    "--secrets-stdin",
+                ],
+                input=json.dumps({"secret": _ROTATED_CERT_SECRET}),
+            )
+            resumed = invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "personal",
+                    "--secrets-stdin",
+                ],
+                input=json.dumps({"secret": _CERT_SECRET}),
+            )
+
+            assert mismatched.exit_code != 0, mismatched.output
+            assert "Traceback" not in mismatched.output
+            assert _ROTATED_CERT_SECRET not in mismatched.output
+            assert resumed.exit_code == 0, resumed.output
+            assert "rotated\tFalse" in resumed.output
+            with profile_storage_session(bucket_id):
+                final = workflow_state_repository().load()
+                resolved_after_retry = resolve_certificate_source_secret(
+                    name="personal",
+                    bucket_id=bucket_id,
+                )
+            events = _certificate_secret_events(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET,
+            )
+            rotated_events = _certificate_secret_events(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED,
+            )
+
+        assert final.auth.certificate_secret_mutation_intent is None
+        assert resolved_after_retry is not None
+        assert resolved_after_retry.get_secret_value() == _CERT_SECRET
+        assert len(events) == 1
+        assert events[0].occurred_at == pending.started_at
+        assert events[0].payload["operation_id"] == pending.operation_id
+        assert rotated_events == ()
+
+
+def test_certificate_secret_rotate_cli_resumes_failed_event_commit_as_rotation_once(
+    tmp_path: Path,
+) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        _create_profile()
+        bucket_id = _active_bucket_id()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+        db_path = storage_root / "buckets" / bucket_id / "db" / "cadrumo.db"
+
+        with activate_master_key_provider(get_master_key_provider()):
+            registered = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
+            )
+            initial = invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "personal",
+                    "--secrets-stdin",
+                ],
+                input=json.dumps({"secret": _CERT_SECRET}),
+            )
+            assert registered.exit_code == 0, registered.output
+            assert initial.exit_code == 0, initial.output
+
+            with _blocking_certificate_secret_event_commit(db_path):
+                failed = invoke_typer_app(
+                    root_app,
+                    [
+                        "config",
+                        "auth",
+                        "certificate",
+                        "secret",
+                        "set",
+                        "--name",
+                        "personal",
+                        "--secrets-stdin",
+                    ],
+                    input=json.dumps({"secret": _ROTATED_CERT_SECRET}),
+                )
+
+            assert failed.exit_code != 0, failed.output
+            assert "Traceback" not in failed.output
+            assert _ROTATED_CERT_SECRET not in failed.output
+            with profile_storage_session(bucket_id):
+                pending = workflow_state_repository().load().auth.certificate_secret_mutation_intent
+            assert pending is not None
+            assert pending.event_kind.value == "rotated"
+            assert pending.prior_present is True
+
+            resumed = invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "personal",
+                    "--secrets-stdin",
+                ],
+                input=json.dumps({"secret": _ROTATED_CERT_SECRET}),
+            )
+            assert resumed.exit_code == 0, resumed.output
+            assert "rotated\tTrue" in resumed.output
+            with profile_storage_session(bucket_id):
+                resolved = resolve_certificate_source_secret(name="personal", bucket_id=bucket_id)
+            rotated_events = _certificate_secret_events(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_ROTATED,
+            )
+            set_events = _certificate_secret_events(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_SET,
+            )
+
+        assert resolved is not None
+        assert resolved.get_secret_value() == _ROTATED_CERT_SECRET
+        assert len(set_events) == 1
+        assert len(rotated_events) == 1
+        assert rotated_events[0].occurred_at == pending.started_at
+        assert rotated_events[0].payload["operation_id"] == pending.operation_id
+
+
+def test_certificate_secret_remove_cli_resumes_failed_event_commit_truthfully_once(
+    tmp_path: Path,
+) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path) as storage_root:
+        _create_profile()
+        bucket_id = _active_bucket_id()
+        cert_path = tmp_path / "personal.p12"
+        cert_path.write_bytes(b"placeholder cert")
+        db_path = storage_root / "buckets" / bucket_id / "db" / "cadrumo.db"
+
+        with activate_master_key_provider(get_master_key_provider()):
+            registered = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
+            )
+            initial = invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "set",
+                    "--name",
+                    "personal",
+                    "--secrets-stdin",
+                ],
+                input=json.dumps({"secret": _CERT_SECRET}),
+            )
+            assert registered.exit_code == 0, registered.output
+            assert initial.exit_code == 0, initial.output
+
+            with _blocking_certificate_secret_event_commit(db_path):
+                failed = invoke_typer_app(
+                    root_app,
+                    ["config", "auth", "certificate", "secret", "remove", "--name", "personal"],
+                )
+
+            assert failed.exit_code != 0, failed.output
+            assert "Traceback" not in failed.output
+            with profile_storage_session(bucket_id):
+                pending = workflow_state_repository().load().auth.certificate_secret_mutation_intent
+                removed_secret = resolve_certificate_source_secret(name="personal", bucket_id=bucket_id)
+            assert pending is not None
+            assert pending.event_kind.value == "removed"
+            assert pending.prior_present is True
+            assert removed_secret is None
+
+            resumed = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "remove", "--name", "personal"],
+            )
+            repeated = invoke_typer_app(
+                root_app,
+                ["config", "auth", "certificate", "secret", "remove", "--name", "personal"],
+            )
+            removed_events = _certificate_secret_events(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.AUTH_CERTIFICATE_SOURCE_SECRET_REMOVED,
+            )
+            with profile_storage_session(bucket_id):
+                final = workflow_state_repository().load()
+
+        assert resumed.exit_code == 0, resumed.output
+        assert "removed\tTrue" in resumed.output
+        assert repeated.exit_code == 0, repeated.output
+        assert "removed\tFalse" in repeated.output
+        assert final.auth.certificate_secret_mutation_intent is None
+        assert len(removed_events) == 1
+        assert removed_events[0].occurred_at == pending.started_at
+        assert removed_events[0].payload["operation_id"] == pending.operation_id
+
+
+def test_certificate_secret_cli_exposes_no_backend_or_legacy_grammar(
+    tmp_path: Path,
+) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path):
         _create_profile()
         cert_path = tmp_path / "personal.p12"
@@ -421,8 +763,7 @@ def test_certificate_secret_set_unknown_backend_refuses(tmp_path: Path, _isolate
                 root_app,
                 ["config", "auth", "certificate", "register", "--name", "personal", "--file", str(cert_path)],
             )
-            # Invoke through the ROOT app (production path); see #211.
-            result = invoke_typer_app(
+            set_backend = invoke_typer_app(
                 root_app,
                 [
                     "config",
@@ -432,13 +773,86 @@ def test_certificate_secret_set_unknown_backend_refuses(tmp_path: Path, _isolate
                     "set",
                     "--name",
                     "personal",
-                    "--secret",
-                    _CERT_SECRET,
+                    "--secrets-stdin",
                     "--backend",
-                    "not-a-real-backend",
+                    "keyring",
+                ],
+                input=json.dumps({"secret": _CERT_SECRET}),
+            )
+            remove_backend = invoke_typer_app(
+                root_app,
+                [
+                    "config",
+                    "auth",
+                    "certificate",
+                    "secret",
+                    "remove",
+                    "--name",
+                    "personal",
+                    "--backend",
+                    "keyring",
                 ],
             )
+            retired_commands = tuple(
+                invoke_typer_app(
+                    root_app,
+                    ["config", "auth", "certificate", "secret", retired],
+                )
+                for retired in ("keyring", "migrate", "fallback", "probe", "clear", "put", "delete")
+            )
 
-        assert result.exit_code != 0, result.output
-        assert "Traceback" not in result.output, result.output
-        assert "Refused" in result.output, result.output
+        for result in (set_backend, remove_backend):
+            assert result.exit_code == 2, result.output
+            assert "Traceback" not in result.output, result.output
+            assert "No such option: --backend" in result.output, result.output
+        for result in retired_commands:
+            assert result.exit_code == 2, result.output
+            assert "Traceback" not in result.output, result.output
+            assert "No such command" in result.output, result.output
+
+
+# ── certificate secret input hardening (argv passphrase retired) ───
+
+
+def test_certificate_secret_set_rejects_argv_passphrase() -> None:
+    """``certificate secret set`` refuses the passphrase as an ``argv`` value.
+
+    An argv passphrase lands in the process table and shell history; the only
+    accepted channels are the hidden no-echo prompt and the bounded
+    ``--secrets-stdin`` JSON object, through the shared secure-input module.
+    """
+    result = invoke_typer_app(
+        root_app,
+        ["config", "auth", "certificate", "secret", "set", "--name", "personal", "--secret", "argv-secret"],
+    )
+    assert result.exit_code == 2, result.output
+    assert "No such option: --secret" in result.output, result.output
+    assert "Traceback" not in result.output, result.output
+
+
+def test_certificate_secret_set_without_terminal_or_stdin_refuses_cleanly() -> None:
+    """With no TTY and no ``--secrets-stdin``, the hidden-prompt path refuses (exit 2).
+
+    The refusal fires in the shared secure-input channel before any storage
+    access, naming the ``--secrets-stdin`` alternative; the crash class
+    (bare EOFError from getpass) stays gone.
+    """
+    result = invoke_typer_app(
+        root_app,
+        ["config", "auth", "certificate", "secret", "set", "--name", "personal"],
+    )
+    assert result.exit_code == 2, result.output
+    assert "--secrets-stdin" in result.output, result.output
+    assert "Traceback" not in result.output, result.output
+    assert not isinstance(result.exception, EOFError)
+
+
+def test_certificate_secret_set_help_names_only_secure_channels() -> None:
+    """The set help surfaces ``--secrets-stdin`` and no argv secret option."""
+    result = invoke_typer_app(
+        root_app,
+        ["config", "auth", "certificate", "secret", "set", "--help"],
+    )
+    assert result.exit_code == 0, result.output
+    assert "--secrets-stdin" in result.output
+    assert "--secret " not in result.output

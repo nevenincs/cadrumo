@@ -9,9 +9,9 @@ from urllib.parse import urlsplit
 import pytest
 
 from ....adapters.outbound.aeat.auth import _session_store
+from ....core import AuthProviderKind
 from ....core.external_constants import load_external_constants
 from ....tests.secure_sql import isolated_runtime_profile
-from .. import AuthProviderKind
 from .._sessions import load_persisted_session, storage_state_paths
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -30,7 +30,7 @@ def test_load_persisted_session_accepts_provider_specific_clave_metadata(tmp_pat
     """
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
-        settings = runtime.settings.model_copy(update={"aeat_auth_provider": AuthProviderKind.CLAVE_MOVIL})
+        settings = runtime.settings.model_copy(update={"cadrumo_auth_provider": AuthProviderKind.CLAVE_MOVIL})
         external = load_external_constants().aeat
         sede_domain = urlsplit(external.domains.sede).netloc
         landing_url = f"{external.domains.www6}{external.sede_paths.expedientes_resumen}"

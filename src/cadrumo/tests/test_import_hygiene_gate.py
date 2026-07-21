@@ -1,9 +1,9 @@
 """Import-hygiene ratchet gate: the authoritative cross-package import boundary.
 
 Wires ``dev/import_hygiene_scan.py`` into the pytest/CI surface as the single
-gate enforcing the ``import-centralization`` decision record's Ruling 1 (one canonical
+gate enforcing the import-centralization policy: one canonical
 top-level export per symbol; cross-package consumers import only from the
-owning package's ``__all__`` facade). Supersedes the two narrower pre-existing
+owning package's ``__all__`` facade. Supersedes the two narrower pre-existing
 gates it now subsumes:
 ``src/cadrumo/domain/calculations/registry/tests/test_public_api_boundaries.py``
 (registry-package-scoped raw-orchestration boundary) and
@@ -26,9 +26,9 @@ Three ratcheting/pinned checks, backed by the checked-in
   its ratchet/named-set-equality shape (count may not exceed the baseline;
   every current violation must be a named baseline entry) rather than a bare
   ``== []`` assertion, so a genuinely new, unrelated production exception
-  introduced by a different in-flight campaign is forced through the same
-  documented-exception discipline instead of silently reopening tolerance for
-  the cycle-break this pass closed. In the steady state (baseline ``[]``) both
+  is forced through the same documented-exception discipline instead of
+  silently reopening tolerance for the cycle-break this pass closed. In the
+  steady state (baseline ``[]``) both
   checks are equivalent to "zero production Family-1 violations".
 - **Family 2 (shim / pure-reexport modules).** The gate asserts the current
   shim set is EXACTLY the 6 documented bridges named in the baseline -- not a
@@ -39,8 +39,8 @@ Three ratcheting/pinned checks, backed by the checked-in
   none of the 7 symbols retired from the app-layer umbrella facades have
   reappeared as multi-facade symbols, and (b) every OTHER
   ``confidence="high"`` symbol declared in more than one facade's ``__all__``
-  (a Case-A structural duplicate -- the genuine-duplicate class the governing
-  decision record targets) is a member of the named tolerated set. Family-3
+  (a Case-A structural duplicate -- the genuine-duplicate class this policy
+  targets) is a member of the named tolerated set. Family-3
   Case-B hits (a symbol facaded AND separately reached from a private
   submodule by an outside consumer -- overwhelmingly test-only debt tracked by
   Family 1's remaining test sweep, not a structural duplicate) are out of
@@ -52,8 +52,8 @@ A fourth, TEST-ONLY pair of checks backed by the checked-in
 survives after every mechanically-facadable test-only site has been rewritten
 onto its owning package's public export: a private evaluator, repository
 factory, module-level cache, or constant with no sensible public-facade
-promotion, plus the handful of public-named test-only reaches the campaign
-deliberately declined to promote because doing so would contradict a
+promotion, plus the handful of public-named test-only reaches deliberately
+declined for promotion because doing so would contradict a
 package's documented architecture (e.g. ``LocalFileSystemProvider``, whose
 owning package docstring states its concrete backend modules are
 intentionally private behind a ``StorageProvider`` Protocol boundary). These
@@ -226,8 +226,8 @@ def test_production_family1_violations_do_not_exceed_baseline_count() -> None:
     was seeded to track, so in the steady state this assertion is exactly
     ``len(current_sites) <= 0``. This is still expressed as a ratchet (not a
     bare ``== []`` on the current scan) so that a DIFFERENT, unrelated
-    production Family-1 exception introduced by another in-flight campaign is
-    forced through the same named-exception discipline -- added to ``sites``
+    production Family-1 exception is forced through the same
+    named-exception discipline -- added to ``sites``
     with its own reasoned entry in the same commit that introduces it -- rather
     than silently reopening tolerance for the cycle-break this pass closed.
     """
@@ -286,11 +286,11 @@ def _test_debt_sites(test_debt: _TestDebtDocument) -> tuple[_BaselineSite, ...]:
 def _current_test_only_underscore_sites() -> tuple[_BaselineSite, ...]:
     """Re-run the real scanner and return every TEST-ONLY Family-1 violation site.
 
-    Named "underscore" for its dominant shape (Ruling 2/3's individual
-    per-symbol disposition class: a private helper, evaluator, cache, or
-    constant with no sensible public-facade promotion), but also covers the
-    handful of public-named test-only reaches the campaign deliberately did
-    NOT promote (e.g. ``LocalFileSystemProvider``, whose owning package
+    Named "underscore" for its dominant shape (an individual per-symbol
+    disposition class: a private helper, evaluator, cache, or constant with
+    no sensible public-facade promotion), but also covers the handful of
+    public-named test-only reaches deliberately NOT promoted
+    (e.g. ``LocalFileSystemProvider``, whose owning package
     docstring documents its backend module as intentionally private behind
     a Protocol boundary) and the one structural-introspection case that
     imports a submodule's own ``__all__`` rather than a symbol through it.
@@ -430,8 +430,8 @@ def test_family3_genuine_duplicate_symbols_are_exactly_the_pinned_set() -> None:
     """Every Case-A (multi-facade `__all__`) Family-3 'high' confidence symbol is pinned.
 
     Case-A here means the symbol is declared in more than one facade's
-    ``__all__`` -- the structural-duplication shape the governing decision
-    record's Family-3 'genuine duplicate' finding targets. Case-B hits (a
+    ``__all__`` -- the structural-duplication shape the Family-3 'genuine
+    duplicate' check targets. Case-B hits (a
     facade-declared symbol ALSO reached from a private submodule by an
     outside consumer, usually a test file) are excluded from this pin: they
     are Family-1 test-only debt surfaced through the Family-3 lens and are

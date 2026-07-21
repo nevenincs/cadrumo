@@ -19,8 +19,7 @@
 # rate for the progressive Art 25.1.b tariff, so the downstream
 # `base_imponible * tipo_gravamen` formula lands on the statutory quota.
 # The application-layer verification sweep rewrites the sentinels
-# into BLOCKING findings post-engine per ADR §D2.4 self-execution
-# doctrine.
+# into BLOCKING findings post-engine.
 
 [[revisions."2025".formulas]]
 id = "m210-tipo-gravamen-2025-resolve"

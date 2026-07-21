@@ -49,6 +49,7 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import urllib.error
@@ -159,7 +160,7 @@ def _ignore_patterns() -> list[str]:
     ]
 
 
-def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool) -> list[str]:
+def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool, scope: str = "user") -> list[str]:
     """Build the ``sphinx-autobuild`` argument vector for the dev server.
 
     Args:
@@ -167,6 +168,13 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool) 
         host: Interface the server binds (``0.0.0.0`` serves every interface).
         port: TCP port the server listens on.
         open_browser: Whether to open a browser tab once the first build lands.
+        scope: Documentation surface (``user`` | ``full``). The preview loop's
+            audience is user-docs authors, so ``user`` is the default: the API
+            autodoc tree is excluded and the app is never imported for rendering,
+            so the first build is minutes not an hour. Under ``user`` scope the
+            ``src/cadrumo`` autodoc source is NOT watched — there is no autodoc to
+            rebuild, and a user-docs author edits ``docs/``, not the app. ``full``
+            restores the API tree and the source watch.
 
     Returns:
         The full command vector, runnable with the current interpreter.
@@ -186,13 +194,13 @@ def serve_command(repo_root: Path, *, host: str, port: int, open_browser: bool) 
         # No --no-initial: the first serve builds the current tree before the
         # browser opens, so a review can never start on a stale snapshot of
         # docs/_build/html left by an earlier session.
-        "--watch",
-        str(repo_root / "src" / "cadrumo"),
-        "--host",
-        host,
-        "--port",
-        str(port),
     ]
+    if scope != "user":
+        # Full scope watches the autodoc source so a docstring edit rebuilds its
+        # API page; user scope loads no autodoc, so watching src/cadrumo would
+        # only trigger rebuilds that render nothing new.
+        command.extend(["--watch", str(repo_root / "src" / "cadrumo")])
+    command.extend(["--host", host, "--port", str(port)])
     if open_browser:
         command.append("--open-browser")
     for pattern in _ignore_patterns():
@@ -481,7 +489,7 @@ def _wait_for_free(bind_host: str, port: int, *, timeout: float) -> bool:
     return probe_port(bind_host, port) is PortStatus.FREE
 
 
-def _build_env(repo_root: Path) -> dict[str, str]:
+def _build_env(repo_root: Path, *, scope: str = "user") -> dict[str, str]:
     """Return the child environment forcing the full-site build path.
 
     sphinx-autobuild drives Sphinx through the ``build`` subcommand form
@@ -491,13 +499,26 @@ def _build_env(repo_root: Path) -> dict[str, str]:
     pydantic-model rebuild and the CLI-reference generation, leaving autodoc to
     crash on a not-fully-defined model. The dev server always serves the whole
     site, so force both build-time steps on via the conf.py overrides.
+
+    Ambient Cadrumo product and AEAT authority settings are stripped and the
+    local-storage root is pinned to an isolated temp directory, mirroring the
+    CLI-reference generator's subprocess environment: a developer workstation
+    whose real storage root holds retired ``aeat``-named state otherwise trips
+    the former-product refusal inside ``conf.py``'s settings construction and
+    kills every rebuild.
     """
-    return {
-        **os.environ,
-        "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
-        "CADRUMO_DOCS_FORCE_DEFERRED_MODELS": "1",
-        "CADRUMO_DOCS_FORCE_CLI_REFERENCE": "1",
-    }
+    environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
+    environment.update(
+        {
+            "CADRUMO_DOCS_PROJECT_ROOT": str(repo_root),
+            "CADRUMO_DOCS_FORCE_DEFERRED_MODELS": "1",
+            "CADRUMO_DOCS_FORCE_CLI_REFERENCE": "1",
+            "CADRUMO_OUTPUT_LANGUAGE": "en",
+            "CADRUMO_DOCS_SCOPE": scope,
+            "CADRUMO_LOCAL_STORAGE_ROOT": tempfile.mkdtemp(prefix="cadrumo-docs-serve-"),
+        }
+    )
+    return environment
 
 
 def _pipe(source: socket.socket, sink: socket.socket) -> None:
@@ -558,12 +579,13 @@ def _launch(
     host: str,
     port: int,
     open_browser: bool,
+    scope: str = "user",
 ) -> int:
     """Launch the server in the foreground, recording and clearing its state."""
-    command = serve_command(repo_root, host=host, port=port, open_browser=open_browser)
+    command = serve_command(repo_root, host=host, port=port, open_browser=open_browser, scope=scope)
     probe_host = _probe_host(host)
     state_path = _state_path(repo_root)
-    print(f"Serving documentation on http://{probe_host}:{port}/ (Ctrl-C to stop).", flush=True)
+    print(f"Serving {scope}-scope documentation on http://{probe_host}:{port}/ (Ctrl-C to stop).", flush=True)
     relay = start_ipv6_relay(port) if host in _WILDCARD_PROBE_HOST else None
     if host in _WILDCARD_PROBE_HOST:
         stacks = "IPv4+IPv6" if relay is not None else "IPv4"
@@ -634,6 +656,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Open a browser tab after the first build (or on attach).",
     )
+    parser.add_argument(
+        "--scope",
+        choices=("user", "full"),
+        default="user",
+        help=(
+            "Documentation surface to serve. 'user' (default) previews only the operator-facing docs, "
+            "excluding the API autodoc tree so the first build is minutes instead of an hour; 'full' serves "
+            "the whole handbook including the API reference and watches src/cadrumo for docstring edits."
+        ),
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--stop", action="store_true", help="Terminate the recorded running docs server and exit.")
     group.add_argument("--status", action="store_true", help="Report the recorded running docs server and exit.")
@@ -697,7 +729,7 @@ def main(argv: list[str] | None = None) -> int:
             )
             return 1
 
-    return _launch(repo_root, host=args.host, port=port, open_browser=args.open_browser)
+    return _launch(repo_root, host=args.host, port=port, open_browser=args.open_browser, scope=args.scope)
 
 
 if __name__ == "__main__":

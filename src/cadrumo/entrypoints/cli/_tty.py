@@ -23,10 +23,10 @@ import sys
 
 from ...core.click_context import current_cli_flag
 from ...core.config import Settings
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class NonTtyRefusedError(AeatError):
+class NonTtyRefusedError(CadrumoError):
     """Raised when a command requires interactive stdin but stdin is piped.
 
     Carries the operator-facing recovery hint on

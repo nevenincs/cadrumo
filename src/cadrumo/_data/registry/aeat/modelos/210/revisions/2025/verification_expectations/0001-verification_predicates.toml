@@ -1,7 +1,7 @@
 # M210 IRNR verification predicates.
 #
 # Representante-fiscal gate per TRLIRNR Art 10: non-EU (broader: non-
-# UE/EEE per m210-irnr-full-engine ADR §D2.5 escape hatch) IRNR filers
+# UE/EEE) IRNR filers
 # must designate a fiscal representative in Spain. EEA-resident IRNR
 # filers are exempt because of the bilateral mutual-assistance regime.
 # The applicability filter "non_resident_irnr_non_eea" encodes the
@@ -19,7 +19,7 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
 # UE-EEE branch's base_imponible (manual rendimientos_integros, optionally
 # reduced by gastos_deducibles per art 24.6) is computed from
 # rendimientos_integros via m210-base-imponible-2025
-# (src/aeat/_data/registry/aeat/modelos/210/revisions/2025/formulas/0001-m210-base-imponible-2025.toml).
+# (src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/formulas/0001-m210-base-imponible-2025.toml).
 # A positive rendimientos_integros with a zero base_imponible is unexpected for
 # this branch (a registry/formula regression, not a routine operator choice),
 # so the guard is ADVISORY: the consequent IS formula-derived, but a
@@ -30,16 +30,15 @@ legal_refs = ["trlirnr-rdleg-5-2004:art-10"]
 # explicitly out of scope when this guard first landed -- its silent-zero
 # risk needed a categorical-equality predicate operator the DSL did not yet
 # support. It is now closed by the casilla_equals_implies_nonzero guard
-# below, per the m210-categorical-conditional-predicate ADR.
+# below.
 [[revisions."2025".verification_predicates]]
 predicate_id = "modelo-210-2025-rendimientos-integros-implica-base-imponible"
 expression = 'implies_nonzero(["rendimientos_integros", "base_imponible"])'
 finding_kind = "ADVISORY"
 legal_refs = ["trlirnr-rdleg-5-2004:art-24"]
 
-# Silent-under-declaration guard, inmobiliaria branch, per
-# no-silent-under-declaration and the m210-categorical-conditional-predicate
-# ADR. The most common M210 filing scenario -- a non-resident who owns
+# Silent-under-declaration guard, inmobiliaria branch. The most common
+# M210 filing scenario -- a non-resident who owns
 # Spanish real estate with no rental income -- still owes imputed-rent IRNR
 # (TRLIRNR art 13.1.h, routed through LIRPF art 85 imputation mechanics).
 # Every inmobiliaria-branch input casilla (valor_catastral,
@@ -64,8 +63,7 @@ expression = 'casilla_equals_implies_nonzero(["tipo_renta", "inmobiliaria", "bas
 finding_kind = "ADVISORY"
 legal_refs = ["trlirnr-rdleg-5-2004:art-13.1.h", "trlirnr-rdleg-5-2004:art-24"]
 
-# Residence-cross-check guard, per no-silent-under-declaration and the
-# m210-categorical-conditional-predicate ADR shape. TRLIRNR art 25.1.a
+# Residence-cross-check guard. TRLIRNR art 25.1.a
 # reserves the reduced 19% tipo_renta="ue_residente" rate for taxpayers
 # resident in another EU/EEA member state; the general 24% rate applies
 # otherwise. The tipo_renta casilla is an operator-entered free-text

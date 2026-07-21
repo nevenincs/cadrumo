@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-27-2014-art-16.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-27-2014-art-16.html",
   "source_sha256": "1d5abb0e0eaf3d795fd70f0f6b35288211de2519bb047c9e794d0d1304743720",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

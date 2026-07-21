@@ -48,7 +48,6 @@ from ....adapters.persistence.storage import (
     SecureObjectRepository,
     secure_object_repository_for_active_bucket,
 )
-from ....core.classification import SensitivityClass
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.time import now
 from ._impersonation import GoogleCredentialSourceSelection
@@ -59,7 +58,16 @@ _NAMESPACE_TOKEN = GOOGLE_OAUTH_TOKEN_NAMESPACE.namespace
 _NAMESPACE_METADATA = GOOGLE_OAUTH_METADATA_NAMESPACE.namespace
 _NAMESPACE_DRIVE_CONFIG = GOOGLE_DRIVE_CONFIG_NAMESPACE.namespace
 _NAMESPACE_CREDENTIAL_SOURCE = GOOGLE_CREDENTIAL_SOURCE_NAMESPACE.namespace
-_RECORD_VERSION = 1
+_CLIENT_SENSITIVITY = GOOGLE_OAUTH_CLIENT_NAMESPACE.sensitivity
+_CLIENT_VERSION = GOOGLE_OAUTH_CLIENT_NAMESPACE.schema_version
+_TOKEN_SENSITIVITY = GOOGLE_OAUTH_TOKEN_NAMESPACE.sensitivity
+_TOKEN_VERSION = GOOGLE_OAUTH_TOKEN_NAMESPACE.schema_version
+_METADATA_SENSITIVITY = GOOGLE_OAUTH_METADATA_NAMESPACE.sensitivity
+_METADATA_VERSION = GOOGLE_OAUTH_METADATA_NAMESPACE.schema_version
+_DRIVE_CONFIG_SENSITIVITY = GOOGLE_DRIVE_CONFIG_NAMESPACE.sensitivity
+_DRIVE_CONFIG_VERSION = GOOGLE_DRIVE_CONFIG_NAMESPACE.schema_version
+_CREDENTIAL_SOURCE_SENSITIVITY = GOOGLE_CREDENTIAL_SOURCE_NAMESPACE.sensitivity
+_CREDENTIAL_SOURCE_VERSION = GOOGLE_CREDENTIAL_SOURCE_NAMESPACE.schema_version
 
 
 def save_client(profile: str, client: OAuthClient) -> None:
@@ -74,8 +82,8 @@ def save_client(profile: str, client: OAuthClient) -> None:
     _repository().save(
         namespace=_NAMESPACE_CLIENT,
         object_key=profile,
-        classification=SensitivityClass.SECRET,
-        schema_version=_RECORD_VERSION,
+        classification=_CLIENT_SENSITIVITY,
+        schema_version=_CLIENT_VERSION,
         written_at=now(),
         payload=client.model_dump_json().encode(UTF_8_ENCODING),
     )
@@ -91,8 +99,8 @@ def load_client(profile: str) -> OAuthClient | None:
     record = _repository().load(
         _NAMESPACE_CLIENT,
         profile,
-        expected_class=SensitivityClass.SECRET,
-        max_supported_version=_RECORD_VERSION,
+        expected_class=_CLIENT_SENSITIVITY,
+        max_supported_version=_CLIENT_VERSION,
     )
     if record is None:
         return None
@@ -112,8 +120,8 @@ def save_token(profile: str, token: OAuthToken) -> None:
     _repository().save(
         namespace=_NAMESPACE_TOKEN,
         object_key=profile,
-        classification=SensitivityClass.SECRET,
-        schema_version=_RECORD_VERSION,
+        classification=_TOKEN_SENSITIVITY,
+        schema_version=_TOKEN_VERSION,
         written_at=now(),
         payload=token.model_dump_json().encode(UTF_8_ENCODING),
     )
@@ -129,8 +137,8 @@ def load_token(profile: str) -> OAuthToken | None:
     record = _repository().load(
         _NAMESPACE_TOKEN,
         profile,
-        expected_class=SensitivityClass.SECRET,
-        max_supported_version=_RECORD_VERSION,
+        expected_class=_TOKEN_SENSITIVITY,
+        max_supported_version=_TOKEN_VERSION,
     )
     if record is None:
         return None
@@ -150,8 +158,8 @@ def save_metadata(profile: str, metadata: OAuthMetadata) -> None:
     _repository().save(
         namespace=_NAMESPACE_METADATA,
         object_key=profile,
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=_RECORD_VERSION,
+        classification=_METADATA_SENSITIVITY,
+        schema_version=_METADATA_VERSION,
         written_at=now(),
         payload=metadata.model_dump_json().encode(UTF_8_ENCODING),
     )
@@ -167,8 +175,8 @@ def load_metadata(profile: str) -> OAuthMetadata | None:
     record = _repository().load(
         _NAMESPACE_METADATA,
         profile,
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=_RECORD_VERSION,
+        expected_class=_METADATA_SENSITIVITY,
+        max_supported_version=_METADATA_VERSION,
     )
     if record is None:
         return None
@@ -188,8 +196,8 @@ def save_drive_config(profile: str, config: DriveConfig) -> None:
     _repository().save(
         namespace=_NAMESPACE_DRIVE_CONFIG,
         object_key=profile,
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=_RECORD_VERSION,
+        classification=_DRIVE_CONFIG_SENSITIVITY,
+        schema_version=_DRIVE_CONFIG_VERSION,
         written_at=now(),
         payload=config.model_dump_json().encode(UTF_8_ENCODING),
     )
@@ -205,8 +213,8 @@ def load_drive_config(profile: str) -> DriveConfig | None:
     record = _repository().load(
         _NAMESPACE_DRIVE_CONFIG,
         profile,
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=_RECORD_VERSION,
+        expected_class=_DRIVE_CONFIG_SENSITIVITY,
+        max_supported_version=_DRIVE_CONFIG_VERSION,
     )
     if record is None:
         return None
@@ -229,8 +237,8 @@ def save_credential_source_selection(profile: str, selection: GoogleCredentialSo
     _repository().save(
         namespace=_NAMESPACE_CREDENTIAL_SOURCE,
         object_key=profile,
-        classification=SensitivityClass.FINANCIAL,
-        schema_version=_RECORD_VERSION,
+        classification=_CREDENTIAL_SOURCE_SENSITIVITY,
+        schema_version=_CREDENTIAL_SOURCE_VERSION,
         written_at=now(),
         payload=selection.model_dump_json().encode(UTF_8_ENCODING),
     )
@@ -249,8 +257,8 @@ def load_credential_source_selection(profile: str) -> GoogleCredentialSourceSele
     record = _repository().load(
         _NAMESPACE_CREDENTIAL_SOURCE,
         profile,
-        expected_class=SensitivityClass.FINANCIAL,
-        max_supported_version=_RECORD_VERSION,
+        expected_class=_CREDENTIAL_SOURCE_SENSITIVITY,
+        max_supported_version=_CREDENTIAL_SOURCE_VERSION,
     )
     if record is None:
         return None

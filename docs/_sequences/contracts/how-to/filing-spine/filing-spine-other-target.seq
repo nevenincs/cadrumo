@@ -1,0 +1,4 @@
+@step Address a different visible target, such as another period.
+@static aeat app modelo work status --modelo 303 --year 2026 --period 2T
+@step Or address a different work unit by its reference number.
+@static aeat app modelo work status <another-work-unit-id>

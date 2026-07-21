@@ -41,7 +41,7 @@ def test_representative_leaves_are_files() -> None:
         ("registry", "aeat", "legal", "iva-flow.toml"),
         ("registry", "aeat", "iva", "rates.toml"),
         ("registry", "aeat", "calendars", "festivos-2025.toml"),
-        ("registry", "aeat", "user_profile", "schema.toml"),
+        ("registry", "cadrumo", "user_profile", "schema.toml"),
     )
 
     for parts in cases:

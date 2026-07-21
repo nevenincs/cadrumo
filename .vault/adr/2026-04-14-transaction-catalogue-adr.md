@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#transaction-catalogue"
 date: "2026-04-14"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-14-transaction-catalogue-research]]"
   - "[[2026-04-13-p2a-financial-provider-adr]]"
@@ -24,14 +24,14 @@ Issue `#74` must introduce a durable transaction catalogue at the T1/T2 seam wit
 
 ## Constraints
 
-- Public API must be imported from `aeat.domain.financial.transactions` only.
+- Public API must be imported from `cadrumo.domain.transactions` only.
 - Every persisted and boundary-crossing structure must be strict pydantic v2; closed sets must use `enum.StrEnum`.
-- Errors must inherit from `aeat.core.errors.AeatError`, and logging must use `aeat.core.logging.get_logger(__name__)`.
+- Errors must inherit from `cadrumo.core.errors.CadrumoError`, and logging must use `cadrumo.core.logging.get_logger(__name__)`.
 - The wrapped `raw` record must remain verbatim and never be mutated in place.
 
 ## Implementation
 
-- Create `src/aeat/domain/financial/transactions/` with a public `__init__.py` and private underscored modules for enums, models, persistence, service functions, CLI helpers, and typing stubs.
+- Create `src/cadrumo/domain/transactions/` with a public `__init__.py` and private underscored modules for enums, models, persistence, service functions, CLI helpers, and typing stubs.
 - Define `TransactionDirection` and `BusinessClassification` as `StrEnum` values.
 - Define `Transaction` as a strict frozen pydantic model embedding `raw: RawTransaction` and storing the issue-mandated classification/linking fields.
 - Generate catalogue transaction IDs with a deterministic SHA-256 over the canonical tuple `(raw.transaction_id, raw.value_date or raw.booked_date, raw.amount, raw.description)`. This preserves the issue’s intent while matching the merged upstream contract on `main`.
@@ -46,7 +46,7 @@ Issue `#74` must introduce a durable transaction catalogue at the T1/T2 seam wit
 - An immutable `Transaction` plus immutable-return catalogue operations make provenance integrity easier to reason about than in-place mutation.
 - A SHA-256 digest over a canonical text payload is simple, deterministic, and collision-resistant enough for stable catalogue keys while satisfying the issue’s required identity tuple.
 - Internal `Protocol` placeholders let the transaction package describe the intended foreign-key seam without creating forbidden imports into sibling branches that are still in flight.
-- A dedicated `aeat.domain.financial.transactions` public surface matches the package discipline already established by `aeat.domain.financial.vat` and avoids callers reaching into internal helpers.
+- A dedicated `cadrumo.domain.transactions` public surface matches the package discipline already established by `cadrumo.domain.iva` and avoids callers reaching into internal helpers.
 
 ## Consequences
 

@@ -1,6 +1,6 @@
 """The data flywheel: promote a live failure into a golden regression scenario.
 
-ADR R7's operating cadence: a live subagent-persona failure is not just a red
+A live subagent-persona failure is not just a red
 run — it becomes a NEW golden scenario so the same failure cannot recur
 unnoticed. Promotion is deliberately conservative: the promoted scenario pins
 the ORIGINAL scenario's declared expectations (the correct path), while the

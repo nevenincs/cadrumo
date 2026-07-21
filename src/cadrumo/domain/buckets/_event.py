@@ -38,7 +38,7 @@ BucketActorLabel = Annotated[
 
 A non-empty string of at most 64 characters; trailing and leading
 whitespace is stripped at validation time. Typical values are the CLI
-command path (``"aeat.app.modelo.calculate"``) or an automated-agent
+command path (``"cadrumo.app.modelo.calculate"``) or an automated-agent
 slug (``"censo.sync"``).
 """
 _ObjectId = Annotated[
@@ -106,9 +106,8 @@ class BucketEventType(StrEnum):
     MODELO_LEDGER_DEPENDENT_STAMPED_STALE = "modelo.ledger.dependent_stamped_stale"
 
     # 036 declarative-recording verbs (operator declares an alta /
-    # modificacion / baja was filed at sede). Per the 2026-05-16
-    # ADR amendment to cli-workflow-redesign-modelo-036-037-foundation,
-    # the local app never files a 036 — AEAT is the authority. These
+    # modificacion / baja was filed at sede). The local app never
+    # files a 036 — AEAT is the authority. These
     # events record the operator's declaration so downstream profile
     # state and stale-cascade logic can react. Distinct prefix
     # ``modelo.036.declaration.*`` separates them from the existing
@@ -134,6 +133,10 @@ class BucketEventType(StrEnum):
 
     # operator authentication + workspace bootstrap
     AUTH_PROVIDER_CONFIGURED = "auth.provider.configured"
+    AUTH_PROVIDER_CLEARED = "auth.provider.cleared"
+    AUTH_SESSION_VERIFIED = "auth.session.verified"
+    AUTH_SESSION_CLEARED = "auth.session.cleared"
+    AUTH_LOCK_CLEARED = "auth.lock.cleared"
     CONFIG_ENV_UPDATED = "config.env.updated"
 
     # named multi-certificate source registry (personal + apoderado certs)
@@ -180,7 +183,6 @@ class BucketEventType(StrEnum):
     # audit verb-group (evidence bundle)
     MODELO_AUDIT_VERIFIED = "modelo.audit.verified"
     MODELO_AUDIT_EXPORTED = "modelo.audit.exported"
-    MODELO_AUDIT_REPLAYED = "modelo.audit.replayed"
     # live AEAT read surface.
     # Every event below records a READ-ONLY capture; submission is
     # permanently forbidden per the live-AEAT charter.
@@ -369,8 +371,8 @@ class BucketEventHistoryCatalogue(BaseModel):
 
     @override
     # TYPE-IGNORE-RATIONALE-HARD-DEFERRED-PYDANTIC-METACLASS:
-    # pydantic BaseModel.__iter__ override requires pydantic-v2 metaclass-aware
-    # base class. Successor epic required.
+    # pydantic BaseModel.__iter__ override requires a pydantic-v2
+    # metaclass-aware base class, which is not yet available.
     def __iter__(self) -> Iterator[BucketEvent]:  # type: ignore[override]  # pyright: ignore[reportIncompatibleMethodOverride]  # ty: ignore[invalid-method-override]  # pyrefly: ignore[bad-override]
         """Iterate over every :class:`BucketEvent` in insertion order."""
         return iter(self.events.values())

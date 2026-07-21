@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#arch-remediation-program'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-modelo-surface-adr]]"

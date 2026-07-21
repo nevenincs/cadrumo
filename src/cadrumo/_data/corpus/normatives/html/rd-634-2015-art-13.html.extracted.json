@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/rd-634-2015-art-13.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/rd-634-2015-art-13.html",
   "source_sha256": "f310bc9e3c46aeeb0ef6db6e05c7045c0f069f16d0ae0f381dd2584b474692be",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

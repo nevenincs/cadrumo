@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class RentaError(AeatError):
+class RentaError(CadrumoError):
     """Base error for every :mod:`cadrumo.domain.renta` failure mode."""
 
 

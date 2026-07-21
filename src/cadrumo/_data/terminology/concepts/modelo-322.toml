@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-322"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:322"]
+legal_refs = ["orden-eha-3434-2007:art-1", "orden-eha-3434-2007:art-8"]
+related = ["iva", "modelo-353", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "IVA de grupo de entidades: modelo individual mensual."
+definition = "Autoliquidacion mensual individual que presenta cada entidad integrada en un grupo de entidades de IVA."
+
+[language.es.source]
+citation = "Orden EHA/3434/2007."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 322"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "IVA de grupo individual"
+term_status = "admitted"
+
+[language.en]
+short_description = "Monthly individual VAT return of a VAT-group member entity."
+
+[language.ca]
+short_description = "IVA de grup d'entitats: model individual mensual."
+
+[language.hu]
+short_description = "Afacsoport-tag havi egyedi afa-bevallasa."

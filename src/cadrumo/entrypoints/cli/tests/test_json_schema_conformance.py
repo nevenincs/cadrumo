@@ -1,6 +1,6 @@
-"""Conformance gate for the CLI ``--json`` envelope contract.
+"""Conformance gate for the CLI schema-envelope contract.
 
-Every leaf command exposed by the ``cadrumo`` CLI MUST emit its result
+Every leaf command exposed by the Cadrumo CLI MUST emit its result
 through :class:`SchemaEnvelope`, which means its payload model MUST
 be registered under a stable command-path string in
 :data:`SCHEMA_REGISTRY` via :func:`register_schema`.
@@ -15,6 +15,7 @@ must be fixed before the suite goes green.
 
 from __future__ import annotations
 
+import ast
 from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any, Protocol, TypeGuard, cast
@@ -29,13 +30,16 @@ from ....application.ledger import (
     LedgerRemovalBlocker,
     LedgerTransactionRemovalReport,
 )
+from ....core import PRODUCT_IDENTITY
 from ....core.json_contract import SCHEMA_REGISTRY, OutputSchema, SchemaEnvelope
+from ...schema_surface import GROUP_CALLBACK_SCHEMA_KEYS, SCHEMA_KEY_BY_CLI_PATH
 
 # Import the per-package payload modules so their @register_schema
 # decorators populate SCHEMA_REGISTRY before the gate inspects it.
 # The CLI loads these lazily at dispatch time, so without an explicit
 # import here the registry is empty when this test module collects.
 from .. import _config_payloads as _config_payloads
+from .. import _config_sandbox_payloads as _config_sandbox_payloads
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -44,9 +48,9 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # ---------------------------------------------------------------------
 #
 # A leaf-command Typer path is a tuple of group/command names walked
-# from the ``cadrumo`` root, e.g. ``("cadrumo", "app", "modelo", "work",
+# from the executable root, e.g. ``("aeat", "app", "modelo", "work",
 # "calculate")``. Registry keys are dot-joined strings without the
-# ``cadrumo`` root, e.g. ``"modelo.work.calculate"``.
+# executable root, e.g. ``"modelo.work.calculate"``.
 #
 # Most registry keys also drop the ``app`` group segment that owns the
 # operational subtrees (``modelo``, ``ledger``, ``review``, ...). The
@@ -57,7 +61,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # The normaliser below applies the same rule the live ``_emit_envelope``
 # call sites use:
 #
-#  * Strip the leading ``cadrumo`` token.
+#  * Strip the leading canonical executable token.
 #  * Replace dashes with underscores so Typer command names with hyphens
 #    (e.g. ``iva-wallet``) align with the registry key
 #    (``iva_wallet``).
@@ -84,6 +88,7 @@ type _LedgerReport = LedgerTransactionRemovalReport | LedgerCatalogueResetReport
 type _LedgerReportFactory = Callable[[], _LedgerReport]
 type _LedgerPayloadClass = type[OutputSchema]
 
+
 # Intentional, asserted command-path → registry-key divergences.
 #
 # The append-only event-history verb moved from ``config bucket history`` to
@@ -94,15 +99,10 @@ type _LedgerPayloadClass = type[OutputSchema]
 # verb relocation. The leaf path therefore diverges from its registry key by
 # design; this map records the divergence so the no-allowlist gate stays exact
 # without silently masking an accidental mismatch elsewhere.
-_PATH_KEY_OVERRIDES: dict[str, str] = {
-    "config.profile.history": "config.bucket.history",
-}
-
-
 def _normalise_command_path(path: tuple[str, ...]) -> str:
     """Project a Typer leaf-command path onto the registry key convention."""
     tokens = [token.replace("-", "_") for token in path]
-    if tokens and tokens[0] == "cadrumo":
+    if tokens and tokens[0] == PRODUCT_IDENTITY.cli_executable:
         tokens = tokens[1:]
     if len(tokens) >= 2 and tokens[0] == "app":
         head = tokens[1]
@@ -111,7 +111,7 @@ def _normalise_command_path(path: tuple[str, ...]) -> str:
         elif head in _APP_NAMESPACE_PASSTHROUGH:
             pass  # keep ``app.`` prefix
     normalised = ".".join(tokens)
-    return _PATH_KEY_OVERRIDES.get(normalised, normalised)
+    return SCHEMA_KEY_BY_CLI_PATH.get(normalised, normalised)
 
 
 # ---------------------------------------------------------------------
@@ -204,25 +204,7 @@ def _click_leaf_paths(command: click.Command, prefix: tuple[str, ...]) -> set[tu
 #    ``ledger.participation`` for the inverse audit lookup invoked as
 #    ``participation <transaction-id>`` (the group is ``invoke_without_command``);
 #    the ``rebuild`` subcommand is a reachable leaf with its own key.
-_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = frozenset(
-    {
-        "root.status",
-        "root.app",
-        "ledger.participation",
-        # ``aeat app contract`` is an ``invoke_without_command`` group whose
-        # callback emits the operator capability manifest under ``contract``.
-        # It registers no leaf subcommand, so the leaf walker cannot reach it.
-        "contract",
-        # ``aeat app agent --output DIR`` is the same shape: an
-        # ``invoke_without_command`` group-callback that materialises the operator
-        # workspace under ``agent``, with no leaf subcommand.
-        "agent",
-        # ``aeat app quickfile`` is the same shape: an ``invoke_without_command``
-        # group-callback that runs the full readiness -> calculate -> verify ->
-        # export chain and emits under ``quickfile``, with no leaf subcommand.
-        "quickfile",
-    },
-)
+_GROUP_CALLBACK_EMIT_KEYS: frozenset[str] = GROUP_CALLBACK_SCHEMA_KEYS
 
 
 def _walk_cli_command_paths(app: typer.Typer) -> set[str]:
@@ -237,7 +219,7 @@ def _walk_cli_command_paths(app: typer.Typer) -> set[str]:
     """
     _force_load_lazy_subcommands(app)
     root = _typer_get_command(app)
-    root.name = app.info.name or "cadrumo"
+    root.name = app.info.name or PRODUCT_IDENTITY.cli_executable
     # typer.main.get_command is typed to return typer's vendored
     # ``typer._click.core.Command``; it is the same click runtime object the
     # walk consumes as a top-level ``click.Command``. Bridge the vendored→real
@@ -314,30 +296,6 @@ def test_registered_schema_envelope_round_trips(command_path: str) -> None:
 # ---------------------------------------------------------------------
 # Zero-bare-emit gate for the envelope-schema contract.
 # ---------------------------------------------------------------------
-
-# Production CLI sites that legitimately emit through the bare ``_emit``
-# helper rather than the OutputSchema-gated ``_emit_envelope``. Each
-# entry carries a durable constraint-shape rationale about which
-# surfaces are typed payloads versus unstructured operator-facing prose.
-_BARE_EMIT_EXEMPTIONS: frozenset[tuple[str, str]] = frozenset(
-    {
-        (
-            "src/cadrumo/entrypoints/cli/_config/__init__.py",
-            "help-document prose is operator-facing text, not an OutputSchema payload",
-        ),
-        (
-            "src/cadrumo/entrypoints/cli/_config/__init__.py",
-            "repair-report passthrough emits an already validated ConfigRepairReport",
-        ),
-        (
-            "src/cadrumo/entrypoints/cli/_config/_repair_cli.py",
-            "repair-report passthrough after config repair extraction",
-        ),
-    },
-)
-
-_BARE_EMIT_EXEMPTION_PATHS: frozenset[str] = frozenset(path for path, _rationale in _BARE_EMIT_EXEMPTIONS)
-
 
 # ---------------------------------------------------------------------
 # Shared-spine + notices-channel conformance.
@@ -487,36 +445,38 @@ def test_profile_bound_command_populates_active_profile_label(tmp_path: Path) ->
             dispose_engine()
 
 
-def test_zero_bare_emit_sites_outside_exemption_set() -> None:
-    """Production CLI modules must use ``_emit_envelope``, not bare ``_emit``.
+def test_cli_has_no_bare_emit_definition_import_or_call() -> None:
+    """The CLI has no structural route around the typed envelope boundary.
 
-    Walks every Python file under ``src/cadrumo/entrypoints/cli/`` (excluding
-    tests + the ``_common`` helper module that DEFINES ``_emit``) and
-    counts call sites matching ``_emit(ctx`` outside the documented
-    exemption set. Any new bare-emit site fails the gate so the
-    OutputSchema envelope contract stays the canonical CLI emit path.
+    AST inspection catches definitions, imports, direct calls, aliased calls,
+    and attribute calls regardless of whitespace or multiline formatting. A
+    text search for ``_emit(ctx`` could miss every one of those variants.
     """
-    from pathlib import Path
-
     root = Path("src/cadrumo/entrypoints/cli")
     violations: list[str] = []
     for path in sorted(root.rglob("*.py")):
         if path.name.startswith("test_") or path.name == "conftest.py":
             continue
-        if path.name == "_common.py":
-            continue  # canonical definition of _emit lives here
-        text = path.read_text(encoding="utf-8")
-        for lineno, line in enumerate(text.splitlines(), start=1):
-            if "_emit(ctx" not in line:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        relative = path.as_posix()
+        for node in ast.walk(tree):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "_emit":
+                violations.append(f"{relative}:{node.lineno}: defines _emit")
                 continue
-            relative = path.as_posix()
-            if relative in _BARE_EMIT_EXEMPTION_PATHS:
+            if isinstance(node, ast.ImportFrom):
+                for alias in node.names:
+                    if alias.name == "_emit":
+                        violations.append(f"{relative}:{node.lineno}: imports _emit")
                 continue
-            violations.append(f"{relative}:{lineno}: {line.strip()}")
+            if not isinstance(node, ast.Call):
+                continue
+            if isinstance(node.func, ast.Name) and node.func.id == "_emit":
+                violations.append(f"{relative}:{node.lineno}: calls _emit")
+            elif isinstance(node.func, ast.Attribute) and node.func.attr == "_emit":
+                violations.append(f"{relative}:{node.lineno}: calls attribute _emit")
     assert violations == [], (
-        "New bare _emit(ctx call site detected outside the exemption set; "
-        "every CLI command emit must route through _emit_envelope with a "
-        "registered OutputSchema. Violations:\n  " + "\n  ".join(violations)
+        "Bare CLI emit route detected; every CLI result must route through "
+        "_emit_envelope with a registered OutputSchema. Violations:\n  " + "\n  ".join(violations)
     )
 
 

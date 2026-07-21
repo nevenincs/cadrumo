@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cadrumo-frontend-launch'
-date: '2026-07-12'
-modified: '2026-07-12'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-12-cadrumo-frontend-launch-audit]]'
 ---

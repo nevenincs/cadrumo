@@ -1,0 +1,6 @@
+@step Export the verified revision to a local fichero-BOE.
+@static aeat app modelo export --modelo 390 --year 2025 --period 0A --output ./modelo-390-2025.boe
+@step After you upload at the portal, record the local filed marker.
+@static aeat app modelo work file --modelo 390 --year 2025 --period 0A
+@step Reconcile the justificante against the filed record.
+@static aeat app modelo reconcile file --modelo 390 --year 2025 --period 0A --file ./390-2025-justificante.pdf

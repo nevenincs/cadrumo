@@ -1,30 +1,32 @@
 # Diagnose and repair your local setup
 
-Every check on this page runs locally and the tool never submits anything to AEAT - building, validating, and exporting all happen on your machine. The only network step is the optional connectivity probe, which checks reachability and reads nothing. Find the error you see in the headings on this page and follow the steps under it. If your error is not listed, jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
+Every check on this page runs locally unless it explicitly says otherwise.
+The optional connectivity probe opens the public AEAT Sede landing page and
+checks reachability. It does not submit taxpayer data.
 
-For a step-by-step recovery procedure for one common scenario - a certificate to renew, a refused live read, an export that verification blocks, unreadable records, or a modelo that is not ready - use the [recovery runbooks](../runbooks/index.md).
+Find the error in the headings below and follow its steps. If it is not listed,
+jump to [Prepare a privacy-safe support request](#prepare-a-privacy-safe-support-request).
 
-Every profile-scoped command needs your master-key passphrase. The tool prompts for it interactively. To run a command non-interactively, set `CADRUMO_SECRET_PASSPHRASE` in the environment first. The tool's output is in Spanish, so the error text you see may differ from the English shown on this page.
+Profile-scoped commands need an active taxpayer profile and may ask for the
+master-key passphrase. See [Set up your taxpayer profile](profile-setup.md) if
+you have none. Output can be English, Spanish, Catalan, or Hungarian.
 
 ## "This operation requires an active profile"
 
-The command needs a taxpayer profile and none is active. Check what the tool thinks is active:
+The command needs a taxpayer profile and none is active. First inspect what
+the tool thinks is active, then run the repair check without changing
+anything. A healthy profile reports `ready`; a broken local pointer reports
+the repair action you can take:
 
-```bash
-aeat config profile status
+```{cli-sequence} troubleshooting-active-profile
+:verify: Confirm the repair check reports the active profile's current status without changing it.
 ```
 
-If a profile exists but the active setting won't load, repair it:
+If the repair check says the active setting points at unreadable profile
+state, clear that broken local pointer, then switch to a good profile:
 
-```bash
-aeat config repair profile
-```
-
-If the active setting points at unreadable profile state, clear it and switch to a good profile:
-
-```bash
-aeat config repair profile --clear-active --yes
-aeat config switch <profile-name>
+```{cli-sequence} troubleshooting-clear-active
+:verify: Confirm you can clear a broken active setting, then switch to a good profile by name.
 ```
 
 If no profile exists yet, create one first - see [Set up your taxpayer profile](profile-setup.md).
@@ -35,8 +37,8 @@ If a profile loads but the numbers look wrong, see the next symptom.
 
 The wrong profile is active. Each profile keeps its own ledger, calculations, and filings, so a command run under the wrong one shows someone else's data. See which profile is active:
 
-```bash
-aeat config profile status
+```{cli-sequence} troubleshooting-wrong-profile
+:verify: Confirm the active profile is the one you expect to be working under.
 ```
 
 Switch to the right profile with `aeat config switch <profile-name>` - [Set up your taxpayer profile](profile-setup.md) covers creating and switching profiles.
@@ -51,12 +53,11 @@ ledger preflight blocks modelo calculation: transaction <id> <reason>: <detail>.
 
 The calculation reads your imported transactions, and some rows aren't ready. Run the preflight check for the period you're calculating - `ledger preflight` takes an AEAT token (`1T`-`4T`, `0A`, `01`-`12`) and also requires `--year`, so add it even though the message above omits it:
 
-```bash
-aeat app ledger preflight --year 2026 --period 1T
-aeat app ledger status
+```{cli-sequence} troubleshooting-ledger-ready
+:verify: Confirm the ledger preflight and status run for the period you are calculating.
 ```
 
-The preflight report names the rows that block the calculation. Fix them by completing the import and review steps in [Work with transactions](import-bank-statements.md), then run the calculation again.
+The preflight report names the rows that block the calculation. Fix them by completing the import and review steps in [Import and manage transactions](import-bank-statements.md), then run the calculation again.
 
 ## A required value is missing
 
@@ -69,8 +70,8 @@ Required casilla <id> is not present in the calculation revision inputs
 
 A casilla is a numbered box on the official form. A binding is a rule that fills one. List which values are still missing for your form:
 
-```bash
-aeat app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
+```{cli-sequence} troubleshooting-missing-values
+:verify: Confirm the tool lists the values still missing for the form.
 ```
 
 Replace the modelo, year, and period with your own. The full workflow for supplying and reviewing values lives in [Review and supply calculation inputs](review-calculation-values.md).
@@ -81,14 +82,13 @@ Use one period grammar everywhere: the AEAT tokens. `0A` is the annual period, `
 
 Modelo and ledger commands share the same shape - the AEAT token with `--year`:
 
-```bash
-aeat app ledger preflight --year 2026 --period 1T
-aeat app ledger status --year 2026 --period 0A
-aeat app ledger preflight --year 2026 --period 03
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
+```{cli-sequence} troubleshooting-period-grammar
+:verify: Confirm the AEAT token plus --year is accepted across ledger and modelo commands.
 ```
 
-The ledger `--period` commands are `ledger preflight`, `ledger status`, `ledger export`, `ledger import`, and `overview status`. On `ledger status` and `overview status`, where the period is optional, a bare token with no `--year` is refused with the year fix (shown here in English; the tool prints it in Spanish):
+The ledger `--period` commands are `ledger preflight`, `ledger status`,
+`ledger export`, `ledger import`, and `overview status`. Where the year is
+optional, a bare period token is refused with a correction:
 
 ```text
 El token de periodo '1T' necesita un año en este comando. Añada --year (e.g. --period 1T --year 2024).
@@ -120,104 +120,75 @@ This refusal applies to `aeat app modelo work file` only - exporting works at an
 
 Add `--language` to the command. Accepted values are `en`, `es`, `ca`, and `hu`. The flag changes both command output and help text:
 
-```bash
-aeat --language en config profile create --help
+```{cli-sequence} troubleshooting-language
+:verify: Confirm the --language flag renders a command's output in the chosen language.
 ```
 
-To set the language for a whole shell session, set the environment variable `CADRUMO_OUTPUT_LANGUAGE` before running commands.
-
-In PowerShell:
-
-```powershell
-$env:CADRUMO_OUTPUT_LANGUAGE = 'en'
-```
-
-In bash:
-
-```bash
-export CADRUMO_OUTPUT_LANGUAGE=en
-```
-
-The `--language` flag wins over the environment variable for that command. A profile also carries a default output language - set it with `--output-language` at profile creation, as described in [Set up your taxpayer profile](profile-setup.md).
+The `--language` flag applies to that one command. A profile also carries
+a default output language - set it with `--output-language` at profile
+creation, as described in [Set up your taxpayer profile](profile-setup.md).
 
 ## A live read from AEAT refuses
 
-Live reads need a registered digital certificate or Cl@ve PIN (the digital identity system Spain uses for citizens to log in to government services online). Check your authentication:
+Live reads need a registered digital certificate, Cl@ve Móvil, or Cl@ve
+Permanente. Check your authentication:
 
-```bash
-aeat config auth status
-aeat config auth test
+```{cli-sequence} troubleshooting-auth-check
+:verify: Confirm the tool reports what authentication is configured and probes it locally.
 ```
 
-`auth test` is a local probe - it checks your stored credentials without contacting AEAT. It also reports the certificate's expiry: an expired or soon-to-expire certificate blocks live reads. If the report warns about expiry, follow [Renew your certificate before it expires](authenticate-with-aeat.md#renew-your-certificate-before-it-expires). Check that the tool can reach the AEAT website (Sede Electrónica, the official online portal):
+`auth test` checks stored credentials without contacting AEAT. An expired
+certificate, or one within the 14-day critical window, blocks authenticated
+work. The earlier 60-day warning is advisory. If expiry is close, follow
+[Renew your certificate before it expires](authenticate-with-aeat.md#renew-your-certificate-before-it-expires).
 
-```bash
-aeat config repair connectivity
+Check that the tool can reach the AEAT website:
+
+```{cli-sequence} troubleshooting-connectivity
 ```
 
 If authentication was never set up, follow [Authenticate with AEAT](authenticate-with-aeat.md).
 
 When a live login fails, the tool captures an encrypted diagnostic of the failure. List and inspect them:
 
-```bash
-aeat config auth diagnostics list
-aeat config auth diagnostics show <diagnostic-id>
+```{cli-sequence} troubleshooting-auth-diagnostics
+:verify: Confirm the tool lists saved login diagnostics.
 ```
 
-`list` shows when each failure happened, the reason, and which login method and profile were involved. `show` prints one diagnostic with sensitive content redacted — configured credentials appear only as present/absent flags and fingerprints, never as values.
+`list` shows when each failure happened, the reason, and which login method and profile were involved. `show` prints one diagnostic with sensitive content redacted. Configured credentials appear only as present/absent flags and fingerprints, never as values.
 
-For Cl@ve failures, the missing piece is often what happened on your phone — something the tool cannot see. Record what you observed so the diagnostic is complete:
+For Cl@ve failures, the missing piece is often what happened on your phone, something the tool cannot see. Record what you observed so the diagnostic is complete:
 
-```bash
-aeat config auth diagnostics report <diagnostic-id> --phone-state app_prompted_not_accepted
+```{cli-sequence} troubleshooting-diagnostics-report
 ```
 
 Accepted states are `app_prompted_and_accepted`, `app_prompted_not_accepted`, `app_did_not_prompt`, and `operator_did_not_check`.
 
 ## The diagnostic toolbox
 
-Use these when no single symptom matches, or to gather context before asking for help.
+Use these when no single symptom matches, or before asking for help. Run the
+read-only diagnostics in order: overall status, active profile, recent logs,
+and both integrity checks.
 
-When you don't know where to start, check overall status:
-
-```bash
-aeat app overview status
-aeat config profile status
+```{cli-sequence} troubleshooting-toolbox
+:verify: Confirm the read-only diagnostics all run and report on your setup and data.
 ```
 
-`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data.
-
-When a command fails and you want the details, read the logs:
-
-```bash
-aeat config repair logs --lines 50
-```
-
-It prints the log file path and the most recent lines. Use `--lines` to control how many it prints.
-
-When a command reports corrupt or unreadable data, check integrity:
-
-```bash
-aeat config repair integrity objects
-aeat config repair integrity registry
-```
-
-`integrity objects` checks the security seals on your encrypted records; `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
+`overview status` reports your profile, ledger, and modelo readiness; `profile status` reports the active profile. Together they tell you whether the problem is your setup or your data. `repair logs` prints the log file path and the most recent lines. Use `--lines` to control how many. `integrity objects` checks the security seals on your encrypted records, and `integrity registry` checks the tax rule definitions. If either fails, the report names the affected item. Take that report to the issue tracker rather than editing stored data by hand.
 
 When unreadable encrypted records block other commands, move them aside. Preview first, then apply:
 
-```bash
-aeat config repair quarantine --dry-run
-aeat config repair quarantine --yes
+```{cli-sequence} troubleshooting-quarantine
+:verify: Confirm the quarantine preview and the real run both complete.
 ```
 
-The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover — for example with the recovery key, see [Protect access to your data](protect-data-access.md) — the archived records still exist.
+The preview lists how many records would move, per storage area, without changing anything. The real run requires `--yes`. Quarantine does not delete anything: each unreadable record is moved, still encrypted, into a quarantine archive inside the same storage, and readable records are untouched. If the cause was a missing key that you later recover (for example with the recovery key, see [Protect access to your data](protect-data-access.md)), the archived records still exist.
 
-When you need to know which finalized calculations and filings used a transaction, ask the participation index:
+To find which finalized calculations and filings used a transaction, query the
+participation index. Rebuild it first if the lookup appears incomplete:
 
-```bash
-aeat app ledger participation <transaction-id>
-aeat app ledger participation rebuild
+```{cli-sequence} troubleshooting-participation
+:verify: Confirm the participation index rebuilds from the finalized records.
 ```
 
 The index is a derived cross-reference, safe to regenerate at any time: `rebuild` rescans the finalized calculation records and rewrites it. Run it if a participation lookup looks incomplete. Rebuilding changes no ledger or filing data.
@@ -226,12 +197,12 @@ Both `participation` verbs read the active profile's encrypted bucket, so they n
 
 When nothing else recovers the problem, and only then, clear the saved progress of interrupted commands. This command is destructive:
 
-```bash
-aeat config repair reset-progress --yes
+```{cli-sequence} troubleshooting-reset-progress
 ```
 
 It removes saved interrupted-command progress and requires `--yes`. Like the participation verbs, it reads the active profile's bucket, so switch to the profile first if it refuses with `No hay una sesion de bucket activa`.
 
+(prepare-a-privacy-safe-support-request)=
 ## Prepare a privacy-safe support request
 
 When the steps on this page don't resolve the problem, gather this before asking for help:

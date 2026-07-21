@@ -536,7 +536,7 @@ def test_iva_aggregation_buckets_on_value_date_caja_basis_only() -> None:
     accrual/devengo basis selector anywhere in the aggregation surface.
 
     This is a *documentation* test: it pins the current, intentionally
-    single-basis behaviour so the future devengo follow-on (#58) has a
+    single-basis behaviour so a future devengo addition has a
     regression anchor. If someone silently introduces a devengo branch (e.g.
     bucketing on ``booked_date`` while ``value_date`` says otherwise, or a
     new basis-selector argument), the assertions below turn RED.
@@ -582,7 +582,7 @@ def test_no_devengo_basis_selector_exists_on_iva_aggregation_surface() -> None:
     Confirms (against the live module/signature, re-read at runtime) that
     neither the public IVA-aggregation entry points nor their parameters
     expose a ``basis``/``devengo``/``accrual`` axis. Caja is the only basis.
-    The future devengo design (#58) will add such a selector; until then this
+    A future devengo design will add such a selector; until then this
     test fails RED the moment a basis selector is introduced without the
     accompanying behaviour and tests.
     """
@@ -647,7 +647,7 @@ def test_repository_backed_projection_reports_out_of_period_catalogue_transactio
 ) -> None:
     """A catalogue transaction outside the requested quarter must surface as a summary.
 
-    Regression test (issue #408): the repository-backed entry point must NOT
+    Regression test: the repository-backed entry point must NOT
     silently drop out-of-window rows. The compact summary keeps the operator
     visibility signal without allocating one row-level issue per excluded
     plaintext index entry.

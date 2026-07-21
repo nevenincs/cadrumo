@@ -68,10 +68,6 @@ See Also:
         ``invoice_id`` and ``purchase_invoice_evidence_id``.
     :mod:`~domain.usage_ratios`
         Proportionality profiles referenced by ledger rows before aggregation.
-    ``2026-06-10-ledger-amount-direction-adr``
-        Decision making amount magnitude absolute and direction authoritative.
-    ``2026-06-10-ledger-modelo-crossref-adr``
-        Decision for the rebuildable transaction participation index.
 """
 
 from __future__ import annotations
@@ -134,10 +130,8 @@ from ._llm import (
     parse_split_response,
     prompt_spec_with_every_spending_category,
     prompt_spec_with_saturation_fields,
-    register_classifier,
     resolve_classifier,
     resolve_split_proposer,
-    unregister_classifier,
 )
 from ._m210_income_classification import M210IncomeClassification
 from ._model_tier import ModelCapability, catalogue, profiles_for_provider, resolve_profile
@@ -175,7 +169,6 @@ from ._service import (
 
 if TYPE_CHECKING:
     from ._repository import (
-        TX_BUCKET_NAMESPACE,
         ImportSummary,
         transaction_index_object_key,
         transaction_object_key,
@@ -185,7 +178,6 @@ if TYPE_CHECKING:
 _LAZY_REPOSITORY_NAMES = frozenset(
     {
         "ImportSummary",
-        "TX_BUCKET_NAMESPACE",
         "transaction_index_object_key",
         "transaction_object_key",
     },
@@ -198,8 +190,8 @@ def __getattr__(name: str):
     The concrete :class:`TransactionCatalogueRepository` now lives in the
     persistence adapter
     :class:`~adapters.persistence.profile.transactions.TransactionCatalogueRepository`;
-    only the pure port surface (``ImportSummary``, the key-derivation helpers,
-    and the namespace constant) is resolved here.
+    only the pure port surface (``ImportSummary`` and the key-derivation
+    helpers) is resolved here.
     """
     if name in _LAZY_REPOSITORY_NAMES:
         from . import _repository
@@ -217,7 +209,6 @@ __all__ = [
     "PROFESSIONAL_SERVICE_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_CATEGORIES_PAID_NET_OF_WITHHOLDING",
     "RENT_IRPF_CATEGORIES_PAID_NET_OF_WITHHOLDING",
-    "TX_BUCKET_NAMESPACE",
     "BucketTransactionRef",
     "BusinessClassification",
     "CategoryChoice",
@@ -289,7 +280,6 @@ __all__ = [
     "profiles_for_provider",
     "prompt_spec_with_every_spending_category",
     "prompt_spec_with_saturation_fields",
-    "register_classifier",
     "resolve_classifier",
     "resolve_profile",
     "resolve_split_proposer",
@@ -297,5 +287,4 @@ __all__ = [
     "snapshot_classification_state",
     "transaction_index_object_key",
     "transaction_object_key",
-    "unregister_classifier",
 ]

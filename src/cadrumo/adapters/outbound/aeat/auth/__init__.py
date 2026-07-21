@@ -1,10 +1,10 @@
-"""Public outbound AEAT auth facade.
+"""Concrete outbound AEAT authentication implementations.
 
-This package mirrors the application auth contract from
-:mod:`application.auth` by re-exporting
-:class:`application.auth.AuthProvider` and
-:class:`application.auth.AuthProviderKind` alongside the concrete
-certificate, Cl@ve Móvil, and Cl@ve Permanente providers. Use
+This facade exports certificate, Cl@ve Móvil, and Cl@ve Permanente providers,
+their session and assertion payloads, browser-context helpers, and typed
+adapter errors. Provider identifiers and readiness descriptions are owned by
+:mod:`core`; application orchestration is owned by
+:mod:`application.auth`. Use
 :func:`select_provider` to resolve
 ``CERTIFICATE`` to :class:`AeatAuthenticator`
 and ``CLAVE_MOVIL`` to
@@ -20,8 +20,7 @@ provider-specific payloads through the discriminated ``AuthSessionDetail`` and
 ``AuthLoginAssertionDetail`` unions.
 Selected certificate public API is available through
 :mod:`adapters.outbound.aeat.auth.certificate`, including
-:func:`adapters.outbound.aeat.auth.certificate.load_certificate`,
-:func:`adapters.outbound.aeat.auth.certificate.verify_handshake`, and
+:func:`adapters.outbound.aeat.auth.certificate.load_certificate` and
 :func:`adapters.outbound.aeat.auth.certificate.health`.
 
 Live-read policy is owned by
@@ -46,15 +45,18 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from .....application.auth import (
-    AuthProvider,
-    AuthProviderKind,
-)
+from .....application.auth_credentials import ActiveCertificateCredentials
+from .....core import AuthProviderKind as _AuthProviderKind
 from .....core.access_gate import (
     AeatAccessGate,
     AeatGateEnvSnapshot,
 )
-from .....core.file_permissions import restrict_file_permissions
+from .....core.config import (
+    AEAT_CERTIFICATE_PROTECTED_ORIGIN,
+    AEAT_CERTIFICATE_PROTECTED_PATH,
+    AEAT_CERTIFICATE_PROTECTED_URL,
+)
+from . import _session_store as session_store
 from ._authenticator import (
     AEAT_SESSION_IDLE_TTL,
     AeatAuthenticator,
@@ -65,14 +67,9 @@ from ._authenticator import (
     BrowserResponseLike,
     BrowserSessionFactory,
     BrowserSessionLike,
-    BrowserSessionProfileLike,
 )
 from ._authenticator_types import CertificateHealthCheck
-from ._certificate_backends._playwright_context import (
-    build_client_certificates_kwarg,
-)
 from ._clave_movil import (
-    CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE,
     ClaveMovilApprovalTimeoutError,
     ClaveMovilAuthProvider,
     ClaveMovilConfigurationError,
@@ -88,10 +85,10 @@ from ._errors import (
     AeatSessionExpiredError,
     AuthConfigurationError,
     AuthError,
+    AuthProviderCleanupError,
     AuthValidationError,
 )
 from ._providers import (
-    CERTIFICATE_CONTEXT_MARKER,
     AuthLoginAssertionDetail,
     AuthSessionDetail,
     BrowserContextProvisioner,
@@ -108,30 +105,27 @@ from .certificate import (
     CertificateBundle,
     CertificateError,
     CertificateExpiredError,
-    CertificateHandshakeError,
     CertificateHealth,
     CertificateHealthSeverity,
     CertificateLoadError,
     CertificateNifParseError,
     CertificatePasswordError,
     CertificatePreExpiryError,
-    HandshakeResult,
     LoadedCertificate,
     evaluate_loaded_certificate_health,
     extract_nif_from_subject,
     health,
     load_certificate,
-    preload_into_browser_context,
-    verify_handshake,
 )
 
 if TYPE_CHECKING:
     from .....core.config import Settings
 
 __all__ = [
+    "AEAT_CERTIFICATE_PROTECTED_ORIGIN",
+    "AEAT_CERTIFICATE_PROTECTED_PATH",
+    "AEAT_CERTIFICATE_PROTECTED_URL",
     "AEAT_SESSION_IDLE_TTL",
-    "CERTIFICATE_CONTEXT_MARKER",
-    "CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE",
     "AeatAccessGate",
     "AeatAuthenticator",
     "AeatGateEnvSnapshot",
@@ -142,8 +136,7 @@ __all__ = [
     "AuthConfigurationError",
     "AuthError",
     "AuthLoginAssertionDetail",
-    "AuthProvider",
-    "AuthProviderKind",
+    "AuthProviderCleanupError",
     "AuthSessionDetail",
     "AuthValidationError",
     "BrowserContextLike",
@@ -152,12 +145,10 @@ __all__ = [
     "BrowserResponseLike",
     "BrowserSessionFactory",
     "BrowserSessionLike",
-    "BrowserSessionProfileLike",
     "CertificateBundle",
     "CertificateContextProvisioner",
     "CertificateError",
     "CertificateExpiredError",
-    "CertificateHandshakeError",
     "CertificateHealth",
     "CertificateHealthCheck",
     "CertificateHealthSeverity",
@@ -177,9 +168,7 @@ __all__ = [
     "ClavePermanenteFailureMode",
     "ClavePermanenteLoginAssertionDetail",
     "ClavePermanenteSessionDetail",
-    "HandshakeResult",
     "LoadedCertificate",
-    "build_client_certificates_kwarg",
     "classify_identity",
     "describe_certificate_provider",
     "evaluate_loaded_certificate_health",
@@ -187,20 +176,19 @@ __all__ = [
     "health",
     "load_certificate",
     "operator_progress_sink",
-    "preload_into_browser_context",
-    "restrict_file_permissions",
     "select_provider",
-    "verify_handshake",
+    "session_store",
 ]
 
 
 def select_provider(
-    kind: AuthProviderKind,
+    kind: _AuthProviderKind,
     *,
     settings: Settings,
     browser_session_factory: BrowserSessionFactory | None = None,
-) -> AuthProvider:
-    """Return the concrete outbound :class:`AuthProvider` for ``kind``.
+    certificate_credentials: ActiveCertificateCredentials | None = None,
+) -> AeatAuthenticator | ClaveMovilAuthProvider | ClavePermanenteAuthProvider:
+    """Return the concrete outbound provider implementation for ``kind``.
 
     ``AuthProviderKind.CERTIFICATE`` builds an :class:`AeatAuthenticator`;
     ``AuthProviderKind.CLAVE_MOVIL`` builds a
@@ -211,19 +199,24 @@ def select_provider(
 
     Raises:
         AuthConfigurationError: If ``kind`` is outside the supported
-            :class:`AuthProviderKind` set.
+            :class:`core.AuthProviderKind` set.
     """
-    if kind is AuthProviderKind.CERTIFICATE:
+    if kind is _AuthProviderKind.CERTIFICATE:
+        if certificate_credentials is None:
+            raise AuthConfigurationError(
+                "certificate provider construction requires ActiveCertificateCredentials",
+            )
         return AeatAuthenticator(
             settings,
+            credentials=certificate_credentials,
             browser_session_factory=browser_session_factory,
         )
-    if kind is AuthProviderKind.CLAVE_MOVIL:
+    if kind is _AuthProviderKind.CLAVE_MOVIL:
         return ClaveMovilAuthProvider(
             settings,
             browser_session_factory=browser_session_factory,
         )
-    if kind is AuthProviderKind.CLAVE_PERMANENTE:
+    if kind is _AuthProviderKind.CLAVE_PERMANENTE:
         return ClavePermanenteAuthProvider(
             settings,
             browser_session_factory=browser_session_factory,

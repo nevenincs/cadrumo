@@ -26,7 +26,7 @@ from ...core.i18n import tr
 from ...core.resources import bundled_path
 from ...domain.calculations.registry import OracleEnvironment as _OracleEnvironment
 from ._common import _emit_envelope
-from ._registry_corpus import citations_app, guard_corpus_companion, manuals_app
+from ._registry_corpus import citations_app, manuals_app
 from ._registry_diff_payloads import RegistryDiffRevisionsResult
 from ._registry_payloads import (
     RegistryAuditOraclesResult,
@@ -179,11 +179,6 @@ def verify_registry_cmd(
     """Validate every registry modelo against shared legal/source catalogues."""
     registry_root = _resolve_registry_root(registry_root)
     resolved_source_root = _resolve_source_root(source_root)
-    guard_corpus_companion(
-        capability=tr("cli.registry.errors.capability.registry_verify"),
-        registry_root=registry_root,
-        source_root=resolved_source_root,
-    )
     report = verify_registry_tree(registry_root, source_root=resolved_source_root)
     _emit_envelope(
         ctx,
@@ -499,11 +494,6 @@ def verify_workbooks_cmd(
     ] = None,
 ) -> None:
     """Run the read-only workbook parity backend verification."""
-    guard_corpus_companion(
-        capability=tr("cli.registry.errors.capability.workbooks_verify"),
-        registry_root=_resolve_registry_root(None),
-        source_root=_resolve_source_root(None),
-    )
     report = verify_registry_workbooks(
         root=_resolve_workbook_root(root),
         limit=limit,
@@ -588,11 +578,6 @@ def run_parity_cmd(
     """Run one stored parity scenario and archive the resulting tape."""
     resolved_registry_root = _resolve_registry_root(registry_root)
     resolved_source_root = _resolve_source_root(source_root)
-    guard_corpus_companion(
-        capability=tr("cli.registry.errors.capability.parity"),
-        registry_root=resolved_registry_root,
-        source_root=resolved_source_root,
-    )
     tape, target = run_registry_parity(
         scenario_path=scenario_path,
         registry_root=resolved_registry_root,
@@ -653,11 +638,6 @@ def replay_parity_cmd(
     """Replay one archived parity tape against the current registry runtime."""
     resolved_registry_root = _resolve_registry_root(registry_root)
     resolved_source_root = _resolve_source_root(source_root)
-    guard_corpus_companion(
-        capability=tr("cli.registry.errors.capability.parity"),
-        registry_root=resolved_registry_root,
-        source_root=resolved_source_root,
-    )
     report = replay_registry_parity(
         tape_path=tape_path,
         registry_root=resolved_registry_root,

@@ -62,9 +62,9 @@ def test_withholding_observation_country_code_must_be_uppercase_alphabetic() -> 
 
 
 def test_withholding_observation_clave_must_be_a_valid_retencion_clave() -> None:
-    """A lowercase / out-of-set clave is refused (#29): ``clave`` is the typed
+    """A lowercase / out-of-set clave is refused: ``clave`` is the typed
     :class:`RetencionClave` (Modelo 190/193 A-L), so ``"a"`` (lowercase) is not a
-    member -- the closed-set hardening that replaced the former uppercase-only check.
+    member.
     """
     with pytest.raises(ValidationError, match="not a valid RetencionClave"):
         WithholdingObservation.model_validate(

@@ -35,13 +35,15 @@ import os
 import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
+from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import Any
 
 from pydantic import SecretStr
 from pydantic_settings import SettingsConfigDict
 
-from ..core.config import AuthProviderKindSetting, Settings
+from ..core import AuthProviderKind
+from ..core.config import Settings
 
 _SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
 """Keep temporary Cadrumo local-storage roots alive for returned Settings instances."""
@@ -49,6 +51,7 @@ _SETTINGS_STORAGE_DIRECTORIES: list[TemporaryDirectory[str]] = []
 __all__ = [
     "isolated_aeat_env",
     "ready_clave_settings",
+    "scoped_cwd",
     "scoped_env_var",
     "scoped_sys_argv",
     "settings_without_env_file",
@@ -94,8 +97,8 @@ def settings_without_env_file(**overrides: Any) -> Settings:
 
 def ready_clave_settings(tax_id: str) -> Settings:
     return settings_without_env_file(
-        aeat_auth_provider=AuthProviderKindSetting.CLAVE_MOVIL,
-        aeat_clave_movil_dni_nie=SecretStr(tax_id),
+        cadrumo_auth_provider=AuthProviderKind.CLAVE_MOVIL,
+        cadrumo_clave_movil_dni_nie=SecretStr(tax_id),
     )
 
 
@@ -121,14 +124,14 @@ def isolated_aeat_env(**overrides: str) -> Iterator[None]:
 
     Arguments:
         **overrides: Env vars to set within the with-block, by name
-            (e.g. ``AEAT_AUTH_PROVIDER="clave_movil"``). Pass an empty
+            (e.g. ``CADRUMO_AUTH_PROVIDER="clave_movil"``). Pass an empty
             string to test the "explicitly set to blank" path; pass no
             key for that var to test the "unset" path.
 
     Examples:
-        >>> with isolated_aeat_env(AEAT_AUTH_PROVIDER="clave_movil"):
+        >>> with isolated_aeat_env(CADRUMO_AUTH_PROVIDER="clave_movil"):
         ...     settings = Settings()
-        ...     assert settings.aeat_auth_provider is AuthProviderKindSetting.CLAVE_MOVIL
+        ...     assert settings.cadrumo_auth_provider is AuthProviderKind.CLAVE_MOVIL
     """
     saved: dict[str, str | None] = {}
     for name in Settings.env_var_names():
@@ -208,3 +211,30 @@ def scoped_env_var(name: str, value: str | None) -> Iterator[None]:
             os.environ.pop(name, None)
         else:
             os.environ[name] = prior
+
+
+@contextmanager
+def scoped_cwd(path: Path) -> Iterator[None]:
+    """Change the process working directory for the with-block.
+
+    The determinism-conformance and CLI path-echo suites need to prove a
+    behaviour is genuinely cwd-independent, which means actually running
+    code from two different real working directories. The process cwd is
+    OS-process infrastructure, not AEAT configuration, so — like
+    :func:`scoped_sys_argv` — it has no Settings equivalent; this is the
+    centralized scope helper tests must call rather than rebinding
+    ``os.getcwd()``/``os.chdir`` in a test-local try/finally.
+
+    Arguments:
+        path: The directory to ``chdir`` into for the with-block.
+
+    Examples:
+        >>> with scoped_cwd(tmp_path / "cwd-a"):
+        ...     result = service.add(source_path=Path("receipt.pdf"), ...)
+    """
+    prior = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prior)

@@ -47,13 +47,13 @@ from functools import lru_cache
 from pathlib import Path
 
 from ...adapters.persistence.profile.submission import SubmissionRepository
-from ...application.auth import AuthProviderKind, select_provider
-from ...core import Period
+from ...application.auth import select_provider
+from ...core import AuthProviderKind, Period
 from ...core.config import Settings, load_settings
 from ...domain.calculations.registry import RegistrySnapshotError
 from ...domain.deadlines import DeadlineEngine, TaxpayerProfile
 from ...domain.modelos import CalculationRevision, WorkUnit
-from ...domain.submission import ModeloDraftStatus, SubmissionEngine
+from ...domain.submission import DeadlineWindowChecker, ModeloDraftStatus, SubmissionEngine
 from ...domain.transactions import TransactionCatalogue
 from ..filing import (
     approve_draft,
@@ -242,6 +242,28 @@ class _RevisionDeadlineWindowChecker:
         )
 
 
+def build_revision_deadline_window_checker(
+    *,
+    profile: TaxpayerProfile,
+    engine: DeadlineEngine,
+) -> DeadlineWindowChecker:
+    """Build the revision filing-window checker for one taxpayer.
+
+    The returned :class:`DeadlineWindowChecker` binds the supplied
+    :class:`TaxpayerProfile` and :class:`DeadlineEngine`. It answers raw,
+    inclusive window membership for an exact modelo and period; workflow
+    purpose and skip policy remain owned by the workflow engine.
+
+    Args:
+        profile: Taxpayer facts used to compute the obligation schedule.
+        engine: Registry-backed deadline engine used for that schedule.
+
+    Returns:
+        The production deadline-window checker bound to ``profile``.
+    """
+    return _RevisionDeadlineWindowChecker(profile=profile, engine=engine)
+
+
 def build_revision_workflow_engine(
     *,
     revision: CalculationRevision,
@@ -278,14 +300,10 @@ def build_revision_workflow_engine(
     """
     cfg = settings or load_settings()
     deadline_engine = DeadlineEngine()
-    provider_kind = (
-        AuthProviderKind(cfg.aeat_auth_provider.value)
-        if cfg.aeat_auth_provider is not None
-        else AuthProviderKind.CERTIFICATE
-    )
+    provider_kind = cfg.cadrumo_auth_provider if cfg.cadrumo_auth_provider is not None else AuthProviderKind.CERTIFICATE
     submission_engine = SubmissionEngine(
         auth_provider=select_provider(provider_kind, settings=cfg),
-        deadline_checker=_RevisionDeadlineWindowChecker(profile=profile, engine=deadline_engine),
+        deadline_checker=build_revision_deadline_window_checker(profile=profile, engine=deadline_engine),
         settings=cfg,
         repository=SubmissionRepository(),
     )
@@ -356,6 +374,7 @@ def run_revision_workflow_gate(
 
 __all__ = [
     "_RevisionInputsProvider",
+    "build_revision_deadline_window_checker",
     "build_revision_workflow_engine",
     "run_revision_workflow_gate",
     "workflow_period_for_work_unit",

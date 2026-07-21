@@ -2,11 +2,11 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/boe-a-2011-208-modelo-145.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/boe-a-2011-208-modelo-145.html",
   "source_sha256": "10b68a50615af2e1aa3eebe610983c799048ae677999276fe1ce29186278ae76",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",
-  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/diario_boe/txt.php?id=BOE-A-2011-208",
   "units": [
     {
       "text": "A partir de la entrada en vigor de la presente resolución quedará derogada la Resolución de 11 de diciembre de 2008, del Departamento de Gestión Tributaria de la Agencia Estatal de Administración Tributaria, por la que se aprueba el modelo 145, de comunicación de datos al pagador de rendimientos del trabajo o de la variación de los datos previamente comunicados.",

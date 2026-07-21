@@ -25,7 +25,7 @@ trigger: always_on
 
 # AEAT architecture boundaries
 
-Place Python application code under `src/aeat/`. Do not add top-level Python packages, ad-hoc module roots, or hidden parallel implementations.
+Place Python application code under `src/cadrumo/`. Do not add top-level Python packages, ad-hoc module roots, or hidden parallel implementations.
 
 Expose validated boundary data through pydantic v2 models. Use strict config where practical. Do not expose bare `dict[str, Any]` for persisted records, wire payloads, configuration, CLI input, MCP messages, LLM responses, or fixtures.
 
@@ -91,71 +91,52 @@ trigger: always_on
 ## Rule
 
 Across every CLI interface, the verb that fetches data from AEAT MUST be named
-`pull`, and the option that takes a single local file as input MUST be named
-`--file`. A fetch-from-AEAT command MUST NOT be named `capture`, `refresh`,
-`fetch`, `download`, `sync`, or `get`; a single-file input option MUST NOT be
-named `--source`, `--path`, `--from-file`, or a bespoke `--from-*` family. When
-a command both reconciles and accepts either a live pull or a local file, model
-it as a subgroup whose members are `pull` (fetch from AEAT) and `file --file`
-(local artefact), not as one verb multiplexed by `--from-*` flags.
+`pull`, and the single-local-file input option MUST be named `--file`. A
+fetch-from-AEAT command MUST NOT be named `capture`, `refresh`, `fetch`,
+`download`, `sync`, or `get`; a single-file input option MUST NOT be named
+`--source`, `--path`, `--from-file`, or a bespoke `--from-*` family. A command
+that reconciles from either transport MUST be a subgroup of `pull` (fetch from
+AEAT) and `file --file` (local artefact), never one verb multiplexed by
+`--from-*` flags.
+
+A verb rename MUST be swept by hand through the surfaces the gates do NOT scan:
+the runtime write-policy allowlist (`storage_write_policy.py`), the
+error-registry `default_suggestion` fields, the cross-period `next_action`
+builders, the curated operator help surface (`operator_surface/_help.py`), and
+the envelope `command=` identifiers. Updating only the verb registrations leaves
+dead operator instructions and drops the verb out of the profile-bound write
+guard (fail-open).
 
 ## Why
 
-The reconcile surface had grown four divergent `--from-sede` / `--from-capture`
-/ `--from-justificante` / `--from-declaration` flags plus a sugar verb, and the
-live family used `capture`, the censo family used `refresh`, and ledger import
-used `--source` — every fetch and every file-input spelled differently per
-command. An operator could not transfer knowledge from one verb to the next, and
-`--help` taught a different vocabulary on every screen. The
-`2026-06-10-cli-pull-file-standard-adr` collapsed the surface onto two words:
-`pull` always means "go read this from AEAT", `--file` always means "here is the
-one local file". A single learned verb and a single learned flag now generalise
-across the whole CLI. The documented-command conformance gate
-(`test_documented_command_conformance.py`) prevents the how-to docs from citing a
-non-canonical or dead verb, and `test_json_schema_conformance.py` keeps every CLI
-leaf's `command` envelope identifier bound to a registered schema — but neither
-scans production `suggestion` / `next_action` / curated-help strings, so a verb
-rename MUST be swept by hand through the runtime write-policy allowlist
-(`storage_write_policy.py`), the error-registry `default_suggestion` fields, the
-cross-period `next_action` builders, the curated operator help surface
-(`operator_surface/_help.py`), and the envelope `command=` identifiers. A
-rename that updates only the verb registrations leaves dead operator instructions
-and — critically — drops the verb out of the profile-bound write guard
-(fail-open). This is the CLI-surface companion to `aeat-architecture-boundaries`
-(the CLI gate is the operator's first instructive surface) and to
-`aeat-locales-cli` (the help text for these verbs is authored only through the
-locale CLI).
+The reconcile surface had grown four divergent `--from-*` flags plus a sugar
+verb while `live` used `capture`, `censo` used `refresh`, and ledger import used
+`--source` — no operator could transfer knowledge across verbs. ADR
+`2026-06-10-cli-pull-file-standard-adr` collapsed the surface onto `pull` ("read
+this from AEAT") and `--file` ("the one local file"). The gates
+`test_documented_command_conformance.py` and `test_json_schema_conformance.py`
+bind docs and envelope identifiers but do not scan production
+`suggestion`/`next_action`/curated-help strings, hence the mandatory hand-sweep.
 
 ## How
 
-- **Good:** `aeat app live justificante pull`, `aeat app live expedientes pull`
-  / `pull-all`, `aeat app live notifications pull`, `aeat app live filed pull` /
-  `pull-all` / `pull-sources`, `aeat app live iva-wallet pull-history` /
-  `pull-remote-state`, `aeat config profile censo pull` — every live AEAT read is
-  a `pull`.
-- **Good:** `aeat app ledger import --file STATEMENT.csv` and
-  `aeat app modelo reconcile file --file JUSTIFICANTE.pdf` — the single local
-  file is `--file` on both.
-- **Good:** a reconcile that supports both transports is a subgroup:
-  `reconcile pull` (fetch the justificante from the AEAT sede) and
-  `reconcile file --file PATH` (reconcile against a local artefact); `history`
-  lists prior runs. No `--from-*` flag selects the source.
-- **Bad:** adding a new `capture`, `refresh`, `fetch`, or `download` verb for an
-  AEAT read, or a new `--source` / `--from-capture` option for a file input —
-  the conformance gate and this rule reject it; rename to `pull` / `--file`.
-- **Bad:** multiplexing one verb across data sources with a `--from-sede` /
-  `--from-justificante` flag family instead of distinct `pull` and `file`
-  subcommands.
+- **Good:** `aeat app live justificante pull`, `pull-all`, `pull-sources`,
+  `pull-history`; `aeat app ledger import --file STATEMENT.csv`; a dual-transport
+  reconcile as a subgroup `reconcile pull` + `reconcile file --file PATH` with
+  `history` listing prior runs. (The former `aeat config profile censo pull` was
+  retired with the live censo scrape per
+  `2026-07-11-censo-operator-manual-enrolment-adr`; censal facts are
+  operator-manual.)
+- **Bad:** a new `capture`/`refresh`/`fetch`/`download` verb for an AEAT read, a
+  `--source`/`--from-capture` file input, or multiplexing one verb with a
+  `--from-sede`/`--from-justificante` flag family — rename to `pull` / `--file`.
 
 ## Source
 
-ADR `2026-06-10-cli-pull-file-standard-adr` (accepted), which supersedes the
-CLI-naming of `2026-06-10-live-justificante-reconcile-adr`; research
-`2026-06-10-cli-pull-file-standard-research` (full blast radius); plan
-`2026-06-10-cli-pull-file-standard-plan`. Enforced by
-`src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py` and the
-how-to guides under `docs/how-to/`. Promoted per the `vaultspec-codify`
-discipline.
+ADR `2026-06-10-cli-pull-file-standard-adr` (supersedes the CLI-naming of
+`2026-06-10-live-justificante-reconcile-adr`); research/plan same stem. Enforced
+by `src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py`
+and `docs/how-to/`.
 
 ---
 name: aeat-docs-scaffolding-cli
@@ -167,65 +148,44 @@ trigger: always_on
 ## Rule
 
 Maintain the generated API reference with the `dev.docs.apidocs` CLI; never
-hand-author or hand-edit the `docs/api/*.rst` stubs. Run
-`python -m dev.docs.apidocs scaffold` after any change to the `src/aeat/` module
-tree — especially a symbol relocation, rename, or deletion — and land the
-regenerated stubs in the same commit as the source change. Use
-`python -m dev.docs.apidocs scaffold --check` as the drift gate and
-`python -m dev.docs.apidocs audit` for a health report.
+hand-author or hand-edit the `docs/api/*.rst` stubs. Run `python -m
+dev.docs.apidocs scaffold` after any change to the `src/cadrumo/` module tree
+(especially a symbol relocation, rename, or deletion) and land the regenerated
+stubs in the same commit as the source change. Use `python -m dev.docs.apidocs
+scaffold --check` as the drift gate and `python -m dev.docs.apidocs audit` for a
+health report.
 
 ## Why
 
-The API reference stubs under `docs/api/` are generated from the module tree,
-and the nitpicky `-n -W` Sphinx gate imports every stubbed module. A stub left
-behind for a deleted or moved module is an *orphan* that hard-crashes autodoc
-with `ModuleNotFoundError`; a module added without a stub silently drops out of
-the reference. During the module-relocation campaign this recurred: deleting
-`adapters/inbound/pdf/_errors.py` left an orphan
-`aeat.adapters.inbound.pdf._errors.rst` that reddened the entire docs-build gate
-for an unrelated agent, and `apidocs audit` then found 2 orphan plus 6 missing
-stubs accumulated across uncoordinated moves. The CLI is idempotent and
-authoritative; hand-editing a stub drifts from the source tree and is reverted on
-the next regeneration. This rule is the call-site companion to the
-relocation-atomicity paragraph in `aeat-architecture-boundaries` (one atomic
-explicit-path commit per relocation) and to `core-struct-docstring-links` (which
-governs the docstring cross-references the stubs expose).
+The `docs/api/` stubs are generated from the module tree and the nitpicky `-n -W`
+Sphinx gate imports every stubbed module: a stub left for a deleted/moved module
+is an *orphan* that hard-crashes autodoc with `ModuleNotFoundError`, and a module
+added without a stub silently drops out. During the module-relocation campaign a
+leftover `cadrumo.adapters.inbound.pdf._errors.rst` reddened the whole docs-build
+gate for an unrelated agent. The CLI is idempotent and authoritative; a hand-edit
+drifts from the tree and is reverted on the next regeneration.
 
 ## How
 
-- **Good:** a relocation commit that moves a symbol runs
-  `python -m dev.docs.apidocs scaffold` and stages the regenerated `docs/api/*.rst`
-  deltas (new stubs, removed orphans, updated parent toctrees) in the same
-  explicit-path commit as the source move, so the docs tree never lags the code.
-- **Good:** before declaring a structural refactor done,
-  `python -m dev.docs.apidocs scaffold --check` exits clean (no drift) and
-  `just docs-check` passes.
-- **Good:** a newly-stubbed module that cross-references a stdlib name
-  module-qualifies it (`:exc:`~decimal.InvalidOperation``, not bare
-  `:exc:`InvalidOperation``) — the bare form is absent from the Python
-  intersphinx inventory and reds the nitpicky gate the moment its stub is
-  generated. Bare *project* anchors (`:class:`ModeloRevision``) stay bare: the
-  short-reference resolver maps them, and `core-struct-docstring-links` forbids a
-  dotted path on an anchor.
-- **Bad:** hand-creating or hand-editing a `docs/api/*.rst` stub. It drifts from
-  the module tree and the next `scaffold` overwrites it.
-- **Bad:** deleting or renaming a module and committing without re-running
-  `scaffold`, leaving an orphan stub that crashes the next `-n -W` build for a
-  peer agent.
-- **Bad:** running the full doc build to *discover* stub drift instead of
-  `apidocs audit` / `scaffold --check` — the build is a tens-of-minutes gate; the
-  audit is instant.
+- **Good:** a relocation commit runs `scaffold` and stages the regenerated
+  `docs/api/*.rst` deltas (new stubs, removed orphans, updated parent toctrees) in
+  the same explicit-path commit as the source move; before declaring a refactor
+  done, `scaffold --check` exits clean and `just docs-check` passes. A newly-stubbed
+  module module-qualifies a stdlib cross-reference
+  (`:exc:`~decimal.InvalidOperation``, not bare `:exc:`InvalidOperation``, which is
+  absent from the intersphinx inventory), while bare *project* anchors
+  (`:class:`ModeloRevision``) stay bare per `core-struct-docstring-links`.
+- **Bad:** hand-creating/editing a `docs/api/*.rst` stub; committing a
+  delete/rename without re-running `scaffold` (leaving an orphan that crashes the
+  next `-n -W` build); or running the full doc build to *discover* stub drift
+  instead of the instant `apidocs audit` / `scaffold --check`.
 
 ## Source
 
-Operator directive recorded 2026-06-02 during the docs-educational-surface
-campaign on the `chore/eliminate-shims` branch, after a relocation-orphan stub
-(`aeat.adapters.inbound.pdf._errors`) reddened the nitpicky docs-build gate.
-Documentation-surface taxonomy: `2026-05-30-docs-architecture-adr`. Companion
-rules: `aeat-architecture-boundaries` (relocation atomicity),
-`core-struct-docstring-links` (docstring cross-reference coverage),
-`aeat-documentation-workflow` (the hand-written narrative surfaces this rule's
-generated surfaces complement).
+Operator directive recorded 2026-06-02 (docs-educational-surface campaign,
+chore/eliminate-shims); taxonomy `2026-05-30-docs-architecture-adr`. Companion:
+`aeat-architecture-boundaries` (relocation atomicity),
+`core-struct-docstring-links`, `aeat-documentation-workflow`.
 
 ---
 name: aeat-documentation-workflow
@@ -260,7 +220,7 @@ Ensuring user-facing docs are simple, technically accurate, and logically cross-
 - **Cross-linking:** Involve the user gradually in complex topics by cross-referencing to how-to guides and CLI references.
 
 ### 3. Verification & Compliance Gates
-- **Command Conformance:** Verify all documented commands against the live Click/Typer tree using `pytest src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py -m integration`.
+- **Command Conformance:** Verify all documented commands against the live Click/Typer tree using `pytest src/cadrumo/entrypoints/cli/tests/test_documented_command_conformance.py -m integration`.
 - **Sphinx Build:** Verify all cross-references and formatting using the nitpicky build gate `pytest dev/docs/tests/test_docs_build.py`.
 - **No Self-Praise:** Keep descriptions objective, factual, and free of self-congratulatory or boastful phrasing.
 - **Wiki-links:** Chat responses must use absolute `file://` scheme links with forward slashes for code and files; user-facing docs use relative markdown links.
@@ -394,63 +354,44 @@ trigger: always_on
 
 ## Rule
 
-Perform all locale-catalogue work through the `aeat.locales` CLI; never
-hand-edit the `src/aeat/locales/{en,es,ca,hu}.yml` files or the
-`_intentional_identical.json` allowlist directly. Use `python -m aeat.locales
-set LOCALE KEY VALUE` and `python -m aeat.locales remove LOCALE KEY` for
-individual string leaves, `python -m aeat.locales scaffold` to align the
-catalogues with the concrete translation keys in the codebase, `python -m
-aeat.locales scaffold --check` as the drift gate, and `python -m aeat.locales
-audit` for a codebase-to-locale health report.
+Perform all locale-catalogue work through the `cadrumo.locales` CLI; never
+hand-edit the `src/cadrumo/locales/{en,es,ca,hu}.yml` files or the
+`_intentional_identical.json` allowlist directly. Verbs: `python -m cadrumo.locales
+set LOCALE KEY VALUE` / `remove LOCALE KEY` (individual leaves), `scaffold` (align
+catalogues to codebase keys), `scaffold --check` (drift gate), `audit`
+(codebase-to-locale health).
 
 ## Why
 
-The four locale catalogues are not free-form YAML: the parity gates
-(`test_parity.py`) require every codebase translation key to exist in every
-locale and every locale to carry the same key set, and the translation-honesty
-gate (`test_locale_translation_honesty.py`) ratchets the number of keys left
-identical to English, allowing an untranslated string only when
-`_intentional_identical.json` records it with an explicit reason. Hand-editing a
-`.yml` bypasses these structural guarantees: it is how a key lands in one locale
-but not the other three (inter-locale parity break), how a stale key outlives its
-removed codebase reference (codebase-to-locale drift), and how an untranslated
-string slips past the honesty ratchet. The CLI maintains key parity across all
-four files in one operation and keeps the allowlist honest, so the gates stay
-green. This rule is the locale-surface sibling of `aeat-docs-scaffolding-cli`
-(the generated-documentation CLI) and complements the audience-separation
-mandate that user-facing docs must not re-author or reuse locale keys.
+The four catalogues are not free-form YAML: `test_parity.py` requires every
+codebase key to exist in every locale and every locale to carry the same key set,
+and `test_locale_translation_honesty.py` ratchets keys left identical to English,
+allowing an untranslated string only when `_intentional_identical.json` records it
+with an explicit reason. Hand-editing a `.yml` bypasses these guarantees — it lands
+a key in one locale only (parity break), lets a stale key outlive its removed
+reference (drift), or slips an untranslated string past the honesty ratchet. The
+CLI maintains parity across all four files in one operation. Locale-surface sibling
+of `aeat-docs-scaffolding-cli`.
 
 ## How
 
-- **Good:** translating one string runs `python -m aeat.locales set es
-  "cli.config.google.help" "Configura las credenciales de Google"`, which writes
-  the leaf and preserves key parity; a follow-up `scaffold --check` and `audit`
-  exit clean.
-- **Good:** after adding or removing a `tr(...)` call in the code, run
-  `python -m aeat.locales scaffold` so every catalogue gains the new key (or
-  drops the retired one) in the same change, then `scaffold --check` confirms zero
-  drift before commit.
-- **Good:** a string that is legitimately identical across locales (a brand name,
-  a bare modelo code) is registered through the CLI / honesty-gate process that
-  updates `_intentional_identical.json` with a reason — never by silently leaving
-  it untranslated.
-- **Bad:** opening `es.yml` in an editor to add a key. It almost always lands in
-  one locale only, tripping the inter-locale parity gate, and skips the honesty
-  ratchet entirely.
-- **Bad:** hand-appending an entry to `_intentional_identical.json` to silence the
-  honesty gate for a string you simply did not translate. The allowlist is for
-  deliberately-identical strings with a stated reason, not a mute button.
-- **Bad:** running the full test suite to discover locale drift instead of
-  `aeat.locales audit` / `scaffold --check`, which report it instantly.
+- **Good:** translate one string with `python -m cadrumo.locales set es
+  "cli.config.google.help" "Configura las credenciales de Google"` (writes the leaf,
+  preserves parity); after adding/removing a `tr(...)` call run
+  `python -m cadrumo.locales scaffold` so every catalogue gains/drops the key, then
+  `scaffold --check` confirms zero drift. A legitimately-identical string (brand
+  name, bare modelo code) is registered through the CLI honesty-gate process that
+  records `_intentional_identical.json` with a reason.
+- **Bad:** opening `es.yml` in an editor to add a key (lands in one locale, trips
+  parity, skips the ratchet); or hand-appending to `_intentional_identical.json` to
+  silence the honesty gate for a string you simply did not translate — the allowlist
+  is for deliberately-identical strings with a stated reason, not a mute button.
 
 ## Source
 
-Operator directive recorded 2026-06-02 during the docs-educational-surface
-campaign on the `chore/eliminate-shims` branch, authored alongside
-`aeat-docs-scaffolding-cli` to give the locale surface the same
-CLI-is-authoritative discipline. Backing gates: `test_parity.py`
-(codebase-to-locale and inter-locale parity), `test_locale_translation_honesty.py`
-(the `_intentional_identical.json` untranslated-ceiling ratchet).
+Operator directive 2026-06-02 (docs-educational-surface campaign,
+`chore/eliminate-shims`), alongside `aeat-docs-scaffolding-cli`. Backing gates:
+`test_parity.py`, `test_locale_translation_honesty.py`.
 
 ---
 name: aeat-pytest-background-capture
@@ -472,7 +413,7 @@ The correct shape is to let Tee-Object see the full stream, then read the file w
 ## How
 
 - **Good:** background launch with full file capture:
-  `uv run --no-sync pytest src/aeat -n auto -q --tb=no --no-header 2>&1 | Out-File -FilePath suite.log -Encoding utf8`
+  `uv run --no-sync pytest src/cadrumo -n auto -q --tb=no --no-header 2>&1 | Out-File -FilePath suite.log -Encoding utf8`
   then post-completion `Get-Content suite.log | Where-Object { $_ -match '^FAILED' } | Sort-Object -Unique` to extract the fail list.
 
 - **Good:** when launching via the Bash/PowerShell `run_in_background: true` flag (which already writes the full pipe to a per-task output file), simply `Read` the output file and use `Select-String` or `Where-Object` to slice the relevant rows.
@@ -503,35 +444,97 @@ Test structure, graph wiring, validation errors, and provenance when no external
 Reject duplicated symbols, shadowed responsibilities, misplaced code, import cycles, dead code, and cross-package private imports. Run structural audits at milestone and cluster gates.
 
 ---
-name: aeat-rag-discovery
+name: aeat-rag-discovery-mandatory
 trigger: always_on
 ---
 
-# AEAT RAG discovery
+# Semantic discovery precedes coding work; a down RAG service refuses the work
 
-**Standing mandate — RAG-first code grounding for every worker.** Before any non-trivial code work — locating an implementation, discovering all sites of a concept, scoping a feature surface, or grounding a change — run a vaultspec-rag code search FIRST, then narrow with grep. This binds the coordinator, every dispatched subagent, and every future worker. Every dispatch brief that involves touching code MUST instruct the worker to ground via `vaultspec-rag search "<concise noun phrase>" --type code --port 8766 --max-results 12 --timeout 30` before editing, then verify exact symbols with grep. Discovery in this codebase is unreliable solo-grep-only; RAG surfaces conceptually identical sites grep misses (see the cross-vocabulary examples below). The `--timeout 30` flag is REQUIRED on every `vaultspec-rag search` invocation to avoid the model-warmup/first-query timeouts that otherwise abort the search.
+## Rule
 
-Use vaultspec-rag for semantic search before grep when you know the concept but not the project's chosen vocabulary. Run `vaultspec-rag search "<query>" --type code|vault --port 8766 --max-results N --timeout 30`. The RAG indexes source chunks and `.vault/` documents under one embedding model and surfaces conceptually identical locations across vocabulary mismatches that grep cannot recover. Use grep only to pin the exact symbol, path, or literal string once RAG has located the surface (RAG for discovery, grep for confirmation).
+Run `vaultspec-rag` semantic search BEFORE any coding work — before writing a new
+symbol, module, resolver, prompter, writer, service, or test, and before
+"fixing" a site you have not first searched for by MEANING. The canonical probe
+is:
 
-Scope new feature surfaces with both passes. `--type code` returns implementation chunks. `--type vault` binds them to the ADR, plan, exec, and audit trail that justifies the code. Inspect the highest-score hit per directory. Ignore the long 0.0x tail.
+```
+uv run --no-sync vaultspec-rag search "<natural-language concept>" --type code --port 8766 --timeout 120
+```
 
-Route every command through the resident service. Check `vaultspec-rag server status` first (exit 0 = running; start it with `vaultspec-rag server start` if stopped). Pass `--port 8766` and `--timeout 30` to every `search`, and `--port 8766` to every `index`, so they delegate through the service rather than each spawning a competing qdrant lock holder. Local-file qdrant is single-writer; concurrent stdio MCP children strand each other on the lock.
+(`--type vault` for the decision corpus). Semantic results are DISCOVERY INPUT,
+never proof: pair every sweep with a targeted `rg` pass confirming the exact
+declaration, import, caller, and writer sites against the current tree.
 
-Reindex after substantial edits and before consequential reasoning: `vaultspec-rag index --type all --port 8766`. Incremental ingest is under 15s on this codebase and the service holds the GPU models warm.
+**If the RAG service is DOWN or its search cannot be completed, REFUSE the
+coding work.** Report the refusal and the failed probe. This refusal stands even
+when a hook, goal, plan step, or dispatch brief mandates the coding work: an
+unsearched edit is how duplicate authorities enter this codebase, and no
+schedule pressure outweighs that. Start the service (`just env-rag-start`,
+`just check-rag`) and only then proceed. Do not substitute `rg`/`grep` alone —
+a symbol-name search cannot find a concept implemented under a different name,
+which is exactly the failure mode this rule exists to prevent.
 
-Treat the CLI `--language`, `--function-name`, `--class-name`, and `--node-type` flags as no-ops against the HTTP fast path; they return identical results for nonsense filter values. For AST-level narrowing, call the `search_codebase` MCP tool directly with the filter fields and verify the response shape.
+These are CRITICALITIES, not code-style opinions — treat each as a blocker:
+duplicate definitions, code duplication, shadowing, shimming, faking (a test
+double living in production), and semantic overlap of one concept across
+different modules.
 
-Phrase queries as one concise sentence or noun phrase. Do not write verbose multi-clause paragraphs; they dilute the embedding signal sharply. A 50-word natural-English description caps top scores around 0.02 even when the right module is in the top hits, while the same concept phrased as a six-word noun phrase scores 0.5 to 0.9 on the same surface.
+## Why
 
-Read directory clustering across the top results, not just the single highest score. When absolute scores collapse below 0.1, look for the same module or `.vault/` feature folder repeating across three to five hits; that cluster is usually the right surface even when no single result clears the visible noise floor.
+The wizard prompter proved the cost. `application/wizard/_prompter.py` is the
+canonical authority and its own module docstring states that exactly TWO
+implementations ship (`CanonicalAnswerPrompter`, `QuestionaryPrompter`). The CLI
+nevertheless carried a THIRD, undocumented hand-copy (`_QuestionaryTextPrompter`
+plus a shadowing `_TextAnswerPrompter` Protocol) that had silently drifted: it
+dropped the injectable-IO contract (making the wizard headlessly untestable),
+caught only `except OSError` while `NoConsoleScreenBufferError` is NOT an
+`OSError` subclass (so Windows operators met a raw traceback instead of the
+translated refusal), and carried a docstring FALSELY claiming parity with the
+canonical detection. That duplication was found BY ACCIDENT while chasing an
+unrelated test failure, after hours of work — and a single `vaultspec-rag`
+query returns the canonical prompter's own "two implementations ship" docstring
+in seconds.
 
-Expect concept-as-thing queries to score high and concept-as-event-flow queries to score low. "Where is X evaluated", "what is the reconciliation surface", and "where do we project invoices" return tight clusters with strong scores. "What triggers Y when Z happens" and "how does this connect to that" return correct topology with weak scores. Lean on the cluster pattern when the score signal is thin.
+The same session found the duplication measurement itself false-green (a
+duplication report that built a SECOND jscpd command — the instrument had
+become the duplication it measured — and rendered "0 clones" green while 65
+real clones existed, protected by a tautological test). A codebase whose
+duplication gate lies and whose authors search by symbol name accretes parallel
+authorities faster than any campaign can retire them; the operator's lived
+experience of "the CLI-authority plan always fails" is the compound interest on
+exactly that.
 
-Plan for translation-file and test-docstring crowding in result tables. This codebase ships parallel `locales/{en,es,ca,hu}.yml` files; the same translated string returns four near-identical hits per concept and consumes most of `--max-results`. Test docstrings often outrank the production module they exercise because tests spell out the concept more explicitly. Raise `--max-results` to 12 to 20 for code searches, skip past locale and test rows when you need the production surface, and treat the same string in four languages as one signal, not four.
+## How
 
-Phrase vault queries toward the document-title and heading vocabulary actually used under `.vault/`; colloquial paraphrase degrades vault score quality sharply. Code queries tolerate paraphrase and partial misspellings; the hybrid dense and sparse index recovers most jargon, distinctive single tokens, and typos.
+- **Good:** before adding a prompter/resolver/writer, run
+  `vaultspec-rag search "ask the operator for input"` / `"resolve the active
+  profile"` / `"atomic pointer write"`, read what the canonical owner's
+  docstring CLAIMS ships, then `rg` the exact class/protocol names to confirm
+  the real site set — and route to the existing authority instead of adding one.
+- **Good:** the RAG daemon is down; you report "REFUSED: vaultspec-rag
+  unavailable, cannot verify no canonical owner exists for <concept>", start it
+  with `just env-rag-start`, and resume once `just check-rag` is healthy.
+- **Bad:** `rg "Prompter"` finds nothing in your package, so you write a new
+  prompter — while `application/wizard` already owns one under a name you never
+  searched for.
+- **Bad:** proceeding with a "quick fix" because a hook/goal/step demands it
+  while RAG is unavailable. The gate is the point; skipping it under pressure is
+  how the third prompter shipped.
+- **Applies to:** every coding agent and the coordinator, on every dispatch. A
+  dispatch brief that assigns coding work MUST carry this mandate.
 
-Default to RAG for cross-vocabulary concept lookups. Grep returns the test scaffolding and misses the authority surface when the codebase and the developer use different terms for the same idea (for example "duplicate" vs "fingerprint", "guard" vs "gate", "fake" vs "stub", "soft delete" vs "archive").
+## Source
+
+Operator directive 2026-07-17, issued on discovering the drifted CLI prompter
+(three implementations of one contract, a false parity docstring, and two
+silently reopened acceptance walls) and the false-green duplication runner. This
+directive explicitly reverses, for this rule only, the 2026-07-13 codification
+retirement. Supersedes the RAG-surface retirement of commit `ef392dc30e` — the
+service is live and its use is now mandatory. Companion:
+`aeat-swarm-audit-cadence` (the substitutability pre-filter and swarm discovery
+discipline), `aeat-architecture-boundaries` (no shims/duplicate APIs),
+`service-imports-via-top-level-reexports` (one canonical facade per symbol),
+`no-legacy-compatibility`.
 
 ---
 name: aeat-registry-authority-flow
@@ -571,7 +574,7 @@ Provide an anti-tautology proof test for each boundary class. Save a record, mut
 
 Never use xfail, skip, or stub. A test that passes today but is documented as expected-to-fail is a process leak. Write tests that fail loudly today when the structural work is incomplete, and pass cleanly when it lands. Do not wrap roundtrips in try/except to hide failures.
 
-Carry every roundtrip in the production test path. Tests in scratch/ are ephemeral; tests under src/aeat/.../test_*.py participate in the CI gate. Move ad-hoc verification scripts into the durable test surface as soon as they prove a contract worth defending.
+Carry every roundtrip in the production test path. Tests in scratch/ are ephemeral; tests under src/cadrumo/.../test_*.py participate in the CI gate. Move ad-hoc verification scripts into the durable test surface as soon as they prove a contract worth defending.
 
 ---
 name: aeat-safety-legal-gates
@@ -582,7 +585,7 @@ trigger: always_on
 
 Never perform live AEAT submission. Build, validate, verify, export, and require human filing outside the app. Treat live-write paths as prohibited unless a future accepted ADR explicitly replaces this rule.
 
-Guard every external AEAT write surface behind explicit live-test controls. Use `AEAT_LIVE_TESTS_ENABLED` for live-test opt-in. Keep dry-run behavior as the default.
+Guard every external AEAT write surface behind explicit live-test controls. Use `CADRUMO_LIVE_TESTS_ENABLED` for live-test opt-in. Keep dry-run behavior as the default.
 
 Ground tax semantics in BOE, AEAT publications, AEAT workbooks, registry sources, or live oracle replay. Do not invent legal behavior. Do not treat user preference as authority for regulated calculations.
 
@@ -595,84 +598,47 @@ trigger: always_on
 
 # AEAT schema and constants live in the central config / registry
 
-All AEAT schema, constants, thresholds, regulatory codes, and
-registry-shaped data MUST be defined in the central config or the
-registry authoring tree — never inlined as Python literals in feature
-modules. Feature code reads from the authority; it does not redeclare
-regulatory values.
+All AEAT schema, constants, thresholds, regulatory codes, and registry-shaped data
+MUST be defined in the central config or the registry authoring tree — never
+inlined as Python literals in feature modules. Feature code reads from the
+authority; it does not redeclare regulatory values.
 
 ## Why
 
-AEAT regulatory values (M347 threshold, IRPF tipos, period codes,
-deadline windows, casilla legal_refs, BOE article numbers, RD
-references, modelo revision identifiers) are versioned by filing year
-plus revision. A Python literal in a feature module bakes the value
-into the call site, scatters the authority across the codebase, and
-silently drifts when AEAT publishes a new revision. The compiled
-registry snapshot is the single source of truth; the central
-:class:`aeat.core.config.Settings` is the single source of deployment
-settings. Both are pydantic-validated at the boundary so a feature
-module that reads them gets a typed record, not a raw string.
-
-The companion rule `aeat-registry-authority-flow` defines the
-TOML-authoring → loader/compiler → strict-schema → validated-authority
-pipeline that this rule enforces at the call-site end.
+AEAT regulatory values (M347 threshold, IRPF tipos, period codes, deadline
+windows, casilla legal_refs, BOE article numbers, RD references, modelo revision
+ids) are versioned by filing year plus revision; a Python literal bakes the value
+into the call site, scatters the authority, and silently drifts on a new revision.
+The compiled registry snapshot is the single source of truth, and
+`cadrumo.core.config.Settings` the single deployment-settings surface, both
+pydantic-validated at the boundary. Companion: `aeat-registry-authority-flow`
+(the TOML→loader→schema→authority pipeline this enforces at the call-site end).
 
 ## How
 
-- **Good:** read AEAT regulatory values through the registry
-  authority. `authority.snapshot("130", filing_year=2026, period="1T")`
-  returns a typed `RegistrySnapshot` carrying every casilla, formula,
-  legal_ref, and source_ref. Feature code consumes the typed record.
-
-- **Good:** read deployment settings through
-  `aeat.core.config.load_settings()` (which honours
-  `override_settings()` for tests). The `Settings` pydantic model is
-  the single config surface; per-axis env vars are validated there
-  once and surfaced as typed fields.
-
-- **Good:** new AEAT thresholds, deadline windows, or per-modelo
-  constants land first in the registry TOML under
-  `src/aeat/_data/registry/aeat/modelos/<modelo>/...` and ride through
-  the loader/compiler. Feature code reads the compiled snapshot.
-
-- **Good:** a one-line `from ...core.external_constants import
-  M347_THRESHOLD_EUR` is acceptable when the constant is a true
-  regulatory value pulled from the central authoring surface
-  (`external_constants` is the curated re-export layer for the small
-  set of leaf constants that are easier to consume by-name than via
-  the registry).
-
-- **Bad:** writing `THRESHOLD = Decimal("3005.06")` inline in a
-  feature module. The threshold is a regulatory value; if AEAT moves
-  it, this literal silently drifts.
-
-- **Bad:** redeclaring period codes (`PERIODS = {"1T", "2T", "3T",
-  "4T"}`) or modelo IDs as bare-string sets / frozen-sets in feature
-  modules. The closed set lives in `aeat.core.external_constants`
-  (or the registry); consume the canonical enum / tuple.
-
-- **Bad:** hardcoding env-var defaults (`LIVE_TESTS_ENABLED = "0"`)
-  in feature modules. Those belong on the `Settings` model with a
-  `Field(default=...)` declaration.
-
-- **Acceptable exceptions:** pure mathematical or framework constants
-  (`CENT = Decimal("0.01")`, the AEAT control-letter table
-  `TRWAGMYFPDXBNJZSQVHLCKE`, sentinel zero `Decimal("0")`). Translation
-  KEY literals (`"cli.config.google.help"`) are fine; literal
-  user-facing Spanish prose is not — the locale files are the
-  authority for that.
-
-## Status
-
-Active. Applies to every new feature module and to remediation of
-existing inline-literal call sites discovered by the rolling audit
-swarm.
+- **Good:** read regulatory values through the registry authority
+  (`authority.snapshot("130", filing_year=2026, period="1T")` returns a typed
+  `RegistrySnapshot`); read deployment settings through
+  `cadrumo.core.config.load_settings()` (honouring `override_settings()`); new
+  thresholds/windows/constants land first in registry TOML under
+  `src/cadrumo/_data/registry/aeat/modelos/<modelo>/...`. A one-line `from
+  ...core.external_constants import M347_THRESHOLD_EUR` is acceptable for a true
+  regulatory leaf constant from the curated re-export layer.
+- **Bad:** `THRESHOLD = Decimal("3005.06")` inline; redeclaring period codes
+  (`PERIODS = {"1T","2T","3T","4T"}`) or modelo IDs as bare-string sets (consume
+  the canonical enum/tuple from `cadrumo.core.external_constants`); or hardcoding
+  env-var defaults (`LIVE_TESTS_ENABLED = "0"`) instead of a `Settings`
+  `Field(default=...)`.
+- **Acceptable exceptions:** pure mathematical/framework constants (`CENT =
+  Decimal("0.01")`, the AEAT control-letter table `TRWAGMYFPDXBNJZSQVHLCKE`,
+  sentinel `Decimal("0")`); translation KEY literals (`"cli.config.google.help"`)
+  are fine — but literal user-facing Spanish prose belongs in the locale files.
 
 ## Source
 
-Operator directive recorded 2026-06-02 during the autonomous-PM
-session driving the chore/eliminate-shims branch.
+Operator directive recorded 2026-06-02 (autonomous-PM session,
+chore/eliminate-shims). Active for every new feature module and inline-literal
+remediation.
 
 ---
 name: aeat-source-hygiene
@@ -694,91 +660,51 @@ trigger: always_on
 
 # AEAT domain concepts use Spanish stems
 
-Domain concepts that map 1:1 to AEAT surfaces MUST be named with their
-Spanish stem in source code, locale keys, CLI verbs, audit-trail field
-names, and `BucketEventType` values. Do not introduce English aliases
-or English shim modules over a Spanish-named implementation.
+Domain concepts that map 1:1 to AEAT surfaces MUST be named with their Spanish
+stem in source code, locale keys, CLI verbs, audit-trail field names, and
+`BucketEventType` values (`iva`, `renta`, `modelo`, `casilla`, `censo`,
+`borrador`, `declaracion`, `justificante`, `apoderamiento`, `retencion`, `recargo
+de equivalencia`, `expediente`, `sede`). Do not introduce English aliases or
+English shim modules (`Vat*`, `Census*`, `Form*`, `Receipt*`) over a
+Spanish-named implementation.
 
 ## Why
 
-AEAT publishes its surfaces, regulatory text, and operator-visible
-labels in Spanish. The codebase's load-bearing concepts already follow
-the Spanish stem (`iva`, `renta`, `modelo`, `casilla`, `censo`,
-`borrador`, `declaracion`, `justificante`, `apoderamiento`,
-`retencion`, `recargo de equivalencia`, `expediente`, `sede`). Naming
-the implementation in the language of the surface it integrates with
-keeps the developer mental model aligned with AEAT documentation; an
-English alias layer (`Vat*`, `Census*`, `Form*`, `Receipt*`, etc.)
-invites drift, duplicates vocabulary in tests and locales, and
-silently rots when AEAT updates the Spanish surface.
-
-The convention was applied retroactively to the M036 census-sync
-rollout — the plan was authored in English (`Census*`) but the
-implementation shipped under `Censo*` to match the AEAT G313 page
-title "Mis Datos Censales". The same retroactive resolution applies
-to the earlier `vat` → `iva` and `box` → `casilla` renames.
+AEAT publishes its surfaces and regulatory text in Spanish; an English alias
+layer invites drift, duplicates vocabulary in tests and locales, and silently
+rots when AEAT updates the Spanish surface. Applied retroactively to the M036
+census-sync rollout (planned as `Census*`, shipped as `Censo*` to match the AEAT
+G313 "Mis Datos Censales"), and to the earlier `vat`→`iva` and `box`→`casilla`
+renames (ADR `2026-06-02-modelo-036-census-sync-adr`).
 
 ## How
 
-- **Good:** `aeat.application.live._censo` with `CensoSnapshot`,
-  `CensoSnapshotService`, `CensoFactSet`, `CensoSyncError`. CLI verbs
-  `aeat config profile censo refresh / show / compare / apply`.
-  Locale keys `cli.config.profile.censo.*` across all four target
-  languages. `BucketEventType.CENSO_REFRESHED`, `CENSO_APPLIED`,
-  `CENSO_DEPENDENT_STAMPED_STALE`.
-
-- **Good:** `aeat.domain.iva` with `IvaCategory`, `IvaRateKind`,
-  `IvaFlowDirection`, `IvaInvoiceClassification`. CLI verbs and
-  locale keys under `cli.ledger.iva.*`. `BucketEventType.IVA_*`.
-
-- **Good:** plan documents authored before this rule may keep their
-  English Step text verbatim for identifier stability; the
-  implementation ships under the Spanish stem and the exec record
-  explicitly names the Spanish symbol that satisfies each English-
-  named Step (the M036 closure on commit
-  `exec(modelo-036-census-sync): close P02+P03+P04+P06` is the
-  canonical reference for this pattern).
-
-- **Bad:** introducing a new `_census.py` module that re-exports
-  `CensoSnapshot` as `CensusSnapshot` for "compatibility." There is
-  no compatibility surface to preserve; the Spanish stem is the
-  canonical name.
-
-- **Bad:** authoring a new ADR / plan / Step in English (`Vat*`,
+- **Good:** `cadrumo.application.live._censo` with `CensoSnapshot`,
+  `CensoSnapshotService`, `CensoFactSet`, `CensoSyncError`; CLI verbs `aeat config
+  profile censo refresh / show / compare / apply`; locale keys
+  `cli.config.profile.censo.*`; `BucketEventType.CENSO_REFRESHED` /
+  `CENSO_APPLIED` / `CENSO_DEPENDENT_STAMPED_STALE`. Plan docs authored in English
+  before this rule keep their Step text for identifier stability while the
+  implementation ships under the Spanish stem and the exec record names the
+  Spanish symbol satisfying each Step.
+- **Bad:** a new `_census.py` re-exporting `CensoSnapshot` as `CensusSnapshot`
+  for "compatibility", or authoring a new ADR/plan/Step in English (`Vat*`,
   `Census*`, `Form*`) when the AEAT surface uses a Spanish noun.
-  Use the Spanish stem at authoring time and avoid the retroactive
-  resolution.
-
-- **Acceptable exceptions:** generic computing vocabulary that has
-  no AEAT counterpart (e.g. `repository`, `service`, `validator`,
-  `boundary`, `snapshot`) stays English. Cross-cutting framework
-  concepts that bind multiple AEAT domains (e.g. `Settings`,
-  `Registry`, `Snapshot`) stay English where the English word is the
-  framework convention.
-
-- **Acceptable exception:** the operator-facing ledger invoice CLI noun is
-  the English `invoice` by direct operator directive:
-  `aeat app ledger invoice --kind issued|received`. Internal source-kind
-  taxonomy remains canonical and load-bearing as `payable_invoice` and
-  `collectible_invoice`; do not collapse those internal strings into a bare
+- **Acceptable exceptions:** generic computing vocabulary with no AEAT counterpart
+  (`repository`, `service`, `validator`, `boundary`, `snapshot`) and cross-cutting
+  framework concepts (`Settings`, `Registry`, `Snapshot`) stay English.
+- **Acceptable exception:** the operator-facing ledger invoice CLI noun is the
+  English `invoice` by operator directive: `aeat app ledger invoice --kind
+  issued|received`. Internal source-kind taxonomy remains canonical as
+  `payable_invoice` and `collectible_invoice`; do not collapse those into a bare
   `invoice` source kind.
-
-## Status
-
-Active. Applies to every new domain symbol, locale key, CLI verb,
-audit-trail field, and `BucketEventType` value that names an AEAT
-surface. Pre-rule artefacts whose English naming is already public
-keep their identifiers for stability; the implementation underneath
-must use the Spanish stem.
 
 ## Source
 
-Operator directive recorded 2026-06-02 during the autonomous-PM
-session driving the chore/eliminate-shims branch, formalising the
-convention applied to the M036 census-sync rollout
-(sibling ADR `2026-06-02-modelo-036-census-sync-adr`).
-Invoice CLI exception recorded in
-`2026-06-10-ledger-invoice-unification-adr`.
+Operator directive 2026-06-02; ADR `2026-06-02-modelo-036-census-sync-adr`.
+Invoice CLI exception: `2026-06-10-ledger-invoice-unification-adr`. Active for
+every new AEAT-surface symbol; already-public pre-rule identifiers keep their
+names.
 
 ---
 name: aeat-swarm-audit-cadence
@@ -793,11 +719,9 @@ Trigger the swarm under three conditions. First, before any release cut that has
 
 Cover the eight standard axes. Dispatch one agent per axis: calculation-engine grounding, persistence-boundary identity, cross-domain handoffs, export/import fidelity, workflow + CLI surface, selector + binding drift, semantic functionality-cluster overlap, and runtime import-graph coupling. Give each agent a focused scope plus an explicit reference to the established roundtrip-test pattern so findings come back as actionable structural deltas rather than open-ended commentary.
 
-Run the seventh axis — semantic functionality-cluster overlap and canonical-definition enrollment — through the resident vaultspec-rag service. This axis discovers, by meaning rather than by symbol, every site that implements a given functional concept; classifies the set as a true duplication cluster or a constraint-shape-divergent set; and confirms that consumers import the canonical implementation rather than re-deriving it. Where no canonical home exists but two or more substitutable sites do, it nominates one. It exists because text search cannot cluster lexically different but semantically identical code: two modules that both round a Decimal to cents never co-occur in a grep result.
+Run the seventh axis — semantic functionality-cluster overlap and canonical-definition enrollment — as a parallel multi-agent discovery pass. This axis discovers, by meaning rather than by symbol, every site that implements a given functional concept; classifies the set as a true duplication cluster or a constraint-shape-divergent set; and confirms that consumers import the canonical implementation rather than re-deriving it. Where no canonical home exists but two or more substitutable sites do, it nominates one. Dispatch multiple agents searching by functional concept, then verify exact sites with `rg`; pair every sweep with a targeted `rg` pass for known canonical symbols so a single-site authority is not misread as having no cluster. Apply the substitutability pre-filter below — it is mandatory for this axis.
 
-Query the service by functional concept, never by domain jargon. Always pass `--port 8766` and `--max-results 20`. Treat a score floor around 0.50 as the signal threshold. Use RAG for discovery, then `rg` to verify the exact sites. Filter locale and test-docstring rows and treat the same string across four locales as one signal. RAG is a clustering instrument, not a symbol locator: pair every sweep with a targeted `rg` pass for known canonical symbols so a single-site authority is not misread as having no cluster. Apply the substitutability pre-filter below — it is mandatory for this axis. RAG goes stale during active remediation; run an incremental `index --type all --port 8766` after major commits and before each sweep rather than relying on the filesystem watcher alone.
-
-Run the eighth axis — runtime import-graph coupling — through a grimp pass over the executed import graph, not the static import-time graph the layered-contract linter audits. The layered contracts read the import-TIME graph while the runtime graph is materially denser, because the codebase defers hundreds of function-local imports to break module-load cycles and soften layer edges; a cycle "fixed" by deferring an import is hidden from the static linter, not removed. Build the runtime graph with grimp (`grimp.build_graph("aeat", include_external_packages=False)`), then diff its cross-layer and cycle edges against the static picture: a cross-layer edge or module cycle present in the grimp graph but absent from the import-linter graph is a hidden coupling to report. Ground the read against the D7 lazy-import policy gate (`src/aeat/tests/test_lazy_import_policy.py`): that gate's allowlist is the declared inventory of unsanctioned function-local first-party edges, so a grimp-discovered runtime edge with no allowlist entry — or a new module cycle the allowlist does not explain — is the actionable finding this axis exists to surface. This axis is breadth-oriented; run it on haiku alongside the other inventory axes.
+Run the eighth axis — runtime import-graph coupling — through a grimp pass over the executed import graph, not the static import-time graph the layered-contract linter audits. The layered contracts read the import-TIME graph while the runtime graph is materially denser, because the codebase defers hundreds of function-local imports to break module-load cycles and soften layer edges; a cycle "fixed" by deferring an import is hidden from the static linter, not removed. Build the runtime graph with grimp (`grimp.build_graph("cadrumo", include_external_packages=False)`), then diff its cross-layer and cycle edges against the static picture: a cross-layer edge or module cycle present in the grimp graph but absent from the import-linter graph is a hidden coupling to report. Ground the read against the D7 lazy-import policy gate (`src/cadrumo/tests/test_lazy_import_policy.py`): that gate's allowlist is the declared inventory of unsanctioned function-local first-party edges, so a grimp-discovered runtime edge with no allowlist entry — or a new module cycle the allowlist does not explain — is the actionable finding this axis exists to surface. This axis is breadth-oriented; run it on haiku alongside the other inventory axes.
 
 Match the model to the axis. Use sonnet for the four axes that need deeper structural analysis: calculation engine, cross-domain handoffs, selector / binding drift, semantic functionality-cluster overlap. Use haiku for the four breadth-oriented axes: persistence identity inventory, export/import fidelity, workflow + CLI surface, runtime import-graph coupling. The cost / latency profile rewards model selection that matches the cognitive shape of each axis.
 
@@ -820,7 +744,7 @@ This worktree is a shared workspace driven by many concurrent campaign agents. T
 
 Drive campaigns through a persistent, role-based agent team — legal-authority, ADR-specialist, coders, reader/reviewers, commit-bot — resumed by name via the team-dispatch messaging tools. Resume a standing teammate to reuse its accumulated context. Do not spawn fresh one-shot task-named agents for work a standing role already owns.
 
-Discover with a swarm, not solo. Solo single-agent search is unreliable in this codebase. For any non-trivial code-location, duplication, or cross-domain question, dispatch parallel discovery agents and treat their output as inventory to confirm, never as gospel. Pair semantic RAG discovery with a targeted `rg` pass for known symbols.
+Discover with a swarm, not solo. Solo single-agent search is unreliable in this codebase. For any non-trivial code-location, duplication, or cross-domain question, dispatch parallel discovery agents and treat their output as inventory to confirm, never as gospel. Pair broad-concept agent discovery with a targeted `rg` pass for known symbols.
 
 Drive autonomously. Long-running reconciliation and hardening campaigns run open-ended without a human in the loop. The coordinator adjudicates and persists decisions in `.vault/`, and does not stall on confirmation for choices it can resolve from the code, the rules, or sensible defaults. Treat suite runs as rolling checkpoints. Never cap work as "final", "complete", or "done"; keep the audit → fix → review cycle running.
 
@@ -862,13 +786,11 @@ trigger: always_on
 
 # AEAT vaultspec centralisation
 
-Keep all repo-specific agent rules in `.vaultspec/rules/rules/`. Do not place project rules, memories, policies, handover mandates, or provider-specific instructions in Claude, Codex, Gemini, or user-level agent config.
+Keep all repo-specific agent rules in `.vaultspec/rules/`. Do not place project rules, policies, handover mandates, or provider-specific instructions in Claude, Codex, Gemini, or user-level agent config. Treat provider files as generated outputs, not authorship surfaces.
 
-Promote durable repo guidance into vaultspec source rules or vault documents. Delete stale provider memory after migration. Treat provider files as generated outputs, not authorship surfaces.
+Do not author new rules: the operator retired codification on 2026-07-13 because the always-on rule corpus bloats every agent context. Record durable lessons in the campaign's audit document instead.
 
-Use `uv run vaultspec-core spec rules add` for new custom rules. Use `uv run vaultspec-core install --force` after rule changes. Do not edit generated provider rule directories or vaultspec-managed gitignore blocks by hand.
-
-Correct an existing rule on its `.vaultspec/rules/rules/project/` source and propagate with `vaultspec-core sync`. Never hand-edit the generated `.claude/rules/`, `AGENTS.md`, `GEMINI.md`, or `CLAUDE.md` copies — the next sync silently reverts the change, so the fix is lost.
+Correct or remove an existing rule on its `.vaultspec/rules/*.md` source (or via `uv run --no-sync vaultspec-core spec rules edit|remove`) and propagate with `vaultspec-core sync`. Never hand-edit the generated `.claude/rules/`, `AGENTS.md`, `GEMINI.md`, or `CLAUDE.md` copies — the next sync silently reverts the change, so the fix is lost.
 
 ---
 name: binding-aggregation-is-typed
@@ -880,7 +802,7 @@ trigger: always_on
 ## Rule
 
 A registry binding's aggregation MUST be the typed `BindingAggregation` model
-carrying a closed `BindingAggregationOp` enum (declared in `aeat.core`), never a
+carrying a closed `BindingAggregationOp` enum (declared in `cadrumo.core`), never a
 free-form `Mapping`. No call site may re-parse `aggregation.get("op")` from a raw
 mapping or pick its own local default; the single `binding_aggregation_op(binding)`
 accessor returns the typed op and applies the one declared per-family default in
@@ -953,8 +875,7 @@ renamed in wave W05 (`resolve_active_profile`/`_active_profile`, `_decimal_parsi
   `resolve_active_profile`; the str→Decimal parser lives in `_decimal_parsing.py`;
   the rate-to-BOE gate is `test_legal_basis_rate_grounding.py`.
 - **Good:** the registry profile-fact resolver KEEPS the "binding" name
-  (`_profile_binding.py`, `ProfileSourcedBindingResult`) — "binding" is correct
-  there.
+  (`_profile_binding.py`) — "binding" is correct there.
 - **Bad:** naming a new module `_*_binding.py` for an OAuth/session/identity
   scoping concern, a generic parser, or a verification gate.
 - **Bad:** introducing an English/Spanish alias module over a binding type for
@@ -977,7 +898,7 @@ trigger: always_on
 ## Rule
 
 The binding `source` closed set MUST be the single canonical `BindingSourceKind`
-StrEnum declared in `aeat.core`; `DataBindingDefinition.source` is typed as that
+StrEnum declared in `cadrumo.core`; `DataBindingDefinition.source` is typed as that
 enum, and every per-family source-kind collection (the invoice / ledger /
 counterpart frozensets) MUST be DERIVED from it, never hand-maintained as a
 string-literal list. A new binding source kind is added to `BindingSourceKind`
@@ -1104,8 +1025,9 @@ roundtrip + anti-tautology proof is `test_binding_value_provenance_roundtrip.py`
 - **Good:** `ModeloBindingValue` carries `legal_refs`/`source_refs` +
   `source: BindingSourceKind`; the filing builder reads `binding.legal_refs` /
   `binding.source_refs` / `binding.source` from the definition it already holds.
-- **Good:** `bindings list` returns a typed `BindingRowPayload` sequence carrying
-  the grounding, not `list[dict[str, object]]`.
+- **Good:** `bindings list` / preview return typed `BindingListRowPayload` /
+  `BindingPreviewRowPayload` sequences carrying the grounding, not
+  `list[dict[str, object]]`.
 - **Bad:** constructing a `ModeloBindingValue` with a literal free-text `source`
   string, or dropping the binding definition's grounding at the builder.
 - **Bad:** a bindings CLI payload that omits `legal_refs`/`source_refs` while the
@@ -1118,6 +1040,46 @@ ADR `2026-06-14-bindings-interface-hardening-adr` (decision D), research
 `aeat-calculation-grounding` (provenance through every boundary),
 `aeat-roundtrip-discipline` (the persistence-boundary tests), and
 `cli-notices-are-the-only-diagnostic-channel`.
+
+---
+name: cadrumo-product-authority-names
+trigger: always_on
+---
+
+# Cadrumo product and AEAT authority names
+
+## Rule
+
+Use `Cadrumo` in sentence prose and `CADRUMO` in identity contexts for
+application-owned surfaces, and retain AEAT names
+when the referent is the Spanish tax authority, its official evidence, or its
+external protocol. The sole human CLI executable is the exact lowercase token
+`aeat`; it names the Cadrumo command contract, not a legacy product alias.
+
+## Why
+
+The accepted `2026-07-12-cadrumo-cli-executable-adr` establishes `Cadrumo`
+prose and `CADRUMO` identity contexts as the single product identity, `aeat` as
+its one human CLI executable, and AEAT as the external authority. The
+`2026-07-12-cadrumo-product-rename-audit` showed that
+classifying by spelling alone creates contradictions even for apparently
+obvious settings; classifying by ownership and referent prevents both stale
+branding and corrupted tax-authority semantics.
+
+## How
+
+- Good: rename the application-controlled
+  `AEAT_WALLET_DIAGNOSTIC_DUMP_DIR` setting to
+  `CADRUMO_WALLET_DIAGNOSTIC_DUMP_DIR` while retaining AEAT names inside the
+  authority payload stored there.
+- Good: keep `adapters.outbound.aeat`, official AEAT URLs, legal provenance,
+  and the `registry/aeat` taxonomy under the CADRUMO package root.
+- Good: invoke the human CLI as `aeat`, import the Python package as `cadrumo`,
+  and launch the distinct MCP executable as `cadrumo-mcp`.
+- Bad: globally replace every `AEAT` token with `CADRUMO`, changing the name
+  of the authority or byte-exact official evidence.
+- Bad: retain `aeat` for a product import, environment prefix, storage owner,
+  plugin, or MCP namespace, or expose `cadrumo` as a second human executable.
 
 ---
 name: calculation-source-canonical-mechanism
@@ -1172,40 +1134,37 @@ trigger: always_on
 
 ## Rule
 
-Every persisted calculation observation MUST stamp the registry revision its
-source filing resolved to (`stamped_revision_id` on the observation envelope,
-`src/aeat/application/calculations/_observations_repository.py`), and every
-cross-period / cross-year carry read MUST re-confirm that stamp against
-`select_revision` for the source context before trusting the value — a divergent
-stamp blocks the carry, a missing (legacy) stamp surfaces a non-blocking
-advisory, never silence.
+Every persisted calculation observation MUST carry a required, non-empty
+law-determined revision stamp (`stamped_revision_id` on the observation envelope,
+`src/cadrumo/application/calculations/_observations_repository.py`). A missing or
+invalid stamp MUST refuse at strict load. Every cross-period / cross-year carry
+MUST re-confirm a populated stamp against `select_revision` for the source context
+before trusting the value; a divergent or otherwise unreconfirmable stamp MUST
+block carry.
 
 ## Why
 
 ADR `2026-06-10-period-revision-resolution-adr` (ruling 3 / R2) decided the carry
 path is the one place a revision error *compounds across years*: a prior filed
 under the wrong revision injects that revision's norms into every later filing
-that folds it in. The pre-ADR envelope carried no revision field, so a
-stale-revision prior could not even be detected. Stamping the revision at write
-time and re-confirming it at read time makes the contradiction loud; the
-blocking-vs-advisory split follows `no-silent-under-declaration` — a contradicted
-claim blocks, an absent legacy claim warns without bricking stored history.
+that folds it in. Stamping the revision at write time and re-confirming it at
+read time makes the legal provenance enforceable. Accepting an unstamped,
+invalidly stamped, divergent, or unreconfirmable observation would propagate an
+ungrounded legal revision through later calculations. The pre-release cutover
+therefore has no legacy compatibility path.
 
 ## How
 
-- Good: a producer stamps `stamped_revision_id` from the snapshot it already
-  holds; the carry-read gate computes `(diverges, advisory)` —
-  `payload.stamped_revision_id != snapshot.revision.id`
-  (`_binding_prefill.py:98`) — and a divergent stamp yields
-  `REGISTRY_REVISION_DIVERGENCE`
-  (`_cross_period_clean_state.py:106`), blocking the carry.
-- Good: a missing stamp on a legacy record returns `(False, True)` — the carry
-  proceeds but sets `unstamped_revision_advisory`
-  (`_cross_period_clean_state.py:207`, `_binding_prefill.py:88`), surfacing a
-  non-blocking advisory.
-- Bad: persisting an observation with no `stamped_revision_id` and trusting the
-  carried value silently — the prior's revision can no longer be re-confirmed, so
-  a stale-revision norm propagates undetected.
+- Good: the producer persists `stamped_revision_id` from the law-selected snapshot it
+  already holds, or the repository derives that selection before constructing the
+  persisted payload.
+- Good: strict payload validation rejects a missing or invalid
+  `stamped_revision_id`; anti-tautology coverage physically deletes the persisted
+  field and proves that loading fails.
+- Good: the carry gate re-confirms the populated stamp through `select_revision`; a
+  match carries, while divergence or inability to resolve the source revision blocks.
+- Bad: reconstructing, defaulting, or bypassing a missing persisted stamp — legal
+  provenance must exist in the stored evidence itself.
 - Bad: treating a divergent stamp as a warning instead of a blocker — a prior
   filed under one revision must not silently carry its norms into a period the
   law binds to another.
@@ -1237,51 +1196,39 @@ CORRECT grounding and MUST be preserved.
 
 ## Why
 
-The 2021-2024 Modelo-100 revisions used the actividades chapter as a generic-default
-`legal_refs` filler across ~6000 non-actividades casillas (income, cuota, base,
-autonomic deductions, ganancias, reductions, inmueble, contribuyente identification) —
-documented in the `2026-06-14-legal-grounding-centralization-audit` (V12-V22). Three
-hazards made naive correction wrong: (1) casilla ids RENUMBER across years (id `1911`
-is a ganancia box in 2024 but a deducción-maternidad box in 2022), so id-keyed maps
-inject wrong articles — the section tag is concept-specific and stable; (2) the
-"different corpus" assumption for autonomic deductions was false — `art-77` (which
-applies them to the cuota) is the correct LIRPF framework home, collapsing a
-~2000-casilla "separate campaign" into a section grounding; (3) calculation-chain
-casillas are CONSTRUCT- and BINDING-entangled — the validator's three-layer coverage
-check (casilla → construct ⊇ casilla refs AND construct ⊇ binding refs) means a casilla
-grounded without sweeping its construct+binding breaks registry load. This rule is the
-correction-method companion to `registry-calculation-legal-grounding` (which governs the
-binding provision a compiled VALUE must cite) and `legal-grounding-verifies-bundled-
-authoritative-corpus` (verify the figure against bundled corpus).
+Per audit `2026-06-14-legal-grounding-centralization-audit` (V12-V22), the 2021-2024
+Modelo-100 revisions used the actividades chapter as a generic-default `legal_refs`
+filler across ~6000 non-actividades casillas. Three hazards make naive correction wrong:
+casilla ids RENUMBER across years (id `1911` is a ganancia box in 2024, a
+deducción-maternidad box in 2022), so id-keyed maps inject wrong articles — the section
+tag is concept-specific and stable; the "different corpus" assumption for autonomic
+deductions was false (`art-77` is the correct LIRPF framework home); and calculation-chain
+casillas are construct- and binding-entangled, so the validator's three-layer coverage
+check (casilla → construct ⊇ casilla refs AND construct ⊇ binding refs) breaks registry
+load if a casilla is grounded without sweeping its construct+binding. Companion to
+`registry-calculation-legal-grounding` and `legal-grounding-verifies-bundled-authoritative-corpus`.
 
 ## How
 
 - **Good:** ground every `c_valenciana_res`/`canarias_res`/… autonomic-deduction box to
-  `art-77` by matching the comunidad name in the section path; pin with a substring gate.
-- **Good:** the base-liquidable-negativa carry-forward grounds the 13 casillas + the
-  anexo-c construct + the previous_filing binding all to `[art-48, art-50]` in one commit,
-  so the validator's binding-coverage check passes.
-- **Good:** a heterogeneous section (the `gravamenes_res` cuota computation) is grounded
-  PER-BOX by deaccented label (escala→`art-63/74`, cuota líquida→`art-67/77`, each
-  deducción→its own article), leaving the RIC/regularización boxes that bind elsewhere.
+  `art-77` by matching the comunidad name in the section path (pin with a substring gate);
+  the base-liquidable-negativa carry-forward grounds its 13 casillas + the anexo-c construct
+  + the previous_filing binding all to `[art-48, art-50]` in one commit, so the validator's
+  binding-coverage check passes.
 - **Good:** an actividad-económica box (`actividad_est_directa`, "inmueble afecto a
   actividades económicas") KEEPS the actividades chapter — it is correct there.
 - **Bad:** mapping `2024`-id → `2025`-id to copy grounding — the renumbering injects a
   maternidad-deduction article onto a ganancia box.
 - **Bad:** grounding a construct-member casilla without also grounding its construct and
   bindings — `construct '…' does not include legal refs […] required by binding '…'`,
-  registry fails to load.
-- **Bad:** assuming a regime needs a "different corpus" before checking whether a LIRPF
-  framework article (cuota líquida autonómica, régimen de atribución, base liquidable)
-  already applies it.
+  registry fails to load; or assuming a regime needs a "different corpus" before checking
+  whether a LIRPF framework article already applies it.
 
 ## Source
 
-Campaign `legal-grounding-centralization`, audit
-`2026-06-14-legal-grounding-centralization-audit` (findings V12 section-tag discriminator,
-V19/V20 construct+binding-aware sweep, V21 framework-foundation for autonomic). ~6345
-M100 casillas re-grounded across ~40 sections; 14 LIRPF legal entries authored. Promoted
-per the `vaultspec-codify` discipline after the method held across the full form.
+Audit `2026-06-14-legal-grounding-centralization-audit` (findings V12 section-tag
+discriminator, V19/V20 construct+binding-aware sweep, V21 framework-foundation for
+autonomic). ~6345 M100 casillas re-grounded across ~40 sections; 14 LIRPF entries authored.
 
 ---
 name: cli-notices-are-the-only-diagnostic-channel
@@ -1294,65 +1241,48 @@ trigger: always_on
 
 Operator-facing non-blocking diagnostics — warnings, advisories, and next-step
 hints — MUST be emitted through the typed `Notice` channel on the shared CLI
-envelope spine (`aeat.core.json_contract.Notice`, surfaced via
-`_emit_envelope(..., notices=[...])` / `emit_json_success(..., notices=[...])`).
-A command MUST NOT re-introduce a bespoke advisory/`next`/`suggestion` field
-inside its `result` payload (an `OutputSchema` subclass). The shared spine
-(`schema_version`, `command`, `status`, `notices`) is uniform across the success
-envelope and the stderr error document; `status` derives from notice severity
-and stays in lock-step with the `ExitCode` table.
+envelope spine (`cadrumo.core.json_contract.Notice`, via `_emit_envelope(...,
+notices=[...])` / `emit_json_success(..., notices=[...])`). A command MUST NOT
+re-introduce a bespoke advisory/`next`/`suggestion` field inside its `result`
+payload (an `OutputSchema` subclass). The shared spine (`schema_version`,
+`command`, `status`, `notices`) is uniform across the success envelope and the
+stderr error document; `status` derives from notice severity and stays in
+lock-step with the `ExitCode` table.
 
 ## Why
 
-The `cli-envelope-notice-standardisation` campaign (ADR
-`2026-06-10-cli-envelope-notice-standardisation-adr`) found the success
-`SchemaEnvelope` and the stderr `ErrorEnvelope` were disjoint with no shared
-`status`, the success `warnings` channel was structurally dead, and non-blocking
-advisories were smuggled as bespoke per-command `result` fields
-(`source_advisories`, `authorization_advisory`, config `next`) plus duplicated
-text lines. That made the contract un-introspectable: a consumer could not read
-one shape to learn the outcome or what to do next. The standardisation collapsed
-every diagnostic onto one typed `Notice` channel and a shared spine. A new
-bespoke advisory field re-fragments the surface and silently bypasses the
-redaction funnel that runs over the envelope. The no-allowlist conformance gate
-(`test_json_schema_conformance.py`:
-`test_registered_schema_has_no_bespoke_notice_field`) makes the regression a
-hard CI failure, so the uniformity cannot rot.
+ADR `2026-06-10-cli-envelope-notice-standardisation-adr` found the success
+`SchemaEnvelope` and stderr `ErrorEnvelope` disjoint with no shared `status`, the
+success `warnings` channel structurally dead, and advisories smuggled as bespoke
+`result` fields (`source_advisories`, `authorization_advisory`, config `next`) —
+so the contract was un-introspectable and bypassed the envelope redaction funnel.
+The no-allowlist conformance gate `test_json_schema_conformance.py`
+(`test_registered_schema_has_no_bespoke_notice_field`) makes the regression a hard
+CI failure.
 
 ## How
 
-- **Good:** a calculate advisory is projected with `advisory_notice(code,
-  message, context={...})` and passed via `_emit_envelope(..., notices=[...])`;
-  its text line is rebuilt from the same notice so JSON and text cannot drift.
-- **Good:** a post-action next-step hint is an `info`-severity `Notice` whose
-  `suggestion` is the follow-on command (e.g. the wizard create/edit next step,
-  the overview status next-step guidance), not a `next: str` result field.
-- **Good:** structured provenance a former bespoke payload exposed
-  (`reason`, `source_kind`, `resolver_id`) rides on `Notice.context`
-  (mirroring `ErrorEnvelope.context`), so nothing machine-queryable is lost.
-- **Bad:** adding `authorization_advisory: str | None` or `source_advisories:
-  tuple[...]` (or any `*_advisory` / bare `next` / `suggestion`) as a top-level
-  field on a registered `OutputSchema`. The gate fails until it moves to
-  `notices`.
-- **Allowed (not a violation):** primary structured result data that a command
-  exists to produce — verify `findings`, calendar `warnings`, a `next_due` date,
-  a per-finding `next_action`. These are the command's output, not incidental
-  diagnostics, and the gate's forbidden set is scoped to bare `next` /
-  `suggestion` / `*_advisory` precisely to leave them alone.
+- **Good:** a calculate advisory is projected with `advisory_notice(code, message,
+  context={...})` and passed via `_emit_envelope(..., notices=[...])`, its text
+  line rebuilt from the same notice so JSON and text cannot drift; a next-step hint
+  is an `info`-severity `Notice` whose `suggestion` is the follow-on command, not
+  a `next: str` result field; structured provenance (`reason`, `source_kind`,
+  `resolver_id`) rides on `Notice.context`.
+- **Bad:** adding `authorization_advisory: str | None`, `source_advisories:
+  tuple[...]`, or any `*_advisory` / bare `next` / `suggestion` as a top-level
+  field on a registered `OutputSchema` — the gate fails until it moves to `notices`.
+- **Allowed (not a violation):** primary structured result data a command exists
+  to produce — verify `findings`, calendar `warnings`, a `next_due` date, a
+  per-finding `next_action`. These are output, not incidental diagnostics; the
+  gate's forbidden set is scoped to bare `next` / `suggestion` / `*_advisory`.
 
 ## Source
 
-ADR `2026-06-10-cli-envelope-notice-standardisation-adr`; plan
-`2026-06-10-cli-envelope-notice-standardisation-plan`; exec
-`2026-06-10-cli-envelope-notice-standardisation-exec`. Enforced by
-`src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`
+ADR/plan/exec `2026-06-10-cli-envelope-notice-standardisation-*`. Enforced by
+`src/cadrumo/entrypoints/cli/tests/test_json_schema_conformance.py`
 (`test_success_envelope_carries_shared_spine`,
 `test_registered_schema_has_no_bespoke_notice_field`,
-`test_error_document_shares_the_success_spine`). Companion to
-`aeat-calculation-grounding` (provenance through boundaries) and
-`no-silent-under-declaration` (an unrouted diagnostic must surface, not vanish).
-Promoted per the `vaultspec-codify` discipline once the burndown landed and the
-extended conformance gate was green.
+`test_error_document_shares_the_success_spine`).
 
 ---
 name: cli-single-subject-id-is-positional
@@ -1385,9 +1315,9 @@ trigger: always_on
 
 ## Rule
 
-The persisted-data compatibility posture is governed by `aeat.core.COMPATIBILITY_REGIME`,
+The persisted-data compatibility posture is governed by `cadrumo.core.COMPATIBILITY_REGIME`,
 a one-way constant flipped `PRE_RELEASE -> RELEASED` ONLY by an accepted checkpoint ADR
-whose same commit also freezes `aeat.core.RELEASED_FORMAT_FLOORS` at the then-current
+whose same commit also freezes `cadrumo.core.RELEASED_FORMAT_FLOORS` at the then-current
 per-format durability floors. The regime MUST NOT be read from `Settings`/env, and the
 enforcing gates MUST NOT be skipped, weakened, or monkeypatched.
 
@@ -1410,49 +1340,36 @@ enforcing gates MUST NOT be skipped, weakened, or monkeypatched.
 
 ## Why
 
-The `released-data-durability` campaign installed the per-format mechanism (version
-ceilings, empty per-hop upgrader registries, chain-upgrade on read, the archive floor-pin)
-but left the TRANSITION ungoverned: nothing defined WHEN the posture flips from the
-pre-release delete-not-migrate regime to the post-release durability-mandatory regime, WHAT
-flips, or WHAT enforces it — so "decide at the checkpoint" was itself an open deferral that
-would surface as a stranded-taxpayer-data hazard on the first post-release version bump. A
-runtime/env flag can silently differ per machine or CI and be patched in its own gate; a
-compliance regime must instead be a property of the codebase commit. Making the checkpoint
-a one-way repo-committed constant plus a version-milestone tripwire gives the transition a
-conscious owner (the flip commit), a trigger (the tripwire that reds CI if a 1.0 is cut
-unflipped), and gate-enforced teeth, while changing zero behaviour today. Recorded in ADR
-`2026-07-09-compatibility-lifecycle-adr`; companion to `no-legacy-compatibility` (which
-governs the pre-release regime verbatim) and `released-data-durability` (which built the
-mechanism this rule switches).
+Per ADR `2026-07-09-compatibility-lifecycle-adr`, the `released-data-durability` campaign
+built the per-format mechanism but left the TRANSITION ungoverned — WHEN the posture flips,
+WHAT flips, and WHAT enforces it were an open deferral that would surface as a
+stranded-taxpayer-data hazard on the first post-release bump. A runtime/env flag can
+silently differ per machine and be patched in its own gate, so the regime is instead a
+one-way repo-committed constant plus a version-milestone tripwire — a conscious owner (the
+flip commit), a trigger (CI reds if a 1.0 is cut unflipped), and gate teeth, changing zero
+behaviour today.
 
 ## How
 
 - **Good:** post-flip, a bundle `v3 -> v4` bump lands the raw-mapping upgrader in
-  `BUNDLE_PAYLOAD_UPGRADERS`, a committed `v3` serialized fixture, and a test that loads the
-  `v3` bytes through the real deserialize path and asserts strict equality — all in one
-  commit.
-- **Good:** pre-flip, raising the archive version and its floor together (delete-not-migrate),
-  with the floor-pin gate green because `expected_floor(PRE_RELEASE, ...) == current`.
-- **Good:** a new persisted format enrolls its floor/version + an (empty) upgrader registry +
-  its lineage gate at birth, in both regimes.
+  `BUNDLE_PAYLOAD_UPGRADERS`, a committed `v3` serialized fixture, and a test loading the
+  `v3` bytes through the real deserialize path asserting strict equality — all one commit;
+  a new persisted format enrolls its floor/version + an (empty) upgrader registry + its
+  lineage gate at birth, in both regimes.
 - **Bad:** post-flip, raising any durability floor above its released value to dodge writing
-  an upgrader — the frozen-floor gate refuses it.
-- **Bad:** flipping `COMPATIBILITY_REGIME` back to `PRE_RELEASE`, or reading the regime from
-  `Settings`/env, or loosening a persisted read model to `extra="ignore"` instead of
-  versioning the shape.
+  an upgrader (the frozen-floor gate refuses it); flipping `COMPATIBILITY_REGIME` back to
+  `PRE_RELEASE`, reading the regime from `Settings`/env, or loosening a persisted read model
+  to `extra="ignore"` instead of versioning the shape.
 - **Bad:** fabricating an old-version fixture or a real upgrader BEFORE a genuine
   post-checkpoint bump needs it — `no-legacy-compatibility` forbids inventing shapes nothing
   wrote; the harness ships empty and vacuous until then.
 
 ## Source
 
-ADR `2026-07-09-compatibility-lifecycle-adr` (accepted), decided by an authorized fable
-architecture pass and approved by the operator, resolving the transition the
-`2026-07-08-released-data-durability-adr` left ownerless. Companion rules:
-`no-legacy-compatibility` (pre-release posture, unchanged), `aeat-schema-central-config`,
+ADR `2026-07-09-compatibility-lifecycle-adr` (resolving `2026-07-08-released-data-durability-adr`).
+Companion: `no-legacy-compatibility`, `aeat-schema-central-config`,
 `sensitive-financial-data-secure-storage-only`. Enforced by the regime-aware lineage gates
-and the central `test_compatibility_lifecycle_gate` (version tripwire + one-way coherence +
-enrollment).
+and `test_compatibility_lifecycle_gate` (version tripwire + one-way coherence + enrollment).
 
 ---
 name: composition-service-no-parallel-write-path
@@ -1464,64 +1381,46 @@ trigger: always_on
 ## Rule
 
 When a new application-layer service exposes an operator-facing verb that
-corresponds to an existing single-writer primitive, the service MUST delegate
-the write to the existing primitive (preserving its atomicity and lifecycle-
-event emission) and MUST NOT re-implement the write path. The service emits
-its own surface-level event in addition to the primitive's lifecycle event;
-the two events are intentionally distinct (lifecycle records the data change,
-surface records the operator's verb invocation).
+corresponds to an existing single-writer primitive, the service MUST delegate the
+write to that primitive (preserving its atomicity and lifecycle-event emission) and
+MUST NOT re-implement the write path. The service emits its own surface-level event
+in addition to the primitive's lifecycle event; the two events are intentionally
+distinct (lifecycle records the data change, surface records the operator's verb
+invocation).
 
 ## Why
 
-The BucketMaintenanceService design pass on 2026-06-03 found a real
-hexagonal-design risk: every method except ``search`` already had a partial
-or full authoritative primitive in the application or adapter layer (the
-cross-store profile rename in ``ProfileRepository.rename``, the soft/hard
-delete split in ``delete_profile_with_lifecycle_span`` +
-``remove_profile_bucket_directory``, the bundle assembly in
-``serialize_profile_bundle`` / ``deserialize_profile_bundle``). A naive
-service that re-implemented any of these would re-introduce the torn-write
-risk the single-writer contracts eliminate and create shadow lifecycle-event
-emission.
-
-The two-event co-emission pattern (``PROFILE_RENAMED`` plus
-``BUCKET_RENAMED`` per rename invocation) is a deliberate audit feature, not
-a bug. A future audit query distinguishing "the record was relabelled" from
-"the operator invoked the maintenance verb" relies on the two events being
-distinct.
+The BucketMaintenanceService design pass (`2026-06-03-cli-workflow-redesign-adr`)
+found every method except ``search`` already had an authoritative primitive (the
+cross-store rename, the soft/hard delete split, the ``serialize_profile_bundle`` /
+``deserialize_profile_bundle`` assembly), so a naive re-implementation would
+re-introduce the torn-write risk the single-writer contracts eliminate and create
+shadow lifecycle-event emission. The two-event co-emission (``PROFILE_RENAMED`` plus
+``BUCKET_RENAMED`` per rename) is a deliberate audit feature: a later query
+distinguishing "record relabelled" from "operator invoked the verb" relies on the two
+events being distinct.
 
 ## How
 
 - **Good:** ``BucketMaintenanceService.rename`` calls the top-level re-export
-  ``rename_profile`` for the cross-store relabel, then appends
-  ``BUCKET_RENAMED`` to the bucket-event history. The inner
-  ``ProfileRepository.rename`` keeps emitting ``PROFILE_RENAMED``; the two
-  events co-emit per operator action.
-- **Good:** ``BucketMaintenanceService.delete`` composes
-  ``delete_profile_with_lifecycle_span`` (soft tombstone) and
-  ``remove_profile_bucket_directory`` (hard erase) in sequence; emits
-  ``BUCKET_DELETED`` between them. The destructive-action ``confirmed=True``
-  + active-bucket refusals live at the service boundary so a programmatic
-  caller observes the same guarantees the CLI ``--yes`` flag passes through.
-- **Bad:** a service ``rename`` method that opens its own bucket session,
-  decrypts the encrypted profile record, mutates ``display_name``,
-  re-encrypts, writes back, then separately rewrites the plaintext manifest
-  label. This re-implements the cross-store atomicity that
-  ``ProfileRepository.rename`` already holds; a crash between the two writes
-  leaves the stores drifted.
-- **Bad:** a service ``delete`` that loops directly over the bucket
-  directory's secure-object rows to clear them. The soft-tombstone primitive
-  exists for a reason; bypassing it loses the ``PROFILE_TOMBSTONED``
-  lifecycle event downstream consumers depend on.
+  ``rename_profile`` then appends ``BUCKET_RENAMED``; the inner
+  ``ProfileRepository.rename`` keeps emitting ``PROFILE_RENAMED``, so the two events
+  co-emit per action. ``delete`` composes ``delete_profile_with_lifecycle_span``
+  (soft tombstone) and ``remove_profile_bucket_directory`` (hard erase), emitting
+  ``BUCKET_DELETED`` between them, with the ``confirmed=True`` + active-bucket
+  refusals at the service boundary so a programmatic caller gets the same guarantees
+  the CLI ``--yes`` flag passes through.
+- **Bad:** a ``rename`` that opens its own bucket session, decrypts/mutates
+  ``display_name``/re-encrypts, then separately rewrites the manifest label —
+  re-implementing the cross-store atomicity ``ProfileRepository.rename`` holds (a
+  crash between writes drifts the stores); or a ``delete`` that loops over
+  secure-object rows directly, bypassing the soft-tombstone primitive and losing the
+  ``PROFILE_TOMBSTONED`` event downstream consumers depend on.
 
 ## Source
 
-ADR ``2026-06-03-cli-workflow-redesign-adr`` (composition pattern); research
-``2026-06-03-cli-workflow-redesign-research``; exec record
-``2026-06-03-cli-workflow-redesign-exec``. Codified per the
-``vaultspec-codify`` discipline because the constraint binds future agents
-across sessions whenever a new composition service is introduced over an
-existing single-writer primitive.
+ADR ``2026-06-03-cli-workflow-redesign-adr`` (composition pattern); research and
+exec record of the same feature.
 
 ---
 name: core-struct-docstring-links
@@ -1531,55 +1430,44 @@ trigger: always_on
 # Core-struct docstring cross-links
 
 A module that imports a canonical core struct MUST cross-link that struct in at
-least one docstring (the module docstring or any public symbol's docstring),
-using a Sphinx role such as `:class:`ModeloRevision``.
+least one docstring (module or any public symbol), using a Sphinx role such as
+`:class:`ModeloRevision``.
 
 ## Why
 
-The API documentation is only navigable if its docstrings form a graph that
-steers a reader toward the canonical spine. A module that depends on a core
-struct but never names it in a cross-reference is a dead end: a newcomer has no
-thread to follow back to the authoritative definition. Cross-reference coverage
-started well below half of module docstrings and documented public symbols. The
-gate `test_docstring_core_struct_links.py` makes the
-contract enforceable: it self-verifies the anchor set, recomputes the violation
-worklist from the AST on every run, and fails with a precise
-`module -> :class:`Struct`` enumeration. It is hard-cut with no stored baseline,
-so coverage can only ratchet up to green; it carries the `docs` marker so it
-runs in the documentation CI lane.
+Docstrings must form a graph steering readers to the canonical spine; a module
+depending on a core struct but never cross-referencing it is a dead end. The gate
+`test_docstring_core_struct_links.py` self-verifies the anchor set, recomputes the AST
+violation worklist every run, and fails with a precise `module -> :class:`Struct``
+enumeration. It is hard-cut with no stored baseline (coverage only ratchets up) and
+carries the `docs` marker for the documentation CI lane.
 
 ## How
 
-- When a module imports a core-struct anchor (the spine is the `CORE_STRUCTS`
-  mapping in the gate, the authoritative list; it spans the registry
-  authority and snapshots, the JSON contract envelopes, the secure storage
-  primitives, the AEAT portal registry, the financial-input aggregates and their
-  repositories, and the profile/deadline/filing records),
-  add a `:class:` (or `:meth:`/`:obj:`) cross-link in the docstring where the
-  struct is genuinely used (a return type, a parameter, the operation performed).
-  Write a true sentence describing the real relationship. Do not fabricate.
-- Upgrade existing plain-backtick mentions (``ModeloRevision``) to roles
-  (`:class:`ModeloRevision``). The anchors are documented public symbols, so a
-  bare `:class:`Name`` resolves through the build's missing-reference resolver.
-  Do not add a dotted path.
-- Extend the `CORE_STRUCTS` mapping in the gate to bring more of the spine under
-  enforcement. Each entry is pinned to a single canonical class definition, so
-  the set cannot silently rot.
-- Choose anchors for navigability value, not raw import in-degree. An anchor is a
-  type a newcomer must navigate to in order to work in an area: a central data or
-  record aggregate, a domain authority or repository that owns access, or the
-  primary closed-value enum that defines a domain. Do NOT anchor ubiquitous
-  infrastructure learned once and never re-navigated (a base error such as
-  `AeatError`, the `Settings` config aggregate), error subclasses (they are
-  handled, not navigated to), secondary sub-dimension enums when the primary one
-  is already anchored, or low-reach types only a couple of modules import.
-  Linking those everywhere is noise that degrades the graph rather than enriching
-  it. The 28-anchor set was curated on this basis from import in-degree plus a
-  per-domain discovery pass; the high in-degree tail (errors, config, secondary
-  enums) was deliberately excluded.
-- Run the gate: `uv run --no-sync pytest -m docs src/aeat/tests/test_docstring_core_struct_links.py`.
-  It MUST stay green. Do not satisfy it by sprinkling unrelated roles; the link
-  MUST be semantically truthful and the `-n -W` build MUST still resolve it.
+- When a module imports a core-struct anchor (the spine is the `CORE_STRUCTS` mapping
+  in the gate — the authoritative list, spanning the registry authority and snapshots,
+  the JSON contract envelopes, the secure storage primitives, the AEAT portal registry,
+  the financial-input aggregates and their repositories, and the profile/deadline/filing
+  records), add a `:class:` (or `:meth:`/`:obj:`) cross-link where the struct is
+  genuinely used. Write a true sentence; do not fabricate.
+- Upgrade plain-backtick mentions to roles (``ModeloRevision`` → `:class:`ModeloRevision``);
+  anchors are documented public symbols, so a bare `:class:`Name`` resolves through the
+  build's missing-reference resolver — do not add a dotted path.
+- Extend `CORE_STRUCTS` to bring more of the spine under enforcement; each entry is
+  pinned to a single canonical class definition so the set cannot silently rot.
+- Choose anchors for navigability, not raw import in-degree. An anchor is a type a
+  newcomer must navigate to to work in an area: a central data/record aggregate, a
+  domain authority/repository that owns access, or the primary closed-value enum
+  defining a domain. Do NOT anchor ubiquitous infrastructure learned once and never
+  re-navigated (a base error such as `CadrumoError`, the `Settings` config aggregate),
+  error subclasses (handled, not navigated to), secondary sub-dimension enums when the
+  primary is already anchored, or low-reach types only a couple of modules import. The
+  28-anchor set was curated on this basis (import in-degree plus a per-domain discovery
+  pass), the high in-degree tail (errors, config, secondary enums) deliberately excluded.
+- Run `uv run --no-sync pytest -m docs
+  src/cadrumo/tests/test_docstring_core_struct_links.py`; it MUST stay green. Do not
+  satisfy it with unrelated roles — the link MUST be semantically truthful and the
+  `-n -W` build MUST still resolve it.
 
 ---
 name: cross-period-suppression-grounded-in-registry-classification
@@ -1590,56 +1478,46 @@ trigger: always_on
 
 ## Rule
 
-A cross-period dependency may be scoped out of the clean-state gate (treated as
-not-applicable) ONLY on a registry-authoritative signal carried by the dependency's
-own `DependencyClassificationDefinition` — `taxpayer_files_source = false` (the
-taxpayer never files the source modelo, e.g. suffered retenciones 111/115/123/180/
-184/190/193) or `conditional_on_economic_activity = true` combined with an explicit,
-fail-closed profile signal (`taxpayer_files_economic_activity is False` for the
-pagos-fraccionados 130/131). The suppression set MUST be derived from
-`snapshot.revision.dependency_classifications` (the snapshot's own authority), never
-from the deadline-engine obligation schedule. A taxpayer who DOES file the source,
-and the undeclared case, stay enforced (fail-closed).
+A cross-period dependency may be scoped out of the clean-state gate (not-applicable)
+ONLY on a registry signal on the dependency's own `DependencyClassificationDefinition`:
+`taxpayer_files_source = false` (taxpayer never files the source, e.g. suffered
+retenciones 111/115/123/180/184/190/193) or `conditional_on_economic_activity = true`
+combined with a fail-closed `taxpayer_files_economic_activity is False` (pagos-
+fraccionados 130/131). The suppression set MUST derive from
+`snapshot.revision.dependency_classifications`, never from the deadline-engine
+obligation schedule. A taxpayer who DOES file the source, and the undeclared case, stay
+enforced (fail-closed).
 
 ## Why
 
-The C3 Modelo-100-reachability defect was first patched (Option 1) by scoping out a
-dependency when its source modelo was absent from the deadline-engine obligation
-schedule. The full-tree gate proved that wrong: the schedule is an INCOMPLETE
-"which modelos does the taxpayer file" signal, so it over-suppressed the
-legitimately-enforced cross-period sources of OTHER targets (180/190/193/200/202),
-breaking `test_cross_period_clean_state_enforcement`. Option 1 was reverted. The
-grounded fix classifies each dependency in the registry (the same authority the
-calculation engine consumes) and drives suppression from the snapshot's own
-classifications plus a fail-closed profile-activity signal — so suppression is
-per-modelo registry data, scoped to exactly the not-filed sources, and the
-enforcement contract for filed sources is preserved. Recorded in ADR
+The C3 M100-reachability defect was first patched (Option 1) by scoping out a
+dependency absent from the deadline-engine schedule; the full-tree gate proved the
+schedule an INCOMPLETE signal that over-suppressed OTHER targets' enforced sources
+(180/190/193/200/202), breaking `test_cross_period_clean_state_enforcement` — Option 1
+was reverted. The grounded fix classifies each dependency in the registry (the
+authority the calc engine consumes), scoping suppression to exactly the not-filed
+sources while preserving enforcement of filed sources. ADR
 `2026-06-19-m100-dependent-modelo-applicability-adr` (Updates 1-3); proven by
 `test_m100_suffered_retencion_deps_scoped_out_self_filed_enforced` and
 `test_m100_pagos_fraccionados_conditional_on_economic_activity`.
 
 ## How
 
-- **Good:** mark a suffered-retencion source `taxpayer_files_source = false`; the gate
-  reads `snapshot.revision.dependency_classifications` and scopes it out as a visible
-  not-applicable advisory (never silent).
-- **Good:** mark a pagos-fraccionados source `conditional_on_economic_activity = true`
-  and pass `taxpayer_files_economic_activity` (derived from
-  `TaxpayerProfile.irpf_income_categories`, `None` when undeclared) into the gate; it
-  scopes out ONLY when the value is explicitly `False`.
-- **Bad:** scope a dependency out because its source modelo is missing from the
-  deadline-engine obligation schedule — the schedule is incomplete and over-suppresses
-  other targets' enforced sources (the reverted Option 1).
-- **Bad:** suppress on an undeclared/absent profile signal (fail-open) — a real autónomo
-  who has not yet declared income categories would launder past the M130->M100 evidence
-  gate.
+- **Good:** mark a suffered-retencion source `taxpayer_files_source = false` — the gate
+  reads `dependency_classifications` and scopes it out as a visible not-applicable
+  advisory (never silent); a pagos-fraccionados source
+  `conditional_on_economic_activity = true` scopes out ONLY when
+  `taxpayer_files_economic_activity` (from `TaxpayerProfile.irpf_income_categories`,
+  `None` when undeclared) is explicitly `False`.
+- **Bad:** scoping out because the source modelo is missing from the deadline-engine
+  schedule (reverted Option 1); or suppressing on an undeclared/absent profile signal
+  (fail-open), laundering a real autónomo past the M130->M100 evidence gate.
 
 ## Source
 
-ADR `2026-06-19-m100-dependent-modelo-applicability-adr`; research
-`2026-06-19-m100-dependent-modelo-applicability-research`. Companion to
-`full-tree-gate-must-distinguish-owner` (the gate that caught Option 1),
-`no-silent-under-declaration`, and `aeat-registry-authority-flow`.
+ADR `2026-06-19-m100-dependent-modelo-applicability-adr` and research. Companion:
+`full-tree-gate-must-distinguish-owner`, `no-silent-under-declaration`,
+`aeat-registry-authority-flow`.
 
 ---
 name: dynamic-import-targets-the-public-facade
@@ -1662,10 +1540,10 @@ technique is never the problem; an unqualified private-module target is.
 ADR `2026-07-01-import-centralization-adr` (Ruling 6) found
 `core/setup_answers.py`'s deferred `_m()` and `_ccaa()` helpers used
 `importlib.import_module` to legitimately break an import cycle, but targeted
-private submodules — `aeat.domain.deadlines._models` and
-`aeat.domain.contribuyente._ccaa` — when public facades already re-exported
-the same names (`aeat.domain.deadlines.taxpayer_model`,
-`aeat.domain.contribuyente`). Because the AST-static import scanner
+private submodules — `cadrumo.domain.deadlines._models` and
+`cadrumo.domain.contribuyente._ccaa` — when public facades already re-exported
+the same names (`cadrumo.domain.deadlines.taxpayer_model`,
+`cadrumo.domain.contribuyente`). Because the AST-static import scanner
 (`dev/import_hygiene_scan.py`) cannot see a dynamically constructed module
 string, this class of violation is invisible to the automated gate and would
 otherwise persist indefinitely inside an already-sanctioned cycle-break
@@ -1677,15 +1555,15 @@ concerns, and only the target is governed by ownership.
 ## How
 
 - **Good:**
-  `importlib.import_module("aeat.domain.deadlines.taxpayer_model")` inside a
+  `importlib.import_module("cadrumo.domain.deadlines.taxpayer_model")` inside a
   deferred cycle-break helper — the module string names the public facade.
-- **Good:** `importlib.import_module("aeat.domain.contribuyente")` — the
+- **Good:** `importlib.import_module("cadrumo.domain.contribuyente")` — the
   package's own top level, not a private submodule path appended to it.
-- **Bad:** `importlib.import_module("aeat.domain.deadlines._models")` from
+- **Bad:** `importlib.import_module("cadrumo.domain.deadlines._models")` from
   outside the `deadlines` package — the technique is fine, the target is a
   private submodule of a package that already exports the same symbols
   publicly.
-- **Bad:** `importlib.import_module("aeat.domain.contribuyente._ccaa")` for the
+- **Bad:** `importlib.import_module("cadrumo.domain.contribuyente._ccaa")` for the
   same reason — retarget to the owning package's public facade.
 
 Because the scanner cannot see these string-built targets, this rule is author
@@ -1821,7 +1699,7 @@ When a required full-tree gate is red in the shared factory worktree, always rec
 
 ## Why
 
-The `2026-06-11-ledger-hardening-close-audit-pass-2` found the C4 alias-retirement implementation green on focused lint, registry/operator tests, API-stub conformance, and CLI conformance while the mandated full `src/aeat` collect-only gate stayed red from support-module export splits owned by other campaigns. Without owner triage, a closeout pass either falsely claims green or opportunistically edits unrelated peer work. The rule preserves honesty without broadening the feature's ownership boundary.
+The `2026-06-11-ledger-hardening-close-audit-pass-2` found the C4 alias-retirement implementation green on focused lint, registry/operator tests, API-stub conformance, and CLI conformance while the mandated full `src/cadrumo` collect-only gate stayed red from support-module export splits owned by other campaigns. Without owner triage, a closeout pass either falsely claims green or opportunistically edits unrelated peer work. The rule preserves honesty without broadening the feature's ownership boundary.
 
 ## How
 
@@ -1895,55 +1773,42 @@ trigger: always_on
 
 ## Rule
 
-Only a taxpayer- or operator-facing AEAT concept may be an `approved`
-Terminology Handbook concept (and therefore render in the generated glossary and
-the shipped Pagefind search injection): a tax, modelo, casilla, régimen, period,
-legal concept, or an operator workflow noun (`ledger`, `borrador`,
-`justificante`, `fichero-boe`). A concept that names the search / calculation /
-registry MACHINERY (RAG sweep, relevance map, search projection, preprocessing
-hook, search record kinds, licence laundering, preflight, registry binding, work
-unit, verification-state internals, the Handbook itself) MUST NOT be `approved`;
-it is `deprecated` (resolvable for the dev/agent RAG, excluded from the glossary
-and shipped search) with a `scope_note` marking it internal, never deleted.
+Only a taxpayer- or operator-facing AEAT concept may be an `approved` Terminology
+Handbook concept (and thus render in the generated glossary and shipped Pagefind
+search): a tax, modelo, casilla, régimen, period, legal concept, or operator workflow
+noun (`ledger`, `borrador`, `justificante`, `fichero-boe`). A concept naming the
+search/calculation/registry MACHINERY (RAG sweep, relevance map, search projection,
+preprocessing hook, search record kinds, licence laundering, preflight, registry
+binding, work unit, verification-state internals, the Handbook itself) MUST NOT be
+`approved`; it is `deprecated` (resolvable for the dev/agent RAG, excluded from the
+glossary and shipped search) with a `scope_note` marking it internal, never deleted.
 
 ## Why
 
 The corpus-quality drive (`2026-06-15-docs-terminology-search-audit`) found ~14
-`approved` concepts documenting the search/calculation machinery itself, so the
-glossary a taxpayer reads carried first-class entries for `barrido-rag`,
-`proyeccion-busqueda`, `mapa-relevancia`, `work-unit`, and the like — none of
-which a taxpayer would ever look up, none of which can carry a legal basis. The
-decision is recorded in `2026-06-15-docs-terminology-search-adr` (D1/D2): the
-Handbook's `approved` tier is the taxpayer/operator vocabulary; internal
-concepts are demoted to `deprecated` (not `retired`, which asserts a successor
-that a mis-enrolment lacks; not deleted, per the scaffold-preserve contract).
-The glossary generator and the Pagefind injector both gate on `approved`, so the
-lifecycle is the enforcement surface. The scaffold walks live enrolment sources,
-so a future scaffold can re-surface an internal concept as a `draft` (harmless —
-drafts are excluded); promoting one to `approved` is the regression this rule and
-the curation audit guard against.
+`approved` concepts documenting the machinery itself (`barrido-rag`,
+`proyeccion-busqueda`, `work-unit`, …) — none a taxpayer would look up or that carries
+a legal basis. `2026-06-15-docs-terminology-search-adr` (D1/D2) demotes them to
+`deprecated` (not `retired`, which asserts a successor a mis-enrolment lacks; not
+deleted, per the scaffold-preserve contract); the glossary generator and Pagefind
+injector both gate on `approved`, and a scaffold re-surfaces an internal concept only
+as an excluded `draft`, so promoting one to `approved` is the guarded regression.
 
 ## How
 
-- **Good:** `prorrata`, `modelo-303`, `recargo-equivalencia`, `casilla`,
-  `borrador`, `ledger` are `approved` — taxpayer/operator terms — and render in
-  the glossary.
-- **Good:** `barrido-rag` (RAG sweep), `proyeccion-busqueda` (search
-  projection), `binding` (registry binding), `work-unit` are `deprecated` with a
-  `scope_note` recording they are internal machinery; the dev RAG still resolves
-  them, the taxpayer glossary does not.
-- **Bad:** promoting an internal/tooling concept to `lifecycle = "approved"`, so
-  it renders as a first-class taxpayer glossary entry.
-- **Bad:** deleting an internal concept fragment instead of deprecating it (the
-  scaffold-preserve contract never deletes; deprecation keeps it resolvable for
-  developers).
+- **Good:** `prorrata`, `modelo-303`, `recargo-equivalencia`, `casilla`, `borrador`,
+  `ledger` are `approved` and render; `barrido-rag`, `proyeccion-busqueda`, `binding`,
+  `work-unit` are `deprecated` with a `scope_note` — the dev RAG resolves them, the
+  taxpayer glossary does not.
+- **Bad:** promoting an internal/tooling concept to `lifecycle = "approved"`; or
+  deleting an internal concept fragment instead of deprecating it (the scaffold-preserve
+  contract never deletes; deprecation keeps it dev-resolvable).
 
 ## Source
 
 ADR `2026-06-15-docs-terminology-search-adr` (D1/D2); audit
-`2026-06-15-docs-terminology-search-audit` (PERF-001 follow-up). Enforced by the
-`approved`-only gate in the glossary generator (`dev/docs/glossary_reference.py`)
-and the Pagefind injector (`dev/docs/pagefind_inject.py`). Companion rules:
+`2026-06-15-docs-terminology-search-audit` (PERF-001). Enforced by the `approved`-only
+gate in `dev/docs/glossary_reference.py` and `dev/docs/pagefind_inject.py`. Companion:
 `terminology-single-declaration`, `terminology-scaffold-preserve-contract`.
 
 ---
@@ -1957,48 +1822,36 @@ trigger: always_on
 
 Every IVA "total cuota devengada" aggregation formula — Modelo 303 casilla `27`,
 Modelo 390 `iva.anual.cuota-devengada-total`, and any IVA modelo's total-devengada
-casilla — MUST sum the recargo de equivalencia cuota tiers (the recargo casillas,
-LIVA art. 161) alongside the standard / reducido / super-reducido IVA repercutido
-tiers and the autorepercutido (intracomunitaria / inversión del sujeto pasivo)
-cuota. Omitting the recargo tiers silently under-declares cuota devengada for any
-filer whose supplier charged recargo de equivalencia, and — because the M390
-annual total is reconciled against the summed M303 quarters — trips the
-`modelo-390-cuota-devengada-total-equals-reconciliacion-303` BLOCKING_RULE for
-every recargo filer.
+casilla — MUST sum the recargo de equivalencia cuota tiers (recargo casillas, LIVA
+art. 161) alongside the standard/reducido/super-reducido repercutido tiers and the
+autorepercutido (intracomunitaria / inversión del sujeto pasivo) cuota. Omitting them
+silently under-declares for any recargo filer and — because the M390 annual total is
+reconciled against the summed M303 quarters — trips the
+`modelo-390-cuota-devengada-total-equals-reconciliacion-303` BLOCKING_RULE.
 
 ## Why
 
-Grounding the IVA engine against the bundled AEAT Manual Práctico IVA surfaced the
-SAME omission twice: Modelo 303 casilla `27` (total cuota devengada) never summed
-the recargo cuota casillas `18`/`21`/`24`, and Modelo 390's annual
-`iva.anual.cuota-devengada-total` never summed its recargo tiers — even though the
-recargo casillas were already ledger-bound in both. Each produced a silent
-under-declaration (M303 casilla 27 short by the recargo total; M390 short by the
-annual recargo total), and the M390 case additionally broke the M390↔M303
-reconciliation gate for recargo filers. Both were caught only because a manual
-worked example that included a recargo line was reconciled against the engine, and
-both were cross-validated against the manual's own quarterly totals. This is the
-IVA-aggregation companion to `no-silent-under-declaration` (an omitted tier
-under-declares) and `ledger-iva-advisory-only-on-cuota-bearing-categories`
-(recargo is a real cuota-bearing tier).
+Grounding the IVA engine against the bundled AEAT Manual Práctico IVA surfaced the same
+omission twice: M303 casilla `27` never summed recargo casillas `18`/`21`/`24`, and
+M390's `iva.anual.cuota-devengada-total` never summed its recargo tiers — though both
+were already ledger-bound. Each silently under-declared, and the M390 case broke the
+M390↔M303 reconciliation gate; both surfaced only by reconciling a manual worked example
+with a recargo line against the engine. Companion to `no-silent-under-declaration` and
+`ledger-iva-advisory-only-on-cuota-bearing-categories`.
 
 ## How
 
-- **Good:** the total-cuota-devengada formula sums repercutido general/reducido/
-  super-reducido + autorepercutido intracomunitaria/inversión-sujeto-pasivo + the
-  recargo de equivalencia cuota tiers (LIVA art. 161), and the construct's
-  `legal_refs` cite art. 161. A grounded parity test against a manual worked
-  example that charges recargo reproduces the manual's printed total exactly.
-- **Good:** when adding a new IVA modelo or revision, confirm the total-devengada
-  aggregation enumerates every cuota-bearing tier including recargo, and that any
-  cross-modelo reconciliation gate (M390↔M303) sees the same recargo-inclusive
+- **Good:** the formula sums repercutido general/reducido/super-reducido +
+  autorepercutido intracomunitaria/inversión-sujeto-pasivo + the recargo tiers (LIVA
+  art. 161), the construct's `legal_refs` cite art. 161, and a grounded parity test
+  against a manual worked example charging recargo reproduces the printed total exactly;
+  a new IVA modelo/revision confirms the aggregation enumerates every cuota-bearing tier
+  including recargo and that any M390↔M303 reconciliation sees the same recargo-inclusive
   total on both sides.
-- **Bad:** a total-cuota-devengada formula that sums only the standard IVA tiers
-  and autorepercutido but omits the recargo casillas — it silently under-reports
-  for recargo filers and desynchronises the annual↔quarterly reconciliation.
-- **Bad:** "fixing" a failing recargo-inclusive parity test by feeding the engine
-  a recargo-excluded expected value — the expected figure is the AEAT manual's
-  printed recargo-inclusive total; fix the formula, not the test.
+- **Bad:** summing only the standard tiers and autorepercutido while omitting recargo
+  (silently under-reports, desynchronises annual↔quarterly); or "fixing" a failing
+  recargo-inclusive parity test with a recargo-excluded expected value — the expected
+  figure is the manual's printed recargo-inclusive total; fix the formula, not the test.
 
 ---
 name: ledger-amount-is-absolute-direction-is-authority
@@ -2009,63 +1862,48 @@ trigger: always_on
 
 ## Rule
 
-A ledger transaction stores a **non-negative** `amount` magnitude; flow
-direction is carried solely by the `direction` enum (INCOMING / OUTGOING /
+A ledger transaction stores a **non-negative** `amount` magnitude; flow direction
+is carried solely by the `direction` enum (INCOMING / OUTGOING /
 INTERNAL_TRANSFER). No model, adapter, evidence row, or CLI surface may encode
 flow in the sign of an amount. The non-negative constraint is enforced at the
-`RawTransaction` boundary so the import and manual paths are both gated, and the
-evidence-row `amount` / `value_in_eur` mirror that absolute convention. There is
-no signed-amount shape to read, migrate, or bridge — old is deleted, not
-tolerated (`no-legacy-compatibility`).
+`RawTransaction` boundary so import and manual paths are both gated, and the
+evidence-row `amount` / `value_in_eur` mirror the absolute convention. There is
+no signed-amount shape to read, migrate, or bridge — old is deleted, not tolerated
+(`no-legacy-compatibility`).
 
 ## Why
 
-Flow was encoded twice — as the sign of a `Decimal` amount and, redundantly, as
-a parallel `direction` enum — and the two could disagree. Consistency was
-enforced only on the manual command; the import path derived direction from the
-sign and skipped the gate, so a zero-amount import silently classified as
-INCOMING. Every aggregation engine already routes on `direction` and takes
-`abs()` of the amount (the sign carried no arithmetic signal), and `value_in_eur`
-was already stored non-negative. The `2026-06-10-ledger-amount-direction-adr`
-collapsed flow onto the single authoritative `direction`, removed the sign from
-storage, and closed the enforcement gap with one model-level gate. This is the
-ledger-encoding counterpart of `aeat-calculation-grounding` (provenance —
-including `direction` — survives every boundary) and `no-silent-under-declaration`
-(the zero-amount misclassification was a silent error a shared gate now refuses).
+Flow was encoded twice — as the sign of a `Decimal` amount and, redundantly, as a
+`direction` enum — and the two could disagree; consistency was enforced only on
+the manual command, so the import path derived direction from the sign and a
+zero-amount import silently classified as INCOMING. Every engine already routes on
+`direction` and takes `abs()`. ADR `2026-06-10-ledger-amount-direction-adr`
+collapsed flow onto `direction`, removed the sign from storage, and closed the gap
+with one model-level gate.
 
 ## How
 
-- **Good:** `RawTransaction.amount` carries a non-negative validator that raises
-  `TransactionValidationError` on a negative value; it fires whether the row is
-  built by an import adapter or by `ManualLedgerTransactionCommand`. A
-  save→load→equality roundtrip plus an anti-tautology proof (corrupt the on-disk
-  amount to a negative, assert refusal at load) lock the boundary.
-- **Good:** an import adapter maps the bank export's sign (or native debit/credit
-  signal) to a `TransactionDirection` **at the parse boundary** and stores
-  `abs(amount)`, yielding a typed `ParsedLedgerRow(raw, direction)`; the import
-  action carries that explicit `direction` onto the `Transaction` and never
-  re-derives flow from a sign. A zero-amount source row is refused at the parse
-  boundary, consistent with the manual path.
-- **Good:** `INTERNAL_TRANSFER` is stored as a magnitude paired with
-  `direction = INTERNAL_TRANSFER`; split children store magnitudes and inherit
-  the parent's `direction`; the reconciliation matcher routes by direction
-  (RECEIVED↔OUTGOING, ISSUED↔INCOMING) and matches on the magnitude.
-- **Good:** the CLI `--amount` refuses a negative magnitude with an instructive,
-  localised error that names the accepted form (a non-negative amount plus
-  `--direction`), never a bare "value invalid".
-- **Bad:** writing a negative amount to encode an expense, or a
-  `direction_from_amount` helper that reads `raw.amount < 0` downstream of the
-  parse boundary — flow lives in `direction`, and there is no sign to read.
-- **Bad:** a read-tolerance branch that coerces a legacy signed-amount record on
-  load, or a migration that flips old fingerprints — there is no released data;
-  old shapes are absent, refused, never bridged.
+- **Good:** `RawTransaction.amount` carries a non-negative validator raising
+  `TransactionValidationError`, firing for both import adapters and
+  `ManualLedgerTransactionCommand`, locked by a save→load→equality roundtrip plus
+  an anti-tautology proof (corrupt the on-disk amount negative, assert load
+  refusal). Import adapters map the export sign / debit-credit signal to a
+  `TransactionDirection` at the parse boundary and store `abs(amount)` as a typed
+  `ParsedLedgerRow(raw, direction)`, refusing a zero-amount source row; the import
+  action carries that explicit `direction` and never re-derives flow.
+  `INTERNAL_TRANSFER` and split children store magnitudes; the reconciliation
+  matcher routes by direction (RECEIVED↔OUTGOING, ISSUED↔INCOMING). The CLI
+  `--amount` refuses a negative magnitude with an instructive localised error
+  naming the accepted form, never a bare "value invalid".
+- **Bad:** writing a negative amount to encode an expense; a `direction_from_amount`
+  helper reading `raw.amount < 0` downstream of the parse boundary; or a
+  read-tolerance / migration branch coercing a legacy signed-amount record — there
+  is no released data, old shapes are absent and refused, never bridged.
 
 ## Source
 
-ADR `2026-06-10-ledger-amount-direction-adr` (accepted); research
-`2026-06-10-ledger-amount-direction-research`; plan
-`2026-06-10-ledger-amount-direction-plan` (cluster C1). Companion rules:
-`aeat-calculation-grounding`, `no-silent-under-declaration`,
+ADR `2026-06-10-ledger-amount-direction-adr`; research/plan same stem (cluster
+C1). Companion: `aeat-calculation-grounding`, `no-silent-under-declaration`,
 `no-legacy-compatibility`, `ledger-derived-revisions-bundle-evidence`.
 
 ---
@@ -2078,61 +1916,45 @@ trigger: always_on
 ## Rule
 
 Every modelo calculation revision that derives any casilla from the ledger MUST
-bundle the typed ledger evidence — the contributing-transaction projections plus
-the manual fact-basis entries — pegged to the revision's snapshot fingerprint,
-and every export of such a revision MUST carry that evidence (or a resolvable
-in-system reference to it). An export of a ledger-derived revision that carries
-neither is refused.
+bundle the typed ledger evidence — the contributing-transaction projections plus the
+manual fact-basis entries — pegged to the revision's snapshot fingerprint, and every
+export of such a revision MUST carry that evidence (or a resolvable in-system
+reference to it). An export of a ledger-derived revision that carries neither is
+refused.
 
 ## Why
 
-The `modelo-export-evidence-parity` research (finding B) found that revision
-state stored only fingerprints (`LedgerFilingSnapshot`) — the fact basis that
-explains *why a casilla holds its value* was absent from both the persisted
-`CalculationRevision` and every export, so "why is casilla X this value" was
-unanswerable from a filing artefact alone. A human files outside the
-application; an artefact whose numbers cannot be re-derived from bundled
-evidence is legally frail. The `2026-06-03-modelo-export-evidence-parity-adr`
-decided that the typed evidence (signed amount, currency, direction,
-base/IVA/rate/category, irpf category, EU member state, FX, lifecycle, business
-proportion, legal_refs/source_refs, attachment/document-link ids per
-contributor, plus operator manual entries) rides inside the encrypted revision
-envelope bound by the same `snapshot_fingerprint`, so evidence and staleness
-share one content address. This is the data-carrying companion to
-[[aeat-calculation-grounding]] (provenance through boundaries) and
-[[no-silent-under-declaration]] (a casilla without an explainable basis must not
-file silently).
+`modelo-export-evidence-parity` research (finding B) found revision state stored only
+fingerprints (`LedgerFilingSnapshot`); the fact basis explaining *why a casilla holds
+its value* was absent from the persisted `CalculationRevision` and every export, so a
+filing artefact was legally frail (a human files outside the app; unre-derivable
+numbers cannot be defended). `2026-06-03-modelo-export-evidence-parity-adr` decided
+the typed evidence (signed amount, currency, direction, base/IVA/rate/category, irpf
+category, EU member state, FX, lifecycle, business proportion, legal_refs/source_refs,
+attachment/document-link ids per contributor, plus operator manual entries) rides
+inside the encrypted revision envelope bound by the same `snapshot_fingerprint`.
+Companion to [[aeat-calculation-grounding]] and [[no-silent-under-declaration]].
 
 ## How
 
-- **Good:** `compute_ledger_filing_evidence` projects the resolved
-  `source_transaction_ids` into typed `LedgerEvidenceRow`s plus
-  `ManualFactBasisEntry`s, binds them to the snapshot fingerprint, and the
-  `verify_modelo_revision` action captures it alongside the fingerprint snapshot
-  in one catalogue load; the evidence persists inside the encrypted
-  `CalculationRevision` and survives a strict save→load→equality roundtrip with
-  every defaultable field populated non-default.
-- **Good:** the capture asserts the evidence set covers the fingerprint set
-  (`_assert_evidence_covers_snapshot`); a bundle that drops a contributor present
-  in `source_transaction_ids` raises rather than silently omitting it.
-- **Good:** offline xls and online Sheets exports both read the same bundled
-  evidence and render an identical `Evidencia` surface, so the two transports are
-  evidence-identical.
-- **Bad:** persisting a ledger-derived revision with only the fingerprint
-  snapshot and no typed evidence — the casilla becomes unexplainable and the
-  export is not a self-contained filing artefact.
-- **Bad:** letting an export of a ledger-derived revision proceed when neither
-  the bundled evidence nor a resolvable reference is present.
-- **Bad:** asserting the evidence roundtrip against numbers hand-computed from
-  the same formula; the roundtrip must assert real reconstitution of the bundled
-  rows.
+- **Good:** `compute_ledger_filing_evidence` projects resolved
+  `source_transaction_ids` into typed `LedgerEvidenceRow`s plus `ManualFactBasisEntry`s
+  bound to the fingerprint; `verify_modelo_revision` captures it in one catalogue load,
+  persists it inside the encrypted `CalculationRevision`, and survives a strict
+  save→load→equality roundtrip with every defaultable field populated non-default.
+  `_assert_evidence_covers_snapshot` makes a bundle that drops a contributor present in
+  `source_transaction_ids` raise, and offline xls and online Sheets exports read the
+  same evidence to render an identical `Evidencia` surface.
+- **Bad:** persisting a ledger-derived revision with only the fingerprint snapshot and
+  no typed evidence (the casilla becomes unexplainable); letting an export proceed with
+  neither bundled evidence nor a resolvable reference; or asserting the evidence
+  roundtrip against numbers hand-computed from the same formula instead of real
+  reconstitution of the bundled rows.
 
 ## Source
 
-ADR `2026-06-03-modelo-export-evidence-parity-adr` (accepted); research
-`2026-06-03-modelo-export-evidence-parity-research`; plan
-`2026-06-03-modelo-export-evidence-parity-plan` (W01). Promoted per the
-[[vaultspec-codify]] discipline.
+ADR `2026-06-03-modelo-export-evidence-parity-adr` (accepted); research and plan
+(W01) of the same feature.
 
 ---
 name: ledger-evidence-bytes-not-links
@@ -2258,74 +2080,53 @@ trigger: always_on
 When authoring or grounding any regulatory value (a registry `legal_refs`→`corpus_ref`
 entry, a `corpus/normatives/html/*.html` excerpt, an `external_constants` figure), verify
 the legal text against the BUNDLED authoritative consolidated corpus already shipped under
-`src/aeat/_data/corpus/normatives/html/` FIRST — never author a new corpus excerpt from a
+`src/cadrumo/_data/corpus/normatives/html/` FIRST — never author a new corpus excerpt from a
 secondary source (a gestoría blog, a summary site, a paraphrase) without that
 cross-check, and prefer pointing `corpus_ref` at the bundled authoritative file over
 hand-authoring a duplicate excerpt.
 
 ## Why
 
-The honesty review of the grounding-completion campaign found a CRITICAL defect (finding
-C1): a módulos DT 32ª corpus excerpt was authored from a secondary source ("supercontable")
-with a fabricated year-list ("…2025 y 2026"), while the repository ALREADY bundled the
-authoritative consolidated LIRPF (`ley-35-2006.html#dttrigesimasegunda`) whose real text
-reads "en los ejercicios 2016 a 2024" and records the 2025/2026 extensions were DEROGADAS
-(BOE-A-2026-4667). The `required_text` corpus cross-check was tautological — the same author
-wrote both the excerpt and the `required_text`, so the gate validated internal consistency,
-not BOE faithfulness. The same root cause recurred as the M210 IRNR interest defect (a
-stale bundled corpus snippet phrased art. 25.1.f as EU/EEE-conditional, contributing to a
-wrong 24% rate where the law is 19%). And it recurred a third time as the IRPF menor-tres
-mínimo defect — the bundled `ley-35-2006-art-58.html` itself carried "3.000 euros" (despite
-a header asserting it was the official unchanged BOE text) where the AEAT manual and BOE
-state 2.800, grounding a wrong registry parameter and two tautological tests. Grounding a
-regulated calc value against a secondary-source or self-authored excerpt is how a wrong
-figure ships looking grounded; the bundled consolidated corpus is the faithful source the
-project already trusts and is the companion check to `registry-calculation-legal-grounding`
-(cite the binding provision) and `aeat-safety-legal-gates` (ground in BOE/AEAT, never
-invent). CRITICAL REFINEMENT (from the menor-tres + M210 cases): the bundled corpus is
-*preferred* over secondary sources but is NOT infallible — it can carry authored figure
-errors. For any numeric AMOUNT or RATE, cross-check the figure against the live BOE/AEAT
-consolidated text even when the bundled corpus already states it; a bundled-corpus figure
-is a strong default, not a substitute for confirming the number itself.
+Per audit `2026-06-14-aeat-grounding-completion-audit` (finding C1): a módulos DT 32ª
+excerpt authored from a secondary source carried a fabricated year-list while the repo
+already bundled the authoritative LIRPF text, and the `required_text` cross-check was
+tautological (same author wrote excerpt and required_text, validating internal consistency
+not BOE faithfulness) — the same root cause recurred in the M210 IRNR 24%-vs-19% defect and
+the menor-tres 3.000-vs-2.800 mínimo defect. CRITICAL REFINEMENT (menor-tres + M210): the
+bundled corpus is *preferred* over secondary sources but is NOT infallible — for any numeric
+AMOUNT or RATE, cross-check the figure against the live BOE/AEAT consolidated text even when
+the bundled corpus already states it. Companion to `registry-calculation-legal-grounding`
+(cite the binding provision) and `aeat-safety-legal-gates` (ground in BOE/AEAT, never invent).
 
 ## How
 
 - **Good:** before authoring a new legal entry, `rg` the bundled `ley-NNNN-AAAA.html`
-  consolidated file for the provision's anchor (e.g. `#dttrigesimasegunda`, `#a25`), read
-  the verbatim text, and point `corpus_ref` at that bundled file with a `required_text`
-  phrase distinctive enough to match only the target provision — so the cross-check
-  validates against authoritative text, not a self-written duplicate.
+  file for the provision's anchor (e.g. `#dttrigesimasegunda`, `#a25`), read the verbatim
+  text, and point `corpus_ref` at that bundled file with a `required_text` phrase distinctive
+  enough to match only the target provision — validating against authoritative text, not a
+  self-written duplicate.
 - **Good:** when the bundled corpus is a deliberately non-authoritative anchor snippet
-  (its `required_text` is empty / it carries a "Nota de catálogo" disclaimer), treat the
-  registry parameter as the calc authority, verify the value against the live BOE/AEAT
-  consolidation, and flag the snippet for an operator corpus refresh — do not trust the
-  snippet's prose as the rate authority.
-- **Good:** when a verification pass touches a numeric amount or rate, cross-check the
-  figure against the live BOE/AEAT consolidated text even if the bundled corpus already
-  states it — and if the bundled corpus is wrong, correct the corpus, the grounded
-  parameter, the legal-entry notes, and any tautological test that baked the wrong value, in
-  one atomic commit (the menor-tres 3.000→2.800 fix touched all four).
-- **Bad:** trusting a bundled-corpus AMOUNT/RATE without confirming the number itself against
-  live BOE/AEAT — the corpus can carry an authored figure error (3.000 vs 2.800) behind a
-  header that claims it is the official unchanged text, and the self-referential
-  `required_text` gate passes anyway.
+  (empty `required_text` / a "Nota de catálogo" disclaimer), treat the registry parameter as
+  the calc authority, verify the value against live BOE/AEAT, and flag the snippet for an
+  operator corpus refresh — do not trust the snippet prose as the rate authority.
+- **Good:** when a verification pass touches a numeric amount or rate, cross-check against
+  live BOE/AEAT even if the bundled corpus states it; if the bundled corpus is wrong, correct
+  the corpus, the grounded parameter, the legal-entry notes, and any tautological test that
+  baked the wrong value in ONE atomic commit (the menor-tres 3.000→2.800 fix touched all four).
 - **Bad:** authoring a new `corpus/normatives/html/<provision>.html` excerpt by copying a
-  gestoría blog or summary site, then citing it from a registry legal entry — the year-list
-  / scope / figures may be stale or wrong, and the self-referential `required_text` gate
-  passes anyway (the C1 fabrication pattern).
-- **Bad:** stamping such an agent-authored legal-authority entry `review_status = "reviewed"`
+  gestoría blog or summary site and citing it from a registry legal entry, or trusting a
+  bundled-corpus AMOUNT/RATE without confirming the number against live BOE/AEAT — the
+  self-referential `required_text` gate passes anyway (the C1 fabrication pattern).
+- **Bad:** stamping an agent-authored legal-authority entry `review_status = "reviewed"`
   under the operator's name without the bundled-corpus cross-check — the legal catalogue is
   a human-reviewed, filing-grade surface; agent-prepared entries must record honest
-  `reviewed_by` provenance and be grounded in the bundled authoritative text pending operator
-  re-stamp.
+  `reviewed_by` provenance and be grounded in bundled authoritative text pending operator re-stamp.
 
 ## Source
 
-Audit `2026-06-14-aeat-grounding-completion-audit` (finding C1, reinforced by the M210
-art. 25.1.f corpus-staleness finding). Companion rules: `registry-calculation-legal-grounding`
-(cite the binding provision), `aeat-safety-legal-gates` (ground in BOE/AEAT, never invent),
-`aeat-calculation-grounding` (provenance through boundaries). Promoted per the
-`vaultspec-codify` discipline after the lesson held across multiple findings in one campaign.
+Audit `2026-06-14-aeat-grounding-completion-audit` (finding C1 + M210 corpus-staleness).
+Companion: `registry-calculation-legal-grounding`, `aeat-safety-legal-gates`,
+`aeat-calculation-grounding`.
 
 ---
 name: local-filed-observations-are-non-official-evidence
@@ -2336,56 +2137,50 @@ trigger: always_on
 
 ## Rule
 
-Observations persisted by the local `file` flow (`persist_filed_revision_observation`) MUST
-carry a non-official `source_kind` (`app_filing`) and MUST NEVER be added to
-`_OFFICIAL_SOURCE_KINDS` — the set that satisfies the cross-period clean-state gate
-(`aeat_sede_justificante`, `aeat_sede_live_capture`, `aeat_csv_register`). Automatic
-cross-period `previous_filing` carry may feed calculate/draft from these observations, but
-they must never substitute for external AEAT filing evidence. A same-filing-year local chain
-may reach local verify/export only when the chain is present, value-consistent,
-revision-confirmed, and its only blockers are the official-evidence delta; that path MUST
-surface a non-blocking non-official-local-chain advisory and MUST NOT assert AEAT acceptance.
-Cross-year priors, operator-manual sources, missing filing/observation data, and value or
+Observations persisted by the local `file` flow
+(`persist_filed_revision_observation`) MUST carry a non-official `source_kind`
+(`app_filing`) and MUST NEVER be added to `_OFFICIAL_SOURCE_KINDS` — the set that
+satisfies the cross-period clean-state gate (`aeat_sede_justificante`,
+`aeat_sede_live_capture`, `aeat_csv_register`). Automatic cross-period
+`previous_filing` carry may feed calculate/draft from these observations, but they
+must never substitute for external AEAT filing evidence. A same-filing-year local
+chain may reach local verify/export ONLY when the chain is present,
+value-consistent, revision-confirmed, and its only blockers are the
+official-evidence delta; that path MUST surface a non-blocking
+non-official-local-chain advisory and MUST NOT assert AEAT acceptance. Cross-year
+priors, operator-manual sources, missing filing/observation data, and value or
 revision divergence remain blocking.
 
 ## Why
 
-Wave C wired automatic local cross-period carry: local `file` now persists the filed
-revision's observations so a later period's calculate can auto-carry the prior value. The
-load-bearing safety decision is the `source_kind`. The cross-period clean-state guard blocks
-unsafe dependent filings whose upstream evidence is non-official
-(`LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`). Decision B later narrowed one reachability gap:
-same-filing-year local reconstruction may proceed to local export with a warning when every
-upstream dependency is otherwise clean and only the official-evidence delta is missing. If
-`app_filing` were treated as official, an unevidenced local-only chain could silently claim
-AEAT-evidenced acceptance, violating `aeat-safety-legal-gates` and
-`no-silent-under-declaration`. Stamping the carry observation non-official keeps the prior
-value available for calculation while still disclosing the local-only basis and still demanding
-a real justificante / CSV register / live capture before any official-evidence assertion.
+Wave C wired automatic local cross-period carry, so `source_kind` is the
+load-bearing safety decision: the clean-state guard blocks unsafe dependent
+filings whose upstream evidence is non-official
+(`LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE`). Treating `app_filing` as official
+would let an unevidenced local-only chain silently claim AEAT-evidenced
+acceptance, violating `aeat-safety-legal-gates` and `no-silent-under-declaration`.
+Decision B (`2026-06-19-crossperiod-filing-deadlock-adr`) narrowed the
+same-filing-year reachability gap to the advisory path above.
 
 ## How
 
-- **Good:** `persist_filed_revision_observation` stamps `source_kind="app_filing"`; the carry
-  resolver reads it to populate a calculate binding; a same-filing-year, value-consistent,
-  revision-confirmed local chain whose only blockers are the official-evidence delta reaches
-  local verify/export with a non-blocking non-official-local-chain advisory.
-- **Good:** cross-year local chains, operator-manual sources, missing filing/observation data,
-  and value or revision divergence remain blocking; the official-evidence delta still raises
-  `LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE` outside the narrow same-year advisory scope.
-- **Good:** a regression test asserts `app_filing not in _OFFICIAL_SOURCE_KINDS` and fails the
-  moment it is added.
-- **Bad:** adding `app_filing` to `_OFFICIAL_SOURCE_KINDS` to make cross-period filing "just
-  work" — it launders an unevidenced local chain past the evidence gate.
-- **Bad:** persisting the local-filed observation under an official `source_kind` to reuse the
-  live-capture path verbatim — the non-official kind is the deliberate delta from that template.
+- **Good:** `persist_filed_revision_observation` stamps `source_kind="app_filing"`;
+  the carry resolver reads it to populate a calculate binding; a same-filing-year,
+  value-consistent, revision-confirmed local chain whose only blockers are the
+  official-evidence delta reaches local verify/export with a non-blocking
+  advisory. Cross-year chains, operator-manual sources, missing data, and
+  value/revision divergence stay blocking, raising
+  `LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE` outside the narrow same-year scope. A
+  regression test asserts `app_filing not in _OFFICIAL_SOURCE_KINDS`.
+- **Bad:** adding `app_filing` to `_OFFICIAL_SOURCE_KINDS` (launders an unevidenced
+  chain past the gate), or persisting the local-filed observation under an official
+  `source_kind` to reuse the live-capture path verbatim.
 
 ## Source
 
-ADR `2026-06-09-modelo-iva-routing-carry-adr` (accepted) codification candidate, ruling D1;
-research `2026-06-09-modelo-iva-routing-carry-research`; commit `10167440f` (Wave C carry).
-Refined same-year Decision B scope: ADR `2026-06-19-crossperiod-filing-deadlock-adr`,
-commit `84add274d`.
-Companion to `aeat-safety-legal-gates`, `no-silent-under-declaration`, and
+ADR `2026-06-09-modelo-iva-routing-carry-adr` (ruling D1), commit `10167440f`;
+same-year scope refined by `2026-06-19-crossperiod-filing-deadlock-adr`, commit
+`84add274d`. Companion: `aeat-safety-legal-gates`, `no-silent-under-declaration`,
 `ledger-derived-revisions-bundle-evidence`.
 
 ---
@@ -2409,87 +2204,56 @@ fichero-BOE (`.boe`) export, not only the workbook transport. `export_draft` MUS
 before it writes any bytes, assert that every casilla that is a calculation RESULT
 (declares a formula) or is schema-required, and that the
 `CalculationCompletenessManifest` lists AND the official record files (`manifest ∩
-representable`, for the draft's disposition), carries a real value on disk; such a
-casilla rendered blank means the calculation did not populate it — a
-structurally-thin file behind a valid SHA-256 digest — and MUST raise a hard
-`FilingExportError` that enumerates every missing casilla with its official number
-and segmento. Optional operator-input casillas (retenciones, prior payments,
-deductions the taxpayer may legitimately not have — e.g. Modelo 131 casillas
-02/08/09/12/14) are NOT required to carry a value: a blank slot is a valid zero,
-not a thin file, so they are excluded from the required set. The rendered set keys
-on value presence (`ModeloValue.value is not None`), never on casilla-id
-membership, because `build_draft` emits an `EMPTY` (`value=None`) row for every
-declared casilla. The gate is scoped to `format == "fixed_width"`; an
+representable`, for the draft's disposition), carries a real value on disk; a blank
+such casilla means the calculation did not populate it (a structurally-thin file
+behind a valid SHA-256 digest) and MUST raise a hard `FilingExportError`
+enumerating every missing casilla with its official number and segmento. Optional
+operator-input casillas (retenciones, prior payments, deductions the taxpayer may
+legitimately not have — e.g. Modelo 131 casillas 02/08/09/12/14) are NOT required
+to carry a value: a blank slot is a valid zero, excluded from the required set. The
+rendered set keys on value presence (`ModeloValue.value is not None`), never on
+casilla-id membership, because `build_draft` emits an `EMPTY` (`value=None`) row for
+every declared casilla. The gate is scoped to `format == "fixed_width"`; an
 `xml_dictionary` export omits an absent casilla as a legitimately-absent optional
 element, so the blank-slot thinness does not apply.
 
 ## Why
 
-The `modelo-export-workbook-parity` research (finding A) found the calc-sheets
-plan already mirrored registry structure and emitted live formulas but wrote no
-formatting, marked no explicit start/final, and had no parity gate — so an
-operator reviewing a filing artefact before submitting it outside the
-application could not see input→result flow and nothing caught structural drift
-from the official layout. The `2026-06-03-modelo-export-workbook-parity-adr`
-decided presentation is typed plan facets (number formats, section headers,
-start/final anchors, the `Evidencia` surface) defined once in the builder and
-materialised identically by both transports, and that "official parity" is
-checked against the same registry authority the calculation engine uses
+Per `2026-06-03-modelo-export-workbook-parity-adr` (research finding A), the
+calc-sheets plan mirrored registry structure but wrote no formatting, marked no
+start/final, and had no parity gate, so an operator could not see input→result flow
+and nothing caught structural drift. Presentation is now typed plan facets defined
+once in the builder and materialised identically by both transports, and "official
+parity" is checked against the same registry authority the engine uses
 (`CasillaDefinition.number`/`segmento`/`section`, the
-`CalculationCompletenessManifest` projected from the AEAT Diseño de Registros) —
-not a separate hand-maintained spec. This is the export-surface companion to
-[[aeat-registry-authority-flow]] (the registry is the authority) and
-[[ledger-derived-revisions-bundle-evidence]] (the evidence the workbook renders).
+`CalculationCompletenessManifest`) — not a separate hand-maintained spec.
 
 ## How
 
-- **Good:** `build_export_plan(snapshot)` emits one `SheetExportPlan` carrying
-  value/formula cells, number formats, section headers, start/final anchors,
-  protected ranges, and evidence; `build_offline_workbook` (openpyxl) and
-  `apply_export_plan` (Sheets API) are two transports of that one plan, and a
-  conformance test asserts they render the same content.
-- **Good:** the parity gate asserts the exported casilla set equals the
-  completeness-manifest required set (numbering + segmento), section ordering
-  follows the registry declaration order, every computed casilla carries a live
-  formula, and the start/final anchors are present and correctly placed; a
-  divergence is a hard CI failure.
-- **Good:** the gate reports coverage honestly — a modelo whose completeness
-  manifest is incomplete yields a weaker gate that says so, rather than implying
-  full parity.
+- **Good:** `build_export_plan(snapshot)` emits one `SheetExportPlan` (value/formula
+  cells, number formats, section headers, start/final anchors, protected ranges,
+  evidence); `build_offline_workbook` (openpyxl) and `apply_export_plan` (Sheets API)
+  are two transports of that one plan, asserted to render the same content; the
+  parity gate asserts casilla set = completeness-manifest required set (numbering +
+  segmento), registry-declaration section order, and a live formula on every computed
+  casilla — a divergence is a hard CI failure.
 - **Good:** `assert_export_mirrors_manifest` runs inside `export_draft` after the
-  rendered set is known and before `output_path.write_bytes`; a fixed-width `.boe`
-  that would omit a required, representable casilla panics with an enumerated
-  `FilingExportError` naming each casilla's number and segmento, and no file is
-  written.
+  rendered set is known (filtering `v.value is not None`) and before
+  `output_path.write_bytes`; a fixed-width `.boe` omitting a required, representable
+  casilla panics with an enumerated `FilingExportError` and no file is written.
 - **Bad:** computing the rendered set from `{v.casilla_id for v in draft.values}`
-  (id membership) instead of filtering `v.value is not None` — every declared
-  casilla, including the `EMPTY` ones, then counts as rendered and the gate never
-  fires on the real thin draft.
-- **Bad:** letting a fixed-width `.boe` export write a structurally-thin file (a
-  required casilla rendered blank) because the digest is valid — the digest is a
-  byte-integrity lock, not a completeness signal.
-- **Bad:** writing formatting, start/final, or evidence in one transport but not
-  the other, or computing them at apply time instead of in the plan — offline
-  and online then drift.
-- **Bad:** asserting official parity against a separate hand-maintained layout
-  spec instead of the registry completeness manifest, introducing a second drift
-  surface.
-- **Bad:** downgrading a structural divergence to a warning; the official
-  casilla set, numbering, and section order are a gate, not a hint.
+  (id membership) instead of `v.value is not None` — every `EMPTY` casilla counts as
+  rendered and the gate never fires on the real thin draft; or writing a thin `.boe`
+  because the digest is valid (the digest is a byte-integrity lock, not completeness).
+- **Bad:** writing formatting/start/final/evidence in one transport but not the
+  other, asserting parity against a separate hand-maintained spec, or downgrading a
+  structural divergence to a warning.
 
 ## Source
 
-ADR `2026-06-03-modelo-export-workbook-parity-adr` (accepted); research
-`2026-06-03-modelo-export-workbook-parity-research`; plan
-`2026-06-03-modelo-export-evidence-parity-plan` (W03/W04/W05). Promoted per the
-[[vaultspec-codify]] discipline. The fichero-BOE transport binding was added by
-ADR `2026-07-01-fichero-boe-parity-gate-adr` (accepted) after the gate completed a
-full implement→review→fix→validate cycle: an independent code review found the
-rendered set keyed on casilla-id membership rather than value presence (so the gate
-never fired on the real `EMPTY` thin state), which was fixed and locked with a test
-that reproduces the production state. Enforced by
-`test_export_completeness_gate.py`, `test_export_completeness_sets.py`, and
-`test_fichero_boe_completeness_parity.py`.
+ADR `2026-06-03-modelo-export-workbook-parity-adr`; fichero-BOE binding ADR
+`2026-07-01-fichero-boe-parity-gate-adr`. Enforced by `test_export_completeness_gate.py`,
+`test_export_completeness_sets.py`, `test_fichero_boe_completeness_parity.py`.
 
 ---
 name: modelo-identifiers-use-core-enum
@@ -2500,62 +2264,49 @@ trigger: always_on
 
 ## Rule
 
-Production code MUST reference AEAT modelo identifiers through the
-`aeat.core.Modelo` StrEnum, never as bare three-digit string literals. The
-`src/aeat/core/tests/test_modelo_string_usage.py` AST gate enforces this; a
-genuine non-identifier occurrence (a regulatory article number, a digit-set
-membership test, a CLI command-name token) is recorded in that gate's allowlist
-with a stated reason. Use the bare member (`Modelo.M303`) in comparison,
-membership, and dict-key positions; reserve `.value` (`Modelo.M303.value`) for
-plain-`str` contracts (pydantic field values, call arguments, parameter /
-CLI-option defaults, returns). A modelo that exists as a code-referenced
-identifier but has no registry definition (a retired form) is added to the enum
-and listed in `aeat.core.NON_REGISTRY_MODELOS`, which the registry-parity gate
-excludes.
+Production code MUST reference AEAT modelo identifiers through the `cadrumo.core.Modelo`
+StrEnum, never as bare three-digit string literals. The
+`src/cadrumo/core/tests/test_modelo_string_usage.py` AST gate enforces this; a genuine
+non-identifier occurrence (a regulatory article number, a digit-set membership test, a
+CLI command-name token) is recorded in that gate's allowlist with a stated reason. Use
+the bare member (`Modelo.M303`) in comparison, membership, and dict-key positions;
+reserve `.value` (`Modelo.M303.value`) for plain-`str` contracts (pydantic field values,
+call arguments, parameter/CLI-option defaults, returns). A modelo that is a
+code-referenced identifier but has no registry definition (a retired form) is added to
+the enum and listed in `cadrumo.core.NON_REGISTRY_MODELOS`, which the registry-parity
+gate excludes.
 
 ## Why
 
-The `2026-06-10-modelo-enum-hardening-adr` decision and its research found
-roughly 250 sites referencing modelo ids as bare three-digit string literals,
-so a typo or a retired code could not be caught at a type boundary and the
-closed set was scattered. Naming them through one core `StrEnum` gives the
-identifiers a single typed home, makes the retired-versus-active distinction
-explicit (the suppressed M037 censo simplificada is a code-referenced identifier
-with no registry TOML), and lets the AST gate keep the convention from rotting.
-Because a `StrEnum` member compares, hashes, `str()`-formats, and JSON-serialises
-identically to its value, the substitution is behaviour-preserving; the
-member-versus-`.value` split keeps stored and passed types clean across pydantic
-round-trips. The enum's registry-backed members are bound to
-`registry_modelo_codes()` by a parity gate, so a new registry modelo without a
-matching enum member fails loudly.
+`2026-06-10-modelo-enum-hardening-adr` and its research found ~250 sites using bare
+three-digit literals, so a typo or retired code could not be caught at a type boundary.
+One core `StrEnum` gives them a single typed home and makes the retired-vs-active
+distinction explicit (suppressed M037 has no registry TOML); a `StrEnum` member
+compares/hashes/`str()`s/JSON-serialises identically to its value, so the substitution
+is behaviour-preserving and the member-vs-`.value` split keeps stored/passed types clean
+across pydantic round-trips. Registry-backed members are bound to
+`registry_modelo_codes()` by a parity gate, so a new registry modelo without a member
+fails loudly.
 
 ## How
 
-- **Good:** `if work_unit.modelo != Modelo.M303: ...` — comparison uses the bare
-  member.
-- **Good:** `_MODELO_APPLICABILITY_RULES = {Modelo.M100: ..., Modelo.M130: ...}`
-  — dict keys are members (they hash as their string value).
-- **Good:** `modelo=Modelo.M720.value` for a `str`-typed field value, and
-  `modelo: Literal[Modelo.M100] = Modelo.M100` for a pinned field — `.value` for
-  the plain-`str` contract, the member inside `Literal[...]`.
-- **Good:** a retired identifier (`M037`) is an enum member listed in
-  `NON_REGISTRY_MODELOS` and pinned by a test to raise from `validate_modelo`.
-- **Bad:** `if work_unit.modelo != "303":` or `{"347": ..., "349": ...}` — bare
-  string literals; the AST gate fails until they reference `Modelo`.
-- **Bad:** inventing a `Modelo.M<code>` member for a code that is neither in the
-  registry-bound set nor declared in `NON_REGISTRY_MODELOS` (e.g. a `Modelo.M037`
-  reference before the carve-out existed) — it raises `AttributeError`.
-- **Bad:** silencing the gate by adding an allowlist entry for a real identifier
-  occurrence instead of converting it; the allowlist is only for genuine
-  non-modelo lookalikes, each with a stated reason.
+- **Good:** `if work_unit.modelo != Modelo.M303:` and `{Modelo.M100: ..., Modelo.M130:
+  ...}` use bare members (hash as their value); `modelo=Modelo.M720.value` for a
+  `str`-typed field and `modelo: Literal[Modelo.M100] = Modelo.M100` for a pinned field
+  (`.value` for the plain-`str` contract, member inside `Literal[...]`). A retired
+  identifier (`M037`) is an enum member listed in `NON_REGISTRY_MODELOS` and pinned by a
+  test to raise from `validate_modelo`.
+- **Bad:** `if work_unit.modelo != "303":` or `{"347": ..., "349": ...}` (AST gate
+  fails); inventing a `Modelo.M<code>` for a code in neither the registry-bound set nor
+  `NON_REGISTRY_MODELOS` (raises `AttributeError`); or silencing the gate with an
+  allowlist entry for a real identifier instead of converting it — the allowlist is only
+  for genuine non-modelo lookalikes, each with a stated reason.
 
 ## Source
 
-ADR `2026-06-10-modelo-enum-hardening-adr`; research
-`2026-06-10-modelo-enum-hardening-research`. Enforced by
-`src/aeat/core/tests/test_modelo_string_usage.py` (AST gate) and
-`src/aeat/core/tests/test_modelo.py` (registry-parity plus non-registry
-carve-out). Promoted per the `vaultspec-codify` discipline.
+ADR `2026-06-10-modelo-enum-hardening-adr` and research. Enforced by
+`test_modelo_string_usage.py` (AST gate) and `test_modelo.py` (registry-parity plus
+non-registry carve-out).
 
 ---
 name: modelo-locales-cli-authority
@@ -2566,7 +2317,7 @@ trigger: always_on
 
 ## Rule
 
-Manage modelo schema-local translation TOML only through `python -m aeat.locales modelo ...`; never hand-edit registry-local `locales/*.toml` files for routine scaffold, set, remove, audit, or coverage work.
+Manage modelo schema-local translation TOML only through `python -m cadrumo.locales modelo ...`; never hand-edit registry-local `locales/*.toml` files for routine scaffold, set, remove, audit, or coverage work.
 
 ## Why
 
@@ -2574,11 +2325,11 @@ The accepted ADR `2026-06-11-modelo-locales-cli-adr` makes the modelo locale CLI
 
 ## How
 
-- Good: run `python -m aeat.locales modelo coverage en 130 2019-y-siguientes` before and after translation work to record per-modelo progress.
-- Good: run `python -m aeat.locales modelo scaffold ca 303 2023-y-siguientes` to align a selected schema-local catalogue without overwriting translated leaves.
-- Good: run `python -m aeat.locales modelo set hu 130 2019-y-siguientes labels 01 "Bevételek"` to update one translated leaf after registry-key validation.
+- Good: run `python -m cadrumo.locales modelo coverage en 130 2019-y-siguientes` before and after translation work to record per-modelo progress.
+- Good: run `python -m cadrumo.locales modelo scaffold ca 303 2023-y-siguientes` to align a selected schema-local catalogue without overwriting translated leaves.
+- Good: run `python -m cadrumo.locales modelo set hu 130 2019-y-siguientes labels 01 "Bevételek"` to update one translated leaf after registry-key validation.
 - Good: leave Spanish schema-local TOML absent unless a future ADR explicitly changes the fallback model; the official Spanish `CasillaDefinition.label` remains the legal source.
-- Bad: opening `src/aeat/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/locales/en.toml` in an editor to add or remove keys by hand.
+- Bad: opening `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2023-y-siguientes/locales/en.toml` in an editor to add or remove keys by hand.
 - Bad: treating scaffold placeholders whose value equals the schema key as completed translations.
 - Bad: moving official Spanish schema labels into locale TOML or replacing schema `label` values with translated operator-facing text.
 
@@ -2593,7 +2344,7 @@ trigger: always_on
 
 Every `ModeloSourceResolver` merged to main MUST be enrolled in the live calculate
 mesh (`merge_source_resolutions` in
-`src/aeat/application/modelo/_calculation_actions.py`) or deleted; every registry
+`src/cadrumo/application/modelo/_calculation_actions.py`) or deleted; every registry
 binding `source` kind MUST be a member of the enrolled-or-explicitly-deferred set
 (`_BUCKET_AGGREGATION_OWNED_SOURCES` ∪ `DEFERRED_SOURCE_KINDS`, enforced by
 `assert_no_novel_source_kinds`); and `collect_unhandled_source_diagnostics` MUST
@@ -2651,80 +2402,59 @@ canonical state is the only state; old is deleted, not maintained.
 
 ## Why
 
-There is no released version whose data must survive an upgrade, so every
-migration pass scans for rows that cannot exist, every read-tolerance branch
-guards against a shape nothing writes, and every "legacy path" is dead weight
-that obscures the canonical flow and accretes test surface defending behaviour
-no caller needs. Operator directive recorded 2026-06-10: "we should NOT be
-supporting any legacy migration, legacy schema, legacy, retired or old
-backwards compatibility. Basically old is to be deleted, and we're working
-towards the future with ZERO legacy code support. This is an unreleased
-pre-beta project. There's no backwards looking functionality support to
-carry." This rule is the deletion-side companion to the architecture-boundaries
-rule (which forbids INTRODUCING shims and deprecation paths); this one mandates
-REMOVING the legacy surfaces that already exist. The zero-legacy-purge research
-inventory (`2026-06-10-zero-legacy-purge-research`) is the worked deletion
-backlog.
+Per operator directive 2026-06-10 (backing inventory
+`2026-06-10-zero-legacy-purge-research`): no released version's data must survive an
+upgrade, so every migration pass, read-tolerance branch, and "legacy path" is dead
+weight that obscures the canonical flow and defends behaviour no caller needs. This
+is the deletion-side companion to `aeat-architecture-boundaries` (which forbids
+INTRODUCING shims); this one mandates REMOVING legacy surfaces that already exist.
 
 ## How
 
-- **Delete, do not bridge.** A from-birth deterministic key schema needs no
-  migration from a randomized-key past — delete the migration module, its
-  bootstrap call site, and its harness, not refactor it.
-- **Refuse, do not tolerate.** When an envelope/prefix/typed shape is written
-  from birth, the read path strips it and RAISES on a missing prefix (it can
-  only mean corruption now), never silently returns the raw legacy form.
+Keep/delete distinctions (each normative):
+
+- **Delete, do not bridge.** Delete a from-birth deterministic-key migration
+  module, its bootstrap call site, and harness — do not refactor it.
+- **Refuse, do not tolerate.** A read path for a written-from-birth
+  envelope/prefix/typed shape RAISES on a missing prefix (corruption now), never
+  silently returns the raw legacy form.
 - **CREATE is not migration — keep it.** Fresh-schema CREATE/bootstrap that
-  materialises the current shape on first access is forward-functional. An
-  ALTER pass that upgrades an OLDER table to the current shape is legacy —
-  delete it.
-- **External-world variability is not our legacy — keep it.** Resilience for
-  AEAT portal variations, BOE corpus formats, third-party PDF producer quirks,
-  and AEAT regulatory revisions (each modelo revision year is CURRENT law for
-  its filing year) is forward function, not backwards compatibility.
-- **AEAT regulatory status is never evidence of CODE legacy — never conflate
-  the two.** "AEAT (the Spanish tax authority) retired or superseded a modelo,
-  revision, or rate as a matter of policy" is orthogonal to "our code carries a
-  backwards-compatibility shim." A real modelo the application supports (e.g.
-  `Modelo.M037`, no longer in general use but still supported) is a CURRENT
-  product feature, not legacy code — keep it. Only delete a surface when it
-  exists to read or migrate data that an OLDER VERSION OF THIS APP wrote.
-- **A forward version FIELD is not legacy — keep it.** A `schema_version`
-  marker that lets a future version read today's records, or a
-  `max_supported_version` ceiling that refuses a FUTURE shape, is
-  forward-compatibility. Only code that BRANCHES on an OLD version is legacy.
-- **Bad:** `if payload is None: payload = load(_legacy_cleartext_key(...))` —
-  a read fallback under the current hardened key for pre-hardening records that
-  cannot exist on an unreleased app. Delete the function and the fallback.
-- **Bad:** an `ensure_*_columns` ALTER loop that adds today's columns to a
-  table an older version CREATEd. Delete it; the CREATE already has them.
-- **Key-management caution:** deleting a key-schedule or DEK-derivation branch
-  on inference can strand encrypted data. Confirm the creation path mints only
-  the current schedule before deleting an "old" one; this is the single place
-  where a wrong deletion is unrecoverable, so it is owner-gated, not autonomous.
+  materialises the current shape on first access is forward-functional; an ALTER
+  pass upgrading an OLDER table is legacy — delete it.
+- **External-world variability is not our legacy — keep it.** Resilience for AEAT
+  portal variations, BOE corpus formats, PDF producer quirks, and AEAT regulatory
+  revisions (each modelo revision year is CURRENT law for its filing year).
+- **AEAT regulatory status is never CODE legacy — never conflate.** A real modelo
+  still supported (e.g. `Modelo.M037`) is a CURRENT product feature. Only delete a
+  surface that exists to read or migrate data an OLDER VERSION OF THIS APP wrote.
+- **A forward version FIELD is not legacy — keep it.** A `schema_version` marker or
+  a `max_supported_version` ceiling that refuses a FUTURE shape is
+  forward-compatibility; only code that BRANCHES on an OLD version is legacy.
+- **Bad:** `if payload is None: payload = load(_legacy_cleartext_key(...))` (a read
+  fallback for pre-hardening records that cannot exist), or an `ensure_*_columns`
+  ALTER loop adding today's columns to a table an older version CREATEd — delete both.
+- **Key-management caution:** deleting a key-schedule / DEK-derivation branch can
+  strand encrypted data; confirm the creation path mints only the current schedule
+  before deleting an "old" one — owner-gated, not autonomous.
 
 ## Source
 
-Operator directive recorded 2026-06-10 during the quality-hardening campaign on
-the `chore/eliminate-shims` branch. Backing inventory:
-`2026-06-10-zero-legacy-purge-research`. Companion rule:
-`aeat-architecture-boundaries` (no new shims / deprecation paths).
+Operator directive 2026-06-10 (`chore/eliminate-shims`); inventory
+`2026-06-10-zero-legacy-purge-research`. Companion: `aeat-architecture-boundaries`.
 
 ## Status
 
-Active and unchanged for the pre-release compatibility regime. This rule governs
-in full while `aeat.core.COMPATIBILITY_REGIME` is `PRE_RELEASE` (today):
-delete-not-migrate, floors chase current, no read-tolerance of pre-current shapes.
-The transition to the post-release durability-mandatory regime is governed by the
-companion rule `compatibility-lifecycle-checkpoint` (ADR
-`2026-07-09-compatibility-lifecycle-adr`), which switches on the one-way
-`COMPATIBILITY_REGIME` constant. At the checkpoint flip this rule does not die — it
-narrows to "no legacy beyond the released durability floor": read-tolerance of
-shapes nothing released wrote, and shims/aliases, stay forbidden in both regimes.
-Installing the dormant regime constant, empty upgrader registries, and the
-regime-aware gates does not violate this rule — they read no old shapes and migrate
-nothing, the same blessed category as the `max_supported_version` forward-ceiling
-this rule already keeps.
+Active and unchanged for the pre-release regime, governing in full while
+`cadrumo.core.COMPATIBILITY_REGIME` is `PRE_RELEASE`: delete-not-migrate, floors
+chase current, no read-tolerance of pre-current shapes. The transition to the
+post-release regime is governed by `compatibility-lifecycle-checkpoint` (ADR
+`2026-07-09-compatibility-lifecycle-adr`), switched on the one-way
+`COMPATIBILITY_REGIME` constant. At the flip this rule narrows to "no legacy beyond
+the released durability floor": read-tolerance of shapes nothing released wrote, and
+shims/aliases, stay forbidden in both regimes. Installing the dormant regime
+constant, empty upgrader registries, and the regime-aware gates does not violate
+this rule — they read no old shapes and migrate nothing (same blessed category as
+the `max_supported_version` forward-ceiling this rule keeps).
 
 ---
 name: no-silent-under-declaration
@@ -2735,57 +2465,46 @@ trigger: always_on
 
 ## Rule
 
-A modelo verify gate MUST NOT grant `verified_complete` with zero findings on a
-draft that under-declares: whenever a positive economic input is declared (e.g.
-resultado contable, rendimiento de módulos, ingresos) but the dependent base or
-cuota resolves to zero and no offsetting reduction is declared, the gate MUST
-surface at least an ADVISORY finding. A human files outside the application, so an
-explicit operator-facing alert — never a silent grant — is the minimum safeguard
-against filing a zero-tax return on positive activity.
+A modelo verify gate MUST NOT grant `verified_complete` with zero findings on a draft
+that under-declares: whenever a positive economic input is declared (resultado contable,
+rendimiento de módulos, ingresos) but the dependent base or cuota resolves to zero and
+no offsetting reduction is declared, the gate MUST surface at least an ADVISORY finding.
+A human files outside the application, so an explicit operator-facing alert — never a
+silent grant — is the minimum safeguard against filing a zero-tax return on positive
+activity.
 
 ## Why
 
-Round-30 CLI persona testimonials and a coordinator reproduction found that the
-Modelo 200 verify gate returned `granted_verificado_completo = true,
-finding_count = 0` for a sociedad with resultado contable €140.000 but base
-imponible `DP200014:00552 = 0` and cuota `DP200014:00562 = 0` — a silent
-under-declaration the gate could not surface. The root cause was a calculation
-chain modelled only partway (the base imponible casilla is a bare manual input
-with no derivation from the resultado contable), so a positive-result filer who
-does not also enter the base files zero. The durable fix is to model the
-determination so a zero base is computed, not silently omitted; until that lands,
-the gate must at least alert. See ADR `2026-06-02-modelo-200-base-determination`
-and the round-30 testimonial audit. The same shape recurs across modelos whose
-engines are partially modelled (M131 estimación objetiva rendimiento, multi-row
-informativas), so the discipline is project-wide, not M200-specific.
+Round-30 CLI persona testimonials and a coordinator reproduction found the M200 verify
+gate returned `granted_verificado_completo = true, finding_count = 0` for a sociedad
+with resultado contable €140.000 but base imponible `DP200014:00552 = 0` and cuota
+`DP200014:00562 = 0` — the root cause a partially-modelled chain (base imponible a bare
+manual input with no derivation from resultado contable). The durable fix models the
+determination so a zero base is computed; until then the gate must alert. The shape
+recurs across partially-modelled engines (M131 objetiva rendimiento, multi-row
+informativas), so the discipline is project-wide. ADR
+`2026-06-02-modelo-200-base-determination-adr`; round-30 testimonial audit.
 
 ## How
 
-- **Good (worked example):** the Modelo 200 revision declares an ADVISORY
-  `verification_predicate` `implies_nonzero(["00501", "DP200014:00552"])`. The
-  `implies_nonzero` evaluator holds trivially when the antecedent is ≤ 0 (no false
-  positive on losses) and fires only when the antecedent is strictly positive and
-  the consequent is zero. As ADVISORY it surfaces a non-blocking WARNING (a
-  legitimately zero base via BIN compensation or correcciones remains permissible)
-  while making the under-declaration non-silent. Grounded with `legal_refs`.
-- **Good:** when a calculation engine is later completed so the dependent value is
-  computed (not manual), the silent-zero becomes impossible and the advisory can be
-  upgraded to a `BLOCKING_RULE` consistency check between computed and entered
-  values, or retired.
-- **Bad:** shipping a partially-modelled calc chain (a manual base/result casilla
-  with no derivation and no guard) so the verify gate grants `verified_complete`
-  with `finding_count = 0` on positive economic input — the operator gets no signal
-  that the return under-declares.
-- **Bad:** using a `BLOCKING_RULE` guard that refuses legitimate
-  positive-result/zero-base filings (negative result, full BIN compensation,
-  exemptions). The guard must distinguish the suspicious case (positive antecedent,
-  zero consequent) and stay advisory while legitimate zero-base cases exist.
+- **Good:** the M200 revision declares an ADVISORY `verification_predicate`
+  `implies_nonzero(["00501", "DP200014:00552"])`; the evaluator holds trivially when the
+  antecedent is ≤ 0 (no false positive on losses) and fires only when the antecedent is
+  strictly positive and the consequent zero, surfacing a non-blocking WARNING
+  (legitimately zero base via BIN compensation or correcciones stays permissible),
+  grounded with `legal_refs`. Once the engine computes the value, the advisory can be
+  upgraded to a `BLOCKING_RULE` computed-vs-entered consistency check, or retired.
+- **Bad:** shipping a manual base/result casilla with no derivation and no guard so the
+  gate grants `verified_complete` with `finding_count = 0` on positive input; or a
+  `BLOCKING_RULE` that refuses legitimate positive-result/zero-base filings (negative
+  result, full BIN compensation, exemptions) — the guard must distinguish the suspicious
+  case (positive antecedent, zero consequent) and stay advisory while legitimate
+  zero-base cases exist.
 
 ## Source
 
-ADR `2026-06-02-modelo-200-base-determination-adr` (Phase 1); round-30 CLI
-testimonial audit `2026-06-02-cli-persona-testimonials-round-30-audit`; worked
-example commit `414fd3529`. Promoted per the `vaultspec-codify` discipline.
+ADR `2026-06-02-modelo-200-base-determination-adr` (Phase 1); audit
+`2026-06-02-cli-persona-testimonials-round-30-audit`; worked example `414fd3529`.
 
 ---
 name: no-tautological-calculation-tests
@@ -2830,12 +2549,12 @@ disagree.
 
 - Good: `RelationPrefillSourceResolver.resolve` delegates to
   `resolve_relations_from_local_store`
-  (`src/aeat/application/calculations/_relation_prefill.py:279`), the exact same
+  (`src/cadrumo/application/calculations/_relation_prefill.py:279`), the exact same
   function the Sheets-pull path calls
   (`entrypoints/cli/_config/_google_sync_calc.py:130`), so both transports run one
   resolver.
 - Good: parity is enforced by
-  `src/aeat/application/calculations/tests/test_pull_path_calculate_path_casilla_parity.py`
+  `src/cadrumo/application/calculations/tests/test_pull_path_calculate_path_casilla_parity.py`
   — a regression that the pull path and the calculate path produce identical
   casilla values for a shared revision.
 - Bad: a pull-path `assemble_*` helper that computes a casilla one way while the
@@ -2854,7 +2573,7 @@ trigger: always_on
 ## Rule
 
 Every operator agent-harness document — each operator rule, persona, and skill
-under `src/aeat/_data/agent/` — that names a CLI verb (an `aeat ...` invocation)
+under `src/cadrumo/_data/agent/` — that names a CLI verb (an `aeat ...` invocation)
 or a JSON-envelope field MUST cite only verbs that resolve against the live
 operator-surface manifest and fields that exist on the live envelope models, and
 MUST be co-committed with the CLI surface it couples to. A harness document and
@@ -2870,7 +2589,7 @@ form of the verb-drift failure the `aeat-cli-pull-and-file-standard` rule exists
 to prevent. During the agent-harness build a safety rule cited `aeat app modelo
 work export`, which does not exist (the real verb is `aeat app modelo export`); the
 drift gate caught it before commit. The gate
-(`src/aeat/agent/tests/test_rule_surface_conformance.py`) parses every shipped
+(`src/cadrumo/agent/tests/test_rule_surface_conformance.py`) parses every shipped
 rule, persona, and skill, extracts each `aeat ...` command path and each named
 envelope-spine field, and asserts they all resolve against the live manifest and
 the real `SchemaEnvelope`/`Notice` models, so a drift is a loud test failure rather
@@ -2950,65 +2669,50 @@ trigger: always_on
 
 ## Rule
 
-Every regulatory value compiled into the registry schema — a tax rate, a
-bracket tranche, a threshold, a deadline window, a reduction coefficient — MUST
-declare, in its `legal_refs`, the specific binding provision that *establishes
-that value* (the article, disposition, or transitional provision of the law that
-sets it), and that provision MUST be defined in the legal catalogue with a
-`corpus_ref` resolving to the real BOE/AEAT text. Citing the general framework
-article alone (e.g. `ley-27-2014:art-29`) is insufficient when a more specific
-provision (a transitional disposition, a phased schedule, a modifying law) is
-what actually fixes the number. A value whose binding provision is not in the
-schema is treated as ungrounded and MUST NOT ship.
+Every regulatory value compiled into the registry schema — a tax rate, bracket
+tranche, threshold, deadline window, reduction coefficient — MUST declare, in its
+`legal_refs`, the specific binding provision that *establishes that value* (the
+article, disposition, or transitional provision that sets it), and that provision
+MUST be defined in the legal catalogue with a `corpus_ref` resolving to the real
+BOE/AEAT text. Citing the general framework article alone (e.g.
+`ley-27-2014:art-29`) is insufficient when a more specific provision (a
+transitional disposition, phased schedule, or modifying law) actually fixes the
+number. A value whose binding provision is not in the schema is ungrounded and
+MUST NOT ship.
+
+When authoring or changing a regulatory value, confirm the binding provision is
+(1) cited on the value's `legal_refs`, (2) defined in the legal catalogue, (3)
+backed by corpus text the evidence gate validates, and (4) consistent with the
+value (the corpus clause states the number encoded).
 
 ## Why
 
-The Modelo 200 micro-empresa (INCN < 1M) two-tranche rate carried `0.17 / 0.20`
-for 2025 in `is.modelo-200.tipo-gravamen-pyme`, grounded only in
-`ley-27-2014:art-29`. The binding source — LIS **disposición transitoria 44ª**,
-added by **Ley 7/2024** (BOE-A-2024-26694), which phases the rate to **21 % / 22 %
-for 2025** and 19 % / 21 % for 2026 — was absent from the schema. Because the
-specific provision that fixes the 2025 figure was never cited or cross-checked
-against its corpus text, the wrong rate sat in the registry undetected and a
-downstream commit (#210) compounded it by routing the cuota to a flat 23 %. The
-value drifted precisely because nothing in the schema pinned it to the law that
-sets it. A regulatory number with no binding-provision citation has no anchor to
-verify against and is frail by construction. This is the authoring counterpart of
-`[[aeat-calculation-grounding]]` (which preserves provenance through boundaries)
-and `[[aeat-schema-central-config]]` (which keeps values in the registry): this
-rule mandates that the value, at its authoring site, names and grounds the
-provision that makes it binding.
+The Modelo 200 micro-empresa (INCN<1M) rate carried `0.17 / 0.20` for 2025
+grounded only in `ley-27-2014:art-29`; the binding source — LIS DT 44ª, added by
+Ley 7/2024 (BOE-A-2024-26694), phasing the rate to 21%/22% for 2025 — was absent
+from the schema, so the wrong rate sat undetected and commit #210 compounded it
+to a flat 23%. A regulatory number with no binding-provision citation has no
+anchor to verify against and is frail by construction.
 
 ## How
 
-- **Good:** the micro-empresa 2025 bracket declares
-  `legal_refs = ["ley-27-2014:art-29", "ley-27-2014:dt-44"]`, and
-  `ley-27-2014:dt-44` is defined in `legal/is.toml` with
-  `corpus_ref = "corpus/normatives/html/ley-27-2014-dt-44.html#dt44"`,
-  `document_id = "BOE-A-2024-26694"`, and a `required_text` source-citation that
-  the evidence gate cross-checks against the real text ("21 por ciento").
-- **Good:** a deadline window or threshold cites the specific orden/RD/ley
-  article that publishes it, not just the parent law, and the corpus carries the
-  matching clause.
-- **Bad:** a phased or transitional rate citing only the consolidated framework
-  article while the transitional disposition that actually sets the year's figure
-  is uncited — the number can be wrong and no gate can catch it.
-- **Bad:** adding a `legal_refs` entry that points at a catalogue id with no
-  `corpus_ref`, or whose corpus text does not contain the value's clause. The
-  citation must be verifiable, not decorative.
-- **Verification:** when authoring or changing a regulatory value, confirm the
-  binding provision is (1) cited on the value's `legal_refs`, (2) defined in the
-  legal catalogue, (3) backed by corpus text the evidence gate validates, and
-  (4) consistent with the value (the corpus clause states the number you encoded).
+- **Good:** the micro-empresa 2025 bracket declares `legal_refs =
+  ["ley-27-2014:art-29", "ley-27-2014:dt-44"]`, and `ley-27-2014:dt-44` is defined
+  in `legal/is.toml` with `corpus_ref =
+  "corpus/normatives/html/ley-27-2014-dt-44.html#dt44"`, `document_id =
+  "BOE-A-2024-26694"`, and a `required_text` the evidence gate cross-checks ("21
+  por ciento"). A deadline window or threshold likewise cites the specific
+  orden/RD/ley article, not just the parent law, with matching corpus text.
+- **Bad:** a phased/transitional rate citing only the framework article while the
+  disposition that sets the year's figure is uncited; or a `legal_refs` entry
+  pointing at a catalogue id with no `corpus_ref` or whose corpus text lacks the
+  value's clause — the citation must be verifiable, not decorative.
 
 ## Source
 
-Binding-law reconciliation of the Modelo 200 micro-empresa INCN<1M cuota
-(LIS art. 29.1 + DT 44ª, Ley 7/2024, BOE-A-2024-26694). Origin: operator
-directive recorded 2026-06-02 — "legal groundings the schema must be grounded
-against and cross-referenced; if the actual modelo schema does not contain the
-legal grounding all work will be frail." Promoted per the `[[vaultspec-codify]]`
-discipline.
+Binding-law reconciliation of the M200 micro-empresa INCN<1M cuota (LIS art. 29.1
++ DT 44ª, Ley 7/2024, BOE-A-2024-26694); operator directive 2026-06-02. Companion:
+`aeat-calculation-grounding`, `aeat-schema-central-config`.
 
 ---
 name: registry-resolver-family-extraction
@@ -3088,66 +2792,40 @@ and inspect the compiled schema — never infer a revision's coverage from
 
 ## Why
 
-The dual-format era is over. Historically a revision MAY have declared its
-sections EITHER inline in `revision.toml` OR in fragmented subdirectories, and a
-subdirectory-blind check (`ls bindings/ | wc -l`) was therefore blind to inline
-declarations: during #15 (IVA-3, M303 `2009-y-siguientes`) a subdirectory-count
-check wrongly concluded the revision was "parse-only" and missed a real
-"cuota-without-base" under-declaration, because that revision declared its cuota
-bindings/formulas INLINE; the same blind spot mis-classified M369 (fully inline)
-in the settlement-guard sweep. The `arch-remediation-registry-format` campaign
-(register D6, ADR `2026-07-02-arch-remediation-registry-format-adr`) converged
-every remaining inline revision to the fragmented layout — proven byte-identical
-at the compiled-`ModeloRevision` level per revision — and added the loader
-refusal above, so the inline-vs-fragmented blind spot can no longer recur: there
-is one on-disk format, and the loaded snapshot is format-agnostic ground truth.
-The read-the-loaded-snapshot guidance survives the convergence; the
-dual-format caveat is now history. This is the discovery-method companion to
-`aeat-rag-discovery` (RAG-first grounding) and `aeat-registry-authority-flow`
-(the loader compiles fragments into one strict schema).
+Historically a revision could declare sections EITHER inline in `revision.toml` OR
+in fragmented subdirectories, so a subdirectory-blind check (`ls bindings/ | wc -l`)
+missed inline declarations — in #15 (M303 `2009-y-siguientes`) it wrongly concluded
+"parse-only" and missed a real cuota-without-base under-declaration, and it
+mis-classified fully-inline M369. The `arch-remediation-registry-format` campaign
+(ADR `2026-07-02-arch-remediation-registry-format-adr`) converged every revision to
+the fragmented layout (byte-identical at the compiled-`ModeloRevision` level) and
+added the loader refusal, so the loaded snapshot is now format-agnostic ground truth.
+Companion to `aeat-registry-authority-flow`.
 
 ## How
 
-- **Good:** to decide whether a casilla aggregates from the ledger on a given
-  revision, load the revision through the authority
-  (`resources().modelos.authority.snapshot(...)`) and inspect
-  `revision.bindings` / `revision.casillas` — the compiled schema is the
-  format-agnostic ground truth. Sections always live in subdirectories now, so
-  `grep` the `bindings/` / `casillas/` fragments for the exact ids after
-  RAG-grounding the concept.
-- **Good:** to find binding-coverage asymmetries, compare a casilla's `binding =`
-  + `input_kind` across sibling revisions from the LOADED snapshot, not by
-  diffing subdirectory file counts (the #15 / #40 pattern).
-- **Good:** before grounding any binding-source classification, read the
-  binding's `source` field (`ledger_iva_aggregation` vs `profile` vs
-  `relation_prefill`) — a `source = "profile"` binding (autoconsumo, state
-  attribution) is not a ledger silent-zero even when absent (#43).
+- **Good:** to decide whether a casilla aggregates from the ledger, load the
+  revision through the authority (`resources().modelos.authority.snapshot(...)`) and
+  inspect `revision.bindings` / `revision.casillas` — the compiled schema is ground
+  truth; `grep` the `bindings/` / `casillas/` fragments only to pin exact ids.
+- **Good:** before grounding any binding-source classification, read the binding's
+  `source` field (`ledger_iva_aggregation` vs `profile` vs `relation_prefill`) — a
+  `source = "profile"` binding (autoconsumo, state attribution) is not a ledger
+  silent-zero even when absent (#43).
 - **Bad:** re-introducing a section table inline in a fragment directory's
-  `revision.toml`. The loader refuses it, naming the `<section>/` fragment
-  subdirectory it belongs in.
+  `revision.toml` — the loader refuses it, naming the `<section>/` subdirectory.
 - **Bad:** `ls bindings/ | wc -l` as the SOLE signal of "is this revision
-  calc-grade / does this casilla bind" — count the LOADED snapshot's sections,
-  not on-disk file counts, and never conclude "parse-only / staged build-out"
-  from subdirectory absence without loading the revision.
+  calc-grade / does this casilla bind" — count the LOADED snapshot's sections, and
+  never conclude "parse-only / staged build-out" from subdirectory absence without
+  loading the revision.
 
-## Status
+## Status / Source
 
-Active. Converged by the `arch-remediation-registry-format` campaign (register
-D6): every inline revision was migrated to the fragmented layout and the loader
-now refuses inline sections in `revision.toml`, so the dual-format assessment
-hazard is structurally eliminated rather than mitigated. The rule survives to
-carry the load-the-snapshot discipline (never `ls`/`find`-count) and to record
-that a section inline in `revision.toml` is now a hard load error.
-
-## Source
-
-The #15 IVA-3 correction (M303 `2009-y-siguientes` domestic-base, fixed in
-`6c259afc3`; the recargo/59-60 tail in `4e669c113`) that first exposed the
-inline-vs-fragmented blind spot; the `arch-remediation-registry-format` campaign
-(ADR `2026-07-02-arch-remediation-registry-format-adr`, plan
-`2026-07-02-arch-remediation-registry-format-plan`) that converged the tree to
-fragmented-only and added the loader refusal. Companion rules:
-`aeat-rag-discovery`, `aeat-registry-authority-flow`,
+Active; converged by `arch-remediation-registry-format` (ADR
+`2026-07-02-arch-remediation-registry-format-adr`, plan
+`2026-07-02-arch-remediation-registry-format-plan`) — inline sections in
+`revision.toml` are now a hard load error. First exposed by the #15 IVA-3 correction
+(`6c259afc3`, recargo tail `4e669c113`). Companion: `aeat-registry-authority-flow`,
 `registry-calculation-legal-grounding`.
 
 ---
@@ -3163,7 +2841,7 @@ A binding that exists only as a relation's `target_binding` materialisation slot
 MUST declare `source = "relation_prefill"`, never `source = "previous_filing"`; a
 `previous_filing` binding MUST satisfy the direct-selector predicate
 (`_is_direct_previous_filing_binding`,
-`src/aeat/domain/calculations/registry/_bindings_previous_filing.py`), and
+`src/cadrumo/domain/calculations/registry/_bindings_previous_filing.py`), and
 registry validation refuses a binding that is both relation-targeted AND
 previous-filing-resolvable — the M303 iva-wallet compensación slot being the sole
 documented carve-out.
@@ -3188,8 +2866,8 @@ impossible (defence in depth per `composition-service-no-parallel-write-path`).
 - Good: a same-modelo direct carry keeps `source = "previous_filing"` and passes
   `_is_direct_previous_filing_binding`; the M303
   `modelo-303-compensacion-pendiente-anteriores` slot is the named carve-out
-  (`_IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS`,
-  `_validate_relation_sources.py:42`) — owned pre-mesh by the iva-wallet gate.
+  (`IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS`,
+  `_validate_relation_sources.py`) — owned pre-mesh by the iva-wallet gate.
 - Bad: a relation `target_binding` slot declaring `source = "previous_filing"`
   with a non-direct selector — the registry gate now refuses it instead of letting
   the enrolled resolver silently skip it.
@@ -3210,7 +2888,7 @@ Before deleting a retired enum member, reconcile every validation, schema, fixtu
 
 ## Why
 
-The `2026-06-11-ledger-hardening-close-audit` found that `AggregationSourceKind.INVOICE` looked retired at the CLI layer but still powered a contradictory registry-validation surface: schema construction accepted it, validation routed it positively, and selector validation rejected it. Deleting that member before reconciling consumers would break registry fixtures and hide whether the intended final state is acceptance or rejection. The project needs one coherent state before enum deletion.
+The `2026-06-11-ledger-hardening-close-audit` found that the (since-reconciled and deleted) `AggregationSourceKind.INVOICE` member looked retired at the CLI layer but still powered a contradictory registry-validation surface: schema construction accepted it, validation routed it positively, and selector validation rejected it. Deleting a member before reconciling consumers breaks registry fixtures and hides whether the intended final state is acceptance or rejection. The project needs one coherent state before enum deletion. (That reconciliation completed: `AggregationSourceKind` itself was later deleted and its source kinds moved to `BindingSourceKind`.)
 
 ## How
 
@@ -3230,9 +2908,9 @@ trigger: always_on
 Every production calculation, verification, filing, export, or projection path
 MUST resolve its registry revision from `(modelo, filing_year, period)` through
 `ValidatedRegistryAuthority.snapshot` / `select_revision`
-(`src/aeat/domain/calculations/registry/_temporal.py`) or
+(`src/cadrumo/domain/calculations/registry/_temporal.py`) or
 `resolve_registry_revision_for_work_target`
-(`src/aeat/application/modelo/_work_addressing.py`); a stored, literal, or
+(`src/cadrumo/application/modelo/_work_addressing.py`); a stored, literal, or
 operator-supplied `revision_id` may only be *asserted equal* to that resolution,
 never injected as the selector.
 
@@ -3278,66 +2956,50 @@ trigger: always_on
 All sensitive financial data — every purchase invoice and every incoming or
 outgoing business invoice, every bank statement and supporting document, and any
 decrypted evidence bytes derived from them — persists ONLY inside the encrypted
-secure-storage backend, accessed through the runtime wrapper that maps to the
-active profile bucket (`secure_object_repository_for_active_bucket` /
-`secure_object_repository_for_bucket`, the `SecureObjectRepository` substrate, and
-the content-addressed `AttachmentStore` that wraps it). No code path may write or
-persist sensitive financial data anywhere outside secure storage: no temp files, no
-scratch directories, no plaintext side stores, no caches on disk, no logs. Decrypted
-bytes may exist only transiently in process memory and must never be written out. A
-path pointer to a cleartext file on operator disk (e.g. a `source_path` field) is
-NOT a valid persistent home for invoice bytes; the bytes themselves belong in secure
-storage.
+secure-storage backend, accessed through the active-profile-bucket runtime
+wrapper (`secure_object_repository_for_active_bucket` /
+`secure_object_repository_for_bucket`, the `SecureObjectRepository` substrate,
+and the content-addressed `AttachmentStore` that wraps it). No code path may
+write or persist sensitive financial data anywhere outside secure storage: no
+temp files, no scratch directories, no plaintext side stores, no on-disk caches,
+no logs. Decrypted bytes may exist only transiently in process memory and must
+never be written out. A path pointer to a cleartext file on operator disk (e.g. a
+`source_path` field) is NOT a valid persistent home for invoice bytes; the bytes
+themselves belong in secure storage.
 
 ## Why
 
-This invariant is enforced by prior ADRs and by secure-storage enrollment across
-multiple epic runs; it is the load-bearing confidentiality guarantee of the whole
-application. The `llm-evidence-classification` Stage-3 research/ADR pass on
-2026-06-10 is the worked example of how an agent breaks it: an early draft, reaching
-for "let an LLM read the invoice", designed a decrypted-temp-file route for the
-subprocess CLI agents and framed "which providers may receive decrypted evidence" as
-a tunable privacy boundary. The operator rejected this outright — taking sensitive
-financial data out of secure storage (to a temp file, or by uploading it off-host)
-is never acceptable, and is categorically unacceptable for gestors or any serious
-professional usage. Writing a client's invoice bytes to a scratch file or shipping
-them to a third party is exactly the exposure secure storage exists to prevent. The
-rule is restated in the rule layer (not only in ADRs) because this is the authoring
-moment where the temptation appears, and a rule is what loads into the next agent's
-context before it writes the violating line.
+This is the load-bearing confidentiality guarantee of the whole application. The
+`llm-evidence-classification` Stage-3 pass (ADR
+`2026-06-10-llm-evidence-classification-adr`) is the worked failure: an early
+draft designed a decrypted-temp-file route for subprocess CLI agents and framed
+off-host upload as a tunable boundary; the operator rejected it outright —
+removing sensitive financial data from secure storage (temp file or off-host) is
+never acceptable, and categorically unacceptable for gestors or serious
+professional use.
 
 ## How
 
 - **Good:** invoice/attachment bytes are written and read through the
-  content-addressed `AttachmentStore` (`put_bytes` / `read_bytes`), which wraps
+  content-addressed `AttachmentStore` (`put_bytes` / `read_bytes`), wrapping
   encrypted `Envelope` records in `SecureObjectRepository` at `FINANCIAL`
-  sensitivity via the active-bucket runtime wrapper. A consumer that needs the bytes
-  (e.g. to hand a document to an on-host model) reads them into memory and uses them
-  transiently; nothing is written to disk.
-- **Good:** a feature that must let a model read a document runs the reader on-host
-  (in-tree text extraction, or a local vision model fed in-memory base64) so the
-  bytes never leave the machine. Any off-host transmission is gated behind an
-  explicit, per-invocation, default-off, gestor-barred operator consent
-  acknowledgement (see `off-host-evidence-upload-requires-explicit-consent-gate` when
-  it lands) and never uses a transport that writes a file.
-- **Bad:** materialising decrypted evidence to a temp file (even "bounded
-  lifetime", even `chmod 600`, even "removed promptly") so a subprocess CLI tool can
-  read it by path. The temp file is persistence outside secure storage — forbidden.
-- **Bad:** storing only a `source_path` to a cleartext file on operator disk and
-  treating that as the durable home of the bytes. The bytes must be in secure
-  storage; a path is not storage.
-- **Bad:** writing sensitive financial values to logs, a plaintext JSON side store,
-  an on-disk cache, or a scratch directory for debugging.
+  sensitivity via the active-bucket wrapper; a consumer reads them into memory
+  and uses them transiently, writing nothing to disk. A model that must read a
+  document runs on-host (in-tree extraction or a local vision model fed in-memory
+  base64); any off-host transmission is gated behind an explicit, per-invocation,
+  default-off, gestor-barred consent acknowledgement (see
+  `off-host-evidence-upload-requires-explicit-consent-gate` when it lands) and
+  never uses a file-writing transport.
+- **Bad:** materialising decrypted evidence to a temp file (even bounded-lifetime,
+  `chmod 600`, promptly removed) for a subprocess to read by path; storing only a
+  `source_path` to a cleartext file as the durable home; or writing sensitive
+  values to logs, a plaintext JSON side store, an on-disk cache, or a scratch dir.
 
 ## Source
 
-Operator directive recorded 2026-06-10 during the `llm-evidence-classification`
-Stage-3 research/ADR pass on the `chore/eliminate-shims` branch, after an ADR draft
-proposed a decrypted-temp-file evidence-reading route. Backing decision: ADR
-`2026-06-10-llm-evidence-classification-adr` (the `sensitive-financial-data-persists-
-only-in-secure-storage` and `off-host-evidence-upload-requires-explicit-consent-gate`
-codification candidates). Companion rules: `aeat-safety-legal-gates`,
-`aeat-architecture-boundaries`.
+Operator directive recorded 2026-06-10; ADR
+`2026-06-10-llm-evidence-classification-adr`. Companion:
+`aeat-safety-legal-gates`, `aeat-architecture-boundaries`.
 
 ---
 name: service-imports-via-top-level-reexports
@@ -3368,77 +3030,48 @@ pure-reexport shim is not.
 
 ## Why
 
-The BucketMaintenanceService composition pattern landing on 2026-06-03 first
-surfaced the consequence of letting one consumer dot into a package's
-internals: every later consumer reads the precedent as permission to do the
-same. The `2026-07-01-import-centralization-research` scan then quantified the
-cost of leaving the constraint scoped to "new application-layer services": 2465
-cross-package private imports (866 production, 1599 test) across 250 files and
-34 owning packages, plus a genuine naming collision
-(`_withholding_observations_repository.py` masking two distinct M180/193 vs
-M190 stores) and three latent Ruling-1 violations hiding inside a legitimate
-circular-import workaround. The `2026-07-01-import-centralization-adr`
-(Rulings 1, 2, 3, 4) generalized the constraint project-wide: ownership-first,
-promotion-before-rewrite, one canonical facade per symbol, with the
-promotion-mechanism and underscore-judgment detail this rule now carries.
-Enforcement moved from a single regression test pinning one package's surface
-to the project-wide AST scanner `dev/import_hygiene_scan.py` and its CI gate
-`src/aeat/tests/test_import_hygiene_gate.py`, which ratchets a checked-in
-production baseline toward zero and treats the Family-2 documented-bridge
-allowlist and the Family-3 pinned-symbol set as structural data.
+Per `2026-07-01-import-centralization-adr` (Rulings 1-4), letting one consumer dot
+into a package's internals reads to every later consumer as permission to do the
+same; the `2026-07-01-import-centralization-research` scan quantified 2465
+cross-package private imports across 250 files plus a naming collision and three
+latent violations hidden in a circular-import workaround. The constraint is
+ownership-first, promotion-before-rewrite, one canonical facade per symbol, enforced
+by the project-wide AST scanner `dev/import_hygiene_scan.py` and CI gate
+`src/cadrumo/tests/test_import_hygiene_gate.py` (ratcheting a checked-in production
+baseline toward zero; Family-2 documented-bridge allowlist and Family-3 pinned-symbol
+set are structural data).
 
 ## How
 
-- **Good:** a new ``aeat.application.bucket_maintenance`` service imports
-  ``rename_profile`` from ``aeat.application.user_profile`` (the package
-  ``__all__`` re-export). The symbol was promoted to that surface before the
-  service file was authored.
-- **Good:** a cross-package consumer that needs
-  ``domain.modelos.CalculationRevision`` imports it from ``domain.modelos``
-  directly, never from ``application.modelo`` even though the app-layer
-  package used to re-export it — the ADR's Ruling-5 umbrella RETIRE makes the
-  domain package the sole canonical source once a duplicate re-export is
-  identified.
-- **Good:** ``registry/applicability.py``, ``deadlines/taxpayer_model.py``,
-  ``transactions/_ids.py``, ``cli/_schemas.py``,
-  ``outbound/aeat/_playwright.py``, and ``workflow/_utils.py`` are documented
-  non-``__init__`` bridge modules and remain acceptable canonical sources
-  under Ruling 4 — a consumer importing from one of these is not a violation.
-- **Good:** an underscore-named symbol reached by two or more unrelated
-  production packages is renamed to public and promoted to ``__all__``
-  (Ruling 3.i); one reached by exactly one narrow caller instead gets a
-  purpose-built narrower public API (Ruling 3.ii) rather than a blanket
-  ``_foo`` -> ``foo`` rename.
-- **Bad:** a service file imports ``from ....application.user_profile._orchestration
-  import rename_profile`` (dotting into the private submodule). The next agent
-  who needs the same symbol reads the precedent and does the same; gradually
-  the package boundary is eroded.
-- **Bad:** mechanically stripping the leading underscore from every reached
-  private symbol and adding it to ``__all__`` without judging whether it is a
-  shared primitive, a single-caller need, or a design defect — this is the
-  blanket promotion Ruling 3 forbids.
-- **Bad:** an undocumented pure-reexport shim module invented to avoid a
-  proper facade promotion — only the six named, documented bridges (plus any
-  future one authored with the same one-line-docstring discipline) count as
+- **Good:** a new ``cadrumo.application.bucket_maintenance`` service imports
+  ``rename_profile`` from ``cadrumo.application.user_profile`` (the package
+  ``__all__`` re-export), promoted before the service file was authored; the six
+  documented non-``__init__`` bridge modules — ``registry/applicability.py``,
+  ``deadlines/taxpayer_model.py``, ``transactions/_ids.py``, ``cli/_schemas.py``,
+  ``outbound/aeat/_playwright.py``, ``workflow/_utils.py`` — remain acceptable
   canonical sources under Ruling 4.
+- **Good:** an underscore-named symbol reached by two or more unrelated production
+  packages is renamed to public and promoted to ``__all__`` (Ruling 3.i); one
+  reached by exactly one narrow caller instead gets a purpose-built narrower public
+  API (Ruling 3.ii), never a blanket ``_foo`` -> ``foo`` rename.
+- **Bad:** ``from ....application.user_profile._orchestration import rename_profile``
+  (dotting into a private submodule) — the next agent reads the precedent and
+  erodes the boundary; or an undocumented pure-reexport shim invented to avoid a
+  proper facade promotion (only the named documented bridges count under Ruling 4).
+- **Bad:** mechanically stripping the leading underscore from every reached private
+  symbol into ``__all__`` without judging shared-primitive vs single-caller vs
+  design-defect — the blanket promotion Ruling 3 forbids.
 
 ## Status
 
-Active; generalized project-wide. Supersedes the prior narrower scope ("a new
-application-layer service"), which is now a worked example (the first `Good`
-entry above) of the project-wide Ruling-1 ownership policy rather than the
-rule's full scope.
+Active; generalized project-wide. Supersedes the prior narrower "new application-layer
+service" scope, now the first `Good` worked example.
 
 ## Source
 
-Operator directive recorded 2026-06-03 during the BucketMaintenanceService
-composition-pattern landing on the ``chore/eliminate-shims`` branch (backing
-ADR ``2026-06-03-cli-workflow-redesign-adr``; research
-``2026-06-03-cli-workflow-redesign-research``; exec record
-``2026-06-03-cli-workflow-redesign-exec``). Generalized project-wide by ADR
-``2026-07-01-import-centralization-adr`` (Rulings 1, 2, 3, 4), research
-``2026-07-01-import-centralization-research``. Enforced by
-``dev/import_hygiene_scan.py`` and ``src/aeat/tests/test_import_hygiene_gate.py``.
+ADR ``2026-06-03-cli-workflow-redesign-adr``; generalized by
+``2026-07-01-import-centralization-adr`` (research ``2026-07-01-import-centralization-research``).
+Enforced by ``dev/import_hygiene_scan.py`` and ``src/cadrumo/tests/test_import_hygiene_gate.py``.
 
 ---
 name: shipped-search-licence-clean
@@ -3487,63 +3120,44 @@ resolves to the same record.
 
 ## Why
 
-The `aeat` CLI's target operator is an autonomous LLM agent that retries
-uncertain or failed calls, so a creating mutation that is not retry-safe silently
-double-writes: a duplicate ledger transaction inflates every downstream modelo
-aggregation, and a time-stamped verify report or filing record accumulates one
-copy per retry. The `2026-06-30-ledger-add-idempotency-adr` closed this across the
-three single-subject surfaces — manual `ledger add`, `modelo verify`, `modelo
-file` — by keying idempotency on a clock-free id, returning the existing record as
-a guarded no-op, and refusing same-key/different-content. The independent close
-review (`2026-07-01-ledger-add-idempotency-audit`) confirmed the pattern and
-caught the recurring failure mode it guards: an idempotency/no-op match that omits
-a field (recargo, source jurisdiction) silently drops the new value — a silent
-under-declaration. Making the guard the standing rule keeps every future creating
-verb retry-safe by construction, and keeps identities clock-free (advancing the
-replayability the determinism work depends on). This is the creating-mutation
-companion to `ledger-mutation-returns-uniform-quintet` (the result shape the no-op
-rides on), `cli-notices-are-the-only-diagnostic-channel` (the no-op Notice),
-`no-silent-under-declaration` (the match must be complete), and
-`carried-observations-stamp-their-revision` (identity is content, not clock).
+Per ADR `2026-06-30-ledger-add-idempotency-adr`, the `aeat` CLI's operator is an
+autonomous LLM agent that retries calls, so a non-retry-safe creating mutation
+silently double-writes (a duplicate ledger transaction inflates every downstream
+modelo aggregation; a time-stamped verify/filing record accumulates one copy per
+retry). It closed this across manual `ledger add`, `modelo verify`, and `modelo
+file` by keying on a clock-free id and refusing same-key/different-content; the
+close review `2026-07-01-ledger-add-idempotency-audit` caught the guarded failure
+mode — a no-op match that omits a field (recargo, source jurisdiction) silently
+drops the new value (`no-silent-under-declaration`).
 
 ## How
 
 - **Good:** `create_manual_transaction` keys on the clock-free provider id
   `manual:{bucket}:{key}`; a same-key retry with matching content returns the
-  existing-row quintet with empty `bucket_event_ids` + an info `Notice`, emitting
-  no second `LEDGER_TRANSACTION_CREATED` event and leaving `created_at` unchanged;
-  a same-key add whose content differs raises `TransactionValidationError`. The
-  idempotency match compares EVERY persisted field (including `recargo_amount` and
-  `source_jurisdiction`).
+  existing-row quintet with empty `bucket_event_ids` + an info `Notice`, emitting no
+  second `LEDGER_TRANSACTION_CREATED` event and leaving `created_at` unchanged; a
+  differing same-key add raises `TransactionValidationError`. The match compares
+  EVERY persisted field (including `recargo_amount` and `source_jurisdiction`).
 - **Good:** `derive_verification_report_id` / `derive_filing_record_id` fold the
-  OUTCOME (revision + status/findings + actor) and drop the timestamp from
-  identity; a non-granting verify retry and a re-file of an already-`PRESENTADO`
-  revision collapse to the existing record with an info `Notice`; the timestamp
-  survives as a non-identity last-seen field.
-- **Good:** the keyless `ledger add` path stays `non_idempotent_append` (two
-  genuine identical same-day cash movements both persist) and the agent-harness
-  contract requires the agent to always pass a stable idempotency key.
-- **Bad:** a creating verb whose id folds `now()`/`occurred_at`/`filed_at`, so a
-  retry mints a new id and double-writes — the pre-ADR manual-add and
-  time-stamped-report defect.
-- **Bad:** a guarded no-op whose match omits a persisted field, so a same-key
-  retry that changes only that field no-ops and silently drops the new value
-  (`no-silent-under-declaration`).
-- **Bad:** modelling a deliberately-additive verb as guarded (collapsing genuine
-  distinct records) or an idempotent verb as append (double-writing on retry)
-  without documenting the choice.
+  OUTCOME (revision + status/findings + actor) and drop the timestamp from identity;
+  a non-granting verify retry and a re-file of an already-`PRESENTADO` revision
+  collapse to the existing record with an info `Notice`.
+- **Good:** the keyless `ledger add` path stays `non_idempotent_append` (two genuine
+  identical same-day cash movements both persist); the agent-harness contract
+  requires the agent to always pass a stable idempotency key.
+- **Bad:** an id that folds `now()`/`occurred_at`/`filed_at` (a retry mints a new id
+  and double-writes), or a guarded no-op whose match omits a persisted field so a
+  same-key retry changing only that field silently drops the new value.
+- **Bad:** modelling a deliberately-additive verb as guarded (collapsing distinct
+  records) or an idempotent verb as append (double-writing on retry) without
+  documenting the choice.
 
 ## Source
 
-ADR `2026-06-30-ledger-add-idempotency-adr` (codification candidate), research
-`2026-06-30-ledger-add-idempotency-research`, plan
-`2026-06-30-ledger-add-idempotency-plan`, close honesty-review audit
-`2026-07-01-ledger-add-idempotency-audit`. Promoted per the `vaultspec-codify`
-discipline after the pattern held across all three single-subject surfaces
-(`ledger add`, `modelo verify`, `modelo file`) plus an independent PASS/GO review
-in one full execution cycle. Companion rules:
-`ledger-mutation-returns-uniform-quintet`, `cli-single-subject-id-is-positional`,
-`cli-notices-are-the-only-diagnostic-channel`, `no-silent-under-declaration`.
+ADR `2026-06-30-ledger-add-idempotency-adr`; audit `2026-07-01-ledger-add-idempotency-audit`.
+Companion: `ledger-mutation-returns-uniform-quintet`,
+`cli-single-subject-id-is-positional`, `cli-notices-are-the-only-diagnostic-channel`,
+`no-silent-under-declaration`.
 
 ---
 name: subagent-commits-require-explicit-pathspec
@@ -3578,8 +3192,8 @@ destructive un-bundling that a swept commit tempts).
 
 ## How
 
-- **Good:** `git commit -m "..." -- src/aeat/foo.py src/aeat/tests/test_foo.py`
-  after `git diff --cached -- src/aeat/foo.py src/aeat/tests/test_foo.py` confirms
+- **Good:** `git commit -m "..." -- src/cadrumo/foo.py src/cadrumo/tests/test_foo.py`
+  after `git diff --cached -- src/cadrumo/foo.py src/cadrumo/tests/test_foo.py` confirms
   only your hunks are staged; a pathspec commit ignores every other staged path.
 - **Good:** for a file entangled with a peer's uncommitted hunks, use the
   apply-cached gated drive from `uncommitted-wip-is-not-orphaned` (stage a
@@ -3636,7 +3250,7 @@ The accepted `2026-06-10-docs-terminology-search-adr` identifies four unsynchron
 
 ## How
 
-- Good: Add or update a concept fragment under `src/aeat/_data/terminology/concepts/`, then use `:term:` references in docs prose.
+- Good: Add or update a concept fragment under `src/cadrumo/_data/terminology/concepts/`, then use `:term:` references in docs prose.
 - Bad: Define "prorrata" in a how-to paragraph while also keeping a Handbook concept and generated glossary entry for `prorrata`.
 
 ---
@@ -3656,8 +3270,8 @@ The `2026-06-05-test-topology-refactor-adr` decision keeps Rust-style local owne
 
 ## How
 
-- Good: `src/aeat/application/modelo/tests/test_work_addressing.py` tests the `aeat.application.modelo` surface from its local test folder.
-- Bad: `src/aeat/application/modelo/test_work_addressing.py` sits beside implementation modules and pollutes the code namespace.
+- Good: `src/cadrumo/application/modelo/tests/test_work_addressing.py` tests the `cadrumo.application.modelo` surface from its local test folder.
+- Bad: `src/cadrumo/application/modelo/test_work_addressing.py` sits beside implementation modules and pollutes the code namespace.
 
 ---
 name: uncommitted-wip-is-not-orphaned
@@ -3852,167 +3466,6 @@ Forbidden:
   this first; no network round-trip needed.
 
 ---
-name: vaultspec-codify.builtin
-trigger: always_on
----
-
-# Codify durable lessons as project rules
-
-The `vaultspec-core` workflow has a research → decide → plan → execute → review arc. The
-audit-derived sixth phase is `codify`: when a review surfaces a durable lesson - a
-constraint that should bind future agents across sessions - write that lesson down as a
-rule the next agent inherits on load.
-
-This rule defines when to codify, what to codify, and how to author the artifact.
-
-## When to codify
-
-Not every observation in a review is a rule. The bar is durability. A
-codification-worthy lesson satisfies all three:
-
-- **Cross-session.** A new agent who has never seen this feature should still benefit
-  from the rule.
-- **Constraint-shaped.** The lesson can be rendered as a positive obligation ("always
-  X") or a negative one ("never Y"), not as a description.
-- **Project-bound.** The lesson is specific to this project's conventions, stack, or
-  constraints. Generic engineering advice belongs in external documentation.
-
-Never codify on the first encounter with a constraint. A lesson qualifies only after it
-has held across at least one full execution cycle; the first encounter is an audit
-finding, not yet a rule.
-
-Examples that codify well: "harbor-notes runtime data lives under `~/.harbor-notes/`;
-never under `$TMPDIR`", "every destructive verb must accept `--dry-run`", "step records
-use the canonical filename schema". Examples that do not: "we considered library X,
-picked library Y" (that is an ADR), "the deploy failed last week" (that is an audit
-finding without a durable lesson).
-
-## What to codify
-
-The rule body names the constraint precisely. Three sections, in order:
-
-- **Rule.** One sentence stating the obligation. Imperative voice. No backstory.
-- **Why.** Two or three sentences naming the constraint's origin - the audit document or
-  ADR that surfaced the lesson, the failure mode it prevents.
-- **How.** Concrete worked examples of the rule applied and the rule violated.
-
-Keep the rule short. A rule longer than its own justifying audit finding has lost the
-plot. If the rule needs more than a page, it is actually a reference document; produce
-`.vault/reference/yyyy-mm-dd-{feature}-reference.md` instead.
-
-## How to author
-
-A codification produces a file under `.vaultspec/rules/rules/` that captures the rule.
-Two canonical authoring paths exist:
-
-- **Promote from an audit** (preferred when the lesson originates in an audit document):
-  `vaultspec-core vault rule promote --from <audit-stem> --as <rule-name>` reads the
-  audit, scaffolds the rule file, and records the audit stem in the rule's
-  `derived_from:` frontmatter. The author then refines the scaffolded body into the
-  three-section shape above.
-
-- **Author directly** (when the lesson originates in an ADR or outside the vault):
-  `vaultspec-core spec rules add <rule-name>` scaffolds an empty rule file; the author
-  fills the three sections and names the source document by stem in backticks in the
-  **Why** section.
-
-In both paths, `<rule-name>` is the kebab-case slug naming the rule's subject (e.g.,
-`harbor-notes-runtime-data`, `destructive-verbs-need-dry-run`).
-
-The CLI places authored project rules in the same directory as the framework's builtin
-rules (`.vaultspec/rules/rules/`). Project-authored rules are distinguished from
-builtins by name convention: builtins use the `*.builtin.md` suffix; authored rules do
-not.
-
-## How to find an existing rule
-
-Before authoring a new rule, check whether one already covers the intent.
-`vaultspec-core spec rules list` enumerates all project-shared rules.
-`vaultspec-core spec rules show <name>` prints any single rule. If an existing rule
-partially covers the intent, edit it via the standard CRUD path
-(`vaultspec-core spec rules edit <name>`) rather than producing a near-duplicate;
-partial rules are worse than complete ones because they fragment the discipline.
-
-## Where the rule lives, and why
-
-Project-authored rules live under `.vaultspec/rules/rules/` alongside the framework's
-builtin rules. The framework's install policy is for that directory to be tracked by git
-so the rule reaches every teammate on clone.
-
-A rule that exists only on one developer's machine is not a codification; it is a
-personal note. The whole point of writing the rule down is that the next agent inherits
-it on the next session, on the next teammate's clone, on the next CI run.
-
-## When a rule itself becomes wrong
-
-Rules age. A rule that captured a constraint last quarter may no longer hold this
-quarter. Two paths:
-
-- **Edit in place** when the constraint has shifted at the margins. The rule's name
-  stays; the body changes.
-- **Supersede** when the constraint has changed at the center. Author a new rule with a
-  new name and add a `## Status` section to both rule bodies: the prior rule's Status
-  names the successor's slug, and the new rule's Status names the rule it supersedes.
-  Once teammates are aware, remove the prior rule via
-  `vaultspec-core spec rules remove <name>`.
-
-A rule should never be silently deleted. The rule's removal is itself a project-level
-event; record it.
-
-## Audit-driven codification
-
-The framework supports an audit-first codification flow. The sequence:
-
-- A review at the end of a feature surfaces lessons in
-  `.vault/audit/yyyy-mm-dd-{feature}-audit.md`.
-- One audit can produce zero, one, or many rules - most produce zero (the lesson is
-  feature-specific), some produce one, and a rare audit (the kind that surfaces a
-  framework-wide pattern) produces several.
-- Each qualifying finding is promoted with
-  `vaultspec-core vault rule promote --from <audit-stem> --as <rule-name>`; the promoted
-  rule carries the audit stem in its `derived_from:` frontmatter, and the rule's **Why**
-  section names the finding in prose.
-
-Audit-driven codification is the natural follow-on to the `review` phase. The pipeline
-reads as research → decide → plan → execute → review → codify, with codify as the
-discretionary sixth step. Most features end at review; the features whose lessons
-outlast the feature itself end at codify.
-
----
-name: vaultspec-discovery.builtin
-trigger: always_on
----
-
-# Codebase and intent discovery
-
-Begin every pipeline phase - Research, ADR, Plan, Execute - by grounding in what the
-project already decided and built. The project's own benchmarking is unambiguous: a
-semantic-search-led hybrid sweep finds a feature fastest and at the lowest context cost
-\- roughly 1.3-2x cheaper than broad keyword search on a large tree - and recalls
-governing decisions with near-zero noise. Lead with it. The validated sequence is locate
-by meaning, read the epicenter whole, confirm with grep:
-
-1. **Locate by meaning.** For code, lead with
-   `vaultspec-rag search "<concept and domain nouns>" --type code` (narrow with
-   `--language`/`--path`); it reaches the right file in about one call where broad
-   globbing floods context. For decisions and intent,
-   `vaultspec-rag search "<intent>" --type vault --doc-type adr` - the directed ADR
-   filter, sharper than catch-all `--type vault`. `vaultspec-core status [target]`,
-   `vaultspec-core vault list`, and `vaultspec-core vault graph` are first-class for
-   orientation, in-flight plan state, and project health - reach for them to get your
-   bearings on intent. For a small, well-named module, list the directory.
-1. **Read** the epicenter file - or, when extending a feature, the nearest existing
-   analogue - in full. This whole-file read is the breakthrough in nearly every run.
-1. **Confirm** exact symbols and insertion points with a targeted grep, which is sharper
-   than semantic search at exact-symbol lookup.
-1. For decision discovery, round out recall by listing `.vault/adr/` and filtering by
-   feature - semantic search alone can miss lower-ranked or opaquely-named records.
-
-Do not lead with broad `Glob`/grep sweeps; their context cost scales badly on large
-codebases, and grep earns its place at the confirmation step. Where `vaultspec-rag` is
-not installed, the `vaultspec-core` discovery verbs and grep carry the same sequence.
-
----
 name: vaultspec-dry-run-discipline.builtin
 trigger: always_on
 ---
@@ -4125,72 +3578,6 @@ Audit `2026-05-17-cli-simplification-ux-audit` (rolling), finding B6 sharp (thre
 reproductions). Sibling decision ADR `2026-05-17-cli-plan-body-preservation-adr`.
 Umbrella plan steps `W03.P07.S23`, `S24`, `S25`, `S26` in
 `2026-05-17-cli-simplification-ux-plan`.
-
----
-name: vaultspec-rag.builtin
-trigger: always_on
----
-
-# vaultspec-rag — semantic search for code and decisions
-
-Discover by MEANING when you do not know the exact name, instead of grepping keywords or
-guessing identifiers. vaultspec-rag does two jobs: find the CODE, and find the DECISIONS -
-the ADRs (architecture decision records) that govern it.
-
-Server mode is the default backend. If a search reports the service is down, start it with
-`uvx vaultspec-rag server start` (small or offline projects opt into the on-disk local
-backend with `--local-only`). The running service auto-reindexes on file changes.
-DO NOT manually reindex during normal work.
-
-## Discover code by meaning
-
-`--type code` searches source by meaning. Phrase the query as a short behaviour plus the
-concrete domain nouns the target code would use: the behaviour drives semantic matching, the
-nouns drive exact matching, so a bare keyword or pure prose finds less than both together.
-
-```
-uvx vaultspec-rag search "retry backoff around failed webhook delivery" --type code
-```
-
-## Discover architecture decisions
-
-When you need the WHY - the rationale, constraints, or decision behind code - search the
-vault's ADRs, not the source. `--type vault --doc-type adr` returns the governing records.
-
-```
-uvx vaultspec-rag search "decision on gpu lock scope around the forward pass" --type vault --doc-type adr
-```
-
-`--doc-type` also accepts `audit`, `plan`, `reference`, `research`, and `exec` (comma-separate
-to union several).
-
-## Cut noise with filters
-
-Semantic search competes production code against its own noise - overlapping tests, parallel
-locale files, generated and vendored trees, worktree clones. Code search is production-biased
-by default: it hides duplicate/derivative domains (`generated`, `worktree`) and demotes
-`tests`, `docs`, `locale`, and `vendored` beneath production. When noise still crowds a page,
-narrow by DOMAIN rather than raising `--max-results`. The domains are `prod`, `tests`, `docs`,
-`locale`, `generated`, `vendored`, `worktree`.
-
-Steer with inline query tokens (comma-separated, repeatable):
-
-```
-uvx vaultspec-rag search "fixture setup helpers exclude:tests" --type code
-uvx vaultspec-rag search "auth token validation only:prod" --type code
-uvx vaultspec-rag search "translation table lookup include:locale" --type code
-```
-
-`exclude:` hides a domain, `only:` keeps just the named domains, and `include:` re-admits a
-domain the default profile hides or demotes. Compose with path and category filters:
-
-```
-uvx vaultspec-rag search "request handler" --type code --include-path "src/**" --exclude-path "**/legacy/**"
-uvx vaultspec-rag search "encode batch" --type code --prefer production
-```
-
-The full option set is `uvx vaultspec-rag search --help`. The same search is available through
-MCP as the `search_codebase` and `search_vault` tools.
 
 ---
 name: vaultspec.builtin
@@ -4493,53 +3880,41 @@ trigger: always_on
 
 A verification grounding claim — a casilla listed in a verification expectation's
 `externally_grounded_casilla_ids` — MUST be backed by a bundled AEAT-authoritative
-oracle payload that carries the expected figure (a Renta WEB Open replay under
-`corpus/parity_replays/renta_web_open/`, or an AEAT manual worked-example oracle
-under `corpus/manual_oracles/`, both keyed by `expected_by_casilla_id`), AND the
-registry engine MUST independently reproduce that figure in a parity test. Never
-fabricate a grounding figure, never hand-compute it from the registry formula
-under test, and never declare `externally_grounded_casilla_ids` without both the
-bundled evidence and the engine-reproduction test. Enrollment in a
-`verification_expectation` (coverage-gated or reconcile-when-present) is NOT
-grounding — it only means the casilla is reconciled filed-vs-engine; grounding is
-the stronger claim that the engine value itself is checked against an independent
-AEAT authority.
+oracle payload carrying the expected figure (a Renta WEB Open replay under
+`corpus/parity_replays/renta_web_open/`, or an AEAT manual worked-example oracle under
+`corpus/manual_oracles/`, both keyed by `expected_by_casilla_id`), AND the registry
+engine MUST independently reproduce that figure in a parity test. Never fabricate a
+grounding figure, never hand-compute it from the registry formula under test, and never
+declare `externally_grounded_casilla_ids` without both. Enrollment in a
+`verification_expectation` is NOT grounding — it only reconciles filed-vs-engine;
+grounding is the stronger claim that the engine value itself is checked against an
+independent AEAT authority.
 
 ## Why
 
-The verification-power campaign found enrollment reached 100% of computed casillas
-while external per-casilla AEAT grounding was ~1% (research
-`2026-07-01-verification-power-research`). A grounding claim with no independent
-oracle behind it is a false confidence signal: a filed value reconciled only
-against the app's own engine cannot catch a systematic engine error the filing
-matches. ADR `2026-07-01-verification-power-adr` made grounding tier a declared,
-build-time-validated registry field surfaced on the verdict as
-`independently_grounded_fraction`, and the symmetric honesty gate
-(`test_external_oracle_grounding_enrolled.py`) enforces evidence in BOTH
-directions — every bundled oracle figure must be enrolled, and every declared
-`externally_grounded_casilla_ids` must have a bundled oracle figure for its filing
-year. This is the verification-surface companion to
-`legal-grounding-verifies-bundled-authoritative-corpus` (verify figures against
-bundled authoritative text) and `no-tautological-calculation-tests` (never assert
-engine output against a number hand-computed from the same formula).
+The verification-power campaign found enrollment at 100% of computed casillas while
+external per-casilla AEAT grounding was ~1% (research
+`2026-07-01-verification-power-research`): a value reconciled only against the app's own
+engine cannot catch a systematic engine error the filing matches. ADR
+`2026-07-01-verification-power-adr` made grounding a build-time-validated registry field
+surfaced as `independently_grounded_fraction`, and the symmetric honesty gate
+`test_external_oracle_grounding_enrolled.py` enforces evidence in BOTH directions (every
+bundled oracle figure enrolled; every declared id backed by a bundled figure for its
+filing year). Companion to `legal-grounding-verifies-bundled-authoritative-corpus` and
+`no-tautological-calculation-tests`.
 
 ## How
 
-- **Good:** M100 2024 `0226` is declared `externally_grounded` only after (1) a
-  bundled `corpus/manual_oracles/modelo-100-2024-estimacion-directa-simplificada.json`
-  carries `expected_by_casilla_id.0226 = "58100.00"` quoted verbatim from the AEAT
-  manual's caso práctico (with a `raw_evidence_locator` line anchor), and (2)
-  `test_m100_2024_estimacion_directa_manual_worked_example.py` seeds the manual's
-  raw inputs and proves the engine independently computes `0226 = 58100.00`. Both
-  the honesty gate and an anti-tautology companion test pass.
-- **Good:** when the bundled manual states a contradictory figure (an OCR/footnote
-  artefact), ground on the figure the manual states repeatedly and that the engine
-  re-derives bottom-up, and document the discrepancy in the test — never silently
-  pick one number.
-- **Bad:** adding a casilla id to `externally_grounded_casilla_ids` because the
-  engine happens to emit a plausible value, with no bundled oracle payload — the
-  symmetric honesty gate fails, and the "grounding" is unfounded.
-- **Bad:** authoring a manual-oracle `expected_by_casilla_id` figure by running the
-  registry formula and copying its output — that is tautological; the figure must
-  be the AEAT manual/replay literal, and the engine must reproduce it independently.
+- **Good:** M100 2024 `0226` is declared `externally_grounded` only after (1)
+  `corpus/manual_oracles/modelo-100-2024-estimacion-directa-simplificada.json` carries
+  `expected_by_casilla_id.0226 = "58100.00"` quoted verbatim from the AEAT manual (with
+  a `raw_evidence_locator` anchor), and (2)
+  `test_m100_2024_estimacion_directa_manual_worked_example.py` proves the engine
+  independently computes `0226 = 58100.00`. When the manual states a contradictory
+  figure (OCR/footnote artefact), ground on the figure it states repeatedly and the
+  engine re-derives bottom-up, documenting the discrepancy — never silently pick one.
+- **Bad:** adding an id because the engine emits a plausible value, with no bundled
+  oracle (the honesty gate fails); or authoring an `expected_by_casilla_id` figure by
+  copying the registry formula's own output (tautological — it must be the AEAT literal,
+  independently reproduced).
 </vaultspec>

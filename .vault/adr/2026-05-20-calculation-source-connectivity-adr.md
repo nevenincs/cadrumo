@@ -1,7 +1,7 @@
 ---
 tags: ["#adr", "#calculation-source-connectivity"]
 date: "2026-05-20"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-20-calculation-source-connectivity-research]]"
 ---
@@ -58,7 +58,7 @@ registry to depend on observation shape instead of concrete source packages.
 
 ## Constraints
 
-Application code must remain under `src/aeat/`.
+Application code must remain under `src/cadrumo/`.
 
 Boundary payloads must be strict typed Pydantic v2 models, not bare
 `dict[str, Any]`.
@@ -85,19 +85,19 @@ surface when implementing the source mesh.
 
 Application aggregation surface:
 
-- `src/aeat/application/aggregation/_modelo_bindings.py` contains
+- `src/cadrumo/application/aggregation/_modelo_bindings.py` contains
   `ModeloLedgerBindingAggregation`,
   `resolve_modelo_ledger_binding_values_from_repositories`, and
   `aggregation_period_for_modelo`. This is the existing narrow bridge from
   bucket repositories into registry binding values.
-- `src/aeat/application/aggregation/_iva_ledger.py` contains
+- `src/cadrumo/application/aggregation/_iva_ledger.py` contains
   `IvaLedgerAggregationIssueReason`, `IvaLedgerAggregationIssue`,
   `ProrrataLedgerReference`, `IvaLedgerAggregation`,
   `aggregate_iva_ledger_observations_from_repositories`,
   `aggregate_iva_ledger_observations`, `_classify_iva_transaction`,
   `_flow_direction_for`, and `_iva_rate_kind_for`. This is the current ledger
   IVA source adapter.
-- `src/aeat/application/aggregation/_renta_ledger.py` contains
+- `src/cadrumo/application/aggregation/_renta_ledger.py` contains
   `RentaLedgerAggregationIssueReason`, `RentaLedgerAggregationIssue`,
   `_PurchaseInvoiceEvidencePayload`, `RentaLedgerExpenseAggregation`,
   `aggregate_renta_ledger_expenses_from_repositories`,
@@ -105,82 +105,82 @@ Application aggregation surface:
   `_renta_direction_for`, `_business_amount`,
   `_purchase_invoice_evidence_payload`, and `_casilla_aggregation`. This is
   the current ledger Renta expense source adapter.
-- `src/aeat/application/aggregation/_retenciones.py` contains
+- `src/cadrumo/application/aggregation/_retenciones.py` contains
   `RetencionScheme`, `RetencionObservation`, `RetencionPerceptorRollup`,
   `RetencionesAggregation`, `aggregate_retenciones_111`,
   `aggregate_retenciones_115`, `aggregate_retenciones_123`,
   `aggregate_retenciones_180`, `aggregate_retenciones_190`, and
   `aggregate_retenciones_193`. This is aggregation logic, but it is not yet
   wired into the default bucket modelo calculation path.
-- `src/aeat/application/aggregation/_counterpart.py` contains
+- `src/cadrumo/application/aggregation/_counterpart.py` contains
   `OperationKind347`, `OperationKind349`, `CounterpartObservation`,
   `CounterpartRollup`, and `CounterpartAggregation`. This is the counterpart
   observation family for 347 and 349-style source cohorts.
-- `src/aeat/application/aggregation/_foreign_assets.py` contains
+- `src/cadrumo/application/aggregation/_foreign_assets.py` contains
   `ForeignAssetClass`, `ForeignAssetIngestObservation`,
   `ForeignAssetClassRollup`, and `ForeignAssetsAggregation`. This is the 720
   source family shape.
-- `src/aeat/application/aggregation/_service.py` contains
+- `src/cadrumo/application/aggregation/_service.py` contains
   `AggregationSourceKind`, `PerModeloAggregationProvider`,
   `PerModeloAggregationProviderContract`, `PerModeloAggregationContract`,
   `PerModeloAggregationCommand`, `PerModeloAggregationResult`,
   `provider_for_modelo`, and `aggregate_per_modelo`. This is the closest
   existing generic aggregation service, but it is provider-grouped by modelo
   family rather than binding-source-driven for all registry sources.
-- `src/aeat/application/aggregation/_registry_provider.py` contains
+- `src/cadrumo/application/aggregation/_registry_provider.py` contains
   `PerModeloRegistryBindingResolution` and counterpart registry binding
   resolution. This is a reusable pattern for turning source observations into
   registry binding values.
-- `src/aeat/application/aggregation/_oss_ioss.py` contains
+- `src/cadrumo/application/aggregation/_oss_ioss.py` contains
   `OssIossLedgerCandidate` and OSS/IOSS ledger binding aggregation. It must be
   enrolled as its own source resolver, not collapsed into domestic IVA.
-- `src/aeat/application/aggregation/_models.py` contains `PeriodKind`,
+- `src/cadrumo/application/aggregation/_models.py` contains `PeriodKind`,
   `Quarter`, `PeriodType`, `Period`, `CasillaProvenance`, and
   `CasillaAggregation`. Period normalization and provenance should be reused
   or centralized instead of duplicated in each source path.
 
 Application modelo and filing surface:
 
-- `src/aeat/application/modelo/_actions.py` contains
+- `src/cadrumo/application/modelo/_calculation_actions.py` contains
   `calculate_modelo_revision`, `_apply_iva_compensation_decision_binding`,
   `_taxpayer_nif_for_bucket`,
   `calculate_modelo_revision_from_bucket_aggregation`, `_ledger_binding_ids`,
   and `_reject_caller_overrides_of_ledger_bindings`. The hardcoded
   `ledger_iva_aggregation` and `ledger_renta_expense_aggregation` ownership
   check is the immediate place to generalize.
-- `src/aeat/application/modelo/_borrador_binding.py` contains
+- `src/cadrumo/application/modelo/_borrador_binding.py` contains
   `Modelo100BorradorBindingCommand` and `Modelo100BorradorBindingResult`.
   Borrador is a calculation source and must participate through the same
   source ownership and provenance rules.
-- `src/aeat/application/modelo/_export.py` contains `ModeloExportCommand` and
+- `src/cadrumo/application/modelo/_export.py` contains `ModeloExportCommand` and
   `ModeloExportResult`. Export must consume row values and source-derived
   values after the mesh has resolved them.
-- `src/aeat/application/modelo/_reconcile.py` contains
+- `src/cadrumo/application/modelo/_reconcile.py` contains
   `ModeloReconciliationCommand` and `ModeloReconciliationReport`.
   Reconciliation remains downstream from calculation and must not become a
   hidden source resolver.
-- `src/aeat/application/filing/__init__.py` contains `build_draft`. The draft
+- `src/cadrumo/application/filing/__init__.py` contains `build_draft`. The draft
   API accepts inputs and registry calculation values but does not itself read
   repositories for source-backed bindings.
-- `src/aeat/application/filing/_review.py` contains
+- `src/cadrumo/application/filing/_review.py` contains
   `compute_current_approval_basis` and `approval_stale_reasons`. Approval
   staleness currently fingerprints only part of the source surface and must
   become source-mesh-aware.
-- `src/aeat/application/filing/runtime.py` contains
+- `src/cadrumo/application/filing/runtime.py` contains
   `ModeloOperatorProfile`, `RegistryCasillaSchema`, and runtime schema
   provider wiring. It is a runtime schema surface, not a source repository
   reader.
 
 Registry calculation surface:
 
-- `src/aeat/domain/calculations/registry/_schema.py` defines
+- `src/cadrumo/domain/calculations/registry/_schema.py` defines
   `DataBindingDefinition` source literals. Current committed source families
   include `ledger_iva_aggregation`, `ledger_renta_expense_aggregation`,
   `ledger_oss_aggregation`, `ledger_transaction`, `purchase_invoice_evidence`,
   `payable_invoice`, `collectible_invoice`, `profile`, `previous_filing`,
   `withholding`, `foreign_asset`, `manual_input`, `related_party_operation`,
   `atribucion_member`, and `refund_operation`.
-- `src/aeat/domain/calculations/registry/_bindings.py` contains
+- `src/cadrumo/domain/calculations/registry/_bindings.py` contains
   `CasillaObservation`, `RegistryModeloObservation`,
   `OracleModeloObservation`, `InvoiceObservation`,
   `InvoiceObservationRequirement`, `_InvoiceSelector`,
@@ -194,26 +194,26 @@ Registry calculation surface:
   `AtributionMemberObservation`, `_AtributionSelector`,
   `RefundOperationObservation`, `_RefundSelector`, `_ProfileSelector`, and
   `_ManualInputSelector`.
-- `src/aeat/domain/calculations/registry/_bindings.py` also contains
+- `src/cadrumo/domain/calculations/registry/_bindings.py` also contains
   `validate_ledger_iva_aggregation_binding_definition`,
   `resolve_ledger_iva_aggregation_binding_values`,
   `validate_ledger_renta_expense_aggregation_binding_definition`, and
   `resolve_ledger_renta_expense_aggregation_binding_values`. These are pure
   registry-side resolvers and must remain storage-free.
-- `src/aeat/domain/calculations/registry/_validate.py` dispatches
+- `src/cadrumo/domain/calculations/registry/_validate.py` dispatches
   source-specific binding validators. Adding a source family requires registry
   validation here and application resolver enrollment separately.
-- `src/aeat/domain/calculations/registry/_relations.py` contains
+- `src/cadrumo/domain/calculations/registry/_relations.py` contains
   relation-source requirements. Cross-model values are source dependencies and
   must be explicit in the source resolution envelope.
-- `src/aeat/domain/calculations/registry/_queries.py` contains
+- `src/cadrumo/domain/calculations/registry/_queries.py` contains
   `RegistryQueryService` and report rows for model, casilla, binding, and
   formula discovery. The mesh should use the registry as the source of truth
   for required binding sources, not maintain a parallel static list.
 
 Ledger and transaction surface:
 
-- `src/aeat/domain/transactions/_models.py` contains `Transaction`,
+- `src/cadrumo/domain/transactions/_models.py` contains `Transaction`,
   `TransactionCatalogue`, `BucketTransactionRef`,
   `ClassificationHistoryEntry`, `TransactionEvidenceProvenanceEntry`,
   `TransactionEditLineageEntry`, `TransactionLifecycleLineageEntry`, and
@@ -221,27 +221,27 @@ Ledger and transaction surface:
   `taxable_base`, `iva_rate`, `iva_amount`, `irpf_category`,
   `usage_ratio_id`, `prorrata_reference`, `purchase_invoice_evidence_id`, and
   `attachment_ids`.
-- `src/aeat/domain/transactions/_enums.py` contains `TransactionDirection`,
+- `src/cadrumo/domain/transactions/_enums.py` contains `TransactionDirection`,
   `BusinessClassification`, `TransactionLifecycleState`, and `SplitRole`.
   These enums are currently decisive for IVA and Renta aggregation.
-- `src/aeat/domain/transactions/_repository.py` contains
+- `src/cadrumo/domain/transactions/_repository.py` contains
   `TransactionCatalogueRepository`. It is bucket-scoped and source ids are
   unique only inside a bucket.
-- `src/aeat/application/ledger/_actions.py` owns ledger mutation and guards
+- `src/cadrumo/application/ledger/` owns ledger mutation and guards
   finalized modelo dependencies through modelo source id checks. The mesh must
   preserve those dependency ids or expand them to typed source refs.
-- `src/aeat/application/ledger/_models.py` contains
+- `src/cadrumo/application/ledger/_models.py` contains
   `ManualLedgerTransactionCommand`, `ManualLedgerTransactionPatch`,
   `ManualLedgerTransactionResult`, `LedgerImportOperationResult`,
   `LedgerReviewRow`, `LedgerStatusReport`, `LedgerRemovalBlocker`,
   `LedgerTransactionRemovalReport`, `LedgerExportCommand`, and
   `LedgerExportResult`. CLI/application input can already carry IVA, IRPF,
   prorrata, evidence, and attachment fields.
-- `src/aeat/application/ledger/_preflight.py` contains
+- `src/cadrumo/application/ledger/_preflight.py` contains
   `LedgerPreflightIssueReason`, `LedgerPreflightIssue`, and
   `LedgerPreflightReport`. Preflight diagnostics should align with source mesh
   diagnostics instead of becoming a separate silent gate.
-- `src/aeat/application/ledger/_ratios.py` contains `EligibleCategoryRow`,
+- `src/cadrumo/application/ledger/_ratios.py` contains `EligibleCategoryRow`,
   `RatiosValidationFinding`, `RatiosValidationReport`, and
   `RatiosCensoOverrideWarning`. Shared business expense ratios must flow into
   source resolution as explicit provenance, not only as transaction scalar
@@ -249,98 +249,98 @@ Ledger and transaction surface:
 
 IVA domain surface:
 
-- `src/aeat/domain/iva/_schema.py` contains `IvaCategory`, `EUMemberState`,
+- `src/cadrumo/domain/iva/_schema.py` contains `IvaCategory`, `EUMemberState`,
   `IvaRateKind`, and `IvaCitationSource`. Ledger IVA rate validation depends
   on these canonical rates and citations.
-- `src/aeat/domain/iva/_flow.py` contains `IvaFlowDirection` and
+- `src/cadrumo/domain/iva/_flow.py` contains `IvaFlowDirection` and
   `IvaSettlementSide`. Current ledger mapping sends incoming rows to
   repercutido and outgoing rows to soportado.
-- `src/aeat/domain/iva/_classification.py` contains `IvaTerritorialScope`,
+- `src/cadrumo/domain/iva/_classification.py` contains `IvaTerritorialScope`,
   `InvoiceKind`, `CustomerTaxStatus`, and `TransactionKind`. Invoice-derived
   IVA source resolution should use this classification surface instead of
   reinterpreting invoice direction ad hoc.
-- `src/aeat/domain/iva/_prorrata.py` contains `ProrrataRegime`,
+- `src/cadrumo/domain/iva/_prorrata.py` contains `ProrrataRegime`,
   `ProrrataKind`, and `InputClassification`. Current ledger IVA aggregation
   records prorrata references but does not make the whole prorrata lifecycle a
   first-class source resolver.
-- `src/aeat/domain/iva/_oss.py` contains `OssIossRegime`, `IossFilerRole`,
+- `src/cadrumo/domain/iva/_oss.py` contains `OssIossRegime`, `IossFilerRole`,
   `DeductionScope`, and `RegimePeriodicity`. OSS/IOSS must remain a distinct
   resolver and binding source.
 
 Renta, category, and regional surface:
 
-- `src/aeat/domain/renta/_ledger_expenses.py` contains
+- `src/cadrumo/domain/renta/_ledger_expenses.py` contains
   `RentaExpenseDirection`, `RentaDeductibilityStatus`,
   `RentaInvoiceEvidenceStatus`, `RentaReconciliationStatus`,
   `RentaDeductibilityContext`, `RentaDeductibleExpenseFact`,
   `RentaDeductibilityResult`, `RentaDeductibleExpenseObservation`,
   `evaluate_renta_deductibility`, and
   `build_renta_deductible_expense_observation`.
-- `src/aeat/domain/renta/_first_slice_routing.py` contains
+- `src/cadrumo/domain/renta/_first_slice_routing.py` contains
   `FIRST_SLICE_EXPENSE_CASILLAS` and `expected_casilla_for_category`. Current
   Renta ledger binding coverage is first-slice only, not all deductible
   expense categories.
-- `src/aeat/domain/renta/_substrate.py` contains `RentaIncomeType` and
+- `src/cadrumo/domain/renta/_substrate.py` contains `RentaIncomeType` and
   `EstimacionDirectaModalidad`. These are likely future inputs for full IRPF
   and Renta activity source routing.
-- `src/aeat/domain/categories/_spending_category.py` contains
+- `src/cadrumo/domain/categories/_spending_category.py` contains
   `SpendingCategory` and `SpendingCategoryFamily`. This is the stable expense
   taxonomy for autonomo ledger categories.
-- `src/aeat/domain/categories/_profile.py` contains
+- `src/cadrumo/domain/categories/_profile.py` contains
   `IvaDeductibilityHint` and `CategoryProfile`. Current profiles are year-keyed
   and do not carry CCAA-specific deductibility.
-- `src/aeat/domain/categories/_proportionality.py` contains
+- `src/cadrumo/domain/categories/_proportionality.py` contains
   `CategoryCitationSource`, `CategoryCitation`, `ProportionalityKind`,
   `StatutoryCapPeriod`, `StatutoryCapVariant`, and `ProportionalityRule`.
   Shared business expense and statutory caps must stay here, not in registry
   formulas.
-- `src/aeat/core/resources/_repos/category_profiles.py` contains
+- `src/cadrumo/core/resources/_repos/category_profiles.py` contains
   `CategoryProfileRepository`. Its current key is the filing year. If expense
   categories differ by CCAA or foral regime, this repository and the
   `RentaDeductibilityContext` must become region-aware.
-- `src/aeat/domain/profile/_ccaa.py` contains `CCAA`. CCAA is already bound
+- `src/cadrumo/domain/contribuyente/_ccaa.py` contains `CCAA`. CCAA is already bound
   into Modelo 100 profile facts, but it is not yet part of expense
   deductibility context.
-- `src/aeat/domain/profile/__init__.py` contains `TaxResidenceProfile` and
+- `src/cadrumo/domain/contribuyente/__init__.py` contains `TaxResidenceProfile` and
   residence-change records. The source mesh should derive region context from
   profile source resolution, not duplicate profile parsing.
 
 Invoice and evidence surface:
 
-- `src/aeat/domain/invoices/_models.py` contains `InvoiceLine`, `Invoice`,
+- `src/cadrumo/domain/invoices/_models.py` contains `InvoiceLine`, `Invoice`,
   and `InvoiceCatalogue`. `Invoice` carries `kind`, `base_total`, `iva_total`,
   `grand_total`, and `linked_transaction_ids`.
-- `src/aeat/domain/invoices/_enums.py` contains `IvaRate` and
+- `src/cadrumo/domain/invoices/_enums.py` contains `IvaRate` and
   `PaymentStatus`. Invoice-derived IVA and counterpart sources should preserve
   invoice rate and payment status evidence.
-- `src/aeat/domain/invoices/_repository.py` contains
+- `src/cadrumo/domain/invoices/_repository.py` contains
   `InvoiceCatalogueRepository`. Individual invoices carry bucket identity, so
   source resolvers must check bucket ownership when using this global
   catalogue.
-- `src/aeat/domain/invoices/_service.py` contains
+- `src/cadrumo/domain/invoices/_service.py` contains
   `ReconciliationSuggestion`, `LinkInconsistency`, invoice link operations,
   reconciliation suggestion logic, and link consistency validation.
-- `src/aeat/application/invoices/_linking.py` contains
+- `src/cadrumo/application/invoices/_linking.py` contains
   `InvoiceTransactionLinkResult` and `link_invoice_transaction_repositories`.
   This is the application-level bidirectional link between invoices and ledger
   transactions.
-- `src/aeat/application/invoices/_reconciliation.py` contains
+- `src/cadrumo/application/invoices/_reconciliation.py` contains
   `InvoiceReconciliationResult` and `reconcile_invoice_repositories`.
   Reconciliation can improve evidence links, but calculation must not depend
   on hidden reconciliation side effects.
-- `src/aeat/application/invoices/_queries.py` contains `InvoiceListRow` and
+- `src/cadrumo/application/invoices/_queries.py` contains `InvoiceListRow` and
   invoice list queries. These are read projections, not calculation source
   envelopes.
-- `src/aeat/application/invoices/_projection.py` contains
+- `src/cadrumo/application/invoices/_projection.py` contains
   `InvoiceReviewProjection`, `InvoiceMatchRow`, and `InvoiceMatchProjection`.
   These are operator review projections and should not duplicate source
   resolution.
-- `src/aeat/application/ledger/_evidence.py` contains
+- `src/cadrumo/application/ledger/_evidence.py` contains
   `PurchaseInvoiceEvidence`, `PurchaseInvoiceEvidencePatch`,
   `PurchaseInvoiceEvidenceResult`, and `PurchaseInvoiceEvidenceService`.
   Purchase evidence is a separate application store and must be adapted into
   typed source observations before use in calculations.
-- `src/aeat/application/ledger/_business_operation_invoice.py` contains
+- `src/cadrumo/application/ledger/_business_operation_invoice.py` contains
   `BusinessOperationInvoiceSourceKind`, `BusinessOperationInvoice`,
   `BusinessOperationInvoicePatch`, `_BusinessOperationInvoiceService`,
   `PayableInvoiceService`, and `CollectibleInvoiceService`. These payable and
@@ -349,19 +349,19 @@ Invoice and evidence surface:
 
 Fincas, property, and amortization surface:
 
-- `src/aeat/domain/fincas/_models.py` contains `Finca`,
+- `src/cadrumo/domain/fincas/_models.py` contains `Finca`,
   `FincaRendimientoRecord`, `FincaGasto`, and
   `FincaAmortizacionLedgerEntry`.
-- `src/aeat/domain/fincas/_repository.py` contains `FincaRepository`,
+- `src/cadrumo/domain/fincas/_repository.py` contains `FincaRepository`,
   `ArrendamientoRepository`, `FincaRendimientoRepository`,
   `FincaGastoRepository`, and `FincaAmortizacionLedgerRepository`.
-- `src/aeat/domain/fincas/_aggregates.py` contains `FincaAttribution`,
+- `src/cadrumo/domain/fincas/_aggregates.py` contains `FincaAttribution`,
   `ContractTierAttribution`, and `FincaAggregates`.
-- `src/aeat/domain/fincas/_amortization_ledger.py` contains
+- `src/cadrumo/domain/fincas/_amortization_ledger.py` contains
   `AmortizationComputation`.
-- `src/aeat/domain/fincas/_expense_rollup.py` contains
+- `src/cadrumo/domain/fincas/_expense_rollup.py` contains
   `CarryForwardEntry` and `GastosForYear`.
-- `src/aeat/domain/fincas/_enums.py` contains `UseType`,
+- `src/cadrumo/domain/fincas/_enums.py` contains `UseType`,
   `ExpenseCategory`, and `ReduccionTier`.
 - No current application source resolver was found that projects fincas,
   rental income, property expense, imputation, or amortization records into
@@ -369,11 +369,11 @@ Fincas, property, and amortization surface:
 
 Inventory surface:
 
-- `src/aeat/application/inventory/_service.py` contains
+- `src/cadrumo/application/inventory/_service.py` contains
   `InventoryActividadSummary`, `InventoryMovementCommand`,
   `InventoryValuationPreview`, `InventoryLedgerResult`,
   `InventoryValuationPreviewResult`, and `InventoryService`.
-- `src/aeat/domain/profile/inventory/__init__.py` contains `MovementKind` and
+- `src/cadrumo/domain/contribuyente/inventory/__init__.py` contains `MovementKind` and
   `ValuationMethod`.
 - Inventory is currently an application service over profile inventory
   structures and a ledgers-directory persistence path, not a secure
@@ -382,28 +382,28 @@ Inventory surface:
 
 Secure storage, profile lifecycle, live, and workflow surface:
 
-- `src/aeat/adapters/persistence/storage/sql/secure_objects.py` contains
+- `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py` contains
   `SecureObjectRepository`. This is the low-level encrypted object store.
-- `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`
+- `src/cadrumo/adapters/persistence/storage/envelope/_secure_repository.py`
   contains `SecureBoundRepository`. This is the reusable typed encrypted
   repository pattern.
-- `src/aeat/application/user_profile/_repository.py` contains
+- `src/cadrumo/application/user_profile/_repository.py` contains
   `UserProfileLifecycleRepository` and `UserProfileSnapshotRepository`.
   Profile facts are source inputs and must be fingerprinted when used.
-- `src/aeat/application/calculations/_observations_repository.py` contains
+- `src/cadrumo/application/calculations/_observations_repository.py` contains
   `CalculationObservationRepository` and `IvaWalletDecisionRepository`.
   Prior observations and IVA wallet choices are source families.
-- `src/aeat/application/calculations/_iva_compensation_history.py` contains
+- `src/cadrumo/application/calculations/_iva_compensation_history.py` contains
   `IvaCompensationHistoryRepository`. IVA compensation history is a source
   dependency for Modelo 303 chain behavior.
-- `src/aeat/application/live/_borrador_100.py` contains
+- `src/cadrumo/application/live/_borrador_100.py` contains
   `Borrador100SnapshotRepository`. Borrador values are source inputs for
   Modelo 100.
-- `src/aeat/application/live/_censo.py` contains `CensoSnapshotRepository`.
+- `src/cadrumo/application/live/_censo.py` contains `CensoSnapshotRepository`.
   Censo snapshots can affect profile and obligation source context.
-- `src/aeat/application/workflow/_persistence.py` contains
+- `src/cadrumo/application/workflow/_persistence.py` contains
   `WorkflowRunRepository`.
-- `src/aeat/application/workflow/_engine.py` contains `WorkflowEngine`.
+- `src/cadrumo/application/workflow/_engine.py` contains `WorkflowEngine`.
   Workflow is an orchestration gate and must not own source calculation logic.
 
 Model-by-model source inventory from committed registry data:
@@ -457,7 +457,7 @@ Connectivity facts that constrain the implementation:
 
 ## Implementation
 
-Introduce a canonical calculation source mesh under `aeat.application.aggregation`.
+Introduce a canonical calculation source mesh under `cadrumo.application.aggregation`.
 
 Define `CalculationSourceContext` as the typed input to source resolution. It
 contains bucket id, modelo, filing year, period, selected registry revision,
@@ -480,17 +480,16 @@ refuses unhandled source-backed bindings unless the binding is explicitly
 manual, rejects duplicate binding or bound-casilla writes without declared
 precedence, and returns one merged resolution.
 
-Move the current ledger IVA and Renta bridge into resolvers or wrap it through
-the new mesh. `calculate_modelo_revision_from_bucket_aggregation` can remain as
-a compatibility facade during the transition, but the default calculation
-entrypoint should be mesh-backed.
+Ledger IVA and Renta bridges are resolvers in the source mesh. The retired
+`calculate_modelo_revision_from_bucket_aggregation` facade is absent; modelo
+calculation has one mesh-backed entrypoint.
 
 Change `app modelo work calculate` to call the mesh-backed calculation path.
 Manual `--binding` and `--casilla` values should be merged only after resolver
 ownership checks. Caller-provided values must not override source-owned
 bindings or source-owned bound casillas.
 
-Enroll source families incrementally:
+The mesh enrolls these source families:
 ledger IVA aggregation; ledger Renta expense aggregation; prior filing and
 relation sources; Modelo 100 borrador prefill; IVA compensation wallet;
 invoice and counterpart observations; withholding; foreign assets; profile

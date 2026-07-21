@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#cli-workflow-redesign'
 date: '2026-05-21'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L3
 related:
   - "[[2026-05-21-profile-uuid-identity-adr]]"
@@ -11,10 +11,11 @@ related:
   - "[[2026-05-21-state-read-projection-adr]]"
   - "[[2026-05-20-cli-state-architecture-research]]"
   - "[[2026-05-21-cli-testimonial-reference]]"
+  - '[[2026-07-12-state-architecture-audit]]'
 ---
-
 # `cli-workflow-redesign` plan: profile state-management architecture
 
+> **Reconciled 2026-07-12 â€” delivered, not active.** The final testimonial and full verification gate was executed after the original W05 closeout, covering both remaining rows. Continued persona intake belongs to later campaigns, not this completed state-architecture slice. Evidence is recorded in `2026-07-12-state-architecture-audit`.
 The shared, evolving plan for the profile/workspace state-architecture
 slice. It executes three accepted ADRs:
 
@@ -91,7 +92,7 @@ Source: UUID-identity ADR + aggregate ADR.
   the manifest `label`, never the directory name.
 - [x] `W03.S14` - delete the legacy name-keyed code paths entirely;
   no dual-key read path remains.
-- [ ] `W03.S15` - testimonial regression persona re-runs the
+- [x] `W03.S15` - testimonial regression persona re-runs the
   `profile create / rename / switch / delete / status` flows.
 
 ## Wave `W04` - canonical state read-projection
@@ -125,7 +126,7 @@ Source: UUID-identity ADR + aggregate ADR.
   `AEAT_LOCAL_STORAGE_ROOT`.
 - [x] `W05.S21` - confirm `AEAT_LOCAL_STORAGE_ROOT` roots every
   profile store end to end - the persona harness depends on it.
-- [ ] `W05.S22` - full CLI + registry suite green; cross-store
+- [x] `W05.S22` - full CLI + registry suite green; cross-store
   integrity verified; testimonial regression batch across the
   `profile`, `auth`, `overview`, and `verify` surfaces.
 

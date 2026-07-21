@@ -3,10 +3,11 @@ tags:
   - '#adr'
   - '#verifactu-sii-scope-stance'
 date: '2026-07-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-21-sii-digital-iva-ledger-adr]]"
   - "[[2026-04-27-live-submit-permanently-forbidden-adr]]"
+  - '[[2026-07-10-verifactu-sii-scope-stance-research]]'
 ---
 
 # `verifactu-sii-scope-stance` adr: `Verifactu and SII scope stance` | (**status:** `accepted`)
@@ -27,12 +28,12 @@ The ambiguity is asymmetric: `2026-05-21-sii-digital-iva-ledger-adr`
 already modelled SII as a taxpayer-profile enrolment axis that reshapes other
 obligations (Modelo 347/390 suppression, Modelo 303 monthly cadence), and that
 model is implemented in production code (`sii_enrolled` on
-`src/aeat/domain/deadlines/_models.py`, `src/aeat/domain/deadlines/_profiles.py`,
+`src/cadrumo/domain/deadlines/_models.py`, `src/cadrumo/domain/deadlines/_profiles.py`,
 the wizard catalogue, and the M303 monthly-cadence commits `d3d49b29f` /
 `2dbe9d6e8`) -- yet that ADR's own status field still reads `proposed`. VERI*FACTU
-has only a registry topic (`src/aeat/_data/registry/aeat/topics/verifactu.toml`)
+has only a registry topic (`src/cadrumo/_data/registry/aeat/topics/verifactu.toml`)
 and a draft, uncurated terminology stub
-(`src/aeat/_data/terminology/concepts/tema-verifactu.toml`) -- no behavioural
+(`src/cadrumo/_data/terminology/concepts/tema-verifactu.toml`) -- no behavioural
 model, no profile fact, no obligation representation. This ADR closes the gap:
 it ratifies the SII stance retroactively (matching what already shipped) and
 issues the first explicit VERI*FACTU ruling.
@@ -155,8 +156,8 @@ No new implementation lands from this ADR. It is a scope ruling:
 - `2026-05-21-sii-digital-iva-ledger-adr`'s status is corrected from
   `proposed` to `accepted` in a follow-up housekeeping edit, since its model
   is already implemented and load-bearing in production
-  (`src/aeat/domain/deadlines/_models.py`, `_profiles.py`,
-  `src/aeat/application/wizard/_catalogue.py`, `src/aeat/core/setup_answers.py`,
+  (`src/cadrumo/domain/deadlines/_models.py`, `_profiles.py`,
+  `src/cadrumo/application/wizard/_catalogue.py`, `src/cadrumo/core/setup_answers.py`,
   and the M303 monthly-cadence commits).
 - VERI*FACTU remains at its current state: a registry `topics/verifactu.toml`
   stub (legal-reference anchor only) and a `draft` terminology concept, with

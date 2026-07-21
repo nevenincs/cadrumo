@@ -22,7 +22,7 @@ from collections.abc import Mapping
 from datetime import datetime
 from pathlib import Path
 
-from pydantic import BaseModel, Field, JsonValue, TypeAdapter
+from pydantic import BaseModel, JsonValue, TypeAdapter, model_validator
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.auth_session_keys import (
@@ -37,6 +37,7 @@ from ....persistence.storage import (
     SecureObjectRepository,
     secure_object_repository_for_active_bucket,
 )
+from ._errors import AuthError
 
 _SESSION_VERSION = AEAT_BROWSER_SESSION_NAMESPACE.schema_version
 type JsonObject = Mapping[str, JsonValue]
@@ -46,8 +47,18 @@ type ProviderSessionMetadata = JsonObject
 _JSON_OBJECT_ADAPTER: TypeAdapter[JsonObject] = TypeAdapter(JsonObject)
 
 
-class FormerProductAuthSessionStateError(RuntimeError):
-    """Raised when Cadrumo detects retired product session custody."""
+class FormerProductAuthSessionStateError(AuthError):
+    """Raised when Cadrumo detects retired product session custody.
+
+    Unlike :class:`core._config_state_root.FormerProductStateError`, this
+    refusal is raised at the adapter/storage boundary, not during
+    ``Settings``/pydantic bootstrap, so no bootstrap-cycle constraint bars it
+    from the registry-bound hierarchy: it derives from the same
+    :class:`AuthError` base as every other outbound AEAT authentication
+    domain error, so a caller catching ``AuthError`` (or ``CadrumoError``) at an
+    adapter or CLI boundary observes this refusal too, instead of it
+    propagating as an unclassified internal error.
+    """
 
 
 class PersistedBrowserSession(BaseModel):
@@ -63,10 +74,16 @@ class PersistedBrowserSession(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    schema_version: int = Field(default=_SESSION_VERSION, ge=1)
+    schema_version: int = _SESSION_VERSION
     storage_state: PlaywrightStorageState
     metadata: ProviderSessionMetadata
     written_at: datetime
+
+    @model_validator(mode="after")
+    def _schema_is_current(self) -> PersistedBrowserSession:
+        if self.schema_version != _SESSION_VERSION:
+            raise ValueError("persisted browser session schema version is unsupported")
+        return self
 
     @property
     def storage_state_sha256(self) -> str:

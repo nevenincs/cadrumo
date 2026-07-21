@@ -1,10 +1,11 @@
-"""Typed ``--json`` payload schemas for config CLI commands.
+"""Typed ``--json`` payload schemas for core config CLI commands.
 
 Every registered class is a strict :class:`OutputSchema` transport shape for a
 config command result. Field sets match the production emit sites in
 :mod:`_config` and its submodules; sequence fields use ``list`` so JSON-mode
 pydantic dumps stay arrays. Application services remain authoritative for
-profile, auth, apoderado, repair, diagnostics, and workflow semantics.
+profile, auth, apoderado, repair, diagnostics, and workflow semantics. Sandbox
+payloads live in the cohesive sibling :mod:`_config_sandbox_payloads`.
 """
 
 from __future__ import annotations
@@ -16,7 +17,8 @@ from pydantic import ConfigDict
 from ._schemas import OutputSchema, register_schema
 
 if TYPE_CHECKING:
-    from ...application.auth import AuthClearResult, AuthConfigureResult
+    from ...application.auth import AuthConfigureResult
+    from ...application.config_reset import ConfigResetOperation
 
 # Shared sub-models (not registered — used as nested types)
 
@@ -95,7 +97,52 @@ class ProfileFactPayload(OutputSchema):
     value: str
 
 
+class ConfigHelpEntryPayload(OutputSchema):
+    """One command row in the curated config help document."""
+
+    command: str
+    description: str
+
+
+class ConfigHelpSectionPayload(OutputSchema):
+    """One workflow-ordered section in the curated config help document."""
+
+    title: str
+    entries: list[ConfigHelpEntryPayload]
+
+
+@register_schema("root.config")
+class ConfigRootResult(OutputSchema):
+    """JSON envelope for bare ``aeat config`` and ``aeat config --help``."""
+
+    surface: str
+    heading: str
+    paragraphs: list[str]
+    sections: list[ConfigHelpSectionPayload]
+    footer: str
+
+
 # P05 — repair verb result schemas
+
+
+@register_schema("config.repair")
+class ConfigRepairResult(OutputSchema):
+    """JSON envelope for the composite ``aeat config repair`` report.
+
+    The application diagnostics service owns the nested registry, setup,
+    secure-object, and check records. This transport schema fixes the report's
+    top-level contract while preserving those already validated nested DTOs.
+    """
+
+    overall: str
+    package_name: str
+    package_version: str
+    python_version: str
+    log_file: str
+    registry: dict[str, object]
+    setup: dict[str, object] | None
+    secure_objects: dict[str, object]
+    checks: list[dict[str, object]]
 
 
 @register_schema("config.repair.logs")
@@ -206,30 +253,17 @@ class ConfigSwitchResult(OutputSchema):
     active_profile: str
 
 
-@register_schema("config.lock")
-class ConfigLockResult(OutputSchema):
-    """JSON envelope for ``aeat config lock``.
+@register_schema("config.passphrase.change")
+class ConfigPassphraseChangeResult(OutputSchema):
+    """JSON envelope for ``aeat config passphrase change``.
 
-    Confirms the profile whose local session material was locked and echoes the
-    remaining active pointer, if any. ``session_warning`` carries the local
-    secure-storage advisory shown by the command.
-    """
-
-    locked_profile: str
-    active_profile: str | None = None
-    session_warning: str
-
-
-@register_schema("config.rekey")
-class ConfigRekeyResult(OutputSchema):
-    """JSON envelope for ``aeat config rekey``.
-
-    Reports the secure-store directory and whether local encrypted material was
-    re-keyed. Key material and recovery phrases never enter this payload.
+    Reports the secure-store directory and whether the passphrase was rotated.
+    Neither the current nor the new passphrase, key material, nor recovery
+    phrases ever enter this payload.
     """
 
     secret_store_dir: str
-    rekeyed: bool
+    changed: bool
 
 
 @register_schema("config.recover")
@@ -245,24 +279,49 @@ class ConfigRecoverResult(OutputSchema):
     recovered: bool
 
 
-@register_schema("config.show_recovery")
-class ConfigShowRecoveryResult(OutputSchema):
-    """JSON envelope for ``aeat config show-recovery``.
+@register_schema("config.recovery.status")
+class ConfigRecoveryStatusResult(OutputSchema):
+    """JSON envelope for ``aeat config recovery status``.
 
-    The mnemonic is optional and appears only when the command intentionally
-    rotates or reveals recovery material. The path and enrolment flags remain
-    the stable machine-readable status fields.
+    Reports enrollment and the non-secret recovery fingerprint only; the
+    recovery words are never serialised on any envelope.
     """
 
     recovery_path: str
     recovery_enrolled: bool
-    rotated: bool = False
-    mnemonic: str | None = None
+    recovery_fingerprint: str | None = None
 
 
-@register_schema("config.verify_recovery")
-class ConfigVerifyRecoveryResult(OutputSchema):
-    """JSON envelope for ``aeat config verify-recovery``.
+@register_schema("config.recovery.create")
+class ConfigRecoveryCreateResult(OutputSchema):
+    """JSON envelope for ``aeat config recovery create``.
+
+    The candidate recovery words were written to the controlling terminal and
+    retype-confirmed before commit; only the non-secret fingerprint of the
+    installed envelope rides here.
+    """
+
+    recovery_path: str
+    recovery_fingerprint: str
+    rotated: bool
+
+
+@register_schema("config.recovery.rotate")
+class ConfigRecoveryRotateResult(OutputSchema):
+    """JSON envelope for ``aeat config recovery rotate``.
+
+    Same non-secret shape as the create envelope; ``rotated`` is true because
+    a prior enrollment was replaced.
+    """
+
+    recovery_path: str
+    recovery_fingerprint: str
+    rotated: bool
+
+
+@register_schema("config.recovery.verify")
+class ConfigRecoveryVerifyResult(OutputSchema):
+    """JSON envelope for ``aeat config recovery verify``.
 
     Confirms whether the supplied recovery material matched the encrypted local
     recovery record; the secret phrase is not echoed back.
@@ -270,6 +329,7 @@ class ConfigVerifyRecoveryResult(OutputSchema):
 
     recovery_path: str
     verified: bool
+    recovery_fingerprint: str | None = None
 
 
 @register_schema("config.profile.show")
@@ -415,18 +475,101 @@ class ConfigStatusResult(OutputSchema):
     next_action: str | None = None
 
 
-@register_schema("config.reset")
-class ConfigResetResult(OutputSchema):
-    """JSON envelope for ``aeat config reset``.
+class ConfigResetTargetPayload(OutputSchema):
+    """Secret-free phase projection for one reset target."""
 
-    Reports the reset scope, removed profile ids, and whether local auth session
-    state was removed. It does not include deleted profile records or auth
-    secrets.
-    """
+    bucket_id: str
+    label: str | None
+    status_at_snapshot: str | None
+    exists_at_snapshot: bool
+    phase: str
+    retention_blocks_erase: bool | None
+    retention_override_approved: bool | None
+    completed_at: str | None
 
-    scope: str
-    removed_profile_ids: list[str]
-    removed_auth_session: bool
+
+class ConfigResetSummaryPayload(OutputSchema):
+    """Reconciled completion counts for one reset operation."""
+
+    target_count: int
+    deleted_count: int
+    already_absent_count: int
+    retention_override_count: int
+    completed_at: str
+
+
+class ConfigResetOperationPayload(OutputSchema):
+    """Credential-free operator projection of one durable reset journal."""
+
+    operation_id: str
+    status: str
+    started_at: str
+    updated_at: str
+    pause_reason: str | None
+    paused_target_ids: list[str]
+    targets: list[ConfigResetTargetPayload]
+    summary: ConfigResetSummaryPayload | None
+
+    @classmethod
+    def from_operation(cls, operation: ConfigResetOperation) -> ConfigResetOperationPayload:
+        """Project the application journal without fingerprints or deletion witnesses."""
+        targets = [
+            ConfigResetTargetPayload(
+                bucket_id=target.bucket_id,
+                label=target.label,
+                status_at_snapshot=(target.status_at_snapshot.value if target.status_at_snapshot is not None else None),
+                exists_at_snapshot=target.exists_at_snapshot,
+                phase=target.phase.value,
+                retention_blocks_erase=(target.retention.blocks_erase if target.retention is not None else None),
+                retention_override_approved=(
+                    target.retention.override_approved if target.retention is not None else None
+                ),
+                completed_at=(target.completed_at.isoformat() if target.completed_at is not None else None),
+            )
+            for target in operation.targets
+        ]
+        summary = operation.summary
+        return cls(
+            operation_id=operation.operation_id,
+            status=operation.status.value,
+            started_at=operation.started_at.isoformat(),
+            updated_at=operation.updated_at.isoformat(),
+            pause_reason=(operation.pause_reason.value if operation.pause_reason is not None else None),
+            paused_target_ids=list(operation.paused_target_ids),
+            targets=targets,
+            summary=(
+                ConfigResetSummaryPayload(
+                    target_count=summary.target_count,
+                    deleted_count=summary.deleted_count,
+                    already_absent_count=summary.already_absent_count,
+                    retention_override_count=summary.retention_override_count,
+                    completed_at=summary.completed_at.isoformat(),
+                )
+                if summary is not None
+                else None
+            ),
+        )
+
+
+@register_schema("config.reset.start")
+class ConfigResetStartResult(OutputSchema):
+    """JSON envelope for starting one durable all-profile reset."""
+
+    operation: ConfigResetOperationPayload
+
+
+@register_schema("config.reset.status")
+class ConfigResetStatusResult(OutputSchema):
+    """JSON envelope for read-only durable reset status."""
+
+    operation: ConfigResetOperationPayload | None
+
+
+@register_schema("config.reset.resume")
+class ConfigResetResumeResult(OutputSchema):
+    """JSON envelope for resuming one exact durable reset journal."""
+
+    operation: ConfigResetOperationPayload
 
 
 # P07 — auth and bucket verb result schemas
@@ -543,39 +686,27 @@ class AuthLoginPayload(OutputSchema):
     model_config = ConfigDict(extra="allow")  # type: ignore[assignment]
 
 
-@register_schema("config.auth.clear")
-class AuthClearPayload(OutputSchema):
-    """JSON envelope for ``aeat config auth clear``.
+@register_schema("config.auth.logout")
+class AuthLogoutPayload(OutputSchema):
+    """Secret-free JSON envelope for ``aeat config auth logout``."""
 
-    Field set is 1:1 with the application
-    :class:`AuthClearResult`; the envelope derives its
-    values via
-    :meth:`AuthClearPayload.from_result`
-    rather than the command handler re-declaring the field map inline (DB-26
-    S49).
-    """
-
+    bucket_id: str
+    providers: list[str]
     removed_sessions: int
-    cleared_workflow_state: bool
+    cleared_session_state: bool
+
+
+@register_schema("config.auth.reset")
+class AuthResetPayload(OutputSchema):
+    """Secret-free JSON envelope for ``aeat config auth reset``."""
+
+    bucket_id: str
+    providers: list[str]
+    removed_sessions: int
+    cleared_provider_configuration: bool
     cleared_locks: int
-
-    @classmethod
-    def from_result(cls, result: AuthClearResult) -> AuthClearPayload:
-        """Project the application clear result into this CLI envelope.
-
-        The mapping stays 1:1 with
-        :class:`AuthClearResult`.
-
-        Returns:
-            The projected
-            :class:`AuthClearPayload`
-            instance.
-        """
-        return cls(
-            removed_sessions=result.removed_sessions,
-            cleared_workflow_state=result.cleared_workflow_state,
-            cleared_locks=result.cleared_locks,
-        )
+    removed_certificate_sources: int
+    removed_certificate_secrets: int
 
 
 @register_schema("config.auth.apoderado.check")
@@ -656,8 +787,8 @@ class ConfigProfileExportResult(OutputSchema):
     profile_id: str
     display_name: str
     out: str
-    # bundle_schema_version is an int (SUPPORTED_BUNDLE_SCHEMA_VERSIONS
-    # is `frozenset[int]`); the export handler passes it through verbatim.
+    # bundle_schema_version is an int; the export handler passes the current
+    # version through verbatim.
     schema_version: int
 
 
@@ -979,12 +1110,12 @@ class CertificateSourceSecretMutationPayload(OutputSchema):
 
     Mirrors :class:`application.auth.CertificateSourceSecretMutationResult`.
     Never carries the secret value itself — only whether one is now
-    registered, which backend holds it, and whether the call rotated an
-    existing secret.
+    registered and whether the call rotated an existing secret. Named
+    certificate secrets have exactly one storage authority (encrypted
+    secure storage), so no backend descriptor is projected.
     """
 
     name: str
-    backend: str = ""
     has_secret: bool = False
     rotated: bool = False
     removed: bool = False
@@ -1084,166 +1215,3 @@ class ConfigProfileDescendienteRemoveResult(OutputSchema):
     profile: str
     removed_index: int
     total: int
-
-
-@register_schema("config.profile.sandbox.create")
-class ConfigProfileSandboxCreateResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox create``.
-
-    Reports the new sandbox bucket identity and label; the sandbox is now the
-    active profile. ``seeded_from`` names the live profile whose facts were
-    copied in, or ``None`` when the sandbox started empty.
-    """
-
-    bucket_id: str
-    label: str
-    seeded_from: str | None = None
-
-
-@register_schema("config.profile.sandbox.list")
-class ConfigProfileSandboxListResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox list``.
-
-    Reuses :class:`ProfilePointerPayload` rows, filtered to buckets whose
-    label carries the reserved sandbox prefix.
-    """
-
-    active_profile: str | None = None
-    sandboxes: list[ProfilePointerPayload]
-
-
-@register_schema("config.profile.sandbox.use")
-class ConfigProfileSandboxUseResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox use``.
-
-    Same shape as :class:`ConfigSwitchResult`; registered under its own
-    command path since ``sandbox use`` delegates to the canonical
-    select-lifecycle-span primitive rather than the root ``config switch``
-    command.
-    """
-
-    active_profile: str
-
-
-class SandboxNamespacePayload(OutputSchema):
-    """One secure-object namespace row in a sandbox discard preview.
-
-    Mirrors :class:`~cadrumo.application.bucket_maintenance.SandboxNamespaceInventoryRow`:
-    only the namespace name and stored-row count, never decrypted payload
-    material.
-    """
-
-    namespace: str
-    row_count: int
-
-
-@register_schema("config.profile.sandbox.discard")
-class ConfigProfileSandboxDiscardResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox discard``.
-
-    Covers both the ``--dry-run`` preview branch (``dry_run=True``, no
-    mutation — ``namespaces`` lists what would be removed) and the confirmed
-    erase branch (``dry_run=False`` — ``previous_label`` reports the erased
-    sandbox's prior label; ``namespaces`` stays empty).
-    """
-
-    dry_run: bool = False
-    bucket_id: str
-    previous_label: str | None = None
-    namespaces: list[SandboxNamespacePayload] = []
-
-
-@register_schema("config.profile.sandbox.prune")
-class ConfigProfileSandboxPruneResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox prune``.
-
-    Covers the ``--dry-run`` preview branch (``sandboxes`` names every
-    sandbox that would be discarded, nothing removed) and the confirmed
-    branch (``discarded`` names every sandbox actually erased). Both
-    branches report the total count considered.
-    """
-
-    dry_run: bool = False
-    total: int
-    sandboxes: list[str] = []
-    discarded: list[str] = []
-
-
-@register_schema("config.profile.sandbox.archive")
-class ConfigProfileSandboxArchiveResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox archive``.
-
-    Reports the archived sandbox's bucket identity and label. Unlike
-    ``discard``, the sandbox bucket, manifest, and encrypted record all
-    survive intact — the sandbox merely drops off the live
-    ``sandbox list`` surface until ``sandbox restore`` reactivates it.
-    """
-
-    bucket_id: str
-    label: str
-
-
-@register_schema("config.profile.sandbox.restore")
-class ConfigProfileSandboxRestoreResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox restore``.
-
-    Reports the restored sandbox's bucket identity and label. The
-    symmetric inverse of ``sandbox archive``.
-    """
-
-    bucket_id: str
-    label: str
-
-
-class SandboxDiskUsageSubdirPayload(OutputSchema):
-    """One on-disk subdirectory row in a sandbox disk-usage report.
-
-    Mirrors :class:`~cadrumo.application.bucket_maintenance.BucketDiskUsageSubdirRow`:
-    a fixed-layout subdirectory name (``db``, ``blobs``, ``audit``) plus its
-    summed regular-file byte total and file count.
-    """
-
-    subdir: str
-    total_bytes: int
-    file_count: int
-
-
-class SandboxDiskUsagePayload(OutputSchema):
-    """One sandbox's disk-usage row within a ``sandbox usage`` report."""
-
-    label: str
-    bucket_id: str
-    total_bytes: int
-    subdirs: list[SandboxDiskUsageSubdirPayload]
-
-
-@register_schema("config.profile.sandbox.usage")
-class ConfigProfileSandboxUsageResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox usage``.
-
-    Reports the on-disk footprint of one named sandbox, or of every sandbox
-    at once when no name is given (``total_bytes`` then sums across every
-    listed sandbox). The measurement reads only filesystem metadata — never
-    decrypted secure-object content — via
-    :meth:`~cadrumo.application.bucket_maintenance.BucketMaintenanceService`.disk_usage.
-    """
-
-    total_bytes: int
-    sandboxes: list[SandboxDiskUsagePayload]
-
-
-@register_schema("config.profile.sandbox.merge")
-class ConfigProfileSandboxMergeResult(OutputSchema):
-    """JSON envelope for ``aeat config profile sandbox merge``.
-
-    Reports the promoted scope, the source sandbox and target profile
-    labels, and the per-category row counts merged via
-    :func:`~cadrumo.application.bucket_maintenance.merge_sandbox`. A re-run
-    against unchanged sandbox content reports the same counts (an
-    idempotent no-op write into the target, never a duplicate row).
-    """
-
-    scope: str
-    source_label: str
-    target_label: str
-    merged_counts: dict[str, int]

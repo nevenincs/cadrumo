@@ -1,4 +1,4 @@
-"""Unit tests for the casilla-value spreadsheet parser (issue #273)."""
+"""Unit tests for the casilla-value spreadsheet parser."""
 
 from __future__ import annotations
 

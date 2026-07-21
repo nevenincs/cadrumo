@@ -95,7 +95,7 @@ from ._applicability import (
     modelo_202_modality_from_inputs,
     taxpayer_model_is_declared,
 )
-from ._authority import ValidatedRegistryAuthority, bundled_authority
+from ._authority import ValidatedRegistryAuthority, bundled_authority, stamp_bundled_registry_verdict
 from ._bindings import (
     INVOICE_BINDING_SOURCE_KINDS,
     LEDGER_BINDING_SOURCE_KINDS,
@@ -219,9 +219,6 @@ from ._convenio import (
     load_convenio_authority,
 )
 from ._corpus_catalogue import (
-    CORPUS_SOURCES_INSTALL_HINT,
-    CorpusCompanionAdvisory,
-    is_companion_corpus_binary,
     verify_source_catalogue,
     verify_source_file,
 )
@@ -506,7 +503,6 @@ __all__ = [
     "CENSO_MODELO_ERROR_CODES",
     "CENSO_MODELO_EVENT_KINDS",
     "CENSO_MODELO_SERVICE_OWNER",
-    "CORPUS_SOURCES_INSTALL_HINT",
     "GROI_ORACLE_ID",
     "INVOICE_BINDING_SOURCE_KINDS",
     "IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS",
@@ -550,7 +546,6 @@ __all__ = [
     "ConvenioOverride",
     "ConvenioOverrideRow",
     "ConvenioTreaty",
-    "CorpusCompanionAdvisory",
     "CounterpartAggregationObservation",
     "CounterpartObservationRequirement",
     "CounterpartSourceKind",
@@ -796,7 +791,6 @@ __all__ = [
     "inventory_workbook_coverage",
     "invoice_binding_requirements",
     "is_active_censo_modelo",
-    "is_companion_corpus_binary",
     "is_registry_id",
     "iter_modelo_applicability_rules",
     "load_catalogue_file",
@@ -871,6 +865,7 @@ __all__ = [
     "select_revision",
     "selector_as_dict",
     "selector_model_for_source",
+    "stamp_bundled_registry_verdict",
     "summarize_non_overlapping_cross_revision_casilla_drift",
     "taxpayer_model_is_declared",
     "undeclared_casilla_ids",

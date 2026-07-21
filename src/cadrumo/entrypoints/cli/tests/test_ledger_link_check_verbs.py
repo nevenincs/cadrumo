@@ -12,6 +12,7 @@ from click.testing import Result
 from ....core import Period
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -22,7 +23,7 @@ def _invoke(args: Sequence[str]) -> Result:
 
 @pytest.fixture(autouse=True)
 def _isolated_backend(tmp_path: Path) -> Iterator[None]:
-    from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+    from ....application.user_profile import profile_create_storage_span
     from ....application.workflow import workflow_state_repository
 
     with (
@@ -35,12 +36,20 @@ def _isolated_backend(tmp_path: Path) -> Iterator[None]:
         yield
 
 
-def test_link_requires_at_least_one_target() -> None:
-    """Neither --invoice-id nor --evidence-id supplied surfaces as
-    BadParameter; the canonical call is meant to bind something."""
+def test_link_requires_invoice_id() -> None:
+    """`link` is invoice-only: --invoice-id is required, so a bare call refuses."""
 
     result = _invoke(["app", "ledger", "link", "0" * 64])
     assert result.exit_code != 0, result.output
+
+
+def test_link_rejects_removed_evidence_id_grammar() -> None:
+    """The retired `--evidence-id` option must be gone: evidence assignment is
+    reserved for `aeat app ledger attach`. Passing it is an unknown-option error."""
+
+    result = _invoke(["app", "ledger", "link", "0" * 64, "--invoice-id", "inv-1", "--evidence-id", "ev-123"])
+    assert result.exit_code != 0, result.output
+    assert "--evidence-id" in result.output or "No such option" in result.output
 
 
 def test_link_refuses_unknown_transaction_id() -> None:
@@ -48,7 +57,7 @@ def test_link_refuses_unknown_transaction_id() -> None:
     refused before either repository write is attempted."""
 
     result = _invoke(
-        ["app", "ledger", "link", "0" * 64, "--evidence-id", "ev-123"],
+        ["app", "ledger", "link", "0" * 64, "--invoice-id", "inv-123"],
     )
     assert result.exit_code != 0, result.output
 
@@ -178,14 +187,13 @@ def _line_value(output: str, key: str) -> str:
 def test_link_refuses_operator_invoice_add_id_instructively() -> None:
     """`link --invoice-id` must refuse an id minted by ``invoice add``.
 
-    Per the accepted ``2026-06-10-ledger-invoice-unification`` the slim
-    operator-CRUD ``BusinessOperationInvoice`` store (filled by ``invoice add``)
-    and the rich reconciliation ``InvoiceCatalogue`` that ``link --invoice-id``
-    targets are intentionally distinct: only the rich ``Invoice`` carries
-    ``linked_transaction_ids``. An ``invoice add`` id is therefore not a valid
-    ``--invoice-id`` target. This is the "documented sharp edge" the decision record fixes
-    explicitly so a future agent does not unify the two stores by mistake, and
-    it is the runtime fact the ledger-evidence how-to must reflect (audit M17).
+    The slim operator-CRUD ``BusinessOperationInvoice`` store (filled by
+    ``invoice add``) and the rich reconciliation ``InvoiceCatalogue`` that
+    ``link --invoice-id`` targets are intentionally distinct: only the rich
+    ``Invoice`` carries ``linked_transaction_ids``. An ``invoice add`` id is
+    therefore not a valid ``--invoice-id`` target. This is a documented sharp
+    edge, deliberate so the two stores are never unified by mistake, and it is
+    the runtime fact the ledger-evidence how-to must reflect.
 
     The refusal must be the instructive typed message that names the ``invoice
     add`` provenance and points at the evidence/attach path — never a silent

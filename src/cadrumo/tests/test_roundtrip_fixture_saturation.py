@@ -1,29 +1,23 @@
 """Structural gate: roundtrip-fixture builders must saturate defaultable fields.
 
-Per :mod:`aeat-roundtrip-discipline`: "Populate every defaultable field with a
-non-default value in roundtrip fixtures." A save-drops-field / load-re-defaults
-regression is invisible when the fixture uses the default.
+Every defaultable field must be populated with a non-default value in a
+roundtrip fixture. A save-drops-field / load-re-defaults regression is invisible
+when the fixture uses the default.
 
-This test applies two complementary checks across dedicated roundtrip test files
-(``test_*roundtrip*.py`` and ``test_*anti_tautology*.py``):
+The gate enumerates the dedicated roundtrip test files (``test_*roundtrip*.py``
+and ``test_*anti_tautology*.py``) live from the tree, and requires every
+``_populated_*`` function (the project's canonical naming convention for "all
+optional fields set") to satisfy at least one of the following structural
+markers:
 
-1. **Snapshot integrity**: the builder-function inventory committed to
-   ``src/cadrumo/_data/audit/s223-roundtrip-fixture-builders-2026-05-28.txt``
-   is consistent with the current file tree — every listed file still exists.
-   This catches renames or deletions that silently invalidate the audit.
+a. The enclosing file's module docstring mentions "populate" or "non-default"
+   or "optional" — indicating the author was aware of the rule.
+b. The function's own docstring mentions "populate", "non-default", "optional",
+   or "saturation".
+c. The function body contains at least 4 keyword-argument assignments in its
+   return call(s) — a heuristic proxy for "not just required fields".
 
-2. **Saturation marker**: every ``_populated_*`` function (the project's
-   canonical naming convention for "all optional fields set") must satisfy at
-   least one of the following structural markers:
-
-   a. The enclosing file's module docstring mentions "populate" or "non-default"
-      or "optional" — indicating the author was aware of the rule.
-   b. The function's own docstring mentions "populate", "non-default",
-      "optional", or "saturation".
-   c. The function body contains at least 4 keyword-argument assignments in its
-      return call(s) — a heuristic proxy for "not just required fields".
-
-   A function failing all three markers is reported as an unsaturated candidate.
+A function failing all three markers is reported as an unsaturated candidate.
 
 Waivers are declared inline below in ``_WAIVERS`` and must justify why the
 saturation rule does not apply (e.g. the model has no optional fields).
@@ -40,7 +34,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _TESTS_DIR = Path(__file__).parent
 _AEAT_ROOT = _TESTS_DIR.parent
-_REPO_ROOT = _AEAT_ROOT.parent.parent
 
 # Waivers: builder functions exempt from the saturation marker check.
 # Format: "path:lineno:function_name" -> "rationale"
@@ -113,43 +106,6 @@ def _collect_populated_builders(
             if isinstance(node, ast.FunctionDef) and node.name.startswith("_populated_"):
                 results.append((rel, node.lineno, node.name, node, tree))
     return results
-
-
-def test_snapshot_files_still_exist() -> None:
-    """Every file listed in the behavior contract audit snapshot must still exist on disk.
-
-    If a roundtrip test file is renamed or deleted the snapshot becomes stale.
-    This test surfaces that drift before the next saturation audit runs blind.
-    """
-    snapshot_path = _AEAT_ROOT / "_data" / "audit" / "s223-roundtrip-fixture-builders-2026-05-28.txt"
-    assert snapshot_path.exists(), f"S223 audit snapshot not found: {snapshot_path}"
-
-    missing: list[str] = []
-    for raw_line in snapshot_path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        # Format: "src/cadrumo/path/to/file.py:lineno func_name NOTE"
-        parts = line.split()
-        if not parts:
-            continue
-        path_lineno = parts[0]
-        # path_lineno is like "src/cadrumo/adapters/.../file.py:42"
-        colon_idx = path_lineno.rfind(":")
-        if colon_idx == -1:
-            continue
-        rel_path = path_lineno[:colon_idx]
-        # rel_path starts with "src/cadrumo/"; strip to get relative-to-repo
-        abs_path = _REPO_ROOT / Path(rel_path)
-        if not abs_path.exists():
-            missing.append(rel_path)
-
-    if missing:
-        joined = "\n  ".join(missing)
-        raise AssertionError(
-            f"S223 audit snapshot references {len(missing)} file(s) that no longer exist:\n  {joined}\n"
-            "Update the snapshot in src/cadrumo/_data/audit/s223-roundtrip-fixture-builders-2026-05-28.txt.",
-        )
 
 
 def test_populated_builders_carry_saturation_markers() -> None:

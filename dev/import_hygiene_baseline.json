@@ -1,11 +1,11 @@
 {
-  "$schema_note": "Checked-in ratchet baseline for the import-hygiene CI gate (dev/import_hygiene_scan.py). Read by src/cadrumo/tests/test_import_hygiene_gate.py. Every entry below is a NAMED, documented exception -- never a bulk allowlist. A closing commit that fixes a violation MUST shrink the matching list in the SAME commit (aeat-architecture-boundaries relocation-atomicity discipline). See ADR 2026-07-01-import-centralization-adr Ruling 8.",
+  "$schema_note": "Checked-in ratchet baseline for the import-hygiene CI gate (dev/import_hygiene_scan.py). Read by src/cadrumo/tests/test_import_hygiene_gate.py. Every entry below is a NAMED, documented exception -- never a bulk allowlist. A closing commit that fixes a violation MUST shrink the matching list in the SAME commit (relocation atomicity: the fix and the baseline shrink together).",
   "production_family1_cross_package_private_imports": {
-    "_note": "HARD-ZERO (2026-07): the application.review <-> application.workflow cycle-break documented here since the import-centralization campaign has been structurally removed. WorkflowEvent, utc_now, InvoiceReviewRecord, and LedgerReviewRecord -- the four runtime-bound names each side needed from the other -- were extracted into a new shared leaf module, cadrumo.application._workflow_review_models, that neither application.review nor application.workflow depends on; both packages now import these names from that shared owner instead of from each other's private submodules. Every consumer outside these two packages is unaffected: they already imported through the public application.review / application.workflow facades, which keep re-exporting the same names from the new owner. The gate now asserts the production count is EXACTLY ZERO (see the corresponding hard-zero assertion in test_import_hygiene_gate.py) rather than ratcheting against a named baseline; sites stays [] and any new production Family-1 hit is a straight failure.",
+    "_note": "HARD-ZERO (2026-07): the application.review <-> application.workflow cycle-break documented here has been structurally removed. WorkflowEvent, utc_now, InvoiceReviewRecord, and LedgerReviewRecord -- the four runtime-bound names each side needed from the other -- were extracted into a new shared leaf module, cadrumo.application._workflow_review_models, that neither application.review nor application.workflow depends on; both packages now import these names from that shared owner instead of from each other's private submodules. Every consumer outside these two packages is unaffected: they already imported through the public application.review / application.workflow facades, which keep re-exporting the same names from the new owner. The gate now asserts the production count is EXACTLY ZERO (see the corresponding hard-zero assertion in test_import_hygiene_gate.py) rather than ratcheting against a named baseline; sites stays [] and any new production Family-1 hit is a straight failure.",
     "sites": []
   },
   "family2_shim_modules": {
-    "_note": "Every module the scanner classifies as a Family-2 shim / pure-reexport surface. Each is a DOCUMENTED bridge (ADR Ruling 4): a single non-__init__ public re-export module is an acceptable canonical source when it carries a docstring explaining why. The gate fails if a NEW undocumented shim appears that is not in this list.",
+    "_note": "Every module the scanner classifies as a Family-2 shim / pure-reexport surface. Each is a DOCUMENTED bridge: a single non-__init__ public re-export module is an acceptable canonical source when it carries a docstring explaining why. The gate fails if a NEW undocumented shim appears that is not in this list.",
     "paths": [
       "src/cadrumo/adapters/outbound/aeat/_playwright.py",
       "src/cadrumo/application/workflow/_utils.py",
@@ -16,7 +16,7 @@
     ]
   },
   "family3_pinned_duplicate_symbols": {
-    "_note": "Named Family-3 'genuine duplicate' symbols the ADR investigated and pinned a disposition for (Ruling 5). The 7 umbrella app-layer re-exports (CalculationRevision, CalculationRevisionAmendmentKind, ExternalEvidenceKind, WorkUnit, link_transaction, suggest_reconciliations, verify_link_consistency) were RETIRED in Wave W03.P88 and must never reappear as multi-facade symbols. save_envelope and DEFAULT_IVA_GENERAL_RATE_PCT were investigated and require no action (two unrelated same-named functions; a benign zero-consumer duplicate declaration respectively) -- they are pinned here as the exact tolerated set so a NEW genuine cross-facade duplicate fails the gate.",
+    "_note": "Named Family-3 'genuine duplicate' symbols with an investigated, pinned disposition. The 7 umbrella app-layer re-exports (CalculationRevision, CalculationRevisionAmendmentKind, ExternalEvidenceKind, WorkUnit, link_transaction, suggest_reconciliations, verify_link_consistency) were RETIRED and must never reappear as multi-facade symbols. save_envelope and DEFAULT_IVA_GENERAL_RATE_PCT were investigated and require no action (two unrelated same-named functions; a benign zero-consumer duplicate declaration respectively) -- they are pinned here as the exact tolerated set so a NEW genuine cross-facade duplicate fails the gate.",
     "retired_symbols_must_not_reappear": [
       "CalculationRevision",
       "CalculationRevisionAmendmentKind",
@@ -30,12 +30,12 @@
       {
         "symbol": "save_envelope",
         "confidence": "name_collision",
-        "reason": "Two unrelated same-named functions (cadrumo.adapters.persistence.storage.envelope._envelope.save_envelope and cadrumo.core.observability._store.save_envelope). Investigated per the ADR; no consolidation needed. A cosmetic rename is deferred, out of scope."
+        "reason": "Two unrelated same-named functions (cadrumo.adapters.persistence.storage.envelope._envelope.save_envelope and cadrumo.core.observability._store.save_envelope). Investigated; no consolidation needed. A cosmetic rename is deferred, out of scope."
       },
       {
         "symbol": "DEFAULT_IVA_GENERAL_RATE_PCT",
         "confidence": "high",
-        "reason": "Declared in both cadrumo.domain.contribuyente.assets and cadrumo.domain.contribuyente.inventory facades, zero private sources, zero cross-package consumers recorded by the scanner. Benign single-origin duplicate declaration; investigated per the ADR, no action required."
+        "reason": "Declared in both cadrumo.domain.contribuyente.assets and cadrumo.domain.contribuyente.inventory facades, zero private sources, zero cross-package consumers recorded by the scanner. Benign single-origin duplicate declaration; investigated, no action required."
       }
     ]
   }

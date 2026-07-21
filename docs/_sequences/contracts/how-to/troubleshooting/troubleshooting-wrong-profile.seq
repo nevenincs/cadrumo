@@ -1,0 +1,3 @@
+@result aeat --format json config profile status
+@expect result.tax_id_present == true
+@expect exit_code == 0

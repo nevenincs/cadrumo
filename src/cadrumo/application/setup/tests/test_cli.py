@@ -52,7 +52,7 @@ def test_setup_auth_help_exposes_access_lifecycle(tmp_path: Path) -> None:
     result = invoke_cached_cli(["config", "auth", "--help"], env=_env(tmp_path))
 
     assert result.exit_code == 0, result.output
-    for command in ("providers", "configure", "status", "test", "clear"):
+    for command in ("providers", "configure", "status", "test", "logout", "reset"):
         assert command in result.output
 
 

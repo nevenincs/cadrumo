@@ -25,8 +25,8 @@ _REQUIRED_SYMBOLS = [
     "select_provider",
     "LoadedCertificate",
     "load_certificate",
-    "verify_handshake",
     "health",
+    "AEAT_CERTIFICATE_PROTECTED_URL",
 ]
 
 

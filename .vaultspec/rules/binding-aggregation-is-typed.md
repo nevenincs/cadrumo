@@ -7,7 +7,7 @@ name: binding-aggregation-is-typed
 ## Rule
 
 A registry binding's aggregation MUST be the typed `BindingAggregation` model
-carrying a closed `BindingAggregationOp` enum (declared in `aeat.core`), never a
+carrying a closed `BindingAggregationOp` enum (declared in `cadrumo.core`), never a
 free-form `Mapping`. No call site may re-parse `aggregation.get("op")` from a raw
 mapping or pick its own local default; the single `binding_aggregation_op(binding)`
 accessor returns the typed op and applies the one declared per-family default in

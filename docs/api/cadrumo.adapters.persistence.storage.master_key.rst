@@ -23,10 +23,10 @@ Submodules
    cadrumo.adapters.persistence.storage.master_key._master_key
    cadrumo.adapters.persistence.storage.master_key._master_key_bucket_dek
    cadrumo.adapters.persistence.storage.master_key._master_key_derivation
-   cadrumo.adapters.persistence.storage.master_key._master_key_ephemeral
    cadrumo.adapters.persistence.storage.master_key._master_key_io
    cadrumo.adapters.persistence.storage.master_key._master_key_records
    cadrumo.adapters.persistence.storage.master_key._master_key_tax_id
+   cadrumo.adapters.persistence.storage.master_key._provider_session
    cadrumo.adapters.persistence.storage.master_key._recovery
    cadrumo.adapters.persistence.storage.master_key._recovery_facade
    cadrumo.adapters.persistence.storage.master_key._recovery_record

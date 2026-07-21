@@ -1,6 +1,6 @@
 """Domain exceptions for :mod:`domain.usage_ratios`.
 
-The hierarchy roots at :class:`core.errors.AeatError` so callers may catch
+The hierarchy roots at :class:`core.errors.CadrumoError` so callers may catch
 the project-wide base class when treating the substrate as opaque, or the
 specific subclass when they need to distinguish persistence faults from
 upcoming domain-level failure modes.
@@ -8,7 +8,7 @@ upcoming domain-level failure modes.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 __all__ = [
     "CensoRatioMismatchError",
@@ -18,7 +18,7 @@ __all__ = [
 ]
 
 
-class UsageRatioError(AeatError):
+class UsageRatioError(CadrumoError):
     """Base error for every :mod:`domain.usage_ratios` failure mode.
 
     Subclassed by every concrete error raised by the package so callers can

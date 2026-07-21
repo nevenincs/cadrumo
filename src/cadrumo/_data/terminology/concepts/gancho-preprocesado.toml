@@ -11,12 +11,8 @@ updated_at = 2026-06-12
 
 [language.es]
 short_description = "El contrato upstream para transformar fuentes PDF, XLS, HTML u otras antes de indexarlas."
-definition = "Interfaz generica solicitada a vaultspec-rag para registrar preprocessors por patron de fichero, emitir una salida versionada con texto extraido o unidades pre-chunked, incluir identidad del preprocessor en la clave de cache y declarar fallos de forma explicita. En ADR D6, este contrato permite que los corpus BOE y AEAT sean indexables sin codificar conocimiento AEAT dentro de vaultspec-rag."
+definition = "Interfaz generica solicitada al servicio RAG de desarrollo para registrar preprocessors por patron de fichero, emitir una salida versionada con texto extraido o unidades pre-chunked, incluir identidad del preprocessor en la clave de cache y declarar fallos de forma explicita. Este contrato permite que los corpus BOE y AEAT sean indexables sin codificar conocimiento AEAT dentro del indexador."
 scope_note = "Mientras el gancho upstream no exista, este proyecto usa sidecars de extraccion como camino interino."
-
-[language.es.source]
-citation = "2026-06-10-docs-terminology-search-adr, decision D6."
-authority = "vaultspec"
 
 [[language.es.term]]
 label = "gancho de preprocesado"

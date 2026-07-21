@@ -39,15 +39,12 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterator, Sequence
-from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 from click.testing import Result
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.modelo import (
     RecipientFingerprintRegistryRepository,
@@ -55,28 +52,15 @@ from ....application.modelo import (
     recipient_encryption_public_key,
     resolve_registry_revision_for_work_target,
 )
-from ....application.user_profile import (
-    profile_create_storage_span,
-    profile_storage_session,
-    register_minimal_profile,
-    set_active_fields,
-)
+from ....application.user_profile import profile_create_storage_span, profile_storage_session, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....core import CasillaId, Period, validated_casilla_id
 from ....domain.buckets import BucketEventType
-from ....domain.modelos import (
-    CalculationRevision,
-    CalculationRevisionState,
-    ModeloCode,
-    WorkUnit,
-    derive_calculation_revision_id,
-    derive_work_unit_id,
-    upsert_calculation_revision,
-    upsert_work_unit,
-)
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from ._modelo_review_package_support import seed_exportable_modelo_revision
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -140,64 +124,11 @@ _M111_CASILLAS: dict[CasillaId, str] = {
 }
 
 
-def _seed_exportable_modelo_111_revision(
-    *,
-    modelo: str = "111",
-    filing_year: int = 2026,
-    period: str = "1T",
-) -> tuple[str, str]:
-    """Persist a verified-complete modelo-111 revision ready for export/packaging."""
-    state = workflow_state_repository().load()
-    bucket_id = state.active_profile_bucket_id()
-    assert bucket_id is not None
-    revision_id = _active_registry_revision_id(modelo=modelo, filing_year=filing_year, period=period)
-    filing_period = Period.from_year_and_code(filing_year, period)
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=revision_id,
-    )
-    now = datetime.now(UTC)
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=filing_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{period}",
-        created_at=now,
-        updated_at=now,
-    )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
-
-    calculation_revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id=_M111_CASILLAS,
-        binding_overrides={},
-        casilla_values={},
-    )
-    revision = CalculationRevision(
-        calculation_revision_id=calculation_revision_id,
-        work_unit_id=work_unit_id,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id=_M111_CASILLAS,
-        created_at=now,
-        updated_at=now,
-        verified_at=now,
-        verified_by="operator",
-    )
-    cr_repo = CalculationRevisionCatalogueRepository()
-    cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
-    return work_unit_id, calculation_revision_id
-
-
 def _build_package(tmp_path: Path, *, name: str = "review-package.zip") -> tuple[Path, str, str]:
     _set_export_profile_name()
-    work_unit_id, calculation_revision_id = _seed_exportable_modelo_111_revision()
+    work_unit_id, calculation_revision_id = seed_exportable_modelo_revision(
+        input_values_by_casilla_id=_M111_CASILLAS,
+    )
     package_path = tmp_path / name
     build_result = _invoke(
         ["app", "modelo", "review-package", "build", work_unit_id, "--output", str(package_path)],

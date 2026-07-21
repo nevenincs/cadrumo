@@ -3,7 +3,7 @@ tags:
   - "#reference"
   - "#core-authority-types-v2"
 date: "2026-05-31"
-modified: '2026-07-03'
+modified: '2026-07-17'
 related: []
 ---
 
@@ -503,7 +503,6 @@ Zero NewType declarations found.
 | `adapters/outbound/aeat/auth/certificate.py:284` | _BrowserContextLike | adapter | non-domain |  |
 | `adapters/outbound/aeat/browser/evasion.py:15` | EvasionStrategy | adapter | non-domain | apply(self,context) |
 | `adapters/outbound/aeat/sede/_browser_stage.py:13` | PlaywrightStageRunner | adapter | non-domain | __call__(self,operation) |
-| `adapters/outbound/aeat/verify/__init__.py:60` | VerifyBrowserKeyboardLike | adapter | non-domain | type(self,value) / press(self,key) |
 | `adapters/outbound/aeat/verify/__init__.py:67` | VerifyBrowserPageLike | adapter | non-domain | goto(self,url) / fill(self,selector,value) / press(self,selector,key) |
 | `adapters/outbound/aeat/verify/__init__.py:78` | VerifyBrowserContextLike | adapter | non-domain | new_page(self) / close(self) |
 | `adapters/outbound/aeat/verify/__init__.py:86` | VerifyBrowserSessionLike | adapter | non-domain | create_context(self) / close(self) |

@@ -9,6 +9,7 @@
  *   3. Base + motion         8. Code surfaces
  *   4. Site header           9. Components (admonitions, cards, tabs, tables)
  *   5. Broadcast strip      10. Footer, palette, responsive
+ *                          11. CLI sequence player
  */
 
 /* ── 1. Fonts (self-hosted, SIL OFL 1.1 — no third-party font CDN) ────── */
@@ -388,6 +389,96 @@ body[data-theme="dark"] .cadrumo-header-mark {
 /* The header owns the theme toggle; drop the duplicate above the article. */
 .theme-toggle-container.theme-toggle-content {
   display: none;
+}
+
+/* Language switcher: native details/summary dropdown. Closed state is a
+   fixed-footprint button (current language code only) so the header never
+   overflows; the open panel overlays content above the mobile drawers. */
+.cadrumo-header-lang {
+  position: relative;
+}
+
+.cadrumo-header-lang-summary {
+  align-items: center;
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: flex;
+  gap: 0.25rem;
+  height: 2.1rem;
+  list-style: none;
+  padding: 0 0.5rem;
+  user-select: none;
+}
+
+.cadrumo-header-lang-summary::-webkit-details-marker {
+  display: none;
+}
+
+.cadrumo-header-lang-summary:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-lang-code {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.cadrumo-header-lang-caret {
+  flex: none;
+  height: 0.7rem;
+  transition: transform 0.15s ease;
+  width: 0.7rem;
+}
+
+.cadrumo-header-lang[open] .cadrumo-header-lang-caret {
+  transform: rotate(180deg);
+}
+
+.cadrumo-header-lang-menu {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  list-style: none;
+  margin: 0;
+  min-width: 8.5rem;
+  padding: 0.25rem;
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.3rem);
+  z-index: 95;
+}
+
+.cadrumo-header-lang-menu li {
+  display: block;
+  margin: 0;
+}
+
+.cadrumo-header-lang-item,
+.cadrumo-header-lang-item:any-link {
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  display: block;
+  font-size: 0.84rem;
+  padding: 0.4rem 0.7rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.cadrumo-header-lang-item:any-link:hover {
+  background: var(--color-background-hover);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-header-lang-item.is-current {
+  color: var(--color-brand-content);
+  font-weight: 500;
 }
 
 /* ── 5. Broadcast strip ───────────────────────────────────────────────── */
@@ -1316,6 +1407,66 @@ a.sd-card:any-link,
   color: var(--color-foreground-muted);
 }
 
+/* In-flight search signal. Pagefind resolves async and the list deliberately
+ * keeps the previous results painted meanwhile, so the head carries the "a
+ * newer answer is coming" signal instead. The spinner keeps its slot at all
+ * times and only fades in, so appearing never shifts the esc key beside it. */
+.cadrumo-palette-spin {
+  animation: cadrumo-palette-spin 0.7s linear infinite;
+  border: 2px solid var(--color-background-border);
+  border-radius: 50%;
+  border-top-color: var(--color-brand-content);
+  flex: 0 0 auto;
+  height: 0.85rem;
+  opacity: 0;
+  transition: opacity 0.12s ease-in;
+  width: 0.85rem;
+}
+
+.cadrumo-palette.is-busy .cadrumo-palette-spin {
+  opacity: 1;
+}
+
+/* The stale rows the list is still showing are dimmed while a newer query is
+ * in flight: they are a real answer, just not the one being typed. */
+.cadrumo-palette.is-busy .cadrumo-palette-list {
+  opacity: 0.55;
+  transition: opacity 0.12s ease-in;
+}
+
+@keyframes cadrumo-palette-spin {
+  to {
+    transform: rotate(1turn);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-palette-spin {
+    animation: none;
+    /* A frozen ring reads as a broken spinner, so drop the moving part and let
+     * the ring stand as a static "busy" mark; the polite live region carries
+     * the same state in words. */
+    border-color: var(--color-brand-content);
+    transition: none;
+  }
+
+  .cadrumo-palette.is-busy .cadrumo-palette-list {
+    transition: none;
+  }
+}
+
+/* Announced to assistive tech, never shown: the visible signal is the spinner
+ * plus the dimmed list. */
+.cadrumo-palette-status {
+  clip-path: inset(50%);
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .cadrumo-palette-esc {
   flex: 0 0 auto;
 }
@@ -1332,11 +1483,45 @@ a.sd-card:any-link,
 }
 
 .cadrumo-palette-item a:any-link {
+  align-items: flex-start;
   border-radius: var(--cadrumo-radius-s);
   color: var(--color-foreground-secondary);
-  display: block;
+  display: flex;
+  gap: 0.55rem;
   padding: 0.5rem 0.7rem;
   text-decoration: none;
+}
+
+/* Per-class result icon (ADR 2026-07-15 D7): a fixed leading column carrying the
+ * hand-authored inline SVG selected by the shipped `display_class`. The text
+ * column (`--body`) flexes beside it; `min-width: 0` lets the excerpt ellipsis
+ * clip inside the flex row. Rows with no shipped class render no icon and the
+ * body simply takes the full width. */
+.cadrumo-palette-item-icon {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  line-height: 0;
+  margin-top: 0.12rem;
+}
+
+.cadrumo-palette-item-icon svg {
+  display: block;
+  height: 0.95rem;
+  width: 0.95rem;
+}
+
+.cadrumo-palette-item-icon--doc,
+.cadrumo-palette-item-icon--modelo {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-palette-item-icon--casilla {
+  color: var(--color-foreground-secondary);
+}
+
+.cadrumo-palette-item-body {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .cadrumo-palette-item-title {
@@ -1361,9 +1546,9 @@ a.sd-card:any-link,
   color: var(--color-brand-content);
 }
 
-/* Pagefind term-card tiers: a kind badge on the crumb and a one-line excerpt
- * of the matched description. The badge colour distinguishes the surface
- * (term / casilla / command) at a glance. */
+/* Pagefind term-card tiers: a one-line excerpt of the matched description. The
+ * surface is distinguished by the leading per-class icon (D7) rather than the
+ * former crumb dot the icon supersedes. */
 .cadrumo-palette-item-excerpt {
   color: var(--color-foreground-muted);
   display: block;
@@ -1372,29 +1557,6 @@ a.sd-card:any-link,
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.cadrumo-palette-item--concept .cadrumo-palette-item-crumb::before,
-.cadrumo-palette-item--casilla .cadrumo-palette-item-crumb::before,
-.cadrumo-palette-item--cli .cadrumo-palette-item-crumb::before {
-  border-radius: var(--cadrumo-radius-s);
-  content: "";
-  display: inline-block;
-  height: 0.5rem;
-  margin-right: 0.4rem;
-  width: 0.5rem;
-}
-
-.cadrumo-palette-item--concept .cadrumo-palette-item-crumb::before {
-  background: var(--color-brand-content);
-}
-
-.cadrumo-palette-item--casilla .cadrumo-palette-item-crumb::before {
-  background: var(--color-foreground-secondary);
-}
-
-.cadrumo-palette-item--cli .cadrumo-palette-item-crumb::before {
-  background: var(--color-foreground-muted);
 }
 
 .cadrumo-palette-empty {
@@ -1410,6 +1572,62 @@ a.sd-card:any-link,
   font-size: 0.68rem;
   gap: 1rem;
   padding: 0.5rem 1.05rem;
+}
+
+/* Search page (inline host) ─────────────────────────────────────────────
+ * The shipped search.html mounts the same controller that drives the Ctrl-K
+ * modal (ADR 2026-07-15 D5). It reuses the `.cadrumo-palette-item*` result
+ * styling verbatim (those rules are unscoped) so cards look identical across
+ * the two hosts; only the frame differs — a bordered search box and a list
+ * that flows with the page instead of the modal's clamped scroll area. */
+.cadrumo-search-page {
+  margin-top: 1rem;
+  max-width: 42rem;
+}
+
+.cadrumo-search-page-head {
+  align-items: center;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-l);
+  display: flex;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+}
+
+.cadrumo-search-page-head svg {
+  color: var(--color-foreground-muted);
+  flex: 0 0 auto;
+  height: 1rem;
+  width: 1rem;
+}
+
+.cadrumo-search-page-input {
+  font-size: 1.05rem;
+}
+
+.cadrumo-search-page-list {
+  margin-top: 0.6rem;
+  max-height: none;
+  overflow: visible;
+  padding: 0;
+}
+
+/* The busy signal reuses the shared spinner and dimmed-list treatment, keyed
+ * on the mount's own `is-busy` class (the controller toggles it on `root`). */
+.cadrumo-search-page.is-busy .cadrumo-palette-spin {
+  opacity: 1;
+}
+
+.cadrumo-search-page.is-busy .cadrumo-search-page-list {
+  opacity: 0.55;
+  transition: opacity 0.12s ease-in;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-search-page.is-busy .cadrumo-search-page-list {
+    transition: none;
+  }
 }
 
 /* Responsive */
@@ -1505,5 +1723,599 @@ a.sd-card:any-link,
   .cadrumo-header,
   .cadrumo-broadcast {
     display: none;
+  }
+}
+
+/* ── 11. CLI sequence playhead ─────────────────────────────────────────
+ * The server-rendered `cli-sequence` transcript (ADR D5; presentation revised
+ * per operator review): a minimal command rundown that cadrumo-docs.js
+ * enhances into a playhead. Every command stays visible at all times; the
+ * active command is highlighted with its output shown beneath, commands after
+ * the playhead are dimmed with highlighting and output suppressed. No frame is
+ * hidden by CSS alone and no highlighting is stripped server-side — the dim and
+ * output-collapse states are keyed on JS-applied classes over the same DOM, so
+ * a no-JS reader sees the complete, fully highlighted transcript. Code bodies
+ * track the docs code styling (JetBrains Mono via --font-stack--monospace,
+ * 0.85rem / 1.7 line height). */
+
+/* The block is a light group: a slim top bar, one CARD per step, and the
+ * stepper row. Each step is a single self-contained pill — header, command,
+ * and output live inside one bounded element that clips its own content. */
+.cadrumo-sequence {
+  background: transparent;
+  color: var(--color-code-foreground);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.85rem;
+  line-height: 1.7;
+  margin: 1.5rem 0;
+  min-width: 0;
+  tab-size: 2;
+}
+
+.cadrumo-frame {
+  background: var(--color-code-background);
+  border: 1.5px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  margin: 0.65rem 0;
+  min-width: 0;
+  overflow: hidden; /* nothing may escape the step card's edge */
+  padding: 0.55rem 0.9rem 0.6rem;
+  position: relative; /* anchor the absolute copy control */
+}
+
+/* Per-step header: the "do this" instruction line above each command — a step
+ * number badge plus an imperative description, in the text (not mono) type so it
+ * reads as prose guidance rather than terminal output. */
+.cadrumo-frame-header {
+  align-items: baseline;
+  display: flex;
+  font-family: var(--font-stack);
+  gap: 0.5rem;
+  margin: 0 0 0.35rem;
+}
+
+.cadrumo-frame-step {
+  align-items: center;
+  background: var(--color-background-secondary);
+  border-radius: 999px;
+  color: var(--color-foreground-muted);
+  display: inline-flex;
+  flex: none;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  height: 1.25rem;
+  justify-content: center;
+  min-width: 1.25rem;
+  padding: 0 0.35rem;
+  align-self: center;
+}
+
+.cadrumo-frame-desc {
+  color: var(--color-foreground-primary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Command line: a bold JetBrains Mono row led by a prompt affordance, so the
+ * command reads instantly as the instruction (distinct from its output). The
+ * playhead highlight now lives on the step card itself. */
+.cadrumo-frame-command {
+  min-width: 0;
+  padding: 0.1rem 0;
+}
+
+.cadrumo-frame-command pre {
+  background: transparent;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0;
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+  white-space: pre;
+}
+
+.cadrumo-frame-command pre code {
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-weight: 600;
+  padding: 0;
+}
+
+.cadrumo-frame-command pre code::before {
+  color: var(--color-brand-content);
+  font-weight: 600;
+  user-select: none;
+}
+
+/* Shell prompt affordance, keyed by the variant's shell: bash "$ ", pwsh "> ". */
+.cadrumo-cmd-variant[data-shell="bash"] pre code::before {
+  content: "$ ";
+}
+
+.cadrumo-cmd-variant[data-shell="pwsh"] pre code::before {
+  content: "> ";
+}
+
+/* Shell variants: one command variant per declared shell. Only the variant
+ * matching the sequence root's data-cadrumo-shell shows; the directive sets that
+ * attribute to the default shell at build time, so the correct variant renders
+ * without JavaScript, and the widget switcher only updates it. */
+.cadrumo-cmd-variant {
+  display: none;
+  min-width: 0;
+}
+
+.cadrumo-sequence[data-cadrumo-shell="bash"] .cadrumo-cmd-variant[data-shell="bash"],
+.cadrumo-sequence[data-cadrumo-shell="pwsh"] .cadrumo-cmd-variant[data-shell="pwsh"] {
+  display: block;
+}
+
+/* The line-continuation marker (bash \, pwsh `): muted and unselectable, so a
+ * manual text selection never picks it up (copy uses the authored single line). */
+.cadrumo-sequence .cli-continuation {
+  color: var(--color-foreground-muted);
+  user-select: none;
+}
+
+/* Output region: the command's return values inside the same step card —
+ * terminal output at a smaller size than the command core, soft-wrapped so
+ * lines never run past the card's edge, height-capped with its own scroll.
+ * The Pygments token classes are coloured by the panel's OWN palette below
+ * (never the docs' `.highlight` code-block chrome, whose box rules would
+ * override this panel's layout). */
+.cadrumo-frame-output,
+.cadrumo-frame-stderr {
+  background: color-mix(in srgb, var(--color-background-secondary) 65%, transparent);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  font-size: 0.78rem;
+  font-weight: 400;
+  line-height: 1.6;
+  margin: 0.5rem 0 0.35rem;
+  max-height: 24rem;
+  max-width: 100%;
+  overflow-y: auto;
+  overflow-wrap: break-word;
+  padding: 0.6rem 0.8rem;
+  scrollbar-color: var(--color-background-border) transparent;
+  scrollbar-width: thin;
+  white-space: pre-wrap;
+}
+
+.cadrumo-frame-stderr {
+  background: color-mix(in srgb, var(--cadrumo-accent-danger) 7%, transparent);
+  color: var(--cadrumo-accent-danger);
+}
+
+/* JSON token palette for the output panel — self-owned, theme-aware. */
+.cadrumo-frame-output .nt {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-frame-output .s1,
+.cadrumo-frame-output .s2 {
+  color: var(--cadrumo-accent-success);
+}
+
+.cadrumo-frame-output .mi,
+.cadrumo-frame-output .mf {
+  color: var(--cadrumo-accent-warning);
+}
+
+.cadrumo-frame-output .kc {
+  color: var(--color-foreground-primary);
+  font-style: italic;
+}
+
+.cadrumo-frame-output .p {
+  color: var(--color-foreground-muted);
+}
+
+/* Token kinds — the server-rendered, correct-by-construction highlighting
+ * (Python-side against the live Click tree). Shown for the active and past
+ * commands; the future-command override below dims it. */
+.cadrumo-sequence .cli-tok-executable,
+.cadrumo-sequence .cli-tok-leaf {
+  color: var(--color-brand-content);
+}
+
+.cadrumo-sequence .cli-tok-group {
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-sequence .cli-tok-option {
+  color: light-dark(#55876b, #9dc2ac);
+}
+
+.cadrumo-sequence .cli-tok-option_value,
+.cadrumo-sequence .cli-tok-argument {
+  color: var(--color-foreground-secondary);
+}
+
+.cadrumo-sequence .cli-tok-placeholder {
+  color: var(--cadrumo-accent-warning);
+  font-style: italic;
+}
+
+/* A verb token carrying live help invites a hover; mark it discoverable. */
+.cadrumo-sequence .cli-tok[data-command-path] {
+  cursor: help;
+  text-decoration: underline dotted color-mix(in srgb, currentColor 40%, transparent);
+  text-underline-offset: 3px;
+}
+
+.cadrumo-sequence .cli-tok[data-command-path]:hover,
+.cadrumo-sequence .cli-tok[data-command-path]:focus-visible {
+  text-decoration-color: currentColor;
+}
+
+.cadrumo-sequence .cli-tok[data-command-path]:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+}
+
+/* ── Playhead states (JS-applied; enhancement only) ──────────────────────
+ * Without the `--enhanced` class every frame renders fully highlighted with
+ * its output — the no-JS transcript. */
+
+/* Active step: the playhead is the CARD — an unmistakable brand border hugs
+ * the whole current step (header, command, and output as one element). */
+.cadrumo-sequence--enhanced .cadrumo-frame.is-active {
+  background: color-mix(in srgb, var(--color-brand-content) 4%, var(--color-code-background));
+  border-color: var(--color-brand-content);
+}
+
+/* Output disclosure: only the output/stderr blocks collapse — the command,
+ * the verification caption, and its checks always render. Disclosure is
+ * entirely reader-driven (stepping never opens or closes it). Without JS no
+ * frame carries the enhanced class, so everything renders. */
+.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-output-open) .cadrumo-frame-output,
+.cadrumo-sequence--enhanced .cadrumo-frame:not(.is-output-open) .cadrumo-frame-stderr {
+  display: none;
+}
+
+/* The disclosure control: a real labelled button — chevron icon + "Show
+ * output"/"Hide output" text. The chevron rotates when open. JS-created only. */
+.cadrumo-output-toggle {
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--font-stack);
+  font-size: 0.78rem;
+  gap: 0.4rem;
+  line-height: 1;
+  margin: 0.3rem 0 0.1rem;
+  min-height: 1.7rem;
+  padding: 0.2rem 0.6rem 0.2rem 0;
+}
+
+.cadrumo-output-toggle svg {
+  flex: none;
+  transition: transform 0.12s ease;
+}
+
+.cadrumo-frame.is-output-open .cadrumo-output-toggle svg {
+  transform: rotate(90deg);
+}
+
+.cadrumo-output-toggle:hover {
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-output-toggle:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 1px;
+}
+
+/* Future commands: dimmed to a tertiary tone with highlighting dropped — a
+ * uniform muted colour over the same highlighted spans (no server-side rewrite),
+ * signalling "not yet run". */
+.cadrumo-sequence--enhanced .cadrumo-frame.is-future .cadrumo-frame-command pre code,
+.cadrumo-sequence--enhanced .cadrumo-frame.is-future .cadrumo-frame-command pre code::before {
+  color: var(--color-foreground-muted);
+  font-weight: 400;
+}
+
+.cadrumo-sequence--enhanced .cadrumo-frame.is-future .cli-tok {
+  color: var(--color-foreground-muted);
+  font-style: normal;
+  font-weight: 400;
+  text-decoration: none;
+}
+
+/* Setup frames are ordinary visible steppable frames — context, not the lesson,
+ * so their command is very slightly muted against the command/result frames. */
+.cadrumo-frame[data-frame-kind="setup"] .cadrumo-frame-command pre code {
+  color: var(--color-foreground-secondary);
+  font-weight: 500;
+}
+
+/* The active result frame's verification caption and its imperative checks. */
+.cadrumo-verify {
+  color: var(--color-foreground-primary);
+  font-family: var(--font-stack);
+  font-weight: 600;
+  margin: 0.6rem 0 0;
+}
+
+.cadrumo-expects {
+  color: var(--color-foreground-secondary);
+  font-family: var(--font-stack);
+  font-size: 0.82rem;
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+}
+
+.cadrumo-expects > li {
+  padding-left: 1.4rem;
+  position: relative;
+}
+
+.cadrumo-expects > li::before {
+  color: var(--cadrumo-accent-success);
+  content: "\2713";
+  left: 0.2rem;
+  position: absolute;
+}
+
+/* Playhead controls (created by cadrumo-docs.js; absent without JS). Prev/next
+ * plus a position indicator — no autonomous playback. */
+.cadrumo-sequence-controls {
+  align-items: center;
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.35rem 0.1rem;
+}
+
+.cadrumo-sequence-btn {
+  align-items: center;
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 0.9rem;
+  height: 1.8rem;
+  justify-content: center;
+  line-height: 1;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  width: 1.9rem;
+}
+
+.cadrumo-sequence-btn:hover:not(:disabled) {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-sequence-btn:focus-visible {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+}
+
+.cadrumo-sequence-btn:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.cadrumo-sequence-position {
+  color: var(--color-foreground-muted);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.76rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0 0.35rem;
+}
+
+/* Shell switcher (cadrumo-docs.js): a segmented control in a slim block header
+ * bar at the top of the sequence, right-aligned; toggles the visible command
+ * variant. */
+.cadrumo-sequence-bar {
+  align-items: center;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0.1rem 0.1rem 0.15rem;
+}
+
+.cadrumo-shell-switcher {
+  display: inline-flex;
+}
+
+.cadrumo-shell-btn {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  font-family: var(--font-stack--monospace);
+  font-size: 0.72rem;
+  height: 1.8rem;
+  line-height: 1;
+  padding: 0 0.6rem;
+  transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.cadrumo-shell-btn + .cadrumo-shell-btn {
+  border-left: none;
+}
+
+.cadrumo-shell-btn:first-child {
+  border-radius: var(--cadrumo-radius-s) 0 0 var(--cadrumo-radius-s);
+}
+
+.cadrumo-shell-btn:last-child {
+  border-radius: 0 var(--cadrumo-radius-s) var(--cadrumo-radius-s) 0;
+}
+
+.cadrumo-shell-btn[aria-pressed="true"] {
+  background: var(--color-brand-content);
+  border-color: var(--color-brand-content);
+  color: var(--color-background-primary);
+}
+
+.cadrumo-shell-btn:hover:not([aria-pressed="true"]) {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-shell-btn:focus-visible {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 2px;
+  position: relative;
+}
+
+/* Copy control (cadrumo-docs.js): an icon-button pinned to each command/result
+ * frame's top-right that copies the authored single-line command, flashing a
+ * brief "Copied" label. Enhancement only — JS-created, absent without JS. */
+.cadrumo-copy-btn {
+  align-items: center;
+  background: color-mix(in srgb, var(--color-code-background) 88%, transparent);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-s);
+  color: var(--color-foreground-secondary);
+  cursor: pointer;
+  display: inline-flex;
+  gap: 0.35rem;
+  line-height: 1;
+  padding: 0.25rem 0.4rem;
+  position: absolute;
+  right: 0.6rem;
+  top: 0.5rem;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.cadrumo-copy-btn svg {
+  flex: none;
+}
+
+.cadrumo-copy-btn:hover {
+  border-color: var(--color-foreground-border);
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-copy-btn:focus-visible {
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 1px;
+}
+
+.cadrumo-copy-btn.is-copied {
+  border-color: color-mix(in srgb, var(--cadrumo-accent-success) 50%, var(--color-background-border));
+  color: var(--cadrumo-accent-success);
+}
+
+.cadrumo-copy-label:not(:empty) {
+  font-family: var(--font-stack);
+  font-size: 0.72rem;
+}
+
+/* CLI hover-help popover (cadrumo-docs.js). */
+.cadrumo-cli-popover {
+  background: var(--color-background-primary);
+  border: 1px solid var(--color-background-border);
+  border-radius: var(--cadrumo-radius-m);
+  box-shadow: var(--cadrumo-shadow-pop);
+  color: var(--color-foreground-primary);
+  font-family: var(--font-stack);
+  font-size: 0.82rem;
+  line-height: 1.5;
+  max-height: min(60vh, 26rem);
+  max-width: min(24rem, calc(100vw - 2rem));
+  overflow: auto;
+  padding: 0.7rem 1.6rem 0.7rem 0.85rem;
+  position: absolute;
+  z-index: 60;
+}
+
+/* The pinned popup's explicit close control. */
+.cadrumo-cli-popover-close {
+  background: none;
+  border: none;
+  color: var(--color-foreground-muted);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.15rem 0.35rem;
+  position: absolute;
+  right: 0.25rem;
+  top: 0.3rem;
+}
+
+.cadrumo-cli-popover-close:hover {
+  color: var(--color-foreground-primary);
+}
+
+.cadrumo-cli-popover-close:focus-visible {
+  border-radius: 3px;
+  outline: 2px solid var(--color-brand-content);
+  outline-offset: 1px;
+}
+
+.cadrumo-cli-popover[hidden] {
+  display: none;
+}
+
+.cadrumo-cli-popover-path {
+  color: var(--color-brand-content);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.cadrumo-cli-popover-usage {
+  color: var(--color-foreground-secondary);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.76rem;
+  margin: 0.35rem 0 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.cadrumo-cli-popover-help {
+  margin: 0.45rem 0 0;
+}
+
+.cadrumo-cli-popover-params {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+
+.cadrumo-cli-popover-params > li {
+  margin-top: 0.35rem;
+}
+
+.cadrumo-cli-popover-param-name {
+  color: var(--color-foreground-primary);
+  font-family: var(--font-stack--monospace);
+  font-size: 0.76rem;
+  font-weight: 600;
+}
+
+.cadrumo-cli-popover-param-req {
+  color: var(--cadrumo-accent-warning);
+  font-size: 0.7rem;
+  margin-left: 0.3rem;
+  text-transform: uppercase;
+}
+
+.cadrumo-cli-popover-param-help {
+  color: var(--color-foreground-secondary);
+  display: block;
+}
+
+/* prefers-reduced-motion: the control hover transition is the only motion;
+ * remove it. Playback carries no animation and no timed advance. */
+@media (prefers-reduced-motion: reduce) {
+  .cadrumo-sequence-btn,
+  .cadrumo-shell-btn,
+  .cadrumo-copy-btn {
+    transition: none;
   }
 }

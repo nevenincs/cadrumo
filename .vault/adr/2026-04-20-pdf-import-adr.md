@@ -3,11 +3,10 @@ tags:
   - "#adr"
   - "#pdf-import"
 date: "2026-04-20"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-20-pdf-import-research]]"
   - "[[2026-04-17-export-first-adr]]"
-  - "[[2026-04-18-live-submit-cli-excision-adr]]"
 ---
 
 # `pdf-import` adr: `reconstruct-filing-draft-from-justificante-pdf` | (**status:** `accepted`)
@@ -18,7 +17,7 @@ Kent already has a justificante PDF for a Modelo 130 he filed on the AEAT portal
 
 ## Considerations
 
-- The justificante parser (`aeat.domain.justificante.parse_justificante`) is already public, deterministic, and produces a frozen `Justificante` with `modelo`, `period`, `tax_id`, `csv`, `presented_at`, `verification_url`, `source_pdf_path`, `source_pdf_sha256`.
+- The justificante parser (`cadrumo.domain.justificante.parse_justificante`) is already public, deterministic, and produces a frozen `Justificante` with `modelo`, `period`, `tax_id`, `csv`, `presented_at`, `verification_url`, `source_pdf_path`, `source_pdf_sha256`.
 - `Justificante` does not currently surface the `ejercicio` string, but the extractor's `_EJERCICIO_RE` parses it. Period normalisation (`1T` + `2026` → `2026Q1`) requires the ejercicio to be accessible.
 - `FilingDraft` is strict + frozen with a content-hashed `draft_id`. The hash covers `modelo`, `period`, `profile_tax_id`, `schema_version`, and `values` only — adding new optional fields that are NOT in the hash is safe.
 - Every registered builder (`Modelo130Builder`, `Modelo303Builder`, `Modelo390Builder`) already materialises missing inputs as `FilingValueKind.EMPTY` through `_materialise_literal`. Passing an empty inputs dict yields exactly the "scaffold with every casilla empty" shape the issue requires — no new builder work is needed.
@@ -29,10 +28,10 @@ Kent already has a justificante PDF for a Modelo 130 he filed on the AEAT portal
 
 ## Constraints
 
-- **Zero cert coupling.** No import path may reference `aeat.adapters.outbound.aeat.auth`, `aeat.adapters.outbound.aeat.export._submitters`, or any live-submission code path.
+- **Zero cert coupling.** No import path may reference `cadrumo.adapters.outbound.aeat.auth`, `cadrumo.adapters.outbound.aeat.export._submitters`, or any live-submission code path.
 - **No live-submit surface regression.** The import command registers under `aeat filing`, not under `aeat submission`; it must not call `SubmissionEngine.submit*` or touch `live_transport_supported`.
 - **Pydantic strict + frozen** throughout — no bare dicts at boundaries.
-- **`AeatError`-rooted exceptions** (`JustificanteParseError`, `FilingBuilderError`) surface to Typer via `typer.BadParameter`.
+- **`CadrumoError`-rooted exceptions** (`JustificanteParseError`, `FilingBuilderError`) surface to Typer via `typer.BadParameter`.
 - **No mocks, patches, stubs, fakes** in the new tests — we use the committed synthetic fixture PDFs under `tests/fixtures/justificantes/`.
 - **Trilingual** where applicable: warning messages use `Translatable` only when they cross a typed boundary; ephemeral CLI echo is English for now (matches existing `aeat filing build` output).
 
@@ -40,11 +39,11 @@ Kent already has a justificante PDF for a Modelo 130 he filed on the AEAT portal
 
 ### 1. Expose `ejercicio` on `Justificante`
 
-`aeat.domain.justificante._schema.Justificante` gains `ejercicio: str | None = Field(default=None, max_length=8)`. `aeat.domain.justificante._extract.extract_justificante` populates it from the existing `_EJERCICIO_RE` match when present. Additive; no parser-side breakage.
+`cadrumo.domain.justificante._schema.Justificante` gains `ejercicio: str | None = Field(default=None, max_length=8)`. `cadrumo.domain.justificante._extract.extract_justificante` populates it from the existing `_EJERCICIO_RE` match when present. Additive; no parser-side breakage.
 
-### 2. New `aeat.application.filing._import` module
+### 2. New `cadrumo.application.filing._import` module
 
-`src/aeat/application/filing/_import.py` owns the reconstruction helper:
+`src/cadrumo/application/filing/_import.py` owns the reconstruction helper:
 
 ```python
 @dataclass(frozen=True)
@@ -75,11 +74,11 @@ Behaviour:
     - `justificante_pdf_path = j.source_pdf_path.resolve()`.
     - `submitted_at` = `j.presented_at` converted from Europe/Madrid wall-clock to UTC (`zoneinfo.ZoneInfo("Europe/Madrid")` → `.astimezone(UTC)`).
     - Single `SubmissionAttempt` stamped with the same timestamps and `status=SUBMITTED`.
-- Emit at minimum one warning: *"Line-level casilla values were not extracted from the justificante PDF; fill them via `aeat filing build` or directly in the draft JSON."* Wrapped in a `Translatable` so callers can render in Spanish/English/Hungarian later (`aeat.core.i18n.Translatable`).
+- Emit at minimum one warning: *"Line-level casilla values were not extracted from the justificante PDF; fill them via `aeat filing build` or directly in the draft JSON."* Wrapped in a `Translatable` so callers can render in Spanish/English/Hungarian later (`cadrumo.core.i18n.Translatable`).
 
 ### 3. Wire the CLI
 
-`src/aeat/entrypoints/cli/filing/__init__.py` adds:
+`src/cadrumo/entrypoints/cli/filing/__init__.py` adds:
 
 ```python
 @app.command("import")
@@ -98,13 +97,13 @@ Error handling:
 
 ### 4. Tests (all `@pytest.mark.unit`)
 
-- `src/aeat/application/filing/test_import.py` — unit tests against the committed `modelo_130_2026Q1.pdf` and `modelo_303_2026Q1.pdf` fixtures. Asserts:
+- `src/cadrumo/application/filing/test_import.py` — unit tests against the committed `modelo_130_2026Q1.pdf` and `modelo_303_2026Q1.pdf` fixtures. Asserts:
     - Draft has `modelo == "130"`, `period == "2026Q1"`, `profile_tax_id == "00000000T"`, every casilla is `FilingValueKind.EMPTY`.
     - `SubmittedFiling.justificante_csv == "ABCD1234EFGH5678"`; `submitted_at.tzinfo is UTC`; `status == SUBMITTED`.
     - Period normalisation covers 130/303 quarterly, and a fabricated monthly 303 path (via a parametrised helper — not a new fixture — to keep the PDF fixture corpus stable).
     - Unsupported modelo (Modelo 100 fixture) raises `FilingBuilderError` with a readable message.
     - Missing PDF raises `JustificanteParseError` (from `parse_justificante`).
-- `src/aeat/entrypoints/cli/filing/test_filing_cli.py` — smoke tests for `aeat filing import`:
+- `src/cadrumo/entrypoints/cli/filing/test_filing_cli.py` — smoke tests for `aeat filing import`:
     - Happy path: command exits 0, draft JSON is created under `AEAT_DRAFTS_DIR`, submission JSON is created under `AEAT_SUBMISSIONS_DIR`, output contains the warning string.
     - Missing PDF → exit code `2` (`BadParameter`).
 
@@ -115,7 +114,7 @@ Error handling:
 
 ### 6. Forbidden / explicitly out of scope
 
-- No changes to `aeat.adapters.outbound.aeat.auth`, `aeat.adapters.outbound.aeat.export._submitters`, or `SubmissionEngine` wiring.
+- No changes to `cadrumo.adapters.outbound.aeat.auth`, `cadrumo.adapters.outbound.aeat.export._submitters`, or `SubmissionEngine` wiring.
 - No changes to live-submission env gates or the 4-factor safety charter.
 - No changes to amendment engine (`_complementaria.py`) beyond what `SubmittedFiling` already supports. The amendment flow will "just work" against imported records because it resolves metadata from `SubmittedFiling.justificante_csv` / `justificante_pdf_path`, both of which we populate.
 

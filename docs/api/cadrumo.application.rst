@@ -48,8 +48,15 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application._bucket_deletion_contracts
+   cadrumo.application._config_reset_models
+   cadrumo.application._config_reset_repository
    cadrumo.application._errors
+   cadrumo.application._state_projection_auth
+   cadrumo.application._state_projection_readiness
+   cadrumo.application._workflow_auth_models
    cadrumo.application._workflow_review_models
+   cadrumo.application.auth_credentials
    cadrumo.application.config_reset
    cadrumo.application.diagnostics
    cadrumo.application.diagnostics_run_health

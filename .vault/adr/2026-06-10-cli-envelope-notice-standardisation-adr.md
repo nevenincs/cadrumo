@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-envelope-notice-standardisation'
 date: '2026-06-10'
-modified: '2026-07-10'
+modified: '2026-07-15'
 related:
   - "[[2026-06-10-cli-envelope-notice-standardisation-research]]"
   - "[[2026-06-02-emit-envelope-schema-burndown-adr]]"
@@ -46,9 +46,11 @@ error alike — a **shared outer spine** carrying `status` and a single typed
   the contract without a nullable-everything shape. Chosen: shared spine.
 - **The domain already owns severity.** `ModeloFinding` (`WARNING` /
   `BLOCKING`), the `source_advisories` diagnostics, the RETMAR mandatory-filing
-  warning, and the revision-stamp advisory are existing typed, severity-bearing
-  records. The CLI should *project* these into the notice channel, not
-  re-model them per command.
+  warning, and registry-revision divergence findings are existing typed,
+  severity-bearing records. The CLI should *project* these into the notice
+  channel, not re-model them per command. A missing or invalid required
+  persisted revision stamp refuses at strict load before notice production; it
+  is not a CLI advisory condition.
 - **Exit codes are sound.** `ExitCode` and `get_error_exit_code(category)` are
   already centralised and uniform; the new `status` derives from the same table
   so the JSON `status` and the shell exit code can never disagree.

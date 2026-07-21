@@ -3,6 +3,8 @@
 :func:`assess_active_profile_health` reads the persisted
 :class:`UserProfileRecord` from the active bucket and returns an
 :class:`ActiveProfileHealth` verdict used by every operator status surface.
+Confirmed pointer repairs coordinate mutation through the public
+:func:`~cadrumo.application.user_profile.active_profile_pointer_transaction` boundary.
 
 See Also:
     :class:`~application.workflow.ProfileBucketPointer`
@@ -30,18 +32,19 @@ from pydantic import BaseModel, ValidationError
 
 from ...adapters.persistence.storage import StorageValidationError
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import pointer_path, read_pointer
-from ...core.config import load_settings
-from ...core.errors import AeatError
+from ...core import resolve_active_bucket_id
+from ...core.config import load_settings, override_settings
+from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ..user_profile import (
+    active_profile_pointer_transaction,
     list_profile_key_records,
     record_to_path_values,
     validate_profile_values,
 )
 from ._models import WorkflowState
 from ._persistence import workflow_state_repository
-from ._profile_bucket_scan import read_profile_bucket_by_id
+from ._profile_bucket_scan import resolve_profile_bucket
 
 ProfileHealthStatus = Literal[
     "none",
@@ -101,9 +104,8 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
     """Return a redacted, non-secret :class:`ActiveProfileHealth` projection for the active profile."""
     settings = load_settings()
     override = (settings.cadrumo_active_profile or "").strip()
-    pointer = None if override else read_pointer(settings.cadrumo_local_storage_root)
-    active_profile = override or (pointer.bucket_id if pointer is not None else None)
-    source: ProfileSource = "env_override" if override else ("pointer" if pointer is not None else "none")
+    active_profile = resolve_active_bucket_id()
+    source: ProfileSource = "env_override" if override else ("pointer" if active_profile is not None else "none")
     total_keys = len(list_profile_key_records())
     if active_profile is None:
         return ActiveProfileHealth(
@@ -115,7 +117,7 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         )
 
     try:
-        registered_pointer = read_profile_bucket_by_id(active_profile)
+        registered_pointer = resolve_profile_bucket(active_profile)
     except _MANIFEST_HEALTH_EXCEPTIONS as exc:
         _log.debug(
             "active profile manifest unreadable bucket_id=%s",
@@ -151,11 +153,13 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
                 else "unset CADRUMO_ACTIVE_PROFILE or set it to a registered profile"
             ),
         )
+    active_profile = registered_pointer.bucket_id
 
     try:
-        resolved_state = state or workflow_state_repository().load()
-    except (AeatError, OSError) as exc:
-        # AeatError: decryption, session, or domain failures loading the workflow state row.
+        with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
+            resolved_state = state or workflow_state_repository().load()
+    except (CadrumoError, OSError) as exc:
+        # CadrumoError: decryption, session, or domain failures loading the workflow state row.
         # OSError: filesystem I/O failure reading the encrypted database file.
         return ActiveProfileHealth(
             active_profile=active_profile,
@@ -172,9 +176,10 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
             ),
         )
     try:
-        record = resolved_state.active_profile_record()
-    except (AeatError, ValueError) as exc:
-        # AeatError: domain or registry failures resolving the profile record.
+        with override_settings(cadrumo_active_profile=registered_pointer.bucket_id):
+            record = resolved_state.active_profile_record()
+    except (CadrumoError, ValueError) as exc:
+        # CadrumoError: domain or registry failures resolving the profile record.
         # ValueError (including pydantic ValidationError): stored record fails strict validation.
         return ActiveProfileHealth(
             active_profile=active_profile,
@@ -218,55 +223,93 @@ def assess_active_profile_health(state: WorkflowState | None = None) -> ActivePr
         profile_total_keys=validation.total_keys,
         missing_required=validation.missing_required,
         next_action=(
-            "aeat app overview status"
-            if validation.valid
-            else f"aeat config profile edit {registered_pointer.label}"
+            "aeat app overview status" if validation.valid else f"aeat config profile edit {registered_pointer.label}"
         ),
     )
 
 
 def repair_active_profile_pointer(*, clear_active: bool, confirmed: bool) -> ActiveProfileRepairResult:
-    """Clear a degraded pointer-file active profile when explicitly confirmed.
+    """Clear an eligible degraded pointer-file active profile after locked reassessment.
 
-    Returns an :class:`ActiveProfileRepairResult`.
+    The preliminary best-effort probe keeps cold, unconfirmed, and ineligible
+    calls read-only. A confirmed repair candidate acquires the bounded pointer
+    transaction, then performs an authoritative locked reassessment whose
+    ``repairable_by_clearing_pointer`` flag is the sole eligibility authority.
+    The returned ``before`` is that locked reassessment, and ``after`` is
+    measured before releasing the transaction. Lock contention propagates
+    without pointer mutation.
     """
-    before = _assess_with_best_effort_session()
-    should_clear = before.repairable_by_clearing_pointer and before.status in {
-        "dangling_pointer",
-        "missing_profile_record",
-        "profile_record_unreadable",
-    }
-    if not clear_active or not confirmed or not should_clear:
+    before = assess_active_profile_health_with_session()
+    if not clear_active or not confirmed or not before.repairable_by_clearing_pointer:
         return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
 
-    target = pointer_path(load_settings().cadrumo_local_storage_root)
-    if target.is_file():
-        target.unlink()
-    return ActiveProfileRepairResult(
-        dry_run=False,
-        cleared_pointer=True,
-        before=before,
-        after=_assess_with_best_effort_session(),
-    )
+    root = load_settings().cadrumo_local_storage_root
+    with active_profile_pointer_transaction(root) as pointer_transaction:
+        before = assess_active_profile_health_with_session()
+        if not before.repairable_by_clearing_pointer:
+            return ActiveProfileRepairResult(dry_run=True, cleared_pointer=False, before=before)
+        pointer_transaction.clear()
+        after = assess_active_profile_health_with_session()
+        return ActiveProfileRepairResult(
+            dry_run=False,
+            cleared_pointer=True,
+            before=before,
+            after=after,
+        )
 
 
-def _assess_with_best_effort_session() -> ActiveProfileHealth:
-    """Assess profile health, opening the active bucket session when available."""
+def assess_active_profile_health_with_session() -> ActiveProfileHealth:
+    """Assess profile health, opening a missing active-bucket session when possible.
+
+    Long-running processes can observe a profile that a sibling process just
+    created or selected. In that case the pointer and manifest are current but
+    no bucket session exists in this process yet. This projection retries only
+    that explicit cold-session failure under the canonical master-key provider;
+    every other degraded status remains unchanged.
+    """
     before = assess_active_profile_health()
-    if before.status != "profile_record_unreadable" or "NoActiveBucketSessionError" not in before.profile_record_error:
+    cold_session_error = (
+        "NoActiveBucketSessionError" in before.profile_record_error
+        or "no active bucket session" in before.profile_record_error
+    )
+    if before.status != "profile_record_unreadable" or not cold_session_error:
         return before
     try:
         from ...adapters.persistence.storage import get_master_key_provider, has_active_bucket_session
 
         if has_active_bucket_session():
             return before
-        with get_master_key_provider():
-            return assess_active_profile_health()
-    except (AeatError, OSError, ImportError) as exc:
-        # AeatError: keyring/master-key domain failures.
+        registered_pointer = resolve_profile_bucket(before.active_profile or "")
+        if registered_pointer is None:
+            return before
+        with (
+            override_settings(cadrumo_active_profile=registered_pointer.bucket_id),
+            get_master_key_provider(),
+        ):
+            reassessed = assess_active_profile_health()
+        updates: dict[str, object] = {"source": before.source}
+        if reassessed.status in {
+            "dangling_pointer",
+            "missing_profile_record",
+            "profile_record_unreadable",
+            "manifest_unreadable",
+        }:
+            repairable = before.source == "pointer"
+            updates["repairable_by_clearing_pointer"] = repairable
+            if repairable:
+                updates["next_action"] = "aeat config repair profile --clear-active --yes"
+        return reassessed.model_copy(update=updates)
+    except (CadrumoError, OSError, ImportError) as exc:
+        # CadrumoError: keyring/master-key domain failures.
         # OSError: filesystem-backed secret-store I/O failures.
         # ImportError: defensive guard; the dynamic import of storage internals may fail.
-        return before.model_copy(update={"profile_record_error": _compact_error(exc)})
+        return before.model_copy(
+            update={
+                "profile_record_error": _compact_error(exc),
+                "repairable_by_clearing_pointer": False,
+                "next_action": "restore access to the active profile secret store, then retry",
+            }
+        )
 
 
 def _compact_error(exc: Exception) -> str:
@@ -282,5 +325,6 @@ __all__ = [
     "ActiveProfileHealth",
     "ActiveProfileRepairResult",
     "assess_active_profile_health",
+    "assess_active_profile_health_with_session",
     "repair_active_profile_pointer",
 ]

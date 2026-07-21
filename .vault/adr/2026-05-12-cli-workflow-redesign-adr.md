@@ -7,7 +7,6 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-bucket-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-bucket-event-history-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-ledger-transaction-management-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-invoice-domain-decoupling-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-modelo-work-units-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-modelo-calculate-revisions-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-modelo-verify-adr]]"
@@ -15,15 +14,12 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-modelo-file-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-modelo-filing-record-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-modelo-shape-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-init-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-config-auth-shape-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-config-doctor-shape-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-config-repair-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-overview-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-live-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-registry-boundary-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-app-ledger-ratios-shape-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-workflow-engine-harvest-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-workflow-resumption-semantics-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-evidence-bundle-shape-adr]]"
@@ -36,7 +32,6 @@ related:
   - "[[2026-05-12-cli-workflow-redesign-output-rendering-normalization-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-profile-read-path-retirement-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-observability-wrapping-decision-adr]]"
-  - "[[2026-05-12-cli-workflow-redesign-per-modelo-aggregation-pipeline-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-festivos-deadline-shift-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-iva-prorrata-art-101-103-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-foreign-currency-normalization-adr]]"
@@ -51,7 +46,6 @@ related:
   - "[[2026-05-13-cli-workflow-redesign-actor-attribution-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-app-modelo-discard-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-borrador-100-binding-integration-adr]]"
-  - "[[2026-05-13-cli-workflow-redesign-config-profile-use-and-status-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-root-help-shape-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-apoderado-scope-vocabulary-adr]]"
   - "[[2026-05-13-cli-workflow-redesign-ledger-transaction-removal-adr]]"
@@ -72,9 +66,9 @@ related:
   - "[[2026-04-18-unified-review-queue-adr]]"
 supersedes:
   - '2026-05-02-aeat-cli-redesign-adr'
-modified: '2026-07-10'
+modified: '2026-07-17'
 ---
-> **Updated 2026-05-19**: Module-path mentions of domain/vat/_classification.py and domain/vat/_oss.py in the backend exit-cap inventory, plus the domain/vat legal prorrata substrate reference in the functional gap inventory, follow the Spanish-stem terminology authority: domain/vat migrates into domain/iva. The CLI verb tree, root-command contract, phantom-family adjudication, and backend exit-cap inventory shape are unaffected.
+> **Updated 2026-05-19**: Module-path mentions of domain/iva/_classification.py and domain/iva/_oss.py in the backend exit-cap inventory, plus the domain/iva legal prorrata substrate reference in the functional gap inventory, follow the Spanish-stem terminology authority: domain/iva migrates into domain/iva. The CLI verb tree, root-command contract, phantom-family adjudication, and backend exit-cap inventory shape are unaffected.
 > See `2026-05-19-spanish-stem-terminology-authority-adr` for the canonical
 > rename ledger and Spanish-stem terminology authority.
 
@@ -84,9 +78,9 @@ modified: '2026-07-10'
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
 
-CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+CLI logging and error handling MUST use the central facilities: `cadrumo.core.logging.get_logger(__name__)`, `cadrumo.core.logging.SecretScrubbingFilter`, `cadrumo.core.errors.CadrumoError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `cadrumo.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
 
-CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
+CLI output MUST use the established emitters, including `cadrumo.entrypoints.cli._common._emit`, `cadrumo.entrypoints.cli._schemas.emit_json_success`, and `cadrumo.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 
 ## Problem Statement
 
@@ -185,7 +179,7 @@ per-modelo section, and shrink the list of open questions.
 - Profile reads use workflow state only to identify the active profile
   pointer. `WorkflowState.profiles` stores pointer records such as
   `{ "bucket_id": profile_name }`; profile values themselves live only in
-  `PROFILE_BUCKET_NAMESPACE = "aeat.application.profile.bucket"` as
+  `PROFILE_BUCKET_NAMESPACE = "cadrumo.application.profile.bucket"` as
   `Envelope[ProfileBucket]` with `SensitivityClass.IDENTITY`, loaded
   through `profile_bucket_repository().load(...)` from
   `state.active_profile_record()`.
@@ -269,7 +263,7 @@ records, not in compatibility aliases or support surfaces.
   only to identify the active profile pointer. `WorkflowState.profiles`
   stores pointer records such as `{ "bucket_id": profile_name }`; profile
   values live only in `PROFILE_BUCKET_NAMESPACE =
-  "aeat.application.profile.bucket"` as `Envelope[ProfileBucket]` with
+  "cadrumo.application.profile.bucket"` as `Envelope[ProfileBucket]` with
   `SensitivityClass.IDENTITY`, loaded through
   `profile_bucket_repository().load(...)` from
   `state.active_profile_record()`. `--profile PATH`,
@@ -396,9 +390,9 @@ Canonical verb tree:
 - `apoderado clear [--format json|text]`
 - `apoderado check [--format json|text]`
 
-Implemented providers: `certificate`, `clave_movil`.
+   Implemented providers: `certificate`, `clave_movil`, `clave_permanente`.
 
-Reserved provider slots: `clave_pin`, `clave_permanente`, `dnie_pkcs`. These
+   Reserved provider slots: `clave_pin`, `dnie_pkcs`. These
 may be listed as reserved/unavailable, but configuration attempts fail closed
 for unavailable providers.
 
@@ -613,9 +607,9 @@ no aliases or shims. Mutations emit `ledger.ratios.set` and
 `ledger.ratios.unset`.
 
 - `app ledger classify` consumes the domain VAT classifier through
-  `aeat.application.ledger.classify_ledger_transaction(...)`. Business
+  `cadrumo.application.ledger.classify_ledger_transaction(...)`. Business
   classification and optional VAT-derived output share the same persisted
-  operation, `ledger.classification.set`. `classify_vat` remains pure domain
+  operation, `ledger.classification.set`. `classify_iva` remains pure domain
   logic and is not a CLI or persistence API. OSS/IOSS and IVA prorrata remain
   separate domains.
 
@@ -924,7 +918,7 @@ Modelos are grouped by family. Status legend:
   design locked by the domain-harvest-oss-ioss ADR. Execution requires
   the 2026-05-06 modelo-369-vat-centralization ADR to be accepted or
   superseded first. `app modelo` owns the work-unit and calculate path;
-  `domain/vat/_oss.py` remains pure substrate. The application wrapper
+  `domain/iva/_oss.py` remains pure substrate. The application wrapper
   resolves profile and ledger facts into `ledger_oss_aggregation`
   bindings, validates destination member-state VAT rates, and emits the
   modelo calculation event.
@@ -947,7 +941,7 @@ Modelos are grouped by family. Status legend:
 - **100** (IRPF anual) — calc-ready (multi-revision dir, 2020–2025). UX
   hooks: CCAA autonomic scale (present, all 15 CCAA × multiple years
   wired), rental aggregation (domain-harvest-rental ADR requires
-  `aeat.application.rental`, `app ledger rental ...`, and
+  `cadrumo.application.rental`, `app ledger rental ...`, and
   `rental_register_aggregation` consumed through `app modelo bindings`),
   datos fiscales borrador pre-fill (backend present via `_renta_web_open.py`,
   no verb).
@@ -1057,7 +1051,7 @@ needs its own follow-up ADR + plan + execution.
   service with national plus CCAA/local source layering, explainable
   adjusted dates, and modelo-specific exceptions such as Modelo 369.
 - **IVA prorrata under arts. 101/103 LIVA** — design locked by the
-  iva-prorrata-art-101-103 ADR. Add `domain/vat` legal prorrata
+  iva-prorrata-art-101-103 ADR. Add `domain/iva` legal prorrata
   substrate and application aggregation observations for 303/390.
   `domain/usage_ratios` and `app ledger ratios` remain proportional
   expense/allocation machinery, not legal prorrata.
@@ -1145,15 +1139,15 @@ target. As each verb lands, the entry is removed.
 - **Usage ratios** (`domain/usage_ratios/`, unmounted `financial profile
   ratios`) — **Target verb locked**: `aeat app ledger ratios list/set/unset`
   (§4.2). Remove the old `financial profile` route with no compatibility shim.
-- **`domain/rental/`** — art. 22-24 LIRPF tier resolver, FIFO amortisation.
-  **Target behavior locked**: add `aeat.application.rental`; expose source
+- **`domain/fincas/`** — art. 22-24 LIRPF tier resolver, FIFO amortisation.
+  **Target behavior locked**: add `cadrumo.application.rental`; expose source
   facts under `aeat app ledger rental ...`; expose Modelo 100 readiness through
   `app modelo bindings`; add `rental_register_aggregation`.
-- **`domain/vat/_classification.py classify_vat`** — deterministic VAT-
+- **`domain/iva/_classification.py classify_iva`** — deterministic VAT-
   rule classifier. **Target behavior locked**: consumed by
-  `aeat.application.ledger.classify_ledger_transaction(...)` behind
-  `aeat app ledger classify`; `classify_vat` remains pure domain logic.
-- **`domain/vat/_oss.py`** — OSS/IOSS regime substrate. **Target behavior
+  `cadrumo.application.ledger.classify_ledger_transaction(...)` behind
+  `aeat app ledger classify`; `classify_iva` remains pure domain logic.
+- **`domain/iva/_oss.py`** — OSS/IOSS regime substrate. **Target behavior
   locked**: `app modelo` calculation-path binding provider creates
   `OssIossLedgerObservation`, resolves `ledger_oss_aggregation`, validates
   destination-country rates, and feeds Modelo 369 calculate.
@@ -1198,7 +1192,7 @@ target. As each verb lands, the entry is removed.
   **Target behavior locked**: consumed by `aeat app ledger classify` and
   the modelo-100 ledger aggregation; no separate operator surface.
 - **`domain/renta/` (LIRPF ledger-expense substrate)** — distinct from
-  `domain/rental/`. **Target behavior locked**: consumed by
+  `domain/fincas/`. **Target behavior locked**: consumed by
   `application/aggregation/_renta_ledger.py` for modelo 100 bindings; no
   operator surface.
 - **`domain/portals/_cli.py`** — fully-built standalone Typer app inside
@@ -1492,7 +1486,7 @@ The amendment also tightens four apex-level concepts:
   ADR's `DiagnosticCheck` discriminated union together cover this rule.
 
 - **Registry exhaustiveness as an import-time invariant.** Every
-  `AeatError` subclass MUST have a declared `ErrorCode` entry in
+  `CadrumoError` subclass MUST have a declared `ErrorCode` entry in
   `ERROR_REGISTRY`. The invariant is enforced at package import time
   AND by a CI test that walks the package subclass graph. Adding a new
   subclass without a registry entry fails CI; running production code
@@ -1668,7 +1662,7 @@ amendments to the affected child ADR.
 | R17 | `aeat app overview` ships only `status` verb; `calendar/agenda/backlog/explain` not exposed as discrete verbs (`--calendar` is a flag on `status`) | app-overview-shape ADR, W53 | Adjudicate — flag-on-status may be Improvement (single verb with axis switches) or Regression (loses discoverability); if Improvement, amend §4.1 | `W81` |
 | R18 | `domain/deadlines/_festivos.shift_deadline` exists but is never called from `OverviewCalendarEntry`; `adjusted_closes_on` field absent | festivos-deadline-shift ADR, W37 | Regression — wire into overview calendar; add field; retire legacy `entrypoints/cli/deadlines/` package | `W81` |
 | R19 | `aeat config repair` ships 4 of 6 locked subverbs (`connectivity/quarantine/reset-state/logs`); missing `integrity` and `list` | config-repair-shape ADR, W18 | Regression — add 2 subcommands wired to existing AES-256-GCM scan + namespace inventory functions | `W82` |
-| R20 | `aeat config init` exists via wizard but no atomic init service; bucket.created/profile.created/profile.activated events not emitted | config-init-shape ADR, config-vs-setup-namespace ADR, W15, W11 | Regression — build `src/aeat/application/setup` service; close `aeat config auth setup` orphan reference in diagnostics | `W83` |
+| R20 | `aeat config init` exists via wizard but no atomic init service; bucket.created/profile.created/profile.activated events not emitted | config-init-shape ADR, config-vs-setup-namespace ADR, W15, W11 | Regression — build `src/cadrumo/application/setup` service; close `aeat config auth setup` orphan reference in diagnostics | `W83` |
 | R21 | Registry domain admits bare `invoice` source bindings for 347/349/720 despite four-source taxonomy lock | per-modelo-aggregation-pipeline ADR, invoice-domain-decoupling ADR, W52 | Regression — reject bare `invoice` at registry domain layer; ship retenciones (111/115/123/180/190/193), 347/349 counterpart, 720 aggregators using explicit source kinds | `W84` |
 | R22 | Modelo 036/037 and 145 foundations absent (no registry TOML) | modelo-036-037-foundation ADR, modelo-145-foundation ADR, W50, W51 | Unstarted greenfield (not drift) — ship TOMLs + binding contracts | `W85` |
 | R23 | `EvidenceBundle` class + `aeat app modelo audit show/check/export/replay` verbs absent | evidence-bundle-shape ADR, W57 | Unstarted greenfield — ship per ADR | `W85` |
@@ -1926,8 +1920,8 @@ state.
 
 | R-id | 2026-05-15 | 2026-06-03 | Closure evidence |
 |---|---|---|---|
-| R02 | reopened | ✅ closed | `aeat app modelo reconcile` at `src/aeat/entrypoints/cli/_modelo.py:4739` + coverage in `test_modelo_reconcile_verb.py` |
-| R03 | reopened | ✅ closed | `link` / `check` / `preflight` at `src/aeat/entrypoints/cli/_ledger.py:1226` / `:1372` / `:1481` + coverage |
+| R02 | reopened | ✅ closed | `aeat app modelo reconcile` at `src/cadrumo/entrypoints/cli/_modelo.py:4739` + coverage in `test_modelo_reconcile_verb.py` |
+| R03 | reopened | ✅ closed | `link` / `check` / `preflight` at `src/cadrumo/entrypoints/cli/_ledger.py:1226` / `:1372` / `:1481` + coverage |
 | R05 | partial | ✅ closed | `PROFILE_EXPORTED` emission at `_config/__init__.py:1623`, `PROFILE_IMPORTED` at `:1794`, `PROFILE_ACTIVATED` at `_orchestration.py:277` and `:291` |
 | R08 | reopened | ✅ closed | `BucketMaintenanceService` at `_service.py:49`; rename + delete + browse + export + import operational; search deferred by bucket-search ADR; retired `config bucket` mount recorded. See R08 progression amendment above. |
 | R14 | partial | ✅ closed | `WorkflowResult.resumed_from` at `_models.py:484` + engine propagation at `_engine.py:254-429` |

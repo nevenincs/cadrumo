@@ -94,6 +94,9 @@ def _neutral_binding_values() -> dict[str, Decimal]:
     Mirrors the fixture in ``test_modelo_100_eo_agraria_rendimiento_base.py``.
     """
     return {
+        # Agricultural activity is económica; the production profile resolver
+        # supplies this predicate as 1/0 from taxpayer_type.irpf_income_categories.
+        "renta-2025-profile-has-economic-activity": Decimal("1"),
         "renta-2025-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-2025-modelo-184-atribucion-actividades-economicas": Decimal("0"),
         "renta-2025-profile-declaration-type": Decimal("1"),

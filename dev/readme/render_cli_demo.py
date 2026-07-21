@@ -11,6 +11,7 @@ import sys
 import textwrap
 from functools import cache
 from hashlib import sha256
+from typing import Final
 
 from dev.readme.prepare_cli_demo import DEMO_ROOT, REPO_ROOT, demo_environment, prepare_demo
 from PIL import Image, ImageDraw, ImageFont
@@ -18,6 +19,8 @@ from PIL import Image, ImageDraw, ImageFont
 from cadrumo.application.filing import build_runtime_schema_provider
 from cadrumo.core import Period
 from cadrumo.domain.calculations.registry import parse_export_payload
+
+_UTF_8: Final[str] = "utf-8"
 
 OUTPUT_PATH = REPO_ROOT / "assets" / "readme" / "cli-demo.gif"
 FONT_PATH = REPO_ROOT / "assets" / "readme" / "fonts" / "CascadiaMono-Regular.ttf"
@@ -70,7 +73,7 @@ def _run_quickfile() -> tuple[str, ...]:
         env=demo_environment(),
         capture_output=True,
         text=True,
-        encoding="utf-8",
+        encoding=_UTF_8,
         errors="replace",
         timeout=180,
         check=False,

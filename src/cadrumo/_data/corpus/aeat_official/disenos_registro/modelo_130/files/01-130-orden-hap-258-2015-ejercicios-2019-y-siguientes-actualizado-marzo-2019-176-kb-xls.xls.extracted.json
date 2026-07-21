@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_130/files/01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_130/files/01-130-orden-hap-258-2015-ejercicios-2019-y-siguientes-actualizado-marzo-2019-176-kb-xls.xls",
   "source_sha256": "58f731b0c72eff7fd23484000c74e73e0ac803a5167065176d78cac8712f5fe7",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

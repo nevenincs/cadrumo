@@ -74,7 +74,7 @@ GOOGLE_EXTRA = OptionalExtra(extra="google", import_name="googleapiclient", feat
 BROWSER_EXTRA = OptionalExtra(extra="browser", import_name="playwright", feature="live AEAT browser automation")
 ANTHROPIC_EXTRA = OptionalExtra(extra="anthropic", import_name="anthropic", feature="the Anthropic-API LLM provider")
 # ``ofxtools`` is GPL-3.0-only; gating it behind an extra keeps the CORE
-# dependency closure free of strong copyleft (license-posture ADR).
+# dependency closure free of strong copyleft.
 OFX_EXTRA = OptionalExtra(extra="ofx", import_name="ofxtools", feature="OFX/QFX bank-statement import")
 
 OPTIONAL_EXTRAS: tuple[OptionalExtra, ...] = (GOOGLE_EXTRA, BROWSER_EXTRA, ANTHROPIC_EXTRA, OFX_EXTRA)
@@ -84,7 +84,7 @@ class MissingOptionalExtraError(CoreError, ImportError):
     """Raised when a feature is reached but its optional extra is not installed.
 
     Descends from :class:`~core.errors.CoreError` so the project-wide
-    :class:`~core.errors.AeatError` boundary sees the refusal, and from
+    :class:`~core.errors.CadrumoError` boundary sees the refusal, and from
     :class:`ImportError` so adapters that already catch import failures keep
     working. Application probes report the same missing package as a
     :class:`application.provisioning.DependencyStatus`; feature guards raise

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-iva-routing-carry'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-09-modelo-iva-routing-carry-adr]]'
   - '[[2026-06-09-modelo-iva-routing-carry-research]]'

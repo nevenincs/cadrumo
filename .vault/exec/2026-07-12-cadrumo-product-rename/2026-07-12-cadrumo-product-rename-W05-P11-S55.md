@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-13'
 step_id: 'S55'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
@@ -13,32 +13,43 @@ related:
 
 ## Scope
 
+- `.vault/exec/2026-07-12-cadrumo-product-rename/2026-07-12-cadrumo-product-rename-W05-P11-S55.md`
+- `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `dev/release/readiness.py`
+- `dev/release/tests/test_justfile_release_guidance.py`
+- `dev/release/tests/test_readiness.py`
 - `justfile`
 
 ## Description
 
-- Retarget the workstation doctor recipe to the canonical Cadrumo executable.
-- Verify release repository URLs, PyPI rollback guidance, and Cadrumo companion build paths.
-- Classify retained AEAT recipe tokens as authority-facing live-capture and test taxonomy.
+- Preserve `aeat` as the workstation doctor command and correct the stale
+  execution-record claim that it invoked `cadrumo`.
+- Replace broad tag pushes with explicit final or rollback tag pushes in both
+  platform recipe variants.
+- Cover the root and both companion distributions in rollback yank guidance.
+- Make release-apply guidance name all version authorities, both exact
+  companion pins, lock regeneration, lock verification, and the fail-closed
+  readiness rerun.
+- Extend the production readiness gate and real rendered-recipe tests to reject
+  companion version or exact-pin drift.
 
 ## Outcome
 
-The developer recipe surface now invokes `cadrumo config check`. Existing
-Cadrumo release-preview URLs, rollback instructions, publication diagnostics,
-source paths, and both companion-project build paths were inspected and found
-aligned with the committed product identity.
+The developer recipe surface continues to invoke `aeat config check`. Release
+guidance now pushes only `refs/tags/vX.Y.Z` or the explicit rollback marker,
+names all three PyPI yank targets, and treats the root version, both companion
+versions, manifest, import version, exact companion pins, and regenerated lock
+as one release cohort. The readiness gate blocks version or pin drift.
 
 ## Notes
 
-The broad Cadrumo release and packaging recipe changes were already present in
-the current committed file; this step preserved and verified those bytes and
-changed only the remaining obsolete doctor command. No unrelated recipe WIP was
-present when the scoped diff was taken.
+No publish, push, yank, tag, or rollback action was executed. Ruff, formatting,
+and Ty passed. Thirty-four release and configuration tests passed, including
+real `just --dry-run` subprocess coverage of `release-apply`,
+`release-rollback`, and `doctor`. `just --list` and `just --summary` also parsed
+successfully. Documentation, release runbooks, CI, and unrelated staged
+marketplace work were excluded.
 
-`just --list`, `just --summary`, and dry runs of `doctor`, `release`,
-`release-rollback`, and `publish-data` parsed successfully. Referenced Cadrumo
-source and companion paths exist, and the scoped former-product residue gate
-passed. `just --unstable --fmt --check` remains red because the repository
-justfile differs wholesale from Just's unstable formatter; no bulk formatting
-was applied. Formal review against the committed product-rename ADR found no
-unresolved finding.
+This evidence-only remediation cross-carries the pre-existing sanitizer removal
+of scaffold comments from this record and corrects Scope to enumerate all six
+paths delivered by `c2230d2b77`; it changes no implementation or plan state.

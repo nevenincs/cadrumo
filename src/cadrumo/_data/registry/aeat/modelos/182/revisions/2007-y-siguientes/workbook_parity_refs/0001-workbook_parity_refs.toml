@@ -15,5 +15,4 @@ source_refs = ["enrolled-modelo-182-layout"]
 # satisfy the per-revision parity-coverage gate honestly against that
 # bundled source; it does NOT assert a verified fixed-width byte-position
 # layout. The fichero-BOE export layout and its roundtrip test are blocked
-# on enrolling the real AEAT DR PDF into the corpus (see the M182 registry
-# TOML follow-up tracked against issue #523).
+# on enrolling the real AEAT DR PDF into the corpus.

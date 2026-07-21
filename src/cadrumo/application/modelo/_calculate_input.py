@@ -43,7 +43,7 @@ from ...core import (
     Modelo,
     RescateType,
 )
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
@@ -560,7 +560,7 @@ def _validated_m210_tipo_renta_code(raw_value: str, *, key: str) -> str:
     its conceptual key. (Codes that share a concept, e.g. arrendamiento ``01``
     and empresariales ``03`` both ``general``, collapse to that concept here;
     per-code form-fidelity display belongs to the fetch-gated full-casilla
-    schema, Slice C.)
+    schema.)
     """
     return M210_TIPO_RENTA_CODE_PROJECTION[_validated_m210_official_tipo_renta_code(raw_value, key=key)].value
 
@@ -660,7 +660,7 @@ def _revision_for_work_unit(work_unit_id: str) -> ModeloRevision:
         filing_year=unit.filing_year,
         period=unit.period.registry_token,
     )
-    # D1 calc-time assertion (defense-in-depth, ruling 2 "both ends"): the
+    # Calc-time assertion (defense-in-depth): the
     # law-determined revision must equal the revision the work unit was created
     # against.  The work unit's revision_id is an identity claim, not a
     # resolution input — it is only compared against resolution's answer.
@@ -786,7 +786,7 @@ def authorization_advisory_for_modelo(modelo: str) -> ModeloAuthorizationAdvisor
 
     try:
         capability = resources().modelos.authority.authorization(modelo.strip())
-    except AeatError:
+    except CadrumoError:
         return None
     if capability.state is AuthorizationState.AUTHORIZED:
         return None

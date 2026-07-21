@@ -14,7 +14,7 @@ import pytest
 
 from ...core import MissingOptionalExtraError, OptionalExtra, require_optional_extra
 from ...core.config import override_settings
-from ...core.errors import AeatError, CoreError
+from ...core.errors import CadrumoError, CoreError
 from ..provisioning import (
     OPTIONAL_EXTRAS,
     DependencyStatus,
@@ -111,7 +111,7 @@ def test_require_optional_extra_present_is_a_noop() -> None:
 
 
 def test_require_optional_extra_absent_raises_instructive_import_error() -> None:
-    """A missing extra raises one typed AEAT error that remains import-compatible."""
+    """A missing extra raises one typed Cadrumo error."""
     extra = OptionalExtra(extra="ghost", import_name="aeat_definitely_not_installed_xyz", feature="a ghost feature")
     with pytest.raises(MissingOptionalExtraError) as raised:
         require_optional_extra(extra)
@@ -126,19 +126,19 @@ def test_require_optional_extra_absent_raises_instructive_import_error() -> None
     }
     assert raised.value.name == "aeat_definitely_not_installed_xyz"
     assert raised.value.path is None
-    assert isinstance(raised.value, AeatError)
+    assert isinstance(raised.value, CadrumoError)
     assert isinstance(raised.value, CoreError)
     assert isinstance(raised.value, ImportError)
 
 
-def test_require_optional_extra_absent_is_caught_by_aeat_error_boundary() -> None:
+def test_require_optional_extra_absent_is_caught_by_cadrumo_error_boundary() -> None:
     """The central CLI error boundary can catch missing optional extras."""
     extra = OptionalExtra(extra="ghost", import_name="aeat_definitely_not_installed_xyz", feature="a ghost feature")
 
-    caught: AeatError | None = None
+    caught: CadrumoError | None = None
     try:
         require_optional_extra(extra)
-    except AeatError as exc:
+    except CadrumoError as exc:
         caught = exc
 
     assert isinstance(caught, MissingOptionalExtraError)

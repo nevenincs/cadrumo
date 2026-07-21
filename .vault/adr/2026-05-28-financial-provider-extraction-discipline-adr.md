@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#financial-provider-extraction-discipline'
 date: '2026-05-28'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-21-declaracion-extraction-architecture-adr]]"
   - '[[2026-06-04-financial-provider-extraction-discipline-research]]'
@@ -14,7 +14,7 @@ related:
 ## Problem Statement
 
 The financial-provider layer at
-`src/aeat/adapters/inbound/financial/providers/` ingests bank statement
+`src/cadrumo/adapters/inbound/financial/providers/` ingests bank statement
 files (CSV, OFX, XLSX, PDF) and converts them to typed `RawTransaction`
 records. The PDF provider (`PdfN26Provider`) uses regex-anchored text
 extraction from `pdfplumber`. This creates a structural silent-failure
@@ -44,7 +44,7 @@ closed for `DeclaracionParseError` (task #51) and `JustificanteParseError`
 
 **UNIT 1 — Provider framework audit**
 
-The `FinancialProvider` ABC in `src/aeat/adapters/inbound/financial/providers/_base.py`
+The `FinancialProvider` ABC in `src/cadrumo/adapters/inbound/financial/providers/_base.py`
 declares three class variables: `name`, `supported_extensions`,
 `source_format`. No corpus provenance is declared. The four concrete
 providers (`CsvProvider`, `OfxProvider`, `XlsxProvider`, `PdfN26Provider`)
@@ -59,7 +59,7 @@ The N26 PDF provider (`PdfN26Provider`) uses:
 - Three synthetic corpus PDFs generated from the portfolio-performance
   open-source test corpus (sanitised text dumps from real N26 layouts)
 
-The exception hierarchy had: `FinancialProviderError < AeatError`,
+The exception hierarchy had: `FinancialProviderError < CadrumoError`,
 `UnsupportedFinancialSourceError`, `InvalidFinancialSourceError`,
 `FinancialValidationError`. No `BankStatementParseError` with structured
 attributes existed.
@@ -120,13 +120,13 @@ at collection time that asserts the class variables are present and valid.
 
 ## Constraints
 
-- Must use `AeatError` hierarchy — `BankStatementParseError` roots at
-  `FinancialProviderError < AeatError`, not at `PdfModeloImportError`
+- Must use `CadrumoError` hierarchy — `BankStatementParseError` roots at
+  `FinancialProviderError < CadrumoError`, not at `PdfModeloImportError`
   (banks are not AEAT filing; the two domains are architecturally
   separate).
-- `ErrorCode` registry entry required for every new `AeatError` subclass
+- `ErrorCode` registry entry required for every new `CadrumoError` subclass
   (`REFUSED_FINANCIAL_BANK_STATEMENT_PARSE` added to
-  `src/aeat/core/errors/registry/_adapters.py`).
+  `src/cadrumo/core/errors/registry/_adapters.py`).
 - No new top-level packages; all changes are within the existing
   `financial.providers` module.
 - Real-behaviour tests only — the existing three N26 corpus PDFs are
@@ -139,7 +139,7 @@ at collection time that asserts the class variables are present and valid.
 `ambiguous`, `coverage` structured attributes with the same signature
 as `DeclaracionParseError` and `JustificanteParseError`. The
 `REFUSED_FINANCIAL_BANK_STATEMENT_PARSE` error code is registered in
-`src/aeat/core/errors/registry/_adapters.py`.
+`src/cadrumo/core/errors/registry/_adapters.py`.
 
 **`CorpusVerificationSource`** type alias added to `_base.py`:
 `Literal["real_bank_corpus_pdf", "synthetic_from_bank_published_text", "no_corpus"]`.

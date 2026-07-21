@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#docstring-google-style'
 date: '2026-06-09'
-modified: '2026-07-03'
+modified: '2026-07-17'
 tier: L1
 related:
   - '[[2026-05-30-docs-architecture-adr]]'
@@ -12,1001 +12,1000 @@ related:
 
 # `docstring-google-style` `Enforce Google Style Docstrings` plan
 
-- [ ] `S01` - verify docs; `adapters/__init__.py`.
-- [ ] `S02` - verify docs; `adapters/inbound/__init__.py`.
-- [ ] `S03` - verify docs; `adapters/inbound/borrador/__init__.py`.
-- [ ] `S04` - verify docs; `adapters/inbound/borrador/_detect.py`.
-- [ ] `S05` - verify docs; `adapters/inbound/borrador/_errors.py`.
-- [ ] `S06` - verify docs; `adapters/inbound/borrador/_extractors/__init__.py`.
-- [ ] `S07` - verify docs; `adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`.
-- [ ] `S08` - verify docs; `adapters/inbound/borrador/_parser.py`.
-- [ ] `S09` - verify docs; `adapters/inbound/borrador/_parsers/__init__.py`.
-- [ ] `S10` - verify docs; `adapters/inbound/borrador/_parsers/_pdfplumber_backend.py`.
-- [ ] `S11` - verify docs; `adapters/inbound/borrador/_schema.py`.
-- [ ] `S12` - verify docs; `adapters/inbound/declaracion/__init__.py`.
-- [ ] `S13` - verify docs; `adapters/inbound/declaracion/_detect.py`.
-- [ ] `S14` - verify docs; `adapters/inbound/declaracion/_errors.py`.
-- [ ] `S15` - verify docs; `adapters/inbound/declaracion/_parser.py`.
-- [ ] `S16` - verify docs; `adapters/inbound/declaracion/_parsers/__init__.py`.
-- [ ] `S17` - verify docs; `adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`.
-- [ ] `S18` - verify docs; `adapters/inbound/declaracion/_schema.py`.
-- [ ] `S19` - verify docs; `adapters/inbound/financial/__init__.py`.
-- [ ] `S20` - verify docs; `adapters/inbound/financial/providers/__init__.py`.
-- [ ] `S21` - verify docs; `adapters/inbound/financial/providers/_base.py`.
-- [ ] `S22` - verify docs; `adapters/inbound/financial/providers/_constants.py`.
-- [ ] `S23` - verify docs; `adapters/inbound/financial/providers/_csv.py`.
-- [ ] `S24` - verify docs; `adapters/inbound/financial/providers/_detection.py`.
-- [ ] `S25` - verify docs; `adapters/inbound/financial/providers/_ofx.py`.
-- [ ] `S26` - verify docs; `adapters/inbound/financial/providers/_pdf_n26.py`.
-- [ ] `S27` - verify docs; `adapters/inbound/financial/providers/_xlsx.py`.
-- [ ] `S28` - verify docs; `adapters/inbound/justificante/__init__.py`.
-- [ ] `S29` - verify docs; `adapters/inbound/justificante/_extract.py`.
-- [ ] `S30` - verify docs; `adapters/inbound/justificante/_parser.py`.
-- [ ] `S31` - verify docs; `adapters/inbound/justificante/_parsers/__init__.py`.
-- [ ] `S32` - verify docs; `adapters/inbound/justificante/_parsers/_pdfplumber_backend.py`.
-- [ ] `S33` - verify docs; `adapters/inbound/pdf/__init__.py`.
-- [ ] `S34` - verify docs; `adapters/inbound/pdf/_label_regex.py`.
-- [ ] `S35` - verify docs; `adapters/inbound/pdf/_pdfplumber.py`.
-- [ ] `S36` - verify docs; `adapters/inbound/pdf/_scrub.py`.
-- [ ] `S37` - verify docs; `adapters/inbound/pdf/_shared.py`.
-- [ ] `S38` - verify docs; `adapters/inbound/pdf/_utils.py`.
-- [ ] `S39` - verify docs; `adapters/inbound/sanitizer/__init__.py`.
-- [ ] `S40` - verify docs; `adapters/inbound/sanitizer/_determinism.py`.
-- [ ] `S41` - verify docs; `adapters/inbound/sanitizer/_dynamic.py`.
-- [ ] `S42` - verify docs; `adapters/inbound/sanitizer/_errors.py`.
-- [ ] `S43` - verify docs; `adapters/inbound/sanitizer/_metadata.py`.
-- [ ] `S44` - verify docs; `adapters/inbound/sanitizer/_pipeline.py`.
-- [ ] `S45` - verify docs; `adapters/inbound/sanitizer/_records.py`.
-- [ ] `S46` - verify docs; `adapters/inbound/sanitizer/_streams.py`.
-- [ ] `S47` - verify docs; `adapters/inbound/sanitizer/_structtree.py`.
-- [ ] `S48` - verify docs; `adapters/inbound/sanitizer/fixtures.py`.
-- [ ] `S49` - verify docs; `adapters/outbound/__init__.py`.
-- [ ] `S50` - verify docs; `adapters/outbound/aeat/__init__.py`.
-- [ ] `S51` - verify docs; `adapters/outbound/aeat/_playwright.py`.
-- [ ] `S52` - verify docs; `adapters/outbound/aeat/auth/__init__.py`.
-- [ ] `S53` - verify docs; `adapters/outbound/aeat/auth/_authenticator.py`.
-- [ ] `S54` - verify docs; `adapters/outbound/aeat/auth/_authenticator_persistence.py`.
-- [ ] `S55` - verify docs; `adapters/outbound/aeat/auth/_authenticator_types.py`.
-- [ ] `S56` - verify docs; `adapters/outbound/aeat/auth/_certificate_backends/__init__.py`.
-- [ ] `S57` - verify docs; `adapters/outbound/aeat/auth/_certificate_backends/_base.py`.
-- [ ] `S58` - verify docs; `adapters/outbound/aeat/auth/_certificate_backends/_httpx_fallback.py`.
-- [ ] `S59` - verify docs; `adapters/outbound/aeat/auth/_certificate_backends/_playwright_context.py`.
-- [ ] `S60` - verify docs; `adapters/outbound/aeat/auth/_clave_movil.py`.
-- [ ] `S61` - verify docs; `adapters/outbound/aeat/auth/_clave_movil_metadata.py`.
-- [ ] `S62` - verify docs; `adapters/outbound/aeat/auth/_clave_movil_page_flow.py`.
-- [ ] `S63` - verify docs; `adapters/outbound/aeat/auth/_clave_movil_support.py`.
-- [ ] `S64` - verify docs; `adapters/outbound/aeat/auth/_errors.py`.
-- [ ] `S65` - verify docs; `adapters/outbound/aeat/auth/_fixtures.py`.
-- [ ] `S66` - verify docs; `adapters/outbound/aeat/auth/_providers.py`.
-- [ ] `S67` - verify docs; `adapters/outbound/aeat/auth/_session_store.py`.
-- [ ] `S68` - verify docs; `adapters/outbound/aeat/auth/certificate.py`.
-- [ ] `S69` - verify docs; `adapters/outbound/aeat/auth/conftest.py`.
-- [ ] `S70` - verify docs; `adapters/outbound/aeat/browser/__init__.py`.
-- [ ] `S71` - verify docs; `adapters/outbound/aeat/browser/_errors.py`.
-- [ ] `S72` - verify docs; `adapters/outbound/aeat/browser/_factory.py`.
-- [ ] `S73` - verify docs; `adapters/outbound/aeat/browser/_site_health.py`.
-- [ ] `S74` - verify docs; `adapters/outbound/aeat/browser/_site_health_parsers.py`.
-- [ ] `S75` - verify docs; `adapters/outbound/aeat/browser/_site_health_probe.py`.
-- [ ] `S76` - verify docs; `adapters/outbound/aeat/browser/evasion.py`.
-- [ ] `S77` - verify docs; `adapters/outbound/aeat/browser/health.py`.
-- [ ] `S78` - verify docs; `adapters/outbound/aeat/browser/profile.py`.
-- [ ] `S79` - verify docs; `adapters/outbound/aeat/browser/session.py`.
-- [ ] `S80` - verify docs; `adapters/outbound/aeat/export/__init__.py`.
-- [ ] `S81` - verify docs; `adapters/outbound/aeat/export/_errors.py`.
-- [ ] `S82` - verify docs; `adapters/outbound/aeat/export/_formats/__init__.py`.
-- [ ] `S83` - verify docs; `adapters/outbound/aeat/export/_formats/_deserialise.py`.
-- [ ] `S84` - verify docs; `adapters/outbound/aeat/export/_formats/_record_spec.py`.
-- [ ] `S85` - verify docs; `adapters/outbound/aeat/export/_formats/_serialise.py`.
-- [ ] `S86` - verify docs; `adapters/outbound/aeat/export/_submitters/__init__.py`.
-- [ ] `S87` - verify docs; `adapters/outbound/aeat/sede/__init__.py`.
-- [ ] `S88` - verify docs; `adapters/outbound/aeat/sede/_adapter_utils.py`.
-- [ ] `S89` - verify docs; `adapters/outbound/aeat/sede/_auth_state.py`.
-- [ ] `S90` - verify docs; `adapters/outbound/aeat/sede/_browser_constants.py`.
-- [ ] `S91` - verify docs; `adapters/outbound/aeat/sede/_browser_stage.py`.
-- [ ] `S92` - verify docs; `adapters/outbound/aeat/sede/_censo.py`.
-- [ ] `S93` - verify docs; `adapters/outbound/aeat/sede/_censo_live.py`.
-- [ ] `S94` - verify docs; `adapters/outbound/aeat/sede/_declarations.py`.
-- [ ] `S95` - verify docs; `adapters/outbound/aeat/sede/_declarations_diagnostics.py`.
-- [ ] `S96` - verify docs; `adapters/outbound/aeat/sede/_declarations_listbox.py`.
-- [ ] `S97` - verify docs; `adapters/outbound/aeat/sede/_declarations_observations.py`.
-- [ ] `S98` - verify docs; `adapters/outbound/aeat/sede/_declarations_remote.py`.
-- [ ] `S99` - verify docs; `adapters/outbound/aeat/sede/_declarations_schema.py`.
-- [ ] `S100` - verify docs; `adapters/outbound/aeat/sede/_errors.py`.
-- [ ] `S101` - verify docs; `adapters/outbound/aeat/sede/_groi_check.py`.
-- [ ] `S102` - verify docs; `adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
-- [ ] `S103` - verify docs; `adapters/outbound/aeat/sede/_nif_iva_check.py`.
-- [ ] `S104` - verify docs; `adapters/outbound/aeat/sede/_notifications.py`.
-- [ ] `S105` - verify docs; `adapters/outbound/aeat/sede/_observation_store.py`.
-- [ ] `S106` - verify docs; `adapters/outbound/aeat/sede/_parse.py`.
-- [ ] `S107` - verify docs; `adapters/outbound/aeat/sede/_renta_web_open.py`.
-- [ ] `S108` - verify docs; `adapters/outbound/aeat/sede/_renta_web_open_safety.py`.
-- [ ] `S109` - verify docs; `adapters/outbound/aeat/sede/_schema.py`.
-- [ ] `S110` - verify docs; `adapters/outbound/aeat/sede/_walker.py`.
-- [ ] `S111` - verify docs; `adapters/outbound/aeat/verify/__init__.py`.
-- [ ] `S112` - verify docs; `adapters/outbound/fx/__init__.py`.
-- [ ] `S113` - verify docs; `adapters/outbound/fx/_ecb_provider.py`.
-- [ ] `S114` - verify docs; `adapters/outbound/fx/_ecb_refresh.py`.
-- [ ] `S115` - verify docs; `adapters/outbound/google/__init__.py`.
-- [ ] `S116` - verify docs; `adapters/outbound/google/_api.py`.
-- [ ] `S117` - verify docs; `adapters/outbound/google/_calc_sheets_apply.py`.
-- [ ] `S118` - verify docs; `adapters/outbound/google/_calc_sheets_apply_values.py`.
-- [ ] `S119` - verify docs; `adapters/outbound/google/_calc_sheets_pull.py`.
-- [ ] `S120` - verify docs; `adapters/outbound/google/_document_link_resolver.py`.
-- [ ] `S121` - verify docs; `adapters/outbound/google/_errors.py`.
-- [ ] `S122` - verify docs; `adapters/outbound/google/_oauth_flow.py`.
-- [ ] `S123` - verify docs; `adapters/outbound/google/_profile_binding.py`.
-- [ ] `S124` - verify docs; `adapters/outbound/google/_records.py`.
-- [ ] `S125` - verify docs; `adapters/outbound/google/_session_store.py`.
-- [ ] `S126` - verify docs; `adapters/outbound/llm/__init__.py`.
-- [ ] `S127` - verify docs; `adapters/outbound/llm/_cache.py`.
-- [ ] `S128` - verify docs; `adapters/outbound/llm/_client.py`.
-- [ ] `S129` - verify docs; `adapters/outbound/llm/_errors.py`.
-- [ ] `S130` - verify docs; `adapters/outbound/llm/_models.py`.
-- [ ] `S131` - verify docs; `adapters/outbound/llm/_pricing.py`.
-- [ ] `S132` - verify docs; `adapters/outbound/llm/_providers/__init__.py`.
-- [ ] `S133` - verify docs; `adapters/outbound/llm/_providers/anthropic.py`.
-- [ ] `S134` - verify docs; `adapters/outbound/llm/_providers/base.py`.
-- [ ] `S135` - verify docs; `adapters/outbound/llm/_providers/deterministic.py`.
-- [ ] `S136` - verify docs; `adapters/outbound/llm/_providers/gemini.py`.
-- [ ] `S137` - verify docs; `adapters/outbound/llm/_providers/local.py`.
-- [ ] `S138` - verify docs; `adapters/outbound/llm/_providers/openai.py`.
-- [ ] `S139` - verify docs; `adapters/outbound/llm/_usage.py`.
-- [ ] `S140` - verify docs; `adapters/outbound/llm/conftest.py`.
-- [ ] `S141` - verify docs; `adapters/outbound/storage/__init__.py`.
-- [ ] `S142` - verify docs; `adapters/outbound/storage/_errors.py`.
-- [ ] `S143` - verify docs; `adapters/outbound/storage/_factory.py`.
-- [ ] `S144` - verify docs; `adapters/outbound/storage/_google_drive.py`.
-- [ ] `S145` - verify docs; `adapters/outbound/storage/_local.py`.
-- [ ] `S146` - verify docs; `adapters/outbound/storage/_mirror_manifest.py`.
-- [ ] `S147` - verify docs; `adapters/outbound/storage/_protocol.py`.
-- [ ] `S148` - verify docs; `adapters/outbound/storage/_records.py`.
-- [ ] `S149` - verify docs; `adapters/persistence/__init__.py`.
-- [ ] `S150` - verify docs; `adapters/persistence/profile/__init__.py`.
-- [ ] `S151` - verify docs; `adapters/persistence/profile/assets.py`.
-- [ ] `S152` - verify docs; `adapters/persistence/profile/inventory.py`.
-- [ ] `S153` - verify docs; `adapters/persistence/storage/__init__.py`.
-- [ ] `S154` - verify docs; `adapters/persistence/storage/_kdf_salt.py`.
-- [ ] `S155` - verify docs; `adapters/persistence/storage/_namespace_registry.py`.
-- [ ] `S156` - verify docs; `adapters/persistence/storage/_path_safety.py`.
-- [ ] `S157` - verify docs; `adapters/persistence/storage/_rotation.py`.
-- [ ] `S158` - verify docs; `adapters/persistence/storage/attachment.py`.
-- [ ] `S159` - verify docs; `adapters/persistence/storage/blob_store/__init__.py`.
-- [ ] `S160` - verify docs; `adapters/persistence/storage/blob_store/_blob_store.py`.
-- [ ] `S161` - verify docs; `adapters/persistence/storage/blob_store/_materialisation.py`.
-- [ ] `S162` - verify docs; `adapters/persistence/storage/bucket/__init__.py`.
-- [ ] `S163` - verify docs; `adapters/persistence/storage/bucket/_errors.py`.
-- [ ] `S164` - verify docs; `adapters/persistence/storage/bucket/_export_header.py`.
-- [ ] `S165` - verify docs; `adapters/persistence/storage/bucket/_keystore_paths.py`.
-- [ ] `S166` - verify docs; `adapters/persistence/storage/bucket/_layout.py`.
-- [ ] `S167` - verify docs; `adapters/persistence/storage/bucket/_lockfile.py`.
-- [ ] `S168` - verify docs; `adapters/persistence/storage/bucket/_manifest.py`.
-- [ ] `S169` - verify docs; `adapters/persistence/storage/bucket/_manifest_io.py`.
-- [ ] `S170` - verify docs; `adapters/persistence/storage/bucket/_sealed_archive_errors.py`.
-- [ ] `S171` - verify docs; `adapters/persistence/storage/bucket/_sealed_archive_reader.py`.
-- [ ] `S172` - verify docs; `adapters/persistence/storage/bucket/_sealed_archive_writer.py`.
-- [ ] `S173` - verify docs; `adapters/persistence/storage/crypto/__init__.py`.
-- [ ] `S174` - verify docs; `adapters/persistence/storage/crypto/_crypto.py`.
-- [ ] `S175` - verify docs; `adapters/persistence/storage/crypto/_encrypted_columns.py`.
-- [ ] `S176` - verify docs; `adapters/persistence/storage/envelope/__init__.py`.
-- [ ] `S177` - verify docs; `adapters/persistence/storage/envelope/_envelope.py`.
-- [ ] `S178` - verify docs; `adapters/persistence/storage/envelope/_repository_test_suite.py`.
-- [ ] `S179` - verify docs; `adapters/persistence/storage/envelope/_secure_repository.py`.
-- [ ] `S180` - verify docs; `adapters/persistence/storage/envelope/conftest.py`.
-- [ ] `S181` - verify docs; `adapters/persistence/storage/errors.py`.
-- [ ] `S182` - verify docs; `adapters/persistence/storage/master_key/__init__.py`.
-- [ ] `S183` - verify docs; `adapters/persistence/storage/master_key/_active_session.py`.
-- [ ] `S184` - verify docs; `adapters/persistence/storage/master_key/_bucket_session.py`.
-- [ ] `S185` - verify docs; `adapters/persistence/storage/master_key/_dek_wrap.py`.
-- [ ] `S186` - verify docs; `adapters/persistence/storage/master_key/_errors.py`.
-- [ ] `S187` - verify docs; `adapters/persistence/storage/master_key/_idle_timeout.py`.
-- [ ] `S188` - verify docs; `adapters/persistence/storage/master_key/_kdf.py`.
-- [ ] `S189` - verify docs; `adapters/persistence/storage/master_key/_kdf_params.py`.
-- [ ] `S190` - verify docs; `adapters/persistence/storage/master_key/_master_key.py`.
-- [ ] `S191` - verify docs; `adapters/persistence/storage/master_key/_master_key_bucket_dek.py`.
-- [ ] `S192` - verify docs; `adapters/persistence/storage/master_key/_master_key_derivation.py`.
-- [ ] `S193` - verify docs; `adapters/persistence/storage/master_key/_master_key_ephemeral.py`.
-- [ ] `S194` - verify docs; `adapters/persistence/storage/master_key/_master_key_io.py`.
-- [ ] `S195` - verify docs; `adapters/persistence/storage/master_key/_master_key_records.py`.
-- [ ] `S196` - verify docs; `adapters/persistence/storage/master_key/_master_key_tax_id.py`.
-- [ ] `S197` - verify docs; `adapters/persistence/storage/master_key/_recovery.py`.
-- [ ] `S198` - verify docs; `adapters/persistence/storage/master_key/_recovery_facade.py`.
-- [ ] `S199` - verify docs; `adapters/persistence/storage/master_key/_recovery_record.py`.
-- [ ] `S200` - verify docs; `adapters/persistence/storage/master_key/_zeroise.py`.
-- [ ] `S201` - verify docs; `adapters/persistence/storage/master_key/conftest.py`.
-- [ ] `S202` - verify docs; `adapters/persistence/storage/runtime.py`.
-- [ ] `S203` - verify docs; `adapters/persistence/storage/runtime_repository.py`.
-- [ ] `S204` - verify docs; `adapters/persistence/storage/secret_store/__init__.py`.
-- [ ] `S205` - verify docs; `adapters/persistence/storage/secret_store/_secret_store.py`.
-- [ ] `S206` - verify docs; `adapters/persistence/storage/secret_store/conftest.py`.
-- [ ] `S207` - verify docs; `adapters/persistence/storage/sql/__init__.py`.
-- [ ] `S208` - verify docs; `adapters/persistence/storage/sql/_orm.py`.
-- [ ] `S209` - verify docs; `adapters/persistence/storage/sql/_secure_object_crypto.py`.
-- [ ] `S210` - verify docs; `adapters/persistence/storage/sql/_secure_object_integrity.py`.
-- [ ] `S211` - verify docs; `adapters/persistence/storage/sql/_secure_object_migration.py`.
-- [ ] `S212` - verify docs; `adapters/persistence/storage/sql/_secure_object_records.py`.
-- [ ] `S213` - verify docs; `adapters/persistence/storage/sql/_secure_object_schema.py`.
-- [ ] `S214` - verify docs; `adapters/persistence/storage/sql/conftest.py`.
-- [ ] `S215` - verify docs; `adapters/persistence/storage/sql/engine.py`.
-- [ ] `S216` - verify docs; `adapters/persistence/storage/sql/records.py`.
-- [ ] `S217` - verify docs; `adapters/persistence/storage/sql/repository.py`.
-- [ ] `S218` - verify docs; `adapters/persistence/storage/sql/secure_objects.py`.
-- [ ] `S219` - verify docs; `adapters/persistence/storage/sql/session.py`.
-- [ ] `S220` - verify docs; `application/__init__.py`.
-- [ ] `S221` - verify docs; `application/_errors.py`.
-- [ ] `S222` - verify docs; `application/_storage_paths.py`.
-- [ ] `S223` - verify docs; `application/aggregation/__init__.py`.
-- [ ] `S224` - verify docs; `application/aggregation/_business_proportion.py`.
-- [ ] `S225` - verify docs; `application/aggregation/_counterpart.py`.
-- [ ] `S226` - verify docs; `application/aggregation/_currency_predicates.py`.
-- [ ] `S227` - verify docs; `application/aggregation/_errors.py`.
-- [ ] `S228` - verify docs; `application/aggregation/_foreign_assets.py`.
-- [ ] `S229` - verify docs; `application/aggregation/_grouping.py`.
-- [ ] `S230` - verify docs; `application/aggregation/_iva_ledger.py`.
-- [ ] `S231` - verify docs; `application/aggregation/_ledger_filing_snapshot.py`.
-- [ ] `S232` - verify docs; `application/aggregation/_modelo_bindings.py`.
-- [ ] `S233` - verify docs; `application/aggregation/_models.py`.
-- [ ] `S234` - verify docs; `application/aggregation/_oss_ioss.py`.
-- [ ] `S235` - verify docs; `application/aggregation/_prorrata.py`.
-- [ ] `S236` - verify docs; `application/aggregation/_registry_provider.py`.
-- [ ] `S237` - verify docs; `application/aggregation/_renta_income_ledger.py`.
-- [ ] `S238` - verify docs; `application/aggregation/_renta_ledger.py`.
-- [ ] `S239` - verify docs; `application/aggregation/_retenciones.py`.
-- [ ] `S240` - verify docs; `application/aggregation/_service.py`.
-- [ ] `S241` - verify docs; `application/aggregation/_shared_issue_reasons.py`.
-- [ ] `S242` - verify docs; `application/aggregation/_source_mesh.py`.
-- [ ] `S243` - verify docs; `application/aggregation/_source_profile.py`.
-- [ ] `S244` - verify docs; `application/auth/__init__.py`.
-- [ ] `S245` - verify docs; `application/auth/_acquisition_lock.py`.
-- [ ] `S246` - verify docs; `application/auth/_actions.py`.
-- [ ] `S247` - verify docs; `application/auth/_apoderado.py`.
-- [ ] `S248` - verify docs; `application/auth/_catalogue.py`.
-- [ ] `S249` - verify docs; `application/auth/_diagnostics.py`.
-- [ ] `S250` - verify docs; `application/auth/_errors.py`.
-- [ ] `S251` - verify docs; `application/auth/_models.py`.
-- [ ] `S252` - verify docs; `application/auth/_operator.py`.
-- [ ] `S253` - verify docs; `application/auth/_operator_probes.py`.
-- [ ] `S254` - verify docs; `application/auth/_operator_results.py`.
-- [ ] `S255` - verify docs; `application/auth/_operator_scope.py`.
-- [ ] `S256` - verify docs; `application/auth/_protocols.py`.
-- [ ] `S257` - verify docs; `application/auth/_sessions.py`.
-- [ ] `S258` - verify docs; `application/bucket_maintenance/__init__.py`.
-- [ ] `S259` - verify docs; `application/bucket_maintenance/_contracts.py`.
-- [ ] `S260` - verify docs; `application/bucket_maintenance/_manifest_digest.py`.
-- [ ] `S261` - verify docs; `application/bucket_maintenance/_service.py`.
-- [ ] `S262` - verify docs; `application/calculations/__init__.py`.
-- [ ] `S263` - verify docs; `application/calculations/_binding_prefill.py`.
-- [ ] `S264` - verify docs; `application/calculations/_cross_period_clean_state.py`.
-- [ ] `S265` - verify docs; `application/calculations/_errors.py`.
-- [ ] `S266` - verify docs; `application/calculations/_iva_compensation_history.py`.
-- [ ] `S267` - verify docs; `application/calculations/_iva_wallet_balance.py`.
-- [ ] `S268` - verify docs; `application/calculations/_iva_wallet_reconciliation.py`.
-- [ ] `S269` - verify docs; `application/calculations/_maritime_exemption_service.py`.
-- [ ] `S270` - verify docs; `application/calculations/_multi_year.py`.
-- [ ] `S271` - verify docs; `application/calculations/_observations_repository.py`.
-- [ ] `S272` - verify docs; `application/calculations/_ports.py`.
-- [ ] `S273` - verify docs; `application/calculations/_relation_prefill.py`.
-- [ ] `S274` - verify docs; `application/calculations/_row_set_assembly.py`.
-- [ ] `S275` - verify docs; `application/config_reset.py`.
-- [ ] `S276` - verify docs; `application/conftest.py`.
-- [ ] `S277` - verify docs; `application/diagnostics.py`.
-- [ ] `S278` - verify docs; `application/evidence/__init__.py`.
-- [ ] `S279` - verify docs; `application/evidence/_ids.py`.
-- [ ] `S280` - verify docs; `application/evidence/_models.py`.
-- [ ] `S281` - verify docs; `application/evidence/_service.py`.
-- [ ] `S282` - verify docs; `application/export/__init__.py`.
-- [ ] `S283` - verify docs; `application/export/_errors.py`.
-- [ ] `S284` - verify docs; `application/export/_tabular.py`.
-- [ ] `S285` - verify docs; `application/filing/__init__.py`.
-- [ ] `S286` - verify docs; `application/filing/_calculate.py`.
-- [ ] `S287` - verify docs; `application/filing/_complementaria.py`.
-- [ ] `S288` - verify docs; `application/filing/_export.py`.
-- [ ] `S289` - verify docs; `application/filing/_history_models.py`.
-- [ ] `S290` - verify docs; `application/filing/_history_repository.py`.
-- [ ] `S291` - verify docs; `application/filing/_import.py`.
-- [ ] `S292` - verify docs; `application/filing/_review.py`.
-- [ ] `S293` - verify docs; `application/filing/_runtime_repository.py`.
-- [ ] `S294` - verify docs; `application/filing/_testing_registry.py`.
-- [ ] `S295` - verify docs; `application/filing/conftest.py`.
-- [ ] `S296` - verify docs; `application/filing/errors.py`.
-- [ ] `S297` - verify docs; `application/filing/reconciliation/__init__.py`.
-- [ ] `S298` - verify docs; `application/filing/reconciliation/_kind.py`.
-- [ ] `S299` - verify docs; `application/filing/reconciliation/_reconcile.py`.
-- [ ] `S300` - verify docs; `application/filing/reconciliation/_schema.py`.
-- [ ] `S301` - verify docs; `application/filing/runtime.py`.
-- [ ] `S302` - verify docs; `application/filing/testing.py`.
-- [ ] `S303` - verify docs; `application/inventory/__init__.py`.
-- [ ] `S304` - verify docs; `application/inventory/_errors.py`.
-- [ ] `S305` - verify docs; `application/inventory/_service.py`.
-- [ ] `S306` - verify docs; `application/invoices/__init__.py`.
-- [ ] `S307` - verify docs; `application/invoices/_importing.py`.
-- [ ] `S308` - verify docs; `application/invoices/_linking.py`.
-- [ ] `S309` - verify docs; `application/invoices/_projection.py`.
-- [ ] `S310` - verify docs; `application/invoices/_queries.py`.
-- [ ] `S311` - verify docs; `application/invoices/_reconciliation.py`.
-- [ ] `S312` - verify docs; `application/invoices/_source_resolver.py`.
-- [ ] `S313` - verify docs; `application/ledger/__init__.py`.
-- [ ] `S314` - verify docs; `application/ledger/_actions.py`.
-- [ ] `S315` - verify docs; `application/ledger/_actions_classification.py`.
-- [ ] `S316` - verify docs; `application/ledger/_actions_common.py`.
-- [ ] `S317` - verify docs; `application/ledger/_actions_export.py`.
-- [ ] `S318` - verify docs; `application/ledger/_actions_import.py`.
-- [ ] `S319` - verify docs; `application/ledger/_actions_lifecycle.py`.
-- [ ] `S320` - verify docs; `application/ledger/_actions_manual.py`.
-- [ ] `S321` - verify docs; `application/ledger/_actions_split_merge.py`.
-- [ ] `S322` - verify docs; `application/ledger/_business_operation_invoice.py`.
-- [ ] `S323` - verify docs; `application/ledger/_evidence.py`.
-- [ ] `S324` - verify docs; `application/ledger/_id_resolution.py`.
-- [ ] `S325` - verify docs; `application/ledger/_llm_classification.py`.
-- [ ] `S326` - verify docs; `application/ledger/_models.py`.
-- [ ] `S327` - verify docs; `application/ledger/_preflight.py`.
-- [ ] `S328` - verify docs; `application/ledger/_protocols.py`.
-- [ ] `S329` - verify docs; `application/ledger/_ratios.py`.
-- [ ] `S330` - verify docs; `application/ledger/_review_projection.py`.
-- [ ] `S331` - verify docs; `application/ledger/_rule_repository.py`.
-- [ ] `S332` - verify docs; `application/live/__init__.py`.
-- [ ] `S333` - verify docs; `application/live/_borrador_100.py`.
-- [ ] `S334` - verify docs; `application/live/_censo.py`.
-- [ ] `S335` - verify docs; `application/live/_errors.py`.
-- [ ] `S336` - verify docs; `application/live/_expedientes.py`.
-- [ ] `S337` - verify docs; `application/live/_filed_data.py`.
-- [ ] `S338` - verify docs; `application/live/_filed_data_capture.py`.
-- [ ] `S339` - verify docs; `application/live/_filed_observation_persistence.py`.
-- [ ] `S340` - verify docs; `application/live/_iva_remote_state.py`.
-- [ ] `S341` - verify docs; `application/live/_notifications.py`.
-- [ ] `S342` - verify docs; `application/live/_remote_state_models.py`.
-- [ ] `S343` - verify docs; `application/live/_remote_state_outcomes.py`.
-- [ ] `S344` - verify docs; `application/live/_session.py`.
-- [ ] `S345` - verify docs; `application/live/_snapshot_base.py`.
-- [ ] `S346` - verify docs; `application/live/_verify.py`.
-- [ ] `S347` - verify docs; `application/modelo/__init__.py`.
-- [ ] `S348` - verify docs; `application/modelo/_action_errors.py`.
-- [ ] `S349` - verify docs; `application/modelo/_actions.py`.
-- [ ] `S350` - verify docs; `application/modelo/_amendment_actions.py`.
-- [ ] `S351` - verify docs; `application/modelo/_binding_readiness.py`.
-- [ ] `S352` - verify docs; `application/modelo/_binding_resolution.py`.
-- [ ] `S353` - verify docs; `application/modelo/_borrador_binding.py`.
-- [ ] `S354` - verify docs; `application/modelo/_calculate_input.py`.
-- [ ] `S355` - verify docs; `application/modelo/_calculation_actions.py`.
-- [ ] `S356` - verify docs; `application/modelo/_calculation_helpers.py`.
-- [ ] `S357` - verify docs; `application/modelo/_decimal_binding_value.py`.
-- [ ] `S358` - verify docs; `application/modelo/_export.py`.
-- [ ] `S359` - verify docs; `application/modelo/_external_import_actions.py`.
-- [ ] `S360` - verify docs; `application/modelo/_filing_actions.py`.
-- [ ] `S361` - verify docs; `application/modelo/_history.py`.
-- [ ] `S362` - verify docs; `application/modelo/_iva_wallet_gate.py`.
-- [ ] `S363` - verify docs; `application/modelo/_iva_wallet_seed.py`.
-- [ ] `S364` - verify docs; `application/modelo/_m036_lifecycle.py`.
-- [ ] `S365` - verify docs; `application/modelo/_m210_rate.py`.
-- [ ] `S366` - verify docs; `application/modelo/_maritime_preview.py`.
-- [ ] `S367` - verify docs; `application/modelo/_profile_binding.py`.
-- [ ] `S368` - verify docs; `application/modelo/_projection.py`.
-- [ ] `S369` - verify docs; `application/modelo/_reconcile.py`.
-- [ ] `S370` - verify docs; `application/modelo/_registry_discovery.py`.
-- [ ] `S371` - verify docs; `application/modelo/_registry_helpers.py`.
-- [ ] `S372` - verify docs; `application/modelo/_registry_resources.py`.
-- [ ] `S373` - verify docs; `application/modelo/_result_summary.py`.
-- [ ] `S374` - verify docs; `application/modelo/_revision_persistence.py`.
-- [ ] `S375` - verify docs; `application/modelo/_selectors.py`.
-- [ ] `S376` - verify docs; `application/modelo/_taxation_comparison.py`.
-- [ ] `S377` - verify docs; `application/modelo/_verification_actions.py`.
-- [ ] `S378` - verify docs; `application/modelo/_work_addressing.py`.
-- [ ] `S379` - verify docs; `application/modelo/_work_create_policy.py`.
-- [ ] `S380` - verify docs; `application/modelo/_work_lifecycle.py`.
-- [ ] `S381` - verify docs; `application/modelo/_work_plazo.py`.
-- [ ] `S382` - verify docs; `application/modelo/_workflow_gate.py`.
-- [ ] `S383` - verify docs; `application/operator_surface/__init__.py`.
-- [ ] `S384` - verify docs; `application/operator_surface/_contract.py`.
-- [ ] `S385` - verify docs; `application/operator_surface/_crud_contract.py`.
-- [ ] `S386` - verify docs; `application/operator_surface/_crud_registry.py`.
-- [ ] `S387` - verify docs; `application/operator_surface/_errors.py`.
-- [ ] `S388` - verify docs; `application/operator_surface/_help.py`.
-- [ ] `S389` - verify docs; `application/operator_surface/_models.py`.
-- [ ] `S390` - verify docs; `application/overview/__init__.py`.
-- [ ] `S391` - verify docs; `application/overview/_agenda.py`.
-- [ ] `S392` - verify docs; `application/overview/_backlog.py`.
-- [ ] `S393` - verify docs; `application/overview/_calendar.py`.
-- [ ] `S394` - verify docs; `application/overview/_errors.py`.
-- [ ] `S395` - verify docs; `application/overview/_explain.py`.
-- [ ] `S396` - verify docs; `application/portals/__init__.py`.
-- [ ] `S397` - verify docs; `application/portals/_service.py`.
-- [ ] `S398` - verify docs; `application/registry/__init__.py`.
-- [ ] `S399` - verify docs; `application/registry/_corpus.py`.
-- [ ] `S400` - verify docs; `application/registry/_errors.py`.
-- [ ] `S401` - verify docs; `application/repair_integrity.py`.
-- [ ] `S402` - verify docs; `application/review/__init__.py`.
-- [ ] `S403` - verify docs; `application/review/_actions.py`.
-- [ ] `S404` - verify docs; `application/review/_adapters.py`.
-- [ ] `S405` - verify docs; `application/review/_aggregator.py`.
-- [ ] `S406` - verify docs; `application/review/_edit.py`.
-- [ ] `S407` - verify docs; `application/review/_enums.py`.
-- [ ] `S408` - verify docs; `application/review/_errors.py`.
-- [ ] `S409` - verify docs; `application/review/_filter.py`.
-- [ ] `S410` - verify docs; `application/review/_models.py`.
-- [ ] `S411` - verify docs; `application/review/_operator.py`.
-- [ ] `S412` - verify docs; `application/review/conftest.py`.
-- [ ] `S413` - verify docs; `application/setup/__init__.py`.
-- [ ] `S414` - verify docs; `application/setup/_contracts.py`.
-- [ ] `S415` - verify docs; `application/setup/_service.py`.
-- [ ] `S416` - verify docs; `application/state_projection.py`.
-- [ ] `S417` - verify docs; `application/storage/__init__.py`.
-- [ ] `S418` - verify docs; `application/storage/calc_sheets/__init__.py`.
-- [ ] `S419` - verify docs; `application/storage/calc_sheets/_engine.py`.
-- [ ] `S420` - verify docs; `application/storage/calc_sheets/_errors.py`.
-- [ ] `S421` - verify docs; `application/storage/calc_sheets/_evidence.py`.
-- [ ] `S422` - verify docs; `application/storage/calc_sheets/_layout.py`.
-- [ ] `S423` - verify docs; `application/storage/calc_sheets/_parity_harness.py`.
-- [ ] `S424` - verify docs; `application/storage/calc_sheets/_records.py`.
-- [ ] `S425` - verify docs; `application/storage/calc_sheets/_styling.py`.
-- [ ] `S426` - verify docs; `application/storage/calc_sheets/_theme.py`.
-- [ ] `S427` - verify docs; `application/storage/calc_sheets/_translator.py`.
-- [ ] `S428` - verify docs; `application/storage/calc_sheets/_workbook_export.py`.
-- [ ] `S429` - verify docs; `application/storage_write_policy.py`.
-- [ ] `S430` - verify docs; `application/transactions/__init__.py`.
-- [ ] `S431` - verify docs; `application/transactions/_diagnostics.py`.
-- [ ] `S432` - verify docs; `application/transactions/_import.py`.
-- [ ] `S433` - verify docs; `application/user_profile/__init__.py`.
-- [ ] `S434` - verify docs; `application/user_profile/_aggregate.py`.
-- [ ] `S435` - verify docs; `application/user_profile/_bundle.py`.
-- [ ] `S436` - verify docs; `application/user_profile/_censo_errors.py`.
-- [ ] `S437` - verify docs; `application/user_profile/_censo_sync.py`.
-- [ ] `S438` - verify docs; `application/user_profile/_commands.py`.
-- [ ] `S439` - verify docs; `application/user_profile/_custody.py`.
-- [ ] `S440` - verify docs; `application/user_profile/_integrity.py`.
-- [ ] `S441` - verify docs; `application/user_profile/_keys_validation.py`.
-- [ ] `S442` - verify docs; `application/user_profile/_language_resolver.py`.
-- [ ] `S443` - verify docs; `application/user_profile/_lifecycle.py`.
-- [ ] `S444` - verify docs; `application/user_profile/_orchestration.py`.
-- [ ] `S445` - verify docs; `application/user_profile/_preflight.py`.
-- [ ] `S446` - verify docs; `application/user_profile/_profile_repository.py`.
-- [ ] `S447` - verify docs; `application/user_profile/_projections.py`.
-- [ ] `S448` - verify docs; `application/user_profile/_repository.py`.
-- [ ] `S449` - verify docs; `application/user_profile/_testing.py`.
-- [ ] `S450` - verify docs; `application/user_profile/_validation.py`.
-- [ ] `S451` - verify docs; `application/verification/__init__.py`.
-- [ ] `S452` - verify docs; `application/verification/_errors.py`.
-- [ ] `S453` - verify docs; `application/verification/_schema.py`.
-- [ ] `S454` - verify docs; `application/verification/_verify.py`.
-- [ ] `S455` - verify docs; `application/wizard/__init__.py`.
-- [ ] `S456` - verify docs; `application/wizard/_catalogue.py`.
-- [ ] `S457` - verify docs; `application/wizard/_commands.py`.
-- [ ] `S458` - verify docs; `application/wizard/_compiler.py`.
-- [ ] `S459` - verify docs; `application/wizard/_errors.py`.
-- [ ] `S460` - verify docs; `application/wizard/_models.py`.
-- [ ] `S461` - verify docs; `application/wizard/_persistence.py`.
-- [ ] `S462` - verify docs; `application/wizard/_prompter.py`.
-- [ ] `S463` - verify docs; `application/wizard/_runner.py`.
-- [ ] `S464` - verify docs; `application/wizard/_status.py`.
-- [ ] `S465` - verify docs; `application/wizard/_translations.py`.
-- [ ] `S466` - verify docs; `application/wizard/_verifier.py`.
-- [ ] `S467` - verify docs; `application/wizard/_widgets.py`.
-- [ ] `S468` - verify docs; `application/workflow/__init__.py`.
-- [ ] `S469` - verify docs; `application/workflow/_adapters.py`.
-- [ ] `S470` - verify docs; `application/workflow/_engine.py`.
-- [ ] `S471` - verify docs; `application/workflow/_engine_helpers.py`.
-- [ ] `S472` - verify docs; `application/workflow/_engine_recording.py`.
-- [ ] `S473` - verify docs; `application/workflow/_errors.py`.
-- [ ] `S474` - verify docs; `application/workflow/_events.py`.
-- [ ] `S475` - verify docs; `application/workflow/_models.py`.
-- [ ] `S476` - verify docs; `application/workflow/_persistence.py`.
-- [ ] `S477` - verify docs; `application/workflow/_profile_bucket_scan.py`.
-- [ ] `S478` - verify docs; `application/workflow/_profile_health.py`.
-- [ ] `S479` - verify docs; `application/workflow/_protocols.py`.
-- [ ] `S480` - verify docs; `application/workflow/_resume.py`.
-- [ ] `S481` - verify docs; `application/workflow/_utils.py`.
-- [ ] `S482` - verify docs; `core/__init__.py`.
-- [ ] `S483` - verify docs; `core/_bucket_pointer.py`.
-- [ ] `S484` - verify docs; `core/_bucket_pointer_io.py`.
-- [ ] `S485` - verify docs; `core/_config_storage_route.py`.
-- [ ] `S486` - verify docs; `core/_config_support.py`.
-- [ ] `S487` - verify docs; `core/_models.py`.
-- [ ] `S488` - verify docs; `core/_period.py`.
-- [ ] `S489` - verify docs; `core/_tax_domain.py`.
-- [ ] `S490` - verify docs; `core/_toml.py`.
-- [ ] `S491` - verify docs; `core/access_gate/__init__.py`.
-- [ ] `S492` - verify docs; `core/access_gate/_authorization.py`.
-- [ ] `S493` - verify docs; `core/access_gate/_errors.py`.
-- [ ] `S494` - verify docs; `core/aggregation.py`.
-- [ ] `S495` - verify docs; `core/auth_session_keys.py`.
-- [ ] `S496` - verify docs; `core/classification/__init__.py`.
-- [ ] `S497` - verify docs; `core/click_context.py`.
-- [ ] `S498` - verify docs; `core/config.py`.
-- [ ] `S499` - verify docs; `core/corpus_manifest/__init__.py`.
-- [ ] `S500` - verify docs; `core/corpus_manifest/_errors.py`.
-- [ ] `S501` - verify docs; `core/decimal/__init__.py`.
-- [ ] `S502` - verify docs; `core/decimal/_coerce.py`.
-- [ ] `S503` - verify docs; `core/decimal/_format.py`.
-- [ ] `S504` - verify docs; `core/env_io.py`.
-- [ ] `S505` - verify docs; `core/errors/__init__.py`.
-- [ ] `S506` - verify docs; `core/errors/_not_found.py`.
-- [ ] `S507` - verify docs; `core/errors/_registry.py`.
-- [ ] `S508` - verify docs; `core/errors/_severity.py`.
-- [ ] `S509` - verify docs; `core/errors/registry/__init__.py`.
-- [ ] `S510` - verify docs; `core/errors/registry/_adapters.py`.
-- [ ] `S511` - verify docs; `core/errors/registry/_adapters_part1.py`.
-- [ ] `S512` - verify docs; `core/errors/registry/_adapters_part2.py`.
-- [ ] `S513` - verify docs; `core/errors/registry/_application.py`.
-- [ ] `S514` - verify docs; `core/errors/registry/_application_part1.py`.
-- [ ] `S515` - verify docs; `core/errors/registry/_application_part2.py`.
-- [ ] `S516` - verify docs; `core/errors/registry/_core.py`.
-- [ ] `S517` - verify docs; `core/errors/registry/_domain.py`.
-- [ ] `S518` - verify docs; `core/errors/registry/_domain_part1.py`.
-- [ ] `S519` - verify docs; `core/errors/registry/_domain_part2.py`.
-- [ ] `S520` - verify docs; `core/errors/registry/_domain_part3.py`.
-- [ ] `S521` - verify docs; `core/errors/registry/_entrypoints.py`.
-- [ ] `S522` - verify docs; `core/external_constants.py`.
-- [ ] `S523` - verify docs; `core/file_permissions.py`.
-- [ ] `S524` - verify docs; `core/hashing.py`.
-- [ ] `S525` - verify docs; `core/i18n/__init__.py`.
-- [ ] `S526` - verify docs; `core/i18n/_render.py`.
-- [ ] `S527` - verify docs; `core/i18n/_translatable.py`.
-- [ ] `S528` - verify docs; `core/i18n/conftest.py`.
-- [ ] `S529` - verify docs; `core/identity/__init__.py`.
-- [ ] `S530` - verify docs; `core/identity/_bucket.py`.
-- [ ] `S531` - verify docs; `core/identity/_documents.py`.
-- [ ] `S532` - verify docs; `core/identity/_profile.py`.
-- [ ] `S533` - verify docs; `core/identity/_snapshot.py`.
-- [ ] `S534` - verify docs; `core/identity/_tax_id.py`.
-- [ ] `S535` - verify docs; `core/identity/_transaction.py`.
-- [ ] `S536` - verify docs; `core/json_contract.py`.
-- [ ] `S537` - verify docs; `core/locks.py`.
-- [ ] `S538` - verify docs; `core/locks_errors.py`.
-- [ ] `S539` - verify docs; `core/logging.py`.
-- [ ] `S540` - verify docs; `core/money/__init__.py`.
-- [ ] `S541` - verify docs; `core/observability/__init__.py`.
-- [ ] `S542` - verify docs; `core/observability/_context.py`.
-- [ ] `S543` - verify docs; `core/observability/_errors.py`.
-- [ ] `S544` - verify docs; `core/observability/_fingerprint.py`.
-- [ ] `S545` - verify docs; `core/observability/_models.py`.
-- [ ] `S546` - verify docs; `core/observability/_recorder.py`.
-- [ ] `S547` - verify docs; `core/observability/_redaction_rules.py`.
-- [ ] `S548` - verify docs; `core/observability/_replay.py`.
-- [ ] `S549` - verify docs; `core/observability/_sink.py`.
-- [ ] `S550` - verify docs; `core/observability/_store.py`.
-- [ ] `S551` - verify docs; `core/output_rendering.py`.
-- [ ] `S552` - verify docs; `core/parsing/__init__.py`.
-- [ ] `S553` - verify docs; `core/parsing/_dates.py`.
-- [ ] `S554` - verify docs; `core/parsing/_utils.py`.
-- [ ] `S555` - verify docs; `core/paths.py`.
-- [ ] `S556` - verify docs; `core/redaction/__init__.py`.
-- [ ] `S557` - verify docs; `core/resources/__init__.py`.
-- [ ] `S558` - verify docs; `core/resources/_boundary.py`.
-- [ ] `S559` - verify docs; `core/resources/_errors.py`.
-- [ ] `S560` - verify docs; `core/resources/_keys.py`.
-- [ ] `S561` - verify docs; `core/resources/_registry.py`.
-- [ ] `S562` - verify docs; `core/resources/_repos/__init__.py`.
-- [ ] `S563` - verify docs; `core/resources/_repos/apoderamientos.py`.
-- [ ] `S564` - verify docs; `core/resources/_repos/category_profiles.py`.
-- [ ] `S565` - verify docs; `core/resources/_repos/holiday_calendars.py`.
-- [ ] `S566` - verify docs; `core/resources/_repos/iva_catalogues.py`.
-- [ ] `S567` - verify docs; `core/resources/_repos/iva_rate_tables.py`.
-- [ ] `S568` - verify docs; `core/resources/_repos/legal_parameters.py`.
-- [ ] `S569` - verify docs; `core/resources/_repos/manuals.py`.
-- [ ] `S570` - verify docs; `core/resources/_repos/modelos.py`.
-- [ ] `S571` - verify docs; `core/resources/_repos/normatives.py`.
-- [ ] `S572` - verify docs; `core/resources/_repos/recargo_bands.py`.
-- [ ] `S573` - verify docs; `core/resources/_repos/topics.py`.
-- [ ] `S574` - verify docs; `core/resources/_repos/user_profile.py`.
-- [ ] `S575` - verify docs; `core/resources/_repository.py`.
-- [ ] `S576` - verify docs; `core/setup_answers.py`.
-- [ ] `S577` - verify docs; `core/time/__init__.py`.
-- [ ] `S578` - verify docs; `core/time/_clock.py`.
-- [ ] `S579` - verify docs; `core/time/_utc.py`.
-- [ ] `S580` - verify docs; `core/topics/__init__.py`.
-- [ ] `S581` - verify docs; `core/wizard_catalogue.py`.
-- [ ] `S582` - verify docs; `domain/__init__.py`.
-- [ ] `S583` - verify docs; `domain/_errors.py`.
-- [ ] `S584` - verify docs; `domain/_identifiers.py`.
-- [ ] `S585` - verify docs; `domain/attachments/__init__.py`.
-- [ ] `S586` - verify docs; `domain/attachments/_enums.py`.
-- [ ] `S587` - verify docs; `domain/attachments/_errors.py`.
-- [ ] `S588` - verify docs; `domain/attachments/_ids.py`.
-- [ ] `S589` - verify docs; `domain/attachments/_models.py`.
-- [ ] `S590` - verify docs; `domain/attachments/_protocols.py`.
-- [ ] `S591` - verify docs; `domain/attachments/_service.py`.
-- [ ] `S592` - verify docs; `domain/auth/__init__.py`.
-- [ ] `S593` - verify docs; `domain/auth/apoderamientos/__init__.py`.
-- [ ] `S594` - verify docs; `domain/auth/apoderamientos/_catalogue.py`.
-- [ ] `S595` - verify docs; `domain/buckets/__init__.py`.
-- [ ] `S596` - verify docs; `domain/buckets/_errors.py`.
-- [ ] `S597` - verify docs; `domain/buckets/_event.py`.
-- [ ] `S598` - verify docs; `domain/buckets/_event_repository.py`.
-- [ ] `S599` - verify docs; `domain/buckets/_protocols.py`.
-- [ ] `S600` - verify docs; `domain/calculations/__init__.py`.
-- [ ] `S601` - verify docs; `domain/calculations/_export_field_kind.py`.
-- [ ] `S602` - verify docs; `domain/calculations/registry/__init__.py`.
-- [ ] `S603` - verify docs; `domain/calculations/registry/_aeat_hosts.py`.
-- [ ] `S604` - verify docs; `domain/calculations/registry/_aeat_nif_iva_oracle.py`.
-- [ ] `S605` - verify docs; `domain/calculations/registry/_applicability.py`.
-- [ ] `S606` - verify docs; `domain/calculations/registry/_applicability_modelo202.py`.
-- [ ] `S607` - verify docs; `domain/calculations/registry/_applicability_payer_facts.py`.
-- [ ] `S608` - verify docs; `domain/calculations/registry/_authority.py`.
-- [ ] `S609` - verify docs; `domain/calculations/registry/_binding_selector_utils.py`.
-- [ ] `S610` - verify docs; `domain/calculations/registry/_bindings.py`.
-- [ ] `S611` - verify docs; `domain/calculations/registry/_bindings_previous_filing.py`.
-- [ ] `S612` - verify docs; `domain/calculations/registry/_censo_modelos.py`.
-- [ ] `S613` - verify docs; `domain/calculations/registry/_checker_oracle_flow.py`.
-- [ ] `S614` - verify docs; `domain/calculations/registry/_citation_blocklist.py`.
-- [ ] `S615` - verify docs; `domain/calculations/registry/_constructs.py`.
-- [ ] `S616` - verify docs; `domain/calculations/registry/_counterpart_bindings.py`.
-- [ ] `S617` - verify docs; `domain/calculations/registry/_coverage.py`.
-- [ ] `S618` - verify docs; `domain/calculations/registry/_cross_revision_divergence.py`.
-- [ ] `S619` - verify docs; `domain/calculations/registry/_detail_record_bindings.py`.
-- [ ] `S620` - verify docs; `domain/calculations/registry/_errors.py`.
-- [ ] `S621` - verify docs; `domain/calculations/registry/_export.py`.
-- [ ] `S622` - verify docs; `domain/calculations/registry/_export_parse.py`.
-- [ ] `S623` - verify docs; `domain/calculations/registry/_filed_state.py`.
-- [ ] `S624` - verify docs; `domain/calculations/registry/_formula_initial_values.py`.
-- [ ] `S625` - verify docs; `domain/calculations/registry/_formula_runtime.py`.
-- [ ] `S626` - verify docs; `domain/calculations/registry/_groi_oracle.py`.
-- [ ] `S627` - verify docs; `domain/calculations/registry/_ids.py`.
-- [ ] `S628` - verify docs; `domain/calculations/registry/_invoice_bindings.py`.
-- [ ] `S629` - verify docs; `domain/calculations/registry/_ledger_bindings.py`.
-- [ ] `S630` - verify docs; `domain/calculations/registry/_legal.py`.
-- [ ] `S631` - verify docs; `domain/calculations/registry/_live_parity.py`.
-- [ ] `S632` - verify docs; `domain/calculations/registry/_loader.py`.
-- [ ] `S633` - verify docs; `domain/calculations/registry/_m232_row_bindings.py`.
-- [ ] `S634` - verify docs; `domain/calculations/registry/_parity_tapes.py`.
-- [ ] `S635` - verify docs; `domain/calculations/registry/_queries.py`.
-- [ ] `S636` - verify docs; `domain/calculations/registry/_record_design.py`.
-- [ ] `S637` - verify docs; `domain/calculations/registry/_record_design_coverage.py`.
-- [ ] `S638` - verify docs; `domain/calculations/registry/_record_design_schema.py`.
-- [ ] `S639` - verify docs; `domain/calculations/registry/_record_spec.py`.
-- [ ] `S640` - verify docs; `domain/calculations/registry/_relations.py`.
-- [ ] `S641` - verify docs; `domain/calculations/registry/_remote_state_guard.py`.
-- [ ] `S642` - verify docs; `domain/calculations/registry/_renta_web_open_oracle.py`.
-- [ ] `S643` - verify docs; `domain/calculations/registry/_runtime_graph.py`.
-- [ ] `S644` - verify docs; `domain/calculations/registry/_scenarios.py`.
-- [ ] `S645` - verify docs; `domain/calculations/registry/_schedules.py`.
-- [ ] `S646` - verify docs; `domain/calculations/registry/_schema.py`.
-- [ ] `S647` - verify docs; `domain/calculations/registry/_schema_base.py`.
-- [ ] `S648` - verify docs; `domain/calculations/registry/_schema_formula.py`.
-- [ ] `S649` - verify docs; `domain/calculations/registry/_schema_input_kind.py`.
-- [ ] `S650` - verify docs; `domain/calculations/registry/_schema_rounding.py`.
-- [ ] `S651` - verify docs; `domain/calculations/registry/_schema_scalars.py`.
-- [ ] `S652` - verify docs; `domain/calculations/registry/_schema_surfaces.py`.
-- [ ] `S653` - verify docs; `domain/calculations/registry/_snapshot.py`.
-- [ ] `S654` - verify docs; `domain/calculations/registry/_sources.py`.
-- [ ] `S655` - verify docs; `domain/calculations/registry/_temporal.py`.
-- [ ] `S656` - verify docs; `domain/calculations/registry/_text.py`.
-- [ ] `S657` - verify docs; `domain/calculations/registry/_validate.py`.
-- [ ] `S658` - verify docs; `domain/calculations/registry/_validate_algorithms.py`.
-- [ ] `S659` - verify docs; `domain/calculations/registry/_validate_application_links.py`.
-- [ ] `S660` - verify docs; `domain/calculations/registry/_validate_cache.py`.
-- [ ] `S661` - verify docs; `domain/calculations/registry/_validate_completeness.py`.
-- [ ] `S662` - verify docs; `domain/calculations/registry/_validate_constructs.py`.
-- [ ] `S663` - verify docs; `domain/calculations/registry/_validate_cross_domain_snapshot.py`.
-- [ ] `S664` - verify docs; `domain/calculations/registry/_validate_cross_revision.py`.
-- [ ] `S665` - verify docs; `domain/calculations/registry/_validate_cross_revision_advisory.py`.
-- [ ] `S666` - verify docs; `domain/calculations/registry/_validate_dependency_sections.py`.
-- [ ] `S667` - verify docs; `domain/calculations/registry/_validate_evidence.py`.
-- [ ] `S668` - verify docs; `domain/calculations/registry/_validate_exports.py`.
-- [ ] `S669` - verify docs; `domain/calculations/registry/_validate_extraction_profiles.py`.
-- [ ] `S670` - verify docs; `domain/calculations/registry/_validate_formulas.py`.
-- [ ] `S671` - verify docs; `domain/calculations/registry/_validate_helpers.py`.
-- [ ] `S672` - verify docs; `domain/calculations/registry/_validate_label_artifacts.py`.
-- [ ] `S673` - verify docs; `domain/calculations/registry/_validate_previous_filing_sources.py`.
-- [ ] `S674` - verify docs; `domain/calculations/registry/_validate_record_sections.py`.
-- [ ] `S675` - verify docs; `domain/calculations/registry/_validate_reference_checker.py`.
-- [ ] `S676` - verify docs; `domain/calculations/registry/_validate_reference_sections.py`.
-- [ ] `S677` - verify docs; `domain/calculations/registry/_validate_references.py`.
-- [ ] `S678` - verify docs; `domain/calculations/registry/_validate_registry_scope.py`.
-- [ ] `S679` - verify docs; `domain/calculations/registry/_validate_relation_periods.py`.
-- [ ] `S680` - verify docs; `domain/calculations/registry/_validate_relation_sources.py`.
-- [ ] `S681` - verify docs; `domain/calculations/registry/_validate_revision_context.py`.
-- [ ] `S682` - verify docs; `domain/calculations/registry/_validate_revision_identity.py`.
-- [ ] `S683` - verify docs; `domain/calculations/registry/_validate_revision_rules.py`.
-- [ ] `S684` - verify docs; `domain/calculations/registry/_validate_revision_sections.py`.
-- [ ] `S685` - verify docs; `domain/calculations/registry/_validate_semantic_role_axes.py`.
-- [ ] `S686` - verify docs; `domain/calculations/registry/_validate_semantic_role_typos.py`.
-- [ ] `S687` - verify docs; `domain/calculations/registry/_validate_semantic_roles.py`.
-- [ ] `S688` - verify docs; `domain/calculations/registry/_validate_source_outputs.py`.
-- [ ] `S689` - verify docs; `domain/calculations/registry/_validate_surfaces.py`.
-- [ ] `S690` - verify docs; `domain/calculations/registry/_withholding_bindings.py`.
-- [ ] `S691` - verify docs; `domain/calculations/registry/_workbook_parity.py`.
-- [ ] `S692` - verify docs; `domain/calculations/registry/_workbook_parity_models.py`.
-- [ ] `S693` - verify docs; `domain/calculations/registry/_workbook_parity_types.py`.
-- [ ] `S694` - verify docs; `domain/calculations/registry/applicability.py`.
-- [ ] `S695` - verify docs; `domain/calculations/registry/conftest.py`.
-- [ ] `S696` - verify docs; `domain/categories/__init__.py`.
-- [ ] `S697` - verify docs; `domain/categories/_corpus.py`.
-- [ ] `S698` - verify docs; `domain/categories/_errors.py`.
-- [ ] `S699` - verify docs; `domain/categories/_profile.py`.
-- [ ] `S700` - verify docs; `domain/categories/_proportionality.py`.
-- [ ] `S701` - verify docs; `domain/categories/_registry.py`.
-- [ ] `S702` - verify docs; `domain/categories/_spending_category.py`.
-- [ ] `S703` - verify docs; `domain/contribuyente/__init__.py`.
-- [ ] `S704` - verify docs; `domain/contribuyente/_ccaa.py`.
-- [ ] `S705` - verify docs; `domain/contribuyente/_constants.py`.
-- [ ] `S706` - verify docs; `domain/contribuyente/_deduccion_maternidad.py`.
-- [ ] `S707` - verify docs; `domain/contribuyente/_descendant_facts.py`.
-- [ ] `S708` - verify docs; `domain/contribuyente/_errors.py`.
-- [ ] `S709` - verify docs; `domain/contribuyente/_keys.py`.
-- [ ] `S710` - verify docs; `domain/contribuyente/_marriage_facts.py`.
-- [ ] `S711` - verify docs; `domain/contribuyente/_normalise.py`.
-- [ ] `S712` - verify docs; `domain/contribuyente/_renta_codes.py`.
-- [ ] `S713` - verify docs; `domain/contribuyente/assets/__init__.py`.
-- [ ] `S714` - verify docs; `domain/contribuyente/conftest.py`.
-- [ ] `S715` - verify docs; `domain/contribuyente/family.py`.
-- [ ] `S716` - verify docs; `domain/contribuyente/inventory/__init__.py`.
-- [ ] `S717` - verify docs; `domain/currency/__init__.py`.
-- [ ] `S718` - verify docs; `domain/currency/_errors.py`.
-- [ ] `S719` - verify docs; `domain/currency/_models.py`.
-- [ ] `S720` - verify docs; `domain/currency/_service.py`.
-- [ ] `S721` - verify docs; `domain/deadlines/__init__.py`.
-- [ ] `S722` - verify docs; `domain/deadlines/_engine.py`.
-- [ ] `S723` - verify docs; `domain/deadlines/_errors.py`.
-- [ ] `S724` - verify docs; `domain/deadlines/_festivos.py`.
-- [ ] `S725` - verify docs; `domain/deadlines/_models.py`.
-- [ ] `S726` - verify docs; `domain/deadlines/_plazo.py`.
-- [ ] `S727` - verify docs; `domain/deadlines/_profiles.py`.
-- [ ] `S728` - verify docs; `domain/deadlines/_recargo.py`.
-- [ ] `S729` - verify docs; `domain/deadlines/conftest.py`.
-- [ ] `S730` - verify docs; `domain/deadlines/taxpayer_model.py`.
-- [ ] `S731` - verify docs; `domain/filing/__init__.py`.
-- [ ] `S732` - verify docs; `domain/filing/_amendment.py`.
-- [ ] `S733` - verify docs; `domain/filing/_complementaria_repository.py`.
-- [ ] `S734` - verify docs; `domain/filing/_errors.py`.
-- [ ] `S735` - verify docs; `domain/filing/_protocols.py`.
-- [ ] `S736` - verify docs; `domain/filing/_repository.py`.
-- [ ] `S737` - verify docs; `domain/filing/_runtime_repository.py`.
-- [ ] `S738` - verify docs; `domain/filing/_schema.py`.
-- [ ] `S739` - verify docs; `domain/filing/_validator.py`.
-- [ ] `S740` - verify docs; `domain/filing/reconciliation/__init__.py`.
-- [ ] `S741` - verify docs; `domain/filing/reconciliation/_errors.py`.
-- [ ] `S742` - verify docs; `domain/fincas/__init__.py`.
-- [ ] `S743` - verify docs; `domain/fincas/_aggregates.py`.
-- [ ] `S744` - verify docs; `domain/fincas/_amortization_ledger.py`.
-- [ ] `S745` - verify docs; `domain/fincas/_enums.py`.
-- [ ] `S746` - verify docs; `domain/fincas/_errors.py`.
-- [ ] `S747` - verify docs; `domain/fincas/_expense_rollup.py`.
-- [ ] `S748` - verify docs; `domain/fincas/_imputacion_parameters.py`.
-- [ ] `S749` - verify docs; `domain/fincas/_models.py`.
-- [ ] `S750` - verify docs; `domain/fincas/_repository.py`.
-- [ ] `S751` - verify docs; `domain/fincas/_tier_resolver.py`.
-- [ ] `S752` - verify docs; `domain/invoices/__init__.py`.
-- [ ] `S753` - verify docs; `domain/invoices/_enums.py`.
-- [ ] `S754` - verify docs; `domain/invoices/_errors.py`.
-- [ ] `S755` - verify docs; `domain/invoices/_ids.py`.
-- [ ] `S756` - verify docs; `domain/invoices/_models.py`.
-- [ ] `S757` - verify docs; `domain/invoices/_protocols.py`.
-- [ ] `S758` - verify docs; `domain/invoices/_repository.py`.
-- [ ] `S759` - verify docs; `domain/invoices/_service.py`.
-- [ ] `S760` - verify docs; `domain/invoices/_validators.py`.
-- [ ] `S761` - verify docs; `domain/iva/__init__.py`.
-- [ ] `S762` - verify docs; `domain/iva/_catalogue.py`.
-- [ ] `S763` - verify docs; `domain/iva/_classification.py`.
-- [ ] `S764` - verify docs; `domain/iva/_corpus.py`.
-- [ ] `S765` - verify docs; `domain/iva/_errors.py`.
-- [ ] `S766` - verify docs; `domain/iva/_flow.py`.
-- [ ] `S767` - verify docs; `domain/iva/_invoice_classification.py`.
-- [ ] `S768` - verify docs; `domain/iva/_lookup.py`.
-- [ ] `S769` - verify docs; `domain/iva/_oss.py`.
-- [ ] `S770` - verify docs; `domain/iva/_prorrata.py`.
-- [ ] `S771` - verify docs; `domain/iva/_rates.py`.
-- [ ] `S772` - verify docs; `domain/iva/_recargo_equivalencia.py`.
-- [ ] `S773` - verify docs; `domain/iva/_saturation.py`.
-- [ ] `S774` - verify docs; `domain/iva/_schema.py`.
-- [ ] `S775` - verify docs; `domain/iva/_verify.py`.
-- [ ] `S776` - verify docs; `domain/iva_compensation/__init__.py`.
-- [ ] `S777` - verify docs; `domain/iva_compensation/_balance.py`.
-- [ ] `S778` - verify docs; `domain/iva_compensation/_carry_forward.py`.
-- [ ] `S779` - verify docs; `domain/iva_compensation/_errors.py`.
-- [ ] `S780` - verify docs; `domain/iva_compensation/_reconciliation.py`.
-- [ ] `S781` - verify docs; `domain/justificante/__init__.py`.
-- [ ] `S782` - verify docs; `domain/justificante/_errors.py`.
-- [ ] `S783` - verify docs; `domain/justificante/_repository.py`.
-- [ ] `S784` - verify docs; `domain/justificante/_schema.py`.
-- [ ] `S785` - verify docs; `domain/manuals/__init__.py`.
-- [ ] `S786` - verify docs; `domain/manuals/_errors.py`.
-- [ ] `S787` - verify docs; `domain/manuals/_fetch.py`.
-- [ ] `S788` - verify docs; `domain/manuals/_ids.py`.
-- [ ] `S789` - verify docs; `domain/manuals/_loader.py`.
-- [ ] `S790` - verify docs; `domain/manuals/_rule_id.py`.
-- [ ] `S791` - verify docs; `domain/manuals/_schema.py`.
-- [ ] `S792` - verify docs; `domain/manuals/_verify.py`.
-- [ ] `S793` - verify docs; `domain/modelos/__init__.py`.
-- [ ] `S794` - verify docs; `domain/modelos/_calculation_repository.py`.
-- [ ] `S795` - verify docs; `domain/modelos/_calculation_revision.py`.
-- [ ] `S796` - verify docs; `domain/modelos/_codes.py`.
-- [ ] `S797` - verify docs; `domain/modelos/_dt12_reduccion.py`.
-- [ ] `S798` - verify docs; `domain/modelos/_errors.py`.
-- [ ] `S799` - verify docs; `domain/modelos/_filing_record.py`.
-- [ ] `S800` - verify docs; `domain/modelos/_filing_repository.py`.
-- [ ] `S801` - verify docs; `domain/modelos/_ids.py`.
-- [ ] `S802` - verify docs; `domain/modelos/_ledger_filing_snapshot.py`.
-- [ ] `S803` - verify docs; `domain/modelos/_protocols.py`.
-- [ ] `S804` - verify docs; `domain/modelos/_repository.py`.
-- [ ] `S805` - verify docs; `domain/modelos/_row_models.py`.
-- [ ] `S806` - verify docs; `domain/modelos/_runtime_repository.py`.
-- [ ] `S807` - verify docs; `domain/modelos/_sal_reserva_especial.py`.
-- [ ] `S808` - verify docs; `domain/modelos/_verification_report.py`.
-- [ ] `S809` - verify docs; `domain/modelos/_verification_repository.py`.
-- [ ] `S810` - verify docs; `domain/modelos/_work_unit.py`.
-- [ ] `S811` - verify docs; `domain/normatives/__init__.py`.
-- [ ] `S812` - verify docs; `domain/normatives/_cite.py`.
-- [ ] `S813` - verify docs; `domain/normatives/_errors.py`.
-- [ ] `S814` - verify docs; `domain/normatives/_loader.py`.
-- [ ] `S815` - verify docs; `domain/normatives/_lookup.py`.
-- [ ] `S816` - verify docs; `domain/normatives/_schema.py`.
-- [ ] `S817` - verify docs; `domain/normatives/_verify.py`.
-- [ ] `S818` - verify docs; `domain/period.py`.
-- [ ] `S819` - verify docs; `domain/portals/__init__.py`.
-- [ ] `S820` - verify docs; `domain/portals/_categories.py`.
-- [ ] `S821` - verify docs; `domain/portals/_codes.py`.
-- [ ] `S822` - verify docs; `domain/portals/_entries/__init__.py`.
-- [ ] `S823` - verify docs; `domain/portals/_entries/_common.py`.
-- [ ] `S824` - verify docs; `domain/portals/_entries/portal_calendario_contribuyente.py`.
-- [ ] `S825` - verify docs; `domain/portals/_entries/portal_cert_selection.py`.
-- [ ] `S826` - verify docs; `domain/portals/_entries/portal_cert_validation_rest.py`.
-- [ ] `S827` - verify docs; `domain/portals/_entries/portal_clave_gestiones.py`.
-- [ ] `S828` - verify docs; `domain/portals/_entries/portal_clave_idp_root.py`.
-- [ ] `S829` - verify docs; `domain/portals/_entries/portal_clave_sede_entry.py`.
-- [ ] `S830` - verify docs; `domain/portals/_entries/portal_consulta_pagos.py`.
-- [ ] `S831` - verify docs; `domain/portals/_entries/portal_dnie_sede_entry.py`.
-- [ ] `S832` - verify docs; `domain/portals/_entries/portal_domiciliacion_bancaria.py`.
-- [ ] `S833` - verify docs; `domain/portals/_entries/portal_m036_censal.py`.
-- [ ] `S834` - verify docs; `domain/portals/_entries/portal_m037_censal_simplificada.py`.
-- [ ] `S835` - verify docs; `domain/portals/_entries/portal_m100_renta.py`.
-- [ ] `S836` - verify docs; `domain/portals/_entries/portal_m111_retenciones_trabajo.py`.
-- [ ] `S837` - verify docs; `domain/portals/_entries/portal_m115_retenciones_arrendamientos.py`.
-- [ ] `S838` - verify docs; `domain/portals/_entries/portal_m123_retenciones_capital.py`.
-- [ ] `S839` - verify docs; `domain/portals/_entries/portal_m130_pago_fraccionado_ed.py`.
-- [ ] `S840` - verify docs; `domain/portals/_entries/portal_m131_pago_fraccionado_eo.py`.
-- [ ] `S841` - verify docs; `domain/portals/_entries/portal_m180_resumen_arrendamientos.py`.
-- [ ] `S842` - verify docs; `domain/portals/_entries/portal_m190_resumen_trabajo.py`.
-- [ ] `S843` - verify docs; `domain/portals/_entries/portal_m193_resumen_capital.py`.
-- [ ] `S844` - verify docs; `domain/portals/_entries/portal_m200_sociedades_anual.py`.
-- [ ] `S845` - verify docs; `domain/portals/_entries/portal_m202_sociedades_fraccionado.py`.
-- [ ] `S846` - verify docs; `domain/portals/_entries/portal_m232_vinculadas.py`.
-- [ ] `S847` - verify docs; `domain/portals/_entries/portal_m303_iva_autoliquidacion.py`.
-- [ ] `S848` - verify docs; `domain/portals/_entries/portal_m347_operaciones_terceros.py`.
-- [ ] `S849` - verify docs; `domain/portals/_entries/portal_m349_intracomunitarias.py`.
-- [ ] `S850` - verify docs; `domain/portals/_entries/portal_m369_oss_ioss.py`.
-- [ ] `S851` - verify docs; `domain/portals/_entries/portal_m390_resumen_iva.py`.
-- [ ] `S852` - verify docs; `domain/portals/_entries/portal_m720_bienes_extranjero.py`.
-- [ ] `S853` - verify docs; `domain/portals/_entries/portal_m840_iae.py`.
-- [ ] `S854` - verify docs; `domain/portals/_entries/portal_mi_area_personal.py`.
-- [ ] `S855` - verify docs; `domain/portals/_entries/portal_mis_datos_censales.py`.
-- [ ] `S856` - verify docs; `domain/portals/_entries/portal_mis_documentos_pendientes_firma.py`.
-- [ ] `S857` - verify docs; `domain/portals/_entries/portal_mis_expedientes.py`.
-- [ ] `S858` - verify docs; `domain/portals/_entries/portal_mis_notificaciones.py`.
-- [ ] `S859` - verify docs; `domain/portals/_entries/portal_pago_autoliquidacion_cuenta.py`.
-- [ ] `S860` - verify docs; `domain/portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py`.
-- [ ] `S861` - verify docs; `domain/portals/_entries/portal_pago_liquidaciones_deudas.py`.
-- [ ] `S862` - verify docs; `domain/portals/_entries/portal_pre303_ayuda.py`.
-- [ ] `S863` - verify docs; `domain/portals/_entries/portal_presentar_consultar_index.py`.
-- [ ] `S864` - verify docs; `domain/portals/_entries/portal_renta_web_borrador.py`.
-- [ ] `S865` - verify docs; `domain/portals/_entries/portal_sede_root.py`.
-- [ ] `S866` - verify docs; `domain/portals/_errors.py`.
-- [ ] `S867` - verify docs; `domain/portals/_hosts.py`.
-- [ ] `S868` - verify docs; `domain/portals/_metadata.py`.
-- [ ] `S869` - verify docs; `domain/portals/_registry.py`.
-- [ ] `S870` - verify docs; `domain/renta/__init__.py`.
-- [ ] `S871` - verify docs; `domain/renta/_errors.py`.
-- [ ] `S872` - verify docs; `domain/renta/_first_slice_routing.py`.
-- [ ] `S873` - verify docs; `domain/renta/_first_slice_routing_integrity.py`.
-- [ ] `S874` - verify docs; `domain/renta/_ledger_expenses.py`.
-- [ ] `S875` - verify docs; `domain/renta/_maritime_exemption.py`.
-- [ ] `S876` - verify docs; `domain/renta/_substrate.py`.
-- [ ] `S877` - verify docs; `domain/submission/__init__.py`.
-- [ ] `S878` - verify docs; `domain/submission/_engine.py`.
-- [ ] `S879` - verify docs; `domain/submission/_errors.py`.
-- [ ] `S880` - verify docs; `domain/submission/_models.py`.
-- [ ] `S881` - verify docs; `domain/submission/_preflight.py`.
-- [ ] `S882` - verify docs; `domain/submission/_protocols.py`.
-- [ ] `S883` - verify docs; `domain/submission/_repository.py`.
-- [ ] `S884` - verify docs; `domain/transactions/__init__.py`.
-- [ ] `S885` - verify docs; `domain/transactions/_classification_rule.py`.
-- [ ] `S886` - verify docs; `domain/transactions/_enums.py`.
-- [ ] `S887` - verify docs; `domain/transactions/_errors.py`.
-- [ ] `S888` - verify docs; `domain/transactions/_ids.py`.
-- [ ] `S889` - verify docs; `domain/transactions/_llm.py`.
-- [ ] `S890` - verify docs; `domain/transactions/_model_tier.py`.
-- [ ] `S891` - verify docs; `domain/transactions/_models.py`.
-- [ ] `S892` - verify docs; `domain/transactions/_protocols.py`.
-- [ ] `S893` - verify docs; `domain/transactions/_raw_transaction.py`.
-- [ ] `S894` - verify docs; `domain/transactions/_repository.py`.
-- [ ] `S895` - verify docs; `domain/transactions/_service.py`.
-- [ ] `S896` - verify docs; `domain/usage_ratios/__init__.py`.
-- [ ] `S897` - verify docs; `domain/usage_ratios/_errors.py`.
-- [ ] `S898` - verify docs; `domain/usage_ratios/_model.py`.
-- [ ] `S899` - verify docs; `domain/usage_ratios/_service.py`.
-- [ ] `S900` - verify docs; `domain/user_profile/__init__.py`.
-- [ ] `S901` - verify docs; `domain/user_profile/_errors.py`.
-- [ ] `S902` - verify docs; `domain/user_profile/_loader.py`.
-- [ ] `S903` - verify docs; `domain/user_profile/_portable_export.py`.
-- [ ] `S904` - verify docs; `domain/user_profile/_registry_contract.py`.
-- [ ] `S905` - verify docs; `domain/user_profile/_schema.py`.
-- [ ] `S906` - verify docs; `domain/user_profile/_values.py`.
-- [ ] `S907` - verify docs; `entrypoints/__init__.py`.
-- [ ] `S908` - verify docs; `entrypoints/cli/__init__.py`.
-- [ ] `S909` - verify docs; `entrypoints/cli/_app_live.py`.
-- [ ] `S910` - verify docs; `entrypoints/cli/_app_live_borrador_cli.py`.
-- [ ] `S911` - verify docs; `entrypoints/cli/_app_live_expedientes_cli.py`.
-- [ ] `S912` - verify docs; `entrypoints/cli/_app_live_notifications_cli.py`.
-- [ ] `S913` - verify docs; `entrypoints/cli/_app_live_payloads.py`.
-- [ ] `S914` - verify docs; `entrypoints/cli/_app_live_portals_cli.py`.
-- [ ] `S915` - verify docs; `entrypoints/cli/_app_live_verify_cli.py`.
-- [ ] `S916` - verify docs; `entrypoints/cli/_bootstrap_exempt.py`.
-- [ ] `S917` - verify docs; `entrypoints/cli/_command_suggestions.py`.
-- [ ] `S918` - verify docs; `entrypoints/cli/_common.py`.
-- [ ] `S919` - verify docs; `entrypoints/cli/_config/__init__.py`.
-- [ ] `S920` - verify docs; `entrypoints/cli/_config/_apoderado.py`.
-- [ ] `S921` - verify docs; `entrypoints/cli/_config/_auth.py`.
-- [ ] `S922` - verify docs; `entrypoints/cli/_config/_auth_diagnostics.py`.
-- [ ] `S923` - verify docs; `entrypoints/cli/_config/_bucket_history.py`.
-- [ ] `S924` - verify docs; `entrypoints/cli/_config/_custody.py`.
-- [ ] `S925` - verify docs; `entrypoints/cli/_config/_custody_secret.py`.
-- [ ] `S926` - verify docs; `entrypoints/cli/_config/_errors.py`.
-- [ ] `S927` - verify docs; `entrypoints/cli/_config/_google.py`.
-- [ ] `S928` - verify docs; `entrypoints/cli/_config/_google_errors.py`.
-- [ ] `S929` - verify docs; `entrypoints/cli/_config/_google_folder.py`.
-- [ ] `S930` - verify docs; `entrypoints/cli/_config/_google_payloads.py`.
-- [ ] `S931` - verify docs; `entrypoints/cli/_config/_google_sync_calc.py`.
-- [ ] `S932` - verify docs; `entrypoints/cli/_config/_profile_bundle.py`.
-- [ ] `S933` - verify docs; `entrypoints/cli/_config/_profile_censo.py`.
-- [ ] `S934` - verify docs; `entrypoints/cli/_config/_profile_censo_payloads.py`.
-- [ ] `S935` - verify docs; `entrypoints/cli/_config/_repair_cli.py`.
-- [ ] `S936` - verify docs; `entrypoints/cli/_config/_repair_profile.py`.
-- [ ] `S937` - verify docs; `entrypoints/cli/_config_payloads.py`.
-- [ ] `S938` - verify docs; `entrypoints/cli/_errors.py`.
-- [ ] `S939` - verify docs; `entrypoints/cli/_exit_codes.py`.
-- [ ] `S940` - verify docs; `entrypoints/cli/_ledger.py`.
-- [ ] `S941` - verify docs; `entrypoints/cli/_ledger_business_invoice_cli.py`.
-- [ ] `S942` - verify docs; `entrypoints/cli/_ledger_classify_cli.py`.
-- [ ] `S943` - verify docs; `entrypoints/cli/_ledger_evidence_cli.py`.
-- [ ] `S944` - verify docs; `entrypoints/cli/_ledger_import_cli.py`.
-- [ ] `S945` - verify docs; `entrypoints/cli/_ledger_inventory_cli.py`.
-- [ ] `S946` - verify docs; `entrypoints/cli/_ledger_lifecycle_cli.py`.
-- [ ] `S947` - verify docs; `entrypoints/cli/_ledger_list.py`.
-- [ ] `S948` - verify docs; `entrypoints/cli/_ledger_payloads.py`.
-- [ ] `S949` - verify docs; `entrypoints/cli/_ledger_ratios_cli.py`.
-- [ ] `S950` - verify docs; `entrypoints/cli/_ledger_read_cli.py`.
-- [ ] `S951` - verify docs; `entrypoints/cli/_ledger_review_cli.py`.
-- [ ] `S952` - verify docs; `entrypoints/cli/_ledger_rules_cli.py`.
-- [ ] `S953` - verify docs; `entrypoints/cli/_log_levels.py`.
-- [ ] `S954` - verify docs; `entrypoints/cli/_modelo.py`.
-- [ ] `S955` - verify docs; `entrypoints/cli/_modelo_audit_cli.py`.
-- [ ] `S956` - verify docs; `entrypoints/cli/_modelo_cli_support.py`.
-- [ ] `S957` - verify docs; `entrypoints/cli/_modelo_discovery_cli.py`.
-- [ ] `S958` - verify docs; `entrypoints/cli/_modelo_export_cli.py`.
-- [ ] `S959` - verify docs; `entrypoints/cli/_modelo_iva_wallet_cli.py`.
-- [ ] `S960` - verify docs; `entrypoints/cli/_modelo_m036_cli.py`.
-- [ ] `S961` - verify docs; `entrypoints/cli/_modelo_maritime_cli.py`.
-- [ ] `S962` - verify docs; `entrypoints/cli/_modelo_payloads.py`.
-- [ ] `S963` - verify docs; `entrypoints/cli/_modelo_projection_cli.py`.
-- [ ] `S964` - verify docs; `entrypoints/cli/_modelo_readiness_cli.py`.
-- [ ] `S965` - verify docs; `entrypoints/cli/_modelo_reconcile_cli.py`.
-- [ ] `S966` - verify docs; `entrypoints/cli/_modelo_records_cli.py`.
-- [ ] `S967` - verify docs; `entrypoints/cli/_modelo_rendering.py`.
-- [ ] `S968` - verify docs; `entrypoints/cli/_modelo_work.py`.
-- [ ] `S969` - verify docs; `entrypoints/cli/_modelo_work_calculate_cli.py`.
-- [ ] `S970` - verify docs; `entrypoints/cli/_modelo_work_lifecycle_cli.py`.
-- [ ] `S971` - verify docs; `entrypoints/cli/_modelo_work_revision_cli.py`.
-- [ ] `S972` - verify docs; `entrypoints/cli/_modelo_work_runs_cli.py`.
-- [ ] `S973` - verify docs; `entrypoints/cli/_modelo_work_verification_cli.py`.
-- [ ] `S974` - verify docs; `entrypoints/cli/_overview.py`.
-- [ ] `S975` - verify docs; `entrypoints/cli/_overview_payloads.py`.
-- [ ] `S976` - verify docs; `entrypoints/cli/_overview_rendering.py`.
-- [ ] `S977` - verify docs; `entrypoints/cli/_registry_corpus.py`.
-- [ ] `S978` - verify docs; `entrypoints/cli/_registry_corpus_payloads.py`.
-- [ ] `S979` - verify docs; `entrypoints/cli/_registry_payloads.py`.
-- [ ] `S980` - verify docs; `entrypoints/cli/_review.py`.
-- [ ] `S981` - verify docs; `entrypoints/cli/_review_payloads.py`.
-- [ ] `S982` - verify docs; `entrypoints/cli/_root_landing.py`.
-- [ ] `S983` - verify docs; `entrypoints/cli/_root_payloads.py`.
-- [ ] `S984` - verify docs; `entrypoints/cli/_schemas.py`.
-- [ ] `S985` - verify docs; `entrypoints/cli/_stdio.py`.
-- [ ] `S986` - verify docs; `entrypoints/cli/_tty.py`.
-- [ ] `S987` - verify docs; `entrypoints/cli/conftest.py`.
-- [ ] `S988` - verify docs; `entrypoints/cli/registry.py`.
-- [ ] `S989` - verify docs; `locales/__init__.py`.
-- [ ] `S990` - verify docs; `locales/__main__.py`.
-- [ ] `S991` - verify docs; `locales/_ast_scanner.py`.
-- [ ] `S992` - verify docs; `locales/_fstring_registry.py`.
-- [ ] `S993` - verify docs; `locales/cli.py`.
-- [ ] `S994` - verify docs; `locales/manager.py`.
-
+- [x] `S01` - verify docs; `adapters/__init__.py`.
+- [x] `S02` - verify docs; `adapters/inbound/__init__.py`.
+- [x] `S03` - verify docs; `adapters/inbound/borrador/__init__.py`.
+- [x] `S04` - verify docs; `adapters/inbound/borrador/_detect.py`.
+- [x] `S05` - verify docs; `adapters/inbound/borrador/_errors.py`.
+- [x] `S06` - verify docs; `adapters/inbound/borrador/_extractors/__init__.py`.
+- [x] `S07` - verify docs; `adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`.
+- [x] `S08` - verify docs; `adapters/inbound/borrador/_parser.py`.
+- [x] `S09` - verify docs; `adapters/inbound/borrador/_parsers/__init__.py`.
+- [x] `S10` - verify docs; `adapters/inbound/borrador/_parsers/_pdfplumber_backend.py`.
+- [x] `S11` - verify docs; `adapters/inbound/borrador/_schema.py`.
+- [x] `S12` - verify docs; `adapters/inbound/declaracion/__init__.py`.
+- [x] `S13` - verify docs; `adapters/inbound/declaracion/_detect.py`.
+- [x] `S14` - verify docs; `adapters/inbound/declaracion/_errors.py`.
+- [x] `S15` - verify docs; `adapters/inbound/declaracion/_parser.py`.
+- [x] `S16` - verify docs; `adapters/inbound/declaracion/_parsers/__init__.py`.
+- [x] `S17` - verify docs; `adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`.
+- [x] `S18` - verify docs; `adapters/inbound/declaracion/_schema.py`.
+- [x] `S19` - verify docs; `adapters/inbound/financial/__init__.py`.
+- [x] `S20` - verify docs; `adapters/inbound/financial/providers/__init__.py`.
+- [x] `S21` - verify docs; `adapters/inbound/financial/providers/_base.py`.
+- [x] `S22` - verify docs; `adapters/inbound/financial/providers/_constants.py`.
+- [x] `S23` - verify docs; `adapters/inbound/financial/providers/_csv.py`.
+- [x] `S24` - verify docs; `adapters/inbound/financial/providers/_detection.py`.
+- [x] `S25` - verify docs; `adapters/inbound/financial/providers/_ofx.py`.
+- [x] `S26` - verify docs; `adapters/inbound/financial/providers/_pdf_n26.py`.
+- [x] `S27` - verify docs; `adapters/inbound/financial/providers/_xlsx.py`.
+- [x] `S28` - verify docs; `adapters/inbound/justificante/__init__.py`.
+- [x] `S29` - verify docs; `adapters/inbound/justificante/_extract.py`.
+- [x] `S30` - verify docs; `adapters/inbound/justificante/_parser.py`.
+- [x] `S31` - verify docs; `adapters/inbound/justificante/_parsers/__init__.py`.
+- [x] `S32` - verify docs; `adapters/inbound/justificante/_parsers/_pdfplumber_backend.py`.
+- [x] `S33` - verify docs; `adapters/inbound/pdf/__init__.py`.
+- [x] `S34` - verify docs; `adapters/inbound/pdf/_label_regex.py`.
+- [x] `S35` - verify docs; `adapters/inbound/pdf/_pdfplumber.py`.
+- [x] `S36` - verify docs; `adapters/inbound/pdf/_scrub.py`.
+- [x] `S37` - verify docs; `adapters/inbound/pdf/_shared.py`.
+- [x] `S38` - verify docs; `adapters/inbound/pdf/_utils.py`.
+- [x] `S39` - verify docs; `adapters/inbound/sanitizer/__init__.py`.
+- [x] `S40` - verify docs; `adapters/inbound/sanitizer/_determinism.py`.
+- [x] `S41` - verify docs; `adapters/inbound/sanitizer/_dynamic.py`.
+- [x] `S42` - verify docs; `adapters/inbound/sanitizer/_errors.py`.
+- [x] `S43` - verify docs; `adapters/inbound/sanitizer/_metadata.py`.
+- [x] `S44` - verify docs; `adapters/inbound/sanitizer/_pipeline.py`.
+- [x] `S45` - verify docs; `adapters/inbound/sanitizer/_records.py`.
+- [x] `S46` - verify docs; `adapters/inbound/sanitizer/_streams.py`.
+- [x] `S47` - verify docs; `adapters/inbound/sanitizer/_structtree.py`.
+- [x] `S48` - verify docs; `adapters/inbound/sanitizer/fixtures.py`.
+- [x] `S49` - verify docs; `adapters/outbound/__init__.py`.
+- [x] `S50` - verify docs; `adapters/outbound/aeat/__init__.py`.
+- [x] `S51` - verify docs; `adapters/outbound/aeat/_playwright.py`.
+- [x] `S52` - verify docs; `adapters/outbound/aeat/auth/__init__.py`.
+- [x] `S53` - verify docs; `adapters/outbound/aeat/auth/_authenticator.py`.
+- [x] `S54` - verify docs; `adapters/outbound/aeat/auth/_authenticator_persistence.py`.
+- [x] `S55` - verify docs; `adapters/outbound/aeat/auth/_authenticator_types.py`.
+- [x] `S56` - verify docs; `adapters/outbound/aeat/auth/_certificate_backends/__init__.py`.
+- [x] `S57` - verify docs; `adapters/outbound/aeat/auth/_certificate_backends/_base.py`.
+- [x] `S58` - verify docs; `adapters/outbound/aeat/auth/_certificate_backends/_httpx_fallback.py`.
+- [x] `S59` - verify docs; `adapters/outbound/aeat/auth/_certificate_backends/_playwright_context.py`.
+- [x] `S60` - verify docs; `adapters/outbound/aeat/auth/_clave_movil.py`.
+- [x] `S61` - verify docs; `adapters/outbound/aeat/auth/_clave_movil_metadata.py`.
+- [x] `S62` - verify docs; `adapters/outbound/aeat/auth/_clave_movil_page_flow.py`.
+- [x] `S63` - verify docs; `adapters/outbound/aeat/auth/_clave_movil_support.py`.
+- [x] `S64` - verify docs; `adapters/outbound/aeat/auth/_errors.py`.
+- [x] `S65` - verify docs; `adapters/outbound/aeat/auth/_fixtures.py`.
+- [x] `S66` - verify docs; `adapters/outbound/aeat/auth/_providers.py`.
+- [x] `S67` - verify docs; `adapters/outbound/aeat/auth/_session_store.py`.
+- [x] `S68` - verify docs; `adapters/outbound/aeat/auth/certificate.py`.
+- [x] `S69` - verify docs; `adapters/outbound/aeat/auth/conftest.py`.
+- [x] `S70` - verify docs; `adapters/outbound/aeat/browser/__init__.py`.
+- [x] `S71` - verify docs; `adapters/outbound/aeat/browser/_errors.py`.
+- [x] `S72` - verify docs; `adapters/outbound/aeat/browser/_factory.py`.
+- [x] `S73` - verify docs; `adapters/outbound/aeat/browser/_site_health.py`.
+- [x] `S74` - verify docs; `adapters/outbound/aeat/browser/_site_health_parsers.py`.
+- [x] `S75` - verify docs; `adapters/outbound/aeat/browser/_site_health_probe.py`.
+- [x] `S76` - verify docs; `adapters/outbound/aeat/browser/evasion.py`.
+- [x] `S77` - verify docs; `adapters/outbound/aeat/browser/health.py`.
+- [x] `S78` - verify docs; `adapters/outbound/aeat/browser/profile.py`.
+- [x] `S79` - verify docs; `adapters/outbound/aeat/browser/session.py`.
+- [x] `S80` - verify docs; `adapters/outbound/aeat/export/__init__.py`.
+- [x] `S81` - verify docs; `adapters/outbound/aeat/export/_errors.py`.
+- [x] `S82` - verify docs; `adapters/outbound/aeat/export/_formats/__init__.py`.
+- [x] `S83` - verify docs; `adapters/outbound/aeat/export/_formats/_deserialise.py`.
+- [x] `S84` - verify docs; `adapters/outbound/aeat/export/_formats/_record_spec.py`.
+- [x] `S85` - verify docs; `adapters/outbound/aeat/export/_formats/_serialise.py`.
+- [x] `S86` - verify docs; `adapters/outbound/aeat/export/_submitters/__init__.py`.
+- [x] `S87` - verify docs; `adapters/outbound/aeat/sede/__init__.py`.
+- [x] `S88` - verify docs; `adapters/outbound/aeat/sede/_adapter_utils.py`.
+- [x] `S89` - verify docs; `adapters/outbound/aeat/sede/_auth_state.py`.
+- [x] `S90` - verify docs; `adapters/outbound/aeat/sede/_browser_constants.py`.
+- [x] `S91` - verify docs; `adapters/outbound/aeat/sede/_browser_stage.py`.
+- [x] `S92` - verify docs; `adapters/outbound/aeat/sede/_censo.py`.
+- [x] `S93` - verify docs; `adapters/outbound/aeat/sede/_censo_live.py`.
+- [x] `S94` - verify docs; `adapters/outbound/aeat/sede/_declarations.py`.
+- [x] `S95` - verify docs; `adapters/outbound/aeat/sede/_declarations_diagnostics.py`.
+- [x] `S96` - verify docs; `adapters/outbound/aeat/sede/_declarations_listbox.py`.
+- [x] `S97` - verify docs; `adapters/outbound/aeat/sede/_declarations_observations.py`.
+- [x] `S98` - verify docs; `adapters/outbound/aeat/sede/_declarations_remote.py`.
+- [x] `S99` - verify docs; `adapters/outbound/aeat/sede/_declarations_schema.py`.
+- [x] `S100` - verify docs; `adapters/outbound/aeat/sede/_errors.py`.
+- [x] `S101` - verify docs; `adapters/outbound/aeat/sede/_groi_check.py`.
+- [x] `S102` - verify docs; `adapters/outbound/aeat/sede/_iva_compensation_wallet.py`.
+- [x] `S103` - verify docs; `adapters/outbound/aeat/sede/_nif_iva_check.py`.
+- [x] `S104` - verify docs; `adapters/outbound/aeat/sede/_notifications.py`.
+- [x] `S105` - verify docs; `adapters/outbound/aeat/sede/_observation_store.py`.
+- [x] `S106` - verify docs; `adapters/outbound/aeat/sede/_parse.py`.
+- [x] `S107` - verify docs; `adapters/outbound/aeat/sede/_renta_web_open.py`.
+- [x] `S108` - verify docs; `adapters/outbound/aeat/sede/_renta_web_open_safety.py`.
+- [x] `S109` - verify docs; `adapters/outbound/aeat/sede/_schema.py`.
+- [x] `S110` - verify docs; `adapters/outbound/aeat/sede/_walker.py`.
+- [x] `S111` - verify docs; `adapters/outbound/aeat/verify/__init__.py`.
+- [x] `S112` - verify docs; `adapters/outbound/fx/__init__.py`.
+- [x] `S113` - verify docs; `adapters/outbound/fx/_ecb_provider.py`.
+- [x] `S114` - verify docs; `adapters/outbound/fx/_ecb_refresh.py`.
+- [x] `S115` - verify docs; `adapters/outbound/google/__init__.py`.
+- [x] `S116` - verify docs; `adapters/outbound/google/_api.py`.
+- [x] `S117` - verify docs; `adapters/outbound/google/_calc_sheets_apply.py`.
+- [x] `S118` - verify docs; `adapters/outbound/google/_calc_sheets_apply_values.py`.
+- [x] `S119` - verify docs; `adapters/outbound/google/_calc_sheets_pull.py`.
+- [x] `S120` - verify docs; `adapters/outbound/google/_document_link_resolver.py`.
+- [x] `S121` - verify docs; `adapters/outbound/google/_errors.py`.
+- [x] `S122` - verify docs; `adapters/outbound/google/_oauth_flow.py`.
+- [x] `S123` - verify docs; `adapters/outbound/google/_profile_binding.py`.
+- [x] `S124` - verify docs; `adapters/outbound/google/_records.py`.
+- [x] `S125` - verify docs; `adapters/outbound/google/_session_store.py`.
+- [x] `S126` - verify docs; `adapters/outbound/llm/__init__.py`.
+- [x] `S127` - verify docs; `adapters/outbound/llm/_cache.py`.
+- [x] `S128` - verify docs; `adapters/outbound/llm/_client.py`.
+- [x] `S129` - verify docs; `adapters/outbound/llm/_errors.py`.
+- [x] `S130` - verify docs; `adapters/outbound/llm/_models.py`.
+- [x] `S131` - verify docs; `adapters/outbound/llm/_pricing.py`.
+- [x] `S132` - verify docs; `adapters/outbound/llm/_providers/__init__.py`.
+- [x] `S133` - verify docs; `adapters/outbound/llm/_providers/anthropic.py`.
+- [x] `S134` - verify docs; `adapters/outbound/llm/_providers/base.py`.
+- [x] `S135` - verify docs; `adapters/outbound/llm/_providers/deterministic.py`.
+- [x] `S136` - verify docs; `adapters/outbound/llm/_providers/gemini.py`.
+- [x] `S137` - verify docs; `adapters/outbound/llm/_providers/local.py`.
+- [x] `S138` - verify docs; `adapters/outbound/llm/_providers/openai.py`.
+- [x] `S139` - verify docs; `adapters/outbound/llm/_usage.py`.
+- [x] `S140` - verify docs; `adapters/outbound/llm/conftest.py`.
+- [x] `S141` - verify docs; `adapters/outbound/storage/__init__.py`.
+- [x] `S142` - verify docs; `adapters/outbound/storage/_errors.py`.
+- [x] `S143` - verify docs; `adapters/outbound/storage/_factory.py`.
+- [x] `S144` - verify docs; `adapters/outbound/storage/_google_drive.py`.
+- [x] `S145` - verify docs; `adapters/outbound/storage/_local.py`.
+- [x] `S146` - verify docs; `adapters/outbound/storage/_mirror_manifest.py`.
+- [x] `S147` - verify docs; `adapters/outbound/storage/_protocol.py`.
+- [x] `S148` - verify docs; `adapters/outbound/storage/_records.py`.
+- [x] `S149` - verify docs; `adapters/persistence/__init__.py`.
+- [x] `S150` - verify docs; `adapters/persistence/profile/__init__.py`.
+- [x] `S151` - verify docs; `adapters/persistence/profile/assets.py`.
+- [x] `S152` - verify docs; `adapters/persistence/profile/inventory.py`.
+- [x] `S153` - verify docs; `adapters/persistence/storage/__init__.py`.
+- [x] `S154` - verify docs; `adapters/persistence/storage/_kdf_salt.py`.
+- [x] `S155` - verify docs; `adapters/persistence/storage/_namespace_registry.py`.
+- [x] `S156` - verify docs; `adapters/persistence/storage/_path_safety.py`.
+- [x] `S157` - verify docs; `adapters/persistence/storage/_rotation.py`.
+- [x] `S158` - verify docs; `adapters/persistence/storage/attachment.py`.
+- [x] `S159` - verify docs; `adapters/persistence/storage/blob_store/__init__.py`.
+- [x] `S160` - verify docs; `adapters/persistence/storage/blob_store/_blob_store.py`.
+- [x] `S161` - verify docs; `adapters/persistence/storage/blob_store/_materialisation.py`.
+- [x] `S162` - verify docs; `adapters/persistence/storage/bucket/__init__.py`.
+- [x] `S163` - verify docs; `adapters/persistence/storage/bucket/_errors.py`.
+- [x] `S164` - verify docs; `adapters/persistence/storage/bucket/_export_header.py`.
+- [x] `S165` - verify docs; `adapters/persistence/storage/bucket/_keystore_paths.py`.
+- [x] `S166` - verify docs; `adapters/persistence/storage/bucket/_layout.py`.
+- [x] `S167` - verify docs; `adapters/persistence/storage/bucket/_lockfile.py`.
+- [x] `S168` - verify docs; `adapters/persistence/storage/bucket/_manifest.py`.
+- [x] `S169` - verify docs; `adapters/persistence/storage/bucket/_manifest_io.py`.
+- [x] `S170` - verify docs; `adapters/persistence/storage/bucket/_sealed_archive_errors.py`.
+- [x] `S171` - verify docs; `adapters/persistence/storage/bucket/_sealed_archive_reader.py`.
+- [x] `S172` - verify docs; `adapters/persistence/storage/bucket/_sealed_archive_writer.py`.
+- [x] `S173` - verify docs; `adapters/persistence/storage/crypto/__init__.py`.
+- [x] `S174` - verify docs; `adapters/persistence/storage/crypto/_crypto.py`.
+- [x] `S175` - verify docs; `adapters/persistence/storage/crypto/_encrypted_columns.py`.
+- [x] `S176` - verify docs; `adapters/persistence/storage/envelope/__init__.py`.
+- [x] `S177` - verify docs; `adapters/persistence/storage/envelope/_envelope.py`.
+- [x] `S178` - verify docs; `adapters/persistence/storage/envelope/_repository_test_suite.py`.
+- [x] `S179` - verify docs; `adapters/persistence/storage/envelope/_secure_repository.py`.
+- [x] `S180` - verify docs; `adapters/persistence/storage/envelope/conftest.py`.
+- [x] `S181` - verify docs; `adapters/persistence/storage/errors.py`.
+- [x] `S182` - verify docs; `adapters/persistence/storage/master_key/__init__.py`.
+- [x] `S183` - verify docs; `adapters/persistence/storage/master_key/_active_session.py`.
+- [x] `S184` - verify docs; `adapters/persistence/storage/master_key/_bucket_session.py`.
+- [x] `S185` - verify docs; `adapters/persistence/storage/master_key/_dek_wrap.py`.
+- [x] `S186` - verify docs; `adapters/persistence/storage/master_key/_errors.py`.
+- [x] `S187` - verify docs; `adapters/persistence/storage/master_key/_idle_timeout.py`.
+- [x] `S188` - verify docs; `adapters/persistence/storage/master_key/_kdf.py`.
+- [x] `S189` - verify docs; `adapters/persistence/storage/master_key/_kdf_params.py`.
+- [x] `S190` - verify docs; `adapters/persistence/storage/master_key/_master_key.py`.
+- [x] `S191` - verify docs; `adapters/persistence/storage/master_key/_master_key_bucket_dek.py`.
+- [x] `S192` - verify docs; `adapters/persistence/storage/master_key/_master_key_derivation.py`.
+- [x] `S193` - verify docs; `adapters/persistence/storage/master_key/_master_key_ephemeral.py`.
+- [x] `S194` - verify docs; `adapters/persistence/storage/master_key/_master_key_io.py`.
+- [x] `S195` - verify docs; `adapters/persistence/storage/master_key/_master_key_records.py`.
+- [x] `S196` - verify docs; `adapters/persistence/storage/master_key/_master_key_tax_id.py`.
+- [x] `S197` - verify docs; `adapters/persistence/storage/master_key/_recovery.py`.
+- [x] `S198` - verify docs; `adapters/persistence/storage/master_key/_recovery_facade.py`.
+- [x] `S199` - verify docs; `adapters/persistence/storage/master_key/_recovery_record.py`.
+- [x] `S200` - verify docs; `adapters/persistence/storage/master_key/_zeroise.py`.
+- [x] `S201` - verify docs; `adapters/persistence/storage/master_key/conftest.py`.
+- [x] `S202` - verify docs; `adapters/persistence/storage/runtime.py`.
+- [x] `S203` - verify docs; `adapters/persistence/storage/runtime_repository.py`.
+- [x] `S204` - verify docs; `adapters/persistence/storage/secret_store/__init__.py`.
+- [x] `S205` - verify docs; `adapters/persistence/storage/secret_store/_secret_store.py`.
+- [x] `S206` - verify docs; `adapters/persistence/storage/secret_store/conftest.py`.
+- [x] `S207` - verify docs; `adapters/persistence/storage/sql/__init__.py`.
+- [x] `S208` - verify docs; `adapters/persistence/storage/sql/_orm.py`.
+- [x] `S209` - verify docs; `adapters/persistence/storage/sql/_secure_object_crypto.py`.
+- [x] `S210` - verify docs; `adapters/persistence/storage/sql/_secure_object_integrity.py`.
+- [x] `S211` - verify docs; `adapters/persistence/storage/sql/_secure_object_migration.py`.
+- [x] `S212` - verify docs; `adapters/persistence/storage/sql/_secure_object_records.py`.
+- [x] `S213` - verify docs; `adapters/persistence/storage/sql/_secure_object_schema.py`.
+- [x] `S214` - verify docs; `adapters/persistence/storage/sql/conftest.py`.
+- [x] `S215` - verify docs; `adapters/persistence/storage/sql/engine.py`.
+- [x] `S216` - verify docs; `adapters/persistence/storage/sql/records.py`.
+- [x] `S217` - verify docs; `adapters/persistence/storage/sql/repository.py`.
+- [x] `S218` - verify docs; `adapters/persistence/storage/sql/secure_objects.py`.
+- [x] `S219` - verify docs; `adapters/persistence/storage/sql/session.py`.
+- [x] `S220` - verify docs; `application/__init__.py`.
+- [x] `S221` - verify docs; `application/_errors.py`.
+- [x] `S222` - verify docs; `application/_storage_paths.py`.
+- [x] `S223` - verify docs; `application/aggregation/__init__.py`.
+- [x] `S224` - verify docs; `application/aggregation/_business_proportion.py`.
+- [x] `S225` - verify docs; `application/aggregation/_counterpart.py`.
+- [x] `S226` - verify docs; `application/aggregation/_currency_predicates.py`.
+- [x] `S227` - verify docs; `application/aggregation/_errors.py`.
+- [x] `S228` - verify docs; `application/aggregation/_foreign_assets.py`.
+- [x] `S229` - verify docs; `application/aggregation/_grouping.py`.
+- [x] `S230` - verify docs; `application/aggregation/_iva_ledger.py`.
+- [x] `S231` - verify docs; `application/aggregation/_ledger_filing_snapshot.py`.
+- [x] `S232` - verify docs; `application/aggregation/_modelo_bindings.py`.
+- [x] `S233` - verify docs; `application/aggregation/_models.py`.
+- [x] `S234` - verify docs; `application/aggregation/_oss_ioss.py`.
+- [x] `S235` - verify docs; `application/aggregation/_prorrata.py`.
+- [x] `S236` - verify docs; `application/aggregation/_registry_provider.py`.
+- [x] `S237` - verify docs; `application/aggregation/_renta_income_ledger.py`.
+- [x] `S238` - verify docs; `application/aggregation/_renta_ledger.py`.
+- [x] `S239` - verify docs; `application/aggregation/_retenciones.py`.
+- [x] `S240` - verify docs; `application/aggregation/_service.py`.
+- [x] `S241` - verify docs; `application/aggregation/_shared_issue_reasons.py`.
+- [x] `S242` - verify docs; `application/aggregation/_source_mesh.py`.
+- [x] `S243` - verify docs; `application/aggregation/_source_profile.py`.
+- [x] `S244` - verify docs; `application/auth/__init__.py`.
+- [x] `S245` - verify docs; `application/auth/_acquisition_lock.py`.
+- [x] `S246` - verify docs; `application/auth/_actions.py`.
+- [x] `S247` - verify docs; `application/auth/_apoderado.py`.
+- [x] `S248` - verify docs; `application/auth/_catalogue.py`.
+- [x] `S249` - verify docs; `application/auth/_diagnostics.py`.
+- [x] `S250` - verify docs; `application/auth/_errors.py`.
+- [x] `S251` - verify docs; `application/auth/_models.py`.
+- [x] `S252` - verify docs; `application/auth/_operator.py`.
+- [x] `S253` - verify docs; `application/auth/_operator_probes.py`.
+- [x] `S254` - verify docs; `application/auth/_operator_results.py`.
+- [x] `S255` - verify docs; `application/auth/_operator_scope.py`.
+- [x] `S256` - verify docs; `application/auth/_protocols.py`.
+- [x] `S257` - verify docs; `application/auth/_sessions.py`.
+- [x] `S258` - verify docs; `application/bucket_maintenance/__init__.py`.
+- [x] `S259` - verify docs; `application/bucket_maintenance/_contracts.py`.
+- [x] `S260` - verify docs; `application/bucket_maintenance/_manifest_digest.py`.
+- [x] `S261` - verify docs; `application/bucket_maintenance/_service.py`.
+- [x] `S262` - verify docs; `application/calculations/__init__.py`.
+- [x] `S263` - verify docs; `application/calculations/_binding_prefill.py`.
+- [x] `S264` - verify docs; `application/calculations/_cross_period_clean_state.py`.
+- [x] `S265` - verify docs; `application/calculations/_errors.py`.
+- [x] `S266` - verify docs; `application/calculations/_iva_compensation_history.py`.
+- [x] `S267` - verify docs; `application/calculations/_iva_wallet_balance.py`.
+- [x] `S268` - verify docs; `application/calculations/_iva_wallet_reconciliation.py`.
+- [x] `S269` - verify docs; `application/calculations/_maritime_exemption_service.py`.
+- [x] `S270` - verify docs; `application/calculations/_multi_year.py`.
+- [x] `S271` - verify docs; `application/calculations/_observations_repository.py`.
+- [x] `S272` - verify docs; `application/calculations/_ports.py`.
+- [x] `S273` - verify docs; `application/calculations/_relation_prefill.py`.
+- [x] `S274` - verify docs; `application/calculations/_row_set_assembly.py`.
+- [x] `S275` - verify docs; `application/config_reset.py`.
+- [x] `S276` - verify docs; `application/conftest.py`.
+- [x] `S277` - verify docs; `application/diagnostics.py`.
+- [x] `S278` - verify docs; `application/evidence/__init__.py`.
+- [x] `S279` - verify docs; `application/evidence/_ids.py`.
+- [x] `S280` - verify docs; `application/evidence/_models.py`.
+- [x] `S281` - verify docs; `application/evidence/_service.py`.
+- [x] `S282` - verify docs; `application/export/__init__.py`.
+- [x] `S283` - verify docs; `application/export/_errors.py`.
+- [x] `S284` - verify docs; `application/export/_tabular.py`.
+- [x] `S285` - verify docs; `application/filing/__init__.py`.
+- [x] `S286` - verify docs; `application/filing/_calculate.py`.
+- [x] `S287` - verify docs; `application/filing/_complementaria.py`.
+- [x] `S288` - verify docs; `application/filing/_export.py`.
+- [x] `S289` - verify docs; `application/filing/_history_models.py`.
+- [x] `S290` - verify docs; `application/filing/_history_repository.py`.
+- [x] `S291` - verify docs; `application/filing/_import.py`.
+- [x] `S292` - verify docs; `application/filing/_review.py`.
+- [x] `S293` - verify docs; `application/filing/_runtime_repository.py`.
+- [x] `S294` - verify docs; `application/filing/_testing_registry.py`.
+- [x] `S295` - verify docs; `application/filing/conftest.py`.
+- [x] `S296` - verify docs; `application/filing/errors.py`.
+- [x] `S297` - verify docs; `application/filing/reconciliation/__init__.py`.
+- [x] `S298` - verify docs; `application/filing/reconciliation/_kind.py`.
+- [x] `S299` - verify docs; `application/filing/reconciliation/_reconcile.py`.
+- [x] `S300` - verify docs; `application/filing/reconciliation/_schema.py`.
+- [x] `S301` - verify docs; `application/filing/runtime.py`.
+- [x] `S302` - verify docs; `application/filing/testing.py`.
+- [x] `S303` - verify docs; `application/inventory/__init__.py`.
+- [x] `S304` - verify docs; `application/inventory/_errors.py`.
+- [x] `S305` - verify docs; `application/inventory/_service.py`.
+- [x] `S306` - verify docs; `application/invoices/__init__.py`.
+- [x] `S307` - verify docs; `application/invoices/_importing.py`.
+- [x] `S308` - verify docs; `application/invoices/_linking.py`.
+- [x] `S309` - verify docs; `application/invoices/_projection.py`.
+- [x] `S310` - verify docs; `application/invoices/_queries.py`.
+- [x] `S311` - verify docs; `application/invoices/_reconciliation.py`.
+- [x] `S312` - verify docs; `application/invoices/_source_resolver.py`.
+- [x] `S313` - verify docs; `application/ledger/__init__.py`.
+- [x] `S314` - verify docs; `application/ledger/_actions.py`.
+- [x] `S315` - verify docs; `application/ledger/_actions_classification.py`.
+- [x] `S316` - verify docs; `application/ledger/_actions_common.py`.
+- [x] `S317` - verify docs; `application/ledger/_actions_export.py`.
+- [x] `S318` - verify docs; `application/ledger/_actions_import.py`.
+- [x] `S319` - verify docs; `application/ledger/_actions_lifecycle.py`.
+- [x] `S320` - verify docs; `application/ledger/_actions_manual.py`.
+- [x] `S321` - verify docs; `application/ledger/_actions_split_merge.py`.
+- [x] `S322` - verify docs; `application/ledger/_business_operation_invoice.py`.
+- [x] `S323` - verify docs; `application/ledger/_evidence.py`.
+- [x] `S324` - verify docs; `application/ledger/_id_resolution.py`.
+- [x] `S325` - verify docs; `application/ledger/_llm_classification.py`.
+- [x] `S326` - verify docs; `application/ledger/_models.py`.
+- [x] `S327` - verify docs; `application/ledger/_preflight.py`.
+- [x] `S328` - verify docs; `application/ledger/_protocols.py`.
+- [x] `S329` - verify docs; `application/ledger/_ratios.py`.
+- [x] `S330` - verify docs; `application/ledger/_review_projection.py`.
+- [x] `S331` - verify docs; `application/ledger/_rule_repository.py`.
+- [x] `S332` - verify docs; `application/live/__init__.py`.
+- [x] `S333` - verify docs; `application/live/_borrador_100.py`.
+- [x] `S334` - verify docs; `application/live/_censo.py`.
+- [x] `S335` - verify docs; `application/live/_errors.py`.
+- [x] `S336` - verify docs; `application/live/_expedientes.py`.
+- [x] `S337` - verify docs; `application/live/_filed_data.py`.
+- [x] `S338` - verify docs; `application/live/_filed_data_capture.py`.
+- [x] `S339` - verify docs; `application/live/_filed_observation_persistence.py`.
+- [x] `S340` - verify docs; `application/live/_iva_remote_state.py`.
+- [x] `S341` - verify docs; `application/live/_notifications.py`.
+- [x] `S342` - verify docs; `application/live/_remote_state_models.py`.
+- [x] `S343` - verify docs; `application/live/_remote_state_outcomes.py`.
+- [x] `S344` - verify docs; `application/live/_session.py`.
+- [x] `S345` - verify docs; `application/live/_snapshot_base.py`.
+- [x] `S346` - verify docs; `application/live/_verify.py`.
+- [x] `S347` - verify docs; `application/modelo/__init__.py`.
+- [x] `S348` - verify docs; `application/modelo/_action_errors.py`.
+- [x] `S349` - verify docs; `application/modelo/_actions.py`.
+- [x] `S350` - verify docs; `application/modelo/_amendment_actions.py`.
+- [x] `S351` - verify docs; `application/modelo/_binding_readiness.py`.
+- [x] `S352` - verify docs; `application/modelo/_binding_resolution.py`.
+- [x] `S353` - verify docs; `application/modelo/_borrador_binding.py`.
+- [x] `S354` - verify docs; `application/modelo/_calculate_input.py`.
+- [x] `S355` - verify docs; `application/modelo/_calculation_actions.py`.
+- [x] `S356` - verify docs; `application/modelo/_calculation_helpers.py`.
+- [x] `S357` - verify docs; `application/modelo/_decimal_binding_value.py`.
+- [x] `S358` - verify docs; `application/modelo/_export.py`.
+- [x] `S359` - verify docs; `application/modelo/_external_import_actions.py`.
+- [x] `S360` - verify docs; `application/modelo/_filing_actions.py`.
+- [x] `S361` - verify docs; `application/modelo/_history.py`.
+- [x] `S362` - verify docs; `application/modelo/_iva_wallet_gate.py`.
+- [x] `S363` - verify docs; `application/modelo/_iva_wallet_seed.py`.
+- [x] `S364` - verify docs; `application/modelo/_m036_lifecycle.py`.
+- [x] `S365` - verify docs; `application/modelo/_m210_rate.py`.
+- [x] `S366` - verify docs; `application/modelo/_maritime_preview.py`.
+- [x] `S367` - verify docs; `application/modelo/_profile_binding.py`.
+- [x] `S368` - verify docs; `application/modelo/_projection.py`.
+- [x] `S369` - verify docs; `application/modelo/_reconcile.py`.
+- [x] `S370` - verify docs; `application/modelo/_registry_discovery.py`.
+- [x] `S371` - verify docs; `application/modelo/_registry_helpers.py`.
+- [x] `S372` - verify docs; `application/modelo/_registry_resources.py`.
+- [x] `S373` - verify docs; `application/modelo/_result_summary.py`.
+- [x] `S374` - verify docs; `application/modelo/_revision_persistence.py`.
+- [x] `S375` - verify docs; `application/modelo/_selectors.py`.
+- [x] `S376` - verify docs; `application/modelo/_taxation_comparison.py`.
+- [x] `S377` - verify docs; `application/modelo/_verification_actions.py`.
+- [x] `S378` - verify docs; `application/modelo/_work_addressing.py`.
+- [x] `S379` - verify docs; `application/modelo/_work_create_policy.py`.
+- [x] `S380` - verify docs; `application/modelo/_work_lifecycle.py`.
+- [x] `S381` - verify docs; `application/modelo/_work_plazo.py`.
+- [x] `S382` - verify docs; `application/modelo/_workflow_gate.py`.
+- [x] `S383` - verify docs; `application/operator_surface/__init__.py`.
+- [x] `S384` - verify docs; `application/operator_surface/_contract.py`.
+- [x] `S385` - verify docs; `application/operator_surface/_crud_contract.py`.
+- [x] `S386` - verify docs; `application/operator_surface/_crud_registry.py`.
+- [x] `S387` - verify docs; `application/operator_surface/_errors.py`.
+- [x] `S388` - verify docs; `application/operator_surface/_help.py`.
+- [x] `S389` - verify docs; `application/operator_surface/_models.py`.
+- [x] `S390` - verify docs; `application/overview/__init__.py`.
+- [x] `S391` - verify docs; `application/overview/_agenda.py`.
+- [x] `S392` - verify docs; `application/overview/_backlog.py`.
+- [x] `S393` - verify docs; `application/overview/_calendar.py`.
+- [x] `S394` - verify docs; `application/overview/_errors.py`.
+- [x] `S395` - verify docs; `application/overview/_explain.py`.
+- [x] `S396` - verify docs; `application/portals/__init__.py`.
+- [x] `S397` - verify docs; `application/portals/_service.py`.
+- [x] `S398` - verify docs; `application/registry/__init__.py`.
+- [x] `S399` - verify docs; `application/registry/_corpus.py`.
+- [x] `S400` - verify docs; `application/registry/_errors.py`.
+- [x] `S401` - verify docs; `application/repair_integrity.py`.
+- [x] `S402` - verify docs; `application/review/__init__.py`.
+- [x] `S403` - verify docs; `application/review/_actions.py`.
+- [x] `S404` - verify docs; `application/review/_adapters.py`.
+- [x] `S405` - verify docs; `application/review/_aggregator.py`.
+- [x] `S406` - verify docs; `application/review/_edit.py`.
+- [x] `S407` - verify docs; `application/review/_enums.py`.
+- [x] `S408` - verify docs; `application/review/_errors.py`.
+- [x] `S409` - verify docs; `application/review/_filter.py`.
+- [x] `S410` - verify docs; `application/review/_models.py`.
+- [x] `S411` - verify docs; `application/review/_operator.py`.
+- [x] `S412` - verify docs; `application/review/conftest.py`.
+- [x] `S413` - verify docs; `application/setup/__init__.py`.
+- [x] `S414` - verify docs; `application/setup/_contracts.py`.
+- [x] `S415` - verify docs; `application/setup/_service.py`.
+- [x] `S416` - verify docs; `application/state_projection.py`.
+- [x] `S417` - verify docs; `application/storage/__init__.py`.
+- [x] `S418` - verify docs; `application/storage/calc_sheets/__init__.py`.
+- [x] `S419` - verify docs; `application/storage/calc_sheets/_engine.py`.
+- [x] `S420` - verify docs; `application/storage/calc_sheets/_errors.py`.
+- [x] `S421` - verify docs; `application/storage/calc_sheets/_evidence.py`.
+- [x] `S422` - verify docs; `application/storage/calc_sheets/_layout.py`.
+- [x] `S423` - verify docs; `application/storage/calc_sheets/_parity_harness.py`.
+- [x] `S424` - verify docs; `application/storage/calc_sheets/_records.py`.
+- [x] `S425` - verify docs; `application/storage/calc_sheets/_styling.py`.
+- [x] `S426` - verify docs; `application/storage/calc_sheets/_theme.py`.
+- [x] `S427` - verify docs; `application/storage/calc_sheets/_translator.py`.
+- [x] `S428` - verify docs; `application/storage/calc_sheets/_workbook_export.py`.
+- [x] `S429` - verify docs; `application/storage_write_policy.py`.
+- [x] `S430` - verify docs; `application/transactions/__init__.py`.
+- [x] `S431` - verify docs; `application/transactions/_diagnostics.py`.
+- [x] `S432` - verify docs; `application/transactions/_import.py`.
+- [x] `S433` - verify docs; `application/user_profile/__init__.py`.
+- [x] `S434` - verify docs; `application/user_profile/_aggregate.py`.
+- [x] `S435` - verify docs; `application/user_profile/_bundle.py`.
+- [x] `S436` - verify docs; `application/user_profile/_censo_errors.py`.
+- [x] `S437` - verify docs; `application/user_profile/_censo_sync.py`.
+- [x] `S438` - verify docs; `application/user_profile/_commands.py`.
+- [x] `S439` - verify docs; `application/user_profile/_custody.py`.
+- [x] `S440` - verify docs; `application/user_profile/_integrity.py`.
+- [x] `S441` - verify docs; `application/user_profile/_keys_validation.py`.
+- [x] `S442` - verify docs; `application/user_profile/_language_resolver.py`.
+- [x] `S443` - verify docs; `application/user_profile/_lifecycle.py`.
+- [x] `S444` - verify docs; `application/user_profile/_orchestration.py`.
+- [x] `S445` - verify docs; `application/user_profile/_preflight.py`.
+- [x] `S446` - verify docs; `application/user_profile/_profile_repository.py`.
+- [x] `S447` - verify docs; `application/user_profile/_projections.py`.
+- [x] `S448` - verify docs; `application/user_profile/_repository.py`.
+- [x] `S449` - verify docs; `application/user_profile/_testing.py`.
+- [x] `S450` - verify docs; `application/user_profile/_validation.py`.
+- [x] `S451` - verify docs; `application/verification/__init__.py`.
+- [x] `S452` - verify docs; `application/verification/_errors.py`.
+- [x] `S453` - verify docs; `application/verification/_schema.py`.
+- [x] `S454` - verify docs; `application/verification/_verify.py`.
+- [x] `S455` - verify docs; `application/wizard/__init__.py`.
+- [x] `S456` - verify docs; `application/wizard/_catalogue.py`.
+- [x] `S457` - verify docs; `application/wizard/_commands.py`.
+- [x] `S458` - verify docs; `application/wizard/_compiler.py`.
+- [x] `S459` - verify docs; `application/wizard/_errors.py`.
+- [x] `S460` - verify docs; `application/wizard/_models.py`.
+- [x] `S461` - verify docs; `application/wizard/_persistence.py`.
+- [x] `S462` - verify docs; `application/wizard/_prompter.py`.
+- [x] `S463` - verify docs; `application/wizard/_runner.py`.
+- [x] `S464` - verify docs; `application/wizard/_status.py`.
+- [x] `S465` - verify docs; `application/wizard/_translations.py`.
+- [x] `S466` - verify docs; `application/wizard/_verifier.py`.
+- [x] `S467` - verify docs; `application/wizard/_widgets.py`.
+- [x] `S468` - verify docs; `application/workflow/__init__.py`.
+- [x] `S469` - verify docs; `application/workflow/_adapters.py`.
+- [x] `S470` - verify docs; `application/workflow/_engine.py`.
+- [x] `S471` - verify docs; `application/workflow/_engine_helpers.py`.
+- [x] `S472` - verify docs; `application/workflow/_engine_recording.py`.
+- [x] `S473` - verify docs; `application/workflow/_errors.py`.
+- [x] `S474` - verify docs; `application/workflow/_events.py`.
+- [x] `S475` - verify docs; `application/workflow/_models.py`.
+- [x] `S476` - verify docs; `application/workflow/_persistence.py`.
+- [x] `S477` - verify docs; `application/workflow/_profile_bucket_scan.py`.
+- [x] `S478` - verify docs; `application/workflow/_profile_health.py`.
+- [x] `S479` - verify docs; `application/workflow/_protocols.py`.
+- [x] `S480` - verify docs; `application/workflow/_resume.py`.
+- [x] `S481` - verify docs; `application/workflow/_utils.py`.
+- [x] `S482` - verify docs; `core/__init__.py`.
+- [x] `S483` - verify docs; `core/_bucket_pointer.py`.
+- [x] `S484` - verify docs; `core/_bucket_pointer_io.py`.
+- [x] `S485` - verify docs; `core/_config_storage_route.py`.
+- [x] `S486` - verify docs; `core/_config_support.py`.
+- [x] `S487` - verify docs; `core/_models.py`.
+- [x] `S488` - verify docs; `core/_period.py`.
+- [x] `S489` - verify docs; `core/_tax_domain.py`.
+- [x] `S490` - verify docs; `core/_toml.py`.
+- [x] `S491` - verify docs; `core/access_gate/__init__.py`.
+- [x] `S492` - verify docs; `core/access_gate/_authorization.py`.
+- [x] `S493` - verify docs; `core/access_gate/_errors.py`.
+- [x] `S494` - verify docs; `core/aggregation.py`.
+- [x] `S495` - verify docs; `core/auth_session_keys.py`.
+- [x] `S496` - verify docs; `core/classification/__init__.py`.
+- [x] `S497` - verify docs; `core/click_context.py`.
+- [x] `S498` - verify docs; `core/config.py`.
+- [x] `S499` - verify docs; `core/corpus_manifest/__init__.py`.
+- [x] `S500` - verify docs; `core/corpus_manifest/_errors.py`.
+- [x] `S501` - verify docs; `core/decimal/__init__.py`.
+- [x] `S502` - verify docs; `core/decimal/_coerce.py`.
+- [x] `S503` - verify docs; `core/decimal/_format.py`.
+- [x] `S504` - verify docs; `core/env_io.py`.
+- [x] `S505` - verify docs; `core/errors/__init__.py`.
+- [x] `S506` - verify docs; `core/errors/_not_found.py`.
+- [x] `S507` - verify docs; `core/errors/_registry.py`.
+- [x] `S508` - verify docs; `core/errors/_severity.py`.
+- [x] `S509` - verify docs; `core/errors/registry/__init__.py`.
+- [x] `S510` - verify docs; `core/errors/registry/_adapters.py`.
+- [x] `S511` - verify docs; `core/errors/registry/_adapters_part1.py`.
+- [x] `S512` - verify docs; `core/errors/registry/_adapters_part2.py`.
+- [x] `S513` - verify docs; `core/errors/registry/_application.py`.
+- [x] `S514` - verify docs; `core/errors/registry/_application_part1.py`.
+- [x] `S515` - verify docs; `core/errors/registry/_application_part2.py`.
+- [x] `S516` - verify docs; `core/errors/registry/_core.py`.
+- [x] `S517` - verify docs; `core/errors/registry/_domain.py`.
+- [x] `S518` - verify docs; `core/errors/registry/_domain_part1.py`.
+- [x] `S519` - verify docs; `core/errors/registry/_domain_part2.py`.
+- [x] `S520` - verify docs; `core/errors/registry/_domain_part3.py`.
+- [x] `S521` - verify docs; `core/errors/registry/_entrypoints.py`.
+- [x] `S522` - verify docs; `core/external_constants.py`.
+- [x] `S523` - verify docs; `core/file_permissions.py`.
+- [x] `S524` - verify docs; `core/hashing.py`.
+- [x] `S525` - verify docs; `core/i18n/__init__.py`.
+- [x] `S526` - verify docs; `core/i18n/_render.py`.
+- [x] `S527` - verify docs; `core/i18n/_translatable.py`.
+- [x] `S528` - verify docs; `core/i18n/conftest.py`.
+- [x] `S529` - verify docs; `core/identity/__init__.py`.
+- [x] `S530` - verify docs; `core/identity/_bucket.py`.
+- [x] `S531` - verify docs; `core/identity/_documents.py`.
+- [x] `S532` - verify docs; `core/identity/_profile.py`.
+- [x] `S533` - verify docs; `core/identity/_snapshot.py`.
+- [x] `S534` - verify docs; `core/identity/_tax_id.py`.
+- [x] `S535` - verify docs; `core/identity/_transaction.py`.
+- [x] `S536` - verify docs; `core/json_contract.py`.
+- [x] `S537` - verify docs; `core/locks.py`.
+- [x] `S538` - verify docs; `core/locks_errors.py`.
+- [x] `S539` - verify docs; `core/logging.py`.
+- [x] `S540` - verify docs; `core/money/__init__.py`.
+- [x] `S541` - verify docs; `core/observability/__init__.py`.
+- [x] `S542` - verify docs; `core/observability/_context.py`.
+- [x] `S543` - verify docs; `core/observability/_errors.py`.
+- [x] `S544` - verify docs; `core/observability/_fingerprint.py`.
+- [x] `S545` - verify docs; `core/observability/_models.py`.
+- [x] `S546` - verify docs; `core/observability/_recorder.py`.
+- [x] `S547` - verify docs; `core/observability/_redaction_rules.py`.
+- [x] `S548` - verify docs; `core/observability/_replay.py`.
+- [x] `S549` - verify docs; `core/observability/_sink.py`.
+- [x] `S550` - verify docs; `core/observability/_store.py`.
+- [x] `S551` - verify docs; `core/output_rendering.py`.
+- [x] `S552` - verify docs; `core/parsing/__init__.py`.
+- [x] `S553` - verify docs; `core/parsing/_dates.py`.
+- [x] `S554` - verify docs; `core/parsing/_utils.py`.
+- [x] `S555` - verify docs; `core/paths.py`.
+- [x] `S556` - verify docs; `core/redaction/__init__.py`.
+- [x] `S557` - verify docs; `core/resources/__init__.py`.
+- [x] `S558` - verify docs; `core/resources/_boundary.py`.
+- [x] `S559` - verify docs; `core/resources/_errors.py`.
+- [x] `S560` - verify docs; `core/resources/_keys.py`.
+- [x] `S561` - verify docs; `core/resources/_registry.py`.
+- [x] `S562` - verify docs; `core/resources/_repos/__init__.py`.
+- [x] `S563` - verify docs; `core/resources/_repos/apoderamientos.py`.
+- [x] `S564` - verify docs; `core/resources/_repos/category_profiles.py`.
+- [x] `S565` - verify docs; `core/resources/_repos/holiday_calendars.py`.
+- [x] `S566` - verify docs; `core/resources/_repos/iva_catalogues.py`.
+- [x] `S567` - verify docs; `core/resources/_repos/iva_rate_tables.py`.
+- [x] `S568` - verify docs; `core/resources/_repos/legal_parameters.py`.
+- [x] `S569` - verify docs; `core/resources/_repos/manuals.py`.
+- [x] `S570` - verify docs; `core/resources/_repos/modelos.py`.
+- [x] `S571` - verify docs; `core/resources/_repos/normatives.py`.
+- [x] `S572` - verify docs; `core/resources/_repos/recargo_bands.py`.
+- [x] `S573` - verify docs; `core/resources/_repos/topics.py`.
+- [x] `S574` - verify docs; `core/resources/_repos/user_profile.py`.
+- [x] `S575` - verify docs; `core/resources/_repository.py`.
+- [x] `S576` - verify docs; `core/setup_answers.py`.
+- [x] `S577` - verify docs; `core/time/__init__.py`.
+- [x] `S578` - verify docs; `core/time/_clock.py`.
+- [x] `S579` - verify docs; `core/time/_utc.py`.
+- [x] `S580` - verify docs; `core/topics/__init__.py`.
+- [x] `S581` - verify docs; `core/wizard_catalogue.py`.
+- [x] `S582` - verify docs; `domain/__init__.py`.
+- [x] `S583` - verify docs; `domain/_errors.py`.
+- [x] `S584` - verify docs; `domain/_identifiers.py`.
+- [x] `S585` - verify docs; `domain/attachments/__init__.py`.
+- [x] `S586` - verify docs; `domain/attachments/_enums.py`.
+- [x] `S587` - verify docs; `domain/attachments/_errors.py`.
+- [x] `S588` - verify docs; `domain/attachments/_ids.py`.
+- [x] `S589` - verify docs; `domain/attachments/_models.py`.
+- [x] `S590` - verify docs; `domain/attachments/_protocols.py`.
+- [x] `S591` - verify docs; `domain/attachments/_service.py`.
+- [x] `S592` - verify docs; `domain/auth/__init__.py`.
+- [x] `S593` - verify docs; `domain/auth/apoderamientos/__init__.py`.
+- [x] `S594` - verify docs; `domain/auth/apoderamientos/_catalogue.py`.
+- [x] `S595` - verify docs; `domain/buckets/__init__.py`.
+- [x] `S596` - verify docs; `domain/buckets/_errors.py`.
+- [x] `S597` - verify docs; `domain/buckets/_event.py`.
+- [x] `S598` - verify docs; `domain/buckets/_event_repository.py`.
+- [x] `S599` - verify docs; `domain/buckets/_protocols.py`.
+- [x] `S600` - verify docs; `domain/calculations/__init__.py`.
+- [x] `S601` - verify docs; `domain/calculations/_export_field_kind.py`.
+- [x] `S602` - verify docs; `domain/calculations/registry/__init__.py`.
+- [x] `S603` - verify docs; `domain/calculations/registry/_aeat_hosts.py`.
+- [x] `S604` - verify docs; `domain/calculations/registry/_aeat_nif_iva_oracle.py`.
+- [x] `S605` - verify docs; `domain/calculations/registry/_applicability.py`.
+- [x] `S606` - verify docs; `domain/calculations/registry/_applicability_modelo202.py`.
+- [x] `S607` - verify docs; `domain/calculations/registry/_applicability_payer_facts.py`.
+- [x] `S608` - verify docs; `domain/calculations/registry/_authority.py`.
+- [x] `S609` - verify docs; `domain/calculations/registry/_binding_selector_utils.py`.
+- [x] `S610` - verify docs; `domain/calculations/registry/_bindings.py`.
+- [x] `S611` - verify docs; `domain/calculations/registry/_bindings_previous_filing.py`.
+- [x] `S612` - verify docs; `domain/calculations/registry/_censo_modelos.py`.
+- [x] `S613` - verify docs; `domain/calculations/registry/_checker_oracle_flow.py`.
+- [x] `S614` - verify docs; `domain/calculations/registry/_citation_blocklist.py`.
+- [x] `S615` - verify docs; `domain/calculations/registry/_constructs.py`.
+- [x] `S616` - verify docs; `domain/calculations/registry/_counterpart_bindings.py`.
+- [x] `S617` - verify docs; `domain/calculations/registry/_coverage.py`.
+- [x] `S618` - verify docs; `domain/calculations/registry/_cross_revision_divergence.py`.
+- [x] `S619` - verify docs; `domain/calculations/registry/_detail_record_bindings.py`.
+- [x] `S620` - verify docs; `domain/calculations/registry/_errors.py`.
+- [x] `S621` - verify docs; `domain/calculations/registry/_export.py`.
+- [x] `S622` - verify docs; `domain/calculations/registry/_export_parse.py`.
+- [x] `S623` - verify docs; `domain/calculations/registry/_filed_state.py`.
+- [x] `S624` - verify docs; `domain/calculations/registry/_formula_initial_values.py`.
+- [x] `S625` - verify docs; `domain/calculations/registry/_formula_runtime.py`.
+- [x] `S626` - verify docs; `domain/calculations/registry/_groi_oracle.py`.
+- [x] `S627` - verify docs; `domain/calculations/registry/_ids.py`.
+- [x] `S628` - verify docs; `domain/calculations/registry/_invoice_bindings.py`.
+- [x] `S629` - verify docs; `domain/calculations/registry/_ledger_bindings.py`.
+- [x] `S630` - verify docs; `domain/calculations/registry/_legal.py`.
+- [x] `S631` - verify docs; `domain/calculations/registry/_live_parity.py`.
+- [x] `S632` - verify docs; `domain/calculations/registry/_loader.py`.
+- [x] `S633` - verify docs; `domain/calculations/registry/_m232_row_bindings.py`.
+- [x] `S634` - verify docs; `domain/calculations/registry/_parity_tapes.py`.
+- [x] `S635` - verify docs; `domain/calculations/registry/_queries.py`.
+- [x] `S636` - verify docs; `domain/calculations/registry/_record_design.py`.
+- [x] `S637` - verify docs; `domain/calculations/registry/_record_design_coverage.py`.
+- [x] `S638` - verify docs; `domain/calculations/registry/_record_design_schema.py`.
+- [x] `S639` - verify docs; `domain/calculations/registry/_record_spec.py`.
+- [x] `S640` - verify docs; `domain/calculations/registry/_relations.py`.
+- [x] `S641` - verify docs; `domain/calculations/registry/_remote_state_guard.py`.
+- [x] `S642` - verify docs; `domain/calculations/registry/_renta_web_open_oracle.py`.
+- [x] `S643` - verify docs; `domain/calculations/registry/_runtime_graph.py`.
+- [x] `S644` - verify docs; `domain/calculations/registry/_scenarios.py`.
+- [x] `S645` - verify docs; `domain/calculations/registry/_schedules.py`.
+- [x] `S646` - verify docs; `domain/calculations/registry/_schema.py`.
+- [x] `S647` - verify docs; `domain/calculations/registry/_schema_base.py`.
+- [x] `S648` - verify docs; `domain/calculations/registry/_schema_formula.py`.
+- [x] `S649` - verify docs; `domain/calculations/registry/_schema_input_kind.py`.
+- [x] `S650` - verify docs; `domain/calculations/registry/_schema_rounding.py`.
+- [x] `S651` - verify docs; `domain/calculations/registry/_schema_scalars.py`.
+- [x] `S652` - verify docs; `domain/calculations/registry/_schema_surfaces.py`.
+- [x] `S653` - verify docs; `domain/calculations/registry/_snapshot.py`.
+- [x] `S654` - verify docs; `domain/calculations/registry/_sources.py`.
+- [x] `S655` - verify docs; `domain/calculations/registry/_temporal.py`.
+- [x] `S656` - verify docs; `domain/calculations/registry/_text.py`.
+- [x] `S657` - verify docs; `domain/calculations/registry/_validate.py`.
+- [x] `S658` - verify docs; `domain/calculations/registry/_validate_algorithms.py`.
+- [x] `S659` - verify docs; `domain/calculations/registry/_validate_application_links.py`.
+- [x] `S660` - verify docs; `domain/calculations/registry/_validate_cache.py`.
+- [x] `S661` - verify docs; `domain/calculations/registry/_validate_completeness.py`.
+- [x] `S662` - verify docs; `domain/calculations/registry/_validate_constructs.py`.
+- [x] `S663` - verify docs; `domain/calculations/registry/_validate_cross_domain_snapshot.py`.
+- [x] `S664` - verify docs; `domain/calculations/registry/_validate_cross_revision.py`.
+- [x] `S665` - verify docs; `domain/calculations/registry/_validate_cross_revision_advisory.py`.
+- [x] `S666` - verify docs; `domain/calculations/registry/_validate_dependency_sections.py`.
+- [x] `S667` - verify docs; `domain/calculations/registry/_validate_evidence.py`.
+- [x] `S668` - verify docs; `domain/calculations/registry/_validate_exports.py`.
+- [x] `S669` - verify docs; `domain/calculations/registry/_validate_extraction_profiles.py`.
+- [x] `S670` - verify docs; `domain/calculations/registry/_validate_formulas.py`.
+- [x] `S671` - verify docs; `domain/calculations/registry/_validate_helpers.py`.
+- [x] `S672` - verify docs; `domain/calculations/registry/_validate_label_artifacts.py`.
+- [x] `S673` - verify docs; `domain/calculations/registry/_validate_previous_filing_sources.py`.
+- [x] `S674` - verify docs; `domain/calculations/registry/_validate_record_sections.py`.
+- [x] `S675` - verify docs; `domain/calculations/registry/_validate_reference_checker.py`.
+- [x] `S676` - verify docs; `domain/calculations/registry/_validate_reference_sections.py`.
+- [x] `S677` - verify docs; `domain/calculations/registry/_validate_references.py`.
+- [x] `S678` - verify docs; `domain/calculations/registry/_validate_registry_scope.py`.
+- [x] `S679` - verify docs; `domain/calculations/registry/_validate_relation_periods.py`.
+- [x] `S680` - verify docs; `domain/calculations/registry/_validate_relation_sources.py`.
+- [x] `S681` - verify docs; `domain/calculations/registry/_validate_revision_context.py`.
+- [x] `S682` - verify docs; `domain/calculations/registry/_validate_revision_identity.py`.
+- [x] `S683` - verify docs; `domain/calculations/registry/_validate_revision_rules.py`.
+- [x] `S684` - verify docs; `domain/calculations/registry/_validate_revision_sections.py`.
+- [x] `S685` - verify docs; `domain/calculations/registry/_validate_semantic_role_axes.py`.
+- [x] `S686` - verify docs; `domain/calculations/registry/_validate_semantic_role_typos.py`.
+- [x] `S687` - verify docs; `domain/calculations/registry/_validate_semantic_roles.py`.
+- [x] `S688` - verify docs; `domain/calculations/registry/_validate_source_outputs.py`.
+- [x] `S689` - verify docs; `domain/calculations/registry/_validate_surfaces.py`.
+- [x] `S690` - verify docs; `domain/calculations/registry/_withholding_bindings.py`.
+- [x] `S691` - verify docs; `domain/calculations/registry/_workbook_parity.py`.
+- [x] `S692` - verify docs; `domain/calculations/registry/_workbook_parity_models.py`.
+- [x] `S693` - verify docs; `domain/calculations/registry/_workbook_parity_types.py`.
+- [x] `S694` - verify docs; `domain/calculations/registry/applicability.py`.
+- [x] `S695` - verify docs; `domain/calculations/registry/conftest.py`.
+- [x] `S696` - verify docs; `domain/categories/__init__.py`.
+- [x] `S697` - verify docs; `domain/categories/_corpus.py`.
+- [x] `S698` - verify docs; `domain/categories/_errors.py`.
+- [x] `S699` - verify docs; `domain/categories/_profile.py`.
+- [x] `S700` - verify docs; `domain/categories/_proportionality.py`.
+- [x] `S701` - verify docs; `domain/categories/_registry.py`.
+- [x] `S702` - verify docs; `domain/categories/_spending_category.py`.
+- [x] `S703` - verify docs; `domain/contribuyente/__init__.py`.
+- [x] `S704` - verify docs; `domain/contribuyente/_ccaa.py`.
+- [x] `S705` - verify docs; `domain/contribuyente/_constants.py`.
+- [x] `S706` - verify docs; `domain/contribuyente/_deduccion_maternidad.py`.
+- [x] `S707` - verify docs; `domain/contribuyente/_descendant_facts.py`.
+- [x] `S708` - verify docs; `domain/contribuyente/_errors.py`.
+- [x] `S709` - verify docs; `domain/contribuyente/_keys.py`.
+- [x] `S710` - verify docs; `domain/contribuyente/_marriage_facts.py`.
+- [x] `S711` - verify docs; `domain/contribuyente/_normalise.py`.
+- [x] `S712` - verify docs; `domain/contribuyente/_renta_codes.py`.
+- [x] `S713` - verify docs; `domain/contribuyente/assets/__init__.py`.
+- [x] `S714` - verify docs; `domain/contribuyente/conftest.py`.
+- [x] `S715` - verify docs; `domain/contribuyente/family.py`.
+- [x] `S716` - verify docs; `domain/contribuyente/inventory/__init__.py`.
+- [x] `S717` - verify docs; `domain/currency/__init__.py`.
+- [x] `S718` - verify docs; `domain/currency/_errors.py`.
+- [x] `S719` - verify docs; `domain/currency/_models.py`.
+- [x] `S720` - verify docs; `domain/currency/_service.py`.
+- [x] `S721` - verify docs; `domain/deadlines/__init__.py`.
+- [x] `S722` - verify docs; `domain/deadlines/_engine.py`.
+- [x] `S723` - verify docs; `domain/deadlines/_errors.py`.
+- [x] `S724` - verify docs; `domain/deadlines/_festivos.py`.
+- [x] `S725` - verify docs; `domain/deadlines/_models.py`.
+- [x] `S726` - verify docs; `domain/deadlines/_plazo.py`.
+- [x] `S727` - verify docs; `domain/deadlines/_profiles.py`.
+- [x] `S728` - verify docs; `domain/deadlines/_recargo.py`.
+- [x] `S729` - verify docs; `domain/deadlines/conftest.py`.
+- [x] `S730` - verify docs; `domain/deadlines/taxpayer_model.py`.
+- [x] `S731` - verify docs; `domain/filing/__init__.py`.
+- [x] `S732` - verify docs; `domain/filing/_amendment.py`.
+- [x] `S733` - verify docs; `domain/filing/_complementaria_repository.py`.
+- [x] `S734` - verify docs; `domain/filing/_errors.py`.
+- [x] `S735` - verify docs; `domain/filing/_protocols.py`.
+- [x] `S736` - verify docs; `domain/filing/_repository.py`.
+- [x] `S737` - verify docs; `domain/filing/_runtime_repository.py`.
+- [x] `S738` - verify docs; `domain/filing/_schema.py`.
+- [x] `S739` - verify docs; `domain/filing/_validator.py`.
+- [x] `S740` - verify docs; `domain/filing/reconciliation/__init__.py`.
+- [x] `S741` - verify docs; `domain/filing/reconciliation/_errors.py`.
+- [x] `S742` - verify docs; `domain/fincas/__init__.py`.
+- [x] `S743` - verify docs; `domain/fincas/_aggregates.py`.
+- [x] `S744` - verify docs; `domain/fincas/_amortization_ledger.py`.
+- [x] `S745` - verify docs; `domain/fincas/_enums.py`.
+- [x] `S746` - verify docs; `domain/fincas/_errors.py`.
+- [x] `S747` - verify docs; `domain/fincas/_expense_rollup.py`.
+- [x] `S748` - verify docs; `domain/fincas/_imputacion_parameters.py`.
+- [x] `S749` - verify docs; `domain/fincas/_models.py`.
+- [x] `S750` - verify docs; `domain/fincas/_repository.py`.
+- [x] `S751` - verify docs; `domain/fincas/_tier_resolver.py`.
+- [x] `S752` - verify docs; `domain/invoices/__init__.py`.
+- [x] `S753` - verify docs; `domain/invoices/_enums.py`.
+- [x] `S754` - verify docs; `domain/invoices/_errors.py`.
+- [x] `S755` - verify docs; `domain/invoices/_ids.py`.
+- [x] `S756` - verify docs; `domain/invoices/_models.py`.
+- [x] `S757` - verify docs; `domain/invoices/_protocols.py`.
+- [x] `S758` - verify docs; `domain/invoices/_repository.py`.
+- [x] `S759` - verify docs; `domain/invoices/_service.py`.
+- [x] `S760` - verify docs; `domain/invoices/_validators.py`.
+- [x] `S761` - verify docs; `domain/iva/__init__.py`.
+- [x] `S762` - verify docs; `domain/iva/_catalogue.py`.
+- [x] `S763` - verify docs; `domain/iva/_classification.py`.
+- [x] `S764` - verify docs; `domain/iva/_corpus.py`.
+- [x] `S765` - verify docs; `domain/iva/_errors.py`.
+- [x] `S766` - verify docs; `domain/iva/_flow.py`.
+- [x] `S767` - verify docs; `domain/iva/_invoice_classification.py`.
+- [x] `S768` - verify docs; `domain/iva/_lookup.py`.
+- [x] `S769` - verify docs; `domain/iva/_oss.py`.
+- [x] `S770` - verify docs; `domain/iva/_prorrata.py`.
+- [x] `S771` - verify docs; `domain/iva/_rates.py`.
+- [x] `S772` - verify docs; `domain/iva/_recargo_equivalencia.py`.
+- [x] `S773` - verify docs; `domain/iva/_saturation.py`.
+- [x] `S774` - verify docs; `domain/iva/_schema.py`.
+- [x] `S775` - verify docs; `domain/iva/_verify.py`.
+- [x] `S776` - verify docs; `domain/iva_compensation/__init__.py`.
+- [x] `S777` - verify docs; `domain/iva_compensation/_balance.py`.
+- [x] `S778` - verify docs; `domain/iva_compensation/_carry_forward.py`.
+- [x] `S779` - verify docs; `domain/iva_compensation/_errors.py`.
+- [x] `S780` - verify docs; `domain/iva_compensation/_reconciliation.py`.
+- [x] `S781` - verify docs; `domain/justificante/__init__.py`.
+- [x] `S782` - verify docs; `domain/justificante/_errors.py`.
+- [x] `S783` - verify docs; `domain/justificante/_repository.py`.
+- [x] `S784` - verify docs; `domain/justificante/_schema.py`.
+- [x] `S785` - verify docs; `domain/manuals/__init__.py`.
+- [x] `S786` - verify docs; `domain/manuals/_errors.py`.
+- [x] `S787` - verify docs; `domain/manuals/_fetch.py`.
+- [x] `S788` - verify docs; `domain/manuals/_ids.py`.
+- [x] `S789` - verify docs; `domain/manuals/_loader.py`.
+- [x] `S790` - verify docs; `domain/manuals/_rule_id.py`.
+- [x] `S791` - verify docs; `domain/manuals/_schema.py`.
+- [x] `S792` - verify docs; `domain/manuals/_verify.py`.
+- [x] `S793` - verify docs; `domain/modelos/__init__.py`.
+- [x] `S794` - verify docs; `domain/modelos/_calculation_repository.py`.
+- [x] `S795` - verify docs; `domain/modelos/_calculation_revision.py`.
+- [x] `S796` - verify docs; `domain/modelos/_codes.py`.
+- [x] `S797` - verify docs; `domain/modelos/_dt12_reduccion.py`.
+- [x] `S798` - verify docs; `domain/modelos/_errors.py`.
+- [x] `S799` - verify docs; `domain/modelos/_filing_record.py`.
+- [x] `S800` - verify docs; `domain/modelos/_filing_repository.py`.
+- [x] `S801` - verify docs; `domain/modelos/_ids.py`.
+- [x] `S802` - verify docs; `domain/modelos/_ledger_filing_snapshot.py`.
+- [x] `S803` - verify docs; `domain/modelos/_protocols.py`.
+- [x] `S804` - verify docs; `domain/modelos/_repository.py`.
+- [x] `S805` - verify docs; `domain/modelos/_row_models.py`.
+- [x] `S806` - verify docs; `domain/modelos/_runtime_repository.py`.
+- [x] `S807` - verify docs; `domain/modelos/_sal_reserva_especial.py`.
+- [x] `S808` - verify docs; `domain/modelos/_verification_report.py`.
+- [x] `S809` - verify docs; `domain/modelos/_verification_repository.py`.
+- [x] `S810` - verify docs; `domain/modelos/_work_unit.py`.
+- [x] `S811` - verify docs; `domain/normatives/__init__.py`.
+- [x] `S812` - verify docs; `domain/normatives/_cite.py`.
+- [x] `S813` - verify docs; `domain/normatives/_errors.py`.
+- [x] `S814` - verify docs; `domain/normatives/_loader.py`.
+- [x] `S815` - verify docs; `domain/normatives/_lookup.py`.
+- [x] `S816` - verify docs; `domain/normatives/_schema.py`.
+- [x] `S817` - verify docs; `domain/normatives/_verify.py`.
+- [x] `S818` - verify docs; `domain/period.py`.
+- [x] `S819` - verify docs; `domain/portals/__init__.py`.
+- [x] `S820` - verify docs; `domain/portals/_categories.py`.
+- [x] `S821` - verify docs; `domain/portals/_codes.py`.
+- [x] `S822` - verify docs; `domain/portals/_entries/__init__.py`.
+- [x] `S823` - verify docs; `domain/portals/_entries/_common.py`.
+- [x] `S824` - verify docs; `domain/portals/_entries/portal_calendario_contribuyente.py`.
+- [x] `S825` - verify docs; `domain/portals/_entries/portal_cert_selection.py`.
+- [x] `S826` - verify docs; `domain/portals/_entries/portal_cert_validation_rest.py`.
+- [x] `S827` - verify docs; `domain/portals/_entries/portal_clave_gestiones.py`.
+- [x] `S828` - verify docs; `domain/portals/_entries/portal_clave_idp_root.py`.
+- [x] `S829` - verify docs; `domain/portals/_entries/portal_clave_sede_entry.py`.
+- [x] `S830` - verify docs; `domain/portals/_entries/portal_consulta_pagos.py`.
+- [x] `S831` - verify docs; `domain/portals/_entries/portal_dnie_sede_entry.py`.
+- [x] `S832` - verify docs; `domain/portals/_entries/portal_domiciliacion_bancaria.py`.
+- [x] `S833` - verify docs; `domain/portals/_entries/portal_m036_censal.py`.
+- [x] `S834` - verify docs; `domain/portals/_entries/portal_m037_censal_simplificada.py`.
+- [x] `S835` - verify docs; `domain/portals/_entries/portal_m100_renta.py`.
+- [x] `S836` - verify docs; `domain/portals/_entries/portal_m111_retenciones_trabajo.py`.
+- [x] `S837` - verify docs; `domain/portals/_entries/portal_m115_retenciones_arrendamientos.py`.
+- [x] `S838` - verify docs; `domain/portals/_entries/portal_m123_retenciones_capital.py`.
+- [x] `S839` - verify docs; `domain/portals/_entries/portal_m130_pago_fraccionado_ed.py`.
+- [x] `S840` - verify docs; `domain/portals/_entries/portal_m131_pago_fraccionado_eo.py`.
+- [x] `S841` - verify docs; `domain/portals/_entries/portal_m180_resumen_arrendamientos.py`.
+- [x] `S842` - verify docs; `domain/portals/_entries/portal_m190_resumen_trabajo.py`.
+- [x] `S843` - verify docs; `domain/portals/_entries/portal_m193_resumen_capital.py`.
+- [x] `S844` - verify docs; `domain/portals/_entries/portal_m200_sociedades_anual.py`.
+- [x] `S845` - verify docs; `domain/portals/_entries/portal_m202_sociedades_fraccionado.py`.
+- [x] `S846` - verify docs; `domain/portals/_entries/portal_m232_vinculadas.py`.
+- [x] `S847` - verify docs; `domain/portals/_entries/portal_m303_iva_autoliquidacion.py`.
+- [x] `S848` - verify docs; `domain/portals/_entries/portal_m347_operaciones_terceros.py`.
+- [x] `S849` - verify docs; `domain/portals/_entries/portal_m349_intracomunitarias.py`.
+- [x] `S850` - verify docs; `domain/portals/_entries/portal_m369_oss_ioss.py`.
+- [x] `S851` - verify docs; `domain/portals/_entries/portal_m390_resumen_iva.py`.
+- [x] `S852` - verify docs; `domain/portals/_entries/portal_m720_bienes_extranjero.py`.
+- [x] `S853` - verify docs; `domain/portals/_entries/portal_m840_iae.py`.
+- [x] `S854` - verify docs; `domain/portals/_entries/portal_mi_area_personal.py`.
+- [x] `S855` - verify docs; `domain/portals/_entries/portal_mis_datos_censales.py`.
+- [x] `S856` - verify docs; `domain/portals/_entries/portal_mis_documentos_pendientes_firma.py`.
+- [x] `S857` - verify docs; `domain/portals/_entries/portal_mis_expedientes.py`.
+- [x] `S858` - verify docs; `domain/portals/_entries/portal_mis_notificaciones.py`.
+- [x] `S859` - verify docs; `domain/portals/_entries/portal_pago_autoliquidacion_cuenta.py`.
+- [x] `S860` - verify docs; `domain/portals/_entries/portal_pago_autoliquidacion_tarjeta_bizum.py`.
+- [x] `S861` - verify docs; `domain/portals/_entries/portal_pago_liquidaciones_deudas.py`.
+- [x] `S862` - verify docs; `domain/portals/_entries/portal_pre303_ayuda.py`.
+- [x] `S863` - verify docs; `domain/portals/_entries/portal_presentar_consultar_index.py`.
+- [x] `S864` - verify docs; `domain/portals/_entries/portal_renta_web_borrador.py`.
+- [x] `S865` - verify docs; `domain/portals/_entries/portal_sede_root.py`.
+- [x] `S866` - verify docs; `domain/portals/_errors.py`.
+- [x] `S867` - verify docs; `domain/portals/_hosts.py`.
+- [x] `S868` - verify docs; `domain/portals/_metadata.py`.
+- [x] `S869` - verify docs; `domain/portals/_registry.py`.
+- [x] `S870` - verify docs; `domain/renta/__init__.py`.
+- [x] `S871` - verify docs; `domain/renta/_errors.py`.
+- [x] `S872` - verify docs; `domain/renta/_first_slice_routing.py`.
+- [x] `S873` - verify docs; `domain/renta/_first_slice_routing_integrity.py`.
+- [x] `S874` - verify docs; `domain/renta/_ledger_expenses.py`.
+- [x] `S875` - verify docs; `domain/renta/_maritime_exemption.py`.
+- [x] `S876` - verify docs; `domain/renta/_substrate.py`.
+- [x] `S877` - verify docs; `domain/submission/__init__.py`.
+- [x] `S878` - verify docs; `domain/submission/_engine.py`.
+- [x] `S879` - verify docs; `domain/submission/_errors.py`.
+- [x] `S880` - verify docs; `domain/submission/_models.py`.
+- [x] `S881` - verify docs; `domain/submission/_preflight.py`.
+- [x] `S882` - verify docs; `domain/submission/_protocols.py`.
+- [x] `S883` - verify docs; `domain/submission/_repository.py`.
+- [x] `S884` - verify docs; `domain/transactions/__init__.py`.
+- [x] `S885` - verify docs; `domain/transactions/_classification_rule.py`.
+- [x] `S886` - verify docs; `domain/transactions/_enums.py`.
+- [x] `S887` - verify docs; `domain/transactions/_errors.py`.
+- [x] `S888` - verify docs; `domain/transactions/_ids.py`.
+- [x] `S889` - verify docs; `domain/transactions/_llm.py`.
+- [x] `S890` - verify docs; `domain/transactions/_model_tier.py`.
+- [x] `S891` - verify docs; `domain/transactions/_models.py`.
+- [x] `S892` - verify docs; `domain/transactions/_protocols.py`.
+- [x] `S893` - verify docs; `domain/transactions/_raw_transaction.py`.
+- [x] `S894` - verify docs; `domain/transactions/_repository.py`.
+- [x] `S895` - verify docs; `domain/transactions/_service.py`.
+- [x] `S896` - verify docs; `domain/usage_ratios/__init__.py`.
+- [x] `S897` - verify docs; `domain/usage_ratios/_errors.py`.
+- [x] `S898` - verify docs; `domain/usage_ratios/_model.py`.
+- [x] `S899` - verify docs; `domain/usage_ratios/_service.py`.
+- [x] `S900` - verify docs; `domain/user_profile/__init__.py`.
+- [x] `S901` - verify docs; `domain/user_profile/_errors.py`.
+- [x] `S902` - verify docs; `domain/user_profile/_loader.py`.
+- [x] `S903` - verify docs; `domain/user_profile/_portable_export.py`.
+- [x] `S904` - verify docs; `domain/user_profile/_registry_contract.py`.
+- [x] `S905` - verify docs; `domain/user_profile/_schema.py`.
+- [x] `S906` - verify docs; `domain/user_profile/_values.py`.
+- [x] `S907` - verify docs; `entrypoints/__init__.py`.
+- [x] `S908` - verify docs; `entrypoints/cli/__init__.py`.
+- [x] `S909` - verify docs; `entrypoints/cli/_app_live.py`.
+- [x] `S910` - verify docs; `entrypoints/cli/_app_live_borrador_cli.py`.
+- [x] `S911` - verify docs; `entrypoints/cli/_app_live_expedientes_cli.py`.
+- [x] `S912` - verify docs; `entrypoints/cli/_app_live_notifications_cli.py`.
+- [x] `S913` - verify docs; `entrypoints/cli/_app_live_payloads.py`.
+- [x] `S914` - verify docs; `entrypoints/cli/_app_live_portals_cli.py`.
+- [x] `S915` - verify docs; `entrypoints/cli/_app_live_verify_cli.py`.
+- [x] `S916` - verify docs; `entrypoints/cli/_bootstrap_exempt.py`.
+- [x] `S917` - verify docs; `entrypoints/cli/_command_suggestions.py`.
+- [x] `S918` - verify docs; `entrypoints/cli/_common.py`.
+- [x] `S919` - verify docs; `entrypoints/cli/_config/__init__.py`.
+- [x] `S920` - verify docs; `entrypoints/cli/_config/_apoderado.py`.
+- [x] `S921` - verify docs; `entrypoints/cli/_config/_auth.py`.
+- [x] `S922` - verify docs; `entrypoints/cli/_config/_auth_diagnostics.py`.
+- [x] `S923` - verify docs; `entrypoints/cli/_config/_bucket_history.py`.
+- [x] `S924` - verify docs; `entrypoints/cli/_config/_custody.py`.
+- [x] `S925` - verify docs; `entrypoints/cli/_config/_custody_secret.py`.
+- [x] `S926` - verify docs; `entrypoints/cli/_config/_errors.py`.
+- [x] `S927` - verify docs; `entrypoints/cli/_config/_google.py`.
+- [x] `S928` - verify docs; `entrypoints/cli/_config/_google_errors.py`.
+- [x] `S929` - verify docs; `entrypoints/cli/_config/_google_folder.py`.
+- [x] `S930` - verify docs; `entrypoints/cli/_config/_google_payloads.py`.
+- [x] `S931` - verify docs; `entrypoints/cli/_config/_google_sync_calc.py`.
+- [x] `S932` - verify docs; `entrypoints/cli/_config/_profile_bundle.py`.
+- [x] `S933` - verify docs; `entrypoints/cli/_config/_profile_censo.py`.
+- [x] `S934` - verify docs; `entrypoints/cli/_config/_profile_censo_payloads.py`.
+- [x] `S935` - verify docs; `entrypoints/cli/_config/_repair_cli.py`.
+- [x] `S936` - verify docs; `entrypoints/cli/_config/_repair_profile.py`.
+- [x] `S937` - verify docs; `entrypoints/cli/_config_payloads.py`.
+- [x] `S938` - verify docs; `entrypoints/cli/_errors.py`.
+- [x] `S939` - verify docs; `entrypoints/cli/_exit_codes.py`.
+- [x] `S940` - verify docs; `entrypoints/cli/_ledger.py`.
+- [x] `S941` - verify docs; `entrypoints/cli/_ledger_business_invoice_cli.py`.
+- [x] `S942` - verify docs; `entrypoints/cli/_ledger_classify_cli.py`.
+- [x] `S943` - verify docs; `entrypoints/cli/_ledger_evidence_cli.py`.
+- [x] `S944` - verify docs; `entrypoints/cli/_ledger_import_cli.py`.
+- [x] `S945` - verify docs; `entrypoints/cli/_ledger_inventory_cli.py`.
+- [x] `S946` - verify docs; `entrypoints/cli/_ledger_lifecycle_cli.py`.
+- [x] `S947` - verify docs; `entrypoints/cli/_ledger_list.py`.
+- [x] `S948` - verify docs; `entrypoints/cli/_ledger_payloads.py`.
+- [x] `S949` - verify docs; `entrypoints/cli/_ledger_ratios_cli.py`.
+- [x] `S950` - verify docs; `entrypoints/cli/_ledger_read_cli.py`.
+- [x] `S951` - verify docs; `entrypoints/cli/_ledger_review_cli.py`.
+- [x] `S952` - verify docs; `entrypoints/cli/_ledger_rules_cli.py`.
+- [x] `S953` - verify docs; `entrypoints/cli/_log_levels.py`.
+- [x] `S954` - verify docs; `entrypoints/cli/_modelo.py`.
+- [x] `S955` - verify docs; `entrypoints/cli/_modelo_audit_cli.py`.
+- [x] `S956` - verify docs; `entrypoints/cli/_modelo_cli_support.py`.
+- [x] `S957` - verify docs; `entrypoints/cli/_modelo_discovery_cli.py`.
+- [x] `S958` - verify docs; `entrypoints/cli/_modelo_export_cli.py`.
+- [x] `S959` - verify docs; `entrypoints/cli/_modelo_iva_wallet_cli.py`.
+- [x] `S960` - verify docs; `entrypoints/cli/_modelo_m036_cli.py`.
+- [x] `S961` - verify docs; `entrypoints/cli/_modelo_maritime_cli.py`.
+- [x] `S962` - verify docs; `entrypoints/cli/_modelo_payloads.py`.
+- [x] `S963` - verify docs; `entrypoints/cli/_modelo_projection_cli.py`.
+- [x] `S964` - verify docs; `entrypoints/cli/_modelo_readiness_cli.py`.
+- [x] `S965` - verify docs; `entrypoints/cli/_modelo_reconcile_cli.py`.
+- [x] `S966` - verify docs; `entrypoints/cli/_modelo_records_cli.py`.
+- [x] `S967` - verify docs; `entrypoints/cli/_modelo_rendering.py`.
+- [x] `S968` - verify docs; `entrypoints/cli/_modelo_work.py`.
+- [x] `S969` - verify docs; `entrypoints/cli/_modelo_work_calculate_cli.py`.
+- [x] `S970` - verify docs; `entrypoints/cli/_modelo_work_lifecycle_cli.py`.
+- [x] `S971` - verify docs; `entrypoints/cli/_modelo_work_revision_cli.py`.
+- [x] `S972` - verify docs; `entrypoints/cli/_modelo_work_runs_cli.py`.
+- [x] `S973` - verify docs; `entrypoints/cli/_modelo_work_verification_cli.py`.
+- [x] `S974` - verify docs; `entrypoints/cli/_overview.py`.
+- [x] `S975` - verify docs; `entrypoints/cli/_overview_payloads.py`.
+- [x] `S976` - verify docs; `entrypoints/cli/_overview_rendering.py`.
+- [x] `S977` - verify docs; `entrypoints/cli/_registry_corpus.py`.
+- [x] `S978` - verify docs; `entrypoints/cli/_registry_corpus_payloads.py`.
+- [x] `S979` - verify docs; `entrypoints/cli/_registry_payloads.py`.
+- [x] `S980` - verify docs; `entrypoints/cli/_review.py`.
+- [x] `S981` - verify docs; `entrypoints/cli/_review_payloads.py`.
+- [x] `S982` - verify docs; `entrypoints/cli/_root_landing.py`.
+- [x] `S983` - verify docs; `entrypoints/cli/_root_payloads.py`.
+- [x] `S984` - verify docs; `entrypoints/cli/_schemas.py`.
+- [x] `S985` - verify docs; `entrypoints/cli/_stdio.py`.
+- [x] `S986` - verify docs; `entrypoints/cli/_tty.py`.
+- [x] `S987` - verify docs; `entrypoints/cli/conftest.py`.
+- [x] `S988` - verify docs; `entrypoints/cli/registry.py`.
+- [x] `S989` - verify docs; `locales/__init__.py`.
+- [x] `S990` - verify docs; `locales/__main__.py`.
+- [x] `S991` - verify docs; `locales/_ast_scanner.py`.
+- [x] `S992` - verify docs; `locales/_fstring_registry.py`.
+- [x] `S993` - verify docs; `locales/cli.py`.
+- [x] `S994` - verify docs; `locales/manager.py`.
 ## Description
 
 ## Steps

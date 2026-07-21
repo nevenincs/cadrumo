@@ -1,9 +1,8 @@
-r"""Cross-platform best-effort file-permission hardening for auth state.
+r"""Cross-platform best-effort file-permission hardening for sensitive files.
 
-Both the FNMT-certificate-backed authenticator and the Cl@ve Móvil
-provider persist session-state JSON containing bearer-equivalent
-material (storage-state cookies, OAuth tokens, refresh tokens). The
-files must be restricted to the operator's user account.
+App-owned sensitive files such as locally generated corpus-signing keys must be
+restricted to the operator's user account. Browser session state is persisted
+through secure objects and does not use this plaintext-file helper.
 
 POSIX: ``chmod 0o600`` is sufficient. Windows: ``icacls.exe
 /inheritance:r /grant:r <user>:(F)`` strips inherited ACLs and grants
@@ -11,31 +10,17 @@ full control to the operator only. The ``icacls`` call is best-effort
 and tries both ``DOMAIN\\user`` and ``user`` candidate names so it works
 on standalone machines and domain-joined hosts.
 
-The helper is shared between
-:mod:`~adapters.outbound.aeat.auth._authenticator` and
-:mod:`~adapters.outbound.aeat.auth._clave_movil` so the Windows-ACL
-discipline cannot diverge between the two session writers.
-
-This module is a compatibility/public hardening primitive for plaintext files;
-the active AEAT browser-session persistence backend stores session state through
-secure objects. The Windows branch reads ``SYSTEMROOT`` and ``USERDOMAIN`` as OS
-ambient context only. It does not read AEAT-prefixed configuration or make
-permission tightening an authorization decision.
+The Windows branch reads ``SYSTEMROOT`` and ``USERDOMAIN`` as operating-system
+ambient context only. It does not read Cadrumo configuration or make permission
+tightening an authorization decision.
 
 The public :func:`restrict_file_permissions` entry point accepts a
 :class:`~pathlib.Path` target and deliberately returns ``None`` even when the
 best-effort hardening step cannot be applied.
 
 See Also:
-    :func:`~core.file_permissions.restrict_file_permissions`
-        Public entry point used by legacy/plaintext session writers.
-    :mod:`~adapters.outbound.aeat.auth._authenticator`
-        FNMT-backed browser-session writer that shares this hardening helper.
-    :mod:`~adapters.outbound.aeat.auth._clave_movil`
-        Cl@ve Móvil provider whose active session persistence now uses secure
-        objects instead of plaintext storage-state files.
-    ``2026-06-05-secure-storage-production-hardening-w12-p26-s297-review-audit``
-        Review that fixed silent POSIX failure swallowing and bounded ACL calls.
+    :mod:`~core.corpus_manifest._bundle_signing`
+        Corpus-signing key writer that applies this hardening helper.
 """
 
 from __future__ import annotations

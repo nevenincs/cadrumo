@@ -15,19 +15,19 @@ session is diagnosable without leaving the host:
 Nothing here performs a network call or a live AEAT read: the LLM run records
 are read from encrypted local secure-object storage and the auth probe reads
 only the locally persisted session token's metadata. This backs the
-``aeat app diagnostics run-health`` operator surface (GitHub issue #407).
+``aeat app diagnostics run-health`` operator surface.
 
 :func:`list_recent_runs` projects the same recorded :class:`LLMRunRecord` rows
 individually (most-recent-first, optionally limited) rather than aggregated
-per-provider, backing the sibling ``aeat app diagnostics runs`` listing verb
-(also GitHub issue #407). It reuses
+per-provider, backing the sibling ``aeat app diagnostics runs`` listing verb.
+It reuses
 :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 directly -- there is no parallel capture or storage path here.
 
 :func:`build_latency_report` and :func:`build_error_breakdown` project the
 *same* recorded rows into a percentile-latency view and a failed-run
 error-kind breakdown, backing the ``aeat app diagnostics latency`` and
-``aeat app diagnostics errors`` verbs (also GitHub issue #407). Neither
+``aeat app diagnostics errors`` verbs. Neither
 introduces a new capture or storage path -- both read
 :meth:`~adapters.outbound.llm.LLMRunTelemetryRecorder.load_records`
 exactly as ``run-health`` and ``runs`` do, honouring
@@ -35,7 +35,7 @@ exactly as ``run-health`` and ``runs`` do, honouring
 
 :func:`build_llm_usage_report` projects the same recorded rows into a
 run-count/duration/success-rate summary grouped by provider AND by model,
-backing the ``aeat app diagnostics llm-usage`` verb (also GitHub issue #407).
+backing the ``aeat app diagnostics llm-usage`` verb.
 :class:`~adapters.outbound.llm.LLMRunRecord` carries only timing and
 outcome metadata -- no token counts are recorded on this store -- so the
 usage summary reports run counts, durations, and success rate rather than
@@ -69,7 +69,7 @@ from decimal import Decimal
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-from .auth import AuthTestResult, test_operator_auth
+from .auth import test_operator_auth
 
 __all__ = [
     "ErrorKindCount",
@@ -153,7 +153,6 @@ def build_run_health_report(
     until: date | None = None,
     provider: str | None = None,
     run_telemetry_recorder: LLMRunTelemetryRecorder | None = None,
-    auth_probe: AuthTestResult | None = None,
 ) -> RunHealthReport:
     """Aggregate local LLM run telemetry and the auth-session probe into one report.
 
@@ -164,16 +163,10 @@ def build_run_health_report(
             ``"llm:claude:sonnet"``, ``"claude"``); scopes ONLY the LLM
             run-timing section. This is distinct from an AEAT auth provider
             name -- the auth-session probe always auto-resolves its provider
-            from workflow state (see ``auth_probe`` below) and never receives
-            this filter.
+            from workflow state and never receives this filter.
         run_telemetry_recorder: Injected recorder (dependency injection for
             tests); defaults to the active-bucket
             :class:`~adapters.outbound.llm.LLMRunTelemetryRecorder`.
-        auth_probe: Injected :class:`~application.auth.AuthTestResult`
-            (dependency injection for tests); defaults to a fresh call to
-            :func:`~application.auth.test_operator_auth` with no provider
-            override, so it reports whatever AEAT auth provider is configured
-            in workflow state (or "none configured").
 
     Returns:
         The populated :class:`RunHealthReport`.
@@ -184,7 +177,7 @@ def build_run_health_report(
         records = tuple(item for item in records if item.provider == provider)
     llm_providers = _aggregate_runs(records)
 
-    probe = auth_probe if auth_probe is not None else test_operator_auth()
+    probe = test_operator_auth()
 
     return RunHealthReport(
         since=since,

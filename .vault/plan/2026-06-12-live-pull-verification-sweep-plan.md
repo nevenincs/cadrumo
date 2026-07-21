@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#live-pull-verification-sweep'
 date: '2026-06-12'
-modified: '2026-07-10'
+modified: '2026-07-15'
 tier: L4
 related:
   - '[[2026-06-05-live-censo-calendar-reconciliation-plan]]'
@@ -58,9 +58,9 @@ Prove the live authentication substrate can create, persist, resume, and clean u
 
 Exercise each backend facade through the real implementation path, persisting only authorised local evidence and refusing ambiguous or synthetic data.
 
-- [ ] `W02.P04.S10` - Prove censo pull and profile reconciliation fetch authenticated Modelo 036 or censo information and derive taxpayer facts without inventing missing obligations; `src/aeat/application/live/_censo.py src/aeat/application/user_profile/_censo_sync.py src/aeat/adapters/outbound/aeat/sede/_censo_live.py`.
-- [ ] `W02.P04.S11` - Prove filed-declaration list, single pull, bulk pull, and source pull fetch authenticated AEAT register data and persist only stamped official evidence; `src/aeat/application/live/_filed_data.py src/aeat/application/live/_filed_data_capture.py src/aeat/application/live/_filed_observation_persistence.py`.
-- [ ] `W02.P04.S12` - Prove expedientes pull fetches authenticated expediente rows with typed empty, timeout, and portal-drift outcomes; `src/aeat/application/live/_expedientes.py src/aeat/adapters/outbound/aeat/sede`.
+- [x] `W02.P04.S10` - Prove censo pull and profile reconciliation fetch authenticated Modelo 036 or censo information and derive taxpayer facts without inventing missing obligations; `src/aeat/application/live/_censo.py src/aeat/application/user_profile/_censo_sync.py src/aeat/adapters/outbound/aeat/sede/_censo_live.py`.
+- [x] `W02.P04.S11` - Prove filed-declaration list, single pull, bulk pull, and source pull fetch authenticated AEAT register data and persist only stamped official evidence; `src/aeat/application/live/_filed_data.py src/aeat/application/live/_filed_data_capture.py src/aeat/application/live/_filed_observation_persistence.py`.
+- [x] `W02.P04.S12` - Prove expedientes pull fetches authenticated expediente rows with typed empty, timeout, and portal-drift outcomes; `src/aeat/application/live/_expedientes.py src/aeat/adapters/outbound/aeat/sede`.
 - [x] `W02.P04.S13` - Prove notifications pull fetches authenticated notification rows with read-only parsing and no acknowledgement or mutation path; `src/aeat/application/live src/aeat/adapters/outbound/aeat/sede src/aeat/entrypoints/cli/_app_live_notifications_cli.py`.
 - [x] `W02.P04.S14` - Prove justificante pull and reconcile fetch the filed-period receipt, persist the official artefact, and refuse mismatched or unstamped evidence; `src/aeat/application/live/_justificante.py src/aeat/entrypoints/cli/_app_live_justificante_cli.py`.
 - [x] `W02.P04.S15` - Prove IVA wallet and IVA remote acquisition are pull-only captures over filed history and wallet evidence, with no remote-state return or push semantics; `src/aeat/application/live/_iva_remote_state.py src/aeat/application/live/_iva_remote_state_outcomes.py src/aeat/entrypoints/cli/_app_live.py`.
@@ -76,7 +76,7 @@ Every live command must have conformance tests, useful JSON/text output, typed f
 
 - [x] `W03.P05.S17` - Verify the live command tree exposes only allowed pull, list, view, verify, and portal-read commands; `bulk filed and expedientes acquisition must live under `pull` options only, with no submit, push, sync-write, or pull-all aliases; `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests/test_live_read_subgroups.py src/aeat/entrypoints/cli/tests/test_registry_cli.py`.
 - [x] `W03.P05.S18` - Exercise filed CLI commands for list, pull, and pull-sources with JSON and text output, proving backend evidence is required before success and that `pull` is the only acquisition verb (`pull-all` remains absent); `src/aeat/entrypoints/cli/_app_live.py src/aeat/entrypoints/cli/tests`.
-- [ ] `W03.P05.S19` - Exercise censo CLI commands for pull, show, compare, apply, and calendar projection, proving authenticated Modelo 036 facts drive obligations and typed `core.Period` identities connect those obligations to filed/justificante evidence; `src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py src/aeat/entrypoints/cli/_overview.py`.
+- [x] `W03.P05.S19` - Exercise censo CLI commands for pull, show, compare, apply, and calendar projection, proving authenticated Modelo 036 facts drive obligations and typed `core.Period` identities connect those obligations to filed/justificante evidence; `src/aeat/entrypoints/cli/_config/_profile_censo.py src/aeat/entrypoints/cli/tests/test_profile_censo_verbs.py src/aeat/entrypoints/cli/_overview.py`.
 - [x] `W03.P05.S20` - Exercise expedientes CLI commands with authenticated results, typed empty-state output, and no local-only success masquerading as AEAT evidence; `src/aeat/entrypoints/cli/_app_live_expedientes_cli.py src/aeat/entrypoints/cli/tests`.
 - [x] `W03.P05.S21` - Exercise notifications CLI commands with authenticated results and prove no acknowledgement, dismissal, or remote mutation is reachable; `src/aeat/entrypoints/cli/_app_live_notifications_cli.py src/aeat/entrypoints/cli/tests/test_live_notifications_verbs.py`.
 - [x] `W03.P05.S22` - Exercise justificante CLI commands for pull, list, view, and reconcile-from-persisted evidence; `src/aeat/entrypoints/cli/_app_live_justificante_cli.py src/aeat/entrypoints/cli/tests/test_live_justificante_verbs.py`.
@@ -96,8 +96,8 @@ and `aeat app live expedientes pull` only.
 Manual acceptance requires authenticated evidence captured in exec records, with secret handling and redaction explicit enough for review.
 
 - [x] `W03.P06.S25` - Author the authenticated live exercise runbook as an exec template covering operator auth prompts, redaction, command order, expected evidence, and blocker recording; `.vault/exec/2026-06-12-live-pull-verification-sweep`.
-- [ ] `W03.P06.S26` - Run the manual authenticated sweep with the operator present and create one exec record per completed command group; `.vault/exec/2026-06-12-live-pull-verification-sweep`.
-- [ ] `W03.P06.S27` - Project live-backed censo, filed, expedientes, notifications, justificante, and IVA evidence into overview or registry views and verify the user-visible calendar distinguishes local ready-to-file calculations from AEAT-submitted filings with justificante checks; `src/aeat/application/overview src/aeat/entrypoints/cli/_overview.py src/aeat/entrypoints/cli/registry.py`.
+- [x] `W03.P06.S26` - Run the manual authenticated sweep with the operator present and create one exec record per completed command group; `.vault/exec/2026-06-12-live-pull-verification-sweep`.
+- [x] `W03.P06.S27` - Project live-backed censo, filed, expedientes, notifications, justificante, and IVA evidence into overview or registry views and verify the user-visible calendar distinguishes local ready-to-file calculations from AEAT-submitted filings with justificante checks; `src/aeat/application/overview src/aeat/entrypoints/cli/_overview.py src/aeat/entrypoints/cli/registry.py`.
 
 ## Wave `W04` - green gates and closeout
 
@@ -107,7 +107,7 @@ Close only after live lanes, manual evidence, local regression gates, code revie
 
 Acceptance requires opted-in live tests plus focused offline tests over every touched surface, without weakening skips or expectations to get green.
 
-- [ ] `W04.P07.S28` - Run the curated AEAT live pytest lane under explicit opt-in and record pass, skip, fail, and external-auth blocker counts without treating skips as green acceptance; `src/aeat/adapters/outbound/aeat src/aeat/application/live src/aeat/entrypoints/cli/tests .vault/exec/2026-06-12-live-pull-verification-sweep`.
+- [x] `W04.P07.S28` - Run the curated AEAT live pytest lane under explicit opt-in and record pass, skip, fail, and external-auth blocker counts without treating skips as green acceptance; `src/aeat/adapters/outbound/aeat src/aeat/application/live src/aeat/entrypoints/cli/tests .vault/exec/2026-06-12-live-pull-verification-sweep`.
 - [x] `W04.P07.S29` - Run focused unit and integration tests for live backends, CLI payloads, overview projection, registry filed-state verification, and access gates; `src/aeat/application/live src/aeat/entrypoints/cli/tests src/aeat/application/overview src/aeat/domain/calculations/registry src/aeat/core/access_gate`.
 - [x] `W04.P07.S30` - Run lint, typing, locale parity, command conformance, and docs/API scaffold checks for every touched live surface; `src/aeat docs dev/docs src/aeat/locales`.
 

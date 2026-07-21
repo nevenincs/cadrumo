@@ -18,7 +18,9 @@ from __future__ import annotations
 
 import atexit
 import os
+import threading
 import time
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -35,6 +37,19 @@ if TYPE_CHECKING:
 _log = get_logger(__name__)
 _LOCKFILE_MODE = 0o600
 _LOCKFILE_VALIDATION_SURFACE = "bucket_lockfile"
+
+
+@dataclass(slots=True)
+class _LocalLockOwnership:
+    """Same-process owner and re-entry depth for one bucket lock."""
+
+    pid: int
+    thread_id: int
+    depth: int
+
+
+_LOCAL_LOCKS: dict[Path, _LocalLockOwnership] = {}
+_LOCAL_LOCKS_CONDITION = threading.Condition()
 
 
 class _PidReadState(Enum):
@@ -233,29 +248,101 @@ def acquire_lock(paths: BucketPaths, *, wait_seconds: float = 0.0) -> None:
             the wait window expires.
     """
     target = lock_path(paths)
-    try:
-        paths.bucket_dir.mkdir(parents=True, exist_ok=True)
-    except FileExistsError as exc:
+    ownership_key = target.expanduser().resolve(strict=False)
+    if not paths.bucket_dir.is_dir():
+        bucket_dir_present = os.path.lexists(paths.bucket_dir)
+        if bucket_dir_present:
+            try:
+                paths.bucket_dir.mkdir(parents=True, exist_ok=True)
+            except FileExistsError as exc:
+                raise BucketValidationError(
+                    "bucket lock directory path is not a directory",
+                    context={
+                        "reason": "bucket_dir_not_directory",
+                        "surface": _LOCKFILE_VALIDATION_SURFACE,
+                    },
+                ) from exc
         raise BucketValidationError(
-            "bucket lock directory path is not a directory",
+            "bucket lock requires an existing bucket directory",
             context={
-                "reason": "bucket_dir_not_directory",
+                "reason": "bucket_dir_missing",
                 "surface": _LOCKFILE_VALIDATION_SURFACE,
             },
-        ) from exc
+        )
     pid = os.getpid()
-
     deadline = time.monotonic() + max(wait_seconds, 0.0)
+    thread_id = threading.get_ident()
+
     while True:
-        _reclaim_if_stale(target)
-        if _try_create_lock(target, pid):
-            _ATEXIT_REGISTRY.add(target)
-            return
-        if time.monotonic() >= deadline:
-            pid_read = _read_pid(target)
-            holding_pid = _holding_pid_for_error(pid_read)
-            raise BucketBusyError(bucket_id=paths.bucket_id, holding_pid=holding_pid)
-        time.sleep(_poll_interval_seconds())
+        with _LOCAL_LOCKS_CONDITION:
+            ownership = _LOCAL_LOCKS.get(ownership_key)
+            if ownership is not None and ownership.pid != pid:
+                del _LOCAL_LOCKS[ownership_key]
+                ownership = None
+                _LOCAL_LOCKS_CONDITION.notify_all()
+            if ownership is None:
+                _LOCAL_LOCKS[ownership_key] = _LocalLockOwnership(
+                    pid=pid,
+                    thread_id=thread_id,
+                    depth=0,
+                )
+                break
+            if ownership.thread_id == thread_id:
+                if ownership.depth == 0:
+                    raise RuntimeError(
+                        "bucket lock cannot re-enter while initial acquisition is incomplete",
+                    )
+                ownership.depth += 1
+                return
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise BucketBusyError(
+                    bucket_id=paths.bucket_id,
+                    holding_pid=pid,
+                )
+            _LOCAL_LOCKS_CONDITION.wait(
+                timeout=min(_poll_interval_seconds(), remaining),
+            )
+
+    try:
+        while True:
+            _reclaim_if_stale(target)
+            try:
+                created = _try_create_lock(target, pid)
+            except FileNotFoundError as exc:
+                raise BucketValidationError(
+                    "bucket directory disappeared during lock acquisition",
+                    context={
+                        "reason": "bucket_dir_disappeared",
+                        "surface": _LOCKFILE_VALIDATION_SURFACE,
+                    },
+                ) from exc
+            if created:
+                with _LOCAL_LOCKS_CONDITION:
+                    ownership = _LOCAL_LOCKS[ownership_key]
+                    ownership.depth = 1
+                _ATEXIT_REGISTRY.add(ownership_key)
+                return
+            if time.monotonic() >= deadline:
+                pid_read = _read_pid(target)
+                holding_pid = _holding_pid_for_error(pid_read)
+                raise BucketBusyError(
+                    bucket_id=paths.bucket_id,
+                    holding_pid=holding_pid,
+                )
+            time.sleep(_poll_interval_seconds())
+    except BaseException:
+        with _LOCAL_LOCKS_CONDITION:
+            ownership = _LOCAL_LOCKS.get(ownership_key)
+            if (
+                ownership is not None
+                and ownership.pid == pid
+                and ownership.thread_id == thread_id
+                and ownership.depth == 0
+            ):
+                del _LOCAL_LOCKS[ownership_key]
+                _LOCAL_LOCKS_CONDITION.notify_all()
+        raise
 
 
 def release_lock(paths: BucketPaths) -> None:
@@ -266,21 +353,40 @@ def release_lock(paths: BucketPaths) -> None:
     another process's lock.
     """
     target = lock_path(paths)
+    ownership_key = target.expanduser().resolve(strict=False)
+    current_pid = os.getpid()
+    thread_id = threading.get_ident()
+    with _LOCAL_LOCKS_CONDITION:
+        ownership = _LOCAL_LOCKS.get(ownership_key)
+        if ownership is not None and ownership.pid != current_pid:
+            del _LOCAL_LOCKS[ownership_key]
+            ownership = None
+            _LOCAL_LOCKS_CONDITION.notify_all()
+        if ownership is not None:
+            if ownership.thread_id != thread_id:
+                return
+            if ownership.depth > 1:
+                ownership.depth -= 1
+                return
+            pid = _read_pid(target)
+            if pid is _PidReadState.UNREADABLE:
+                _log.debug("bucket lockfile release skipped unreadable lockfile")
+                return
+            if pid == current_pid:
+                _unlink_lockfile_if_present(target, reason="release")
+            elif pid is not _PidReadState.MISSING:
+                return
+            del _LOCAL_LOCKS[ownership_key]
+            _ATEXIT_REGISTRY.discard(ownership_key)
+            _LOCAL_LOCKS_CONDITION.notify_all()
+            return
+
     pid = _read_pid(target)
     if pid is _PidReadState.MISSING:
         _log.debug("bucket lockfile release skipped missing lockfile")
-        _ATEXIT_REGISTRY.discard(target)
-        return
-    if pid is _PidReadState.INVALID:
-        _ATEXIT_REGISTRY.discard(target)
-        return
-    if pid is _PidReadState.UNREADABLE:
-        _log.debug("bucket lockfile release skipped unreadable lockfile")
-        return
-    if pid != os.getpid():
-        return
-    _unlink_lockfile_if_present(target, reason="release")
-    _ATEXIT_REGISTRY.discard(target)
+        _ATEXIT_REGISTRY.discard(ownership_key)
+    elif pid is _PidReadState.INVALID:
+        _ATEXIT_REGISTRY.discard(ownership_key)
 
 
 class _AtexitRegistry:

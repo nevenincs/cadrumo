@@ -11,35 +11,30 @@ Cadrumo does not submit Modelo 303 to the Agencia Estatal de Administración
 Tributaria (AEAT). Export creates a local file that you upload through the official
 AEAT channel yourself.
 
-The tool needs a master-key passphrase. It prompts for it interactively, or
-read it from `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
+The tool needs a master-key passphrase and prompts for it.
+
+**Requirement:** a valid taxpayer profile. Create one with
+`aeat config profile create <name>` before you start. [Set up your
+profile](profile-setup.md) walks through it step by step.
 
 ## The complete first-quarter chain
 
-This is the full path from an empty store to an exported `.boe` for a
-first-period filer. Run these commands in order. Each load-bearing detail is
-explained below.
+This is the full path from a classified, evidenced ledger to an exported fichero
+for a first-period filer. The preparation below sets up a self-employed profile,
+classifies the quarter's income and expense rows, and attaches the supplier's
+purchase invoice as encrypted evidence. The sequence then creates the draft,
+calculates it, verifies it, records the local filed marker, and exports the
+fichero-BOE. Each load-bearing detail is explained under the sequence.
 
-```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
-  --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
-  --description "venta" --classification BUSINESS \
-  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
-  --description "compra" --classification BUSINESS --category-id material_oficina \
-  --taxable-base 500 --iva-rate 0.21 --iva-amount 105
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
-aeat app modelo work verify --modelo 303 --year 2026 --period 1T
-aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
+```{cli-sequence} modelo-303-first-quarter
+:verify: Confirm the draft verifies, files locally, and exports a stable fichero.
 ```
 
 Load-bearing details:
 
 - Create the profile with `--quiet` for the non-interactive form. A bare
-  `profile create me` opens an interactive wizard. The profile MUST carry
-  `--name` and `--surnames`, or export later refuses with "requires the
+  `aeat config profile create me` opens an interactive wizard. The profile MUST
+  carry `--name` and `--surnames`, or export later refuses with "requires the
   operator name".
 - `--activity-start-date 2026-01-01` scopes the prior-period dependency out for
   a first period. Without it, verify blocks on the previous quarter.
@@ -48,8 +43,20 @@ Load-bearing details:
   taxable base plus IVA equals the gross to the cent.
 - A deductible-expense row needs `--category-id`. List the valid ids with
   `aeat app ledger categories`. The example uses `material_oficina`.
-- `verify` reports `completeness complete` and `granted true`. `export` writes
-  the `.boe` and reports its path, byte size, and SHA-256 checksum.
+- Calculation charges 210.00 of IVA on the sale (`IVA repercutido`) and deducts
+  105.00 on the purchase (`IVA soportado`), so casilla 71 (Resultado final) is
+  105.00, the IVA due for the quarter. The deductible IVA counts at calculate
+  time; the attached invoice evidence is what lets the row be *filed*, not what
+  changes the figure.
+- Attach the purchase invoice as evidence *before* you verify. Verification
+  finalizes the revision and captures a snapshot over the contributing rows, so
+  the evidence must already be on the expense row. A locked row cannot take a
+  late attachment.
+- `verify` reports `completeness complete` and `granted true`. `work file` then
+  writes the local filed marker, and `export` writes the `.boe` and reports its
+  path, byte size, and SHA-256 checksum. The exported fichero is byte-stable:
+  the same classified, evidenced quarter always produces the same 7365-byte file
+  with the same checksum.
 - Casilla 65 ("% atribuible a la Administración del Estado") resolves to 100
   automatically for a común-territory profile, so casilla 66 and the headline
   casilla 71 (Resultado final) carry the full régimen-general result. This tool
@@ -115,13 +122,8 @@ reverse-charge. Rows that are unclassified or missing required IVA fields can
 block calculation or produce missing binding guidance.
 
 When you add a row by hand, pass the GROSS amount on `--amount` and the IVA
-detail explicitly:
-
-```bash
-aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
-  --description "venta" --classification BUSINESS \
-  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-```
+detail explicitly with `aeat app ledger add`. The complete-chain sequence above
+runs this from the seed ledger.
 
 `--amount` is `--taxable-base` plus `--iva-amount`, and the tool refuses the row
 if they do not match to the cent. A deductible-expense row also needs a
@@ -130,28 +132,20 @@ if they do not match to the cent. A deductible-expense row also needs a
 ## Create the work unit
 
 Create or reuse the saved workspace for the active profile, modelo, filing year,
-period, and registry revision. This needs an active profile; create one first if
-you have none:
-
-```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
-  --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-aeat app modelo work create --modelo 303 --year 2026 --period 1T
-```
+period, and registry revision. This needs an active profile; create one first
+if you have none with `aeat config profile create`, then open the work unit with
+`aeat app modelo work create`. Both run in the complete-chain sequence above.
 
 The command is idempotent for the same visible target. If a work unit already
 exists for the active profile, Modelo 303, year, period, and resolved registry
 revision, Cadrumo returns it instead of creating a duplicate.
 
-Use the same visible target on the later commands:
-
-```bash
-aeat app modelo work status --modelo 303 --year 2026 --period 1T
-```
+Use the same visible target on the later commands, for example `aeat app modelo
+work status`.
 
 For routine work, the visible target (`--modelo`, `--year`, `--period`) is all
 you need. Reference-number workflows are covered in
-[The filing workflow: work units and calculation revisions](filing-spine.md).
+[The filing workflow](filing-spine.md).
 
 ## Check the ledger period
 
@@ -164,9 +158,8 @@ with `--year 2026` is January.
 
 Check that period before calculating:
 
-```bash
-aeat app ledger preflight --year 2026 --period 1T
-aeat app ledger status --year 2026 --period 1T
+```{cli-sequence} modelo-303-ledger-period
+:verify: Confirm the quarter's ledger reads back ready to calculate.
 ```
 
 The row window uses the transaction operation date: `raw.value_date` when
@@ -187,11 +180,8 @@ Cadrumo does not silently choose a quarter from today's date. The work unit's
 
 ## Calculate the draft
 
-Run calculation for the same target:
-
-```bash
-aeat app modelo work calculate --modelo 303 --year 2026 --period 1T
-```
+Run calculation for the same target with `aeat app modelo work calculate`. The
+complete-chain sequence above runs this.
 
 Calculation resolves the registry revision for that work unit, reads the active
 profile's ledger for the target period, resolves profile and
@@ -207,19 +197,17 @@ pointer.
 If the command reports missing bindings or missing casillas, inspect them
 before adding values:
 
-```bash
-aeat app modelo bindings list --modelo 303 --year 2026 --period 1T --missing
-aeat app modelo casillas 303 --period 1T --required
+```{cli-sequence} modelo-303-inspect-boxes
+:verify: Confirm the draft's missing bindings and the modelo's required casillas read back.
 ```
 
 Only provide `--binding`, `--casilla`, `--relation`, or Modelo 303-specific
 flags when the registry/help output identifies the value you are supplying. For
-example, use the IVA compensation wallet commands before relying on a prior
+example, inspect the IVA compensation wallet before relying on a prior
 compensation amount:
 
-```bash
-aeat app modelo iva-wallet balance --as-of-year 2026
-aeat app modelo iva-wallet seed --filing-year 2024 --period 4T --amount 0 --confirm
+```{cli-sequence} modelo-303-wallet
+:verify: Confirm the IVA compensation wallet seeds and reads back its balance.
 ```
 
 Use `--amount 0` only for a true first Modelo 303 period with no previous
@@ -227,16 +215,10 @@ pending IVA compensation.
 
 ## Review the calculated values
 
-List saved revisions:
+List the saved revisions, then show the current revision's persisted values:
 
-```bash
-aeat app modelo work revisions --modelo 303 --year 2026 --period 1T
-```
-
-Show the current revision's persisted values:
-
-```bash
-aeat app modelo work revision --modelo 303 --year 2026 --period 1T
+```{cli-sequence} modelo-303-revision
+:verify: Confirm the saved revisions and the current revision's values read back.
 ```
 
 The revision view exposes the revision id and state, persisted casilla values,
@@ -251,11 +233,8 @@ manual inputs, bindings, offsets, and revision selection, see
 
 ## Verify and export
 
-Verify the selected calculation:
-
-```bash
-aeat app modelo work verify --modelo 303 --year 2026 --period 1T
-```
+Verify the selected calculation with `aeat app modelo work verify`. The
+complete-chain sequence above runs verify, file, and export end to end.
 
 Verification checks the selected draft against the verified-complete contract.
 The report exposes the calculation revision id, completeness status, whether
@@ -268,11 +247,7 @@ revision. That evidence lets later staleness checks detect whether a
 contributing ledger row changed or disappeared. It is not a general lock on the
 whole ledger, and it does not freeze unrelated rows.
 
-Export the verified or filed revision:
-
-```bash
-aeat app modelo export --modelo 303 --year 2026 --period 1T --output ./modelo-303.boe
-```
+Export the verified or filed revision with `aeat app modelo export`.
 
 Export writes a local AEAT-compatible fichero-BOE file and reports the output
 path, size, checksum, and IDs. It does not contact AEAT. For ledger-derived
@@ -280,15 +255,10 @@ revisions, export expects bundled evidence or a resolvable snapshot reference;
 do not treat export as a way to bypass missing evidence.
 
 If you need to mark the verified revision as filed in local history after you
-submit through AEAT, use the filing workflow guide:
-
-```bash
-aeat app modelo work file --modelo 303 --year 2026 --period 1T
-```
-
+submit through AEAT, record the local marker with `aeat app modelo work file`.
 `work file` is an internal local marker, not an AEAT submission.
 
-## Periods, carry-forward, and unclear cases
+## Periods, carry-forward, and special cases
 
 Modelo 303 supports quarterly and monthly period tokens in the registry. The
 profile determines which cadence appears in the filing calendar: ordinary
@@ -323,7 +293,7 @@ filing pass.
 
 ## Next steps
 
-- [The filing workflow: work units and calculation revisions](filing-spine.md)
+- [The filing workflow](filing-spine.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Plan your filing calendar](filing-calendar.md)
 - [Reconcile a filing](reconcile.md)

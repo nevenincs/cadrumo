@@ -192,14 +192,13 @@ def test_config_unlock_is_no_longer_a_command() -> None:
     assert "No such command 'unlock'" in result.output
 
 
-def test_config_switch_reports_manifest_without_profile_record() -> None:
+def test_config_switch_reports_manifest_without_profile_record_through_lifecycle_boundary() -> None:
     stage_bucket_manifest("operator", label="operator")
 
     result = _invoke_config(("switch", "operator"))
 
     assert result.exit_code == 2, result.output
-    assert "readiness\tmissing_profile_record" in result.output
-    assert "profile_record\tmissing" in result.output
+    assert "Profile record was not found in the active bucket" in result.output
     assert "unknown profile" not in result.output.lower()
 
 
@@ -218,7 +217,7 @@ def test_config_profile_create_refuses_manifest_only_profile() -> None:
     stage_bucket_manifest("operator", label="operator")
 
     # Invoke through the root CLI so decorate_typer_app's error boundary is active
-    # and AeatError exceptions are rendered to output rather than propagating raw.
+    # and CadrumoError exceptions are rendered to output rather than propagating raw.
     result = _invoke_profile(
         (
             "create",
@@ -240,24 +239,23 @@ def test_config_profile_create_refuses_manifest_only_profile() -> None:
     assert "already exists" in result.output
 
 
-def test_repair_profile_named_active_clear_active_clears_pointer(tmp_path: Path) -> None:
-    from ....application.user_profile._orchestration import _write_active_profile_pointer
-    from ....core import read_pointer
+def test_repair_profile_named_active_clear_active_clears_pointer(_isolated_backend: Path) -> None:
+    from ....core import BucketPointer, read_pointer, write_pointer
 
     stage_bucket_manifest("operator", label="operator")
-    _write_active_profile_pointer("operator")
+    write_pointer(_isolated_backend, BucketPointer(bucket_id="operator", schema_version=1))
 
     result = _invoke_repair(("profile", "--profile", "operator", "--clear-active", "--yes"))
 
     assert result.exit_code == 0, result.output
     assert "cleared_pointer\tTrue" in result.output
-    assert read_pointer(tmp_path) is None
+    assert read_pointer(_isolated_backend) is None
 
 
 def test_config_profile_create_refuses_existing_profile() -> None:
     seed("operator")
 
-    # Invoke through the root CLI so the error boundary renders AeatError to output.
+    # Invoke through the root CLI so the error boundary renders CadrumoError to output.
     result = _invoke_profile(
         (
             "create",
@@ -297,9 +295,7 @@ def test_config_profile_create_bare_name_refusal_names_both_recovery_paths() -> 
     output = result.output
     # Both concrete recovery paths are named in the message body.
     assert "aeat config profile create NAME" in output
-    advertised_command = "aeat config profile create NAME " + " ".join(
-        _ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS
-    )
+    advertised_command = "aeat config profile create NAME " + " ".join(_ADVERTISED_RESIDENT_IRPF_NATURAL_PERSON_FLAGS)
     assert advertised_command in output
     # No internal tokens leak into the operator-facing refusal.
     assert "flow_id" not in output
@@ -650,13 +646,13 @@ def test_show_and_status_do_not_contradict_on_a_freshly_created_profile() -> Non
     assert "readiness\tready" not in status_result.output
 
 
-def test_config_profile_show_refuses_when_no_active_profile() -> None:
+def test_config_profile_show_refuses_when_no_active_profile(_isolated_backend: Path) -> None:
     # Clear the active-profile precedence chain (env + pointer) so the
     # resolver returns None and the show verb refuses.
-    from ....application.user_profile._orchestration import _clear_active_profile_pointer
+    from ....core import clear_pointer
     from ....core.config import override_settings
 
-    _clear_active_profile_pointer()
+    clear_pointer(_isolated_backend)
     with override_settings(cadrumo_active_profile=None):
         result = _invoke_profile(("show",))
     assert result.exit_code != 0
@@ -753,14 +749,14 @@ def test_config_profile_edit_non_tty_recovery_hint_points_at_edit() -> None:
 # --- Fix 3: degraded profile status exits non-zero ---
 
 
-def test_config_profile_status_exits_nonzero_for_dangling_pointer() -> None:
+def test_config_profile_status_exits_nonzero_for_dangling_pointer(_isolated_backend: Path) -> None:
     """``config profile status`` exits non-zero when the active profile
     has a dangling pointer (registered but no manifest bucket)."""
 
-    from ....application.user_profile._orchestration import _write_active_profile_pointer
+    from ....core import BucketPointer, write_pointer
 
     # Write a pointer to a non-existent bucket so status sees dangling_pointer.
-    _write_active_profile_pointer("phantom")
+    write_pointer(_isolated_backend, BucketPointer(bucket_id="phantom", schema_version=1))
 
     result = _invoke_profile(("status",))
 

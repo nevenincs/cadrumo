@@ -106,35 +106,26 @@ def _hash_tree(
 
 
 def compute_corpus_sha256(
-    vault_dir: Path,
     settings: Settings,
     *,
     env_path: Path | None = None,
 ) -> str:
-    """Compute a deterministic fingerprint of ``.vault/`` plus Settings plus the on-disk ``.env``.
+    """Compute a deterministic fingerprint of the effective configuration.
 
-    The hash folds three inputs so replay's drift gate catches every
-    channel that can change the effective configuration between record
-    and replay:
+    The hash folds the two channels through which the effective
+    configuration can change between record and replay:
 
-    1. The ``.vault/`` spec content — architectural decisions, plans,
-       research, execution records. ``.vault/data/`` is excluded:
-       it hosts the gitignored vaultspec-rag index (Qdrant database
-       files, embeddings cache) which mutates continuously under a
-       live RAG service and is not part of the canonical spec surface
-       a replay needs to gate on.
-    2. ``settings.model_dump_json()`` — the currently-loaded Settings
+    1. ``settings.model_dump_json()`` — the currently-loaded Settings
        snapshot (includes env-var-sourced overrides).
-    3. The raw bytes of ``env/.env`` if present — catches dotfile
+    2. The raw bytes of ``env/.env`` if present — catches dotfile
        edits the operator made after process start that won't be
        reflected in the already-instantiated ``Settings()``.
 
-    Combining (2) + (3) is deliberate: (2) alone misses post-startup
-    ``.env`` edits; (3) alone misses shell-exported env vars and
+    Combining the two is deliberate: (1) alone misses post-startup
+    ``.env`` edits; (2) alone misses shell-exported env vars and
     test-fixture overrides. Together they close the drift hole.
 
     Args:
-        vault_dir: Path to the ``.vault/`` directory.
         settings: Active :class:`Settings` instance to fold into the hash.
         env_path: Path to the ``.env`` dotfile. Defaults to
             ``PROJECT_ROOT/env/.env``; passed explicitly by tests so the
@@ -142,18 +133,14 @@ def compute_corpus_sha256(
             patching the ``PROJECT_ROOT`` module constant.
 
     Returns:
-        SHA-256 hex digest of the vault tree + Settings snapshot +
-        ``.env`` bytes tuple.
+        SHA-256 hex digest of the Settings snapshot + ``.env`` bytes pair.
     """
     from ..config import PROJECT_ROOT
 
-    excluded_vault_subtrees = frozenset({(vault_dir / "data").resolve()})
-    tree_digest = _hash_tree(vault_dir, excluded_dirs=excluded_vault_subtrees)
     settings_blob = settings.model_dump_json().encode("utf-8")
     resolved_env_path = env_path if env_path is not None else PROJECT_ROOT / "env" / ".env"
     env_digest = _file_sha256(resolved_env_path) if resolved_env_path.exists() else sha256_hex(b"")
     h = hashlib.sha256()
-    h.update(tree_digest.encode("ascii"))
     h.update(b"|settings|")
     h.update(sha256_hex(settings_blob).encode("ascii"))
     h.update(b"|env|")
@@ -232,7 +219,7 @@ def read_cert_fingerprint() -> str:
     # bypasses the context-var so a test that overrides the cert path
     # sees the project-default fingerprint instead of its own.
     settings = load_settings()
-    cert_path = settings.aeat_certificate_path
+    cert_path = settings.cadrumo_certificate_path
     if cert_path is None or not cert_path.exists():
         return ""
     return _file_sha256(cert_path)

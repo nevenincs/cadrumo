@@ -18,8 +18,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs12
 from cryptography.x509.oid import NameOID
 
-from ......core.config import CertificateBackend
-from ......core.errors import AeatError
+from ......core.errors import CadrumoError
 from .. import (
     CertificateBundle,
     CertificateHealth,
@@ -95,7 +94,6 @@ def _loaded_cert_for_window(
         path=p12,
         password=SecretStr(_SECRET),
         friendly_name=None,
-        backend=CertificateBackend.PLAYWRIGHT_CONTEXT,
     )
     return load_certificate(bundle)
 
@@ -216,8 +214,8 @@ def test_health_model_is_frozen(tmp_path: Path) -> None:
         result.severity = CertificateHealthSeverity.CRITICAL
 
 
-def test_pre_expiry_error_is_aeat_error() -> None:
-    assert issubclass(CertificatePreExpiryError, AeatError)
+def test_pre_expiry_error_is_cadrumo_error() -> None:
+    assert issubclass(CertificatePreExpiryError, CadrumoError)
 
 
 def test_evaluate_rejects_inverted_thresholds(tmp_path: Path) -> None:

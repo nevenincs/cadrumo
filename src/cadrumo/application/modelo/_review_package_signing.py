@@ -20,7 +20,7 @@ Key custody (``sensitive-financial-data-secure-storage-only`` /
 ``no-legacy-compatibility``): the private key is generated once per profile
 bucket and persisted ONLY as ciphertext through
 :class:`~adapters.persistence.storage.SecureObjectRepository` at
-:attr:`~adapters.persistence.storage.SensitivityClass.SECRET` sensitivity
+:attr:`~adapters.persistence.storage._NAMESPACE.sensitivity` sensitivity
 (:data:`~adapters.persistence.storage.MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE`).
 It is never logged, never written to a plaintext file, and never leaves this
 module as raw bytes except transiently in process memory to sign. The public
@@ -60,10 +60,9 @@ from cryptography.hazmat.primitives.serialization import (
 from pydantic import BaseModel, Field, field_validator
 
 from ...adapters.persistence.storage import MODELO_REVIEW_PACKAGE_SIGNING_KEY_NAMESPACE as _NAMESPACE
-from ...adapters.persistence.storage import SensitivityClass
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.corpus_manifest import CorpusBundleError, CorpusManifestTamperError, verify_corpus_bundle
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.time import now as _utc_now
 from ._review_package import assert_review_package_verifies
@@ -83,7 +82,7 @@ _HEX_PATTERN_64 = r"^[0-9a-f]{64}$"
 _HEX_PATTERN_128 = r"^[0-9a-f]{128}$"
 
 
-class ReviewPackageSigningError(AeatError):
+class ReviewPackageSigningError(CadrumoError):
     """Base error for review-package signing/verification failures."""
 
 
@@ -210,7 +209,7 @@ def ensure_review_package_signing_keypair(
     existing = repository.load(
         _NAMESPACE.namespace,
         object_key,
-        expected_class=SensitivityClass.SECRET,
+        expected_class=_NAMESPACE.sensitivity,
         max_supported_version=_NAMESPACE.schema_version,
     )
     if existing is not None:
@@ -234,7 +233,7 @@ def ensure_review_package_signing_keypair(
     repository.save(
         namespace=_NAMESPACE.namespace,
         object_key=object_key,
-        classification=SensitivityClass.SECRET,
+        classification=_NAMESPACE.sensitivity,
         schema_version=_NAMESPACE.schema_version,
         written_at=keypair.created_at,
         payload=keypair.model_dump_json().encode(UTF_8_ENCODING),
@@ -264,7 +263,7 @@ def load_review_package_signing_keypair(
     record = repository.load(
         _NAMESPACE.namespace,
         object_key,
-        expected_class=SensitivityClass.SECRET,
+        expected_class=_NAMESPACE.sensitivity,
         max_supported_version=_NAMESPACE.schema_version,
     )
     if record is None:

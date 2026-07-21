@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#just-tooling-bootstrap'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-04-just-tooling-bootstrap-S01]]'
   - '[[2026-06-04-just-tooling-bootstrap-S02]]'

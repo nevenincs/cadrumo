@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#aeat-user-docs-hardening'
 date: '2026-06-18'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-16-aeat-user-docs-hardening-plan]]"
 ---

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#binding-resolver-contract-unification'
 date: '2026-06-26'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-26-bindings-architecture-unification-audit]]"
   - "[[2026-06-26-bindings-architecture-unification-research]]"
@@ -12,7 +12,7 @@ related:
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - '[[2026-06-26-binding-resolver-contract-unification-research]]'
 ---
-# `binding-resolver-contract-unification` adr: `resolver-contract unification: one source-resolver port and one result envelope across the calculate mesh` | (**status:** `proposed`)
+# `binding-resolver-contract-unification` adr: `resolver-contract unification: one source-resolver port and one result envelope across the calculate mesh` | (**status:** `accepted`)
 
 > PROPOSED — design-ahead for coordinator review, authored while phase-2.1 code is
 > gated on the #6/#28 peer landing. NOT self-accepted and NOT a code-execution
@@ -178,9 +178,10 @@ mirroring phase 2.1's enum↔mesh gate.
 ## Consequences
 
 Gains: one resolver contract and one envelope a reader learns once; profile/borrador
-stop the B→A→B round-trip; counterpart/720 join the live calculate path (closing a
-real orphan); retenciones has one path; the four-place enrollment scatter collapses to
-one registry with a parity gate. Together with phase 2.1 this delivers the "cohesive,
+stop the B→A→B round-trip; counterpart/720 remain explicitly scoped out for a
+grounded follow-up instead of being forced into a parallel path; retenciones has one
+path; the four-place enrollment scatter collapses to one registry with a parity gate.
+Together with phase 2.1 this delivers the "cohesive,
 centralised" resolver half of the bindings engine.
 
 Difficulties, framed honestly: the C-service fold is the highest-risk step (live-path
@@ -188,8 +189,9 @@ resolvers for counterpart/720/retenciones must be behaviour-preserving, proven a
 the existing suites); folding profile/borrador must preserve the caller-override
 precedence exactly; and retiring the vestigial envelopes requires reconciling their
 few real consumers first. Execution depends on phase 2.1 and is gated/sequenced behind
-it. This ADR is design-ahead and proposed — it asserts no completed change and
-requests no acceptance ahead of coordinator review.
+it. Execution accepted the unified resolver contract while explicitly scoping
+counterpart/720 out to grounded follow-up work; this ADR records that implemented
+boundary.
 
 Out of scope (later phases): the relation-vs-previous_filing value-layer fold-in dedup
 and the one compensación-carry mechanism (phase 2.3); the naming homonyms and CLI verb

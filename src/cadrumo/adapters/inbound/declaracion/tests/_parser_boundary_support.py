@@ -12,7 +12,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
 from .....core import Period
-from .....core.errors import AeatError
+from .....core.errors import CadrumoError
 from .....core.resources import resources
 from .....domain.calculations.registry import CasillaId, validated_casilla_id
 from .....domain.justificante import PdfModeloImportError
@@ -53,7 +53,7 @@ __all__ = [
     "_REAL_DECLARATION_COPY",
     "_REAL_MODELO_190_DECLARATION_COPY",
     "_REAL_MODELO_303_DECLARATION_COPY",
-    "AeatError",
+    "CadrumoError",
     "CasillaId",
     "Decimal",
     "DeclaracionParseError",

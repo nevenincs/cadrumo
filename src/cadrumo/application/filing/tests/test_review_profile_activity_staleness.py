@@ -40,12 +40,8 @@ from ....core.config import load_settings
 from ....domain.submission import ModeloDraftStatus
 from ....domain.user_profile import UserProfileFact
 from ....tests.secure_sql import isolated_profile_storage_root
-from ...user_profile import (
-    profile_create_storage_span,
-    profile_storage_session,
-    register_minimal_profile,
-    set_active_field,
-)
+from ....tests.user_profile import register_minimal_profile
+from ...user_profile import profile_create_storage_span, profile_storage_session, set_active_field
 from ...workflow import workflow_state_repository
 from .. import (
     CasillaSchemaProvider,
@@ -57,7 +53,7 @@ from .. import (
     build_runtime_schema_provider,
 )
 from .._review import empty_profile_activity_fingerprint
-from ..testing import ModeloTestProfile
+from ..runtime import ModeloOperatorProfile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -112,7 +108,7 @@ def _ready_draft(schema_provider: CasillaSchemaProvider) -> ModeloDraft:
     return build_draft(
         modelo="130",
         period=_PERIOD,
-        profile=ModeloTestProfile(tax_id=_TAX_ID, display_name="Profile activity staleness test"),
+        profile=ModeloOperatorProfile(tax_id=_TAX_ID, display_name="Profile activity staleness test"),
         inputs={
             "01": Decimal("100"),
             "02": Decimal("25"),

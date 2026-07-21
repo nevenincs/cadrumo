@@ -136,7 +136,7 @@ def _seed_m303_external_baseline(
 ) -> tuple[WorkUnit, CalculationRevision, ModeloRecord]:
     """Seed a CURRENT M303 filing record carrying ``external_evidence``.
 
-    The single casilla populated is casilla 71 (the codified final-result
+    The single casilla populated is casilla 71 (the canonical final-result
     casilla — see :func:`~core.result_disposition_casilla_ids`), so the
     liability-direction guard has a real value to compare.
     """

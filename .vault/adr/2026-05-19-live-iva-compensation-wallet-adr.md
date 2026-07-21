@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-iva-compensation-wallet'
 date: '2026-05-19'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-research]]'
   - '[[2026-05-19-iva-compensation-chain-adr]]'
@@ -112,15 +112,15 @@ and reason.
 
 Map the code changes to existing state boundaries:
 
-- `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py` captures
+- `src/cadrumo/adapters/outbound/aeat/sede/_iva_compensation_wallet.py` captures
   external wallet evidence.
-- `src/aeat/adapters/outbound/aeat/sede/_schema.py` defines wallet evidence and
+- `src/cadrumo/adapters/outbound/aeat/sede/_schema.py` defines wallet evidence and
   rows as strict read-only records.
-- `src/aeat/adapters/outbound/aeat/sede/_observation_store.py` persists raw
+- `src/cadrumo/adapters/outbound/aeat/sede/_observation_store.py` persists raw
   wallet evidence and capture artefacts.
-- `src/aeat/application/calculations/_iva_wallet_reconciliation.py` produces
+- `src/cadrumo/application/calculations/_iva_wallet_reconciliation.py` produces
   reconciliation decisions.
-- `src/aeat/application/calculations/_binding_prefill.py` consumes only the
+- `src/cadrumo/application/calculations/_binding_prefill.py` consumes only the
   selected non-blocking decision for `modelo-303-compensacion-pendiente-anteriores`.
 
 ## Rationale

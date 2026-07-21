@@ -15,13 +15,15 @@ import io
 import logging
 import sys
 from pathlib import Path
-from typing import cast
+from typing import Any, cast, override
 
+import pydantic
 import pytest
 
 from .. import logging as _logging_mod
 from ..config import override_settings
 from ..logging import (
+    LogExtra,
     SecretScrubbingFilter,
     _prepare_log_directory,
     _scrub_value,
@@ -140,7 +142,7 @@ def test_configure_logging_degrades_to_stderr_only_when_log_dir_uncreatable(
 ) -> None:
     """An uncreatable log directory must NOT crash startup with a raw traceback.
 
-    Real-behavior reproduction of Windows PowerShell issue #577: the log
+    Real-behavior reproduction of a Windows PowerShell failure mode: the log
     directory derived from an inaccessible ``CADRUMO_LOCAL_STORAGE_ROOT`` cannot be
     created, and ``configure_logging`` runs at import time — before any CLI
     error boundary. The contract: no exception escapes, logging degrades to
@@ -548,3 +550,62 @@ def test_attach_run_sink_does_not_double_install_scrubbing_filter(tmp_path: Path
     finally:
         root_logger.removeHandler(sink)
         sink.close()
+
+
+# ---------------------------------------------------------------------------
+# contract — LogExtra: typed replacement for the Mapping[str, object] extras boundary
+# ---------------------------------------------------------------------------
+
+
+def test_log_extra_for_logging_materialises_a_plain_dict() -> None:
+    """``for_logging`` returns a plain ``dict`` matching the constructed payload."""
+    extra = LogExtra({"service_name": "per_modelo_aggregation", "observation_count": 3, "cancelled": False})
+
+    materialised = extra.for_logging()
+
+    assert materialised == {"service_name": "per_modelo_aggregation", "observation_count": 3, "cancelled": False}
+    assert isinstance(materialised, dict)
+
+
+def test_log_extra_rejects_a_non_scalar_value() -> None:
+    """A nested mapping is not a loggable scalar; construction must fail loudly."""
+    invalid_nested_value: Any = {"inner": "value"}
+    with pytest.raises(pydantic.ValidationError):
+        LogExtra({"nested": invalid_nested_value})
+
+
+class _RecordCapturingHandler(logging.Handler):
+    """Minimal handler that keeps the raw :class:`logging.LogRecord` instances."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.records: list[logging.LogRecord] = []
+
+    @override
+    def emit(self, record: logging.LogRecord) -> None:
+        self.records.append(record)
+
+
+def test_log_extra_materialised_extra_survives_the_real_logging_pipeline() -> None:
+    """The materialised dict flows through the real stdlib logging pipeline's ``extra=``."""
+    logger = get_logger("aeat-test_logging.log_extra")
+    root_logger = logging.getLogger()
+    previous_root_level = root_logger.level
+    root_logger.setLevel(logging.INFO)
+    handler = _RecordCapturingHandler()
+    handler.setLevel(logging.INFO)
+    root_logger.addHandler(handler)
+    extra = LogExtra({"modelo": "303", "period": "1T", "observation_count": 5})
+    try:
+        logger.info("ran aggregation", extra=extra.for_logging())
+    finally:
+        root_logger.removeHandler(handler)
+        root_logger.setLevel(previous_root_level)
+
+    assert len(handler.records) == 1
+    record = handler.records[0]
+    assert record.getMessage() == "ran aggregation"
+    record_attributes = vars(record)
+    assert record_attributes["modelo"] == "303"
+    assert record_attributes["period"] == "1T"
+    assert record_attributes["observation_count"] == 5

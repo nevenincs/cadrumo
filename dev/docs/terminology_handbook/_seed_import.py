@@ -1,4 +1,4 @@
-"""Tier-A external seed importers for the Terminology Handbook (ADR D9).
+"""Tier-A external seed importers for the Terminology Handbook.
 
 External terminology sources contribute the missing-language translations
 and aliases that hand-curation is slow to produce: a reader's en / ca / hu
@@ -119,7 +119,7 @@ class SeedSource(StrEnum):
 #: refusing it (see :data:`_EUROVOC_LICENCE_CONFIRMED`) until that happens.
 _TIER_A_INGESTIBLE: frozenset[SeedSource] = frozenset({SeedSource.IATE, SeedSource.UBTERM})
 
-#: EuroVoc download-page licence verification flag (ADR D9). Held False until
+#: EuroVoc download-page licence verification flag. Held False until
 #: the operator confirms the Publications Office download-page licence; while
 #: False, EuroVoc is refused by the licence gate. Flipping this to True is a
 #: deliberate, reviewed change paired with the confirmed attribution string.
@@ -219,7 +219,7 @@ def assert_source_ingestible(source: SeedSource) -> None:
         if _EUROVOC_LICENCE_CONFIRMED:
             return
         raise SeedLicenceError(
-            "EuroVoc refused: download-page licence not yet verified (ADR D9). "
+            "EuroVoc refused: download-page licence not yet verified. "
             "Confirm the Publications Office licence and supply the attribution before ingesting.",
         )
     reason = _EXCLUDED_REASON.get(source, "not a Tier-A ingestible source")
@@ -266,8 +266,7 @@ def parse_iate_tbx(
     ``termType`` (fullForm / abbreviation / synonym) and a reliability code.
     An entry is kept only when it has a Spanish term whose reliability is at
     least ``min_reliability`` and (when ``domains`` is given) its subject
-    field is in the allow-set -- the tax / law / finance filter the ADR
-    mandates.
+    field is in the allow-set -- the tax / law / finance domain filter.
 
     The Spanish ``fullForm`` becomes the ``spanish_key`` and a ``PREFERRED``
     Spanish term; other-language full forms become ``PREFERRED`` terms in
@@ -687,7 +686,7 @@ def _commit_seeded_concept(
     concepts_dir: Path,
 ) -> Path:
     # Re-validate the mutated record through the strict schema, then the whole
-    # tree through the ADR-D8 gate inventory; refuse rather than write an
+    # tree through the full gate inventory; refuse rather than write an
     # invalid tree (the curation write-path contract).
     revalidated = _revalidate_record(new_concept)
     by_id = dict(handbook.by_id)

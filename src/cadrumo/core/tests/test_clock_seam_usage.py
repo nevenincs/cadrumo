@@ -1,20 +1,27 @@
-"""CI gate: production code reads the clock through the seam, not a bare ``datetime.now``.
+"""CI gate: production code reads the clock through the seam, not a bare wall-clock call.
 
 Walks every production module under ``src/cadrumo`` (tests excluded) and fails if a
-bare ``datetime.now(...)`` / ``datetime.utcnow(...)`` call appears — the wall-clock
-read that bypasses the deterministic-output seam
+bare ``datetime.now(...)`` / ``datetime.utcnow(...)`` / ``datetime.today(...)`` or
+``date.today(...)`` call appears — the wall-clock read that bypasses the
+deterministic-output seam
 (:func:`~core.time.now` / :func:`~core.time.frozen_clock`). A call site that
 reads the clock directly is invisible to :func:`~core.time.frozen_clock`, so a
 golden capture or replay cannot pin it; routing every read through
-:func:`~core.time.now` keeps the seam the single consulted clock.
+:func:`~core.time.now` (a date is ``now().date()``) keeps the seam the single
+consulted clock. ``date.today()`` is the sharpest instance of this: it reads the
+*local* wall-clock date the frozen-clock seam cannot pin, so a committed docs
+golden that derives a deadline posture from it diverges daily — the defect this
+gate's ``date`` coverage was added to catch.
 
 Detection is by AST, grounded in each module's own imports so an aliased binding is
-caught and an unrelated ``.now()`` on a non-datetime object is not:
+caught and an unrelated ``.now()`` / ``.today()`` on a non-datetime object is not:
 
 * ``from datetime import datetime [as X]`` binds a *class* name; ``X.now(...)`` /
-  ``X.utcnow(...)`` is an offender.
-* ``import datetime [as Y]`` binds a *module* name; ``Y.datetime.now(...)`` is an
+  ``X.utcnow(...)`` / ``X.today(...)`` is an offender.
+* ``from datetime import date [as X]`` binds a *class* name; ``X.today(...)`` is an
   offender.
+* ``import datetime [as Y]`` binds a *module* name; ``Y.datetime.now(...)`` and
+  ``Y.date.today(...)`` are offenders.
 
 The seam implementation itself (``core/time/_clock.py``) is the one production site
 that legitimately calls ``datetime.now(tz=UTC)`` — it is the fallback the seam
@@ -56,7 +63,10 @@ _SKIP_FILES: frozenset[str] = frozenset({"core/time/_clock.py"})
 #: ``now=`` parameter (so tests inject a fixed instant) and reads wall-clock only as
 #: the default; the deterministic seam is deliberately barred on the live path (it
 #: refuses under ``CADRUMO_LIVE_TESTS_ENABLED``), so the fallback is load-bearing, not a
-#: mute button.
+#: mute button. The two regulated ``date.today()`` defaults formerly parked here (the
+#: IVA-rate effective-date and the Beckham six-year-window reference) were resolved by
+#: the 2026-07-14 Madrid-civil-date ruling: both now default to
+#: :func:`cadrumo.core.time.today_madrid`, so the gate ratchets shut on them.
 _ALLOWLIST: dict[str, str] = {
     "application/auth/_acquisition_lock.py": (
         "Injectable live-AEAT site: the auth acquisition-lock staleness check accepts "
@@ -80,48 +90,65 @@ _ALLOWLIST: dict[str, str] = {
     ),
 }
 
-#: Attribute names that read the wall clock off a datetime binding.
-_CLOCK_ATTRS: frozenset[str] = frozenset({"now", "utcnow"})
+#: Attribute names that read the wall clock off a ``datetime`` class binding.
+_DATETIME_CLOCK_ATTRS: frozenset[str] = frozenset({"now", "utcnow", "today"})
+#: Attribute names that read the wall clock off a ``date`` class binding.
+_DATE_CLOCK_ATTRS: frozenset[str] = frozenset({"today"})
 
 
-def _datetime_bindings(tree: ast.Module) -> tuple[set[str], set[str]]:
-    """Return ``(class_names, module_names)`` bound to ``datetime`` in this module.
+def _clock_bindings(tree: ast.Module) -> tuple[set[str], set[str], set[str]]:
+    """Return ``(datetime_classes, date_classes, module_names)`` bound in this module.
 
-    ``class_names`` are names bound by ``from datetime import datetime [as X]``;
+    ``datetime_classes`` are names bound by ``from datetime import datetime [as X]``;
+    ``date_classes`` are names bound by ``from datetime import date [as X]``;
     ``module_names`` are names bound by ``import datetime [as Y]``. Imports are
     collected wherever they appear (module level or function-local), matching the
     module's real binding surface.
     """
-    class_names: set[str] = set()
+    datetime_classes: set[str] = set()
+    date_classes: set[str] = set()
     module_names: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.ImportFrom) and node.module == "datetime":
             for alias in node.names:
                 if alias.name == "datetime":
-                    class_names.add(alias.asname or alias.name)
+                    datetime_classes.add(alias.asname or alias.name)
+                elif alias.name == "date":
+                    date_classes.add(alias.asname or alias.name)
         elif isinstance(node, ast.Import):
             for alias in node.names:
                 if alias.name == "datetime":
                     module_names.add(alias.asname or alias.name)
-    return class_names, module_names
+    return datetime_classes, date_classes, module_names
 
 
-def _is_bare_clock_read(node: ast.Call, class_names: set[str], module_names: set[str]) -> bool:
-    """Return whether ``node`` is ``<datetime>.now(...)`` / ``<datetime>.utcnow(...)``."""
+def _is_bare_clock_read(
+    node: ast.Call,
+    datetime_classes: set[str],
+    date_classes: set[str],
+    module_names: set[str],
+) -> bool:
+    """Return whether ``node`` reads the wall clock off a ``datetime``/``date`` binding.
+
+    Offenders: ``<datetime>.now/utcnow/today(...)``, ``<date>.today(...)``, and the
+    module-qualified ``<mod>.datetime.now/utcnow/today(...)`` / ``<mod>.date.today(...)``.
+    """
     func = node.func
-    if not isinstance(func, ast.Attribute) or func.attr not in _CLOCK_ATTRS:
+    if not isinstance(func, ast.Attribute):
         return False
+    attr = func.attr
     target = func.value
-    # `X.now(...)` where X is the datetime class binding.
-    if isinstance(target, ast.Name) and target.id in class_names:
-        return True
-    # `Y.datetime.now(...)` where Y is the datetime module binding.
-    return (
-        isinstance(target, ast.Attribute)
-        and target.attr == "datetime"
-        and isinstance(target.value, ast.Name)
-        and target.value.id in module_names
-    )
+    # `X.<attr>(...)` where X is a class binding.
+    if isinstance(target, ast.Name):
+        if target.id in datetime_classes and attr in _DATETIME_CLOCK_ATTRS:
+            return True
+        return target.id in date_classes and attr in _DATE_CLOCK_ATTRS
+    # `Y.datetime.<attr>(...)` / `Y.date.today(...)` where Y is the datetime module binding.
+    if isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name) and target.value.id in module_names:
+        if target.attr == "datetime" and attr in _DATETIME_CLOCK_ATTRS:
+            return True
+        return target.attr == "date" and attr in _DATE_CLOCK_ATTRS
+    return False
 
 
 def test_no_bare_wall_clock_reads_in_production(source_tree_ast: Mapping[Path, ast.AST]) -> None:
@@ -139,18 +166,20 @@ def test_no_bare_wall_clock_reads_in_production(source_tree_ast: Mapping[Path, a
         rel = aeat_relative(path)
         if rel in _SKIP_FILES:
             continue
-        class_names, module_names = _datetime_bindings(tree)
-        if not class_names and not module_names:
+        datetime_classes, date_classes, module_names = _clock_bindings(tree)
+        if not (datetime_classes or date_classes or module_names):
             continue
         for node in ast.walk(tree):
-            if not isinstance(node, ast.Call) or not _is_bare_clock_read(node, class_names, module_names):
+            if not isinstance(node, ast.Call) or not _is_bare_clock_read(
+                node, datetime_classes, date_classes, module_names
+            ):
                 continue
             if rel in _ALLOWLIST:
                 used_allowlist.add(rel)
                 continue
             offenders.append(
-                f"src/cadrumo/{rel}:{node.lineno}: bare datetime clock read; "
-                "use cadrumo.core.time.now() so the frozen-clock seam can pin it",
+                f"src/cadrumo/{rel}:{node.lineno}: bare datetime/date clock read; "
+                "use cadrumo.core.time.now() (a date is now().date()) so the frozen-clock seam can pin it",
             )
 
     assert not offenders, (

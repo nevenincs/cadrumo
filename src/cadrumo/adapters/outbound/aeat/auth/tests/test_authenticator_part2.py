@@ -1,178 +1,53 @@
-"""Focused adapter contract tests split from the original monolith (part 2).
+"""Public lifecycle and validation contracts for ``AeatAuthenticator``.
 
-Re-exports the async ``test_*`` functions defined in ``_authenticator_support``
-so pytest actually collects them: ``pyproject.toml`` sets
-``python_files = ["test_*.py"]``, so a function defined only inside
-``_authenticator_support.py`` (which intentionally does not match that glob,
-per the module's own "shared support for split adapter tests" docstring) is
-never collected — the module's own docstring for
-``test_reauthenticate_does_not_deadlock`` and its 12 siblings were silently
-dead before this file existed, per the ``import-single-canonical-source``
-discovery discipline: a function existing is not the same as it running.
-
-Also closes the two remaining genuine test-coverage gaps tracked by
-GitHub issue #590 (deferred from the #193 access-gate cohesion close):
-
-* ``reauthenticate()`` happy path with a fake browser factory.
-* (The third deferred item — a byte-for-byte parity test between
-  ``AeatAccessGate.require_live_write()`` and
-  ``SubmissionEngine._submit_with_transport()`` — is obsolete:
-  ``_submit_with_transport`` no longer exists anywhere in the codebase. See
-  ``src/cadrumo/adapters/outbound/aeat/export/tests/test_engine.py`` for the
-  reframed structural proof.)
+Browser ownership and certificate context construction are exercised through
+real Playwright in the browser factory and certificate suites. Exact protected
+resource acceptance remains the credential-gated live oracle; this module does
+not manufacture browser responses or mutate authenticator lifecycle internals.
 """
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+import asyncio
 
 import pytest
 
+from ......application.auth_credentials import ActiveCertificateCredentials
 from ......core.config import Settings
-from .. import AEAT_SESSION_IDLE_TTL, AeatAuthenticator, BrowserSessionLike
+from .. import AeatAuthenticator
 from . import _authenticator_support as _support
-from ._authenticator_support import (
-    _certificate_session,
-    _HandshakeVerifier,
-    _RecordingBrowserSession,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
-# Re-export so pytest collects these: ``pyproject.toml`` sets
-# ``python_files = ["test_*.py"]``, so a function defined only inside
-# ``_authenticator_support.py`` (which intentionally does not match that
-# glob) is never collected on its own — see the module docstring above.
-test_authenticate_falls_back_after_stale_persisted_session = (
-    _support.test_authenticate_falls_back_after_stale_persisted_session
-)
+
+@pytest.mark.asyncio
+async def test_concurrent_close_calls_complete_through_the_public_lifecycle() -> None:
+    """Concurrent public close calls serialize and remain idempotent."""
+    authenticator = AeatAuthenticator(
+        Settings(),
+        credentials=ActiveCertificateCredentials(
+            certificate_path=None,
+            password=None,
+            friendly_name=None,
+        ),
+    )
+
+    await asyncio.wait_for(
+        asyncio.gather(
+            authenticator.close(),
+            authenticator.close(),
+            authenticator.close(),
+        ),
+        timeout=1.0,
+    )
+    await asyncio.wait_for(authenticator.close(), timeout=1.0)
+
+
+# Re-export network-free public contracts from the shared support module. Tests
+# that fabricated browser responses or mutated private lifecycle state were
+# intentionally retired in favour of real Playwright/process coverage and the
+# external live protected-resource oracle.
 test_authenticator_synchronous_surface = _support.test_authenticator_synchronous_surface
-test_capture_storage_state_writes_storage_and_metadata = _support.test_capture_storage_state_writes_storage_and_metadata
-test_close_is_idempotent = _support.test_close_is_idempotent
-test_close_latch_blocks_concurrent_verify_login = _support.test_close_latch_blocks_concurrent_verify_login
-test_concurrent_close_and_verify_login_race = _support.test_concurrent_close_and_verify_login_race
 test_reauthenticate_does_not_deadlock = _support.test_reauthenticate_does_not_deadlock
-test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts = (
-    _support.test_resume_from_storage_state_invalidates_corrupt_persisted_artifacts
-)
-test_resume_from_storage_state_invalidates_failed_live_probe = (
-    _support.test_resume_from_storage_state_invalidates_failed_live_probe
-)
-test_resume_from_storage_state_reuses_persisted_session_without_handshake = (
-    _support.test_resume_from_storage_state_reuses_persisted_session_without_handshake
-)
-test_run_login_probe_redacts_navigation_exception_text = _support.test_run_login_probe_redacts_navigation_exception_text
-test_verify_login_raises_on_stale_session = _support.test_verify_login_raises_on_stale_session
-test_verify_login_raises_without_context = _support.test_verify_login_raises_without_context
-
-
-@pytest.mark.asyncio
-async def test_reauthenticate_happy_path_with_fake_browser_factory(tmp_path, _settings_factory) -> None:
-    """``reauthenticate()`` closes the old session and produces a genuinely fresh one.
-
-    Uncovered before this test: the existing
-    ``test_reauthenticate_does_not_deadlock`` only proves the method returns in
-    bounded time when no browser factory is injected (the failure path); it
-    never proves ``reauthenticate()`` actually delegates ``close()`` +
-    ``authenticate()`` correctly on a real success. This test injects a real
-    in-process :class:`BrowserSessionLike` factory (``_RecordingBrowserSession``)
-    plus a real :class:`_HandshakeVerifier`, authenticates once, then calls
-    ``reauthenticate()`` and asserts the returned session is a genuinely new
-    :class:`AeatSession` (later ``authenticated_at`` / ``idle_deadline``, an
-    active browser context restored, no active session left dangling from the
-    old one) rather than merely "did not raise".
-
-    ``_RecordingBrowserSession.profile`` is ``None`` (settings-derived storage
-    path fallback), so both the initial ``authenticate()`` and the delegated
-    ``authenticate()`` inside ``reauthenticate()`` resolve to the *same*
-    bucket-scoped storage-state path; ``close()`` never deletes persisted
-    state, so the delegated call legitimately takes the resume branch
-    (``_resume_from_storage_state_locked``) rather than a from-scratch
-    handshake. That is real, correct ``authenticate()`` behaviour (persisted
-    sessions exist precisely so a fresh handshake is not always required) and
-    is itself part of what this test proves: ``reauthenticate()`` composes
-    correctly with whichever branch the delegated ``authenticate()`` takes.
-    """
-    from ._authenticator_support import _build_bundle
-
-    bundle_path = _build_bundle(tmp_path)
-    settings = _settings_factory(bundle_path)
-    verifier = _HandshakeVerifier()
-
-    async def factory(settings: Settings) -> BrowserSessionLike:
-        return _RecordingBrowserSession(cert_ok=True)
-
-    async with AeatAuthenticator(
-        settings,
-        browser_session_factory=factory,
-        handshake_verifier=verifier,
-    ) as auth:
-        first_session = await auth.authenticate()
-        assert auth._active_session == first_session
-        assert verifier.calls == 1
-
-        refreshed_session = await auth.reauthenticate(first_session)
-
-        # A genuinely fresh session was produced, not a copy of the old one.
-        assert refreshed_session != first_session
-        assert refreshed_session.authenticated_at >= first_session.authenticated_at
-        assert refreshed_session.idle_deadline > first_session.idle_deadline
-        assert refreshed_session.identity_nif == first_session.identity_nif
-
-        # The authenticator ends reauthenticate() in a fully re-usable state:
-        # a live active session and context, not the torn-down close() state.
-        assert auth._active_session == refreshed_session
-        assert auth._context is not None
-        assert auth._closing is False
-
-        # The delegated authenticate() call resumed the persisted session
-        # rather than re-running the handshake (see docstring above), so the
-        # verifier count is unchanged from the initial authenticate() call.
-        assert verifier.calls == 1
-
-
-@pytest.mark.asyncio
-async def test_reauthenticate_second_authenticate_failure_raises_session_expired_upstream(
-    tmp_path,
-    _settings_factory,
-) -> None:
-    """A second consecutive authenticate failure inside reauthenticate propagates.
-
-    Companion negative case to the happy path above: per the method's own
-    documented contract ("a second consecutive failure ... MUST raise
-    AeatSessionExpiredError upwards rather than loop"), this proves
-    ``reauthenticate()`` itself does not swallow or retry an ``authenticate()``
-    failure — it lets the underlying error surface. The browser factory here
-    returns a context that fails the certificate-recognition probe, so the
-    delegated ``authenticate()`` call raises.
-    """
-    from .. import AeatLoginAssertionError
-    from ._authenticator_support import _build_bundle
-
-    bundle_path = _build_bundle(tmp_path)
-    settings = _settings_factory(bundle_path)
-    verifier = _HandshakeVerifier()
-
-    async def failing_factory(settings: Settings) -> BrowserSessionLike:
-        return _RecordingBrowserSession(cert_ok=False)
-
-    async with AeatAuthenticator(
-        settings,
-        browser_session_factory=failing_factory,
-        handshake_verifier=verifier,
-    ) as auth:
-        now = datetime.now(UTC)
-        session = _certificate_session(
-            authenticated_at=now,
-            idle_deadline=now + AEAT_SESSION_IDLE_TTL,
-            thumbprint="abc",
-            subject="CN=x",
-        )
-        with pytest.raises(AeatLoginAssertionError, match=r"login assertion|fresh AEAT authentication"):
-            await auth.reauthenticate(session)
-        # close() ran as part of the delegated teardown even though the
-        # subsequent authenticate() failed; the authenticator is left clean,
-        # not half-torn-down.
-        assert auth._active_session is None
-        assert auth._context is None
-        assert auth._closing is False
+test_verify_raises_on_stale_session = _support.test_verify_raises_on_stale_session
+test_verify_raises_without_context = _support.test_verify_raises_without_context

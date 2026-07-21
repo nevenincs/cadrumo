@@ -3,7 +3,7 @@ tags:
   - "#plan"
   - "#category-assignment"
 date: 2026-04-18
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-18-category-assignment-cli-adr]]"
   - "[[2026-04-18-category-assignment-cli-research]]"

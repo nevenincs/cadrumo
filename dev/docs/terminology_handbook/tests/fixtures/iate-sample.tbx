@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   FIXTURE — minimal hand-authored IATE-style TBX sample for the Tier-A seed
-  importer tests (ADR D9). NOT real IATE bulk data: a clearly-labelled
+  importer tests. NOT real IATE bulk data: a clearly-labelled
   structural sample proving the parser reads the termEntry / langSet / tig
   three-tier shape, the reliability filter, the subject-field filter, and the
   termType -> term-status mapping. The real IATE TBX export is placed at an

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-49-2002-art-14.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-49-2002-art-14.html",
   "source_sha256": "e3c914312a01e2e0c2acdec6f22886a9aab182f7d03811b58b3ca2a3cfaca5b7",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

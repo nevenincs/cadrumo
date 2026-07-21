@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...core.resources import resources
 from ...domain.calculations.registry import (
@@ -91,7 +91,7 @@ _M100_PAGOS_FRACCIONADOS_CASILLA: CasillaId = validated_casilla_id(
 )
 
 
-class ModeloProjectionError(AeatError):
+class ModeloProjectionError(CadrumoError):
     """Base class for application-level projection failures."""
 
     def __init__(

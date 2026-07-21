@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class SubmissionError(AeatError):
+class SubmissionError(CadrumoError):
     """Base class for submission-domain failures."""
 
 

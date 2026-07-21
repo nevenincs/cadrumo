@@ -34,7 +34,7 @@ from ....domain.retention import RetentionBlockingRecord, RetentionFloorAssessme
 from ....domain.user_profile import ProfileSchemaDefinition, UserProfileFact
 from ....tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...user_profile import RegisterProfileCommand
-from .. import BucketMaintenanceService, DeleteBucketCommand
+from .. import AssessBucketDeletionCommand, BucketMaintenanceService, DeleteBucketCommand
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -141,6 +141,49 @@ def test_assess_reads_recent_filing_and_blocks(
     assert assessment.blocks_erase is True
     assert len(assessment.retained) == 1
     assert assessment.retained[0].earliest_safe_erase_date == datetime(2028, 7, 1, tzinfo=UTC)
+
+
+def test_public_deletion_assessment_reports_blocker_without_mutating_durable_bucket(
+    runtime: TestRuntimeProfile,
+    registered_profile: None,
+) -> None:
+    """The target-scoped preflight returns fingerprint + retention and leaves durable bytes unchanged."""
+    del registered_profile
+    _persist_filing(runtime.bucket_id, filing_year=2024, filed_at=datetime(2024, 7, 1, tzinfo=UTC))
+    service = BucketMaintenanceService()
+    before = service.assess_deletion(AssessBucketDeletionCommand(bucket_id=runtime.bucket_id))
+
+    observed = service.assess_deletion(AssessBucketDeletionCommand(bucket_id=runtime.bucket_id))
+    after = service.assess_deletion(AssessBucketDeletionCommand(bucket_id=runtime.bucket_id))
+
+    assert observed.exists is True
+    assert observed.label == _LABEL
+    assert observed.fingerprint is not None
+    assert observed.retention is not None
+    assert observed.retention.blocks_erase is True
+    assert observed.fingerprint == before.fingerprint == after.fingerprint
+    assert runtime.paths.bucket_dir.is_dir()
+    assert ModeloRecordCatalogueRepository(bucket_id=runtime.bucket_id).load().records
+
+
+def test_deletion_fingerprint_changes_when_authoritative_filing_content_changes(
+    runtime: TestRuntimeProfile,
+    registered_profile: None,
+) -> None:
+    """A real filing-catalogue revision changes the deletion/resume fingerprint."""
+    del registered_profile
+    _persist_filing(runtime.bucket_id, filing_year=2024, filed_at=datetime(2024, 7, 1, tzinfo=UTC))
+    service = BucketMaintenanceService()
+    before = service.assess_deletion(AssessBucketDeletionCommand(bucket_id=runtime.bucket_id))
+    assert before.fingerprint is not None
+
+    _persist_filing(runtime.bucket_id, filing_year=2025, filed_at=datetime(2025, 7, 1, tzinfo=UTC))
+    after = service.assess_deletion(AssessBucketDeletionCommand(bucket_id=runtime.bucket_id))
+
+    assert after.fingerprint is not None
+    assert after.fingerprint.digest != before.fingerprint.digest
+    assert after.retention is not None
+    assert after.retention.retained[0].filing_year == 2025
 
 
 def test_assess_reads_old_filing_and_allows(

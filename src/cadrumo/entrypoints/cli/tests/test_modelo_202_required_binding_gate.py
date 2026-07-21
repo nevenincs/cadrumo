@@ -195,7 +195,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     assert filed.exit_code != 0, filed.output
     assert "presentado" not in filed.output
 
-    export_path = tmp_path / "m202-laura-zero.txt"
+    export_path = tmp_path / "modelo-202-2025-1P.txt"
     exported = invoke_cached_cli(
         [
             "--format",

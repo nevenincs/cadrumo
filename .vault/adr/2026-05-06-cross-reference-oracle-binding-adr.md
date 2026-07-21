@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#live-parity-oracle'
 date: '2026-05-06'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-05-06-live-parity-oracle-backend-adr]]'
   - '[[2026-05-06-aeat-nif-iva-checker-adapter-adr]]'
@@ -118,7 +118,7 @@ surface confirms both round-trips.
 
 ## Implementation Direction
 
-Extend `src/aeat/domain/calculations/registry/_schema.py`:
+Extend `src/cadrumo/domain/calculations/registry/_schema.py`:
 
 - Add `oracle_id: str | None = Field(default=None, min_length=1, max_length=128)`
   to `LiveCrossReferenceDecision`.
@@ -126,14 +126,14 @@ Extend `src/aeat/domain/calculations/registry/_schema.py`:
   (lowercase ASCII letters, digits, hyphens; must start with a letter;
   no trailing hyphens) when the value is non-None.
 
-Extend `src/aeat/domain/calculations/registry/_validate.py`:
+Extend `src/cadrumo/domain/calculations/registry/_validate.py`:
 
 - During revision validation, collect every non-None
   `oracle_id` declared by the revision's
   `live_cross_references` and reject duplicates with a clear error
   citing both cross-reference ids.
 
-Add `src/aeat/domain/calculations/registry/test_cross_reference_oracle_binding.py`
+Add `src/cadrumo/domain/calculations/registry/test_cross_reference_oracle_binding.py`
 with the following coverage:
 
 - A cross-reference with no `oracle_id` validates and round-trips

@@ -2,11 +2,11 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-eha-769-2010.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-eha-769-2010.html",
   "source_sha256": "d57d707f8fe68b1d5d6ecd0f08997325e8e00a93ba57b8200e9d08b00d71fac0",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",
-  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098",
   "units": [
     {
       "text": "1. Se aprueba el modelo 349 “Declaración recapitulativa de operaciones intracomunitarias”, de formato electrónico y cuyo contenido se ajustará a los diseños lógicos que figuran en el anexo de esta orden.\nEl número identificativo que habrá de figurar en el modelo 349 será un número secuencial cuyos tres primeros dígitos se corresponderán con el código 349.\n2. La presentación de las declaraciones complementarias o sustitutivas de otra declaración presentada anteriormente que se refieran al mismo período, se realizará de acuerdo con los requisitos técnicos que consten en el momento de la presentación en la sede electrónica de la Agencia Estatal de Administración Tributaria, en la dirección electrónica https://www.agenciatributaria.gob.es.\nSe modifica por el art. único.1 de la Orden HAC/174/2020, de 4 de febrero. Ref. BOE-A-2020-2898\nEsta modificación será aplicable, por primera vez, a las declaraciones recapitulativas de operaciones intracomunitarias correspondientes a 2020 que se presenten a partir del 1 de marzo, según establece su disposición final única.",

@@ -10,19 +10,16 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ...adapters.persistence.storage import (
-    EphemeralMasterKeyProvider,
-    activate_session,
-    has_active_bucket_session,
-    suspend_active_session,
-)
+from ...adapters.persistence.storage import activate_session, has_active_bucket_session, suspend_active_session
 from ...adapters.persistence.storage.master_key import BucketSession
 from ...adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from ...adapters.persistence.storage.sql import dispose_engine
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ...core.classification import SensitivityClass
 from ...core.config import override_settings
+from ...tests.master_key import EphemeralMasterKeyProvider
 from ...tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from ...tests.user_profile import register_minimal_profile
 from ..diagnostics import (
     ConfigRepairReport,
     DiagnosticCheck,
@@ -382,7 +379,7 @@ def test_repair_auth_session_predicate_agrees_with_wizard_status(tmp_path: Path)
     authenticated) and asserting the report shape across each.
     """
     from ..auth import update_auth
-    from ..user_profile import profile_create_storage_span, register_minimal_profile
+    from ..user_profile import profile_create_storage_span
     from ..workflow import WorkflowState
 
     with (
@@ -475,8 +472,7 @@ def test_preview_quarantine_reports_unreadable_rows_without_mutating(
     dry-run preview under K2, and asserts the preview reports two
     unreadable / one readable row while leaving ``secure_objects``
     untouched and never creating the quarantine archive table — the
-    contract the ``repair quarantine --dry-run`` surface relies on
-    (persona-fleet finding H3).
+    contract the ``repair quarantine --dry-run`` surface relies on.
     """
     import sqlite3
 

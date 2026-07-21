@@ -11,31 +11,21 @@ económicas en estimación directa. Pago fraccionado."
 `aeat` does not submit Modelo 130 to AEAT. Export creates a local file that
 you upload through the official AEAT channel yourself.
 
-The tool needs a master-key passphrase. It prompts for it interactively, or
-reads `CADRUMO_SECRET_PASSPHRASE` for non-interactive runs.
+The tool needs a master-key passphrase and prompts for it.
+
+**Requirement:** a valid taxpayer profile with self-employed activity under
+estimación directa. Create one with `aeat config profile create <name>` before
+you start. [Set up your taxpayer profile](profile-setup.md) walks through it.
 
 ## The complete first-quarter chain
 
-This is the full path from an empty store to an exported `.boe` for a
-first-period filer. Run these commands in order. Each load-bearing detail is
-explained below.
+This is the full path from an empty store to a verified draft for a
+first-period filer. The preparation below sets up a self-employed profile and a
+classified ledger, then creates the draft, calculates it, and verifies it. Each
+load-bearing detail is explained under the sequence.
 
-```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
-  --surnames "Garcia Lopez" --activity "consultoria" --activity-start-date 2026-01-01
-aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
-  --description "venta" --classification BUSINESS \
-  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
-  --description "compra" --classification BUSINESS --category-id material_oficina \
-  --taxable-base 500 --iva-rate 0.21 --iva-amount 105
-aeat app modelo work create --modelo 130 --year 2026 --period 1T
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T \
-  --binding modelo-130-resultados-negativos-anteriores=0 \
-  --binding modelo-130-pagos-fraccionados-anteriores=0 \
-  --binding irpf.previous_year_economic_activity_net_income=0
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
-aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
+```{cli-sequence} modelo-130-quarterly
+:verify: Confirm the draft passed verification before you export it.
 ```
 
 Load-bearing details:
@@ -54,17 +44,18 @@ Load-bearing details:
   instalments paid, and last year's net income (used for the minoración).
   Later quarters resolve them from your own filed history instead - see
   [the cumulative behaviour](#each-quarter-is-cumulative) below.
-- With the two rows above, calculate reports rendimiento neto (casilla `03`)
-  of `500.00` - income base minus expense base - and a pago fraccionado
-  (casilla `04`) of `100.00`, 20 percent of the net.
-- `verify` reports `completeness complete` and `granted true`. `export`
+- With the two rows above, calculate reports cumulative income (casilla `01`)
+  of `1000.00`, rendimiento neto (casilla `03`) of `500.00` - income base
+  minus expense base - and a pago fraccionado (casilla `04`) of `100.00`,
+  20 percent of the net.
+- `verify` reports `completeness complete` and `granted true`. Export then
   writes the `.boe` and reports its path, byte size, and SHA-256 checksum.
 
 ## Before you create the draft
 
 - [Set up your taxpayer profile](profile-setup.md). Modelo 130 applies to a
   profile with self-employed activity under estimación directa; check
-  applicability with `aeat app overview explain 130 --year 2026`.
+  applicability with `aeat app overview explain 130`.
 - [Plan your filing calendar](filing-calendar.md). Modelo 130 uses quarterly
   periods `1T` through `4T` only.
 - [Import or add your transactions](import-bank-statements.md), then
@@ -90,11 +81,28 @@ through registry bindings; prior filings feed the carries. Casillas `06`,
 (withholdings, second-activity volume, vivienda habitual deduction, prior
 complementary results). Inspect what is bound, missing, or manual:
 
-```bash
-aeat app modelo bindings list --modelo 130 --year 2026 --period 1T
-aeat app modelo casillas 130 --period 1T
+```{cli-sequence} modelo-130-inspect-boxes
+:verify: Confirm the draft's bindings and the modelo's casilla definitions read back.
 ```
 
+## Supply a manual box value
+
+Casilla `06` (Retenciones e ingresos a cuenta) is a manual box: the ledger
+does not fill it, so you supply it by hand with `--casilla`. Pass it in the
+same calculate call as the first-period bindings, then review the saved
+calculation to confirm your value landed:
+
+```{cli-sequence} modelo-130-manual-casilla
+:verify: Confirm the manual value you supplied appears in the saved calculation.
+```
+
+`--casilla` works only on `manual` boxes; a `bound` box filled from your ledger
+(like casilla `02`) refuses the override. Check a box's kind with `aeat app
+modelo casillas 130` (the inspect sequence above shows this), and see
+[Review and supply calculation inputs](review-calculation-values.md) for the
+full input workflow.
+
+(each-quarter-is-cumulative)=
 ## Each quarter is cumulative
 
 Modelo 130 is a year-to-date form, not a quarter-slice form. The second
@@ -126,19 +134,25 @@ The chain is the standard filing workflow - see
 [The filing workflow](filing-spine.md) for how work units and calculation
 revisions behave. In short:
 
-```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T
-aeat app modelo work revision --modelo 130 --year 2026 --period 1T
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
-aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
+```{cli-sequence} modelo-130-review-chain
+:verify: Confirm the draft calculates, reviews, and verifies before you export it.
+```
+
+Once the draft verifies, export it. Export refuses until every
+deductible-expense row carries linked purchase-invoice evidence (see
+[Attach invoices and receipts](ledger-evidence.md)); this simple Modelo 130
+example omits that evidence, so the export and the post-portal filed marker are
+shown as display frames. The full evidence-to-export chain runs end to end,
+executed, on [Prepare a Modelo 303 IVA filing](modelo-303.md):
+
+```{cli-sequence} modelo-130-export-file
 ```
 
 Each computed casilla carries its formula, legal references, and source
 references; show them with the revision view or
-[review the calculation values](review-calculation-values.md). After you
-upload the exported file at the portal, record the local marker with
-`aeat app modelo work file --modelo 130 --year 2026 --period 1T` and
-reconcile against the justificante.
+[review the calculation values](review-calculation-values.md). After you record
+the marker, reconcile against the justificante (see
+[Reconcile a filing](reconcile.md)).
 
 Modelo 130's quarterly results feed your annual Renta declaration: the four
 instalments are folded into Modelo 100 as payments on account. See
@@ -146,8 +160,8 @@ instalments are folded into Modelo 100 as payments on account. See
 
 ## Next steps
 
-- [The income-tax year (tutorial)](../tutorials/irpf-lifecycle.md)
-- [The filing workflow: work units and calculation revisions](filing-spine.md)
+- [The income-tax year (run-through)](irpf-lifecycle.md)
+- [The filing workflow](filing-spine.md)
 - [Review and supply calculation inputs](review-calculation-values.md)
 - [Upload your exported modelo at the AEAT portal](file-at-aeat.md)
 - [Reconcile a filing](reconcile.md)

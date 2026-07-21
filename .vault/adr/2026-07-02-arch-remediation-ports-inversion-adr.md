@@ -3,13 +3,12 @@ tags:
   - '#adr'
   - '#arch-remediation-ports-inversion'
 date: '2026-07-02'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-07-02-aeat-architecture-review-audit]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
   - "[[2026-06-01-domain-boundary-audit-adr]]"
   - "[[2026-05-31-core-authority-adr]]"
-  - "[[2026-04-30-secure-persistence-foundation-adr]]"
   - '[[2026-07-06-arch-remediation-ports-inversion-research]]'
 ---
 # `arch-remediation-ports-inversion` adr: `domain persistence ports inversion: fincas template as standard` | (**status:** `accepted`)
@@ -170,7 +169,7 @@ precisions are recorded so the claim is not overstated:
   is bundled shipped data, so a CI gate is the authoritative resolution check.
 - F2 (deferred, peer-owned): the shared `test_importlinter_ledger.py`
   application→adapters ratchet is red at HEAD from an unrelated `#407` commit
-  that added an `application.diagnostics_run_health → aeat.adapters.**` wildcard
+  that added an `application.diagnostics_run_health → cadrumo.adapters.**` wildcard
   ignore without bumping the baseline. Out of ports-inversion scope per
   `full-tree-gate-must-distinguish-owner`; handed to the `#407` owner to
   de-wildcard the pin and bump the baseline.

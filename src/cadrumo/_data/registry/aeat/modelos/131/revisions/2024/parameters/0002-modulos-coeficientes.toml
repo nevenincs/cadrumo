@@ -1,0 +1,1019 @@
+# M131 estimación-objetiva módulos coefficient table (Fase 1ª: rendimiento neto
+# previo). Keyed-bracket-table parameter mapping "<epígrafe IAE>:<módulo>" to
+# the "rendimiento anual por unidad antes de amortización" (Anexo II, Orden
+# HFP/1359/2023, art. 4). Lookup is exact-match on the composite key; there is
+# no interval-overlap semantics because the domain is a discrete (epígrafe,
+# módulo) catalogue, not a numeric-continuous base.
+#
+# Incrementally authored dataset: only activities grounded and cross-checked
+# against the bundled corpus are tabled here; the ~80+-activity Orden Anexo II
+# is authored over time. An epígrafe absent from this table is NOT computed
+# by the engine; casilla 01 stays reachable as a manual operator input and the
+# "modelo-131-2024-modulos-computed-diverges-de-c01" advisory fires instead of a
+# silent zero.
+#
+# Tabled activities: transporte por autotaxis (721.2), transporte de
+# mercancías por carretera (722), peluquería (972.1); café-bar / restaurante
+# (671.4, 671.5, 672.1-2-3, 673.1, 673.2) and comercio al por menor de
+# alimentación (642.1-2-3-4, 642.5, 642.6, 643.1-2, 644.1, 644.2, 644.3,
+# 644.6, 647.1, 647.2-3); comercio al por menor de textil/calzado/mercería
+# (651.1, 651.2, 651.3-y-5, 651.4, 651.6), droguería/perfumería (652.2-y-3),
+# mueble/electrodoméstico/menaje/construcción (653.1, 653.2, 653.3, 653.4-y-5,
+# 653.9), recambios/maquinaria/neumáticos (654.2, 654.5, 654.6), oficina/
+# óptica/papelería/juguetería/semillas (659.2, 659.3, 659.6, 659.7), comercio
+# mixto (662.2), comercio ambulante (663.1, 663.2, 663.3, 663.4, 663.9),
+# hospedaje (681, 682, 683), reparaciones (691.1, 691.2, 692, 699), and
+# transporte urbano colectivo (721.1-y-3); remaining reparaciones (691.9
+# collision pair), engrase/lavado de vehículos (751.5), mudanzas (757),
+# mensajería/recadería (849.5), enseñanza (933.1, 933.9, 967.2), servicios
+# personales (971.1, 972.2, 973.3), remaining comercio/hostelería (641 frutas
+# y verduras, 675 quioscos, 676 chocolaterías/heladerías/horchaterías), and the
+# second 659.4 collision-pair activity. Two epígrafe collisions (659.4, 691.9
+# — each names two distinct activities under one IAE code) are resolved via a
+# documented key-namespace suffix convention ("659.4a"/"659.4b",
+# "691.9a"/"691.9b") — see the note further below, immediately before the
+# affected rows. This covers every non-agrarian Anexo II activity except the
+# purely-industrial/manufacturing epígrafes (419.x panadería industrial,
+# 423.9 patatas fritas industriales, etc.), which fall outside the tabled
+# commerce, hostelería, transporte, reparaciones, enseñanza, and servicios
+# personales groups. The Anexo I agrarian activities (índice de rendimiento
+# neto × volumen de ingresos — a materially different mechanism, not units ×
+# coefficient) remain a separate, distinct engine not yet implemented here.
+#
+# Cross-checked against the bundled consolidated Orden HFP/1359/2023 Anexo II
+# (corpus/normatives/html/orden-hfp-1359-2023.html) AND against the AEAT Manual
+# práctico de Renta 2024, Parte 1, Capítulo 8 "Apéndice: Rendimientos anuales
+# por unidad de módulo antes de amortización aplicables en el ejercicio 2024"
+# — both sources state byte-identical euro figures for every row below. One
+# noted anomaly: the bundled Orden HTML (corpus row at 651.3 y 5, key
+# "651.3", not tabled here) carries a literal typo "11.998.85" (period
+# instead of comma decimal separator) verbatim in the official BOE-published
+# HTML; no row below is affected by this anomaly, flagged here for the next
+# author who reaches that epígrafe.
+#
+# Row format note: rows are authored as a single `keyed_brackets = [ {...}, ... ]`
+# array-literal (one inline table per row) rather than repeated
+# `[[revisions."2024".parameters.keyed_brackets]]` array-of-tables headers, to
+# keep this fragment under the committed-registry per-file line-count gate
+# (`test_committed_registry_toml_files_stay_reviewable`) as the dataset grew.
+# Both forms parse to an identical tuple of rows; this is a pure
+# authoring-density change, not a schema or semantic change.
+[[revisions."2024".parameters]]
+id = "m131-modulos-coeficientes-2024"
+data_type = "keyed_bracket_table"
+unit = "euro_per_unit"
+legal_refs = ["orden-hfp-1359-2023:art-4"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+keyed_brackets = [
+    # Epígrafe IAE 721.2 — Transporte por autotaxis.
+    # Módulo 1 Personal asalariado (persona): 1.346,27
+    { key = "721.2:1", value = "1346.27", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 7.656,89
+    { key = "721.2:2", value = "7656.89", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Distancia recorrida (1.000 kilómetros): 45,08
+    { key = "721.2:3", value = "45.08", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 722 — Transporte de mercancías por carretera.
+    # Módulo 1 Personal asalariado (persona): 2.728,59
+    { key = "722:1", value = "2728.59", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.090,99
+    { key = "722:2", value = "10090.99", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Carga vehículos (tonelada): 126,21
+    { key = "722:3", value = "126.21", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 972.1 — Servicios de peluquería de señora y caballero.
+    # Módulo 1 Personal asalariado (persona): 3.161,90
+    { key = "972.1:1", value = "3161.90", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 9.649,47
+    { key = "972.1:2", value = "9649.47", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 94,48
+    { key = "972.1:3", value = "94.48", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Consumo de energía eléctrica (100 kWh): 81,88
+    { key = "972.1:4", value = "81.88", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # comercio al por menor (64x epígrafes) and café-bar / restaurante
+    # (671/672/673 epígrafes), cross-checked byte-identical between
+    # the bundled consolidated Orden HFP/1359/2023 Anexo II
+    # (corpus/normatives/html/orden-hfp-1359-2023.html) AND the AEAT Manual
+    # práctico de Renta 2024, Parte 1, Capítulo 8 "Apéndice: Rendimientos anuales
+    # por unidad de módulo antes de amortización aplicables en el ejercicio 2024".
+    # Epígrafe IAE 671.4 — Restaurantes de dos tenedores.
+    # Módulo 1 Personal asalariado (persona): 3.709,88
+    { key = "671.4:1", value = "3709.88", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 17.434,55
+    { key = "671.4:2", value = "17434.55", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia eléctrica (KW contratado): 201,55
+    { key = "671.4:3", value = "201.55", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Mesas (mesa): 585,77
+    { key = "671.4:4", value = "585.77", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Máquinas tipo «A» (máquina tipo «A»): 1.077,06
+    { key = "671.4:5", value = "1077.06", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 6 Máquinas tipo «B» (máquina tipo «B»): 3.810,65
+    { key = "671.4:6", value = "3810.65", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 671.5 — Restaurantes de un tenedor.
+    # Módulo 1 Personal asalariado (persona): 3.602,80
+    { key = "671.5:1", value = "3602.80", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 16.174,82
+    { key = "671.5:2", value = "16174.82", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia eléctrica (KW contratado): 125,97
+    { key = "671.5:3", value = "125.97", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Mesas (mesa): 220,45
+    { key = "671.5:4", value = "220.45", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Máquinas tipo «A» (máquina tipo «A»): 1.077,06
+    { key = "671.5:5", value = "1077.06", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 6 Máquinas tipo «B» (máquina tipo «B»): 3.810,65
+    { key = "671.5:6", value = "3810.65", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 672.1, 2 y 3 — Cafeterías.
+    # Módulo 1 Personal asalariado (persona): 1.448,68
+    { key = "672.1:1", value = "1448.68", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 13.743,56
+    { key = "672.1:2", value = "13743.56", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia eléctrica (KW contratado): 478,69
+    { key = "672.1:3", value = "478.69", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Mesas (mesa): 377,92
+    { key = "672.1:4", value = "377.92", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Máquinas tipo «A» (máquina tipo «A»): 957,39
+    { key = "672.1:5", value = "957.39", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 6 Máquinas tipo «B» (máquina tipo «B»): 3.747,67
+    { key = "672.1:6", value = "3747.67", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 673.1 — Cafés y bares de categoría especial.
+    # Módulo 1 Personal asalariado (persona): 4.056,30
+    { key = "673.1:1", value = "4056.30", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 15.538,66
+    { key = "673.1:2", value = "15538.66", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia eléctrica (KW contratado): 321,23
+    { key = "673.1:3", value = "321.23", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Mesas (mesa): 233,04
+    { key = "673.1:4", value = "233.04", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Longitud de barra (metro): 371,62
+    { key = "673.1:5", value = "371.62", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 6 Máquinas tipo «A» (máquina tipo «A»): 957,39
+    { key = "673.1:6", value = "957.39", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 7 Máquinas tipo «B» (máquina tipo «B»): 2.903,66
+    { key = "673.1:7", value = "2903.66", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 673.2 — Otros cafés y bares.
+    # Módulo 1 Personal asalariado (persona): 1.643,93
+    { key = "673.2:1", value = "1643.93", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 11.413,08
+    { key = "673.2:2", value = "11413.08", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia eléctrica (KW contratado): 94,48
+    { key = "673.2:3", value = "94.48", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Mesas (mesa): 119,67
+    { key = "673.2:4", value = "119.67", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Longitud de barra (metro): 163,76
+    { key = "673.2:5", value = "163.76", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 6 Máquinas tipo «A» (máquina tipo «A»): 806,23
+    { key = "673.2:6", value = "806.23", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 7 Máquinas tipo «B» (máquina tipo «B»): 2.947,75
+    { key = "673.2:7", value = "2947.75", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 642.1, 2, 3 y 4 — Comercio al por menor de carne y despojos;
+    # de productos y derivados cárnicos elaborados.
+    # Módulo 1 Personal asalariado (persona): 2.355,68
+    { key = "642.1:1", value = "2355.68", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.991,07
+    { key = "642.1:2", value = "10991.07", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local independiente (m2): 35,90
+    { key = "642.1:3", value = "35.90", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local no independiente (m2): 81,88
+    { key = "642.1:4", value = "81.88", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Consumo de energía eléctrica (100 kWh): 39,05
+    { key = "642.1:5", value = "39.05", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 642.5 — Comercio al por menor de huevos, aves, conejos de
+    # granja, caza; y de productos derivados de los mismos.
+    # Módulo 1 Personal asalariado (persona): 3.382,36
+    { key = "642.5:1", value = "3382.36", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 11.337,49
+    { key = "642.5:2", value = "11337.49", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 25,19
+    { key = "642.5:3", value = "25.19", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local independiente (m2): 27,08
+    { key = "642.5:4", value = "27.08", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Superficie del local no independiente (m2): 58,57
+    { key = "642.5:5", value = "58.57", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 642.6 — Comercio al por menor, en casquerías, de vísceras y
+    # despojos procedentes de animales de abasto, frescos y congelados.
+    # Módulo 1 Personal asalariado (persona): 2.254,90
+    { key = "642.6:1", value = "2254.90", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 11.098,14
+    { key = "642.6:2", value = "11098.14", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local independiente (m2): 27,71
+    { key = "642.6:3", value = "27.71", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie local no independiente (m2): 69,28
+    { key = "642.6:4", value = "69.28", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Consumo de energía eléctrica (100 kWh): 35,90
+    { key = "642.6:5", value = "35.90", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 643.1 y 2 — Comercio al por menor de pescados y otros
+    # productos de la pesca y de la acuicultura y de caracoles.
+    # Módulo 1 Personal asalariado (persona): 3.823,25
+    { key = "643.1:1", value = "3823.25", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 13.296,36
+    { key = "643.1:2", value = "13296.36", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local independiente (m2): 36,53
+    { key = "643.1:3", value = "36.53", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local no independiente (m2): 113,37
+    { key = "643.1:4", value = "113.37", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Consumo de energía eléctrica (100 kWh): 28,98
+    { key = "643.1:5", value = "28.98", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 644.1 — Comercio al por menor de pan, pastelería, confitería y
+    # similares y de leche y productos lácteos.
+    # Módulo 1 Personal asalariado de fabricación (persona): 6.248,22
+    { key = "644.1:1", value = "6248.22", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Resto personal asalariado (persona): 1.058,17
+    { key = "644.1:2", value = "1058.17", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Personal no asalariado (persona): 14.530,89
+    { key = "644.1:3", value = "14530.89", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local de fabricación (m2): 49,13
+    { key = "644.1:4", value = "49.13", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Resto superficie local independiente (m2): 34,01
+    { key = "644.1:5", value = "34.01", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 6 Resto superficie local no independiente (m2): 125,97
+    { key = "644.1:6", value = "125.97", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 7 Superficie del horno (100 decímetros cuadrados): 629,86
+    { key = "644.1:7", value = "629.86", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 644.2 — Despachos de pan, panes especiales y bollería.
+    # Módulo 1 Personal asalariado de fabricación (persona): 6.134,85
+    { key = "644.2:1", value = "6134.85", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Resto personal asalariado (persona): 1.039,27
+    { key = "644.2:2", value = "1039.27", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Personal no asalariado (persona): 14.266,34
+    { key = "644.2:3", value = "14266.34", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local de fabricación (m2): 48,50
+    { key = "644.2:4", value = "48.50", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Resto superficie local independiente (m2): 33,38
+    { key = "644.2:5", value = "33.38", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 6 Resto superficie local no independiente (m2): 125,97
+    { key = "644.2:6", value = "125.97", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 7 Superficie del horno (100 decímetros cuadrados): 629,86
+    { key = "644.2:7", value = "629.86", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 644.3 — Comercio al por menor de productos de pastelería,
+    # bollería y confitería.
+    # Módulo 1 Personal asalariado de fabricación (persona): 6.367,89
+    { key = "644.3:1", value = "6367.89", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Resto personal asalariado (persona): 1.014,08
+    { key = "644.3:2", value = "1014.08", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Personal no asalariado (persona): 12.912,15
+    { key = "644.3:3", value = "12912.15", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local de fabricación (m2): 43,46
+    { key = "644.3:4", value = "43.46", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Resto superficie local independiente (m2): 34,01
+    { key = "644.3:5", value = "34.01", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 6 Resto superficie local no independiente (m2): 113,37
+    { key = "644.3:6", value = "113.37", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 7 Superficie del horno (100 decímetros cuadrados): 522,78
+    { key = "644.3:7", value = "522.78", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 644.6 — Comercio al por menor de masas fritas, con o sin
+    # coberturas o rellenos, patatas fritas, productos de aperitivo, frutos
+    # secos, golosinas, preparados de chocolate y bebidas refrescantes.
+    # Módulo 1 Personal asalariado de fabricación (persona): 6.852,88
+    { key = "644.6:1", value = "6852.88", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Resto personal asalariado (persona): 2.254,90
+    { key = "644.6:2", value = "2254.90", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Personal no asalariado (persona): 13.214,47
+    { key = "644.6:3", value = "13214.47", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local de fabricación (m2): 27,71
+    { key = "644.6:4", value = "27.71", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Resto superficie local independiente (m2): 21,41
+    { key = "644.6:5", value = "21.41", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 6 Resto superficie local no independiente (m2): 36,53
+    { key = "644.6:6", value = "36.53", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 647.1 — Comercio al por menor de cualquier clase de productos
+    # alimenticios y de bebidas en establecimientos con vendedor.
+    # Módulo 1 Personal asalariado (persona): 1.026,67
+    { key = "647.1:1", value = "1026.67", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.839,90
+    { key = "647.1:2", value = "10839.90", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local independiente (m2): 20,15
+    { key = "647.1:3", value = "20.15", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local no independiente (m2): 68,65
+    { key = "647.1:4", value = "68.65", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Consumo de energía eléctrica (100 kWh): 8,81
+    { key = "647.1:5", value = "8.81", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 647.2 y 3 — Comercio al por menor de cualquier clase de
+    # productos alimenticios y de bebidas en régimen de autoservicio o mixto en
+    # establecimientos cuya sala de ventas tenga una superficie inferior a 400
+    # metros cuadrados.
+    # Módulo 1 Personal asalariado (persona): 1.788,80
+    { key = "647.2:1", value = "1788.80", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.827,31
+    { key = "647.2:2", value = "10827.31", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 23,31
+    { key = "647.2:3", value = "23.31", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Consumo de energía eléctrica (100 kWh): 32,75
+    { key = "647.2:4", value = "32.75", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # comercio al por menor de textil/calzado (651.x),
+    # droguería/perfumería (652.2 y 3), mueble/electrodomésticos/menaje (653.x,
+    # 654.x, 659.x, 662.2), comercio ambulante (663.x), hospedaje (681-683),
+    # reparaciones (691.x, 692, 699), and transporte urbano colectivo (721.1 y 3).
+    # Cross-checked byte-identical between the bundled consolidated Orden
+    # HFP/1359/2023 Anexo II (corpus/normatives/html/orden-hfp-1359-2023.html) AND
+    # the AEAT Manual práctico de Renta 2024, Parte 1, Capítulo 8 "Apéndice:
+    # Rendimientos anuales por unidad de módulo antes de amortización aplicables
+    # en el ejercicio 2024".
+    #
+    # Corpus-typo correction: the bundled Orden HTML módulo 2 figure for 651.3 y 5
+    # reads "11.998.85" (a literal period-for-comma decimal-separator typo,
+    # verbatim in the official BOE-published HTML). The AEAT Manual Renta 2024
+    # states the same row as "11.998,85"
+    # (comma decimal separator, i.e. eleven thousand nine hundred ninety-eight
+    # euros and eighty-five cents) with no ambiguity. The manual's figure is used
+    # below; both sources otherwise agree on this row's other three módulos.
+    #
+    # Two epígrafe collisions deliberately deferred (NOT tabled here): 659.4
+    # (two distinct activities share the same IAE code — "Comercio al por menor
+    # de libros, periódicos, artículos de papelería..." vs "...de prensa,
+    # revistas y libros en quioscos...") and 691.9 ("Reparación de calzado" vs
+    # "Reparación de otros bienes de consumo n.c.o.p."). The keyed_bracket_table
+    # key is "<epígrafe>:<módulo>" with no third axis to disambiguate two
+    # same-code activities, so tabling either would silently misattribute the
+    # other's coefficients. Flagged here for the next author who reaches these
+    # epígrafes — resolving them needs either a registry key-shape extension
+    # (a third disambiguating axis) or an explicit epígrafe-suffix convention
+    # agreed with the operator before authoring.
+    # Epígrafe IAE 651.1 — Comercio al por menor de productos textiles,
+    # confecciones para el hogar, alfombras y similares y artículos de tapicería.
+    # Módulo 1 Personal asalariado (persona): 3.010,74
+    { key = "651.1:1", value = "3010.74", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 13.812,85
+    { key = "651.1:2", value = "13812.85", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 38,42
+    { key = "651.1:3", value = "38.42", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local independiente (m2): 35,28
+    { key = "651.1:4", value = "35.28", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Superficie del local no independiente (m2): 107,07
+    { key = "651.1:5", value = "107.07", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 651.2 — Comercio al por menor de toda clase de prendas para el
+    # vestido y tocado.
+    # Módulo 1 Personal asalariado (persona): 2.569,83
+    { key = "651.2:1", value = "2569.83", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 13.995,51
+    { key = "651.2:2", value = "13995.51", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 49,13
+    { key = "651.2:3", value = "49.13", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Consumo de energía eléctrica (100 kWh): 56,69
+    { key = "651.2:4", value = "56.69", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 651.3 y 5 — Comercio al por menor de lencería, corsetería y
+    # prendas especiales.
+    # Módulo 1 Personal asalariado (persona): 2.198,21
+    { key = "651.3:1", value = "2198.21", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 11.998,85 — corpus-typo
+    # correction (see note above); grounded in the AEAT Manual Renta 2024 figure,
+    # not the bundled Orden HTML's "11.998.85" literal.
+    { key = "651.3:2", value = "11998.85", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 47,87
+    { key = "651.3:3", value = "47.87", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Consumo de energía eléctrica (100 kWh): 75,58
+    { key = "651.3:4", value = "75.58", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 651.4 — Comercio al por menor de artículos de mercería y
+    # paquetería.
+    # Módulo 1 Personal asalariado (persona): 1.902,18
+    { key = "651.4:1", value = "1902.18", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.291,93
+    { key = "651.4:2", value = "10291.93", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 28,98
+    { key = "651.4:3", value = "28.98", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Consumo de energía eléctrica (100 kWh): 58,57
+    { key = "651.4:4", value = "58.57", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 651.6 — Comercio al por menor de calzado, artículos de piel e
+    # imitación o productos sustitutivos, cinturones, carteras, bolsos, maletas y
+    # artículos de viaje en general.
+    # Módulo 1 Personal asalariado (persona): 3.130,41
+    { key = "651.6:1", value = "3130.41", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 13.453,83
+    { key = "651.6:2", value = "13453.83", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 27,71
+    { key = "651.6:3", value = "27.71", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Consumo de energía eléctrica (100 kWh): 52,27
+    { key = "651.6:4", value = "52.27", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 652.2 y 3 — Comercio al por menor de productos de droguería,
+    # perfumería y cosmética, limpieza, pinturas, barnices, disolventes, papeles y
+    # otros productos para la decoración y de productos químicos, y de artículos
+    # para la higiene y el aseo personal.
+    # Módulo 1 Personal asalariado (persona): 3.722,48
+    { key = "652.2:1", value = "3722.48", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 12.786,18
+    { key = "652.2:2", value = "12786.18", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 31,49
+    { key = "652.2:3", value = "31.49", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local independiente (m2): 18,27
+    { key = "652.2:4", value = "18.27", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Superficie del local no independiente (m2): 55,43
+    { key = "652.2:5", value = "55.43", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 653.1 — Comercio al por menor de muebles.
+    # Módulo 1 Personal asalariado (persona): 4.075,20
+    { key = "653.1:1", value = "4075.20", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 16.200,02
+    { key = "653.1:2", value = "16200.02", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 50,39
+    { key = "653.1:3", value = "50.39", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 16,38
+    { key = "653.1:4", value = "16.38", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 653.2 — Comercio al por menor de material y aparatos
+    # eléctricos, electrónicos, electrodomésticos y otros aparatos de uso
+    # doméstico accionados por otro tipo de energía distinta de la eléctrica, así
+    # como muebles de cocina.
+    # Módulo 1 Personal asalariado (persona): 2.884,77
+    { key = "653.2:1", value = "2884.77", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 14.656,86
+    { key = "653.2:2", value = "14656.86", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 100,78
+    { key = "653.2:3", value = "100.78", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local independiente (m2): 36,53
+    { key = "653.2:4", value = "36.53", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Superficie local no independiente (m2): 113,37
+    { key = "653.2:5", value = "113.37", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 653.3 — Comercio al por menor de artículos de menaje,
+    # ferretería, adorno, regalo, o reclamo (incluyendo bisutería y pequeños
+    # electrodomésticos).
+    # Módulo 1 Personal asalariado (persona): 3.709,88
+    { key = "653.3:1", value = "3709.88", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 15.116,66
+    { key = "653.3:2", value = "15116.66", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 51,02
+    { key = "653.3:3", value = "51.02", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 21,41
+    { key = "653.3:4", value = "21.41", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 653.4 y 5 — Comercio al por menor de materiales de
+    # construcción, artículos y mobiliario de saneamiento, puertas, ventanas,
+    # persianas, etc.
+    # Módulo 1 Personal asalariado (persona): 3.061,12
+    { key = "653.4:1", value = "3061.12", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 16.527,55
+    { key = "653.4:2", value = "16527.55", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 94,48
+    { key = "653.4:3", value = "94.48", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 8,81
+    { key = "653.4:4", value = "8.81", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 653.9 — Comercio al por menor de otros artículos para el
+    # equipamiento del hogar n.c.o.p.
+    # Módulo 1 Personal asalariado (persona): 4.950,71
+    { key = "653.9:1", value = "4950.71", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 20.061,07
+    { key = "653.9:2", value = "20061.07", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 81,88
+    { key = "653.9:3", value = "81.88", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 39,68
+    { key = "653.9:4", value = "39.68", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 654.2 — Comercio al por menor de accesorios y piezas de
+    # recambio para vehículos terrestres.
+    # Módulo 1 Personal asalariado (persona): 3.098,92
+    { key = "654.2:1", value = "3098.92", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 17.018,84
+    { key = "654.2:2", value = "17018.84", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 201,55
+    { key = "654.2:3", value = "201.55", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Potencia fiscal vehículo (CVF): 617,26
+    { key = "654.2:4", value = "617.26", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 654.5 — Comercio al por menor de toda clase de maquinaria
+    # (excepto aparatos del hogar, de oficina, médicos, ortopédicos, ópticos y
+    # fotográficos).
+    # Módulo 1 Personal asalariado (persona): 9.422,71
+    { key = "654.5:1", value = "9422.71", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 18.858,03
+    { key = "654.5:2", value = "18858.03", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 39,05
+    { key = "654.5:3", value = "39.05", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Potencia fiscal vehículo (CVF): 132,27
+    { key = "654.5:4", value = "132.27", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 654.6 — Comercio al por menor de cubiertas, bandas o bandajes y
+    # cámaras de aire para toda clase de vehículos, excepto las actividades de
+    # comercio al por mayor de los artículos citados.
+    # Módulo 1 Personal asalariado (persona): 2.746,19
+    { key = "654.6:1", value = "2746.19", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 14.222,25
+    { key = "654.6:2", value = "14222.25", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 119,67
+    { key = "654.6:3", value = "119.67", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Potencia fiscal vehículo (CVF): 377,92
+    { key = "654.6:4", value = "377.92", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 659.2 — Comercio al por menor de muebles de oficina y de
+    # máquinas y equipos de oficina.
+    # Módulo 1 Personal asalariado (persona): 4.157,08
+    { key = "659.2:1", value = "4157.08", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 16.521,25
+    { key = "659.2:2", value = "16521.25", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 56,69
+    { key = "659.2:3", value = "56.69", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 17,01
+    { key = "659.2:4", value = "17.01", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 659.3 — Comercio al por menor de aparatos e instrumentos
+    # médicos, ortopédicos, ópticos y fotográficos.
+    # Módulo 1 Personal asalariado (persona): 7.174,12
+    { key = "659.3:1", value = "7174.12", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 19.273,74
+    { key = "659.3:2", value = "19273.74", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 119,67
+    { key = "659.3:3", value = "119.67", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Potencia fiscal vehículo (CVF): 1.070,76
+    { key = "659.3:4", value = "1070.76", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 659.6 — Comercio al por menor de juguetes, artículos de
+    # deporte, prendas deportivas de vestido, calzado y tocado, armas, cartuchería
+    # y artículos de pirotecnia.
+    # Módulo 1 Personal asalariado (persona): 2.916,26
+    { key = "659.6:1", value = "2916.26", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 13.258,56
+    { key = "659.6:2", value = "13258.56", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 138,57
+    { key = "659.6:3", value = "138.57", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 32,75
+    { key = "659.6:4", value = "32.75", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 659.7 — Comercio al por menor de semillas, abonos, flores y
+    # plantas y pequeños animales.
+    # Módulo 1 Personal asalariado (persona): 4.988,50
+    { key = "659.7:1", value = "4988.50", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 16.124,43
+    { key = "659.7:2", value = "16124.43", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia fiscal vehículo (CVF): 258,24
+    { key = "659.7:3", value = "258.24", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 662.2 — Comercio al por menor de toda clase de artículos,
+    # incluyendo alimentación y bebidas, en establecimientos distintos de los
+    # especificados en el Grupo 661 y en el epígrafe 662.1.
+    # Módulo 1 Personal asalariado (persona): 4.868,82
+    { key = "662.2:1", value = "4868.82", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 9.429,01
+    { key = "662.2:2", value = "9429.01", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 28,98
+    { key = "662.2:3", value = "28.98", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 37,79
+    { key = "662.2:4", value = "37.79", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 663.1 — Comercio al por menor fuera de un establecimiento
+    # comercial permanente de productos alimenticios, incluso bebidas y helados.
+    # Módulo 1 Personal asalariado (persona): 1.398,29
+    { key = "663.1:1", value = "1398.29", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 13.989,21
+    { key = "663.1:2", value = "13989.21", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia fiscal vehículo (CVF): 113,37
+    { key = "663.1:3", value = "113.37", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 663.2 — Comercio al por menor fuera de un establecimiento
+    # comercial permanente de artículos textiles y de confección.
+    # Módulo 1 Personal asalariado (persona): 2.991,84
+    { key = "663.2:1", value = "2991.84", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 13.982,91
+    { key = "663.2:2", value = "13982.91", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia fiscal vehículo (CVF): 239,34
+    { key = "663.2:3", value = "239.34", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 663.3 — Comercio al por menor fuera de un establecimiento
+    # comercial permanente de calzado, pieles y artículos de cuero.
+    # Módulo 1 Personal asalariado (persona): 2.613,92
+    { key = "663.3:1", value = "2613.92", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 11.186,32
+    { key = "663.3:2", value = "11186.32", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia fiscal vehículo (CVF): 151,16
+    { key = "663.3:3", value = "151.16", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 663.4 — Comercio al por menor fuera de un establecimiento
+    # comercial permanente de artículos de droguería y cosméticos y de productos
+    # químicos en general.
+    # Módulo 1 Personal asalariado (persona): 3.678,39
+    { key = "663.4:1", value = "3678.39", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 12.641,30
+    { key = "663.4:2", value = "12641.30", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia fiscal vehículo (CVF): 113,37
+    { key = "663.4:3", value = "113.37", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 663.9 — Comercio al por menor fuera de un establecimiento
+    # comercial permanente de otras clases de mercancías n.c.o.p.
+    # Módulo 1 Personal asalariado (persona): 5.448,29
+    { key = "663.9:1", value = "5448.29", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.537,57
+    { key = "663.9:2", value = "10537.57", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia fiscal vehículo (CVF): 283,44
+    { key = "663.9:3", value = "283.44", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 681 — Servicio de hospedaje en hoteles y moteles de una o dos
+    # estrellas.
+    # Módulo 1 Personal asalariado (persona): 6.223,02
+    { key = "681:1", value = "6223.02", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 20.438,98
+    { key = "681:2", value = "20438.98", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Número de plazas (plaza): 371,62
+    { key = "681:3", value = "371.62", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 682 — Servicio de hospedaje en hostales y pensiones.
+    # Módulo 1 Personal asalariado (persona): 5.145,96
+    { key = "682:1", value = "5145.96", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 17.541,62
+    { key = "682:2", value = "17541.62", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Número de plazas (plaza): 270,85
+    { key = "682:3", value = "270.85", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 683 — Servicio de hospedaje en fondas y casas de huéspedes.
+    # Módulo 1 Personal asalariado (persona): 4.478,31
+    { key = "683:1", value = "4478.31", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 14.587,57
+    { key = "683:2", value = "14587.57", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Número de plazas (plaza): 132,27
+    { key = "683:3", value = "132.27", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 691.1 — Reparación de artículos eléctricos para el hogar.
+    # Módulo 1 Personal asalariado (persona): 4.314,54
+    { key = "691.1:1", value = "4314.54", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 15.538,66
+    { key = "691.1:2", value = "15538.66", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 17,01
+    { key = "691.1:3", value = "17.01", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 691.2 — Reparación de vehículos automóviles, bicicletas y
+    # otros vehículos.
+    # Módulo 1 Personal asalariado (persona): 4.157,08
+    { key = "691.2:1", value = "4157.08", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 17.094,42
+    { key = "691.2:2", value = "17094.42", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 27,08
+    { key = "691.2:3", value = "27.08", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 692 — Reparación de maquinaria industrial.
+    # Módulo 1 Personal asalariado (persona): 4.409,02
+    { key = "692:1", value = "4409.02", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 18.146,29
+    { key = "692:2", value = "18146.29", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 94,48
+    { key = "692:3", value = "94.48", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 699 — Otras reparaciones n.c.o.p.
+    # Módulo 1 Personal asalariado (persona): 3.703,58
+    { key = "699:1", value = "3703.58", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 15.230,03
+    { key = "699:2", value = "15230.03", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 88,18
+    { key = "699:3", value = "88.18", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 721.1 y 3 — Transporte urbano colectivo y de viajeros por
+    # carretera.
+    # Módulo 1 Personal asalariado (persona): 2.981,02
+    { key = "721.1:1", value = "2981.02", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 16.016,97
+    { key = "721.1:2", value = "16016.97", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Número de asientos (asiento): 121,40
+    { key = "721.1:3", value = "121.40", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Remaining non-agrarian Anexo II activities —
+    # reparación de calzado / otros bienes de consumo (691.9 collision pair,
+    # resolved below), engrase y lavado de vehículos (751.5), servicios de
+    # mudanzas (757), transporte de mensajería y recadería (849.5), enseñanza de
+    # conducción y otras enseñanzas (933.1, 933.9), escuelas de deporte (967.2),
+    # tintorería (971.1), salones e institutos de belleza (972.2), copistería
+    # (973.3), and the second 659.4 collision-pair activity (comercio de prensa
+    # en quioscos). Cross-checked byte-identical against the bundled consolidated
+    # Orden HFP/1359/2023 Anexo II
+    # (corpus/normatives/html/orden-hfp-1359-2023.html).
+    #
+    # Epígrafe-collision resolution (659.4, 691.9): the Orden Anexo II names TWO
+    # distinct activities under each of these two IAE codes with materially
+    # different coefficient rows (different signo counts and euro figures). The
+    # `keyed_bracket_table` lookup key is a free-form string
+    # ("<epígrafe>:<módulo>") with no schema-level third axis — resolving the
+    # collision does not need a schema change, only a documented key-namespace
+    # convention: each colliding activity is tabled under the IAE code plus a
+    # lowercase disambiguating suffix ("a" for the first-listed Anexo II
+    # activity, "b" for the second), and the operator types the suffixed form
+    # into the "modulos-epigrafe" free-text casilla for that activity. The bare
+    # unsuffixed code (e.g. "659.4") remains untabled (no coefficient row), so
+    # an operator who has not yet been told which sub-activity applies gets the
+    # "activity not yet table-driven" advisory rather than a silently
+    # misattributed coefficient from the wrong sub-activity.
+    #   - "659.4a" — Comercio al por menor de libros, periódicos, artículos de
+    #     papelería y escritorio y artículos de dibujo y bellas artes, excepto en
+    #     quioscos situados en la vía pública.
+    #   - "659.4b" — Comercio al por menor de prensa, revistas y libros en
+    #     quioscos situados en la vía pública.
+    #   - "691.9a" — Reparación de calzado.
+    #   - "691.9b" — Reparación de otros bienes de consumo n.c.o.p. (excepto
+    #     reparación de calzado, restauración de obras de arte, muebles,
+    #     antigüedades e instrumentos musicales).
+    # Epígrafe IAE 659.4a — Comercio al por menor de libros, periódicos,
+    # artículos de papelería y escritorio y artículos de dibujo y bellas artes,
+    # excepto en quioscos situados en la vía pública.
+    # Módulo 1 Personal asalariado (persona): 4.648,37
+    { key = "659.4a:1", value = "4648.37", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 17.176,30
+    { key = "659.4a:2", value = "17176.30", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 57,94
+    { key = "659.4a:3", value = "57.94", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 30,86
+    { key = "659.4a:4", value = "30.86", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Potencia fiscal vehículo (CVF): 535,38
+    { key = "659.4a:5", value = "535.38", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 659.4b — Comercio al por menor de prensa, revistas y libros en
+    # quioscos situados en la vía pública.
+    # Módulo 1 Personal asalariado (persona): 3.476,83
+    { key = "659.4b:1", value = "3476.83", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 17.220,39
+    { key = "659.4b:2", value = "17220.39", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 403,11
+    { key = "659.4b:3", value = "403.11", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 844,02
+    { key = "659.4b:4", value = "844.02", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 691.9a — Reparación de calzado.
+    # Módulo 1 Personal asalariado (persona): 1.845,50
+    { key = "691.9a:1", value = "1845.50", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.014,78
+    { key = "691.9a:2", value = "10014.78", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 125,97
+    { key = "691.9a:3", value = "125.97", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 691.9b — Reparación de otros bienes de consumo n.c.o.p.
+    # Módulo 1 Personal asalariado (persona): 4.094,10
+    { key = "691.9b:1", value = "4094.10", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 16.187,42
+    { key = "691.9b:2", value = "16187.42", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 45,35
+    { key = "691.9b:3", value = "45.35", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 751.5 — Engrase y lavado de vehículos.
+    # Módulo 1 Personal asalariado (persona): 4.667,27
+    { key = "751.5:1", value = "4667.27", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 19.191,86
+    { key = "751.5:2", value = "19191.86", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 30,23
+    { key = "751.5:3", value = "30.23", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 757 — Servicios de mudanzas.
+    # Módulo 1 Personal asalariado (persona): 2.566,32
+    { key = "757:1", value = "2566.32", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.175,13
+    { key = "757:2", value = "10175.13", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Carga vehículos (tonelada): 48,08
+    { key = "757:3", value = "48.08", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 849.5 — Transporte de mensajería y recadería, cuando la
+    # actividad se realice exclusivamente con medios de transporte propios.
+    # Módulo 1 Personal asalariado (persona): 2.728,59
+    { key = "849.5:1", value = "2728.59", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.090,99
+    { key = "849.5:2", value = "10090.99", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Carga vehículos (tonelada): 126,21
+    { key = "849.5:3", value = "126.21", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 933.1 — Enseñanza de conducción de vehículos terrestres,
+    # acuáticos, aeronáuticos, etc.
+    # Módulo 1 Personal asalariado (persona): 3.067,42
+    { key = "933.1:1", value = "3067.42", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 20.596,45
+    { key = "933.1:2", value = "20596.45", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Número de vehículos (vehículo): 774,72
+    { key = "933.1:3", value = "774.72", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Potencia fiscal vehículo (CVF): 258,24
+    { key = "933.1:4", value = "258.24", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 933.9 — Otras actividades de enseñanza, tales como idiomas,
+    # corte y confección, mecanografía, taquigrafía, preparación de exámenes y
+    # oposiciones y similares n.c.o.p.
+    # Módulo 1 Personal asalariado (persona): 1.253,49
+    { key = "933.9:1", value = "1253.49", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 15.727,62
+    { key = "933.9:2", value = "15727.62", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 62,36
+    { key = "933.9:3", value = "62.36", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 967.2 — Escuelas y servicios de perfeccionamiento del deporte.
+    # Módulo 1 Personal asalariado (persona): 7.035,55
+    { key = "967.2:1", value = "7035.55", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 14.215,95
+    { key = "967.2:2", value = "14215.95", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 34,01
+    { key = "967.2:3", value = "34.01", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 971.1 — Tinte, limpieza en seco, lavado y planchado de ropas
+    # hechas y de prendas y artículos del hogar usados.
+    # Módulo 1 Personal asalariado (persona): 4.553,90
+    { key = "971.1:1", value = "4553.90", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 16.773,19
+    { key = "971.1:2", value = "16773.19", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Consumo de energía eléctrica (100 kWh): 45,98
+    { key = "971.1:3", value = "45.98", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 972.2 — Salones e institutos de belleza.
+    # Módulo 1 Personal asalariado (persona): 1.788,80
+    { key = "972.2:1", value = "1788.80", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 14.896,21
+    { key = "972.2:2", value = "14896.21", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local (m2): 88,18
+    { key = "972.2:3", value = "88.18", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Consumo de energía eléctrica (100 kWh): 55,43
+    { key = "972.2:4", value = "55.43", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 973.3 — Servicios de copias de documentos con máquinas
+    # fotocopiadoras.
+    # Módulo 1 Personal asalariado (persona): 4.125,59
+    { key = "973.3:1", value = "4125.59", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 17.044,03
+    { key = "973.3:2", value = "17044.03", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia eléctrica (KW contratado): 541,68
+    { key = "973.3:3", value = "541.68", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 641 — Comercio al por menor de frutas, verduras,
+    # hortalizas y tubérculos.
+    # Módulo 1 Personal asalariado (persona): 2.387,18
+    { key = "641:1", value = "2387.18", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 10.581,66
+    { key = "641:2", value = "10581.66", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Superficie del local independiente (m2): 57,94
+    { key = "641:3", value = "57.94", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie local no independiente (m2): 88,18
+    { key = "641:4", value = "88.18", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Carga elementos de transporte (kilogramo): 1,01
+    { key = "641:5", value = "1.01", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 675 — Servicios en quioscos, cajones, barracas u otros
+    # locales análogos.
+    # Módulo 1 Personal asalariado (persona): 2.802,88
+    { key = "675:1", value = "2802.88", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 14.461,60
+    { key = "675:2", value = "14461.60", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia eléctrica (KW contratado): 107,07
+    { key = "675:3", value = "107.07", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Superficie del local (m2): 26,45
+    { key = "675:4", value = "26.45", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Epígrafe IAE 676 — Servicios en chocolaterías, heladerías y
+    # horchaterías.
+    # Módulo 1 Personal asalariado (persona): 2.418,67
+    { key = "676:1", value = "2418.67", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 2 Personal no asalariado (persona): 20.016,97
+    { key = "676:2", value = "20016.97", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 3 Potencia eléctrica (KW contratado): 541,68
+    { key = "676:3", value = "541.68", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 4 Mesas (mesa): 220,45
+    { key = "676:4", value = "220.45", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+    # Módulo 5 Máquinas tipo «A» (máquina tipo «A»): 806,23
+    { key = "676:5", value = "806.23", valid_from = 2024-01-01, valid_to = 2024-12-31 },
+]
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = [
+    "Rendimientos anuales por unidad de módulo antes de amortización aplicables en el ejercicio 2024",
+]
+
+# Epígrafe IAE 721.2 — Transporte por autotaxis.
+# Módulo 1 Personal asalariado (persona): 1.346,27
+
+# Reducción general del rendimiento neto de módulos aplicable en 2024 (fase
+# 4ª), grounded in orden-hfp-1359-2023:da-1 apartado 1 ("podrán reducir el
+# rendimiento neto de módulos obtenido en 2024 en un 5 por ciento"), apartado
+# 3 confirming its application to the 2024 pagos fraccionados.
+[[revisions."2024".parameters]]
+id = "m131-modulos-reduccion-general-2024"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["orden-hfp-1359-2023:da-1"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["reducción general del 5 por 100"]
+
+# Fase 2ª — minoración por incentivos al empleo (Orden HFP/1359/2023 Anexo II,
+# instrucción 2.2.a). Coeficiente por incremento del número de personas
+# asalariadas: 0,40 applied to the positive year-over-year increase in the
+# módulo "personal asalariado" unit count, cross-checked byte-identical
+# against the AEAT Manual práctico de Renta 2024 worked example (epígrafe
+# 673.1: incremento 0,66 x 0,40 = 0,264).
+[[revisions."2024".parameters]]
+id = "m131-modulos-coeficiente-incremento-asalariados-2024"
+data_type = "ratio"
+unit = "coefficient"
+legal_refs = ["orden-hfp-1359-2023:instruccion-2-2-a"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.values]]
+value = "0.40"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Coeficiente por incremento del número de personas asalariadas: 0,40"]
+
+# Fase 2ª — coeficiente por tramos del número de unidades del módulo
+# "personal asalariado" (Orden HFP/1359/2023 Anexo II, instrucción 2.2.a).
+# A progressive cumulative-bracket schedule structurally identical to an
+# IRPF escala: fixed_addition per tramo is the cumulative coefficient sum up
+# to lower_bound, marginal_rate is the tramo's own coefficient. Reused via
+# lookup_bracket (resolve_bracket): coeficiente(3,00) = 0 + 0,10x(1,00-0) +
+# ... equivalently 0,10 (hasta 1,00) + 0,15x(3,00-1,00) = 0,10+0,30 = 0,40,
+# matching the manual worked example (epígrafe 673.1, base_tramos=3,00).
+[[revisions."2024".parameters]]
+id = "m131-modulos-coeficiente-tramos-asalariados-2024"
+data_type = "bracket_table"
+unit = "coefficient"
+bracket_axis = "filing_period"
+legal_refs = ["orden-hfp-1359-2023:instruccion-2-2-a"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.brackets]]
+lower_bound = "0"
+upper_bound = "1.00"
+fixed_addition = "0"
+marginal_rate = "0.10"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.brackets]]
+lower_bound = "1.00"
+upper_bound = "3.00"
+fixed_addition = "0.10"
+marginal_rate = "0.15"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.brackets]]
+lower_bound = "3.00"
+upper_bound = "5.00"
+fixed_addition = "0.40"
+marginal_rate = "0.20"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.brackets]]
+lower_bound = "5.00"
+upper_bound = "8.00"
+fixed_addition = "0.80"
+marginal_rate = "0.25"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.brackets]]
+lower_bound = "8.00"
+fixed_addition = "1.55"
+marginal_rate = "0.30"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Hasta 1,00 0,10", "Entre 1,01 y 3,00 0,15", "Entre 5,01 y 8,00 0,25", "Más de 8,00 0,30"]
+
+# Fase 3ª — índice corrector de exceso (Orden HFP/1359/2023 Anexo II,
+# instrucción 2.3.b.3). Índice 1,30 aplicado al exceso del rendimiento neto
+# minorado sobre la cuantía tabulada por actividad.
+[[revisions."2024".parameters]]
+id = "m131-modulos-indice-exceso-2024"
+data_type = "ratio"
+unit = "coefficient"
+legal_refs = ["orden-hfp-1359-2023:instruccion-2-3-b-3"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.values]]
+value = "1.30"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["índice corrector de exceso, debido"]
+
+# Fase 3ª — cuantía a efectos del índice corrector de exceso, por epígrafe
+# IAE (Orden HFP/1359/2023 Anexo II, instrucción 2.3.b.3, tabla de cuantías).
+# Keyed-bracket-table parameter mirroring m131-modulos-coeficientes-2024's
+# lookup shape (exact-match on epígrafe, discrete per-activity catalogue).
+# Cross-checked byte-identical against the AEAT Manual práctico de Renta
+# 2024 Apéndice per-activity "Cuantía a efectos del índice corrector de
+# exceso" lines, and against the bundled Orden Anexo II cuantía table.
+# Phased dataset: only the epígrafes already tabled in
+# m131-modulos-coeficientes-2024 are grounded here
+# (peluquería 972.1, transporte por autotaxis 721.2, transporte de
+# mercancías 722, restaurantes 671.4/671.5, cafeterías 672.1, cafés y bares
+# 673.1/673.2). An untabled epígrafe resolves to the minorado figure
+# unchanged (see _m131_modulos_cuantia_exceso docstring) — never a silent
+# fabricated cuantía.
+[[revisions."2024".parameters]]
+id = "m131-modulos-cuantia-exceso-2024"
+data_type = "keyed_bracket_table"
+unit = "euro"
+legal_refs = ["orden-hfp-1359-2023:instruccion-2-3-b-3"]
+source_refs = ["aeat-renta-2024-manual-parte1"]
+
+[[revisions."2024".parameters.keyed_brackets]]
+key = "972.1"
+value = "18051.81"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.keyed_brackets]]
+key = "721.2"
+value = "33640.86"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.keyed_brackets]]
+key = "722"
+value = "33640.86"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.keyed_brackets]]
+key = "671.4"
+value = "51617.08"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.keyed_brackets]]
+key = "671.5"
+value = "38081.38"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.keyed_brackets]]
+key = "672.1"
+value = "39070.26"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.keyed_brackets]]
+key = "673.1"
+value = "30586.03"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.keyed_brackets]]
+key = "673.2"
+value = "19084.78"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+
+[[revisions."2024".parameters.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = ["Cuantía a efectos del índice corrector de exceso: 30.586,03 euros"]

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#iva-complexity-hardening-scope'
-date: '2026-07-01'
-modified: '2026-07-03'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-07-01-iva-complexity-hardening-scope-adr]]'
   - '[[2026-07-01-iva-complexity-hardening-scope-research]]'
@@ -18,8 +18,8 @@ Auto-generated index of all documents tagged with `#iva-complexity-hardening-sco
 
 ### adr
 
-- `2026-07-01-iva-complexity-hardening-scope-adr` - iva-complexity-hardening-scope adr: Prorrata definitiva annual regularizacion (LIVA arts 105-106) | (status: proposed)
+- `2026-07-01-iva-complexity-hardening-scope-adr` - `iva-complexity-hardening-scope` adr: `Prorrata definitiva annual regularizacion (LIVA arts 105-106): provisional-carry + Q4 regularisation feeding M303 casilla 44 and M390` | (**status:** `superseded`)
 
 ### research
 
-- `2026-07-01-iva-complexity-hardening-scope-research` - iva-complexity-hardening-scope research: IVA complexity hardening umbrella 345
+- `2026-07-01-iva-complexity-hardening-scope-research` - `iva-complexity-hardening-scope` research: `IVA complexity hardening umbrella #345: verify-first scoping of children #346/#347/#348`

@@ -13,8 +13,9 @@ consumer adheres to. It pins:
 
 The :func:`~adapters.persistence.storage.save_envelope` and
 :func:`~adapters.persistence.storage.load_envelope` helpers atomically
-write and read the envelope JSON via the project's standard
-``tempfile.NamedTemporaryFile + os.replace`` pattern. Encrypted envelopes
+write and read the envelope JSON via
+:func:`~cadrumo.core.atomic_write.atomic_write_text` (standard tier).
+Encrypted envelopes
 require an explicit
 :class:`~adapters.persistence.storage.MasterKeyProvider` and HKDF context;
 the helpers derive a per-consumer key via HKDF-SHA256 and do not resolve an
@@ -32,8 +33,6 @@ from __future__ import annotations
 
 import base64
 import binascii
-import os
-import tempfile
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
@@ -42,10 +41,10 @@ from typing import cast
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from .....core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from .....core.atomic_write import atomic_write_text
 from .....core.classification import SensitivityClass
 from .....core.errors import CoreValidationError
 from .....core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
-from .....core.locks import fsync_parent_dir
 from .....core.logging import get_logger
 from .....core.time import validate_utc_aware
 from ..crypto import (
@@ -82,17 +81,6 @@ def _parse_model_json[T: BaseModel](model_type: type[T], raw: str, *, label: str
     except (ValidationError, ValueError) as exc:
         _log.debug("envelope JSON validation failed label=%s error_type=%s", label, type(exc).__name__)
         raise _storage_validation_error(f"{label} envelope JSON is not valid") from exc
-
-
-def _cleanup_tmp_file(tmp_path: Path | None) -> None:
-    if tmp_path is None:
-        return
-    try:
-        tmp_path.unlink()
-    except FileNotFoundError:
-        _log.debug("envelope temp cleanup skipped because temp file is absent")
-    except OSError as exc:
-        _log.debug("envelope temp cleanup failed error_type=%s", type(exc).__name__)
 
 
 class AeadAlgorithm(StrEnum):
@@ -226,28 +214,10 @@ def save_envelope[T: BaseModel](envelope: Envelope[T], path: Path) -> None:
     """
     target = path.resolve()
     payload = envelope.model_dump_json()
-    # NamedTemporaryFile raising means no file was created; the outer
-    # except re-raises cleanly.
-    tmp_path: Path | None = None
     try:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding=_UTF_8_ENCODING,
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(payload)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(tmp_path, target)
-        fsync_parent_dir(target)
+        atomic_write_text(target, payload, encoding=_UTF_8_ENCODING)
     except OSError as exc:
         _log.error("envelope atomic write failed error_type=%s", type(exc).__name__)
-        _cleanup_tmp_file(tmp_path)
         raise _storage_validation_error("envelope cannot be written") from exc
 
 
@@ -295,8 +265,8 @@ def load_envelope[PayloadT: BaseModel](
     return envelope
 
 
-_HKDF_CONTEXT_ENVELOPE_PAYLOAD = b"aeat.envelope.payload.v1"
-_CIPHER_ENVELOPE_AAD_PREFIX = b"aeat.envelope.cipher.v1::"
+_HKDF_CONTEXT_ENVELOPE_PAYLOAD = b"cadrumo.envelope.payload.v1"
+_CIPHER_ENVELOPE_AAD_PREFIX = b"cadrumo.envelope.cipher.v1::"
 
 
 class CipherEnvelope(BaseModel):
@@ -380,7 +350,7 @@ def save_encrypted_envelope[T: BaseModel](
     attacker cannot relabel or cross-consumer-graft.
 
     The caller supplies ``master_key_provider`` explicitly. Tests can
-    pass :class:`~adapters.persistence.storage.EphemeralMasterKeyProvider`;
+    pass :class:`~cadrumo.tests.master_key.EphemeralMasterKeyProvider`;
     production callers pass the provider selected by the custody flow.
     This helper does not resolve settings, active sessions, or default
     key providers on its own.
@@ -414,28 +384,10 @@ def save_encrypted_envelope[T: BaseModel](
         encryption=EncryptionMetadata.from_blob(blob, associated_data=aad),
     )
     serialised = cipher_envelope.model_dump_json()
-    # NamedTemporaryFile raising means no file was created; the outer
-    # except re-raises cleanly.
-    tmp_path: Path | None = None
     try:
-        target.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding=_UTF_8_ENCODING,
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(serialised)
-            handle.flush()
-            os.fsync(handle.fileno())
-        os.replace(tmp_path, target)
-        fsync_parent_dir(target)
+        atomic_write_text(target, serialised, encoding=_UTF_8_ENCODING)
     except OSError as exc:
         _log.error("envelope encrypted atomic write failed error_type=%s", type(exc).__name__)
-        _cleanup_tmp_file(tmp_path)
         raise _storage_validation_error("encrypted envelope cannot be written") from exc
 
 

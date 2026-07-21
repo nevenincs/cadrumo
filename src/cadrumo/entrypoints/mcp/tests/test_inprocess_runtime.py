@@ -1,0 +1,99 @@
+"""Real-behavior coverage for the warm in-process CLI runtime.
+
+Exercises :mod:`entrypoints.mcp._inprocess` against the real ``aeat`` Typer app,
+the real registry, and real filesystem state - no mocks, stubs, or monkeypatch.
+The runtime's contract is that it runs the genuine CLI pipeline in-process and
+returns a completed run whose captured stdout parses to the same JSON envelope
+the subprocess transport would emit; the byte-for-byte parity against the
+subprocess transport itself is proven separately in
+``test_inprocess_envelope_parity.py``.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from .._call_runtime import CallTier
+from .._inprocess import (
+    CompletedCliRun,
+    dispatch_verb_in_process,
+    parse_cli_envelope,
+    run_cli_in_process,
+    tier_runs_in_process,
+)
+from .._tools import build_tool_descriptors
+
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+def test_live_tier_stays_on_subprocess_other_tiers_run_in_process() -> None:
+    assert tier_runs_in_process(CallTier.READ) is True
+    assert tier_runs_in_process(CallTier.MUTATE) is True
+    # The AEAT-sede / open-world family keeps its supervised subprocess for the
+    # process-tree kill and the operator progress sink.
+    assert tier_runs_in_process(CallTier.LIVE) is False
+
+
+def test_run_cli_in_process_emits_the_read_only_contract_envelope() -> None:
+    # ``app contract`` is a read-only verb that needs no active profile, so it
+    # exercises the whole in-process pipeline - root callback, verb body, and the
+    # shared envelope emitter - without touching encrypted bucket state.
+    run = run_cli_in_process(["--format", "json", "app", "contract"], acquire_timeout_s=30.0)
+    assert run is not None
+    assert run.returncode == 0
+    envelope, is_error = parse_cli_envelope(run)
+    assert is_error is False
+    assert envelope["command"] == "contract"
+    assert envelope["status"] in {"success", "warning"}
+    assert "result" in envelope
+    # Nothing may have leaked onto the captured stderr on a clean read.
+    assert run.stderr.strip() == ""
+
+
+def test_dispatch_verb_in_process_reconstructs_the_argv_from_the_schema() -> None:
+    descriptor = next(candidate for candidate in build_tool_descriptors() if candidate.command_key == "contract")
+    run = dispatch_verb_in_process(descriptor.verb_schema, {}, acquire_timeout_s=30.0)
+    assert run is not None
+    envelope, is_error = parse_cli_envelope(run)
+    assert is_error is False
+    assert envelope["command"] == "contract"
+
+
+def test_parse_cli_envelope_reads_success_from_stdout() -> None:
+    run = CompletedCliRun(
+        stdout='{"schema_version": "1", "command": "contract", "status": "success", "result": {}, "notices": []}',
+        stderr="",
+        returncode=0,
+    )
+    envelope, is_error = parse_cli_envelope(run)
+    assert is_error is False
+    assert envelope["command"] == "contract"
+
+
+def test_parse_cli_envelope_reads_error_document_from_stderr() -> None:
+    run = CompletedCliRun(
+        stdout="",
+        stderr='{"schema_version": "1", "command": "modelo.export", "status": "error", "error": {}}',
+        returncode=2,
+    )
+    envelope, is_error = parse_cli_envelope(run)
+    assert is_error is True
+    assert envelope["command"] == "modelo.export"
+
+
+def test_parse_cli_envelope_non_zero_exit_marks_error_even_on_success_body() -> None:
+    run = CompletedCliRun(
+        stdout='{"status": "success"}',
+        stderr="",
+        returncode=1,
+    )
+    _, is_error = parse_cli_envelope(run)
+    assert is_error is True
+
+
+def test_parse_cli_envelope_non_json_body_becomes_a_typed_error() -> None:
+    run = CompletedCliRun(stdout="Traceback (most recent call last): boom", stderr="", returncode=1)
+    envelope, is_error = parse_cli_envelope(run)
+    assert is_error is True
+    assert envelope["status"] == "error"
+    assert "boom" in str(envelope["raw"])

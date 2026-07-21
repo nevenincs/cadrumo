@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#manual-practico'
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-12-manual-practico-adr]]'
   - '[[2026-04-12-manual-practico-plan]]'
   - '[[2026-04-12-trilingual-i18n-adr]]'
-  - '[[2026-04-12-base-module-structure-adr]]'
 ---
 
 # `manual-practico` research: ingest, structure, and trilingualise the AEAT Manual práctico (Renta + IVA)

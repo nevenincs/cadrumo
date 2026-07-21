@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#dt-12-rescate-plan-pensiones'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-21-modelo-100-renta-adr]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
@@ -56,7 +56,7 @@ provided.
 
 Add a pure helper function `_compute_dt12_reduccion_plan_pensiones(
 capital, pre_2007, totales) -> Decimal` in
-`src/aeat/application/modelo/_actions.py`. The formula is:
+`src/cadrumo/application/modelo/_calculation_actions.py`. The formula is:
 
   `reduction = (pre_2007 / totales) * capital * Decimal("0.40")`
 

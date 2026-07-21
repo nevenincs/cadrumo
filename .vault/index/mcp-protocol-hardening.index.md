@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-protocol-hardening'
-date: '2026-07-10'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-08-mcp-hardening-conformance-plan]]'
   - '[[2026-07-08-mcp-protocol-hardening-P01-S01]]'

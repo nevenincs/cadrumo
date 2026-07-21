@@ -1,0 +1,285 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: 2026-07-18 13:10+0200\n"
+"Last-Translator: Cadrumo Localization <docs@cadrumo.example>\n"
+"Language: es\n"
+"Language-Team: es <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../explanation/from-records-to-figures.md:1
+msgid "How your records become tax figures"
+msgstr "Cómo tus registros se convierten en cifras fiscales"
+
+#: ../../explanation/from-records-to-figures.md:3
+msgid ""
+"This page covers where the numbers on your tax form come from: how a "
+"plain bank movement turns into a figure for each numbered box on an "
+"official form, and why the tool is built to let you explain every figure "
+"later. It walks through the idea, not the buttons - the how-to guides "
+"linked from each section carry the commands."
+msgstr ""
+"Esta página trata de dónde vienen las cifras de tu modelo: cómo un simple "
+"movimiento bancario se convierte en una cifra para cada casilla numerada de "
+"un modelo oficial y por qué la herramienta está diseñada para que puedas "
+"explicar cada cifra más adelante. Recorre la idea, no los botones: las guías "
+"prácticas enlazadas en cada sección contienen los comandos."
+
+#: ../../explanation/from-records-to-figures.md:9
+#, python-brace-format
+msgid ""
+"The forms in question are modelos that you send to the {term}`AEAT`. Each"
+" modelo is made of {term}`casillas <casilla>`. Your job, with the tool's "
+"help, is to put the right figure in each box and to keep the evidence "
+"behind it."
+msgstr ""
+"Los formularios en cuestión son modelos que envías a la {term}`AEAT`. Cada "
+"modelo se compone de {term}`casillas <casilla>`. Tu tarea, con la ayuda de "
+"la herramienta, es poner la cifra correcta en cada casilla y conservar la "
+"evidencia que la respalda."
+
+#: ../../explanation/from-records-to-figures.md:11
+msgid "A bank movement means nothing on its own"
+msgstr "Un movimiento bancario no significa nada por sí solo"
+
+#: ../../explanation/from-records-to-figures.md:13
+msgid ""
+"A line on a bank statement is just a date and an amount. The money moved,"
+" but the statement doesn't know whether it was a customer paying you, a "
+"supplier you paid, your weekly groceries, or a transfer between your own "
+"accounts."
+msgstr ""
+"Una línea de un extracto bancario es solo una fecha y un importe. El dinero "
+"se movió, pero el extracto no sabe si fue un cliente que te pagó, un "
+"proveedor al que pagaste, la compra semanal o una transferencia entre tus "
+"propias cuentas."
+
+#: ../../explanation/from-records-to-figures.md:15
+msgid ""
+"Tax meaning isn't in the bank data. You add it. Until you do, a movement "
+"can't count toward any box on any form."
+msgstr ""
+"El significado fiscal no está en los datos bancarios. Lo añades tú. Hasta "
+"que no lo hagas, un movimiento no puede computar en ninguna casilla de "
+"ningún modelo."
+
+#: ../../explanation/from-records-to-figures.md:17
+msgid "Making a record tax-ready"
+msgstr "Preparar un registro para su tratamiento fiscal"
+
+#: ../../explanation/from-records-to-figures.md:19
+msgid ""
+"To give a movement tax meaning, you turn it into a sorted, categorized "
+"record. A tax-ready record carries three things:"
+msgstr ""
+"Para dar significado fiscal a un movimiento, lo conviertes en un registro "
+"clasificado y categorizado. Un registro listo para su tratamiento fiscal "
+"lleva tres cosas:"
+
+#: ../../explanation/from-records-to-figures.md:21
+msgid "a business, personal, or mixed decision;"
+msgstr "una decisión entre empresarial, personal o mixto;"
+
+#: ../../explanation/from-records-to-figures.md:22
+msgid "a category, such as customer sales or office supplies;"
+msgstr "una categoría, como ventas a clientes o material de oficina;"
+
+#: ../../explanation/from-records-to-figures.md:23
+msgid ""
+"and, for a mixed cost, the business-versus-personal split, so only the "
+"business share counts."
+msgstr ""
+"y, para un gasto mixto, el reparto entre la parte empresarial y la personal, "
+"de modo que solo compute la parte empresarial."
+
+#: ../../explanation/from-records-to-figures.md:25
+msgid ""
+"A record that has all of this is ready to feed into a calculation. To do "
+"this for your own movements, see [Classify transactions](../how-to"
+"/classify-transactions.md)."
+msgstr ""
+"Un registro que tiene todo esto está listo para alimentar un cálculo. Para "
+"hacerlo con tus propios movimientos, consulta [Clasificar transacciones]"
+"(../how-to/classify-transactions.md)."
+
+#: ../../explanation/from-records-to-figures.md:27
+msgid "Splitting a mixed cost, and checking readiness"
+msgstr "Repartir un gasto mixto y comprobar la idoneidad"
+
+#: ../../explanation/from-records-to-figures.md:29
+msgid ""
+"Some costs serve both your business and your private life - a phone bill,"
+" home internet, a home office. Only the business share counts, and the "
+"split can come from a percentage on the single record, a saved default "
+"for the whole category, or a ratio worked out from your registered facts "
+"- see [the mixed-use workflow](../how-to/classify-transactions.md"
+"#classify-mixed-use-transactions)."
+msgstr ""
+"Algunos gastos sirven a la vez a tu actividad y a tu vida privada: una "
+"factura de teléfono, el internet del hogar, una oficina en casa. Solo "
+"computa la parte empresarial, y el reparto puede venir de un porcentaje en "
+"el registro concreto, de un valor por defecto guardado para toda la "
+"categoría, o de una proporción calculada a partir de tus datos registrados; "
+"consulta [el flujo de uso mixto](../how-to/classify-transactions.md"
+"#classify-mixed-use-transactions)."
+
+#: ../../explanation/from-records-to-figures.md:35
+msgid ""
+"Before the tool adds anything up, a readiness check flags each record in "
+"the period that is still missing a decision, a category, a tax figure, a "
+"split reference, or a convertible currency. The check changes nothing; it"
+" tells you which records are not ready so you fix the raw material before"
+" trusting any total - see the readiness section of [Import and manage "
+"transactions](../how-to/import-bank-statements.md)."
+msgstr ""
+"Antes de que la herramienta sume nada, una comprobación de idoneidad señala "
+"cada registro del periodo al que aún le falta una decisión, una categoría, "
+"una cifra fiscal, una referencia de reparto o una moneda convertible. La "
+"comprobación no cambia nada; te dice qué registros no están listos para que "
+"corrijas la materia prima antes de fiarte de cualquier total; consulta la "
+"sección de idoneidad de [Importar y gestionar transacciones](../how-to"
+"/import-bank-statements.md)."
+
+#: ../../explanation/from-records-to-figures.md:42
+msgid "Which form, and which period"
+msgstr "Qué modelo y qué periodo"
+
+#: ../../explanation/from-records-to-figures.md:44
+msgid ""
+"A calculation is always for one form, one year, and one period. The "
+"period decides which of your records count."
+msgstr ""
+"Un cálculo siempre es para un modelo, un año y un periodo. El periodo decide "
+"cuáles de tus registros cuentan."
+
+#: ../../explanation/from-records-to-figures.md:46
+msgid ""
+"A period is a quarter, a single month, or a whole year. The tool turns it"
+" into a start and end date, then keeps only the records whose date falls "
+"inside that window. A first-quarter filing sees January through March; a "
+"March filing sees only March."
+msgstr ""
+"Un periodo es un trimestre, un solo mes o todo un año. La herramienta lo "
+"convierte en una fecha de inicio y una de fin, y luego conserva solo los "
+"registros cuya fecha cae dentro de esa ventana. Una presentación del primer "
+"trimestre ve de enero a marzo; una presentación de marzo ve solo marzo."
+
+#: ../../explanation/from-records-to-figures.md:48
+msgid ""
+"Choosing the right form for your activity is its own decision - see [Find"
+" out which modelos apply to you](../how-to/choose-modelo.md). For how "
+"quarters, months, and annual periods map to dates, see [Period tokens and"
+" dates](../how-to/filing-calendar.md#period-tokens-and-dates)."
+msgstr ""
+"Elegir el modelo adecuado para tu actividad es una decisión aparte; consulta "
+"[Averigua qué modelos te aplican](../how-to/choose-modelo.md). Para saber "
+"cómo se corresponden con fechas los trimestres, los meses y los periodos "
+"anuales, consulta [Tokens de periodo y fechas](../how-to/filing-calendar.md"
+"#period-tokens-and-dates)."
+
+#: ../../explanation/from-records-to-figures.md:50
+msgid "From records to numbered boxes"
+msgstr "De los registros a las casillas numeradas"
+
+#: ../../explanation/from-records-to-figures.md:52
+msgid ""
+"Here's where the figures appear. The tool reads two things: your tax-"
+"ready records for the period, and your profile - who you are and what you"
+" do."
+msgstr ""
+"Aquí es donde aparecen las cifras. La herramienta lee dos cosas: tus "
+"registros listos para su tratamiento fiscal del periodo, y tu perfil: quién "
+"eres y a qué te dedicas."
+
+#: ../../explanation/from-records-to-figures.md:54
+msgid ""
+"It then applies the rules the agency publishes for that form. Those rules"
+" decide which input feeds which box, and how the boxes relate to each "
+"other. A cost you marked as office supplies lands in the box for that "
+"kind of expense. Income lands in its own box. From there, the rules add, "
+"subtract, and apply rates - total income minus deductible costs to reach "
+"a net figure, a rate applied to reach the tax due - until every box on "
+"the form holds a figure."
+msgstr ""
+"Después aplica las reglas que la Agencia publica para ese modelo. Esas "
+"reglas deciden qué dato alimenta cada casilla y cómo se relacionan las "
+"casillas entre sí. Un gasto que marcaste como material de oficina va a la "
+"casilla de ese tipo de gasto. Los ingresos van a tu propia casilla. A "
+"partir de ahí, las reglas suman, restan y aplican tipos (ingresos totales "
+"menos gastos deducibles para llegar a una cifra neta, un tipo aplicado "
+"para llegar a la cuota) hasta que cada casilla del modelo contiene una "
+"cifra."
+
+#: ../../explanation/from-records-to-figures.md:56
+msgid ""
+"You don't wire any of this by hand. You make your records tax-ready and "
+"keep your profile current; the published rules do the routing and the "
+"arithmetic."
+msgstr ""
+"Nada de esto lo conectas a mano. Preparas tus registros para su tratamiento "
+"fiscal y mantienes tu perfil al día; las reglas publicadas hacen el "
+"encaminamiento y la aritmética."
+
+#: ../../explanation/from-records-to-figures.md:58
+msgid "Tracing a number back to the law"
+msgstr "Rastrear una cifra hasta la ley"
+
+#: ../../explanation/from-records-to-figures.md:60
+msgid ""
+"Every figure the tool produces keeps three things attached: the rule that"
+" produced it, the law article behind that rule, and the section of the "
+"official manual that explains it. Input figures you entered yourself "
+"carry the same trail back to their source."
+msgstr ""
+"Cada cifra que produce la herramienta lleva adjuntas tres cosas: la regla "
+"que la produjo, el artículo de la ley que respalda esa regla y la sección "
+"del manual oficial que la explica. Las cifras que introdujiste tú mismo "
+"llevan el mismo rastro hasta su origen."
+
+#: ../../explanation/from-records-to-figures.md:62
+msgid ""
+"This is the point of the whole design. Spanish tax filing expects you to "
+"justify every number. If an inspector asks why a box holds a certain "
+"figure, you can show the records behind it and the rule and law that "
+"turned those records into that figure. Nothing is a black box."
+msgstr ""
+"Este es el objetivo de todo el diseño. La presentación de impuestos en "
+"España espera que justifiques cada cifra. Si un inspector pregunta por qué "
+"una casilla contiene una cifra determinada, puedes mostrar los registros que "
+"la respaldan y la regla y la ley que convirtieron esos registros en esa "
+"cifra. Nada es una caja negra."
+
+#: ../../explanation/from-records-to-figures.md:64
+msgid "Where this sits in the journey"
+msgstr "Dónde encaja esto en el recorrido"
+
+#: ../../explanation/from-records-to-figures.md:66
+msgid ""
+"This page is part of understanding the AEAT pipeline - how your data "
+"flows from bank statement to filed form."
+msgstr ""
+"Esta página forma parte de entender el circuito de la AEAT: cómo fluyen tus "
+"datos desde el extracto bancario hasta el modelo presentado."
+
+#: ../../explanation/from-records-to-figures.md:68
+msgid "Start at the [how-it-works overview](index.md)."
+msgstr "Empieza por la [visión general de cómo funciona](index.md)."
+
+#: ../../explanation/from-records-to-figures.md:69
+msgid ""
+"Continue to the next stage: [Editing and verifying a calculation"
+"](editing-and-verifying.md)."
+msgstr ""
+"Continúa con la siguiente etapa: [Editar y verificar un cálculo](editing-"
+"and-verifying.md)."

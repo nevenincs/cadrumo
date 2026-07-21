@@ -44,15 +44,17 @@ from ....domain.modelos import (
     VerificationReportPersistenceError,
     raise_catalogue_integrity_error,
 )
+from ..storage import MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository
 
 _LOGGER = get_logger(__name__)
-_VERIFICATION_NAMESPACE = "cadrumo.domain.modelos.verification_reports"
-_VERIFICATION_OBJECT_KEY = "catalogue"
-_VERIFICATION_CATALOGUE_VERSION = 1
+_VERIFICATION_NAMESPACE = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.namespace
+_VERIFICATION_OBJECT_KEY = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.require_default_object_key()
+_VERIFICATION_CATALOGUE_VERSION = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.schema_version
+_VERIFICATION_CATALOGUE_SENSITIVITY = MODELO_VERIFICATION_REPORT_CATALOGUE_NAMESPACE.sensitivity
 _VERIFICATION_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_verification_report_persistence"
 
 
@@ -111,14 +113,13 @@ class VerificationReportCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
-            SensitivityClass,
         )
 
         try:
             record = self._objects.load(
                 _VERIFICATION_NAMESPACE,
                 _VERIFICATION_OBJECT_KEY,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_VERIFICATION_CATALOGUE_SENSITIVITY,
                 max_supported_version=_VERIFICATION_CATALOGUE_VERSION,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
@@ -132,11 +133,11 @@ class VerificationReportCatalogueRepository:
         if record is None:
             return VerificationReportCatalogue()
         envelope = Envelope[VerificationReportCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        if envelope.classification is not _VERIFICATION_CATALOGUE_SENSITIVITY:
             _LOGGER.error(
                 "verification-report catalogue classification mismatch",
                 extra={
-                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "expected_classification": _VERIFICATION_CATALOGUE_SENSITIVITY.value,
                     "actual_classification": envelope.classification.value,
                 },
             )
@@ -145,7 +146,7 @@ class VerificationReportCatalogueRepository:
                 translated_message=_VERIFICATION_PERSISTENCE_MESSAGE,
                 context={
                     "reason": "classification_mismatch",
-                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "expected_classification": _VERIFICATION_CATALOGUE_SENSITIVITY.value,
                     "actual_classification": envelope.classification.value,
                 },
             )
@@ -175,18 +176,18 @@ class VerificationReportCatalogueRepository:
             catalogue: The full :class:`VerificationReportCatalogue` to store,
                 keyed by each report's verification-report identifier.
         """
-        from ..storage import Envelope, SensitivityClass
+        from ..storage import Envelope
 
         envelope = Envelope[VerificationReportCatalogue](
             schema_version=_VERIFICATION_CATALOGUE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_VERIFICATION_CATALOGUE_SENSITIVITY,
             payload=catalogue,
         )
         self._objects.save(
             namespace=_VERIFICATION_NAMESPACE,
             object_key=_VERIFICATION_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_VERIFICATION_CATALOGUE_SENSITIVITY,
             schema_version=_VERIFICATION_CATALOGUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),

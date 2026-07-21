@@ -3,10 +3,9 @@ generated: true
 tags:
   - '#index'
   - '#aeat-auth-providers'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-16'
+modified: '2026-07-17'
 related:
-  - '[[2026-04-18-aeat-auth-providers-research]]'
   - '[[2026-04-18-auth-provider-abstraction-adr]]'
 ---
 
@@ -18,8 +17,4 @@ Auto-generated index of all documents tagged with `#aeat-auth-providers`.
 
 ### adr
 
-- `2026-04-18-auth-provider-abstraction-adr` - auth-provider-abstraction-adr
-
-### research
-
-- `2026-04-18-aeat-auth-providers-research` - aeat-auth-providers-research
+- `2026-04-18-auth-provider-abstraction-adr` - auth-provider-abstraction-adr | (**status:** `accepted`)

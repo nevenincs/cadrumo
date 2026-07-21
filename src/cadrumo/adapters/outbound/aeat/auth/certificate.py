@@ -1,27 +1,24 @@
 """PKCS#12 client-certificate records and checks for AEAT Sede Electrónica.
 
-This module is the public surface for certificate-based authentication
-against the Spanish tax authority's Sede Electrónica. Callers import
-exclusively from :mod:`adapters.outbound.aeat.auth`; the backend implementations live in
-the private :mod:`adapters.outbound.aeat.auth._certificate_backends` package.
+This module is the public surface for loading and evaluating certificates used
+for authentication against the Spanish tax authority's Sede Electrónica.
 
 :class:`adapters.outbound.aeat.auth.AeatAuthenticator` consumes this
 surface by loading a :class:`CertificateBundle` into a :class:`LoadedCertificate`,
-recording :class:`CertificateHealth`, deriving the taxpayer NIF/NIE through
-:func:`extract_nif_from_subject`, and storing :class:`HandshakeResult` evidence
-in certificate-backed sessions.
+recording :class:`CertificateHealth`, and deriving the taxpayer NIF/NIE through
+:func:`extract_nif_from_subject`.
 
 Design constraints:
 
 * All boundary records are pydantic v2 ``BaseModel`` with
   ``model_config`` set to the shared strict, frozen project config.
 * Cert passphrases are :class:`pydantic.SecretStr`. The secret value is
-  materialised only at the exact TLS-handshake boundary and is never
+  materialised only at the PKCS#12 or Playwright context boundary and is never
   logged, persisted, or serialised by ``model_dump``.
 * Parsed private-key material and the raw PKCS#12 bytes live in
   :class:`pydantic.PrivateAttr` fields on :class:`LoadedCertificate`,
   so they can never be leaked via ``model_dump`` or ``repr``.
-* All errors inherit from :class:`core.errors.AeatError` via
+* All errors inherit from :class:`core.errors.CadrumoError` via
   :class:`CertificateError`.
 
 See Also:
@@ -37,7 +34,7 @@ import re
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import TYPE_CHECKING, Protocol, override, runtime_checkable
+from typing import override
 
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
@@ -46,14 +43,10 @@ from cryptography.x509.oid import NameOID
 from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
 from .....core import STRICT_FROZEN_CONFIG
-from .....core.config import CertificateBackend
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
-
-if TYPE_CHECKING:
-    from ._certificate_backends._base import _CertBackend
 
 log = get_logger(__name__)
 
@@ -66,7 +59,7 @@ class CertificateError(AuthError):
 
     Subclasses remain catchable through the shared :class:`AuthError` branch
     while preserving certificate-specific causes for loading, password,
-    health, handshake, and subject-identity failures.
+    health, and subject-identity failures.
     """
 
 
@@ -92,16 +85,6 @@ class CertificatePreExpiryError(CertificateError):
     threshold, before the bundle becomes technically unusable. Callers
     may suppress it via an explicit override flag on the narrow
     programmatic surfaces that still support certificate probes.
-    """
-
-
-class CertificateHandshakeError(CertificateError):
-    """Raised when handshake input is structurally invalid.
-
-    TLS failures encountered during :func:`verify_handshake` are
-    returned as ``HandshakeResult(success=False, ...)`` rather than
-    raised; this exception is reserved for cases where the caller
-    passed nonsense (e.g. an empty URL).
     """
 
 
@@ -153,8 +136,7 @@ class CertificateBundle(BaseModel):
     """Operator-supplied pointer at a PKCS#12 bundle on disk.
 
     :func:`load_certificate` turns this pointer into a
-    :class:`LoadedCertificate`. The selected :class:`CertificateBackend`
-    determines which private backend later consumes the loaded certificate.
+    :class:`LoadedCertificate`.
 
     The PKCS#12 passphrase is carried directly as a
     :class:`pydantic.SecretStr` so callers no longer have to round-trip
@@ -166,7 +148,6 @@ class CertificateBundle(BaseModel):
         path: Filesystem path to the ``.p12`` / ``.pfx`` bundle.
         password: PKCS#12 passphrase as a :class:`SecretStr`.
         friendly_name: Optional human-readable label for logs.
-        backend: Which backend should consume this bundle.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -174,7 +155,6 @@ class CertificateBundle(BaseModel):
     path: Path
     password: SecretStr
     friendly_name: str | None = None
-    backend: CertificateBackend
 
 
 class LoadedCertificate(BaseModel):
@@ -182,7 +162,7 @@ class LoadedCertificate(BaseModel):
 
     :class:`adapters.outbound.aeat.auth.AeatAuthenticator` uses this
     record for NIF/NIE extraction, :class:`CertificateHealth` evaluation,
-    :class:`HandshakeResult` creation, and browser-context provisioning.
+    and browser-context provisioning.
 
     Public fields are safe to log and serialise. Secret material
     (raw PKCS#12 bytes, parsed private key, passphrase) lives in
@@ -200,7 +180,6 @@ class LoadedCertificate(BaseModel):
             encoding.
         source_path: Path the bundle was loaded from.
         friendly_name: Optional label propagated from the bundle.
-        backend: Backend this cert should be handed to.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -213,7 +192,6 @@ class LoadedCertificate(BaseModel):
     sha256_thumbprint: str
     source_path: Path
     friendly_name: str | None
-    backend: CertificateBackend
 
     _pkcs12_bytes: bytes = PrivateAttr(default=b"")
     _password: SecretStr = PrivateAttr(default=SecretStr(""))
@@ -234,12 +212,11 @@ class LoadedCertificate(BaseModel):
 
     @override
     def __repr__(self) -> str:  # pragma: no cover - trivial
-        """Return a developer-readable string showing subject, issuer, thumbprint, and backend."""
+        """Return a developer-readable subject, issuer, and thumbprint summary."""
         return (
             f"LoadedCertificate(subject={self.subject!r}, "
             f"issuer={self.issuer!r}, "
-            f"sha256_thumbprint={self.sha256_thumbprint!r}, "
-            f"backend={self.backend.value})"
+            f"sha256_thumbprint={self.sha256_thumbprint!r})"
         )
 
 
@@ -283,49 +260,6 @@ class CertificateHealth(BaseModel):
     warn_threshold_days: int = Field(gt=0)
     critical_threshold_days: int = Field(gt=0)
     evaluated_at: datetime
-
-
-class HandshakeResult(BaseModel):
-    """Structured outcome of a :func:`verify_handshake` attempt.
-
-    Successful certificate sessions persist this result inside
-    :class:`adapters.outbound.aeat.auth._authenticator_persistence.PersistedSessionMetadata`
-    so resumed sessions can preserve the original mTLS probe evidence.
-
-    Attributes:
-        success: Whether the TLS handshake completed successfully.
-        status_code: HTTP status returned by the verify URL (0 if the
-            handshake failed before any HTTP response was observed).
-        server_cert_chain: Tuple of subject DNs from the server-presented
-            chain, outermost leaf first. Empty on failure.
-        elapsed_ms: Wall-clock elapsed time in milliseconds.
-        attempted_at: Timezone-aware UTC timestamp of the attempt.
-        error_message: Human-readable failure reason when
-            ``success=False``.
-    """
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    success: bool
-    status_code: int
-    server_cert_chain: tuple[str, ...]
-    elapsed_ms: int
-    attempted_at: datetime
-    error_message: str | None = None
-
-
-# ── Browser integration Protocol ────────────────────────────────────────────
-
-
-@runtime_checkable
-class _BrowserContextLike(Protocol):
-    """Structural typing hint for a Playwright ``BrowserContext``.
-
-    Declared as a :class:`typing.Protocol` so this module does not
-    import ``playwright`` at module load. The actual attribute surface
-    Playwright exposes is large and out of scope for static typing here;
-    the ``ty`` checker treats the protocol body as informational only.
-    """
 
 
 # ── Loader ──────────────────────────────────────────────────────────────────
@@ -404,7 +338,6 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
         sha256_thumbprint=x509_cert.fingerprint(hashes.SHA256()).hex(),
         source_path=bundle.path,
         friendly_name=friendly_name,
-        backend=bundle.backend,
     )
 
     object.__setattr__(loaded, "_pkcs12_bytes", raw_bytes)
@@ -416,11 +349,7 @@ def load_certificate(bundle: CertificateBundle) -> LoadedCertificate:
             f"certificate for subject {loaded.subject!r} expired at {loaded.not_after.isoformat()}",
         )
 
-    log.info(
-        "loaded PKCS#12 certificate: thumbprint=%s backend=%s",
-        loaded.sha256_thumbprint,
-        loaded.backend.value,
-    )
+    log.info("loaded PKCS#12 certificate: thumbprint=%s", loaded.sha256_thumbprint)
     return loaded
 
 
@@ -520,7 +449,6 @@ def health(
     password: SecretStr,
     warn_days: int,
     critical_days: int,
-    backend: CertificateBackend = CertificateBackend.PLAYWRIGHT_CONTEXT,
     friendly_name: str | None = None,
     now: datetime | None = None,
 ) -> CertificateHealth:
@@ -540,8 +468,6 @@ def health(
         warn_days: Warning threshold in days (see
             :func:`evaluate_loaded_certificate_health`).
         critical_days: Critical threshold in days.
-        backend: Backend the bundle belongs to (default
-            ``PLAYWRIGHT_CONTEXT``).
         friendly_name: Optional label propagated to the bundle.
         now: Optional reference time, for deterministic tests.
 
@@ -558,7 +484,6 @@ def health(
         path=path,
         password=password,
         friendly_name=friendly_name,
-        backend=backend,
     )
     try:
         loaded = load_certificate(bundle)
@@ -690,104 +615,21 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
     )
 
 
-# ── Backend dispatch ────────────────────────────────────────────────────────
-
-
-def _select_backend(backend: CertificateBackend) -> _CertBackend:
-    """Return the backend implementation for ``backend``.
-
-    Imports are performed lazily so the cryptography + playwright
-    dependency cost is paid only when the relevant backend is actually
-    requested.
-    """
-    from ._certificate_backends._httpx_fallback import HttpxFallbackBackend
-    from ._certificate_backends._playwright_context import (
-        PlaywrightContextBackend,
-    )
-
-    match backend:
-        case CertificateBackend.PLAYWRIGHT_CONTEXT:
-            return PlaywrightContextBackend()
-        case CertificateBackend.HTTPX_FALLBACK:
-            return HttpxFallbackBackend()
-
-
-# ── Public backend-facing API ───────────────────────────────────────────────
-
-
-def preload_into_browser_context(
-    cert: LoadedCertificate,
-    context: object,
-) -> None:
-    """Validate that ``context`` was constructed with ``cert``.
-
-    Per Playwright's API, per-context client certificates must be
-    supplied at :meth:`playwright.async_api.Browser.new_context` time;
-    there is no post-hoc injection hook. This function therefore
-    **validates** the contract rather than mutating ``context``. It is
-    the integration hook used by
-    :class:`adapters.outbound.aeat.auth.CertificateContextProvisioner`
-    after it passes a :class:`CertificateBundle`-derived certificate through
-    to ``new_context``.
-
-    Args:
-        cert: The :class:`LoadedCertificate` to verify against ``context``.
-        context: A Playwright ``BrowserContext`` duck-typed via
-            :class:`_BrowserContextLike`.
-    """
-    backend = _select_backend(cert.backend)
-    backend.preload(cert, context)
-
-
-def verify_handshake(cert: LoadedCertificate, url: str) -> HandshakeResult:
-    """Perform an opt-in TLS handshake smoke test.
-
-    :class:`adapters.outbound.aeat.auth.AeatAuthenticator` calls this
-    before constructing a certificate-backed :class:`AeatSession`. Backend
-    implementations own the actual transport behavior.
-
-    Dispatches to the backend selected by ``cert.backend``. TLS failures
-    are returned as :class:`HandshakeResult` with ``success=False`` so
-    callers can record them in health-check reports without catching
-    exceptions. Only structurally invalid input raises
-    :class:`CertificateHandshakeError`.
-
-    Args:
-        cert: The loaded certificate to present.
-        url: Fully-qualified target URL (must include scheme + host).
-
-    Returns:
-        A frozen :class:`HandshakeResult`.
-
-    Raises:
-        CertificateHandshakeError: When ``url`` is empty or malformed.
-    """
-    if not url or "://" not in url:
-        raise CertificateHandshakeError(f"verify_handshake: invalid url {url!r}")
-    backend = _select_backend(cert.backend)
-    return backend.verify(cert, url)
-
-
 __all__ = [
     "AeatLoginAssertionError",
     "AeatSessionExpiredError",
-    "CertificateBackend",
     "CertificateBundle",
     "CertificateError",
     "CertificateExpiredError",
-    "CertificateHandshakeError",
     "CertificateHealth",
     "CertificateHealthSeverity",
     "CertificateLoadError",
     "CertificateNifParseError",
     "CertificatePasswordError",
     "CertificatePreExpiryError",
-    "HandshakeResult",
     "LoadedCertificate",
     "evaluate_loaded_certificate_health",
     "extract_nif_from_subject",
     "health",
     "load_certificate",
-    "preload_into_browser_context",
-    "verify_handshake",
 ]

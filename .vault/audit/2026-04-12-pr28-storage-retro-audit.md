@@ -3,10 +3,9 @@ tags:
   - '#audit'
   - '#pr28-storage-retro'
 date: '2026-04-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-04-12-pr28-storage-retro-research]]'
-  - '[[2026-04-12-data-storage-research]]'
 ---
 
 # `pr28-storage-retro` Code Review

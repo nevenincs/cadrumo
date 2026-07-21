@@ -1,14 +1,14 @@
-"""Calc-mesh resolver for the dedicated per-perceptor retención store (RET-1 P02).
+"""Calc-mesh resolver for the dedicated per-perceptor retención store.
 
 The :class:`RetencionesAggregationSourceResolver` reads the persisted per-perceptor
-observations (P01 store) and materialises the Modelo 180 "número total de
+observations and materialises the Modelo 180 "número total de
 perceptores" box with the validated DISTINCT-NIF count — never the sum of
 quarterly aggregate counts. An empty store on a revision that declares the
 perceptor-count binding raises before a zero count can be persisted.
 
 The test revision is the real Modelo 180 revision with its perceptor-count binding
-re-pointed to the ``retenciones_aggregation`` source (the P03 cutover, simulated
-here via ``model_copy`` so P02 can be exercised before the registry re-stamp).
+re-pointed to the ``retenciones_aggregation`` source, simulated here via
+``model_copy`` so the resolver can be exercised before the registry re-stamp.
 """
 
 from __future__ import annotations
@@ -70,7 +70,7 @@ def _observation(nif: str) -> RetencionObservation:
 def _m180_revision_with_retenciones_source() -> ModeloRevision:
     """The real M180 revision with its perceptor-count binding flipped to retenciones_aggregation.
 
-    Simulates the P03 registry re-stamp via ``model_copy`` so the P02 resolver is
+    Simulates the registry re-stamp via ``model_copy`` so the resolver is
     exercised before the registry cutover lands.
     """
     snapshot = _authority_snapshot("180", 2024, "0A")
@@ -266,7 +266,7 @@ def test_resolver_is_silent_when_revision_declares_no_retenciones_binding(tmp_pa
     """A revision without a retenciones_aggregation binding resolves empty (no false advisory).
 
     Modelo 303 (IVA) declares no retenciones_aggregation binding. (M180/M193 DO
-    declare it after the RET-1 P03 re-stamp, so this uses a non-retenciones modelo.)
+    declare it, so this uses a non-retenciones modelo.)
     """
     with isolated_runtime_profile(tmp_path=tmp_path):
         snapshot = _authority_snapshot("303", 2024, "1T")

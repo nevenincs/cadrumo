@@ -2,9 +2,9 @@
 
 This package owns the application-layer authentication contract used by
 operator configuration, live-read preflight, and AEAT session acquisition.
-:class:`AuthProvider` and
-:class:`AuthProviderKind` define the provider protocol
-and closed provider catalogue; :func:`select_provider`
+:class:`AuthProvider` defines the provider protocol; the layer-neutral
+:class:`core.AuthProviderKind` and :class:`core.AuthProviderDescription`
+contracts are owned by :mod:`core`. :func:`select_provider`
 delegates lazily to concrete outbound providers under
 :mod:`adapters.outbound.aeat.auth` so application consumers keep one
 stable facade without importing adapter mechanics at module load.
@@ -13,15 +13,16 @@ Operator-facing auth configuration stays in this layer.
 :func:`configure_operator_auth`,
 :func:`inspect_operator_auth`,
 :func:`test_operator_auth`,
-:func:`login_operator_auth`, and
-:func:`clear_operator_auth` return typed result records
+:func:`login_operator_auth`,
+:func:`logout_operator_auth`, and
+:func:`reset_operator_auth` return typed result records
 such as :class:`AuthStatusResult`,
 :class:`AuthLoginResult`, and
-:class:`LiveAuthPreflightReport`. The persisted local
-configuration is :class:`AuthState`, while provider
-metadata is reported through
-:class:`AuthProviderDescription` and
-:class:`AuthProvidersReport`. Configuration writes are
+:class:`LiveAuthPreflightReport`. Persisted auth state and durable auth intents
+are owned by :mod:`application.workflow`; this facade deliberately does not
+re-export them. Provider metadata is reported through
+:class:`core.AuthProviderDescription` and :class:`AuthProvidersReport`.
+Configuration writes are
 gated by :class:`application.workflow.ActiveProfileHealth`: a missing,
 dangling, or unreadable active bucket is refused before workflow state changes.
 Successful provider configuration persists the updated
@@ -82,22 +83,20 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import date
-from enum import StrEnum
+from importlib import import_module
 from typing import TYPE_CHECKING, Protocol, runtime_checkable
-
-from pydantic import BaseModel, Field
 
 if TYPE_CHECKING:
     from ...adapters.outbound.aeat.auth import (
         AeatLoginAssertion,
         AeatSession,
         BrowserSessionFactory,
-        BrowserSessionLike,
     )
     from ...core.config import Settings
 
-from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core import AuthProviderDescription as _AuthProviderDescription
+from ...core import AuthProviderKind as _AuthProviderKind
+from ..auth_credentials import ActiveCertificateCredentials
 from ._catalogue import (
     AUTH_PROVIDER_CATALOGUE,
     AuthProviderListing,
@@ -108,51 +107,6 @@ from ._catalogue import (
 )
 
 
-class AuthProviderKind(StrEnum):
-    """Closed enumeration of supported AEAT authentication providers.
-
-    Attributes:
-        CERTIFICATE: PKCS#12 client certificate (FNMT-RCM and equivalents).
-        CLAVE_MOVIL: operator-mediated ``Cl@ve`` Móvil flow.
-        CLAVE_PERMANENTE: DNI/NIE + password ``Cl@ve`` Permanente flow, used
-            for AEAT read paths without an FNMT certificate or a phone.
-    """
-
-    CERTIFICATE = "certificate"
-    CLAVE_MOVIL = "clave_movil"
-    CLAVE_PERMANENTE = "clave_permanente"
-
-
-class AuthProviderDescription(BaseModel):
-    """Operator-facing description of one configured auth provider.
-
-    Attributes:
-        kind: Identifier of the provider.
-        label: Human-readable provider name.
-        configured: Whether the provider's required settings are present.
-        available: Whether a session can be established.
-        identity_nif: NIF resolved by the provider, when known.
-        subject: Subject DN or equivalent identity string.
-        expires_on: Expiry date for the underlying credential.
-        health_severity: Provider-specific health classification.
-        days_until_expiry: Convenience countdown to ``expires_on``.
-        health_summary: Short human-readable diagnostic.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    kind: AuthProviderKind
-    label: str = Field(min_length=1)
-    configured: bool
-    available: bool
-    identity_nif: str | None = None
-    subject: str | None = None
-    expires_on: date | None = None
-    health_severity: str | None = None
-    days_until_expiry: int | None = None
-    health_summary: str | None = None
-
-
 @runtime_checkable
 class AuthProvider(Protocol):
     """Protocol every concrete AEAT auth provider satisfies.
@@ -161,13 +115,10 @@ class AuthProvider(Protocol):
     and are dispatched by :func:`select_provider`.
     """
 
-    kind: AuthProviderKind
+    kind: _AuthProviderKind
 
     async def authenticate(
         self,
-        *,
-        browser_session: BrowserSessionLike | None = None,
-        target_url: str | None = None,
     ) -> AeatSession:
         """Establish an authenticated session and return the :class:`AeatSession` record."""
         ...
@@ -175,22 +126,25 @@ class AuthProvider(Protocol):
     async def verify(
         self,
         session: AeatSession,
-        *,
-        target_url: str | None = None,
     ) -> AeatLoginAssertion:
-        """Re-probe ``session`` against ``target_url`` and return the :class:`AeatLoginAssertion` for the provider."""
+        """Re-probe ``session`` through the provider's authoritative proof."""
         ...
 
-    def describe(self) -> AuthProviderDescription:
-        """Return a safe, log-friendly :class:`AuthProviderDescription` of the provider's configured state."""
+    def describe(self) -> _AuthProviderDescription:
+        """Return the provider's safe :class:`core.AuthProviderDescription`."""
+        ...
+
+    async def close(self) -> None:
+        """Release every browser resource owned by this provider."""
         ...
 
 
 def select_provider(
-    kind: AuthProviderKind,
+    kind: _AuthProviderKind,
     *,
     settings: Settings,
     browser_session_factory: BrowserSessionFactory | None = None,
+    certificate_credentials: ActiveCertificateCredentials | None = None,
 ) -> AuthProvider:
     """Return the concrete outbound auth provider for ``kind``.
 
@@ -198,35 +152,28 @@ def select_provider(
     implementations stay in the outbound adapter layer and are imported
     lazily to avoid an application/adapter import cycle at module load.
 
-    Returns an :class:`AuthProvider` configured for the requested
-    provider kind.
-    """
-    from ...adapters.outbound.aeat.auth import select_provider as _select_provider
+    Certificate construction resolves the active named credential exactly
+    once, then passes that typed credential directly to the outbound adapter.
+    Explicit absent values are retained so a missing named-source secret can
+    never inherit an unrelated global password.
 
-    return _select_provider(
+    Returns an :class:`AuthProvider` configured for the requested provider
+    kind.
+    """
+    credentials = certificate_credentials
+    if kind is _AuthProviderKind.CERTIFICATE and credentials is None:
+        credentials = resolve_active_certificate_credentials(settings=settings)
+    outbound_auth = import_module("cadrumo.adapters.outbound.aeat.auth")
+    outbound_factory = outbound_auth.select_provider
+    provider = outbound_factory(
         kind,
         settings=settings,
         browser_session_factory=browser_session_factory,
+        certificate_credentials=credentials,
     )
-
-
-def describe_provider_operator_impact(description: AuthProviderDescription) -> str:
-    """Return a one-paragraph operator-facing summary of how ``description`` affects the workflow.
-
-    Used by ``aeat config auth providers`` to render a human-readable
-    diagnostic. The string focuses on what the operator can and cannot
-    do given the current provider configuration; never contains
-    secrets.
-    """
-    from ...core.i18n import tr
-
-    if not description.configured:
-        return tr("application.auth.provider_impact.unconfigured")
-    if not description.available:
-        return tr("application.auth.provider_impact.unavailable", label=description.label)
-    if description.kind == AuthProviderKind.CERTIFICATE:
-        return tr("application.auth.provider_impact.certificate_ready")
-    return tr("application.auth.provider_impact.generic_ready", label=description.label)
+    if not isinstance(provider, AuthProvider):
+        raise TypeError("outbound auth factory returned an object outside the AuthProvider contract")
+    return provider
 
 
 from ._acquisition_lock import (
@@ -250,12 +197,7 @@ from ._apoderado import (
 )
 from ._certificate_secret_backend import (
     CertificateSecretBackend,
-    CertificateSecretBackendKind,
-    CertificateSecretBackendUnavailableError,
-    CertificateSecretNotFoundError,
-    KeyringCertificateSecretBackend,
     SecureStorageCertificateSecretBackend,
-    certificate_secret_backend,
 )
 from ._certificate_sources import (
     CertificateSourceNoActiveBucketError,
@@ -269,9 +211,15 @@ from ._certificate_sources_operator import (
     register_operator_certificate_source,
     remove_operator_certificate_source,
     remove_operator_certificate_source_secret,
-    resolve_certificate_source_secret,
     select_operator_certificate_source,
     set_operator_certificate_source_secret,
+)
+from ._credential_resolution import (
+    ActiveAuthProjectionSnapshot,
+    active_auth_projection_span,
+    project_active_certificate_credentials,
+    resolve_active_certificate_credentials,
+    resolve_certificate_source_secret,
 )
 from ._diagnostics import (
     AUTH_DIAGNOSTIC_PHONE_STATES,
@@ -284,33 +232,39 @@ from ._diagnostics import (
     record_auth_diagnostic_phone_state,
 )
 from ._errors import AuthDiagnosticPayloadError
-from ._models import AuthState, CertificateSourceRecord
 from ._operator import (
     build_live_auth_preflight_report,
-    clear_operator_auth,
     configure_operator_auth,
     inspect_operator_auth,
     list_operator_auth_providers,
     login_operator_auth,
+    logout_operator_auth,
+    reset_operator_auth,
     test_operator_auth,
 )
 from ._operator_probes import (
     ProviderConfigurationProbe,
     ProviderProbeResult,
     probe_provider_configuration,
+    probe_provider_credentials,
 )
 from ._operator_results import (
-    AuthClearResult,
+    AuthCleanupInProgressError,
     AuthConfigureDanglingActiveProfileError,
     AuthConfigureNoActiveBucketError,
     AuthConfigureResult,
     AuthLoginNotEnabledError,
     AuthLoginPreconditionError,
     AuthLoginResult,
+    AuthLogoutResult,
+    AuthOperationScopeConflictError,
+    AuthProviderNotConfiguredError,
     AuthProviderReservedError,
     AuthProvidersReport,
+    AuthResetResult,
     AuthStatusResult,
     AuthTestResult,
+    CertificateSecretMutationInProgressError,
     CertificateSourceCheckEntry,
     CertificateSourceCheckReport,
     CertificateSourceListResult,
@@ -328,10 +282,10 @@ from ._sessions import (
     PersistedAuthSession,
     SessionDeserializationError,
     StorageStatePaths,
-    configure_session_store,
     delete_persisted_session,
     ensure_authenticated_aeat_session,
     load_persisted_session,
+    persisted_session_exists,
     require_verified_aeat_session,
     storage_state_paths,
 )
@@ -339,6 +293,8 @@ from ._sessions import (
 __all__ = [
     "AUTH_DIAGNOSTIC_PHONE_STATES",
     "AUTH_PROVIDER_CATALOGUE",
+    "ActiveAuthProjectionSnapshot",
+    "ActiveCertificateCredentials",
     "ApoderadoConfiguration",
     "ApoderadoConfigurationNotSetError",
     "ApoderadoLiveCheckUnavailableError",
@@ -348,7 +304,7 @@ __all__ = [
     "AuthAcquisitionLockState",
     "AuthAcquisitionLockStatus",
     "AuthAcquisitionLockedError",
-    "AuthClearResult",
+    "AuthCleanupInProgressError",
     "AuthConfigureDanglingActiveProfileError",
     "AuthConfigureNoActiveBucketError",
     "AuthConfigureResult",
@@ -360,22 +316,21 @@ __all__ = [
     "AuthLoginNotEnabledError",
     "AuthLoginPreconditionError",
     "AuthLoginResult",
+    "AuthLogoutResult",
+    "AuthOperationScopeConflictError",
     "AuthProfileIdentityMismatchError",
     "AuthProvider",
-    "AuthProviderDescription",
-    "AuthProviderKind",
     "AuthProviderListing",
+    "AuthProviderNotConfiguredError",
     "AuthProviderReservedError",
     "AuthProvidersReport",
+    "AuthResetResult",
     "AuthSessionUnavailableError",
-    "AuthState",
     "AuthStatusResult",
     "AuthTestResult",
     "AuthenticatedAeatSessionResult",
     "CertificateSecretBackend",
-    "CertificateSecretBackendKind",
-    "CertificateSecretBackendUnavailableError",
-    "CertificateSecretNotFoundError",
+    "CertificateSecretMutationInProgressError",
     "CertificateSourceCheckEntry",
     "CertificateSourceCheckReport",
     "CertificateSourceListResult",
@@ -383,10 +338,8 @@ __all__ = [
     "CertificateSourceNoActiveBucketError",
     "CertificateSourceNotFoundError",
     "CertificateSourcePayload",
-    "CertificateSourceRecord",
     "CertificateSourceSecretMutationResult",
     "CorruptAuthSessionError",
-    "KeyringCertificateSecretBackend",
     "LiveAuthPreflightReport",
     "PersistedAuthSession",
     "ProviderConfigurationProbe",
@@ -396,17 +349,14 @@ __all__ = [
     "StateCertificateSourceNotFoundError",
     "StorageStatePaths",
     "acquire_auth_acquisition_lock",
+    "active_auth_projection_span",
     "auth_acquisition_lock_path",
     "auth_lock_ttl_seconds",
     "build_live_auth_preflight_report",
-    "certificate_secret_backend",
     "check_operator_certificate_sources",
     "clear_auth_acquisition_lock",
-    "clear_operator_auth",
     "configure_operator_auth",
-    "configure_session_store",
     "delete_persisted_session",
-    "describe_provider_operator_impact",
     "ensure_authenticated_aeat_session",
     "get_auth_provider",
     "implemented_auth_provider_ids",
@@ -420,12 +370,18 @@ __all__ = [
     "load_auth_diagnostic",
     "load_persisted_session",
     "login_operator_auth",
+    "logout_operator_auth",
+    "persisted_session_exists",
     "probe_provider_configuration",
+    "probe_provider_credentials",
+    "project_active_certificate_credentials",
     "record_auth_diagnostic_phone_state",
     "register_operator_certificate_source",
     "remove_operator_certificate_source",
     "remove_operator_certificate_source_secret",
     "require_verified_aeat_session",
+    "reset_operator_auth",
+    "resolve_active_certificate_credentials",
     "resolve_certificate_source_secret",
     "select_operator_certificate_source",
     "select_provider",

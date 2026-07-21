@@ -1,0 +1,4 @@
+@step Export the verified draft to a local fichero-BOE.
+@static aeat app modelo export --modelo 130 --year 2026 --period 1T --output ./modelo-130.boe
+@step After you upload at the portal, record the local filed marker.
+@static aeat app modelo work file --modelo 130 --year 2026 --period 1T

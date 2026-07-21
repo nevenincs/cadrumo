@@ -1,6 +1,6 @@
 """Exception hierarchy for :mod:`application.workflow`.
 
-All workflow errors inherit from :class:`core.errors.AeatError` per
+All workflow errors inherit from :class:`core.errors.CadrumoError` per
 the project-wide error-hierarchy rule. The engine's default path never
 raises :class:`WorkflowAbortedError`: aborts are first-class outcomes
 encoded in the returned
@@ -10,11 +10,11 @@ exception-on-abort behaviour opt in by inspecting the result themselves.
 
 from __future__ import annotations
 
-from ...core.errors import AeatError, CoreValidationError
-from ._models import WorkflowAbortReason
+from ...core.errors import CadrumoError, CoreValidationError
+from ._workflow_abort import WorkflowAbortReason
 
 
-class WorkflowError(AeatError):
+class WorkflowError(CadrumoError):
     """Base exception for all :mod:`application.workflow` failures."""
 
 

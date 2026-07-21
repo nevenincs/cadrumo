@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#registry-m100-2025-row-width'
 date: '2026-06-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-04-registry-m100-2025-row-width-research]]'
   - '[[2026-06-04-registry-m100-row-width-deferrals-plan]]'

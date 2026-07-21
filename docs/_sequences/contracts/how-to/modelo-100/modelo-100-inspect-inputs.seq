@@ -1,0 +1,10 @@
+:seed: renta-2025
+@setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
+@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
+@step List which bound casillas are still missing a value.
+aeat --format json app modelo bindings list --modelo 100 --year 2025 --period 0A --missing
+@step List the casillas the declaration requires.
+aeat --format json app modelo casillas 100 --period 0A --required
+@step Show the saved observations behind the calculated figures.
+@result aeat --format json app modelo work observations --modelo 100 --year 2025 --period 0A
+@expect exit_code == 0

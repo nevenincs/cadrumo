@@ -1,21 +1,19 @@
 ---
 name: 2026-04-13-modelo-inventory-adr
-description: Architecture decision for the authoritative AEAT modelo inventory + pydantic registry under aeat.domain.modelos (#108)
+description: Architecture decision for the authoritative AEAT modelo inventory + pydantic registry under cadrumo.domain.modelos (#108)
 type: adr
 tags:
   - "#adr"
   - "#modelo-inventory"
 date: 2026-04-13
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-13-modelo-inventory-research]]"
   - "[[2026-04-12-modelo-303-390-adr]]"
-  - "[[2026-04-12-casilla-db-adr]]"
   - "[[2026-04-12-manual-practico-adr]]"
   - "[[2026-04-12-deadline-engine-adr]]"
   - "[[2026-04-12-normatives-adr]]"
   - "[[2026-04-12-trilingual-i18n-adr]]"
-  - "[[2026-04-12-base-module-structure-adr]]"
 ---
 
 # modelo-inventory adr (#108) | (**status:** `accepted`)
@@ -35,7 +33,7 @@ exec summary.
 `main` ships filing builders for exactly three modelos (130, 303,
 390) plus a deadline engine, a casilla catalogue, and a normative
 corpus that already references ten autonomo modelos by code. The
-`src/aeat/domain/modelos/` subpackage exists as a stub
+`src/cadrumo/domain/modelos/` subpackage exists as a stub
 (`__all__: list[str] = []`) reserved by #6 for the authoritative
 modelo inventory. Sibling branches that need a stable
 `ModeloCode` import surface include #77 (workflow engine) and
@@ -53,14 +51,14 @@ raw-article extraction pipeline yet.
 
 This ADR commits the public shape of the registry, resolves
 every open question the research doc raised, and locks the
-boundary between `aeat.domain.modelos` and its consumers
-(`aeat.domain.deadlines`, `aeat.domain.casillas`, `aeat.application.filing`, `aeat.entrypoints.cli`).
+boundary between `cadrumo.domain.modelos` and its consumers
+(`cadrumo.domain.deadlines`, `cadrumo.domain.casillas`, `cadrumo.application.filing`, `cadrumo.entrypoints.cli`).
 
 ## Decision
 
 ### 1. Module layout
 
-All new code lives under `src/aeat/domain/modelos/`. The package is
+All new code lives under `src/cadrumo/domain/modelos/`. The package is
 split into one private module per concern and one file per
 modelo entry to keep code-review diffs tractable when citations
 are revised:
@@ -85,7 +83,7 @@ are revised:
   `modelo_720.py`, `modelo_840.py`). Each file exposes a
   single module-level `ENTRY: ModeloMetadata`. `_registry.py`
   imports every entry and stitches them into the registry.
-- `_cli.py` for the Typer commands wired into `aeat.entrypoints.cli`
+- `_cli.py` for the Typer commands wired into `cadrumo.entrypoints.cli`
 - `_errors.py` for `ModeloRegistryError`, `UnknownModeloError`,
   `RegistryIntegrityError`
 - Colocated test files (`test_codes.py`, `test_registry.py`,
@@ -115,8 +113,8 @@ research doc:
 The value is the official AEAT three-digit code as a string
 (`"036"`, `"100"`, `"840"`). `StrEnum` (not `IntEnum`) is
 mandatory because 036 and 037 carry a leading zero and because
-every existing consumer (`aeat.domain.deadlines`, `aeat.domain.casillas`,
-`aeat.application.filing._builders`) already keys on three-character
+every existing consumer (`cadrumo.domain.deadlines`, `cadrumo.domain.casillas`,
+`cadrumo.application.filing._builders`) already keys on three-character
 strings. Member names use `MODELO_<code>` (not semantic names
 like `IRPF_ANUAL`) so sibling branches get a stable,
 mechanically predictable import surface and so that a new
@@ -156,7 +154,7 @@ with exactly the eight profiles the research D2 matrix locks:
 This is the catalogue profile space and the keying dimension
 for `ModeloApplicability`. It deliberately does NOT model IVA
 regime as a second dimension; IVA regime continues to live on
-`aeat.domain.deadlines.AutonomoProfile.iva_regime` and the
+`cadrumo.domain.deadlines.AutonomoProfile.iva_regime` and the
 applicability of regime-specific modelos (369 OSS, recargo de
 equivalencia branches) is captured inside the per-profile
 `trigger_notes_es`. A two-dimensional `(profile, iva_regime)`
@@ -225,7 +223,7 @@ a human-readable annotation.
 
 - `model_config = ConfigDict(frozen=True, extra="forbid", strict=True, arbitrary_types_allowed=True)`
   the `arbitrary_types_allowed` is required so the field can
-  hold a `DeadlineRule` imported from `aeat.domain.deadlines`
+  hold a `DeadlineRule` imported from `cadrumo.domain.deadlines`
 - `code: ModeloCode`
 - `official_name_es: str` non-empty after strip
 - `display_label: Translatable` must contain `es`, `en`, `hu`
@@ -237,12 +235,12 @@ a human-readable annotation.
 - `caps_into: ModeloCode | None`
 - `related_modelos: tuple[ModeloCode, ...]`
 - `submission_portal_hint: str` free-form string; locked as a
-  string for v1 because `aeat.domain.portals` (#7) has not landed
+  string for v1 because `cadrumo.domain.portals` (#7) has not landed
 - `deadline_rule: DeadlineRule` imported from
-  `aeat.domain.deadlines`; for v1 entries that have no rule on
-  `aeat.domain.deadlines.CALENDAR` yet, the field accepts a
+  `cadrumo.domain.deadlines`; for v1 entries that have no rule on
+  `cadrumo.domain.deadlines.CALENDAR` yet, the field accepts a
   `DeadlineRule` synthesised from the calendar existing
-  helpers (no new public surface on `aeat.domain.deadlines`)
+  helpers (no new public surface on `cadrumo.domain.deadlines`)
 - `known_gotchas: tuple[str, ...]`
 
 Two integrity invariants are enforced:
@@ -253,10 +251,10 @@ Two integrity invariants are enforced:
   raises `RegistryIntegrityError` at import.
 - **Test-time only:** any casilla codes referenced inside a
   `known_gotchas` string or in a future structured cross-
-  reference field are validated against `aeat.domain.casillas`
+  reference field are validated against `cadrumo.domain.casillas`
   from `test_casilla_cross_reference.py`. This is
   intentionally NOT enforced at import to avoid pulling the
-  casilla catalogue into every consumer of `aeat.domain.modelos`.
+  casilla catalogue into every consumer of `cadrumo.domain.modelos`.
 
 ### 8. MODELO_REGISTRY
 
@@ -321,7 +319,7 @@ the OSS opt-in.
 ### 11. CLI commands
 
 A new `_cli.py` declares a Typer app `models_app` registered
-into `aeat.entrypoints.cli` under the command group `aeat modelos`. Four
+into `cadrumo.entrypoints.cli` under the command group `aeat modelos`. Four
 commands, all gain a `--json` flag that switches output from
 a human-readable table to a stable JSON document derived
 from `model_dump(mode="json")`:
@@ -331,7 +329,7 @@ from `model_dump(mode="json")`:
 - `aeat modelos applicable-to <profile> [--json]`
 - `aeat modelos year-plan <year> [--profile P] [--json]`
 
-`year-plan` consumes `aeat.domain.deadlines.DeadlineEngine` to
+`year-plan` consumes `cadrumo.domain.deadlines.DeadlineEngine` to
 expand the per-modelo `deadline_rule` for the requested year
 and emits a calendar-style listing. `list` and `show` are
 pure registry queries. `applicable-to` returns the union of
@@ -340,7 +338,7 @@ is the function exposed publicly as `modelos_for_profile`.
 
 ### 12. Public API discipline
 
-Only `src/aeat/domain/modelos/__init__.py` re-exports symbols. Every
+Only `src/cadrumo/domain/modelos/__init__.py` re-exports symbols. Every
 other file is underscore-prefixed. The locked `__all__` tuple
 is:
 
@@ -365,8 +363,8 @@ __all__ = (
 ```
 
 Every consumer (sibling branches included) MUST import from
-`aeat.domain.modelos` only, never from `aeat.domain.modelos._registry` or
-`aeat.domain.modelos._entries`. This is the same discipline the rest
+`cadrumo.domain.modelos` only, never from `cadrumo.domain.modelos._registry` or
+`cadrumo.domain.modelos._entries`. This is the same discipline the rest
 of the project already enforces under the
 base-module-structure ADR.
 
@@ -374,7 +372,7 @@ base-module-structure ADR.
 
 A new error hierarchy lives in `_errors.py`:
 
-- `ModeloRegistryError(AeatError)` base
+- `ModeloRegistryError(CadrumoError)` base
 - `UnknownModeloError(ModeloRegistryError)` raised by
   `get_modelo(code)` when `code` is not a `ModeloCode`
   member
@@ -382,7 +380,7 @@ A new error hierarchy lives in `_errors.py`:
   import time by `_registry.py` when the completeness or
   `caps_into` invariants are violated
 
-These are the ONLY error types `aeat.domain.modelos` raises. Every
+These are the ONLY error types `cadrumo.domain.modelos` raises. Every
 other failure (citation validation, applicability partition,
 metadata field validation) is a pydantic `ValidationError`
 and surfaces at construction time inside
@@ -391,8 +389,8 @@ at module import; exactly the desired behaviour.
 
 ### 14. Logging
 
-Every module under `aeat.domain.modelos` obtains its logger via
-`aeat.core.logging.get_logger(__name__)`. The CLI logs query
+Every module under `cadrumo.domain.modelos` obtains its logger via
+`cadrumo.core.logging.get_logger(__name__)`. The CLI logs query
 parameters at INFO and full registry traversal at DEBUG; the
 registry import path logs the count of loaded entries at
 INFO exactly once.
@@ -400,7 +398,7 @@ INFO exactly once.
 ### 15. Testing
 
 `pytest` only, every test marked `@pytest.mark.unit`,
-colocated under `src/aeat/domain/modelos/`:
+colocated under `src/cadrumo/domain/modelos/`:
 
 - `test_codes.py` checks that `ModeloCode` has exactly 20
   members; values are three-character strings; member
@@ -421,9 +419,9 @@ colocated under `src/aeat/domain/modelos/`:
   enforcement; `display_label` trilingual key check.
 - `test_cli.py` smoke-tests `list`, `show`, `applicable-to`,
   `year-plan` in both human and `--json` modes; `year-plan`
-  exercised against the real `aeat.domain.deadlines.DeadlineEngine`.
+  exercised against the real `cadrumo.domain.deadlines.DeadlineEngine`.
 - `test_casilla_cross_reference.py` lazy-imports
-  `aeat.domain.casillas` and asserts that any casilla codes
+  `cadrumo.domain.casillas` and asserts that any casilla codes
   referenced by `known_gotchas` strings (or any future
   structured field) resolve in the casilla catalogue.
 
@@ -449,7 +447,7 @@ superseded issue.
 - **Frozen dataclass for `ModeloMetadata`.** Rejected; the
   project pydantic mandate is non-negotiable for any
   boundary-crossing record, and the registry is the
-  highest-visibility boundary surface in `aeat.domain.modelos`.
+  highest-visibility boundary surface in `cadrumo.domain.modelos`.
 - **`IntEnum` for `ModeloCode`.** Rejected; modelos 036 and
   037 carry a leading zero that vanishes under integer
   representation, every existing consumer keys on strings,
@@ -468,13 +466,13 @@ superseded issue.
 - **Two-dimensional applicability keyed on
   `(TaxpayerProfile, IVARegime)`.** Rejected; out of scope
   for v1 and combinatorially expensive; IVA regime stays on
-  `aeat.domain.deadlines.AutonomoProfile`.
+  `cadrumo.domain.deadlines.AutonomoProfile`.
 - **Import-time casilla cross-reference enforcement.**
   Rejected; would pull the casilla catalogue into every
-  consumer of `aeat.domain.modelos`. Test-time enforcement is
+  consumer of `cadrumo.domain.modelos`. Test-time enforcement is
   sufficient.
 - **`AeatPortal` typed enum on `submission_portal`.**
-  Rejected; `aeat.domain.portals` (#7) has not landed; a free-form
+  Rejected; `cadrumo.domain.portals` (#7) has not landed; a free-form
   string is the lowest-risk placeholder.
 
 ## Consequences
@@ -500,11 +498,11 @@ superseded issue.
   follow-up issue must backfill BOE-verbatim text once the
   extraction pipeline lands.
 - `submission_portal_hint` is a free-form string until #7
-  ships `aeat.domain.portals`. Portal URL drift is a manual
+  ships `cadrumo.domain.portals`. Portal URL drift is a manual
   maintenance burden until then.
 - `caps_into` casilla cross-reference integrity is enforced
   at test time, not import time. A consumer that imports
-  `aeat.domain.modelos` without running the test suite cannot
+  `cadrumo.domain.modelos` without running the test suite cannot
   detect a broken casilla reference.
 - IVA regime is not a registry-level dimension;
   regime-specific filings (369 OSS, recargo de equivalencia)

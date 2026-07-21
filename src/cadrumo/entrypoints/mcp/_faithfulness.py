@@ -93,7 +93,7 @@ def faithfulness_check(*, agent_text: str, tool_result_json: str, blocking: bool
 class SessionGroundingWindow:
     """A bounded, in-memory record of the session's tool-result JSON.
 
-    The serving-path integration surface (ADR R6): the model's free narration
+    The serving-path integration surface: the model's free narration
     lives client-side where the server cannot see it, so the ENFORCEABLE
     faithfulness boundary is the tool-call arguments — every amount-shaped
     number an agent sends INTO a call must be grounded in a tool result this

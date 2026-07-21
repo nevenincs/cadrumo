@@ -76,10 +76,19 @@ docs/cli/
 # Glossary is generated fresh at build time from the approved Terminology
 # Handbook concepts (docs/conf.py builder-inited); never committed.
 docs/_generated/
+# cli-tree.json help projection is generated fresh at build time from the live
+# command tree (docs/conf.py builder-inited); the widget fetches it same-origin
+# from _static. Never committed, so it cannot drift.
+docs/_static/cli-tree.json
 # Compiled Pagefind search index (ADR D5: uncommitted, regenerated every docs
 # build like docs/_build). The canonical output lives under docs/_build/html/
 # pagefind/; a root-level pagefind/ from an ad-hoc build run is never committed.
 pagefind/
+# Gettext POT message templates for docs localization (`just docs-gettext`),
+# extracted fresh from the user-scope pages on every run. The per-language .po
+# catalogues under docs/locales/<lang>/ ARE committed; only these templates are
+# a regenerated build product.
+docs/locales/pot/
 
 # PyBuilder
 .pybuilder/
@@ -238,22 +247,22 @@ test-results/
 # `aeat manual fetch` and verified against the committed manifest.json.
 # Keep raw PDFs ignored unless a registry source catalogue or committed
 # manual-corpus guard explicitly enrolls the official payload as evidence.
-src/aeat/_data/corpus/manuals/**/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2020/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2021/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2022/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2023/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2024/source.pdf
-!src/aeat/_data/corpus/manuals/iva/2025/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2020/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2021/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2022/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2023/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2024/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2024/part2-deducciones-autonomicas/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2025/part1/source.pdf
-!src/aeat/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf
-src/aeat/_data/corpus/manuals/**/source.html/
+src/cadrumo/_data/corpus/manuals/**/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2020/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2021/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2022/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2023/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2024/source.pdf
+!src/cadrumo/_data/corpus/manuals/iva/2025/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2020/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2021/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2022/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2023/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2024/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2024/part2-deducciones-autonomicas/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2025/part1/source.pdf
+!src/cadrumo/_data/corpus/manuals/renta/2025/part2-deducciones-autonomicas/source.pdf
+src/cadrumo/_data/corpus/manuals/**/source.html/
 
 # IDE
 .idea/
@@ -286,6 +295,12 @@ tmp_*/
 temp/
 cache/
 
+# Root-level ad-hoc agent run directories (the retired .runtime-sNN-*
+# convention; ruling R5 mandates scratch/ as the sole scratch location).
+# Ignored so a future one-off cannot land tracked; existing dirs are
+# cleaned up under S22.
+.runtime-*/
+
 
 # Root-level safety net for common ad-hoc output patterns that tend to
 # appear when agents shortcut past the scratch/ convention. Narrow,
@@ -300,6 +315,12 @@ cache/
 
 # Playwright MCP session capture output
 .playwright-mcp/
+
+# One-off session prompts and trademark-search screenshots are local research
+# captures, not repository sources.
+/ORIGINAL_REQUEST.md
+/euipo-*.png
+/oepm-*.png
 
 # Scratch / research artefacts under .tmp/ (xlsx downloads, raw JSON,
 # agent workspaces). Same role as scratch/ — ephemeral, never in git.
@@ -335,6 +356,22 @@ cache/
 /apex.txt
 /campaign_run.txt
 /api.bak/
+# Root-level git-diff/patch dumps from an ad-hoc revert/apply-cached run
+# (e.g. revert.patch). Never a durable repo artifact.
+/*.patch
+# One-off root-level "add_*" fixer scripts (e.g. add_frontmatter.py),
+# symmetrical with the existing write_*.py / translate_*.py / scratch_*.py
+# one-shot-script patterns above.
+/add_*.py
+# Root-level scratch text dumps that don't fit the tmp_*.txt shape above
+# (e.g. scratch_pathspec.txt from a staged-pathspec probe).
+/scratch_*.txt
+# Root-level captured command/gate output dumps (e.g. test_docs_output.txt
+# from an ad-hoc docs-gate run). Never a durable repo artifact.
+/*_output.txt
+# Root-level Playwright/browser accessibility-tree snapshot dumps
+# (e.g. rail-snap.md). Never a durable repo artifact.
+/*-snap.md
 # Underscore-prefixed one-shot agent run workspaces (persona reruns, m303/m390
 # capture dirs) — carry secrets/*.key/*.kdf/*.db; ephemeral, never in git.
 /_scratch*/
@@ -342,15 +379,6 @@ cache/
 # (accidental Windows temp path captured as a repo-root filename).
 /C*AppData*
 /*scratchpadvault_check*
-
-# Quarantined: this plan repeatedly self-corrupts to multi-GB via the
-# vaultspec-core plan round-trip bug (wgergely/vaultspec-core#125) whenever
-# any agent runs a `vault plan` verb on it. Untracked + ignored so the
-# corruption never re-enters git or pollutes status. Clean content lives in
-# git history; restore with `git show <sha>:<path>`. Un-quarantine once #125
-# ships.
-/.vault/plan/2026-05-14-secure-backend-passkey-bucket-plan.md
-
 
 # >>> vaultspec-managed (do not edit this block) >>>
 .vault/.obsidian/

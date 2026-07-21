@@ -41,9 +41,28 @@ computed_casilla_ids = []
 # coeficientes de abatimiento (see
 # corpus/manual_oracles/modelo-100-2024-ganancias-patrimoniales-transmision-inmueble.json
 # and test_m100_2024_ganancias_patrimoniales_transmision_inmueble_manual_worked_example.py).
+# 0519/0520 ("Minimo personal y familiar" estatal/autonomica), 0528/0529
+# ("Cuota escala estatal/autonomica sobre base liquidable general"), 0532/0533
+# ("Cuota base liquidable general estatal/autonomica") and 0545/0546 ("Cuota
+# integra estatal/autonomica") reproduce 5.550,00 / 5.550,00 / 2.667,75 /
+# 2.621,89 / 2.140,50 / 2.094,64 / 2.406,50 / 2.360,64 respectively, the
+# subtotals the same manual (Parte 1, Cap. 15) states verbatim in its own
+# "Ejemplo practico: calculo de las cuotas integras estatal y autonomica" for
+# don A.B.C. residente en Aragon (see
+# corpus/manual_oracles/modelo-100-2024-cuotas-integras-escala-aragon.json and
+# test_m100_2024_cuotas_integras_escala_aragon_manual_worked_example.py).
+# 0418/0419 ("Ganancias/Perdidas patrimoniales base general (suma)"), 0421
+# ("Saldo neto negativo base general"), 0422/0423 ("Ganancias/Perdidas
+# patrimoniales base del ahorro (suma)") and 0424 ("Saldo neto positivo base del
+# ahorro") reproduce 4.500 / 9.600 / 5.100 / 5.600 / 1.600 / 4.000
+# respectively, the current-year gains/losses integration-and-compensation
+# subtotals the same manual (Parte 1, Cap. 12) states verbatim in its own "Caso
+# practico" de don A.P.G. (see
+# corpus/manual_oracles/modelo-100-2024-integracion-compensacion-ganancias-patrimoniales.json
+# and test_m100_2024_integracion_compensacion_ganancias_patrimoniales_manual_worked_example.py).
 # The CI honesty gate (test_external_oracle_grounding_enrolled.py) cross-checks
 # both declarations symmetrically against the bundled corpus.
-externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226", "1826", "1830", "1836", "1840"]
+externally_grounded_casilla_ids = ["0012", "0017", "0022", "0025", "0149", "0150", "0154", "0226", "0418", "0419", "0421", "0422", "0423", "0424", "0519", "0520", "0528", "0529", "0532", "0533", "0545", "0546", "1826", "1830", "1836", "1840"]
 reconcile_when_present_casilla_ids = [
     "0007",
     "0012",
@@ -123,9 +142,14 @@ reconcile_when_present_casilla_ids = [
     "0512",
     "0513",
     "0514",
+    "0519",
+    "0520",
     "0527",
     "0528",
+    "0529",
     "0530",
+    "0532",
+    "0533",
     "0534",
     "0535",
     "0536",
@@ -136,6 +160,8 @@ reconcile_when_present_casilla_ids = [
     "0541",
     "0542",
     "0543",
+    "0545",
+    "0546",
     "0547",
     "0548",
     "0550",

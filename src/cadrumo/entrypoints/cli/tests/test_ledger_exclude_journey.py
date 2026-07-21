@@ -1,4 +1,4 @@
-"""CLI acceptance for the reviewed-excluded verb (issue #224).
+"""CLI acceptance for the reviewed-excluded verb.
 
 Drives the real ``aeat app ledger exclude`` CLI end-to-end: add a row, exclude
 it, and assert the uniform mutation quintet comes back with ``review_status``
@@ -20,11 +20,12 @@ import pytest
 from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 

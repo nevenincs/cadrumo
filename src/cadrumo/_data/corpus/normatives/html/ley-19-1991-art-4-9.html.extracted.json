@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/ley-19-1991-art-4-9.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/ley-19-1991-art-4-9.html",
   "source_sha256": "4a9cf89a6e86e2e259ddac00655e26b65f68dbd44a8c9f801cbd0d564e78d563",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

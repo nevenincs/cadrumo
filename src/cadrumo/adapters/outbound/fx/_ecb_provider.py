@@ -3,8 +3,7 @@
 Implements the :class:`domain.currency.ExchangeRateProvider` protocol over a
 bundled snapshot of the European Central Bank euro foreign-exchange reference
 rates (``eurofxref`` XML). The ECB rates are the official exchange rate of
-Spanish law (Ley 46/1998 art. 36) accepted for IRPF, IVA, and PGC conversion —
-see the ``ledger-fx-conversion`` ADR.
+Spanish law (Ley 46/1998 art. 36) accepted for IRPF, IVA, and PGC conversion.
 
 The ECB publishes EUR-base quotes (``1 EUR = rate CCY``). The
 :class:`domain.currency.CurrencyNormalizationService` expects

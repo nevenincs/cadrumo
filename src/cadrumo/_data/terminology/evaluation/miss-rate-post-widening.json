@@ -1,0 +1,276 @@
+{
+  "evaluation": {
+    "case_count": 32,
+    "compiled_failed_query_count": 0,
+    "compiled_query_count": 112,
+    "compiled_targeted_query_count": 112,
+    "hit_count": 26,
+    "miss_count": 6,
+    "miss_rate": 0.1875,
+    "rows": [
+      {
+        "concept_id": "prorrata",
+        "hit": true,
+        "matched_record_id": "legal:ley-37-1992:art-102",
+        "query": "regla de prorrata",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "prorrata",
+        "hit": true,
+        "matched_record_id": "concept:prorrata",
+        "query": "pro rata",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "casilla",
+        "hit": true,
+        "matched_record_id": "concept:casilla",
+        "query": "box",
+        "reason": "hit",
+        "target_count": 1
+      },
+      {
+        "concept_id": "modelo-303",
+        "hit": true,
+        "matched_record_id": "concept:modelo-303",
+        "query": "modelo 303",
+        "reason": "hit",
+        "target_count": 4
+      },
+      {
+        "concept_id": "recargo-equivalencia",
+        "hit": true,
+        "matched_record_id": "concept:recargo-equivalencia",
+        "query": "recargo de equivalencia",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-036",
+        "hit": true,
+        "matched_record_id": "concept:modelo-036",
+        "query": "declaracion censal",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-111",
+        "hit": true,
+        "matched_record_id": "concept:modelo-111",
+        "query": "retenciones del trabajo",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-115",
+        "hit": true,
+        "matched_record_id": "concept:modelo-115",
+        "query": "modelo 115",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-123",
+        "hit": true,
+        "matched_record_id": "concept:modelo-123",
+        "query": "modelo 123",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-131",
+        "hit": true,
+        "matched_record_id": "concept:modelo-131",
+        "query": "pago fraccionado por modulos",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-184",
+        "hit": true,
+        "matched_record_id": "concept:modelo-184",
+        "query": "atribucion de rentas",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-190",
+        "hit": true,
+        "matched_record_id": "concept:modelo-190",
+        "query": "resumen anual de retenciones",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-200",
+        "hit": true,
+        "matched_record_id": "concept:modelo-200",
+        "query": "impuesto sobre sociedades",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-202",
+        "hit": true,
+        "matched_record_id": "concept:modelo-202",
+        "query": "pago fraccionado de sociedades",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-210",
+        "hit": true,
+        "matched_record_id": "concept:modelo-210",
+        "query": "impuesto de no residentes",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-309",
+        "hit": true,
+        "matched_record_id": "concept:modelo-309",
+        "query": "IVA no periodico",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-322",
+        "hit": true,
+        "matched_record_id": "concept:modelo-322",
+        "query": "modelo 322",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-349",
+        "hit": true,
+        "matched_record_id": "concept:modelo-349",
+        "query": "operaciones intracomunitarias",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-369",
+        "hit": true,
+        "matched_record_id": "concept:modelo-369",
+        "query": "ventanilla unica",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-720",
+        "hit": true,
+        "matched_record_id": "concept:modelo-720",
+        "query": "bienes en el extranjero",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-303",
+        "hit": true,
+        "matched_record_id": "concept:modelo-303",
+        "query": "cuando presento el modelo 303",
+        "reason": "hit",
+        "target_count": 9
+      },
+      {
+        "concept_id": "prorrata-especial",
+        "hit": true,
+        "matched_record_id": "concept:prorrata-especial",
+        "query": "que es la prorrata especial",
+        "reason": "hit",
+        "target_count": 8
+      },
+      {
+        "concept_id": "modelo-720",
+        "hit": true,
+        "matched_record_id": "concept:modelo-720",
+        "query": "declarar bienes en el extranjero",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-130",
+        "hit": true,
+        "matched_record_id": "concept:modelo-130",
+        "query": "modelo 130 para autonomos",
+        "reason": "hit",
+        "target_count": 9
+      },
+      {
+        "concept_id": "modelo-190",
+        "hit": true,
+        "matched_record_id": "concept:modelo-190",
+        "query": "resumen anual de retenciones de mis trabajadores",
+        "reason": "hit",
+        "target_count": 5
+      },
+      {
+        "concept_id": "modelo-369",
+        "hit": true,
+        "matched_record_id": "concept:modelo-369",
+        "query": "como funciona la ventanilla unica de iva",
+        "reason": "hit",
+        "target_count": 9
+      },
+      {
+        "concept_id": "modelo-115",
+        "hit": false,
+        "matched_record_id": null,
+        "query": "retenciones del alquiler de la oficina",
+        "reason": "query-not-compiled",
+        "target_count": 0
+      },
+      {
+        "concept_id": "modelo-200",
+        "hit": false,
+        "matched_record_id": null,
+        "query": "impuesto de sociedades a pagar este ano",
+        "reason": "query-not-compiled",
+        "target_count": 0
+      },
+      {
+        "concept_id": "iva",
+        "hit": false,
+        "matched_record_id": null,
+        "query": "factura de la luz deducible",
+        "reason": "query-not-compiled",
+        "target_count": 0
+      },
+      {
+        "concept_id": "modelo-036",
+        "hit": false,
+        "matched_record_id": null,
+        "query": "dar de alta un autonomo en hacienda",
+        "reason": "query-not-compiled",
+        "target_count": 0
+      },
+      {
+        "concept_id": "modelo-349",
+        "hit": false,
+        "matched_record_id": null,
+        "query": "vender a francia sin iva",
+        "reason": "target-mismatch",
+        "target_count": 4
+      },
+      {
+        "concept_id": "ledger",
+        "hit": false,
+        "matched_record_id": null,
+        "query": "libro de ingresos y gastos",
+        "reason": "query-not-compiled",
+        "target_count": 0
+      }
+    ]
+  },
+  "note": "W04 gate measurement (ADR 2026-07-13 D3, threshold 0.10) after the close-review SHARP-1/2/3 remediation: widened 112-query mapping, 32-case held-out corpus (20 vocabulary + 12 out-of-sample), top-five bound. Out-of-sample evaluation models the precompiled tiers only, so its misses are an upper bound on shipped misses.",
+  "rung2": {
+    "decision": "implement-rung-2",
+    "measured_miss_rate": 0.1875,
+    "miss_rate_threshold": 0.1,
+    "rationale": "The relevance artifact is not marked degraded and the held-out miss-rate exceeds the accepted threshold, so rung-2 static term embeddings are justified."
+  }
+}

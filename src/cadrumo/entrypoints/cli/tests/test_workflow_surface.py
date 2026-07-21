@@ -18,6 +18,7 @@ from ....core.config import SecretStoreBackend, load_settings, override_settings
 from ....core.redaction import CLI_BUCKET_ID_PLACEHOLDER, CLI_PROFILE_ID_PLACEHOLDER
 from ....domain.buckets import BucketEventType
 from ....tests.cli_runner import invoke_cached_cli, invoke_typer_app
+from ....tests.user_profile import register_minimal_profile
 from .. import _import_failure_surface, _startup_import_error_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -72,12 +73,12 @@ def _isolated_user_cli(tmp_path: Path) -> Iterator[Path]:
     dispose_engine()
     dev_test_passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
-        aeat_auth_provider=None,
-        aeat_certificate_path=None,
-        aeat_certificate_password_secret=None,
-        aeat_clave_movil_dni_nie=None,
-        aeat_clave_movil_dni_fecha=None,
-        aeat_clave_movil_nie_soporte=None,
+        cadrumo_auth_provider=None,
+        cadrumo_certificate_path=None,
+        cadrumo_certificate_password_secret=None,
+        cadrumo_clave_movil_dni_nie=None,
+        cadrumo_clave_movil_dni_fecha=None,
+        cadrumo_clave_movil_nie_soporte=None,
         cadrumo_secret_store_backend=SecretStoreBackend.FILE,
         cadrumo_secret_passphrase=dev_test_passphrase,
         cadrumo_secret_store_dir=tmp_path / "secrets",
@@ -134,7 +135,7 @@ def _seed_profile(
     matches the operator's state after a quiet profile-create run.
     """
 
-    from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+    from ....application.user_profile import profile_create_storage_span
     from ....application.workflow import workflow_state_repository
 
     repo = workflow_state_repository()
@@ -332,7 +333,9 @@ def test_config_repair_is_config_scoped_not_root(isolated_user_cli: Path) -> Non
     assert text_result.exit_code == 0, text_result.output
     assert "Overall\t" in text_result.output
     assert "registry.load" in text_result.output
-    payload = json.loads(_json_output(json_result))
+    envelope = json.loads(_json_output(json_result))
+    assert envelope["command"] == "config.repair"
+    payload = envelope["result"]
     assert payload["registry"]["available"] is True
     assert "registry.load" in {check["name"] for check in payload["checks"]}
     assert logs_result.exit_code == 0, logs_result.output
@@ -563,7 +566,9 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
         unsupported = _invoke(["config", "auth", "configure", "--provider", "clave_pin"])
         unsupported_test = _invoke(["config", "auth", "test", "--provider", "dnie_pkcs"])
         unsupported_login = _invoke(["config", "auth", "login", "--provider", "dnie_pkcs"])
-        unsupported_clear = _invoke(["config", "auth", "clear", "--provider", "clave_pin"])
+        reserved_reset = _invoke(
+            ["--format", "json", "config", "auth", "reset", "--provider", "clave_pin", "--yes"],
+        )
 
     assert configure.exit_code == 0, configure.output
     assert "clave_movil" in configure.output
@@ -575,8 +580,14 @@ def test_config_auth_accepts_supported_provider_and_rejects_others(
     assert "dnie_pkcs" in unsupported_test.output
     assert unsupported_login.exit_code != 0
     assert "dnie_pkcs" in unsupported_login.output
-    assert unsupported_clear.exit_code != 0
-    assert "clave_pin" in unsupported_clear.output
+    assert reserved_reset.exit_code == 0, reserved_reset.output
+    reset_payload = json.loads(_json_output(reserved_reset))["result"]
+    assert reset_payload["providers"] == ["clave_pin"]
+    assert reset_payload["removed_sessions"] == 0
+    assert reset_payload["cleared_provider_configuration"] is False
+    assert reset_payload["cleared_locks"] == 0
+    assert reset_payload["removed_certificate_sources"] == 0
+    assert reset_payload["removed_certificate_secrets"] == 0
 
 
 def test_ledger_import_accepts_n26_csv_dry_run(isolated_user_cli: Path) -> None:

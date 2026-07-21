@@ -15,13 +15,14 @@ operator outputs in :mod:`cadrumo.core.config` and is not a valid resolution pat
 for read-only bundled data.
 
 The corpus source binaries (``_data/corpus/**/*.{pdf,xls,xlsx}``) are excluded
-from the slim ``cadrumo`` runtime wheel and shipped in an optional ``cadrumo_data``
-companion distribution whose layout mirrors ``cadrumo/_data``. :func:`resolve_corpus_binary`
-is the single ``importlib.resources`` seam that resolves such a binary from the
-``cadrumo`` tree first and then the companion, so a full checkout and a split
-install read a corpus binary uniformly; :func:`resolve_companion_binary`
-resolves the companion side alone. A missing companion is a not-present signal
-(``None``), never an exception leak.
+from the command-bearing ``cadrumo`` wheel and shipped in two mandatory
+``cadrumo_data`` companion distributions whose joined layout mirrors
+``cadrumo/_data``. :func:`resolve_corpus_binary` is the single
+``importlib.resources`` seam that resolves such a binary from the ``cadrumo``
+tree first and then the companion namespace, so a full checkout and an installed
+three-wheel cohort read a corpus binary uniformly. A missing companion remains
+a not-present signal (``None``) at this low-level resource boundary; the
+catalogue integrity boundary turns that signal into a hard failure.
 """
 
 from __future__ import annotations
@@ -116,10 +117,10 @@ def _traversable_is_file(node: Traversable) -> bool:
 def _companion_root() -> Traversable | None:
     """Return the ``cadrumo_data`` companion package root, or ``None`` when it is absent.
 
-    The companion is an optional distribution; when it is not installed
-    ``importlib.resources.files`` raises an import-family error, which this
-    helper maps to ``None``. A missing companion is a not-present signal, never
-    an exception the caller must handle.
+    The companion namespace is supplied by two mandatory distributions. A
+    broken or deliberately dependency-pruned installation may still omit it;
+    this low-level helper maps that import-family error to ``None`` so the
+    catalogue integrity boundary can report the missing source precisely.
     """
     try:
         return files(_COMPANION_PACKAGE)
@@ -128,7 +129,7 @@ def _companion_root() -> Traversable | None:
 
 
 def resolve_companion_binary(*parts: str) -> Path | None:
-    """Resolve a corpus binary from the optional ``cadrumo_data`` companion alone.
+    """Resolve a corpus binary from the mandatory ``cadrumo_data`` namespace.
 
     Args:
         *parts: Segments under the companion's mirrored ``_data`` root
@@ -136,9 +137,9 @@ def resolve_companion_binary(*parts: str) -> Path | None:
 
     Returns:
         A read-only :class:`pathlib.Path` valid for the process lifetime when
-        the companion is installed and carries the binary, else ``None``. The
-        companion mirrors ``cadrumo/_data``, so the segments are identical to the
-        ones :func:`packaged_data` takes.
+        the joined companion namespace carries the binary, else ``None``. The
+        namespace mirrors ``cadrumo/_data``, so the segments are identical to
+        the ones :func:`packaged_data` takes.
     """
     root = _companion_root()
     if root is None:
@@ -156,11 +157,12 @@ def resolve_corpus_binary(*parts: str) -> Path | None:
 
     ``parts`` are the segments under ``_data`` (e.g. ``"corpus",
     "aeat_official", "disenos_registro", "modelo_100", "files", "dr.xlsx"``).
-    The slim Cadrumo wheel excludes ``_data/corpus/**/*.{pdf,xls,xlsx}``; the
-    optional ``cadrumo_data`` companion carries exactly those binaries under
-    mirrored paths. This is the single ``importlib.resources`` seam that unifies
-    the full-checkout read (binary in the ``cadrumo`` tree) and the split-install
-    read (binary in the companion).
+    The command-bearing Cadrumo wheel excludes
+    ``_data/corpus/**/*.{pdf,xls,xlsx}``; the mandatory ``cadrumo_data``
+    namespace carries exactly those binaries under mirrored paths. This is the
+    single ``importlib.resources`` seam that unifies the full-checkout read
+    (binary in the ``cadrumo`` tree) and the installed-cohort read (binary in a
+    companion distribution).
 
     Returns:
         A read-only :class:`pathlib.Path` valid for the process lifetime when

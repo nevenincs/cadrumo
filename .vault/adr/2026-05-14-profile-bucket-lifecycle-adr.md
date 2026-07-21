@@ -3,11 +3,10 @@ tags:
   - '#adr'
   - '#profile-bucket-lifecycle'
 date: '2026-05-14'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-14-secure-backend-passkey-safety-research]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
-  - '[[2026-04-12-data-storage-adr]]'
   - '[[2026-06-04-profile-bucket-lifecycle-research]]'
 ---
 
@@ -121,7 +120,7 @@ resolve the collision flagged in research §5.0.
 
 Concrete rename targets that the implementation must hit:
 
-- `ProfileBucketPointer` (record at `src/aeat/application/workflow/_models.py`)
+- `ProfileBucketPointer` (record at `src/cadrumo/application/workflow/_models.py`)
   is renamed `BucketPointer` and gains the manifest fields enumerated
   in subsection 3 below; the `profile_id` <-> `bucket_id` aliasing
   collapses to one identifier, `bucket_id`.
@@ -130,12 +129,11 @@ Concrete rename targets that the implementation must hit:
   introduced in subsection 5.
 - `Settings.aeat_default_profile_name` is **removed**. No replacement.
 - `aeat_default_profile_name` consumers in
-  `src/aeat/application/auth/_acquisition_lock.py` and
-  `src/aeat/application/auth/_sessions.py` re-key to the active
+  `src/cadrumo/application/auth/_acquisition_lock.py` and
+  `src/cadrumo/application/auth/_sessions.py` re-key to the active
   bucket id from the pointer file.
-- The Google adapter `--profile` override flag in
-  `src/aeat/adapters/outbound/google/_profile_binding.py` is
-  **removed**; profile selection happens only through the
+- Adapter-specific `--profile` override flags are **removed**; profile
+  selection happens only through the
   precedence chain defined in subsection 5.
 - Locale catalogues (es / en / ca / hu) standardise on `bucket` for
   every storage-layer string and `profile` for every identity-layer
@@ -253,7 +251,7 @@ ciphertext under it until unlock runs.
 
 The class-level singletons identified in research §5.1.4 -- notably
 `KeyringMasterKeyProvider._cache` at
-`src/aeat/adapters/persistence/storage/master_key/_master_key.py:348-349`
+`src/cadrumo/adapters/persistence/storage/master_key/_master_key.py:348-349`
 and `FileFallbackMasterKeyProvider._cached_passphrase` /
 `_cached_master_key` at `_master_key.py:473-475` -- are replaced with
 per-process instance state owned by a `BucketSession` object
@@ -343,15 +341,12 @@ process-exclusive ownership window.
 ### 12. auth lockfiles and Google adapter bindings
 
 The auth-acquisition lockfile namespacing in
-`src/aeat/application/auth/_acquisition_lock.py` is re-keyed from
+`src/cadrumo/application/auth/_acquisition_lock.py` is re-keyed from
 `Settings.aeat_default_profile_name` to the active bucket id read
 from the precedence chain defined in subsection 5. The same change
-lands in `src/aeat/application/auth/_sessions.py`. The
-`_profile_binding.py:resolve_active_profile(profile_override)`
-function in
-`src/aeat/adapters/outbound/google/_profile_binding.py` loses its
-`profile_override` parameter; its sole job becomes reading the
-precedence chain. The `--profile` flag on every
+lands in `src/cadrumo/application/auth/_sessions.py`. The
+Adapter-local profile-binding functions are deleted. The application profile
+service owns the precedence chain. The `--profile` flag on every
 `aeat config google ...` verb is removed.
 
 The Google session-store records (OAuth client, OAuth token, Drive
@@ -423,40 +418,39 @@ review.
 
 Files identified by research §5.1 that this ADR touches:
 
-- `src/aeat/application/setup/_service.py` -- `initialize_workspace`
+- `src/cadrumo/application/setup/_service.py` -- `initialize_workspace`
   stops passing one string as both `profile_id` and `bucket_id`;
   the bucket directory is provisioned under
   `<aeat-root>/buckets/<bucket-id>/` with subdirs `db/`, `blobs/`,
   `audit/`, and the `manifest.toml` is written.
-- `src/aeat/application/user_profile/_orchestration.py` --
+- `src/cadrumo/application/user_profile/_orchestration.py` --
   `register_active_profile`, `select_profile`, and the tombstone
   path are rewritten against the new pointer-file precedence chain;
   `profile duplicate` is removed in favour of `export-bucket` +
   `import-bucket`.
-- `src/aeat/application/wizard/_persistence.py` -- the wizard
+- `src/cadrumo/application/wizard/_persistence.py` -- the wizard
   consumes the new `BucketPointer` record and emits a manifest.
-- `src/aeat/application/workflow/_models.py` --
+- `src/cadrumo/application/workflow/_models.py` --
   `ProfileBucketPointer` -> `BucketPointer`; `WorkflowState.active_profile`
   -> `WorkflowState.active_bucket_id`.
-- `src/aeat/adapters/persistence/storage/master_key/_master_key.py` --
+- `src/cadrumo/adapters/persistence/storage/master_key/_master_key.py` --
   the `ClassVar` caches at lines 348-349 and 473-475 are replaced
   with `BucketSession`-scoped instance state.
-- `src/aeat/adapters/persistence/storage/sql/secure_objects.py` --
+- `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py` --
   the `bucket_id` column filter pattern is removed; each bucket's
   database is its own file and rows belong to one bucket
   unconditionally.
-- `src/aeat/adapters/persistence/storage/sql/_engine.py` -- the
+- `src/cadrumo/adapters/persistence/storage/sql/_engine.py` -- the
   module-level engine singleton becomes a `BucketSession`-owned
   engine registry that constructs and tears down per unlock / lock.
-- `src/aeat/adapters/outbound/storage/_factory.py` -- the
+- `src/cadrumo/adapters/outbound/storage/_factory.py` -- the
   `var/storage/<profile>/` directory composition becomes
   `<aeat-root>/buckets/<bucket-id>/blobs/`; the construction is
   scoped to the active bucket.
-- `src/aeat/adapters/outbound/google/_profile_binding.py` -- the
-  `--profile` override is removed; `resolve_active_profile`
-  reads the precedence chain only.
-- `src/aeat/application/auth/_acquisition_lock.py` and
-  `src/aeat/application/auth/_sessions.py` -- the lockfile
+- Adapter-local profile binding is absent; application profile resolution owns
+  the precedence chain.
+- `src/cadrumo/application/auth/_acquisition_lock.py` and
+  `src/cadrumo/application/auth/_sessions.py` -- the lockfile
   namespace re-keys to the active bucket id.
 - The config-CLI surface (the `config` root referenced by the
   CLI-root mandate) gains `list-buckets`, `switch`,

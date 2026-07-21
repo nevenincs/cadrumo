@@ -1,15 +1,16 @@
 """Application tests for relation prefill source mesh enrollment.
 
-Finding F2 — cross-domain-handoffs-swarm-audit 2026-05-16: the bare
-``except Exception`` in ``resolve_relations_from_local_store`` was narrowed to
-``except RegistryValidationError`` so that unexpected failures surface instead
-of silently downgrading to ``operator_manual`` provenance. The operator-manual
-fallback is legitimate when the local store genuinely has no prior filings; it
-must not mask structural failures.
+``resolve_relations_from_local_store`` catches only
+``RegistryValidationError`` (never a bare ``except Exception``), so that
+unexpected failures surface instead of silently downgrading to
+``operator_manual`` provenance. The operator-manual fallback is legitimate
+when the local store genuinely has no prior filings; it must not mask
+structural failures.
 """
 
 from __future__ import annotations
 
+import logging
 from datetime import date
 from decimal import Decimal
 from functools import cache
@@ -250,6 +251,57 @@ def test_unresolved_non_formula_relation_with_materialised_slot_is_not_flagged(t
     assert non_formula.isdisjoint(_diagnosed_relation_ids(source_resolution)), (
         "a cold-start non-formula relation whose target_binding materialises an observable slot "
         "must NOT fire the cold-start advisory — that would regress the cross-modelo carry contract"
+    )
+
+
+def test_operator_manual_relation_detail_is_a_debug_breadcrumb_not_a_warning(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The unresolved-source 'remains operator-manual' detail is DEBUG, never WARNING stderr.
+
+    An empty local store leaves the M202 cross-modelo carries unresolved — the
+    intended cold-start (materialised zero slot). Their 'remains operator-manual'
+    detail was formerly a ``_log.warning`` stderr line, which was
+    environment-inconsistent (present under one logging config, absent under
+    another) and made replay goldens unportable, and bypassed the typed Notice
+    channel (cli-notices-are-the-only-diagnostic-channel). It must now be emitted
+    at DEBUG only. The DEBUG-level capture below still sees the breadcrumb (proving
+    the cold-start path fired — the anti-tautology leg), and every such record is
+    DEBUG, so a default WARNING-level operator surface sees none of it.
+    """
+    logger_name = "cadrumo.application.calculations._relation_prefill"
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = CalculationObservationRepository()  # empty store — cold-start
+        snapshot = _snapshot("202", 2025, "2P")
+        with caplog.at_level(logging.DEBUG, logger=logger_name):
+            RelationPrefillSourceResolver(
+                repository=repository,
+                registry_snapshot=snapshot,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id="operator",
+                    modelo="202",
+                    filing_year=2025,
+                    period=Period.from_year_and_code(2025, "2P"),
+                    revision=snapshot.revision,
+                ),
+            )
+
+    operator_manual_records = [
+        record
+        for record in caplog.records
+        if record.name == logger_name and "remains operator-manual" in record.getMessage()
+    ]
+    assert operator_manual_records, (
+        "the cold-start path must still emit the 'remains operator-manual' detail at DEBUG "
+        "(anti-tautology: an empty store must exercise the unresolved-requirement branch)"
+    )
+    warning_or_above = [record for record in operator_manual_records if record.levelno >= logging.WARNING]
+    assert not warning_or_above, (
+        "the 'remains operator-manual' detail must be a DEBUG breadcrumb, never a WARNING+ stderr line "
+        "(cli-notices-are-the-only-diagnostic-channel); found: "
+        f"{[(r.levelname, r.getMessage()) for r in warning_or_above]}"
     )
 
 

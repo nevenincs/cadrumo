@@ -12,13 +12,13 @@ protocol-fixed and mechanical substitution adds no value.
 Structural prevention (ratchet history)
 --------------------------------
 This test AST-walks **all** Python files under ``src/cadrumo/`` rather than
-a fixed allowlist so that new files added by any campaign are automatically
+a fixed allowlist so that any new file is automatically
 covered.  The ratchet history regression (``locales/manager.py`` escaping detection
 because it was added after the original test was written) cannot recur.
 
 The test uses a ratchet: ``_KNOWN_VIOLATING_FILES`` records the set of
 files that still carry pre-existing bare literals (enrolled for future
-cleanup campaigns).  Any file **not** in this set must have zero
+cleanup).  Any file **not** in this set must have zero
 violations.  This means:
 
 - A new file added with bare ``"utf-8"`` literals fails immediately.
@@ -71,7 +71,7 @@ _SCAN_EXCLUDES: frozenset[str] = frozenset(
 )
 
 # Known pre-existing violating files (ratchet history/ratchet history backlog, to be cleaned up
-# in future campaigns).  New files must NOT appear here — add a cleanup
+# over time).  New files must NOT appear here — add a cleanup
 # commit instead.  Removing an entry locks that file at zero violations.
 _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
     {
@@ -85,7 +85,7 @@ _KNOWN_VIOLATING_FILES: frozenset[str] = frozenset(
         "adapters/persistence/storage/attachment.py",
         "adapters/persistence/storage/crypto/_encrypted_columns.py",
         "adapters/persistence/storage/envelope/_envelope.py",
-        "adapters/persistence/storage/envelope/_repository_test_suite.py",
+        "adapters/persistence/storage/envelope/tests/_repository_contract_support.py",
         "adapters/persistence/storage/envelope/_secure_repository.py",
         "adapters/persistence/storage/master_key/test_no_classvar_state.py",
         "adapters/persistence/storage/sql/secure_objects.py",
@@ -170,7 +170,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
 
     - Files already in the ratchet set are skipped (tracked for future cleanup).
     - Any file NOT in the ratchet set must have zero bare ``"utf-8"`` literals.
-    - New files added by any campaign are automatically covered — the ratchet history regression
+    - Any new file is automatically covered — the ratchet history regression
       class (new files escaping the fixed enrolled-module set) cannot recur.
 
     To clean up a known-violating file: migrate it to ``UTF_8_ENCODING``, then
@@ -185,7 +185,7 @@ def test_no_bare_utf8_literals_in_production_files() -> None:
     for path in production_files:
         rel = aeat_relative(path)
         if rel in _KNOWN_VIOLATING_FILES:
-            # Pre-existing backlog — covered by future cleanup campaigns.
+            # Pre-existing backlog — covered by future cleanup.
             continue
         module_violations = bare_utf8_literal_violations(path)
         for lineno, snippet in module_violations:

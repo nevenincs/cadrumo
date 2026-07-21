@@ -1,149 +1,125 @@
-# Set up a fresh workstation
+# Install Cadrumo
 
-Use this the first time you install Cadrumo on a clean machine. It takes you from
-an empty checkout to a working tool, shows you how to check what is missing, and
-lets you choose which optional services to turn on.
+This page covers installation only: get the package, install the `aeat`
+command, add the optional extras you want, and (if you use an AI assistant)
+install the agent surface. If you do not have Cadrumo on your machine yet,
+start at [Get Cadrumo](download.md) for the acquisition paths and their
+current availability. Configuration and first use start in the
+[quickstart](how-to/quickstart.md) once the install checks pass.
 
-Cadrumo works without any optional service. Google export, on-host LLM vision, and
-cloud LLM upload are opt-in. The core filing workflow runs with none of them.
+Cadrumo works without any optional service. Google export, on-host LLM vision,
+cloud LLM upload, and the agent surface are all opt-in. The core filing
+workflow runs with none of them.
 
-## Install the environment
+## Before you start
 
-Choose one of two paths: install directly on your machine, or open the
-project in a ready-made container.
+You need:
 
-### Option A: install on your machine
+- Python 3.13 or newer, with `pip` available.
+- Around 200 MB of free disk space.
 
-Install the project and its tools in one step:
+## Install the CLI
 
-```bash
-just bootstrap
-```
-
-This installs the Python environment, syncs every dependency group, and runs the
-readiness check at the end.
-
-### Option B: open in a devcontainer
-
-The repository ships a `Dockerfile` and a `.devcontainer/devcontainer.json`
-with Python 3.13, `uv`, and headless-Chromium already installed, so you skip
-the manual `uv sync` / `playwright install` steps entirely.
-
-With VS Code and the Dev Containers extension, open the project folder and
-choose "Reopen in Container". The first build installs every dependency group
-and pre-bakes the Playwright browser; later reopens reuse the cached image.
-
-Without VS Code, build and run the image directly:
+The beta installs from the project repository:
 
 ```bash
-just devcontainer-build
-docker run --rm -it -v "$(pwd)":/workspace cadrumo-devcontainer bash
+git clone https://github.com/nevenincs/cadrumo.git
+cd cadrumo
+uv sync
+uv run aeat --version
 ```
 
-Verify the image installs cleanly and its toolchain works end to end:
+Registry listings for the packaged channels (PyPI, Scoop, Homebrew, and the
+plugin marketplace) open with the public launch; see
+[Get Cadrumo](download.md) for each channel's current status.
 
-```bash
-just devcontainer-test
+## Confirm the install
+
+No taxpayer profile is needed for these checks; you create one with
+`aeat config profile create` after installing. See
+[Set up a profile](how-to/profile-setup.md).
+
+Confirm the command is on your path and the capability posture is readable.
+Then run the workstation check on your own machine. Its dependency and
+platform rows intentionally reflect that workstation, including tools on
+your path, installed browser assets, and operating-system settings. Use the
+machine-readable form for scripted setup checks (`--format json` is a global
+flag, so it goes before the command):
+
+```{cli-sequence} install-confirm
+:verify: Confirm the installed command reports its version and its dependency report resolves.
 ```
 
-The container has no interactive display, so live AEAT browser reads run
-headless (`AEAT_BROWSER_HEADLESS=true` is set for you). Your digital
-certificate is personal, per-machine data — it is never baked into the
-image. Mount it or set `AEAT_CERTIFICATE_PATH` after the container starts if
-you need `aeat app live ...` inside the container; see
-[Authenticate with AEAT](how-to/authenticate-with-aeat.md).
-
-## Check what is ready
-
-Ask `aeat` what is installed and what is missing:
-
-```bash
-just doctor
-```
-
-`just doctor` runs `aeat config check`. The report lists each external
-dependency, whether it is available, and the exact command to fix any gap. It
-also shows your profile's capability posture. It exits with an error when a
-capability you turned on has a missing dependency.
-
-Run the check directly for machine-readable output. `--format json` is a global
-flag, so it goes before the command:
-
-```bash
-aeat --format json config check
-```
-
-## Install optional integrations
+## Install optional extras from the checkout
 
 The core install is lean. Google export, the live AEAT browser, the
-Anthropic-API provider, and OFX/QFX bank-statement import are optional package
-extras. Install only the ones you need:
+Anthropic-API provider, OFX/QFX bank-statement import, and the agent surface
+are optional package extras. Name the extras you need when you install:
 
 ```bash
-pip install "cadrumo[google]"
-pip install "cadrumo[browser]"
-pip install "cadrumo[anthropic]"
-pip install "cadrumo[ofx]"
-pip install "cadrumo[all]"
+uv sync --extra google --extra browser
 ```
 
-`aeat config check` lists each extra and prints the exact install command for any
-that is missing. A feature whose extra is not installed refuses with the same
-hint instead of failing obscurely.
+The available extras are `google`, `browser`, `anthropic`, `ofx`, `agent`, and
+`all`. `aeat config check` lists each extra and prints the exact install
+command for any that is missing. A feature whose extra is not installed
+refuses with the same hint instead of failing obscurely.
 
-## Provision optional dependencies
+Two extras need a further provisioning step after the pip install:
 
-Install the optional browser and model dependencies when you need them.
+- The `browser` extra provides the `playwright` command; install the browser
+  it drives for live AEAT reads:
 
-Install the Playwright browser used for live AEAT reads:
+  ```bash
+  playwright install chromium
+  ```
 
-```bash
-just provision
-```
+- On-host invoice reading uses a local vision model. Start the Ollama server
+  and pull the model named in the `aeat config check` report:
 
-Install the on-host vision model used to read invoices. Start the Ollama server
-and pull the model named in the report:
+  ```bash
+  ollama serve
+  ollama pull qwen2.5vl:3b
+  ```
 
-```bash
-ollama serve
-ollama pull qwen2.5vl:3b
-```
-
-Install a cloud LLM provider CLI when you want cloud classification. Put its
-executable on `PATH` and sign in with that provider's own flow. See
+For cloud LLM classification, put the provider's own CLI on `PATH` and sign in
+with that provider's flow. See
 [Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-a-provider).
 
-Run `just doctor` again after each change to confirm the gap is closed.
+Run `aeat config check` again after each change to confirm the gap is closed.
 
-## Choose your service capabilities
+## Run the Model Context Protocol (MCP) surface
 
-Each profile carries its own opt-in for three optional services. Show the
-resolved posture:
+Cadrumo ships an MCP server, `cadrumo-mcp`, so an AI
+assistant can operate the same local, gated commands the CLI exposes,
+together with an agent harness: the operator rules, taxpayer-situation
+skills, and scoped agent personas that keep the assistant inside the safety
+boundary.
 
-```bash
-aeat config profile capabilities show
-```
-
-The three capabilities are:
-
-- `cloud_evidence_upload` — allow sending sensitive evidence to a cloud LLM
-  provider. Off by default. Barred for gestor profiles.
-- `llm_vision` — read invoices with the on-host vision model. On by default.
-- `google_export` — export calculations to Google Sheets. On by default.
-
-Turn a capability on or off for the active profile:
+In the beta, run the server from the same repository checkout:
 
 ```bash
-aeat config profile capabilities set llm_vision off
-aeat config profile capabilities set cloud_evidence_upload on
+uv sync --extra agent
+uv run cadrumo-mcp --help
 ```
 
-The setup wizard also asks these questions when you create or edit a profile, so
-you can set them during onboarding. See [Set up a profile](how-to/profile-setup.md).
+[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout
+registration and explains what the agent can and cannot do.
+
+### Materialize the agent harness in a project workspace
+
+To place the harness (rules, personas, skills, and a `CLAUDE.md`) directly
+into a project directory, materialize it with the CLI:
+
+```{cli-sequence} install-agent-harness
+:verify: Confirm the operator harness materializes into the chosen workspace.
+```
 
 ## Next steps
 
-- [Quickstart](how-to/quickstart.md)
-- [Set up a profile](how-to/profile-setup.md)
-- [Classify transactions with an LLM](how-to/classify-with-llm.md#set-up-a-provider)
+- [Quickstart](how-to/quickstart.md) - from an empty profile to an exported
+  modelo file.
+- [Set up a profile](how-to/profile-setup.md) - including the per-profile
+  service capabilities (Google export, LLM vision, cloud evidence upload).
+- [Connect an agent](how-to/connect-an-agent.md)
 - [Troubleshooting](how-to/troubleshooting.md)

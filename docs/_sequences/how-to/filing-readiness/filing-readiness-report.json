@@ -1,0 +1,167 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "describe",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T"
+      ],
+      "captures": [
+        {
+          "json_path": "result.revision",
+          "name": "revision_id",
+          "value": "2023-y-siguientes"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.describe",
+        "notices": [],
+        "result": {
+          "binding_count": 28,
+          "cadence": "quarterly",
+          "casilla_count": 126,
+          "code": "303",
+          "filing_year": 2026,
+          "formula_count": 25,
+          "official_name": "Modelo 303. Impuesto sobre el Valor Añadido. Autoliquidación.",
+          "operation": "modelo.describe",
+          "period": "1T",
+          "periods": [
+            "1T",
+            "2T",
+            "3T",
+            "4T",
+            "01",
+            "02",
+            "03",
+            "04",
+            "05",
+            "06",
+            "07",
+            "08",
+            "09",
+            "10",
+            "11",
+            "12"
+          ],
+          "revision": "2023-y-siguientes",
+          "revision_ids": [
+            "2009-y-siguientes",
+            "2023-y-siguientes"
+          ],
+          "tax_domain": "iva",
+          "title": "IVA. Autoliquidación (trimestral)"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "readiness",
+        "--modelo",
+        "303",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--revision-id",
+        "2023-y-siguientes"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.readiness",
+        "notices": [
+          {
+            "code": "modelo.readiness.ledger_preflight_scope",
+            "context": {
+              "binding_ready": "false",
+              "ledger_ready": "true",
+              "missing_bindings": "4"
+            },
+            "message": "ledger_ready only means the period ledger rows passed transaction preflight; missing_bindings/source_binding_ready still decide source completeness.",
+            "severity": "info",
+            "suggestion": null
+          }
+        ],
+        "result": {
+          "binding_ready": false,
+          "filing_year": 2026,
+          "ledger_checked_transaction_count": 0,
+          "ledger_issues": [],
+          "ledger_period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "ledger_preflight_required": true,
+          "ledger_ready": true,
+          "missing": [],
+          "missing_bindings": [
+            {
+              "binding_id": "modelo-303-autoconsumo-promotor-base",
+              "input_channel": "decimal",
+              "source": "profile"
+            },
+            {
+              "binding_id": "modelo-303-bienes-inversion-regularizacion-casilla-43",
+              "input_channel": "decimal",
+              "source": "bienes_inversion_regularizacion"
+            },
+            {
+              "binding_id": "modelo-303-compensacion-pendiente-anteriores",
+              "input_channel": "decimal",
+              "source": "previous_filing"
+            },
+            {
+              "binding_id": "modelo-303-prorrata-regularizacion-casilla-44",
+              "input_channel": "decimal",
+              "source": "prorrata_regularizacion"
+            }
+          ],
+          "modelo": "303",
+          "operation": "modelo.readiness",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "profile_id": "<profile-id>",
+          "profile_ready": true,
+          "profile_refusal": "",
+          "ready": false,
+          "registry_ready": true,
+          "registry_refusal": "",
+          "revision_id": "2023-y-siguientes"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "filing-readiness-report"
+}

@@ -31,7 +31,13 @@ def _write_project(project_file: Path, *, name: str, version: str) -> None:
 
 
 def _write_pyprojects(root: Path, version: str) -> None:
-    _write_project(root / "pyproject.toml", name="cadrumo", version=version)
+    root_project = root / "pyproject.toml"
+    _write_project(root_project, name="cadrumo", version=version)
+    root_project.write_text(
+        root_project.read_text(encoding="utf-8")
+        + f'dependencies = ["cadrumo-data-manuals=={version}", "cadrumo-data-official=={version}"]\n',
+        encoding="utf-8",
+    )
     _write_project(
         root / "packaging" / "cadrumo_data_manuals" / "pyproject.toml",
         name="cadrumo-data-manuals",
@@ -54,20 +60,40 @@ def _write_manifest(root: Path, version: str) -> None:
     (root / ".release-please-manifest.json").write_text(json.dumps({".": version}), encoding="utf-8")
 
 
+def _write_mcpb_manifest(root: Path, version: str) -> None:
+    manifest_dir = root / "packaging" / "mcpb"
+    manifest_dir.mkdir(parents=True, exist_ok=True)
+    (manifest_dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "version": version,
+                "server": {
+                    "mcp_config": {
+                        "command": "uvx",
+                        "args": ["--from", f"cadrumo[agent]=={version}", "cadrumo-mcp"],
+                    },
+                },
+            },
+        ),
+        encoding="utf-8",
+    )
+
+
 def _make_repo_root(tmp_path: Path, *, version: str = "1.2.3") -> Path:
     root = tmp_path / "repo"
     root.mkdir()
     _write_pyprojects(root, version)
     _write_init(root, version)
     _write_manifest(root, version)
+    _write_mcpb_manifest(root, version)
     (root / "CHANGELOG.md").write_text(
         "# Changelog\n\n## [1.2.3] - 2026-07-04\n\n### Features\n- thing\n", encoding="utf-8"
     )
     return root
 
 
-def test_version_surfaces_agree_passes_when_all_three_match(tmp_path: Path) -> None:
-    """A repo where pyproject, __init__, and manifest agree passes as blocking-clean."""
+def test_version_surfaces_agree_passes_when_all_release_authorities_match(tmp_path: Path) -> None:
+    """A repo where every version authority and companion pin agrees passes."""
     root = _make_repo_root(tmp_path, version="2.0.0")
 
     check = readiness.check_version_surfaces_agree(root)
@@ -75,6 +101,25 @@ def test_version_surfaces_agree_passes_when_all_three_match(tmp_path: Path) -> N
     assert check.severity == "blocking"
     assert check.passed is True
     assert "2.0.0" in check.detail
+
+
+def test_version_surfaces_agree_fails_when_the_mcpb_bundle_pin_is_stale(tmp_path: Path) -> None:
+    """A stale ``.mcpb`` version or uvx self-install pin reds the release parity gate.
+
+    Enrolling the Desktop-Extension bundle in this gate means a release bump that
+    updates every other surface but leaves the bundle pinned to the prior release
+    (so the bundle would self-install a stale ``cadrumo[agent]``) fails loudly.
+    """
+    root = _make_repo_root(tmp_path, version="2.0.0")
+    # Bump every other release surface to 2.1.0, leaving the mcpb bundle at 2.0.0.
+    _write_pyprojects(root, "2.1.0")
+    _write_init(root, "2.1.0")
+    _write_manifest(root, "2.1.0")
+
+    check = readiness.check_version_surfaces_agree(root)
+
+    assert check.passed is False
+    assert "mcpb='2.0.0'" in check.detail
 
 
 def test_project_names_are_canonical_for_root_and_both_companions(tmp_path: Path) -> None:
@@ -123,6 +168,58 @@ def test_version_surfaces_agree_fails_on_drift(tmp_path: Path) -> None:
     assert check.passed is False
     assert "1.9.9" in check.detail
     assert "2.0.0" in check.detail
+
+
+def test_version_surfaces_agree_fails_on_companion_project_drift(tmp_path: Path) -> None:
+    """A companion project version that drifts from the release cohort blocks release."""
+    root = _make_repo_root(tmp_path, version="2.0.0")
+    _write_project(
+        root / "packaging" / "cadrumo_data_manuals" / "pyproject.toml",
+        name="cadrumo-data-manuals",
+        version="1.9.9",
+    )
+
+    check = readiness.check_version_surfaces_agree(root)
+
+    assert check.passed is False
+    assert "cadrumo_data_manuals" in check.detail
+    assert "1.9.9" in check.detail
+
+
+def test_version_surfaces_agree_fails_on_nonmatching_mandatory_exact_pin(tmp_path: Path) -> None:
+    """A mandatory companion pin that does not name the cohort version blocks release."""
+    root = _make_repo_root(tmp_path, version="2.0.0")
+    project = root / "pyproject.toml"
+    project.write_text(
+        project.read_text(encoding="utf-8").replace(
+            "cadrumo-data-official==2.0.0",
+            "cadrumo-data-official==1.9.9",
+        ),
+        encoding="utf-8",
+    )
+
+    check = readiness.check_version_surfaces_agree(root)
+
+    assert check.passed is False
+    assert "cadrumo-data-official==1.9.9" in check.detail
+
+
+def test_version_surfaces_agree_fails_when_a_mandatory_companion_is_missing(tmp_path: Path) -> None:
+    """Removing a base dependency cannot recreate the retired slim-only install."""
+    root = _make_repo_root(tmp_path, version="2.0.0")
+    project = root / "pyproject.toml"
+    project.write_text(
+        project.read_text(encoding="utf-8").replace(
+            ', "cadrumo-data-official==2.0.0"',
+            "",
+        ),
+        encoding="utf-8",
+    )
+
+    check = readiness.check_version_surfaces_agree(root)
+
+    assert check.passed is False
+    assert "cadrumo-data-manuals==2.0.0" in check.detail
 
 
 def test_changelog_ready_fails_when_missing(tmp_path: Path) -> None:
@@ -208,6 +305,21 @@ def test_packaging_smoke_evidence_reads_the_most_recent_real_manifest(tmp_path: 
     assert "core-20260702T000000Z" in check.detail
 
 
+def test_packaging_smoke_evidence_reads_a_pruned_checkpoint(tmp_path: Path) -> None:
+    """Release readiness retains the evidence signal after ephemeral runtime pruning."""
+    root = _make_repo_root(tmp_path)
+    evidence_dir = root / "var" / "packaging-smoke-evidence"
+    evidence_dir.mkdir(parents=True)
+    checkpoint = evidence_dir / "docker-core-20260715T214242Z.json"
+    checkpoint.write_text(json.dumps({"ok": True, "lane": "docker-core"}), encoding="utf-8")
+
+    check = readiness.check_latest_packaging_smoke_evidence(root)
+
+    assert check.passed is True
+    assert "docker-core-20260715T214242Z" in check.detail
+    assert "lane=docker-core" in check.detail
+
+
 def _write_probe_gh(bin_dir: Path, *, issues_json: str, exit_code: int = 0) -> Path:
     """Write a real executable `gh` script that emits fixed real process output."""
     bin_dir.mkdir(parents=True, exist_ok=True)
@@ -269,14 +381,19 @@ def test_no_open_release_blockers_is_advisory_when_gh_not_installed(tmp_path: Pa
     assert "not found on PATH" in check.detail
 
 
-def test_build_report_ok_when_every_blocking_check_passes(tmp_path: Path) -> None:
-    """A clean repo tree with the network check skipped reports an overall OK verdict."""
+def test_build_report_blocks_without_complete_distribution_evidence(tmp_path: Path) -> None:
+    """Version parity alone cannot authorize a release with no installed evidence."""
     root = _make_repo_root(tmp_path)
 
     report = readiness.build_report(root, skip_network=True)
 
-    assert report.ok is True
-    assert report.blocking_failures == ()
+    assert report.ok is False
+    # A repo with no built cohort blocks on BOTH cohort-dependent gates: the
+    # installed-evidence set and the generated-surface version/digest check.
+    assert {check.name for check in report.blocking_failures} == {
+        "distribution-evidence-complete",
+        "generated-surface-versions",
+    }
 
 
 def test_build_report_blocks_on_a_real_version_drift(tmp_path: Path) -> None:
@@ -298,13 +415,13 @@ def test_report_to_dict_roundtrips_through_json(tmp_path: Path) -> None:
     report = readiness.build_report(root, skip_network=True)
     payload = json.loads(json.dumps(report.to_dict()))
 
-    assert payload["ok"] is True
+    assert payload["ok"] is False
     assert isinstance(payload["checks"], list)
     assert all({"name", "severity", "passed", "detail"} <= set(entry) for entry in payload["checks"])
 
 
-def test_main_cli_json_contract_exits_zero_on_clean_report(tmp_path: Path) -> None:
-    """The `main()` entry point prints valid JSON and returns exit code 0 for a clean report."""
+def test_main_cli_json_contract_blocks_without_distribution_evidence(tmp_path: Path) -> None:
+    """The JSON contract exits nonzero when required installed evidence is absent."""
     root = _make_repo_root(tmp_path)
     driver = tmp_path / "drive_readiness.py"
     driver.write_text(
@@ -322,9 +439,9 @@ def test_main_cli_json_contract_exits_zero_on_clean_report(tmp_path: Path) -> No
         text=True,
         check=False,
     )
-    assert result.returncode == 0, result.stderr
+    assert result.returncode == 1, result.stderr
     payload = json.loads(result.stdout)
-    assert payload["ok"] is True
+    assert payload["ok"] is False
 
 
 def test_real_repo_root_resolves_and_version_surfaces_currently_agree() -> None:

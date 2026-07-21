@@ -116,7 +116,6 @@ def auth_diagnostics_show(
             f"certificate_path_configured\t{bool_value(detail.certificate_path_configured)}",
             f"certificate_password_configured\t{bool_value(detail.certificate_password_configured)}",
             f"certificate_file_present\t{bool_value(detail.certificate_file_present)}",
-            f"certificate_backend\t{detail.certificate_backend}",
             f"certificate_path_fingerprint\t{detail.certificate_path_fingerprint}",
             f"phone_state\t{detail.phone_state}",
             f"phone_state_reported_at\t{reported_at}",

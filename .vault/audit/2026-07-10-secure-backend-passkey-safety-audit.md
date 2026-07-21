@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-backend-passkey-safety'
 date: '2026-07-10'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-14-secure-backend-passkey-custody-adr]]"
   - "[[2026-05-22-secure-storage-production-hardening-architecture-adr]]"
@@ -14,10 +14,13 @@ related:
 ## Scope
 
 Verify-close reconciliation of the accepted 2026-05-14 secure-backend-passkey-custody
-ADR and its execution plan against HEAD. The plan carries 52 steps across 11 phases with
-24 checked. The reconcile brief flagged the checkboxes as stale relative to more-advanced
-code. This audit records the true per-step state at HEAD, honestly, without fabrication.
-It is a reconciliation only; no crypto or storage code was authored.
+ADR and its execution plan against HEAD. The historical plan carried 52 steps across 11
+phases with 24 checked, but only 16 retained execution records. The reconciliation retains
+those 16 evidence-backed checks and retires every other structural row; none was checked
+from code inspection or successor-plan work. The reconcile brief flagged the old checkboxes
+as stale relative to more-advanced code. This audit records the true per-step state at HEAD,
+honestly, without fabrication. It is a reconciliation only; no crypto or storage code was
+authored.
 
 ## Findings
 
@@ -69,27 +72,56 @@ test files at the planned `_config/tests/test_e2e_*.py` paths, and the P11 docs
 the vault reference doc) do not exist at HEAD. P09 is additionally moot under the
 `no-legacy-compatibility` rule (unreleased pre-beta, no released data to refuse).
 
-### passkey-plan-p04-p05s01-checked-without-exec-records | low | six already-checked steps carry no execution record
+### successor-unlock-claim-diverges-from-code | medium | the successor record claims `config unlock`, but HEAD exposes `config switch`
 
-`vaultspec-core status` reports P04.S01-S05 and P05.S01 as checked but with "no record".
-Their planned files are also stale (`workflow/_active_bucket.py`, `_bucket_pointer.py`, and
-the Google `_profile_binding.py`, which was renamed to `_active_profile.py` per the
-`binding-names-reserved-for-registry-input` rule). This is pre-existing checkbox/exec-record
-drift under `plan-closure-requires-exec-records`, inherited from the superseded execution,
-not new to this reconcile.
+The successor production-hardening plan and a related rollout audit describe `aeat config
+unlock` as a first-class custody command. HEAD registers `lock`, `rekey`, `recover`,
+`show-recovery`, and `verify-recovery` in `_custody_secret.py`, and registers `switch` in
+`_custody.py`; there is no `unlock` command. `switch` remains the select-and-open lifecycle
+path. This is successor-plan and successor-audit drift, not a reason to reopen or credit
+the retired P05.S25 row. The successor must reconcile its own wording to the live CLI.
+
+### passkey-plan-checkbox-and-exec-drift | low | eight historical checks lacked retained execution records
+
+The historical plan carried 24 checked rows but only 16 retained execution records. In
+addition to P04.S01-S05 and P05.S01, P03.S06 and P03.S07 had no per-step execution record.
+The P03 implementations are visible at HEAD, but code inspection is not execution evidence.
+The P04/P05 planned files are also stale (`workflow/_active_bucket.py`, `_bucket_pointer.py`,
+and the Google `_profile_binding.py`, which was renamed to `_active_profile.py` per the
+`binding-names-reserved-for-registry-input` rule).
+
+The current-schema reconciliation retains only the 16 evidence-backed checks, each bridged
+to its historical record. The two incomplete P03 rows and all P04+ rows are retired from
+the plan rather than left open: their historical identifiers remain visible in the plan's
+Vaultspec retirement annotation, while this audit preserves their disposition. This preserves
+the `plan-closure-requires-exec-records` rule without crediting successor-plan work to the
+superseded plan.
+
+### retirement disposition | passkey plan has no remaining execution scope
+
+- `S17`-`S18`: visible HEAD behavior but no retained execution record for the historical
+  rows; successor ownership makes retrospective completion misleading.
+- `S19`-`S23`: obsolete active-bucket naming and file targets; the profile-centric successor
+  architecture owns the live routing model.
+- `S24`-`S33`: partly replaced by successor custody and profile commands, partly never built
+  as specified; none has the planned file or verb contract.
+- `S34`-`S37`: the wizard and Drive-mirror changes were not built as specified.
+- `S38`-`S42`: terminology work lacks the planned scope, and the legacy-layout gate is moot
+  under the unreleased no-legacy-compatibility policy.
+- `S43`-`S48`: no planned end-to-end or property-test files exist; successor coverage cannot
+  serve as execution evidence for this plan.
+- `S49`-`S52`: none of the planned documentation or reference targets exists at the stated
+  path.
+
+All of these rows are retired, not complete or deferred. Residual production custody work
+must be planned and evidenced under secure-storage-production-hardening.
 
 ## Recommendations
 
-Mark the `2026-05-14-secure-backend-passkey-bucket-plan` SUPERSEDED by the
-`2026-05-22-secure-storage-production-hardening-refactor-plan`, which is where the custody
-surface actually landed and where its residual work should be tracked and closed. Do not
-piecemeal-flip the passkey plan's remaining boxes: the four verbs that are genuinely
-satisfied at HEAD (rekey, recover, show-recovery/verify-recovery, switch) were built by the
-successor, and closing them under this plan with per-step exec records would misrepresent a
-superseded plan as incrementally self-executing while the majority of its steps
-(list/delete/export/import/set verbs, wizard screens, terminology tests, legacy gate, e2e
-files, docs) have no HEAD equivalent. The passkey ADR itself stays accepted and honoured —
-its decisions live on in the production-hardening architecture. FIDO2-hardware passkey
-custody remains out of scope (operator declined the hardware). No autonomous crypto/key
-action is warranted; any residual custody hardening belongs to the successor plan under its
-own review.
+The `2026-05-14-secure-backend-passkey-bucket-plan` is SUPERSEDED and closed by the
+`2026-05-22-secure-storage-production-hardening-refactor-plan`, where its residual custody
+work is tracked and closed. Its 36 non-evidenced rows are retired rather than piecemeal
+checked: the related HEAD behavior belongs to the successor and several planned targets have
+no equivalent. The passkey ADR stays accepted and honoured because its decisions live on in
+the production-hardening architecture. FIDO2-hardware passkey custody remains out of scope
+(operator declined the hardware). No autonomous crypto/key action is warranted.

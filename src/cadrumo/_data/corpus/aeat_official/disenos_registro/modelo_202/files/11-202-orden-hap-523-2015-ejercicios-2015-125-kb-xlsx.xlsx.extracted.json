@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "diseno_registro_workbook",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/disenos_registro/modelo_202/files/11-202-orden-hap-523-2015-ejercicios-2015-125-kb-xlsx.xlsx",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_202/files/11-202-orden-hap-523-2015-ejercicios-2015-125-kb-xlsx.xlsx",
   "source_sha256": "71584d7d3258f83472a486f5e426d7533f1f66dc87d631fb1f2e60b7a4130f46",
   "preprocessor_id": "diseno-registro-workbook",
   "preprocessor_version": "1.0",

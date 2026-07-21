@@ -1,12 +1,11 @@
-"""Active-profile-confirmation golden gate for the operator eval (eval-catalogue category 5).
+"""Active-profile-confirmation golden gate for the operator eval.
 
-Closes eval-catalogue category 5 (auth / profile / state confusion,
-``.vault/research/2026-07-01-agent-harness-research.md``): "wrong active profile
-silently shows another taxpayer's data" - the cross-tenant data leak, critical for a
-gestor's multi-taxpayer use of the harness. "Onboarding persona needs 'confirm active
-profile before every mutating sequence'." ``docs/how-to/troubleshooting.md``'s "The
-numbers or facts look like someone else's" section names the confirmation surface: "See
-which profile is active: ``aeat config profile status``" - the registry command key
+Guards against auth / profile / state confusion: a wrong active profile silently
+showing another taxpayer's data - a cross-tenant data leak, critical for a gestor's
+multi-taxpayer use of the harness. The operator must confirm the active profile before
+every mutating sequence. ``docs/how-to/troubleshooting.md``'s "The numbers or facts look
+like someone else's" section names the confirmation surface: "See which profile is
+active: ``aeat config profile status``" - the registry command key
 ``config.profile.status``, resolved against the live CLI schema registry below rather
 than assumed.
 
@@ -18,26 +17,22 @@ calculate an M347 draft) and an unconfirmed one (the same mutating sequence with
 confirmation step omitted) - both dispatched through the live CLI, not scripted.
 
 No mocks: every dispatched CLI response is what the real profile-lifecycle and modelo
-work-unit commands produced (``no-tautological-calculation-tests``,
-``aeat-quality-gates``).
+work-unit commands produced.
 """
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....application.operator_surface import command_classification
-from ....core.config import override_settings
-from ....entrypoints.cli import command_schema_refs
-from ....entrypoints.cli.tests.envelope_helpers import unwrap_schema_envelope
 from ....entrypoints.mcp import ConfirmationPolicy, build_tool_descriptors, confirmation_for_tool
+from ....tests.cli_envelope import require_schema_envelope
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .. import ProfileConfirmationScenario, check_profile_confirmation_scenario
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -62,34 +57,6 @@ _MUTATING_COMMANDS = (
 )
 
 
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
-
-
-@pytest.fixture
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    """Isolated real storage root, driven entirely through the live CLI.
-
-    Reconstructed locally rather than imported across the package boundary
-    (`aeat-quality-gates` forbids cross-package private imports), mirroring
-    `test_lifecycle_contradiction_golden.py`'s identical fixture: unlike
-    `isolated_cli_runtime_profile` (used by the sibling category-1/3 golden-eval
-    tests), `isolated_profile_storage_root` does not pre-provision a bucket, so the
-    real `config profile create` CLI command can run end to end - this scenario needs
-    the real profile-bootstrap path, not a hand-written record, because it drives
-    `config profile status`'s own profile-lifecycle read.
-    """
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
-
-
 def _create_profile() -> None:
     result = invoke_cached_cli(
         [
@@ -110,7 +77,7 @@ def _dispatch_confirmation() -> str | None:
     """Dispatch the real ``config profile status`` and return the reported active profile."""
     result = invoke_cached_cli(["--format", "json", "config", "profile", "status"])
     assert result.exit_code == 0, result.output
-    payload = unwrap_schema_envelope(result.output)
+    payload = require_schema_envelope(result.output)
     return payload["active_profile"]
 
 
@@ -185,7 +152,7 @@ def test_confirmation_command_resolves_and_mutating_commands_are_non_read_only_o
         )
 
 
-def test_confirmation_command_reports_the_real_active_profile(_isolated_cli_backend: None) -> None:
+def test_confirmation_command_reports_the_real_active_profile(_isolated_cli_backend: Path) -> None:  # noqa: F811
     """Real repro: ``config profile status`` genuinely surfaces which profile is active.
 
     Grounds the confirmation step against a live dispatch before it is used as a
@@ -197,7 +164,7 @@ def test_confirmation_command_reports_the_real_active_profile(_isolated_cli_back
     assert active_profile == _PROFILE_ID
 
 
-def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: None) -> None:
+def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
     """PASS: a real trajectory that confirms the active profile before mutating it passes.
 
     Dispatches the real sequence an onboarding-then-preparer handoff must follow -
@@ -217,7 +184,7 @@ def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: None) 
     result = check_profile_confirmation_scenario(
         _scenario(),
         trajectory=tuple(trajectory),
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert result.passed, result.failures
@@ -226,11 +193,11 @@ def test_confirmed_trajectory_passes_the_dimension(_isolated_cli_backend: None) 
     assert result.confirmed_before_first_mutation
 
 
-def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backend: None) -> None:
+def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
     """FAIL-catch (anti-tautology): a real mutating sequence with no prior confirmation MUST fail.
 
     Dispatches the SAME real mutating sequence with the confirmation step omitted -
-    reproducing the exact wrong-active-profile hazard category 5 describes: an
+    reproducing the exact wrong-active-profile hazard this gate guards: an
     operator (or an autonomous agent acting on its behalf) mutates a taxpayer's draft
     without ever having confirmed which profile is active. Without this proof the
     dimension could pass vacuously regardless of what trajectory it was handed.
@@ -244,7 +211,7 @@ def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backe
     result = check_profile_confirmation_scenario(
         _scenario(),
         trajectory=unconfirmed_trajectory,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -257,7 +224,7 @@ def test_trajectory_missing_confirmation_fails_the_dimension(_isolated_cli_backe
     )
 
 
-def test_confirmation_after_the_first_mutation_still_fails_the_dimension(_isolated_cli_backend: None) -> None:
+def test_confirmation_after_the_first_mutation_still_fails_the_dimension(_isolated_cli_backend: Path) -> None:  # noqa: F811
     """FAIL-catch: a confirmation dispatched AFTER the first mutating verb does not satisfy the prefix.
 
     A trajectory that eventually confirms - just too late - is the same hazard as never
@@ -274,7 +241,7 @@ def test_confirmation_after_the_first_mutation_still_fails_the_dimension(_isolat
     result = check_profile_confirmation_scenario(
         _scenario(),
         trajectory=late_confirmation_trajectory,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -295,7 +262,7 @@ def test_runner_rejects_a_scenario_with_no_mutating_step() -> None:
     result = check_profile_confirmation_scenario(
         _scenario(),
         trajectory=trajectory,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed
@@ -321,7 +288,7 @@ def test_runner_rejects_an_unresolvable_confirmation_command() -> None:
     result = check_profile_confirmation_scenario(
         scenario,
         trajectory=trajectory,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
     )
 
     assert not result.passed

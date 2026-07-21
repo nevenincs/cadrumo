@@ -44,16 +44,17 @@ from ....domain.modelos import (
     ModeloRecordPersistenceError,
     raise_catalogue_integrity_error,
 )
+from ..storage import MODELO_FILING_RECORD_CATALOGUE_NAMESPACE
 from ._modelo_runtime import resolve_modelo_repository_bucket_id, secure_objects_for_modelo_bucket
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
     from ..storage import SecureObjectRepository, SecureObjectWrite
 
 _LOGGER = get_logger(__name__)
-# namespace string preserved across rename to avoid orphaning persisted envelopes
-_FILING_NAMESPACE = "cadrumo.domain.modelos.filing_records"
-_FILING_OBJECT_KEY = "catalogue"
-_FILING_CATALOGUE_VERSION = 1
+_FILING_NAMESPACE = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.namespace
+_FILING_OBJECT_KEY = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.require_default_object_key()
+_FILING_CATALOGUE_VERSION = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.schema_version
+_FILING_CATALOGUE_SENSITIVITY = MODELO_FILING_RECORD_CATALOGUE_NAMESPACE.sensitivity
 _FILING_PERSISTENCE_MESSAGE = "errors.fail.fail_modelo_filing_record_persistence"
 
 
@@ -133,14 +134,13 @@ class ModeloRecordCatalogueRepository:
             ClassificationError,
             Envelope,
             EnvelopeVersionError,
-            SensitivityClass,
         )
 
         try:
             record = self._objects.load(
                 _FILING_NAMESPACE,
                 _FILING_OBJECT_KEY,
-                expected_class=SensitivityClass.FINANCIAL,
+                expected_class=_FILING_CATALOGUE_SENSITIVITY,
                 max_supported_version=_FILING_CATALOGUE_VERSION,
             )
         except (ClassificationError, EnvelopeVersionError) as exc:
@@ -154,11 +154,11 @@ class ModeloRecordCatalogueRepository:
         if record is None:
             return ModeloRecordCatalogue()
         envelope = Envelope[ModeloRecordCatalogue].model_validate_json(record.payload.decode(UTF_8_ENCODING))
-        if envelope.classification is not SensitivityClass.FINANCIAL:
+        if envelope.classification is not _FILING_CATALOGUE_SENSITIVITY:
             _LOGGER.error(
                 "filing-record catalogue classification mismatch",
                 extra={
-                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "expected_classification": _FILING_CATALOGUE_SENSITIVITY.value,
                     "actual_classification": envelope.classification.value,
                 },
             )
@@ -167,7 +167,7 @@ class ModeloRecordCatalogueRepository:
                 translated_message=_FILING_PERSISTENCE_MESSAGE,
                 context={
                     "reason": "classification_mismatch",
-                    "expected_classification": SensitivityClass.FINANCIAL.value,
+                    "expected_classification": _FILING_CATALOGUE_SENSITIVITY.value,
                     "actual_classification": envelope.classification.value,
                 },
             )
@@ -212,18 +212,18 @@ class ModeloRecordCatalogueRepository:
         and :class:`~adapters.persistence.storage.SensitivityClass`
         classification that :meth:`save` would persist directly.
         """
-        from ..storage import Envelope, SecureObjectWrite, SensitivityClass
+        from ..storage import Envelope, SecureObjectWrite
 
         envelope = Envelope[ModeloRecordCatalogue](
             schema_version=_FILING_CATALOGUE_VERSION,
             written_at=now(),
-            classification=SensitivityClass.FINANCIAL,
+            classification=_FILING_CATALOGUE_SENSITIVITY,
             payload=catalogue,
         )
         return SecureObjectWrite(
             namespace=_FILING_NAMESPACE,
             object_key=_FILING_OBJECT_KEY,
-            classification=SensitivityClass.FINANCIAL,
+            classification=_FILING_CATALOGUE_SENSITIVITY,
             schema_version=_FILING_CATALOGUE_VERSION,
             written_at=envelope.written_at,
             payload=envelope.model_dump_json().encode(UTF_8_ENCODING),

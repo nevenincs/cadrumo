@@ -2,10 +2,10 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from ._config_timeouts import AeatTimeoutSettings
+from ._config_timeouts import CadrumoTimeoutSettings
 
 
-class AeatRuntimeSettings(AeatTimeoutSettings):
+class CadrumoRuntimeSettings(CadrumoTimeoutSettings):
     cadrumo_llm_openai_chat_completions_url: str = Field(
         default="https://api.openai.com/v1/chat/completions",
         description="OpenAI Chat Completions endpoint; override for OpenAI-compatible proxies",
@@ -45,7 +45,7 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
             "into the local Ollama runtime. Default qwen2.5vl:3b (~3 GB) is "
             "document/OCR-grade and runs on normal consumer hardware (modest GPU or "
             "CPU); override to qwen2.5vl:7b for an 8 GB+ GPU or moondream for "
-            "CPU-only/low-memory (see the consumer-hardware vision-model ADR)"
+            "CPU-only/low-memory hardware"
         ),
     )
     cadrumo_llm_default_max_tokens: int = Field(
@@ -59,22 +59,22 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
         le=2.0,
         description="Default sampling temperature when an LLM request omits ``temperature``",
     )
-    aeat_browser_locale: str = Field(
+    cadrumo_browser_locale: str = Field(
         default="es-ES",
         min_length=2,
         description="Default browser locale passed to Playwright context (BCP-47 tag)",
     )
-    aeat_browser_timezone: str = Field(
+    cadrumo_browser_timezone: str = Field(
         default="Europe/Madrid",
         min_length=1,
         description="Default IANA timezone string passed to Playwright context",
     )
-    aeat_browser_viewport_width: int = Field(
+    cadrumo_browser_viewport_width: int = Field(
         default=1366,
         gt=0,
         description="Default Playwright viewport width (px) for AEAT sede sessions",
     )
-    aeat_browser_viewport_height: int = Field(
+    cadrumo_browser_viewport_height: int = Field(
         default=900,
         gt=0,
         description="Default Playwright viewport height (px) for AEAT sede sessions",
@@ -102,7 +102,7 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
     cadrumo_auth_clave_movil_lock_buffer_s: int = Field(
         default=90,
         gt=0,
-        description="Headroom (seconds) added to ``aeat_clave_movil_timeout_ms`` for the acquisition lock TTL",
+        description="Headroom (seconds) added to ``cadrumo_clave_movil_timeout_ms`` for the acquisition lock TTL",
     )
     cadrumo_auth_certificate_lock_ttl_s: int = Field(
         default=180,
@@ -117,11 +117,21 @@ class AeatRuntimeSettings(AeatTimeoutSettings):
         default="DEBUG",
         description="Log level for the file handler installed by ``cadrumo.core.logging``",
     )
+    cadrumo_log_file_max_bytes: int = Field(
+        default=10 * 1024 * 1024,
+        ge=1,
+        description=("Size cap (bytes) for cadrumo.log before the rotating file handler rolls over; default 10 MiB"),
+    )
+    cadrumo_log_file_backup_count: int = Field(
+        default=5,
+        ge=0,
+        description="Number of rotated cadrumo.log backups retained by the rotating file handler",
+    )
     cadrumo_log_root_level: str = Field(
         default="DEBUG",
         description="Root logger level installed by ``cadrumo.core.logging``",
     )
-    aeat_manuals_http_timeout_s: float = Field(
+    cadrumo_manuals_http_timeout_s: float = Field(
         default=60.0,
         gt=0,
         description="HTTP timeout (seconds) for AEAT manual PDF downloads",

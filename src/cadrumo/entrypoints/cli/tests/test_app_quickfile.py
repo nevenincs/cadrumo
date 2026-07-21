@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import json
 import time
-from collections.abc import Iterator, Sequence
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -30,7 +30,6 @@ from click.testing import Result
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....core import Period
-from ....core.config import override_settings
 from ....domain.iva_compensation import IvaCompensationReconciliationDecision
 from ....domain.transactions import (
     BusinessClassification,
@@ -43,19 +42,18 @@ from ....domain.transactions import (
 )
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-# Signatures of the concurrent-registry-write race documented by the
-# ``aeat-local-execution`` rule: in the shared worktree a peer agent may be
+# Signatures of a concurrent-registry-write race: a concurrent process may be
 # editing the registry TOML tree while these tests load it, producing a
-# transient mid-edit validation/fingerprint error. The rule's guidance is to
-# re-run rather than triage as a regression; ``_invoke`` encodes that as a
-# bounded retry keyed strictly on these transient markers so a real failure
-# (a genuine refusal, a wrong value) is never masked.
+# transient mid-edit validation/fingerprint error. Re-run rather than triage
+# as a regression; ``_invoke`` encodes that as a bounded retry keyed strictly
+# on these transient markers so a real failure (a genuine refusal, a wrong
+# value) is never masked.
 _TRANSIENT_REGISTRY_RACE_MARKERS = (
     "registry directory changed during cache fingerprinting",
     "required-role gate",
@@ -79,19 +77,6 @@ def _invoke(args: Sequence[str], *, attempts: int = 8) -> Result:
         result = invoke_cached_cli(list(args))
         tries += 1
     return result
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _create_profile() -> None:
@@ -358,7 +343,7 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_boe_without_prorrat
     _create_profile()
     bucket_id = _seed_m303_profile_facts()
     _seed_m303_ledger_and_wallet(bucket_id)
-    out = tmp_path / "modelo-303-1T.boe"
+    out = tmp_path / "modelo-303-2026-1T.boe"
 
     result = _invoke(
         [

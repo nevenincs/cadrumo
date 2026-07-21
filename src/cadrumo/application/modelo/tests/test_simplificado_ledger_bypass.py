@@ -2,7 +2,7 @@
 
 Simplificado operators supply casillas 47-58 as manual inputs and have no
 transaction ledger to satisfy the IVA aggregation preflight check. This test
-pins the bypass added in Task #169 so it cannot regress silently.
+pins that bypass so it cannot regress silently.
 
 The test calls ``_raise_if_ledger_preflight_blocks_calculation`` directly with:
 - a real M303 revision (from the registry, so ledger_iva_aggregation bindings exist)

@@ -3,7 +3,7 @@ tags:
   - '#plan'
   - '#release-readiness-gate'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 tier: L1
 related:
   - '[[2026-07-04-release-readiness-gate-adr]]'

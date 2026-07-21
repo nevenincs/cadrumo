@@ -1,8 +1,8 @@
 rules:
   - id: no-dict-str-any-in-domain-application
     message: |
-      `dict[str, Any]` / `Mapping[str, Any]` forbidden in src/aeat/domain/ and
-      src/aeat/application/. Define a typed pydantic model or `TypedDict` for
+      `dict[str, Any]` / `Mapping[str, Any]` forbidden in src/cadrumo/domain/ and
+      src/cadrumo/application/. Define a typed pydantic model or `TypedDict` for
       the structured shape, or narrow at the consumption boundary
       (e.g. `Model.model_validate(parsed)` and use the model thereafter).
       Untyped string-keyed envelopes erase provenance at cross-boundary
@@ -13,8 +13,12 @@ rules:
       - python
     paths:
       include:
-        - "/src/aeat/domain/"
-        - "/src/aeat/application/"
+        - "src/cadrumo/domain/**"
+        - "src/cadrumo/application/**"
+      exclude:
+        - "src/cadrumo/**/tests/**"
+        - "src/cadrumo/**/test_*.py"
+        - "src/cadrumo/**/_test_*.py"
     pattern-either:
       - pattern: dict[str, Any]
       - pattern: Dict[str, Any]

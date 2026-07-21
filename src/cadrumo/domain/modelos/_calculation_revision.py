@@ -43,7 +43,7 @@ from collections.abc import Iterator, Mapping, Sequence
 from datetime import datetime
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Literal, cast, override
+from typing import Annotated, Literal, override
 
 from pydantic import BaseModel, Field, StringConstraints, TypeAdapter, ValidationError, field_validator, model_validator
 
@@ -214,7 +214,6 @@ def derive_calculation_revision_id(
     bindings_sourced_from_borrador: Sequence[BindingId] = (),
     detail_rows: Sequence[ModeloDetailRow] = (),
     source_issues: Sequence[CalculationSourceIssue] = (),
-    source_resolution_assessed: bool = False,
 ) -> str:
     """Return the deterministic SHA-256 id for a calculation attempt.
 
@@ -234,12 +233,8 @@ def derive_calculation_revision_id(
     identical re-runs with the same rows produce the same id.
 
     ``source_issues`` carries unresolved source conditions that block
-    verification. It participates in identity so a recalculation of a legacy
-    draft without the condition cannot return that stale revision unchanged.
-
-    A true ``source_resolution_assessed`` marker changes M369 verification
-    behaviour, so it is also part of identity. The absent/false legacy value is
-    deliberately omitted to preserve historical revision ids.
+    verification. It participates in identity so distinct resolution outcomes
+    cannot collapse to one revision.
     """
     payload: dict[str, object] = {
         "work_unit_id": work_unit_id.strip(),
@@ -273,10 +268,11 @@ def derive_calculation_revision_id(
         payload["m210_official_tipo_renta_code"] = code
     if m210_gross_income_source_mode is not None:
         payload["m210_gross_income_source_mode"] = m210_gross_income_source_mode.value
-    # CAST-RATIONALE-ROW-BINDING-HASH: canonicalizer validates untyped boundary values before hashing.
+    raw_row_bindings: dict[object, object] = {
+        binding_id: rows for binding_id, rows in (row_binding_values or {}).items()
+    }
     canonical_row_bindings = _canonical_row_binding_values(
-        # CAST-RATIONALE-ROW-BINDING-HASH-VALUE: canonicalizer validates untyped boundary values before hashing.
-        cast(Mapping[object, object], row_binding_values or {}),
+        raw_row_bindings,
         surface="row_binding_values",
     )
     if canonical_row_bindings:
@@ -309,8 +305,6 @@ def derive_calculation_revision_id(
     )
     if canonical_source_issues:
         payload["source_issues"] = canonical_source_issues
-    if source_resolution_assessed:
-        payload["source_resolution_assessed"] = True
     return content_hash_hex(payload)
 
 
@@ -503,23 +497,23 @@ class CalculationRevision(BaseModel):
     # an independent identity axis).
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = Field(default_factory=tuple)
     # Immutable content-addressed snapshot of the ledger state this revision was
-    # computed from (per the modelo-filing-ledger-snapshot ADR). Captured at
+    # computed from. Captured at
     # verify/file time over ``source_transaction_ids``; ``None`` for unsnapshotted
     # revisions and for borradores not yet snapshotted. Deliberately NOT threaded
     # into ``derive_calculation_revision_id`` so the content-addressed id is
     # unaffected. A non-ledger modelo carries an empty-but-valid snapshot.
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None
-    # Bundled fact basis behind a ledger-derived revision (per the
-    # modelo-export-evidence-parity ADR): the typed contributing-row evidence
-    # projections plus operator manual fact-basis entries, pegged to the
+    # Bundled fact basis behind a ledger-derived revision: the typed
+    # contributing-row evidence projections plus operator manual
+    # fact-basis entries, pegged to the
     # snapshot's ``snapshot_fingerprint``. Where ``ledger_filing_snapshot`` proves
     # *whether* the ledger drifted, this carries *what the ledger said* so the
     # fact basis can be reconstituted and exported as filing evidence. Captured at
     # verify/file time; ``None`` for revisions without ledger evidence. Deliberately
     # NOT threaded into ``derive_calculation_revision_id``.
     ledger_filing_evidence: LedgerFilingEvidence | None = None
-    # Resolver-level source-mesh provenance (per the calculation-source-connectivity
-    # ADR, Phase 9): the typed resolver→source-object→fingerprint trace projected
+    # Resolver-level source-mesh provenance: the typed
+    # resolver→source-object→fingerprint trace projected
     # from the mesh resolution's ``CalculationSourceProvenance`` rows at persist
     # time. Where ``observations`` carry the per-casilla legal/source grounding,
     # this carries WHICH resolver mesh and WHICH upstream source objects produced
@@ -536,14 +530,8 @@ class CalculationRevision(BaseModel):
     # must not be recorded as its source.  Verification consumes the typed
     # issue later, after calculation diagnostics have left the CLI surface.
     # It participates in the content-addressed identity because its presence
-    # blocks verification; recalculation must never return a legacy draft that
-    # lacks the issue.
+    # blocks verification.
     source_issues: tuple[CalculationSourceIssue, ...] = Field(default_factory=tuple)
-    # ``True`` only when the current calculation source mesh assessed the
-    # revision. Legacy revisions predate the durable source-issue envelope;
-    # verification reconstructs the M369 OSS condition from encrypted invoice
-    # evidence before treating that legacy revision as filing-grade.
-    source_resolution_assessed: bool = False
     # Operator-supplied detail rows for informational modelos whose
     # content is a list of repeating records rather than scalar casilla
     # values (M184 atribución members, M232 operaciones vinculadas,
@@ -582,7 +570,6 @@ class CalculationRevision(BaseModel):
             bindings_sourced_from_borrador=self.bindings_sourced_from_borrador,
             detail_rows=self.detail_rows,
             source_issues=self.source_issues,
-            source_resolution_assessed=self.source_resolution_assessed,
         )
         if derived != self.calculation_revision_id:
             raise ModeloValidationError(
@@ -717,10 +704,9 @@ class CalculationRevision(BaseModel):
             return {}
         if not isinstance(value, Mapping):
             raise ModeloValidationError("row_binding_values must be a binding -> row-index mapping")
-        # CAST-RATIONALE-ROW-BINDING-VALIDATOR: canonicalizer validates untyped Pydantic input at this boundary.
+        raw_mapping: dict[object, object] = {key: item for key, item in value.items()}
         return _canonical_row_binding_values(
-            # CAST-RATIONALE-ROW-BINDING-VALIDATOR-VALUE: Pydantic boundary input.
-            cast(Mapping[object, object], value),
+            raw_mapping,
             surface="row_binding_values",
         )
 

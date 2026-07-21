@@ -3,13 +3,20 @@ tags:
   - '#exec'
   - '#calculation-source-connectivity'
 date: '2026-07-04'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S38'
 related:
   - "[[2026-05-20-calculation-source-connectivity-plan]]"
 ---
 
-# Test region scoped category profiles select by profile CCAA
+# [RETIRED] Test region scoped category profiles select by profile CCAA
+
+## Reconciliation outcome
+
+Retired on 2026-07-17. Every selection branch depended on a synthetic legal
+profile and no production regional category enrollment existed. The synthetic
+selector tests and dormant production path were removed. The material below
+is historical execution evidence, not current architecture.
 
 ## Scope
 

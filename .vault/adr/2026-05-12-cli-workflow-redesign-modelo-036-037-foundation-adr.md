@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#cli-workflow-redesign'
 date: '2026-05-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-12-cli-workflow-redesign-adr]]"
   - "[[2026-05-12-cli-workflow-redesign-modelo-036-037-foundation-research]]"
@@ -17,9 +17,9 @@ related:
 
 The CLI layer MUST remain a thin entrypoint boundary. It MUST NOT implement business logic, schema conversion logic, validation policy, orchestration rules, persistence behavior, provider behavior, or compatibility/deprecation shims. CLI commands MUST delegate to existing implemented centralized standardized tested Pydantic backend, application, and domain services.
 
-CLI logging and error handling MUST use the central facilities: `aeat.core.logging.get_logger(__name__)`, `aeat.core.logging.SecretScrubbingFilter`, `aeat.core.errors.AeatError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `aeat.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
+CLI logging and error handling MUST use the central facilities: `cadrumo.core.logging.get_logger(__name__)`, `cadrumo.core.logging.SecretScrubbingFilter`, `cadrumo.core.errors.CadrumoError`, `ERROR_REGISTRY`, `ErrorCode`, `ErrorCategory`, `ErrorEnvelope`, `build_error_envelope`, `render_error_text`, `render_error_json`, `get_error_exit_code`, and `get_registered_error_code`. CLI command execution MUST pass through `cadrumo.entrypoints.cli._errors.command_error_boundary` and app decoration through `decorate_typer_app`, using `CliValidationBoundaryError`, `CliUnexpectedBoundaryError`, `CliRefusedBoundaryError`, and `write_stderr` only as boundary adapters.
 
-CLI output MUST use the established emitters, including `aeat.entrypoints.cli._common._emit`, `aeat.entrypoints.cli._schemas.emit_json_success`, and `aeat.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
+CLI output MUST use the established emitters, including `cadrumo.entrypoints.cli._common._emit`, `cadrumo.entrypoints.cli._schemas.emit_json_success`, and `cadrumo.entrypoints.cli._schemas.emit_json_document`. New CLI behavior MUST be expressed by wiring existing backend/application/domain services and centralized error/output drivers, not by adding parallel CLI-local implementations.
 ## Problem Statement
 
 Census workflows are foundational for autónomos, but 036/037 registry files are
@@ -100,7 +100,7 @@ shape.
     `CENSUS_DEPENDENT_STAMPED_STALE`.
 
 - **Backend-boundary stays intact.** `CensusModeloFoundationCommand` and
-  the rest of `src/aeat/domain/calculations/registry/_census_modelos.py`
+  the rest of `src/cadrumo/domain/calculations/registry/_census_modelos.py`
   remain backend-owned (the existing
   `test_census_modelo_foundation_stays_backend_owned` regression keeps
   passing). The new `CensusSyncService` is the only CLI-accessible
@@ -109,7 +109,7 @@ shape.
 - **Snapshot lifecycle mirrors Borrador100.** `CensusSnapshot` is
   content-addressed (SHA-256 over profile_id + captured_at + source_url
   + census_facts), stored in encrypted SQLite under namespace
-  `aeat.application.live.census_snapshot` with sensitivity `PII`, with
+  `cadrumo.application.live.census_snapshot` with sensitivity `PII`, with
   a closed `ACTIVE` / `SUPERSEDED` / `DISCARDED` state machine.
   Re-fetch auto-supersedes the prior ACTIVE snapshot for the same
   profile. Caller emits the bucket event.
@@ -216,7 +216,7 @@ shape.
 
 ### New error hierarchy
 
-Under `src/aeat/application/profile/_census_errors.py`:
+Under `src/cadrumo/application/profile/_census_errors.py`:
 
 - `CensusSyncError` — base.
 - `CensusNotAvailableError` — sede returned no parseable census

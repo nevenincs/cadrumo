@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#dependency-provisioning'
 date: '2026-06-15'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-15-service-capabilities-research]]"
   - "[[2026-06-15-service-capabilities-adr]]"
@@ -21,7 +21,7 @@ model is unpulled — no probe, and the CLI catches neither the connection error
 `LLMProviderError`. Playwright's browser-missing case is typed but gives no
 `playwright install` hint. Provisioning is fragmented: `just bootstrap` never
 verifies, `just env-doctor` hard-crashes on a non-existent
-`aeat.entrypoints.cli.browser.health` module, nothing pulls the Playwright browser
+`cadrumo.entrypoints.cli.browser.health` module, nothing pulls the Playwright browser
 or the Ollama model, the README (`uv sync`) and the justfile (`just bootstrap`)
 give conflicting entry points, and the retired April `aeat setup`/`aeat doctor`
 verification loop was never replaced. There is no single command that tells the
@@ -93,7 +93,7 @@ the provisioning command to fix each gap.**
    browser-not-installed.
 
 4. **pyproject torch relocation (done) + capability-mapped extras (scoped).**
-   `torch` is the vaultspec-rag embedding backend — no `src/aeat/` runtime path
+   `torch` is the vaultspec-rag embedding backend — no `src/cadrumo/` runtime path
    imports it — yet it sat in `[project.dependencies]` (a ~GB CUDA wheel on every
    production install). It is relocated to `[dependency-groups].dev`, which
    vaultspec-rag's `torch_config` accepts as a valid direct-dep location (PEP 735),

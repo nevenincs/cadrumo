@@ -3,9 +3,8 @@ tags:
   - "#audit"
   - "#kent-ux-journey"
 date: 2026-04-17
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
-  - "[[2026-04-12-gsuite-bootstrap-audit]]"
   - "[[2026-04-13-modelo-inventory-audit]]"
   - "[[2026-04-16-submission-safety-sweep-code-review-audit]]"
   - "[[2026-04-17-modelo-inventory-remediation-audit]]"

@@ -86,7 +86,7 @@ CANONICAL_LAYOUT_PACKAGES: tuple[str, ...] = (
 )
 
 CANONICAL_PUBLIC_SYMBOLS: tuple[tuple[str, str], ...] = (
-    ("cadrumo.core.errors", "AeatError"),
+    ("cadrumo.core.errors", "CadrumoError"),
     ("cadrumo.core.access_gate", "LiveSubmitForbiddenError"),
     ("cadrumo.adapters.outbound.aeat.auth", "AeatAuthenticator"),
     ("cadrumo.adapters.outbound.google", "OAuthClient"),
@@ -99,7 +99,6 @@ CANONICAL_PUBLIC_SYMBOLS: tuple[tuple[str, str], ...] = (
 
 REQUIRED_RELOCATED_PATHS: tuple[str, ...] = (
     "application/auth/__init__.py",
-    "application/filing/testing.py",
     "adapters/inbound/justificante/_parser.py",
     "adapters/inbound/justificante/_extract.py",
 )

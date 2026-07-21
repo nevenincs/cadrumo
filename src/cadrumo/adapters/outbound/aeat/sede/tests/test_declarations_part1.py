@@ -424,6 +424,30 @@ class TestParseListbox:
         with pytest.raises(SedeParseError, match=r"listbox|missing|parse"):
             _parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
 
+    def test_missing_listbox_is_tagged_external_shape_changed(self) -> None:
+        """A page with no ``.z-listbox`` container is a portal-drift outcome, not a bare parse error."""
+        with pytest.raises(SedeParseError) as exc_info:
+            _parse_listbox("<html><body>not a listbox</body></html>", modelo="100", ejercicio=2022)
+        assert exc_info.value.failure_mode == "external_shape_changed"
+        assert exc_info.value.context is not None
+        assert exc_info.value.context["modelo"] == "100"
+        assert exc_info.value.context["ejercicio"] == 2022
+
+    def test_missing_justificante_column_is_tagged_external_shape_changed(self) -> None:
+        """AEAT dropping/renaming the justificante column is a portal-drift outcome."""
+        html = """
+            <div class="z-listbox">
+              <div class="z-listheader">Tipo</div>
+              <div class="z-listheader">Estado</div>
+            </div>
+        """
+        with pytest.raises(SedeParseError) as exc_info:
+            _parse_listbox(html, modelo="303", ejercicio=2025)
+        assert exc_info.value.failure_mode == "external_shape_changed"
+        assert exc_info.value.context is not None
+        assert exc_info.value.context["modelo"] == "303"
+        assert exc_info.value.context["ejercicio"] == 2025
+
 
 class TestParsePresentedAt:
     """Verify the Spanish ``dd/mm/YYYY hh:mm:ss`` timestamp shape parses to UTC."""
@@ -461,7 +485,7 @@ class TestSearchOptionSelection:
         tmp_path: Path,
     ) -> None:
         settings = Settings(cadrumo_token_dir=tmp_path)
-        profile = Profile(name="test-declarations", storage_state_path=tmp_path / "state.json")
+        profile = Profile(name="test-declarations")
         async with (
             shared_playwright_runtime() as playwright,
             opened_browser_page(playwright, settings, profile) as (page, _context),

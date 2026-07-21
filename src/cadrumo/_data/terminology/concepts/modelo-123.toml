@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-123"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:123"]
+legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99"]
+related = ["irpf", "modelo-193", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Retenciones sobre rendimientos del capital mobiliario."
+definition = "Autoliquidacion periodica de las retenciones practicadas sobre determinados rendimientos del capital mobiliario, como intereses y dividendos."
+
+[language.es.source]
+citation = "Articulos 25 y 99 de la Ley 35/2006 del IRPF."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 123"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "retenciones sobre intereses y dividendos"
+term_status = "admitted"
+
+[language.en]
+short_description = "Periodic return of withholdings on interest and dividends."
+
+[language.ca]
+short_description = "Retencions sobre rendiments del capital mobiliari."
+
+[language.hu]
+short_description = "Kamat- es osztalekkifizetesek forrasadojanak bevallasa."

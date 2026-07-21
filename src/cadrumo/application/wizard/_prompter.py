@@ -4,8 +4,8 @@ The :class:`Prompter` protocol decouples "where does an answer come
 from" from "what does the wizard ask for". The runtime calls
 ``prompter.ask(question, default=...)`` for every visible question
 and receives a canonical-token string in return. Two implementations
-ship: ``ScriptedPrompter`` for deterministic tests and structured
-flag-driven CLI invocations, and ``QuestionaryPrompter`` for live
+ship: ``CanonicalAnswerPrompter`` for structured non-interactive CLI
+invocations, and ``QuestionaryPrompter`` for live
 operator interaction. Both speak the same canonical-token contract.
 """
 
@@ -17,16 +17,16 @@ from typing import TYPE_CHECKING, Protocol, runtime_checkable
 
 import questionary
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.i18n import tr
 from ...core.logging import get_logger
-from ._errors import WizardScriptOverflowError, WizardScriptUnderflowError
+from ._errors import WizardAnswerQueueOverflowError, WizardAnswerQueueUnderflowError
 from ._models import WizardChoice, WizardQuestion, WizardWidget
 
 _log = get_logger(__name__)
 
 
-class WizardUnsupportedConsoleError(AeatError):
+class WizardUnsupportedConsoleError(CadrumoError):
     """Raised when the host terminal cannot host an interactive wizard.
 
     Surfaces when ``prompt_toolkit`` rejects the active TTY (typically
@@ -87,16 +87,16 @@ class Prompter(Protocol):
         ...
 
 
-class ScriptedPrompter:
-    """Test-only prompter that pops canonical-token answers from a FIFO queue.
+class CanonicalAnswerPrompter:
+    """Non-interactive prompter that consumes canonical answers in flow order.
 
-    Tests construct a ``ScriptedPrompter`` with a deque of canonical
-    tokens whose order matches the runtime's expected question
-    sequence. Each ``ask`` call pops the leftmost token; an empty
-    deque raises :class:`WizardScriptUnderflowError`. Calling
+    Quiet and accept-defaults CLI modes construct this prompter with canonical
+    tokens whose order matches the runtime's expected question sequence. Each
+    ``ask`` call pops the leftmost token; an empty deque raises
+    :class:`WizardAnswerQueueUnderflowError`. Calling
     :meth:`close` after the runtime finishes raises
-    :class:`WizardScriptOverflowError` if any scripted token went
-    unconsumed, surfacing test-fixture drift loudly without exposing
+    :class:`WizardAnswerQueueOverflowError` if any token went unconsumed,
+    surfacing caller/runtime drift loudly without exposing
     token values in diagnostics.
     """
 
@@ -119,25 +119,25 @@ class ScriptedPrompter:
                 answer.
 
         Raises:
-            WizardScriptUnderflowError: When the answer queue is empty.
+            WizardAnswerQueueUnderflowError: When the answer queue is empty.
         """
         del default
         if not self._answers:
             context = {"question_id": question.id, "prompt_key": str(question.prompt)}
-            raise WizardScriptUnderflowError(
-                translated_message="errors.internal.internal_wizard_script_underflow",
+            raise WizardAnswerQueueUnderflowError(
+                translated_message="errors.internal.internal_wizard_answer_queue_underflow",
                 context=context,
             )
         self._asked.append(question.id)
         return self._answers.popleft()
 
     def close(self) -> None:
-        """Assert every scripted answer was consumed.
+        """Assert every canonical answer was consumed.
 
         Raises:
-            WizardScriptOverflowError: When the deque holds unconsumed
+            WizardAnswerQueueOverflowError: When the deque holds unconsumed
                 canonical tokens at flow end. The exception context
-                reports counts only because scripted tokens can contain
+                reports counts only because canonical tokens can contain
                 secrets.
         """
         if self._answers:
@@ -145,8 +145,8 @@ class ScriptedPrompter:
                 "remaining_count": len(self._answers),
                 "asked_count": len(self._asked),
             }
-            raise WizardScriptOverflowError(
-                translated_message="errors.internal.internal_wizard_script_overflow",
+            raise WizardAnswerQueueOverflowError(
+                translated_message="errors.internal.internal_wizard_answer_queue_overflow",
                 context=context,
             )
 
@@ -168,18 +168,55 @@ class QuestionaryPrompter:
     ``questionary.confirm``, ``SELECT`` → ``questionary.select``,
     ``CHECKBOX`` → ``questionary.checkbox``, ``PATH`` →
     ``questionary.path``, ``INTEGER`` → ``questionary.text`` with a
-    numeric validator. The class accepts an optional
-    ``input`` / ``output`` pair so tests can drive it through
-    :func:`prompt_toolkit.input.create_pipe_input`.
+    numeric validator.
+
+    The optional ``input`` / ``output`` pair names the devices the prompts run
+    against; leaving both ``None`` (the production default) binds them to the
+    process stdio. This is ``prompt_toolkit``'s own IO-injection contract, the
+    same one :func:`prompt_toolkit.application.current.create_app_session` uses to
+    host a session away from process stdio, so a host that declares its IO — and
+    a headless harness driving the flow through
+    :func:`prompt_toolkit.input.create_pipe_input` — reach the prompter by the
+    same route. See :meth:`from_ambient_app_session`.
     """
 
     def __init__(self, *, input: Input | None = None, output: Output | None = None) -> None:
         self._input = input
         self._output = output
 
+    @classmethod
+    def from_ambient_app_session(cls) -> QuestionaryPrompter:
+        """Build a prompter bound to the IO the ambient ``prompt_toolkit`` app session declares.
+
+        ``prompt_toolkit`` lets an embedding host declare the IO devices every
+        prompt in a scope should use, via
+        :func:`prompt_toolkit.application.current.create_app_session`. That is the
+        library's own mechanism for hosting prompts somewhere other than the
+        process stdio (a telnet/SSH server serving one session per connection is
+        the documented case), and it is equally what drives a prompt from an
+        in-memory pipe.
+
+        Reading ``_input``/``_output`` rather than the public ``input``/``output``
+        properties is deliberate and mirrors ``create_app_session``'s own
+        implementation: the public properties *lazily construct* a real terminal
+        device on first access, so touching them here would both defeat the
+        detection (a device always materialises) and leak a terminal object into
+        the parent session. The private attributes stay ``None`` until a host
+        explicitly declares IO.
+
+        Outside such a session — every production ``aeat`` invocation — both are
+        ``None``, so the returned prompter is un-injected and
+        :meth:`ensure_interactive_environment` applies the full non-TTY /
+        Windows-no-console refusal.
+        """
+        from prompt_toolkit.application.current import get_app_session
+
+        session = get_app_session()
+        return cls(input=session._input, output=session._output)
+
     def prepare(self, flow: WizardFlow) -> None:
         """Verify prompt support and explain the setup flow before progress starts."""
-        self._ensure_interactive_environment()
+        self.ensure_interactive_environment()
         question_total = sum(len(section.questions) for section in flow.sections)
         required_total = sum(1 for section in flow.sections for question in section.questions if question.required)
         self.emit_progress(
@@ -192,17 +229,49 @@ class QuestionaryPrompter:
         )
 
     def emit_progress(self, text: str) -> None:
-        """Emit a progress line (section header or question prefix).
+        """Render a progress line (section header or question prefix) for the operator.
 
-        Called by the runtime between question prompts so operators see
-        their position in the flow. Routes through the structured logger
-        so the message is handled by the configured logging pipeline and
-        any registered secret-scrubbing filters.
+        Called by the runtime between question prompts so operators see their
+        position in the flow, which means the line has to reach the same eyes the
+        prompts do. It is therefore written to :meth:`output_device` — the very
+        device every ``questionary`` primitive in :meth:`ask` renders on — and
+        never to ``print``/stdout: operator prose interleaved with the
+        ``--format json`` envelope leaves that envelope unparseable for a machine
+        caller. This is the same reasoning that keeps the modelo wizard's help
+        copy riding on the prompt string instead of a bare ``print``.
+
+        The structured log record is kept as a secondary, machine-facing trace
+        (it carries the configured logging pipeline's secret-scrubbing filters);
+        the console handler defaults to ``WARNING``, so it is not what the
+        operator reads.
         """
         _log.info("wizard.progress text=%r", text)
+        output = self.output_device()
+        output.write(f"{text}\n")
+        output.flush()
 
-    def _ensure_interactive_environment(self) -> None:
-        """Fail before progress when this process cannot host an interactive prompt."""
+    def output_device(self) -> Output:
+        """Return the ``prompt_toolkit`` device this prompter's prompts render on.
+
+        An injected ``output`` (see :meth:`from_ambient_app_session`) is that
+        device by declaration. Otherwise the device is the ambient app session's
+        own output, which is exactly what ``questionary`` resolves an
+        ``output=None`` prompt against — so progress and prompts cannot land on
+        different surfaces.
+        """
+        if self._output is not None:
+            return self._output
+        from prompt_toolkit.application.current import get_app_session
+
+        return get_app_session().output
+
+    def ensure_interactive_environment(self) -> None:
+        """Fail before progress when this process cannot host an interactive prompt.
+
+        A prompter carrying explicit IO (see
+        :meth:`from_ambient_app_session`) is already bound to a device that can
+        host a prompt, so the process-stdio probe below does not apply to it.
+        """
         if self._input is not None or self._output is not None:
             return
         if not sys.stdin.isatty():
@@ -239,7 +308,7 @@ class QuestionaryPrompter:
         try:
             match question.widget:
                 case WizardWidget.TEXT:
-                    return self._ask_text(prompt, default)
+                    return self.ask_text(prompt, default=default)
                 case WizardWidget.SECRET:
                     return self._ask_secret(prompt)
                 case WizardWidget.CONFIRM:
@@ -257,13 +326,31 @@ class QuestionaryPrompter:
                 translated_message="wizard.errors.unsupported_console",
             ) from exc
 
-    def _ask_text(self, prompt: str, default: str | None) -> str:
-        result = questionary.text(
-            prompt,
-            default=default or "",
-            input=self._input,
-            output=self._output,
-        ).ask()
+    def ask_text(self, prompt: str, *, default: str | None = None) -> str:
+        """Render an already-rendered free-text ``prompt`` and return the answer.
+
+        The plain-text primitive underneath :meth:`ask`'s ``TEXT`` widget,
+        public because not every caller's prompt copy comes from a static
+        :class:`WizardQuestion`. A prompt whose text is assembled at runtime —
+        the modelo wizard's ``Casilla 06 (Retenciones e ingresos a cuenta)``,
+        built from a registry-resolved casilla label — has no catalogue key to
+        name, so it supplies the rendered string directly instead.
+
+        Raises:
+            WizardUnsupportedConsoleError: When the host terminal cannot host an
+                interactive prompt (Windows no-console, TTY misconfiguration).
+        """
+        try:
+            result = questionary.text(
+                prompt,
+                default=default or "",
+                input=self._input,
+                output=self._output,
+            ).ask()
+        except _NO_CONSOLE_ERRORS as exc:
+            raise WizardUnsupportedConsoleError(
+                translated_message="wizard.errors.unsupported_console",
+            ) from exc
         return _stringify(result)
 
     def _ask_secret(self, prompt: str) -> str:
@@ -343,7 +430,7 @@ def _stringify(value: object) -> str:
 
 
 __all__ = [
+    "CanonicalAnswerPrompter",
     "Prompter",
     "QuestionaryPrompter",
-    "ScriptedPrompter",
 ]

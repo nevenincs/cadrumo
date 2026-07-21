@@ -3,10 +3,10 @@ tags:
   - '#research'
   - '#bucket-custody-completeness'
 date: '2026-06-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-30-agent-harness-research]]'
-  - '[[2026-06-30-agent-harness-adr]]'
+  - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-05-27-profile-portability-adr]]'
   - '[[2026-06-03-bucket-sealed-archive-adr]]'
   - '[[2026-06-03-cli-workflow-redesign-adr]]'

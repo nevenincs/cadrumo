@@ -21,7 +21,7 @@ The call chain under test:
         → ``resolve_active_bucket_id()``
           → ``read_pointer(storage_root)``
             → ``BucketPointer.from_toml(corrupt_text)``
-              → ``pydantic.ValidationError`` (not AeatError)
+              → ``pydantic.ValidationError`` (not CadrumoError)
 
 Before contract: the broad ``except Exception`` caught this and produced the
 profile-create guidance — masking the real error.
@@ -67,7 +67,7 @@ def _corrupt_pointer_root(tmp_path: Path) -> Iterator[Path]:
 
     The file is valid TOML but is missing the required ``bucket_id`` field, so
     ``BucketPointer.model_validate`` raises a ``pydantic.ValidationError`` — which
-    is NOT an ``AeatError`` subclass.
+    is NOT an ``CadrumoError`` subclass.
 
     Before contract this exception was silently reclassified as the "no active
     profile" refusal by the broad ``except Exception`` clause.  After contract
@@ -107,7 +107,7 @@ def test_no_pointer_produces_profile_create_guidance(_no_pointer_root: Path) -> 
 def test_corrupt_pointer_does_not_produce_profile_create_guidance(
     _corrupt_pointer_root: Path,
 ) -> None:
-    """A corrupt pointer file raises a non-AeatError that must NOT be swallowed
+    """A corrupt pointer file raises a non-CadrumoError that must NOT be swallowed
     as the 'no active profile' refusal.
 
     Before contract the broad ``except Exception`` caught every exception and
@@ -132,6 +132,6 @@ def test_corrupt_pointer_does_not_produce_profile_create_guidance(
     output_lower = result.output.lower()
     assert "validation" in output_lower or "repair" in output_lower, (
         "Expected validation-boundary or repair-hint in output; "
-        f"the non-AeatError may not have propagated correctly.\n"
+        f"the non-CadrumoError may not have propagated correctly.\n"
         f"Output:\n{result.output}"
     )

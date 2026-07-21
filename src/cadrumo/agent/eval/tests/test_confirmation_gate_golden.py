@@ -1,6 +1,6 @@
 """HITL confirmation gate wiring for the operator golden-task eval.
 
-Covers eval-catalogue category 8 (HITL / confirmation bypass): an autonomous
+Guards against a HITL / confirmation bypass: an autonomous
 agent optimising for completion may pass ``--yes``, a failure mode no human
 persona would reproduce (a human has no reason to bypass their own
 confirmation). The ``PreToolUse`` gate is the operator-facing, granular half
@@ -10,15 +10,14 @@ backstop beneath it).
 
 ``src/cadrumo/entrypoints/mcp/tests/test_hitl_and_live_write.py`` already proves the
 pure ``confirmation_for_tool`` function returns the right enum for a handful of
-command keys in isolation. This module proves the stronger claim the research
-brief demands: the gate sits IN FRONT of the dispatched call (it is evaluated,
+command keys in isolation. This module proves the stronger claim: the gate sits
+IN FRONT of the dispatched call (it is evaluated,
 and evaluated correctly, before the tool's own arguments are ever read - so an
 auto-yes-equivalent argument riding along on the tool call cannot influence it),
 and that claim is wired into a real golden-scenario run via the caller-injected
 ``ConfirmationGateCheck`` dimension, mirroring exactly how
-``test_faithfulness_golden.py`` (category 9) injects the faithfulness verdict and
-``test_response_provenance_golden.py`` (category 3) injects
-``response_observations``.
+``test_faithfulness_golden.py`` injects the faithfulness verdict and
+``test_response_provenance_golden.py`` injects ``response_observations``.
 
 No mocks: every decision is the real ``confirmation_for_tool`` called against
 real ``McpAnnotations`` built by the real ``build_tool_descriptors`` /
@@ -53,7 +52,6 @@ import pytest
 from mcp.shared.memory import create_connected_server_and_client_session as connect
 
 from ....application.operator_surface import COMMAND_RISK, CommandRiskDeclaration
-from ....entrypoints.cli import command_schema_refs
 from ....entrypoints.mcp import (
     ConfirmationPolicy,
     McpToolDescriptor,
@@ -62,6 +60,7 @@ from ....entrypoints.mcp import (
     confirmation_for_tool,
 )
 from .. import ConfirmationGateCheck, ConfirmationTier, load_scenario, run_golden_scenario
+from ._real_cli_support import valid_cli_commands
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -77,10 +76,6 @@ _CALCULATE_STEP = "modelo.work.calculate"
 # consistent with entrypoints/mcp/tests/test_hitl_and_live_write.py's own
 # defensive proof.
 _HYPOTHETICAL_LIVE_WRITE_STEP = "modelo.work.submit"
-
-
-def _valid_commands() -> frozenset[str]:
-    return frozenset(ref.command for ref in command_schema_refs())
 
 
 def _descriptors_by_command_key() -> dict[str, McpToolDescriptor]:
@@ -134,7 +129,7 @@ def _texts(result: mcp_types.CallToolResult) -> list[str]:
 def test_export_handoff_confirms_and_is_argument_independent() -> None:
     """The export handoff step resolves CONFIRM and cannot be bypassed by an auto-yes arg.
 
-    Proves eval-catalogue category 8(a). Three independent proofs, not one:
+    Three independent proofs, not one:
 
     1. Behavioural: the real ``confirmation_for_tool`` returns CONFIRM for
        ``modelo.export``.
@@ -182,7 +177,7 @@ def test_export_handoff_confirms_and_is_argument_independent() -> None:
 def test_read_step_auto_approves() -> None:
     """A routine calculate step in the trajectory resolves AUTO_APPROVE.
 
-    Proves eval-catalogue category 8(b): a non-destructive, non-handoff step must
+    A non-destructive, non-handoff step must
     not be needlessly gated - over-gating trains operators to rubber-stamp
     confirmations, which is its own bypass risk.
     """
@@ -194,7 +189,7 @@ def test_read_step_auto_approves() -> None:
 def test_hypothetical_live_write_leaf_blocks_unconditionally() -> None:
     """A declared live-write command resolves BLOCK regardless of its family mutability.
 
-    Proves eval-catalogue category 8(c): if a live-write verb ever entered the
+    If a live-write verb ever entered the
     exposed command set, the gate refuses it outright rather than falling through
     to CONFIRM - the strongest tier, requiring no human approval loop to bypass.
     The BLOCK derives from the DECLARED ``live_write`` axis, which forces the command non-read-only
@@ -207,7 +202,7 @@ def test_hypothetical_live_write_leaf_blocks_unconditionally() -> None:
 
 
 def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() -> None:
-    """All three category-8 checks wired into a real M130 golden run pass together.
+    """All three confirmation-gate checks wired into a real M130 golden run pass together.
 
     Mirrors ``test_faithfulness_golden.py``'s wiring pattern: the real
     ``confirmation_for_tool`` decisions are resolved here (the test), packaged as
@@ -244,7 +239,7 @@ def test_confirmation_gate_wired_into_golden_scenario_passes_when_tiers_match() 
     scenario = load_scenario(_SCENARIO_PATH)
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         expected_confirmation_tiers=checks,
     )
 
@@ -275,7 +270,7 @@ def test_confirmation_gate_mismatch_fails_the_scenario() -> None:
     scenario = load_scenario(_SCENARIO_PATH)
     result = run_golden_scenario(
         scenario,
-        valid_commands=_valid_commands(),
+        valid_commands=valid_cli_commands(),
         expected_confirmation_tiers=(mismatched_check,),
     )
 
@@ -292,6 +287,6 @@ def test_confirmation_gate_dimension_holds_trivially_when_not_checked() -> None:
     silently fail every existing scenario run.
     """
     scenario = load_scenario(_SCENARIO_PATH)
-    result = run_golden_scenario(scenario, valid_commands=_valid_commands())
+    result = run_golden_scenario(scenario, valid_commands=valid_cli_commands())
     assert result.expected_confirmation_tiers == ()
     assert result.passed, result.failures

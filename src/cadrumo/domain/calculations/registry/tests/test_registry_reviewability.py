@@ -19,17 +19,18 @@ _MAX_BASELINE_TOML_LINES = 1_400
 _MAX_BASELINE_TOML_LINE_CHARS = 520
 _MAX_NEW_VALIDATOR_MODULE_LINES = 300
 _VALIDATOR_MODULE_LINE_BASELINES = {
-    # Shrunk from 720 to 341 lines (#601): the verification-predicate DSL
-    # validator cluster (arity/shape validators for equals, roll_forward_
-    # balances, casilla_equals_implies_*, deduccion_requires_adquisicion_
-    # before, profile_flag_enabled) moved to the sibling
-    # _validate_verification_predicates.py module, leaving only the
-    # cross-reference, workbook-parity, verification-expectation dispatch,
-    # application-link, and deadline-window section validators here.
+    # The verification-predicate DSL validator cluster (arity/shape
+    # validators for equals, roll_forward_balances,
+    # casilla_equals_implies_*, deduccion_requires_adquisicion_before,
+    # profile_flag_enabled) lives in the sibling
+    # _validate_verification_predicates.py module; this module holds only
+    # the cross-reference, workbook-parity, verification-expectation
+    # dispatch, application-link, and deadline-window section validators.
+    # _validate_evidence.py grew past the 300-line default with the
+    # sidecar-reading helper (_read_manual_pdf_sidecar + constants) and the
+    # validation-verdict-pin disk-cache write counter.
+    "_validate_evidence.py": 362,
     "_validate_surfaces.py": 350,
-    # New sibling module extracted from _validate_surfaces.py (#601): the
-    # verification-predicate DSL operator arity/shape validators, split out
-    # once _validate_surfaces.py grew past its complexity baseline.
     "_validate_verification_predicates.py": 431,
     "_validate_cross_revision.py": 424,
     "_validate_record_sections.py": 305,
@@ -41,10 +42,6 @@ _VALIDATOR_MODULE_LINE_BASELINES = {
     "_validate.py": 251,
     "_validate_relation_periods.py": 209,
     "_validate_semantic_role_axes.py": 188,
-    # +10 lines from the M303 iva-wallet compensación-binding single-source
-    # ownership relocation (commit e353111d84), which added the named
-    # carve-out constant and its registry-gate comment; re-pinned to the
-    # present size.
     "_validate_relation_sources.py": 310,
 }
 _WORKBOOK_PARITY_MODULE_LINE_BASELINE = 1_336

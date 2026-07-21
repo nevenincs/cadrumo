@@ -1,9 +1,7 @@
 """Support types and defaults for the central settings facade.
 
 This module holds the closed settings enums and derived records consumed
-by :class:`~core.config.Settings`: authentication provider selectors
-(:class:`~core.config.AuthProviderKindSetting`,
-:class:`~core.config.CertificateBackend`), secret storage selection
+by :class:`~core.config.Settings`: secret storage selection
 (:class:`~core.config.SecretStoreBackend`), LLM provider selection
 (:class:`~core.config.LLMProviderSetting`), and database routing via
 :class:`~core.config.StorageRouteKind` and
@@ -24,6 +22,17 @@ from pydantic import BaseModel, Field, SecretStr
 
 from ._models import STRICT_FROZEN_CONFIG
 from .external_constants import OutputLanguage, load_external_constants
+
+_EXTERNAL_CONSTANTS = load_external_constants()
+
+AEAT_CERTIFICATE_PROTECTED_ORIGIN = _EXTERNAL_CONSTANTS.aeat.domains.www6
+"""Exact Playwright client-certificate origin for AEAT certificate authentication."""
+
+AEAT_CERTIFICATE_PROTECTED_PATH = _EXTERNAL_CONSTANTS.aeat.sede_paths.expedientes_resumen
+"""Exact protected AEAT resource path used to prove certificate authentication."""
+
+AEAT_CERTIFICATE_PROTECTED_URL = f"{AEAT_CERTIFICATE_PROTECTED_ORIGIN}{AEAT_CERTIFICATE_PROTECTED_PATH}"
+"""Canonical protected navigation URL for certificate authentication."""
 
 
 class SecretStoreBackend(StrEnum):
@@ -58,21 +67,6 @@ class LLMProviderSetting(StrEnum):
     OPENAI = "OPENAI"
     GEMINI = "GEMINI"
     LOCAL = "LOCAL"
-
-
-class CertificateBackend(StrEnum):
-    """Closed catalogue of supported AEAT certificate-handshake backends."""
-
-    PLAYWRIGHT_CONTEXT = "playwright_context"
-    HTTPX_FALLBACK = "httpx_fallback"
-
-
-class AuthProviderKindSetting(StrEnum):
-    """Settings-shape selector for the active AEAT authentication provider."""
-
-    CERTIFICATE = "certificate"
-    CLAVE_MOVIL = "clave_movil"
-    CLAVE_PERMANENTE = "clave_permanente"
 
 
 class StorageRouteKind(StrEnum):
@@ -162,8 +156,9 @@ def coerce_output_language_setting(value: str) -> OutputLanguage | None:
 
 
 __all__ = [
-    "AuthProviderKindSetting",
-    "CertificateBackend",
+    "AEAT_CERTIFICATE_PROTECTED_ORIGIN",
+    "AEAT_CERTIFICATE_PROTECTED_PATH",
+    "AEAT_CERTIFICATE_PROTECTED_URL",
     "JustificanteParserBackendSetting",
     "LLMProviderSetting",
     "SecretStoreBackend",

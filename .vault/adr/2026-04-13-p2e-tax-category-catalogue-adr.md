@@ -3,7 +3,7 @@ tags:
   - "#adr"
   - "#p2e-tax-category-catalogue"
 date: "2026-04-13"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-13-p2e-tax-category-catalogue-research]]"
   - "[[2026-04-13-p2e-tax-category-catalogue-plan]]"
@@ -20,9 +20,9 @@ Topic: 2025 spending-category catalogue, proportionality rules, citations, and
 casilla mappings for the T4 taxonomy substrate.
 
 Audit surface: `#77`, `#104`, the AEAT 2025 Renta manual, `Ley 35/2006`,
-`RD 439/2007`, current `aeat.domain.casillas`, and the root Typer CLI.
+`RD 439/2007`, current `cadrumo.domain.casillas`, and the root Typer CLI.
 
-Rewrite scope: new `aeat.domain.financial.categories` package, additive CLI wiring,
+Rewrite scope: new `cadrumo.domain.categories` package, additive CLI wiring,
 and the minimum additive casillas-side enum surface needed by the new models.
 
 ## Problem statement
@@ -31,7 +31,7 @@ The branch needs a stable, explainable taxonomy substrate that downstream
 engines can consume immediately. The source material is rich enough to support a
 2025 catalogue, but current main has two hard shape constraints:
 
-- `aeat.domain.casillas` exposes only a very small public `130` / `303` surface.
+- `cadrumo.domain.casillas` exposes only a very small public `130` / `303` surface.
 - The requested minimum category list includes some labels that are useful for
   downstream classification even where the current 2025 handbook is weaker than
   the requested name.
@@ -43,15 +43,15 @@ mapping limits.
 ## Considerations
 
 - Every boundary-crossing record must be strict pydantic v2.
-- `aeat.domain.financial.vat` is a sibling branch and must remain untouched.
-- `aeat.domain.financial.providers` is sibling-owned and must remain untouched.
+- `cadrumo.domain.iva` is a sibling branch and must remain untouched.
+- `cadrumo.adapters.inbound.financial.providers` is sibling-owned and must remain untouched.
 - Every profile must carry citations so downstream explainability is preserved.
 - Current-main `MODELO_303` does not expose a category-specific deductible-input
   surface, so the registry cannot pretend otherwise.
 
 ## Constraints
 
-- Public imports must come from `aeat.domain.financial.categories` only.
+- Public imports must come from `cadrumo.domain.categories` only.
 - Closed catalogues use `enum.StrEnum`.
 - No bare dictionaries on the public model surface.
 - No hard imports from in-flight sibling branches.
@@ -62,8 +62,8 @@ mapping limits.
 
 ### 1. Package and public API
 
-Implement the feature under `src/aeat/domain/financial/categories/` and expose it as
-`aeat.domain.financial.categories`.
+Implement the feature under `src/cadrumo/domain/categories/` and expose it as
+`cadrumo.domain.categories`.
 
 Public exports:
 
@@ -93,7 +93,7 @@ deductibility evaluator.
 
 ### 3. Citation strategy
 
-Define a local `Citation` model inside `aeat.domain.financial.categories` rather than
+Define a local `Citation` model inside `cadrumo.domain.categories` rather than
 reaching into the VAT branch.
 
 Rationale:
@@ -115,7 +115,7 @@ Contract:
 
 `load_category_profiles_from_manual(year: int)` should:
 
-- attempt to read the manual corpus through `aeat.domain.manuals`,
+- attempt to read the manual corpus through `cadrumo.domain.manuals`,
 - return the year-specific profile set when the corpus is available,
 - fall back to `CATEGORY_PROFILES_2025` when the structured manual corpus is
   incomplete or missing.
@@ -197,10 +197,10 @@ casilla mappings. It never evaluates deductibility.
 
 ## Consequences
 
-- `aeat.domain.financial.categories` becomes a stable T4 taxonomy substrate for the
+- `cadrumo.domain.categories` becomes a stable T4 taxonomy substrate for the
   downstream Track B engines.
-- The catalogue stays isolated from `aeat.domain.financial.vat` and
-  `aeat.domain.financial.providers`.
+- The catalogue stays isolated from `cadrumo.domain.iva` and
+  `cadrumo.adapters.inbound.financial.providers`.
 - The runtime notes will explicitly expose weaker categories and coarse `303`
   mappings.
 - A future richer deductible-input VAT surface can be adopted without rewriting

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ci-github-actions'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-12-ci-github-actions-adr]]'
   - '[[2026-04-12-ci-github-actions-plan]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#ci-github-actions`.
 
 ### adr
 
-- `2026-04-12-ci-github-actions-adr` - ADR: GitHub Actions CI Workflow
+- `2026-04-12-ci-github-actions-adr` - ADR: GitHub Actions CI Workflow | (**status:** `accepted`)
 
 ### audit
 

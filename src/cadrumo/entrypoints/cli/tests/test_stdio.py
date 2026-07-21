@@ -49,50 +49,23 @@ from .._stdio import (
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-class _ReconfigurableStream(io.StringIO):
-    """A StringIO that records the kwargs it was reconfigured with."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.reconfigure_calls: list[dict[str, str]] = []
-
-    def reconfigure(self, **kwargs: str) -> None:
-        self.reconfigure_calls.append(kwargs)
-
-
-class _NonReconfigurableStream(io.StringIO):
-    """A StringIO that does not expose ``reconfigure``."""
-
-    # Strict no-reconfigure: the attribute genuinely does not exist.
-    # ``hasattr(self, "reconfigure")`` returns False for this class.
-
-
-class _ReconfigureRefusingStream(io.StringIO):
-    """A StringIO whose ``reconfigure`` raises (mid-run pipe refusal)."""
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.reconfigure_calls = 0
-
-    def reconfigure(self, **kwargs: str) -> None:
-        del kwargs
-        self.reconfigure_calls += 1
-        raise OSError("stream refused mid-run reconfiguration")
-
-
-def test_reconfigurable_streams_receive_utf8_replace() -> None:
+def test_reconfigurable_streams_receive_utf8_replace(tmp_path: Path) -> None:
     """A stream exposing ``reconfigure`` must end up on UTF-8 with the
     ``replace`` error policy. The replace policy degrades non-
     encodable characters to ``?`` rather than crashing — the right
     trade-off when the underlying terminal cannot represent the
     character anyway."""
 
-    stdout = _ReconfigurableStream()
-    stderr = _ReconfigurableStream()
-    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
+    with (
+        (tmp_path / "stdout.txt").open("w", encoding="cp1252", errors="strict") as stdout,
+        (tmp_path / "stderr.txt").open("w", encoding="cp1252", errors="strict") as stderr,
+    ):
+        configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
-    assert stdout.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
-    assert stderr.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
+        assert stdout.encoding == "utf-8"
+        assert stdout.errors == "replace"
+        assert stderr.encoding == "utf-8"
+        assert stderr.errors == "replace"
 
 
 def test_non_reconfigurable_streams_are_skipped_silently() -> None:
@@ -100,24 +73,34 @@ def test_non_reconfigurable_streams_are_skipped_silently() -> None:
     custom wrappers) must be left untouched. The helper must not
     raise."""
 
-    stdout = _NonReconfigurableStream()
-    stderr = _NonReconfigurableStream()
+    stdout = io.StringIO()
+    stderr = io.StringIO()
     assert not hasattr(stdout, "reconfigure")
 
     configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
 
-def test_reconfigure_failure_is_swallowed() -> None:
+def test_reconfigure_failure_is_swallowed(tmp_path: Path) -> None:
     """A stream that raises on ``reconfigure`` (e.g. a pipe that
     refuses mid-run encoding changes) must not crash the CLI
     startup."""
 
-    stdout = _ReconfigureRefusingStream()
-    stderr = _ReconfigureRefusingStream()
-    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
+    stdout_path = tmp_path / "stdout.txt"
+    stderr_path = tmp_path / "stderr.txt"
+    stdout_path.write_text("already read", encoding="cp1252")
+    stderr_path.write_text("already read", encoding="cp1252")
+    with (
+        stdout_path.open("r", encoding="cp1252", errors="strict") as stdout,
+        stderr_path.open("r", encoding="cp1252", errors="strict") as stderr,
+    ):
+        assert stdout.read(1) == "a"
+        assert stderr.read(1) == "a"
+        configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
-    assert stdout.reconfigure_calls == 1
-    assert stderr.reconfigure_calls == 1
+        assert stdout.encoding == "cp1252"
+        assert stdout.errors == "strict"
+        assert stderr.encoding == "cp1252"
+        assert stderr.errors == "strict"
 
 
 def test_configure_stdio_for_utf8_handles_none_streams() -> None:
@@ -129,24 +112,23 @@ def test_configure_stdio_for_utf8_handles_none_streams() -> None:
     assert result is None
 
 
-def test_configure_stdio_for_utf8_is_idempotent() -> None:
+def test_configure_stdio_for_utf8_is_idempotent(tmp_path: Path) -> None:
     """Calling the helper more than once must not raise. The Typer
     callback re-imports the entrypoint package in some test setups;
     the helper must survive that."""
 
-    stdout = _ReconfigurableStream()
-    stderr = _ReconfigurableStream()
-    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
-    configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
+    with (
+        (tmp_path / "stdout.txt").open("w", encoding="cp1252", errors="strict") as stdout,
+        (tmp_path / "stderr.txt").open("w", encoding="cp1252", errors="strict") as stderr,
+    ):
+        configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
+        configure_stdio_for_utf8(stdout=stdout, stderr=stderr)
 
-    # Both calls reach the underlying reconfigure call.
-    assert stdout.reconfigure_calls == [
-        {"encoding": "utf-8", "errors": "replace"},
-        {"encoding": "utf-8", "errors": "replace"},
-    ]
+        assert stdout.encoding == "utf-8"
+        assert stdout.errors == "replace"
 
 
-def test_configure_stdio_for_utf8_accepts_explicit_streams() -> None:
+def test_configure_stdio_for_utf8_accepts_explicit_streams(tmp_path: Path) -> None:
     """Tests can pass stdout/stderr directly instead of mutating sys.
 
     The helper's primary contract — reconfigure each stream to UTF-8
@@ -154,21 +136,22 @@ def test_configure_stdio_for_utf8_accepts_explicit_streams() -> None:
     when the caller provides explicit streams.
     """
 
-    out = _ReconfigurableStream()
-    err = _ReconfigurableStream()
+    with (
+        (tmp_path / "out.txt").open("w", encoding="cp1252", errors="strict") as out,
+        (tmp_path / "err.txt").open("w", encoding="cp1252", errors="strict") as err,
+    ):
+        configure_stdio_for_utf8(stdout=out, stderr=err)
 
-    configure_stdio_for_utf8(stdout=out, stderr=err)
-
-    assert out.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
-    assert err.reconfigure_calls == [{"encoding": "utf-8", "errors": "replace"}]
+        assert out.encoding == "utf-8"
+        assert err.encoding == "utf-8"
 
 
 def test_configure_stdio_for_utf8_tolerates_non_reconfigurable_explicit_streams() -> None:
     """Explicit streams without ``reconfigure`` are skipped silently,
     matching the default-streams behavior."""
 
-    out = _NonReconfigurableStream()
-    err = _NonReconfigurableStream()
+    out = io.StringIO()
+    err = io.StringIO()
 
     # Must not raise.
     configure_stdio_for_utf8(stdout=out, stderr=err)
@@ -186,7 +169,7 @@ def test_help_invocation_below_floor_widens_columns() -> None:
     """
 
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "create", "FOO", "--help"]),
+        scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "--help"]),
         scoped_env_var("COLUMNS", "80"),
         _ensure_help_render_width(),
     ):
@@ -202,8 +185,8 @@ def test_console_help_invocation_widens_before_rich_renders_long_flags(tmp_path:
     names from Rich ellipses.
     """
 
-    cadrumo_exe = shutil.which("cadrumo")
-    assert cadrumo_exe is not None, "the cadrumo console script must be installed for this test"
+    aeat_exe = shutil.which("aeat")
+    assert aeat_exe is not None, "the aeat console script must be installed for this test"
     env = {key: value for key, value in os.environ.items() if not key.startswith("AEAT_")}
     env.update(
         {
@@ -213,8 +196,8 @@ def test_console_help_invocation_widens_before_rich_renders_long_flags(tmp_path:
         },
     )
 
-    result = subprocess.run(  # noqa: S603 - test intentionally invokes the resolved cadrumo console script.
-        [cadrumo_exe, "--language", "en", "config", "profile", "create", "--help"],
+    result = subprocess.run(  # noqa: S603 - test intentionally invokes the resolved aeat console script.
+        [aeat_exe, "--language", "en", "config", "profile", "create", "--help"],
         cwd=Path.cwd(),
         env=env,
         capture_output=True,
@@ -239,7 +222,7 @@ def test_help_invocation_keeps_wider_columns() -> None:
     """A genuinely wide terminal keeps its real width on a help surface."""
 
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "create", "FOO", "-h"]),
+        scoped_sys_argv(["aeat", "config", "profile", "create", "FOO", "-h"]),
         scoped_env_var("COLUMNS", "300"),
         _ensure_help_render_width(),
     ):
@@ -254,7 +237,7 @@ def test_non_help_invocation_leaves_columns_untouched() -> None:
     """
 
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "list"]),
+        scoped_sys_argv(["aeat", "config", "profile", "list"]),
         scoped_env_var("COLUMNS", "80"),
         _ensure_help_render_width(),
     ):
@@ -265,7 +248,7 @@ def test_non_help_invocation_without_columns_set() -> None:
     """A non-help invocation does not set COLUMNS when it was unset."""
 
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "list"]),
+        scoped_sys_argv(["aeat", "config", "profile", "list"]),
         scoped_env_var("COLUMNS", None),
         _ensure_help_render_width(),
     ):
@@ -293,7 +276,7 @@ def test_columns_env_var_used_for_env_write() -> None:
     invocation with a narrow terminal os.environ[_COLUMNS_ENV_VAR] must
     hold the floor value.
     """
-    with scoped_sys_argv(["cadrumo", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, "80"), _ensure_help_render_width():
+    with scoped_sys_argv(["aeat", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, "80"), _ensure_help_render_width():
         assert int(os.environ[_COLUMNS_ENV_VAR]) == _MIN_HELP_RENDER_COLUMNS
 
 
@@ -305,7 +288,7 @@ def test_columns_env_var_used_for_env_read() -> None:
     uses the constant rather than an independent literal.
     """
     wide = str(_MIN_HELP_RENDER_COLUMNS + 100)
-    with scoped_sys_argv(["cadrumo", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, wide), _ensure_help_render_width():
+    with scoped_sys_argv(["aeat", "--help"]), scoped_env_var(_COLUMNS_ENV_VAR, wide), _ensure_help_render_width():
         assert os.environ[_COLUMNS_ENV_VAR] == wide
 
 
@@ -320,7 +303,7 @@ def test_columns_write_is_scoped_help_invocation() -> None:
     the mutation from leaking into sibling processes or subsequent test runs.
     """
     with (
-        scoped_sys_argv(["cadrumo", "config", "profile", "create", "--help"]),
+        scoped_sys_argv(["aeat", "config", "profile", "create", "--help"]),
         scoped_env_var(_COLUMNS_ENV_VAR, "80"),
     ):
         before = os.environ[_COLUMNS_ENV_VAR]
@@ -335,7 +318,7 @@ def test_columns_write_is_scoped_help_invocation() -> None:
 def test_columns_write_is_scoped_unset_env() -> None:
     """When COLUMNS was absent before the block it must be absent again after exit."""
     with (
-        scoped_sys_argv(["cadrumo", "--help"]),
+        scoped_sys_argv(["aeat", "--help"]),
         scoped_env_var(_COLUMNS_ENV_VAR, None),
     ):
         assert _COLUMNS_ENV_VAR not in os.environ
@@ -350,7 +333,7 @@ def test_columns_write_is_scoped_unset_env() -> None:
 def test_columns_write_not_scoped_on_non_help() -> None:
     """On a non-help invocation COLUMNS must not be touched at all."""
     with (
-        scoped_sys_argv(["cadrumo", "app", "status"]),
+        scoped_sys_argv(["aeat", "app", "status"]),
         scoped_env_var(_COLUMNS_ENV_VAR, "80"),
     ):
         before = os.environ[_COLUMNS_ENV_VAR]

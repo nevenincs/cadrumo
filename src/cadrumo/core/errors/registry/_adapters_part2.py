@@ -30,6 +30,17 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.adapters.outbound.aeat.auth._session_store.FormerProductAuthSessionStateError",
+        ErrorCode(
+            code="AUTH_FORMER_PRODUCT_SESSION_STATE",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_former_product_session_state",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.adapters.outbound.aeat.export._errors.ExportError",
         ErrorCode(
             code="FAIL_EXPORT",
@@ -651,7 +662,7 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="AUTH_STORAGE_BUCKET_RECOVERY_VERIFICATION",
             category=ErrorCategory.AUTH,
             message_key="errors.auth.auth_storage_bucket_recovery_verification",
-            default_suggestion="aeat config recover --recovery-key <WORDS>",
+            default_suggestion="aeat config recover",
             retryable=False,
             runbook_id=None,
         ),
@@ -684,17 +695,6 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             code="INTERNAL_MASTER_KEY_TYPE",
             category=ErrorCategory.INTERNAL,
             message_key="errors.internal.internal_master_key_type",
-            default_suggestion=None,
-            retryable=False,
-            runbook_id=None,
-        ),
-    ),
-    (
-        "cadrumo.adapters.inbound.financial.providers._base.FinancialProviderError",
-        ErrorCode(
-            code="ERROR_FINANCIAL_PROVIDER",
-            category=ErrorCategory.ERROR,
-            message_key="errors.error.error_financial_provider",
             default_suggestion=None,
             retryable=False,
             runbook_id=None,

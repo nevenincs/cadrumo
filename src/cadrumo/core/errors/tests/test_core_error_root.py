@@ -1,7 +1,7 @@
 """Behavioural tests for the CoreError root and catch-order contract.
 
 CoreError is the structural intermediate root for internal framework and
-core-primitive failures. AeatError is the project-wide root with registry
+core-primitive failures. CadrumoError is the project-wide root with registry
 enforcement; CoreError gives callers a narrower catch surface for failures
 that originate inside core/ rather than domain or application layers.
 
@@ -14,15 +14,15 @@ from __future__ import annotations
 
 import pytest
 
-from .. import AeatError, CoreError, CoreValidationError
+from .. import CadrumoError, CoreError, CoreValidationError
 from .._not_found import CoreNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_core_validation_error_catch_surface_is_well_defined() -> None:
-    """CoreValidationError is catchable as CoreError, AeatError, and ValueError."""
-    assert issubclass(CoreError, AeatError)
+    """CoreValidationError is catchable as CoreError, CadrumoError, and ValueError."""
+    assert issubclass(CoreError, CadrumoError)
 
     caught_as_core: CoreError | None = None
     try:
@@ -30,14 +30,14 @@ def test_core_validation_error_catch_surface_is_well_defined() -> None:
     except CoreError as exc:
         caught_as_core = exc
     assert isinstance(caught_as_core, CoreValidationError)
-    assert isinstance(caught_as_core, AeatError)
+    assert isinstance(caught_as_core, CadrumoError)
 
-    caught_as_aeat: AeatError | None = None
+    caught_as_cadrumo: CadrumoError | None = None
     try:
         raise CoreValidationError("cadrumo catch")
-    except AeatError as exc:
-        caught_as_aeat = exc
-    assert isinstance(caught_as_aeat, CoreError)
+    except CadrumoError as exc:
+        caught_as_cadrumo = exc
+    assert isinstance(caught_as_cadrumo, CoreError)
 
     caught_as_value_error: ValueError | None = None
     try:
@@ -56,7 +56,7 @@ def test_core_not_found_error_descends_from_core_error() -> None:
     pytest would report an uncaught CoreNotFoundError.
     """
     assert issubclass(CoreNotFoundError, CoreError)
-    assert issubclass(CoreNotFoundError, AeatError)
+    assert issubclass(CoreNotFoundError, CadrumoError)
     assert issubclass(CoreNotFoundError, KeyError)
 
     caught_as_core: CoreError | None = None
@@ -80,11 +80,11 @@ def test_core_not_found_error_descends_from_core_error() -> None:
     assert isinstance(caught_as_key_error, CoreNotFoundError)
 
 
-def test_core_error_does_not_catch_non_core_aeat_error() -> None:
-    """CoreError does not catch AeatError subclasses from other hierarchies.
+def test_core_error_does_not_catch_non_core_cadrumo_error() -> None:
+    """CoreError does not catch CadrumoError subclasses from other hierarchies.
 
-    Confirms the catch surface is narrowed: a non-CoreError AeatError
-    (McpLaunchError inherits AeatError directly, not CoreError) raised
+    Confirms the catch surface is narrowed: a non-CoreError CadrumoError
+    (McpLaunchError inherits CadrumoError directly, not CoreError) raised
     inside a try block is NOT caught by a CoreError handler.
     """
     from .. import McpLaunchError
@@ -93,4 +93,4 @@ def test_core_error_does_not_catch_non_core_aeat_error() -> None:
         try:
             raise McpLaunchError("not a core error")
         except CoreError:
-            pytest.fail("CoreError should not catch a non-CoreError AeatError subclass")
+            pytest.fail("CoreError should not catch a non-CoreError CadrumoError subclass")

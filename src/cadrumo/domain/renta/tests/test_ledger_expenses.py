@@ -317,7 +317,7 @@ def test_exclusive_use_profiles_require_confirmation() -> None:
 
 
 def test_first_slice_routes_every_eligible_category_to_a_real_casilla() -> None:
-    """Every :class:`SpendingCategory` builds a real observation (issue #589).
+    """Every :class:`SpendingCategory` builds a real observation.
 
     ``FIRST_SLICE_EXPENSE_CASILLAS`` is a total mapping: no eligible
     deductibility result is rejected for lacking a first-slice

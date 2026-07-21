@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#schema-driven-wizard-closure'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-12-schema-driven-wizard-closure-adr]]'
   - '[[2026-05-12-schema-driven-wizard-closure-phase1-step1-exec]]'
@@ -25,7 +25,7 @@ Auto-generated index of all documents tagged with `#schema-driven-wizard-closure
 
 ### adr
 
-- `2026-05-12-schema-driven-wizard-closure-adr` - `schema-driven-wizard-closure` adr
+- `2026-05-12-schema-driven-wizard-closure-adr` - `schema-driven-wizard-closure` adr | (**status:** `accepted`)
 
 ### exec
 

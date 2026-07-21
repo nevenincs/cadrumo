@@ -216,7 +216,7 @@ def test_classify_refuses_m210_evidence_flags_on_auto_split(tmp_path: Path) -> N
 
 
 def test_classify_reason_persists_to_transaction_notes(tmp_path: Path) -> None:
-    """`classify --reason` records WHY into the transaction notes (issue #223)."""
+    """`classify --reason` records WHY into the transaction notes."""
     txn = _imported_transaction_id(tmp_path)
     result = _invoke(
         [

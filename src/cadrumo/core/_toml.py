@@ -15,8 +15,8 @@ reader. :func:`to_str_keyed_dict` is the narrow bridge from loosely typed
 parsed TOML mappings into strict schema models that require string keys.
 
 The parse itself is backed by :mod:`rtoml` (a Rust-extension TOML parser),
-not stdlib :mod:`tomllib`, per the ``registry-toml-parser`` ADR: ~2.4x
-faster on the registry's ~16k-fragment tree, with output proven
+not stdlib :mod:`tomllib`: ~2.4x faster on the registry's ~16k-fragment tree,
+with output proven
 byte-identical to :mod:`tomllib` across every fragment the registry ships.
 Both parsers return the same native Python types for every TOML value shape
 (str/int/float/bool/list/dict/date/datetime/time); neither ever produces a

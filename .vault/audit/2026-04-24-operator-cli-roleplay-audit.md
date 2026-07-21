@@ -3,11 +3,8 @@ tags:
   - "#audit"
   - "#kent-cli-roleplay"
 date: 2026-04-24
-modified: '2026-07-10'
+modified: '2026-07-15'
 related:
-  - "[[2026-04-24-aeat-cli-wireframe-adr]]"
-  - "[[2026-04-24-aeat-cli-wireframe-research]]"
-  - "[[2026-04-21-auth-cli-adr]]"
   - "[[2026-04-18-unified-review-queue-adr]]"
   - "[[2026-04-18-category-assignment-cli-adr]]"
 ---

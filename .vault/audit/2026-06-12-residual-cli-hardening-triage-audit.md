@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#residual-cli-hardening'
 date: '2026-06-12'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-06-10-cli-operator-surface-plan]]'
   - '[[2026-06-10-cli-envelope-notice-standardisation-plan]]'

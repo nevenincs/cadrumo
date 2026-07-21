@@ -7,17 +7,15 @@
 # the domain is a discrete (epígrafe, módulo) catalogue, not a
 # numeric-continuous base.
 #
-# Phased dataset (2026-07-01-modelo-303-regimen-simplificado-adr, Option B):
-# only activities GROUNDED and cross-checked against the bundled corpus are
-# tabled here; the ~80+-activity Orden Anexo I remains a phased, incremental
+# Only activities GROUNDED and cross-checked against the bundled corpus are
+# tabled here; the ~80+-activity Orden Anexo I remains an incremental
 # authoring backlog. An epígrafe absent from this table is NOT computed by
 # the engine; casilla 48 stays reachable as a manual operator input and the
 # "modelo-303-2023-modulos-iva-computed-diverges-de-c48" advisory fires
-# instead of a silent zero (no-silent-under-declaration).
+# instead of a silent zero.
 #
-# Phase 2 first slice (2026-07-02, mirrors the M131 #516 first slice):
-# transporte por autotaxis (721.2), transporte de mercancías por carretera,
-# excepto residuos (722), peluquería (972.1) — the ADR's companion #516
+# Currently tabled: transporte por autotaxis (721.2), transporte de
+# mercancías por carretera, excepto residuos (722), peluquería (972.1) —
 # highest-prevalence activities, cross-checked available for IVA in the same
 # Orden.
 #

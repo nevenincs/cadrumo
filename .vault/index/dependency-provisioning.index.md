@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#dependency-provisioning'
-date: '2026-07-06'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-15-dependency-provisioning-adr]]'
   - '[[2026-07-06-dependency-provisioning-research]]'

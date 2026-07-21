@@ -15,15 +15,16 @@ from pydantic import ValidationError
 
 from ...application.ledger import (
     LLMProvider,
+    LlmReviewDecision,
+    LlmReviewInvocationOrigin,
+    LLMSplitApplyResult,
     PurchaseInvoiceEvidenceInputError,
     SplitChildCommand,
-    apply_evidence_split,
     archive_manual_transaction,
     attach_manual_transaction_evidence,
     compute_display_id_width,
+    execute_reviewed_decision,
     is_llm_provider_available,
-    ledger_transaction_payload,
-    ledger_transaction_review_status,
     mark_transaction_reviewed_excluded,
     merge_transactions,
     remove_manual_transaction,
@@ -42,13 +43,11 @@ from ...domain.attachments import AttachmentSource, DocumentLinkSource
 from ...domain.transactions import (
     BusinessClassification,
     LLMClassifierError,
-    Transaction,
     TransactionValidationError,
     is_classified,
 )
 from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amount
-from ._ledger_support import _resolve_id
-from ._schemas import OutputSchema
+from ._ledger_support import _emit_update_result, _resolve_id
 
 if TYPE_CHECKING:
     from ._ledger_payloads import LedgerSplitChildIdPayload
@@ -95,40 +94,6 @@ def _ledger_validation_bad(error: ValidationError) -> typer.BadParameter:
     location = ".".join(str(part) for part in item.get("loc", ()) if part is not None) or "ledger"
     message = str(item.get("msg") or error)
     return _bad(f"{location}: {message}")
-
-
-def _emit_update_result(
-    ctx: typer.Context,
-    result_transaction: Transaction,
-    bucket_id: str,
-    events: tuple[str, ...],
-    *,
-    command: str,
-    result_cls: type[OutputSchema],
-) -> None:
-    transaction_payload = ledger_transaction_payload(result_transaction)
-    review_status = ledger_transaction_review_status(result_transaction)
-    result = result_cls.model_validate(
-        {
-            "bucket_id": bucket_id,
-            "transaction_id": result_transaction.transaction_id,
-            "bucket_event_ids": list(events),
-            "review_status": review_status,
-            "transaction": transaction_payload.model_dump(mode="json"),
-        },
-    )
-    _emit_envelope(
-        ctx,
-        command=command,
-        result=result,
-        lines=[
-            f"{tr('cli.ledger.labels.id')}\t{result_transaction.transaction_id}",
-            f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
-            f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
-            f"{tr('cli.ledger.labels.description')}\t{transaction_payload.description}",
-            f"{tr('cli.ledger.labels.review_status')}\t{review_status}",
-        ],
-    )
 
 
 def ledger_attach(
@@ -921,12 +886,13 @@ def _ledger_split_llm(
 
     Without ``--apply`` the proposed children (derived amounts, model-selected
     categories, registry-derived IVA) are previewed and nothing is persisted.
-    With ``--apply`` (and ``--yes``) the reviewed proposal drives
-    :func:`apply_evidence_split`: the single-writer
-    split plus per-child classification, registry-derived numbers,
-    parent-invoice evidence link, and ``llm:<model>`` provenance. The manual
-    ``--child-amount`` / ``--child-description`` flags are the explicit operator
-    override and cannot be combined with ``--llm``.
+    With ``--apply`` (and ``--yes``) the reviewed proposal is routed through the
+    one review workflow (:func:`~application.ledger.execute_reviewed_decision`)
+    with the ``SPLIT_LLM`` origin, which delegates to the single-writer split
+    plus per-child classification, registry-derived numbers, parent-invoice
+    evidence link, and ``llm:<model>`` provenance. The manual ``--child-amount`` /
+    ``--child-description`` flags are the explicit operator override and cannot be
+    combined with ``--llm``.
     """
     from ._ledger_payloads import LedgerSplitChildProposalPayload, LedgerSplitResult
 
@@ -1015,8 +981,10 @@ def _ledger_split_llm(
         return
 
     try:
-        applied = apply_evidence_split(
+        applied = execute_reviewed_decision(
             suggestion,
+            origin=LlmReviewInvocationOrigin.SPLIT_LLM,
+            decision=LlmReviewDecision.SPLIT,
             bucket_id=bucket_id,
             actor=actor or resolve_active_bucket_id() or "operator",
             transaction_repository=transaction_repository,
@@ -1025,6 +993,7 @@ def _ledger_split_llm(
         raise _bad(str(exc)) from exc
     except ValidationError as exc:
         raise _ledger_validation_bad(exc) from exc
+    assert isinstance(applied, LLMSplitApplyResult)
 
     child_id_rows = _split_child_id_rows(applied.child_transaction_ids)
     result = LedgerSplitResult.model_validate(

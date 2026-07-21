@@ -3,12 +3,11 @@ tags:
   - '#adr'
   - '#modelo-100-renta-full-calc'
 date: '2026-04-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-27-modelo-100-renta-full-calc-research]]"
   - "[[2026-04-21-modelo-100-renta-adr]]"
   - "[[2026-04-27-modelo-130-calc-verify-adr]]"
-  - "[[2026-04-27-modelo-115-calc-verify-adr]]"
   - "[[2026-04-27-modelo-123-calc-verify-adr]]"
 ---
 
@@ -99,7 +98,7 @@ autónomas, not Comunidades Autónomas, and lack potestad LIRPF art.
   work touches verification only.
 - **No mocks / fakes / stubs / freezegun / pytest-mock.** Project-wide
   ban. Tests use real `CasillaDefinition` / `Ruleset` / `Formula`
-  instances; real synthetic PDFs from `aeat.domain.testing`; real CLI
+  instances; real synthetic PDFs from `cadrumo.domain.testing`; real CLI
   invocation via Typer `CliRunner`.
 - **No wave / phase numbering in source code or docstrings.** Wave
   markers belong in vault docs and commit messages only.
@@ -111,8 +110,8 @@ autónomas, not Comunidades Autónomas, and lack potestad LIRPF art.
   formula; engine tolerance `Decimal("0.01")`.
 - **No new CLI commands** beyond `aeat audit rulesets citations`
   already present.
-- **All Python modules under `src/aeat/`** (project mandate).
-- **Coverage floor 60%** on `src/aeat` preserved via `just test-cov`.
+- **All Python modules under `src/cadrumo/`** (project mandate).
+- **Coverage floor 60%** on `src/cadrumo` preserved via `just test-cov`.
 - **Conventional commits** with `(#317)` suffix.
 - **GitHub Actions CI** active; do NOT add new workflow files.
 - **Foral regimes (País Vasco / Navarra) out of scope** (`#424`).
@@ -124,10 +123,10 @@ autónomas, not Comunidades Autónomas, and lack potestad LIRPF art.
 ### D1. File layout — sub-package per modelo, per-anexo modules per año
 
 Author the full-form M100 surface as a sub-package within
-`src/aeat/domain/formulas/_rulesets/`:
+`src/cadrumo/domain/calculations/registry/`:
 
 ```
-src/aeat/domain/formulas/_rulesets/
+src/cadrumo/domain/calculations/registry/
 ├── modelo_100_summary_2025.py             (existing — variant="summary")
 ├── modelo_100_2024.py                      (NEW — aggregator: imports anexos, builds RULESET)
 ├── modelo_100_2025.py                      (NEW)
@@ -329,7 +328,7 @@ work preserves this:
 - Synthetic generator (`tests/fixtures/pdf_corpus/l3_synthetic/_generators/modelo_100_generator.py`)
   is already shaped flexibly with `casilla_values: Mapping[str, Decimal]`.
   Extend `_BOXES` to cover full-form casillas across multiple pages.
-- Borrador extractor (`src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`)
+- Borrador extractor (`src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`)
   needs per-año + multi-anexo extension. Add three new sibling extractors:
   `Modelo100V2024Extractor`, `Modelo100V2025Extractor`,
   `Modelo100V2026Extractor` with full-form casilla regex maps.
@@ -412,7 +411,7 @@ After each implementation wave, before moving to the next:
 - `aeat audit rulesets citations` shows 100% on every M100 ruleset
   added so far.
 - `just lint && just typecheck && just hooks` green.
-- `just test src/aeat/domain/formulas/_rulesets/modelo_100/` green.
+- `just test src/cadrumo/domain/calculations/registry/modelo_100/` green.
 - Mutation kill-rate ≥ 90% on newly-added M100 nodes.
 - Per-wave exec record under
   `.vault/exec/2026-04-27-modelo-100-renta-full-calc/wave-<N>-<topic>-exec.md`
@@ -489,11 +488,10 @@ create maintenance drift risk without audit-traceability gain.
 
 ### Why extend the borrador dispatch (D7)
 
-M100's unique `--from-borrador` dispatch is established in landed code.
-Extending it preserves backwards compatibility with the existing
-`TestKentImportsModelo100SummaryBorrador` integration test and keeps
-the CLI surface consistent. Switching M100 to `--from-declaracion`
-would break the existing summary path with no compensating benefit.
+M100 uses one explicit borrador-import dispatch because a borrador is a source
+document distinct from a filed declaración. The integration test proves that
+current semantic distinction; no alternate or compatibility spelling is
+retained.
 
 ### Why ≥5 L1 anchors per año, with synthetic-only fallback (D8)
 

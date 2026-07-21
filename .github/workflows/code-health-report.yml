@@ -1,22 +1,16 @@
 # Monthly code-health report (issue #416)
 #
-# Runs `just audit-health-report` — the composed shadowing / duplication /
-# layering / complexity dashboard (`dev/audit/report.py`) — on a monthly
-# schedule and publishes the result to the workflow summary and as a build
-# artifact.
+# The workflow runs `just audit-health-report`, the composed shadowing,
+# duplication, import-layering, and complexity dashboard (`dev/audit/report.py`),
+# each month. The text output remains in the job logs. The workflow uploads the
+# JavaScript Object Notation (JSON) output as a build artifact.
 #
-# This is DELIBERATELY NON-BLOCKING. The report currently reports RED against
-# real, standing, peer-owned debt (a broken `.importlinter` layering contract
-# and a stale complexity baseline lagging live-branch churn — see the
-# `dev.audit.report` module docstring and issue #416's delivery comment for
-# the current honest baseline). Wiring the report as a hard-blocking CI gate
-# today would fail every PR on pre-existing debt it did not introduce. Instead
-# the report step uses `continue-on-error: true` so a RED verdict is recorded
-# and visible without failing the run.
-#
-# Promoting this from informational to a blocking gate is tracked as
-# follow-on work once the standing layering + complexity debt is remediated
-# (see the scope note in `dev/audit/report.py` and issue #416).
+# This workflow is deliberately non-blocking. The scheduled diagnostic dashboard
+# combines import-layering, shadowing, duplication, and complexity signals.
+# The main continuous integration (CI) workflow enforces every declared
+# `.importlinter` contract through `just check-imports`. The monthly workflow
+# records and displays a diagnostic failure without causing the scheduled job
+# to fail.
 
 name: Code health report
 
@@ -32,7 +26,7 @@ permissions:
 jobs:
   health-report:
     name: Monthly code-health report (informational)
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
 
     steps:
@@ -54,9 +48,9 @@ jobs:
           uv run vaultspec-core install --force
 
       - name: Run code-health report (text)
-        # Informational only: a RED overall verdict must not fail this job.
-        # See the workflow header and `dev/audit/report.py` for why the
-        # report is expected to be RED today against standing peer debt.
+        # Informational only: a failed diagnostic verdict must not fail this job.
+        # See the workflow header and `dev/audit/report.py` for the distinction
+        # between the blocking import boundary and the scheduled combined report.
         run: just audit-health-report
         continue-on-error: true
 

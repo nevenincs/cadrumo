@@ -1,0 +1,5 @@
+@setup aeat config auth apoderado configure --represented-nif 11111111H --scope IVA --scope PAGOSF
+@step Show the apoderado configuration recorded for the active profile.
+@result aeat --format json config auth apoderado status
+@expect result.configured == true
+@expect exit_code == 0

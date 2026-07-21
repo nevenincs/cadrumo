@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#justfile-redesign'
 date: '2026-06-09'
-modified: '2026-07-03'
+modified: '2026-07-17'
 step_id: 'S01'
 related:
   - "[[2026-06-09-justfile-redesign-plan]]"

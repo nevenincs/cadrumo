@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#binding-fold-in-carry-unification'
-date: '2026-06-26'
-modified: '2026-06-28'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-26-binding-fold-in-carry-unification-P01-S01]]'
   - '[[2026-06-26-binding-fold-in-carry-unification-P01-S02]]'
@@ -26,6 +26,7 @@ related:
   - '[[2026-06-26-binding-fold-in-carry-unification-adr]]'
   - '[[2026-06-26-binding-fold-in-carry-unification-plan]]'
   - '[[2026-06-26-binding-fold-in-carry-unification-reference]]'
+  - '[[2026-07-10-binding-fold-in-carry-unification-research]]'
 ---
 
 # `binding-fold-in-carry-unification` feature index
@@ -36,7 +37,7 @@ Auto-generated index of all documents tagged with `#binding-fold-in-carry-unific
 
 ### adr
 
-- `2026-06-26-binding-fold-in-carry-unification-adr` - `binding-fold-in-carry-unification` adr: `fold-in and carry unification: one cross-filing fold-in implementation and one compensacion-carry authority` | (**status:** `proposed`)
+- `2026-06-26-binding-fold-in-carry-unification-adr` - `binding-fold-in-carry-unification` adr: `fold-in and carry unification: one cross-filing fold-in implementation and one compensacion-carry authority` | (**status:** `accepted`)
 
 ### exec
 
@@ -65,3 +66,7 @@ Auto-generated index of all documents tagged with `#binding-fold-in-carry-unific
 ### reference
 
 - `2026-06-26-binding-fold-in-carry-unification-reference` - `binding-fold-in-carry-unification` reference: `phase-2.3 fold-in and carry anchor pins`
+
+### research
+
+- `2026-07-10-binding-fold-in-carry-unification-research` - binding-fold-in-carry-unification research: warning closeout research grounding

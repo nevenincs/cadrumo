@@ -32,8 +32,7 @@ renamed in wave W05 (`resolve_active_profile`/`_active_profile`, `_decimal_parsi
   `resolve_active_profile`; the str→Decimal parser lives in `_decimal_parsing.py`;
   the rate-to-BOE gate is `test_legal_basis_rate_grounding.py`.
 - **Good:** the registry profile-fact resolver KEEPS the "binding" name
-  (`_profile_binding.py`, `ProfileSourcedBindingResult`) — "binding" is correct
-  there.
+  (`_profile_binding.py`) — "binding" is correct there.
 - **Bad:** naming a new module `_*_binding.py` for an OAuth/session/identity
   scoping concern, a generic parser, or a verification gate.
 - **Bad:** introducing an English/Spanish alias module over a binding type for

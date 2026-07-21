@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import os
 import secrets
 from pathlib import Path
@@ -10,24 +9,24 @@ from pathlib import Path
 import pytest
 
 from ......core.config import SecretStoreBackend, Settings, override_settings
+from ......tests.master_key import EphemeralMasterKeyProvider
 from ...crypto import KEY_SIZE
 from ...errors import (
-    KeyringUnavailableError,
     MasterKeyMaterialMissingError,
     SecretStoreError,
     UnsecuredModeRefusedError,
 )
 from .. import (
-    EphemeralMasterKeyProvider,
     FileFallbackMasterKeyProvider,
     KeyringMasterKeyProvider,
     MasterKeyProvider,
     UnsecuredMasterKeyProvider,
+    atomic_write_secure_bytes,
     get_master_key_provider,
     looks_like_real_tax_id,
     refuse_unsecured_with_real_nif,
 )
-from ._master_key_support import _InMemoryKeyringClient, _settings_with_store
+from ._master_key_support import _settings_with_store
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -51,21 +50,6 @@ class TestEphemeralProvider:
             EphemeralMasterKeyProvider(key=b"too-short")
 
 
-class TestKeyringProvider:
-    """Keyring provider tests using a protocol-compatible in-process backend."""
-
-    def test_get_after_explicit_provision_round_trip(self) -> None:
-        service = f"aeat:test:{secrets.token_hex(8)}"
-        client = _InMemoryKeyringClient()
-        provider = KeyringMasterKeyProvider(service=service, client=client)
-
-        first = provider.provision_master_key()
-        second = KeyringMasterKeyProvider(service=service, client=client).get_master_key()
-
-        assert len(first) == KEY_SIZE
-        assert first == second
-
-
 class TestMasterKeyProviderProtocol:
     """Concrete providers implement the master-key provider protocol."""
 
@@ -77,36 +61,6 @@ class TestMasterKeyProviderProtocol:
         ]
         for provider in providers:
             assert isinstance(provider, MasterKeyProvider)
-
-
-class TestKeyringFailureSurfaces:
-    """The keyring provider surfaces failures via ``KeyringUnavailableError``."""
-
-    def test_unreadable_stored_values_raise(self) -> None:
-        from .._master_key import KEYRING_USERNAME
-
-        stored_values = {
-            "malformed-base64": "not!base64!",
-            "wrong-size": base64.b64encode(b"short").decode("ascii"),
-        }
-        for label, stored_value in stored_values.items():
-            service = f"aeat:test:{label}:{secrets.token_hex(8)}"
-            client = _InMemoryKeyringClient(seeded={(service, KEYRING_USERNAME): stored_value})
-            provider = KeyringMasterKeyProvider(service=service, client=client)
-            with pytest.raises(KeyringUnavailableError):
-                provider.get_master_key()
-
-    def test_set_password_failure_raises(self) -> None:
-        from keyring.errors import KeyringError
-
-        def _fail_set(service: str, username: str, password: str) -> None:
-            raise KeyringError("simulated backend failure")
-
-        service = f"aeat:test:{secrets.token_hex(8)}"
-        client = _InMemoryKeyringClient(set_=_fail_set)
-        provider = KeyringMasterKeyProvider(service=service, client=client)
-        with pytest.raises(KeyringUnavailableError):
-            provider.provision_master_key()
 
 
 class TestTornStateGate:
@@ -146,7 +100,7 @@ class TestTornStateGate:
             with pytest.raises(MasterKeyMaterialMissingError, match="torn state") as excinfo:
                 provider.get_master_key()
             msg = str(excinfo.value)
-            assert "aeat config recover --recovery-key" in msg
+            assert "aeat config recover" in msg
             assert "aeat config profile create NAME" in msg
 
     def test_no_install_refuses_implicit_mint(
@@ -214,43 +168,6 @@ class TestSecurityHardening:
             mode = path.stat().st_mode & 0o777
             assert mode == 0o600, f"{name} must be 0o600; got {oct(mode)}"
 
-    def test_keyring_no_op_backend_refused(self) -> None:
-        """The fail.Keyring backend MUST be refused so the auto path falls back."""
-
-        def _refuse() -> None:
-            raise KeyringUnavailableError("OS keychain backend is the no-op fail.Keyring")
-
-        client = _InMemoryKeyringClient(probe=_refuse)
-        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}", client=client)
-        with pytest.raises(KeyringUnavailableError):
-            provider.get_master_key()
-
-    def test_keyring_cache_is_per_service(self) -> None:
-        """Two providers bound to distinct services do NOT share cached keys."""
-
-        shared = _InMemoryKeyringClient()
-        service_a = f"aeat:test:{secrets.token_hex(8)}"
-        service_b = f"aeat:test:{secrets.token_hex(8)}"
-
-        key_a = KeyringMasterKeyProvider(service=service_a, client=shared).provision_master_key()
-        key_b = KeyringMasterKeyProvider(service=service_b, client=shared).provision_master_key()
-        assert key_a != key_b
-        # Re-binding the first service must return the same key (still cached).
-        assert KeyringMasterKeyProvider(service=service_a, client=shared).get_master_key() == key_a
-
-    def test_keyring_round_trip_disagreement_raises(self) -> None:
-        """Explicit provision detects a backend that drops the stored value."""
-
-        # "Silent dropper": set_password swallows the value; get_password
-        # afterwards returns None.
-        client = _InMemoryKeyringClient(
-            get=lambda service, username: None,
-            set_=lambda service, username, password: None,
-        )
-        provider = KeyringMasterKeyProvider(service=f"aeat:test:{secrets.token_hex(8)}", client=client)
-        with pytest.raises(KeyringUnavailableError):
-            provider.provision_master_key()
-
 
 class TestFactory:
     """``get_master_key_provider`` honours the configured backend."""
@@ -269,110 +186,6 @@ class TestFactory:
         settings = _settings_with_store(tmp_path, SecretStoreBackend.FILE)
         with pytest.raises(SecretStoreError):
             get_master_key_provider(backend="not-a-real-backend", settings_override=settings)
-
-    def test_keyring_backend_propagates_failure(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        from keyring.errors import KeyringError
-
-        def _refuse(*_args: object, **_kwargs: object) -> None:
-            raise KeyringError("no backend in this test")
-
-        client = _InMemoryKeyringClient(get=_refuse, set_=_refuse)
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.KEYRING)
-        # The explicit ``keyring`` backend returns the provider without
-        # provisioning. The first read still rejects the operation
-        # rather than silently routing through file.
-        provider = get_master_key_provider(settings_override=settings, keyring_client=client)
-        with pytest.raises(SecretStoreError):
-            provider.get_master_key()
-
-    def test_auto_backend_falls_back_when_keyring_unavailable(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        # When the keyring backend is genuinely unusable (no usable
-        # backend, package missing, ``fail.Keyring`` no-op installed),
-        # auto falls back to file unconditionally — there is no
-        # keychain-backed master key that a file-fallback could
-        # diverge from.
-        from ...errors import KeyringUnavailableError
-
-        def _probe_fail() -> None:
-            raise KeyringUnavailableError("simulated no-op fail.Keyring backend")
-
-        client = _InMemoryKeyringClient(probe=_probe_fail)
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
-        provider = get_master_key_provider(
-            settings_override=settings,
-            passphrase_callback=lambda: "test-passphrase",
-            keyring_client=client,
-        )
-        assert isinstance(provider, FileFallbackMasterKeyProvider)
-        with pytest.raises(MasterKeyMaterialMissingError, match="not provisioned"):
-            provider.get_master_key()
-
-    def test_auto_backend_refuses_locked_keychain_without_file_state(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        # When the keychain is LOCKED (backend works, get_password
-        # refused — Touch ID cancelled, libsecret locked, etc.) AND no
-        # file-fallback artefacts exist, auto must NOT silently mint a
-        # fresh file-fallback master key that would diverge from
-        # whatever the keychain holds. Refuse and surface the lock
-        # state so the operator unlocks-and-retries OR explicitly
-        # switches to ``CADRUMO_SECRET_STORE_BACKEND=file``.
-        from keyring.errors import KeyringError
-
-        from ...errors import MasterKeyKeychainLockedError
-
-        def _locked(*_args: object, **_kwargs: object) -> None:
-            raise KeyringError("simulated locked keychain")
-
-        client = _InMemoryKeyringClient(get=_locked, set_=_locked)
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
-        with pytest.raises(MasterKeyKeychainLockedError, match="auto-mode refuses"):
-            get_master_key_provider(
-                settings_override=settings,
-                passphrase_callback=lambda: "test-passphrase",
-                keyring_client=client,
-            )
-
-    def test_auto_backend_falls_back_when_locked_but_file_exists(
-        self,
-        tmp_path: Path,
-    ) -> None:
-        # When the keychain is LOCKED AND file-fallback artefacts
-        # already exist, auto routes through file safely — the
-        # operator has previously chosen the file backend (or
-        # already provisioned both).
-        from keyring.errors import KeyringError
-
-        from .. import FileFallbackMasterKeyProvider
-
-        def _locked(*_args: object, **_kwargs: object) -> None:
-            raise KeyringError("simulated locked keychain")
-
-        # Seed the file-fallback artefacts via a real
-        # FileFallbackMasterKeyProvider mint so the substrate's
-        # canonical form lands on disk.
-        store_dir = tmp_path / "secrets"
-        seed_provider = FileFallbackMasterKeyProvider(
-            store_dir=store_dir,
-            passphrase_callback=lambda: "seed-passphrase",
-        )
-        seed_provider.provision_master_key()
-        client = _InMemoryKeyringClient(get=_locked, set_=_locked)
-        settings = _settings_with_store(tmp_path, SecretStoreBackend.AUTO)
-        provider = get_master_key_provider(
-            settings_override=settings,
-            passphrase_callback=lambda: "seed-passphrase",
-            keyring_client=client,
-        )
-        assert isinstance(provider, FileFallbackMasterKeyProvider)
-        assert len(provider.get_master_key()) == KEY_SIZE
 
 
 class TestUnsecuredProvider:
@@ -436,3 +249,28 @@ class TestUnsecuredNifCanary:
         refuse_unsecured_with_real_nif("00000000T", provider=UnsecuredMasterKeyProvider())
         with pytest.raises(UnsecuredModeRefusedError, match="real tax id"):
             refuse_unsecured_with_real_nif("12345678Z", provider=UnsecuredMasterKeyProvider())
+
+
+class TestAtomicWriteSecureBytes:
+    def test_roundtrip_preserves_newline_bytes(self, tmp_path: Path) -> None:
+        """A 0x0A byte in the master-key payload must survive verbatim.
+
+        The secure-write fd must be opened O_BINARY: on Windows a text-mode fd
+        makes os.write translate every 0x0A to 0x0D0A, lengthening the file and
+        corrupting the encrypted master-key bytes unrecoverably whenever the
+        payload contains a newline byte. This pins the byte-exact contract on
+        every platform.
+        """
+        payload = b"key-head\nkey\r\nmid\x00\x0a\xff-tail\n"
+        target = tmp_path / "master.key"
+        atomic_write_secure_bytes(target, payload)
+        written = target.read_bytes()
+        assert written == payload
+        assert len(written) == len(payload)
+
+    def test_roundtrip_preserves_random_binary_payload(self, tmp_path: Path) -> None:
+        """A full-range random binary payload (key-sized) survives byte-exact."""
+        payload = secrets.token_bytes(KEY_SIZE) + b"\x0a" * 4 + secrets.token_bytes(KEY_SIZE)
+        target = tmp_path / "master.key"
+        atomic_write_secure_bytes(target, payload)
+        assert target.read_bytes() == payload

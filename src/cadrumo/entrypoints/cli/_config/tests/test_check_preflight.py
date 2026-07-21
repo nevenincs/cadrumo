@@ -1,8 +1,8 @@
 """End-to-end CLI tests for the ``aeat config check`` preflight health rows.
 
 Verifies that the workstation doctor surfaces the per-auth-provider certificate /
-Cl@ve Móvil health (#286), the secure-storage / bundled-corpus / configuration
-preflight (#102), and the registry referential-integrity row (#98) through the
+Cl@ve Móvil health, the secure-storage / bundled-corpus / configuration
+preflight, and the registry referential-integrity row through the
 typed ``preflight`` channel on the JSON envelope — and that a red preflight row
 is reported for operator visibility without crashing the command or leaking into
 the capability/dependency ``issues`` contract that owns the exit code. Real CLI

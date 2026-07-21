@@ -1,7 +1,7 @@
 """The operating layer reaches a client through the floor tool and resources.
 
 Proves that the ``harness.load`` floor tool returns the shipped operator
-rules and the active persona verbatim (decision record R4's tools-only floor), and the
+rules and the active persona verbatim (the tools-only floor), and the
 ``cadrumo://`` resource surface enumerates exactly the shipped skills, rules, and
 personas, resolves each to its verbatim ``text/markdown`` document, and refuses
 an unknown URI cleanly. The SDK-independent surface is asserted directly; the
@@ -82,15 +82,15 @@ def test_floor_payload_with_persona_carries_that_persona_document_verbatim() -> 
     payload = build_harness_floor_payload(persona=AgentPersona.VERIFIER)
     assert payload.operator_rules == operator_rules_text()
     assert payload.active_persona is not None
-    assert payload.active_persona.name == "verifier"
-    assert payload.active_persona.text == _shipped_persona_text("verifier")
+    assert payload.active_persona.name == "cadrumo-verifier"
+    assert payload.active_persona.text == _shipped_persona_text("cadrumo-verifier")
 
 
 def test_floor_text_embeds_both_the_rules_and_the_active_persona() -> None:
     payload = build_harness_floor_payload(persona=AgentPersona.RECONCILER)
     text = render_harness_floor_text(payload)
     assert operator_rules_text() in text
-    assert _shipped_persona_text("reconciler") in text
+    assert _shipped_persona_text("cadrumo-reconciler") in text
 
 
 def test_floor_payload_carries_the_off_host_consent_disclosure() -> None:
@@ -141,12 +141,12 @@ def test_every_advertised_resource_uri_resolves_as_markdown() -> None:
 
 
 def test_a_skill_a_rule_and_a_persona_resolve_verbatim() -> None:
-    skill = read_harness_resource(resource_uri(HarnessResourceKind.SKILL, "preparar-modelo-130"))
-    persona = read_harness_resource(resource_uri(HarnessResourceKind.PERSONA, "verifier"))
-    assert persona.text == _shipped_persona_text("verifier")
+    skill = read_harness_resource(resource_uri(HarnessResourceKind.SKILL, "cadrumo-preparar-modelo-130"))
+    persona = read_harness_resource(resource_uri(HarnessResourceKind.PERSONA, "cadrumo-verifier"))
+    assert persona.text == _shipped_persona_text("cadrumo-verifier")
     # The skill body is the shipped SKILL.md frontmatter + prose.
     assert skill.text.startswith("---")
-    assert "name: preparar-modelo-130" in skill.text
+    assert "name: cadrumo-preparar-modelo-130" in skill.text
 
 
 def test_templates_declare_the_three_kinds() -> None:
@@ -207,11 +207,11 @@ def test_floor_tool_and_resources_are_wired_into_the_built_server() -> None:
 
         request = ReadResourceRequest(
             method="resources/read",
-            params=ReadResourceRequestParams(uri=AnyUrl(resource_uri(HarnessResourceKind.PERSONA, "verifier"))),
+            params=ReadResourceRequestParams(uri=AnyUrl(resource_uri(HarnessResourceKind.PERSONA, "cadrumo-verifier"))),
         )
         contents = (await handlers[ReadResourceRequest](request)).root.contents
         assert contents[0].mimeType == "text/markdown"
-        assert contents[0].text == _shipped_persona_text("verifier")
+        assert contents[0].text == _shipped_persona_text("cadrumo-verifier")
 
     anyio.run(_drive)
 
@@ -239,13 +239,13 @@ def test_floor_tool_call_returns_the_active_persona_payload() -> None:
         assert result.isError is False
         assert result.structuredContent is not None
         assert result.structuredContent["operator_rules"] == operator_rules_text()
-        assert result.structuredContent["active_persona"]["text"] == _shipped_persona_text("verifier")
+        assert result.structuredContent["active_persona"]["text"] == _shipped_persona_text("cadrumo-verifier")
         assert operator_rules_text() in result.content[0].text
 
     anyio.run(_drive)
 
 
-# --- whoami identity tool (ADR I1) --------------------------------------------
+# --- whoami identity tool --------------------------------------------------
 
 
 def test_whoami_identity_resolves_the_active_profile_label(tmp_path: Any) -> None:

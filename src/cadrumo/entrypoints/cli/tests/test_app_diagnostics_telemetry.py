@@ -42,11 +42,13 @@ import pytest
 from click.testing import Result
 
 from ....adapters.outbound.llm import LLMRunRecord, LLMRunTelemetryRecorder
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
+from .envelope_helpers import unwrap_cli_result as _json_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -55,10 +57,6 @@ _BUCKET_ID = "88888888-9999-4aaa-8bbb-cccccccccccc"
 
 def _invoke(args: list[str]) -> Result:
     return invoke_cached_cli(args)
-
-
-def _json_result(result: Result) -> dict[str, Any]:
-    return json.loads(result.output)["result"]
 
 
 @pytest.fixture

@@ -3,7 +3,7 @@ tags:
   - "#plan"
   - "#exception-restructure"
 date: 2026-05-09
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-09-exception-restructure-research]]"
   - "[[2026-05-09-exception-restructure-adr]]"

@@ -3,12 +3,11 @@ tags:
   - '#research'
   - '#bindings-interface-hardening'
 date: '2026-06-14'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-20-calculation-source-connectivity-adr]]"
   - "[[2026-06-10-calculation-aggregation-taxonomy-adr]]"
   - "[[2026-06-02-registry-bindings-boundary-audit]]"
-  - "[[2026-05-12-cli-workflow-redesign-app-modelo-bindings-shape-adr]]"
 ---
 
 # `bindings-interface-hardening` research: `bindings interface: definition, validation, boundary and semantic-spread discovery`

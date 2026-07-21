@@ -3,10 +3,9 @@ tags:
   - "#audit"
   - "#real-pdf-import"
 date: "2026-04-21"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-21-real-pdf-fixture-corpus-plan]]"
-  - "[[2026-04-21-declaracion-extractor-plan]]"
   - "[[2026-04-21-calc-verification-plan]]"
   - "[[2026-04-21-real-pdf-import-execution-wave-1-audit]]"
 ---

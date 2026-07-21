@@ -8,10 +8,34 @@
 [concept]
 concept_id = "modelo-202"
 domain = "modelo"
-lifecycle = "draft"
+lifecycle = "approved"
 domain_refs = ["modelo:202"]
+legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29"]
+related = ["modelo-200", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-13
 
 [language.es]
-short_description = "(sin curar) draft pendiente de definicion"
+short_description = "Pago fraccionado del Impuesto sobre Sociedades."
+definition = "Pago fraccionado a cuenta del Impuesto sobre Sociedades, presentado hasta tres veces al ano (abril, octubre y diciembre)."
+
+[language.es.source]
+citation = "Articulo 40 de la Ley 27/2014 del Impuesto sobre Sociedades."
+authority = "boe"
+
+[[language.es.term]]
+label = "modelo 202"
+term_status = "preferred"
+
+[[language.es.term]]
+label = "pago fraccionado de sociedades"
+term_status = "admitted"
+
+[language.en]
+short_description = "Corporate income tax instalment, up to three times a year."
+
+[language.ca]
+short_description = "Pagament fraccionat de l'Impost sobre Societats."
+
+[language.hu]
+short_description = "Tarsasagiado-eloleg, evente legfeljebb harom alkalommal."

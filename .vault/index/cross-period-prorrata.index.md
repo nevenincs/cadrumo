@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cross-period-prorrata'
-date: '2026-07-06'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-05-cross-period-prorrata-adr]]'
   - '[[2026-07-06-cross-period-prorrata-W01-P01-S01]]'
@@ -17,9 +17,7 @@ related:
   - '[[2026-07-06-cross-period-prorrata-W01-P02-S08]]'
   - '[[2026-07-06-cross-period-prorrata-W01-P02-S09]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P03-S10]]'
-  - '[[2026-07-06-cross-period-prorrata-W02-P03-S11]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P03-S12]]'
-  - '[[2026-07-06-cross-period-prorrata-W02-P03-S13]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S14]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S15]]'
   - '[[2026-07-06-cross-period-prorrata-W02-P04-S16]]'
@@ -88,9 +86,7 @@ Auto-generated index of all documents tagged with `#cross-period-prorrata`.
 - `2026-07-06-cross-period-prorrata-W01-P02-S08` - add the strict save/load/equality roundtrip test with every defaultable field populated non-default, using the real EphemeralMasterKeyProvider and SQLite engine (aeat-roundtrip-discipline)
 - `2026-07-06-cross-period-prorrata-W01-P02-S09` - add the anti-tautology corrupt-payload proof: mutate the on-disk register to delete a field, reload, assert ValidationError or strict inequality surfaces
 - `2026-07-06-cross-period-prorrata-W02-P03-S10` - implement the seed function: resolve the prior settlement revision via select_revision(M303, ejercicio-1, settlement period), read the iva.prorrata-porcentaje observation, and re-confirm its stamped_revision_id before seeding the carried_prior_definitiva entry
-- `2026-07-06-cross-period-prorrata-W02-P03-S11` - make a divergent stamped_revision_id block the seed with a REGISTRY_REVISION_DIVERGENCE-class finding and a missing legacy stamp surface a non-blocking advisory, never silence (carried-observations-stamp-their-revision)
 - `2026-07-06-cross-period-prorrata-W02-P03-S12` - record the source observation identity on the seeded entry so the register stays cross-checkable against the prior filing forever after
-- `2026-07-06-cross-period-prorrata-W02-P03-S13` - add tests for the seed happy path, divergence-blocks, and missing-stamp-advises paths against real filed observations
 - `2026-07-06-cross-period-prorrata-W02-P04-S14` - add the aeat_autorizada override entry recording the art-105.Dos AEAT-authorised provisional percentage plus its authorisation reference
 - `2026-07-06-cross-period-prorrata-W02-P04-S15` - add the inicio_actividad override entry recording the art-105.Tres (via art-111.Dos) inicio-de-actividades proposed percentage plus its reference
 - `2026-07-06-cross-period-prorrata-W02-P04-S16` - wire the single declared precedence ladder into the register in-force-percentage lookup so authorised/inicio provenance outranks the carried prior definitive

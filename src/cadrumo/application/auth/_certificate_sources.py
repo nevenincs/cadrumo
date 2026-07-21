@@ -3,36 +3,31 @@
 A gestor managing several taxpayers typically holds several PKCS#12
 certificates — their own personal certificate plus one apoderado
 certificate per represented entity. Before this module, the certificate
-auth provider carried exactly one certificate path
-(:attr:`~application.auth.AuthState.certificate_path`), configured through
+auth provider carried exactly one ``certificate_path`` on
+:class:`~application.workflow.AuthState`, configured through
 ``aeat config auth configure --provider certificate --file PATH``: adopting
 a different certificate meant re-running that command and losing track of
 the previous path.
 
-This module adds a named registry
-(:attr:`~application.auth.AuthState.certificate_sources`) on top of the existing
-single-path field:
+This module adds a named ``certificate_sources`` registry to
+:class:`~application.workflow.AuthState`:
 :func:`~application.auth._certificate_sources.register_certificate_source` adds
 or re-points a named source,
 :func:`~application.auth._certificate_sources.list_certificate_sources`
 enumerates them,
 :func:`~application.auth._certificate_sources.select_certificate_source` marks
-one active and mirrors its path onto ``certificate_path`` (so every existing
-consumer — the backend health probe, live login preconditions, ``auth status`` /
-``auth test`` — keeps reading the one field it already knows about), and
+one active for the canonical credential resolver, and
 :func:`~application.auth._certificate_sources.remove_certificate_source` retires
 a registered source.
 
 Rotation hooks (invalidating cached state when the active certificate
 changes on disk), a filesystem-fallback loader, external keyring/1Password
 backends, and service-account impersonation UX are explicitly out of scope
-for this module; see GitHub issue #591.
+for this module.
 
 See Also:
-    :class:`~application.auth.AuthState`
-        Persisted local auth selection embedded in workflow state; carries
-        the ``certificate_sources`` registry and ``certificate_path``
-        mirror this module maintains.
+    :class:`~application.workflow.AuthState`
+        Persisted local auth selection embedded in workflow state.
     :func:`~application.auth.configure_operator_auth`
         Configures the active auth *provider*; this module manages
         certificate *sources* within the certificate provider.
@@ -44,7 +39,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from ...core.time import now
-from ._models import AuthState, CertificateSourceRecord
+from .._workflow_auth_models import AuthState, CertificateSourceRecord
 
 if TYPE_CHECKING:
     from ..workflow import WorkflowState
@@ -82,8 +77,8 @@ def register_certificate_source(
     ``certificate_path``/``friendly_name`` and refreshes
     ``registered_at`` rather than erroring — re-registration is the
     supported way to point an existing name at a renewed certificate
-    file. Registering a source never changes which source is active;
-    call
+    file. Registering a source never changes which source
+    is active; call
     :func:`~application.auth._certificate_sources.select_certificate_source`
     explicitly to activate it.
 
@@ -101,17 +96,20 @@ def register_certificate_source(
     )
     sources = dict(auth.certificate_sources)
     sources[normalized_name] = record
-    return _with_auth_state(state, auth.model_copy(update={"certificate_sources": sources}))
+    updates: dict[str, object] = {"certificate_sources": sources}
+    if auth.active_certificate_source == normalized_name:
+        updates["configured_at"] = record.registered_at
+    return _with_auth_state(state, auth.model_copy(update=updates))
 
 
 def list_certificate_sources(state: WorkflowState) -> tuple[CertificateSourceRecord, ...]:
-    """Return every registered :class:`~application.auth.CertificateSourceRecord`."""
+    """Return every registered :class:`~application.workflow.CertificateSourceRecord`."""
     auth = _auth_state(state)
     return tuple(sorted(auth.certificate_sources.values(), key=lambda record: record.name))
 
 
 def active_certificate_source(state: WorkflowState) -> CertificateSourceRecord | None:
-    """Return the active :class:`~application.auth.CertificateSourceRecord`, if any."""
+    """Return the active :class:`~application.workflow.CertificateSourceRecord`, if any."""
     auth = _auth_state(state)
     if auth.active_certificate_source is None:
         return None
@@ -119,7 +117,7 @@ def active_certificate_source(state: WorkflowState) -> CertificateSourceRecord |
 
 
 def select_certificate_source(state: WorkflowState, *, name: str) -> WorkflowState:
-    """Mark the certificate source ``name`` active and mirror its path onto ``certificate_path``.
+    """Mark the certificate source ``name`` active.
 
     Every other registered source stays registered but inactive. The
     provider selection (``AuthState.provider``) is left untouched:
@@ -140,7 +138,6 @@ def select_certificate_source(state: WorkflowState, *, name: str) -> WorkflowSta
     updated_auth = auth.model_copy(
         update={
             "active_certificate_source": normalized_name,
-            "certificate_path": record.certificate_path,
             "configured_at": now(),
         },
     )
@@ -150,10 +147,9 @@ def select_certificate_source(state: WorkflowState, *, name: str) -> WorkflowSta
 def remove_certificate_source(state: WorkflowState, *, name: str) -> tuple[WorkflowState, bool]:
     """Remove the certificate source ``name`` from the registry.
 
-    When ``name`` is the active source, the active selection is cleared
-    (``active_certificate_source`` becomes ``None``); ``certificate_path``
-    is left as-is, matching the pre-existing single-certificate contract
-    where clearing the path is a distinct ``auth clear`` operation.
+    When ``name`` is the active source, the active selection is cleared.
+    A same-path unnamed credential is cleared too; a removed named source
+    must not remain effective through the unnamed field.
 
     Returns a ``(state, removed)`` tuple; ``removed`` is ``False`` when
     ``name`` was not registered (a no-op, not an error).
@@ -167,6 +163,8 @@ def remove_certificate_source(state: WorkflowState, *, name: str) -> tuple[Workf
     update: dict[str, object] = {"certificate_sources": sources}
     if auth.active_certificate_source == normalized_name:
         update["active_certificate_source"] = None
+        if auth.certificate_path == auth.certificate_sources[normalized_name].certificate_path:
+            update["certificate_path"] = None
     return _with_auth_state(state, auth.model_copy(update=update)), True
 
 

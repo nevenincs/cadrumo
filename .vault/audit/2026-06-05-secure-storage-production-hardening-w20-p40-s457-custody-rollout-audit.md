@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#secure-storage-production-hardening'
 date: '2026-06-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-22-secure-storage-production-hardening-refactor-plan]]'
   - '[[2026-05-14-secure-backend-passkey-custody-adr]]'
@@ -13,7 +13,7 @@ related:
 
 ## S457-001 | PASS | First-class custody verbs are mounted
 
-The config CLI now exposes `lock`, `unlock`, `rekey`, `recover`,
+The config CLI now exposes `lock`, `switch`, `rekey`, `recover`,
 `show-recovery`, and `verify-recovery` as first-class root commands under
 `aeat config`. Direct help smoke checks for each command completed successfully.
 
@@ -29,7 +29,7 @@ custody verbs.
 
 ## S457-003 | PASS | Custody verbs own the bucket session lifecycle
 
-`config unlock` selects the requested or active profile through the canonical
+`config switch` selects the requested or active profile through the canonical
 profile lifecycle span, while `config lock` uses the same active-profile logout
 primitive as the existing profile command. This preserves the accepted
 bucket-session lifecycle rather than adding a parallel lock path. The recovery
@@ -75,3 +75,10 @@ Disposition: close `W20.P40.S457`. Remaining W20 work stays open for passphrase
 bootstrap/redaction hardening, stale guidance replacement, guard narrowing,
 remaining localization, provenance path review, and central redaction enrollment
 proof.
+
+## S457-008 | PASS | D1 hard rename reconciled
+
+The later operator-surface D1 decision makes `config switch` the sole
+intent-named profile-selection command and retires `config unlock` without an
+alias. The rollout record now reflects that current contract; session-unlock
+mechanics remain internal to the switch lifecycle span.

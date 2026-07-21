@@ -13,6 +13,7 @@ import re
 from collections.abc import Callable, Mapping
 from contextvars import ContextVar
 from functools import lru_cache
+from string import Formatter
 
 import i18n
 import yaml
@@ -27,13 +28,13 @@ from ..product_identity import PRODUCT_IDENTITY
 _log = get_logger(__name__)
 _INITIALISED = False
 _PLACEHOLDER_RE = re.compile(r"%\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
-_SURVIVING_PLACEHOLDER_RE = re.compile(r"\{(?P<name>[A-Za-z_][A-Za-z0-9_]*)\}")
+_FORMAT_FIELD_ROOT_RE = re.compile(r"(?P<name>[A-Za-z_][A-Za-z0-9_]*)(?=$|[.\[])")
+_FORMATTER = Formatter()
 _STALE_CLI_EXECUTABLE_RE = re.compile(r"\bcadrumo(?=[ \t\r\n]+(?:app|config|manual|--|<))")
-_STALE_PRODUCT_DISPLAY_RE = re.compile(r"\bCadrumo\b")
 _OUTPUT_LANGUAGE_CACHE_VERSION = 0
 
-# Test-scope flag: when True, _interpolate raises UnmatchedPlaceholderError for
-# any {name} token that survives substitution.  Production code leaves this False.
+# Test-scope flag: when True, tr raises UnmatchedPlaceholderError for any
+# declared placeholder not supplied by the caller. Production leaves this False.
 _I18N_STRICT_PLACEHOLDERS: ContextVar[bool] = ContextVar("cadrumo_i18n_strict_placeholders", default=False)
 
 
@@ -144,7 +145,7 @@ def _output_language_cache_key() -> tuple[object, ...]:
     # prior implementation constructed a full ``Settings`` instance on
     # every ``tr()`` call purely to read four field values; a help-screen
     # render fires ~100 ``tr()`` calls, so that was ~100 Settings builds
-    # (the disaster-ADR Ruling 4 fast-path regression for ``--help``).
+    # and a measurable ``--help`` slowdown.
     # Sampling the raw env vars + the ``.env`` mtime varies the key
     # whenever either input changes, so a cache miss still rebuilds
     # ``Settings`` inside ``_cached_output_language`` with the correct
@@ -232,35 +233,133 @@ def tr(translation_key: str, /, **kwargs: object) -> str:
     default = kwargs.pop("default", None)
     rendered = _lookup_translation(locale, translation_key, default=default)
     interpolation = {key: value for key, value in kwargs.items() if key not in {"locale", "default"}}
+    strict_placeholders = _I18N_STRICT_PLACEHOLDERS.get()
+    unmatched_placeholders = (
+        sorted(extract_placeholders(rendered) - interpolation.keys()) if strict_placeholders else []
+    )
+    failed_format_placeholders: list[str] = []
     if interpolation:
-        rendered = _interpolate(translation_key, rendered, interpolation)
+        rendered, format_succeeded = _interpolate_with_status(translation_key, rendered, interpolation)
+        if strict_placeholders and not format_succeeded:
+            failed_format_placeholders = sorted(_extract_format_placeholder_roots(rendered))
     rendered = _normalise_product_identity_references(rendered)
-    if _I18N_STRICT_PLACEHOLDERS.get() and (match := _SURVIVING_PLACEHOLDER_RE.search(rendered)):
+    if strict_placeholders and (unmatched_placeholders or failed_format_placeholders):
         raise UnmatchedPlaceholderError(
             key=translation_key,
-            name=match.group("name"),
+            name=(unmatched_placeholders or failed_format_placeholders)[0],
             rendered=rendered,
         )
     return rendered
 
 
 def _normalise_product_identity_references(rendered: str) -> str:
-    """Project the canonical product display and human executable into locale text.
+    """Project the canonical human executable into locale command text.
 
     Locale catalogues can temporarily lag their per-language migration. Normalize
-    only title-case product prose and unambiguous stale command prefixes at the
-    shared render boundary. Lowercase package and MCP identifiers remain untouched,
-    as does uppercase ``AEAT`` authority prose.
+    only unambiguous stale command prefixes at the shared render boundary.
+    Sentence-case ``Cadrumo``, identity-context ``CADRUMO``, lowercase package
+    and MCP identifiers, and uppercase ``AEAT`` authority prose remain untouched.
     """
-    rendered = _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, rendered)
-    return _STALE_PRODUCT_DISPLAY_RE.sub(PRODUCT_IDENTITY.display_name, rendered)
+    return _STALE_CLI_EXECUTABLE_RE.sub(PRODUCT_IDENTITY.cli_executable, rendered)
+
+
+def extract_placeholders(value: str) -> frozenset[str]:
+    """Return interpolation names consumed by the production renderer.
+
+    The renderer first replaces ``%{name}`` tokens and then delegates
+    ``{name}`` tokens to :meth:`str.format`. Parsing the second form through
+    :class:`string.Formatter` preserves conversions and specifications. Root
+    kwargs consumed by attribute and index fields are returned, and nested
+    replacement fields inside format specifications are inspected recursively.
+    Escaped braces and brace-delimited prose are excluded. For malformed
+    strings, independently valid fields are recovered without representing the
+    malformed format string itself as complete or renderable.
+
+    Args:
+        value: Locale scalar to inspect.
+
+    Returns:
+        The unique placeholder names used by either interpolation pass.
+    """
+    names = {match.group("name") for match in _PLACEHOLDER_RE.finditer(value)}
+    without_percent_tokens = _PLACEHOLDER_RE.sub(lambda match: " " * len(match.group(0)), value)
+    names.update(_extract_format_placeholder_roots(without_percent_tokens))
+    return frozenset(names)
+
+
+def _extract_format_placeholder_roots(value: str) -> frozenset[str]:
+    """Return named root kwargs consumed by the format pass.
+
+    Malformed strings are scanned for independently valid replacement fields
+    so strict mode can still reject supported tokens around the damaged region.
+    The recovery path never treats the malformed whole as a valid format.
+    """
+    parsed = _parse_format_placeholder_roots(value)
+    if parsed is not None:
+        return frozenset(parsed)
+    return frozenset(_recover_format_placeholder_roots(value))
+
+
+def _parse_format_placeholder_roots(value: str) -> set[str] | None:
+    """Parse one valid format fragment, or return ``None`` when malformed."""
+    try:
+        fields = tuple(_FORMATTER.parse(value))
+    except ValueError:
+        return None
+
+    names: set[str] = set()
+    for _literal, field_name, format_spec, _conversion in fields:
+        if field_name is not None:
+            root = _FORMAT_FIELD_ROOT_RE.match(field_name)
+            if root is not None:
+                names.add(root.group("name"))
+        if format_spec:
+            nested = _parse_format_placeholder_roots(format_spec)
+            if nested is None:
+                names.update(_recover_format_placeholder_roots(format_spec))
+            else:
+                names.update(nested)
+    return names
+
+
+def _recover_format_placeholder_roots(value: str) -> set[str]:
+    """Recover valid fields surrounding malformed brace syntax."""
+    names: set[str] = set()
+    index = 0
+    while index < len(value):
+        if value.startswith("{{", index):
+            index += 2
+            continue
+        if value[index] != "{":
+            index += 1
+            continue
+
+        recovered_end: int | None = None
+        for closing in range(index + 1, len(value)):
+            if value[closing] != "}":
+                continue
+            fragment = value[index : closing + 1]
+            parsed = _parse_format_placeholder_roots(fragment)
+            if parsed is None:
+                continue
+            names.update(parsed)
+            recovered_end = closing + 1
+            break
+        index = recovered_end if recovered_end is not None else index + 1
+    return names
 
 
 @lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
 def _locale_map(locale: str) -> dict[str, str]:
     resource = importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales", f"{locale}.yml")
     with resource.open("r", encoding="utf-8") as handle:
-        loaded = yaml.safe_load(handle) or {}
+        # The C-accelerated SafeLoader parses the ~430 KB catalogue in tens of
+        # milliseconds where the pure-Python loader costs ~0.5 s on every
+        # process start; both apply identical safe-load semantics.
+        if hasattr(yaml, "CSafeLoader"):
+            loaded = yaml.load(handle, Loader=yaml.CSafeLoader) or {}
+        else:
+            loaded = yaml.safe_load(handle) or {}
     return _flatten_translations(loaded)
 
 
@@ -311,6 +410,17 @@ def _humanise_key(translation_key: str) -> str:
 
 
 def _interpolate(translation_key: str, rendered: str, values: Mapping[str, object]) -> str:
+    rendered, _format_succeeded = _interpolate_with_status(translation_key, rendered, values)
+    return rendered
+
+
+def _interpolate_with_status(
+    translation_key: str,
+    rendered: str,
+    values: Mapping[str, object],
+) -> tuple[str, bool]:
+    """Interpolate a value and report whether the format pass completed."""
+
     def _replace(match: re.Match[str]) -> str:
         name = match.group("name")
         if name not in values:
@@ -319,7 +429,7 @@ def _interpolate(translation_key: str, rendered: str, values: Mapping[str, objec
 
     rendered = _PLACEHOLDER_RE.sub(_replace, rendered)
     try:
-        return rendered.format(**values)
+        return rendered.format(**values), True
     except (KeyError, IndexError, ValueError) as exc:
         _log.debug(
             "i18n: unable to interpolate locale key %s; returning partially rendered value (%s)",
@@ -327,13 +437,14 @@ def _interpolate(translation_key: str, rendered: str, values: Mapping[str, objec
             type(exc).__name__,
             exc_info=True,
         )
-        return rendered
+        return rendered, False
 
 
 __all__ = [
     "DEFAULT_OUTPUT_LANGUAGE",
     "SUPPORTED_OUTPUT_LANGUAGES",
     "UnmatchedPlaceholderError",
+    "extract_placeholders",
     "output_language",
     "register_profile_language_resolver",
     "tr",

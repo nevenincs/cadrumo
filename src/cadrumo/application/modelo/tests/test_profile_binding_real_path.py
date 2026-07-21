@@ -477,14 +477,14 @@ def test_repeating_collection_selectors_yield_known_alias() -> None:
             )
 
 
-def test_binding_count_is_exactly_38() -> None:
-    """M100 2025 has exactly 38 ``source = 'profile'`` bindings.
+def test_binding_count_is_exactly_39() -> None:
+    """M100 2025 has exactly 39 ``source = 'profile'`` bindings.
 
     This acts as a structural sentinel: adding or removing a profile binding
     without updating this test will fail, prompting a review of whether the
     pin tests cover the new binding.
 
-    Breakdown of the 38: 27 scalar bindings (single-value profile reads
+    Breakdown of the 39: 28 scalar bindings (single-value profile reads
     keyed by entity_type, ccaa, estimation_regime, income categories,
     address-cadastral references, plus the three matrimonio-sobrevenido
     derived scalars marriage_full_year / marriage_month_start /
@@ -493,21 +493,22 @@ def test_binding_count_is_exactly_38() -> None:
     madrid_nacimiento_adopcion_eligible_count and
     unidad_familiar_otros_miembros_base added for casilla 1039 / DL 1/2010,
     the anualidades_sin_minimo_descendientes eligibility flag for the
-    Art. 64/75 separate-escala régimen, and the Art. 58/61 LIRPF mínimo por
+    Art. 64/75 separate-escala régimen, the Art. 58/61 LIRPF mínimo por
     descendientes ESTATAL and AUTONÓMICO aggregates — casillas 0513/0514 —
-    added by the Option A engine (#515) and its Comunidad de Madrid
-    autonómico-override follow-on (#593))
+    including the Comunidad de Madrid autonómico-override, and the
+    has_economic_activity predicate derived from irpf_income_categories
+    that gates the Art. 27/30 LIRPF estimación-directa rendimiento chain)
     plus 11 family-repeating-collection bindings (per-dependent / per-spouse
     / per-child arrays whose cardinality follows the operator's declared
     family composition).
     The split matters when a new binding lands: a scalar/collection
-    rebalance still totals 38 but indicates a different schema shift
+    rebalance still totals 39 but indicates a different schema shift
     (operator-data field add vs family-collection contract change).
     Future drift in the sentinel meaning is prevented by this note
     plus the descriptive assertion message below.
     """
     profile_bindings = _profile_bindings()
-    assert len(profile_bindings) == 38, (
-        f"expected 38 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
+    assert len(profile_bindings) == 39, (
+        f"expected 39 profile-sourced bindings in M100 2025, found {len(profile_bindings)}: "
         + ", ".join(str(b.id) for b in profile_bindings)
     )

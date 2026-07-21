@@ -179,7 +179,7 @@ class TransactionPayload(OutputSchema):
     notes: str = ""
     lifecycle_state: str
     classified_by: str
-    # Decision-provenance fields (#231): the "why" behind the active
+    # Decision-provenance fields: the "why" behind the active
     # classification decision. Declared here so the strict single-transaction
     # read surface (ledger view/classify/update/archive/stash) accepts the
     # persisted provenance fields rather than rejecting them as
@@ -188,15 +188,14 @@ class TransactionPayload(OutputSchema):
     classification_reason: str = ""
     classification_confidence: str | None = None
     source_jurisdiction: str | None = None
-    # FX provenance for foreign-currency rows (ledger-fx-conversion ADR): the
-    # EUR-equivalent and applied CCY->EUR rate the application payload now emits.
+    # FX provenance for foreign-currency rows: the
+    # EUR-equivalent and applied CCY->EUR rate the application payload emits.
     # Declared here so the strict single-transaction read surface (ledger
     # view/classify/update/archive/stash) accepts the persisted FX fields
     # rather than rejecting them as extra_forbidden. None for EUR-native rows.
     value_in_eur: str | None = None
     fx_rate: str | None = None
-    # Persistence-record lifecycle timestamps (ledger-interface-contract D6),
-    # rendered as ISO-8601 strings.
+    # Persistence-record lifecycle timestamps, rendered as ISO-8601 strings.
     created_at: str
     modified_at: str
 
@@ -290,7 +289,7 @@ class LedgerTransactionParticipationEntryPayload(OutputSchema):
 
 
 class LedgerImportTransactionRefPayload(OutputSchema):
-    """One bucket-qualified transaction reference nested in the import result (D2).
+    """One bucket-qualified transaction reference nested in the import result.
 
     Mirrors :class:`BucketTransactionRef`'s
     ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]``
@@ -364,17 +363,17 @@ class LedgerSplitChildProposalPayload(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# P01 — Mutation verb result schemas
+# Mutation verb result schemas
 # ---------------------------------------------------------------------------
 
 
 class _LedgerMutationResult(OutputSchema):
     """Shared shape for single-transaction mutation verbs.
 
-    The uniform mutation quintet settled by the ledger-interface-contract ADR
-    (D1): every verb that mutates exactly one ledger transaction returns
-    ``{bucket_id, transaction_id, bucket_event_ids, review_status,
-    transaction}``. Subclassed per verb so each registers its own schema path.
+    The uniform mutation quintet: every verb that mutates exactly one ledger
+    transaction returns ``{bucket_id, transaction_id, bucket_event_ids,
+    review_status, transaction}``. Subclassed per verb so each registers its
+    own schema path.
     """
 
     bucket_id: str
@@ -388,7 +387,7 @@ class _LedgerMutationResult(OutputSchema):
 class LedgerAddResult(_LedgerMutationResult):
     """JSON envelope for ``aeat app ledger add``.
 
-    D1: ``add`` joins the uniform mutation quintet by subclassing
+    ``add`` joins the uniform mutation quintet by subclassing
     :class:`_LedgerMutationResult`, gaining the ``review_status`` field every
     other single-transaction mutation already carries.
     """
@@ -401,7 +400,7 @@ class LedgerUpdateResult(_LedgerMutationResult):
 
 @register_schema("ledger.classify")
 class LedgerClassifySingleResult(_LedgerMutationResult):
-    """JSON envelope for the single-transaction ``aeat app ledger classify`` path (D1).
+    """JSON envelope for the single-transaction ``aeat app ledger classify`` path.
 
     The primary, non-optional mutation quintet: classifying one transaction
     returns the same ``{bucket_id, transaction_id, bucket_event_ids,
@@ -411,7 +410,7 @@ class LedgerClassifySingleResult(_LedgerMutationResult):
 
 
 class LedgerClassifyBulkResult(OutputSchema):
-    """JSON result for the bulk ``aeat app ledger classify --from-csv`` path (D1).
+    """JSON result for the bulk ``aeat app ledger classify --from-csv`` path.
 
     A discriminated branch of the single ``classify`` CLI leaf; it shares the
     leaf's registered ``ledger.classify`` command key (the conformance gate maps
@@ -586,20 +585,19 @@ class LedgerMergeResult(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# P02 — Query verb result schemas
+# Query verb result schemas
 # ---------------------------------------------------------------------------
 
 
 class LedgerListRowPayload(OutputSchema):
-    """One typed ``aeat app ledger list`` row (D2).
+    """One typed ``aeat app ledger list`` row.
 
     Projected from
     :class:`LedgerTransactionReviewPayload` plus the
     three id/group keys the list builder appends (``full_id``,
     ``display_id``, ``group_label``). Carries the non-negative ``amount`` magnitude
-    plus ``direction`` (money shape fixed by C1) and the D6 ``created_at`` /
-    ``modified_at`` lifecycle timestamps, replacing the former bare
-    ``dict[str, object]`` row shape.
+    plus ``direction`` and the ``created_at`` /
+    ``modified_at`` lifecycle timestamps.
     """
 
     # Identity / display
@@ -633,7 +631,7 @@ class LedgerListRowPayload(OutputSchema):
     lifecycle_state: str
     review_status: str
     classified_by: str
-    # Decision-provenance fields (#231): present so the row validates from
+    # Decision-provenance fields: present so the row validates from
     # the shared `LedgerTransactionReviewPayload` dump without rejecting
     # extra keys; not rendered in the tab-delimited list line (view/history
     # are the dedicated provenance surfaces).
@@ -711,7 +709,7 @@ class LedgerStatusResult(OutputSchema):
 
 
 class LedgerHistoryEventPayload(OutputSchema):
-    """One bucket event nested in ``aeat app ledger history`` (D2).
+    """One bucket event nested in ``aeat app ledger history``.
 
     Mirrors :class:`BucketEvent`'s
     ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]`` event shape. The
@@ -754,17 +752,16 @@ class LedgerCategoriesResult(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# P03 — Import / export / track / review verb result schemas
+# Import / export / track / review verb result schemas
 # ---------------------------------------------------------------------------
 
 
 class LedgerExportRowPayload(OutputSchema):
-    """One serialised ledger row nested in ``aeat app ledger export`` (D2).
+    """One serialised ledger row nested in ``aeat app ledger export``.
 
     Mirrors :class:`LedgerExportRow`'s
-    ``model_dump(mode="json")`` — replaces the former bare ``dict[str, object]``
-    export-row shape. The flow stays the non-negative ``amount`` magnitude plus
-    the ``direction`` authority (money shape fixed by C1); every other column is
+    ``model_dump(mode="json")``. The flow stays the non-negative ``amount``
+    magnitude plus the ``direction`` authority; every other column is
     a string the serializer already emits ("" for an absent optional column).
     """
 
@@ -938,7 +935,7 @@ class LedgerParticipationRebuildResult(OutputSchema):
 
 
 class LedgerTrackingProvenancePayload(OutputSchema):
-    """One evidence-link lineage entry nested in ``ledger track`` (D2).
+    """One evidence-link lineage entry nested in ``ledger track``.
 
     Mirrors
     :class:`TransactionEvidenceProvenanceEntry`'s JSON
@@ -954,7 +951,7 @@ class LedgerTrackingProvenancePayload(OutputSchema):
 
 
 class LedgerTrackingEditPayload(OutputSchema):
-    """One manual-correction lineage entry nested in ``ledger track`` (D2).
+    """One manual-correction lineage entry nested in ``ledger track``.
 
     Mirrors :class:`TransactionEditLineageEntry`'s
     JSON dump; ``edited_at`` is the ISO-8601 timestamp.
@@ -968,7 +965,7 @@ class LedgerTrackingEditPayload(OutputSchema):
 
 
 class LedgerTrackingLifecyclePayload(OutputSchema):
-    """One lifecycle-transition lineage entry nested in ``ledger track`` (D2).
+    """One lifecycle-transition lineage entry nested in ``ledger track``.
 
     Mirrors
     :class:`TransactionLifecycleLineageEntry`'s JSON
@@ -985,7 +982,7 @@ class LedgerTrackingLifecyclePayload(OutputSchema):
 
 
 class LedgerTrackingPayload(OutputSchema):
-    """Durable event-lineage projection for one transaction (D2).
+    """Durable event-lineage projection for one transaction.
 
     Mirrors
     :class:`LedgerTransactionTrackingPayload`'s JSON
@@ -1044,7 +1041,7 @@ class LedgerReviewResult(OutputSchema):
 
 
 # ---------------------------------------------------------------------------
-# P04 — Diagnostic verb result schemas (check / preflight / link)
+# Diagnostic verb result schemas (check / preflight / link)
 # ---------------------------------------------------------------------------
 
 
@@ -1098,44 +1095,22 @@ class LedgerPreflightResult(OutputSchema):
     ready: bool
 
 
-class LedgerLinkEvidenceUpdatePayload(OutputSchema):
-    """Typed evidence-update projection nested in ``ledger link`` (D2).
-
-    Mirrors
-    :class:`LedgerTransactionResultPayload`: the
-    single-transaction mutation result produced when ``link`` attaches
-    purchase-invoice evidence to the transaction. Replaces the former bare
-    ``dict[str, object]`` ``evidence_update`` field.
-    """
-
-    bucket_id: str
-    transaction_id: str
-    review_status: str
-    transaction: TransactionPayload
-
-
 @register_schema("ledger.link")
 class LedgerLinkResult(OutputSchema):
     """JSON envelope for ``aeat app ledger link``.
 
-    D1: ``link`` now projects the ``transaction`` it mutated (the evidence
-    attachment) alongside the link metadata; D2: the former bare-dict
-    ``evidence_update`` is the typed
-    :class:`LedgerLinkEvidenceUpdatePayload`.
-    Both are ``None`` on an invoice-only link, where no single-transaction
-    mutation projection is produced.
+    ``link`` establishes an invoice-only bidirectional relationship and carries
+    only the link metadata. Evidence assignment is a separate operation
+    (``aeat app ledger attach``) and never rides on this result.
     """
 
     operation: str
     bucket_id: str
     transaction_id: str
-    invoice_id: str | None = None
-    evidence_id: str | None = None
+    invoice_id: str
     actor: str
-    transaction: TransactionPayload | None = None
-    evidence_update: LedgerLinkEvidenceUpdatePayload | None = None
 
 
 # ---------------------------------------------------------------------------
-# P05 — Usage-ratios sub-app result schemas
+# Usage-ratios sub-app result schemas
 # ---------------------------------------------------------------------------

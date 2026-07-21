@@ -26,10 +26,8 @@ always reachable and no calendar-edge skip is needed.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
-from pathlib import Path
 from typing import Any
 
 import pytest
@@ -39,7 +37,8 @@ from ....core import Period
 from ....core.resources import resources
 from ....domain.deadlines import resolve_filing_closes_on
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.modelo_cli import create_modelo_work_unit_via_cli
+from ....tests.secure_sql import isolated_cli_backend as _isolated_storage  # noqa: F401 - autouse fixture
 from .._modelo_rendering import _work_unit_deadline_output_from_posture
 from ._m130_source_support import seed_m130_income_transaction
 from .envelope_helpers import unwrap_envelope_notices
@@ -56,12 +55,6 @@ _M130_FILING_YEAR = 2026
 # chronological close order. Each test resolves their real registry close
 # dates and selects deterministically against ``date.today()``.
 _M130_QUARTERLY_PERIODS: tuple[str, ...] = ("1T", "2T", "3T", "4T")
-
-
-@pytest.fixture(autouse=True)
-def _isolated_storage(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _create_natural_person_profile() -> None:
@@ -86,29 +79,6 @@ def _create_natural_person_profile() -> None:
         ],
     )
     assert result.exit_code == 0, result.output
-
-
-def _create_m130_work_unit(*, period: str) -> str:
-    result = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "130",
-            "--year",
-            str(_M130_FILING_YEAR),
-            "--period",
-            period,
-            "--revision",
-            _M130_REVISION,
-        ],
-    )
-    assert result.exit_code == 0, result.output
-    return str(_result(result.output)["work_unit_id"])
 
 
 def _calculate_m130(work_unit_id: str) -> Any:
@@ -229,7 +199,12 @@ def test_calculate_overdue_period_surfaces_unassessed_preview_with_legal_context
     period, closes_on = _select_overdue_period()
 
     _create_natural_person_profile()
-    work_unit_id = _create_m130_work_unit(period=period)
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="130",
+        filing_year=_M130_FILING_YEAR,
+        period=period,
+        revision=_M130_REVISION,
+    )
     seed_m130_income_transaction(
         amount=Decimal("12000.00"),
         filing_year=_M130_FILING_YEAR,
@@ -304,7 +279,12 @@ def test_calculate_in_time_period_carries_no_unassessed_preview_notice() -> None
     period, closes_on = _select_in_time_period()
 
     _create_natural_person_profile()
-    work_unit_id = _create_m130_work_unit(period=period)
+    work_unit_id = create_modelo_work_unit_via_cli(
+        modelo="130",
+        filing_year=_M130_FILING_YEAR,
+        period=period,
+        revision=_M130_REVISION,
+    )
     seed_m130_income_transaction(
         amount=Decimal("12000.00"),
         filing_year=_M130_FILING_YEAR,

@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "corpus_pdf",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/aeat_official/instructions/modelo_036/files/Folleto_Censos.pdf",
+  "source_relpath": "src/cadrumo/_data/corpus/aeat_official/instructions/modelo_036/files/Folleto_Censos.pdf",
   "source_sha256": "ccf8118a62dc9327245064458fbd12010acab6b71eee300d0fb83b1c17e00be0",
   "preprocessor_id": "corpus-pdf",
   "preprocessor_version": "1.0",

@@ -1,4 +1,4 @@
-"""Import-hygiene scanner for the top-level-export centralisation campaign.
+"""Import-hygiene scanner for top-level-export centralisation.
 
 Discovery-phase tool: builds an inventory of cross-package private imports,
 shim/re-export modules, and redundantly re-exported symbols across
@@ -7,9 +7,6 @@ shim/re-export modules, and redundantly re-exported symbols across
 Re-run with:
 
     python dev/import_hygiene_scan.py [--json OUT.json] [--top N]
-
-See ``.vault/`` (once authored) for the campaign ADR/plan that consumes this
-inventory. Companion rule: ``service-imports-via-top-level-reexports``.
 """
 
 from __future__ import annotations
@@ -156,7 +153,7 @@ def discover_facades() -> dict[str, FacadeInfo]:
         try:
             src = init_path.read_text(encoding=_UTF_8)
             tree = ast.parse(src, filename=str(init_path))
-        except (SyntaxError, UnicodeDecodeError):
+        except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
             continue
         all_names: list[str] = []
         has_real_all = False
@@ -233,14 +230,14 @@ class ImportSite:
 
 def walk_module_imports(path: Path) -> list[ImportSite]:
     """Parse a module and return every resolved import site it contains."""
-    mod = module_name_for(path)
-    is_pkg = path.name == "__init__.py"
     try:
         src = path.read_text(encoding=_UTF_8)
         tree = ast.parse(src, filename=str(path))
-    except (SyntaxError, UnicodeDecodeError):
+    except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
         return []
 
+    mod = module_name_for(path)
+    is_pkg = path.name == "__init__.py"
     sites: list[ImportSite] = []
     test_flag = is_test_module(mod, path)
 
@@ -414,13 +411,13 @@ def find_shim_modules(py_files: list[Path], facades: dict[str, FacadeInfo]) -> l
             # "__main__": app()` is the standard `python -m pkg` pattern, not
             # a Family-2 shim/pure-reexport surface.
             continue
-        mod = module_name_for(path)
-        if is_test_module(mod, path):
-            continue
         try:
             src = path.read_text(encoding=_UTF_8)
             tree = ast.parse(src, filename=str(path))
-        except (SyntaxError, UnicodeDecodeError):
+        except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
+            continue
+        mod = module_name_for(path)
+        if is_test_module(mod, path):
             continue
 
         n_imports, n_defs, n_all = module_body_defs(tree)
@@ -501,7 +498,7 @@ def _facade_export_origins(facades: dict[str, FacadeInfo]) -> dict[str, dict[str
         try:
             src = info.path.read_text(encoding=_UTF_8)
             tree = ast.parse(src, filename=str(info.path))
-        except (SyntaxError, UnicodeDecodeError):
+        except (FileNotFoundError, SyntaxError, UnicodeDecodeError):
             continue
         for node in ast.walk(tree):
             if isinstance(node, ast.ImportFrom):

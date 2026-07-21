@@ -7,7 +7,7 @@ Observations must carry canonical source kinds from
 is rejected in favour of ``payable_invoice`` or ``collectible_invoice``.
 
 The live calculation mesh uses these primitives through
-:class:`~._modelo_bindings.RetencionesAggregationSourceResolver` for the RET-1
+:class:`~._modelo_bindings.RetencionesAggregationSourceResolver` for the
 Modelo 180/193 distinct-NIF perceptor count. Modelo 190's distinct
 perceptor/clave/subclave percepciones count is intentionally handled by
 :class:`~._withholding_source.WithholdingSourceResolver`, not by this rollup
@@ -329,7 +329,7 @@ class RetencionesTotalsParity(BaseModel):
     perceptor count (``decl.total-perceptores``) is bound to
     :func:`aggregate_retenciones_193` / :func:`aggregate_retenciones_180` over
     the dedicated per-perceptor retención store
-    (:class:`RetencionesAggregation`, RET-1). Both are independently sourced:
+    (:class:`RetencionesAggregation`). Both are independently sourced:
     nothing in the registry cross-checks that the quarterly-relation totals and
     the per-perceptor store's totals agree.
 

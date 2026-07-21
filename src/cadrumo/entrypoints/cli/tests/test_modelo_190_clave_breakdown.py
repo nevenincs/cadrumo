@@ -1,8 +1,8 @@
-"""The Modelo 190 aggregate output renders a per-clave retención breakdown (#570).
+"""The Modelo 190 aggregate output renders a per-clave retención breakdown.
 
 ``aeat app modelo aggregate --modelo 190`` ingests the per-perceptor-clave
 withholding detail and persists it to the dedicated store the percepciones-count
-resolver reads. Before #570 its result surfaced only the observation/result
+resolver reads. Previously its result surfaced only the observation/result
 totals, so a filer could not reconcile the annual figures against the per-clave
 amounts of the individual Modelo 111 quarterly filings. The command now projects
 the ingested withholding detail into a per-clave breakdown (distinct percepción
@@ -14,22 +14,14 @@ reads (one-aggregation-path), not a recomputation of the M190 engine.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator
-from pathlib import Path
 
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _create_profile() -> None:

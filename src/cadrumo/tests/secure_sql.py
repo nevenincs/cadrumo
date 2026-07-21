@@ -9,13 +9,24 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import ClassVar
 
+import pytest
 from sqlalchemy import inspect as sa_inspect
 from sqlalchemy import text as sa_text
 
-from ..adapters.persistence.storage import EphemeralMasterKeyProvider
+from ..adapters.persistence.storage import (
+    STORAGE_NAMESPACE_REGISTRY,
+    Base,
+    MasterKeyMaterialMissingError,
+    SecretAlreadyExistsError,
+    SecureObjectRepository,
+    StorageRuntime,
+    create_engine_from_settings,
+    dispose_engine,
+    inspect_storage_runtime,
+    secure_object_repository_for_active_bucket,
+)
 from ..adapters.persistence.storage.bucket import (
     BucketKeySchedule,
-    BucketLifecycleStatus,
     BucketManifest,
     BucketPaths,
     provision_bucket_directory,
@@ -28,11 +39,9 @@ from ..adapters.persistence.storage.master_key import (
     get_master_key_provider,
     load_or_mint_bucket_dek,
 )
-from ..adapters.persistence.storage.runtime import StorageRuntime, inspect_storage_runtime
-from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
-from ..adapters.persistence.storage.sql.engine import dispose_engine
-from ..adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ..core.config import Settings, load_settings, override_settings
+from ..domain.user_profile import UserProfileStatus
+from .master_key import EphemeralMasterKeyProvider
 
 _DEFAULT_RUNTIME_BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _DEFAULT_PRIMARY_BUCKET_ID = "22222222-2222-4222-8222-222222222222"
@@ -63,8 +72,6 @@ def _provision_bucket_dek_v1_session(
     consistency is what lets the wrapped DEK unwrap under the
     provider-resolved KEK rather than a divergent raw test key.
     """
-    from ..adapters.persistence.storage.errors import MasterKeyMaterialMissingError, SecretAlreadyExistsError
-
     paths = provision_bucket_directory(storage_root, bucket_id)
     provider = get_master_key_provider()
     try:
@@ -94,7 +101,7 @@ def _provision_bucket_dek_v1_session(
             recovery_enrolled=False,
             key_schedule=BucketKeySchedule.BUCKET_DEK_V1,
             schema_version=2,
-            status=BucketLifecycleStatus.ACTIVE,
+            status=UserProfileStatus.ACTIVE,
         ),
     )
     session = BucketSession.open(
@@ -103,6 +110,7 @@ def _provision_bucket_dek_v1_session(
         dek=dek,
         idle_minutes=15,
         opened_at=opened_at,
+        storage_root=storage_root,
     )
     return session, paths
 
@@ -184,6 +192,35 @@ def reset_secure_object_store(repository: SecureObjectRepository) -> None:
 
 
 @contextmanager
+def isolated_injected_secure_object_repository(
+    *,
+    tmp_path: Path,
+    bucket_id: str,
+    database_name: str,
+) -> Iterator[SecureObjectRepository]:
+    """Yield a second real secure-object store under the active bucket session.
+
+    The repository uses its own SQLite engine and production schema while row
+    encryption remains bound to the caller's genuine active bucket session.
+    This supports source-injection proofs that must keep the injected catalogue
+    physically distinct from the ambient runtime catalogue.
+    """
+
+    settings = Settings(cadrumo_database_url=f"sqlite:///{(tmp_path / database_name).as_posix()}")
+    engine = create_engine_from_settings(settings)
+    Base.metadata.create_all(engine)
+    try:
+        yield SecureObjectRepository(
+            engine=engine,
+            namespace_registry=STORAGE_NAMESPACE_REGISTRY,
+            active_session_bucket_id=bucket_id,
+            require_secure_active_session=True,
+        )
+    finally:
+        dispose_engine(settings)
+
+
+@contextmanager
 def isolated_ephemeral_secure_sql(
     *,
     tmp_path: Path,
@@ -215,11 +252,41 @@ def isolated_sessionless_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     that must all operate without an active session.
     """
 
-    storage_root = tmp_path / "aeat-storage"
+    storage_root = tmp_path / "cadrumo-storage"
     with override_settings(cadrumo_local_storage_root=storage_root, cadrumo_active_profile=None) as settings:
         dispose_engine(settings)
         try:
             yield storage_root
+        finally:
+            dispose_engine(settings)
+
+
+@pytest.fixture(autouse=True)
+def isolated_storage_root(tmp_path: Path) -> Iterator[None]:
+    """Run tests against a flat, session-less real storage root at ``tmp_path`` itself.
+
+    Unlike :func:`isolated_sessionless_storage_root` (which nests the root
+    under ``tmp_path / "cadrumo-storage"``), this fixture points
+    ``cadrumo_local_storage_root`` directly at ``tmp_path`` — the shape a
+    cluster of lower-level repository and runtime test modules already relied
+    on before this fixture was promoted as their single canonical source.
+    Several of those modules also write ancillary fixture bytes (e.g. a
+    synthetic PDF) directly under ``tmp_path`` alongside the storage root, so
+    the two paths must stay coincident rather than nesting one under the
+    other.
+
+    ``autouse=True`` for the same reason as :func:`isolated_cli_backend`:
+    every current call site wants it active for every test in the importing
+    module. Import it directly rather than re-declaring the override block
+    locally, e.g.::
+
+        from ....tests.secure_sql import isolated_storage_root as _isolated_storage
+    """
+
+    with override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_active_profile=None) as settings:
+        dispose_engine(settings)
+        try:
+            yield
         finally:
             dispose_engine(settings)
 
@@ -240,7 +307,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Iterator[Path]:
     ``CADRUMO_SECRET_STORE_BACKEND=unsecured``.
     """
 
-    storage_root = tmp_path / "aeat-storage"
+    storage_root = tmp_path / "cadrumo-storage"
     secret_store_dir = tmp_path / "secrets"
     passphrase = load_settings().cadrumo_dev_test_database_password
     with override_settings(
@@ -278,7 +345,7 @@ def isolated_runtime_profile(
     nested :func:`profile_storage_session` re-resolves on the read path.
     """
 
-    storage_root = tmp_path / "aeat-storage"
+    storage_root = tmp_path / "cadrumo-storage"
     secret_store_dir = tmp_path / "secrets"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
@@ -326,7 +393,7 @@ class MultiBucketTestRuntime:
     manifest, keystore, and secure-object repository but its
     session is held in this dataclass for the
     :meth:`switch_to_secondary` context manager to activate
-    on demand. Authority: ``2026-06-03-multi-bucket-test-fixture-adr``.
+    on demand.
     """
 
     __test__: ClassVar[bool] = False
@@ -369,9 +436,7 @@ def isolated_two_bucket_runtime(
     :class:`BucketMaintenanceService.delete` requires (the service's
     active-bucket guard refuses self-deletion by design), and the
     cross-host-migration distinction that the sealed-archive
-    export/import round-trip requires. See
-    ``2026-06-03-multi-bucket-test-fixture-adr`` for the design
-    rationale.
+    export/import round-trip requires.
 
     Both buckets are genuine ``BUCKET_DEK_V1`` buckets that share the
     storage root's single file-backend master key (the key-encryption
@@ -380,9 +445,9 @@ def isolated_two_bucket_runtime(
     one storage root share one ``master.key`` and each keeps its own
     wrapped DEK. The per-bucket DEK distinctness means an accidental
     cross-bucket DEK reuse in production code still surfaces as a test
-    failure. See ``2026-06-03-multi-bucket-test-fixture-adr``.
+    failure.
     """
-    storage_root = tmp_path / "aeat-storage"
+    storage_root = tmp_path / "cadrumo-storage"
     secret_store_dir = tmp_path / "secrets"
     passphrase = load_settings().cadrumo_dev_test_database_password
     opened_at = datetime.now(UTC).replace(microsecond=0)
@@ -484,15 +549,64 @@ def isolated_cli_runtime_profile(
         yield profile
 
 
+@pytest.fixture(autouse=True)
+def isolated_cli_backend(tmp_path: Path) -> Iterator[Path]:
+    """Canonical isolated storage root for CLI end-to-end tests.
+
+    Unlike :func:`isolated_cli_runtime_profile`, this fixture does not
+    pre-provision a bucket: :func:`isolated_profile_storage_root` leaves the
+    storage root empty so the real ``config profile create`` CLI command can
+    run end to end, which is what most CLI-driven scenarios need.
+
+    Every generated-output directory settings field derives its default from
+    ``cadrumo_local_storage_root`` (the ``_STATE_ROOT_DERIVED_DIRS`` taxonomy
+    in :mod:`core.config`), so isolating the root through
+    :func:`isolated_profile_storage_root` alone relocates the whole family —
+    tokens, drafts, runs, financial catalogues, and every sibling directory —
+    without a per-field override block. ``cadrumo_output_language`` is pinned
+    to English so operator-facing text assertions stay locale-stable across
+    CLI test suites.
+
+    ``autouse=True`` because every current call site wants the isolated
+    backend active for every test in the importing module — matching the
+    convention the ~22 sites this fixture replaces already established.
+    Import it directly into a test module rather than re-declaring the
+    override block locally, e.g.::
+
+        from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
+
+    The re-bound name still carries ``autouse=True`` in the importing module
+    because pytest resolves fixtures by the name bound in the requesting
+    module's namespace, not by the module that originally defined the
+    function; this is the same pattern the entrypoints CLI test suite
+    already uses for its intra-package ``_isolated_cli_backend`` re-export.
+    A caller that wants the storage-root isolation WITHOUT autouse should
+    call :func:`isolated_profile_storage_root` directly instead of importing
+    this fixture — pytest does not support re-decorating an already-wrapped
+    fixture function to change its ``autouse`` value.
+    """
+    dispose_engine()
+    with (
+        override_settings(cadrumo_output_language="en"),
+        isolated_profile_storage_root(tmp_path=tmp_path) as storage_root,
+    ):
+        try:
+            yield storage_root
+        finally:
+            dispose_engine()
+
+
 __all__ = [
     "MultiBucketTestRuntime",
     "TestRuntimeProfile",
     "dev_test_database_password",
+    "isolated_cli_backend",
     "isolated_cli_runtime_profile",
     "isolated_ephemeral_secure_sql",
     "isolated_profile_storage_root",
     "isolated_runtime_profile",
     "isolated_sessionless_storage_root",
+    "isolated_storage_root",
     "isolated_two_bucket_runtime",
     "reset_secure_object_store",
 ]

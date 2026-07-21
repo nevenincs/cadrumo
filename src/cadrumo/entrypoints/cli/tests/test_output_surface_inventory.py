@@ -1,6 +1,6 @@
 """Inventory gate for production CLI output surfaces.
 
-The centralized-output-redaction contract makes ``_emit``/``_emit_envelope`` and
+The centralized-output-redaction contract makes ``_emit_envelope`` and
 ``write_stderr`` the owned output boundaries. This test keeps direct output
 exceptions explicit so new ``typer.echo``, ``print``, or stream writes do not
 silently bypass the redacted renderer.
@@ -42,8 +42,16 @@ _ALLOWED_DIRECT_OUTPUTS = {
     # Group help fallback: renders the click-generated help text verbatim,
     # not operator data subject to redaction.
     ("entrypoints/cli/_app_diagnostics.py", "typer.echo"),
-    # Operator-facing wizard help line, not a debug print.
-    ("entrypoints/cli/_modelo_work_wizard_cli.py", "print"),
+    # Wizard progress rides the prompter's injectable prompt_toolkit output
+    # device (headless-testable), not stdout; it renders operator-facing
+    # progress text, never taxpayer data subject to redaction.
+    ("application/wizard/_prompter.py", "write"),
+    # Recovery-code display writes directly to the controlling terminal
+    # device (CONOUT$ / /dev/tty), deliberately BYPASSING stdout so the
+    # candidate mnemonic can never land in a redirected stream, JSON
+    # envelope, or log. Routing it through the envelope renderer would be
+    # the secret-serialization defect the channel exists to prevent.
+    ("entrypoints/cli/_config/_secure_input.py", "write"),
 }
 
 
@@ -116,7 +124,7 @@ def test_production_direct_output_surfaces_are_owned() -> None:
 
     assert not unowned, (
         "New direct production CLI output call(s) bypass the centralized "
-        "redaction boundary; route through _emit/_emit_envelope/write_stderr "
+        "redaction boundary; route through _emit_envelope/write_stderr "
         "or add an audited exception:\n" + "\n".join(unowned)
     )
 
@@ -135,6 +143,6 @@ def test_emit_boundaries_are_present_for_success_output() -> None:
 
     common = (_CLI_ROOT / "_common.py").read_text(encoding="utf-8")
 
-    assert "def _emit(" in common
+    assert "def _emit(" not in common
     assert "def _emit_envelope(" in common
     assert "render_command_output(" in common

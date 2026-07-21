@@ -1,0 +1,4 @@
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Classify the collected payment as business income.
+@result aeat --format json app ledger classify 71a5db2b --classification BUSINESS
+@expect result.transaction.business_classification == "BUSINESS"

@@ -175,7 +175,7 @@ class AeatClavePermanenteSurface(_Frozen):
     renders a DNI/NIE + password form rather than the QR/push screen. These
     IdP form selectors and error markers are the least stable part of this
     surface — they track the Cl@ve frontend, not an AEAT-published contract —
-    and are the ``needs-design`` surface tracked by issue #283.
+    and may need redesign if the Cl@ve frontend changes shape.
     """
 
     selector_access_url_template: str = Field(min_length=1)
@@ -263,7 +263,6 @@ class AeatLiveSafety(_Frozen):
     auth_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     wallet_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     declarations_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
-    csv_verify_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     consult_oracle_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
     renta_web_open_browser_action_patterns: tuple[str, ...] = Field(default_factory=tuple)
 
@@ -271,7 +270,6 @@ class AeatLiveSafety(_Frozen):
         "auth_browser_action_patterns",
         "wallet_browser_action_patterns",
         "declarations_browser_action_patterns",
-        "csv_verify_browser_action_patterns",
         "consult_oracle_browser_action_patterns",
         "renta_web_open_browser_action_patterns",
         mode="before",
@@ -624,11 +622,9 @@ MODELO_100_ART_20_TRABAJO_REDUCCION_RNT_CEILING_EUR: Final[Decimal] = Decimal("1
 #: "siempre que tal incremento provenga de contribuciones empresariales, o de
 #: aportaciones del trabajador al mismo instrumento de previsión social".
 #: Used by the Modelo 100 art. 52 advisory to flag a possible over-reduction
-#: (a granted reducción above this sub-limit with no employer-linked backing)
-#: — a ``no-silent-under-declaration`` safeguard pending the full individual/
-#: employer contribution-split compute (Phase 2b,
-#: ``2026-07-01-modelo-100-trabajo-casilla-compute-adr``). Binding provision:
-#: Ley 35/2006 art. 52.1.
+#: (a granted reducción above this sub-limit with no employer-linked backing),
+#: pending the full individual/employer contribution-split compute. Binding
+#: provision: Ley 35/2006 art. 52.1.
 MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR: Final[Decimal] = Decimal("1500")
 
 #: Default IVA general-rate percentage for input/pre-fill purposes.
@@ -638,10 +634,6 @@ MODELO_100_ART_52_INDIVIDUAL_SUBLIMIT_EUR: Final[Decimal] = Decimal("1500")
 #: and is resolved via :func:`domain.iva.lookup_rate`; this constant is
 #: bound to that registry authority by a gate test so it cannot silently drift.
 DEFAULT_IVA_GENERAL_RATE_PCT: Final[Decimal] = Decimal("21.00")
-
-#: Secure-object namespace slug for Cl@ve Móvil auth diagnostics.
-#: Used by the auth diagnostics service and the persistence namespace registry.
-CLAVE_MOVIL_DIAGNOSTIC_NAMESPACE: Final[str] = "cadrumo.outbound.aeat.auth.clave_movil.diagnostics"
 
 #: Modelos belonging to the *retenciones* aggregation family (withholding/retention filings).
 #: Covers: M111 (labour income), M115 (leases), M123 (capital yields), M180 (lease annual),

@@ -3,14 +3,15 @@ tags:
   - '#adr'
   - '#modelo-131-eo-modulos-engine'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-27-modelo-131-calc-verify-adr]]"
   - "[[2026-04-27-modelo-100-renta-full-calc-adr]]"
   - "[[2026-05-27-khalid-cli-testimonial-audit]]"
+  - '[[2026-07-10-modelo-131-eo-modulos-engine-research]]'
 ---
 
-# `modelo-131-eo-modulos-engine` adr: `Modelo 131 EO modulos table-driven rendimiento engine` | (**status:** `proposed`)
+# `modelo-131-eo-modulos-engine` adr: `Modelo 131 EO modulos table-driven rendimiento engine` | (**status:** `accepted`)
 
 ## Problem Statement
 

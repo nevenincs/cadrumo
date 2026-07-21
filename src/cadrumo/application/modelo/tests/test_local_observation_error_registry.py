@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....core.errors import ERROR_REGISTRY, AeatError, ErrorCategory, build_error_envelope, get_registered_error_code
+from ....core.errors import ERROR_REGISTRY, CadrumoError, ErrorCategory, build_error_envelope, get_registered_error_code
 from ....domain.modelos import ModeloError
 from .._action_errors import ModeloLocalObservationError
 
@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 def test_modelo_local_observation_error_is_registered_and_envelopes() -> None:
     assert issubclass(ModeloLocalObservationError, ModeloError)
-    assert issubclass(ModeloLocalObservationError, AeatError)
+    assert issubclass(ModeloLocalObservationError, CadrumoError)
 
     code = get_registered_error_code(ModeloLocalObservationError)
 

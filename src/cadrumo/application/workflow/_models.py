@@ -22,6 +22,11 @@ defined in the shared leaf module
 dependency that a shared leaf module resolves without either package
 importing the other.
 
+Workflow-owned auth field types are similarly defined in
+:mod:`cadrumo.application._workflow_auth_models` and exported publicly by
+:mod:`cadrumo.application.workflow`. Auth services consume that shared leaf;
+they do not own or re-export the persisted records.
+
 See Also:
     :class:`~cadrumo.application.workflow.WorkflowEngine`
         Produces :class:`WorkflowResult` records and advances
@@ -37,13 +42,6 @@ See Also:
         Drives calculation revisions through the workflow and persists the
         resulting run record before verification or local filing state changes.
 
-Import ordering note
---------------------
-The ``SiteHealthStatus`` and ``ModeloDeadline`` imports are placed
-*after* :class:`WorkflowState` and related state models so that
-:mod:`cadrumo.application.auth._actions` (which imports :class:`WorkflowState`
-from this partially-initialised module during the browser-adapter import
-chain) finds those names already present.
 """
 
 from __future__ import annotations
@@ -54,9 +52,8 @@ from datetime import datetime
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
-from ...adapters.persistence.storage.bucket import BucketLifecycleStatus
 from ...core import (
     STRICT_FROZEN_CONFIG as _STRICT_FROZEN,
 )
@@ -69,15 +66,18 @@ from ...core import (
 from ...core import (
     resolve_active_bucket_id as _resolve_active_bucket_id,
 )
-from ...core.identity import BucketId
+from ...core.config import override_settings
 from ...core.logging import get_logger
+from .._workflow_auth_models import AuthState
 from .._workflow_review_models import (
     InvoiceReviewRecord,
     LedgerReviewRecord,
     WorkflowEvent,
 )
-from ..auth import AuthState
+from ._profile_bucket_models import ProfileBucketPointer as ProfileBucketPointer
+from ._profile_bucket_scan import resolve_profile_bucket
 from ._utils import utc_now
+from ._workflow_abort import WorkflowAbortReason as WorkflowAbortReason
 
 if TYPE_CHECKING:
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -126,26 +126,6 @@ class WorkflowPurpose(StrEnum):
     VERIFY = "VERIFY"
 
 
-class WorkflowAbortReason(StrEnum):
-    """Closed set of reasons the :class:`WorkflowEngine` may abort a run.
-
-    Each member maps to a distinct failure path in the engine's stage
-    sequence. CLI surfaces and audit logs carry the string value so
-    operators and tools can key on it without importing this module.
-    """
-
-    NO_PENDING_OBLIGATION = "NO_PENDING_OBLIGATION"
-    INBOX_BLOCKING_REQUERIMIENTO = "INBOX_BLOCKING_REQUERIMIENTO"
-    DEADLINE_PASSED = "DEADLINE_PASSED"
-    ALREADY_FILED = "ALREADY_FILED"
-    DRAFT_HAS_ERRORS = "DRAFT_HAS_ERRORS"
-    PREFLIGHT_FAILED = "PREFLIGHT_FAILED"
-    CERT_INVALID = "CERT_INVALID"
-    USER_CANCELLED = "USER_CANCELLED"
-    SITE_UNAVAILABLE = "SITE_UNAVAILABLE"
-    UNHANDLED_EXCEPTION = "UNHANDLED_EXCEPTION"
-
-
 class DeclaracionPointer(BaseModel):
     """Lightweight pointer to a persisted filing draft stored in :class:`WorkflowState`.
 
@@ -165,32 +145,6 @@ class DeclaracionPointer(BaseModel):
     exported_path: str | None = None
     verified: bool | None = None
     updated_at: datetime = Field(default_factory=utc_now)
-
-
-class ProfileBucketPointer(BaseModel):
-    """Pointer to a secure profile bucket.
-
-    ``bucket_id`` is the immutable UUIDv4 profile identity and the
-    name of the bucket directory on disk. ``label`` is the decoupled
-    mutable operator-chosen display name read from the bucket manifest.
-    ``status`` is the plaintext lifecycle marker carried on the
-    manifest; the live-surface scanners filter on it so a tombstoned
-    profile never leaks into ``list`` / ``switch`` / name-uniqueness.
-    """
-
-    model_config = _STRICT_FROZEN
-
-    bucket_id: BucketId
-    label: str = Field(min_length=1, max_length=160)
-    status: BucketLifecycleStatus = BucketLifecycleStatus.ACTIVE
-
-    @field_validator("bucket_id", "label")
-    @classmethod
-    def _trim_text(cls, value: str) -> str:
-        trimmed = value.strip()
-        if not trimmed:
-            raise ValueError("value must not be blank")
-        return trimmed
 
 
 def _period_identity_segment(period: Period) -> str:
@@ -250,32 +204,52 @@ class WorkflowState(BaseModel):
     ) -> UserProfileRecord | None:
         """Return the active :class:`UserProfileRecord` from its secure bucket.
 
-        The active bucket id resolves via the precedence chain in
+        The active selector resolves via the precedence chain in
         :func:`cadrumo.core.resolve_active_bucket_id` (env var > pointer file
-        fallback). The bucket id and profile name are 1:1 by orchestration
-        convention, so the resolved id is the lifecycle-service read key.
+        fallback), then the manifest resolver canonicalizes a display label to
+        its immutable bucket UUID before secure storage is addressed.
 
         ``secure_objects`` (a :class:`SecureObjectRepository` override) and
         ``schema`` are optional overrides forwarded to
         :func:`~cadrumo.application.user_profile.build_lifecycle_service`; a
         per-bucket store and the bundled schema are resolved when ``None``.
         """
-        bucket_id = _resolve_active_bucket_id()
+        identifier, bucket_id = self._active_profile_selection()
         if bucket_id is None:
+            if identifier is not None:
+                _log.debug(
+                    "active profile record resolution returned no profile record: selected profile has no live bucket",
+                )
             return None
         from ...domain.user_profile import ProfileNotFoundError
         from ..user_profile import build_lifecycle_service
 
-        service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
-        try:
-            return service.read(bucket_id)
-        except ProfileNotFoundError as exc:
-            _log.debug("active profile record resolution returned no profile record: %s", type(exc).__name__)
-            return None
+        with override_settings(cadrumo_active_profile=bucket_id):
+            service = build_lifecycle_service(bucket_id=bucket_id, secure_objects=secure_objects, schema=schema)
+            try:
+                return service.read(bucket_id)
+            except ProfileNotFoundError as exc:
+                _log.debug("active profile record resolution returned no profile record: %s", type(exc).__name__)
+                return None
 
     def active_profile_bucket_id(self) -> str | None:
-        """Return the active profile's secure bucket id via the precedence chain."""
-        return _resolve_active_bucket_id()
+        """Return the selected profile's canonical secure bucket UUID.
+
+        Core owns active-selector precedence. The workflow manifest resolver
+        then maps an operator-facing label to the existing immutable bucket
+        UUID. A selector without a live manifest has no secure bucket and
+        returns ``None``; health diagnostics retain the raw selector separately.
+        """
+        return self._active_profile_selection()[1]
+
+    @staticmethod
+    def _active_profile_selection() -> tuple[str | None, str | None]:
+        """Return the raw active selector and its canonical live bucket UUID."""
+        identifier = _resolve_active_bucket_id()
+        if identifier is None:
+            return None, None
+        pointer = resolve_profile_bucket(identifier)
+        return identifier, pointer.bucket_id if pointer is not None else None
 
 
 def active_transaction_catalogue_repository(

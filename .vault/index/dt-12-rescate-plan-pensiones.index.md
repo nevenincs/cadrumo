@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#dt-12-rescate-plan-pensiones'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-27-dt-12-rescate-plan-pensiones-adr]]'
   - '[[2026-06-04-dt-12-rescate-plan-pensiones-research]]'

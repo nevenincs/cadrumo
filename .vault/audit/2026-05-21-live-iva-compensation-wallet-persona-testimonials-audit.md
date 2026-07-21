@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#live-iva-compensation-wallet'
 date: '2026-05-21'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - '[[2026-05-19-live-iva-compensation-wallet-plan]]'
   - '[[2026-05-21-live-iva-compensation-wallet-persona-briefs-audit]]'

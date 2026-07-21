@@ -10,11 +10,11 @@ must not be trusted.
 
 Surfaces a query may be pinned to:
 
-* ``normatives_sidecar`` - a BOE article ``*.extracted.md`` / ``.json``
+* ``normatives_source`` - a BOE normatives ``.html`` source page
   sidecar (the legal-grounding surface);
-* ``diseno_sidecar`` - a Diseno-de-registro workbook / instruction sidecar
+* ``diseno_source`` - a Diseno-de-registro workbook / instruction source
   (the casilla-number-to-field-position surface);
-* ``any_sidecar`` - any extraction sidecar (used where several preprocessed
+* ``any_corpus_source`` - any hook-preprocessed corpus source (used where several
   surfaces are legitimate);
 * ``terminology`` - a Handbook concept fragment.
 
@@ -44,9 +44,9 @@ STRONG_SIGNAL_FLOOR = 0.5
 class GoldenSurface(StrEnum):
     """The preprocessed surface kind a golden query must hit."""
 
-    NORMATIVES_SIDECAR = "normatives_sidecar"
-    DISENO_SIDECAR = "diseno_sidecar"
-    ANY_SIDECAR = "any_sidecar"
+    NORMATIVES_SOURCE = "normatives_source"
+    DISENO_SOURCE = "diseno_source"
+    ANY_CORPUS_SOURCE = "any_corpus_source"
     TERMINOLOGY = "terminology"
 
 
@@ -85,33 +85,33 @@ class GoldenResult:
 GOLDEN_QUERIES: tuple[GoldenQuery, ...] = (
     GoldenQuery(
         query="regla de prorrata operaciones deduccion",
-        surface=GoldenSurface.NORMATIVES_SIDECAR,
+        surface=GoldenSurface.NORMATIVES_SOURCE,
         floor=STRONG_SIGNAL_FLOOR,
         note="prorrata concept reaches the IVA-law article sidecar",
     ),
     GoldenQuery(
         query="prorrateo porcentaje deducible",
-        surface=GoldenSurface.ANY_SIDECAR,
+        surface=GoldenSurface.ANY_CORPUS_SOURCE,
         floor=STRONG_SIGNAL_FLOOR,
         note="prorrata synonym reaches a preprocessed grounding surface",
     ),
     GoldenQuery(
         query="posicion longitud tipo descripcion campo registro",
-        surface=GoldenSurface.DISENO_SIDECAR,
+        surface=GoldenSurface.DISENO_SOURCE,
         floor=STRONG_SIGNAL_FLOOR,
-        note="casilla field-position table reaches a Diseno sidecar",
+        note="casilla field-position table reaches a Diseno source",
     ),
     GoldenQuery(
         query="disposicion transitoria tipo de gravamen",
-        surface=GoldenSurface.NORMATIVES_SIDECAR,
+        surface=GoldenSurface.NORMATIVES_SOURCE,
         floor=STRONG_SIGNAL_FLOOR,
-        note="transitional-provision rate reaches a normatives sidecar",
+        note="transitional-provision rate reaches a normatives source",
     ),
     GoldenQuery(
         query="esquema registro fichero modelo presentacion",
-        surface=GoldenSurface.DISENO_SIDECAR,
+        surface=GoldenSurface.DISENO_SOURCE,
         floor=STRONG_SIGNAL_FLOOR,
-        note="fichero schema reaches a Diseno/instruction sidecar",
+        note="fichero schema reaches a Diseno/instruction source",
     ),
     # Four-language probe: the same concept across es/ca; the es term clears
     # the strong floor and the ca term (declared in the Handbook) reaches the
@@ -133,14 +133,23 @@ GOLDEN_QUERIES: tuple[GoldenQuery, ...] = (
 
 
 def _classify(path: str) -> set[GoldenSurface]:
-    """Return the surface kinds a result path belongs to."""
+    """Return the surface kinds a result path belongs to.
+
+    Corpus hits arrive under SOURCE file paths: the preprocess-hook rules feed
+    the walker, and the extraction sidecars are ``.vaultragignore``-excluded
+    (docs-terminology-search ADR Update 1).
+    """
     kinds: set[GoldenSurface] = set()
-    if ".extracted." in path:
-        kinds.add(GoldenSurface.ANY_SIDECAR)
+    lowered = path.lower()
+    is_corpus_source = (
+        "/_data/corpus/" in path and ".extracted." not in path and lowered.endswith((".html", ".pdf", ".xlsx", ".xls"))
+    )
+    if is_corpus_source:
+        kinds.add(GoldenSurface.ANY_CORPUS_SOURCE)
         if "/corpus/normatives/" in path:
-            kinds.add(GoldenSurface.NORMATIVES_SIDECAR)
+            kinds.add(GoldenSurface.NORMATIVES_SOURCE)
         if "/disenos_registro/" in path or "/instructions/" in path:
-            kinds.add(GoldenSurface.DISENO_SIDECAR)
+            kinds.add(GoldenSurface.DISENO_SOURCE)
     if "/_data/terminology/" in path:
         kinds.add(GoldenSurface.TERMINOLOGY)
     return kinds
@@ -231,15 +240,12 @@ def evaluate_query(golden: GoldenQuery, hits: tuple[QueryHit, ...]) -> GoldenRes
     )
 
 
-def raw_normatives_html_hits(hits: tuple[QueryHit, ...]) -> tuple[QueryHit, ...]:
-    """Return hits that are RAW normatives HTML (not the extracted sidecar).
+def extraction_sidecar_hits(hits: tuple[QueryHit, ...]) -> tuple[QueryHit, ...]:
+    """Return hits that land on an extraction sidecar.
 
-    Used by the dedup proof: after the ``.vaultragignore`` exclusion lands and
-    the index is rebuilt, a normatives query must return zero raw-HTML hits -
-    only the clean ``*.extracted.md`` sidecars survive.
+    Used by the dedup proof: the sidecars are the product corpus payload and
+    are ``.vaultragignore``-excluded from the dev index (the hook rules feed
+    the same text under source paths), so a corpus query must return zero
+    sidecar hits once the index is rebuilt.
     """
-    return tuple(
-        hit
-        for hit in hits
-        if "/corpus/normatives/html/" in hit.path and hit.path.endswith(".html") and ".extracted." not in hit.path
-    )
+    return tuple(hit for hit in hits if ".extracted." in hit.path)

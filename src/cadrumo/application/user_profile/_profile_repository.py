@@ -1,22 +1,16 @@
-"""The single, sole writer of a logical profile's physical stores.
+"""Sequence a logical profile's changes across its durable stores.
 
 A logical profile fragments across a bucket directory, a plaintext
 :class:`~cadrumo.adapters.persistence.storage.bucket.BucketManifest`, an
 encrypted :class:`~cadrumo.domain.user_profile.UserProfileRecord` row in a
 per-bucket SQLite database, and an append-only
 :class:`~cadrumo.domain.buckets.BucketEventHistoryRepository`.
-Before this repository, every CLI handler and application service
-wrote whichever stores it remembered; consistency was by convention
-and a failure mid-sequence left a half-live profile.
-
-:class:`ProfileRepository` makes "touch every store" structural.
-:meth:`ProfileRepository.create` and :meth:`ProfileRepository.delete`
-are cross-store units of work: the
-filesystem directory + manifest are staged first (a directory with no
-secure-object row is detectable, reclaimable garbage), the encrypted
-record commits next inside the SQLite transaction, the
-:class:`~cadrumo.core.BucketPointer` moves last. On any failure the staged
-filesystem state is rolled back. :meth:`ProfileRepository.load` runs
+The :class:`ProfileRepository` owns cross-store aggregate ordering. The shared
+reentrant active-profile pointer transaction coordinates same-root pointer
+access, while the core pointer API owns byte-level persistence. Creation writes
+the manifest, pointer, then encrypted record and events. Deletion conditionally
+clears an active pointer before writing the manifest and encrypted-record
+tombstones. :meth:`ProfileRepository.load` runs
 :func:`~cadrumo.application.user_profile._integrity.verify_profile_integrity`
 so a profile whose stores have drifted surfaces the drift instead of
 being served silently.
@@ -25,8 +19,8 @@ Application orchestration
 (:func:`~cadrumo.application.user_profile.register_active_profile`,
 :func:`~cadrumo.application.user_profile.remove_active_profile`,
 :func:`~cadrumo.application.user_profile.select_profile`) and the CLI
-``config profile`` verbs delegate their store writes here; there is
-exactly one implementation of the cross-store profile write.
+``config profile`` verbs delegate aggregate sequencing here. Profile-health
+inspection and repair remain separate responsibilities.
 
 See Also:
     :class:`~cadrumo.application.user_profile.ProfileLifecycleService`
@@ -52,10 +46,10 @@ from ...adapters.persistence.storage import (
     BUCKETS_DIRNAME,
     SecureObjectRepository,
     StorageValidationError,
+    dispose_engines_for_bucket,
 )
 from ...adapters.persistence.storage.bucket import (
     BucketKeySchedule,
-    BucketLifecycleStatus,
     BucketManifest,
     ManifestKdfParams,
     bucket_paths,
@@ -67,10 +61,9 @@ from ...adapters.persistence.storage.bucket import (
 )
 from ...adapters.persistence.storage.master_key import KdfParams
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core import BucketPointer, pointer_path, write_pointer
+from ...core import BucketPointer
 from ...core.config import load_settings
-from ...core.errors import AeatError
-from ...core.external_constants import UTF_8_ENCODING as _UTF_8_ENCODING
+from ...core.errors import CadrumoError
 from ...core.identity import ProfileId
 from ...core.logging import get_logger
 from ...core.redaction import redact_for_cli_output
@@ -86,6 +79,7 @@ from ...domain.user_profile import (
 from . import ReactivateProfileCommand, RegisterProfileCommand, RemoveProfileCommand, RenameProfileCommand
 from ._aggregate import ProfileAggregate
 from ._integrity import verify_profile_integrity
+from ._profile_pointer_transaction import ActiveProfilePointerTransaction, active_profile_pointer_transaction
 from ._repository import UserProfileLifecycleRepository, _refresh_output_language_hint
 
 if TYPE_CHECKING:
@@ -109,17 +103,6 @@ def _canonical_tax_id(facts: Sequence[UserProfileFact]) -> str | None:
             if text:
                 return text
     return None
-
-
-def _manifest_status_for(status: UserProfileStatus) -> BucketLifecycleStatus:
-    """Map the encrypted-record lifecycle status to its manifest mirror.
-
-    The two enums carry identical string values; the mapping is by
-    value so a new lifecycle state added to one enum but not the other
-    surfaces here as a :class:`ValueError` (the enum lookup rejects an
-    unknown value) rather than silently mismatching.
-    """
-    return BucketLifecycleStatus(status.value)
 
 
 def _default_kdf_params() -> ManifestKdfParams:
@@ -149,15 +132,16 @@ class ProfileSummary(BaseModel):
 
 
 class ProfileRepository:
-    """The sole writer of a logical profile's cross-store physical state.
+    """Sequence profile aggregate mutations across their durable stores.
 
     The repository composes the existing lower-level pieces — the
     secure-record
     :class:`~cadrumo.application.user_profile.UserProfileLifecycleRepository`,
     :func:`~cadrumo.adapters.persistence.storage.bucket.provision_bucket_directory`,
     the :class:`~cadrumo.adapters.persistence.storage.bucket.BucketManifest`
-    IO helpers, and the active-profile :class:`~cadrumo.core.BucketPointer`
-    IO. It is the single place those writes happen.
+    IO helpers, and the shared reentrant active-profile pointer transaction.
+    The transaction coordinates same-root access and delegates pointer byte IO
+    to the core API.
     """
 
     def __init__(
@@ -192,6 +176,29 @@ class ProfileRepository:
     def root(self) -> Path:
         return self._root
 
+    def _rollback_failed_create(
+        self,
+        *,
+        profile_id: str,
+        pointer_transaction: ActiveProfilePointerTransaction,
+        rollback_pointer: bytes | None,
+    ) -> tuple[BaseException, ...]:
+        """Attempt every create rollback action and return all failures."""
+        rollback_errors: list[BaseException] = []
+        try:
+            dispose_engines_for_bucket(profile_id)
+        except BaseException as dispose_error:
+            rollback_errors.append(dispose_error)
+        try:
+            self._remove_bucket_directory(profile_id)
+        except BaseException as cleanup_error:
+            rollback_errors.append(cleanup_error)
+        try:
+            pointer_transaction.restore(rollback_pointer)
+        except BaseException as restore_error:
+            rollback_errors.append(restore_error)
+        return tuple(rollback_errors)
+
     # ── create ─────────────────────────────────────────────────────
 
     def create(
@@ -213,9 +220,8 @@ class ProfileRepository:
         profile's tax id and pass :data:`False`.
 
         Mints a fresh UUID identity (unless ``profile_id`` is supplied
-        for a caller that already minted one), then performs the
-        all-or-nothing write — every store write, the active-profile
-        pointer included, is inside this single unit of work:
+        for a caller that already minted one), then enters the repository
+        root's shared active-profile pointer transaction before doing work:
 
         1. Stage the bucket directory + plaintext manifest. A directory
            with no manifest is detectable, reclaimable garbage — a
@@ -228,13 +234,17 @@ class ProfileRepository:
            :class:`~cadrumo.domain.user_profile.UserProfileRecord` (the
            SQLite transaction).
 
-        The pre-create active-profile pointer is captured here, before
-        the first store write, so a failure at any step rolls back the
-        staged directory + manifest AND restores the pointer to exactly
-        its pre-create state. No caller writes the pointer; the
-        ``missing_profile_record`` torn state (pointer aimed at a
-        profile with no record) is unreachable because the pointer
-        write and the record write are one unit of work.
+        The exact repository-entry pointer bytes are captured before the first
+        repository write. A canonical cold-create caller normally already holds
+        the same-root transaction and has written a provisional pointer, so the
+        repository acquisition is a nested rollback layer. If a
+        :class:`BaseException` occurs after staging begins, the repository
+        independently attempts engine disposal, bucket cleanup, and exact
+        pointer restoration while ownership remains held. It re-raises the
+        original failure when rollback succeeds; otherwise a
+        :class:`BaseExceptionGroup` retains the original followed by every
+        rollback failure. A process interruption can still leave a complete
+        provisional pointer for health inspection and repair.
 
         Args:
             label: Operator-visible display name for the new profile.
@@ -253,117 +263,117 @@ class ProfileRepository:
         Raises:
             ProfileNotFoundError: If the profile already carries a
                 manifest (it is already a registered profile).
-            AeatError: If an error occurs during the all-or-nothing write.
+            CadrumoError: If an error occurs during the all-or-nothing write.
             OSError: If a filesystem error occurs during directory staging.
             UserProfileValidationError: If the routing profile id does not
                 match the resolved profile id.
             ValidationError: If the encrypted record fails schema validation.
+            BaseExceptionGroup: If creation fails and one or more rollback
+                actions also fail.
         """
-        resolved_id = profile_id if profile_id is not None else new_profile_id()
-        if routing_profile_id is not None and routing_profile_id.strip() != resolved_id:
-            raise UserProfileValidationError(
-                translated_message="application.user_profile.errors.profile_create_route_mismatch",
-                context={"route": routing_profile_id, "profile": resolved_id},
-            )
-        paths = bucket_paths(self._root, resolved_id)
-        # Capture the genuine pre-create pointer before any store write
-        # so the rollback restores it exactly.
-        rollback_pointer_text = self._read_pointer_text()
+        with active_profile_pointer_transaction(self._root) as pointer_transaction:
+            resolved_id = profile_id if profile_id is not None else new_profile_id()
+            if routing_profile_id is not None and routing_profile_id.strip() != resolved_id:
+                raise UserProfileValidationError(
+                    translated_message="application.user_profile.errors.profile_create_route_mismatch",
+                    context={"route": routing_profile_id, "profile": resolved_id},
+                )
+            paths = bucket_paths(self._root, resolved_id)
+            rollback_pointer = pointer_transaction.capture()
 
-        # Refuse before any store write: a label already carried by a
-        # live profile, or a UUID that already carries a registered
-        # manifest, is a refusal. No store was written, so there is
-        # nothing to roll back.
-        if manifest_path(paths).is_file():
-            raise ProfileNotFoundError(
-                translated_message="application.user_profile.errors.profile_manifest_already_registered",
-                context={"profile": resolved_id, "bucket_dir": paths.bucket_dir},
-            )
-        self._refuse_duplicate_label(label)
-        if enforce_unique_tax_id:
-            self._refuse_duplicate_tax_id(facts)
+            # Refuse before any store write: a label already carried by a
+            # live profile, or a UUID that already carries a registered
+            # manifest, is a refusal. No store was written, so there is
+            # nothing to roll back.
+            if manifest_path(paths).is_file():
+                raise ProfileNotFoundError(
+                    translated_message="application.user_profile.errors.profile_manifest_already_registered",
+                    context={"profile": resolved_id, "bucket_dir": paths.bucket_dir},
+                )
+            self._refuse_duplicate_label(label)
+            if enforce_unique_tax_id:
+                self._refuse_duplicate_tax_id(facts)
 
-        kdf_params = _default_kdf_params()
-        created_at = now()
-        bucket_dek_path = keystore_path(self._root, resolved_id) / BUCKET_DEK_FILENAME
-        if not bucket_dek_path.is_file():
-            # The create span mints the per-bucket wrapped DEK before this
-            # repository writes the manifest. A missing DEK here is a torn
-            # create, not a valid schedule — fail closed rather than register
-            # a bucket whose only key schedule is BUCKET_DEK_V1 with no DEK.
-            raise StorageValidationError(
-                f"bucket {resolved_id!r} has no wrapped DEK at {bucket_dek_path}; "
-                "the create span must mint the per-bucket DEK before manifest registration.",
-            )
-        key_schedule = BucketKeySchedule.BUCKET_DEK_V1
-        manifest_schema_version = 2
+            kdf_params = _default_kdf_params()
+            created_at = now()
+            bucket_dek_path = keystore_path(self._root, resolved_id) / BUCKET_DEK_FILENAME
+            if not bucket_dek_path.is_file():
+                # The create span mints the per-bucket wrapped DEK before this
+                # repository writes the manifest. A missing DEK here is a torn
+                # create, not a valid schedule — fail closed rather than register
+                # a bucket whose only key schedule is BUCKET_DEK_V1 with no DEK.
+                raise StorageValidationError(
+                    f"bucket {resolved_id!r} has no wrapped DEK at {bucket_dek_path}; "
+                    "the create span must mint the per-bucket DEK before manifest registration.",
+                )
+            key_schedule = BucketKeySchedule.BUCKET_DEK_V1
+            manifest_schema_version = 2
 
-        # Step 1: stage the bucket directory tree + the plaintext
-        # manifest — the point at which the bucket becomes a registered
-        # profile. A bare directory may already exist: a cold-start
-        # caller's workflow-state engine creates ``<bucket>/db/`` when
-        # it opens before this create runs. A directory with no manifest
-        # is not yet a registered profile, so it is reclaimed as
-        # staging rather than refused.
-        self._ensure_bucket_directory(resolved_id)
-        try:
-            write_manifest(
-                bucket_paths(self._root, resolved_id),
-                BucketManifest(
-                    bucket_id=resolved_id,
-                    label=label,
-                    created_at=created_at,
-                    last_unlocked_at=None,
-                    kdf_params=kdf_params,
-                    recovery_enrolled=False,
-                    key_schedule=key_schedule,
-                    schema_version=manifest_schema_version,
-                    status=BucketLifecycleStatus.ACTIVE,
-                ),
-            )
+            try:
+                # Step 1: stage the bucket directory tree + the plaintext
+                # manifest — the point at which the bucket becomes a registered
+                # profile. A bare directory may already exist: a cold-start
+                # caller's workflow-state engine creates ``<bucket>/db/`` when
+                # it opens before this create runs. A directory with no manifest
+                # is not yet a registered profile, so it is reclaimed as
+                # staging rather than refused.
+                self._ensure_bucket_directory(resolved_id)
+                write_manifest(
+                    bucket_paths(self._root, resolved_id),
+                    BucketManifest(
+                        bucket_id=resolved_id,
+                        label=label,
+                        created_at=created_at,
+                        last_unlocked_at=None,
+                        kdf_params=kdf_params,
+                        recovery_enrolled=False,
+                        key_schedule=key_schedule,
+                        schema_version=manifest_schema_version,
+                        status=UserProfileStatus.ACTIVE,
+                    ),
+                )
 
-            # Step 2: write the active-profile pointer. The per-bucket
-            # engine resolves its URL from the pointer chain.
-            write_pointer(self._root, BucketPointer(bucket_id=resolved_id, schema_version=1))
+                # Step 2: write the active-profile pointer. The per-bucket
+                # engine resolves its URL from the pointer chain.
+                pointer_transaction.write(BucketPointer(bucket_id=resolved_id, schema_version=1))
 
-            # Step 3: commit the encrypted record and its bucket events
-            # via the lifecycle service — schema validation and the
-            # PROFILE_BUCKET_CREATED / PROFILE_VALUES_UPDATED audit
-            # events are the service's single-store concern; this
-            # repository owns the cross-store sequencing and the
-            # rollback around it.
-            result = self._lifecycle_service(resolved_id).register(
-                RegisterProfileCommand(
+                # Step 3: commit the encrypted record and its bucket events
+                # via the lifecycle service — schema validation and the
+                # PROFILE_BUCKET_CREATED / PROFILE_VALUES_UPDATED audit
+                # events are the service's single-store concern; this
+                # repository owns the cross-store sequencing and the
+                # rollback around it.
+                result = self._lifecycle_service(resolved_id).register(
+                    RegisterProfileCommand(
+                        profile_id=resolved_id,
+                        display_name=label,
+                        facts=tuple(facts),
+                    ),
+                )
+                record = result.profile
+            except BaseException as create_error:
+                rollback_errors = self._rollback_failed_create(
                     profile_id=resolved_id,
-                    display_name=label,
-                    facts=tuple(facts),
-                ),
+                    pointer_transaction=pointer_transaction,
+                    rollback_pointer=rollback_pointer,
+                )
+                if rollback_errors:
+                    raise BaseExceptionGroup(
+                        "profile creation and repository rollback failed",
+                        [create_error, *rollback_errors],
+                    ) from None
+                raise
+
+            return ProfileAggregate(
+                profile_id=resolved_id,
+                label=label,
+                created_at=created_at,
+                kdf_params=kdf_params,
+                recovery_enrolled=False,
+                manifest_schema_version=manifest_schema_version,
+                record=record,
+                status=record.status,
             )
-            record = result.profile
-        except (AeatError, OSError, ValidationError):
-            # Roll back every store this create touched: the staged
-            # directory + manifest are removed and the pointer is
-            # restored to its pre-create state. This bucket's per-bucket
-            # SQLAlchemy engine opened by the record write is disposed
-            # first: on Windows an open SQLite handle refuses the
-            # directory removal.
-            from ...adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
-
-            dispose_engines_for_bucket(resolved_id)
-            self._remove_bucket_directory(resolved_id)
-            self._restore_pointer_text(rollback_pointer_text)
-            raise
-
-        return ProfileAggregate(
-            profile_id=resolved_id,
-            label=label,
-            created_at=created_at,
-            kdf_params=kdf_params,
-            recovery_enrolled=False,
-            manifest_schema_version=manifest_schema_version,
-            record=record,
-            status=record.status,
-        )
 
     # ── load ───────────────────────────────────────────────────────
 
@@ -445,7 +455,7 @@ class ProfileRepository:
                 idle_lock_minutes=current_manifest.idle_lock_minutes,
                 key_schedule=current_manifest.key_schedule,
                 schema_version=aggregate.manifest_schema_version,
-                status=_manifest_status_for(aggregate.status),
+                status=aggregate.status,
             ),
         )
         self._lifecycle_repository(aggregate.profile_id).save(aggregate.record)
@@ -524,19 +534,23 @@ class ProfileRepository:
         tombstoned and re-saved; the bucket directory and manifest are
         left intact so audit and history reads still resolve.
 
-        Three stores mutate, in an order chosen so every torn
-        intermediate fails closed:
+        The repository enters its root's active-profile pointer transaction
+        before loading the aggregate. Two or three stores then mutate, in an
+        order chosen so every torn intermediate fails closed:
 
-        1. The active-profile pointer is cleared first. A crash here
-           leaves a still-live record with no active pointer — benign,
-           the operator simply re-selects.
+        1. The pointer is read and cleared only when it targets this profile.
+           The read and conditional clear share one transaction, so another
+           cooperating writer cannot select a different profile between them.
+           A crash here leaves a still-live record with no active pointer —
+           benign, the operator simply re-selects.
         2. The plaintext manifest ``status`` is mirrored to
            ``tombstoned`` BEFORE the record tombstone. A crash between
            this write and the record tombstone leaves a manifest saying
            ``tombstoned`` over a still-live record. That is the safe
            direction: the profile immediately drops off every live
            surface (``list`` / ``switch`` / name-uniqueness all read
-           the manifest), and the record is still loadable for repair.
+           the manifest), and the encrypted record remains available to repair
+           machinery.
            The reverse order — record first — would leave a manifest
            saying ``active`` over a tombstoned record, re-opening the
            leak.
@@ -546,8 +560,8 @@ class ProfileRepository:
         the manifest status against the record status, so a profile
         left in the step-2/step-3 drift state by a crash raises
         :class:`~cadrumo.application.user_profile._integrity.ProfileIntegrityError`
-        on the next load - reclaiming a drifted profile is the
-        ``repair`` surface's domain.
+        on the next load - reclaiming a drifted profile is the ``repair``
+        surface's domain.
 
         Args:
             profile_id: The UUID of the profile to tombstone.
@@ -555,25 +569,27 @@ class ProfileRepository:
         Returns:
             The updated :class:`ProfileAggregate` with tombstoned status.
         """
-        aggregate = self.load(profile_id)
-        if self._active_pointer_targets(profile_id):
-            self._clear_pointer()
-        # Step 2: mirror the tombstone onto the plaintext manifest
-        # before the record tombstone. The manifest scan excludes this
-        # profile from every live operator surface without unlocking
-        # the encrypted bucket; doing this first means a crash before
-        # the record write fails closed (manifest tombstoned, record
-        # still loadable for repair) instead of re-opening the leak.
-        paths = bucket_paths(self._root, profile_id)
-        manifest = read_manifest(paths)
-        write_manifest(
-            paths,
-            manifest.model_copy(update={"status": BucketLifecycleStatus.TOMBSTONED}),
-        )
-        # Step 3: tombstone the encrypted record.
-        result = self._lifecycle_service(profile_id).remove(RemoveProfileCommand(profile_id=profile_id))
-        tombstoned_record = result.profile
-        return aggregate.model_copy(update={"record": tombstoned_record, "status": tombstoned_record.status})
+        with active_profile_pointer_transaction(self._root) as pointer_transaction:
+            aggregate = self.load(profile_id)
+            pointer = pointer_transaction.read()
+            if pointer is not None and pointer.bucket_id == profile_id:
+                pointer_transaction.clear()
+            # Step 2: mirror the tombstone onto the plaintext manifest
+            # before the record tombstone. The manifest scan excludes this
+            # profile from every live operator surface without unlocking
+            # the encrypted bucket; doing this first means a crash before
+            # the record write fails closed (manifest tombstoned, record
+            # still loadable for repair) instead of re-opening the leak.
+            paths = bucket_paths(self._root, profile_id)
+            manifest = read_manifest(paths)
+            write_manifest(
+                paths,
+                manifest.model_copy(update={"status": UserProfileStatus.TOMBSTONED}),
+            )
+            # Step 3: tombstone the encrypted record.
+            result = self._lifecycle_service(profile_id).remove(RemoveProfileCommand(profile_id=profile_id))
+            tombstoned_record = result.profile
+            return aggregate.model_copy(update={"record": tombstoned_record, "status": tombstoned_record.status})
 
     # ── reactivate ─────────────────────────────────────────────────
 
@@ -620,7 +636,7 @@ class ProfileRepository:
         manifest = read_manifest(paths)
         write_manifest(
             paths,
-            manifest.model_copy(update={"status": BucketLifecycleStatus.ACTIVE}),
+            manifest.model_copy(update={"status": UserProfileStatus.ACTIVE}),
         )
         return aggregate.model_copy(update={"record": reactivated_record, "status": reactivated_record.status})
 
@@ -629,10 +645,10 @@ class ProfileRepository:
     def select(self, profile_id: str) -> ProfileAggregate:
         """Make a registered profile the active one.
 
-        Loads and integrity-checks the aggregate — a profile whose
-        stores have drifted is never selected — then writes the
-        active-profile pointer. The pointer is the only store this
-        mutates; identity and lifecycle metadata are untouched.
+        Enters the repository root's active-profile pointer transaction before
+        loading the aggregate, then holds it through integrity and tombstone
+        validation, output-language-hint refresh, and the final pointer write.
+        A profile whose stores have drifted is never selected.
 
         A tombstoned profile is not a selectable profile: ``delete`` is
         a soft removal that retains the bucket for audit, but the
@@ -651,15 +667,16 @@ class ProfileRepository:
             ProfileNotFoundError: If the profile is not registered, or
                 is registered but tombstoned.
         """
-        aggregate = self.load(profile_id)
-        if aggregate.status is UserProfileStatus.TOMBSTONED:
-            raise ProfileNotFoundError(
-                translated_message="application.user_profile.errors.profile_tombstoned_not_selectable",
-                context={"profile": profile_id},
-            )
-        _refresh_output_language_hint(bucket_id=profile_id, record=aggregate.record)
-        write_pointer(self._root, BucketPointer(bucket_id=profile_id, schema_version=1))
-        return aggregate
+        with active_profile_pointer_transaction(self._root) as pointer_transaction:
+            aggregate = self.load(profile_id)
+            if aggregate.status is UserProfileStatus.TOMBSTONED:
+                raise ProfileNotFoundError(
+                    translated_message="application.user_profile.errors.profile_tombstoned_not_selectable",
+                    context={"profile": profile_id},
+                )
+            _refresh_output_language_hint(bucket_id=profile_id, record=aggregate.record)
+            pointer_transaction.write(BucketPointer(bucket_id=profile_id, schema_version=1))
+            return aggregate
 
     # ── list ───────────────────────────────────────────────────────
 
@@ -716,7 +733,7 @@ class ProfileRepository:
                 ProfileSummary(
                     profile_id=manifest.bucket_id,
                     label=manifest.label,
-                    status=UserProfileStatus(manifest.status.value),
+                    status=manifest.status,
                 ),
             )
         summaries.sort(key=lambda row: row.profile_id)
@@ -770,7 +787,7 @@ class ProfileRepository:
 
                 with profile_storage_session(summary.profile_id):
                     aggregate = self.load(summary.profile_id)
-            except (AeatError, OSError, ValidationError) as exc:
+            except (CadrumoError, OSError, ValidationError) as exc:
                 # One torn / unreadable bucket must not prevent an operator
                 # from registering a completely different taxpayer. Emit an
                 # operator-visible warning and continue scanning the remaining
@@ -845,9 +862,8 @@ class ProfileRepository:
         leaves a recoverable trace, then recursively deleted. When the
         rename is refused — Windows denies renaming a directory whose
         SQLite file was only just closed — the directory is removed in
-        place. Removal is best-effort: a residual directory must not
-        mask the original failure being re-raised, and a directory
-        with no secure-object row is detectable, reclaimable garbage.
+        place. A removal failure propagates so the create rollback can preserve
+        it alongside the original create failure.
         """
         import gc
 
@@ -864,7 +880,11 @@ class ProfileRepository:
         self._remove_tree_best_effort(trash, reason="create_rollback_trash")
 
     def _remove_tree_best_effort(self, target: Path, *, reason: str) -> None:
-        """Remove a directory without masking the caller's original failure."""
+        """Remove a directory, logging and re-raising ``OSError``.
+
+        The historical name is retained; the create rollback aggregates a
+        cleanup failure with the original create failure.
+        """
         import shutil
 
         try:
@@ -877,41 +897,7 @@ class ProfileRepository:
                 type(exc).__name__,
                 exc_info=True,
             )
-
-    def _read_pointer_text(self) -> str | None:
-        """Return the raw active-profile pointer text, or ``None`` if absent."""
-        target = pointer_path(self._root)
-        if not target.is_file():
-            return None
-        return target.read_text(encoding=_UTF_8_ENCODING)
-
-    def _restore_pointer_text(self, prior_text: str | None) -> None:
-        """Restore the active-profile pointer to a previously captured state.
-
-        A rolled-back ``create`` must leave the pointer exactly as it
-        was found: if there was no pointer it is removed, otherwise its
-        prior bytes are written back.
-        """
-        target = pointer_path(self._root)
-        if prior_text is None:
-            if target.is_file():
-                target.unlink()
-            return
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(prior_text, encoding=_UTF_8_ENCODING)
-
-    def _active_pointer_targets(self, profile_id: str) -> bool:
-        """Return whether the active-profile pointer aims at ``profile_id``."""
-        from ...core import read_pointer
-
-        pointer = read_pointer(self._root)
-        return pointer is not None and pointer.bucket_id == profile_id
-
-    def _clear_pointer(self) -> None:
-        """Remove the active-profile pointer file if present."""
-        target = pointer_path(self._root)
-        if target.is_file():
-            target.unlink()
+            raise
 
 
 __all__ = ["ProfileRepository", "ProfileSummary"]

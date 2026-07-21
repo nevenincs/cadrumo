@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#profile-keys-i18n-migration'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2025-02-13-profile-keys-i18n-migration-adr]]'
   - '[[2025-02-13-profile-keys-i18n-migration-exec]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#profile-keys-i18n-migration`
 
 ### adr
 
-- `2025-02-13-profile-keys-i18n-migration-adr` - `profile-keys-i18n-migration` adr
+- `2025-02-13-profile-keys-i18n-migration-adr` - `profile-keys-i18n-migration` adr | (**status:** `accepted`)
 
 ### exec
 

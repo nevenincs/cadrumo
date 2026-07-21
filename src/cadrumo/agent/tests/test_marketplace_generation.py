@@ -7,8 +7,7 @@ cannot drift: the served plugin is byte-identical to a standalone
 ``materialise_plugin`` emission, and the checked-in scaffold under
 ``packaging/marketplace`` stays in lock-step with the generator's manifest.
 Where the ``claude`` CLI is on PATH the emitted marketplace additionally passes
-``claude plugin validate --strict``; the structural assertions always run so
-the suite never silently degrades to a validator-only skip.
+``claude plugin validate --strict``; the structural assertions always run.
 """
 
 from __future__ import annotations
@@ -36,8 +35,12 @@ def test_marketplace_manifest_is_schema_shaped_and_resolves_to_the_plugin(tmp_pa
 
     document = json.loads((tmp_path / ".claude-plugin" / "marketplace.json").read_text(encoding=_UTF_8))
     assert document["name"] == "neve"
-    assert isinstance(document["owner"], dict) and document["owner"]["name"]
-    assert document["description"]
+    assert document["owner"] == {"name": "CADRUMO tax assistant project"}
+    # Bilingual marketplace description (EN + ES).
+    description = document["description"]
+    assert description.startswith("English: Neve plugin marketplace - Claude plugins")
+    assert "\nEspañol: " in description
+    assert "it never files" in description.lower()
     (entry,) = document["plugins"]
     assert entry["name"] == "cadrumo"
     assert entry["source"] == manifest.plugin_source == "./plugins/cadrumo"

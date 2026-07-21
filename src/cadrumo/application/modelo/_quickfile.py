@@ -47,7 +47,7 @@ from pydantic import BaseModel
 
 from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Period, RefundElection
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 from ...core.logging import get_logger
 from ...domain.deadlines import TaxpayerProfile
 from ...domain.modelos import CalculationRevision, VerificationReport, WorkUnit
@@ -108,7 +108,7 @@ class QuickfileStageOutcome:
     """The typed result of one quickfile stage.
 
     ``translated_message`` and ``context`` carry the originating
-    :class:`core.errors.AeatError` metadata verbatim so the transport layer
+    :class:`core.errors.CadrumoError` metadata verbatim so the transport layer
     can localise the refusal without the application layer depending on i18n.
     """
 
@@ -176,7 +176,7 @@ class QuickfileCommand(BaseModel):
     refund_election: RefundElection = RefundElection.COMPENSAR
 
 
-def _refusal_outcome(stage: QuickfileStage, exc: AeatError) -> QuickfileStageOutcome:
+def _refusal_outcome(stage: QuickfileStage, exc: CadrumoError) -> QuickfileStageOutcome:
     """Build a REFUSED outcome carrying the error's localisation metadata."""
     context = {str(key): str(value) for key, value in (exc.context or {}).items()}
     return QuickfileStageOutcome(
@@ -207,7 +207,7 @@ def run_modelo_quickfile(
 
     Each stage delegates to its authoritative application service. The chain
     halts at the first stage that refuses (a raised
-    :class:`core.errors.AeatError`, or an ungranted verification), records
+    :class:`core.errors.CadrumoError`, or an ungranted verification), records
     the refusal, and marks the remaining stages skipped.
 
     ``build_calculation_inputs`` is the transport-supplied factory that turns the
@@ -241,7 +241,7 @@ def run_modelo_quickfile(
             period=command.period,
             registry_revision_id=command.registry_revision_id,
         )
-    except AeatError as exc:
+    except CadrumoError as exc:
         stages.append(_refusal_outcome(QuickfileStage.READINESS, exc))
         stages.extend(_skipped_after(QuickfileStage.READINESS))
         return QuickfileResult(
@@ -272,7 +272,7 @@ def run_modelo_quickfile(
             registry_revision_id=command.registry_revision_id,
             actor=command.actor,
         )
-    except AeatError as exc:
+    except CadrumoError as exc:
         return _halted(
             command,
             registry_revision_id=registry_revision_id,
@@ -298,7 +298,7 @@ def run_modelo_quickfile(
             actor=command.actor,
             inputs=calculation_inputs,
         )
-    except AeatError as exc:
+    except CadrumoError as exc:
         return _halted(
             command,
             registry_revision_id=registry_revision_id,
@@ -323,7 +323,7 @@ def run_modelo_quickfile(
             actor=command.actor,
             workflow_profile=workflow_profile,
         )
-    except AeatError as exc:
+    except CadrumoError as exc:
         return _halted(
             command,
             registry_revision_id=registry_revision_id,
@@ -377,7 +377,7 @@ def run_modelo_quickfile(
             ),
             workflow_profile=workflow_profile,
         )
-    except AeatError as exc:
+    except CadrumoError as exc:
         return _halted(
             command,
             registry_revision_id=registry_revision_id,
@@ -454,7 +454,7 @@ def _resolve_readiness(
 
     Readiness is imported lazily so the ``application.modelo`` package facade
     does not import ``application.state_projection`` at load time. A raised
-    :class:`core.errors.AeatError` degrades to ``None`` (advisory only):
+    :class:`core.errors.CadrumoError` degrades to ``None`` (advisory only):
     readiness never blocks the chain, so a projection failure must not abort it.
     """
     from ..state_projection import ModeloReadinessRequest, build_operator_state_projection
@@ -470,7 +470,7 @@ def _resolve_readiness(
                 ),
             ),
         )
-    except AeatError:
+    except CadrumoError:
         _log.debug("quickfile readiness projection failed; continuing", exc_info=True)
         return None
     if not projection.modelo_readiness:

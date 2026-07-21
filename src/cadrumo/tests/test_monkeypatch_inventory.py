@@ -20,9 +20,6 @@ See Also:
     :class:`_PatchInventorySites`
         AST-level monkeypatch mutation, context, and reference sites collected
         for each inspected source tree.
-    ``.vault/audit/2026-05-13-eliminate-shims-audit.md``
-        Records the test-hygiene baseline that identified monkeypatch
-        replacement as part of the no-shim campaign.
 """
 
 from __future__ import annotations

@@ -67,7 +67,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> str:
     would reject the already-present manifest.
     """
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name=_PROFILE_ID,

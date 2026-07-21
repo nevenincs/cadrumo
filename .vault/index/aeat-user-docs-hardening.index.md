@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-user-docs-hardening'
-date: '2026-07-04'
-modified: '2026-07-10'
+date: '2026-07-17'
+modified: '2026-07-17'
 related:
   - '[[2026-06-16-aeat-user-docs-hardening-S01]]'
   - '[[2026-06-16-aeat-user-docs-hardening-S02]]'
@@ -40,7 +40,6 @@ related:
   - '[[2026-06-16-aeat-user-docs-hardening-S32]]'
   - '[[2026-06-16-aeat-user-docs-hardening-plan]]'
   - '[[2026-06-18-aeat-user-docs-hardening-audit]]'
-  - '[[2026-07-04-aeat-user-docs-hardening-adr]]'
 ---
 
 # `aeat-user-docs-hardening` feature index
@@ -48,10 +47,6 @@ related:
 Auto-generated index of all documents tagged with `#aeat-user-docs-hardening`.
 
 ## Documents
-
-### adr
-
-- `2026-07-04-aeat-user-docs-hardening-adr` - `aeat-user-docs-hardening` adr: `user docs hardening authority alignment` | (**status:** `accepted`)
 
 ### audit
 

@@ -749,7 +749,7 @@ class Transaction(BaseModel):
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = ()
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
-    # FX provenance (ledger-fx-conversion ADR): the rate source label (e.g.
+    # FX provenance: the rate source label (e.g.
     # "ecb_reference") and the effective rate date as an ISO-8601 string.
     # Optional; populated at import when a normalizer supplied them. Cannot
     # exist without an fx_rate (a rate provenance with no rate is
@@ -1339,8 +1339,7 @@ class OutOfWindowTransactionIndexEntry(BaseModel):
     aggregator needs to report the transaction as excluded --
     ``transaction_id`` and its ``filing_date`` -- never any decrypted field
     (amount, category, counterparty, direction, business classification).
-    This is the O2 period-first partition contract
-    (``2026-07-05-ledger-latency-budget-adr``): an out-of-window row is
+    This is the period-first partition contract: an out-of-window row is
     diagnosed from the plaintext date-index fact alone, without paying the
     decrypt-and-validate cost, and without leaking anything the index itself
     does not already carry.
@@ -1355,9 +1354,8 @@ class OutOfWindowTransactionIndexEntry(BaseModel):
 class OutOfWindowTransactionSummary(BaseModel):
     """Compact diagnostics-only summary for out-of-window catalogue rows.
 
-    Carries only the facts authorized by the 2026-07-06 diagnostic-summary
-    amendment to the latency ADR: excluded-row count and the filing-date span
-    covered by those rows. It never carries decrypted transaction facts.
+    Carries only the excluded-row count and the filing-date span covered
+    by those rows. It never carries decrypted transaction facts.
     """
 
     model_config = _STRICT_FROZEN

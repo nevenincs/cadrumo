@@ -16,12 +16,13 @@ import pytest
 from click.testing import Result
 
 from ....application.live import JustificanteCaptureSnapshotService
-from ....application.user_profile import profile_create_storage_span, register_minimal_profile
+from ....application.user_profile import profile_create_storage_span
 from ....application.workflow import workflow_state_repository
 from ....core import Period
 from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 # INTENTIONAL: integration because it exercises the local justificante read verbs and
 # registration wiring without contacting AEAT.

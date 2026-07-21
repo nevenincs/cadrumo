@@ -5,8 +5,7 @@ or constructs a :class:`adapters.outbound.aeat.browser.DefaultBrowserSession`.
 It is guarded by :class:`domain.calculations.registry.RemoteStateGuardPolicy`
 and never mutates AEAT-side state. The contract is:
 
-* open the Sede verification page,
-* enter the CSV,
+* open the CSV-keyed Sede viewer,
 * read back the server response,
 * return ``True`` iff AEAT confirms the document as valid.
 
@@ -14,11 +13,10 @@ The function degrades gracefully when a browser cannot be
 constructed and surfaces the underlying error to the caller via
 :class:`domain.justificante.JustificanteVerificationError`.
 
-Public surface: :func:`verify_csv` plus the Playwright protocol
-types (:class:`VerifyBrowserKeyboardLike`, :class:`VerifyBrowserPageLike`,
-:class:`VerifyBrowserContextLike`, :class:`VerifyBrowserSessionLike`,
-:class:`VerifyBrowserSessionFactory`) that let the helper be unit-tested
-without spinning up a real browser.
+Public surface: :func:`verify_csv` plus the Playwright protocol types
+(:class:`VerifyBrowserPageLike`, :class:`VerifyBrowserContextLike`,
+:class:`VerifyBrowserSessionLike`, and :class:`VerifyBrowserSessionFactory`)
+shared by the concrete browser adapters.
 
 See Also:
     :func:`adapters.outbound.aeat.browser.default_browser_session_factory`
@@ -27,19 +25,21 @@ See Also:
         Concrete browser session whose context/page surface these protocols
         mirror.
     :func:`domain.calculations.registry.assert_remote_operation_allowed`
-        Guard used to allow only the reviewed read-only CSV verification URL and
-        browser action token.
+        Guard used to allow only the reviewed read-only CSV verification URL.
 """
 
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from typing import Any, Protocol, TypeGuard, runtime_checkable
+from urllib.parse import parse_qs, urlencode, urlsplit
 
+from bs4 import BeautifulSoup
 from pydantic import AnyUrl
 
+from .....core.async_cleanup import close_async_resources as _close_async_resources
 from .....core.config import Settings as _Settings
-from .....core.errors import AeatError as _AeatError
+from .....core.errors import CadrumoError as _CadrumoError
 from .....core.logging import get_logger as _get_logger
 from .....domain.calculations.registry import (
     RemoteOperation as _RemoteOperation,
@@ -57,56 +57,35 @@ from ..sede import BrowserAdapterTypeError as _BrowserAdapterTypeError
 _logger = _get_logger(__name__)
 
 _VERIFY_EXTERNAL = _Settings.external_constants()
-_VERIFY_URL = f"{_VERIFY_EXTERNAL.aeat.domains.sede}{_VERIFY_EXTERNAL.aeat.help_pages.csv_verification}"
-_VERIFY_HOST = _VERIFY_EXTERNAL.aeat.domains.sede.removeprefix("https://")
+_VERIFY_URL = f"{_VERIFY_EXTERNAL.aeat.domains.www2}{_VERIFY_EXTERNAL.aeat.sede_paths.cotejo_query}"
+_VERIFY_HOST = _VERIFY_EXTERNAL.aeat.domains.www2.removeprefix("https://")
 _VERIFY_GUARD_POLICY = _RemoteStateGuardPolicy(
     id="aeat-csv-verifier-read",
     evidence_tier="official_source_guidance",
     classification="public_read_surface",
     allowed_hosts=(_VERIFY_HOST,),
-    allowed_browser_action_patterns=_VERIFY_EXTERNAL.aeat.live_safety.csv_verify_browser_action_patterns,
+    allowed_browser_action_patterns=(),
     synthetic_data_allowed=False,
     requires_authentication=False,
     requires_aeat_authorization=False,
 )
 
 
-class VerifyBrowserKeyboardLike(Protocol):
-    """Subset of Playwright's ``Keyboard`` API used by :func:`verify_csv`.
-
-    The protocol keeps the fallback query path testable without importing a
-    concrete Playwright ``Keyboard`` at runtime.
-    """
-
-    async def type(self, value: str) -> None:
-        """Type ``value`` into the focused element character by character."""
-        ...
-
-    async def press(self, key: str) -> None:
-        """Dispatch a key-press event for ``key`` (e.g. ``"Enter"``)."""
-        ...
-
-
 class VerifyBrowserPageLike(Protocol):
     """Subset of Playwright's ``Page`` API used by :func:`verify_csv`.
 
-    The page surface is intentionally small: navigation to the reviewed Sede URL,
-    CSV entry through a selector or keyboard fallback, and HTML content capture
-    for the confirmation-token parse.
+    The page surface is intentionally small: navigation to the reviewed
+    CSV-keyed Sede URL and HTML content capture for exact result-URL and
+    document-viewer validation.
     """
 
-    keyboard: VerifyBrowserKeyboardLike
+    @property
+    def url(self) -> str:
+        """Return the page's current absolute URL."""
+        ...
 
     async def goto(self, url: str) -> object | None:
         """Navigate the page to ``url`` and return the primary response."""
-        ...
-
-    async def fill(self, selector: str, value: str) -> None:
-        """Clear and fill the element matched by ``selector`` with ``value``."""
-        ...
-
-    async def press(self, selector: str, key: str) -> None:
-        """Focus the element matched by ``selector`` and press ``key``."""
         ...
 
     async def content(self) -> str:
@@ -150,7 +129,6 @@ class VerifyBrowserSessionLike(Protocol):
         self,
         *,
         provisioner: Any | None = None,
-        storage_state_path: Any | None = None,
         storage_state: Any | None = None,
     ) -> VerifyBrowserContextLike:
         """Create and return a configured :class:`VerifyBrowserContextLike`."""
@@ -178,27 +156,19 @@ def _is_verify_browser_session_like(obj: object) -> TypeGuard[VerifyBrowserSessi
     return callable(getattr(obj, "create_context", None)) and callable(getattr(obj, "close", None))
 
 
-async def _build_default_browser_session(
-    factory: Callable[..., Awaitable[object]] | None = None,
-) -> VerifyBrowserSessionLike:
+async def _build_default_browser_session() -> VerifyBrowserSessionLike:
     """Construct the default :class:`VerifyBrowserSessionLike`.
 
     Loads :func:`core.config.load_settings`, materialises the
     central :func:`adapters.outbound.aeat.browser.default_browser_session_factory`,
     checks the result with :func:`_is_verify_browser_session_like`, and returns
     a session the caller is responsible for closing.
-
-    The ``factory`` parameter is a DI seam for the type-guard test that
-    asserts the boundary raises :class:`_BrowserAdapterTypeError` when
-    the factory returns an incompatible type; production callers omit
-    it and the central browser factory is used.
     """
     from .....core.config import load_settings
     from ..browser import default_browser_session_factory
 
     settings = load_settings()
-    resolved_factory = factory or default_browser_session_factory
-    session = await resolved_factory(settings)
+    session = await default_browser_session_factory(settings)
     if not _is_verify_browser_session_like(session):
         raise _BrowserAdapterTypeError(
             f"default_browser_session_factory returned an incompatible type: {type(session)}",
@@ -218,10 +188,10 @@ async def verify_csv(
 ) -> bool:
     """Verify a justificante CSV against AEAT's Sede electrónica.
 
-    The helper normalises the CSV, opens the reviewed public Sede verification
-    URL under the read-only guard, submits the CSV, and parses the returned HTML
-    for AEAT confirmation tokens. Passing ``browser`` borrows the session from
-    the caller; omitting it builds a self-owned session through
+    The helper normalises the CSV, opens AEAT's reviewed CSV-keyed public viewer
+    under the read-only guard, and parses the returned HTML for the exact
+    CSV-bound document iframe. Passing ``browser`` borrows the
+    session from the caller; omitting it builds a self-owned session through
     ``browser_session_factory`` or :data:`DEFAULT_BROWSER_SESSION_FACTORY` and
     closes that session after the round-trip.
 
@@ -252,41 +222,57 @@ async def verify_csv(
             factory = browser_session_factory or DEFAULT_BROWSER_SESSION_FACTORY
             session = await factory()
             own_browser = True
-        except (_PlaywrightError, _AeatError) as exc:
+        except (_PlaywrightError, _CadrumoError) as exc:
             raise _JustificanteVerificationError(f"failed to construct default BrowserSession: {exc}") from exc
 
+    context: VerifyBrowserContextLike | None = None
     try:
         context = await session.create_context()
-        try:
-            page = await context.new_page()
-            _assert_verify_http("GET", _VERIFY_URL)
-            await page.goto(_VERIFY_URL)
-            # The actual Sede electrónica form ID varies by year; we probe
-            # for a text field labelled CSV and fall back to the first
-            # input on the page.
-            try:
-                _assert_verify_action("csv-verifier-query")
-                await page.fill("input[name*='csv' i]", csv)
-                await page.press("input[name*='csv' i]", "Enter")
-            except _PlaywrightError:
-                _assert_verify_action("csv-verifier-query")
-                await page.keyboard.type(csv)
-                await page.keyboard.press("Enter")
-            body = (await page.content()).lower()
-            valid = ("válido" in body) or ("valido" in body) or ("correcto" in body)
-            return valid
-        finally:
-            await context.close()
+        page = await context.new_page()
+        verification_url = f"{_VERIFY_URL}?{urlencode({'CSV': csv})}"
+        _assert_verify_http("GET", verification_url)
+        await page.goto(verification_url)
+        return _response_confirms_valid_csv(
+            await page.content(),
+            expected_csv=csv,
+            final_url=page.url,
+        )
     except _JustificanteVerificationError:
         raise
     except Exception as exc:
         raise _JustificanteVerificationError(f"live CSV verification failed for {csv}: {exc}") from exc
     finally:
-        if own_browser and session is not None:
-            try:
-                await session.close()
-            except Exception as exc:  # pragma: no cover - defensive
-                _logger.debug("browser session close failed: %s", exc, exc_info=True)
+        await _close_async_resources(
+            context,
+            session if own_browser else None,
+            task_name="cadrumo-verify-csv-close",
+        )
+
+
+def _response_confirms_valid_csv(body: str, *, expected_csv: str, final_url: str) -> bool:
+    """Return whether AEAT rendered a concrete document viewer.
+
+    The live-grounded AEAT verifier reference records this exact viewer route
+    and its CSV-bound document iframe. Unknown HTML fails closed rather than
+    trusting generic words such as ``válido`` or ``correcto``.
+    """
+    final = urlsplit(final_url)
+    if final.scheme != "https" or final.netloc != _VERIFY_HOST:
+        return False
+    if final.path != _VERIFY_EXTERNAL.aeat.sede_paths.cotejo_query:
+        return False
+
+    soup = BeautifulSoup(body, "html.parser")
+    viewer = soup.find("iframe", id="iframe-visualiza")
+    if viewer is None:
+        return False
+    source = str(viewer.get("src", ""))
+    parsed = urlsplit(source)
+    if parsed.netloc and parsed.netloc != _VERIFY_HOST:
+        return False
+    if parsed.path != _VERIFY_EXTERNAL.aeat.sede_paths.cotejo_document:
+        return False
+    return parse_qs(parsed.query).get("CSV") == [expected_csv]
 
 
 def _assert_verify_http(method: str, url: str) -> None:
@@ -296,17 +282,9 @@ def _assert_verify_http(method: str, url: str) -> None:
     )
 
 
-def _assert_verify_action(action: str) -> None:
-    _assert_remote_operation_allowed(
-        _VERIFY_GUARD_POLICY,
-        _RemoteOperation(kind="browser_action", action=action),
-    )
-
-
 __all__ = [
     "DEFAULT_BROWSER_SESSION_FACTORY",
     "VerifyBrowserContextLike",
-    "VerifyBrowserKeyboardLike",
     "VerifyBrowserPageLike",
     "VerifyBrowserSessionFactory",
     "VerifyBrowserSessionLike",

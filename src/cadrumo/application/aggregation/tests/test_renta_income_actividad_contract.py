@@ -253,7 +253,7 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06(
 def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> None:
     """Casilla 01 projection carries computable income, never IVA-inclusive gross.
 
-    Testimonial repro shape: a tagged professional invoice (1000 base +
+    A tagged professional invoice (1000 base +
     210 IVA = 1210 gross) plus an untagged 500 receipt. Casilla 01 must
     project 1500 (base + gross fallback) — not 1710 (gross sum, an IVA
     over-declaration) and not 1000 (base-only, dropping the untagged

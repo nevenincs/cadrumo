@@ -1,4 +1,4 @@
-"""Self-test for the shared :mod:`_repository_test_suite` contract.
+"""Self-test for the shared repository contract support.
 
 Runs :func:`assert_secure_repository_contract` against a throwaway
 :class:`SecureBoundRepository[_ContractPayload]` subclass to prove the
@@ -27,12 +27,12 @@ from ......core.config import Settings
 from ... import SensitivityClass
 from ...sql import Base, SecureObjectRepository
 from ...sql.engine import create_engine_from_settings
-from .._repository_test_suite import (
+from .._secure_repository import SecureBoundRepository
+from ._repository_contract_support import (
     EXPECTED_CHECK_COUNT,
     SecureRepositoryContractCase,
     assert_secure_repository_contract,
 )
-from .._secure_repository import SecureBoundRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -68,7 +68,7 @@ from ...domain.calculations.registry import (
 from ...domain.iva_compensation import IvaCompensationCasillaReferenceError, IvaCompensationPeriodState
 from ._errors import BindingPrefillTypeError
 from ._iva_compensation_history import IvaCompensationHistoryRepository
-from ._observations_repository import CalculationObservationRepository, _ObservationEnvelopePayload
+from ._observations_repository import CalculationObservationRepository, ObservationEnvelopePayload
 from ._revision_carry_gate import revision_carry_outcome
 
 
@@ -121,14 +121,13 @@ _M303_GENERADA_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-generad
 _M303_DISPONIBLE_CASILLA: Final[CasillaId] = _casilla_id("iva.compensacion-disponible-fin-periodo")
 
 
-def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> bool:
+def _revision_carry_outcome(payload: ObservationEnvelopePayload) -> bool:
     """Return whether a payload's revision stamp must be refused.
 
     Thin adapter over the single shared
     :func:`~application.calculations._revision_carry_gate.revision_carry_outcome`
-    gate (ADR 2026-06-10-period-revision-resolution-adr, Ruling 3 / R2): it
-    extracts the source context off the payload's observation and delegates the
-    refusal decision so the binding-prefill, cross-period
+    gate: it extracts the source context off the payload's observation and
+    delegates the refusal decision so the binding-prefill, cross-period
     clean-state, and relation-prefill carry reads share one law-determined
     re-confirmation rather than three parallel copies.
     """
@@ -138,16 +137,7 @@ def _revision_carry_outcome(payload: _ObservationEnvelopePayload) -> bool:
         source_modelo=obs.modelo,
         source_filing_year=obs.filing_year,
         source_period=obs.period,
-    )
-
-
-def _revision_prefill_divergence(payload: _ObservationEnvelopePayload) -> bool:
-    """Return True when the payload's stamped revision cannot be re-confirmed.
-
-    See :func:`_revision_carry_outcome` — a divergent or unreconfirmable stamp
-    means the carry must be refused (the caller drops the observation).
-    """
-    return _revision_carry_outcome(payload)
+    ).refused
 
 
 class _GatheredObservation(BaseModel):
@@ -293,7 +283,7 @@ def _gather_grouped_member_observations(
         )
 
 
-def _gathered_from_payload(payload: _ObservationEnvelopePayload | None) -> _GatheredObservation | None:
+def _gathered_from_payload(payload: ObservationEnvelopePayload | None) -> _GatheredObservation | None:
     """Apply the R2 carry gate to a single-key payload.
 
     Divergent or unreconfirmable source revision stamps refuse the carry.

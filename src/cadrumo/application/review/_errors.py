@@ -1,19 +1,19 @@
 """Error hierarchy for the unified review queue.
 
 All review-layer errors inherit from :class:`ReviewError`, which in
-turn inherits from :class:`cadrumo.core.errors.AeatError` per the
+turn inherits from :class:`cadrumo.core.errors.CadrumoError` per the
 project's package-wide error-base mandate. Callers can therefore catch
 either :class:`ReviewError` for review-specific failures or the
-package-wide :exc:`cadrumo.core.errors.AeatError` to handle every aeat
+package-wide :exc:`cadrumo.core.errors.CadrumoError` to handle every aeat
 domain error uniformly.
 """
 
 from __future__ import annotations
 
-from ...core.errors import AeatError
+from ...core.errors import CadrumoError
 
 
-class ReviewError(AeatError):
+class ReviewError(CadrumoError):
     """Base class for every error raised by :mod:`cadrumo.application.review`."""
 
 

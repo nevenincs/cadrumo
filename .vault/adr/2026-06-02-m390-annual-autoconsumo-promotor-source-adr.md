@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#m390-annual-autoconsumo-promotor-source'
 date: '2026-06-02'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
-  - "[[2026-06-01-m303-form-vs-semantic-casilla-dual-keying-adr]]"
+  - "[[2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr]]"
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - '[[2026-06-04-m390-annual-autoconsumo-promotor-source-research]]'
 ---
@@ -34,7 +34,7 @@ Fix requires a new binding source on M390 that produces the annual autoconsumo-p
 
 1. **Semantic correctness.** M390 IS the annual summary of four quarterly M303 filings. Per AEAT M390 instructions (Orden HAC/171/2025 and predecessors), every M390 casilla aggregates over the four trimestres' equivalent M303 casillas. The autoconsumo-promotor base is no exception — it's a quarterly-aggregable concept (Art. 9.1.c LISIVA recognises autoconsumo at the moment of operation per Art. 79.4, which crosses quarters during a single fiscal year). Sourcing from four M303s mirrors the regulatory aggregation directly.
 
-2. **Precedent exists.** M390's existing binding suite at `src/aeat/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/bindings/0001-bindings.toml` ALREADY uses `previous_filing` selectors against quarterly M303 sources. The new binding follows an established pattern, not a novel one.
+2. **Precedent exists.** M390's existing binding suite at `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2010-y-siguientes/bindings/0001-bindings.toml` ALREADY uses `previous_filing` selectors against quarterly M303 sources. The new binding follows an established pattern, not a novel one.
 
 3. **Operator UX.** Option (a) (profile-sourced manual transcription) would re-introduce the per-filing transcription burden M390 was designed to eliminate. An autonomo with autoconsumo-promotor operations would have to manually copy the annual base from their four quarterly filings into M390. The reconciliation test catching the −21 today would catch operator transcription errors tomorrow — same failure mode, different surface.
 

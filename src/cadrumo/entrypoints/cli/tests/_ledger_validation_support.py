@@ -10,16 +10,13 @@ from pathlib import Path
 from click.testing import Result
 
 from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....application.user_profile import (
-    profile_create_storage_span,
-    register_minimal_profile,
-    set_active_fields,
-)
+from ....application.user_profile import profile_create_storage_span, set_active_fields
 from ....application.workflow import workflow_state_repository
 from ....core.config import override_settings
 from ....domain.user_profile import UserProfileFact
 from ....tests.cli_runner import invoke_cached_cli
 from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.user_profile import register_minimal_profile
 
 _PROFILE_ID = "9e0f3a2b-5d1c-4a77-9b2d-27ed6d6c7f10"
 _PROFILE_LABEL = "tester"

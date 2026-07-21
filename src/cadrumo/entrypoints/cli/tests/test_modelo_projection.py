@@ -59,6 +59,7 @@ from ....core.resources import resources
 from ....domain.calculations.registry import CasillaId, calculate_registry_snapshot, validated_casilla_id
 from ....domain.user_profile import UserProfileFact, UserProfileRecord, UserProfileStatus
 from ....tests.cli_runner import invoke_cached_cli
+from ....tests.modelo_cli import create_modelo_work_unit_via_cli
 from ....tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ._m130_source_support import seed_m130_income_transaction
 from .envelope_helpers import unwrap_schema_envelope as _payload
@@ -230,7 +231,7 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed an autónomo (estimación directa) IRPF profile."""
 
     record = UserProfileRecord(
-        schema_id="aeat.user_profile",
+        schema_id="cadrumo.user_profile",
         schema_version=1,
         profile_id=_PROFILE_ID,
         display_name=_PROFILE_LABEL,
@@ -268,21 +269,6 @@ def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
     lifecycle.save(record)
 
 
-def _create_work_unit(modelo: str, year: str, period: str, revision: str) -> str:
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", modelo,
-            "--year", year,
-            "--period", period,
-            "--revision", revision,
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)["work_unit_id"]
-
-
 def test_modelo_project_no_units_guides_natural_m130_creation(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
@@ -310,9 +296,9 @@ def test_modelo_project_no_revisions_guides_natural_m130_calculation(
     runtime_profile: TestRuntimeProfile,
 ) -> None:
     _seed_autónomo_profile(runtime_profile)
-    _create_work_unit(
+    create_modelo_work_unit_via_cli(
         modelo="130",
-        year=str(_FILING_YEAR),
+        filing_year=_FILING_YEAR,
         period="1T",
         revision="2019-y-siguientes",
     )
@@ -353,9 +339,9 @@ def test_modelo_project_2025_uses_revision_declared_default_bindings(
         source_key="projection-2025-1T",
         value_date=date(filing_year, 2, 15),
     )
-    work_unit_id = _create_work_unit(
+    work_unit_id = create_modelo_work_unit_via_cli(
         modelo="130",
-        year=str(filing_year),
+        filing_year=filing_year,
         period="1T",
         revision="2019-y-siguientes",
     )
@@ -451,9 +437,9 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
 
     # -- Create and calculate 4 M130 quarterly work units -------------------
     for period in ("1T", "2T", "3T", "4T"):
-        work_unit_id = _create_work_unit(
+        work_unit_id = create_modelo_work_unit_via_cli(
             modelo="130",
-            year=str(_FILING_YEAR),
+            filing_year=_FILING_YEAR,
             period=period,
             revision="2019-y-siguientes",
         )

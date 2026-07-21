@@ -1,22 +1,21 @@
-"""Interim extraction-sidecar contract for the dev-side RAG index.
+"""Corpus extraction: the product's committed text payload and the dev-index hook.
 
-Defines the versioned :class:`PreprocessOutput` schema that the
-project-side document preprocessors (BOE normatives HTML, Disenos de
-Registro workbooks, corpus PDFs, the unsupported-text tail) emit so the
-binary and unsupported-extension grounding corpus becomes indexable by the
-resident ``vaultspec-rag`` walker. The walker has no preprocess-hook
-capability yet, so this package materialises extracted text as committed
-``*.extracted.md`` sidecars next to each source file plus a
-``*.extracted.json`` provenance sidecar; the walker already indexes ``.md``,
-so the sidecars enter the code index with zero upstream change.
+Defines the versioned :class:`PreprocessOutput` schema the project-side
+document preprocessors (BOE normatives HTML, Disenos de Registro workbooks,
+corpus PDFs) emit, and serves two consumers from that one extraction truth:
 
-This is the interim path adjudicated in the ``docs-terminology-search``
-ADR decision D6 (the index-capability prerequisite). It is a
-forward-compatible precursor of the generic upstream preprocess-output
-schema requested from the ``vaultspec-rag`` team: when the upstream hook
-lands, the preprocessors emit the upstream schema directly and this sidecar
-tree is retired. The sidecar fields are a subset/precursor of that upstream
-contract so the migration is mechanical.
+* **The committed sidecar payload** — ``*.extracted.md`` text plus
+  ``*.extracted.json`` provenance next to each corpus source. These are
+  PRODUCT data, not an indexing workaround: the wheel ships the extracted
+  text while excluding the source binaries, the offline corpus search builds
+  its lexical index from the ``*.html.extracted.json`` triples, and the
+  manual-oracle grounding anchors cite line ranges inside ``*.extracted.md``.
+  The freshness gate keeps them true to the sources.
+* **The upstream preprocess hook** — :mod:`.hook` adapts the same extractor
+  outputs onto the upstream ``vaultspec-rag`` ``PreprocOutput`` contract, so
+  the resident dev index reads the corpus straight from the SOURCE files via
+  the repo-root ``.vaultragpreprocess.toml`` rules (the sidecars are
+  ``.vaultragignore``-excluded from that index to avoid double counting).
 
 Major declarations:
 

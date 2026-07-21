@@ -1,0 +1,463 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2026.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 13:10+0200\n"
+"PO-Revision-Date: 2026-07-18 13:10+0000\n"
+"Last-Translator: Cadrumo translation team <docs@cadrumo.example>\n"
+"Language: ca\n"
+"Language-Team: ca <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../how-to/choose-modelo.md:1
+msgid "Find out which modelos apply to you"
+msgstr "Descobreix quins models se t'apliquen"
+
+#: ../../how-to/choose-modelo.md:3
+msgid ""
+"A modelo is a numbered official AEAT tax form, such as 303 for IVA or 130"
+" for quarterly income-tax instalments. Use this guide to ask the tool "
+"whether a given modelo applies to you, and why. The tool computes the "
+"answer locally from your saved profile facts, so it's only as good as the"
+" profile you keep. For deadlines and what's due when, see the [filing "
+"calendar guide](filing-calendar.md)."
+msgstr ""
+"Un model és un formulari tributari oficial numerat de l'AEAT, com ara el "
+"303 per a l'IVA o el 130 per als pagaments fraccionats trimestrals de "
+"l'IRPF. Utilitza aquesta guia per preguntar a l'eina si un model "
+"determinat se t'aplica, i per què. L'eina calcula la resposta localment a"
+" partir de les dades desades al teu perfil, de manera que només és tan "
+"bona com el perfil que mantens. Per als terminis i què cal presentar i "
+"quan, consulta la [guia del calendari de presentacions](filing-"
+"calendar.md)."
+
+#: ../../how-to/choose-modelo.md:5
+msgid "Before you start"
+msgstr "Abans de començar"
+
+#: ../../how-to/choose-modelo.md:7
+msgid "You need:"
+msgstr "Necessita:"
+
+#: ../../how-to/choose-modelo.md:9
+msgid ""
+"An active profile with your taxpayer type, activity, and regime facts "
+"filled in. See the [profile setup guide](profile-setup.md), or the "
+"[quickstart](quickstart.md) if you're starting from nothing."
+msgstr ""
+"Un perfil actiu amb les dades del teu tipus de contribuent, activitat i "
+"règim emplenades. Consulta la [guia de configuració del perfil](profile-"
+"setup.md), o el [començament ràpid](quickstart.md) si parteixes de zero."
+
+#: ../../how-to/choose-modelo.md:10
+msgid ""
+"Your master-key passphrase. Every profile-scoped command needs it; the "
+"tool prompts for it."
+msgstr ""
+"La contrasenya de la clau mestra. Cada ordre d'àmbit de perfil la "
+"necessita; l'eina te la demana."
+
+#: ../../how-to/choose-modelo.md:12
+msgid ""
+"Check the profile first with `aeat config profile status`. It confirms "
+"the profile exists and carries the basics. If a fact is missing, the "
+"verdict says so. The CLI emits the rationale, legal references, and "
+"refusals in Spanish."
+msgstr ""
+"Comprova primer el perfil amb `aeat config profile status`. Confirma que "
+"el perfil existeix i que porta les dades bàsiques. Si falta alguna dada, "
+"el veredicte ho indica. La CLI emet la justificació, les referències "
+"legals i els rebuigs en castellà."
+
+#: ../../how-to/choose-modelo.md:14
+msgid "Ask whether one modelo applies"
+msgstr "Pregunta si un model concret se t'aplica"
+
+#: ../../how-to/choose-modelo.md:16
+msgid ""
+"Run `overview explain` with the modelo code. By default the tool answers "
+"for the current year; to ask about a different year, add `--year`. The "
+"card below confirms the profile, asks whether Modelo 303 applies for "
+"2026, then checks readiness for the first quarter, the whole diagnostic "
+"flow in order."
+msgstr ""
+"Executa `overview explain` amb el codi del model. Per defecte, l'eina "
+"respon per a l'any actual; per preguntar per un any diferent, afegeix "
+"`--year`. La targeta següent confirma el perfil, pregunta si el Model 303"
+" s'aplica per al 2026 i, tot seguit, comprova la preparació per al primer"
+" trimestre: tot el flux de diagnòstic en ordre."
+
+#: ../../how-to/choose-modelo.md:22
+msgid "The explain answer has four parts:"
+msgstr "La resposta d'explain té quatre parts:"
+
+#: ../../how-to/choose-modelo.md:24
+msgid "**The verdict** - whether the modelo applies to you for that year."
+msgstr "**El veredicte**: si el model se t'aplica per a aquell any."
+
+#: ../../how-to/choose-modelo.md:25
+msgid ""
+"**The rationale** - a plain-language explanation derived from the "
+"official rules."
+msgstr ""
+"**La justificació**: una explicació en llenguatge planer derivada de les "
+"regles oficials."
+
+#: ../../how-to/choose-modelo.md:26
+msgid ""
+"**The legal references** - the provisions the decision rests on. Use them"
+" to check the verdict or share it with an advisor."
+msgstr ""
+"**Les referències legals**: les disposicions en què es basa la decisió. "
+"Utilitza-les per comprovar el veredicte o compartir-lo amb un assessor."
+
+#: ../../how-to/choose-modelo.md:27
+msgid ""
+"**The profile facts used** - exactly which of your saved facts the "
+"decision read. If one of those facts is wrong, the verdict is wrong too."
+msgstr ""
+"**Les dades del perfil utilitzades**: exactament quines de les teves "
+"dades desades ha llegit la decisió. Si una d'aquestes dades és "
+"incorrecta, el veredicte també ho és."
+
+#: ../../how-to/choose-modelo.md:29
+msgid ""
+"Some answers also include a scheduling note. Treat it as a pointer, not a"
+" calendar - the [filing calendar guide](filing-calendar.md) is the place "
+"for deadlines."
+msgstr ""
+"Algunes respostes també inclouen una nota de planificació. Tracta-la com "
+"un indicador, no com un calendari: la [guia del calendari de "
+"presentacions](filing-calendar.md) és el lloc per als terminis."
+
+#: ../../how-to/choose-modelo.md:31
+msgid "What each verdict means"
+msgstr "Què significa cada veredicte"
+
+#: ../../how-to/choose-modelo.md:33
+msgid ""
+"**Applicable** - the form applies to you for that year. Plan to prepare "
+"and file it."
+msgstr ""
+"**Aplicable**: el formulari se t'aplica per a aquell any. Planifica "
+"preparar-lo i presentar-lo."
+
+#: ../../how-to/choose-modelo.md:34
+msgid ""
+"**Not applicable** - your taxpayer situation excludes it. The rationale "
+"tells you which fact rules it out."
+msgstr ""
+"**No aplicable**: la teva situació com a contribuent l'exclou. La "
+"justificació et diu quina dada l'exclou."
+
+#: ../../how-to/choose-modelo.md:35
+msgid ""
+"**Attribution pass-through** - your entity is in régimen de atribución de"
+" rentas, such as a comunidad de bienes or a sociedad civil without a "
+"commercial object (sin objeto mercantil). The entity passes its income "
+"through to its members, so it doesn't file this self-assessment form "
+"itself. The members declare the attributed income on their own returns."
+msgstr ""
+"**Atribució (pass-through)**: la teva entitat està en régimen de "
+"atribución de rentas, com ara una comunidad de bienes o una sociedad "
+"civil sense objecte mercantil (sin objeto mercantil). L'entitat atribueix"
+" la seva renda als seus membres, de manera que no presenta ella mateixa "
+"aquest formulari d'autoliquidació. Els membres declaren la renda "
+"atribuïda a les seves pròpies declaracions."
+
+#: ../../how-to/choose-modelo.md:36
+msgid ""
+"**Incomplete** - the tool cannot decide and refuses to guess. Usually "
+"your profile is missing the facts needed; see [When the verdict is "
+"incomplete](#when-the-verdict-is-incomplete). For a few forms the tool "
+"has not yet derived an applicability rule. The rationale says so, and in "
+"that case no profile change alters the verdict."
+msgstr ""
+"**Incomplet**: l'eina no pot decidir i es nega a endevinar. Normalment és"
+" perquè al teu perfil li falten les dades necessàries; consulta [Quan el "
+"veredicte és incomplet](#when-the-verdict-is-incomplete). Per a alguns "
+"formularis, l'eina encara no ha derivat una regla d'aplicabilitat. La "
+"justificació ho indica, i en aquest cas cap canvi del perfil no altera el"
+" veredicte."
+
+#: ../../how-to/choose-modelo.md:38
+msgid "When the verdict is incomplete"
+msgstr "Quan el veredicte és incomplet"
+
+#: ../../how-to/choose-modelo.md:40
+msgid ""
+"An incomplete verdict usually means the decision depends on facts your "
+"profile doesn't declare yet. The main groups:"
+msgstr ""
+"Un veredicte incomplet normalment significa que la decisió depèn de dades"
+" que el teu perfil encara no declara. Els grups principals:"
+
+#: ../../how-to/choose-modelo.md:42
+msgid ""
+"**Who you are** - your taxpayer type and entity form (an individual "
+"identified by NIF; a company identified by NIF or CIF; an entity in "
+"atribución de rentas)."
+msgstr ""
+"**Qui sou**: el teu tipus de contribuent i la forma de l'entitat (una "
+"persona física identificada per NIF; una empresa identificada per NIF o "
+"CIF; una entitat en atribución de rentas)."
+
+#: ../../how-to/choose-modelo.md:43
+msgid ""
+"**Your income-tax situation** - your IRPF estimation regime and which "
+"income categories you receive."
+msgstr ""
+"**La teva situació d'IRPF**: el teu règim d'estimació de l'IRPF i quines "
+"categories de renda percep."
+
+#: ../../how-to/choose-modelo.md:44
+msgid ""
+"**Your IVA situation** - your IVA regime and any special enrolments, such"
+" as the ROI (Registro de Operadores Intracomunitarios), the OSS (One-Stop"
+" Shop), or intra-community operations."
+msgstr ""
+"**La teva situació d'IVA**: el teu règim d'IVA i qualsevol alta especial,"
+" com ara el ROI (Registro de Operadores Intracomunitarios), l'OSS (One-"
+"Stop Shop) o les operacions intracomunitàries."
+
+#: ../../how-to/choose-modelo.md:45
+msgid ""
+"**Whether you employ or withhold** - employees on payroll, or "
+"withholdings on professional fees, rent, or capital payments."
+msgstr ""
+"**Si tens personal o practiques retencions**: empleats en nòmina, o "
+"retencions sobre honoraris professionals, lloguers o pagaments de "
+"capital."
+
+#: ../../how-to/choose-modelo.md:46
+msgid ""
+"**Informative-declaration thresholds** - facts such as third-party "
+"transaction volume or assets held abroad, which gate the informative "
+"forms."
+msgstr ""
+"**Llindars de les declaracions informatives**: dades com ara el volum "
+"d'operacions amb terceres persones o els béns tinguts a l'estranger, que "
+"condicionen els formularis informatius."
+
+#: ../../how-to/choose-modelo.md:48
+msgid ""
+"Fix the missing facts by hand with the [profile setup guide](profile-"
+"setup.md). For your censo - your AEAT census record, the registration "
+"data AEAT holds about your activities and obligations - enter the facts "
+"from your Modelo 036 copy with the [censo facts guide](censo-update.md). "
+"Then re-run `overview explain` and read the new verdict."
+msgstr ""
+"Corregeix les dades que falten a mà amb la [guia de configuració del "
+"perfil](profile-setup.md). Per al teu censo (el teu registre censal de "
+"l'AEAT, les dades de registre que l'AEAT manté sobre les teves activitats"
+" i obligacions), introdueixes les dades de la teva còpia del Model 036 "
+"amb la [guia de dades censals](censo-update.md). Després torna a executar"
+" `overview explain` i llegeix el nou veredicte."
+
+#: ../../how-to/choose-modelo.md:50
+msgid "Check readiness for one filing"
+msgstr "Comprova la preparació per a una presentació concreta"
+
+#: ../../how-to/choose-modelo.md:52
+msgid ""
+"When you already know which modelo, year, and period you're aiming at, "
+"ask for a preflight check with `aeat config profile preflight`, the "
+"closing frame of the card above."
+msgstr ""
+"Quan ja saps a quin model, any i període apuntes, demanes una comprovació"
+" de preflight amb `aeat config profile preflight`, el tram de tancament "
+"de la targeta anterior."
+
+#: ../../how-to/choose-modelo.md:54
+msgid ""
+"The preflight reports the profile facts still missing for that specific "
+"filing context. Where `overview explain` answers whether the form "
+"applies, preflight answers whether you're ready to work on it."
+msgstr ""
+"El preflight informa de les dades del perfil que encara falten per a "
+"aquell context de presentació concret. Mentre que `overview explain` "
+"respon si el formulari s'aplica, el preflight respon si estàs preparats "
+"per treballar-hi."
+
+#: ../../how-to/choose-modelo.md:56
+msgid ""
+"These two commands read different facts, so they can disagree for the "
+"same profile and modelo, and that is expected. `overview explain` checks "
+"applicability facts (taxpayer type, regime, income categories); on a "
+"profile that has not declared its taxpayer type it returns `applicable "
+"false / verdict incomplete` (\"el tipo de contribuyente no está "
+"declarado\"). `profile preflight` checks filing-context facts for working"
+" on that period; the same profile can return `readiness ready / missing "
+"0`. A `ready` preflight is not a confirmation that the form applies to "
+"you - read `overview explain` for applicability and `profile preflight` "
+"for filing readiness, not one as a proxy for the other."
+msgstr ""
+"Aquestes dues ordres llegeixen dades diferents, de manera que poden "
+"discrepar per al mateix perfil i model, i això és esperable. `overview "
+"explain` comprova dades d'aplicabilitat (tipus de contribuent, règim, "
+"categories de renda); en un perfil que no ha declarat el seu tipus de "
+"contribuent retorna `applicable false / verdict incomplete` («el tipo de "
+"contribuyente no está declarado»). `profile preflight` comprova les dades"
+" del context de presentació per treballar en aquell període; el mateix "
+"perfil pot retornar `readiness ready / missing 0`. Un preflight `ready` "
+"no és una confirmació que el formulari se t'apliqui: llegeix `overview "
+"explain` per a l'aplicabilitat i `profile preflight` per a la preparació "
+"de la presentació, i no un com a substitut de l'altre."
+
+#: ../../how-to/choose-modelo.md:58
+msgid ""
+"The preflight picks the active revision for that modelo, year, and period"
+" automatically. Add `--revision-id` only when you need to pin an exact "
+"past revision for replay."
+msgstr ""
+"El preflight tria automàticament la revisió activa per a aquell model, "
+"any i període. Afegeix `--revision-id` només quan necessites fixar una "
+"revisió passada exacta per a una reproducció."
+
+#: ../../how-to/choose-modelo.md:60
+msgid "Browse the catalogue"
+msgstr "Navega pel catàleg"
+
+#: ../../how-to/choose-modelo.md:62
+msgid ""
+"To see every form the tool knows, list the catalogue with `aeat app "
+"modelo list`, add `--year` to narrow it to one fiscal year, then look one"
+" form up in detail with `aeat app modelo describe 303`:"
+msgstr ""
+"Per veure tots els formularis que l'eina coneix, llistes el catàleg amb "
+"`aeat app modelo list`, afegeix `--year` per acotar-lo a un exercici "
+"fiscal i, tot seguit, consulta un formulari en detall amb `aeat app "
+"modelo describe 303`:"
+
+#: ../../how-to/choose-modelo.md:68
+msgid ""
+"The list shows each modelo's code, official Spanish title, cadence, tax "
+"domain, and revision count. Cadence values include `quarterly`, `annual`,"
+" `monthly`, `ad_hoc`, and `profile_based` (the rhythm depends on your "
+"situation). Domains include `iva`, `irpf`, `is` (corporate income tax), "
+"`censo`, `informative`, `cross_tax`, `irnr` (non-resident income tax), "
+"`patrimonio` (wealth tax), and `iae` (tax on economic activities). Being "
+"listed does not mean a form applies to you - the catalogue covers "
+"everything the tool understands."
+msgstr ""
+"La llista mostra el codi de cada model, el títol oficial en castellà, la "
+"cadència, el domini tributari i el nombre de revisions. Els valors de "
+"cadència inclouen `quarterly`, `annual`, `monthly`, `ad_hoc` i "
+"`profile_based` (el ritme depèn de la teva situació). Els dominis "
+"inclouen `iva`, `irpf`, `is` (impost sobre societats), `censo`, "
+"`informative`, `cross_tax`, `irnr` (impost sobre la renda de no "
+"residents), `patrimonio` (impost sobre el patrimoni) i `iae` (impost "
+"sobre activitats econòmiques). Que un formulari aparegui a la llista no "
+"vol dir que se t'apliqui: el catàleg cobreix tot el que l'eina entén."
+
+#: ../../how-to/choose-modelo.md:70
+msgid ""
+"The description shows the form's official name (Spanish), domain, "
+"cadence, active revision ID, the full list of revision IDs, the valid "
+"period tokens, and three structure counts - casillas (boxes), "
+"vinculaciones (data bindings), and fórmulas (formulas) - that describe "
+"how complex the form is. Keep both commands as lookup aids. Applicability"
+" always comes from `overview explain`."
+msgstr ""
+"La descripció mostra el nom oficial del formulari (en castellà), el "
+"domini, la cadència, l'ID de la revisió activa, la llista completa d'IDs "
+"de revisió, els tokens de període vàlids i tres recomptes d'estructura "
+"que descriuen com és de complex el formulari: casillas (caselles), "
+"vinculaciones (vinculacions de dades) i fórmulas (fórmules). Conserva "
+"totes dues ordres com a ajudes de consulta. L'aplicabilitat sempre prové "
+"d'`overview explain`."
+
+#: ../../how-to/choose-modelo.md:72
+msgid "What these commands don't tell you"
+msgstr "Què no et diuen aquestes ordres"
+
+#: ../../how-to/choose-modelo.md:74
+msgid ""
+"These commands read your local profile and the built-in rules only. They "
+"do not file, submit, or contact AEAT, and they cannot tell you what AEAT "
+"has actually received from you. A verdict of **Applicable** is a "
+"statement about the rules and your facts - not a confirmation that a "
+"filing exists or is pending."
+msgstr ""
+"Aquestes ordres només llegeixen el teu perfil local i les regles "
+"integrades. No presenten, no envien ni contacten amb l'AEAT, i no et "
+"poden dir què ha rebut realment l'AEAT de part teva. Un veredicte "
+"d'**Aplicable** és una afirmació sobre les regles i les teves dades, no "
+"una confirmació que existeixi o estigui pendent una presentació."
+
+#: ../../how-to/choose-modelo.md:76
+msgid ""
+"For AEAT's own view of your situation, see the [notifications guide"
+"](check-aeat-notifications.md)."
+msgstr ""
+"Per a la visió que la mateixa AEAT té de la teva situació, consulta la "
+"[guia de notificacions](check-aeat-notifications.md)."
+
+#: ../../how-to/choose-modelo.md:77
+msgid ""
+"For deadlines and what's due when, see the [filing calendar guide"
+"](filing-calendar.md)."
+msgstr ""
+"Per als terminis i què cal presentar i quan, consulta la [guia del "
+"calendari de presentacions](filing-calendar.md)."
+
+#: ../../how-to/choose-modelo.md:79
+msgid "Where to get help"
+msgstr "On obtenir ajuda"
+
+#: ../../how-to/choose-modelo.md:81
+#, python-brace-format
+msgid ""
+"If a verdict looks wrong or a command fails, see the [troubleshooting "
+"guide](troubleshooting.md). Unfamiliar terms are defined in the "
+"{doc}`glossary </_generated/glossary>`. Before you share command output "
+"to ask for help, remove personal tax identifiers such as your NIF, CIF, "
+"DNI, NIE, or NII."
+msgstr ""
+"Si un veredicte sembla incorrecte o una ordre falla, consulta la [guia de"
+" resolució de problemes](troubleshooting.md). Els termes desconeguts es "
+"defineixen al {doc}`glossari </_generated/glossary>`. Abans de compartir "
+"la sortida d'una ordre per demanar ajuda, elimina els identificadors "
+"fiscals personals com ara el teu NIF, CIF, DNI, NIE o NII."
+
+#: ../../how-to/choose-modelo.md:83
+msgid "Next steps"
+msgstr "Passos següents"
+
+#: ../../how-to/choose-modelo.md:85
+msgid "[Plan your filing deadlines](filing-calendar.md)"
+msgstr "[Planifica els teus terminis de presentació](filing-calendar.md)"
+
+#: ../../how-to/choose-modelo.md:86
+msgid "[Set up or correct your profile](profile-setup.md)"
+msgstr "[Configura o corregeix el teu perfil](profile-setup.md)"
+
+#: ../../how-to/choose-modelo.md:87
+msgid "[Maintain Modelo 036 census facts in your profile](censo-update.md)"
+msgstr "[Mantén les dades censals del Model 036 al teu perfil](censo-update.md)"
+
+#: ../../how-to/choose-modelo.md:88
+msgid "[Start from nothing with the quickstart](quickstart.md)"
+msgstr "[Comença de zero amb el començament ràpid](quickstart.md)"
+
+#: ../../how-to/choose-modelo.md:89
+msgid "[Prepare Modelo 303](modelo-303.md)"
+msgstr "[Prepara el Model 303](modelo-303.md)"
+
+#: ../../how-to/choose-modelo.md:90
+msgid "[Prepare Modelo 390](modelo-390.md)"
+msgstr "[Prepara el Model 390](modelo-390.md)"
+
+#: ../../how-to/choose-modelo.md:91
+msgid "[Browse the full CLI reference](../cli/index.rst)"
+msgstr "[Consulta la referència completa de la CLI](../cli/index.rst)"
+

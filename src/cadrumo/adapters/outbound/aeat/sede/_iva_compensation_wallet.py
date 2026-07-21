@@ -13,6 +13,7 @@ and are re-imported here so the public read surface is unchanged.
 from __future__ import annotations
 
 import asyncio
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING
 from urllib.parse import quote, urljoin, urlsplit
@@ -21,7 +22,8 @@ from bs4 import BeautifulSoup
 from pydantic import AnyUrl
 
 from .....core import Period
-from .....core.config import Settings
+from .....core.async_cleanup import close_async_resources
+from .....core.config import Settings, load_settings
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.i18n import tr
 from .....core.logging import get_logger
@@ -123,112 +125,111 @@ async def fetch_iva_compensation_wallet(
     settings = settings or Settings()
     storage_state = storage_state_for_session(session)
     browser_session = await default_browser_session_factory(settings)
+    context = None
     try:
         context = await browser_session.create_context(storage_state=storage_state)
+        page = await context.new_page()
         try:
-            page = await context.new_page()
-            try:
-                await _open_authenticated_surface(
-                    page,
-                    browser_session=browser_session,
-                    settings=settings,
-                    selector_url=_PRE303_SELECTOR_URL,
-                    target_path=_PRE303.presentation_service_path,
-                    expected_url=_PRE303_PRESENTATION_URL,
-                    surface="pre303_presentation_service",
-                    target_year=target_period.filing_year,
-                    target_period=target_period,
-                )
-                if is_aeat_wallet_auth_gate_redirect(page.url):
-                    raise SedeNavigationError(
-                        "AEAT Pre303 presentation surface rejected the authenticated session with 4033",
-                        failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
-                        context={
-                            "landing_url": _redacted_url(page.url),
-                            "expected_url": _redacted_url(_PRE303_PRESENTATION_URL),
-                            "surface": "pre303_presentation_service",
-                        },
-                        suggestion=(
-                            "Authenticate specifically for the Pre303 presentation service before reading "
-                            "the IVA compensation wallet."
-                        ),
-                    )
-                pre303_html = await page.content()
-                discovered_wallet_url = discover_iva_compensation_wallet_entrypoint(
-                    pre303_html,
-                    base_url=getattr(page, "url", "") or _PRE303_PRESENTATION_URL,
-                )
-                if discovered_wallet_url is not None:
-                    wallet_execute_submitted = await _open_discovered_wallet_entrypoint(
-                        page,
-                        browser_session=browser_session,
-                        settings=settings,
-                        discovered_url=discovered_wallet_url,
-                        target_year=target_period.filing_year,
-                        target_period=target_period,
-                    )
-                else:
-                    wallet_execute_submitted = await _open_authenticated_surface(
-                        page,
-                        browser_session=browser_session,
-                        settings=settings,
-                        selector_url=_WALLET_SELECTOR_URL,
-                        target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
-                        expected_url=_WALLET_URL,
-                        surface="iva_compensation_wallet",
-                        target_year=target_period.filing_year,
-                        target_period=target_period,
-                    )
-            except PlaywrightError as exc:
-                raise SedeNavigationError(
-                    f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}",
-                ) from exc
+            await _open_authenticated_surface(
+                page,
+                browser_session=browser_session,
+                settings=settings,
+                selector_url=_PRE303_SELECTOR_URL,
+                target_path=_PRE303.presentation_service_path,
+                expected_url=_PRE303_PRESENTATION_URL,
+                surface="pre303_presentation_service",
+                target_year=target_period.filing_year,
+                target_period=target_period,
+            )
             if is_aeat_wallet_auth_gate_redirect(page.url):
                 raise SedeNavigationError(
-                    "AEAT IVA compensation wallet rejected the authenticated session with 4033",
+                    "AEAT Pre303 presentation surface rejected the authenticated session with 4033",
                     failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
                     context={
                         "landing_url": _redacted_url(page.url),
-                        "expected_url": _redacted_url(_WALLET_URL),
-                        "surface": "iva_compensation_wallet",
+                        "expected_url": _redacted_url(_PRE303_PRESENTATION_URL),
+                        "surface": "pre303_presentation_service",
                     },
                     suggestion=(
-                        "Authenticate specifically for the Pre303 presentation service, then retry the "
-                        "read-only wallet capture."
+                        "Authenticate specifically for the Pre303 presentation service before reading "
+                        "the IVA compensation wallet."
                     ),
                 )
-            html = await page.content()
-            final_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
-            if final_dump_dir is not None:
-                await _dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
-            try:
-                return parse_iva_compensation_wallet_html(
-                    html,
-                    taxpayer_nif=taxpayer_nif or session.identity_nif,
-                    authenticated_identity=session.identity_nif,
+            pre303_html = await page.content()
+            discovered_wallet_url = discover_iva_compensation_wallet_entrypoint(
+                pre303_html,
+                base_url=getattr(page, "url", "") or _PRE303_PRESENTATION_URL,
+            )
+            if discovered_wallet_url is not None:
+                wallet_execute_submitted = await _open_discovered_wallet_entrypoint(
+                    page,
+                    browser_session=browser_session,
+                    settings=settings,
+                    discovered_url=discovered_wallet_url,
                     target_year=target_period.filing_year,
                     target_period=target_period,
-                    source_url=_WALLET_URL,
-                    captured_at=now(),
-                    allow_empty_wallet_shell=wallet_execute_submitted,
                 )
-            except SedeParseError as exc:
-                raise SedeParseError(
-                    str(exc),
-                    failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
-                    context=_wallet_page_shape_context(html, landing_url=page.url),
-                    suggestion=(
-                        "Inspect the captured AEAT wallet page shape and update the read-only parser or "
-                        "navigation chain; do not hard-code operator wallet values into tests."
-                    ),
-                ) from exc
-        finally:
-            try:
-                await context.close()
-            except Exception as exc:
-                log.debug("fetch_iva_compensation_wallet: context.close suppressed: %s", exc, exc_info=True)
+            else:
+                wallet_execute_submitted = await _open_authenticated_surface(
+                    page,
+                    browser_session=browser_session,
+                    settings=settings,
+                    selector_url=_WALLET_SELECTOR_URL,
+                    target_path=_EXTERNAL.aeat.sede_paths.iva_compensation_wallet,
+                    expected_url=_WALLET_URL,
+                    surface="iva_compensation_wallet",
+                    target_year=target_period.filing_year,
+                    target_period=target_period,
+                )
+        except PlaywrightError as exc:
+            raise SedeNavigationError(
+                f"Pre303/wallet navigation failed for {_PRE303_PRESENTATION_URL!r} -> {_WALLET_URL!r}: {exc}",
+            ) from exc
+        if is_aeat_wallet_auth_gate_redirect(page.url):
+            raise SedeNavigationError(
+                "AEAT IVA compensation wallet rejected the authenticated session with 4033",
+                failure_mode=SedeFailureMode.AUTH_GATE_DETECTED,
+                context={
+                    "landing_url": _redacted_url(page.url),
+                    "expected_url": _redacted_url(_WALLET_URL),
+                    "surface": "iva_compensation_wallet",
+                },
+                suggestion=(
+                    "Authenticate specifically for the Pre303 presentation service, then retry the "
+                    "read-only wallet capture."
+                ),
+            )
+        html = await page.content()
+        final_dump_dir = settings.cadrumo_wallet_diagnostic_dump_dir
+        if final_dump_dir is not None:
+            await _dump_wallet_diagnostic(page, label="final-parse-input", dump_dir=final_dump_dir)
+        try:
+            return parse_iva_compensation_wallet_html(
+                html,
+                taxpayer_nif=taxpayer_nif or session.identity_nif,
+                authenticated_identity=session.identity_nif,
+                target_year=target_period.filing_year,
+                target_period=target_period,
+                source_url=_WALLET_URL,
+                captured_at=now(),
+                allow_empty_wallet_shell=wallet_execute_submitted,
+            )
+        except SedeParseError as exc:
+            raise SedeParseError(
+                str(exc),
+                failure_mode=SedeFailureMode.EXTERNAL_SHAPE_CHANGED,
+                context=_wallet_page_shape_context(html, landing_url=page.url),
+                suggestion=(
+                    "Inspect the captured AEAT wallet page shape and update the read-only parser or "
+                    "navigation chain; do not hard-code operator wallet values into tests."
+                ),
+            ) from exc
     finally:
-        await browser_session.close()
+        await close_async_resources(
+            context,
+            browser_session,
+            task_name="cadrumo-iva-wallet-close",
+        )
 
 
 async def _open_authenticated_surface(
@@ -257,7 +258,7 @@ async def _open_authenticated_surface(
                 lambda url: (
                     target_path in url or is_aeat_wallet_auth_gate_redirect(url) or _is_representation_gate_url(url)
                 ),
-                timeout=settings.aeat_browser_navigation_timeout_ms,
+                timeout=settings.cadrumo_browser_navigation_timeout_ms,
             )
         except PlaywrightError:
             log.debug(
@@ -278,7 +279,7 @@ async def _open_authenticated_surface(
             surface=surface,
         )
     try:
-        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms)
     except PlaywrightError:
         log.debug(
             "IVA wallet surface did not reach networkidle surface=%s current_url=%s",
@@ -330,7 +331,7 @@ async def _open_discovered_wallet_entrypoint(
             surface="iva_compensation_wallet",
         )
     try:
-        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms)
     except PlaywrightError:
         log.debug(
             "Discovered IVA wallet entrypoint did not reach networkidle current_url=%s",
@@ -365,7 +366,7 @@ async def _continue_own_name_representation(
         await page.click(_PRE303.representation_submit_selector)
         await page.wait_for_url(
             lambda url: target_path in url or is_aeat_wallet_auth_gate_redirect(url),
-            timeout=settings.aeat_browser_navigation_timeout_ms,
+            timeout=settings.cadrumo_browser_navigation_timeout_ms,
         )
         await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED)
     except PlaywrightError as exc:
@@ -390,7 +391,7 @@ async def _wait_for_own_name_representation_selector(page: Page, *, settings: Se
         _PRE303.representation_own_name_selector,
     ):
         try:
-            await page.wait_for_selector(selector, timeout=settings.aeat_browser_selector_probe_timeout_ms)
+            await page.wait_for_selector(selector, timeout=settings.cadrumo_browser_selector_probe_timeout_ms)
             return selector
         except PlaywrightError as exc:
             last_error = exc
@@ -463,9 +464,9 @@ async def _select_own_name_actuacion_if_present(page: Page, *, settings: Setting
     _assert_read_browser_action(_OWN_NAME_REPRESENTATION_ACTION)
     try:
         await link.click()
-        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.aeat_browser_navigation_timeout_ms)
+        await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.cadrumo_browser_navigation_timeout_ms)
         try:
-            await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+            await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.cadrumo_browser_navigation_timeout_ms)
         except PlaywrightError:
             log.debug(
                 "cartera own-name continuation did not reach networkidle current_url=%s",
@@ -527,7 +528,7 @@ async def _submit_wallet_execute_gate_if_present(
     try:
         await page.wait_for_selector(
             _PRE303.wallet_execute_submit_selector,
-            timeout=settings.aeat_browser_selector_probe_timeout_ms,
+            timeout=settings.cadrumo_browser_selector_probe_timeout_ms,
         )
     except PlaywrightError:
         log.debug(
@@ -545,7 +546,7 @@ async def _submit_wallet_execute_gate_if_present(
         html, result = await _wait_for_wallet_execute_initial_shape(
             content=content,
             expected_path=expected_path,
-            timeout_ms=settings.aeat_browser_navigation_timeout_ms,
+            timeout_ms=settings.cadrumo_browser_navigation_timeout_ms,
         )
     except PlaywrightError as exc:
         raise SedeNavigationError(
@@ -575,9 +576,10 @@ async def _submit_wallet_execute_gate_if_present(
             await _dump_wallet_diagnostic(page, label="pre-execute", dump_dir=_diag_dump_dir)
         try:
             await page.click(_PRE303.wallet_execute_submit_selector)
-            await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=settings.aeat_browser_navigation_timeout_ms)
+            nav_timeout_ms = settings.cadrumo_browser_navigation_timeout_ms
+            await page.wait_for_load_state(_WAIT_DOMCONTENTLOADED, timeout=nav_timeout_ms)
             try:
-                await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=settings.aeat_browser_navigation_timeout_ms)
+                await page.wait_for_load_state(_WAIT_NETWORKIDLE, timeout=nav_timeout_ms)
             except PlaywrightError:
                 log.debug(
                     "IVA wallet execute read query did not reach networkidle current_url=%s",
@@ -588,7 +590,7 @@ async def _submit_wallet_execute_gate_if_present(
                 page,
                 content=content,
                 expected_path=expected_path,
-                timeout_ms=settings.aeat_browser_navigation_timeout_ms,
+                timeout_ms=settings.cadrumo_browser_navigation_timeout_ms,
             )
             if _diag_dump_dir is not None:
                 await _dump_wallet_diagnostic(page, label="post-execute", dump_dir=_diag_dump_dir)
@@ -723,6 +725,50 @@ async def _dump_wallet_diagnostic(page: Page, *, label: str, dump_dir: Path) -> 
     except OSError as exc:
         log.debug("wallet diagnostic: summary write failed: %s", exc, exc_info=True)
     log.info("wallet diagnostic captured label=%s pages=%s dir=%s", label, len(pages), dump_dir)
+    prune_wallet_diagnostic_dumps(dump_dir)
+
+
+def prune_wallet_diagnostic_dumps(
+    dump_dir: Path,
+    *,
+    retention_days: int | None = None,
+    settings: Settings | None = None,
+) -> int:
+    """Delete wallet diagnostic dump files older than the retention window.
+
+    The dump directory is opt-in (``cadrumo_wallet_diagnostic_dump_dir``);
+    callers pass the configured directory in. ``retention_days`` defaults to
+    :attr:`~core.config.Settings.cadrumo_wallet_diagnostic_retention_days`.
+    Invoked automatically after each dump so the opt-in directory carries a
+    declared retention lifecycle instead of accumulating stale summaries once
+    captures stop. Entirely best-effort: an unenumerable directory or an
+    unremovable file is logged and skipped, never raised.
+
+    Returns:
+        Number of dump files removed.
+    """
+    cfg = settings or load_settings()
+    effective_retention_days = (
+        retention_days if retention_days is not None else cfg.cadrumo_wallet_diagnostic_retention_days
+    )
+    cutoff = now() - timedelta(days=effective_retention_days)
+    removed = 0
+    try:
+        entries = tuple(dump_dir.iterdir())
+    except OSError:
+        log.debug("wallet diagnostic: dump dir not enumerable at %s", dump_dir, exc_info=True)
+        return 0
+    for entry in entries:
+        try:
+            if not entry.is_file():
+                continue
+            if datetime.fromtimestamp(entry.stat().st_mtime, tz=UTC) >= cutoff:
+                continue
+            entry.unlink()
+            removed += 1
+        except OSError:
+            log.debug("wallet diagnostic: could not prune dump file %s", entry, exc_info=True)
+    return removed
 
 
 def _assert_read_http(method: str, url: str) -> None:

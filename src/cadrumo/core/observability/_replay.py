@@ -17,7 +17,7 @@ from collections.abc import Callable
 
 from ..config import PROJECT_ROOT, Settings
 from ..product_identity import PRODUCT_IDENTITY
-from ._errors import AeatCorpusDriftError, AeatObservabilityError
+from ._errors import AeatCorpusDriftError, CadrumoObservabilityError
 from ._fingerprint import compute_corpus_sha256
 from ._models import ArgumentRecord, ArgumentSource, RunTrace
 from ._store import load_trace
@@ -158,7 +158,7 @@ def replay_run(
         The loaded :class:`RunTrace` of the original run.
 
     Raises:
-        AeatObservabilityError: When the trace carries removed write-era
+        CadrumoObservabilityError: When the trace carries removed write-era
             flags, when ``assert_envelope`` is set but the re-entered
             invocation emitted no envelope to compare, or when
             ``assert_db_state`` is set and the post-state ``var/``
@@ -171,14 +171,14 @@ def replay_run(
     original = load_trace(run_id)
     for arg in original.arguments:
         if _argument_uses_removed_write_flag(arg):
-            raise AeatObservabilityError(
+            raise CadrumoObservabilityError(
                 f"refusing to replay run {run_id!r}: recorded entrypoint "
                 f"{original.entrypoint!r} used removed flag "
                 f"{arg.name!r}={arg.value!r}. Replay will not reconstruct "
                 "obsolete write-era CLI arguments.",
             )
     settings = Settings()
-    observed = compute_corpus_sha256(PROJECT_ROOT / ".vault", settings)
+    observed = compute_corpus_sha256(settings)
     if observed != original.corpus_sha256:
         raise AeatCorpusDriftError(
             run_id=run_id,
@@ -246,7 +246,7 @@ def _assert_db_state_unchanged(run_id: str, recorded: str, observed: str) -> Non
     expected to be idempotent mutated state).
     """
     if recorded != observed:
-        raise AeatObservabilityError(
+        raise CadrumoObservabilityError(
             f"db-state drift on replay of run {run_id!r}: "
             f"recorded={recorded[:12]}... observed={observed[:12]}...; the "
             "re-entered invocation was expected to be a no-op against a "
@@ -269,7 +269,7 @@ def _assert_replayed_envelope(
     from ._golden import assert_golden_match
 
     if not captured:
-        raise AeatObservabilityError(
+        raise CadrumoObservabilityError(
             f"refusing to assert envelope for replay of {run_id!r}: the "
             "re-entered invocation emitted no --format json envelope to compare",
         )

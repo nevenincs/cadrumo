@@ -3,8 +3,9 @@ tags:
   - '#adr'
   - '#test-worker-count-policy'
 date: '2026-07-08'
-modified: '2026-07-10'
-related: []
+modified: '2026-07-17'
+related:
+  - '[[2026-07-10-test-worker-count-policy-research]]'
 ---
 
 # `test-worker-count-policy` adr: `cap pytest-xdist workers via the native env var, operator-set, never a blanket default` | (**status:** `accepted`)

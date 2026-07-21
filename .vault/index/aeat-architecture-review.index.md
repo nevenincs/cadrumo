@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-architecture-review'
-date: '2026-07-02'
-modified: '2026-07-03'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-02-aeat-architecture-review-audit]]'
 ---

@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#cadrumo-product-rename'
 date: '2026-07-12'
-modified: '2026-07-12'
+modified: '2026-07-17'
 step_id: 'S48'
 related:
   - "[[2026-07-12-cadrumo-product-rename-plan]]"
@@ -38,3 +38,22 @@ remain owned by S50 and S49 respectively and were not changed here.
 Formal review corrected operator copy that had initially treated the Cadrumo
 product name as the human executable instead of preserving the canonical
 lowercase `aeat` command.
+
+## Contextual-casing continuation
+
+The binding naming authority now exposes distinct runtime values for sentence
+prose and identity contexts. The generator had continued to interpolate the
+identity-context display value into the sentence beginning its plugin
+description, producing `Operate CADRUMO through ...` despite the ratified
+`Cadrumo` prose convention.
+
+The plugin description now consumes `PRODUCT_IDENTITY.prose_name`. Manifest
+identity fields remain derived from `PRODUCT_IDENTITY.display_name`, and all
+lowercase plugin, distribution, MCP, executable, and environment identities
+remain unchanged. Ten real-filesystem plugin materialiser tests passed with the
+live strict Claude validator available; focused Ruff lint and format checks also
+passed.
+
+Pending generator-test refinements owned by S49 were preserved outside this
+Step commit. No generated marketplace output, marketplace documentation, or
+foreign shared-worktree changes were included.

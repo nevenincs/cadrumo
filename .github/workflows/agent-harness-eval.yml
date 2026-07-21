@@ -19,14 +19,8 @@ on:
       - "src/cadrumo/_data/agent/**"
       - "src/cadrumo/application/operator_surface/**"
       - "src/cadrumo/entrypoints/cli/_app_contract*.py"
-  pull_request:
-    branches: [main]
-    paths:
-      - "src/cadrumo/agent/**"
-      - "src/cadrumo/entrypoints/mcp/**"
-      - "src/cadrumo/_data/agent/**"
-      - "src/cadrumo/application/operator_surface/**"
-      - "src/cadrumo/entrypoints/cli/_app_contract*.py"
+  # NO pull_request trigger: self-hosted runners must never execute untrusted
+  # PR-head code (see ci.yml note).
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -38,7 +32,7 @@ permissions:
 jobs:
   agent-harness-eval:
     name: Ubuntu / Python 3.13 / Cadrumo agent-harness / cadrumo-mcp
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 30
 
     steps:

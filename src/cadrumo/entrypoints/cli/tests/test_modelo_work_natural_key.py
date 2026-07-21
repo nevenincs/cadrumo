@@ -2,35 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from ....adapters.persistence.storage.sql.engine import dispose_engine
-from ....core.config import override_settings
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from ._modelo_work_ux_support import _seed_m111_retencion_observation
 from .envelope_helpers import unwrap_envelope_notices as _notices
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    dispose_engine()
-    with (
-        override_settings(cadrumo_local_storage_root=tmp_path, cadrumo_output_language="en"),
-        isolated_profile_storage_root(tmp_path=tmp_path),
-    ):
-        try:
-            yield
-        finally:
-            dispose_engine()
 
 
 def _invoke(args: list[str]):
@@ -161,6 +145,81 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     assert out.stat().st_size > 0
 
 
+def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
+    """Re-verifying an already-verified revision is a guarded no-op in both addressing modes.
+
+    single-subject-mutation-is-idempotent-guarded: the verb must NOT refuse a
+    re-verify. Whether addressed by natural key (work-addressed) or by explicit
+    calculation-revision id (revision-addressed), the second call returns exit 0,
+    the SAME verification report id (no duplicate report), and surfaces the
+    ``modelo.work.verify.idempotent_noop`` info notice. This exercises the real
+    ``work verify`` verb end to end, guarding against the resolver refusing a
+    non-draft revision upstream of the collapse.
+    """
+    _create_profile()
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "create",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    _seed_m111_retencion_observation()
+    calculated = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "calculate",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ],
+    )  # fmt: skip
+    assert calculated.exit_code == 0, calculated.output
+    calculation_revision_id = _payload(calculated.output)["calculation_revision_id"]
+
+    first = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ],
+    )  # fmt: skip
+    assert first.exit_code == 0, first.output
+    assert _payload(first.output)["granted_verificado_completo"] is True, first.output
+    report_id = _payload(first.output)["verification_report_id"]
+    # The first verify grants and carries no idempotent-no-op notice.
+    assert "modelo.work.verify.idempotent_noop" not in [n["code"] for n in _notices(first.output)], first.output
+
+    # Work-addressed re-verify (natural key): collapses to the existing report.
+    work_addressed = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify",
+            "--modelo", "111", "--year", "2025", "--period", "1T",
+        ],
+    )  # fmt: skip
+    assert work_addressed.exit_code == 0, work_addressed.output
+    assert _payload(work_addressed.output)["verification_report_id"] == report_id, work_addressed.output
+    assert _payload(work_addressed.output)["calculation_revision_id"] == calculation_revision_id, work_addressed.output
+    work_addressed_noop = next(
+        n for n in _notices(work_addressed.output) if n["code"] == "modelo.work.verify.idempotent_noop"
+    )
+    assert work_addressed_noop["severity"] == "info", work_addressed.output
+    assert work_addressed_noop["context"]["verification_report_id"] == report_id, work_addressed.output
+
+    # Revision-addressed re-verify (explicit id): collapses to the SAME report.
+    revision_addressed = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "work", "verify", calculation_revision_id,
+        ],
+    )  # fmt: skip
+    assert revision_addressed.exit_code == 0, revision_addressed.output
+    assert _payload(revision_addressed.output)["verification_report_id"] == report_id, revision_addressed.output
+    assert "modelo.work.verify.idempotent_noop" in [n["code"] for n in _notices(revision_addressed.output)], (
+        revision_addressed.output
+    )
+
+
 def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_state() -> None:
     """Modelo 130 cannot be verified as complete without upstream clean-state proof."""
 
@@ -209,12 +268,10 @@ def test_modelo_130_verify_by_natural_key_refuses_without_clean_cross_period_sta
     assert payload["granted_verificado_completo"] is False
     assert payload["findings"][0]["kind"] == "cross_period_dependency_unclean"
     assert (
-        "aeat app live filed pull-sources --modelo 130 --year 2025 --period 1T"
-        in payload["findings"][0]["next_action"]
+        "aeat app live filed pull-sources --modelo 130 --year 2025 --period 1T" in payload["findings"][0]["next_action"]
     )
     assert (
-        "aeat app live justificante pull --modelo 100 --year 2024 --period 0A"
-        in payload["findings"][0]["next_action"]
+        "aeat app live justificante pull --modelo 100 --year 2024 --period 0A" in payload["findings"][0]["next_action"]
     )
     assert (
         "aeat app modelo filing-record import WORK_UNIT_ID --evidence-kind aeat_justificante_pdf"

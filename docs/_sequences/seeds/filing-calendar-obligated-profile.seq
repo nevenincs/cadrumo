@@ -1,0 +1,2 @@
+@step Declare an economic-activity IRPF obligation on the profile so the calendar has modelos to show.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --irpf-income-categories actividad_economica --activity-start-date 2026-01-01

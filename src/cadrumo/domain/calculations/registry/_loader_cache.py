@@ -21,10 +21,6 @@ See Also:
         Coverage for the longer bundled-root fingerprint TTL window.
     :func:`~conftest._isolate_registry_caches`
         Session fixture that clears registry caches around pytest runs.
-    Governing vault records
-        ``2026-05-20-registry-authority-flow-adr`` and
-        ``2026-06-02-registry-loader-boundary-audit`` govern the authority
-        boundary and loader-extraction cache invalidation behavior.
 """
 
 from __future__ import annotations
@@ -41,9 +37,9 @@ REGISTRY_DISK_CACHE_DIR_ENV_VAR = "CADRUMO_REGISTRY_DISK_CACHE_DIR"
 
 # The bundled tree gets a longer fingerprint TTL than a mutable authoring
 # tree, but NOT a process-lifetime one: under an editable install (the
-# routine dev/worktree mode) "bundled" resolves to the literal in-tree
-# ``src/cadrumo/_data/registry/aeat`` source directory, which concurrent peer
-# agents in this shared worktree edit live throughout a session. A TTL that
+# routine development mode) "bundled" resolves to the literal in-tree
+# ``src/cadrumo/_data/registry/aeat`` source directory, which can be edited
+# live during a session. A TTL that
 # never re-checks would silently serve stale registry TOML to a long-running
 # process (an MCP server, a REPL, a background watch loop) after such an
 # edit lands. 10 seconds is long enough to fold the several fingerprint
@@ -85,6 +81,19 @@ def is_bundled_registry_root(resolved: Path) -> bool:
         return False
 
 
+def _running_under_pytest() -> bool:
+    """Whether the current process is a pytest run (including collection and xdist workers)."""
+    import os
+    import sys
+
+    return (
+        "pytest" in sys.modules
+        or "PYTEST_CURRENT_TEST" in os.environ
+        or "PYTEST_XDIST_WORKER" in os.environ
+        or "PYTEST_VERSION" in os.environ
+    )
+
+
 def registry_disk_cache_enabled(*, is_bundled: bool = False) -> bool:
     """Whether the cross-process ``/tmp`` registry pickle is read/written.
 
@@ -109,16 +118,7 @@ def registry_disk_cache_enabled(*, is_bundled: bool = False) -> bool:
     diagnosed). Only the always-immutable bundled tree is exempt from that
     race.
     """
-    import os
-    import sys
-
-    under_pytest = (
-        "pytest" in sys.modules
-        or "PYTEST_CURRENT_TEST" in os.environ
-        or "PYTEST_XDIST_WORKER" in os.environ
-        or "PYTEST_VERSION" in os.environ
-    )
-    if under_pytest:
+    if _running_under_pytest():
         return is_bundled
     return True
 
@@ -126,23 +126,54 @@ def registry_disk_cache_enabled(*, is_bundled: bool = False) -> bool:
 def registry_disk_cache_dir() -> Path:
     """Return the directory the cross-process registry disk pickle lives in.
 
-    Reads :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir` (the
-    ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` env var) before falling back to
-    ``tempfile.gettempdir()``, so a test can redirect the disk-cache pickle to
-    a test-owned directory. Production and the ordinary bundled-root sharing
-    path never set this field and always use the real OS temp directory; only
-    a test that needs to assert EXCLUSIVE state on the pickle (e.g. "exactly
-    one file exists", "the mtime is unchanged") -- which the real OS temp
-    directory cannot guarantee once sibling pytest-xdist workers are also
-    touching the shared bundled-root pickle -- sets this var to isolate its
-    own assertions from that sibling traffic, while still exercising the real
-    filesystem and the real pickle read/write path (no mock of the loader's
-    own behavior). It rides the env var (rather than a plain monkeypatched
-    function) because it also needs to propagate to a subprocess a test
-    spawns via ``env=``, so a cross-process sharing proof can isolate BOTH
-    ends of the process pair onto the same test-owned directory.
+    Resolution precedence:
+
+    1. An explicit :attr:`~core.config.Settings.cadrumo_registry_disk_cache_dir`
+       (the ``CADRUMO_REGISTRY_DISK_CACHE_DIR`` env var) always wins. A test
+       that needs to assert EXCLUSIVE state on the pickle (e.g. "exactly one
+       file exists", "the mtime is unchanged") sets this to a test-owned
+       directory, so its assertions are not confused by sibling pytest-xdist
+       workers touching the shared bundled-root pickle -- while still
+       exercising the real filesystem and read/write path. It rides the env
+       var (not a monkeypatch) so it also propagates to a subprocess a test
+       spawns via ``env=``.
+    2. Production (not under pytest) derives
+       ``<cadrumo_local_storage_root>/cache/registry`` -- one per-user location
+       under the single storage root, never the shared OS temp directory that
+       any two host users could collide in.
+    3. Under pytest with no explicit override, the cross-worker bundled-root
+       share stays in the host-shared OS temp directory: xdist workers each
+       get a per-pid ``cadrumo_local_storage_root``, so deriving from it would
+       give every worker a private cache and defeat the single-compile sharing
+       the disk pickle exists to deliver. The bundled tree is immutable during
+       a run, so one host-shared compiled pickle is safe to share.
     """
-    override = load_settings().cadrumo_registry_disk_cache_dir
+    settings = load_settings()
+    return _resolve_registry_disk_cache_dir(
+        override=settings.cadrumo_registry_disk_cache_dir,
+        under_pytest=_running_under_pytest(),
+        storage_root=settings.cadrumo_local_storage_root,
+    )
+
+
+def _resolve_registry_disk_cache_dir(*, override: Path | None, under_pytest: bool, storage_root: Path) -> Path:
+    """Pure resolution of the registry disk-cache directory.
+
+    Split from :func:`registry_disk_cache_dir` so the three branches (explicit
+    override, pytest host-shared temp, production storage-root derivation) are
+    exercised with real inputs rather than by manipulating the ambient process.
+    """
     if override is not None:
         return override
-    return Path(tempfile.gettempdir())
+    if under_pytest:
+        return Path(tempfile.gettempdir())
+    return storage_root / "cache" / "registry"
+
+
+def registry_disk_cache_max_entries() -> int:
+    """Return the retained-pickle ceiling for registry disk-cache eviction.
+
+    Reads :attr:`~core.config.Settings.cadrumo_registry_disk_cache_max_entries`;
+    the loader prunes the oldest pickles beyond this count after each write.
+    """
+    return load_settings().cadrumo_registry_disk_cache_max_entries

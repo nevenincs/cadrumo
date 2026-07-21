@@ -3,12 +3,12 @@ tags:
   - '#research'
   - '#determinism-replay-residual'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - '[[2026-06-30-deterministic-output-replay-substrate-adr]]'
   - '[[2026-06-30-deterministic-output-replay-substrate-research]]'
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
-  - '[[2026-06-30-agent-harness-adr]]'
+  - '[[2026-07-02-agent-harness-refoundation-adr]]'
 ---
 
 # `determinism-replay-residual` research: `residual non-determinism: surrogate ids, seam-coverage gate, output-ordering`

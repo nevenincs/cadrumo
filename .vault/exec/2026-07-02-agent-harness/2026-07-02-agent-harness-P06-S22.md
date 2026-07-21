@@ -3,7 +3,7 @@ tags:
   - '#exec'
   - '#agent-harness'
 date: '2026-07-06'
-modified: '2026-07-10'
+modified: '2026-07-17'
 step_id: 'S22'
 related:
   - "[[2026-07-02-agent-harness-plan]]"
@@ -36,4 +36,4 @@ related:
 ## Notes
 
 - The repository's default pytest marker selection deselects these integration tests without `-m integration`; the focused default-marker probe reported 14 deselected for `test_modelo_130_golden.py`.
-- Feature-scoped vault checks for placeholders, body links, and frontmatter passed. `annotations` still reports pre-existing scaffold comments in `P07.S20` and `P07.S21`; `modified-stamp` still reports the pre-existing ADR stamp drift on `2026-07-01-agent-harness-adr`.
+- Feature-scoped vault checks for placeholders, body links, and frontmatter passed. `annotations` still reports pre-existing scaffold comments in `P07.S20` and `P07.S21`; `modified-stamp` still reports the pre-existing ADR stamp drift on `2026-07-02-agent-harness-refoundation-adr`.

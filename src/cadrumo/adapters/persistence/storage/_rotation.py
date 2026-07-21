@@ -14,10 +14,11 @@ content-preserving across every consumer's payload type without
 requiring rotation code to know the typed payload schemas.
 
 The rotation is **per-file atomic** - each cipher envelope is
-re-written via tempfile + ``os.replace`` so a crash mid-rotation
-leaves either the old or the new ciphertext on disk, never a torn
-state. The whole rotation is **not** transactional across files:
-both keys must remain available until rotation completes.
+re-written via :func:`~cadrumo.core.atomic_write.atomic_write_text`
+(standard tier) so a crash mid-rotation leaves either the old or the
+new ciphertext on disk, never a torn state. The whole rotation is
+**not** transactional across files: both keys must remain available
+until rotation completes.
 
 Detection of "already rotated" works by attempting to decrypt under
 the new key first; on AEAD-tag verify success the file is skipped.
@@ -28,8 +29,6 @@ from __future__ import annotations
 
 import binascii
 import hashlib
-import os
-import tempfile
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Protocol
@@ -37,8 +36,9 @@ from typing import Protocol
 from pydantic import BaseModel, Field, ValidationError
 
 from ....core import STRICT_FROZEN_CONFIG
+from ....core.atomic_write import atomic_write_text
 from ....core.external_constants import UTF_8_ENCODING
-from ....core.locks import exclusive_file_lock, fsync_parent_dir
+from ....core.locks import exclusive_file_lock
 from ....core.logging import get_logger
 from ....core.time import now
 from .blob_store import EncryptedBlobStore
@@ -225,30 +225,15 @@ def _try_decrypt_bytes(
 
 
 def _atomic_write(target: Path, *, payload: str) -> None:
-    """Atomically replace ``target`` with ``payload`` via tempfile + os.replace."""
-    target.parent.mkdir(parents=True, exist_ok=True)
-    tmp_path: Path | None = None
+    """Atomically replace ``target`` with ``payload`` via the standard-tier atomic-write helper."""
     try:
-        with tempfile.NamedTemporaryFile(
-            mode="w",
-            encoding=UTF_8_ENCODING,
-            dir=target.parent,
-            prefix=f"{target.stem}.",
-            suffix=".tmp",
-            delete=False,
-        ) as handle:
-            tmp_path = Path(handle.name)
-            handle.write(payload)
-        os.replace(tmp_path, target)
-        fsync_parent_dir(target)
+        atomic_write_text(target, payload, encoding=UTF_8_ENCODING)
     except OSError as exc:
         _log.error(
             "rotation: atomic write failed path_marker=%s error_type=%s",
             _path_log_marker(target),
             type(exc).__name__,
         )
-        if tmp_path is not None:
-            tmp_path.unlink(missing_ok=True)
         raise
 
 
@@ -415,7 +400,7 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_attachments_dir) / "manifests",
-            hkdf_context=b"aeat.domain.attachments.manifest.v1",
+            hkdf_context=b"cadrumo.domain.attachments.manifest.v1",
         ),
         RotationPlanEntry(
             # Single-file envelope: ``cadrumo_usage_ratios_path`` defaults
@@ -433,7 +418,7 @@ def default_rotation_plan(settings: _RotationPlanSettings) -> tuple[RotationPlan
         ),
         RotationPlanEntry(
             store_dir=Path(settings.cadrumo_submissions_dir),
-            hkdf_context=b"aeat.adapters.outbound.aeat.export.filing.v1",
+            hkdf_context=b"cadrumo.adapters.outbound.aeat.export.filing.v1",
         ),
         # Amendments share one HKDF context across two store dirs.
         # ``ModeloAmendmentRepository`` is one consumer identity but it

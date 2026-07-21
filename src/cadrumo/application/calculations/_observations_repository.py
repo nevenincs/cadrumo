@@ -40,7 +40,7 @@ from collections.abc import Iterator, Mapping
 from datetime import datetime
 from typing import ClassVar, override
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from ...adapters.persistence.storage import (
     CALCULATION_OBSERVATIONS_NAMESPACE,
@@ -61,21 +61,21 @@ from ...domain.iva_compensation import IvaCompensationReconciliationDecision
 from ._errors import ObservationCasillaReferenceError, ObservationKeyError
 
 
-class _ObservationEnvelopePayload(BaseModel):
-    """Serialisable wrapper around a :class:`RegistryModeloObservation`.
+class ObservationEnvelopePayload(BaseModel):
+    """Canonical public persistence payload for filed observations.
 
-    The registry model is pure calculation evidence. This wrapper keeps the
-    envelope schema identical to other repositories' shape and carries the
-    application-side capture metadata — ``captured_at``, ``source_kind``,
-    ``member_nif``, ``stamped_revision_id``, and ``source_metadata`` — without
-    adding persistence concerns to the inner registry record.
+    This strict, frozen model is returned by
+    :class:`CalculationObservationRepository` reads and iteration. It keeps the
+    :class:`RegistryModeloObservation` calculation evidence separate from the
+    application capture provenance: ``captured_at``, constrained
+    ``source_kind``, optional ``member_nif``, required
+    ``stamped_revision_id``, and source-specific ``source_metadata``. The model
+    does not encrypt that metadata; the secure repository envelope does.
 
-    The ``stamped_revision_id`` field is the registry revision id the
-    source filing resolved to at capture time. Current writes always stamp it
-    so every carry-read can re-confirm the source value against the
-    law-determined registry revision before trusting it. Legacy envelopes that
-    predate the field load it as ``None`` so ADR-specific readers can surface
-    an explicit missing-stamp advisory instead of fabricating a stamp.
+    Every persisted observation carries its source registry revision stamp so
+    carry reads can reconfirm the value against the law-determined revision.
+    A missing or structurally invalid stamp refuses at load; a valid but
+    divergent stamp is refused later by the carry gate.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -99,8 +99,7 @@ class _ObservationEnvelopePayload(BaseModel):
             "single-filer (modelo, filing_year, period) key bit-for-bit."
         ),
     )
-    stamped_revision_id: str | None = Field(
-        default=None,
+    stamped_revision_id: str = Field(
         min_length=1,
         max_length=128,
         description=(
@@ -118,13 +117,6 @@ class _ObservationEnvelopePayload(BaseModel):
             "register row produced the calculation history."
         ),
     )
-
-    @field_validator("stamped_revision_id", mode="before")
-    @classmethod
-    def _reject_explicit_null_revision_stamp(cls, value: object) -> object:
-        if value is None:
-            raise ValueError("stamped_revision_id may be absent on legacy envelopes, but must not be null")
-        return value
 
 
 class IvaWalletDecisionEnvelopePayload(BaseModel):
@@ -285,7 +277,7 @@ def _validate_observation_casilla_ids(observation: RegistryModeloObservation) ->
     )
 
 
-class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelopePayload]):
+class CalculationObservationRepository(SecureBoundRepository[ObservationEnvelopePayload]):
     """Repository over encrypted SQL-backed past-filing observations.
 
     Stores :class:`RegistryModeloObservation` rows for
@@ -306,10 +298,10 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = CALCULATION_OBSERVATIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = CALCULATION_OBSERVATIONS_NAMESPACE.schema_version
-    payload_type: ClassVar[type[BaseModel]] = _ObservationEnvelopePayload
+    payload_type: ClassVar[type[BaseModel]] = ObservationEnvelopePayload
 
     @override
-    def extract_identifier(self, payload: _ObservationEnvelopePayload) -> str:
+    def extract_identifier(self, payload: ObservationEnvelopePayload) -> str:
         observation = payload.observation
         period = observation.filing_period
         if period is None:
@@ -329,7 +321,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         self,
         modelo: str,
         period: Period,
-    ) -> _ObservationEnvelopePayload | None:
+    ) -> ObservationEnvelopePayload | None:
         """Return the persisted observation for one (modelo, year, period token) or None."""
         filing_period = _require_observation_period(period)
         return self.load(observation_key(modelo, filing_period))
@@ -358,7 +350,8 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         :class:`~domain.calculations.registry.RegistrySnapshot` MUST pass
         ``snapshot.revision.id`` here. If omitted, the repository resolves the
         law-determined revision from the observation's ``(modelo, filing_year,
-        period)`` before persisting.
+        period)`` before persisting; the persisted payload always carries a
+        required, non-null stamp.
 
         ``source_metadata`` is source-specific encrypted provenance. It is never
         part of repository keys and must only contain data that belongs inside
@@ -368,7 +361,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         """
         law_revision_id = _validate_observation_casilla_ids(observation)
         when = captured_at if captured_at is not None else now()
-        payload = _ObservationEnvelopePayload(
+        payload = ObservationEnvelopePayload(
             observation=observation,
             captured_at=when,
             source_kind=source_kind,
@@ -378,7 +371,7 @@ class CalculationObservationRepository(SecureBoundRepository[_ObservationEnvelop
         )
         self.save(payload)
 
-    def iter_modelo(self, modelo: str) -> Iterator[_ObservationEnvelopePayload]:
+    def iter_modelo(self, modelo: str) -> Iterator[ObservationEnvelopePayload]:
         """Yield every persisted observation for ``modelo`` in unspecified order.
 
         Used by grouped previous-filing and clean-state readers to enumerate all

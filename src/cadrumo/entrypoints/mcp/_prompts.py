@@ -1,7 +1,7 @@
 """Guided-workflow prompts: the user-controlled entry points of the console.
 
 MCP prompts are the slash-command surface a client renders for the USER to
-pick (ADR R4): invoking one drops the matching shipped skill — verbatim, as an
+pick: invoking one drops the matching shipped skill — verbatim, as an
 embedded resource — plus a short operating brief into the conversation, so the
 model enters the workflow already carrying the playbook and its rules of
 engagement. The catalogue is DERIVED from the shipped skill documents and
@@ -37,7 +37,7 @@ class PromptNotFoundError(LookupError):
 
 
 class PromptArgumentSpec(BaseModel):
-    """One declared argument a guided-workflow prompt accepts (ADR P5).
+    """One declared argument a guided-workflow prompt accepts.
 
     SDK-independent; ``_server`` adapts it to the MCP ``PromptArgument`` type.
     All workflow arguments are optional - a workflow can start without a period
@@ -217,7 +217,7 @@ def prompt_document(name: str, arguments: dict[str, str] | None = None) -> Promp
             brief_text=_orientation_brief(),
             embedded=(
                 EmbeddedDocument(
-                    uri=resource_uri(HarnessResourceKind.RULE, "operating-rules"),
+                    uri=resource_uri(HarnessResourceKind.RULE, "cadrumo-operating-rules"),
                     text=operator_rules_text(),
                 ),
             ),

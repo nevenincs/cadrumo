@@ -32,12 +32,8 @@ adapters:
           assertion.
         capture_requires_active_session: capture_storage_state() requires the currently
           active authenticated session.
-        capture_requires_certificate: capture_storage_state() requires a certificate-backed
-          session with handshake metadata.
-        closing: The authenticator is closing; no new verify_login operations are
-          allowed.
-        context_marker_missing: Browser context was not tagged with the expected certificate
-          marker.
+        capture_requires_certificate: capture_storage_state() requires an active certificate-backed
+          session with protected-resource metadata.
         metadata_parse_failed: Persisted metadata did not produce a parsed model.
         no_active_context: No active browser context; call authenticate() first.
         no_context_capture_storage: No active browser context; cannot capture storage
@@ -52,16 +48,14 @@ adapters:
           authenticating again.
         approval_timeout: Cl@ve Móvil browser authentication did not complete within
           the configured timeout.
-        dni_nie_not_set: AEAT_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI or
-          NIE before authenticating.
+        dni_nie_not_set: CADRUMO_CLAVE_MOVIL_DNI_NIE is not set; configure your DNI
+          or NIE before authenticating.
         initial_navigation_timeout: Initial navigation to Cl@ve Movil did not complete
           within the configured timeout.
         metadata_invalid: Cl@ve Móvil session metadata is invalid or could not be
           parsed.
         no_persisted_session: No persisted Cl@ve Movil session found; run `aeat config
           auth status` first.
-        page_missing_click: Playwright page does not expose click(); cannot drive
-          Cl@ve Movil entry.
         session_expired: Cl@ve Movil session has passed its idle deadline.
         storage_state_hash_mismatch: Cl@ve Movil storage-state hash mismatch; session
           data may be corrupt.
@@ -76,7 +70,7 @@ adapters:
         conflicting_duplicate_metadata: The Google Sheet carries conflicting duplicate
           AEAT metadata.
         foreign_spreadsheet_not_owned: The Google Sheet is not marked as owned by
-          this CADRUMO profile.
+          this Cadrumo profile.
         googleapiclient_not_importable: googleapiclient is not importable; the Google
           adapter cannot reach the API.
         spreadsheet_id_blank: Google spreadsheet id must not be blank.
@@ -106,7 +100,7 @@ adapters:
           needs a controlling terminal, but this command was run non-interactively.'
         oauthlib_not_importable: google-auth-oauthlib is not importable; the OAuth
           flow cannot start.
-        profile_state_unresolved: Google OAuth cannot resolve the selected CADRUMO
+        profile_state_unresolved: Google OAuth cannot resolve the selected Cadrumo
           profile state.
         scope_missing: The Google consent screen returned without granting every required
           scope.
@@ -124,7 +118,7 @@ adapters:
           the active profile to a synthetic test tax identifier.
     profile_binding:
       errors:
-        no_active_profile: No active CADRUMO profile is bound for Google OAuth.
+        no_active_profile: No active Cadrumo profile is bound for Google OAuth.
       suggestions:
         create_profile: Run `aeat config profile create NAME --tax-id <NIF/CIF/DNI/NIE>`
           and then retry the Google command.
@@ -187,7 +181,7 @@ adapters:
           folder_not_owned: Drive folder {folder_name} is not marked as owned by this
             app; refusing to write to protect operator data.
           former_vault_folder: Google Drive vault folder {vault_folder_name} belongs
-            to the former product and cannot be used; use the CADRUMO vault instead.
+            to the former product and cannot be used; use the Cadrumo vault instead.
           googleapiclient_import_failed: The google-api-python-client dependency is
             not importable; run `uv sync` and retry.
           media_non_bytes: Google Drive media download returned {payload_type} instead
@@ -314,6 +308,9 @@ aggregation:
         income to this IRNR projection.
       tipo_renta_code_not_declared: Modelo 210 official tipo-renta code %{tipo_renta_code}
         is not declared for the selected revision and filing period %{period}.
+    errors:
+      official_tipo_renta_parameter_count: Modelo 210 revision %{revision_id} must
+        declare exactly one official tipo-renta code parameter.
   iva_ledger:
     errors:
       bucket_mismatch: Transaction repository bucket does not match the requested
@@ -430,12 +427,12 @@ application:
         or ISO-8601 string.
     operator:
       alignment:
-        both_missing_detail: Neither the Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
+        both_missing_detail: Neither the Cl@ve identity (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           nor the active profile tax id is set. Set both to the same DNI/NIE before
           live AEAT auth.
         both_missing_next_action: Edit the active profile with 'aeat config profile
           edit NAME --tax-id DNI/NIE' and set the same DNI/NIE for Cl@ve Móvil.
-        clave_identity_missing_detail: The Cl@ve identity (AEAT_CLAVE_MOVIL_DNI_NIE)
+        clave_identity_missing_detail: The Cl@ve identity (CADRUMO_CLAVE_MOVIL_DNI_NIE)
           is not set, so it cannot be compared with the active profile tax id. Set
           it to the DNI/NIE of the active profile.
         clave_identity_missing_next_action: Configure the Cl@ve Móvil DNI/NIE to match
@@ -458,16 +455,24 @@ application:
         certificate_file_unresolved: The certificate path '%{certificate_path}' does
           not resolve to an existing file. Run `aeat config auth configure --provider
           certificate --file PATH` with a path to your PKCS#12 (.p12/.pfx) bundle.
+        certificate_secret_mutation_in_progress: A certificate secret change is still
+          being recovered for this profile. Retry that same secret command before
+          changing authentication configuration.
         certificate_source_not_found: Certificate source '%{name}' is not registered.
           Run `aeat config auth certificate list` to see registered sources, or `aeat
           config auth certificate register --name %{name} --file PATH` to register
           it.
+        cleanup_in_progress: An authentication logout or reset is still being recovered
+          for this profile. Resume that operation before changing authentication configuration.
         dangling_active_profile: Active profile pointer '%{active_profile}' does not
           resolve to a registered profile bucket. Run aeat config profile list to
           inspect registered profiles, then aeat config switch NAME or aeat config
           profile create NAME.
         no_active_bucket: No active profile bucket; run `aeat config profile create
           NAME` before configuring auth.
+        provider_not_configured: No authentication provider is configured; specify
+          --provider or configure one first.
+        scope_conflict: Choose either --provider or --all, not both.
         unreadable_active_profile: Active profile '%{active_profile}' has a bucket
           manifest but no readable profile record (status=%{status}). Run `%{next_action}`
           before configuring authentication.
@@ -518,16 +523,18 @@ application:
     sessions:
       errors:
         clave_identity_missing: Cl@ve Móvil live auth requires a configured DNI/NIE
-          (AEAT_CLAVE_MOVIL_DNI_NIE) before any AEAT session can be used.
+          (CADRUMO_CLAVE_MOVIL_DNI_NIE) before any AEAT session can be used.
         clave_identity_profile_mismatch: Cl@ve Móvil identity does not match the active
           profile tax identity; switch to the matching profile or update the profile
           before live AEAT auth.
-        corrupt_session: Your saved auth session is damaged and cannot be read. Run
-          `aeat config auth clear --sessions` and then `aeat config auth test`.
+        corrupt_session: Your saved authentication session is damaged and cannot be
+          read. Run `aeat config auth logout` and then `aeat config auth test`.
         no_session: No active AEAT session; run `aeat config auth test` before reading
           AEAT data.
         profile_tax_id_missing: Cl@ve Móvil live auth requires the active profile
           to carry identity.tax_id.
+        provider_close_failed: AEAT browser session could not be closed safely; retry
+          authentication before reading AEAT data.
         sede_rejected: AEAT session is not accepted by the AEAT Sede; run `aeat config
           auth test` before reading AEAT data.
         session_expired: AEAT session is expired; run `aeat config auth test` before
@@ -1599,9 +1606,10 @@ cli:
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
           a supplier)'
         list_help: List business invoices (both kinds unless --kind filters)
-        operation_type_help: 'M349 operation type: E supply of goods, S services,
-          T triangular, R rectification, A acquisition of goods, I acquisition of
-          services, M miscellaneous'
+        operation_type_help: 'M349 operation key: E supplies of goods, M supplies
+          after an exempt import, H the same via a fiscal representative, A acquisitions
+          of goods, T triangular supplies, S services supplied, I services acquired,
+          R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         operation_type_invalid: '--operation-type must be one of: {valid}'
         remove_help: Delete a business invoice
         update_help: Update business invoice details
@@ -1816,10 +1824,8 @@ cli:
           emitted last).
         force_incomplete_help: Allow export when verification reports the bundle as
           incomplete.
-        group_help: Evidence bundle audit verbs (show/check/export/replay).
+        group_help: Evidence bundle audit verbs (show/check/export).
         output_help: Output path for the bundle ZIP archive.
-        replay_help: Re-run the evidence-case verification for forensic audit handoff;
-          never contacts AEAT and never performs submission.
         show_help: Render an evidence bundle's manifest and referenced records
       bindings:
         app_help: Inspect and preview the bindings of an AEAT tax form
@@ -2622,11 +2628,10 @@ cli:
         status_help: Show the metadata of one work unit
         status_next_action: Draft or recalculate this unit with `aeat app modelo work
           calculate`, then verify the draft with `aeat app modelo work verify`.
-        verify_already_verified_refused: Calculation revision %{calculation_revision_id}
-          is already %{state} and cannot be verified again. Verification accepts only
-          a draft revision.
         verify_help: Verify a draft calculation revision against the verified-complete
           contract
+        verify_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
+          is already verified; returned the existing verification report without changes.'
         verify_next_action_granted: Verification passed. Export the filing artefact
           with `aeat app modelo export`.
         verify_next_action_incomplete: Verification found blocking items (see the
@@ -2720,18 +2725,12 @@ cli:
             name_help: Registered certificate source whose passphrase should be removed
           remove_help: Remove the passphrase bound to a registered certificate source
           set:
-            backend_help: 'Secret backend: secure_storage (default, encrypted at rest)
-              or keyring (OS keychain)'
             name_help: Registered certificate source the passphrase is bound to
-            secret_help: The PKCS#12 passphrase (prompted, hidden, never echoed)
+            secret_prompt: 'PKCS#12 passphrase (input hidden): '
           set_help: Set (or rotate) the passphrase for a registered certificate source
         select:
           name_help: Registered certificate source to activate
         select_help: Select the active certificate source
-      clear_all_help: Clear all configured auth providers
-      clear_help: Clear local authentication metadata
-      clear_locks_help: Clear auth acquisition locks
-      clear_sessions_help: Clear persisted AEAT auth sessions
       configure_help: Configure the active authentication provider
       diagnostics:
         help: Inspect encrypted auth diagnostics.
@@ -2750,6 +2749,8 @@ cli:
         AEAT session
       login_help: Acquire or verify a live AEAT session
       login_reset_lock_help: Clear a stale auth acquisition lock before starting
+      logout_all_help: End sessions for every known authentication provider
+      logout_help: End local authentication sessions without removing provider configuration
       no_active_bucket: No active profile. Run 'aeat config profile create NAME' before
         configuring authentication.
       output_language_help: Output language for the response text (es, en, ca, hu).
@@ -2760,6 +2761,12 @@ cli:
         status_unavailable_gloss: not available yet
       providers_help: List supported authentication providers
       reserved_provider: 'Authentication provider reserved but not available: %{provider}.'
+      reset_all_help: Reset every known authentication provider
+      reset_help: Remove local provider configuration, sessions, locks, certificate
+        registrations, and stored certificate secrets
+      reset_requires_yes: Authentication reset removes stored configuration and credentials.
+        Re-run with --yes to confirm.
+      reset_yes_help: Confirm the destructive authentication reset
       status_help: Show configured authentication state
       status_summary_configured: Authentication is configured but no live session
         is available yet.
@@ -2790,15 +2797,20 @@ cli:
         recipient_id_help: Stable operator-chosen label (e.g. 'my-accountant').
         remove_help: Remove one trusted recipient by id from the active profile.
     custody:
-      confirm_new_passphrase_help: Repeat the new secret-store passphrase.
-      confirm_new_passphrase_prompt: 'Confirm new CADRUMO secret-store passphrase: '
       data_loss_warning: Record this recovery key now. AEAT does not store the plaintext
         recovery key and cannot show it again.
       errors:
-        missing_new_passphrase_confirmation: Repeat the new passphrase with --confirm-new-passphrase.
         new_passphrase_mismatch: The new passphrase and confirmation do not match.
-      new_passphrase_help: New secret-store passphrase. Omit to enter it interactively.
-      new_passphrase_prompt: 'New CADRUMO secret-store passphrase: '
+        non_interactive_secret_required: A secret is required but no interactive terminal
+          is available; use --secrets-stdin.
+        secrets_stdin_invalid_json: The --secrets-stdin payload is not a valid JSON
+          object.
+        secrets_stdin_missing_fields: The --secrets-stdin object is missing required
+          fields or has unexpected ones.
+        secrets_stdin_too_large: The --secrets-stdin payload exceeds the maximum allowed
+          size.
+      secrets_stdin_help: Read the secrets as one bounded JSON object from standard
+        input instead of prompting.
     errors:
       invalid_value: 'Invalid value for %{name}: %{value}'
       no_active_profile: No active profile. Run 'aeat config profile create NAME --tax-id
@@ -2885,7 +2897,7 @@ cli:
       help: Manage the Google OAuth Desktop integration for Drive and Sheets
       login_help: Run the OAuth consent flow (or refresh an existing credential)
       logout_help: Clear the refresh token and metadata; preserve the registered client
-      profile_help: CADRUMO profile name override (default = active profile on workflow
+      profile_help: Cadrumo profile name override (default = active profile on workflow
         state)
       refresh_only_help: Skip the consent screen and refresh an existing credential
         only
@@ -2966,8 +2978,19 @@ cli:
       tax_residence_ccaa_help: Autonomous community of tax residence
     list:
       help: List every registered profile and mark the active one
-    lock:
-      help: Lock the current profile by clearing the active profile pointer.
+    passphrase:
+      change:
+        help: Rotate the file secret store passphrase after verifying the current
+          one.
+      confirm_new_passphrase_prompt: 'Confirm new Cadrumo secret-store passphrase: '
+      current_passphrase_prompt: 'Current Cadrumo secret-store passphrase: '
+      errors:
+        current_passphrase_incorrect: The current passphrase is incorrect; the secret
+          store was not changed.
+        store_unprovisioned: The file secret store is not provisioned; there is no
+          passphrase to change.
+      help: Manage the file secret store passphrase.
+      new_passphrase_prompt: 'New Cadrumo secret-store passphrase: '
     profile:
       already_exists: Profile %{name} already exists. Pick a different target id.
       archive:
@@ -3055,28 +3078,35 @@ cli:
         place
       export_cleartext_local_help: Write cleartext JSON for local/SAR handling only;
         not safe for email, sync, or transfer.
+      export_confirm_passphrase_prompt: 'Confirm bundle passphrase: '
+      export_encrypt_help: AEAD-encrypt the bundle for transfer; the passphrase is
+        prompted (hidden) or read via --secrets-stdin, never argv.
       export_encrypted_info: This profile bundle was written to {out} with AEAD passphrase
-        encryption. Import it with 'aeat config profile import PATH --passphrase ...'.
-        It carries the structured profile bundle only; use the encrypted recovery
-        archive for a complete backup with attachment evidence bytes and audit trail.
+        encryption. Import it with 'aeat config profile import PATH'; the passphrase
+        is prompted (hidden) or read via --secrets-stdin. It carries the structured
+        profile bundle only; use the encrypted recovery archive for a complete backup
+        with attachment evidence bytes and audit trail.
       export_help: Write a passphrase-encrypted portable profile bundle to PATH; cleartext
         JSON requires --cleartext-local for local/SAR use only.
       export_name_help: Profile to export; defaults to the active profile
       export_out_help: Destination path for the profile bundle
-      export_passphrase_help: Passphrase to AEAD-encrypt the serialized profile bundle
-        for transfer.
+      export_passphrase_mismatch: The bundle passphrase and its confirmation do not
+        match; nothing was written.
+      export_passphrase_prompt: 'Bundle passphrase (min 8 characters): '
       export_passphrase_too_short: The profile export passphrase must be at least
         8 characters.
-      export_requires_transport: Use --passphrase for an encrypted transfer bundle,
-        or --cleartext-local for local/SAR JSON only.
+      export_requires_transport: Use --encrypt for an encrypted transfer bundle, or
+        --cleartext-local for local/SAR JSON only.
       export_sensitivity_warning: 'This bundle is UNENCRYPTED and contains sensitive
         financial data: the raw tax id (not redacted), names/surnames, the full ledger,
         calculation revisions, and filing records. It was written to {out}. Use it
         only for local/SAR handling; do not email, sync, or transfer it. Delete it
         after that local/SAR handling is complete. Use ''aeat config profile export
-        --passphrase ...'' for an AEAD-encrypted structured transfer bundle.'
-      export_transport_conflict: Choose either --passphrase or --cleartext-local,
-        not both.
+        --encrypt'' for an AEAD-encrypted structured transfer bundle. It is NOT a
+        full backup: attachment evidence bytes, AEAT captures, and the audit trail
+        are excluded. Use the encrypted recovery archive for a complete backup.'
+      export_transport_conflict: Choose either --encrypt or --cleartext-local, not
+        both.
       help: Manage active profile configuration values
       history:
         invalid_event_type: 'Unknown event type: {value}. Valid event types: {valid}.'
@@ -3114,14 +3144,14 @@ cli:
       import_missing_filing_baseline: 'The profile bundle is missing filing identity
         details. Fix the bundle or re-export a complete profile with these fields:
         %{missing_flags}.'
-      import_passphrase_help: Passphrase for a bundle exported with 'config profile
-        export --passphrase'.
+      import_passphrase_prompt: 'Bundle passphrase: '
       import_path_help: Path to the profile bundle file
       import_uuid_collision: The UUID in the bundle conflicts with an existing profile.
-      logout_help: Sign out of the active profile by clearing the local pointer
-      logout_session_warning: Logout cleared the active-profile pointer. Subsequent
-        verbs in this terminal will refuse with NoActiveBucketSessionError until you
-        run aeat config switch NAME or open a new terminal and re-select.
+      logout_help: Close the active storage session, discard in-memory keys, dispose
+        bucket engines, and clear the local pointer
+      logout_session_warning: Logout closed the active storage session, discarded
+        in-memory key material, disposed bucket engines, and cleared the active-profile
+        pointer. Run aeat config switch NAME before another profile-bound command.
       no_active_profile: No active profile. Run `aeat config profile create NAME --tax-id
         <NIF/CIF/DNI/NIE>` first.
       preflight_filing_year_help: Four-digit filing year.
@@ -3214,13 +3244,11 @@ cli:
         usage_help: Report the on-disk footprint of one sandbox, or every sandbox
           at once.
         usage_name_help: Sandbox name (without the prefix); omit to report every sandbox.
-        use_help: Switch the active profile to an existing sandbox.
-        use_name_help: Sandbox name (without the prefix).
-      sar_catalogue_info: 'This archive holds every personal-data category kept for
-        the profile: identity and profile facts, modelo work units, ledger transactions,
-        calculation revisions, and filing records. Attachment evidence bytes and AEAT
-        captures stay in encrypted storage; use the encrypted recovery archive to
-        include them.'
+      sar_catalogue_info: This archive holds every personal-data category kept for
+        the profile. The exact categories are listed in the data_categories field
+        of this response and its machine-readable context. Attachment evidence bytes
+        and AEAT captures stay in encrypted storage; use the encrypted recovery archive
+        to include them.
       sar_help: Export all personal data held for a profile as a GDPR right-of-access
         archive (the portable profile bundle).
       show:
@@ -3239,11 +3267,32 @@ cli:
         profile.
       view_help: Show one profile's facts (defaults to the active profile)
     recover:
-      help: Recover the file secret store with a recovery key and bind it to a new
-        passphrase.
-      recovery_key_help: Twenty-four word recovery key.
-    rekey:
-      help: Rewrap the file secret store under a new passphrase.
+      errors:
+        recovery_code_rejected: The recovery code did not open the recovery wrapper;
+          the secret store was not changed.
+      help: Recover the file secret store with the 24-word recovery code and bind
+        it to a new passphrase.
+    recovery:
+      candidate_intro: 'Your new recovery code. Write these 24 words down now, in
+        order:'
+      create:
+        help: Enroll a recovery code; the words appear once on the terminal and must
+          be retyped.
+      errors:
+        interactive_terminal_required: 'Recovery enrollment needs an interactive terminal:
+          the code is shown once and must be retyped.'
+        retype_mismatch: The retyped recovery code does not match the one shown; nothing
+          was changed.
+      help: Manage the 24-word recovery code for the file secret store.
+      recovery_code_prompt: '24-word recovery code: '
+      retype_prompt: 'Retype the 24-word recovery code to confirm (input hidden): '
+      rotate:
+        help: Replace the enrolled recovery code; the new words appear once and must
+          be retyped.
+      status:
+        help: Show whether a recovery code is enrolled, without exposing it.
+      verify:
+        help: Verify that a recovery code opens the persisted recovery wrapper.
     repair:
       connectivity_help: Check browser and AEAT Sede connectivity
       connectivity_target_help: Connectivity target to probe
@@ -3289,14 +3338,18 @@ cli:
       reset_progress_yes_help: Confirm clearing saved interrupted-command progress
       yes_help: Confirm repair.
     reset:
-      help: Reset operator-entered configuration scopes
-      invalid_scope: 'Invalid scope: %{scope}. Valid scopes are: %{valid}.'
-      requires_yes: Reset is destructive. Re-run with --yes to confirm.
-      scope_help: 'Scope to reset. profile: delete every profile (manifests, DEKs,
-        declarations, ledger and invoice reviews). auth: clear the persisted AEAT/SEDE
-        auth session. data: quarantine unreadable secure-object rows across all namespaces.
-        all: apply profile, auth, and data together.'
-      yes_help: Explicitly confirm the reset operation
+      help: Start, inspect, or resume the irreversible reset of all locally stored
+        profiles.
+      operation_id_help: Select an exact reset operation by operation ID; omit to
+        select the applicable operation automatically.
+      override_retention_help: Override a legal-retention pause after reviewing your
+        duties; requires a non-empty --reason.
+      reason_help: Give the required reason for overriding a legal-retention pause.
+      requires_yes: Pass --yes to confirm this irreversible reset.
+      resume_help: Continue an incomplete reset operation.
+      start_help: Start a new irreversible reset of every locally stored profile.
+      status_help: Show reset operation status without changing local data.
+      yes_help: Confirm irreversible deletion of every locally stored profile.
     set:
       help: Assign a value to one configuration key
       key_help: Key to assign (e.g. iva.regime)
@@ -3316,11 +3369,6 @@ cli:
       success:
         next_step: 'Next step: run `aeat app overview status` to review your workspace.'
         saved: Profile '%{profile_name}' saved.
-    show_recovery:
-      existing_notice: Recovery key plaintext is not stored and cannot be re-displayed.
-        Use --rotate to mint a new recovery key.
-      help: Show recovery status or mint a one-time recovery key.
-      rotate_help: Rotate the recovery wrapper and print a new one-time recovery key.
     status:
       empty_profile: No profile configured. Run `aeat config profile create NAME`
         to get started.
@@ -3332,8 +3380,6 @@ cli:
     unset:
       help: Clear the value of one configuration key
       key_help: Key to clear
-    verify_recovery:
-      help: Verify that a recovery key opens the persisted recovery wrapper.
     workflow_help: Show config workflow help
   contract:
     app_help: 'Emit the operator capability manifest: roots, command families, lifecycle,
@@ -3904,15 +3950,11 @@ cli:
           by 'aeat app ledger invoice add' are operator invoice records and cannot
           be linked here. To create a linkable catalogue invoice manually, run 'aeat
           app ledger invoice catalogue create' and pass that invoice_id to --invoice-id.
-          To attach purchase-invoice evidence, run 'aeat app ledger link <tx> --evidence-id
-          <id>' (or 'aeat app ledger attach') with an id from 'aeat app ledger evidence
-          add'.
-        missing_target: Supply at least one of --invoice-id or --evidence-id.
-      evidence_id_help: Purchase-invoice evidence id minted by 'aeat app ledger evidence
-        add', attached to the transaction.
-      help: Bind a ledger transaction to an invoice and/or a purchase-invoice evidence
-        record in a single canonical call. Refuses cross-bucket links. Local-only;
-        never contacts AEAT.
+          To attach purchase-invoice evidence, run 'aeat app ledger attach' with an
+          id from 'aeat app ledger evidence add'.
+      help: Bind a ledger transaction to a reconciliation-catalogue invoice in one
+        atomic call. To attach purchase-invoice evidence, use 'aeat app ledger attach'.
+        Refuses cross-bucket links. Local-only; never contacts AEAT.
       id_help: Ledger transaction id (SHA-256 or unambiguous prefix).
       invoice_id_help: Rich invoice-catalogue id from an imported or reconciled invoice,
         or from 'aeat app ledger invoice catalogue create', bound bidirectionally
@@ -4091,6 +4133,8 @@ cli:
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
     app_help: Audit and scaffold locale catalogues
+    canonicalize_product_identity:
+      locale_help: Update only this supported locale catalogue.
     modelo:
       app_help: Manage modelo schema-local translations.
       audit_help: Audit modelo schema translations.
@@ -4163,9 +4207,10 @@ cli:
         section_overview: Overview
         section_review_and_registry: Review and registry
       config:
-        auth_clear: Clear local authentication metadata.
         auth_configure: Configure an authentication provider.
+        auth_logout: End local authentication sessions while preserving provider configuration.
         auth_providers: List supported authentication providers.
+        auth_reset: Remove local authentication configuration and stored credentials.
         auth_status: Show configured authentication state.
         auth_test: Check local authentication readiness.
         diagnostics_logs: Show the configured log path and recent lines.
@@ -4188,6 +4233,9 @@ cli:
         profile_show: Show one profile's facts.
         profile_status: Show active profile readiness.
         profile_switch: Switch to a profile and make it the active one.
+        reset_resume: Continue an incomplete reset operation.
+        reset_start: Start a new irreversible reset of every locally stored profile.
+        reset_status: Show reset operation status without changing local data.
         section_authentication: Authentication
         section_diagnostics: Diagnostics
         section_first_run: First run
@@ -4410,14 +4458,6 @@ cli:
     diff_revisions_modelo_help: Modelo identifier to diff
     diff_revisions_to_year_help: Later filing year whose covering revision is compared
       against the baseline
-    errors:
-      capability:
-        manuals_verify: manual corpus verification
-        parity: registry parity verification
-        registry_verify: registry verification
-        workbooks_verify: workbook verification
-      corpus_companion_absent: Required corpus companion data is unavailable for {capability}.
-        Install {install} and retry.
     inspect_help: Inspect registry status and references
     inspect_registry_root_help: Path to the registry root directory
     manuals:
@@ -4753,8 +4793,6 @@ errors:
     auth_auth_certificate: A certificate-authentication error occurred.
     auth_auth_certificate_expired: The digital certificate has expired. Renew the
       certificate before authenticating.
-    auth_auth_certificate_handshake: The TLS handshake input is not valid. Check the
-      URL provided.
     auth_auth_certificate_load: The PKCS#12 certificate data could not be parsed.
       Check that the file is not corrupted.
     auth_auth_certificate_nif_parse: No DNI, NIF, or NIE could be extracted from the
@@ -4769,8 +4807,12 @@ errors:
       are missing or malformed. Review the Cl@ve configuration.
     auth_auth_configuration: Required authentication settings are missing or malformed.
       Review the authentication configuration.
+    auth_auth_provider_cleanup: The authentication provider could not release all
+      browser resources. Retry cleanup before starting another session.
     auth_auth_validation: The authentication parameters failed validation. Correct
       the values shown and try again.
+    auth_former_product_session_state: Cadrumo detected retired-product AEAT session
+      state and refuses to read, move, re-key, delete, or adopt it.
     auth_google: A Google authentication error occurred.
     auth_google_client_not_registered: No Google Desktop OAuth client is registered
       for the active profile. Register a client to use Google features.
@@ -4799,8 +4841,8 @@ errors:
     auth_storage_master_key_material_missing: No master-key material exists. The secure
       store has not been provisioned yet.
     auth_storage_master_key_passphrase_mismatch: The passphrase does not unwrap the
-      master key. Re-enter it; if you have forgotten it, run aeat config recover --recovery-key
-      <WORDS>.
+      master key. Re-enter it; if you have forgotten it, run aeat config recover with
+      your 24-word recovery code.
     auth_storage_master_key_unavailable: The master key could not be acquired from
       any provider. Check the keychain or the file-fallback passphrase.
   calc:
@@ -4876,9 +4918,6 @@ errors:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
       operation.
-    error_aeat_core: An internal application error occurred.
-    error_aeat_core_not_found: The requested resource or record was not found.
-    error_aeat_observability: An error occurred in the application telemetry.
     error_aggregation_config: An aggregation service composition invariant was violated.
     error_application_live: The live AEAT read orchestration failed.
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
@@ -4886,6 +4925,11 @@ errors:
     error_application_registry: The modelo registry orchestration failed or was refused.
     error_borrador_artefact_not_recognised: The PDF does not match any known Modelo
       100 borrador shape.
+    error_cadrumo_async_resource_cleanup: Asynchronous resource cleanup failed; retry
+      cleanup before continuing.
+    error_cadrumo_core: An internal application error occurred.
+    error_cadrumo_core_not_found: The requested resource or record was not found.
+    error_cadrumo_observability: An error occurred in the application telemetry.
     error_calc_sheets_engine: The spreadsheet export engine encountered an unresolvable
       state while building the export plan.
     error_calc_sheets_parity: The parity harness scenario references casilla ids that
@@ -5226,11 +5270,10 @@ errors:
   integrity:
     integrity_active_profile_pointer: The active-profile pointer is invalid; repair
       the selected profile before continuing.
-    integrity_aeat_core_validation: An internal data-integrity check failed.
+    integrity_cadrumo_core_validation: An internal data-integrity check failed.
     integrity_cli_output_schema: The CLI output-schema registry is misconfigured.
     integrity_filing_amendment_validation: The amendment violates a legal or structural
       invariant.
-    integrity_filing_fixture: The filing fixture data is not valid.
     integrity_filing_validation: Filing validation surfaced a blocking finding.
     integrity_financial_attachments_attachment_validation: The attachment failed validation.
       Check the file and attach it again.
@@ -5308,6 +5351,8 @@ errors:
     profile_import_signature: The profile archive failed its signature or integrity
       check. Do not import archives from an untrusted source.
   internal:
+    internal_active_profile_pointer_transaction: 'Internal error: active-profile pointer
+      transaction ownership is invalid.'
     internal_cli_unexpected_boundary: The command failed due to an unexpected internal
       error, not a stored-data problem. Inspect the diagnostic logs to see what failed.
     internal_master_key_reentrant: 'Internal error: master-key provider entered re-entrantly;
@@ -5323,14 +5368,14 @@ errors:
     internal_profile_project_answers_not_registered: 'Internal error: project_answers
       has not been registered at application startup.'
     internal_profile_registration: 'Internal error: profile could not be registered.'
+    internal_wizard_answer_queue_overflow: 'Internal error: the wizard closed with
+      unconsumed canonical answers.'
+    internal_wizard_answer_queue_underflow: 'Internal error: the wizard asked for
+      more canonical answers than the non-interactive invocation supplied.'
     internal_wizard_catalogue_already_registered: 'Internal error: the wizard catalogue
       was registered a second time with different objects.'
     internal_wizard_catalogue_not_registered: 'Internal error: the wizard catalogue
       has not been registered at application startup.'
-    internal_wizard_script_overflow: 'Internal error: the wizard closed with unconsumed
-      scripted answers.'
-    internal_wizard_script_underflow: 'Internal error: the wizard asked for more answers
-      than it had scripted.'
     internal_workflow_abort_signal: 'Internal error: a workflow stage raised an abort
       signal.'
     internal_workflow_unhandled: 'Internal error: a workflow stage raised an unhandled
@@ -5376,6 +5421,9 @@ errors:
       no further operations.
     modelo_184_share_sum: Modelo 184 member share percentages must sum to exactly
       100%.
+    modelo_210_agrupacion_renta_rows: Modelo 210 annual grouped-renta rows must form
+      a lawful single grouping (one code, one rate, one identified property, and one
+      payer unless the multi-payer exception applies).
     modelo_347_threshold: Modelo 347 operations above the reporting threshold require
       explicit declaration coverage.
     modelo_349_country_prefix_context: 'Modelo 349 rejects country prefix {country_code}
@@ -5594,6 +5642,8 @@ errors:
       profile. Use the profile UUID to disambiguate.
     refused_profile_lifo_forbidden: LIFO stock valuation is not admitted for tax purposes.
       Use FIFO, weighted average price, or average cost.
+    refused_profile_logout_override: Logout cannot change an active profile selected
+      by --profile or CADRUMO_ACTIVE_PROFILE. Remove the override and retry.
     refused_profile_not_configured: RENTA verification needs a tax-residence profile.
       Complete the profile before continuing.
     refused_profile_not_found: No profile exists with the identifier provided.
@@ -5684,13 +5734,11 @@ errors:
         for sensitivity %{expected}, but the caller used %{classification}.
       schema_mismatch: Secure-object namespace %{namespace} is registered for schema
         %{expected}, but the caller used schema %{schema_version}.
-      schema_upgrade_path_missing: 'No schema upgrade path for namespace {namespace}:
-        an upgrader from version {missing_from_version} toward {expected} is missing.'
-      schema_upgrader_already_registered: A schema upgrader is already registered
-        for namespace {namespace} from version {from_version}.
       schema_version_from_future: Stored schema version {schema_version} for namespace
         {namespace} is newer than this application supports (up to {expected}); it
         cannot be read.
+      schema_version_unsupported: Stored schema version {schema_version} for namespace
+        {namespace} is unsupported; this application requires version {expected}.
       unknown_classification: Secure-object namespace %{namespace} contains unknown
         sensitivity %{classification}.
       unregistered: Secure-object namespace %{namespace} is not registered for runtime
@@ -5771,6 +5819,9 @@ mcp:
   call:
     timeout: '''{command}'' exceeded the {tier}-tier time limit ({seconds}s) and was
       cancelled. Retry, or run the equivalent aeat command directly in a terminal.'
+    timeout_may_complete: '''{command}'' exceeded its time limit; the operation may
+      still be completing in the background. Re-run it with the same idempotency key
+      to check - the idempotency guard makes the retry safe and never double-writes.'
   elicitation:
     confirm:
       consequence_handoff: This produces the filing-grade artefact the taxpayer will
@@ -5786,7 +5837,7 @@ mcp:
         by design. Export locally; the taxpayer files themselves.'
       no_channel: '''{command}'' needs a human confirmation, and this client does
         not support elicitation. Run it from a client that can ask you questions,
-        or run the equivalent CADRUMO CLI command directly in a terminal.'
+        or run the equivalent Cadrumo CLI (`aeat`) command directly in a terminal.'
   faithfulness:
     advisory: 'FAITHFULNESS ADVISORY: the call''s arguments cite amount(s) [{values}]
       that no tool result in this session produced. Verify the figure against a calculate/revision
@@ -5812,6 +5863,10 @@ mcp:
       by the ''{owner}'' persona; the ''{persona}'' persona is structurally denied
       it. Hand the verified work unit to the verifier session to produce the export
       or record marker.'
+  serving:
+    warm_degraded: '''{command}'' was served through the subprocess transport because
+      the warm in-process runtime was {reason}; the result is identical, only slower.
+      Warm serving resumes once the slow call clears.'
 profile:
   descendiente:
     custodia_compartida_prorrata_applied: 50 % prorrata (Art. 61 LIRPF) applied for

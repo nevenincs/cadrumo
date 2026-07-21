@@ -321,7 +321,7 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # childless profile; scenarios that exercise real descendientes
         # override this key directly.
         "renta-2024-profile-minimo-descendientes-estatal": Decimal("0"),
-        # Parte autonómica (casilla 0514, #593): every scenario in this file
+        # Parte autonómica (casilla 0514): every scenario in this file
         # runs a Cataluña-resident profile, which is absent from the wired
         # per-CCAA divergence table, so the autonómico aggregate mirrors the
         # estatal one exactly — zero baseline here for the same reason.
@@ -335,8 +335,8 @@ def _base_binding_values() -> dict[BindingId, Decimal]:
         # resolves to zero when no prior Modelo 100 filing exists in the
         # test corpus. Test fixtures with no carry exercise this baseline.
         "renta-2024-base-liquidable-negativa-general-anterior": Decimal("0"),
-        # LIRPF art. 64/75 anualidades separate-escala eligibility flag
-        # (#532). 1 = the non-custodial payer without the mínimo por
+        # LIRPF art. 64/75 anualidades separate-escala eligibility flag.
+        # 1 = the non-custodial payer without the mínimo por
         # descendientes (the form-faithful default). Only read inside the
         # régimen predicate when 0527 > 0 AND 0527 < 0505, so it is inert for
         # every non-anualidades scenario.
@@ -516,7 +516,7 @@ def test_m100_2024_cuota_estatal_ascendant_over_75(
 _BASE_14896 = Decimal("16896")
 _ANUALIDADES_3000 = Decimal("3000")
 _EXPECTED_0505_NO_ANUALIDADES = Decimal("14896.00")
-# LIRPF art. 64/75 (#532): 0505 is the FULL base liquidable general — the
+# LIRPF art. 64/75: 0505 is the FULL base liquidable general — the
 # anualidades are NOT subtracted from the base. They enter only through the
 # separate-escala term inside the régimen branch, so 0505 is unchanged whether
 # or not anualidades are declared.
@@ -564,7 +564,7 @@ def test_0505_computed_from_0500_no_anualidades(m100_2024_snapshot: RegistrySnap
 
 
 def test_anualidades_alimentos_separate_escala(m100_2024_snapshot: RegistrySnapshot) -> None:
-    """Anualidades por alimentos hijos get the LIRPF art. 64/75 separate escala (#532).
+    """Anualidades por alimentos hijos get the LIRPF art. 64/75 separate escala.
 
     With base liquidable 14,896 EUR and judicial anualidades 3,000 EUR (payer
     without the mínimo por descendientes for those children):
@@ -607,11 +607,11 @@ def test_anualidades_alimentos_separate_escala(m100_2024_snapshot: RegistrySnaps
 
 def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot: RegistrySnapshot) -> None:
     """Anti-tautology + ordering: the separate escala sits strictly between the
-    retired shortcut and the no-benefit single escala (#532).
+    retired shortcut and the no-benefit single escala.
 
     Three cuota íntegra estatal values pinned to real LIRPF 2024 art. 63 tramos:
       - no benefit (single escala on full base):  949.02 EUR
-      - separate escala (the correct #532 value): 699.77 EUR
+      - separate escala (the correct value):       699.77 EUR
       - retired shortcut (the under-declaration):  602.87 EUR
     Ordering shortcut < separate < no-benefit is a property (not a recomputation
     of the formula under test): the fix RAISES the cuota above the defect while
@@ -661,7 +661,7 @@ def test_anti_tautology_anualidades_changes_cuota(m100_2024_snapshot: RegistrySn
 def test_anualidades_regime_off_shared_custody_reduces_to_single_escala(
     m100_2024_snapshot: RegistrySnapshot,
 ) -> None:
-    """Flag off (shared custody) → régimen off → ordinary single escala on full base (#532).
+    """Flag off (shared custody) → régimen off → ordinary single escala on full base.
 
     LIRPF art. 64 denies the separate escala to a payer who retains the mínimo
     por descendientes (custodia compartida splits it 50/50). With the eligibility
@@ -695,7 +695,7 @@ def test_anualidades_regime_off_shared_custody_reduces_to_single_escala(
 def test_anualidades_regime_off_when_anualidades_exceed_base(
     m100_2024_snapshot: RegistrySnapshot,
 ) -> None:
-    """Régimen off when anualidades >= base liquidable general (#532).
+    """Régimen off when anualidades >= base liquidable general.
 
     LIRPF art. 64 applies only "cuando el importe de aquellas sea inferior a la
     base liquidable general". With anualidades (16,000) above the base (14,896)

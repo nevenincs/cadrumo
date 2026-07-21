@@ -18,8 +18,9 @@ a ``(path, cleanup)`` tuple; the caller is responsible for invoking
 ``cleanup()`` when the consumer no longer needs the path.
 
 Both helpers consult the active :class:`SecretStore` via
-:func:`get_secret_store`, a process-singleton lazy factory keyed by
-the resolved :class:`Settings`.
+:func:`get_secret_store`, a route-aware lazy factory keyed by the resolved
+secret-store and blob-store roots from :class:`Settings`, or accept an
+explicit ``store`` argument to bypass that factory entirely.
 """
 
 from __future__ import annotations
@@ -42,8 +43,8 @@ if TYPE_CHECKING:
 
 _log = get_logger(__name__)
 _factory_lock = Lock()
-_singleton_store: SecretStore | None = None
-_DEFAULT_TEMPFILE_PREFIX = "aeat-secret"
+_stores_by_route: dict[tuple[str, str], SecretStore] = {}
+_DEFAULT_TEMPFILE_PREFIX = "cadrumo-secret"
 _EMPTY_SUFFIX = ""
 _TEMPFILE_PREFIX_SEPARATOR = "-"
 _FORBIDDEN_TEMPFILE_TOKEN_CHARS = frozenset(("/", "\\", "\0"))
@@ -51,50 +52,45 @@ _MATERIALISATION_ERROR_CONTEXT = {"surface": "secret_materialisation"}
 
 
 def get_secret_store(*, settings: Settings | None = None) -> SecretStore:
-    """Return the process-wide singleton :class:`SecretStore`.
+    """Return the route-canonical :class:`SecretStore`.
 
-    The first call constructs the store from the resolved
-    :class:`Settings`; subsequent calls return the same instance.
-    Tests should call :func:`override_secret_store` to inject a
-    deterministic implementation.
+    Stores are cached by normalized secret-store and blob-store roots, so an
+    explicit Settings route never inherits the first store constructed by an
+    unrelated profile root. Callers needing an isolated store inject it
+    directly at the consuming boundary (the ``store=`` parameter on
+    :func:`materialise_secret` / :func:`export_to_temp_path`, or the
+    ``store=`` / ``settings=`` parameters on the secret-store consumers)
+    rather than through a process-wide override.
 
     Args:
         settings: Optional pre-built settings instance. When ``None``,
-            :func:`load_settings` is consulted on first use.
+            :func:`load_settings` is consulted for the current route.
 
     Returns:
-        The singleton :class:`SecretStore`.
+        The cached :class:`SecretStore` for the resolved route.
     """
-    global _singleton_store
     with _factory_lock:
-        if _singleton_store is not None:
-            return _singleton_store
         from .....core.config import load_settings
 
         resolved = settings if settings is not None else load_settings()
+        route = (
+            os.path.normcase(str(Path(resolved.cadrumo_secret_store_dir).resolve())),
+            os.path.normcase(str(Path(resolved.cadrumo_blob_store_dir).resolve())),
+        )
+        cached = _stores_by_route.get(route)
+        if cached is not None:
+            return cached
         # Stores fall through to ``get_active_master_key()`` (the
         # active :class:`BucketSession`) when ``master_key_provider`` is
         # absent. The CLI root callback opens the session before any
         # consumer reaches this factory.
         blob_store = EncryptedBlobStore(root_dir=Path(resolved.cadrumo_blob_store_dir))
-        _singleton_store = SecretStore(
+        store = SecretStore(
             store_dir=Path(resolved.cadrumo_secret_store_dir),
             blob_store=blob_store,
         )
-        return _singleton_store
-
-
-def override_secret_store(store: SecretStore | None) -> None:
-    """Test helper: install (or clear) a process-wide secret-store override.
-
-    Args:
-        store: The :class:`SecretStore` to install. ``None`` clears
-            the override and reverts to the standard
-            :func:`get_secret_store` resolution.
-    """
-    global _singleton_store
-    with _factory_lock:
-        _singleton_store = store
+        _stores_by_route[route] = store
+        return store
 
 
 def _write_bytes_secure_fd(fd: int, payload: bytes) -> None:
@@ -199,10 +195,9 @@ def materialise_secret(
     Args:
         key: Natural key passed to :meth:`SecretStore.get`.
         store: Optional :class:`SecretStore` override. When ``None``,
-            the process-wide singleton from :func:`get_secret_store`
-            is used.
+            the route-canonical store from :func:`get_secret_store` is used.
         prefix: Filename prefix for the tempfile. Defaults to
-            ``aeat-secret``.
+            ``cadrumo-secret``.
         suffix: Filename suffix (e.g. ``.json`` for a Google
             service-account JSON file). Defaults to empty.
 
@@ -271,5 +266,4 @@ __all__ = [
     "export_to_temp_path",
     "get_secret_store",
     "materialise_secret",
-    "override_secret_store",
 ]

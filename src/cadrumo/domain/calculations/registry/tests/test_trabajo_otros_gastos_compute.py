@@ -158,7 +158,8 @@ def test_otros_gastos_feeds_net_end_to_end() -> None:
 
     A contribuyente with rendimiento íntegro minorado 0018 = 5.000 who enters no
     otros-gastos value still receives the automatic EUR 2.000 (0019) and a net
-    rendimiento of 3.000 (0022) — the over-taxation core of issue #568.
+    rendimiento of 3.000 (0022); omitting the auto-apply would over-tax the
+    contribuyente by silently dropping the automatic deduction.
     """
     for year in _IN_SCOPE_REVISIONS:
         revision = _revision(year)

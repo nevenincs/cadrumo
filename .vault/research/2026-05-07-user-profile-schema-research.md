@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#user-profile-schema'
 date: '2026-05-07'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-07-user-profile-registry-dependencies-reference]]"
   - "[[2026-05-07-user-profile-filing-export-dependencies-reference]]"

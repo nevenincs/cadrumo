@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-303-formulas'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-17-modelo-303-casilla-rules-research]]'
   - '[[2026-04-17-modelo-303-formulas-adr]]'
@@ -19,7 +19,7 @@ Auto-generated index of all documents tagged with `#modelo-303-formulas`.
 
 ### adr
 
-- `2026-04-17-modelo-303-formulas-adr` - modelo-303-formulas adr (#183)
+- `2026-04-17-modelo-303-formulas-adr` - modelo-303-formulas adr (#183) | (**status:** `accepted`)
 
 ### plan
 

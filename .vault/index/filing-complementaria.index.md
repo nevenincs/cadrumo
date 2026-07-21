@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#filing-complementaria'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-04-13-filing-complementaria-adr]]'
   - '[[2026-04-13-filing-complementaria-plan]]'
@@ -21,7 +21,7 @@ Auto-generated index of all documents tagged with `#filing-complementaria`.
 
 ### adr
 
-- `2026-04-13-filing-complementaria-adr` - adr: filing complementaria
+- `2026-04-13-filing-complementaria-adr` - adr: filing complementaria | (**status:** `accepted`)
 
 ### audit
 

@@ -3,11 +3,10 @@ tags:
   - "#adr"
   - "#live-write-test-audit"
 date: "2026-04-16"
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-04-16-live-write-test-audit-research]]"
   - "[[2026-04-16-live-write-test-audit-reference]]"
-  - "[[2026-04-12-submission-engine-adr]]"
 ---
 
 # `live-write-test-audit` adr: `treat-marker-integrity-as-the-test-boundary-tripwire` | (**status:** `accepted`)
@@ -21,7 +20,7 @@ Issue `#119` must verify that the AEAT test suite cannot cross into a live write
 - The default pytest invocation already excludes `live` tests.
 - The live AEAT-facing tests that do exist are dry-run or read-only.
 - Marker integrity is therefore the first and most brittle boundary: an unmarked test can bypass the intended suite partitioning.
-- The submission and workflow unit suites still depend on test doubles around `aeat.adapters.outbound.aeat.export`, which is a quality problem but not evidence of a reachable live AEAT write path.
+- The submission and workflow unit suites still depend on test doubles around `cadrumo.adapters.outbound.aeat.export`, which is a quality problem but not evidence of a reachable live AEAT write path.
 
 ## Decision
 
@@ -34,7 +33,7 @@ Issue `#119` must verify that the AEAT test suite cannot cross into a live write
 
 - Marker integrity is the cheapest high-signal safeguard for keeping live tests out of default pytest runs.
 - Function-body inspection avoids false positives from helper classes or explanatory docstrings while still proving the actual marked test path is safe.
-- Narrow remediation keeps this issue aligned with the user’s explicit instruction not to widen scope or touch `src/aeat/`.
+- Narrow remediation keeps this issue aligned with the user’s explicit instruction not to widen scope or touch `src/cadrumo/`.
 - Follow-up issues preserve momentum on the suite-hardening objective without burying the audit under speculative rewrites.
 
 ## Consequences

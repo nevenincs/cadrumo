@@ -1,6 +1,6 @@
 """Domain exception hierarchy and public error-registry surface.
 
-Every subpackage should raise subclasses of :class:`AeatError` to ensure
+Every subpackage should raise subclasses of :class:`CadrumoError` to ensure
 predictable error handling throughout the application.
 """
 
@@ -82,8 +82,8 @@ class SiteHealthStatusLike(Protocol):
         ...
 
 
-class AeatError(Exception):
-    """Base exception for all AEAT domain errors."""
+class CadrumoError(Exception):
+    """Base exception for all registered Cadrumo errors."""
 
     code: ClassVar[ErrorCode]
 
@@ -120,7 +120,7 @@ class AeatError(Exception):
         self.translated_message: str | None = translated_message
 
 
-class CoreError(AeatError):
+class CoreError(CadrumoError):
     """Base error for internal framework and core-primitive failures."""
 
 
@@ -161,7 +161,7 @@ class ProfileAnswerTypeError(CoreValidationError):
     """
 
 
-class AeatObservabilityError(AeatError):
+class CadrumoObservabilityError(CadrumoError):
     """Base class for observability-layer errors.
 
     Lives in :mod:`core.errors` (rather than the leaf
@@ -171,7 +171,7 @@ class AeatObservabilityError(AeatError):
     """
 
 
-class FixtureProvisioningError(AeatError):
+class FixtureProvisioningError(CadrumoError):
     """Raised when Google Workspace test-fixture provisioning fails.
 
     Thrown by the provisioning and teardown scripts under ``scripts/``
@@ -180,17 +180,7 @@ class FixtureProvisioningError(AeatError):
     """
 
 
-class ModeloFixtureError(AeatError):
-    """Raised when a synthetic modelo-history fixture cannot be loaded.
-
-    Thrown by :mod:`application.filing.testing` when the fixtures directory
-    cannot be resolved, a fixture file cannot be read, JSON decoding fails, or
-    a payload fails strict pydantic validation (including the synthetic-only
-    invariant checks on the ``synthetic`` and ``_comment`` fields).
-    """
-
-
-class SiteHealthError(AeatError):
+class SiteHealthError(CadrumoError):
     """Raised when AEAT site-health detection classifies a non-OK state.
 
     Carries a :class:`SiteHealthStatusLike` payload describing the
@@ -234,7 +224,7 @@ class SiteHealthError(AeatError):
         self.status: SiteHealthStatusLike = status
 
 
-class McpLaunchError(AeatError):
+class McpLaunchError(CadrumoError):
     """Raised when a repo-managed MCP process cannot be launched safely."""
 
 
@@ -257,13 +247,12 @@ class ActiveProfilePointerError(CoreError):
             translated_message="errors.integrity.integrity_active_profile_pointer",
             context={"path": str(path)},
             suggestion=(
-                "aeat config repair profile "
-                "# language fallback=es until the active-profile pointer is readable"
+                "aeat config repair profile # language fallback=es until the active-profile pointer is readable"
             ),
         )
 
 
-class NoActiveProfileError(AeatError):
+class NoActiveProfileError(CadrumoError):
     """Raised when an operation requires an active profile bucket and none is selected.
 
     Bucket-scoped repositories (transaction catalogue, manual ledger,
@@ -300,9 +289,9 @@ from ._severity import BaseSeverity
 __all__ = [
     "ERROR_REGISTRY",
     "ActiveProfilePointerError",
-    "AeatError",
-    "AeatObservabilityError",
     "BaseSeverity",
+    "CadrumoError",
+    "CadrumoObservabilityError",
     "CoreError",
     "CoreNotFoundError",
     "CoreValidationError",
@@ -312,7 +301,6 @@ __all__ = [
     "ErrorEnvelope",
     "FixtureProvisioningError",
     "McpLaunchError",
-    "ModeloFixtureError",
     "NoActiveProfileError",
     "ProfileAnswerTypeError",
     "RedactionError",

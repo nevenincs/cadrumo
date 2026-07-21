@@ -1,0 +1,3714 @@
+{
+  "frames": [
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "dependencies",
+        "--year",
+        "2026"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.dependencies",
+        "notices": [],
+        "result": {
+          "clean_state": null,
+          "filing_year": 2026,
+          "items": [
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "irpf.previous_year_economic_activity_net_income"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "0224",
+                    "1479",
+                    "1553",
+                    "1577"
+                  ],
+                  "source_modelo": "100"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "100"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "130",
+              "target_period": {
+                "code": "1T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2019-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "irpf.previous_year_economic_activity_net_income"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "0224",
+                    "1479",
+                    "1553",
+                    "1577"
+                  ],
+                  "source_modelo": "100"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-130-pagos-fraccionados-anteriores",
+                    "modelo-130-resultados-negativos-anteriores"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "07",
+                    "16",
+                    "saldo-negativo-fin-periodo"
+                  ],
+                  "source_modelo": "130"
+                }
+              ],
+              "dependency_count": 2,
+              "source_modelos": [
+                "100",
+                "130"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "130",
+              "target_period": {
+                "code": "2T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2019-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "irpf.previous_year_economic_activity_net_income"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "0224",
+                    "1479",
+                    "1553",
+                    "1577"
+                  ],
+                  "source_modelo": "100"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-130-pagos-fraccionados-anteriores"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "07",
+                    "16"
+                  ],
+                  "source_modelo": "130"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-130-pagos-fraccionados-anteriores",
+                    "modelo-130-resultados-negativos-anteriores"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "07",
+                    "16",
+                    "saldo-negativo-fin-periodo"
+                  ],
+                  "source_modelo": "130"
+                }
+              ],
+              "dependency_count": 3,
+              "source_modelos": [
+                "100",
+                "130"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "130",
+              "target_period": {
+                "code": "3T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2019-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "irpf.previous_year_economic_activity_net_income"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "0224",
+                    "1479",
+                    "1553",
+                    "1577"
+                  ],
+                  "source_modelo": "100"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-130-pagos-fraccionados-anteriores"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "07",
+                    "16"
+                  ],
+                  "source_modelo": "130"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-130-pagos-fraccionados-anteriores"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "07",
+                    "16"
+                  ],
+                  "source_modelo": "130"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-130-pagos-fraccionados-anteriores",
+                    "modelo-130-resultados-negativos-anteriores"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "07",
+                    "16",
+                    "saldo-negativo-fin-periodo"
+                  ],
+                  "source_modelo": "130"
+                }
+              ],
+              "dependency_count": 4,
+              "source_modelos": [
+                "100",
+                "130"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "130",
+              "target_period": {
+                "code": "4T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2019-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-131-2026-resultados-negativos-anteriores"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "saldo-negativo-fin-periodo"
+                  ],
+                  "source_modelo": "131"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "131"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "131",
+              "target_period": {
+                "code": "2T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2026"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-131-2026-resultados-negativos-anteriores"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "saldo-negativo-fin-periodo"
+                  ],
+                  "source_modelo": "131"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "131"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "131",
+              "target_period": {
+                "code": "3T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2026"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-131-2026-resultados-negativos-anteriores"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "saldo-negativo-fin-periodo"
+                  ],
+                  "source_modelo": "131"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "131"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "131",
+              "target_period": {
+                "code": "4T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2026"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-180-rel-115-base-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "02"
+                  ],
+                  "source_modelo": "115"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-180-rel-115-base-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "02"
+                  ],
+                  "source_modelo": "115"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-180-rel-115-base-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "02"
+                  ],
+                  "source_modelo": "115"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-180-rel-115-base-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "02"
+                  ],
+                  "source_modelo": "115"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-180-rel-115-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "03"
+                  ],
+                  "source_modelo": "115"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-180-rel-115-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "03"
+                  ],
+                  "source_modelo": "115"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-180-rel-115-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "03"
+                  ],
+                  "source_modelo": "115"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-180-rel-115-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "03"
+                  ],
+                  "source_modelo": "115"
+                }
+              ],
+              "dependency_count": 8,
+              "source_modelos": [
+                "115"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "180",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-trabajo-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "02"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-trabajo-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "02"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-trabajo-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "02"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-trabajo-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "02"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-trabajo-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "05"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-trabajo-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "05"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-trabajo-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "05"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-trabajo-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "05"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-actividades-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "08"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-actividades-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "08"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-actividades-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "08"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-actividades-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "08"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-actividades-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "11"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-actividades-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "11"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-actividades-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "11"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-actividades-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "11"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-premios-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "14"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-premios-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "14"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-premios-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "14"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-premios-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "14"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-premios-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "17"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-premios-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "17"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-premios-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "17"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-premios-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "17"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-ganancias-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "20"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-ganancias-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "20"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-ganancias-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "20"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-ganancias-dinerario-importe-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "20"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-ganancias-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "23"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-ganancias-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "23"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-ganancias-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "23"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-ganancias-especie-importe-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "23"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-derechos-imagen-importe-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "26"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-derechos-imagen-importe-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "26"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-derechos-imagen-importe-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "26"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-derechos-imagen-importe-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "26"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-190-rel-111-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111"
+                }
+              ],
+              "dependency_count": 40,
+              "source_modelos": [
+                "111"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "190",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2024-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-193-rel-123-base-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "06"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-193-rel-123-base-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "06"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-193-rel-123-base-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "06"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-193-rel-123-base-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "06"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-193-rel-123-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "09"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-193-rel-123-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "09"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-193-rel-123-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "09"
+                  ],
+                  "source_modelo": "123"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-193-rel-123-retenciones-anual"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "09"
+                  ],
+                  "source_modelo": "123"
+                }
+              ],
+              "dependency_count": 8,
+              "source_modelos": [
+                "123"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "193",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2024-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-200-2024-rel-self-bin-pendiente-anterior"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "00671"
+                  ],
+                  "source_modelo": "200"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-200-2024-rel-self-dotaciones-deterioro-no-cumplido-anterior"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "01498"
+                  ],
+                  "source_modelo": "200"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-200-2024-rel-self-dotaciones-deterioro-cumplido-anterior"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "01499"
+                  ],
+                  "source_modelo": "200"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
+                  ],
+                  "period": {
+                    "code": "1P",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "03"
+                  ],
+                  "source_modelo": "202"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
+                  ],
+                  "period": {
+                    "code": "2P",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "03"
+                  ],
+                  "source_modelo": "202"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-200-2024-rel-202-pagos-fraccionados-40-2"
+                  ],
+                  "period": {
+                    "code": "3P",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "03"
+                  ],
+                  "source_modelo": "202"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-200-2024-rel-202-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "1P",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "34"
+                  ],
+                  "source_modelo": "202"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-200-2024-rel-202-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "2P",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "34"
+                  ],
+                  "source_modelo": "202"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-200-2024-rel-202-pagos-fraccionados"
+                  ],
+                  "period": {
+                    "code": "3P",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "34"
+                  ],
+                  "source_modelo": "202"
+                }
+              ],
+              "dependency_count": 9,
+              "source_modelos": [
+                "200",
+                "202"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "200",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2024-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2024,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-202-2025-y-siguientes-rel-cuota-base-1p"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2024
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "DP200014B:00592"
+                  ],
+                  "source_modelo": "200"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "200"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "202",
+              "target_period": {
+                "code": "1P",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2025-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "DP200014B:00592"
+                  ],
+                  "source_modelo": "200"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-202-2025-y-siguientes-rel-self-pagos-2p"
+                  ],
+                  "period": {
+                    "code": "1P",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "34"
+                  ],
+                  "source_modelo": "202"
+                }
+              ],
+              "dependency_count": 2,
+              "source_modelos": [
+                "200",
+                "202"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "202",
+              "target_period": {
+                "code": "2P",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2025-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-202-2025-y-siguientes-rel-cuota-base-2p-3p"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "DP200014B:00592"
+                  ],
+                  "source_modelo": "200"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-202-2025-y-siguientes-rel-self-pagos-3p"
+                  ],
+                  "period": {
+                    "code": "1P",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "34"
+                  ],
+                  "source_modelo": "202"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-202-2025-y-siguientes-rel-self-pagos-3p"
+                  ],
+                  "period": {
+                    "code": "2P",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "34"
+                  ],
+                  "source_modelo": "202"
+                }
+              ],
+              "dependency_count": 3,
+              "source_modelos": [
+                "200",
+                "202"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "202",
+              "target_period": {
+                "code": "3P",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2025-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "12",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "01",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "01",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "02",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "02",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "03",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "03",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "04",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "04",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "05",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "05",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "06",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "06",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "07",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "07",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "08",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "08",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "09",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "09",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "10",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "10",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "11",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "11",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "12",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2025,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-303-rel-self-compensacion-anteriores"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 2,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "1T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-303-rel-self-compensacion-anteriores"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 2,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "2T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-303-rel-self-compensacion-anteriores"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 2,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "3T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-303-compensacion-pendiente-anteriores"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-303-rel-self-compensacion-anteriores"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.compensacion-disponible-fin-periodo"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 2,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "303",
+              "target_period": {
+                "code": "4T",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2023-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "01",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "01",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "02",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "02",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "03",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "03",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "04",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "04",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "05",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "05",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "06",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "06",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "07",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "07",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "08",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "08",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "09",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "09",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "10",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "10",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "11",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "11",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-353-prev-322-cuota-deducible-total",
+                    "modelo-353-prev-322-cuota-devengada-total",
+                    "modelo-353-prev-322-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "12",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": true,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total",
+                    "iva.cuota-devengada-total",
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "322"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "322"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "353",
+              "target_period": {
+                "code": "12",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2008-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-simplificado"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "54"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 13,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "390",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2010-y-siguientes"
+            },
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2025,
+                  "origin": "previous_filing_binding",
+                  "origin_ids": [
+                    "modelo-720-prior-year-cuentas-valoracion-baseline",
+                    "modelo-720-prior-year-inmuebles-valoracion-baseline",
+                    "modelo-720-prior-year-valores-valoracion-baseline"
+                  ],
+                  "period": {
+                    "code": "0A",
+                    "filing_year": 2025
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "cuentas.valoracion",
+                    "inmuebles.valoracion",
+                    "valores.valoracion"
+                  ],
+                  "source_modelo": "720"
+                }
+              ],
+              "dependency_count": 1,
+              "source_modelos": [
+                "720"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "720",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2013-y-siguientes"
+            }
+          ],
+          "modelo_filter": null,
+          "operation": "modelo.work.dependencies",
+          "period_filter": null,
+          "source_modelos": [
+            "100",
+            "111",
+            "115",
+            "123",
+            "130",
+            "131",
+            "200",
+            "202",
+            "303",
+            "322",
+            "720"
+          ],
+          "target_count": 44,
+          "target_modelos": [
+            "130",
+            "131",
+            "180",
+            "190",
+            "193",
+            "200",
+            "202",
+            "303",
+            "353",
+            "390",
+            "720"
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "dependencies",
+        "--year",
+        "2026",
+        "--modelo",
+        "390"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.dependencies",
+        "notices": [],
+        "result": {
+          "clean_state": null,
+          "filing_year": 2026,
+          "items": [
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-simplificado"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "54"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 13,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "390",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2010-y-siguientes"
+            }
+          ],
+          "modelo_filter": "390",
+          "operation": "modelo.work.dependencies",
+          "period_filter": null,
+          "source_modelos": [
+            "303"
+          ],
+          "target_count": 1,
+          "target_modelos": [
+            "390"
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "command",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
+        "dependencies",
+        "--year",
+        "2026",
+        "--modelo",
+        "390",
+        "--period",
+        "0A"
+      ],
+      "captures": [],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.dependencies",
+        "notices": [],
+        "result": {
+          "clean_state": {
+            "blockers": [
+              "missing_observation",
+              "missing_current_filing_record"
+            ],
+            "clean": false,
+            "dependencies": [
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "1T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [
+                  "missing_observation",
+                  "missing_current_filing_record"
+                ],
+                "calculation_revision_id": null,
+                "clean": false,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2026,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2026
+                },
+                "source_modelo": "303",
+                "unexpected_member_nifs": []
+              }
+            ],
+            "requires_clean_state": true,
+            "target_filing_year": 2026,
+            "target_modelo": "390",
+            "target_period": {
+              "code": "0A",
+              "filing_year": 2026
+            }
+          },
+          "filing_year": 2026,
+          "items": [
+            {
+              "dependencies": [
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-deducible-total"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-deducible-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-total"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.cuota-devengada-total"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-resultado-regimen-general"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "iva.resultado-regimen-general"
+                  ],
+                  "source_modelo": "303"
+                },
+                {
+                  "filing_year": 2026,
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "modelo-390-rel-303-cuota-devengada-simplificado"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2026
+                  },
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "54"
+                  ],
+                  "source_modelo": "303"
+                }
+              ],
+              "dependency_count": 13,
+              "source_modelos": [
+                "303"
+              ],
+              "target_filing_year": 2026,
+              "target_modelo": "390",
+              "target_period": {
+                "code": "0A",
+                "filing_year": 2026
+              },
+              "target_revision_id": "2010-y-siguientes"
+            }
+          ],
+          "modelo_filter": "390",
+          "operation": "modelo.work.dependencies",
+          "period_filter": "0A",
+          "source_modelos": [
+            "303"
+          ],
+          "target_count": 1,
+          "target_modelos": [
+            "390"
+          ]
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "result",
+      "stderr_text": null,
+      "text": null
+    }
+  ],
+  "golden_schema_version": 1,
+  "sequence_id": "filing-readiness-dependencies"
+}

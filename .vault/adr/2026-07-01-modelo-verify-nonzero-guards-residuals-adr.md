@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#modelo-verify-nonzero-guards-residuals'
 date: '2026-07-01'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-07-01-modelo-verify-nonzero-guards-residuals-research]]"
   - "[[2026-07-01-modelo-verify-nonzero-guards-m202-deferred-items-audit]]"

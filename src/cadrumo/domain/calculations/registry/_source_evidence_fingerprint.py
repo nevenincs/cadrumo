@@ -30,7 +30,7 @@ def _source_evidence_roots(
     candidates: list[Path] = []
     if source_root is not None:
         resolved = source_root.expanduser().resolve()
-        candidates.extend((resolved / "corpus", resolved / "src" / "aeat" / "_data" / "corpus"))
+        candidates.extend((resolved / "corpus", resolved / "src" / "cadrumo" / "_data" / "corpus"))
         if resolved.parent != resolved:
             candidates.append(resolved.parents[0] / "tests" / "fixtures" / "justificantes")
     if justificante_corpus_root is not None:

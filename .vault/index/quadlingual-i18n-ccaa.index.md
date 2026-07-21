@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#quadlingual-i18n-ccaa'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-01-quadlingual-i18n-ccaa-reference]]'
 ---

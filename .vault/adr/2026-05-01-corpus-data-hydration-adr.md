@@ -3,10 +3,9 @@ tags:
   - '#adr'
   - '#corpus-data-hydration'
 date: '2026-05-01'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-05-01-corpus-data-hydration-research]]"
-  - "[[2026-04-12-casilla-db-adr]]"
   - "[[2026-04-12-manual-practico-adr]]"
 ---
 
@@ -23,7 +22,7 @@ The project requires a strictly-typed, version-controlled repository of Spanish 
 
 ## Constraints
 - **Human Review Gate:** Autonomous extraction is draft-only. Every committed record must carry a `reviewed_by` and `reviewed_at` stamp.
-- **Tooling:** Must use the `src/aeat/domain/casillas` models and loaders.
+- **Tooling:** Must use the `src/cadrumo/domain/casillas` models and loaders.
 
 ## Implementation
 1. **Source Lock-in:** Map every supported model and year to its specific BOE Order and Manual URL (as identified in `[[2026-05-01-corpus-data-hydration-research]]`).

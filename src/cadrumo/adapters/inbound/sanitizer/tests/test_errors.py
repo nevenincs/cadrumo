@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from .....core.errors import AeatError
+from .....core.errors import CadrumoError
 from .._errors import AlreadySanitizedError, SanitizerSourceParseError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
@@ -16,7 +16,7 @@ _SOURCE_SHA256 = "6a84b40c8c1b6a6771598f77d5334b9af858f5fbdc8fe96c3a8b2511af0f45
 class TestSanitizerSourceParseError:
     """Source-parse errors expose only redacted source and parser-failure type."""
 
-    def test_uses_aeat_error_hierarchy_and_redacted_context(self, tmp_path) -> None:
+    def test_uses_cadrumo_error_hierarchy_and_redacted_context(self, tmp_path) -> None:
         source = tmp_path / _SENSITIVE_BASENAME
 
         error = SanitizerSourceParseError(
@@ -25,7 +25,7 @@ class TestSanitizerSourceParseError:
         )
 
         rendered = str(error)
-        assert isinstance(error, AeatError)
+        assert isinstance(error, CadrumoError)
         assert _SENSITIVE_BASENAME not in rendered
         assert str(source) not in rendered
         assert "<input-pdf>" in rendered
@@ -41,7 +41,7 @@ class TestAlreadySanitizedError:
         error = AlreadySanitizedError(source_sha256=_SOURCE_SHA256)
 
         rendered = str(error)
-        assert isinstance(error, AeatError)
+        assert isinstance(error, CadrumoError)
         assert _SOURCE_SHA256 not in rendered
         assert "already" in rendered
         assert error.source_sha256 == _SOURCE_SHA256

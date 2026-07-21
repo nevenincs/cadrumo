@@ -3,16 +3,23 @@
 from __future__ import annotations
 
 import argparse
+import os
+import shutil
+import subprocess
 import sys
 import venv
 from pathlib import Path
 
+from .python_cohort import (
+    assert_installed_cohort,
+    install_targets,
+    load_python_cohort,
+)
 from .smoke_core import (
     _assert_attachment_and_llm_surfaces,
     _assert_cli_smoke,
     _assert_installed_data,
     _assert_wheel_metadata_matches_pyproject,
-    _build_wheel,
     _executable,
     _manifest_path,
     _run,
@@ -24,10 +31,29 @@ from .smoke_core import (
 
 
 def _create_pip_venv(work_dir: Path, python_executable: str) -> Path:
-    """Create a clean virtualenv with stdlib venv and install pip."""
+    """Create a clean virtualenv and ensure a real ``pip`` is present.
+
+    ``venv --with-pip`` runs ``ensurepip``, whose bundled-wheel install is
+    unreliable on the uv-managed python-build-standalone interpreter this smoke
+    runs under (it fails outright on the self-hosted macOS runner). When
+    ensurepip fails the venv is created WITHOUT pip and pip is seeded with uv;
+    the cadrumo wheel is still installed by that plain ``pip`` afterwards, so
+    the "installs under real pip" contract this lane proves is preserved - only
+    the bootstrap of pip itself changes.
+
+    The interpreter is linked with the platform-default strategy (symlinks on
+    POSIX, copies on Windows). A COPIED python-build-standalone binary loses its
+    ``@executable_path``-relative ``libpython`` on macOS and aborts (SIGABRT) on
+    every launch; a symlink resolves through to the real interpreter's lib dir.
+    """
+    use_symlinks = os.name != "nt"
     venv_path = work_dir / "pip-venv"
-    builder = venv.EnvBuilder(with_pip=True, clear=False, symlinks=False)
-    builder.create(venv_path)
+    try:
+        venv.EnvBuilder(with_pip=True, clear=False, symlinks=use_symlinks).create(venv_path)
+    except subprocess.CalledProcessError:
+        shutil.rmtree(venv_path, ignore_errors=True)
+        venv.EnvBuilder(with_pip=False, clear=False, symlinks=use_symlinks).create(venv_path)
+        _run(["uv", "pip", "install", "--python", str(_venv_python(venv_path)), "pip"], cwd=work_dir)
     python = _venv_python(venv_path)
     version = _run([str(python), "--version"], cwd=work_dir)
     requested_major_minor = ".".join(python_executable.split(".")[:2])
@@ -40,6 +66,15 @@ def _create_pip_venv(work_dir: Path, python_executable: str) -> Path:
 
 def _install_target_with_pip(work_dir: Path, target: str, venv_path: Path) -> None:
     """Install one target specifier into a stdlib venv using pip only."""
+    _install_targets_with_pip(work_dir, (target,), venv_path)
+
+
+def _install_targets_with_pip(
+    work_dir: Path,
+    targets: tuple[str, ...],
+    venv_path: Path,
+) -> None:
+    """Install explicit local targets in one pip transaction."""
     python = _venv_python(venv_path)
     _run(
         [
@@ -49,7 +84,7 @@ def _install_target_with_pip(work_dir: Path, target: str, venv_path: Path) -> No
             "install",
             "--disable-pip-version-check",
             "--no-cache-dir",
-            target,
+            *targets,
         ],
         cwd=work_dir,
     )
@@ -71,6 +106,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument("--work-dir", help="Empty directory for wheel, venv, and profile smoke artifacts.")
     parser.add_argument(
+        "--cohort-dir",
+        required=True,
+        type=Path,
+        help="Directory containing the prebuilt immutable Python cohort.",
+    )
+    parser.add_argument(
         "--skip-export-checks",
         action="store_true",
         help="Skip frozen uv export surface checks and run only the installed-wheel smoke.",
@@ -86,13 +127,24 @@ def main(argv: list[str] | None = None) -> int:
         print("validating frozen dependency exports", flush=True)
         _validate_frozen_exports(repo_root, uv)
 
-    print("building wheel", flush=True)
-    wheel = _build_wheel(repo_root, work_dir, uv)
+    cohort = load_python_cohort(args.cohort_dir)
+    wheel = cohort.root_wheel
+    print("using supplied immutable Python cohort", flush=True)
     _assert_wheel_metadata_matches_pyproject(repo_root, wheel)
 
-    print("creating stdlib venv and installing wheel with pip", flush=True)
+    print("creating stdlib venv and installing the exact cohort with pip", flush=True)
     venv_path = _create_pip_venv(work_dir, args.python)
-    _install_artifact_with_pip(work_dir, wheel, venv_path)
+    _install_targets_with_pip(
+        work_dir,
+        install_targets(cohort, root_artifact=wheel),
+        venv_path,
+    )
+    assert_installed_cohort(
+        _venv_python(venv_path),
+        cohort,
+        root_artifact=wheel,
+        cwd=work_dir,
+    )
     _assert_installed_data(work_dir, venv_path)
     _assert_attachment_and_llm_surfaces(work_dir, venv_path)
     _assert_cli_smoke(work_dir, venv_path)
@@ -115,10 +167,12 @@ def main(argv: list[str] | None = None) -> int:
         lane="pip-core-wheel",
         artifacts={
             "wheel": _manifest_path(work_dir, wheel),
+            "data_wheel_manuals": _manifest_path(work_dir, cohort.manuals_wheel),
+            "data_wheel_official": _manifest_path(work_dir, cohort.official_wheel),
             "venv": _manifest_path(work_dir, venv_path),
         },
         checks=tuple(checks),
-        details={"python": args.python},
+        details={"cohort_version": cohort.version, "python": args.python},
     )
 
     print(f"pip core packaging smoke passed: {wheel}", flush=True)

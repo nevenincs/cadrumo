@@ -22,23 +22,17 @@ fleet:
 
 from __future__ import annotations
 
-import json
-from collections.abc import Iterator
-from pathlib import Path
-
 import pytest
 
 from ....tests.cli_runner import invoke_cached_cli
-from ....tests.secure_sql import isolated_profile_storage_root
+from ....tests.secure_sql import isolated_cli_backend as _isolated_cli_backend  # noqa: F401 - autouse fixture
+from ._modelo_work_ux_support import (
+    _create_calculable_work_unit as _create_111_work_unit,
+)
+from ._modelo_work_ux_support import _create_m303_work_unit
 from .envelope_helpers import unwrap_schema_envelope as _payload
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
-
-
-@pytest.fixture(autouse=True)
-def _isolated_cli_backend(tmp_path: Path) -> Iterator[None]:
-    with isolated_profile_storage_root(tmp_path=tmp_path):
-        yield
 
 
 def _create_profile() -> None:
@@ -76,67 +70,6 @@ def _create_legal_entity_profile() -> None:
     assert result.exit_code == 0, result.output
 
 
-def _create_303_work_unit() -> str:
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "303", "--year", "2025", "--period", "1T",
-            "--revision", "2023-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    return _payload(result.output)["work_unit_id"]
-
-
-def _seed_m111_retencion_observation() -> None:
-    """Seed one work-income retención percepción so a Modelo 111 work unit's
-    ``work calculate`` resolves the ``retenciones_aggregation`` source.
-
-    Modelo 111 calculation requires per-perceptor retención evidence: the
-    source resolver refuses an all-blank quarter rather than silently filing
-    a zero return. One real ``rendimientos_trabajo`` percepción is the
-    minimum that makes the 2025 1T quarter calculable.
-    """
-    observation = json.dumps(
-        {
-            "source_kind": "ledger_transaction",
-            "source_object_id": "m111-work-income-row-001",
-            "perceptor_nif": "A12345678",
-            "perceptor_name": "Empresa Pagadora SL",
-            "scheme": "rendimientos_trabajo",
-            "taxable_base": "1000.00",
-            "retencion_amount": "190.00",
-            "accrued_on": "2025-01-15",
-        },
-    )
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "aggregate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
-            "--retencion-observation", observation,
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-
-
-def _create_111_work_unit() -> str:
-    """Create a Modelo 111 work unit calculable from a seeded retención percepción."""
-
-    result = invoke_cached_cli(
-        [
-            "--format", "json",
-            "app", "modelo", "work", "create",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
-            "--revision", "2019-y-siguientes",
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
-    _seed_m111_retencion_observation()
-    return _payload(result.output)["work_unit_id"]
-
-
 # ---------------------------------------------------------------------------
 # D1 - printed-number metadata tokens refused by work calculate
 # ---------------------------------------------------------------------------
@@ -146,7 +79,7 @@ def test_work_calculate_rejects_registry_number_as_casilla_reference() -> None:
     """``--casilla`` requires canonical ``casilla.id`` values."""
 
     _create_profile()
-    work_unit_id = _create_303_work_unit()
+    work_unit_id = _create_m303_work_unit()
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "calculate", work_unit_id,
@@ -167,7 +100,7 @@ def test_work_calculate_rejects_a_genuinely_unknown_numeric_casilla_id_candidate
     """
 
     _create_profile()
-    work_unit_id = _create_303_work_unit()
+    work_unit_id = _create_m303_work_unit()
     result = invoke_cached_cli(
         [
             "app", "modelo", "work", "calculate", work_unit_id,

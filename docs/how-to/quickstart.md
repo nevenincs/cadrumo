@@ -13,38 +13,29 @@ then calculate, verify, and export a Modelo 130 for the first quarter of 2026.
 Every command below is run in order. It links to deeper guides whenever a step
 has tax-specific setup or review choices.
 
-## 1. Install the CLI
+**Requirement:** a valid taxpayer profile. Step 1 below creates one; if you
+already have a profile, skip it. [Set up your taxpayer
+profile](profile-setup.md) covers every profile question in depth.
 
-Install the `cadrumo` package from PyPI. Any tool that installs Python
-applications works; `pip` is the plainest path:
+## Before you start
 
-```bash
-pip install cadrumo
+This page assumes the `aeat` command is installed and on your path. Confirm
+with:
+
+```{cli-sequence} quickstart-version
+:verify: Confirm the command is installed and the active profile is ready.
 ```
 
-Confirm the command is on your path:
+If it is not, [Install Cadrumo](../workstation-setup.md) covers the full
+setup: the package download, the optional integrations, and the AI-assistant
+(MCP) surface.
 
-```bash
-aeat --version
-```
-
-To use Cadrumo with an AI agent later, install the agent extra instead; see
-[Connect an agent](connect-an-agent.md):
-
-```bash
-pip install "cadrumo[agent]"
-```
-
-## Before you start: the master-key passphrase
+## The master-key passphrase
 
 `aeat` encrypts your local data with a master key derived from a passphrase.
 The first command that touches the store asks for the passphrase and the tool
-reuses it for the rest of the session. To run without a prompt, set it in the
-environment first:
-
-```bash
-export CADRUMO_SECRET_PASSPHRASE="your-passphrase"
-```
+reuses it for the rest of the session. For unattended runs, see
+[Run without a passphrase prompt](protect-data-access.md#run-without-a-passphrase-prompt).
 
 The CLI emits its help and messages in Spanish. The English text on this page
 describes what each step does.
@@ -52,25 +43,20 @@ describes what each step does.
 ## 1. Create your taxpayer profile
 
 A profile is your personal taxpayer record inside the tool. Create it with your
-own details. The name and surnames are required — the export step refuses
-without them — and the activity start date scopes out prior periods so a first
-filing has no earlier quarter to depend on:
+own details:
 
-```bash
-aeat config profile create me --quiet --tax-id 12345678Z --name "Ana" \
-  --surnames "Garcia Lopez" --activity "consultoria" \
-  --activity-start-date 2026-01-01
-aeat config profile status
+```{cli-sequence} quickstart-create-profile
 ```
 
-`--quiet` runs without the interactive setup wizard. The create command
-confirms the active profile and points you to the next step:
+The name and surnames are required (the export step refuses without them), and
+the activity start date scopes out prior periods so a first filing has no
+earlier quarter to depend on. `--quiet` runs without the interactive setup
+wizard.
 
-```text
-profile	me
-estado	creado
-active_profile	me
-next	aeat app modelo work create
+Confirm the active profile is configured and ready:
+
+```{cli-sequence} quickstart-profile
+:verify: Confirm the active profile is configured and ready.
 ```
 
 Profile setup can ask many more tax questions. Use
@@ -85,23 +71,17 @@ are two ways to add them.
 
 The simplest is to add each row directly with its tax fields. `--amount` is the
 gross total (taxable base plus IVA); an expense row also needs a `--category-id`
-from the recognised expense families:
+from the recognised expense families. The `--idempotency-key` on each row makes
+it safe to re-run without adding a duplicate:
 
-```bash
-aeat app ledger add --date 2026-02-10 --amount 1210 --direction INCOMING \
-  --description "venta" --classification BUSINESS \
-  --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
-aeat app ledger add --date 2026-02-11 --amount 605 --direction OUTGOING \
-  --description "compra" --classification BUSINESS \
-  --category-id material_oficina --taxable-base 500 --iva-rate 0.21 \
-  --iva-amount 105
-aeat app ledger list
+```{cli-sequence} quickstart-transactions
+:verify: Confirm both classified rows land in the ledger.
 ```
 
 List the recognised expense categories any time:
 
-```bash
-aeat app ledger categories
+```{cli-sequence} quickstart-categories
+:verify: Confirm the expense category catalogue lists.
 ```
 
 If you instead have a bank export, import it. `aeat` reads a semicolon-delimited
@@ -113,18 +93,17 @@ Fecha operación;Fecha valor;Concepto;Importe;Saldo;Moneda
 2026-02-11;2026-02-11;compra;-605,00;605,00;EUR
 ```
 
-Preview the import, then run it for real:
+Preview the import, then run it for real (shown as a display-only example,
+since running it here would duplicate the two rows added above):
 
-```bash
-aeat app ledger import ./statement.csv --provider auto --dry-run
-aeat app ledger import ./statement.csv --provider auto
+```{cli-sequence} quickstart-import
 ```
 
 Imported rows arrive without a tax category and must be classified before they
 count in a calculation (see the next step). The `ledger add` rows above are
 already classified, so you can skip straight to step 4.
 
-Use [Work with Transactions](import-bank-statements.md) for the full
+Use [Import and manage transactions](import-bank-statements.md) for the full
 transaction workflow: import, add, update, remove, review, classify, allocate,
 and run readiness checks.
 
@@ -132,12 +111,11 @@ and run readiness checks.
 
 Each imported transaction has no tax category until you classify it.
 Classification tells `aeat` whether a row is a business expense, personal
-spending, or a mix of both. Take the transaction id from `ledger list`:
+spending, or a mix of both. Take the transaction id from the row's output, then
+classify it and check the quarter is ready:
 
-```bash
-aeat app ledger classify <transaction-id> --classification BUSINESS \
-  --category-id material_oficina
-aeat app ledger preflight --year 2026 --period 1T
+```{cli-sequence} quickstart-classify
+:verify: Confirm the classified quarter passes the ledger preflight.
 ```
 
 `preflight` reports whether the quarter's rows are ready to calculate.
@@ -146,105 +124,80 @@ Use [Classify transactions](classify-transactions.md) for the detailed review
 path, including manual classification, bulk CSV classification, mixed-use
 allocation, tax fields, and optional LLM suggestions.
 
-## 4. Create a new draft
+## 4. Create, calculate, and verify the draft
 
-This creates a Modelo 130 draft for the first quarter of 2026. A modelo is a
+With the profile and a classified ledger in place, prepare the Modelo 130 draft
+for the first quarter of 2026, calculate it, and verify it. A modelo is a
 Spanish tax form, and the year plus period identify the filing you are
 preparing.
 
-```bash
-aeat app modelo work create --modelo 130 --year 2026 --period 1T
+```{cli-sequence} quickstart-modelo-130
+:verify: Confirm the draft passed verification before you export it.
 ```
 
-The command creates your filing workspace for that form if one does not exist
-yet. Running it again returns the existing workspace.
+Read the frames in order:
 
-`--period 1T` means the first quarter (primer trimestre). Other period codes
-are `2T`, `3T`, `4T` for subsequent quarters and `0A` for an annual filing.
-
-For more on how the tool organises your filing work behind the scenes, see
-[How the tool organises your filing work](filing-spine.md).
-
-## 5. Calculate the values
-
-Run calculation for the same form, year, and period. Modelo 130 needs three
-prior-period figures; for a first filing they are all zero. Pass them as
-bindings so the calculation has no missing inputs:
-
-```bash
-aeat app modelo work calculate --modelo 130 --year 2026 --period 1T \
-  --binding modelo-130-resultados-negativos-anteriores=0 \
-  --binding modelo-130-pagos-fraccionados-anteriores=0 \
-  --binding irpf.previous_year_economic_activity_net_income=0
-```
-
-The tool fills the boxes from your ledger and saves the result as a draft. The
-summary shows the key figures, for example:
-
-```text
-role	casilla	value	label
-key_figure	03	500.00	Rendimiento neto
-key_figure	04	100.00	Importe del pago fraccionado
-key_figure	19	0.00	Resultado final
-```
+- Create the draft. The command creates your filing workspace for that form if
+  one does not exist yet; running it again returns the existing workspace.
+  `--period 1T` means the first quarter (primer trimestre). Other period codes
+  are `2T`, `3T`, `4T` for subsequent quarters and `0A` for an annual filing.
+- Calculate the values. Modelo 130 needs three prior-period figures; for a first
+  filing they are all zero, passed as bindings so the calculation has no missing
+  inputs. The tool fills the boxes from your ledger: casilla `01` is the
+  quarter's income (`1000.00`, the taxable base, since IVA is never part of your
+  income), casilla `03` the net yield (`500.00`), and casilla `04` the
+  instalment (`100.00`, twenty percent of the net).
+- Verify the draft. Verification is a local check. It does not send anything to
+  AEAT. When the draft is complete the report reads `completeness_status
+  complete` and `granted_verificado_completo true`. A first filing also shows one
+  advisory noting that the period falls before your activity start date; this is
+  informational and does not block the export.
 
 Review every saved box with:
 
-```bash
-aeat app modelo work revision --modelo 130 --year 2026 --period 1T
+```{cli-sequence} quickstart-revision
+:verify: Confirm the saved revision shows the calculated boxes.
 ```
 
 If a value is missing or a modelo needs a value you must enter by hand, see
 [Review and supply calculation inputs](review-calculation-values.md). That page
 covers entering missing box values and handling figures carried forward from
-earlier quarters.
+earlier quarters. For how the tool organises filing work behind the scenes, see
+[The filing workflow](filing-spine.md).
 
-## 6. Verify the draft
+## 5. Export the file
 
-Verification checks that your draft is complete enough to export. It is a
-local check — it does not send anything to AEAT or ask whether the filing will
-be accepted.
+Export creates the `.boe` file, the format AEAT's upload portal accepts:
 
-```bash
-aeat app modelo work verify --modelo 130 --year 2026 --period 1T
-```
-
-When the draft is complete, the report shows `completeness_status complete` and
-`granted_verificado_completo true`, and `aeat` marks the draft as verified. A
-first filing also shows one advisory noting that the period falls before your
-activity start date; this is informational and does not block the export. If
-verification reports a blocking issue, fix it and calculate again before
-exporting.
-
-## 7. Export the file
-
-Export creates the `.boe` file — the format AEAT's upload portal accepts.
-
-```bash
-aeat app modelo export --modelo 130 --year 2026 --period 1T \
-  --output ./modelo-130-2026-1T.boe
+```{cli-sequence} quickstart-export
 ```
 
 The tool shows where the file was saved, its size in bytes, and a `file_sha256`
 verification code. Keep this code so you can later confirm you uploaded the
 exact file that was generated.
 
-## 8. Check what else is due (optional)
+This example uses a deductible-IVA expense, and export refuses that until the
+purchase invoice is linked as evidence (the message reads `Deductible IVA
+ledger rows require linked purchase invoice evidence`). Attach the invoice
+first, then re-run the export. [Attach invoices and receipts](ledger-evidence.md)
+and [Prepare a Modelo 303 IVA filing](modelo-303.md) walk through the evidence
+workflow end to end.
+
+## 6. Check what else is due (optional)
 
 Use the local calendar to see what may be due for the active profile. On a fresh
 profile, pass `--allow-incomplete` so the agenda runs before every profile fact
 is filled in:
 
-```bash
-aeat app overview agenda --allow-incomplete
-aeat app overview explain 130 --year 2026
+```{cli-sequence} quickstart-agenda
+:verify: Confirm the agenda and the Modelo 130 explanation read back.
 ```
 
 The calendar uses profile facts and local filing context. It does not replace
 AEAT's official portal. For the full calendar flow, see
 [Plan your filing calendar](filing-calendar.md).
 
-## 9. File manually through AEAT
+## 7. File manually through AEAT
 
 The final filing step is outside `aeat`:
 
@@ -256,11 +209,14 @@ The final filing step is outside `aeat`:
 The full handoff checklist, including what to do when the upload goes wrong,
 is in [Upload your exported modelo at the AEAT portal](file-at-aeat.md).
 
-After a real filing, you can record the local filing marker:
+After a real filing, record the local filing marker:
 
-```bash
-aeat app modelo work file --modelo 130 --year 2026 --period 1T
+```{cli-sequence} quickstart-file
 ```
+
+Like export, `work file` needs the deductible-IVA expense's invoice linked as
+evidence first (it refuses with `Deductible IVA ledger rows require linked
+purchase invoice evidence`). Attach the invoice, then record the marker.
 
 This only records the action on your own computer. It does not contact AEAT.
 To compare your local record with the AEAT receipt, see
@@ -270,7 +226,7 @@ To compare your local record with the AEAT receipt, see
 
 - [Set up your taxpayer profile](profile-setup.md) if profile facts are still
   incomplete.
-- [Work with Transactions](import-bank-statements.md) when your ledger is
+- [Import and manage transactions](import-bank-statements.md) when your ledger is
   not ready yet.
 - [Classify transactions](classify-transactions.md) before calculating from
   imported rows.

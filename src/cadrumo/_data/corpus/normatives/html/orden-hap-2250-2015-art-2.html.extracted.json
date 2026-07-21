@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hap-2250-2015-art-2.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hap-2250-2015-art-2.html",
   "source_sha256": "6f4dc802e9979024701654da7fb29b7ed95732c29c9cba381062306151033e2f",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",

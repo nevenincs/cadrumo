@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#docs-sphinx-build'
 date: '2026-05-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-30-docs-architecture-research]]"
   - "[[2026-05-30-docs-architecture-adr]]"
@@ -77,9 +77,9 @@ baseline; the relevant build-specific factors:
 - **Placement.** There is no top-level `tests/` root in this repo (the
   deleted `tests/test_docs.py` predated the restructure); the
   architecture-boundaries rule forbids adding one. Repo-level invariant
-  tests live under `src/aeat/tests/` and surface-specific tests beside
-  their code (for example `src/aeat/entrypoints/cli/test_root_help_shape.py`).
-  Documentation conformance tests are colocated under `src/aeat/`
+  tests live under `src/cadrumo/tests/` and surface-specific tests beside
+  their code (for example `src/cadrumo/entrypoints/cli/test_root_help_shape.py`).
+  Documentation conformance tests are colocated under `src/cadrumo/`
   accordingly.
 
 ## Constraints
@@ -130,7 +130,7 @@ builder is re-added then, against a real consumer.
 unresolved cross-reference and `-W` turns warnings into errors. On the
 project's Sphinx (>= 8.0) `-W` already collects all warnings before
 failing, so `--keep-going` is not used (it is a deprecated no-op there).
-The gate is wrapped as a pytest test colocated under `src/aeat/` that
+The gate is wrapped as a pytest test colocated under `src/cadrumo/` that
 shells a real `sphinx-build`, and is also exposed via `just docs-check`.
 The test is made hermetic and fast-gate-safe: it builds into a `tmp_path`
 (never the shared `docs/_build`), runs with intersphinx resolved from
@@ -166,14 +166,14 @@ re-adding the blanket `myst.xref_missing`, and not via `nitpick_ignore`,
 which would not apply.
 
 **5. Module-to-stub correspondence test.** A test colocated under
-`src/aeat/` asserts *set* correspondence between the `src/aeat/` module
+`src/cadrumo/` asserts *set* correspondence between the `src/cadrumo/` module
 tree and the `docs/api/*.rst` automodule stub set: every in-scope module
 has a stub and every stub points at a real module (no orphan stubs). The
 assertion is on the module-versus-stub set, **not** a byte-diff against a
 fresh `sphinx-apidoc` run (apidoc output is flag-sensitive and a content
 diff would fail spuriously). The in-scope set excludes exactly what the
 build already excludes: `test_*.py` / `_test_*.py` modules, the
-`aeat.tests` package, the private `aeat._data` package, and `_`-prefixed
+`cadrumo.tests` package, the private `cadrumo._data` package, and `_`-prefixed
 modules — named here so the boundary is unambiguous and matches
 `conf.py`'s exclusions. A rename or new module therefore fails the gate
 rather than silently drifting — the conventions ADR's

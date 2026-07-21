@@ -1,0 +1,233 @@
+# Hungarian translations for CADRUMO.
+# Copyright (C) 2026, the Cadrumo authors
+# This file is distributed under the same license as the CADRUMO package.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: CADRUMO 0.2.1\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-07-18 23:20+0200\n"
+"PO-Revision-Date: 2026-07-19 10:00+0200\n"
+"Last-Translator: Cadrumo hu docs <docs@cadrumo>\n"
+"Language: hu\n"
+"Language-Team: hu <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.18.0\n"
+
+#: ../../updates.md:1
+msgid "Updates and downloads"
+msgstr "Frissítések és letöltések"
+
+#: ../../updates.md:3
+msgid ""
+"Use this page as the project-facing hub for release notes, critical "
+"notices, download links, event notes, and support routes. The banner and "
+"footer point here so important project status is available from every "
+"documentation page."
+msgstr ""
+"Használja ezt az oldalt a projekt központi felületeként a kiadási "
+"jegyzetekhez, a kritikus közleményekhez, a letöltési hivatkozásokhoz, az "
+"eseményjegyzetekhez és a támogatási útvonalakhoz. A fejléc és a lábléc "
+"ide mutat, így a projekt fontos állapota minden dokumentációs oldalról "
+"elérhető."
+
+#: ../../updates.md:8
+msgid ""
+"Cadrumo is in beta. Treat every release note as potentially relevant "
+"before upgrading, and verify filing deadlines, forms, and submission "
+"rules with the Agencia Estatal de Administración Tributaria (AEAT) before"
+" you file."
+msgstr ""
+"A Cadrumo béta állapotú. Frissítés előtt tekintsen minden kiadási "
+"jegyzetet potenciálisan lényegesnek, benyújtás előtt pedig ellenőrizze a "
+"benyújtási határidőket, űrlapokat és benyújtási szabályokat az Agencia "
+"Estatal de Administración Tributariánál (AEAT)."
+
+#: ../../updates.md:18
+msgid "Latest download"
+msgstr "Legfrissebb letöltés"
+
+#: ../../updates.md:23
+msgid ""
+"Start with the latest release when a packaged download is available. "
+"Record the installed version before preparing any filing records."
+msgstr ""
+"Kezdje a legfrissebb kiadással, ha elérhető csomagolt letöltés. Jegyezze "
+"fel a telepített verziót, mielőtt bármilyen benyújtási nyilvántartást "
+"előkészít."
+
+#: ../../updates.md:27 ../../updates.md:65
+msgid "Critical updates"
+msgstr "Kritikus frissítések"
+
+#: ../../updates.md:32
+msgid ""
+"Use release notes to check breaking changes, migration notes, supported "
+"workflows, and known limitations before changing versions."
+msgstr ""
+"A kiadási jegyzetek segítségével ellenőrizze a kompatibilitást megtörő "
+"változásokat, a migrációs jegyzeteket, a támogatott munkafolyamatokat és "
+"az ismert korlátozásokat, mielőtt verziót vált."
+
+#: ../../updates.md:36
+msgid "Report an issue"
+msgstr "Hiba bejelentése"
+
+#: ../../updates.md:41
+msgid ""
+"Open an issue for defects, confusing documentation, missing workflow "
+"coverage, or release notes that need clarification."
+msgstr ""
+"Nyisson hibajegyet hibák, félreérthető dokumentáció, hiányzó "
+"munkafolyamat-lefedettség vagy pontosításra szoruló kiadási jegyzetek "
+"esetén."
+
+#: ../../updates.md:45
+msgid "Source repository"
+msgstr "Forráskódtár"
+
+#: ../../updates.md:50
+msgid ""
+"Use the repository for source code, development history, project "
+"metadata, and links to release and issue activity."
+msgstr ""
+"A kódtárat a forráskódhoz, a fejlesztési előzményekhez, a projekt "
+"metaadataihoz, valamint a kiadási és hibajegy-tevékenységre mutató "
+"hivatkozásokhoz használja."
+
+#: ../../updates.md:55
+msgid "Current status"
+msgstr "Jelenlegi állapot"
+
+#: ../../updates.md:57
+msgid ""
+"Cadrumo is local-first beta software for preparing Spanish tax filing "
+"records ([read the full disclaimer](disclaimer.md))."
+msgstr ""
+"A Cadrumo helyi-elsődleges, béta szoftver spanyol adóbevallási "
+"nyilvántartások előkészítéséhez ([olvassa el a teljes jogi "
+"nyilatkozatot](disclaimer.md))."
+
+#: ../../updates.md:60
+msgid ""
+"Expect breaking changes while the command-line interface (CLI) workflows,"
+" generated documentation, and modelo coverage are still being hardened. "
+"Before relying on a version for a filing period, read the release notes "
+"and keep a record of the installed version used to prepare the export."
+msgstr ""
+"Számítson kompatibilitást megtörő változásokra, amíg a parancssori "
+"felület (CLI) munkafolyamatai, a generált dokumentáció és a modelo "
+"lefedettség még megszilárdítás alatt állnak. Mielőtt egy verzióra "
+"támaszkodna egy benyújtási időszakban, olvassa el a kiadási jegyzeteket, "
+"és jegyezze fel az export előkészítéséhez használt telepített verziót."
+
+#: ../../updates.md:67
+msgid ""
+"Critical updates are published through the release notes and highlighted "
+"through the site banner when the documentation needs to draw attention to"
+" a change."
+msgstr ""
+"A kritikus frissítéseket a kiadási jegyzetekben tesszük közzé, és a "
+"webhely fejlécében emeljük ki, amikor a dokumentációnak fel kell hívnia a"
+" figyelmet egy változásra."
+
+#: ../../updates.md:70
+msgid "Check this section when you need to know whether a release affects:"
+msgstr ""
+"Ezt a szakaszt akkor tekintse meg, amikor tudnia kell, hogy egy kiadás "
+"érinti-e a következőket:"
+
+#: ../../updates.md:72
+msgid "filing workflow order;"
+msgstr "a benyújtási munkafolyamat sorrendje;"
+
+#: ../../updates.md:73
+msgid "taxpayer profile setup;"
+msgstr "az adózói profil beállítása;"
+
+#: ../../updates.md:74
+msgid "ledger import or classification behavior;"
+msgstr "a ledger importálásának vagy besorolásának viselkedése;"
+
+#: ../../updates.md:75
+msgid "modelo calculation, verification, or export behavior;"
+msgstr "a modelo számításának, ellenőrzésének vagy exportálásának viselkedése;"
+
+#: ../../updates.md:76
+msgid "storage, receipts, or reconciliation steps."
+msgstr "a tárolás, a bizonylatok vagy az egyeztetés lépései."
+
+#: ../../updates.md:78
+msgid "Download guidance"
+msgstr "Letöltési útmutató"
+
+#: ../../updates.md:80
+msgid ""
+"Use the latest release link when you need the current packaged version, "
+"and follow the [installation guide](workstation-setup.md) to install it. "
+"If no packaged artifact is available for your environment, open an issue "
+"so the gap is recorded."
+msgstr ""
+"Használja a legfrissebb kiadás hivatkozását, ha az aktuális csomagolt "
+"verzióra van szüksége, és kövesse a [telepítési útmutatót](workstation-"
+"setup.md) a telepítéshez. Ha a környezetéhez nem érhető el csomagolt "
+"artefaktum, nyisson hibajegyet, hogy a hiányosság rögzítésre kerüljön."
+
+#: ../../updates.md:85
+msgid "After installing or upgrading, run:"
+msgstr "Telepítés vagy frissítés után futtassa:"
+
+#: ../../updates.md:91
+msgid ""
+"Keep that version with the local export, AEAT submission receipt, and any"
+" reconciliation notes for the filing period."
+msgstr ""
+"Tárolja ezt a verziót a helyi exporttal, az AEAT benyújtási "
+"justificantéval és a benyújtási időszakhoz tartozó bármely egyeztetési "
+"jegyzettel együtt."
+
+#: ../../updates.md:94
+msgid "Deadlines and project announcements"
+msgstr "Határidők és projektbejelentések"
+
+#: ../../updates.md:96
+msgid ""
+"This documentation may describe filing workflows and preparation order, "
+"but it does not publish an authoritative tax calendar. Always confirm "
+"deadlines, forms, and official changes with AEAT or a qualified "
+"professional before filing."
+msgstr ""
+"Ez a dokumentáció leírhat benyújtási munkafolyamatokat és előkészítési "
+"sorrendet, de nem tesz közzé hiteles adónaptárt. Benyújtás előtt mindig "
+"erősítse meg a határidőket, űrlapokat és hivatalos változásokat az AEAT-"
+"nál vagy egy képzett szakembernél."
+
+#: ../../updates.md:100
+msgid ""
+"Project events that affect documentation readers should be announced "
+"through:"
+msgstr ""
+"A dokumentáció olvasóit érintő projekteseményeket a következőkön "
+"keresztül kell bejelenteni:"
+
+#: ../../updates.md:102
+msgid "the site banner for short-lived notices;"
+msgstr "a webhely fejléce a rövid életű közleményekhez;"
+
+#: ../../updates.md:103
+msgid "this page for durable update and download routes;"
+msgstr "ez az oldal a tartós frissítési és letöltési útvonalakhoz;"
+
+#: ../../updates.md:104
+msgid "release notes for version-specific changes;"
+msgstr "a kiadási jegyzetek a verzióspecifikus változásokhoz;"
+
+#: ../../updates.md:105
+msgid "issues for open defects, regressions, and documentation gaps."
+msgstr ""
+"a hibajegyek a nyitott hibákhoz, visszalépésekhez és dokumentációs "
+"hiányosságokhoz."
+

@@ -10,7 +10,7 @@ When a required full-tree gate is red in the shared factory worktree, always rec
 
 ## Why
 
-The `2026-06-11-ledger-hardening-close-audit-pass-2` found the C4 alias-retirement implementation green on focused lint, registry/operator tests, API-stub conformance, and CLI conformance while the mandated full `src/aeat` collect-only gate stayed red from support-module export splits owned by other campaigns. Without owner triage, a closeout pass either falsely claims green or opportunistically edits unrelated peer work. The rule preserves honesty without broadening the feature's ownership boundary.
+The `2026-06-11-ledger-hardening-close-audit-pass-2` found the C4 alias-retirement implementation green on focused lint, registry/operator tests, API-stub conformance, and CLI conformance while the mandated full `src/cadrumo` collect-only gate stayed red from support-module export splits owned by other campaigns. Without owner triage, a closeout pass either falsely claims green or opportunistically edits unrelated peer work. The rule preserves honesty without broadening the feature's ownership boundary.
 
 ## How
 

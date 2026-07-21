@@ -28,9 +28,7 @@ from ......core import Period
 from ......core.i18n import tr
 from ...auth import (
     AeatSession,
-    AuthProviderKind,
     CertificateSessionDetail,
-    HandshakeResult,
 )
 from .._auth_state import storage_state_for_session
 from .._errors import SedeNavigationError
@@ -48,7 +46,6 @@ _DEADLINE = _NOW + timedelta(hours=8)
 def _minimal_session(*, storage_state_path: Path | None, identity_nif: str = "12345678Z") -> AeatSession:
     """Build the smallest valid AeatSession for offline raises."""
     return AeatSession(
-        provider_kind=AuthProviderKind.CERTIFICATE,
         authenticated_at=_NOW,
         idle_deadline=_DEADLINE,
         storage_state_path=storage_state_path,
@@ -56,14 +53,6 @@ def _minimal_session(*, storage_state_path: Path | None, identity_nif: str = "12
         provider_detail=CertificateSessionDetail(
             certificate_thumbprint="aabbcc",
             certificate_subject="CN=test",
-            handshake=HandshakeResult(
-                success=True,
-                status_code=200,
-                server_cert_chain=(),
-                elapsed_ms=10,
-                attempted_at=_NOW,
-                error_message=None,
-            ),
         ),
     )
 

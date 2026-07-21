@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, NotRequired, TypedDict, cast
+from typing import NotRequired, TypedDict, cast
 
 from pydantic import BaseModel, ConfigDict
 
@@ -42,7 +42,7 @@ class InvoiceRowPayload(TypedDict, total=False):
     counterparty_tax_id: NotRequired[str]
     counterparty_country: NotRequired[str]
     payment_status: NotRequired[str]
-    lines: NotRequired[list[Any]]
+    lines: NotRequired[list[object]]
     base_total: NotRequired[str]
     iva_total: NotRequired[str]
     grand_total: NotRequired[str]
@@ -162,15 +162,26 @@ def _decode_invoice_payload(raw: str) -> tuple[InvoiceRowPayload, ...]:
                 context={"line": str(exc.lineno), "column": str(exc.colno)},
             ) from exc
         if isinstance(decoded, Mapping):
-            # CAST-RATIONALE-WIRE-PAYLOAD-JSON-OBJECT:
-            # json.loads returns Mapping[str, Any]; cast to TypedDict at the
-            # decode boundary before downstream coercion.
-            return (cast(InvoiceRowPayload, dict(decoded)),)
+            return (
+                # CAST-RATIONALE-INVOICE-JSON-TYPEDDICT-BOUNDARY: json.loads
+                # cannot narrow a Mapping to a structural TypedDict; the
+                # authoritative Invoice.model_validate call validates it next.
+                cast(  # nosemgrep: no-cast-in-domain-application reason: Invoice validates the decoded JSON object.
+                    InvoiceRowPayload,
+                    dict(decoded),
+                ),
+            )
         if isinstance(decoded, list) and all(isinstance(item, Mapping) for item in decoded):
-            # CAST-RATIONALE-WIRE-PAYLOAD-JSON-ARRAY:
-            # Same JSON-array decode boundary; each item is cast to TypedDict
-            # before coercion.
-            return tuple(cast(InvoiceRowPayload, dict(item)) for item in decoded)
+            return tuple(
+                # CAST-RATIONALE-INVOICE-JSON-ARRAY-TYPEDDICT-BOUNDARY: Python
+                # cannot narrow each Mapping to a structural TypedDict; the
+                # authoritative Invoice.model_validate call validates it next.
+                cast(  # nosemgrep: no-cast-in-domain-application reason: Invoice validates each decoded JSON row.
+                    InvoiceRowPayload,
+                    dict(item),
+                )
+                for item in decoded
+            )
         raise InvoiceValidationError(
             "invoice JSON payload must be an object or a list of objects",
             translated_message="application.invoices.importing.errors.invalid_json_shape",

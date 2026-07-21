@@ -4,10 +4,9 @@ Asserts end-to-end that the operator's configured PKCS#12 bundle, when
 fed through :class:`cadrumo.adapters.outbound.aeat.auth.AeatAuthenticator`,
 produces a valid :class:`cadrumo.adapters.outbound.aeat.auth.AeatSession`
 and that
-:meth:`cadrumo.adapters.outbound.aeat.auth.AeatAuthenticator.verify_login`
-returns ``is_valid=True`` against the configured verify URL.
+:meth:`cadrumo.adapters.outbound.aeat.auth.AeatAuthenticator.verify`
+returns ``is_valid=True`` only at the canonical protected resource.
 
-The test uses the configured certificate and live verification URL directly.
 After live opt-in, missing certificate configuration is a failing prerequisite.
 """
 
@@ -15,14 +14,15 @@ from __future__ import annotations
 
 import pytest
 
+from ......application.auth_credentials import unnamed_certificate_credentials
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
 from .. import (
+    AEAT_CERTIFICATE_PROTECTED_URL,
     AeatAuthenticator,
     AeatLoginAssertion,
     AeatSession,
     CertificateHealthSeverity,
-    HandshakeResult,
     extract_nif_from_subject,
 )
 
@@ -33,7 +33,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     """Exercise the sync authenticator surface against the real cert.
 
     This covers the paths that future remote-read modules call most
-    often: ``health()``, ``verify_handshake()``,
+    often: ``health()`` and
     ``extract_nif_from_subject(load_certificate())``. It does NOT
     spin up Playwright; the async-context path is covered by the
     separate test below only when an injectable browser factory is
@@ -41,7 +41,7 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     """
     requires_live_enabled()
     settings = Settings()
-    if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
+    if settings.cadrumo_certificate_path is None or settings.cadrumo_certificate_password_secret is None:
         pytest.fail("AEAT certificate env vars are not fully configured after live opt-in")
 
     # Production cert loader reads the passphrase via
@@ -49,7 +49,10 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
     # the env-var round-trip is gone (see ``certificate.py`` docstring).
     # No os.environ bridge is needed.
 
-    authenticator = AeatAuthenticator(settings)
+    authenticator = AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+    )
 
     # Health severity must be OK or WARN — a CRITICAL/EXPIRED cert
     # means the operator should renew before running the live
@@ -59,11 +62,6 @@ def test_aeat_authenticator_synchronous_surface_live() -> None:
         CertificateHealthSeverity.OK,
         CertificateHealthSeverity.WARN,
     }, f"cert health is {health.severity}; renew before live run"
-
-    handshake = authenticator.verify_handshake()
-    assert isinstance(handshake, HandshakeResult)
-    assert handshake.success is True, f"handshake failed: {handshake.error_message}"
-    assert 200 <= handshake.status_code < 500
 
     cert = authenticator.load_certificate()
     nif = extract_nif_from_subject(cert)
@@ -78,11 +76,11 @@ async def test_aeat_authenticator_full_live_flow() -> None:
 
     Requires Playwright to be installed and AEAT to be reachable.
     Uses the real ``BrowserSession`` factory via a thin adapter so
-    zero monkey-patching is involved.
+    no runtime substitution is involved.
     """
     requires_live_enabled()
     settings = Settings()
-    if settings.aeat_certificate_path is None or settings.aeat_certificate_password_secret is None:
+    if settings.cadrumo_certificate_path is None or settings.cadrumo_certificate_password_secret is None:
         pytest.fail("AEAT certificate env vars are not fully configured after live opt-in")
 
     from typing import Any, cast
@@ -90,23 +88,27 @@ async def test_aeat_authenticator_full_live_flow() -> None:
     from ...browser import Profile, create_browser_session
     from .. import BrowserSessionFactory
 
-    profile = Profile(
-        name="live-auth-gate",
-        storage_state_path=settings.cadrumo_token_dir / "live_auth_gate_state.json",
-    )
+    profile = Profile(name="live-auth-gate")
 
     async def factory(_settings: Any) -> Any:
         return await create_browser_session(settings, profile)
 
     typed_factory = cast(BrowserSessionFactory, factory)
-    async with AeatAuthenticator(settings, browser_session_factory=typed_factory) as auth:
+    async with AeatAuthenticator(
+        settings,
+        credentials=unnamed_certificate_credentials(settings),
+        browser_session_factory=typed_factory,
+    ) as auth:
         aeat_session = await auth.authenticate()
         assert isinstance(aeat_session, AeatSession)
         assert aeat_session.is_stale() is False
         assert aeat_session.identity_nif
-        assertion = await auth.verify_login(aeat_session)
+        assertion = await auth.verify(aeat_session)
         assert isinstance(assertion, AeatLoginAssertion)
         assert assertion.is_valid is True, (
             f"login assertion invalid: status={assertion.status_code} err={assertion.error_message}"
         )
+        assert assertion.target_url == AEAT_CERTIFICATE_PROTECTED_URL
+        assert assertion.final_url == AEAT_CERTIFICATE_PROTECTED_URL
+        assert assertion.response_successful is True
         assert assertion.parsed_nif == aeat_session.identity_nif

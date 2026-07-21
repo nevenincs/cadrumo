@@ -100,9 +100,9 @@ _ALIMENTACION_647_1 = {
     5: Decimal("8.81"),  # consumo de energía eléctrica (100 kWh)
 }
 
-# Activities not previously covered by a dedicated test (backfilled
-# per a review's low-severity finding), independently transcribed from the
-# same bundled Orden Anexo II and cross-checked against the AEAT manual.
+# Activities not previously covered by a dedicated test, independently
+# transcribed from the same bundled Orden Anexo II and cross-checked
+# against the AEAT manual.
 _CAFES_ESPECIAL_673_1 = {
     1: Decimal("4056.30"),  # personal asalariado (persona)
     2: Decimal("15538.66"),  # personal no asalariado (persona)
@@ -233,7 +233,7 @@ _TRANSPORTE_URBANO_721_1 = {
     3: Decimal("121.40"),  # número de asientos (asiento)
 }
 
-# Remaining next-priority activities (#516): reparaciones,
+# Remaining next-priority activities: reparaciones,
 # engrase/lavado, mudanzas, mensajería, enseñanza, servicios personales, and
 # the 659.4/691.9 epígrafe-collision pairs (resolved via the "a"/"b"
 # key-namespace suffix convention — see the registry parameter file's note),
@@ -350,8 +350,7 @@ _TRAMOS_ASALARIADOS = (
 # instrucción 2.3.b.3): índice 1,30 aplied to the excess over the tabled
 # cuantía. Cuantías independently transcribed from the same bundled Orden
 # Anexo II table, matching the registry's m131-modulos-cuantia-exceso-2025
-# keyed_bracket_table parameter for the epígrafes tabled in this first
-# slice (2026-07-01-modelo-131-eo-modulos-engine-adr Phase 2).
+# keyed_bracket_table parameter for the epígrafes tabled so far.
 _INDICE_EXCESO = Decimal("1.30")
 _CUANTIA_EXCESO = {
     "972.1": Decimal("18051.81"),

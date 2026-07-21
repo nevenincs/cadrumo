@@ -1,4 +1,4 @@
-"""Real-behaviour conformance for the query-vocabulary RAG sweep runner (ADR D6).
+"""Real-behaviour conformance for the query-vocabulary RAG sweep runner.
 
 The sweep is the build-time compilation oracle: it enumerates the closed query
 vocabulary from the Handbook concepts, runs each term through the resident RAG
@@ -216,8 +216,8 @@ def test_below_floor_query_yields_only_the_seeded_concept_card() -> None:
 
     With no RAG hits above the floor, the sweep fabricates no grounding target.
     But a swept term is, by construction, a declared label of its concept, so
-    the concept card is seeded deterministically as the sole target (ADR D4:
-    concepts are first-class palette results). The mapping is therefore never
+    the concept card is seeded deterministically as the sole target (concepts
+    are first-class palette results). The mapping is therefore never
     targetless -- it carries exactly the concept card -- yet carries no invented
     RAG grounding.
     """

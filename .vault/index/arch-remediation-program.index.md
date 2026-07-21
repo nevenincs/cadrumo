@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-program'
-date: '2026-07-06'
-modified: '2026-07-10'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-07-02-arch-remediation-program-adr]]'
   - '[[2026-07-05-arch-remediation-program-audit]]'

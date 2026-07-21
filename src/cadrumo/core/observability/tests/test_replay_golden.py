@@ -16,10 +16,10 @@ from typing import Any, cast
 
 import pytest
 
-from ...config import PROJECT_ROOT, Settings, override_settings
+from ...config import Settings, override_settings
 from ...json_contract import OutputSchema, emit_json_success
 from .. import (
-    AeatObservabilityError,
+    CadrumoObservabilityError,
     GoldenReplayMismatchError,
     RunOutcome,
     RunTrace,
@@ -87,7 +87,7 @@ def _save_replay_fixture(
     snapshot_id: str = "snap-A",
     with_envelope: bool = True,
 ) -> RunTrace:
-    trace = _build_trace(run_id, corpus_sha256=compute_corpus_sha256(PROJECT_ROOT / ".vault", Settings()))
+    trace = _build_trace(run_id, corpus_sha256=compute_corpus_sha256(Settings()))
     save_trace(trace)
     if with_envelope:
         save_envelope(trace.run_id, _capture_document(label=label, snapshot_id=snapshot_id))
@@ -147,7 +147,7 @@ class TestReplayEnvelopeAssertion:
             def _silent(_argv: list[str]) -> None:
                 return None
 
-            with pytest.raises(AeatObservabilityError, match="emitted no"):
+            with pytest.raises(CadrumoObservabilityError, match="emitted no"):
                 replay_run(trace.run_id, invoke=_silent, assert_envelope=True)
 
     def test_missing_golden_artifact_raises(self, tmp_path: Path) -> None:
@@ -180,7 +180,7 @@ class TestDbStatePostTier:
     def test_drifted_db_state_raises(self) -> None:
         from .._replay import _assert_db_state_unchanged
 
-        with pytest.raises(AeatObservabilityError, match="db-state drift"):
+        with pytest.raises(CadrumoObservabilityError, match="db-state drift"):
             _assert_db_state_unchanged("0123456789abcdef", "a" * 64, "b" * 64)
 
 

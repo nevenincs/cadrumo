@@ -3,14 +3,13 @@ tags:
   - '#adr'
   - '#live-iva-compensation-wallet'
 date: '2026-05-22'
-modified: '2026-07-10'
+modified: '2026-07-16'
 related:
   - '[[2026-05-22-live-iva-compensation-wallet-profile-bucket-repository-binding-reconciliation-research]]'
   - '[[2026-05-19-live-iva-compensation-wallet-adr]]'
   - '[[2026-05-20-calculation-source-connectivity-adr]]'
   - '[[2026-04-17-aeat-access-gate-adr]]'
   - '[[2026-04-17-session-persistence-adr]]'
-  - '[[2026-04-16-live-cert-auth-adr]]'
   - '[[2026-05-26-no-synthetic-sede-live-surfaces-adr]]'
   - '[[2026-05-26-modelo-130-relation-regression-adr]]'
   - '[[2026-05-21-secure-object-database-drift-research]]'
@@ -18,6 +17,7 @@ related:
   - '[[2026-05-21-profile-uuid-identity-adr]]'
   - '[[2026-05-21-profile-state-aggregate-adr]]'
   - '[[2026-05-21-state-read-projection-adr]]'
+  - '[[2026-07-16-protected-browser-certificate-auth-adr]]'
 ---
 
 # `live-iva-compensation-wallet` adr: `profile, bucket, repository, and calculation-binding hierarchy` | (**status:** `accepted`)

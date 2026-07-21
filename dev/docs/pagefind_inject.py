@@ -1,10 +1,10 @@
-"""Inject the unified search records into the Pagefind index (ADR D4 + D5).
+"""Inject the unified search records into the Pagefind index.
 
 This is the custom-record injection that plugs into the post-build index
 pass's seam: ``build_search_index(html_root, inject=build_record_injector())``
 calls the returned async callback with the open ``PagefindIndex`` after the
 HTML directory pass and before the index is written. Where the directory pass
-indexes the built docs pages (full text, ADR-D5 tier three), this injection
+indexes the built docs pages (full text, tier three), this injection
 adds the term cards (tier one) and the casilla / CLI navigation surfaces (tier
 two) as first-class custom records, so the one Pagefind index serves all four
 record kinds.
@@ -21,7 +21,7 @@ for the palette term card, and ``kind``/``domain`` filters let the palette
 narrow by surface.
 
 Ranking: every record carries a base ranking weight from the unified
-projection (ADR D5 tier ordering - concepts outrank navigation outranks full
+projection (tier ordering - concepts outrank navigation outranks full
 text). If the committed relevance file
 (``src/cadrumo/_data/terminology/relevance/relevance.json``) is present, its
 term-to-target weights BOOST the matching records; if absent, the base weights
@@ -43,7 +43,7 @@ from pydantic import ValidationError
 from cadrumo.core.external_constants import OutputLanguage
 
 from .terminology._sweep import SweepResult
-from .terminology._unified_record import SearchRecord, to_search_record
+from .terminology._unified_record import SearchRecord, derive_display_class, to_search_record
 
 if TYPE_CHECKING:
     from pagefind.index import PagefindIndex
@@ -140,7 +140,7 @@ def _materialise_records() -> _Materialised:
 
     # Inject APPROVED concept cards only. A draft concept is scaffold-empty
     # (placeholder short_description) and absent from the approved-only
-    # generated glossary (ADR D7), so its ``#term-<id>`` deep link is dead --
+    # generated glossary, so its ``#term-<id>`` deep link is dead --
     # surfacing it as a first-class palette result ships a placeholder card that
     # 404s. Drafts re-enter the corpus automatically once curated to approved.
     concept_cards, _ = project_concept_cards()
@@ -241,6 +241,11 @@ def _meta_for(record: SearchRecord, weight: float) -> dict[str, str]:
     meta: dict[str, str] = {
         "kind": record.kind.value,
         "tier": record.tier.value,
+        # The closed display class the JS renderer reads verbatim for the
+        # result icon and class-scoped style (ADR D7). Derived once here at the
+        # injection seam -- the single derivation authority -- and shipped as a
+        # display/crumb axis, never re-derived heuristically in the renderer.
+        "display_class": derive_display_class(record).value,
         "title": record.title,
         "summary": _summary_for(record),
         "weight": f"{weight:.6f}",
@@ -254,6 +259,12 @@ def _meta_for(record: SearchRecord, weight: float) -> dict[str, str]:
         meta["modelo"] = md.modelo
     if md.number:
         meta["number"] = md.number
+    if md.segmento:
+        # The casilla card crumb: a segmented modelo (M200 ``DP200014:00562``)
+        # shows its segmento beside the modelo/number so the operator can tell
+        # sibling casillas apart at a glance. Grounding (legal/source refs) stays
+        # off the index meta and renders at the destination (D6).
+        meta["segmento"] = md.segmento
     if md.command_path:
         meta["command_path"] = md.command_path
     return meta

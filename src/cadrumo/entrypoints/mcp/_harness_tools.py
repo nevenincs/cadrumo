@@ -1,6 +1,6 @@
 """The ``harness.load`` floor tool: the universal operating-layer delivery channel.
 
-ADR R4 decides the operating layer reaches an arbitrary client through four
+The operating layer reaches an arbitrary client through four
 channels, floor-first. This module owns the FLOOR: a single read-only tool that
 returns the shipped operator operating rules plus the active persona document as
 text. A tool is the only channel guaranteed to reach a model on a minimal
@@ -32,7 +32,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...adapters.persistence.storage import StorageValidationError
 from ...agent import iter_personas, operator_rules_text
 from ...application.user_profile import TAX_ID_FACT_PATH
-from ...application.workflow import assess_active_profile_health, read_profile_bucket_by_id
+from ...application.workflow import assess_active_profile_health_with_session, read_profile_bucket_by_id
 from ...core.external_constants import UTF_8_ENCODING as _UTF_8
 from ...core.i18n import tr
 from ._persona_scope import AgentPersona
@@ -47,7 +47,7 @@ if TYPE_CHECKING:
 #: ``harness.load`` verb renders as ``cadrumo_harness_load``.
 HARNESS_LOAD_TOOL = "cadrumo_harness_load"
 
-#: The identity-assertion tool's MCP name (ADR I1). Like the floor and
+#: The identity-assertion tool's MCP name. Like the floor and
 #: grounding tools it is a read-only console tool carrying the ``cadrumo_``
 #: prefix; unlike the per-verb surface it is always advertised and never
 #: persona-scoped away, so an agent can always confirm the active taxpayer.
@@ -73,7 +73,7 @@ _OFF_HOST_CONSENT_DEFAULT = (
 
 
 def off_host_consent_text() -> str:
-    """Return the localized off-host consent disclosure (ADR R9).
+    """Return the localized off-host consent disclosure.
 
     A standing disclosure carried on every floor load rather than a stateful
     "first-run" flag: the floor is the read-first channel a client loads at the
@@ -246,10 +246,10 @@ def build_harness_floor_tool() -> Tool:
 
 
 def build_whoami_identity() -> WhoamiIdentity:
-    """Resolve the active taxpayer identity block (ADR I1), best-effort.
+    """Resolve the active taxpayer identity block, best-effort.
 
     Wraps the active-profile health assessment
-    (:func:`~application.workflow.assess_active_profile_health`): its
+    (:func:`~application.workflow.assess_active_profile_health_with_session`): its
     ``status`` is the ``readiness`` and its ``next_action`` the recovery
     step. The display LABEL is resolved from the plaintext bucket manifest
     (:func:`~application.workflow.read_profile_bucket_by_id`) - the same
@@ -264,7 +264,7 @@ def build_whoami_identity() -> WhoamiIdentity:
     resolution is guarded, so this read-only identity probe is safe to call on
     every session and before every mutation.
     """
-    health = assess_active_profile_health()
+    health = assess_active_profile_health_with_session()
     label: str | None = None
     if health.active_profile is not None:
         try:
@@ -295,7 +295,7 @@ def render_whoami_identity_text(identity: WhoamiIdentity) -> str:
 
 
 def build_whoami_tool() -> Tool:
-    """Build the SDK ``Tool`` object for the ``whoami`` identity tool (ADR I1).
+    """Build the SDK ``Tool`` object for the ``whoami`` identity tool.
 
     Lazily imports the SDK types so the module still imports when the
     ``cadrumo[agent]`` extra is absent. The tool takes no arguments and is

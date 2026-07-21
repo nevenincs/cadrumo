@@ -1,0 +1,13 @@
+@step Record when the activity started so the quarter is a valid obligation.
+@setup aeat config profile edit docs-sequence-sandbox --quiet --accept-defaults --activity-start-date 2026-01-01
+@step Import the quarter's bank movements into the ledger.
+@setup aeat app ledger import fixtures/movimientos-2026-1t.csv --provider csv
+@step Classify the collected payment as business income with output VAT.
+@setup aeat app ledger classify 71a5db2b --classification BUSINESS --taxable-base 1000 --iva-rate 0.21 --iva-amount 210
+@step Classify the purchase as a deductible business expense with input VAT.
+@setup aeat app ledger classify e3eeac5e --classification BUSINESS --category-id material_oficina --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@step Register the supplier's purchase invoice as encrypted evidence bytes.
+@setup aeat --format json app ledger evidence add fixtures/factura-material-oficina.pdf --supplier "Papeleria Central SL" --invoice-number C-2026-0087 --invoice-date 2026-02-11 --taxable-base 500 --iva-rate 0.21 --iva-amount 105
+@capture evidence_id result.evidence_id
+@step Attach the purchase-invoice evidence to the deductible expense so it can be filed.
+@setup aeat app ledger attach e3eeac5e --purchase-invoice-evidence-id {evidence_id}

@@ -1,7 +1,7 @@
 """Static guard for production exception base classes.
 
 User/application-facing Cadrumo exceptions must derive from
-:class:`cadrumo.core.errors.AeatError` so they bind to the central error
+:class:`cadrumo.core.errors.CadrumoError` so they bind to the central error
 registry. A tiny allowlist remains for private implementation sentinels
 and structural mixin bases that are not raised directly.
 """
@@ -21,9 +21,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _BARE_EXCEPTION_BASES = (Exception, ValueError, RuntimeError, KeyError, TypeError)
 _ALLOWLIST = {
-    "cadrumo.core.errors.AeatError": "central root of the registry-bound exception hierarchy",
+    "cadrumo.core.errors.CadrumoError": "central root of the registry-bound exception hierarchy",
     "cadrumo.application.live._snapshot_base.SnapshotNotFoundError": (
-        "structural KeyError mixin; concrete snapshot errors also inherit AeatError"
+        "structural KeyError mixin; concrete snapshot errors also inherit CadrumoError"
     ),
     "cadrumo.adapters.outbound.aeat._playwright.PlaywrightError": (
         "optional-extra fallback alias for playwright.async_api.Error; it must match the third-party "
@@ -43,13 +43,6 @@ _ALLOWLIST = {
         "build-time signal that a command's CLI subtree failed to materialise, which would "
         "otherwise ship a silent argument-free schema), not an operator-facing registry-bound "
         "filing error"
-    ),
-    "cadrumo.application.auth._certificate_secret_backend.CertificateSecretBackendUnavailableError": (
-        "certificate-secret backend boundary error; translated by the auth command/service layer, not raised as a "
-        "registry-bound calculation or filing error"
-    ),
-    "cadrumo.application.auth._certificate_secret_backend.CertificateSecretNotFoundError": (
-        "certificate-secret backend absence signal; callers collapse it to optional secret state"
     ),
     "cadrumo.application.auth._certificate_sources.CertificateSourceNoActiveBucketError": (
         "certificate-source mutation precondition signal for an uninitialised local profile bucket"
@@ -80,6 +73,11 @@ _ALLOWLIST = {
     ),
     "cadrumo.application.invoices._wizard._WizardFieldError": (
         "private wizard field-validation carrier; converted to InvoiceValidationError before leaving the module"
+    ),
+    "cadrumo.core._config_state_root.FormerProductStateError": (
+        "raised from inside Settings/pydantic validation during bootstrap, before the CadrumoError "
+        "registry can be relied upon; the CLI boundary explicitly catches it ahead of the CadrumoError "
+        "arm and translates it into a registered CliRefusedBoundaryError"
     ),
 }
 

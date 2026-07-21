@@ -21,6 +21,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Any
 
+from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings, load_settings
 from .....core.external_constants import PDF_MIME_TYPE as _PDF_MIME_TYPE
 from .....core.hashing import sha256_hex
@@ -58,7 +59,7 @@ DEFAULT_EXPAND_TIMEOUT_MS: int = 10_000
 
 
 def _get_navigation_timeout_ms() -> int:
-    return load_settings().aeat_browser_navigation_timeout_ms
+    return load_settings().cadrumo_browser_navigation_timeout_ms
 
 
 @asynccontextmanager
@@ -91,18 +92,17 @@ async def _open_browser_page(
             translated_message=tr("adapters.sede.errors.no_auth_session"),
         )
     browser_session = await default_browser_session_factory(settings)
+    context = None
     try:
         context = await browser_session.create_context(storage_state=storage_state)
-        try:
-            page = await context.new_page()
-            yield context, page
-        finally:
-            try:
-                await context.close()
-            except Exception as exc:
-                log.debug("sede walker: context.close suppressed: %s", exc, exc_info=True)
+        page = await context.new_page()
+        yield context, page
     finally:
-        await browser_session.close()
+        await close_async_resources(
+            context,
+            browser_session,
+            task_name="cadrumo-sede-walker-close",
+        )
 
 
 async def walk_expedientes_tree(
@@ -337,10 +337,16 @@ async def _expand_matching_branches(page: object, *, modelo: str | None) -> None
 
     Two strategies, selected by ``modelo``:
 
-    * When ``modelo`` is set (e.g. ``"100"``), target the leaf
+    * When ``modelo`` is set (e.g. ``"100"``), target every leaf
       ``mostrarListado`` anchor whose visible text contains
-      ``Modelo <N>``. Clicking that anchor lazy-loads the full
-      expediente subtree beneath it in one AJAX round-trip.
+      ``Modelo <N>``. AEAT's procedure tree can list the same modelo
+      under more than one category branch (e.g. distinct
+      autoliquidación / declaración-informativa / recargo procedure
+      entries for the same modelo code); clicking only the first match
+      would lazy-load one branch's subtree while leaving a sibling
+      branch — and any expediente rows nested only under it — never
+      expanded. Every matching anchor is clicked, deduplicated the same
+      way as the ``modelo=None`` branch below.
     * When ``modelo`` is ``None``, click every ``mostrarListado``
       anchor in document order — this expands the whole corpus. The
       JS dedup guards against clicking a category header twice.
@@ -352,25 +358,34 @@ async def _expand_matching_branches(page: object, *, modelo: str | None) -> None
         return
 
     if modelo is not None:
-        clicked = await evaluate(
+        clicked_count = await evaluate(
             """
             (modelo) => {
                 const wanted = 'Modelo ' + modelo;
-                const anchor = Array.from(document.querySelectorAll('a'))
-                    .find(a =>
-                        (a.textContent || '').includes(wanted) &&
-                        ((a.getAttribute('onclick') || '').includes('mostrarListado'))
-                    );
-                if (!anchor) return false;
-                anchor.click();
-                return true;
+                const seen = new Set();
+                let clickedCount = 0;
+                Array.from(document.querySelectorAll('a')).forEach(a => {
+                    const onc = a.getAttribute('onclick') || '';
+                    if (!onc.includes('mostrarListado')) return;
+                    if (!(a.textContent || '').includes(wanted)) return;
+                    const key = a.id || onc;
+                    if (seen.has(key)) return;
+                    seen.add(key);
+                    try { a.click(); clickedCount += 1; } catch (e) {}
+                });
+                return clickedCount;
             }
             """,
             modelo,
         )
-        if not clicked:
+        if not clicked_count:
             log.debug("_expand_matching_branches: no mostrarListado anchor found for modelo=%s", modelo)
             return
+        log.debug(
+            "_expand_matching_branches: expanded %d matching branch(es) for modelo=%s",
+            clicked_count,
+            modelo,
+        )
     else:
         await evaluate(
             """

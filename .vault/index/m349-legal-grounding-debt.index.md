@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#m349-legal-grounding-debt'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-06-03-m349-legal-grounding-debt-research]]'
 ---
@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#m349-legal-grounding-debt`.
 
 ### research
 
-- `2026-06-03-m349-legal-grounding-debt-research` - `m349-legal-grounding-debt` research: `M349 collectible_invoice substantive Ley 37/1992 grounding gap (17/17 procedurally-only)`
+- `2026-06-03-m349-legal-grounding-debt-research` - `m349-legal-grounding-debt` research: M349 substantive Ley 37/1992 grounding debt - closed

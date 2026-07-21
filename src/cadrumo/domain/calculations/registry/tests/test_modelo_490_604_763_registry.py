@@ -23,7 +23,7 @@ See Also:
     :data:`~core.UNMODELED_OBLIGATIONS`
         Former recognized-unmodeled set reduced by these promotions.
     :mod:`~domain.calculations.registry.tests.test_modelo_592_576_121_122_registry`
-        Companion final-tail registry coverage from the same burndown.
+        Companion registry coverage for the remaining new-tax modelos.
 """
 
 from __future__ import annotations

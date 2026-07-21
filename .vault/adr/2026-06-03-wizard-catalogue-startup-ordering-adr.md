@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#wizard-catalogue-startup-ordering'
 date: '2026-06-03'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-06-02-m303-parser-engine-totals-impedance-adr]]"
   - '[[2026-06-04-wizard-catalogue-startup-ordering-research]]'
@@ -17,7 +17,7 @@ Authored via Write tool — same bash-quoting constraint as the prior six ADRs t
 
 ## Problem statement
 
-`register_wizard_catalogue` populates global process state on import of `aeat.application.wizard._catalogue` (line 859). The CLI root callback at `entrypoints/cli/__init__.py:281` triggers that registration via `_register_wizard_catalogue_for_profile_keys()` — but only on the non-exempt active-profile code path (after the line 277 `has_active_bucket_session()` early-return).
+`register_wizard_catalogue` populates global process state on import of `cadrumo.application.wizard._catalogue` (line 859). The CLI root callback at `entrypoints/cli/__init__.py:281` triggers that registration via `_register_wizard_catalogue_for_profile_keys()` — but only on the non-exempt active-profile code path (after the line 277 `has_active_bucket_session()` early-return).
 
 Test paths that route through `cli_runner.invoke(app, ...)` with an active bucket session HIT the early-return BEFORE the registration call AND do not transitively import the wizard package via their own import graph. Result: `"Wizard catalogue has not been registered"` raises mid-test. `test_overview_explain_verb.py::test_explain_721` is the canonical failing case (imports through user_profile + workflow + secure_sql; no wizard touch).
 
@@ -25,17 +25,17 @@ The existing test guard `test_cold_start_wizard_registration.py` documents the e
 
 PM enumerated three options, each violating something:
 
-- **A** — register at `aeat.application.__init__.py`: couples application-layer import-eagerness for every sibling.
+- **A** — register at `cadrumo.application.__init__.py`: couples application-layer import-eagerness for every sibling.
 - **B** — lazy-import in `core.profile_catalogue` getters: violates `aeat-architecture-boundaries` (core importing application).
 - **C** — pytest conftest fixture importing wizard at collection: symptom-fix; per-test boilerplate.
 
-## Decision: Option A with a constrained scope — register in `aeat.application.wizard.__init__.py` only
+## Decision: Option A with a constrained scope — register in `cadrumo.application.wizard.__init__.py` only
 
-Move the registration side-effect import to `aeat.application.wizard/__init__.py`. Importing the wizard PACKAGE triggers the catalogue registration. Tests that consume the wizard subsystem already import `aeat.application.wizard` directly. Tests that don't consume the wizard subsystem (`test_explain_721` and its peers) don't trigger registration — but they also don't need it; they hit the guard because the CLI root callback's early-return short-circuits the production registration call.
+Move the registration side-effect import to `cadrumo.application.wizard/__init__.py`. Importing the wizard PACKAGE triggers the catalogue registration. Tests that consume the wizard subsystem already import `cadrumo.application.wizard` directly. Tests that don't consume the wizard subsystem (`test_explain_721` and its peers) don't trigger registration — but they also don't need it; they hit the guard because the CLI root callback's early-return short-circuits the production registration call.
 
 Two co-landed changes:
 
-1. **`aeat.application.wizard/__init__.py`** gains a top-of-module `from . import _catalogue, _persistence` side-effect import. The package import becomes the registration trigger.
+1. **`cadrumo.application.wizard/__init__.py`** gains a top-of-module `from . import _catalogue, _persistence` side-effect import. The package import becomes the registration trigger.
 
 2. **`entrypoints/cli/__init__.py:277-281`** drops the early-return for the active-bucket-session path's wizard registration. Move the `_register_wizard_catalogue_for_profile_keys()` call ABOVE the bucket-session gate. The call becomes unconditional at CLI bootstrap — same shape as the active-profile language resolver per the cold-start guard docstring.
 
@@ -47,7 +47,7 @@ The combination ensures:
 
 ## Why not A-bare (full application/__init__)
 
-PM's framing of Option A was "register at `aeat.application.__init__.py`". That couples EVERY application sibling — calculations, modelo, aggregation, ledger, etc. — to wizard catalogue eagerness. Architectural over-coupling for a wizard-specific need. The constrained scope (`aeat.application.wizard/__init__.py`) keeps eagerness local to the wizard package, which IS the package that owns the catalogue. No cross-sibling coupling.
+PM's framing of Option A was "register at `cadrumo.application.__init__.py`". That couples EVERY application sibling — calculations, modelo, aggregation, ledger, etc. — to wizard catalogue eagerness. Architectural over-coupling for a wizard-specific need. The constrained scope (`cadrumo.application.wizard/__init__.py`) keeps eagerness local to the wizard package, which IS the package that owns the catalogue. No cross-sibling coupling.
 
 ## Why not B
 
@@ -59,11 +59,11 @@ Symptom-fix at the pytest layer. Doesn't address the production failure mode whe
 
 ## Consequences
 
-- `aeat.application.wizard/__init__.py`: ~3 LOC (one side-effect import).
+- `cadrumo.application.wizard/__init__.py`: ~3 LOC (one side-effect import).
 - `entrypoints/cli/__init__.py`: ~10 LOC move of the registration call above the bucket-session gate.
 - Cold-start guard at `test_cold_start_wizard_registration.py` stays green (production CLI still registers at bootstrap).
 - `test_explain_721` and ~50 sibling tests stop hitting the registration guard.
-- Anti-tautology gate: add a test that imports `aeat.application.wizard` then queries `register_wizard_catalogue` state, asserts registered=True; mutate the side-effect import to a no-op, assert the test fails. Proves the package import IS the registration trigger.
+- Anti-tautology gate: add a test that imports `cadrumo.application.wizard` then queries `register_wizard_catalogue` state, asserts registered=True; mutate the side-effect import to a no-op, assert the test fails. Proves the package import IS the registration trigger.
 
 ## Migration path
 

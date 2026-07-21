@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#pareja-de-hecho-civil-status'
 date: '2026-06-03'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-03-pareja-de-hecho-civil-status-research]]"
   - "[[2026-05-26-cross-domain-continuity-plan]]"
@@ -67,7 +67,7 @@ the `(marital_status, pareja_de_hecho.registered)` pair.
 ## Implementation
 
 The schema author adds the following to
-`src/aeat/_data/registry/aeat/user_profile/schema.toml`:
+`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`:
 
 ```toml
 [[sections]]

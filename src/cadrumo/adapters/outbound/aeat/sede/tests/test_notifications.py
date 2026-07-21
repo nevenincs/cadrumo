@@ -7,13 +7,13 @@ actual column shape AEAT serves.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 from urllib.parse import urlsplit
 
 import pytest
 
 from ......core.config import Settings
 from ......tests import FIXTURES_DIR
+from ...browser.tests.real_http_boundary import opened_http_boundary, real_browser_factory
 from .._errors import SedeNavigationError
 from .._notifications import (
     _RESUMEN_URL,
@@ -30,53 +30,6 @@ _INTERSTITIAL = FIXTURES_DIR / "site_health" / "mantenimiento" / "interstitial.h
 _AEAT = Settings.external_constants().aeat
 _SUMMARY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_summary}"
 _QUERY_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.notifications_query}"
-
-
-class _RecordingPage:
-    def __init__(self, html: str, *, landing_url: str) -> None:
-        self._html = html
-        self.url = landing_url
-        self.goto_calls: list[tuple[str, str]] = []
-
-    async def goto(self, url: str, *, wait_until: str | None) -> None:
-        assert wait_until is not None
-        self.goto_calls.append((url, wait_until))
-
-    async def content(self) -> str:
-        return self._html
-
-
-class _RecordingContext:
-    def __init__(self, page: _RecordingPage) -> None:
-        self._page = page
-        self.close_calls = 0
-
-    async def new_page(self) -> _RecordingPage:
-        return self._page
-
-    async def close(self) -> None:
-        self.close_calls += 1
-
-
-class _RecordingBrowserSession:
-    def __init__(self, html: str, *, landing_url: str) -> None:
-        self.page = _RecordingPage(html, landing_url=landing_url)
-        self.context = _RecordingContext(self.page)
-        self.close_calls = 0
-
-    async def create_context(self, *, storage_state: Mapping[str, object]) -> _RecordingContext:
-        return self.context
-
-    async def close(self) -> None:
-        self.close_calls += 1
-
-
-def _factory_for(browser_session: _RecordingBrowserSession):
-    async def _factory(settings: Settings) -> _RecordingBrowserSession:
-        assert isinstance(settings, Settings)
-        return browser_session
-
-    return _factory
 
 
 class TestParseNotificationsSummary:
@@ -150,19 +103,20 @@ class TestNavigateAndParseLandingGuard:
     async def test_returns_rows_on_real_capture_with_warmup(self) -> None:
         """A real populated capture parses to its rows; warm-up precedes the primary goto."""
         html = (_FIXTURE_ROOT / "notifications-summary-resumen.html").read_text(encoding="utf-8")
-        browser_session = _RecordingBrowserSession(html, landing_url=_SUMMARY_URL)
-        snap = await _navigate_and_parse(
-            {},
-            url=_SUMMARY_URL,
-            parser=parse_notifications_summary,
-            settings=Settings(),
-            browser_session_factory=_factory_for(browser_session),
-        )
+        async with opened_http_boundary() as boundary:
+            boundary.configure_html(html)
+            snap = await _navigate_and_parse(
+                {},
+                url=_SUMMARY_URL,
+                parser=parse_notifications_summary,
+                settings=Settings(),
+                browser_session_factory=real_browser_factory(
+                    boundary=boundary,
+                    profile_name="notifications-populated",
+                ),
+            )
+            assert boundary.requested_urls.index(_RESUMEN_URL) < boundary.requested_urls.index(_SUMMARY_URL)
         assert len(snap.rows) == 2
-        assert browser_session.page.goto_calls == [
-            (_RESUMEN_URL, "domcontentloaded"),
-            (_SUMMARY_URL, "domcontentloaded"),
-        ]
 
     @pytest.mark.asyncio
     async def test_returns_empty_snapshot_on_genuine_empty_but_valid_page(self) -> None:
@@ -176,14 +130,18 @@ class TestNavigateAndParseLandingGuard:
             "<body><h1>Consulta de notificaciones y comunicaciones</h1>"
             "<p>No se han encontrado resultados.</p></body></html>"
         )
-        browser_session = _RecordingBrowserSession(empty_html, landing_url=_QUERY_URL)
-        snap = await _navigate_and_parse(
-            {},
-            url=_QUERY_URL,
-            parser=parse_notifications_query,
-            settings=Settings(),
-            browser_session_factory=_factory_for(browser_session),
-        )
+        async with opened_http_boundary() as boundary:
+            boundary.configure_html(empty_html)
+            snap = await _navigate_and_parse(
+                {},
+                url=_QUERY_URL,
+                parser=parse_notifications_query,
+                settings=Settings(),
+                browser_session_factory=real_browser_factory(
+                    boundary=boundary,
+                    profile_name="notifications-empty",
+                ),
+            )
         assert snap.rows == ()
         assert snap.mode == "read"
 
@@ -191,15 +149,19 @@ class TestNavigateAndParseLandingGuard:
     async def test_raises_instructive_diagnostic_on_marker_absent_landing(self) -> None:
         """Marker ABSENT + zero rows (real maintenance interstitial served in place) raises."""
         interstitial = _INTERSTITIAL.read_text(encoding="utf-8")
-        browser_session = _RecordingBrowserSession(interstitial, landing_url=_QUERY_URL)
-        with pytest.raises(SedeNavigationError) as exc_info:
-            await _navigate_and_parse(
-                {},
-                url=_QUERY_URL,
-                parser=parse_notifications_query,
-                settings=Settings(),
-                browser_session_factory=_factory_for(browser_session),
-            )
+        async with opened_http_boundary() as boundary:
+            boundary.configure_html(interstitial)
+            with pytest.raises(SedeNavigationError) as exc_info:
+                await _navigate_and_parse(
+                    {},
+                    url=_QUERY_URL,
+                    parser=parse_notifications_query,
+                    settings=Settings(),
+                    browser_session_factory=real_browser_factory(
+                        boundary=boundary,
+                        profile_name="notifications-maintenance",
+                    ),
+                )
         context = exc_info.value.context or {}
         assert context["marker_present"] is False
         assert context["row_count"] == 0

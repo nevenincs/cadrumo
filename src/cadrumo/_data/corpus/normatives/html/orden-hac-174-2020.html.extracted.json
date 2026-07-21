@@ -2,11 +2,11 @@
   "schema_version": "1.0",
   "source_kind": "normatives_html",
   "status": "ok",
-  "source_relpath": "src/aeat/_data/corpus/normatives/html/orden-hac-174-2020.html",
+  "source_relpath": "src/cadrumo/_data/corpus/normatives/html/orden-hac-174-2020.html",
   "source_sha256": "913b06641e2abed6ae4d5c089c2f68fc2474b16a2d606a79cdc138b75264d058",
   "preprocessor_id": "normatives-html",
   "preprocessor_version": "1.0",
-  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution.",
+  "attribution": "Source: Boletin Oficial del Estado (BOE) / Agencia Estatal de Administracion Tributaria. Reused with attribution. Official source: https://www.boe.es/buscar/doc.php?id=BOE-A-2020-2898",
   "units": [
     {
       "text": "Se introducen las siguientes modificaciones en la Orden EHA/769/2010, de 18 de marzo, por la que se aprueba el modelo 349 de declaración recapitulativa de operaciones intracomunitarias, así como los diseños físicos y lógicos y el lugar, forma y plazo de presentación, se establecen las condiciones generales y el procedimiento para su presentación telemática, y se modifica la Orden HAC/3625/2003, de 23 de diciembre, por la que se aprueban el modelo 309 de declaración-liquidación no periódica del Impuesto sobre el Valor Añadido, y otras normas tributarias:\nUno. Se modifica el artículo 1 de la Orden EHA/769/2010, de 18 de marzo, por la que se aprueba el modelo 349 de declaración recapitulativa de operaciones intracomunitarias, así como los diseños físicos y lógicos y el lugar, forma y plazo de presentación, se establecen las condiciones generales y el procedimiento para su presentación telemática, y se modifica la Orden HAC/3625/2003, de 23 de diciembre, por la que se aprueban el modelo 309 de declaración-liquidación no periódica del Impuesto sobre el Valor Añadido, y otras normas tributarias, que queda redactado de la siguiente forma:",

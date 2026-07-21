@@ -4,9 +4,10 @@ Each operator-callable registry command becomes one SDK-independent
 :class:`McpToolDescriptor`: a namespaced tool name, a description drawn from the
 family's operator intent, a per-verb input schema derived from the command's own
 click parameters (via :func:`~entrypoints.mcp._input_schema.build_verb_input_schemas`),
-the command's registered result model as the output schema, and the mutability
-annotations. The server shell adapts these into the MCP SDK's ``Tool`` /
-``ToolAnnotations`` types. This module owns no protocol detail and is unit-tested.
+the command's registered result model inside the shared CLI envelope as the output
+schema, and the mutability annotations. The server shell adapts these into the MCP
+SDK's ``Tool`` / ``ToolAnnotations`` types. This module owns no protocol detail and
+is unit-tested.
 """
 
 from __future__ import annotations
@@ -86,8 +87,9 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
 
     Reuses the CLI's own payload-discovery so the registry is fully populated, then
     emits one descriptor per operator-callable command key, skipping group-callback
-    help surfaces. The output schema is the command's registered result model;
-    the input schema is the CLI argument vector.
+    help surfaces. The output schema is the shared CLI envelope specialised with
+    the command's registered result model; the input schema is the CLI argument
+    vector.
 
     Returns:
         Tuple of exposed :class:`McpToolDescriptor` entries.
@@ -111,11 +113,11 @@ def build_tool_descriptors() -> tuple[McpToolDescriptor, ...]:
         cli_form = "aeat app " + key.replace(".", " ")
         intent = _family_intent(key, intent_map)
         verb_schema = verb_schemas[key]
-        # The model-facing description stays English (ADR mcp-protocol-hardening
-        # H5): the CLI form carries the verb path and the shared family intent
-        # follows. The command's own (Spanish) per-verb help is NOT put here - it
-        # feeds the search index instead (P02/S05), so discovery gains the verb
-        # vocabulary without a Spanish string on the model-facing surface.
+        # The model-facing description stays English: the CLI form carries the
+        # verb path and the shared family intent follows. The command's own
+        # (Spanish) per-verb help is NOT put here - it feeds the search index
+        # instead, so discovery gains the verb vocabulary without a Spanish
+        # string on the model-facing surface.
         description = f"Run `{cli_form}`." + (f" {intent}." if intent else "")
         annotations = annotations_for_command(command_key=key, mutability=mutability, title=cli_form)
         descriptors.append(
@@ -136,9 +138,62 @@ def _output_schema_for(command_key: str) -> dict[str, Any]:
     schema = SCHEMA_REGISTRY.get(command_key)
     if schema is None:
         return {"type": "object"}
-    # ADR H4: a thinned verb moves its bulk arrays to resource_link URIs, so its
-    # declared output schema drops those properties in lock-step with the runtime
-    # envelope thinning (_result_thinning.thin_envelope) - the advertised shape
-    # and the emitted structuredContent stay identical, and the size-budget gate
-    # measures the thinned schema.
-    return thin_output_schema(command_key, schema.model_json_schema())
+    # A thinned verb moves its bulk arrays to resource_link URIs, so its result
+    # schema drops those properties before being wrapped in the shared envelope.
+    # The advertised output and emitted structuredContent therefore stay
+    # identical while preserving the CLI's command/status/notices contract.
+    result_schema = thin_output_schema(command_key, schema.model_json_schema())
+    definitions = result_schema.pop("$defs", {})
+    return {
+        "$defs": definitions,
+        "type": "object",
+        "properties": {
+            "schema_version": {"const": ENVELOPE_SCHEMA_VERSION, "type": "string"},
+            "command": {"const": command_key, "type": "string"},
+            "active_profile": {
+                "anyOf": [{"type": "string"}, {"type": "null"}],
+            },
+            "status": {
+                "enum": ["success", "warning"],
+                "type": "string",
+            },
+            "result": result_schema,
+            "notices": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "severity": {
+                            "enum": ["info", "warning"],
+                            "type": "string",
+                        },
+                        "code": {"minLength": 1, "type": "string"},
+                        "message": {"minLength": 1, "type": "string"},
+                        "suggestion": {
+                            "anyOf": [{"type": "string"}, {"type": "null"}],
+                        },
+                        "context": {
+                            "anyOf": [
+                                {
+                                    "type": "object",
+                                    "additionalProperties": {"type": "string"},
+                                },
+                                {"type": "null"},
+                            ],
+                        },
+                    },
+                    "required": ["severity", "code", "message", "suggestion", "context"],
+                    "additionalProperties": False,
+                },
+            },
+        },
+        "required": [
+            "schema_version",
+            "command",
+            "active_profile",
+            "status",
+            "result",
+            "notices",
+        ],
+        "additionalProperties": False,
+    }

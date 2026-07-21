@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#purchase-invoice-ocr-extraction-discipline'
 date: '2026-05-30'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-05-30-declaracion-extraction-architecture-research]]"
   - "[[2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr]]"
@@ -26,7 +26,7 @@ The `2026-05-12-cli-workflow-redesign-receipt-ocr-pdf-evidence-adr` mandated tha
 `aeat app ledger evidence add` verb store the source-file hash, extraction method,
 extraction confidence, extracted fields, and manual-review state inside the active bucket.
 The W10.P44 audit found that **zero** of these OCR-specific requirements have been
-implemented: the `PurchaseInvoiceEvidence` model in `src/aeat/application/ledger/_evidence.py`
+implemented: the `PurchaseInvoiceEvidence` model in `src/cadrumo/application/ledger/_evidence.py`
 carries no `extraction_method`, no `extraction_confidence`, and no `manual_review_state`
 field. There is no OCR library in `pyproject.toml`. All invoice fields are populated
 exclusively by manual operator overrides.
@@ -115,11 +115,11 @@ adapts the same mechanisms with OCR-specific additions.
 
 ### Existing error hierarchy and missing structure
 
-`src/aeat/application/ledger/_evidence.py` (W10.P44 audit state) defines:
+`src/cadrumo/application/ledger/_evidence.py` (W10.P44 audit state) defines:
 
-- `PurchaseInvoiceEvidenceInputError(AeatError)` -- raised on file-path/extension
+- `PurchaseInvoiceEvidenceInputError(CadrumoError)` -- raised on file-path/extension
   refusals (line ~47). No structured attributes.
-- `PurchaseInvoiceEvidenceNotFoundError(AeatError)` -- raised on CRUD lookup failures
+- `PurchaseInvoiceEvidenceNotFoundError(CadrumoError)` -- raised on CRUD lookup failures
   (line ~51). No structured attributes.
 
 No OCR-specific error class exists anywhere in the codebase. The structured-attribute
@@ -141,18 +141,18 @@ exact-match assertion.
 
 ## Constraints
 
-- Must use `aeat.core.errors.AeatError` hierarchy. `InvoiceOcrExtractionError` is rooted
-  at `PurchaseInvoiceEvidenceInputError(AeatError)` -- not at `PdfModeloImportError` --
+- Must use `cadrumo.core.errors.CadrumoError` hierarchy. `InvoiceOcrExtractionError` is rooted
+  at `PurchaseInvoiceEvidenceInputError(CadrumoError)` -- not at `PdfModeloImportError` --
   because supplier evidence is not an AEAT-issued modelo filing document. The two error
   root hierarchies are architecturally separate.
-- Must use `aeat.core.config.Settings` for engine-version and confidence-threshold
+- Must use `cadrumo.core.config.Settings` for engine-version and confidence-threshold
   configuration. No naked `os.environ` reads; no hard-coded threshold constants outside
   `Settings`.
-- Must use `aeat.core.i18n.tr()` for all user-facing OCR error messages. Structured
+- Must use `cadrumo.core.i18n.tr()` for all user-facing OCR error messages. Structured
   exception attributes carry machine-readable tuples; human-readable strings go through
   the `tr()` facility.
 - An `ErrorCode` registry entry is required for `InvoiceOcrExtractionError` in
-  `src/aeat/core/errors/registry/` (pattern: `REFUSED_LEDGER_INVOICE_OCR_EXTRACTION`).
+  `src/cadrumo/core/errors/registry/` (pattern: `REFUSED_LEDGER_INVOICE_OCR_EXTRACTION`).
 - No new top-level packages. All OCR evidence changes are within `application/ledger/`.
 - No live AEAT write surfaces are touched by this discipline; this is an inbound-processing
   and evidence-persistence concern only.
@@ -185,7 +185,7 @@ supplier names, addresses). Sanitisation is an explicit obligation, not an optio
 provenance enum distinguishes sanitised real specimens from synthetic templates to make
 that obligation auditable.
 
-`InvoiceCorpusSource` is placed in `src/aeat/application/ledger/_evidence.py` alongside
+`InvoiceCorpusSource` is placed in `src/cadrumo/application/ledger/_evidence.py` alongside
 the existing error classes.
 
 ### InvoiceOcrExtractionError structured exception
@@ -214,9 +214,9 @@ Three OCR-specific attributes extend the base shape:
   continuation page was expected (total absent on page 1) but subsequent pages were
   not present or not processed. Captures failure class 3.
 
-`InvoiceOcrExtractionError` is placed in `src/aeat/application/ledger/_evidence.py` as a
+`InvoiceOcrExtractionError` is placed in `src/cadrumo/application/ledger/_evidence.py` as a
 sibling of the existing error classes, with an `ErrorCode` entry at
-`src/aeat/core/errors/registry/` following the pattern for
+`src/cadrumo/core/errors/registry/` following the pattern for
 `REFUSED_FINANCIAL_BANK_STATEMENT_PARSE`.
 
 ### Enrollment unit: engine-version pinning with optional per-supplier corpus
@@ -231,7 +231,7 @@ The enrollment unit is: **OCR engine version + confidence threshold** (mandatory
 Engine version is pinned via `Settings.ocr_engine_version`. When the pinned
 version differs from the installed version, the discrepancy is surfaced as an
 `ambiguous` attribute on affected fields and logged at WARNING level via
-`aeat.core.logging` -- a hard failure is not appropriate because a package
+`cadrumo.core.logging` -- a hard failure is not appropriate because a package
 upgrade may improve recognition.
 
 ### Gate machinery
@@ -272,7 +272,7 @@ implementation obligation:
 - `manual_review_state: Literal["pending", "reviewed", "accepted", "rejected"] | None = None`
 
 These fields are added to `PurchaseInvoiceEvidence` in
-`src/aeat/application/ledger/_evidence.py` as the first implementation step,
+`src/cadrumo/application/ledger/_evidence.py` as the first implementation step,
 before any OCR pipeline is wired.
 
 ### Corpus collection discipline
@@ -321,7 +321,7 @@ parametrized tests as the enforcement gate, and
 three OCR-specific attributes and the confidence-threshold gate.
 
 Rooting `InvoiceOcrExtractionError` at
-`PurchaseInvoiceEvidenceInputError(AeatError)` rather than at
+`PurchaseInvoiceEvidenceInputError(CadrumoError)` rather than at
 `PdfModeloImportError` is the correct taxonomy decision. Supplier invoice evidence
 is not an AEAT-issued modelo filing artifact; conflating the two error hierarchies
 would misrepresent the domain boundary between AEAT filing documents and

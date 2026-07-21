@@ -37,6 +37,14 @@ def test_tier_is_derived_from_annotations() -> None:
     assert timeout_seconds(CallTier.LIVE) > timeout_seconds(CallTier.MUTATE) > timeout_seconds(CallTier.READ)
 
 
+def test_mutate_ceiling_has_headroom_beyond_the_observed_cold_client_cutoff() -> None:
+    # An installed Claude Desktop MCPB run reached 121.366 seconds before the
+    # former 120-second server ceiling killed modelo.work.create. Keep the
+    # local-mutation tier at the next established oracle ceiling rather than
+    # barely clearing one observed machine.
+    assert timeout_seconds(CallTier.MUTATE) == 180.0
+
+
 def test_a_fast_command_completes_without_timing_out() -> None:
     result = run_supervised(
         [sys.executable, "-c", "print('ok')"],
@@ -44,6 +52,7 @@ def test_a_fast_command_completes_without_timing_out() -> None:
         encoding="utf-8",
     )
     assert isinstance(result, SupervisedResult)
+    assert result.executable == sys.executable
     assert result.timed_out is False
     assert result.returncode == 0
     assert result.stdout.strip() == "ok"
@@ -80,7 +89,7 @@ def test_a_child_spawning_process_is_killed_as_a_tree() -> None:
 
 
 def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
-    from .._server import _timeout_refusal_envelope
+    from .._transport import _timeout_refusal_envelope
 
     envelope = _timeout_refusal_envelope(command_key="app.live.expedientes.pull", tier=CallTier.LIVE, timeout_s=420.0)
     assert envelope["status"] == "error"
@@ -91,3 +100,52 @@ def test_timeout_refusal_is_localized_and_names_the_tier() -> None:
     assert "app.live.expedientes.pull" in refusal
     assert "live" in refusal
     assert "420" in refusal
+
+
+def test_serving_limiter_is_a_settings_sized_singleton() -> None:
+    from ....core.config import load_settings
+    from .._call_runtime import serving_capacity_limiter
+
+    limiter = serving_capacity_limiter()
+    # The explicit cap is the settings value, not the anyio default of 40.
+    assert limiter.total_tokens == load_settings().cadrumo_mcp_serving_concurrency
+    assert limiter.total_tokens != 40
+    # One limiter lives for the whole server session; repeated calls reuse it.
+    assert serving_capacity_limiter() is limiter
+
+
+def test_serving_limiter_caps_concurrent_off_loop_dispatch() -> None:
+    import threading
+    from functools import partial
+
+    import anyio
+    from anyio.to_thread import run_sync
+
+    from .._call_runtime import serving_capacity_limiter
+
+    limiter = serving_capacity_limiter()
+    cap = int(limiter.total_tokens)
+    lock = threading.Lock()
+    live = 0
+    observed_peak = 0
+
+    def _busy() -> None:
+        nonlocal live, observed_peak
+        with lock:
+            live += 1
+            observed_peak = max(observed_peak, live)
+        # Hold the slot long enough that more than ``cap`` tasks would overlap if
+        # the limiter did not bound them.
+        time.sleep(0.15)
+        with lock:
+            live -= 1
+
+    async def _drive() -> None:
+        async with anyio.create_task_group() as group:
+            for _ in range(cap * 3):
+                group.start_soon(partial(run_sync, _busy, limiter=limiter))
+
+    anyio.run(_drive)
+    # The cap binds: never more than ``cap`` ran at once, and with three times the
+    # cap queued the limit was actually reached (not merely never exceeded).
+    assert observed_peak == cap

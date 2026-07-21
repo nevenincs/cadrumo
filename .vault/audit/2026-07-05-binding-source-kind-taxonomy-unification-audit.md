@@ -3,7 +3,7 @@ tags:
   - '#audit'
   - '#binding-source-kind-taxonomy-unification'
 date: '2026-07-05'
-modified: '2026-07-10'
+modified: '2026-07-17'
 related:
   - "[[2026-06-26-binding-source-kind-taxonomy-unification-plan]]"
 ---

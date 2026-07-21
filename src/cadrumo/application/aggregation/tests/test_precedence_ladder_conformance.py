@@ -81,6 +81,7 @@ def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
                 BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
                 BindingSourceKind.LEDGER_RENTA_GASTO_AGGREGATION,
                 BindingSourceKind.LEDGER_IMPATRIADO_INCOME_AGGREGATION,
+                BindingSourceKind.LEDGER_IRNR_INCOME_AGGREGATION,
                 BindingSourceKind.LEDGER_OSS_AGGREGATION,
                 BindingSourceKind.COLLECTIBLE_INVOICE,
                 BindingSourceKind.PAYABLE_INVOICE,

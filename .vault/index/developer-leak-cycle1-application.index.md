@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#developer-leak-cycle1-application'
-date: '2026-06-15'
-modified: '2026-06-28'
+date: '2026-07-15'
+modified: '2026-07-15'
 related:
   - '[[2026-05-18-developer-leak-cycle1-application-audit]]'
 ---
@@ -17,4 +17,4 @@ Auto-generated index of all documents tagged with `#developer-leak-cycle1-applic
 
 ### audit
 
-- `2026-05-18-developer-leak-cycle1-application-audit` - `developer-leak-cycle1-application` audit: `{title}`
+- `2026-05-18-developer-leak-cycle1-application-audit` - `developer-leak-cycle1-application` audit: `application-layer developer-leak cycle 1 review`

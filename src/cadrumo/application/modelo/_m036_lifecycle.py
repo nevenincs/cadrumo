@@ -123,8 +123,7 @@ class M036DeclarationResult(BaseModel):
     record was written. The ``bucket_id`` field bridges the storage
     cross-check `SecureSnapshotRepository` performs when loading and
     saving records (it refuses payloads whose bucket disagrees with the
-    repository binding), per the M036-declaration-service Path A ADR
-    decision. Downstream consumers (stale-cascade engine, profile-state
+    repository binding). Downstream consumers (stale-cascade engine, profile-state
     re-derivation) read these fields to decide what to recompute.
 
     The record is the payload model for

@@ -1,0 +1,4 @@
+@step Verify the spreadsheet calculation for the modelo, year, and period.
+@static aeat config google sync calc verify --modelo 303 --year 2026 --period 1T
+@step Verify against an explicit scenario JSON of inputs and expected outputs.
+@static aeat config google sync calc verify --modelo 303 --year 2026 --period 1T --scenario ./scenario.json

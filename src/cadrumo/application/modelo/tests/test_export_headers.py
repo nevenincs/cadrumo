@@ -356,7 +356,7 @@ def test_modelo_202_2024_export_uses_2024_registry_snapshot_for_draft_write(
         input_values_by_casilla_id={_M202_CASILLA_01: "0"},
         binding_overrides={_M202_2023_2024_PRIOR_PAYMENTS_BINDING: "0"},
     )
-    output_path = tmp_path / "m202-2024-1p.boe"
+    output_path = tmp_path / "modelo-202-2024-1P.boe"
 
     result = export_modelo_revision(
         ModeloExportCommand(

@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#dsl-conditional-predicate'
 date: '2026-05-27'
-modified: '2026-07-03'
+modified: '2026-07-17'
 related:
   - "[[2026-04-21-calc-verification-adr]]"
   - "[[2026-05-26-modelo-130-relation-regression-adr]]"
@@ -29,7 +29,7 @@ contradicts the regulation), or omit the predicate entirely and rely on
 manual review (silent-pass risk). The DSL needs a first-class
 conditional operator.
 
-The schema docstring at `src/aeat/domain/calculations/registry/_schema.py`
+The schema docstring at `src/cadrumo/domain/calculations/registry/_schema.py`
 explicitly defers conditional DSL to "W09" (predates the L4 cross-domain
 continuity epic) — this ADR is the formal landing decision for that
 deferred work, scoped to the implies-nonzero shape only.
@@ -81,7 +81,7 @@ deferred work, scoped to the implies-nonzero shape only.
 
 ### 1. Schema-side registration
 
-In `src/aeat/domain/calculations/registry/_schema.py`, extend
+In `src/cadrumo/domain/calculations/registry/_schema.py`, extend
 `KNOWN_VERIFICATION_PREDICATE_OPERATORS` to include `"implies_nonzero"`.
 Extend the `VerificationPredicateDefinition` class docstring to
 document the new operator with the same prose structure as the existing
@@ -106,7 +106,7 @@ value does not trigger the implication.
 
 ### 3. Runtime evaluator
 
-In `src/aeat/application/modelo/_actions.py`, add a regex constant
+In `src/cadrumo/application/modelo/_calculation_actions.py`, add a regex constant
 `_PREDICATE_IMPLIES_NONZERO` matching the authoring shape, and a branch
 in `_evaluate_predicate_expression` that:
 
@@ -160,14 +160,14 @@ testing surfaces confusion.
   the runtime/schema lock-step assertion remains green.
 
 Tests live under
-`src/aeat/application/modelo/test_verification_predicates.py` (or the
+`src/cadrumo/application/modelo/test_verification_predicates.py` (or the
 nearest existing predicate-test module — runtime evaluator coverage
 is currently colocated with `_actions.py`).
 
 ### 6. Registry use site
 
 The first authoring use is the Modelo 131 EO cuota-mínima rule under
-`src/aeat/_data/registry/aeat/modelos/131/.../verification_expectations.toml`
+`src/cadrumo/_data/registry/aeat/modelos/131/.../verification_expectations.toml`
 (scope of task #168). That authoring lands in the same commit (or an
 immediately-following commit) as the schema + runtime change so the
 gate test stays green throughout.
