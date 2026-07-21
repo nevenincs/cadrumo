@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# runner disk-hygiene hook - macOS self-hosted runner (macbook-neo).
+# runner disk-hygiene hook - macOS self-hosted runner.
 #
 # Wired via ACTIONS_RUNNER_HOOK_JOB_COMPLETED in the runner root .env, so it
 # fires after EVERY job (success or failure). It MUST stay fast (<30s typical)

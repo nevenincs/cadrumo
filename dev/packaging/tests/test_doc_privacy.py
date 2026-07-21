@@ -46,18 +46,28 @@ def _repo_root() -> Path:
     return Path(top)
 
 
-# Fixed-string banned tokens, assembled from fragments so the literal never
-# appears in this source file. Each is leaked machine / login / path metadata.
+def _token(*fragments: str) -> str:
+    """Join ``fragments`` into one banned token.
+
+    Every token is split across fragments at its call site and rejoined here at
+    runtime, so no banned literal appears whole in this source. That is what
+    lets the scan cover this gate too: a self-exclusion would blind it to its
+    own regressions, and an inline literal would make it fail on itself.
+    """
+    return "".join(fragments)
+
+
+# Fixed-string banned tokens. Each is leaked machine / login / path metadata.
 _BANNED_LITERALS: tuple[str, ...] = (
-    "gw-workstation",  # operator Windows/WSL build-host name
-    "macbook-neo",  # operator macOS build-host name
-    "gw-macbook",  # operator macOS build-host name (variant)
-    "gergelys-macbook",  # operator macOS build-host name (variant)
-    "wgergely",  # operator VCS / account login handle
-    "C:\\Users\\hello",  # operator Windows home path (backslash form)
-    "C:/Users/hello",  # operator Windows home path (forward-slash form)
-    "/home/hello",  # operator Linux home path
-    "/Users/gergely",  # operator macOS home path
+    _token("gw-", "workstation"),  # operator Windows/WSL build-host name
+    _token("macbook", "-neo"),  # operator macOS build-host name
+    _token("gw-", "macbook"),  # operator macOS build-host name (variant)
+    _token("gergelys", "-macbook"),  # operator macOS build-host name (variant)
+    _token("wger", "gely"),  # operator VCS / account login handle
+    _token("C:\\Users", "\\hello"),  # operator Windows home path (backslash form)
+    _token("C:/Users", "/hello"),  # operator Windows home path (forward-slash form)
+    _token("/home", "/hello"),  # operator Linux home path
+    _token("/Users", "/gergely"),  # operator macOS home path
 )
 
 # ERE banned patterns for network identifiers.

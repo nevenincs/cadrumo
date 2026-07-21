@@ -1,4 +1,4 @@
-# runner disk-hygiene hook - Windows self-hosted runner (gw-workstation-win).
+# runner disk-hygiene hook - Windows self-hosted runner.
 #
 # Wired via ACTIONS_RUNNER_HOOK_JOB_COMPLETED in the runner root .env, so it
 # fires after EVERY job (success or failure). It MUST stay fast (<30s typical)
