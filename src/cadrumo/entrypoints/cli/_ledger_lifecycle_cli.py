@@ -50,7 +50,8 @@ from ._common import _bad, _emit_envelope, _state, _tx_repo, parse_decimal_amoun
 from ._ledger_support import _emit_update_result, _resolve_id
 
 if TYPE_CHECKING:
-    from ._ledger_payloads import LedgerSplitChildIdPayload
+    from ...application.ledger import LLMSplitSuggestion
+    from ._ledger_payloads import LedgerSplitChildIdPayload, LedgerSplitChildProposalPayload
 
 
 def register_lifecycle_commands(app: typer.Typer) -> None:
@@ -867,35 +868,15 @@ def _split_classification_dropped_notices(
     ]
 
 
-def _ledger_split_llm(
-    ctx: typer.Context,
+def _validate_split_llm_options(
     *,
-    transaction_id: str,
     child_amount: list[str],
     child_description: list[str],
     provider: LLMProvider | None,
     apply: bool,
-    read_evidence: bool,
-    evidence_acknowledged: bool,
-    vision_model: str | None,
-    reason: str,
     yes: bool,
-    actor: str | None,
 ) -> None:
-    """Run the evidence-driven LLM split suggest / apply loop for ``ledger split --llm``.
-
-    Without ``--apply`` the proposed children (derived amounts, model-selected
-    categories, registry-derived IVA) are previewed and nothing is persisted.
-    With ``--apply`` (and ``--yes``) the reviewed proposal is routed through the
-    one review workflow (:func:`~application.ledger.execute_reviewed_decision`)
-    with the ``SPLIT_LLM`` origin, which delegates to the single-writer split
-    plus per-child classification, registry-derived numbers, parent-invoice
-    evidence link, and ``llm:<model>`` provenance. The manual ``--child-amount`` /
-    ``--child-description`` flags are the explicit operator override and cannot be
-    combined with ``--llm``.
-    """
-    from ._ledger_payloads import LedgerSplitChildProposalPayload, LedgerSplitResult
-
+    """Reject manual-override flag combinations and an unconfirmed apply for ``ledger split --llm``."""
     if child_amount or child_description:
         raise _bad(
             tr(
@@ -919,28 +900,12 @@ def _ledger_split_llm(
     if apply and not yes:
         raise _bad(tr("cli.ledger.errors.confirm_required"))
 
-    state = _state()
-    transaction_repository = _tx_repo(state)
-    bucket_id = transaction_repository.bucket_id
-    resolved_id = _resolve_id(transaction_repository, transaction_id)
-    try:
-        suggestion = suggest_evidence_split(
-            bucket_id=bucket_id,
-            transaction_id=resolved_id,
-            provider=provider,
-            transaction_repository=transaction_repository,
-            read_evidence=read_evidence,
-            evidence_acknowledged=evidence_acknowledged,
-            vision_model=vision_model,
-        )
-    except PurchaseInvoiceEvidenceInputError as exc:
-        raise _bad(str(exc)) from exc
-    except LLMClassifierError as exc:
-        raise _bad(
-            tr("cli.ledger.classify.llm_failed", reason=str(exc), default=f"LLM split proposal failed: {exc}"),
-        ) from exc
 
-    proposed_children = [
+def _build_split_child_proposals(suggestion: LLMSplitSuggestion) -> list[LedgerSplitChildProposalPayload]:
+    """Project the suggestion's proposed children into typed payload rows."""
+    from ._ledger_payloads import LedgerSplitChildProposalPayload
+
+    return [
         LedgerSplitChildProposalPayload.model_validate(
             {
                 "proportion": format(child.proportion, "f"),
@@ -957,43 +922,48 @@ def _ledger_split_llm(
         for child in suggestion.children
     ]
 
-    if not apply:
-        result = LedgerSplitResult.model_validate(
-            {
-                "bucket_id": bucket_id,
-                "parent_transaction_id": suggestion.transaction_id,
-                "llm": True,
-                "persisted": False,
-                "provider": suggestion.provider.value if suggestion.provider is not None else None,
-                "provenance": suggestion.provenance,
-                "reason": suggestion.reason,
-                "parent_amount": format(suggestion.parent_amount, "f"),
-                "proposed_children": [child.model_dump(mode="json") for child in proposed_children],
-            },
-        )
-        lines = [
-            f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
-            f"{tr('cli.ledger.labels.children')}\t{len(proposed_children)}",
-        ]
-        lines.extend(f"{child.description}\t{child.amount}\t{child.iva_category or ''}" for child in proposed_children)
-        lines.append(tr("cli.ledger.classify.llm_review_hint"))
-        _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
-        return
 
-    try:
-        applied = execute_reviewed_decision(
-            suggestion,
-            origin=LlmReviewInvocationOrigin.SPLIT_LLM,
-            decision=LlmReviewDecision.SPLIT,
-            bucket_id=bucket_id,
-            actor=actor or resolve_active_bucket_id() or "operator",
-            transaction_repository=transaction_repository,
-        )
-    except TransactionValidationError as exc:
-        raise _bad(str(exc)) from exc
-    except ValidationError as exc:
-        raise _ledger_validation_bad(exc) from exc
-    assert isinstance(applied, LLMSplitApplyResult)
+def _render_split_llm_preview(
+    ctx: typer.Context,
+    *,
+    bucket_id: str,
+    suggestion: LLMSplitSuggestion,
+    proposed_children: list[LedgerSplitChildProposalPayload],
+) -> None:
+    """Emit the non-persisting split preview envelope."""
+    from ._ledger_payloads import LedgerSplitResult
+
+    result = LedgerSplitResult.model_validate(
+        {
+            "bucket_id": bucket_id,
+            "parent_transaction_id": suggestion.transaction_id,
+            "llm": True,
+            "persisted": False,
+            "provider": suggestion.provider.value if suggestion.provider is not None else None,
+            "provenance": suggestion.provenance,
+            "reason": suggestion.reason,
+            "parent_amount": format(suggestion.parent_amount, "f"),
+            "proposed_children": [child.model_dump(mode="json") for child in proposed_children],
+        },
+    )
+    lines = [
+        f"{tr('cli.ledger.labels.id')}\t{suggestion.transaction_id}",
+        f"{tr('cli.ledger.labels.children')}\t{len(proposed_children)}",
+    ]
+    lines.extend(f"{child.description}\t{child.amount}\t{child.iva_category or ''}" for child in proposed_children)
+    lines.append(tr("cli.ledger.classify.llm_review_hint"))
+    _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
+
+
+def _render_split_llm_applied(
+    ctx: typer.Context,
+    *,
+    suggestion: LLMSplitSuggestion,
+    applied: LLMSplitApplyResult,
+    proposed_children: list[LedgerSplitChildProposalPayload],
+) -> None:
+    """Emit the persisted split-applied envelope."""
+    from ._ledger_payloads import LedgerSplitResult
 
     child_id_rows = _split_child_id_rows(applied.child_transaction_ids)
     result = LedgerSplitResult.model_validate(
@@ -1021,6 +991,96 @@ def _ledger_split_llm(
     lines.extend(f"{tr('cli.ledger.labels.child_id')}\t{row.display_id}\t{row.full_id}" for row in child_id_rows)
     lines.append(f"{tr('cli.ledger.classify.llm_classified_by_label')}\t{applied.provenance}")
     _emit_envelope(ctx, command="ledger.split", result=result, lines=lines)
+
+
+def _ledger_split_llm(
+    ctx: typer.Context,
+    *,
+    transaction_id: str,
+    child_amount: list[str],
+    child_description: list[str],
+    provider: LLMProvider | None,
+    apply: bool,
+    read_evidence: bool,
+    evidence_acknowledged: bool,
+    vision_model: str | None,
+    reason: str,
+    yes: bool,
+    actor: str | None,
+) -> None:
+    """Run the evidence-driven LLM split suggest / apply loop for ``ledger split --llm``.
+
+    Without ``--apply`` the proposed children (derived amounts, model-selected
+    categories, registry-derived IVA) are previewed and nothing is persisted.
+    With ``--apply`` (and ``--yes``) the reviewed proposal is routed through the
+    one review workflow (:func:`~application.ledger.execute_reviewed_decision`)
+    with the ``SPLIT_LLM`` origin, which delegates to the single-writer split
+    plus per-child classification, registry-derived numbers, parent-invoice
+    evidence link, and ``llm:<model>`` provenance. The manual ``--child-amount`` /
+    ``--child-description`` flags are the explicit operator override and cannot be
+    combined with ``--llm``.
+    """
+    _validate_split_llm_options(
+        child_amount=child_amount,
+        child_description=child_description,
+        provider=provider,
+        apply=apply,
+        yes=yes,
+    )
+
+    state = _state()
+    transaction_repository = _tx_repo(state)
+    bucket_id = transaction_repository.bucket_id
+    resolved_id = _resolve_id(transaction_repository, transaction_id)
+    try:
+        suggestion = suggest_evidence_split(
+            bucket_id=bucket_id,
+            transaction_id=resolved_id,
+            provider=provider,
+            transaction_repository=transaction_repository,
+            read_evidence=read_evidence,
+            evidence_acknowledged=evidence_acknowledged,
+            vision_model=vision_model,
+        )
+    except PurchaseInvoiceEvidenceInputError as exc:
+        raise _bad(str(exc)) from exc
+    except LLMClassifierError as exc:
+        raise _bad(
+            tr("cli.ledger.classify.llm_failed", reason=str(exc), default=f"LLM split proposal failed: {exc}"),
+        ) from exc
+
+    proposed_children = _build_split_child_proposals(suggestion)
+
+    if not apply:
+        _render_split_llm_preview(
+            ctx,
+            bucket_id=bucket_id,
+            suggestion=suggestion,
+            proposed_children=proposed_children,
+        )
+        return
+
+    try:
+        applied = execute_reviewed_decision(
+            suggestion,
+            origin=LlmReviewInvocationOrigin.SPLIT_LLM,
+            decision=LlmReviewDecision.SPLIT,
+            bucket_id=bucket_id,
+            actor=actor or resolve_active_bucket_id() or "operator",
+            transaction_repository=transaction_repository,
+        )
+    except TransactionValidationError as exc:
+        raise _bad(str(exc)) from exc
+    except ValidationError as exc:
+        raise _ledger_validation_bad(exc) from exc
+    assert isinstance(applied, LLMSplitApplyResult)
+
+    _render_split_llm_applied(
+        ctx,
+        suggestion=suggestion,
+        applied=applied,
+        proposed_children=proposed_children,
+    )
 
 
 def ledger_merge(

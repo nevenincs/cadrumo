@@ -19,14 +19,17 @@ from __future__ import annotations
 
 import csv
 import io
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 from pydantic import ValidationError
 
 if TYPE_CHECKING:
+    from datetime import datetime
+
     from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-    from ...domain.transactions import LedgerClassificationRule
+    from ...domain.transactions import LedgerClassificationRule, TransactionCatalogue
+    from ._models import LedgerRemovalBlocker
     from ._rule_repository import LedgerClassificationRuleRepository
 
 from ...core.errors import CadrumoError, resolve_error_message
@@ -173,6 +176,89 @@ def _parse_bulk_classify_rows(csv_text: str) -> tuple[list[_ParsedBulkClassifyRo
     return parsed_rows, parse_failures
 
 
+class _BulkRowOutcome(NamedTuple):
+    """The per-row result of applying one parsed bulk-classify row.
+
+    ``working`` is the (possibly-updated) working catalogue; on a skip or a
+    failure it is the unchanged input catalogue. Exactly one of ``applied``,
+    ``skipped``, or ``failure is not None`` characterises the row.
+    """
+
+    working: TransactionCatalogue
+    events: tuple[BucketEvent, ...]
+    applied: bool
+    skipped: bool
+    failure: BulkClassifyFailure | None
+
+
+def _apply_one_bulk_classify_row(
+    *,
+    working: TransactionCatalogue,
+    parsed_row: _ParsedBulkClassifyRow,
+    bucket_id: str,
+    actor: str,
+    source_command: str,
+    now: datetime,
+    blockers_by_txid: dict[str, tuple[LedgerRemovalBlocker, ...]],
+) -> _BulkRowOutcome:
+    """Validate and apply one parsed row against the working catalogue.
+
+    Returns the row outcome without mutating shared batch state; the caller
+    folds the outcome into the accumulated counters, events, and catalogue.
+    """
+    idx, row, provided_patch_columns = parsed_row
+    patch_values: dict[str, object] = {"business_classification": row.classification}
+    patch_values.update({column: getattr(row, column) for column in provided_patch_columns})
+    patch = ManualLedgerTransactionPatch.model_validate(patch_values)
+    try:
+        resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
+        current = _require_transaction(working, resolved_transaction_id)
+        if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+            raise TransactionValidationError(
+                "only active ledger transactions can be edited; archived, stashed, "
+                "and split-parent rows are immutable",
+                context={
+                    "transaction_id": resolved_transaction_id,
+                    "lifecycle_state": current.lifecycle_state.value,
+                },
+            )
+        source_ids = _transaction_modelo_source_ids(current)
+        blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
+        if blockers:
+            _raise_finalized_modelo_blocked(
+                operation="ledger transaction update",
+                transaction_ids=source_ids,
+                blockers=blockers,
+            )
+        command = _command_from_patch(
+            bucket_id=bucket_id,
+            current=current,
+            patch=patch,
+            actor=actor,
+            source_command=source_command,
+        )
+        prepared = _prepare_manual_transaction_update(
+            current=current,
+            command=command,
+            previous_transaction_id=resolved_transaction_id,
+            now=now,
+        )
+        if prepared is None:
+            # field-for-field identical â€” classification already applied.
+            return _BulkRowOutcome(working, (), applied=False, skipped=True, failure=None)
+        replacement, events = prepared
+        updated = _replace_transaction(working, old_transaction_id=resolved_transaction_id, replacement=replacement)
+        return _BulkRowOutcome(updated, tuple(events), applied=True, skipped=False, failure=None)
+    except (CadrumoError, ValidationError, ValueError) as exc:
+        reason = resolve_error_message(exc) if isinstance(exc, CadrumoError) else str(exc)
+        failure = BulkClassifyFailure(
+            row_index=idx,
+            transaction_id=row.transaction_id,
+            reason=reason or type(exc).__name__,
+        )
+        return _BulkRowOutcome(working, (), applied=False, skipped=False, failure=failure)
+
+
 def _apply_bulk_classify_rows(
     *,
     bucket_id: str,
@@ -209,61 +295,25 @@ def _apply_bulk_classify_rows(
         calculation_repository=calculation_repository,
     )
 
-    for idx, row, provided_patch_columns in parsed_rows:
-        patch_values: dict[str, object] = {"business_classification": row.classification}
-        patch_values.update({column: getattr(row, column) for column in provided_patch_columns})
-        patch = ManualLedgerTransactionPatch.model_validate(patch_values)
-        try:
-            resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
-            current = _require_transaction(working, resolved_transaction_id)
-            if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
-                raise TransactionValidationError(
-                    "only active ledger transactions can be edited; archived, stashed, "
-                    "and split-parent rows are immutable",
-                    context={
-                        "transaction_id": resolved_transaction_id,
-                        "lifecycle_state": current.lifecycle_state.value,
-                    },
-                )
-            source_ids = _transaction_modelo_source_ids(current)
-            blockers = tuple(b for txid in source_ids for b in blockers_by_txid.get(txid, ()))
-            if blockers:
-                _raise_finalized_modelo_blocked(
-                    operation="ledger transaction update",
-                    transaction_ids=source_ids,
-                    blockers=blockers,
-                )
-            command = _command_from_patch(
-                bucket_id=bucket_id,
-                current=current,
-                patch=patch,
-                actor=actor,
-                source_command=source_command,
-            )
-            prepared = _prepare_manual_transaction_update(
-                current=current,
-                command=command,
-                previous_transaction_id=resolved_transaction_id,
-                now=now,
-            )
-            if prepared is None:
-                # field-for-field identical â€” classification already applied.
-                skipped += 1
-                continue
-            replacement, events = prepared
-            working = _replace_transaction(working, old_transaction_id=resolved_transaction_id, replacement=replacement)
-            all_events.extend(events)
-            all_event_ids.extend(event.event_id for event in events)
+    for parsed_row in parsed_rows:
+        outcome = _apply_one_bulk_classify_row(
+            working=working,
+            parsed_row=parsed_row,
+            bucket_id=bucket_id,
+            actor=actor,
+            source_command=source_command,
+            now=now,
+            blockers_by_txid=blockers_by_txid,
+        )
+        working = outcome.working
+        if outcome.failure is not None:
+            apply_failures.append(outcome.failure)
+        elif outcome.skipped:
+            skipped += 1
+        else:
+            all_events.extend(outcome.events)
+            all_event_ids.extend(event.event_id for event in outcome.events)
             applied += 1
-        except (CadrumoError, ValidationError, ValueError) as exc:
-            reason = resolve_error_message(exc) if isinstance(exc, CadrumoError) else str(exc)
-            apply_failures.append(
-                BulkClassifyFailure(
-                    row_index=idx,
-                    transaction_id=row.transaction_id,
-                    reason=reason or type(exc).__name__,
-                ),
-            )
 
     if all_events:
         _save_transaction_catalogue_and_events(
