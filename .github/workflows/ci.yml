@@ -4,8 +4,8 @@
 # mins per step"): two parallel jobs — static checks and the unit suite —
 # sized against the two Linux runners. The slow conformance surfaces
 # (nitpicky docs build, CVE audit, pre-commit hook replay) moved to
-# ci-nightly.yml (schedule + dispatch) so every proof still gates main daily
-# without taxing every push.
+# ci-full.yml (manual dispatch only — operator ruling 2026-07-21: no
+# scheduled runs) and gate releases and on-demand full verification.
 #
 # No secrets are required for the unit suite; live tests are explicitly skipped.
 # CADRUMO_LIVE_TESTS_ENABLED is NEVER set on CI.
