@@ -65,12 +65,14 @@ from ...domain.calculations.registry import (
 from ...domain.iva import is_m303_annual_settlement_period
 from ...domain.modelos import (
     CalculationRevision,
+    CalculationRevisionCatalogue,
     CalculationRevisionCatalogueRepositoryProtocol,
     CalculationRevisionState,
     CalculationSourceIssue,
     CalculationSourceRef,
     ModeloDetailRow,
     ModeloRecord,
+    ModeloRecordCatalogue,
     ModeloRecordCatalogueRepositoryProtocol,
     ModeloRecordStatus,
     TransactionRevisionParticipation,
@@ -493,6 +495,41 @@ def _filed_calculation_revision(
     )
 
 
+def _supersede_prior_current_filing(
+    prior_current: ModeloRecord,
+    *,
+    filing_catalogue: ModeloRecordCatalogue,
+    revisions: CalculationRevisionCatalogue,
+    new_filing_id: str,
+    now: datetime,
+) -> tuple[ModeloRecordCatalogue, CalculationRevisionCatalogue]:
+    """Supersede the prior current filing record and its PRESENTADO revision.
+
+    Marks ``prior_current`` SUPERSEDIDO (stamped with ``new_filing_id``) and, when
+    its calculation revision is still PRESENTADO, advances that revision to
+    PRESENTADO_SUPERSEDIDO. Returns the updated ``(filing_catalogue, revisions)``.
+    """
+    superseded_prior = prior_current.model_copy(
+        update={
+            "status": ModeloRecordStatus.SUPERSEDIDO,
+            "superseded_at": now,
+            "superseded_by_filing_record_id": new_filing_id,
+        },
+    )
+    updated_filing_catalogue = upsert_filing_record(filing_catalogue, superseded_prior)
+    prior_revision = revisions.get(prior_current.calculation_revision_id)
+    if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
+        superseded_revision = prior_revision.model_copy(
+            update={
+                "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
+                "superseded_at": now,
+                "updated_at": now,
+            },
+        )
+        revisions = upsert_calculation_revision(revisions, superseded_revision)
+    return updated_filing_catalogue, revisions
+
+
 def persist_filed_revision(
     *,
     target: CalculationRevision,
@@ -569,25 +606,13 @@ def persist_filed_revision(
     revisions = calculation_repository.load()
     updated_filing_catalogue = filing_catalogue
     if prior_current is not None:
-        superseded_prior = prior_current.model_copy(
-            update={
-                "status": ModeloRecordStatus.SUPERSEDIDO,
-                "superseded_at": now,
-                "superseded_by_filing_record_id": new_filing_id,
-            },
+        updated_filing_catalogue, revisions = _supersede_prior_current_filing(
+            prior_current,
+            filing_catalogue=updated_filing_catalogue,
+            revisions=revisions,
+            new_filing_id=new_filing_id,
+            now=now,
         )
-        updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, superseded_prior)
-
-        prior_revision = revisions.get(prior_current.calculation_revision_id)
-        if prior_revision is not None and prior_revision.state is CalculationRevisionState.PRESENTADO:
-            superseded_revision = prior_revision.model_copy(
-                update={
-                    "state": CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-                    "superseded_at": now,
-                    "updated_at": now,
-                },
-            )
-            revisions = upsert_calculation_revision(revisions, superseded_revision)
 
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
     filed_target = _filed_calculation_revision(target=target, actor=actor, now=now)
