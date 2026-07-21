@@ -19,6 +19,7 @@ from typing import Annotated
 
 import typer
 
+from ...core.external_constants import OutputLanguage
 from ...core.i18n import tr
 
 _WorkUnitIdArg = Annotated[str | None, typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help"))]
@@ -41,4 +42,7 @@ _WorkUnitIdOpt = Annotated[
 _RevisionSelectorOpt = Annotated[
     str,
     typer.Option("--select", help=tr("cli.app.modelo.work.revision_selector_help", default="Revision selector.")),
+]
+_WizardOutputLanguageOpt = Annotated[
+    OutputLanguage | None, typer.Option("--output-language", help=tr("cli.app.modelo.work.output_language_help"))
 ]
