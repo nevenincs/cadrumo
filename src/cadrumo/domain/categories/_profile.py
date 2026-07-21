@@ -42,5 +42,5 @@ class CategoryProfile(_CategoryProfileStrictFrozenModel):
     @model_validator(mode="after")
     def _validate_profile(self) -> CategoryProfile:
         if not str(self.display_label).strip():
-            raise CategoryValidationError("category profile display_label must contain authoritative Spanish text")
+            raise CategoryValidationError("category profile display_label must not be blank")
         return self
