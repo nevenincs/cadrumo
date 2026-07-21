@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pytest-markers'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-17-pytest-markers-adr]]'
   - '[[2026-04-17-pytest-markers-phase1-step1-exec]]'
@@ -34,7 +34,7 @@ Auto-generated index of all documents tagged with `#pytest-markers`.
 
 ### adr
 
-- `2026-04-17-pytest-markers-adr` - `pytest-markers` adr: `granular-domain-markers-and-live-read-live-write-split` | (**status:** `accepted`)
+- `2026-04-17-pytest-markers-adr` - `pytest-markers` adr: `granular-domain-markers-and-live-read-live-write-split` | (**status:** `superseded`)
 
 ### exec
 

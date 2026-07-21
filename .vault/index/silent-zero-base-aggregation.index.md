@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#silent-zero-base-aggregation'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P01-S01]]'
   - '[[2026-06-19-silent-zero-base-aggregation-W01-P01-S02]]'

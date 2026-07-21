@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-303-regimen-simplificado'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-01-modelo-303-regimen-simplificado-adr]]'
   - '[[2026-07-10-modelo-303-regimen-simplificado-research]]'

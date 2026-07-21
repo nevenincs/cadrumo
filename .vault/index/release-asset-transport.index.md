@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#release-asset-transport'
-date: '2026-07-20'
-modified: '2026-07-20'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-20-release-asset-transport-adr]]'
   - '[[2026-07-20-release-asset-transport-audit]]'

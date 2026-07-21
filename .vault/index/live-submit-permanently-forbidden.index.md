@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#live-submit-permanently-forbidden'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-27-live-submit-permanently-forbidden-adr]]'
   - '[[2026-04-27-live-submit-permanently-forbidden-issue-116-body-exec]]'
@@ -23,7 +23,7 @@ Auto-generated index of all documents tagged with `#live-submit-permanently-forb
 
 ### adr
 
-- `2026-04-27-live-submit-permanently-forbidden-adr` - `live-submit-permanently-forbidden` adr: `live AEAT submission is permanently forbidden` | (**status:** `accepted`)
+- `2026-04-27-live-submit-permanently-forbidden-adr` - Live AEAT submission is permanently forbidden | (**status:** `accepted`)
 
 ### exec
 

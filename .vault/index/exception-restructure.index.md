@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#exception-restructure'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-09-exception-restructure-adr]]'
   - '[[2026-05-09-exception-restructure-phase-1-plan]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#exception-restructure`.
 
 ### adr
 
-- `2026-05-09-exception-restructure-adr` - `exception-restructure` adr: every domain error roots at AeatError via `_errors.py` convention | (**status:** `accepted`)
+- `2026-05-09-exception-restructure-adr` - `exception-restructure` adr: every domain error roots at CadrumoError via `_errors.py` convention | (**status:** `accepted`)
 
 ### exec
 

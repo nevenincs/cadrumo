@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#pareja-de-hecho-civil-status'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-03-pareja-de-hecho-civil-status-adr]]'
   - '[[2026-06-03-pareja-de-hecho-civil-status-research]]'

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ccaa-in-profile'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-28-ccaa-in-profile-adr]]'
   - '[[2026-04-28-ccaa-in-profile-code-review-audit]]'

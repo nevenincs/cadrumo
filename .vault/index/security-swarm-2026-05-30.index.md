@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#security-swarm-2026-05-30'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-30-security-input-validation-swarm-audit]]'
   - '[[2026-05-30-security-paths-swarm-audit]]'

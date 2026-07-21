@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#p2a-financial-provider'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-13-p2a-financial-provider-adr]]'
   - '[[2026-04-13-p2a-financial-provider-phase1-summary-exec]]'

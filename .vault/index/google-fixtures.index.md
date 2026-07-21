@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#google-fixtures'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-12-google-fixtures-adr]]'
   - '[[2026-04-12-google-fixtures-phase1-step1-exec]]'

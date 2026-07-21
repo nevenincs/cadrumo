@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#arch-remediation-data-budget'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-02-arch-remediation-data-budget-S01]]'
   - '[[2026-07-02-arch-remediation-data-budget-S02]]'
@@ -24,7 +24,7 @@ Auto-generated index of all documents tagged with `#arch-remediation-data-budget
 
 ### adr
 
-- `2026-07-02-arch-remediation-data-budget-adr` - `arch-remediation-data-budget` adr: `bundled data budget and wheel content boundary` | (**status:** `accepted`)
+- `2026-07-02-arch-remediation-data-budget-adr` - `arch-remediation-data-budget` adr: `Whole-tree and split-distribution data budgets` | (**status:** `accepted`)
 
 ### exec
 

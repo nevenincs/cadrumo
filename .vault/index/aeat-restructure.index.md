@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#aeat-restructure'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-30-aeat-restructure-adr]]'
   - '[[2026-04-30-aeat-restructure-plan]]'
@@ -61,7 +61,7 @@ Auto-generated index of all documents tagged with `#aeat-restructure`.
 
 ### adr
 
-- `2026-04-30-aeat-restructure-adr` - `aeat-restructure` adr: domain-aligned restructure of `src/aeat/` | (**status:** `accepted`)
+- `2026-04-30-aeat-restructure-adr` - Cadrumo hexagonal architecture | (**status:** `accepted`)
 
 ### audit
 

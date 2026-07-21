@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#mcp-call-latency'
-date: '2026-07-17'
-modified: '2026-07-17'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-07-17-mcp-call-latency-P01-S01]]'
   - '[[2026-07-17-mcp-call-latency-P01-S02]]'

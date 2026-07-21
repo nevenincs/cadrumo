@@ -1,15 +1,15 @@
 ---
 tags:
-  - '#adr'
-  - '#ledger-fx-conversion'
+  - "#adr"
+  - "#ledger-fx-conversion"
 date: '2026-06-02'
-modified: '2026-07-17'
 related:
   - "[[2026-06-02-ledger-fx-conversion-research]]"
   - "[[2026-06-02-modelo-filing-ledger-snapshot-adr]]"
+superseded_by: '2026-07-21-ledger-fx-conversion-adr'
+modified: '2026-07-21'
 ---
-
-# `ledger-fx-conversion` adr: `ECB euro reference rates as the canonical FX source for ledger-to-modelo conversion` | (**status:** `accepted`)
+# `ledger-fx-conversion` adr: `ECB euro reference rates as the canonical FX source for ledger-to-modelo conversion` | (**status:** `superseded`)
 
 ## Problem Statement
 

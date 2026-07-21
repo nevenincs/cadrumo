@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#filing-complementaria'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-13-filing-complementaria-adr]]'
   - '[[2026-04-13-filing-complementaria-plan]]'

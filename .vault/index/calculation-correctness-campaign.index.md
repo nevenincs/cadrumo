@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#calculation-correctness-campaign'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-13-calculation-correctness-campaign-audit]]'
 ---

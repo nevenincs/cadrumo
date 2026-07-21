@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#developer-leak-cycle1-domain'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-18-developer-leak-cycle1-domain-audit]]'
 ---

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#source-jurisdiction-axis'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-27-source-jurisdiction-axis-adr]]'
   - '[[2026-05-28-source-jurisdiction-axis-audit]]'

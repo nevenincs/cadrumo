@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#relative-imports'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-04-17-relative-imports-adr]]'
   - '[[2026-04-17-relative-imports-phase1-summary-exec]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#relative-imports`.
 
 ### adr
 
-- `2026-04-17-relative-imports-adr` - relative-imports adr: enforce relative imports inside src/aeat/ | (**status:** `accepted`)
+- `2026-04-17-relative-imports-adr` - relative-imports adr: enforce relative imports inside src/cadrumo/ | (**status:** `accepted`)
 
 ### exec
 

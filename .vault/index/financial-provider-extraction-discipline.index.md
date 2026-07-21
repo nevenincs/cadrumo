@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#financial-provider-extraction-discipline'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-05-28-financial-provider-extraction-discipline-adr]]'
   - '[[2026-06-04-financial-provider-extraction-discipline-research]]'

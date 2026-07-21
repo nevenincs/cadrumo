@@ -3,7 +3,7 @@
 Imports the raw bank-export corpus through the real
 :class:`~adapters.inbound.financial.providers.CsvProvider`, applies the
 ground-truth oracle classification (``ground-truth.manifest.json``), wires a
-corpus-local ECB-rate snapshot into :class:`~domain.currency.CurrencyNormalizationService`
+corpus-local ECB observation set into :class:`~domain.currency.CurrencyNormalizationService`
 for the foreign-currency rows, builds strict :class:`~domain.transactions.Transaction`
 records, and runs the real aggregation pipelines.
 
@@ -31,7 +31,7 @@ conversion seam grounds every foreign-currency row's normalisation.
 from __future__ import annotations
 
 import json
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 from typing import Any
@@ -55,13 +55,38 @@ from ..domain.transactions import (
     TransactionDirection,
     TransactionLifecycleState,
 )
+from .ecb_stub import ecb_csv_fetch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).parent / "fixtures" / "financial" / "ledger-corpus"
 _CENT = Decimal("0.01")
 _CLASSIFIED_AT = datetime(2026, 6, 2, 12, 0, tzinfo=UTC)
-_FX_SNAPSHOT = _CORPUS / "eurofxref-corpus.xml"
+
+# Corpus FX oracle, in the ECB's own EUR-base direction. The quotes are chosen so
+# their inverses -- the CCY->EUR multipliers the provider returns -- are exactly
+# 1.18 EUR per GBP and 0.92 EUR per USD, keeping the manifest's expected EUR
+# values exact rather than rounding-dependent.
+#
+# The rate is deliberately held flat across the whole corpus period: this corpus
+# pins classification and aggregation fidelity, so a moving rate would couple its
+# expected EUR totals to FX movement it is not testing. Real per-date ECB
+# resolution is covered by the provider's own suite. The quote is declared on
+# every day of the period rather than on one day, because the provider bounds its
+# working-day fallback to a short window and must never reach back a year.
+_CORPUS_FX_START = date(2024, 12, 1)
+_CORPUS_FX_END = date(2026, 8, 1)
+_CORPUS_FLAT_QUOTES = {
+    "GBP": Decimal("0.8474576271186440677966101695"),
+    "USD": Decimal("1.086956521739130434782608696"),
+}
+_CORPUS_QUOTES = {
+    currency: {
+        _CORPUS_FX_START + timedelta(days=offset): quote
+        for offset in range((_CORPUS_FX_END - _CORPUS_FX_START).days + 1)
+    }
+    for currency, quote in _CORPUS_FLAT_QUOTES.items()
+}
 
 
 def _load_manifest() -> dict[str, Any]:
@@ -108,7 +133,7 @@ def _build_transactions() -> list[tuple[Transaction, dict[str, Any], str]]:
     """
     manifest = _load_manifest()
     rules = manifest["rules"]
-    fx = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider(rates_path=_FX_SNAPSHOT))
+    fx = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider(fetch=ecb_csv_fetch(_CORPUS_QUOTES)))
     provider = CsvProvider()
 
     built: list[tuple[Transaction, dict[str, Any], str]] = []

@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#modelo-locales-cli'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-11-modelo-locales-cli-P01-S01]]'
   - '[[2026-06-11-modelo-locales-cli-P01-S02]]'
@@ -50,7 +50,7 @@ Auto-generated index of all documents tagged with `#modelo-locales-cli`.
 
 ### adr
 
-- `2026-06-11-modelo-locales-cli-adr` - `modelo-locales-cli` adr: `aeat.locales manages modelo schema-local translations` | (**status:** `accepted`)
+- `2026-06-11-modelo-locales-cli-adr` - `modelo-locales-cli` adr: `cadrumo.locales manages modelo schema-local translations` | (**status:** `accepted`)
 
 ### audit
 

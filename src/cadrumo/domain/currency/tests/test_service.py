@@ -4,6 +4,7 @@ from decimal import Decimal
 import pytest
 
 from ....adapters.outbound.fx import EcbReferenceRateProvider
+from ....tests.ecb_stub import ecb_csv_fetch
 from .._models import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
@@ -13,8 +14,14 @@ from .._service import CurrencyNormalizationService
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-_ECB_2026_01_02_USD_QUOTE = Decimal("1.1700")
-_ECB_2026_01_02_USD_RATE = Decimal("1") / _ECB_2026_01_02_USD_QUOTE
+# Published ECB euro reference rate for 2025-03-14 (EUR-base: 1 EUR = 1.0889 USD).
+_ECB_2025_03_14_USD_QUOTE = Decimal("1.0889")
+_ECB_2025_03_14_USD_RATE = Decimal("1") / _ECB_2025_03_14_USD_QUOTE
+_RATE_DATE = date(2025, 3, 14)
+
+
+def _provider() -> EcbReferenceRateProvider:
+    return EcbReferenceRateProvider(fetch=ecb_csv_fetch({"USD": {_RATE_DATE: _ECB_2025_03_14_USD_QUOTE}}))
 
 
 def test_currency_normalization_native_eur() -> None:
@@ -40,9 +47,10 @@ def test_currency_normalization_missing_provider() -> None:
 
 
 def test_currency_normalization_missing_rate() -> None:
-    svc = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider())
-    amount = MonetaryAmount(amount=Decimal("100.00"), currency="JPY")
-    result = svc.normalize(amount, date(2026, 1, 2))
+    # A currency the ECB publishes no series for resolves to no rate at all.
+    svc = CurrencyNormalizationService(rate_provider=_provider())
+    amount = MonetaryAmount(amount=Decimal("100.00"), currency="XYZ")
+    result = svc.normalize(amount, _RATE_DATE)
 
     assert result.status == CurrencyNormalizationStatus.MISSING_RATE
     assert result.eur_amount == Decimal("0.0")
@@ -50,12 +58,12 @@ def test_currency_normalization_missing_rate() -> None:
 
 
 def test_currency_normalization_success() -> None:
-    svc = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider())
+    svc = CurrencyNormalizationService(rate_provider=_provider())
     amount = MonetaryAmount(amount=Decimal("100.00"), currency="USD")
-    result = svc.normalize(amount, date(2026, 1, 2))
+    result = svc.normalize(amount, _RATE_DATE)
 
     assert result.status == CurrencyNormalizationStatus.NORMALIZED
-    assert result.eur_amount == Decimal("85.47")
-    assert result.rate == _ECB_2026_01_02_USD_RATE
+    assert result.eur_amount == (Decimal("100.00") * _ECB_2025_03_14_USD_RATE).quantize(Decimal("0.01"))
+    assert result.rate == _ECB_2025_03_14_USD_RATE
     assert result.rate_source == "provider"
     assert result.original == amount

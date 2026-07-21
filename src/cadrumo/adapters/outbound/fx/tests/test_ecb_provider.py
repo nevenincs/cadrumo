@@ -7,44 +7,101 @@ from decimal import Decimal
 
 import pytest
 
-from .....domain.currency import CurrencyNormalizationService, CurrencyNormalizationStatus, MonetaryAmount
+from .....domain.currency import (
+    CurrencyNormalizationService,
+    CurrencyNormalizationStatus,
+    ExchangeRateProviderError,
+    MonetaryAmount,
+)
+from .....tests.ecb_stub import ecb_csv_fetch
 from .._ecb_provider import EcbReferenceRateProvider, default_ecb_rate_provider
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
+# Published ECB euro reference rates (EUR-base: 1 EUR = quote CCY).
+# Source: ECB Data Portal series D.<CCY>.EUR.SP00.A.
+# 2025-03-14 was a Friday; 2025-03-15/16 fell on a weekend, so the ECB published
+# no rate on either -- the fallback dates below rely on that real calendar gap.
+_ECB_QUOTES = {
+    "USD": {
+        date(2025, 3, 13): Decimal("1.0830"),
+        date(2025, 3, 14): Decimal("1.0889"),
+    },
+    "GBP": {
+        date(2025, 3, 13): Decimal("0.83778"),
+        date(2025, 3, 14): Decimal("0.84183"),
+    },
+}
+
 
 @pytest.fixture
 def provider() -> EcbReferenceRateProvider:
-    return EcbReferenceRateProvider()
+    return EcbReferenceRateProvider(fetch=ecb_csv_fetch(_ECB_QUOTES))
 
 
 def test_eur_is_identity(provider: EcbReferenceRateProvider) -> None:
-    assert provider.get_eur_rate("EUR", date(2026, 1, 2)) == Decimal("1")
+    assert provider.get_eur_rate("EUR", date(2025, 3, 14)) == Decimal("1")
 
 
 def test_get_eur_rate_inverts_ecb_eur_base_quote(provider: EcbReferenceRateProvider) -> None:
-    # Bundled 2026-01-02: 1 EUR = 1.1700 USD -> USD->EUR = 1/1.1700.
-    assert provider.get_eur_rate("USD", date(2026, 1, 2)) == Decimal("1") / Decimal("1.1700")
-    # 1 EUR = 0.8600 GBP -> GBP->EUR = 1/0.8600 (>1, since GBP is stronger).
-    rate = provider.get_eur_rate("GBP", date(2026, 1, 2))
+    # 1 EUR = 1.0889 USD -> USD->EUR = 1/1.0889.
+    assert provider.get_eur_rate("USD", date(2025, 3, 14)) == Decimal("1") / Decimal("1.0889")
+    # 1 EUR = 0.84183 GBP -> GBP->EUR = 1/0.84183 (>1, since GBP is stronger).
+    rate = provider.get_eur_rate("GBP", date(2025, 3, 14))
     assert rate is not None
-    assert rate == Decimal("1") / Decimal("0.8600")
+    assert rate == Decimal("1") / Decimal("0.84183")
     assert rate > Decimal("1")
 
 
-def test_non_publication_date_falls_back_to_prior_working_day(provider: EcbReferenceRateProvider) -> None:
-    # 2026-01-15 is not in the bundled snapshot; must use 2026-01-02's rate.
-    on_15 = provider.get_eur_rate("USD", date(2026, 1, 15))
-    on_02 = provider.get_eur_rate("USD", date(2026, 1, 2))
-    assert on_15 == on_02
+def test_non_publication_date_falls_back_to_prior_working_day(
+    provider: EcbReferenceRateProvider,
+) -> None:
+    # 2025-03-16 was a Sunday; the ECB published no rate, so the most recent
+    # prior publication (Friday the 14th) applies -- not Thursday the 13th.
+    on_sunday = provider.get_eur_rate("USD", date(2025, 3, 16))
+    assert on_sunday == Decimal("1") / Decimal("1.0889")
+    assert on_sunday != Decimal("1") / Decimal("1.0830")
 
 
-def test_unknown_currency_returns_none(provider: EcbReferenceRateProvider) -> None:
-    assert provider.get_eur_rate("JPY", date(2026, 1, 2)) is None
+def test_currency_the_ecb_does_not_publish_returns_none(
+    provider: EcbReferenceRateProvider,
+) -> None:
+    assert provider.get_eur_rate("XYZ", date(2025, 3, 14)) is None
 
 
-def test_date_before_first_published_returns_none(provider: EcbReferenceRateProvider) -> None:
+def test_date_outside_the_lookback_window_returns_none(
+    provider: EcbReferenceRateProvider,
+) -> None:
+    # Far earlier than any published observation: the widened window is empty.
     assert provider.get_eur_rate("USD", date(2024, 12, 1)) is None
+
+
+def test_resolved_rates_are_memoized_per_currency_and_date() -> None:
+    calls: list[str] = []
+    inner = ecb_csv_fetch(_ECB_QUOTES)
+
+    def counting_fetch(url: str) -> str:
+        calls.append(url)
+        return inner(url)
+
+    provider = EcbReferenceRateProvider(fetch=counting_fetch)
+    first = provider.get_eur_rate("USD", date(2025, 3, 14))
+    second = provider.get_eur_rate("USD", date(2025, 3, 14))
+
+    assert first == second
+    assert len(calls) == 1, "a repeated (currency, date) lookup must not re-query the ECB"
+
+
+def test_transport_failure_raises_rather_than_reporting_a_missing_rate() -> None:
+    # A network fault must be distinguishable from "the ECB publishes no such
+    # rate": collapsing the two would silently book the row at zero EUR.
+    def failing_fetch(url: str) -> str:
+        msg = "connection reset"
+        raise ExchangeRateProviderError(msg)
+
+    provider = EcbReferenceRateProvider(fetch=failing_fetch)
+    with pytest.raises(ExchangeRateProviderError):
+        provider.get_eur_rate("USD", date(2025, 3, 14))
 
 
 def test_default_provider_is_cached() -> None:
@@ -54,8 +111,8 @@ def test_default_provider_is_cached() -> None:
 def test_normalizer_converts_gbp_to_eur_via_provider() -> None:
     # End-to-end: the service multiplies amount * get_eur_rate, so a GBP amount
     # converts to a larger EUR amount (GBP stronger than EUR).
-    service = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider())
-    result = service.normalize(MonetaryAmount(amount=Decimal("1000.00"), currency="GBP"), date(2026, 1, 15))
+    service = CurrencyNormalizationService(rate_provider=EcbReferenceRateProvider(fetch=ecb_csv_fetch(_ECB_QUOTES)))
+    result = service.normalize(MonetaryAmount(amount=Decimal("1000.00"), currency="GBP"), date(2025, 3, 14))
     assert result.status is CurrencyNormalizationStatus.NORMALIZED
-    assert result.eur_amount == (Decimal("1000.00") * (Decimal("1") / Decimal("0.8600"))).quantize(Decimal("0.01"))
+    assert result.eur_amount == (Decimal("1000.00") * (Decimal("1") / Decimal("0.84183"))).quantize(Decimal("0.01"))
     assert result.eur_amount > Decimal("1000.00")

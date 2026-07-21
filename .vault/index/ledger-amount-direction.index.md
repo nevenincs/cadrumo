@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#ledger-amount-direction'
-date: '2026-07-15'
-modified: '2026-07-15'
+date: '2026-07-21'
+modified: '2026-07-21'
 related:
   - '[[2026-06-10-ledger-amount-direction-adr]]'
   - '[[2026-06-10-ledger-amount-direction-plan]]'
