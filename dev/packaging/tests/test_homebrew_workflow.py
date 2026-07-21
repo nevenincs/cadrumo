@@ -20,10 +20,9 @@ def _workflow() -> dict[str, Any]:
 def test_homebrew_workflow_declares_every_generated_target_row() -> None:
     """The matrix carries exactly the rows the self-hosted fleet can mint.
 
-    Operator ruling 2026-07-21: no hosted/cloud runners, ever. macos-intel and
-    linux-arm64 are excised until self-hosted MacBook avenues register (a
-    Rosetta /usr/local-prefix runner for Intel; a docker arm64 runner for
-    linux-arm64); their readiness rows stay honestly red meanwhile.
+    Operator ruling 2026-07-21: no hosted/cloud runners, ever. macOS Intel was
+    dropped the same day: Intel is no longer a supported platform (ARM-only
+    macOS), so no macos-intel row may reappear.
     """
     document = _workflow()
     assert document["name"] == "Cadrumo Homebrew Acquisition"
@@ -37,7 +36,6 @@ def test_homebrew_workflow_declares_every_generated_target_row() -> None:
         ("macos-arm64", ("self-hosted", "macOS", "ARM64"), "Darwin", "arm64"),
         ("linux-x86_64", ("self-hosted", "Linux", "X64"), "Linux", "x86_64"),
         ("linux-arm64", ("self-hosted", "Linux", "ARM64"), "Linux", "aarch64"),
-        ("macos-intel", ("self-hosted", "macOS", "X64"), "Darwin", "x86_64"),
     }
     assert job["strategy"]["fail-fast"] is False
     preflight = next(step for step in job["steps"] if step["name"] == "Verify declared Homebrew release row")
@@ -91,16 +89,14 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     document = _workflow()
     job = document["jobs"]["cadrumo-homebrew-acquisition"]
     rows = job["strategy"]["matrix"]["include"]
-    # macos-intel / linux-arm64 rows return with their self-hosted runners
-    # All four homebrew rows run on the self-hosted fleet (operator MacBook
-    # avenues completed 2026-07-21): the macOS Linux-ARM container host carries
-    # linux-arm64, and the macOS Intel host (Rosetta x64 + /usr/local Intel brew)
-    # carries macos-intel. Zero hosted runners, per the absolute spend mandate.
+    # All three homebrew rows run on the self-hosted fleet: the macOS
+    # Linux-ARM container host carries linux-arm64. Zero hosted runners, per
+    # the absolute spend mandate. macOS Intel is not a supported platform
+    # (ARM-only macOS, dropped 2026-07-21).
     assert {row["row_id"] for row in rows} == {
         "homebrew-macos-arm64",
         "homebrew-linux-x86-64",
         "homebrew-linux-arm64",
-        "homebrew-macos-x86-64",
     }
 
     steps = job["steps"]
@@ -111,7 +107,7 @@ def test_homebrew_workflow_mints_every_row_from_the_immutable_cohort() -> None:
     assert '--row-id "$ROW_ID"' in emit["run"]
     assert "--release-cohort-dir " in emit["run"]
 
-    # All four legs publish their rows (distinct {row_id}-{evidence_id}.json
+    # All three legs publish their rows (distinct {row_id}-{evidence_id}.json
     # basenames) and per-leg bundles to the ONE run draft created by the
     # dedicated create-evidence-draft job (single-creator topology: concurrent
     # matrix creates would mint duplicate drafts); the terminal seal job mints

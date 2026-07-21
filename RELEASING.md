@@ -23,7 +23,7 @@ For the full pipeline review and gap analysis see
 | 0. Version + tag | Local, human | Bump 8 surfaces, `uv lock`, commit, tag, push main + tag |
 | 1. Build + prove | CI (`packaging-smoke.yml`, auto-triggered by push) | 3-OS smoke, build immutable release cohort, 3 oracle-emit rows |
 | 2. Channel proofs | CI (3 manual dispatches) + operator real-client captures | Scoop, Homebrew, Claude acquisition; mint 4 claude rows |
-| 3. Readiness gate | Local, human | Aggregate 12 rows; `just release-readiness-json` must report `"ok": true` |
+| 3. Readiness gate | Local, human | Aggregate 11 rows; `just release-readiness-json` must report `"ok": true` |
 | 4. Publish | CI (`publish-release.yml`, human approval required) | Gate 1 opt-in → Gate 2 validate → Gate 3 publish → reacquire |
 
 ## Repository identity
@@ -171,10 +171,9 @@ EVERY workflow job runs on the self-hosted fleet — no hosted/cloud runners, ev
 x64), the WSL Linux build host (Linux x64, containerized), and the macOS build host
 (macOS arm64). The Scoop Windows-container gate runs on the self-hosted Windows host and
 fails fast at its docker-mode preflight until that host runs Windows-container
-mode. The Homebrew `macos-intel` and `linux-arm64` matrix rows are excised until
-self-hosted MacBook avenues register (Rosetta `/usr/local`-prefix runner for
-Intel; docker arm64 runner for linux-arm64); their readiness rows stay honestly
-red meanwhile.
+mode. The Homebrew `linux-arm64` matrix row runs on the MacBook's colima arm64
+container host. macOS Intel is not a supported platform (ARM-only macOS,
+dropped 2026-07-21): no `macos-intel` row exists.
 
 ### Workstation and repository
 
@@ -390,11 +389,11 @@ Each workflow verifies source-run identity (success, `packaging-smoke.yml`, `pus
   the smoke draft's cohorts, generates the Scoop manifest, runs the oracles, and
   publishes the `scoop-windows-x86-64` `DistributionEvidence` row onto its own sealed
   draft `evidence-scoop-<run id>`.
-- `packaging-homebrew.yml` (matrix: self-hosted macOS ARM64 + Linux X64; the
-  macos-intel and linux-arm64 rows are excised until self-hosted MacBook avenues
-  register): installs from the tap snapshot on each platform, runs the oracles,
-  and publishes its `homebrew-<os>-<arch>` `DistributionEvidence` row per matrix
-  row onto the single sealed draft `evidence-homebrew-<run id>`.
+- `packaging-homebrew.yml` (matrix: self-hosted macOS ARM64, Linux X64, and
+  Linux ARM64; macOS Intel is not a supported platform): installs from the tap
+  snapshot on each platform, runs the oracles, and publishes its
+  `homebrew-<os>-<arch>` `DistributionEvidence` row per matrix row onto the
+  single sealed draft `evidence-homebrew-<run id>`.
 - `packaging-claude.yml` (self-hosted Windows): runs a live Claude Code session and
   the MCPB runtime oracle; produces lane evidence, not `DistributionEvidence` rows.
 
@@ -415,7 +414,7 @@ real-client captures.
 ### Stage 3: readiness aggregation
 
 The readiness gate (`just release-readiness-json`, backed by `dev/release/readiness.py`)
-requires all 12 `DistributionEvidence` rows in `var/distribution-install-readiness/`
+requires all 11 `DistributionEvidence` rows in `var/distribution-install-readiness/`
 alongside a local `var/release-cohort/` at the release commit and tag.
 
 | Row | Emission path | CI automated? |
@@ -424,7 +423,6 @@ alongside a local `var/release-cohort/` at the release commit and tag.
 | `python-windows-x86-64` | `oracle-emit-windows` job in packaging-smoke | Yes |
 | `python-macos-arm64` | `oracle-emit-macos` job in packaging-smoke | Yes |
 | `scoop-windows-x86-64` | `packaging-scoop.yml` (row asset on `evidence-scoop-<run id>`) | Yes |
-| `homebrew-macos-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
 | `homebrew-macos-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
 | `homebrew-linux-x86-64` | `packaging-homebrew.yml` per-row emit | Yes |
 | `homebrew-linux-arm64` | `packaging-homebrew.yml` per-row emit | Yes |
@@ -443,7 +441,7 @@ just release-collect-evidence <smoke-run-id> <scoop-run-id> <homebrew-run-id>
 ```
 
 The four `claude-*` rows are minted locally by the operator's `emit_real_client_evidence`
-runs above and already live in that directory. Once all twelve are present, verify:
+runs above and already live in that directory. Once all eleven are present, verify:
 
 ```console
 just release-readiness-json
@@ -487,8 +485,8 @@ ids.
 Gate 2 derives each lane's evidence tag from its run-id input, downloads and
 hash-verifies every draft's assets against its sealed `evidence-manifest.json` and
 the Actions API run record, checks each acquisition run's identity, and re-verifies
-all twelve rows against the sealed cohort — so the local
-`just release-collect-evidence` 12/12 is reproduced hard in CI, never trusted.
+all eleven rows against the sealed cohort — so the local
+`just release-collect-evidence` 11/11 is reproduced hard in CI, never trusted.
 
 The workflow runs three sequential jobs:
 
@@ -501,15 +499,15 @@ checks, each acquisition run (`packaging-scoop.yml` / `packaging-homebrew.yml`,
 `workflow_dispatch`, same repo, success). Downloads and hash-verifies the **sealed**
 release cohort archive (`cadrumo-release-cohort.tar.gz` from the smoke evidence draft
 — the single source of every channel's bytes, PyPI included) and aggregates all
-twelve `DistributionEvidence` rows from their authoritative drafts: 3 python from the
-smoke draft, 1 scoop, 4 homebrew, and the 4 operator `claude-*` rows from the
+eleven `DistributionEvidence` rows from their authoritative drafts: 3 python from the
+smoke draft, 1 scoop, 3 homebrew, and the 4 operator `claude-*` rows from the
 evidence release. The per-OS smoke build cohorts are deliberately NOT part of the
 publication chain. Re-points `promote_python_cohort --check-pypi-only` at the sealed
 cohort's `python/` bytes to guard the PyPI version against overwrite and emit the
 version. Runs `dev.release.readiness --json --skip-network --cohort-dir
 var/promotion/release-cohort --evidence-dir var/promotion/evidence/rows`; the sealed
 cohort's installed behaviour is proven per-OS by the `DistributionEvidence` rows, not
-by the smoke build. Gate 2 passes only with all 12 rows present and verified.
+by the smoke build. Gate 2 passes only with all 11 rows present and verified.
 
 **Gate 3 — publish** (`environment: release`, human approval required). After the
 approval click, the job re-downloads and re-verifies the sealed cohort archive and
@@ -521,7 +519,7 @@ fail-closed `evidence_release leak-sweep` over everything about to be attached
   exact bytes every other channel ships and the oracle-emit legs proved) via
   `uv publish --trusted-publishing always` (OIDC; no API token needed once configured).
 - Creates `gh release create vX.Y.Z --target <source_commit>` attaching every file
-  found in the release-cohort directory (13 files) plus the twelve verified evidence
+  found in the release-cohort directory (13 files) plus the eleven verified evidence
   rows and the three per-lane evidence manifests, so the published release is
   self-evidencing and draft GC can never orphan a shipped audit trail. An empty asset
   set fails hard.

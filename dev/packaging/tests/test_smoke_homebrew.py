@@ -174,7 +174,7 @@ def test_smoke_parser_accepts_retain_install() -> None:
 def test_tap_name_accepts_the_underscored_architecture_matrix_id() -> None:
     """The linux-x86_64 matrix tap must pass, matching Homebrew's own tap grammar."""
     _require_valid_tap_name("cadrumo-smoke/linux-x86_64")
-    _require_valid_tap_name("cadrumo-smoke/macos-intel")
+    _require_valid_tap_name("cadrumo-smoke/macos-arm64")
 
 
 @pytest.mark.parametrize(

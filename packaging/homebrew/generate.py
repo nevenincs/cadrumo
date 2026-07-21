@@ -22,19 +22,6 @@ _COMPANIONS = (
     ("cadrumo-data-official", "cadrumo_data_official"),
 )
 _TARGETS: dict[str, dict[str, str]] = {
-    "macos-x86_64": {
-        "implementation_name": "cpython",
-        "implementation_version": "3.13.0",
-        "os_name": "posix",
-        "platform_machine": "x86_64",
-        "platform_python_implementation": "CPython",
-        "platform_release": "",
-        "platform_system": "Darwin",
-        "platform_version": "",
-        "python_full_version": "3.13.0",
-        "python_version": "3.13",
-        "sys_platform": "darwin",
-    },
     "macos-arm64": {
         "implementation_name": "cpython",
         "implementation_version": "3.13.0",

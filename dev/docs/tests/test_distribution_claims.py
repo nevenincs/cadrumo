@@ -76,7 +76,6 @@ _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]]
             "homebrew-linux-arm64",
             "homebrew-linux-x86-64",
             "homebrew-macos-arm64",
-            "homebrew-macos-x86-64",
         ),
     ),
     (
@@ -86,7 +85,6 @@ _CLAIM_PATTERNS: Final[tuple[tuple[str, re.Pattern[str], tuple[str, ...]], ...]]
             "homebrew-linux-arm64",
             "homebrew-linux-x86-64",
             "homebrew-macos-arm64",
-            "homebrew-macos-x86-64",
         ),
     ),
     (
