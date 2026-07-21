@@ -50,7 +50,7 @@ def _prohibited_aeat_product_forms(surface: str) -> tuple[str, ...]:
     return tuple(label for label, pattern in _PROHIBITED_AEAT_PRODUCT_FORMS if pattern.search(surface))
 
 
-_NIGHTLY_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci-nightly.yml"
+_FULL_WORKFLOW = Path(__file__).resolve().parents[3] / ".github" / "workflows" / "ci-full.yml"
 
 
 def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
@@ -84,7 +84,7 @@ def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
     wedged unit run under the 6-hour default; pytest-timeout caps each test
     and these ceilings cap the jobs. The slow conformance surfaces (docs
     build, CVE audit, hook replay) must stay out of the per-push lane — they
-    gate nightly.
+    live in the dispatch-only full lane.
     """
     document = yaml.safe_load(_WORKFLOW.read_text(encoding="utf-8"))
     assert document["jobs"]["cadrumo-static"]["timeout-minutes"] <= 25
@@ -95,21 +95,26 @@ def test_ci_per_push_jobs_carry_the_speed_budget_ceilings() -> None:
     assert "check-pre-commit" not in commands
 
 
-def test_nightly_workflow_carries_every_slow_conformance_surface() -> None:
-    """The nightly lane keeps docs, CVE, hooks, and the full unit suite gating main."""
-    document = yaml.safe_load(_NIGHTLY_WORKFLOW.read_text(encoding="utf-8"))
-    assert document["name"] == "Cadrumo CI Nightly"
-    assert set(document["jobs"]) == {"cadrumo-nightly-full"}
-    triggers = document[True] if True in document else document["on"]
-    assert set(triggers) == {"workflow_dispatch", "schedule"}
+def test_full_lane_carries_every_slow_conformance_surface() -> None:
+    """The dispatch-only full lane keeps docs, CVE, hooks, and the unit suite.
 
-    commands = "\n".join(str(step.get("run", "")) for step in document["jobs"]["cadrumo-nightly-full"]["steps"])
+    Dispatch-only per the 2026-07-21 operator ruling (manual cadence, no
+    standing compute); the no-schedule invariant itself is pinned repo-wide
+    in test_change_class_tiers.py.
+    """
+    document = yaml.safe_load(_FULL_WORKFLOW.read_text(encoding="utf-8"))
+    assert document["name"] == "Cadrumo CI Full"
+    assert set(document["jobs"]) == {"cadrumo-full-conformance"}
+    triggers = document[True] if True in document else document["on"]
+    assert set(triggers) == {"workflow_dispatch"}
+
+    commands = "\n".join(str(step.get("run", "")) for step in document["jobs"]["cadrumo-full-conformance"]["steps"])
     assert "just docs-check" in commands
     assert "pip-audit --strict" in commands
     assert "just check-pre-commit" in commands
     assert "uv run pytest --durations=100" in commands
     assert "uv run --no-sync aeat app registry verify" in commands
-    assert _prohibited_aeat_product_forms(_NIGHTLY_WORKFLOW.read_text(encoding="utf-8")) == ()
+    assert _prohibited_aeat_product_forms(_FULL_WORKFLOW.read_text(encoding="utf-8")) == ()
 
 
 def test_ci_lanes_use_no_actions_artifact_storage() -> None:
@@ -121,7 +126,7 @@ def test_ci_lanes_use_no_actions_artifact_storage() -> None:
     in the job log, so an `if: always()` junit upload is both a quota risk
     and a policy inconsistency.
     """
-    for path in (_WORKFLOW, _NIGHTLY_WORKFLOW):
+    for path in (_WORKFLOW, _FULL_WORKFLOW):
         document = yaml.safe_load(path.read_text(encoding="utf-8"))
         offending = [
             str(step.get("uses"))
@@ -134,7 +139,7 @@ def test_ci_lanes_use_no_actions_artifact_storage() -> None:
 
 def test_ci_workflow_does_not_materialise_operator_dotenv() -> None:
     """CI stays hermetic instead of loading operator-template overrides."""
-    for path in (_WORKFLOW, _NIGHTLY_WORKFLOW):
+    for path in (_WORKFLOW, _FULL_WORKFLOW):
         document = yaml.safe_load(path.read_text(encoding="utf-8"))
         commands = "\n".join(str(step.get("run", "")) for job in document["jobs"].values() for step in job["steps"])
         assert "env-setup" not in commands

@@ -1,7 +1,7 @@
 # AEAT live-parity drift detector
 #
 # Runs the GROI Spanish-ROI live-read tests against AEAT under a
-# stored cl@ve-movil session every Sunday morning. Failure means
+# stored cl@ve-movil session, on dispatch. Failure means
 # AEAT changed the form shape, response shape, or selectors used by
 # the GROI driver — the project oracle's selectors must be updated.
 #
@@ -19,15 +19,15 @@
 # handled out-of-band.
 #
 # When this workflow fails, an issue is automatically opened with
-# the `aeat-drift` label so the maintainer is notified within hours.
+# the `aeat-drift` label so the failure is tracked to remediation.
 
 name: Cadrumo AEAT Drift Detector
 
+# Dispatch-only (operator ruling 2026-07-21: no schedules, no standing
+# compute). Run before relying on the GROI oracle: ahead of a release, after
+# a long idle stretch, or when AEAT-side drift is suspected.
 on:
   workflow_dispatch:
-  schedule:
-    # Every Sunday at 07:00 UTC (off-minute weekend slot).
-    - cron: '0 7 * * 0'
 
 # A live cl@ve-movil auth session must never be interrupted mid-flight, and
 # two concurrent sessions against the same stored identity would race; one
@@ -91,7 +91,7 @@ jobs:
           script: |
             const title = 'AEAT drift detector: GROI live tests failed';
             const body = [
-              'The weekly AEAT drift detector found the GROI live tests',
+              'The AEAT drift detector found the GROI live tests',
               'failing. AEAT likely changed the form shape, response',
               'shape, or selectors used by the GROI oracle.',
               '',
