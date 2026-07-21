@@ -634,6 +634,87 @@ def _mutation_signature(transaction: Transaction) -> tuple[object, ...]:
     )
 
 
+def _command_idempotency_projection(command: ManualLedgerTransactionCommand) -> tuple[object, ...]:
+    """Project every persisted field of ``command`` into a positional tuple.
+
+    The full-field idempotency contract (``single-subject-mutation-is-idempotent-guarded``)
+    requires the no-op match to compare EVERY persisted field. Keeping the field set as one
+    ordered tuple makes a new model field omitted here a single greppable site, paired with
+    :func:`_transaction_idempotency_projection` position-for-position.
+    """
+    return (
+        command.booked_date,
+        command.value_date,
+        command.amount,
+        command.currency,
+        command.counterparty,
+        command.description,
+        command.direction,
+        command.business_classification,
+        command.business_pct,
+        command.category_id,
+        command.taxable_base,
+        command.iva_rate,
+        command.iva_amount,
+        command.iva_category,
+        command.recargo_amount,
+        command.source_jurisdiction,
+        command.counterparty_eu_member_state,
+        command.irpf_category,
+        command.m210_income_classification,
+        command.usage_ratio_id,
+        command.prorrata_reference,
+        command.art_104_tres_exclusion,
+        command.input_classification,
+        command.prorrata_sector_id,
+        command.purchase_invoice_evidence_id,
+        # tuple[str, ...] compared value-equal, not identity-equal, by tuple equality.
+        command.attachment_ids,
+        command.notes,
+        command.group_label,
+    )
+
+
+def _transaction_idempotency_projection(current: Transaction) -> tuple[object, ...]:
+    """Project the stored transaction's persisted fields, aligned with the command projection.
+
+    The banking-boundary fields read from ``current.raw``; the classification and
+    provenance fields read from the transaction directly — position-for-position with
+    :func:`_command_idempotency_projection`.
+    """
+    raw = current.raw
+    return (
+        raw.booked_date,
+        raw.value_date,
+        raw.amount,
+        raw.currency,
+        raw.counterparty,
+        raw.description,
+        current.direction,
+        current.business_classification,
+        current.business_pct,
+        current.category_id,
+        current.taxable_base,
+        current.iva_rate,
+        current.iva_amount,
+        current.iva_category,
+        current.recargo_amount,
+        current.source_jurisdiction,
+        current.counterparty_eu_member_state,
+        current.irpf_category,
+        current.m210_income_classification,
+        current.usage_ratio_id,
+        current.prorrata_reference,
+        current.art_104_tres_exclusion,
+        current.input_classification,
+        current.prorrata_sector_id,
+        current.purchase_invoice_evidence_id,
+        current.attachment_ids,
+        current.notes,
+        current.group_label,
+    )
+
+
 def _command_matches_current(command: ManualLedgerTransactionCommand, current: Transaction) -> bool:
     """Return True when a command would produce no observable change against the stored transaction.
 
@@ -641,38 +722,7 @@ def _command_matches_current(command: ManualLedgerTransactionCommand, current: T
     the record already carries) so the caller can treat them as confirmed no-ops instead of
     raising a mutation-required error.
     """
-    raw = current.raw
-    return (
-        command.booked_date == raw.booked_date
-        and command.value_date == raw.value_date
-        and command.amount == raw.amount
-        and command.currency == raw.currency
-        and command.counterparty == raw.counterparty
-        and command.description == raw.description
-        and command.direction == current.direction
-        and command.business_classification == current.business_classification
-        and command.business_pct == current.business_pct
-        and command.category_id == current.category_id
-        and command.taxable_base == current.taxable_base
-        and command.iva_rate == current.iva_rate
-        and command.iva_amount == current.iva_amount
-        and command.iva_category == current.iva_category
-        and command.recargo_amount == current.recargo_amount
-        and command.source_jurisdiction == current.source_jurisdiction
-        and command.counterparty_eu_member_state == current.counterparty_eu_member_state
-        and command.irpf_category == current.irpf_category
-        and command.m210_income_classification == current.m210_income_classification
-        and command.usage_ratio_id == current.usage_ratio_id
-        and command.prorrata_reference == current.prorrata_reference
-        and command.art_104_tres_exclusion == current.art_104_tres_exclusion
-        and command.input_classification == current.input_classification
-        and command.prorrata_sector_id == current.prorrata_sector_id
-        and command.purchase_invoice_evidence_id == current.purchase_invoice_evidence_id
-        # tuple[str, ...] on both sides â€” Python tuple equality is value-equal, not identity-equal.
-        and command.attachment_ids == current.attachment_ids
-        and command.notes == current.notes
-        and command.group_label == current.group_label
-    )
+    return _command_idempotency_projection(command) == _transaction_idempotency_projection(current)
 
 
 def _build_bucket_event(
