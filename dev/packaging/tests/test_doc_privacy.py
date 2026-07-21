@@ -49,15 +49,15 @@ def _repo_root() -> Path:
 # Fixed-string banned tokens, assembled from fragments so the literal never
 # appears in this source file. Each is leaked machine / login / path metadata.
 _BANNED_LITERALS: tuple[str, ...] = (
-    "gw-" "workstation",          # operator Windows/WSL build-host name
-    "macbook-" "neo",             # operator macOS build-host name
-    "gw-" "macbook",              # operator macOS build-host name (variant)
-    "gergelys-" "macbook",        # operator macOS build-host name (variant)
-    "wger" "gely",                # operator VCS / account login handle
-    "C:\\Users\\" "hello",        # operator Windows home path (backslash form)
-    "C:/Users/" "hello",          # operator Windows home path (forward-slash form)
-    "/home/" "hello",             # operator Linux home path
-    "/Users/" "gergely",          # operator macOS home path
+    "gw-workstation",  # operator Windows/WSL build-host name
+    "macbook-neo",  # operator macOS build-host name
+    "gw-macbook",  # operator macOS build-host name (variant)
+    "gergelys-macbook",  # operator macOS build-host name (variant)
+    "wgergely",  # operator VCS / account login handle
+    "C:\\Users\\hello",  # operator Windows home path (backslash form)
+    "C:/Users/hello",  # operator Windows home path (forward-slash form)
+    "/home/hello",  # operator Linux home path
+    "/Users/gergely",  # operator macOS home path
 )
 
 # ERE banned patterns for network identifiers.
@@ -114,6 +114,5 @@ def test_no_operator_identifying_tokens_in_tracked_files() -> None:
     assert not offenders, (
         "Operator-identifying tokens found in committed text. Scrub them "
         "(host/login/path/network data must not ship) or, for a genuine "
-        "functional survivor, record it in _ALLOWLIST with a reason:\n"
-        + "\n".join(sorted(offenders))
+        "functional survivor, record it in _ALLOWLIST with a reason:\n" + "\n".join(sorted(offenders))
     )
