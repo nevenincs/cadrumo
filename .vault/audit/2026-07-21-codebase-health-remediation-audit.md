@@ -96,11 +96,38 @@ bare re-raise left in the caller so exception chaining survives;
 spine and CAS conflict raises unchanged; `read_sealed_archive` C(15) to A(5)
 with no version tolerance widening.
 
-WP11 periphery did not land. No commit touching the periphery scope is present
-at HEAD, and `src/cadrumo/entrypoints/mcp/_server.py` has no commit newer than
-`2b534cf86f` of 2026-07-18. The specific claim that
-`enforce_required_runtime_cohort` was remediated under WP11 is therefore
-unsupported at HEAD and is recorded here as open, not done.
+WP11 periphery landed in three explicit-pathspec commits. `ddeb55719a` covers
+the outbound and inbound adapters: `LLMCache.prune` C(14) to B and
+`UsageRecorder.prune` C(11) to B, whose twin retention ladders were
+deliberately *not* cross-extracted because they read different row shapes;
+`list_drive_folder_documents` C(11) to B with the paging state machine moved
+into a generator that the caller fully consumes, so the Drive scope refusal
+still surfaces from the same call; `DefaultBrowserSession.close` C(12) to B
+with the aggregation contract preserved, including the re-raise of a cancelled
+error after the runtime is stopped; `OfxProvider.ingest` C(20) to B(6) and its
+class C(12) to B(8).
+
+`d5a365ae08` covers application-layer periphery:
+`_classify_irnr_income_transaction` C(11) to B with guard order preserved and
+every aggregation issue constructed verbatim; `_seed_inputs_into_sheet` C(11)
+to B; `WorkflowEngine._stage_building_draft` C(17) to B with the stage's
+started stamp threaded through so every workflow step keeps its original
+timing.
+
+`72acbf4262` covers the entrypoints: `_prune_orphan_defs` C(16) and cognitive
+26 to B, split into explicit mark and sweep phases over the fixpoint graph
+walk; `enforce_required_runtime_cohort` C(11) to B by extracting cohort
+probing and refusal rendering, with the stderr wording and the exit code
+unchanged; and `__getattr__` in the profile facade D(24) and cognitive 23 to
+A(2) and cognitive 1, the PEP-562 ladder replaced by a declarative
+name-to-module table resolved through one import hop, with laziness, the
+`__all__` set, and the byte-identical attribute error all preserved.
+
+This paragraph corrects an earlier draft of this record, which stated WP11 had
+not landed. That draft was committed on a stale read: the three commits are
+ancestors of the commit that carried it, so the work was already at HEAD when
+the claim was written. The re-read-HEAD-before-reporting discipline exists for
+exactly this failure, and it was not followed here.
 
 ### complexity-tolerated-hotspots | medium | four hotspots tolerated on stated rationale
 
@@ -108,7 +135,10 @@ Four surfaces were examined and deliberately left alone. `build_server` in the
 MCP entrypoint carries cognitive 109, but it is a registration shell summing
 roughly fifteen individually readable SDK handlers that share session state;
 decomposing it needs a session-state carrier plus handler factories, which is
-protocol-boundary churn for no per-path readability gain. `LocalHttpBoundary.route`
+protocol-boundary churn for no per-path readability gain. The one real
+function-level hotspot in that same file, `enforce_required_runtime_cohort`,
+was remediated under WP11 in `72acbf4262`, so the tolerance is scoped to the
+registration shell alone rather than to the module. `LocalHttpBoundary.route`
 in the browser test harness is a route table. `domain/transactions/_models.py`
 carries its maintainability grade from boundary-contract validators.
 `locales/_modelo_manager.py` has no function-level hotspot at all — only a
@@ -212,9 +242,9 @@ definition. An anti-regression test asserts the resolved files are still the
 private defining modules rather than the package `__init__`. A type narrowing
 in that test followed as `05a0a757ac`.
 
-### gates-caught-campaign-introduced-regressions | high | three type regressions were introduced by the refactors and caught by the types gate
+### gates-caught-campaign-introduced-regressions | high | four type regressions were introduced by the refactors and caught by the types gate
 
-The refactors introduced three type-narrowing regressions, each caught by the
+The refactors introduced four type-narrowing regressions, each caught by the
 types gate rather than by review. `e03b9674b8` restored precise types on two
 WP2 helper boundaries that had been widened to `object`, reintroducing a
 TypedDict for the preflight-field splat and the exact `CertificateHealth` type
@@ -222,9 +252,17 @@ for bundle-health classification. `ad7243b332` restored a genuinely optional
 `str | None` fingerprint on the WP7 `_ProfileFacts` carrier, which had been
 over-narrowed to `str` — the correct fix was to match the source contract, not
 to assert an invariant the code never held. `05a0a757ac` replaced an implicit
-narrowing with an honest assert. This is the load-bearing observation of the
-campaign: pure-structural decomposition is not type-neutral in practice, and
-the gate is what made that visible.
+narrowing with an honest assert. `f3f86709a4` fixed the WP6 extraction
+`_validate_classify_llm_options`, which refused a `None` transaction id but
+returned `None`, so its own guarantee was invisible at its only call site and
+an unnarrowed `str | None` travelled onward; the guard now returns the
+validated id.
+
+This is the load-bearing observation of the campaign: pure-structural
+decomposition is not type-neutral in practice. Three of the four regressions
+share one shape — an extraction that widens or drops a type its inline
+predecessor carried implicitly — and none was caught by review. The gate is
+what made them visible.
 
 ### pre-existing-cli-integration-failures | high | thirteen integration-lane failures on main, two of them genuine production bugs
 
@@ -275,9 +313,12 @@ its companion record.
 
 ### residual-at-close | high | complexity gate still RED at 13 new or regressed hotspots
 
-Measured at HEAD `e9a3c35abe`, the duplication gate passes at 13 clones and
-0.08%. The complexity gate remains RED: 13 new or regressed hotspots, 468
-baselined entries allowed, and 42 baseline entries now resolved. That is down
+Measured at HEAD `72acbf4262` — that is, with all eleven work-packages landed —
+the duplication gate passes at 13 clones and 0.08%. The complexity gate remains
+RED: 13 new or regressed hotspots, 468 baselined entries allowed, and 42
+baseline entries now resolved. Both gates were re-run after WP11 landed and
+returned identical figures, so the residual below is a post-WP11 measurement.
+That is down
 from 87 at open, so the campaign closed roughly 85% of the surface, but the
 gate is not green and this document does not claim it is.
 
@@ -308,12 +349,6 @@ possibility is unresolved and should not be assumed benign.
 
 ## Recommendations
 
-Land WP11 or formally withdraw it. It is the only designed work-package with
-no commit at HEAD, and the specific claim about `enforce_required_runtime_cohort`
-does not hold against the file's history. Either the work lands with its own
-verification, or the package is closed with its hotspots moved into the
-tolerated set on a stated rationale.
-
 Treat the campaign-introduced complexity regressions as in-scope rather than
 deferring them. `close_async_resources` at cognitive 32 and the two new
 maintainability-index B grades were produced by this campaign's own edits;
@@ -328,7 +363,18 @@ tests asserting against silently-dropped fields. A test that passes because an
 argument was discarded is a vacuous assertion, which is a correctness finding
 rather than a typing one.
 
+Check every extraction for a type the inline predecessor carried implicitly.
+Four of this campaign's own regressions were of that one shape, and none
+surfaced in review — a helper boundary widened to `object`, an optional
+narrowed to non-optional, a guard whose refusal guarantee did not travel with
+its return value. A decomposition pass over typed code should run the types
+gate as a step, not as a post-hoc check.
+
 Run the fresh-context honesty review before this campaign is declared
 structurally complete, per the campaign-close honesty-review rule. This
 document is the driving agent's own record and is therefore exactly the
-artefact that rule requires an independent reviewer to read against HEAD.
+artefact that rule requires an independent reviewer to read against HEAD. The
+WP11 correction recorded above is a live example of why: a status claim in
+this document was wrong within minutes of being written because the
+underlying work landed between the check and the commit, and only a re-read
+of HEAD caught it.
