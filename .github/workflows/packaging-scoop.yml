@@ -112,8 +112,23 @@ jobs:
           if ($run.conclusion -ne "success") {
             throw "source packaging run did not succeed"
           }
-          if ($run.event -ne "push" -or $run.head_branch -ne "main") {
-            throw "source packaging run must be one trusted push to main"
+          if ($run.head_branch -ne "main") {
+            throw "source packaging run must target main"
+          }
+          if ($run.event -eq "workflow_dispatch") {
+            # The full campaign is dispatch-only (ci-speed redesign,
+            # 2026-07-20): a dispatch run is trusted only when its commit is
+            # verified on main history via the compare API - equal-or-stronger
+            # than the former push-event pin, which trusted the push router.
+            $ancestry = Invoke-RestMethod `
+              -Headers $headers `
+              -Uri "$env:GITHUB_API_URL/repos/$env:GITHUB_REPOSITORY/compare/main...$($run.head_sha)"
+            if ($ancestry.status -ne "identical" -and $ancestry.status -ne "behind") {
+              throw "dispatch-event source run commit is not on main history"
+            }
+          }
+          elseif ($run.event -ne "push") {
+            throw "source packaging run must be a push or dispatch run on main"
           }
           if ($run.head_repository.full_name -ne $env:GITHUB_REPOSITORY) {
             throw "source packaging run does not belong to this repository"

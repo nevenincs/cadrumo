@@ -1,0 +1,112 @@
+# Nightly full-conformance lane for Cadrumo.
+# The per-push ci.yml is budgeted at a ten-minute wall (operator directive
+# 2026-07-20), so the slow, push-frequency-insensitive proofs live here and
+# still gate main every day: the nitpicky warnings-as-errors docs build, the
+# locked-graph CVE audit, and the pre-commit hook replay, plus the same
+# lint/type/unit surface as per-push CI so a nightly red is diagnosable
+# without cross-referencing another workflow's history. Free compute on the
+# self-hosted fleet; the schedule fires when the runners are idle.
+
+name: Cadrumo CI Nightly
+
+on:
+  workflow_dispatch:
+  schedule:
+    # 02:30 UTC: outside the operator's working hours, after any evening
+    # campaign pushes have settled.
+    - cron: "30 2 * * *"
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  cadrumo-nightly-full:
+    name: Cadrumo / nightly full conformance / Python 3.13
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+
+      - name: Cache prek hooks
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cache/prek
+            ~/AppData/Local/prek
+          key: prek-${{ runner.os }}-${{ hashFiles('prek.toml') }}
+          restore-keys: |
+            prek-${{ runner.os }}-
+
+      - name: CI Bootstrap
+        run: |
+          uv sync
+          uv run vaultspec-core install --force
+
+      - name: Provision Playwright Chromium
+        run: just env-playwright
+
+      - name: Lint
+        run: |
+          just check-style
+          just check-relative-imports
+
+      - name: Import architecture
+        run: just check-imports
+
+      - name: Typecheck
+        run: just check-types
+
+      - name: Semgrep regression rules (linkage-design type-uniformity)
+        run: uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/
+
+      - name: Registry verify
+        run: uv run --no-sync aeat app registry verify
+
+      - name: Audit oracle bindings
+        run: uv run --no-sync aeat app registry audit-oracles
+
+      - name: Test (unit)
+        # No junit artifact (zero Actions-artifact posture); the durations
+        # profile lives in the job log.
+        run: uv run pytest --durations=100
+        # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
+
+      - name: Tooling and workflow conformance gates
+        # Dev-tree ceiling raised over the 300 s ini default: real install/
+        # harness tests legitimately run 300-900 s (see ci.yml).
+        run: uv run --no-sync pytest -q --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
+
+      - name: Documentation conformance
+        # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
+        # module-to-stub correspondence, and CLI reference drift/conformance)
+        # plus doc8 and interrogate. Multi-minute by design; nightly cadence.
+        run: just docs-check
+
+      - name: Audit dependencies for known CVEs
+        # Scans the locked dependency graph against the PyPI Advisory
+        # Database (PYSEC + GitHub Advisory) and fails the build on any
+        # known vulnerability. To allow-list a specific advisory locally,
+        # append --ignore-vuln <GHSA-/PYSEC-id>.
+        run: |
+          uv export --frozen --no-dev --no-emit-project --no-hashes > /tmp/audit-reqs.txt
+          uvx pip-audit --strict -r /tmp/audit-reqs.txt
+
+      - name: Hooks
+        run: just check-pre-commit
