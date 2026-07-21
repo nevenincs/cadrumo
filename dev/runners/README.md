@@ -1,0 +1,138 @@
+# Self-hosted runner disk hygiene
+
+Auto-cleanup for the self-hosted GitHub Actions runner fleet. Hardware space is
+limited, so each runner purges the artifacts that bloat its caches on **every**
+job completion — success **and** failure — using the runner-native job hook
+`ACTIONS_RUNNER_HOOK_JOB_COMPLETED`. This hook is the machine-level guarantee a
+workflow cannot provide: it fires even when a job fails, cancels, or times out.
+
+## Fleet
+
+| Runner name           | Platform | Location                                              | Script               |
+| --------------------- | -------- | ----------------------------------------------------- | -------------------- |
+| `gw-workstation-win`  | Windows  | `C:\actions-runner`                                   | `cleanup-windows.ps1`|
+| `gw-workstation-wsl`  | Linux    | docker container `cadrumo-runner-linux`               | `cleanup-linux.sh`   |
+| `gw-workstation-wsl-2`| Linux    | docker container `cadrumo-runner-linux-2`             | `cleanup-linux.sh`   |
+| `macbook-neo`         | macOS    | `~/actions-runner` (ssh `gergely.wootsch@gergelys-macbook-neo`) | `cleanup-macos.sh` |
+
+The two Linux runners are docker containers that mount the host docker socket,
+so the smoke suite's nested containers create anonymous volumes and dangling
+images on the **host** daemon. The Linux hook prunes those from inside the
+container; the Windows hook (running on the docker host) prunes them too, so the
+host daemon is cleaned whether or not a Linux job is the last to finish.
+
+## What the hooks clean
+
+Every hook, in order:
+
+1. **Stale `_work/_temp`** — the runner clears the current job's temp; crashed
+   jobs strand dirs here. Entries older than 24h are removed.
+2. **Per-run lane roots** — `cadrumo-s2*`, `cadrumo-claude-*`, `oracle-emit-work*`
+   in `RUNNER_TEMP` and `_work`, older than 24h.
+3. **Reused-checkout `var/`** — the checkout in `_work/<repo>/<repo>` is reused
+   by the next job (incremental fetch) and is **left in place**; only its
+   gitignored `var/` residue is purged (`release-cohort*`, `oracle-emit-work*`,
+   `*.tar.gz`) older than 24h. `var/distribution-install-readiness` (evidence
+   rows) is **exempt for 7 days**. The reused `.venv` is never touched.
+4. **Bounded speed caches** — `uv cache prune` (fast, native) every job, then a
+   hard size cap: uv 5GB, pip 3GB, npm 3GB, by oldest-first eviction of
+   per-package cache entries (a cache miss is a re-download, never corruption).
+5. **Docker hygiene** (Linux + Windows host) — `docker container prune`
+   (stopped only), `image prune` (dangling only, never `-a`), `volume prune`
+   (unreferenced only), `builder prune --keep-storage 5GB`.
+6. **Platform residue** — macOS: uninstall/untap leftover `cadrumo-smoke*` test
+   formulas and taps, `brew cleanup -s --prune=7`, clear stale `/tmp` lane dirs.
+7. **Audit line** — one line per run appended to `<work-root>/runner-hygiene.log`
+   (rotated at 2MB → `.log.1`): timestamp, job, run id, bytes freed, what pruned.
+
+### Safety invariants (never violated)
+
+- Never deletes tracked files in any checkout.
+- Never touches runner binaries or credentials (`.runner`, `.credentials`).
+- Never touches the reused checkout's `.venv`.
+- Never touches named docker volumes (`cadrumo-runner-state*`) or the running
+  runner containers — docker `prune` only removes **unreferenced** objects.
+- Never touches real financial data (`C:\Users\hello\AppData\Local\aeat`).
+- Never touches the operator's real Homebrew packages — only `cadrumo-smoke*`.
+- **Always exits 0.** A cleanup failure logs a note and is swallowed; it can
+  never redden a green build.
+
+### Performance
+
+Hooks must stay fast (<30s typical) because they run on every job. The cheap
+work runs every time (age-stat lane purge, `uv cache prune`); the expensive
+work (recursive size measurement for cache caps, docker prune) is throttled to
+run at most once every 6h via marker files in `<work-root>/.hygiene/`.
+
+## Wiring a runner
+
+The hook is enabled per runner by adding the environment variable to the runner
+root's `.env` file and restarting the runner service.
+
+### Windows (`gw-workstation-win`)
+
+```powershell
+# copy the script into the runner root (out of the reused checkout tree)
+Copy-Item dev\runners\cleanup-windows.ps1 C:\actions-runner\cleanup-windows.ps1 -Force
+
+# add the hook var to the runner .env (create if absent)
+Add-Content C:\actions-runner\.env "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=C:\actions-runner\cleanup-windows.ps1"
+
+# restart the runner service (only when busy=false — never mid-job)
+Get-Service 'actions.runner.*' | Restart-Service
+```
+
+### Linux docker runners (`cadrumo-runner-linux`, `-2`)
+
+Copy the script into each container's runner root and append the hook var to its
+`.env`, then restart the container (the runner auto-resumes on restart):
+
+```bash
+for c in cadrumo-runner-linux cadrumo-runner-linux-2; do
+  docker cp dev/runners/cleanup-linux.sh "$c":/home/runner/actions-runner/cleanup-linux.sh
+  docker exec "$c" bash -lc 'chmod +x ~/actions-runner/cleanup-linux.sh && \
+    grep -q ACTIONS_RUNNER_HOOK_JOB_COMPLETED ~/actions-runner/.env 2>/dev/null || \
+    echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=/home/runner/actions-runner/cleanup-linux.sh" >> ~/actions-runner/.env'
+  # restart only when the runner is idle (busy=false)
+  docker restart "$c"
+done
+```
+
+Adjust the in-container runner root path (`/home/runner/actions-runner`) to the
+container's actual runner home if different.
+
+### macOS (`macbook-neo`)
+
+```bash
+ssh gergely.wootsch@gergelys-macbook-neo '
+  cp ~/actions-runner/cleanup-macos.sh ~/actions-runner/cleanup-macos.sh 2>/dev/null || true
+  chmod +x ~/actions-runner/cleanup-macos.sh
+  grep -q ACTIONS_RUNNER_HOOK_JOB_COMPLETED ~/actions-runner/.env 2>/dev/null || \
+    echo "ACTIONS_RUNNER_HOOK_JOB_COMPLETED=$HOME/actions-runner/cleanup-macos.sh" >> ~/actions-runner/.env
+  # restart via the runner service manager (svc.sh) only when idle
+  cd ~/actions-runner && ./svc.sh stop && ./svc.sh start'
+```
+
+(Copy `cleanup-macos.sh` to the runner root first, e.g. `scp dev/runners/cleanup-macos.sh gergely.wootsch@gergelys-macbook-neo:~/actions-runner/`.)
+
+## Restart discipline
+
+**Never restart a runner mid-job.** Poll busy state first and only restart an
+idle runner:
+
+```bash
+gh api repos/nevenincs/cadrumo/actions/runners \
+  --jq '.runners[] | {name, busy}'
+```
+
+Restart a runner only when its `busy` is `false`. A restart of a busy runner
+kills the in-flight job.
+
+## Verifying the hook
+
+After wiring, the next completed job appends a line to
+`<work-root>/runner-hygiene.log`. Confirm the hook fired:
+
+- Windows: `Get-Content C:\actions-runner\_work\runner-hygiene.log -Tail 5`
+- Linux: `docker exec cadrumo-runner-linux tail -5 ~/actions-runner/_work/runner-hygiene.log`
+- macOS: `ssh … tail -5 ~/actions-runner/_work/runner-hygiene.log`
