@@ -301,6 +301,7 @@ class EvidenceExtractResult(OutputSchema):
     iva_rate: str | None = None
     iva_amount: str | None = None
     grand_total: str | None = None
+    currency: str | None = None
     raw_text_length: int = 0
 
 
