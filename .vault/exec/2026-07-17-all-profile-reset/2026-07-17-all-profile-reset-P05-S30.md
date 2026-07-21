@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Prove the removed reset and sandbox spellings are absent from every source and generated surface
 
 ## Scope

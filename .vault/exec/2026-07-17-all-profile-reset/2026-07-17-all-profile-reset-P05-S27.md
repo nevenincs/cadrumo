@@ -9,9 +9,6 @@ related:
   - "[[2026-07-17-all-profile-reset-plan]]"
 ---
 
-
-
-
 # Migrate the reset family help and risk metadata to the accepted grammar
 
 ## Scope

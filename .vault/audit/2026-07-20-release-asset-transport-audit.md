@@ -11,8 +11,6 @@ related:
   - "[[2026-04-12-release-please-adr]]"
 ---
 
-
-
 # `release-asset-transport` audit: `release corpus curation`
 
 ## Scope
