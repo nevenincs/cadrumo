@@ -1165,26 +1165,42 @@ def _transaction_from_command(
     # path does. Without this the row persists with no value_in_eur and every
     # aggregation gate withholds it, so a manually-entered foreign invoice never
     # reaches the modelo at all.
-    fx_rate, value_in_eur, _rate_source, _rate_date_iso = _apply_fx_conversion(raw, currency_normalizer)
-    if fx_rate is not None and value_in_eur is not None:
-        payload["fx_rate"] = fx_rate
-        payload["value_in_eur"] = value_in_eur
-    if command.business_classification is not BusinessClassification.NOT_YET_PROCESSED:
-        payload.update(
-            {
-                "classified_at": occurred_at,
-                "classified_by": command.classified_by_override or CLASSIFIED_BY_MANUAL,
-                # #231: the operator's free-text rationale (the manual `classify
-                # --reason` value, threaded through as `command.notes`) is the
-                # real "why" behind the decision and takes precedence; the
-                # invoking command name remains the fallback for classification
-                # paths that carry no operator-supplied reason (e.g. bulk
-                # `--from-csv` rows with no `notes` column).
-                "classification_reason": command.notes or command.source_command,
-                "classification_confidence": Decimal("1"),
-            },
-        )
+    payload.update(_fx_conversion_fields(raw, currency_normalizer))
+    payload.update(_classification_fields(command, occurred_at=occurred_at))
     return Transaction.model_validate(payload)
+
+
+def _fx_conversion_fields(
+    raw: RawTransaction,
+    currency_normalizer: CurrencyNormalizationService | None,
+) -> dict[str, object]:
+    """Project the converted foreign-currency fields, empty when no rate resolves."""
+    fx_rate, value_in_eur, _rate_source, _rate_date_iso = _apply_fx_conversion(raw, currency_normalizer)
+    if fx_rate is None or value_in_eur is None:
+        return {}
+    return {"fx_rate": fx_rate, "value_in_eur": value_in_eur}
+
+
+def _classification_fields(
+    command: ManualLedgerTransactionCommand,
+    *,
+    occurred_at: datetime,
+) -> dict[str, object]:
+    """Project the classification stamp, empty while the row is unprocessed."""
+    if command.business_classification is BusinessClassification.NOT_YET_PROCESSED:
+        return {}
+    return {
+        "classified_at": occurred_at,
+        "classified_by": command.classified_by_override or CLASSIFIED_BY_MANUAL,
+        # #231: the operator's free-text rationale (the manual `classify
+        # --reason` value, threaded through as `command.notes`) is the
+        # real "why" behind the decision and takes precedence; the
+        # invoking command name remains the fallback for classification
+        # paths that carry no operator-supplied reason (e.g. bulk
+        # `--from-csv` rows with no `notes` column).
+        "classification_reason": command.notes or command.source_command,
+        "classification_confidence": Decimal("1"),
+    }
 
 
 def _evidence_provenance(
