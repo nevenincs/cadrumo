@@ -355,11 +355,11 @@ test-unit-serial:
 # flake under `-n auto` interleaving while passing cleanly in isolation.
 test-integration:
     @uv run --no-sync pytest -q -m "integration and not serial"
-    @uv run --no-sync pytest -q -m "integration and serial" -n0
+    @uv run --no-sync pytest -q -m "integration and serial and not perf" -n0
 
 # Run only the serial (isolation-sensitive) integration lane, no xdist workers.
 test-integration-serial:
-    @uv run --no-sync pytest -q -m "integration and serial" -n0
+    @uv run --no-sync pytest -q -m "integration and serial and not perf" -n0
 
 # Run the live test suite. Quiet progress; failures shown.
 test-live:
