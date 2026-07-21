@@ -10,10 +10,12 @@ real-behaviour testing discipline.
 
 from __future__ import annotations
 
+import functools
 import multiprocessing
 import os
 import stat
 import threading
+import time
 from collections.abc import Callable
 from contextlib import suppress
 from pathlib import Path
@@ -32,15 +34,56 @@ from ..atomic_write import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PIPE_PAYLOAD = bytes(range(256)) * 4096
-# A deadlock guard, not a performance budget: the assertions these children
-# prove are their exit codes, never their wall-clock cost. The bound only has to
-# be short enough that a genuinely wedged writer fails in bounded time instead of
-# hanging the run. It must clear a `spawn` child's full interpreter boot and
-# package re-import on a saturated machine -- measured at 2.3-2.8s under merely
-# moderate parallel load, i.e. already over half of the former 5.0s bound, which
-# turned a busy host into a spurious failure. `timeout = 300` in pyproject.toml
-# remains the outer per-test ceiling.
-_CHILD_TIMEOUT_SECONDS = 60.0
+#: Hang guard for the reader thread's join, used INSIDE an already-booted child.
+#: It deliberately stays a plain constant: the child must not call
+#: :func:`_child_timeout_seconds`, which would spawn a grandchild process to
+#: measure a baseline. Nothing here pays an interpreter boot -- the reader thread
+#: is already running and only has to drain the pipe -- so a fixed, generous
+#: ceiling is the honest shape for a guard against a wedged reader.
+_READER_JOIN_TIMEOUT_SECONDS = 60.0
+
+#: Multiple of the measured no-op ``spawn`` cost allowed for a real writer child.
+#: The pipe children do the same interpreter boot and package re-import the
+#: baseline measures, then a sub-second write of :data:`_PIPE_PAYLOAD` through a
+#: real pipe; 8x that boot cost is far more than the write can need.
+_SPAWN_BUDGET_FACTOR = 8.0
+#: Absolute floor added to the derived budget, covering the children's own pipe
+#: work and absorbing a load spike that lands after the baseline was measured.
+_CHILD_WORK_MARGIN_SECONDS = 10.0
+
+
+def _noop_child() -> None:
+    """Do nothing: the baseline child measures interpreter boot and import only."""
+
+
+@functools.cache
+def _child_timeout_seconds() -> float:
+    """Return this host's deadlock bound for a writer child, derived from measurement.
+
+    A deadlock guard, not a performance budget: the assertions these children
+    prove are their exit codes, never their wall-clock cost, so the bound only
+    has to be short enough that a genuinely wedged writer fails in bounded time
+    instead of hanging the run.
+
+    The former fixed 5.0s bound was arbitrary and had no honest headroom: a
+    Windows ``spawn`` child pays a full interpreter boot plus package re-import
+    before it writes a byte, measured at 2.3-2.8s under merely moderate parallel
+    load -- already over half the budget -- so a busy host failed on cost rather
+    than on defect. Deriving the bound from a real no-op ``spawn`` on THIS host
+    makes it self-scaling: when load inflates the writer children's boot, it
+    inflates the baseline by the same factor, so a timeout can only mean a
+    genuine wedge. ``timeout = 300`` in ``pyproject.toml`` remains the outer
+    per-test ceiling.
+    """
+    started = time.perf_counter()
+    process = multiprocessing.get_context("spawn").Process(target=_noop_child)
+    process.start()
+    process.join()
+    process.close()
+    baseline = time.perf_counter() - started
+    return baseline * _SPAWN_BUDGET_FACTOR + _CHILD_WORK_MARGIN_SECONDS
+
+
 _EXIT_NO_CONTINUATION = 21
 _EXIT_INCOMPLETE = 22
 _EXIT_READER_FAILURE = 23
@@ -105,7 +148,7 @@ def _blocking_pipe_completion_child() -> None:
             _close_fd(write_fd)
             write_fd = -1
 
-        reader.join(timeout=_CHILD_TIMEOUT_SECONDS)
+        reader.join(timeout=_READER_JOIN_TIMEOUT_SECONDS)
         if reader.is_alive() or reader_errors:
             outcome = _EXIT_READER_FAILURE
         elif outcome == 0 and received != _PIPE_PAYLOAD:
@@ -196,7 +239,7 @@ def _signal_interrupted_short_write_completion_child() -> None:
         if not reader_started:
             reader.start()
             reader_started = True
-        reader.join(timeout=_CHILD_TIMEOUT_SECONDS)
+        reader.join(timeout=_READER_JOIN_TIMEOUT_SECONDS)
 
         if reader.is_alive() or reader_errors:
             outcome = _EXIT_READER_FAILURE
@@ -208,16 +251,19 @@ def _signal_interrupted_short_write_completion_child() -> None:
 
 
 def _bounded_child_exitcode(target: Callable[[], None]) -> int:
+    # Measured on this host (once per session), so the guard scales with the
+    # machine's real spawn cost instead of a magic constant.
+    budget = _child_timeout_seconds()
     process = multiprocessing.get_context("spawn").Process(target=target)
     process.start()
     try:
-        process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+        process.join(timeout=budget)
         if process.is_alive():
             process.terminate()
-            process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+            process.join(timeout=budget)
             if process.is_alive():
                 process.kill()
-                process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+                process.join(timeout=budget)
             target_name = getattr(target, "__name__", type(target).__name__)
             pytest.fail(f"child writer {target_name} exceeded the bounded timeout")
         assert process.exitcode is not None
@@ -225,10 +271,10 @@ def _bounded_child_exitcode(target: Callable[[], None]) -> int:
     finally:
         if process.is_alive():
             process.terminate()
-            process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+            process.join(timeout=budget)
             if process.is_alive():
                 process.kill()
-                process.join(timeout=_CHILD_TIMEOUT_SECONDS)
+                process.join(timeout=budget)
         process.close()
 
 
