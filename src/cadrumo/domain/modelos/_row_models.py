@@ -705,25 +705,15 @@ class Modelo210AgrupacionRentaRowsError(CadrumoError, ValueError):
         super().__init__(f"Modelo 210 annual agrupación rows are invalid ({reason}): {detail}")
 
 
-def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
-    """Validate the complete M210 annual ``0A`` grouped-renta row set.
-
-    The validator makes the statutory grouping facts explicit: at least one
-    component; one official renta code, rate, and identified property/right;
-    and one payer unless the set declares the explicit code-35 multi-payer
-    exception. Individual row validation forbids negative components, so no
-    component can offset another in the group.
-
-    Raises:
-        Modelo210AgrupacionRentaRowsError: if the supplied row set cannot be a
-            lawful annual grouping.
-    """
+def _require_nonempty_agrupacion(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
     if not rows:
         raise Modelo210AgrupacionRentaRowsError(
             reason="empty_group",
             detail="period 0A requires at least one grouped-renta component",
         )
 
+
+def _require_unique_agrupacion_source_ids(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
     source_ids = tuple(row.source_id for row in rows)
     if len(set(source_ids)) != len(source_ids):
         raise Modelo210AgrupacionRentaRowsError(
@@ -731,19 +721,26 @@ def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaR
             detail="each grouped-renta component must carry a unique stable source_id",
         )
 
+
+def _resolve_single_agrupacion_tipo_renta_code(rows: Sequence[Modelo210AgrupacionRentaRow]) -> str:
     codes = {row.tipo_renta_code for row in rows}
     if len(codes) != 1:
         raise Modelo210AgrupacionRentaRowsError(
             reason="mixed_tipo_renta_code",
             detail=f"components use more than one official code: {', '.join(sorted(codes))}",
         )
-    code = next(iter(codes))
+    return next(iter(codes))
+
+
+def _require_annual_agrupacion_code(code: str) -> None:
     if code not in _M210_ANNUAL_AGRUPACION_CODES:
         raise Modelo210AgrupacionRentaRowsError(
             reason="annual_code_not_lease_or_sublease",
             detail=f"period 0A is limited to lease/sublease grouped rentas (01 or 35), got {code}",
         )
 
+
+def _require_single_agrupacion_tipo_gravamen(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
     rates = {row.tipo_gravamen for row in rows}
     if len(rates) != 1:
         raise Modelo210AgrupacionRentaRowsError(
@@ -751,6 +748,8 @@ def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaR
             detail=f"components use more than one tax rate: {', '.join(str(rate) for rate in sorted(rates))}",
         )
 
+
+def _require_shared_agrupacion_bien_derecho(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
     if not all(row.deriva_de_bien_derecho and row.bien_derecho_id is not None for row in rows):
         raise Modelo210AgrupacionRentaRowsError(
             reason="missing_bien_derecho",
@@ -763,6 +762,8 @@ def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaR
             detail="components derive from more than one bien or derecho",
         )
 
+
+def _validate_agrupacion_payer_grouping(rows: Sequence[Modelo210AgrupacionRentaRow], code: str) -> None:
     if code == "35":
         if any(row.pagador_mode is not M210PayerMode.MULTIPLE_PAYERS_CODE_35 for row in rows):
             raise Modelo210AgrupacionRentaRowsError(
@@ -777,6 +778,28 @@ def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaR
             reason="mixed_pagador",
             detail="non-35 grouped rentas must proceed from one identified payer",
         )
+
+
+def validate_m210_agrupacion_renta_rows(rows: Sequence[Modelo210AgrupacionRentaRow]) -> None:
+    """Validate the complete M210 annual ``0A`` grouped-renta row set.
+
+    The validator makes the statutory grouping facts explicit: at least one
+    component; one official renta code, rate, and identified property/right;
+    and one payer unless the set declares the explicit code-35 multi-payer
+    exception. Individual row validation forbids negative components, so no
+    component can offset another in the group.
+
+    Raises:
+        Modelo210AgrupacionRentaRowsError: if the supplied row set cannot be a
+            lawful annual grouping.
+    """
+    _require_nonempty_agrupacion(rows)
+    _require_unique_agrupacion_source_ids(rows)
+    code = _resolve_single_agrupacion_tipo_renta_code(rows)
+    _require_annual_agrupacion_code(code)
+    _require_single_agrupacion_tipo_gravamen(rows)
+    _require_shared_agrupacion_bien_derecho(rows)
+    _validate_agrupacion_payer_grouping(rows, code)
 
 
 # ---------------------------------------------------------------------------

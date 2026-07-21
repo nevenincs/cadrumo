@@ -8,6 +8,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
+from ....core import M210GrossIncomeSourceMode
 from ...calculations.registry import CasillaId, RelationId, validated_casilla_id
 from .._calculation_revision import CalculationRevision, CalculationRevisionState, derive_calculation_revision_id
 from .._errors import ModeloValidationError
@@ -113,6 +114,50 @@ def test_revision_id_pinned_against_fully_populated_fixture() -> None:
         f"is {pinned!r}. Every persisted CalculationRevision id now mismatches "
         f"its derived form; either revert the hash change or run a migration "
         f"and update the pin."
+    )
+
+
+def test_revision_id_pinned_across_every_optional_branch() -> None:
+    """Anti-tautology proof for the optional payload branches.
+
+    The base pin in :func:`test_revision_id_pinned_against_fully_populated_fixture`
+    omits relation_overrides, the Modelo 210 code/mode, and row_binding_values.
+    This pin populates those optional branches too, so the
+    canonicalisation-pipeline restructure of
+    :func:`derive_calculation_revision_id` (folding the payload into ordered
+    ``_*_revision_id_payload`` helpers) is locked byte-for-byte. If the hash
+    domain changes without an explicit, migration-backed intent, this fails.
+    """
+    pinned = "7a681bf6fb0a6eee03450370889f6f221907ff6272ea9036768c0364dd86db37"
+    derived = derive_calculation_revision_id(
+        work_unit_id="b" * 64,
+        input_values_by_casilla_id={
+            _PIN_INPUT_CASILLA_01: "1000.00",
+            _PIN_INPUT_CASILLA_02: "250.00",
+        },
+        binding_overrides={
+            "previous_year_net_income": "13000.00",
+            "profile.iva_regime": "GENERAL",
+        },
+        casilla_values={
+            _PIN_OUTPUT_CASILLA_04: Decimal("1300.00"),
+            _PIN_OUTPUT_CASILLA_19: Decimal("200.25"),
+        },
+        row_binding_values={"iva.aggregation": {"2": "5.00", "1": "3.00"}},
+        relation_overrides={_PAGOS_RELATION: "42.00"},
+        source_transaction_ids=("a" * 64, "c" * 64),
+        m210_official_tipo_renta_code="01",
+        m210_gross_income_source_mode=M210GrossIncomeSourceMode.LEDGER,
+        borrador_snapshot_id="borrador-2026-q1-snapshot",
+        bindings_sourced_from_borrador=(
+            "iva.aggregation",
+            "renta.expense.aggregation",
+        ),
+    )
+    assert derived == pinned, (
+        f"Hash domain shifted for the optional payload branches — "
+        f"derive_calculation_revision_id returned {derived!r} but the pinned "
+        f"value is {pinned!r}."
     )
 
 
