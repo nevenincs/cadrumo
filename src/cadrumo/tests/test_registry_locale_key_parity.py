@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from ..core.i18n import tr
-from ..locales._registry_scanner import scan_registry_keys
+from ..locales import scan_registry_keys
 from ..locales.manager import LocaleManager
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
