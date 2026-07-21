@@ -69,6 +69,8 @@ The hard budgets set by the operator: the per-push pipeline wall is at most 10 m
 
 **Projected timings** (grounded in the measured baseline; the full-campaign projections assume lane concurrency 3 and scale the measured serial lane totals, plus the removed duplicate preflights and cloud-cache round-trips):
 
+> Truth amendment (machine-aware-load, 2026-07-21): these projections assumed each runner owned its machine, but the fleet is six runners on TWO physical boxes (three per box), so co-resident jobs contend for the same CPUs — the `-n auto` unit-lane figure above overstated available parallelism, and every CI lane is now sized explicitly per the `.github/README.md` sizing rule (sum of co-resident workers <= machine cores).
+
 | Job | Profile | Baseline (measured) | Projected cold | Projected warm (carried proof) |
 | --- | --- | --- | --- | --- |
 | quick-linux | per-push | — (new) | ~6 min (checkout 1.3 + sync ~1 + cohort 2.2 + core probe ~2) | ~2.5 min (checkout+sync; probe skipped) |
