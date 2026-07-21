@@ -72,6 +72,53 @@ def _read_member(archive: tarfile.TarFile, expected_name: str) -> bytes:
     return _read_member_info(archive, member)
 
 
+def _validate_source_suffix(source_path: Path) -> None:
+    """Refuse a former-product suffix or any non-Cadrumo bundle suffix."""
+    if source_path.name.endswith(FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX):
+        raise SealedArchiveHeaderError(
+            "sealed-archive read refused: former-product bundle suffix is incompatible with Cadrumo; "
+            "the archive was not opened, migrated, copied, renamed, unpacked, or deleted",
+        )
+    if not source_path.name.endswith(CADRUMO_BUCKET_BUNDLE_SUFFIX):
+        raise SealedArchiveLayoutError(
+            f"sealed-archive read refused: source must end with {CADRUMO_BUCKET_BUNDLE_SUFFIX!r}",
+        )
+
+
+def _read_archive_header(archive: tarfile.TarFile) -> ExportArchiveHeader:
+    """Read, product-guard, and strict-parse the archive's first (header) member."""
+    first_member = archive.next()
+    if first_member is None or first_member.name != HEADER_MEMBER_NAME:
+        actual = None if first_member is None else first_member.name
+        raise SealedArchiveLayoutError(
+            f"sealed-archive read refused: first member must be {HEADER_MEMBER_NAME!r}, got {actual!r}",
+        )
+    header_bytes = _read_member_info(archive, first_member)
+    try:
+        raw_header = json.loads(header_bytes)
+    except (TypeError, ValueError):
+        raw_header = None
+    if not isinstance(raw_header, dict) or raw_header.get("product") != PRODUCT_IDENTITY.python_package:
+        raise SealedArchiveHeaderError(
+            "sealed-archive read refused: header does not identify the canonical Cadrumo bundle format; "
+            "payload members were not read and the archive was not migrated, copied, renamed, unpacked, "
+            "or deleted",
+        )
+    try:
+        return ExportArchiveHeader.model_validate_json(header_bytes)
+    except Exception as exc:  # pydantic ValidationError or its subclasses
+        raise SealedArchiveHeaderError(
+            f"sealed-archive read refused: header schema validation failed: {type(exc).__name__}: {exc}",
+        ) from exc
+
+
+def _read_recovery_wrap(archive: tarfile.TarFile, header: ExportArchiveHeader) -> bytes | None:
+    """Return the recovery-wrap member bytes when the header declares one present."""
+    if header.recovery_wrap_present:
+        return _read_member(archive, RECOVERY_WRAP_MEMBER_NAME)
+    return None
+
+
 def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
     """Read and strict-validate a sealed bucket-export archive.
 
@@ -106,48 +153,16 @@ def read_sealed_archive(source_path: Path) -> SealedArchiveContents:
     the archive format (writer + reader change); that hardening is a tracked
     follow-up recorded in the crash-window reference.
     """
-    if source_path.name.endswith(FORMER_PRODUCT_BUCKET_BUNDLE_SUFFIX):
-        raise SealedArchiveHeaderError(
-            "sealed-archive read refused: former-product bundle suffix is incompatible with Cadrumo; "
-            "the archive was not opened, migrated, copied, renamed, unpacked, or deleted",
-        )
-    if not source_path.name.endswith(CADRUMO_BUCKET_BUNDLE_SUFFIX):
-        raise SealedArchiveLayoutError(
-            f"sealed-archive read refused: source must end with {CADRUMO_BUCKET_BUNDLE_SUFFIX!r}",
-        )
+    _validate_source_suffix(source_path)
     try:
         with tarfile.open(source_path, mode="r:gz") as archive:
-            first_member = archive.next()
-            if first_member is None or first_member.name != HEADER_MEMBER_NAME:
-                actual = None if first_member is None else first_member.name
-                raise SealedArchiveLayoutError(
-                    f"sealed-archive read refused: first member must be {HEADER_MEMBER_NAME!r}, got {actual!r}",
-                )
-            header_bytes = _read_member_info(archive, first_member)
-            try:
-                raw_header = json.loads(header_bytes)
-            except (TypeError, ValueError):
-                raw_header = None
-            if not isinstance(raw_header, dict) or raw_header.get("product") != PRODUCT_IDENTITY.python_package:
-                raise SealedArchiveHeaderError(
-                    "sealed-archive read refused: header does not identify the canonical Cadrumo bundle format; "
-                    "payload members were not read and the archive was not migrated, copied, renamed, unpacked, "
-                    "or deleted",
-                )
-            try:
-                header = ExportArchiveHeader.model_validate_json(header_bytes)
-            except Exception as exc:  # pydantic ValidationError or its subclasses
-                raise SealedArchiveHeaderError(
-                    f"sealed-archive read refused: header schema validation failed: {type(exc).__name__}: {exc}",
-                ) from exc
+            header = _read_archive_header(archive)
 
             member_names = tuple(member.name for member in archive.getmembers())
             _validate_layout(member_names)
 
             payload_bytes = _read_member(archive, PAYLOAD_MEMBER_NAME)
-            recovery_wrap_bytes: bytes | None = None
-            if header.recovery_wrap_present:
-                recovery_wrap_bytes = _read_member(archive, RECOVERY_WRAP_MEMBER_NAME)
+            recovery_wrap_bytes = _read_recovery_wrap(archive, header)
     except tarfile.TarError as exc:
         raise SealedArchiveLayoutError(
             f"sealed-archive read refused: tar layer rejected the archive: {type(exc).__name__}: {exc}",

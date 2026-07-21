@@ -454,6 +454,25 @@ def _materialise_plugin_python_cohort(
     if cohort.directory == resolved or cohort.directory in resolved.parents or resolved in cohort.directory.parents:
         raise ValueError("plugin output artifact directory must not overlap the source cohort")
     artifact_dir.mkdir(parents=True)
+    retained = _verify_and_copy_cohort_wheels(cohort, artifact_dir)
+    _write_json(
+        artifact_dir,
+        _PLUGIN_COHORT_MANIFEST,
+        {
+            "artifacts": retained,
+            "sha256": {distribution: cohort.sha256[distribution] for distribution in _PYTHON_COHORT_WHEELS},
+            "source_commit": cohort.source_commit,
+            "version": cohort.version,
+        },
+    )
+
+
+def _verify_and_copy_cohort_wheels(cohort: _PluginPythonCohort, artifact_dir: Path) -> dict[str, str]:
+    """Digest-verify and byte-verify each cohort wheel copied into ``artifact_dir``.
+
+    Returns the retained ``{distribution: filename}`` map. Raises on a digest
+    mismatch against the cohort manifest or on any post-copy byte drift.
+    """
     retained: dict[str, str] = {}
     wheels = _cohort_wheels(cohort)
     for distribution in _PYTHON_COHORT_WHEELS:
@@ -469,16 +488,7 @@ def _materialise_plugin_python_cohort(
         if not filecmp.cmp(source, destination, shallow=False):
             raise ValueError(f"copied plugin wheel bytes drifted for {distribution!r}")
         retained[distribution] = destination.name
-    _write_json(
-        artifact_dir,
-        _PLUGIN_COHORT_MANIFEST,
-        {
-            "artifacts": retained,
-            "sha256": {distribution: cohort.sha256[distribution] for distribution in _PYTHON_COHORT_WHEELS},
-            "source_commit": cohort.source_commit,
-            "version": cohort.version,
-        },
-    )
+    return retained
 
 
 def materialise_plugin(

@@ -102,20 +102,33 @@ async def await_cancellation_complete[T](
     except BaseException as cleanup_error:
         if pending_cancellation is None:
             raise
-        if cleanup_error is not pending_cancellation:
-            previous_cleanup_error = pending_cancellation.__dict__.get("cleanup_error")
-            if isinstance(previous_cleanup_error, AsyncResourceCleanupError) and isinstance(
-                cleanup_error,
-                AsyncResourceCleanupError,
-            ):
-                cleanup_error = previous_cleanup_error._merged_with(cleanup_error)
-            pending_cancellation.__dict__["cleanup_error"] = cleanup_error
-            pending_cancellation.add_note(f"Retained asynchronous cleanup also failed ({type(cleanup_error).__name__})")
+        _merge_cleanup_failure_into_cancellation(pending_cancellation, cleanup_error)
         raise pending_cancellation from cleanup_error
 
     if pending_cancellation is not None:
         raise pending_cancellation
     return result
+
+
+def _merge_cleanup_failure_into_cancellation(
+    cancellation: asyncio.CancelledError,
+    cleanup_error: BaseException,
+) -> None:
+    """Attach a retained cleanup failure to a pending cancellation.
+
+    A distinct failure is stored on the cancellation's ``cleanup_error``,
+    merging with any prior :class:`AsyncResourceCleanupError` so no owner is
+    lost. When the failure *is* the cancellation itself, nothing is attached.
+    """
+    if cleanup_error is not cancellation:
+        previous_cleanup_error = cancellation.__dict__.get("cleanup_error")
+        if isinstance(previous_cleanup_error, AsyncResourceCleanupError) and isinstance(
+            cleanup_error,
+            AsyncResourceCleanupError,
+        ):
+            cleanup_error = previous_cleanup_error._merged_with(cleanup_error)
+        cancellation.__dict__["cleanup_error"] = cleanup_error
+        cancellation.add_note(f"Retained asynchronous cleanup also failed ({type(cleanup_error).__name__})")
 
 
 async def close_async_resources(
@@ -171,23 +184,46 @@ async def close_async_resources(
             cancellation=cancellation or primary_cancellation,
         )
     except asyncio.CancelledError as cleanup_cancellation:
-        if active_error is not None and not isinstance(active_error, asyncio.CancelledError):
-            cleanup_cancellation.__dict__["body_error"] = active_error
-            cleanup_cancellation.add_note(
-                "Cancellation arrived while an earlier body exception was unwinding; "
-                "the body exception is attached as body_error"
-            )
+        _attach_body_error_to_cancellation(cleanup_cancellation, active_error)
         raise
     except AsyncResourceCleanupError as cleanup_error:
-        if active_error is None or isinstance(active_error, asyncio.CancelledError):
+        if not _attach_cleanup_error_to_body(active_error, cleanup_error):
             raise
-        previous_cleanup_error = active_error.__dict__.get("async_cleanup_error")
-        if isinstance(previous_cleanup_error, AsyncResourceCleanupError):
-            cleanup_error = previous_cleanup_error._merged_with(cleanup_error)
-        active_error.__dict__["async_cleanup_error"] = cleanup_error
-        active_error.add_note(
-            "Asynchronous resource cleanup also failed; retry through the attached async_cleanup_error"
+
+
+def _attach_body_error_to_cancellation(
+    cancellation: asyncio.CancelledError,
+    active_error: BaseException | None,
+) -> None:
+    """Attach a still-unwinding non-cancellation body exception to a cancellation."""
+    if active_error is not None and not isinstance(active_error, asyncio.CancelledError):
+        cancellation.__dict__["body_error"] = active_error
+        cancellation.add_note(
+            "Cancellation arrived while an earlier body exception was unwinding; "
+            "the body exception is attached as body_error"
         )
+
+
+def _attach_cleanup_error_to_body(
+    active_error: BaseException | None,
+    cleanup_error: AsyncResourceCleanupError,
+) -> bool:
+    """Attach a cleanup failure to a still-unwinding body exception.
+
+    Returns ``True`` when the failure was attached (merging with any prior
+    :class:`AsyncResourceCleanupError`) and should be suppressed, ``False``
+    when there is no eligible body exception and the caller must re-raise.
+    """
+    if active_error is None or isinstance(active_error, asyncio.CancelledError):
+        return False
+    previous_cleanup_error = active_error.__dict__.get("async_cleanup_error")
+    if isinstance(previous_cleanup_error, AsyncResourceCleanupError):
+        cleanup_error = previous_cleanup_error._merged_with(cleanup_error)
+    active_error.__dict__["async_cleanup_error"] = cleanup_error
+    active_error.add_note(
+        "Asynchronous resource cleanup also failed; retry through the attached async_cleanup_error"
+    )
+    return True
 
 
 __all__ = [
