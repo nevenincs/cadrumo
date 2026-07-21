@@ -1,6 +1,11 @@
 # CI workflow for Cadrumo.
-# This workflow runs lint, typecheck, tests, and hooks on every PR and push to main.
-# It enforces cross-platform parity by running on both Ubuntu and Windows.
+# Per-push verification split for the ten-minute wall (operator directive
+# 2026-07-20: "we cannot have a test or build infrastructure that takes 50
+# mins per step"): two parallel jobs — static checks and the unit suite —
+# sized against the two Linux runners. The slow conformance surfaces
+# (nitpicky docs build, CVE audit, pre-commit hook replay) moved to
+# ci-nightly.yml (schedule + dispatch) so every proof still gates main daily
+# without taxing every push.
 #
 # No secrets are required for the unit suite; live tests are explicitly skipped.
 # CADRUMO_LIVE_TESTS_ENABLED is NEVER set on CI.
@@ -10,7 +15,7 @@ name: Cadrumo CI
 # Cost discipline (operator directive 2026-07-19): shared-worktree campaigns
 # push vault/docs/agent-config churn to main many times an hour; none of it
 # reaches the lint/type/test surface this workflow gates, so those paths never
-# start the two-OS suite.
+# start the suite.
 on:
   workflow_dispatch:
   push:
@@ -36,23 +41,11 @@ permissions:
   contents: read
 
 jobs:
-  cadrumo-lint-and-test:
-    name: Cadrumo / ${{ matrix.os }} / Python ${{ matrix.python-version }}
-    strategy:
-      fail-fast: false
-      matrix:
-        # Single-platform unit lane (operator cost directive 2026-07-19):
-        # lint/type/unit results are platform-independent; the cross-platform
-        # proof lives in the packaging matrix, whose per-OS legs run the real
-        # installed-behavior oracles on every release-relevant change. `os`
-        # stays the identity key the step conditionals and artifact names
-        # branch on; `runner` carries the free self-hosted label set.
-        include:
-          - os: ubuntu-latest
-            runner: [self-hosted, Linux, X64]
-            python-version: "3.13"
-
-    runs-on: ${{ matrix.runner }}
+  cadrumo-static:
+    name: Cadrumo / static checks / Python 3.13
+    runs-on: [self-hosted, Linux, X64]
+    # Budget: ~6-8 min projected; the ceiling kills a wedge fast.
+    timeout-minutes: 25
 
     steps:
       - name: Checkout repository
@@ -64,26 +57,15 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
-          python-version: ${{ matrix.python-version }}
-          enable-cache: true
-
-      - name: Cache prek hooks
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: |
-            ~/.cache/prek
-            ~/AppData/Local/prek
-          key: prek-${{ runner.os }}-${{ hashFiles('prek.toml') }}
-          restore-keys: |
-            prek-${{ runner.os }}-
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
 
       - name: CI Bootstrap
         run: |
           uv sync
           uv run vaultspec-core install --force
-
-      - name: Provision Playwright Chromium
-        run: just env-playwright
 
       - name: Lint
         run: |
@@ -100,7 +82,6 @@ jobs:
         # Semgrep requires the Unix `resource` module and does not run on
         # Windows. Rules in `.semgrep/rules/` enforce the type-uniformity
         # discipline; see `.semgrep/README.md` for the rule inventory and policy.
-        if: matrix.os == 'ubuntu-latest'
         run: uvx --from semgrep==1.168.0 semgrep --config .semgrep/rules/ --error src/cadrumo/
 
       - name: Registry verify
@@ -113,36 +94,57 @@ jobs:
         #   uv run --no-sync aeat app registry audit-oracles
         run: uv run --no-sync aeat app registry audit-oracles
 
-      - name: Test (unit)
-        run: uv run pytest --junitxml=junit.xml
-        # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.
+      - name: Tooling and workflow conformance gates
+        # The dev-tree unit AND integration gates (workflow structural pins,
+        # evidence-transport conformance, shard-plugin partition proof). The
+        # default addopts' `-m unit` deselected the integration-marked
+        # workflow gates from the packaging preflight invocation, so this is
+        # their one per-push home; `not serial` leaves the installed-oracles
+        # pass to the packaging campaign that builds its cohort. The dev tree
+        # carries real install/harness tests that legitimately run 300-900 s,
+        # so this invocation raises the per-test ceiling above the product
+        # suite's 300 s ini default (slowest product test: 58.7 s measured);
+        # 900 s still kills a genuine wedge in minutes.
+        run: uv run --no-sync pytest -q --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
 
-      - name: Documentation conformance
-        # The docs-marked tests (nitpicky warnings-as-errors Sphinx build,
-        # module-to-stub correspondence, and CLI reference drift/conformance)
-        # plus doc8 and interrogate. Excluded from the fast unit lane above
-        # because the nitpicky build is multi-minute; gated here on every push.
-        run: just docs-check
+  cadrumo-unit:
+    name: Cadrumo / unit suite / Python 3.13
+    runs-on: [self-hosted, Linux, X64]
+    # Budget: the suite must fit the per-push wall; pytest-timeout's 300 s
+    # per-test ceiling turns the historical multi-hour worker wedge into a
+    # minutes-scale loud failure, and this job ceiling is the backstop —
+    # never again a 5.5 h wedged run.
+    timeout-minutes: 40
 
-      - name: Audit dependencies for known CVEs
-        # Scans the locked dependency graph against the PyPI Advisory
-        # Database (PYSEC + GitHub Advisory) and fails the build on any
-        # known vulnerability. Catches newly-published CVEs that
-        # otherwise reach production silently — the codebase has no
-        # automated CVE detection today (security swarm 2026-05-30,
-        # axis 6 supply-chain F10). To allow-list a specific advisory
-        # locally, append --ignore-vuln <GHSA-/PYSEC-id>.
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          uv export --frozen --no-dev --no-emit-project --no-hashes > /tmp/audit-reqs.txt
-          uvx pip-audit --strict -r /tmp/audit-reqs.txt
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
-      - name: Hooks
-        run: just check-pre-commit
+      - name: Install just
+        uses: taiki-e/install-action@d56249f532886d210664917b882ad7e152e17d68 # just
 
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
-          name: test-results-${{ matrix.os }}
-          path: junit.xml
+          python-version: "3.13"
+          # Self-hosted: the runner-local uv cache (~/.cache/uv) persists between
+          # jobs; the GitHub cache round-trip only adds network time here.
+          enable-cache: false
+
+      - name: CI Bootstrap
+        run: |
+          uv sync
+          uv run vaultspec-core install --force
+
+      - name: Provision Playwright Chromium
+        run: just env-playwright
+
+      - name: Test (unit)
+        # --durations keeps a rolling public profile of the suite's heaviest
+        # tests in the job log, so the next budget pass is measured, not
+        # guessed (no completed CI unit run existed to profile this redesign).
+        # No junit artifact: the repo's posture is zero Actions-artifact
+        # storage (quota-broken; the release-asset transport exists precisely
+        # to avoid it), and the profile lives in the job log.
+        run: uv run pytest --durations=50
+        # CADRUMO_LIVE_TESTS_ENABLED is NOT set, so live_read tests are skipped.

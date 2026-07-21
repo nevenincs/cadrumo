@@ -59,8 +59,13 @@ def test_homebrew_workflow_consumes_one_successful_commit_bound_cohort() -> None
     assert 'test "$(jq -r .name <<<"$run_json")" = "Cadrumo Packaging Smoke"' in source_gate["run"]
     assert ".github/workflows/packaging-smoke.yml" in source_gate["run"]
     assert 'test "$(jq -r .conclusion <<<"$run_json")" = "success"' in source_gate["run"]
-    assert 'test "$(jq -r .event <<<"$run_json")" = "push"' in source_gate["run"]
+    # Trusted-source predicate (ci-speed redesign): main-branch runs, either
+    # push (historical) or dispatch verified on main history via compare API.
     assert 'test "$(jq -r .head_branch <<<"$run_json")" = "main"' in source_gate["run"]
+    assert '"$event" = "workflow_dispatch"' in source_gate["run"]
+    assert "/compare/main..." in source_gate["run"]
+    assert 'test "$ancestry" = "identical" -o "$ancestry" = "behind"' in source_gate["run"]
+    assert 'test "$event" = "push"' in source_gate["run"]
     assert checkout["with"]["ref"] == "${{ inputs.source_commit }}"
     assert checkout["with"]["persist-credentials"] is False
     # The cohorts come hash-verified from the smoke run's evidence draft, with

@@ -133,7 +133,20 @@ jobs:
           run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${PACKAGING_RUN_ID}")"
           test "$(jq -r .conclusion <<<"$run_json")" = "success"
           test "$(jq -r .path <<<"$run_json")" = ".github/workflows/packaging-smoke.yml"
-          test "$(jq -r .event <<<"$run_json")" = "push"
+          # The full campaign is dispatch-only since the ci-speed redesign
+          # (2026-07-20); push is still accepted so campaign runs recorded
+          # before the trigger change remain promotable. A dispatch run is
+          # trusted only when its commit is verified on main history via the
+          # compare API - equal-or-stronger than the former push-event pin.
+          # The quick per-push workflow lives at a different path and can
+          # never pass the path pin above regardless of event.
+          event="$(jq -r .event <<<"$run_json")"
+          if [ "$event" = "workflow_dispatch" ]; then
+            ancestry="$(gh api "repos/${GITHUB_REPOSITORY}/compare/main...$(jq -r .head_sha <<<"$run_json")" --jq .status)"
+            test "$ancestry" = "identical" -o "$ancestry" = "behind"
+          else
+            test "$event" = "push"
+          fi
           test "$(jq -r .head_branch <<<"$run_json")" = "main"
           test "$(jq -r .head_repository.full_name <<<"$run_json")" = "$GITHUB_REPOSITORY"
           source_commit="$(jq -r .head_sha <<<"$run_json")"
