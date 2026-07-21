@@ -1,7 +1,7 @@
 """Structural gate: CI lanes are sized for the shared machines, never `-n auto`.
 
 The fleet is six runners on TWO physical machines (three per box, see
-`.github/README.md`), so a lane that sizes itself as if it owns the machine
+`.github/ci-control-plane.md`), so a lane that sizes itself as if it owns the machine
 (`pytest -n auto` grabbing every logical CPU) over-subscribes whatever runs
 beside it. Every CI pytest invocation must carry an explicit worker count, the
 packaging campaign legs must pass their per-machine sizing env, and the
