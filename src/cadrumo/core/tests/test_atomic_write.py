@@ -32,7 +32,15 @@ from ..atomic_write import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _PIPE_PAYLOAD = bytes(range(256)) * 4096
-_CHILD_TIMEOUT_SECONDS = 5.0
+# A deadlock guard, not a performance budget: the assertions these children
+# prove are their exit codes, never their wall-clock cost. The bound only has to
+# be short enough that a genuinely wedged writer fails in bounded time instead of
+# hanging the run. It must clear a `spawn` child's full interpreter boot and
+# package re-import on a saturated machine -- measured at 2.3-2.8s under merely
+# moderate parallel load, i.e. already over half of the former 5.0s bound, which
+# turned a busy host into a spurious failure. `timeout = 300` in pyproject.toml
+# remains the outer per-test ceiling.
+_CHILD_TIMEOUT_SECONDS = 60.0
 _EXIT_NO_CONTINUATION = 21
 _EXIT_INCOMPLETE = 22
 _EXIT_READER_FAILURE = 23
