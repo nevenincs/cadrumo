@@ -69,7 +69,17 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 # _batched_wall_results below) rather than one boot each, so the ceiling
 # covers the summed real runtime of every wall's own CLI-driven test, not
 # just one node's worth of interpreter/collection overhead.
-_SUBPROCESS_TIMEOUT_SECONDS = 600
+_SUBPROCESS_TIMEOUT_SECONDS = 800
+
+#: Per-wall ceiling INSIDE the batched subprocess, overriding the repository's
+#: inherited ``timeout = 300``. The batch runs ``-n0`` while the OUTER suite is an
+#: ``-n auto`` run, so each wall executes on a fully saturated host: the slowest
+#: catalogued wall costs ~36s idle, and load inflation of 5-9x is routinely
+#: observed on this machine. The three bounds nest deliberately -- per-wall (600)
+#: inside the whole-batch subprocess bound (800) inside the item's own
+#: ``@pytest.mark.timeout`` (900) -- so a genuine hang is still caught at the
+#: tightest layer that can attribute it, rather than by the outermost one.
+_SUBPROCESS_PER_TEST_TIMEOUT_SECONDS = 600
 
 #: Per-testcase pass/fail result keyed by (junit classname, test function name).
 #: ``None`` means the testcase passed; a non-``None`` value is its failure/error message.
@@ -149,6 +159,8 @@ def _run_pytest_subprocess(
         "-n0",
         "-m",
         "integration",
+        "--override-ini",
+        f"timeout={_SUBPROCESS_PER_TEST_TIMEOUT_SECONDS}",
     ]
     if rootdir is not None:
         argv.extend(["--rootdir", str(rootdir), "--override-ini", "testpaths="])
@@ -288,6 +300,16 @@ def test_catalogue_is_non_empty_and_entries_are_well_formed() -> None:
         )
 
 
+# The global `timeout = 300` in pyproject.toml is documented as a deadlock
+# ceiling "no legitimate unit test approaches". This one legitimately does: the
+# FIRST parametrized item constructs the module-scoped batched-subprocess fixture
+# and so pays for all 30 catalogued walls' real CLI-driven runtime in one item --
+# measured at ~89s on an idle machine, which needs only a ~3.4x parallel-load
+# inflation to cross 300s. When it does, pytest-timeout kills the xdist worker
+# mid-fixture and only that first item is reported failed, which reads as "wall
+# #220 reopened" when nothing regressed. The explicit bound keeps a genuine hang
+# guard while leaving headroom for a saturated host.
+@pytest.mark.timeout(900)
 @pytest.mark.parametrize(
     "entry",
     ACCEPTANCE_WALL_CATALOGUE,
