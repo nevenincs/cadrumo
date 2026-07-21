@@ -45,7 +45,11 @@ from ._overview_calendar_support import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_OUTPUT_LANGUAGE_CHOICE_LIST = f"[{'|'.join(SUPPORTED_OUTPUT_LANGUAGES)}]"
+# The pipe-joined choice set, bracket-agnostic: Typer renders a Choice
+# metavar as `<es|en|ca|hu>` (older Typer used square brackets). Asserting
+# the joined choices without the enclosing bracket proves the full accepted
+# set is surfaced regardless of the bracket glyph.
+_OUTPUT_LANGUAGE_CHOICE_LIST = "|".join(SUPPORTED_OUTPUT_LANGUAGES)
 
 
 def _invoke(args: Sequence[str]) -> Result:

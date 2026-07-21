@@ -256,4 +256,7 @@ def test_profile_history_help_exposes_profile_argument_not_bucket_id() -> None:
 
     assert result.exit_code == 0, result.output
     assert "BUCKET_ID" not in result.output
-    assert "PROFILE" in result.output
+    # The required positional is the operator "profile" token; Typer renders
+    # its metavar braced (`{profile}`) in the usage line — older Typer emitted
+    # bare-uppercase `PROFILE`. The storage-noun `BUCKET_ID` stays absent.
+    assert "{profile}" in result.output
