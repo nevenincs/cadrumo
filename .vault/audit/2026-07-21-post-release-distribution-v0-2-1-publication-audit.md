@@ -154,22 +154,23 @@ directive into the environment the isolated build inherits — also makes the wh
 install succeed. Both point the finger at the specific cffi backend that the
 overlay obtains by default, which is the pre-built PyPI aarch64 wheel.
 
-Conflict, unresolved. The same no-binary directive does not work through a real
-formula install: brew's environment does not carry it into the overlay, so the
-overlay still takes its default cffi. And a source-built cffi that loads correctly
-in a standalone environment still crashed once when the overlay used a
-locally-tagged wheel under brew, the opposite of the standalone result. Comparing
-the two overlay backend binaries directly deepened this rather than resolving it:
-in both the failing and the passing harness the backend is a source-built,
-unstripped object, they are different binaries, and neither contains any exotic
-instruction-set opcode in its own executable section. So the illegal instruction
-is very likely not in the cffi backend at all but in a library it loads — libffi
-is the immediate suspect, since the cffi backend links it and a libffi compiled
-with native tuning would place the trapping instruction exactly where the fault
-handler points, at module load rather than in Python-visible code. That library
-has not been examined. Whoever resumes should disassemble the libffi the overlay
-links, not the cffi backend, and treat "which cffi wheel" as a proxy that has now
-outlived its usefulness.
+Conflict, unresolved — and every quick test overturned the prior hypothesis,
+which is itself the finding. The no-binary directive does not survive brew's
+environment into the overlay. A source-built cffi that loads cleanly standalone
+still crashed once under brew. Comparing the two overlay backend binaries showed
+both source-built, unstripped, different, and neither carrying an exotic opcode in
+its own text — which pointed at a linked library, most naturally libffi. But
+inspecting the crashing backend's linkage disproved that too: it links the stock
+system libffi at the standard multiarch path, not a Homebrew or native-tuned
+build, so the portable-library theory does not hold either. At this point the two
+things that are solid — the crash is at load of the overlay's cffi backend, and
+forcing that dependency to build for a portable baseline in a clean environment
+avoids it — coexist with a chain of specific mechanisms each of which was
+eliminated by the next test. That pattern says the trapping instruction is
+reached through something the quick harnesses do not faithfully reproduce, and
+that root-causing it needs a debugger stopping on the signal to read the faulting
+program counter and the exact mapped object at that address, not more
+build-permutation experiments. It was not carried to that point.
 
 ### scoop-lane-container-mode-conflict | medium | the Scoop lane and the Linux runners cannot share one docker daemon
 
@@ -188,24 +189,32 @@ Sweep a retired architecture's toolchain residue, not just its provisioning: the
 uv managed-Python store outlived the runner that installed it and silently
 redirected an ARM machine to Intel builds.
 
-Resume the arm64 investigation at libffi, not cffi. The backend binaries were
-already compared: both source-built, both free of exotic opcodes in their own
-text, so the trapping instruction is almost certainly in a linked library loaded
-alongside the backend, and libffi is the direct dependency that fits. Identify
-the libffi the overlay resolves, disassemble it, and find the illegal
-instruction; that pins whether this is native-tuned code the virtual machine
-cannot run. Do not re-test the sandbox, the compiler shim, environment filtering,
-architecture, contention, the package standalone, environment layout, install
-ordering, optimisation flags on cffi itself, or the cffi wheel-versus-source
-distinction; all are eliminated or shown to be proxies above, and one hypothesis
-was already withdrawn for resting on a partial reconstruction.
+Resume the arm64 investigation with a debugger, not another build permutation.
+Run the failing metadata build under a debugger that stops on the illegal-
+instruction signal, read the faulting program counter, and map it to the exact
+loaded object and instruction; that ends the guessing the elimination trail could
+not. Everything cheap has been tried: the sandbox, the compiler shim, environment
+filtering, architecture, contention, the package standalone, source-built cffi,
+environment layout, install ordering, cffi optimisation flags, the cffi
+wheel-versus-source split, and the linked libffi (which is the stock system
+build) are all eliminated or shown to be proxies. Two hypotheses were published
+and withdrawn this session for resting on partial reconstructions, so trust only a
+faulting-address reading or a real formula install from here.
 
-Once the offending library is known, the fix is to make that one dependency
-compile for a portable baseline inside the isolated overlay through a channel brew
-does not strip — a pip configuration file staged into the build, or the formula
-generator emitting the dependency as its own resource so build isolation never
-fetches a pre-tuned build — not the environment variable tried here, which brew
-removes before the overlay sees it.
+Two things are nonetheless solid enough to act on. The crash is at load of the
+cffi backend from pip's build-isolation overlay, and forcing that one dependency
+to build for a portable baseline in a clean environment avoids it. Whatever the
+faulting instruction turns out to be, the fix shape is the same: make the overlay
+build its cffi (and whatever it links) for a portable target through a channel
+brew does not strip — a pip configuration file staged into the build, or the
+formula generator emitting the dependency as its own resource — since the plain
+environment variable is removed before the overlay sees it.
+
+Weigh this against the debugging cost. The lane exists to prove one architecture's
+from-source Homebrew install. If the faulting address lands in code the virtual
+machine simply cannot execute, the honest resolutions are to run the leg on
+hardware that executes it or to state that architecture's support level
+explicitly, rather than to hold a release behind a permanently red lane.
 
 A durable alternative worth weighing against further debugging: this lane exists
 to prove a from-source Homebrew install on one architecture. If the cause is the
