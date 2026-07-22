@@ -18,6 +18,7 @@ orden_aplicabilidad = [
     "orden-hac-1431-2025:art-2",
 ]
 source_refs = [
+    "aeat-dr-190-2024",
     "aeat-dr-190-2025",
     "aeat-modelo-190-instructions-2025",
     "aeat-modelo-190-procedure",

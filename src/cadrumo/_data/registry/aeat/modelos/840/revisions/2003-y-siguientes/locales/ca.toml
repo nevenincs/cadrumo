@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Exercici fiscal a què es refereix la declaració"
+"decl.tipo-declaracion" = "Tipus de declaració (alta / variació / baixa)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

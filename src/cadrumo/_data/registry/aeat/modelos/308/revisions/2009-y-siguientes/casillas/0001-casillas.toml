@@ -13,7 +13,7 @@ source_refs = ["aeat-dr-308-2019"]
 [[revisions."2009-y-siguientes".casillas]]
 id = "decl.tipo-solicitud"
 number = "tipo-solicitud"
-label = "Tipo de solicitud (recargo de equivalencia / art 30 bis / art 21.4 / sujeto pasivo ocasional / regimen simplificado transporte)"
+label = "Tipo de solicitud (recargo de equivalencia / art 30 bis / art 21.4 / sujeto pasivo ocasional / régimen simplificado transporte)"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "tipo_solicitud"

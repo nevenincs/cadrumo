@@ -27,7 +27,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "iva.cuota-no-periodica-total"
 number = "iva.cuota-no-periodica-total"
-label = "Total cuota IVA no periodica (autorepercutido + soportado-recargo)"
+label = "Total cuota IVA no periódica (autorepercutido + soportado-recargo)"
 section = ["iva", "no_periodica", "totales"]
 data_type = "money"
 semantic_role = "iva_cuota_no_periodica_total"
