@@ -1,7 +1,0 @@
-[labels]
-"decl.ejercicio" = "Ejercicio al que se refiere la solicitud"
-"decl.tipo-declaracion" = "Tipo de solicitud (alta / modificación / baja)"
-
-[help]
-"decl.ejercicio" = "decl.ejercicio"
-"decl.tipo-declaracion" = "decl.tipo-declaracion"

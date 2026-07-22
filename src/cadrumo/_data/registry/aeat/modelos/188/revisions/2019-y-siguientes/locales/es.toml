@@ -1,9 +1,0 @@
-[labels]
-"03" = "Base retenciones e ingresos a cuenta"
-"04" = "Retenciones e ingresos a cuenta declarados"
-"05" = "Total retenciones del resumen anual"
-
-[help]
-"03" = "03"
-"04" = "04"
-"05" = "05"
