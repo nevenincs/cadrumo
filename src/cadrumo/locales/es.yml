@@ -939,8 +939,9 @@ application:
       calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
         registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period}.
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
-      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
+      caller_casilla_source_binding_conflict: 'Las entradas de casilla del operador
+        no pueden sobrescribir casillas vinculadas a una fuente derivada del bucket
+        (casillas vinculadas a fuente): %{casillas}.'
       computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
         Casillas afectadas: %{computed}.'
@@ -1024,9 +1025,9 @@ application:
         de IVA no coincide con la unidad de trabajo del Modelo 303.
       iva_wallet_unsupported_decision_type: 'Tipo de decisión de cartera de IVA no
         admitido: %{decision_type}.'
-      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
-        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
-        %{period}` before calculating.'
+      ledger_preflight_blocked: 'la comprobación previa del libro bloquea el cálculo
+        del modelo: transacción %{transaction_id} %{reason}: %{detail}. Ejecuta `aeat
+        app ledger preflight --period %{period}` antes de calcular.'
       m210_ledger_manual_agrupacion_rows: El modo de fuente de libro mayor del Modelo
         210 deriva las filas anuales de agrupación de rentas de las clasificaciones
         del libro; no proporcione filas manuales de agrupación de rentas.
@@ -1156,8 +1157,8 @@ application:
         la renta del régimen de atribución quede declarada.
       cross_casilla_invariant_next_action: Asegúrate de que todas las casillas requeridas
         por el predicado %{predicate_id} sean distintas de cero antes de verificar.
-      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
-        %{expression}'
+      cross_casilla_invariant_violated: 'invariante entre casillas %{predicate_id}
+        incumplida: %{expression}'
       cross_period_dependency_unclean: 'la dependencia entre períodos no está limpia:
         modelo=%{modelo} ejercicio=%{year} período=%{period} origen=%{origin} ids_origen=%{origin_ids}
         bloqueos=%{blockers}'
@@ -1628,108 +1629,175 @@ auth:
 categories:
   registry:
     amortizacion_vivienda_afecto:
-      notes: categories.registry.amortizacion_vivienda_afecto.notes
+      label: Amortización de la vivienda afecta
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª, amortización de la vivienda afecta).
     arrendamiento_local:
-      notes: categories.registry.arrendamiento_local.notes
-    arrendamiento_vivienda_afecta: categories.registry.arrendamiento_vivienda_afecta
+      label: Alquiler del local
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    arrendamiento_vivienda_afecta: Parte del alquiler de la vivienda afecta a la actividad
     arrendamiento_vivienda_afecto:
-      notes: categories.registry.arrendamiento_vivienda_afecto.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     asesoria_contable:
-      notes: categories.registry.asesoria_contable.notes
+      label: Honorarios de asesoría contable
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
     asesoria_fiscal:
-      notes: categories.registry.asesoria_fiscal.notes
+      label: Honorarios de asesoría fiscal
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
     asesoria_juridica:
-      notes: categories.registry.asesoria_juridica.notes
+      label: Honorarios de asesoría jurídica
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
     comunidad_vivienda_afecto:
-      notes: categories.registry.comunidad_vivienda_afecto.notes
+      label: Gastos de comunidad de la vivienda afecta
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 30.2.5.b, regla 2ª, gastos de titularidad de la vivienda).
     cuotas_autonomos_ss:
-      notes: categories.registry.cuotas_autonomos_ss.notes
+      notes: Gasto totalmente deducible; las cuotas del RETA son una condición legal
+        para el ejercicio de la actividad.
     cuotas_colegiales:
-      notes: categories.registry.cuotas_colegiales.notes
-    cuotas_reta: categories.registry.cuotas_reta
+      label: Cuotas colegiales
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    cuotas_reta: Cuotas de autónomos a la Seguridad Social (RETA)
     formacion_profesional:
-      notes: categories.registry.formacion_profesional.notes
+      label: Formación profesional
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
     gastos_bancarios:
-      notes: categories.registry.gastos_bancarios.notes
+      label: Gastos bancarios
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, gastos financieros
+        y bancarios).
     gastos_financieros:
-      notes: categories.registry.gastos_financieros.notes
+      label: Gastos financieros
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, gastos financieros
+        y bancarios).
     hardware_amortizable:
-      notes: categories.registry.hardware_amortizable.notes
-    home_office_agua: categories.registry.home_office_agua
-    home_office_gas: categories.registry.home_office_gas
-    home_office_internet: categories.registry.home_office_internet
-    home_office_luz: categories.registry.home_office_luz
+      label: Hardware amortizable
+      notes: Gasto totalmente deducible mediante amortización (Ley 35/2006 art. 28.1,
+        amortización del inmovilizado).
+    home_office_agua: Agua del despacho en casa
+    home_office_gas: Gas del despacho en casa
+    home_office_internet: Internet del despacho en casa
+    home_office_luz: Electricidad del despacho en casa
     ibi_local_afecto:
-      notes: categories.registry.ibi_local_afecto.notes
+      label: IBI del local afecto
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 14 LIS por remisión; tributos
+        fiscalmente deducibles).
     ibi_vivienda_afecto:
-      notes: categories.registry.ibi_vivienda_afecto.notes
+      label: IBI de la vivienda afecta
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 30.2.5.b, regla 2ª, tributos no estatales de la vivienda).
     manutencion_dietas_extranjero:
-      notes: categories.registry.manutencion_dietas_extranjero.notes
+      notes: 'Deducible hasta un límite diario legal: 48,08 EUR/día sin pernocta,
+        91,35 EUR/día con pernocta (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
-          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.con-pernocta.label
+          label: Con pernocta
         sin-pernocta:
-          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.sin-pernocta.label
+          label: Sin pernocta
     manutencion_dietas_nacional:
-      notes: categories.registry.manutencion_dietas_nacional.notes
+      notes: 'Deducible hasta un límite diario legal: 26,67 EUR/día sin pernocta,
+        53,34 EUR/día con pernocta (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
-          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.con-pernocta.label
+          label: Con pernocta
         sin-pernocta:
-          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.sin-pernocta.label
-    manutencion_extranjero: categories.registry.manutencion_extranjero
-    manutencion_nacional: categories.registry.manutencion_nacional
+          label: Sin pernocta
+    manutencion_extranjero: Dietas de manutención en el extranjero
+    manutencion_nacional: Dietas de manutención nacional
     material_oficina:
-      notes: categories.registry.material_oficina.notes
+      label: Material de oficina
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
     mobiliario_amortizable:
-      notes: categories.registry.mobiliario_amortizable.notes
+      label: Mobiliario amortizable
+      notes: Gasto totalmente deducible mediante amortización (Ley 35/2006 art. 28.1,
+        amortización del inmovilizado).
     mutualidad_alternativa:
-      notes: categories.registry.mutualidad_alternativa.notes
+      label: Mutualidad alternativa
+      notes: Deducible hasta un límite legal de 15.000 EUR/año por contribuyente,
+        para una mutualidad alternativa que sustituye al RETA (AEAT ayuda Renta, Cotizaciones
+        al RETA).
     publicidad_marketing:
-      notes: categories.registry.publicidad_marketing.notes
+      label: Publicidad y marketing
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
     reparaciones_conservacion:
-      notes: categories.registry.reparaciones_conservacion.notes
-    seguros_rc: categories.registry.seguros_rc
+      label: Reparaciones y conservación
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    seguros_rc: Seguro de responsabilidad civil profesional
     seguros_responsabilidad_civil:
-      notes: categories.registry.seguros_responsabilidad_civil.notes
-    seguros_salud: categories.registry.seguros_salud
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    seguros_salud: Seguro de salud del autónomo
     seguros_salud_autonomo:
-      notes: categories.registry.seguros_salud_autonomo.notes
+      notes: Deducible hasta un límite legal de 500 EUR/año por contribuyente (Ley
+        35/2006 art. 30.2.5.c, regla 1ª, primas de seguro de enfermedad).
     software_suscripcion:
-      notes: categories.registry.software_suscripcion.notes
+      label: Suscripción de software
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
     subcontratacion:
-      notes: categories.registry.subcontratacion.notes
+      label: Subcontratación
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
     suministros_cliente_directos:
-      notes: categories.registry.suministros_cliente_directos.notes
+      label: Suministros directos del cliente
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
     suministros_home_office_agua:
-      notes: categories.registry.suministros_home_office_agua.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     suministros_home_office_gas:
-      notes: categories.registry.suministros_home_office_gas.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     suministros_home_office_internet:
-      notes: categories.registry.suministros_home_office_internet.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     suministros_home_office_luz:
-      notes: categories.registry.suministros_home_office_luz.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     telefonia_fija:
-      notes: categories.registry.telefonia_fija.notes
+      label: Telefonía fija
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 28.1).
     telefonia_movil:
-      notes: categories.registry.telefonia_movil.notes
-    tributos_deducibles: categories.registry.tributos_deducibles
+      label: Telefonía móvil
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del elemento patrimonial).
+    tributos_deducibles: Otros tributos y tasas fiscalmente deducibles
     tributos_fiscalmente_deducibles:
-      notes: categories.registry.tributos_fiscalmente_deducibles.notes
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 14 LIS por remisión).
     vehiculo_combustible:
-      notes: categories.registry.vehiculo_combustible.notes
+      label: Combustible del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     vehiculo_mantenimiento:
-      notes: categories.registry.vehiculo_mantenimiento.notes
+      label: Mantenimiento del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     vehiculo_parking:
-      notes: categories.registry.vehiculo_parking.notes
+      label: Aparcamiento del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     vehiculo_peaje:
-      notes: categories.registry.vehiculo_peaje.notes
+      label: Peajes del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     vehiculo_seguro:
-      notes: categories.registry.vehiculo_seguro.notes
+      label: Seguro del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     viajes_alojamiento:
-      notes: categories.registry.viajes_alojamiento.notes
+      label: Alojamiento en viajes
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
     viajes_transporte:
-      notes: categories.registry.viajes_transporte.notes
+      label: Transporte en viajes
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
   test_profile:
     display_label_851219: Etiqueta de visualización 851219
 cli:
@@ -3055,16 +3123,16 @@ cli:
           de certificado registrada
         help: Gestiona fuentes de certificado con nombre para el proveedor de autenticación
           por certificado
-        list_help: List every registered certificate source
+        list_help: Lista cada fuente de certificado registrada
         register:
           file_help: Ruta al paquete PKCS#12 (.p12/.pfx)
-          friendly_name_help: Optional human-readable label distinct from --name
+          friendly_name_help: Etiqueta legible opcional distinta de --name
           name_help: Identificador de esta fuente de certificado (por ejemplo, personal
             o apoderado-acme)
-        register_help: Register or re-point a named certificate source
+        register_help: Registra o redirige una fuente de certificado con nombre
         remove:
-          name_help: Registered certificate source to remove
-        remove_help: Remove a registered certificate source
+          name_help: Fuente de certificado registrada a eliminar
+        remove_help: Elimina una fuente de certificado registrada
         secret:
           help: Gestiona la contraseña vinculada a una fuente de certificado con nombre
           remove:
@@ -3077,7 +3145,7 @@ cli:
           set_help: Establece (o rota) la contraseña de una fuente de certificado
             registrada
         select:
-          name_help: Registered certificate source to activate
+          name_help: Fuente de certificado registrada a activar
         select_help: Selecciona la fuente de certificado activa
       configure_help: Configurar el proveedor de autenticación activo
       diagnostics:
@@ -3334,26 +3402,26 @@ cli:
         root_folder_id_unset: No hay carpeta raíz de Google Drive configurada; ejecuta
           `aeat config google folder set <id>` primero
     init:
-      activity_help: Economic activity description (e.g. 761.1, programador)
+      activity_help: Descripción de la actividad económica (p. ej. 761.1, programador)
       auth_provider_help: Id del proveedor de autenticación a usar para el perfil
       certificate_password_env_help: Nombre de la variable de entorno que contiene
         la contraseña del certificado
       certificate_path_help: Ruta al archivo de certificado .p12 o .pfx
-      drafts_dir_help: Directory to store local filing drafts
+      drafts_dir_help: Directorio donde guardar los borradores de presentación locales
       dry_run_help: Informa de los cambios sin modificar la configuración
-      from_help: Source profile ID to import settings from
+      from_help: Id del perfil de origen desde el que importar la configuración
       help: Inicializa un nuevo perfil activo.
-      iva_regime_help: IVA regime (general, simplificado, exento, etc.)
-      manuals_root_help: Root directory for AEAT technical manuals
+      iva_regime_help: Régimen de IVA (general, simplificado, exento, etc.)
+      manuals_root_help: Directorio raíz para los manuales técnicos de la AEAT
       non_interactive_help: Ejecuta sin pedir datos al operador
-      output_language_help: Primary language for CLI output (en, es, ca)
+      output_language_help: Idioma principal de la salida de la CLI (en, es, ca)
       profile_name_help: Identificador único de este perfil de configuración
       quiet_help: Oculta el mensaje de éxito después de inicializar
-      submissions_dir_help: Directory to store submitted filing receipts
+      submissions_dir_help: Directorio donde guardar los justificantes de presentación
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
       tax_id_help: Identificador fiscal español (NIF/CIF/DNI/NIE)
-      tax_residence_ccaa_help: Autonomous community of tax residence
+      tax_residence_ccaa_help: Comunidad autónoma de residencia fiscal
     list:
       help: Listar todos los perfiles registrados y marcar el activo
     passphrase:
@@ -3549,7 +3617,7 @@ cli:
       preflight_revision_ambiguous: 'Mas de una revisión del registro coincide con
         el modelo %{modelo} periodo %{period}: %{candidates}. Vuelva a ejecutar con
         --revision-id indicando una de ellas.'
-      preflight_revision_help: Registry revision id.
+      preflight_revision_help: Id de revisión del registro.
       preflight_revision_id_help: Anulación opcional del id de revisión del registro
         para reproducción exacta (p. ej. 2024-0A); por defecto usa la revisión activa
         para el modelo, ejercicio y periodo.
@@ -3559,7 +3627,7 @@ cli:
       preflight_revision_unresolved: Ninguna revisión del registro cubre el modelo
         %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo
         describe %{modelo}` para ver los periodos y revisiones válidos.
-      preflight_year_help: Filing year.
+      preflight_year_help: Ejercicio de presentación.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
@@ -3862,7 +3930,7 @@ cli:
       finding_label: '-'
       finding_optional: opcional
       finding_required: obligatorio
-      logs_label: Logs
+      logs_label: Registros
       next_label: Siguiente
       note_label: Nota
       overall_label: Estado
@@ -6392,7 +6460,7 @@ locales:
       file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
       file_ok: '%{locale_file}: ok'
       key_extra: '  extra %{key}'
-      key_missing: '  missing %{key}'
+      key_missing: '  falta %{key}'
     modelo:
       audit:
         missing: faltante locale=%{locale_code} modelo=%{modelo} revision=%{revision}
@@ -6410,10 +6478,10 @@ locales:
       set:
         updated: Actualizado %{path} %{field} %{key}
     remove:
-      removed: removed %{locale_file}:%{key}
-    scaffold_updated: locale scaffold updated
+      removed: eliminado %{locale_file}:%{key}
+    scaffold_updated: catálogo de locale actualizado
     set:
-      updated: updated %{locale_file}:%{key}
+      updated: actualizado %{locale_file}:%{key}
 mcp:
   call:
     timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)
@@ -6654,16 +6722,16 @@ wizard:
     general: General
     irpf: IRPF
     iva: IVA
-    simplificado: Simplified
+    simplificado: Simplificado
   commands:
     status:
       created: creado
       updated: actualizado
   demo:
-    description: A demonstration section to test wizard functionality
+    description: Una sección de demostración para probar la funcionalidad del asistente.
     section:
-      title: Demo section
-    title: Demo
+      title: Sección de demostración
+    title: Demostración
   errors:
     blank_integer: Valor entero requerido para %{prompt_key}.
     blank_path: Ruta requerida para %{prompt_key}.
@@ -6696,10 +6764,10 @@ wizard:
       \ --quiet --<campo> VALOR\n\nO vuelve a ejecutar la edición guiada desde una\
       \ sesión de terminal interactiva:\n  aeat config profile edit %{profile_name}"
   other:
-    description: Other configuration options
+    description: Otras opciones de configuración
     section:
-      title: Other settings
-    title: Other
+      title: Otros ajustes
+    title: Otro
   progress:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Paso %{section_n} de %{section_total}: %{title}'
@@ -7102,7 +7170,7 @@ wizard:
             label: Húngaro
         prompt: Idioma de salida de la CLI para este perfil
       regimes:
-        prompt: Select your applicable tax regimes
+        prompt: Selecciona tus regímenes fiscales aplicables
       surnames:
         prompt: Apellidos o razón social para cabeceras de exportación
       tax-id:
@@ -7345,10 +7413,10 @@ wizard:
         'yes':
           description: Selecciona esto para confirmar
           label: Sí
-      help: Example help text for testing
-      prompt: Example test question
+      help: Texto de ayuda de ejemplo para pruebas
+      prompt: Pregunta de ejemplo para pruebas
     main:
-      title: Main test
+      title: Prueba principal
     section:
       title: Sección de prueba
-    title: Test
+    title: Prueba
