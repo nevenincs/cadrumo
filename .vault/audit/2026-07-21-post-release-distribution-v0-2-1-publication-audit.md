@@ -94,6 +94,34 @@ residue from the retired Rosetta runner, not a packaging defect, and it is the
 reason a machine can look correctly labelled while building for the wrong
 architecture.
 
+### homebrew-linux-arm64-sigill-SOLVED | medium | root cause is pac-ret retaa under Apple Virtualization; a verified fix exists
+
+RESOLVED after the long elimination trail below. A debugger on the faulting
+process named the instruction: `retaa`, the ARMv8.3 pointer-authentication
+combined authenticate-and-return, in the cffi backend's `get_unique_type`. That
+is why pointer authentication looked eliminated earlier — the HINT-space
+`paciasp`/`autiasp` are no-ops on cores without the feature and appear in working
+builds too, but `retaa` is a real instruction that faults. Apple's
+Virtualization.framework guest (the colima virtual machine on the Apple-silicon
+host) does not execute it and raises an illegal-instruction fault; the same class
+is documented independently at dotnet/runtime issue 122608 (SIGILL on Apple
+Virtualization from pointer authentication). The instruction enters the build
+because Homebrew's compiler shim injects `-mbranch-protection=standard` whenever
+its `HOMEBREW_CCCFG` carries the `b` flag (`shims/super/cc`, `branch_protection?`
+is exactly `config.include?("b")`); the distribution's own gcc does not default to
+it. It surfaces at library load rather than lazily because the build environment
+resolves relocations eagerly.
+
+The fix is verified on the real formula, three of three clean installs plus a
+load under eager binding: drop the `b` from `HOMEBREW_CCCFG` in the formula so no
+compiled extension carries `retaa`, and install the argon2 bindings with build
+isolation disabled so they build against that pac-free virtual-environment cffi
+rather than a fresh isolated-overlay cffi that would re-inherit the shim's
+pac-ret. The bindings' build backend must be present for the isolation-off build
+— setuptools plus setuptools-scm, the latter pinned to the self-contained 8.x
+line since 10.x splits its versioning into a separate distribution. This is a
+generator change, now being landed, not an infrastructure or scope decision.
+
 ### homebrew-linux-arm64-sigill | medium | the arm64 leg dies on an illegal instruction, cause narrowed by elimination
 
 The Linux arm64 Homebrew leg fails building `argon2-cffi-bindings`, whose

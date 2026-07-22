@@ -21,6 +21,20 @@ _COMPANIONS = (
     ("cadrumo-data-manuals", "cadrumo_data_manuals"),
     ("cadrumo-data-official", "cadrumo_data_official"),
 )
+
+# argon2-cffi-bindings is installed with build isolation disabled (see the
+# formula install method), so its build backend must be present in the virtual
+# environment. setuptools ships in the locked closure; setuptools-scm does not,
+# and is pinned to the self-contained 8.x line because 10.x splits its
+# versioning into a separate `vcs_versioning` distribution that an
+# isolation-disabled build cannot resolve. Declared as (name, url, sha256).
+_EXTRA_BUILD_BACKEND = (
+    (
+        "setuptools-scm",
+        "https://files.pythonhosted.org/packages/4f/a4/00a9ac1b555294710d4a68d2ce8dfdf39d72aa4d769a7395d05218d88a42/setuptools_scm-8.1.0.tar.gz",
+        "42dea1b65771cba93b7a515d65a65d8246e560768a66b9106a592c8e7f26c8a7",
+    ),
+)
 _TARGETS: dict[str, dict[str, str]] = {
     "macos-arm64": {
         "implementation_name": "cpython",
@@ -365,7 +379,15 @@ def generate_formula(
         )
         for artifact in companions
     )
-    resources = (*companion_resources, *_locked_resources(lock_path.resolve(strict=True)))
+    build_backend_resources = tuple(
+        Resource(name=name, url=url, sha256=sha256, platforms=frozenset(_TARGETS))
+        for name, url, sha256 in _EXTRA_BUILD_BACKEND
+    )
+    resources = (
+        *companion_resources,
+        *build_backend_resources,
+        *_locked_resources(lock_path.resolve(strict=True)),
+    )
     resource_text = _resource_blocks(resources)
     return f'''class Cadrumo < Formula
   include Language::Python::Virtualenv
@@ -391,7 +413,20 @@ def generate_formula(
 {resource_text}
 
   def install
-    virtualenv_install_with_resources using: "python3.13"
+    # Apple's Virtualization.framework guest (the Linux-arm64 build host runs as
+    # a colima VM on Apple silicon) faults on the pac-ret pointer-authentication
+    # return instruction (retaa) that Homebrew's cc shim injects via
+    # HOMEBREW_CCCFG "b". Drop it so no compiled C extension carries retaa.
+    ENV["HOMEBREW_CCCFG"] = ENV["HOMEBREW_CCCFG"].to_s.delete("b")
+    venv = virtualenv_create(libexec, "python3.13")
+    # argon2-cffi-bindings' isolated build would install a fresh cffi into a
+    # pip build-isolation overlay that re-inherits the shim's pac-ret and
+    # crashes on load. Build it with isolation off against the already-installed
+    # pac-free venv cffi instead; its build backend (setuptools, setuptools-scm)
+    # is present from the resources installed above.
+    venv.pip_install resources.reject {{ |r| r.name == "argon2-cffi-bindings" }}
+    venv.pip_install resource("argon2-cffi-bindings"), build_isolation: false
+    venv.pip_install_and_link buildpath
   end
 
   test do
