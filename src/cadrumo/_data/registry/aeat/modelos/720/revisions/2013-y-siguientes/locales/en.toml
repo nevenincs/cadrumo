@@ -1,0 +1,10 @@
+[labels]
+"cuentas.codigo-de-cuenta" = "Account code at a financial institution located abroad"
+"cuentas.valoracion" = "Valuation of an account at a financial institution located abroad"
+"decl.ejercicio" = "Tax year the information refers to"
+"decl.tipo-declaracion" = "Type of return (original / replacement / supplementary)"
+"inmuebles.valoracion" = "Valuation of real estate or real property rights located abroad"
+"valores.identificacion" = "Identification of securities, rights, insurance policies or income located abroad"
+"valores.valoracion" = "Valuation of securities, rights, insurance policies or income located abroad"
+
+[help]
