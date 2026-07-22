@@ -26,6 +26,7 @@ from ...core.decimal import coerce_decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId, validate_spanish_tax_id
+from ...core.money import round_to_cents
 from ...core.parsing import parse_iso8601_date as _parse_iso8601_date
 from .. import canonical_decimal_string
 from ..iva import EUMemberState, InvoiceKind, IvaCategory, IvaRateKind, OssIossRegime, TransactionKind
@@ -422,7 +423,7 @@ class Invoice(BaseModel):
             return amount
         if self.fx_rate is None:
             return None
-        return (amount * self.fx_rate).quantize(Decimal("0.01"))
+        return round_to_cents(amount * self.fx_rate)
 
     @model_validator(mode="before")
     @classmethod

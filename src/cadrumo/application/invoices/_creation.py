@@ -29,6 +29,7 @@ from ...adapters.outbound.fx import default_ecb_rate_provider
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...core import IntracomOperationType
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.money import round_to_cents
 from ...domain.currency import ExchangeRateProvider
 from ...domain.invoices import (
     Invoice,
@@ -129,8 +130,8 @@ def build_catalogue_invoice(
     # registry-resolved rate, never a hand-typed percentage. EXEMPT /
     # NOT_SUBJECT resolve to None and carry a zero cuota.
     pct = iva_rate_percentage(rate_slot)
-    iva_amount = Decimal("0") if pct is None else (taxable_base * pct).quantize(Decimal("0.01"))
-    base_total = taxable_base.quantize(Decimal("0.01"))
+    iva_amount = Decimal("0") if pct is None else round_to_cents(taxable_base * pct)
+    base_total = round_to_cents(taxable_base)
     iva_total = iva_amount
     grand_total = base_total + iva_total
     line = {
