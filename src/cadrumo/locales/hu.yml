@@ -367,7 +367,7 @@ aggregation:
         nem oldható fel.
   service:
     errors:
-      envelope_modelo_mismatch: Az aggregációs modelo nem egyezik az eredmény modelóval.
+      envelope_modelo_mismatch: Az aggregációs modell nem egyezik az eredmény modellel.
       envelope_period_mismatch: Az aggregációs időszak nem egyezik az eredmény időszakával.
       envelope_provider_payload_mismatch: A szolgáltató nem egyezik az aggregációs
         payload típusával.
@@ -867,7 +867,7 @@ application:
       calculate_text_input_empty: A --casilla érték egy szöveges casillához tartozik,
         és nem lehet üres.
       calculation_registry_root_missing: A(z) %{registry_root} registry gyökér hiányzik;
-        a modelo számítás nem folytatható.
+        a modell számítás nem folytatható.
       calculation_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel.
       calculation_revision_not_found: Nem található számítás-revízió id=%{calculation_revision_id}
@@ -891,7 +891,7 @@ application:
       export_ledger_evidence_missing: A(z) %{calculation_revision_id} ledgerből származó
         számítási revízió nem tartalmaz csatolt ledger-evidenciát vagy feloldható
         ledger-pillanatkép hivatkozást; exportálás előtt ellenőrizze újra a revíziót.
-      export_no_active_bucket: Nincs aktív profil bucket; a modelo-revízió exportálása
+      export_no_active_bucket: Nincs aktív profil bucket; a modellrevízió exportálása
         előtt futtassa a `aeat config profile create NÉV` parancsot.
       export_operator_name_missing: 'Az exportáláshoz szükség van az operátor nevére
         az aktív profilban; hiányzó profiladatok: %{missing}.'
@@ -955,7 +955,7 @@ application:
         a Modelo 303 munkaegységgel.
       iva_wallet_unsupported_decision_type: 'Nem támogatott IVA-tárca döntéstípus:
         %{decision_type}.'
-      ledger_preflight_blocked: 'a főkönyvi előellenőrzés blokkolja a modelo számítást:
+      ledger_preflight_blocked: 'a főkönyvi előellenőrzés blokkolja a modell számítást:
         %{transaction_id} tranzakció, %{reason}: %{detail}. Futtassa a `aeat app ledger
         preflight --period %{period}` parancsot számítás előtt.'
       m210_ledger_manual_agrupacion_rows: Az M210-es modell főkönyvi forrásmódja a
@@ -974,7 +974,7 @@ application:
         vagy jelölje halasztottként a számítás előtt.'
       profile_readiness_missing: 'A profil hiányos a(z) %{modelo} %{filing_year} %{period}
         modellhez; előbb töltse ki ezeket a profiladatokat: %{missing}.'
-      profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modelo
+      profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modell
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
       recipient_decryption_failed: A címzett számára titkosított csomagot nem sikerült
         megfejteni; a kulcs nem megfelelő, vagy a csomagot módosították.
@@ -1024,14 +1024,14 @@ application:
         vagy 01.'
       work_unit_already_discarded: A munkakérés már el van vetve.
       work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység el lett
-        dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modelo, év és
+        dobva, nem számítható. Hozz létre új munkaegységet ugyanazon modell, év és
         időszak alapján a folytatáshoz.
       work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység el lett
-        dobva, nem importálható. Hozz létre új munkaegységet ugyanazon modelo, év
+        dobva, nem importálható. Hozz létre új munkaegységet ugyanazon modell, év
         és időszak alapján a folytatáshoz.
       work_unit_mutation_refused: A munkakérés el van vetve; új munkakérést kell létrehozni
         a folytatáshoz.
-      work_unit_not_found: 'Nem található modelo munkaegység ezzel az azonosítóval:
+      work_unit_not_found: 'Nem található modell munkaegység ezzel az azonosítóval:
         %{work_unit_id}.'
       work_unit_revision_divergence: A(z) %{work_unit_id} munkaegység a(z) %{work_unit_revision}
         nyilvántartási revízióval jött létre, de a(z) %{modelo} %{filing_year} %{period}
@@ -1287,7 +1287,7 @@ application:
         a kapott érték: %{horizon_days}'
     explain:
       errors:
-        modelo_blank: A modelo azonosító nem lehet üres.
+        modelo_blank: A modell azonosító nem lehet üres.
   portals:
     errors:
       portal_not_found: A kért AEAT portál nincs regisztrálva. Futtassa a 'aeat app
@@ -1971,14 +1971,14 @@ cli:
         list_help: Mentett expediente pillanatképek listázása.
         pull_help: Letölti az AEAT nyilatkozat-nyilvántartást és bucket-szintű pillanatképet
           ment.
-        pull_modelo_help: Korlátozza ezt a letöltést erre a modellora.
+        pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         view_help: Expediente pillanatkép megjelenítése.
       filed:
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_help: Letölti a benyújtott nyilatkozatok adatait a hitelesített AEAT
           nyilvántartásból.
-        pull_modelo_help: Korlátozza ezt a letöltést erre a modellora.
+        pull_modelo_help: Korlátozza ezt a letöltést erre a modellre.
         pull_sources_help: Letölti egy cél-nyilatkozat függőségeihez szükséges benyújtott
           megfigyeléseket.
       filed_app_help: Csak olvasható benyújtott bevallás-megfigyelések.
@@ -2145,7 +2145,7 @@ cli:
         explain_help: Lokalizált súgószöveg bevonása a szöveges kimenetbe.
         form_number_help: Mezők szűrése BOE-n nyomtatott nyomtatványszám szerint (pl.
           46).
-        help: A kiválasztott modelo verzióhoz tartozó összes casilla (mező/doboz)
+        help: A kiválasztott modell verzióhoz tartozó összes casilla (mező/doboz)
           listázása.
         input_kind_help: Mezők szűrése beviteli típus szerint (manual, bound, computed,
           informational).
@@ -2175,7 +2175,7 @@ cli:
       describe:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         help: Részletes struktúra, metaadatok és aktív időszakok megjelenítése egy
-          adott modelo-hoz.
+          adott modellhez.
         label_bindings: Kötések
         label_cadence: Gyakoriság
         label_casillas: Mezők
@@ -2239,7 +2239,7 @@ cli:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         explain_help: Az egyes képleteket megalapozó legal_refs és source_refs bevonása
           a szöveges kimenetbe. A JSON-adatcsomag mindig tartalmazza azokat.
-        help: A kiválasztott modelo verzióhoz tartozó összes számított casilla és
+        help: A kiválasztott modell verzióhoz tartozó összes számított casilla és
           képlet listázása.
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         period_help: 'A nyomtatvány-revíziót feloldó időszaktoken: 0A éves, 1T-4T
@@ -2326,7 +2326,7 @@ cli:
           (pl. 4T).'
       list:
         domain_help: Szűrje a modellkatalógust egyetlen adónemre (pl. iva, irpf, is)
-        help: A rendszerben regisztrált összes hivatalos adóbevallás (modelo) listázása.
+        help: A rendszerben regisztrált összes hivatalos adóbevallás (modell) listázása.
         year_help: A nyomtatványkatalógus szűrése egyetlen adóévre.
       m036:
         alta_help: Rögzítse az M036 alta nyilatkozatot (kezdeti adónyilvántartási
@@ -2414,17 +2414,16 @@ cli:
           Kapcsolatba lép az AEAT-tal (csak olvasás).
         work_unit_id_help: Munkaegység-azonosító (SHA-256 vagy egyértelmű előtag).
       requires:
-        help: 'Megjeleníti az egy adott modelo-hoz és időszakhoz szükséges adatok
-          ellenőrzőlistáját: mely mezőket kell kézzel kitölteni, melyek opcionálisak,
-          melyeket tölti ki automatikusan a könyvelési napló, és melyek származnak
-          az aktív profilból.'
+        help: 'Megjeleníti az egy adott modellhez és időszakhoz szükséges adatok ellenőrzőlistáját:
+          mely mezőket kell kézzel kitölteni, melyek opcionálisak, melyeket tölti
+          ki automatikusan a könyvelési napló, és melyek származnak az aktív profilból.'
         missing_profile_coefficient: 'Az aktív profilban nincs beállítva a következő,
-          ehhez a modelo-hoz szükséges együttható(k): %{missing}.'
+          ehhez a modellhez szükséges együttható(k): %{missing}.'
         modelo_help: Adóbevallási forma kódja (pl. 303, 130, 100).
         no_active_profile: Nincs aktív profil beállítva, ezért nem lehetett ellenőrizni
           a profiltól függő együtthatókat (pl. otthoni iroda használati arányát).
-        period_help: 'Az időszak-token a modelo revíziójának feloldásához: 0A éves,
-          1T-4T negyedévek, 01-12 hónapok; a censo modelo-khoz (036) használja: alta,
+        period_help: 'Az időszak-token a modell revíziójának feloldásához: 0A éves,
+          1T-4T negyedévek, 01-12 hónapok; a censo modellekhez (036) használja: alta,
           modificacion vagy baja.'
         section_ledger: konyvelesi_naplobol_szarmazo
         section_optional: opcionalis_kezi_mezok
@@ -2613,10 +2612,10 @@ cli:
         calculate_source_advisory: 'FIGYELMEZTETÉS: %{message} A számítás befejeződött,
           de ezt a bevallható összeget egyetlen rovat sem fogadja be, és nem szerepel
           a bevallásban; ellenőrizze benyújtás előtt.'
-        calculate_unauthorized_advisory: 'FIGYELMEZTETÉS: a(z) %{modelo} modelo számítási
+        calculate_unauthorized_advisory: 'FIGYELMEZTETÉS: a(z) %{modelo} modell számítási
           háttere NEM ENGEDÉLYEZETT — még nem bizonyította end-to-end teszt legalább
           két renta-éven át (többéves renta engedélyezési kapu). Az eredmény kiszámításra
-          és mentésre került, de kezelje ideiglenesként, amíg a modelo engedélyezve
+          és mentésre került, de kezelje ideiglenesként, amíg a modell engedélyezve
           nem lesz.'
         calculation_revision_id_help: Stabil 64 karakteres SHA-256 azonosító egy számítási
           revízióhoz.
@@ -2628,7 +2627,7 @@ cli:
         compare_taxation_error: 'A közös és egyéni adózás összehasonlítása nem végezhető
           el: {detail}'
         compare_taxation_help: 'Összehasonlítja az IRPF kvótát közös (conjunta, Art.
-          82-84 LIRPF) és egyéni adóbevallás esetén egy meglévő 100-as modelo munkaegységre.
+          82-84 LIRPF) és egyéni adóbevallás esetén egy meglévő 100-as modell munkaegységre.
           A nyilvántartási motort kétszer futtatja — egyszer 2-es (conjunta) és egyszer
           1-es (individual) nyilatkozattípussal — azonos profilkötéseken, és közli
           a kvóta-különbözetet és a javaslatot. Efemer: nem ment revíziót.'
@@ -2942,12 +2941,12 @@ cli:
           a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges
           a --sal-beneficio-neto és --sal-capital-social opciókkal együtt.
         sal_reserva_not_decimal: A --sal-* értékeknek decimális összegeknek kell lenniük.
-        selector_ambiguous: Több aktív munkaegység illeszkedik erre a modelo/év/időszak
+        selector_ambiguous: Több aktív munkaegység illeszkedik erre a modell/év/időszak
           párosra. Válasszon nyilvántartási revíziót vagy adjon meg pontos munkaegység-azonosítót.
           {candidates}
-        selector_not_found: 'Nincs aktív munkaegység ehhez a modelo/év/időszak pároshoz.
+        selector_not_found: 'Nincs aktív munkaegység ehhez a modell/év/időszak pároshoz.
           Futtassa először: aeat app modelo work create.'
-        selector_revision_conflict: Ehhez a modelo/év/időszak pároshoz már létezik
+        selector_revision_conflict: Ehhez a modell/év/időszak pároshoz már létezik
           aktív munkaegység {existing_revision} nyilvántartási revízióval; a kért
           revízió {requested_revision}. Folytassa a meglévő munkaegységet, dobja el
           explicit módon, vagy adjon meg pontos azonosítót.
@@ -3001,7 +3000,7 @@ cli:
         year_out_of_range: A(z) %{year} benyújtási év kívül esik a tartományon; adjon
           meg évet %{minimum} és %{maximum} között.
     quickfile:
-      app_help: 'Futtassa a teljes helyi modelo beadási láncot egyetlen paranccsal:
+      app_help: 'Futtassa a teljes helyi modell beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
         és exportál; soha nem nyújt be az AEAT-hoz'
   common:
@@ -3531,9 +3530,9 @@ cli:
       no_active_profile: 'Nincs aktív profil. Futtassa: `aeat config profile create
         NÉV --tax-id <NIF/CIF/DNI/NIE>`.'
       preflight_filing_year_help: Bevallási év (négy számjegy).
-      preflight_help: Jelenti, mely profilmezők hiányoznak adott (modelo, revízió,
+      preflight_help: Jelenti, mely profilmezők hiányoznak adott (modell, revízió,
         év, időszak) bevallási kontextushoz.
-      preflight_modelo_help: Számozott modelo azonosító (pl. 303).
+      preflight_modelo_help: Számozott modell azonosító (pl. 303).
       preflight_period_help: Időszak kód (pl. 1T, 1P, 0A, 01).
       preflight_revision_ambiguous: 'Egynél több registry-revízió illeszkedik a(z)
         %{modelo} modellhez, %{period} időszakhoz: %{candidates}. Futtassa újra a
@@ -3599,7 +3598,7 @@ cli:
         help: Futtass kísérleteket egy elkülönített, eldobható workspace-ben, amely
           soha nem érinti a fő profil állapotát.
         list_help: Minden sandbox listázása.
-        merge_help: A sandbox főkönyvi tételeinek és/vagy modelo nyilvántartásainak
+        merge_help: A sandbox főkönyvi tételeinek és/vagy modell nyilvántartásainak
           beemelése egy másik profilba.
         merge_into_help: A célprofil neve, amelybe a sandbox nyilvántartásait beemeli.
         merge_name_help: A sandbox neve (előtag nélkül).
@@ -4790,7 +4789,7 @@ cli:
     calendar_local_live_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
       élő eseménybizonyíték.
     calendar_local_modelo_events_unavailable: Ehhez a naptársorhoz nem érhető el helyi
-      modelo eseménybizonyíték.
+      modell eseménybizonyíték.
     calendar_refused_incomplete: 'A naptárnak megoldatlan profilellenőrzései vannak:
       %{keys}. Futtassa a figyelmeztetés javító parancsát, vagy adja meg a --allow-incomplete
       kapcsolót az ideiglenes naptár megtekintéséhez.'
@@ -4923,9 +4922,9 @@ cli:
       view_help: Egy jogi hivatkozás és opcionálisan egy cikkének megjelenítése.
     diff_revisions_from_year_help: A korábbi adóév, amelynek fedő revíziója az összehasonlítás
       alapja
-    diff_revisions_help: Egy modelo nyilvántartási revízióinak összehasonlítása két
+    diff_revisions_help: Egy modell nyilvántartási revízióinak összehasonlítása két
       adóév között
-    diff_revisions_modelo_help: Az összehasonlítandó modelo azonosítója
+    diff_revisions_modelo_help: Az összehasonlítandó modell azonosítója
     diff_revisions_to_year_help: A későbbi adóév, amelynek fedő revízióját az alaphoz
       hasonlítjuk
     inspect_help: A nyilvántartás állapotának és hivatkozásainak vizsgálata.
@@ -5409,8 +5408,8 @@ errors:
     error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.
     error_application_live_iva_surface_timeout: Az élő IVA-olvasási felület időtúllépett,
       mielőtt AEAT-bizonyítékot adott volna vissza.
-    error_application_registry: A modelo-nyilvántartás vezénylése meghiúsult vagy
-      el lett utasítva.
+    error_application_registry: A modellnyilvántartás vezénylése meghiúsult vagy el
+      lett utasítva.
     error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert Modelo
       100 tervezet-sémával sem.
     error_cadrumo_async_resource_cleanup: Az aszinkron erőforrás-tisztítás meghiúsult;
@@ -5523,8 +5522,8 @@ errors:
     error_modelo_work_unit_already_discarded: A munkajegység már el van vetve.
     error_modelo_work_unit_mutation_refused: Egy elvetett munkajegység nem módosítható.
     error_modelo_work_unit_not_found: A kért munkajegység nem található.
-    error_modelos: Adómodelo hiba történt.
-    error_modelos_validation: Egy modelo-kód sérti az alaki invariánsait.
+    error_modelos: Adómodell hiba történt.
+    error_modelos_validation: Egy modellkód sérti az alaki invariánsait.
     error_observation_key: Egy megfigyelési kulcs komponense nem felel meg a tárrepozitórium
       szerződésének.
     error_outbound_storage_not_found: A kért tárolási objektum vagy névtér nem létezik.
@@ -5613,8 +5612,8 @@ errors:
     modelo_projection: A nyomtatvány-előrejelzés sikertelen.
     modelo_work_address_not_found: Nincs aktív nyomtatvány-munkaegység a kért nyomtatványhoz,
       évhez és időszakhoz.
-    modelo_work_selector: A modelo munkavalaszto hibazott.
-    modelo_work_selector_unit_not_found: A kiválasztott modelo munkaegység nem található.
+    modelo_work_selector: A modell munkaválasztó hibázott.
+    modelo_work_selector_unit_not_found: A kiválasztott modell munkaegység nem található.
   fail:
     censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
@@ -5666,7 +5665,7 @@ errors:
       sikerült menteni vagy betölteni.
     fail_modelo_filing_record_persistence: A benyújtás-rekord katalógust nem sikerült
       menteni vagy betölteni.
-    fail_modelo_locale_manager: 'Belső hiba: a modelo séma-lokális fordításkezelés
+    fail_modelo_locale_manager: 'Belső hiba: a modell séma-lokális fordításkezelés
       meghiúsult.'
     fail_modelo_verification_report_persistence: Az ellenőrzési jelentés katalógust
       nem sikerült menteni vagy betölteni.
@@ -5712,8 +5711,8 @@ errors:
     missing_exchange_rate: Hiányzó árfolyam a megadott dátumhoz és devizához.
     modelo_036_lifecycle: Hiba történt a Modelo 036 életciklusában (regisztrálás,
       módosítás vagy törlés).
-    modelo_export: Hiba történt a modelo-revízió exportálása során.
-    modelo_export_manifest: A modelo-export manifesztet nem sikerült létrehozni vagy
+    modelo_export: Hiba történt a modellrevízió exportálása során.
+    modelo_export_manifest: A modellexport manifesztet nem sikerült létrehozni vagy
       érvényesíteni.
     overview: Hiba történt az áttekintő összeállítása során.
     overview_agenda: Az áttekintő nem tudta felsorolni a következő esedékes teendőket.
@@ -5897,7 +5896,7 @@ errors:
       kért hitelesítési munkamenettel.
     bootstrap_already_complete: Már létezik profil; az első futtatás beállítása csak
       egyszer fut le. Profil váltáshoz használja az  parancsot.
-    ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modelo-futtatást,
+    ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modellfuttatást,
       mert az még nem nyújtható be.
     m145_communication_record_ambiguous: A Modelo 145 kommunikációs rekord azonosítójának
       előtagja több rekorddal egyezik.
@@ -5929,9 +5928,9 @@ errors:
       aktív revízióra.
     modelo_calculate_decimal_input: A megadott számítási felülírási érték nem decimális
       alakú.
-    modelo_calculate_detail_rows: A megadott részletsorok megsértik a modelo számítás
+    modelo_calculate_detail_rows: A megadott részletsorok megsértik a modell számítás
       előfeltételeit.
-    modelo_calculate_input: Az operátor által megadott modelo számítási bemeneti érték
+    modelo_calculate_input: Az operátor által megadott modell számítási bemeneti érték
       érvénytelen.
     modelo_calculate_relation_input: A megadott --relation felülírás nem oldható fel
       az aktív revízióra.
@@ -5961,12 +5960,12 @@ errors:
     modelo_work_period_token: Érvénytelen modell időszak.
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.
-    modelo_work_selector_ambiguous: Több modelo munkaegység is illeszkedik a választóra.
-    modelo_work_selector_contradiction: A modelo munkavalaszto argumentumai ellentmondanak
-      egymasnak.
-    modelo_work_selector_no_active_bucket: Válasszon aktív profilt a modelo munkaegység
+    modelo_work_selector_ambiguous: Több modell munkaegység is illeszkedik a választóra.
+    modelo_work_selector_contradiction: A modell munkaválasztó argumentumai ellentmondanak
+      egymásnak.
+    modelo_work_selector_no_active_bucket: Válasszon aktív profilt a modell munkaegység
       feloldása előtt.
-    modelo_work_selector_revision_conflict: A kiválasztott modelo munkaegység másik
+    modelo_work_selector_revision_conflict: A kiválasztott modell munkaegység másik
       revízióhoz tartozik.
     profile_already_registered: Ilyen nevű profil már létezik. Profil váltáshoz használja
       az  parancsot.
@@ -5995,7 +5994,7 @@ errors:
       katalógusban.
     refused_application_live_input: Az élő AEAT olvasási kérés nem hajtható végre
       a megadott bemenettel.
-    refused_application_registry_input: A modelo-nyilvántartás kérése nem hajtható
+    refused_application_registry_input: A modellnyilvántartás kérése nem hajtható
       végre a megadott bemenettel.
     refused_auth_certificate_source_not_found: A megadott tanúsítványforrás nincs
       regisztrálva.
@@ -6155,7 +6154,7 @@ errors:
     refused_profile_not_configured: A RENTA-ellenőrzéshez adóügyi illetőségi profil
       szükséges. A folytatás előtt töltse ki a profilt.
     refused_profile_not_found: Nem létezik profil a megadott azonosítóval.
-    refused_profile_preflight_missing: A modelo-előzetes-ellenőrzés nem talált kötelező
+    refused_profile_preflight_missing: A modell-előzetes-ellenőrzés nem talált kötelező
       profilválasztót. A folytatás előtt töltse ki a profilt.
     refused_profile_prorrata_register_validation: Egy időszakok közötti áfa-arányosítási
       nyilvántartás nem ment át az ellenőrzésen.
@@ -6957,7 +6956,7 @@ wizard:
       monedas-virtuales-extranjero-above-threshold:
         prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
       objective-estimation-modulos-iae-epigraph:
-        help: Évente egyszer kerül a profilba. Az együtthatók továbbra is a modelo-nyilvántartásban
+        help: Évente egyszer kerül a profilba. Az együtthatók továbbra is a modellnyilvántartásban
           maradnak.
         prompt: IAE epigrafus objektív becslési modulokhoz
       objective-estimation-modulos-module-1-units:
