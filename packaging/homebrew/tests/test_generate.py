@@ -136,6 +136,9 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
         '["argon2-cffi-bindings", "cryptography"].include?(r.name) }'
     ) in formula
     assert 'venv.pip_install resource("argon2-cffi-bindings"), build_isolation: false' in formula
+    # cryptography's maturin backend shells out to the `maturin` executable, so
+    # the venv bin must be on PATH before its isolation-off install.
+    assert 'ENV.prepend_path "PATH", libexec/"bin"' in formula
     assert 'venv.pip_install resource("cryptography"), build_isolation: false' in formula
     assert "venv.pip_install_and_link buildpath" in formula
     assert 'assert_predicate bin/"aeat", :executable?' in formula
