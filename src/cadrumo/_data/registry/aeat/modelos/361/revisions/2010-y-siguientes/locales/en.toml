@@ -1,0 +1,9 @@
+[labels]
+"ejercicio" = "Year the request refers to"
+"operacion-base-imponible" = "Taxable base of each invoice or import document"
+"operacion-cuota-iva" = "VAT amount of each invoice or import document"
+"operacion-importe-solicitado-devolver" = "Amount requested for refund per transaction"
+"operacion-prorrata-iva" = "Deductible VAT proration applicable to each transaction"
+"periodo-solicitud" = "Request period"
+
+[help]
