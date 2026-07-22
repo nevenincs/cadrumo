@@ -1,0 +1,6 @@
+[labels]
+"decl.percepciones-total" = "A kifizetések teljes összege"
+"decl.retenciones-total" = "A visszatartások és előlegfizetések teljes összege"
+"decl.total-percepciones" = "A kifizetések teljes száma"
+
+[help]
