@@ -48,4 +48,9 @@ citation = "Ley 35/2006 del IRPF."
 authority = "boe"
 
 [language.hu]
-short_description = "Eves szemelyi jovedelemado-bevallas."
+short_description = "Éves személyi jövedelemadó-bevallás."
+definition = "A személyi jövedelemadó (IRPF) éves bevallása, amellyel az adózó rendezi az adóév adózását (a Renta-kampány)."
+
+[language.hu.source]
+citation = "A 35/2006. IRPF-törvény."
+authority = "boe"

@@ -54,4 +54,9 @@ citation = "Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las 
 authority = "boe"
 
 [language.hu]
-short_description = "A spanyol szemelyi jovedelemado, a belfoldi maganszemelyek jovedelmet terhelo ado."
+short_description = "A spanyol személyi jövedelemadó, a belföldi magánszemélyek jövedelmét terhelő adó."
+definition = "Közvetlen és személyi adó, amely a spanyol területen belföldi illetőségű természetes személyek jövedelmét adóztatja, beleértve a munkaviszonyból, az ingó és ingatlan vagyoni tőkéből, a gazdasági tevékenységekből származó jövedelmeket, a vagyoni nyereségeket és veszteségeket, valamint a jövedelem-hozzárendeléseket. Az éves Modelo 100-ban kell bevallani, részkifizetésekkel és visszatartásokkal a Modelo 111, 115, 130, 131, 180 és 190 nyomtatványokon. Nem terjed ki a nem rezidensek jövedelemadójára (IRNR), sem a társasági adóra (Impuesto sobre Sociedades)."
+
+[language.hu.source]
+citation = "A 35/2006. törvény, 2006. november 28., a személyi jövedelemadóról (BOE-A-2006-20764)."
+authority = "boe"

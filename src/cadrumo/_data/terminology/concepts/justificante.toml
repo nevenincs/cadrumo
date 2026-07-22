@@ -50,4 +50,9 @@ citation = "Manuales de la Sede Electronica de la AEAT sobre presentacion de dec
 authority = "aeat"
 
 [language.hu]
-short_description = "A benyujtas utan az AEAT altal kiadott bizonylat."
+short_description = "A benyújtás után az AEAT által kiadott bizonylat."
+definition = "Igazoló dokumentum (jellemzően PDF), amelyet az AEAT egy bevallás benyújtása után ad ki, a biztonságos ellenőrzési kóddal és a benyújtott adatokkal, a benyújtás bizonyítékaként."
+
+[language.hu.source]
+citation = "Az AEAT Elektronikus Ügyfélkapujának kézikönyvei a bevallások benyújtásáról."
+authority = "aeat"

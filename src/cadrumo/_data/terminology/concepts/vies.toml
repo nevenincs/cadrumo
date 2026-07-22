@@ -49,4 +49,9 @@ citation = "Reglamento (UE) n. 904/2010 del Consejo, sobre cooperacion administr
 authority = "eu"
 
 [language.hu]
-short_description = "Az EU hozzaadottertekado-informaciocsere-rendszere a kozossegen beluli afaszamok ellenorzesere."
+short_description = "Az EU hozzáadottérték-adó-információcsere-rendszere a közösségen belüli áfaszámok ellenőrzésére."
+definition = "Az Európai Unió IVA-információcsere rendszere (VAT Information Exchange System), amely lehetővé teszi annak ellenőrzését, hogy egy IVA-azonosító szám egy másik tagállamban Közösségen belüli szereplőként van-e nyilvántartva. Az alkalmazás csak olvasható módban kérdezheti le, hogy egy IVA-számot egy Közösségen belüli ügylet bevallása előtt validáljon."
+
+[language.hu.source]
+citation = "A Tanács 904/2010/EU rendelete az IVA területén történő igazgatási együttműködésről és csalás elleni küzdelemről; az Európai Bizottság VIES-rendszere."
+authority = "eu"

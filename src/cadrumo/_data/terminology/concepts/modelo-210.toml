@@ -48,4 +48,9 @@ citation = "Texto refundido de la Ley del IRNR (RDLeg 5/2004)."
 authority = "boe"
 
 [language.hu]
-short_description = "Kulfoldi illetoseguek jovedelemado-bevallasa telephely nelkul."
+short_description = "Külföldi illetőségűek jövedelemadó-bevallása telephely nélkül."
+definition = "A nem rezidensek jövedelemadójának (IRNR) önbevallása a Spanyolországban állandó telephely nélkül szerzett jövedelmekre."
+
+[language.hu.source]
+citation = "Az IRNR-törvény egységes szerkezetbe foglalt szövege (5/2004. törvényerejű rendelet)."
+authority = "boe"

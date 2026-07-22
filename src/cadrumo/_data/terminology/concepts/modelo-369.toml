@@ -48,4 +48,9 @@ citation = "Orden HAC/610/2021."
 authority = "boe"
 
 [language.hu]
-short_description = "Egyablakos (OSS/IOSS) afa-bevallas hataron atnyulo B2C ertekesitesre."
+short_description = "Egyablakos (OSS/IOSS) áfa-bevallás határon átnyúló B2C értékesítésre."
+definition = "Az egyablakos ügyintézés (OSS és IOSS) különleges szabályozásainak IVA-önbevallása a más tagállami fogyasztóknak történő, határokon átnyúló értékesítésekhez."
+
+[language.hu.source]
+citation = "A HAC/610/2021. rendelet."
+authority = "boe"

@@ -43,4 +43,9 @@ citation = "Documentacion de la aplicacion aeat; concepto interno del producto."
 authority = "other"
 
 [language.hu]
-short_description = "A penzmozgasok nyilvantartasa az alkalmazason belul, amely a szamitasokat taplalja."
+short_description = "A pénzmozgások nyilvántartása az alkalmazáson belül, amely a számításokat táplálja."
+definition = "A gazdasági mozgások nyilvántartása az alkalmazáson belül. A személy importálja tranzakcióit a ledgerbe, és adózási szempontból osztályozza mindegyiket, így a számítási szabályok meghatározhatják, hogy melyik bejegyzés táplálja egy modell egyes rovatait."
+
+[language.hu.source]
+citation = "Az aeat alkalmazás dokumentációja; a termék belső fogalma."
+authority = "other"

@@ -47,4 +47,9 @@ citation = "Articulos 154 y 156 de la Ley 37/1992 del IVA."
 authority = "boe"
 
 [language.hu]
-short_description = "Az afa-potlek, amelyet a kiskereskedo fizet a beszallitojanak."
+short_description = "Az áfa-pótlék, amelyet a kiskereskedő fizet a beszállítójának."
+definition = "Pótlék, amelyet a recargo de equivalencia különleges szabályozásában a beszállító az IVA-n felül hárít át a kiskereskedőre, cserébe azért, hogy a kiskereskedő mentesüljön az IVA-önbevallások benyújtása alól ezen értékesítések tekintetében."
+
+[language.hu.source]
+citation = "A 37/1992. IVA-törvény 154. és 156. cikke."
+authority = "boe"

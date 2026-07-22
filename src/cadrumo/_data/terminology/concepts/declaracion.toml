@@ -56,3 +56,8 @@ authority = "boe"
 
 [language.hu]
 short_description = "Adatszolgáltatás (bevallás) az AEAT felé."
+definition = "Minden olyan dokumentum, amelyet az adóhatóság előtt nyújtanak be, és amelyben az adók alkalmazása szempontjából releváns tény megvalósulását elismerik vagy közlik. A modell az űrlap; a bevallás az, amit ezen az űrlapon benyújtanak."
+
+[language.hu.source]
+citation = "Az 58/2003. törvény (általános adózási törvény) 119. cikke."
+authority = "boe"

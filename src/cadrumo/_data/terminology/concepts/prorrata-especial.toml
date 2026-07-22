@@ -1,8 +1,9 @@
 # Terminology Handbook concept fragment.
-# `broader = ["prorrata"]` declares this concept as a child of the
-# general prorrata concept; the loader DERIVES the inverse
-# `narrower = ["prorrata-especial"]` onto `prorrata` at compile time.
-# The inverse relation is never authored on both sides.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
 
 [concept]
 concept_id = "prorrata-especial"
@@ -12,7 +13,7 @@ domain_refs = ["modelo:303"]
 legal_refs = ["ley-37-1992:art-104"]
 broader = ["prorrata"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Modalidad de prorrata que deduce el IVA de cada sector de actividad por separado."
@@ -43,6 +44,11 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "Modalitat de prorrata que dedueix l'IVA de cada sector d'activitat per separat."
+definition = "Modalitat de la regla de prorrata en la qual les quotes suportades es dedueixen segons la destinació real de cada bé o servei, aplicant la prorrata general només a les quotes comunes a diversos sectors. És obligatòria quan la prorrata general superaria en més d'un 10 per cent la deducció que resulta de l'especial."
+
+[language.ca.source]
+citation = "Articulo 103 de la Ley 37/1992 del IVA (LIVA)."
+authority = "boe"
 
 [[language.ca.term]]
 label = "prorrata especial"
@@ -51,7 +57,12 @@ part_of_speech = "noun"
 grammatical_gender = "feminine"
 
 [language.hu]
-short_description = "A prorrata azon valtozata, amely tevekenysegi szektoronkent kulon vonja le az elozetes afat."
+short_description = "A prorrata azon változata, amely tevékenységi szektoronként külön vonja le az előzetes áfát."
+definition = "A prorrata-szabály olyan formája, amelyben a beszerzési adót az egyes termékek vagy szolgáltatások tényleges felhasználása szerint vonják le, az általános prorratát csak a több szektor közös adóira alkalmazva. Kötelező, ha az általános prorrata több mint 10 százalékkal meghaladná a különleges prorratából eredő levonást."
+
+[language.hu.source]
+citation = "A 37/1992. IVA-törvény (LIVA) 103. cikke."
+authority = "boe"
 
 [[language.hu.term]]
 label = "kulonleges aranyositas"

@@ -48,4 +48,9 @@ citation = "Articulo 18 de la Ley 27/2014; articulo 13 del RD 634/2015."
 authority = "boe"
 
 [language.hu]
-short_description = "Kapcsolt ugyletek es adoparadicsomi ugyletek informacios bevallasa."
+short_description = "Kapcsolt ügyletek és adóparadicsomi ügyletek információs bevallása."
+definition = "Éves tájékoztató bevallás a kapcsolt személyekkel vagy entitásokkal végzett ügyletekről, valamint az adóparadicsomokkal végzett ügyletekről."
+
+[language.hu.source]
+citation = "A 27/2014. törvény 18. cikke; a 634/2015. királyi rendelet 13. cikke."
+authority = "boe"

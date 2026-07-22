@@ -48,4 +48,9 @@ citation = "Articulo 99 de la Ley 35/2006 del IRPF; Orden EHA/3127/2009."
 authority = "boe"
 
 [language.hu]
-short_description = "Eves osszesito a beres es vallalkozoi forrasadorol (111-es)."
+short_description = "Éves összesítő a béres és vállalkozói forrásadóról (111-es)."
+definition = "Éves tájékoztató bevallás, amely összesíti az adóévben a Modelo 111-en bevallott munkaviszonyból és gazdasági tevékenységekből eredő visszatartásokat, kedvezményezettenkénti részletezéssel."
+
+[language.hu.source]
+citation = "A 35/2006. IRPF-törvény 99. cikke; az EHA/3127/2009. rendelet."
+authority = "boe"

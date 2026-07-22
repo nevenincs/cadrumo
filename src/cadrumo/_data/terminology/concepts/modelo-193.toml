@@ -43,4 +43,9 @@ authority = "boe"
 short_description = "Resum anual de retencions del capital mobiliari."
 
 [language.hu]
-short_description = "Eves osszesito a tokejovedelem forrasadojarol (123-as)."
+short_description = "Éves összesítő a tőkejövedelem forrásadójáról (123-as)."
+definition = "Éves tájékoztató bevallás, amely összesíti az adóévben a Modelo 123-on bevallott ingó vagyoni tőkéből származó jövedelmek visszatartásait, kedvezményezettenkénti részletezéssel."
+
+[language.hu.source]
+citation = "A 35/2006. IRPF-törvény 25. és 99. cikke."
+authority = "boe"

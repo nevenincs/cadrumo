@@ -45,4 +45,9 @@ citation = "Ley 35/2006 del IRPF, Titulo I, Capitulo I (concepto y ambito de apl
 authority = "boe"
 
 [language.hu]
-short_description = "Az IRPF jovedelemalapja; koznyelvben az eves IRPF-bevallas (Modelo 100)."
+short_description = "Az IRPF jövedelemalapja; köznyelvben az éves IRPF-bevallás (Modelo 100)."
+definition = "Az IRPF által adóztatott jövedelem, amely összesíti a munkaviszonyból, a tőkéből, a gazdasági tevékenységekből származó jövedelmeket, a vagyoni nyereségeket és veszteségeket, valamint a jövedelem-hozzárendeléseket. A köznyelvben az éves Renta-bevallást is jelöli, amelyet a Modelo 100-on nyújtanak be a Renta Web kampányon keresztül. Nem jelent bérleti díjat az angol \"renta\" szó értelmében: egy bérbe adott ingatlan ingatlan-vagyoni tőkéből származó jövedelmet eredményez, nem ebben az értelemben vett rentát."
+
+[language.hu.source]
+citation = "A 35/2006. IRPF-törvény I. cím, I. fejezet (fogalom és alkalmazási kör) (BOE-A-2006-20764)."
+authority = "boe"

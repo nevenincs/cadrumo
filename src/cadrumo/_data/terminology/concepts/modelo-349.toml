@@ -48,4 +48,9 @@ citation = "Orden EHA/769/2010; Orden HAC/174/2020."
 authority = "boe"
 
 [language.hu]
-short_description = "Osszesito nyilatkozat a kozossegen beluli ugyletekrol."
+short_description = "Összesítő nyilatkozat a közösségen belüli ügyletekről."
+definition = "Összesítő bevallás más tagállami szereplőkkel végzett Közösségen belüli termékértékesítésekről és -beszerzésekről, valamint szolgáltatásokról."
+
+[language.hu.source]
+citation = "Az EHA/769/2010. rendelet; a HAC/174/2020. rendelet."
+authority = "boe"

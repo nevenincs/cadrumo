@@ -48,4 +48,9 @@ citation = "Orden HAC/3625/2003."
 authority = "boe"
 
 [language.hu]
-short_description = "Nem idoszakos afa-bevallas egyszeri ugyletekre."
+short_description = "Nem időszakos áfa-bevallás egyszeri ügyletekre."
+definition = "Az IVA nem időszakos bevallás-elszámolása azok számára, akik nem nyújtanak be időszakos önbevallásokat, és egyszeri, adóköteles ügyletet végeznek."
+
+[language.hu.source]
+citation = "A HAC/3625/2003. rendelet."
+authority = "boe"

@@ -43,4 +43,9 @@ citation = "AEAT, Disenos de registro publicados por Orden Ministerial en el BOE
 authority = "aeat"
 
 [language.hu]
-short_description = "Az AEAT altal egy modelo benyujtasahoz elfogadott rogzitett szelessegu szovegfajl."
+short_description = "Az AEAT által egy modell benyújtásához elfogadott rögzített szélességű szövegfájl."
+definition = "Rögzített szélességű szöveges fájlformátum, amelyet az AEAT elfogad egy modell elektronikus benyújtásához. Az alkalmazás egy bevallás exportálásakor hozza létre ezt a fájlt, hogy a személy maga töltse fel az Elektronikus Ügyfélkapun. Nevét a Boletín Oficial del Estado-tól (BOE) kapja, ahol minden modell nyilvántartási formátumát közzéteszik."
+
+[language.hu.source]
+citation = "AEAT, az egyes modellekhez miniszteri rendelettel a BOE-ban közzétett nyilvántartási formátumok (Diseños de Registro)."
+authority = "aeat"
