@@ -1,0 +1,23 @@
+[labels]
+"decl.ejercicio" = "Filing year to which the self-assessment relates"
+"decl.periodo" = "Monthly period (01..12)"
+"iva.autorepercutido.intracomunitaria" = "Self-charged VAT on intra-Community acquisitions"
+"iva.cuota-deducible-total" = "Total deductible VAT (input + self-charged)"
+"iva.cuota-devengada-total" = "Total output VAT (charged + self-charged)"
+"iva.repercutido.general" = "VAT output tax at the general rate (21%)"
+"iva.repercutido.reducido" = "VAT output tax at the reduced rate (10%)"
+"iva.repercutido.super-reducido" = "VAT output tax at the super-reduced rate (4%)"
+"iva.resultado-regimen-general" = "Result of the individual general regime (output tax minus deductible tax)"
+"iva.soportado.interiores" = "Input VAT on domestic current transactions"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"
+"iva.autorepercutido.intracomunitaria" = "iva.autorepercutido.intracomunitaria"
+"iva.cuota-deducible-total" = "iva.cuota-deducible-total"
+"iva.cuota-devengada-total" = "iva.cuota-devengada-total"
+"iva.repercutido.general" = "iva.repercutido.general"
+"iva.repercutido.reducido" = "iva.repercutido.reducido"
+"iva.repercutido.super-reducido" = "iva.repercutido.super-reducido"
+"iva.resultado-regimen-general" = "iva.resultado-regimen-general"
+"iva.soportado.interiores" = "iva.soportado.interiores"

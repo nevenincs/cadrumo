@@ -1,0 +1,19 @@
+[labels]
+"01" = "Number of recipients"
+"02" = "Withholding and advance payment tax base"
+"03" = "Withholdings and advance payments"
+"04" = "Income from prior years"
+"05" = "Adjustment"
+"06" = "Sum of withholdings and adjustment"
+"07" = "Result of prior self-assessments"
+"08" = "Result payable"
+
+[help]
+"01" = "01"
+"02" = "02"
+"03" = "03"
+"04" = "04"
+"05" = "05"
+"06" = "06"
+"07" = "07"
+"08" = "08"

@@ -1,0 +1,19 @@
+[labels]
+"01" = "A kedvezményezettek száma"
+"02" = "Levonások és előlegfizetések adóalapja"
+"03" = "Levonások és előlegfizetések"
+"04" = "Előző évekből származó jövedelem"
+"05" = "Korrekció"
+"06" = "Levonások és korrekció összege"
+"07" = "Korábbi önadózások eredménye"
+"08" = "Befizetendő eredmény"
+
+[help]
+"01" = "01"
+"02" = "02"
+"03" = "03"
+"04" = "04"
+"05" = "05"
+"06" = "06"
+"07" = "07"
+"08" = "08"

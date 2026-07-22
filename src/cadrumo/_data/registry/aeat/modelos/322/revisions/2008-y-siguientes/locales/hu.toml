@@ -1,0 +1,23 @@
+[labels]
+"decl.ejercicio" = "Az önadózás vonatkozási éve"
+"decl.periodo" = "Havi időszak (01..12)"
+"iva.autorepercutido.intracomunitaria" = "Önmagával szemben áthárított HÉA közösségi beszerzések esetén"
+"iva.cuota-deducible-total" = "Levonható HÉA összesen (előzetesen felszámított + önmagával szemben áthárított)"
+"iva.cuota-devengada-total" = "Felszámított HÉA összesen (áthárított + önmagával szemben áthárított)"
+"iva.repercutido.general" = "Áthárított HÉA az általános kulcson (21%)"
+"iva.repercutido.reducido" = "Áthárított HÉA a kedvezményes kulcson (10%)"
+"iva.repercutido.super-reducido" = "Áthárított HÉA a szuper-kedvezményes kulcson (4%)"
+"iva.resultado-regimen-general" = "Az egyéni általános szabályozás eredménye (felszámított HÉA - levonható HÉA)"
+"iva.soportado.interiores" = "Előzetesen felszámított HÉA belföldi folyó ügyletek után"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"
+"iva.autorepercutido.intracomunitaria" = "iva.autorepercutido.intracomunitaria"
+"iva.cuota-deducible-total" = "iva.cuota-deducible-total"
+"iva.cuota-devengada-total" = "iva.cuota-devengada-total"
+"iva.repercutido.general" = "iva.repercutido.general"
+"iva.repercutido.reducido" = "iva.repercutido.reducido"
+"iva.repercutido.super-reducido" = "iva.repercutido.super-reducido"
+"iva.resultado-regimen-general" = "iva.resultado-regimen-general"
+"iva.soportado.interiores" = "iva.soportado.interiores"

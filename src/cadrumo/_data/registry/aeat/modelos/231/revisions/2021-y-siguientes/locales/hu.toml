@@ -1,0 +1,23 @@
+[labels]
+"activos-materiales-inversiones" = "Tárgyi eszközök és befektetési célú ingatlanok a pénzeszközök és követelések kivételével"
+"capital-resultados-no-distribuidos" = "Tőke és fel nem osztott eredmény az időszak záró időpontjában"
+"entidades-residentes-actividades" = "Belföldi illetőségű vállalkozások, állandó telephelyek és fő tevékenységek listája"
+"impuestos-devengados" = "Felhalmozott társasági adó vagy hasonló adók, a levonásokkal együtt"
+"impuestos-satisfechos" = "Megfizetett társasági adó vagy hasonló adók, a viselt levonásokkal együtt"
+"ingresos-brutos-terceros" = "A csoport harmadik felekkel elért bruttó bevételei"
+"ingresos-brutos-vinculadas" = "A csoport kapcsolt vállalkozásokkal elért bruttó bevételei"
+"otra-informacion-relevante" = "Egyéb releváns információ és a szereplő adatok magyarázata"
+"plantilla-media" = "Átlagos létszám"
+"resultado-antes-impuestos" = "Adózás előtti eredmény (társasági adó vagy hasonló adók előtt)"
+
+[help]
+"activos-materiales-inversiones" = "activos-materiales-inversiones"
+"capital-resultados-no-distribuidos" = "capital-resultados-no-distribuidos"
+"entidades-residentes-actividades" = "entidades-residentes-actividades"
+"impuestos-devengados" = "impuestos-devengados"
+"impuestos-satisfechos" = "impuestos-satisfechos"
+"ingresos-brutos-terceros" = "ingresos-brutos-terceros"
+"ingresos-brutos-vinculadas" = "ingresos-brutos-vinculadas"
+"otra-informacion-relevante" = "otra-informacion-relevante"
+"plantilla-media" = "plantilla-media"
+"resultado-antes-impuestos" = "resultado-antes-impuestos"
