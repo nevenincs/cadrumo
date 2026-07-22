@@ -49,7 +49,7 @@ authority = "boe"
 
 [language.hu]
 short_description = "Negyedéves szja-előleg az átalánybecslés (modulok) szerint."
-definition = "Az objektív becslés (módulok) szerinti gazdasági tevékenységekre vonatkozó IRPF negyedéves részkifizetése."
+definition = "Az objektív becslés (modulok) szerinti gazdasági tevékenységekre vonatkozó IRPF negyedéves részkifizetése."
 
 [language.hu.source]
 citation = "A 439/2007. királyi rendelet 110. cikke; az EHA/672/2007. rendelet."
