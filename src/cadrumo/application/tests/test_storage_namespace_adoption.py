@@ -19,13 +19,30 @@ with three production-root scans:
    registered definition is covered automatically without editing this gate.
 2. **Redeclaration detection** — an AST walk over the whole ``cadrumo`` package
    that flags any secure-object write site (a ``save(namespace=..., ...)`` call,
-   an ``Envelope(...)`` construction, or a ``SecureBoundRepository`` metadata
-   ClassVar) passing a *raw* ``SensitivityClass.X`` / integer literal for the
-   metadata instead of a definition-sourced value. This set is empty on the
-   canonical tree; a re-hardcoded literal would repopulate it.
+   an ``Envelope(...)`` / ``SecureObjectWrite(...)`` construction, or a
+   ``SecureBoundRepository`` metadata ClassVar) passing a *raw* namespace string,
+   ``SensitivityClass.X`` member, or integer literal for the metadata instead of
+   a definition-sourced value. This set is empty on the canonical tree; a
+   re-hardcoded literal would repopulate it. The scan sees through two evasions:
+   a value reached through a *module-level constant* (``sensitivity =
+   _CLASSIFICATION`` where ``_CLASSIFICATION = SensitivityClass.FINANCIAL``) is
+   resolved to its bound expression before the raw-literal predicates run, and a
+   write call passing its metadata *positionally* is bound to parameter names
+   before inspection.
 3. **Consumption proof** — every ``SecureBoundRepository`` subclass in production
    binds its ``namespace`` / ``sensitivity`` / ``schema_version`` ClassVars to a
    ``<NAME>_NAMESPACE.<attr>`` attribute of a registered definition.
+
+Constant resolution is deliberately *module-local*. A name that does not resolve
+to a top-level assignment in the same module — an imported alias, a parameter, a
+local — is left unresolved and therefore never flagged: the gate holds one module
+tree at a time, and following an import through the package's ``__init__``
+re-export chains would require an import graph this structural scan does not
+build. That is sound rather than merely convenient, because an imported alias is
+itself bound in some other production module, where this same scan applies to its
+binding sites; the residual blind spot is a raw literal parked in a module that
+declares no write site of its own and is re-exported purely to be consumed
+elsewhere.
 
 The detector is proven non-vacuous by a self-test that feeds it a synthetic
 redeclaration fragment and asserts it flags, plus a definition-sourced fragment
@@ -100,6 +117,54 @@ def _production_modules() -> Iterator[tuple[str, ast.Module]]:
 
 
 # ---------------------------------------------------------------------------
+# Module-level constant resolution
+# ---------------------------------------------------------------------------
+
+
+def _module_constants(tree: ast.Module) -> dict[str, ast.expr]:
+    """Return every top-level ``NAME = <expr>`` binding in ``tree``.
+
+    Only module-level statements are collected: these are the constants a write
+    site can reach by bare name, and the indirection the raw-literal predicates
+    must see through.
+    """
+    constants: dict[str, ast.expr] = {}
+    for stmt in tree.body:
+        if isinstance(stmt, ast.Assign):
+            for target in stmt.targets:
+                if isinstance(target, ast.Name):
+                    constants[target.id] = stmt.value
+        elif isinstance(stmt, ast.AnnAssign) and isinstance(stmt.target, ast.Name) and stmt.value is not None:
+            constants[stmt.target.id] = stmt.value
+    return constants
+
+
+def _resolve_constant(node: ast.expr, constants: dict[str, ast.expr]) -> ast.expr:
+    """Follow a bare name through module-level constants to its bound expression.
+
+    ``_CLASSIFICATION`` -> ``SensitivityClass.FINANCIAL`` collapses to the member
+    access so the raw-literal predicates fire on it. A chain of aliases is
+    followed transitively, guarding against a self-referential cycle. A name with
+    no module-level binding (an import, a parameter, a local) resolves to itself
+    and is therefore never treated as raw.
+    """
+    current = node
+    seen: set[str] = set()
+    while isinstance(current, ast.Name) and current.id in constants and current.id not in seen:
+        seen.add(current.id)
+        current = constants[current.id]
+    return current
+
+
+def _describe(original: ast.expr, resolved: ast.expr) -> str:
+    """Render a metadata value, showing the indirection when there was one."""
+    rendered = ast.unparse(original)
+    if resolved is original:
+        return rendered
+    return f"{rendered} -> {ast.unparse(resolved)}"
+
+
+# ---------------------------------------------------------------------------
 # Raw-literal predicates
 # ---------------------------------------------------------------------------
 
@@ -107,10 +172,11 @@ def _production_modules() -> Iterator[tuple[str, ast.Module]]:
 def _is_raw_sensitivity_literal(node: ast.expr) -> bool:
     """Return whether ``node`` is a raw ``SensitivityClass.<MEMBER>`` access.
 
-    A definition-sourced value (``<def>.sensitivity`` / ``self.sensitivity`` /
-    a module constant bound to one) is an attribute whose *attr* is ``sensitivity``
-    or a plain name; only a direct member of the ``SensitivityClass`` enum is a
-    redeclaration.
+    A definition-sourced value (``<def>.sensitivity`` / ``self.sensitivity``) is
+    an attribute whose *attr* is ``sensitivity``; only a direct member of the
+    ``SensitivityClass`` enum is a redeclaration. Callers pass the
+    :func:`_resolve_constant` output, so a module constant bound to a member is
+    caught as well.
     """
     if not isinstance(node, ast.Attribute):
         return False
@@ -121,6 +187,11 @@ def _is_raw_sensitivity_literal(node: ast.expr) -> bool:
 def _is_raw_int_literal(node: ast.expr) -> bool:
     """Return whether ``node`` is a bare integer literal (a schema-version restatement)."""
     return isinstance(node, ast.Constant) and type(node.value) is int
+
+
+def _is_raw_namespace_literal(node: ast.expr) -> bool:
+    """Return whether ``node`` is a bare string literal (a namespace restatement)."""
+    return isinstance(node, ast.Constant) and type(node.value) is str
 
 
 # ---------------------------------------------------------------------------
@@ -141,13 +212,6 @@ class _Redeclaration:
         return f"{self.module}:{self.line} [{self.site}] {self.detail}"
 
 
-def _call_keyword(call: ast.Call, name: str) -> ast.keyword | None:
-    for keyword in call.keywords:
-        if keyword.arg == name:
-            return keyword
-    return None
-
-
 def _func_name(call: ast.Call) -> str:
     func = call.func
     if isinstance(func, ast.Name):
@@ -157,65 +221,145 @@ def _func_name(call: ast.Call) -> str:
     return ""
 
 
-def _inspect_write_call(call: ast.Call, module: str) -> Iterator[_Redeclaration]:
+# Positional parameter order of every recognised secure-object write callable.
+# The canonical writers are keyword-only today, so positional binding is defence
+# in depth: it keeps the gate honest if a write helper ever accepts positionals,
+# and it closes the "pass the literal positionally" evasion outright.
+_WRITE_CALL_POSITIONAL_PARAMS: dict[str, tuple[str, ...]] = {
+    "save": ("namespace", "object_key", "classification", "schema_version", "written_at", "payload"),
+    "save_with_raw_key": (
+        "namespace",
+        "hashed_object_key",
+        "classification",
+        "schema_version",
+        "written_at",
+        "payload",
+    ),
+    "SecureObjectWrite": ("namespace", "object_key", "classification", "schema_version", "written_at", "payload"),
+    "Envelope": ("schema_version", "written_at", "classification", "payload"),
+}
+
+# A positional call is only read as a secure-object write when it carries at
+# least this many positional arguments, so an unrelated one-argument ``save(row)``
+# on some other repository is never misread as the six-parameter write shape.
+_MIN_POSITIONAL_WRITE_ARITY = 3
+
+
+def _positional_param_order(call: ast.Call) -> tuple[str, ...]:
+    name = _func_name(call)
+    if name.endswith("Envelope"):
+        return _WRITE_CALL_POSITIONAL_PARAMS["Envelope"]
+    return _WRITE_CALL_POSITIONAL_PARAMS.get(name, ())
+
+
+def _bound_write_arguments(call: ast.Call) -> dict[str, ast.expr]:
+    """Bind a write call's arguments to parameter names, positionals included."""
+    bound: dict[str, ast.expr] = {}
+    order = _positional_param_order(call)
+    if order and len(call.args) >= _MIN_POSITIONAL_WRITE_ARITY:
+        for name, arg in zip(order, call.args, strict=False):
+            if not isinstance(arg, ast.Starred):
+                bound[name] = arg
+    for keyword in call.keywords:
+        if keyword.arg is not None:
+            bound[keyword.arg] = keyword.value
+    return bound
+
+
+def _inspect_write_call(call: ast.Call, module: str, constants: dict[str, ast.expr]) -> Iterator[_Redeclaration]:
     """Flag raw metadata literals passed to a secure-object write call.
 
     A secure-object write is recognised structurally as either a ``save(...)``
-    with both ``namespace=`` and ``classification=`` keywords (the
-    :meth:`SecureObjectRepository.save` shape), or an ``Envelope(...)``
-    construction carrying a ``classification=`` keyword.
+    carrying both ``namespace`` and ``classification`` (the
+    :meth:`SecureObjectRepository.save` shape), or an ``Envelope(...)`` /
+    ``SecureObjectWrite(...)`` construction carrying ``classification``. Arguments
+    are matched whether they are passed by keyword or positionally, and each
+    metadata value is resolved through module-level constants before the
+    raw-literal predicates run.
     """
-    classification_kw = _call_keyword(call, "classification")
-    if classification_kw is None:
+    bound = _bound_write_arguments(call)
+    classification = bound.get("classification")
+    if classification is None:
         return
-    namespace_kw = _call_keyword(call, "namespace")
-    is_envelope_ctor = _func_name(call).endswith("Envelope")
-    if namespace_kw is None and not is_envelope_ctor:
+    func_name = _func_name(call)
+    is_envelope_ctor = func_name.endswith("Envelope")
+    namespace = bound.get("namespace")
+    if namespace is None and not is_envelope_ctor:
         return
     site = "envelope-construction" if is_envelope_ctor else "secure-object-save"
-    if _is_raw_sensitivity_literal(classification_kw.value):
-        member = ast.unparse(classification_kw.value)
+
+    if namespace is not None:
+        resolved_namespace = _resolve_constant(namespace, constants)
+        if _is_raw_namespace_literal(resolved_namespace):
+            yield _Redeclaration(
+                module=module,
+                line=namespace.lineno,
+                site=site,
+                detail=(
+                    f"namespace={_describe(namespace, resolved_namespace)} "
+                    "restated instead of sourced off the namespace definition"
+                ),
+            )
+
+    resolved_classification = _resolve_constant(classification, constants)
+    if _is_raw_sensitivity_literal(resolved_classification):
         yield _Redeclaration(
             module=module,
-            line=classification_kw.value.lineno,
+            line=classification.lineno,
             site=site,
-            detail=f"classification={member} restated instead of sourced off the namespace definition",
+            detail=(
+                f"classification={_describe(classification, resolved_classification)} "
+                "restated instead of sourced off the namespace definition"
+            ),
         )
-    schema_kw = _call_keyword(call, "schema_version")
-    if schema_kw is not None and _is_raw_int_literal(schema_kw.value):
-        yield _Redeclaration(
-            module=module,
-            line=schema_kw.value.lineno,
-            site=site,
-            detail=f"schema_version={ast.unparse(schema_kw.value)} restated instead of sourced off the namespace definition",
-        )
+    schema = bound.get("schema_version")
+    if schema is not None:
+        resolved_schema = _resolve_constant(schema, constants)
+        if _is_raw_int_literal(resolved_schema):
+            yield _Redeclaration(
+                module=module,
+                line=schema.lineno,
+                site=site,
+                detail=(
+                    f"schema_version={_describe(schema, resolved_schema)} "
+                    "restated instead of sourced off the namespace definition"
+                ),
+            )
 
 
 def _annassign_target_name(node: ast.AnnAssign) -> str | None:
     return node.target.id if isinstance(node.target, ast.Name) else None
 
 
-def _inspect_metadata_classvar(node: ast.AnnAssign, module: str) -> Iterator[_Redeclaration]:
-    """Flag a ``sensitivity``/``schema_version`` ClassVar bound to a raw literal."""
+_CLASSVAR_RAW_PREDICATES = {
+    "namespace": _is_raw_namespace_literal,
+    "sensitivity": _is_raw_sensitivity_literal,
+    "schema_version": _is_raw_int_literal,
+}
+
+
+def _inspect_metadata_classvar(
+    node: ast.AnnAssign,
+    module: str,
+    constants: dict[str, ast.expr],
+) -> Iterator[_Redeclaration]:
+    """Flag a ``namespace``/``sensitivity``/``schema_version`` ClassVar bound to a raw literal."""
     name = _annassign_target_name(node)
-    if name not in {"sensitivity", "schema_version"}:
+    if name is None or name not in _CLASSVAR_RAW_PREDICATES:
         return
     value = node.value
     if value is None:  # bare annotation on the base class — no binding to check
         return
-    if name == "sensitivity" and _is_raw_sensitivity_literal(value):
+    resolved = _resolve_constant(value, constants)
+    if _CLASSVAR_RAW_PREDICATES[name](resolved):
         yield _Redeclaration(
             module=module,
             line=value.lineno,
             site="metadata-classvar",
-            detail=f"sensitivity ClassVar = {ast.unparse(value)} restated instead of sourced off the namespace definition",
-        )
-    if name == "schema_version" and _is_raw_int_literal(value):
-        yield _Redeclaration(
-            module=module,
-            line=value.lineno,
-            site="metadata-classvar",
-            detail=f"schema_version ClassVar = {ast.unparse(value)} restated instead of sourced off the namespace definition",
+            detail=(
+                f"{name} ClassVar = {_describe(value, resolved)} "
+                "restated instead of sourced off the namespace definition"
+            ),
         )
 
 
@@ -227,16 +371,19 @@ def _find_redeclarations(tree: ast.Module, module: str) -> list[_Redeclaration]:
     / ``Envelope(classification=...)`` shape is itself the scope). *Metadata
     ClassVars* are scanned only inside :class:`SecureBoundRepository` subclass
     bodies, so an unrelated ``schema_version`` field on some other record model
-    is not misread as a namespace-metadata restatement.
+    is not misread as a namespace-metadata restatement. Both site kinds resolve
+    their values through the module's top-level constants first, so an
+    indirection through a module constant is flagged like a direct literal.
     """
+    constants = _module_constants(tree)
     findings: list[_Redeclaration] = []
     for node in ast.walk(tree):
         if isinstance(node, ast.Call):
-            findings.extend(_inspect_write_call(node, module))
+            findings.extend(_inspect_write_call(node, module, constants))
         elif isinstance(node, ast.ClassDef) and _is_secure_bound_subclass(node):
             for stmt in node.body:
                 if isinstance(stmt, ast.AnnAssign):
-                    findings.extend(_inspect_metadata_classvar(stmt, module))
+                    findings.extend(_inspect_metadata_classvar(stmt, module, constants))
     return findings
 
 
@@ -359,11 +506,21 @@ from typing import ClassVar
 
 from cadrumo.core.classification import SensitivityClass
 
+_ARTEFACT_CLASSIFICATION = SensitivityClass.FINANCIAL
+_ENVELOPE_VERSION = 1
+_ARTEFACT_NAMESPACE = "cadrumo.calculations.observations"
+
 
 class _DriftedRepository(SecureBoundRepository[object]):
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = SensitivityClass.FINANCIAL
     schema_version: ClassVar[int] = 1
+
+
+class _IndirectlyDriftedRepository(SecureBoundRepository[object]):
+    namespace: ClassVar[str] = _ARTEFACT_NAMESPACE
+    sensitivity: ClassVar[SensitivityClass] = _ARTEFACT_CLASSIFICATION
+    schema_version: ClassVar[int] = _ENVELOPE_VERSION
 
 
 def _drifted_writer(objects) -> None:
@@ -374,6 +531,27 @@ def _drifted_writer(objects) -> None:
         schema_version=7,
         payload=b"{}",
     )
+
+
+def _indirectly_drifted_writer(objects) -> None:
+    objects.save(
+        namespace=_ARTEFACT_NAMESPACE,
+        object_key="k",
+        classification=_ARTEFACT_CLASSIFICATION,
+        schema_version=_ENVELOPE_VERSION,
+        payload=b"{}",
+    )
+
+
+def _positional_drifted_writer(objects, written_at) -> None:
+    objects.save(
+        "cadrumo.calculations.observations",
+        "k",
+        SensitivityClass.FINANCIAL,
+        9,
+        written_at,
+        b"{}",
+    )
 """
 
 _DEFINITION_SOURCED_SOURCE = """
@@ -381,11 +559,21 @@ from typing import ClassVar
 
 from cadrumo.core.classification import SensitivityClass
 
+_OBSERVATION_NAMESPACE = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
+_OBSERVATION_CLASSIFICATION = CALCULATION_OBSERVATIONS_NAMESPACE.sensitivity
+_OBSERVATION_ENVELOPE_VERSION = CALCULATION_OBSERVATIONS_NAMESPACE.schema_version
+
 
 class _CleanRepository(SecureBoundRepository[object]):
     namespace: ClassVar[str] = CALCULATION_OBSERVATIONS_NAMESPACE.namespace
     sensitivity: ClassVar[SensitivityClass] = CALCULATION_OBSERVATIONS_NAMESPACE.sensitivity
     schema_version: ClassVar[int] = CALCULATION_OBSERVATIONS_NAMESPACE.schema_version
+
+
+class _CleanConstantSourcedRepository(SecureBoundRepository[object]):
+    namespace: ClassVar[str] = _OBSERVATION_NAMESPACE
+    sensitivity: ClassVar[SensitivityClass] = _OBSERVATION_CLASSIFICATION
+    schema_version: ClassVar[int] = _OBSERVATION_ENVELOPE_VERSION
 
 
 def _clean_writer(objects, definition) -> None:
@@ -396,6 +584,30 @@ def _clean_writer(objects, definition) -> None:
         schema_version=definition.schema_version,
         payload=b"{}",
     )
+
+
+def _clean_constant_writer(objects) -> None:
+    objects.save(
+        namespace=_OBSERVATION_NAMESPACE,
+        object_key="k",
+        classification=_OBSERVATION_CLASSIFICATION,
+        schema_version=_OBSERVATION_ENVELOPE_VERSION,
+        payload=b"{}",
+    )
+
+
+def _clean_imported_constant_writer(objects) -> None:
+    objects.save(
+        namespace=IMPORTED_NAMESPACE_STRING,
+        object_key="k",
+        classification=IMPORTED_CLASSIFICATION,
+        schema_version=IMPORTED_ENVELOPE_VERSION,
+        payload=b"{}",
+    )
+
+
+def _unrelated_single_argument_save(repository, record) -> None:
+    repository.save(record)
 """
 
 
@@ -420,13 +632,60 @@ def test_detector_flags_an_injected_redeclaration() -> None:
     assert "classification=SensitivityClass.FINANCIAL" in details
     assert "schema_version=7" in details
 
+    # A raw namespace string is metadata restatement too: the definition is the
+    # single authority for the namespace value, not only for its two siblings.
+    assert 'namespace="cadrumo.calculations.observations"' in details.replace("'", '"'), (
+        f"expected the raw namespace string flagged, saw {rendered}"
+    )
+
+
+def test_detector_flags_metadata_reached_through_a_module_constant() -> None:
+    """A raw literal parked in a module constant and referenced is still a redeclaration.
+
+    This is the indirection evasion: the binding site reads as an ``ast.Name``,
+    so a predicate that only matches a direct ``SensitivityClass.X`` attribute or
+    a bare ``ast.Constant`` sees nothing. The detector must resolve the constant
+    to its bound expression first.
+    """
+    tree = ast.parse(_INJECTED_REDECLARATION_SOURCE)
+    findings = _find_redeclarations(tree, "synthetic.drift")
+    indirect = [finding for finding in findings if "->" in finding.detail]
+    rendered = [finding.render() for finding in indirect]
+    details = " ".join(rendered)
+
+    assert indirect, (
+        f"expected the module-constant indirection flagged, saw only {[finding.render() for finding in findings]}"
+    )
+    assert "_ARTEFACT_CLASSIFICATION -> SensitivityClass.FINANCIAL" in details, rendered
+    assert "_ENVELOPE_VERSION -> 1" in details, rendered
+    assert "_ARTEFACT_NAMESPACE ->" in details, rendered
+    assert any(finding.site == "metadata-classvar" for finding in indirect), rendered
+    assert any(finding.site == "secure-object-save" for finding in indirect), rendered
+
+
+def test_detector_flags_metadata_passed_positionally() -> None:
+    """A write call passing its metadata positionally does not escape the scan.
+
+    The canonical writers are keyword-only, so this is defence in depth against a
+    future write helper that accepts positionals — and it proves the argument
+    binding is by parameter name, not by keyword presence alone.
+    """
+    tree = ast.parse(_INJECTED_REDECLARATION_SOURCE)
+    findings = _find_redeclarations(tree, "synthetic.drift")
+    positional = [f for f in findings if "schema_version=9" in f.detail]
+    assert positional, f"expected the positional save-site metadata flagged, saw {[f.render() for f in findings]}"
+
 
 def test_detector_leaves_a_definition_sourced_fragment_clean() -> None:
     """The detector does not fire on correctly definition-sourced metadata.
 
     This is the negative control: it proves the detector distinguishes a
     redeclaration from the canonical single-sourced form rather than flagging
-    every metadata site unconditionally.
+    every metadata site unconditionally. It covers the three shapes the
+    resolution and positional-binding passes could each turn into a false
+    positive: a module constant that resolves to a *definition* attribute, an
+    imported name that resolves to nothing module-local, and an unrelated
+    one-argument ``repository.save(record)``.
     """
     tree = ast.parse(_DEFINITION_SOURCED_SOURCE)
     findings = _find_redeclarations(tree, "synthetic.clean")
