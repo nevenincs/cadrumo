@@ -88,6 +88,19 @@ def test_identity_classification_rejects_unsupported_identity(identity: str) -> 
         _classify_identity(identity)
 
 
+@pytest.mark.parametrize("identity", ["12345678A", "X1234567M"])
+def test_identity_classification_rejects_checksum_invalid_identity(identity: str) -> None:
+    """A correctly-shaped identifier with the wrong checksum letter is refused locally.
+
+    ``12345678`` checksums to ``Z`` and ``X1234567`` to ``L``, so both values
+    carry a shape the provider supports but a letter no real document does.
+    The shape-only gate accepted them and deferred the failure to the live AEAT
+    portal; the checksum gate refuses the operator's typo at configuration time.
+    """
+    with pytest.raises(ClaveMovilConfigurationError, match=r"checksum"):
+        _classify_identity(identity)
+
+
 def test_attempt_context_uses_profile_storage_and_redacts_identity_values() -> None:
     bucket_id = "25252525-2525-4252-8252-252525252525"
     with profile_create_storage_span(bucket_id):

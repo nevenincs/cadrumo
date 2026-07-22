@@ -117,10 +117,10 @@ def test_extract_nif_from_bare_serial(tmp_path: Path) -> None:
         subject_attrs=[
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
             x509.NameAttribute(NameOID.COMMON_NAME, "ANYBODY"),
-            x509.NameAttribute(NameOID.SERIAL_NUMBER, "87654321A"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "87654321X"),
         ],
     )
-    assert extract_nif_from_subject(cert) == "87654321A"
+    assert extract_nif_from_subject(cert) == "87654321X"
 
 
 def test_extract_nif_accepts_nie(tmp_path: Path) -> None:
@@ -140,10 +140,41 @@ def test_extract_nif_cn_fallback(tmp_path: Path) -> None:
         tmp_path,
         subject_attrs=[
             x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
-            x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO - 22334455B"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO - 22334455Y"),
         ],
     )
-    assert extract_nif_from_subject(cert) == "22334455B"
+    assert extract_nif_from_subject(cert) == "22334455Y"
+
+
+def test_extract_nif_rejects_checksum_invalid_serial(tmp_path: Path) -> None:
+    """A serialNumber with a DNI shape but the wrong checksum letter is not accepted.
+
+    ``12345678`` checksums to ``Z``, so ``12345678A`` is a shape no real FNMT
+    subject carries. The shape-only gate returned it as the taxpayer identity.
+    """
+    cert = _load_cert(
+        tmp_path,
+        subject_attrs=[
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "12345678A"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "NO-NIF-HERE"),
+        ],
+    )
+    with pytest.raises(CertificateNifParseError, match=r"NIF|subject|certificate"):
+        extract_nif_from_subject(cert)
+
+
+def test_extract_nif_skips_checksum_invalid_serial_and_falls_back_to_cn(tmp_path: Path) -> None:
+    """A checksum-invalid serialNumber is skipped, not fatal: the CN still resolves."""
+    cert = _load_cert(
+        tmp_path,
+        subject_attrs=[
+            x509.NameAttribute(NameOID.COUNTRY_NAME, "ES"),
+            x509.NameAttribute(NameOID.SERIAL_NUMBER, "12345678A"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "NOMBRE APELLIDO - 22334455Y"),
+        ],
+    )
+    assert extract_nif_from_subject(cert) == "22334455Y"
 
 
 def test_extract_nif_rejects_cif(tmp_path: Path) -> None:

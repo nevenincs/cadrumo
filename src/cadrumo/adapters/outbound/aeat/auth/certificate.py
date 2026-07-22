@@ -44,6 +44,7 @@ from pydantic import BaseModel, Field, PrivateAttr, SecretStr
 
 from .....core import STRICT_FROZEN_CONFIG
 from .....core.external_constants import UTF_8_ENCODING
+from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....core.time import coerce_utc_aware
 from ._errors import AeatLoginAssertionError, AeatSessionExpiredError, AuthError, AuthValidationError
@@ -545,6 +546,24 @@ def _normalise_candidate(candidate: str) -> str:
     return _SERIAL_PREFIX_RE.sub("", stripped).upper()
 
 
+def _persona_fisica_identifier(candidate: str) -> str | None:
+    """Return the canonical DNI/NIE ``candidate`` carries, or ``None``.
+
+    The shape gate admits a DNI written without its leading zero, so the
+    candidate is zero-padded to the canonical nine characters before
+    :func:`~core.identity.validate_spanish_tax_id` verifies the checksum
+    letter. A shape-valid candidate whose checksum fails is not an identifier
+    this subject can be trusted to carry, so it is skipped and the caller
+    continues to the next attribute.
+    """
+    if not (_DNI_RE.match(candidate) or _NIE_RE.match(candidate)):
+        return None
+    try:
+        return validate_spanish_tax_id(candidate.zfill(9))
+    except IdentityError:
+        return None
+
+
 def _iter_rdn_values(subject: str, oid: x509.ObjectIdentifier) -> list[str]:
     r"""Return every attribute value in ``subject`` matching ``oid``.
 
@@ -583,8 +602,9 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
 
     Raises:
         CertificateNifParseError: When the subject contains no
-            recognisable DNI / NIE identifier, or when the value
-            present is a CIF (legal-entity). Certificate auth here
+            recognisable DNI / NIE identifier — including one whose
+            checksum letter fails — or when the value present is a
+            CIF (legal-entity). Certificate auth here
             accepts individual taxpayer certificates and rejects
             organization certificates rather than guessing an identity.
     """
@@ -598,15 +618,16 @@ def extract_nif_from_subject(cert: LoadedCertificate) -> str:
                 "(legal-entity). This project supports individual taxpayer "
                 "(persona física) certificates only.",
             )
-        if _DNI_RE.match(candidate) or _NIE_RE.match(candidate):
-            return candidate
+        identifier = _persona_fisica_identifier(candidate)
+        if identifier is not None:
+            return identifier
 
     for cn in _iter_rdn_values(subject, NameOID.COMMON_NAME):
         trailing = _TRAILING_NIF_RE.search(cn)
         if trailing is not None:
-            candidate = trailing.group(1).upper()
-            if _DNI_RE.match(candidate) or _NIE_RE.match(candidate):
-                return candidate
+            identifier = _persona_fisica_identifier(trailing.group(1).upper())
+            if identifier is not None:
+                return identifier
 
     raise CertificateNifParseError(
         f"cannot parse a DNI or NIE from certificate subject "
