@@ -1,11 +1,12 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "714",
-  "retrieved_at": "2026-06-02",
+  "retrieved_at": "2026-07-21",
   "source_pages": [
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html"
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 1,
+  "artefact_count": 4,
   "artefacts": [
     {
       "modelo": "714",
@@ -18,6 +19,42 @@
       "bytes": 839168,
       "sha256": "660e2ce1f4cea1405e27b4251231036e75b78aef33512afc22dec8081c7cb4d3",
       "retrieved_at": "2026-06-02"
+    },
+    {
+      "modelo": "714",
+      "title": "714 - Ejercicio 2022",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2022.xls",
+      "stored_path": "files/01-714-ejercicio-2022.xls",
+      "original_filename": "DR714_2022.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 766464,
+      "sha256": "b24b9ee856a9b4ea665e61ccbbe000fd8d50e4d70d48b34b5eeacbe74778b925",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "714",
+      "title": "714 - Ejercicio 2023",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR714_2023.xls",
+      "stored_path": "files/02-714-ejercicio-2023.xls",
+      "original_filename": "DR714_2023.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 835584,
+      "sha256": "b51178affa2a64ec2d538657136e807c11802457922f97e9333018d414c66299",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "714",
+      "title": "714 - Ejercicio 2024",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/DR714_2024.xls",
+      "stored_path": "files/03-714-ejercicio-2024.xls",
+      "original_filename": "DR714_2024.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 829440,
+      "sha256": "d70ce59786aa88cc91ad67197bf7f6a6630676abe087b7d66a64a0bf74a72aa5",
+      "retrieved_at": "2026-07-21"
     }
   ]
 }

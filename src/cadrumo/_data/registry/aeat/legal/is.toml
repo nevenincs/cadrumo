@@ -798,12 +798,12 @@ required_text = [
 evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
-corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/01-202-ejercicio-2025-y-siguientes-actualizado-17-03-26-132-kb-xlsx.xlsx"
-sha256 = "463cac7529de6333f55c174e3a887e92c79e7af328de5865bb1a0399d711b9a0"
-bytes = 135038
-retrieved_at = 2026-05-03
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_202/files/15-202-ejercicio-2025-y-siguientes-actualizado-14-07-2026.xlsx"
+sha256 = "04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c"
+bytes = 134404
+retrieved_at = 2026-07-21
 applies_from = 2025-01-01
-source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR202e25.xlsx"
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR202e25.xlsx"
 review_status = "reviewed"
 
 [sources."aeat-modelo-202-instructions"]
@@ -1221,11 +1221,63 @@ evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx"
-sha256 = "12ee2c1482654d99a4d6e37406d1ef2846555764aecf91a4184e9d4027f7747f"
-bytes = 2316271
-retrieved_at = 2026-05-03
+sha256 = "a4506d24b7973a745d1225d59147078e03f14a30791a229d852b37f757442505"
+bytes = 2316549
+retrieved_at = 2026-07-21
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR200e25.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-200-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_200/files/16-200-ejercicio-2024-actualizado-13-10-2025-10-7-mb-xls.xls"
+sha256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+bytes = 11248640
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR200-2024.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-220-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_220/files/03-220-ejercicio-2023.xlsm"
+sha256 = "ad3ed2e041789c820cb92e6a9be392a0fa5327ada9f71ac18c70f65cc9da17ca"
+bytes = 1353283
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_23/DR220e23.xlsm"
+review_status = "reviewed"
+
+[sources."aeat-dr-220-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_220/files/04-220-ejercicio-2024.xlsx"
+sha256 = "a8f398dd42db0b1142d5f2e98bf3a60d79069e31d63af32001373f459fee4f2e"
+bytes = 1559124
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR220e24.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-220-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_220/files/01-220-ejercicio-2025.xlsx"
+sha256 = "69c3a234e96eb4485a31c65209348bbcede0a49a8c143223c952000784f3f2df"
+bytes = 1662928
+retrieved_at = 2026-07-21
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR220e25.xlsx"
 review_status = "reviewed"
 
 [sources."aeat-modelo-200-manual-2024"]
@@ -1239,6 +1291,19 @@ retrieved_at = 2026-05-06
 applies_from = 2024-01-01
 applies_to = 2024-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2024.pdf"
+review_status = "reviewed"
+
+[sources."aeat-modelo-200-manual-2025"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "manual_pdf"
+corpus_path = "corpus/aeat_official/manuals/modelo_200/files/manual-sociedades-2025.pdf"
+sha256 = "6e837ca4af4a7b67fcb5f062cd239ce8ced48dbefc4da50c3886bc40947472ca"
+bytes = 5178589
+retrieved_at = 2026-07-21
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/Sociedades/Manual_Sociedades_2025.pdf"
 review_status = "reviewed"
 
 [sources."boe-modelo-200-2025-form"]

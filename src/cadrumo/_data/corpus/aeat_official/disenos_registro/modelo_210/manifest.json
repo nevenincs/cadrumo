@@ -1,11 +1,12 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "210",
-  "retrieved_at": "2026-07-10",
+  "retrieved_at": "2026-07-21",
   "source_pages": [
-    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html"
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html"
   ],
-  "artefact_count": 1,
+  "artefact_count": 3,
   "artefacts": [
     {
       "modelo": "210",
@@ -18,6 +19,30 @@
       "bytes": 48190,
       "sha256": "41875d015c809fc303a399581d6a437255f3235f8727515fe7e47606772a45e3",
       "retrieved_at": "2026-07-10"
+    },
+    {
+      "modelo": "210",
+      "title": "210 - Devengos a partir de 2026",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_26/dr210_2026.xlsx",
+      "stored_path": "files/01-210-devengos-a-partir-de-2026.xlsx",
+      "original_filename": "dr210_2026.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 121815,
+      "sha256": "2f86f1b95cd64a0c2d5eb3bf503052e6d3cb7f76994466a933fb2b91be2ca6c2",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "210",
+      "title": "210 - Devengos entre 01/06/2022 y 01/01/2026",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/dr210e22.xls",
+      "stored_path": "files/02-210-devengos-entre-01-06-2022-y-01-01-2026.xls",
+      "original_filename": "dr210e22.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 308224,
+      "sha256": "dce167991abaf547f31b38d7a5e51892ff6e8bd49a27a539432ab504891a0c00",
+      "retrieved_at": "2026-07-21"
     }
   ]
 }

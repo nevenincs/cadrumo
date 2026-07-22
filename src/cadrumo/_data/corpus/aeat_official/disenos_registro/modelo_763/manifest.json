@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "763",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "763",
+      "title": "763 - Desde 2018 4T y siguientes, actualizado en 2023",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR763e18.xlsx",
+      "stored_path": "files/01-763-desde-2018-4t-y-siguientes-actualizado-en-2023.xlsx",
+      "original_filename": "DR763e18.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 100952,
+      "sha256": "590db67f074251ad1ddfcbebfffbf8d58f6157848b62661fadc334bc5e7af5d4",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

@@ -56,7 +56,8 @@ def _assert_sdist_contains_expected_data(sdist: Path, expected: set[str]) -> Non
     leaked = sorted(
         name
         for name in names
-        if "/src/cadrumo/_data/corpus/" in name and name.lower().endswith((".docx", ".pdf", ".xls", ".xlsx", ".zip"))
+        if "/src/cadrumo/_data/corpus/" in name
+        and name.lower().endswith((".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip"))
     )
     if leaked:
         raise SystemExit(
@@ -102,7 +103,7 @@ def main(argv: list[str] | None = None) -> int:
         for path in _tracked_source_data_paths(repo_root)
         if not (
             path.startswith("src/cadrumo/_data/corpus/")
-            and path.lower().endswith((".docx", ".pdf", ".xls", ".xlsx", ".zip"))
+            and path.lower().endswith((".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip"))
         )
         and "/tests/" not in path
     }

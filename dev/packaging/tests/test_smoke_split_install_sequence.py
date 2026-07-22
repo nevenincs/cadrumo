@@ -53,7 +53,7 @@ def test_real_wheels_form_one_complete_authority_cohort(tmp_path: Path) -> None:
     with zipfile.ZipFile(wheel) as archive:
         assert not any(
             name.startswith("cadrumo/_data/corpus/")
-            and name.lower().endswith((".docx", ".pdf", ".xls", ".xlsx", ".zip"))
+            and name.lower().endswith((".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip"))
             for name in archive.namelist()
         )
     with zipfile.ZipFile(companions[1]) as archive:

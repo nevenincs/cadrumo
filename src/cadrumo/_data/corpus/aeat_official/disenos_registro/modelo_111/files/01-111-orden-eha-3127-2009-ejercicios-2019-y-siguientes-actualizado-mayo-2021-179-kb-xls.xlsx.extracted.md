@@ -2,7 +2,7 @@
 
  | Agencia Tributaria
 Modelo 111
-vers 1.9 |  | Diseño de registro
+vers 2 |  | Diseño de registro
  |  | IMPUESTO SOBRE LA RENTA DE LAS PERSONAS FÍSICAS (retenciones e ingresos a cuenta)
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Constante. |  | "<T"
@@ -40,8 +40,8 @@ Nº | Posic. | Lon | Tipo | Descripción | Contenido
 7 | 14 | 9 | An | Identificación. Sujeto pasivo. NIF
 8 | 23 | 60 | An | Identificación. Sujeto pasivo. Denominación o Apellidos
 9 | 83 | 20 | An | Identificación. Sujeto pasivo. Nombre
-10 | 103 | 4 | Num | Identificación. Ejercicio
-11 | 107 | 2 | An | Identificación. Periodo | "01" ... "12" o "1T" … "4T"
+10 | 103 | 4 | Num | Devengo. Ejercicio
+11 | 107 | 2 | An | Devengo. Periodo | "01" ... "12" o "1T" … "4T"
 12 | 109 | 8 | Num | Rendim. del trabajo - Rendimientos dinerarios - Nº de perceptores
 13 | 117 | 17 | Num | Rendim. del trabajo - Rendimientos dinerarios - Importe percepciones | [quince enteros + dos decimales]
 14 | 134 | 17 | Num | Rendim. del trabajo - Rendimientos dinerarios - Importe retenciones | [quince enteros + dos decimales]

@@ -1,0 +1,36 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "182",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html"
+  ],
+  "artefact_count": 2,
+  "artefacts": [
+    {
+      "modelo": "182",
+      "title": "182 - Ejercicio 2025",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2025.pdf",
+      "stored_path": "files/01-182-ejercicio-2025.pdf",
+      "original_filename": "DR_Modelo_182_2025.pdf",
+      "content_type": "application/pdf",
+      "bytes": 276709,
+      "sha256": "90eac5615609f6bec7bf5c9fa9386253e80bd0e26997747fbb1160c3da180831",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "182",
+      "title": "182 - Ejercicio 2024",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_182_2024.pdf",
+      "stored_path": "files/02-182-ejercicio-2024.pdf",
+      "original_filename": "DR_Modelo_182_2024.pdf",
+      "content_type": "application/pdf",
+      "bytes": 413403,
+      "sha256": "6ed486256193f31e81d19b3f464ee15fbdeaa9251ec825349b3263ced5ff381f",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

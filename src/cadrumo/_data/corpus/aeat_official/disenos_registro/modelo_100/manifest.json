@@ -42,15 +42,15 @@
     },
     {
       "modelo": "100",
-      "title": "100 - Esquema XSD Ejercicio 2025 - Actualizado 14-04-2026 (796 KB - Ejecutable)",
+      "title": "100 - Esquema XSD Ejercicio 2025 - Actualizado 24-06-2026 (793 KB - Ejecutable)",
       "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
       "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/Renta2025.xsd",
       "stored_path": "files/03-100-esquema-xsd-ejercicio-2025-actualizado-14-04-2026-796-kb-ejecutable.xsd",
       "original_filename": "Renta2025.xsd",
       "content_type": "",
-      "bytes": 812095,
-      "sha256": "208e9cf5367bd7d009eb66152902f149bc90693f9734fe4831951c763d128864",
-      "retrieved_at": "2026-05-03"
+      "bytes": 812099,
+      "sha256": "df94cc5160e8ad8244e6fc5fb0f257280b4c8c3f70107f0c2acc99d395f678c2",
+      "retrieved_at": "2026-07-21"
     },
     {
       "modelo": "100",

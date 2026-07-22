@@ -86,7 +86,10 @@
       "content_type": "",
       "bytes": 386694,
       "sha256": "6c3d7eeb714e0deb52f91d7e8dbadeb83f16c1d32d25f9e871756f3ddf0117e6",
-      "retrieved_at": "2026-05-06"
+      "retrieved_at": "2026-05-06",
+      "url_aliases": [
+        "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_25/DR303e25.xlsx"
+      ]
     },
     {
       "modelo": "303",
