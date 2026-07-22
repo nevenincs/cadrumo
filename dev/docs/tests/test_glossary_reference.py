@@ -68,13 +68,21 @@ def test_headword_and_alias_term_lines_present() -> None:
     its admitted alias ``Agencia Tributaria`` as an additional term line on the
     same entry, so a ``:term:`` to either resolves to one definition.
     """
-    rst, _ = render_glossary(_REPO_ROOT, _load_handbook())
+    handbook = _load_handbook()
+    rst, _ = render_glossary(_REPO_ROOT, handbook)
     assert ".. glossary::" in rst
     # Headword and alias both appear as term lines (3-space indented).
     assert "\n   AEAT\n" in rst
     assert "\n   Agencia Tributaria\n" in rst
-    # The English definition body is present (6-space indented).
-    assert "The Spanish Tax Agency" in rst
+    # The English body is present. Derive it from the generator's own
+    # definition-preferred contract rather than a hardcoded string: authoring an
+    # English `definition` supersedes the `short_description` as the body, so a
+    # literal assertion would falsely red this gate the moment the concept gains
+    # a full English definition (which is the campaign goal, not a regression).
+    from ..glossary_reference import _body_text
+
+    aeat = next(concept for concept in handbook.concepts if concept.concept_id == "aeat")
+    assert f"\n      {_body_text(aeat)}" in rst
 
 
 @pytest.mark.integration
