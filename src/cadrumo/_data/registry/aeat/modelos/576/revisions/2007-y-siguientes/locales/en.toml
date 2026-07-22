@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Filing year to which the self-assessment relates"
+"decl.tipo-declaracion" = "Self-assessment type (original / substitute / supplementary)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

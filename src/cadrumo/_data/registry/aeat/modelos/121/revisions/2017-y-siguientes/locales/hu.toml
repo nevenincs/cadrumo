@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "A bejelentés vonatkozási éve"
+"decl.tipo-declaracion" = "Bejelentés típusa (bejegyzés / módosítás / törlés)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

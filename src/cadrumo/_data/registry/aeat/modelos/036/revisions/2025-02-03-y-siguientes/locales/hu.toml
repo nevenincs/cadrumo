@@ -1,0 +1,7 @@
+[labels]
+"decl.event-kind" = "Nyilvántartási bevallás típusa"
+"decl.vigencia-2025" = "Jogszabályi hatály 2025. február 3-tól"
+
+[help]
+"decl.event-kind" = "decl.event-kind"
+"decl.vigencia-2025" = "decl.vigencia-2025"

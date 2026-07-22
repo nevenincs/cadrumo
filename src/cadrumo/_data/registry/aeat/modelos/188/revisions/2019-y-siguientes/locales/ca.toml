@@ -1,0 +1,9 @@
+[labels]
+"03" = "Base de retencions i ingressos a compte"
+"04" = "Retencions i ingressos a compte declarats"
+"05" = "Total de retencions del resum anual"
+
+[help]
+"03" = "03"
+"04" = "04"
+"05" = "05"

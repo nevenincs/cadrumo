@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "A részletfizetés vonatkozási éve"
+"decl.tipo-declaracion" = "Részletfizetés módja (40.2. cikk teljes adóösszeg / 40.3. cikk adóalap)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

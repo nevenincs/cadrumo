@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Az önadózás vonatkozási éve"
+"decl.periodo" = "Időszak (naptári hónap)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"

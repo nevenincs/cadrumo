@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Az önadózás vonatkozási éve"
+"decl.periodo" = "Az önadózás elszámolási időszaka"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"

@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Exercici a què es refereix la sol·licitud"
+"decl.tipo-declaracion" = "Tipus de sol·licitud (alta / modificació / baixa)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"
