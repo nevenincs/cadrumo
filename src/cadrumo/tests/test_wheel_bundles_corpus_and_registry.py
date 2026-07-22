@@ -1,4 +1,4 @@
-"""Tripwire test that the built wheel bundles every shipped data file except corpus source binaries.
+"""Prove exact built-wheel parity for tracked runtime data.
 
 The corpus-registry packaging contract
 relocates both data trees under ``src/cadrumo/_data/`` so the existing
@@ -6,8 +6,8 @@ relocates both data trees under ``src/cadrumo/_data/`` so the existing
 the wheel without any force-include declaration. The terminology tree
 uses the same shipped-data contract. The wheel-split packaging decision
 then excludes the corpus SOURCE binaries
-(``_data/corpus/**/*.{pdf,docx,xls,xlsx,zip}``)
-from this slim ``aeat`` wheel — they ship in the two separate ``aeat-data-*``
+(``_data/corpus/**/*.{pdf,docx,xls,xlsm,xlsx,zip}``)
+from the command-bearing ``cadrumo`` wheel. They ship in the two mandatory ``cadrumo-data-*``
 companion distributions — while every derived surface the runtime reads
 (extracted text, normative html, registry, terminology, agent data) stays.
 This test verifies that contract end-to-end by driving the real build pipeline:
@@ -15,11 +15,11 @@ This test verifies that contract end-to-end by driving the real build pipeline:
 1. ``uv build --wheel`` is invoked into a temporary output directory.
 2. The resulting wheel archive is opened as a zip.
 3. Every path reported by ``git ls-files`` under the shipped data
-   subtrees, EXCEPT the excluded corpus source binaries, is asserted to
+   tree, except the excluded corpus source binaries and tests, is asserted to
    appear in the archive at the corresponding ``cadrumo/_data/<relative-path>``
    prefix.
-4. The corpus source binaries are asserted ABSENT from the slim wheel; the two
-   ``aeat-data-*`` companion distributions are what carry them
+4. The corpus source binaries are asserted absent from the root wheel; the two
+   ``cadrumo-data-*`` companion distributions carry them
    (``test_cadrumo_data_distribution`` proves that side).
 
 No mocks, fakes, or skips. If the worktree is missing the ``uv``
@@ -44,12 +44,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _DATA_ROOT = SRC_CADRUMO / "_data"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
 
-# Corpus source binaries excluded from the slim ``aeat`` wheel (they ship in the
-# two ``aeat-data-*`` companions). A path is an excluded corpus source binary
+# Corpus source binaries excluded from the command-bearing ``cadrumo`` wheel
+# (they ship in the two ``cadrumo-data-*`` companions). A path is an excluded binary
 # when it lives under ``_data/corpus/`` and carries one of these suffixes.
 # Mirrors the ``tool.hatch.build`` exclude patterns in ``pyproject.toml`` and
 # the companion builders' suffix sets (``packaging/*/hatch_build.py``).
-_CORPUS_BINARY_SUFFIXES = (".pdf", ".docx", ".xls", ".xlsx", ".zip")
+_CORPUS_BINARY_SUFFIXES = (".pdf", ".docx", ".xls", ".xlsm", ".xlsx", ".zip")
 
 
 def _is_corpus_source_binary(source_relative: str) -> bool:
@@ -67,9 +67,7 @@ def _git_ls_files_data() -> list[str]:
         [
             "git",
             "ls-files",
-            "src/cadrumo/_data/corpus",
-            "src/cadrumo/_data/registry",
-            "src/cadrumo/_data/terminology",
+            "src/cadrumo/_data",
         ],
         cwd=REPO_ROOT,
         capture_output=True,
@@ -98,8 +96,8 @@ def _expected_archive_paths(tracked: list[str]) -> set[str]:
     pool to appear in the archive.
 
     Also excludes the corpus source binaries
-    (``_data/corpus/**/*.{pdf,docx,xls,xlsx,zip}``):
-    the wheel-split decision moves them to the two ``aeat-data-*`` companions, so
+    (``_data/corpus/**/*.{pdf,docx,xls,xlsm,xlsx,zip}``):
+    the wheel-split decision moves them to the two ``cadrumo-data-*`` companions, so
     they are legitimately absent from this slim wheel and must not be expected here.
     """
 
@@ -160,21 +158,29 @@ def test_wheel_filename_matches_distribution(built_wheel: Path) -> None:
 
 
 def test_wheel_archive_contains_every_tracked_data_file(built_wheel: Path) -> None:
-    """Every git-tracked file under src/cadrumo/_data appears inside the wheel archive."""
+    """The wheel's complete data payload equals the tracked runtime set."""
 
     tracked = _git_ls_files_data()
     expected = _expected_archive_paths(tracked)
     with zipfile.ZipFile(built_wheel) as archive:
-        names = {info.filename for info in archive.infolist()}
-    missing = sorted(expected - names)
-    assert not missing, f"wheel is missing {len(missing)} bundled files; first ten: {missing[:10]!r}"
+        actual = {
+            info.filename
+            for info in archive.infolist()
+            if not info.is_dir() and info.filename.startswith(f"{_WHEEL_DATA_PREFIX}/")
+        }
+    missing = sorted(expected - actual)
+    unexpected = sorted(actual - expected)
+    assert not missing and not unexpected, (
+        f"wheel data payload differs from tracked runtime data: missing={missing[:10]!r}, "
+        f"unexpected={unexpected[:10]!r}"
+    )
 
 
 def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
     """The Renta ``source.pdf`` corpus binaries are absent from the slim wheel.
 
     They are corpus source binaries under ``corpus/manuals`` and ship in the
-    ``aeat-data-manuals`` companion, not this wheel; asserting their absence pins
+    ``cadrumo-data-manuals`` companion, not this wheel; asserting their absence pins
     the wheel-split boundary at exactly the highest-value binaries the prior
     contract force-shipped.
     """
@@ -189,7 +195,7 @@ def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:
     leaked = sorted(renta_pdfs & names)
     assert not leaked, (
         f"the slim wheel still ships Renta corpus source PDFs the wheel-split excludes: {leaked!r}; "
-        "they belong in the aeat-data-manuals companion distribution"
+        "they belong in the cadrumo-data-manuals companion distribution"
     )
 
 

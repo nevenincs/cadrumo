@@ -21,7 +21,7 @@ Esta publicación tiene efectos meramente informativos.
 • Resultado de la declaración
 • Otras cuestiones de interés
 • Capítulo 1. Campaña de la declaración de Renta 2025
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1
 
 # Pag. 2
 
@@ -66,7 +66,7 @@ cuestiones generales
 • Declaración bienes inmuebles
 • Caso práctico
 • Capítulo 5. Rendimientos del capital mobiliario
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 2
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 2
 
 # Pag. 3
 
@@ -112,7 +112,7 @@ profesional en estimación directa, modalidad simplificada)
 • Apéndice: Rendimientos anuales por unidad de módulo antes de
 amortización aplicables en el ejercicio 2025
 • Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 3
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 3
 
 # Pag. 4
 
@@ -157,7 +157,7 @@ normas específicas de valoración
 • Cuadro: Excesos de adjudicación en la extinción del condominio.
 Resolución del TEAC de 7 de junio de 2018
 • Cuadros: usufructo sobre bienes inmuebles
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 4
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 4
 
 # Pag. 5
 
@@ -202,7 +202,7 @@ español
 • Introducción
 • Deducción por inversión en vivienda habitual: Régimen transitorio
 • Deducción por inversión en empresas de nueva o reciente creación
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 5
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 5
 
 # Pag. 6
 
@@ -245,7 +245,7 @@ en el Manual
 • Normativa consolidada a 31 de diciembre de 2025
 • Normas autonómicas en relación al IRPF (disposiciones legales)
 • Glosario de abreviaturas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 6
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 6
 
 # Pag. 7
 
@@ -257,7 +257,7 @@ https://cpage.mpr.gob.es.
 Aquí podrá consultar todo el catálogo.
 NIPO: 226-26-004-2
 Código perteneciente a la versión en castellano, gallego, catalán, valenciano e inglés.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 7
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 7
 
 # Pag. 8
 
@@ -298,7 +298,7 @@ incremento de las deducciones autonómicas en los últimos años, lo que puso de
 conveniencia de dedicar un volumen independiente al estudio de las mismas. No obstante la
 división efectuada, el contenido de la Parte 2 ha de ser puesto en relación con la Parte 1,
 para una visión completa y coherente de la normativa aplicable.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 8
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 8
 
 # Pag. 9
 
@@ -332,7 +332,7 @@ Además, atendiendo a la petición de un importante número de contribuyentes us
 aplicación, se han incluido junto a la normativa estatal, las normas autonómicas del IRPF de
 cada Comunidad Autónoma mediante enlaces a los textos consolidados del BOE.
 Departamento de Gestión Tributaria
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 9
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 9
 
 # Pag. 10
 
@@ -365,7 +365,7 @@ importe de la casilla [0505] de la declaración del IRPF correspondiente al ejer
 declarante el año inmediato anterior, en cuyo caso se deberá aportar un código
 internacional de cuenta bancaria española (IBAN) en el que figure como titular a 31 de
 diciembre de 2025.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 10
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 10
 
 # Pag. 11
 
@@ -412,7 +412,7 @@ Con el fin de mejorar la cumplimentación de las operaciones de compraventa de
 participaciones o acciones de fondos cotizados y sociedades de inversión de capital
 variable índice cotizadas a que refiere el artículo 75.3.j) del Reglamento del IRPF, se
 crea un nuevo apartado específico para la cumplimentación de las mismas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 11
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 11
 
 # Pag. 12
 
@@ -458,7 +458,7 @@ por la totalidad del importe a ingresar resultante de la autoliquidación.
 Los contribuyentes que domicilien el pago del primer plazo podrán domiciliar el segundo
 plazo hasta el 2 de noviembre de 2026 y si no domicilian el primero podrán domiciliar el
 segundo hasta el 30 de junio de 2026.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 12
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 12
 
 # Pag. 13
 
@@ -493,7 +493,7 @@ Rendimiento de actividades económicas
 Actividades económicas en estimación directa
 Determinación del rendimiento neto
 • Gastos deducibles
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 13
 
 # Pag. 14
 
@@ -537,7 +537,7 @@ funcionamiento se haya producido en el ejercicio 2023, 2024 y 2025.
 Determinación del rendimiento neto reducido total
 Reducción por rendimientos de actividades artísticas obtenidos de manera
 excepcional
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 14
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 14
 
 # Pag. 15
 
@@ -583,7 +583,7 @@ de estimación objetiva desde el día siguiente a la fecha de publicación de es
 Decreto-ley (BOE de 24 de diciembre) hasta el 31 de enero de 2026.
 Las renuncias y revocaciones presentadas para el año 2026 durante el mes de diciembre
 de 2025, con anterioridad al nuevo plazo, se entenderán presentadas en período hábil.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 15
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 15
 
 # Pag. 16
 
@@ -624,7 +624,7 @@ de recarga
 Para el ejercicio 2025 se mantiene el sistema de libertad de amortización para
 determinados vehículos y nuevas infraestructuras de recarga prevista en la disposición
 adicional decimoctava de la Ley 27/2014, de 27 de noviembre, del Impuesto sobre
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 16
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 16
 
 # Pag. 17
 
@@ -660,7 +660,7 @@ A partir del 1 de enero de 2025, se puede disponer anticipadamente de los derech
 consolidados de Planes de Pensiones y sistemas de previsión social complementarios
 análogos correspondientes a aportaciones realizadas con al menos diez años de
 antigüedad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 17
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 17
 
 # Pag. 18
 
@@ -693,7 +693,7 @@ estímulos a la inversión empresarial de la Ley del Impuesto sobre
 Sociedades
 • Regímenes especiales de deducciones
 Programas de apoyo a acontecimientos de excepcional interés público.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 18
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 18
 
 # Pag. 19
 
@@ -738,7 +738,7 @@ arrendamiento de vivienda habitual (siempre que el inmueble no haya estado arren
 dentro del año anterior), con o sin opción de compra, y no exista vinculación directa o
 indirecta con el arrendatario. Se admite también la materialización de la reserva mediante la
 realización de inversiones en creación de empleo relacionada de forma directa con las
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 19
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 19
 
 # Pag. 20
 
@@ -779,7 +779,7 @@ combustible nuevos.
 • Deducción para la instalación de puntos de recarga de baterías para dichos vehículos
 eléctricos.
 Deducciones de la cuota líquida total
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 20
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 20
 
 # Pag. 21
 
@@ -822,7 +822,7 @@ No obstante, se concede la opción al pagador de efectuar lo señalado con anter
 los primeros rendimientos del trabajo que se satisfagan o abonen a partir del mes de
 diciembre, en cuyo caso el tipo de retención o ingreso a cuenta sobre los rendimientos del
 trabajo satisfechos con anterioridad se determinará sin tener en cuenta la reducción del
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 21
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 21
 
 # Pag. 22
 
@@ -860,7 +860,7 @@ Presupuestos Generales del Estado para 2026, lo que a fecha de cierre de este Ma
 todavía no se ha producido.
 • El salario medio anual del conjunto de los declarantes del IRPF se mantiene en 22.100
 euros para el ejercicio 2025.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 22
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 22
 
 # Pag. 23
 
@@ -891,7 +891,7 @@ cada clase o fuente se señalan más abajo.
 b. Los que, con independencia de la cuantía y naturaleza o fuente de las rentas obtenidas,
 tuvieran derecho a aplicar el régimen transitorio de la deducción por inversión en
 vivienda habitual, la deducción por doble imposición internacional, o bien hayan
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 23
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 23
 
 # Pag. 24
 
@@ -935,7 +935,7 @@ progenitores (si es la opción de tributación de la unidad familiar) y, para el
 acceder al servicio de ayuda Renta WEB, autenticándose de la siguiente manera:
 (*) En el caso de declaración conjunta, se deberá consignar el NIF del menor pero no será necesaria su
 autenticación con número de referencia (RENØ) o Cl@ve, salvo que el menor obtenga renta.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 24
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 24
 
 # Pag. 25
 
@@ -975,7 +975,7 @@ pasivos, comprendidos los procedentes del extranjero, así como las pensiones
 compensatorias y las anualidades por alimentos no exentas) cuyo importe no supere la
 cantidad de:
 • 22.000 euros anuales, con carácter general.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 25
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 25
 
 # Pag. 26
 
@@ -1020,7 +1020,7 @@ no exentas.
 Téngase en cuenta que están exentas del IRPF las anualidades por alimentos percibidas de los padres en
 virtud de decisión judicial o del convenio regulador. Véanse a este respecto el Capítulo 2.
 c. Cuando el pagador de los rendimientos del trabajo no esté obligado a retener.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 26
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 26
 
 # Pag. 27
 
@@ -1069,7 +1069,7 @@ Importante: cuando la base de retención no se haya determinado en función de l
 cuantía a integrar en la base imponible, la ganancia patrimonial obtenida procedente de
 transmisiones o reembolsos de acciones o participaciones de instituciones de inversión
 colectiva no podrá computarse como ganancia patrimonial sometida a retención o
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 27
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 27
 
 # Pag. 28
 
@@ -1114,7 +1114,7 @@ rendimientos de la actividad económica o profesional. Su inclusión en el Régi
 Trabajadores Autónomos vino motivada por la necesidad de otorgar a los mismos una cobertura
 dentro del sistema de Seguridad Social y no por el desarrollo de una actividad a título lucrativo como
 trabajador por cuenta propia o autónomo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 28
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 28
 
 # Pag. 29
 
@@ -1132,7 +1132,7 @@ determinadas loterías y apuestas, regulado en la disposición adicional trigés
 Ley del IRPF.
 Ninguna de las cuantías o límites se incrementará o ampliará en caso de tributación conjunta
 de unidades familiares.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 29
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 29
 
 # Pag. 30
 
@@ -1178,7 +1178,7 @@ contribuyentes en RETA
 o RETM.
 • Ganancias
 patrimoniales.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 30
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 30
 
 # Pag. 31
 
@@ -1216,7 +1216,7 @@ c. Cuando se perciban pensiones compensatorias del cónyuge o anualidades por
 alimentos no exentas.
 d. Cuando el pagador de los rendimientos del trabajo no esté obligado a retener.
 e. Cuando se perciban rendimientos íntegros del trabajo sujetos a tipo fijo de retención.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 31
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 31
 
 # Pag. 32
 
@@ -1255,7 +1255,7 @@ b. Rendimientos del capital mobiliario sujetos a retención o ingreso a cuenta, 
 derivados de letras del Tesoro.
 c. Ganancias patrimoniales sometidas a retención o ingreso a cuenta, así como las
 subvenciones para la adquisición de vivienda habitual.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 32
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 32
 
 # Pag. 33
 
@@ -1297,7 +1297,7 @@ Téngase en cuenta que Ley 59/2003, de 19 de diciembre, de firma electrónica, f
 de 13 de noviembre de 2020, por la disposición derogatoria.a) de la Ley 6/2020, de 11 de noviembre,
 reguladora de determinados aspectos de los servicios electrónicos de confianza (BOE de 12 de
 noviembre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 33
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 33
 
 # Pag. 34
 
@@ -1343,7 +1343,7 @@ hubiera solicitado, de tal forma que, en caso de que se hubieran solicitado vari
 de referencia, solo será válido y por tanto permitirá acceder al borrador o a los datos
 fiscales, modificar y en su caso presentar el borrador o la declaración del IRPF, el último
 número de referencia solicitado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 34
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 34
 
 # Pag. 35
 
@@ -1384,7 +1384,7 @@ El borrador de declaración se elabora para cada contribuyente a partir de los d
 económicos facilitados por terceros a través de declaraciones informativas y de la
 información de carácter personal en poder de la AEAT. Dichos datos fiscales se ponen a
 disposición del contribuyente con el fin de facilitar la confección de la declaración del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 35
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 35
 
 # Pag. 36
 
@@ -1427,7 +1427,7 @@ https://sede.agenciatributaria.gob.es, accediendo a través del trámite de “D
 Además, los contribuyentes también podrán acceder a sus datos fiscales y al resumen del
 borrador de declaración a través de una aplicación para dispositivos móviles, previo
 registro en la misma, utilizando el sistema Cl@ve Móvil o el número de referencia a los que
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 36
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 36
 
 # Pag. 37
 
@@ -1469,7 +1469,7 @@ aquellos contribuyentes que cumplan los requisitos que consten en la Sede electr
 la Agencia Estatal de Administración Tributaria en Internet. En los supuestos de
 declaración conjunta formulada por ambos cónyuges será necesario, además, comunicar
 el NIF así como el número de referencia del cónyuge.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 37
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 37
 
 # Pag. 38
 
@@ -1509,7 +1509,7 @@ siguientes: certificado electrónico reconocido, sistema Cl@ve Móvil, número d
 eIDAS. Tratándose de declaraciones conjuntas formuladas por ambos cónyuges será
 necesario, además, comunicar el NIF, así como el número de referencia o Cl@ve Móvil del
 cónyuge.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 38
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 38
 
 # Pag. 39
 
@@ -1550,7 +1550,7 @@ conservar.
 En el supuesto de que la autoliquidación fuese rechazada, se mostrarán los errores
 detectados para que se proceda a su subsanación.
 2. Por medios electrónicos a través del teléfono
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 39
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 39
 
 # Pag. 40
 
@@ -1595,7 +1595,7 @@ realizada o, en su caso, el justificante de presentación con los datos del mode
 declaración del IRPF correspondientes a la declaración presentada, validado con un código
 seguro de verificación, en el que constará la fecha y hora de la presentación de la
 declaración.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 40
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 40
 
 # Pag. 41
 
@@ -1639,7 +1639,7 @@ Los contribuyentes que presenten declaración por el Impuesto sobre Patrimonio, 
 obligados a utilizar la vía electrónica a través de Internet para la presentación de la
 declaración del IRPF, debiendo utilizar la vía electrónica, a través de Internet o del
 teléfono para confirmar, en su caso, el borrador de la declaración del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 41
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 41
 
 # Pag. 42
 
@@ -1683,7 +1683,7 @@ Generales del Estado para el año 2023 (BOE de 24 de diciembre).
 4. Los contribuyentes que soliciten la devolución mediante cheque nominativo sin
 cruzar del Banco de España: deberán presentar conjuntamente con la declaración del IRPF
 escrito conteniendo dicha solicitud.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 42
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 42
 
 # Pag. 43
 
@@ -1726,7 +1726,7 @@ correspondiente a los contribuyentes que manifiesten expresamente su voluntad en
 sentido.
 A estos efectos, se entiende por cuota íntegra del IRPF la formada por la suma de la cuota íntegra estatal y de
 la cuota íntegra autonómica, casillas [0545] y [0546], respectivamente, de la declaración.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 43
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 43
 
 # Pag. 44
 
@@ -1773,7 +1773,7 @@ Para 2025 resulta aplicable la mencionada disposición adicional septuagésima s
 Ley 31/2022, de 23 de diciembre, de Presupuestos Generales del Estado para el año 2023
 (BOE de 24 de diciembre), que establece que la cuantía total asignada en los presupuestos
 para actividades de interés general consideradas de interés social se distribuirá aplicando los
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 44
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 44
 
 # Pag. 45
 
@@ -1817,7 +1817,7 @@ el ingreso en la entidad colaboradora y proceder a la confirmación y presentaci
 borrador de declaración.
 A estos efectos, el declarante o el presentador podrá obtener el Número de Referencia Completo (NRC) de la
 entidad colaboradora por alguna de las siguientes vías:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 45
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 45
 
 # Pag. 46
 
@@ -1858,7 +1858,7 @@ simultánea a la presentación de la declaración, domiciliar el ingreso, efectu
 inmediato pago electrónico (previa obtención del Número de Referencia Completo -
 NRC-), o bien podrá obtener un documento de ingreso que le permitirá efectuar el pago
 en una entidad colaboradora.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 46
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 46
 
 # Pag. 47
 
@@ -1902,7 +1902,7 @@ cuenta, Código Internacional de Cuenta Bancaria (IBAN) y proceder a su confirma
 presentación.
 En el caso de que se solicite la devolución en una cuenta abierta en el extranjero se
 comunicarán los datos identificativos de dicha cuenta bancaria.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 47
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 47
 
 # Pag. 48
 
@@ -1927,7 +1927,7 @@ podrá optar por efectuarlo de una sola vez (en Renta WEB, "pago No fraccionado"
 por fraccionar su importe (en Renta WEB, "pago fraccionado"), sin interés ni recargo alguno,
 en dos plazos en las condiciones que se indican en el punto siguiente.
 Para ello, podrá elegir alguna de las siguientes modalidades de ingreso:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 48
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 48
 
 # Pag. 49
 
@@ -1960,7 +1960,7 @@ Reconocimiento de deuda, y pago Sí. No.
 mediante transferencia bancaria
 Reconocimiento de deuda con Sí. No.
 imposibilidad de pago
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 49
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 49
 
 # Pag. 50
 
@@ -1998,7 +1998,7 @@ Especialidad en caso de confirmación y presentación del borrador a través de 
 El pago del importe de la deuda tributaria resultante deberá realizarse necesariamente en
 dos plazos mediante domiciliación bancaria de ambos plazos. La modificación de esta forma
 de pago en la App sólo es posible mediante Renta WEB en la Sede electrónica.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 50
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 50
 
 # Pag. 51
 
@@ -2035,7 +2035,7 @@ a. Los que efectúen la presentación electrónica de la declaración del IRPF .
 b. Aquellos cuya autoliquidación se efectúe a través de los servicios de ayuda prestados en
 las oficinas de la AEAT, en las oficinas de las Administraciones tributarias de las
 Comunidades Autónomas y Ciudades con Estatuto de Autonomía que hayan suscrito con
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 51
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 51
 
 # Pag. 52
 
@@ -2085,7 +2085,7 @@ Si domicilia sólo el • Plazo para domiciliar: hasta el 30 de junio de -
 segundo plazo (40
 por 100)
 • Fecha de pago: 5 de noviembre de 2026.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 52
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 52
 
 # Pag. 53
 
@@ -2130,7 +2130,7 @@ declaraciones cuyo resultado suponga un ingreso y para las que no se haya selecc
 como forma de pago la domiciliación bancaria (cargo el 30 de junio).
 Bajo esta opción, Renta WEB ofrecen tres formas de pago, que se analizarán a continuación:
 • Pagar con cargo en cuenta.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 53
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 53
 
 # Pag. 54
 
@@ -2171,7 +2171,7 @@ botón “Realizar Declaración”.
 2. Pago con tarjeta o mediante transferencias instantáneas efectuadas a través de
 plataformas de comercio electrónico seguro (BIZUM)
 • Pago con tarjeta
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 54
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 54
 
 # Pag. 55
 
@@ -2210,7 +2210,7 @@ pantalla los datos del modelo de declaración del IRPF correspondiente a la decl
 presentada, justificante de presentación, validado con un código seguro de verificación en el
 que constará la fecha y hora de presentación que el declarante deberá imprimir o archivar y
 conservar.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 55
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 55
 
 # Pag. 56
 
@@ -2251,7 +2251,7 @@ apartado de Información y gestiones.
 4. Reconocimiento de deuda (total o parcial) con pago mediante entrega
 de bienes integrantes del Patrimonio Histórico Español
 Normativa: Arts. 97.3 Ley IRPF y 62.3 Reglamento IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 56
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 56
 
 # Pag. 57
 
@@ -2295,7 +2295,7 @@ en una entidad colaboradora de la AEAT, dicha transferencia será devuelta a su 
 origen y el pago realizado no producirá ningún efecto, con las consecuencias legales que ello
 pudiera suponer sobre la deuda liquidada/autoliquidada. En este caso, debe elegir otra
 modalidad de pago.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 57
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 57
 
 # Pag. 58
 
@@ -2339,7 +2339,7 @@ deudas o créditos que deban anotarse en dicha cuenta corriente tributaria y se 
 dispuesto en el Real Decreto 1108/1999, de 25 de junio, por el que se regula el sistema de
 cuenta corriente en materia tributaria.
 Extinción por compensación con créditos tributarios reconocidos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 58
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 58
 
 # Pag. 59
 
@@ -2378,7 +2378,7 @@ positiva puede solicitar la suspensión del ingreso de su deuda tributaria, sin 
 demora, en la cuantía máxima que permita el importe de la devolución resultante de la
 declaración de su cónyuge, a condición de que este renuncie al cobro de la misma en una
 cantidad igual al importe de la deuda cuya suspensión haya sido solicitada por aquel.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 59
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 59
 
 # Pag. 60
 
@@ -2419,7 +2419,7 @@ respectivamente, pudiendo asimismo domiciliarse en cuenta el pago de cada uno de
 plazos, con arreglo al procedimiento general establecido en el epígrafe anterior para el pago
 del IRPF.
 Efectos de las solicitudes de suspensión improcedentes
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 60
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 60
 
 # Pag. 61
 
@@ -2459,7 +2459,7 @@ deducción por maternidad regulada en el artículo 81 de la Ley del IRPF y/o a l
 por familia numerosa o personas con discapacidad a cargo prevista en el artículo 81 bis
 de la Ley del IRPF.
 ¿Cómo se devuelve?
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 61
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 61
 
 # Pag. 62
 
@@ -2506,7 +2506,7 @@ causa imputable a la Administración tributaria, se aplicará a la cantidad pend
 devolución el interés de demora tributario desde el día siguiente al de la finalización de dicho
 plazo y hasta la fecha en que se ordene su pago, sin necesidad de que el contribuyente lo
 reclame.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 62
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 62
 
 # Pag. 63
 
@@ -2548,7 +2548,7 @@ corresponda de acuerdo con lo dispuesto en la legislación específica, a efecto
 al reconocimiento del derecho y al pago o compensación de la devolución, excepto cuando
 se trate de herencias yacentes debidamente identificadas, en cuyo caso se reconocerá y
 abonará la devolución a la herencia yacente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 63
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 63
 
 # Pag. 64
 
@@ -2606,7 +2606,7 @@ En el caso de que haya varios herederos y se desee que el importe de la devoluci
 ○
 sea abonado a todos los herederos, certificado bancario de titularidad de la cuenta
 bancaria a nombre de todos ellos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 64
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 64
 
 # Pag. 65
 
@@ -2650,7 +2650,7 @@ través del paginado del programa o bien desde el botón “Apartados de la decl
 al elegir la opción "Modificar declaración Renta 2025 ya presentada". Una vez marcada,
 e incluido el resultado de la declaración inicial, el programa, le reconducirá al tipo de
 regularización que corresponda. Véase el capítulo 18 de este manual.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 65
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 65
 
 # Pag. 66
 
@@ -2676,21 +2676,21 @@ ASISTENCIA Y CITA PARA RENTA 2025. Para confeccionar la declaración de Renta 20
 desde el 29 de abril hasta el 29 de junio de 2026 por alguna de las siguientes vías:
 Internet, en la Sede electrónica de la Agencia Tributaria o en la App de la Agencia Tributaria.
 ○
-Teléfono 91 553 00 71 (de lunes a viernes, de 9 a 19 horas). Atención personalizada.
+Teléfono 91 553 00 71 ó 901 22 33 44 (de lunes a viernes, de 9 a 19 horas). Atención personalizada.
 ○
-Teléfono 91 535 73 26 (automático, 24 horas).
+Teléfono 91 535 73 26 ó 901 12 12 24 (automático, 24 horas).
 ○
 • En oficinas de la Agencia Tributaria y de entidades colaboradoras (como comunidades autónomas y
 ciudades con Estatuto de autonomía) desde el 1 de junio, con obtención de cita desde el 29 de mayo
 hasta el 29 de junio de 2026 por alguna de las siguientes vías:
 Internet, en la Sede electrónica de la Agencia Tributaria o en la App de la Agencia Tributaria.
 ○
-Teléfono 91 553 00 71 (de lunes a viernes, de 9 a 19 horas). Atención personalizada.
+Teléfono 91 553 00 71 ó 901 22 33 44 (de lunes a viernes, de 9 a 19 horas). Atención personalizada.
 ○
 APP "AGENCIA TRIBUTARIA". Desde un dispositivo móvil y descargando gratuitamente la aplicación
 “Agencia Tributaria”, el contribuyente tendrá acceso directo a diversas gestiones y al servicio de Renta WEB
 para presentar su declaración de Renta 2025.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 66
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 66
 
 # Pag. 67
 
@@ -2722,7 +2722,7 @@ El IRPF se aplica en todo el territorio español, con las especialidades previst
 Canarias, Ceuta y Melilla y sin perjuicio de los regímenes tributarios forales de concierto y
 convenio económico en vigor, respectivamente, en los Territorios Históricos del País Vasco y
 en la Comunidad Foral de Navarra.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 67
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 67
 
 # Pag. 68
 
@@ -2761,7 +2761,7 @@ por descendientes, ascendientes y discapacidad a que se refieren los artículos 
 una de las cuantías. Véase a este respecto los mínimos aprobados por las Comunidades
 Autónomas en el Capítulo 14.
 b. Escala autonómica aplicable a la base liquidable general
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 68
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 68
 
 # Pag. 69
 
@@ -2806,7 +2806,7 @@ Los porcentajes de deducción aplicables en el tramo autonómico de la deducció
 habitual en la Comunidad Autónoma de Cataluña se comentan en el Capítulo 16 dentro del apartado relativo a
 "Deducción por inversión en vivienda habitual: Régimen transitorio" así como en la Parte 2 de este Manual
 Práctico al examinar las deducciones de la Comunidad Autónoma de Cataluña.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 69
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 69
 
 # Pag. 70
 
@@ -2847,7 +2847,7 @@ directivo de la Secretaría de Estado de Hacienda de la que depende la Secretar�
 Autonómica y Local y, dentro de la actual Subsecretaría de Hacienda, a la Inspección General.
 Consejos Territoriales para la Dirección y Coordinación de la Gestión
 Tributaria
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 70
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 70
 
 # Pag. 71
 
@@ -2889,7 +2889,7 @@ d. Las ganancias y pérdidas patrimoniales.
 e. Las imputaciones de renta establecidas por ley.
 No obstante, a efectos de la determinación de la base imponible y del cálculo del IRPF, la
 renta se clasifica en general y del ahorro.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 71
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 71
 
 # Pag. 72
 
@@ -2930,7 +2930,7 @@ su racionalización y sistematización.
 • Las indemnizaciones y ayudas económicas contempladas en la Ley 32/1999, de 8 de
 octubre, de Solidaridad con las Víctimas del Terrorismo (BOE de 9 de octubre) de
 acuerdo con lo establecido en su artículo 13.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 72
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 72
 
 # Pag. 73
 
@@ -2977,7 +2977,7 @@ Normativa: Art. 7.b) Ley IRPF
 Están exentas las ayudas de cualquier clase percibidas por los afectados por el Virus de
 inmunodeficiencia humana (VIH), reguladas en el Real Decreto-ley 9/1993, de 28 de mayo
 (BOE de 1 de junio).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 73
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 73
 
 # Pag. 74
 
@@ -3017,7 +3017,7 @@ de 5 de noviembre), en tanto sean abonadas por una entidad aseguradora como
 consecuencia de la responsabilidad civil de su asegurado.
 En relación con dichas cuantías hay que distinguir para la valoración de los daños y
 perjuicios causados a las personas en accidentes de circulación entre:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 74
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 74
 
 # Pag. 75
 
@@ -3061,7 +3061,7 @@ a partir de esa fecha.
 Cuantías judicialmente reconocidas
 Se consideran comprendidos en esta expresión dos supuestos:
 a. Cuantificación fijada por un juez o tribunal mediante resolución judicial.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 75
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 75
 
 # Pag. 76
 
@@ -3102,7 +3102,7 @@ indemnizatorias vigentes durante el año 2025, una vez actualizadas en el 2,8 po
 sistema recogido en el Anexo del Texto Refundido de la Ley sobre responsabilidad civil y
 seguro en la circulación de vehículos a motor, aprobado por el Real Decreto Legislativo
 8/2004, de 29 de octubre, en su redacción vigente hasta 31 de diciembre de 2015.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 76
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 76
 
 # Pag. 77
 
@@ -3150,7 +3150,7 @@ Segunda de la Sala de lo Contencioso- Administrativo ( ROJ: STS 986/2022).
 • El requisito de la desvinculación efectiva del trabajador con la empresa que prevé, como presunción iuris
 tantum, el artículo 1 del Reglamento del IRPF, no es aplicable, fuera de los casos de exención por despido
 o cese del trabajador - art. 7.e) de la Ley del IRPF - para excluir la reducción de rendimientos obtenidos de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 77
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 77
 
 # Pag. 78
 
@@ -3195,7 +3195,7 @@ Legislativo 2/2015, de 23 de octubre (BOE de 24 de octubre).
 B. No obstante, el importe de la indemnización exenta tendrá como límite máximo la
 cantidad de 180.000 euros. Por tanto, aunque la indemnización total no exceda de lo
 estipulado en el Estatuto de los Trabajadores o en sus normas de desarrollo, si se superan
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 78
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 78
 
 # Pag. 79
 
@@ -3231,7 +3231,7 @@ trabajador o para la que no esté establecido con carácter obligatorio en el Es
 Trabajadores ni en sus normas de desarrollo el derecho del trabajador a percibir
 indemnización.
 Entre estos supuestos, cabe mencionar los siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 79
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 79
 
 # Pag. 80
 
@@ -3272,7 +3272,7 @@ Los contratos de fomento de la contratación indefinida celebrados con anteriori
 febrero de 2012 continuarán rigiéndose por la normativa a cuyo amparo se concertaron.
 El contrato para el fomento de la contratación indefinida se regulaba en la derogada actualmente disposición
 adicional primera de la Ley 12/2001, de 9 de julio, Medidas Urgentes de Reforma del Mercado de Trabajo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 80
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 80
 
 # Pag. 81
 
@@ -3312,7 +3312,7 @@ en menoscabo de su dignidad del trabajador (Art. 41 Estatuto de los Trabajadores
 En este caso están exentas las indemnizaciones que no excedan de 20 días de salario por
 año trabajado, prorrateándose por meses los períodos de tiempo inferiores al año, con
 un máximo de 9 mensualidades.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 81
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 81
 
 # Pag. 82
 
@@ -3355,7 +3355,7 @@ consecuencia, el empleador no tiene que indemnizar a los trabajadores, estando
 plenamente sujetas al IRPF las cantidades percibidas por este concepto.
 Régimen transitorio:
 Normativa: Disposición transitoria vigésima segunda Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 82
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 82
 
 # Pag. 83
 
@@ -3396,7 +3396,7 @@ Normativa: Art. 52 Estatuto de los Trabajadores
 En los despidos por alguna de las causas objetivas a que se refiere el artículo 52 del Estatuto
 de los Trabajadores, estará exenta la indemnización percibida que no supere el importe de
 20 días de salario por año trabajado, con un máximo de 12 mensualidades.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 83
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 83
 
 # Pag. 84
 
@@ -3439,7 +3439,7 @@ dicho artículo para el despido colectivo.
 H) Indemnizaciones exentas derivadas de la extinción de relaciones
 laborales especiales
 a. Personal de alta dirección
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 84
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 84
 
 # Pag. 85
 
@@ -3483,7 +3483,7 @@ garantizada de al menos dos mensualidades de sus retribuciones periódicas, más
 proporcional correspondiente de los complementos de calidad y cantidad de trabajo
 percibidos durante el último año, prorrateándose por meses los períodos de tiempo inferiores
 a un año.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 85
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 85
 
 # Pag. 86
 
@@ -3505,7 +3505,7 @@ de servicio, con el límite de 6 mensualidades.
 mensualidades.
 Si se trata de despido improcedente, la indemnización exenta será de 20 días naturales por
 año de servicio, con el límite de 12 mensualidades.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 86
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 86
 
 # Pag. 87
 
@@ -3545,7 +3545,7 @@ Despido colectivo desde 12-02-2012 33 42 SI: cuantía obligatoria
 (Régimen improcedente (33 días/24
 transitorio) mensualidades o
 régimen transitorio).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 87
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 87
 
 # Pag. 88
 
@@ -3583,7 +3583,7 @@ Empleados del servicio del hogar familiar
 Desistimiento con contrato 12 6 SI
 concertado desde 01-01-2012
 Desistimiento con contrato 7 6 SI
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 88
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 88
 
 # Pag. 89
 
@@ -3624,7 +3624,7 @@ cumplan los siguientes requisitos:
 incapacidad absoluta o gran invalidez.
 • Que la entidad que satisface la prestación goce, según la normativa del país de
 procedencia de la pensión, del carácter de sustitutoria de la Seguridad Social.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 89
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 89
 
 # Pag. 90
 
@@ -3668,7 +3668,7 @@ incapacidad permanente para el servicio, debe constar si la lesión o proceso pa
 además de incapacitarle para las funciones propias de su Cuerpo, le inhabilita por completo para toda
 profesión u oficio y, en su caso, si necesita la asistencia de otra persona para la realización de los actos más
 esenciales de la vida.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 90
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 90
 
 # Pag. 91
 
@@ -3716,7 +3716,7 @@ La cuantía exenta tiene como límite el importe de la prestación máxima que r
 por el concepto que corresponda. El exceso tributará como rendimiento del trabajo, entendiéndose
 producido, en caso de concurrencia de prestaciones de la Seguridad Social y de las mutualidades antes
 citadas, en las prestaciones de estas últimas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 91
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 91
 
 # Pag. 92
 
@@ -3766,7 +3766,7 @@ guarda y paternidad, por los empleados públicos encuadrados en un régimen de
 Seguridad Social que no dé derecho a percibir prestación de maternidad o paternidad,
 con el límite de la prestación máxima que reconozca la Seguridad Social por el concepto
 que corresponda.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 92
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 92
 
 # Pag. 93
 
@@ -3809,7 +3809,7 @@ se entienden prorrogados para 2024 y 2025 los Presupuestos Generales del Estado 
 Normativa: Arts. 7.j) Ley IRPF y 2 Reglamento IRPF
 A) Becas para cursar estudios reglados
 A.1. Becas que incluye
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 93
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 93
 
 # Pag. 94
 
@@ -3853,7 +3853,7 @@ b. Que el anuncio de la Convocatoria se publique en el Boletín Oficial del Esta
 Comunidad Autónoma y, bien en un periódico de gran circulación nacional, bien en la
 página web de la entidad.
 c. Que la adjudicación se lleve a cabo en régimen de concurrencia competitiva.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 94
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 94
 
 # Pag. 95
 
@@ -3890,7 +3890,7 @@ mecenazgo.
 • Becas concedidas por las fundaciones bancarias reguladas en el Título II de la Ley
 26/2013, de 27 de diciembre, de cajas de ahorros y fundaciones bancarias en el
 desarrollo de su actividad de obra social.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 95
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 95
 
 # Pag. 96
 
@@ -3933,7 +3933,7 @@ básica se contiene en la Ley 14/2011, de 1 de junio, y que se desarrolla en est
 2. La contratación predoctoral según la modalidad y condiciones definidas en el artículo anterior deberá
 respetar los principios de publicidad, igualdad, mérito y capacidad en la concesión de las ayudas o en los
 procesos selectivos correspondientes.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 96
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 96
 
 # Pag. 97
 
@@ -3978,7 +3978,7 @@ naturaleza las actividades propias de su objeto o finalidad estatutaria.
 - Que el anuncio de la Convocatoria se publique en el Boletín Oficial del Estado o de la
 Comunidad Autónoma y, bien en un periódico de gran circulación nacional, bien en la
 página web de la entidad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 97
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 97
 
 # Pag. 98
 
@@ -4014,7 +4014,7 @@ Nota al cuadro: cuando la duración de la beca sea inferior al año natural, la 
 corresponda
 11. Anualidades por alimentos a favor de los hijos
 Normativa: Art. 7.k) Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 98
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 98
 
 # Pag. 99
 
@@ -4059,7 +4059,7 @@ Recuerde: téngase en cuenta el tratamiento para el pagador de las anualidades p
 alimentos a favor de los hijos que se comenta en el Capítulo 15 y las reducciones por
 pensiones compensatorias y anualidades por alimentos que se comentan el Capítulo 13
 de este Manual .
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 99
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 99
 
 # Pag. 100
 
@@ -4098,7 +4098,7 @@ La declaración de la exención tendrá validez para sucesivas convocatorias sie
 los términos que hubieran sido tomados a efectos de conceder la exención. Si en las sucesivas convocatorias
 se modificasen dichos términos, o se incumpliese alguno de los requisitos exigidos para su aplicación se
 declarará la pérdida del derecho a su aplicación.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 100
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 100
 
 # Pag. 101
 
@@ -4137,7 +4137,7 @@ Decreto 1044/1985, de 19 de junio, por el que se establece el abono de la presta
 modalidad de pago único, incluidas las modificaciones incorporadas por normas posteriores, en lo que no se
 oponga a las reglas que en este mismo apartado 1 del artículo 34 se indican.
 Los supuestos para los que se puede solicitar el pago único por desempleo son:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 101
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 101
 
 # Pag. 102
 
@@ -4180,7 +4180,7 @@ rendimientos del mismo Plan a los que hubiera resultado de aplicación la exenci
 humanitarias a los miembros de dichas misiones e indemnizaciones por
 operaciones internacionales de paz y seguridad
 Normativa: Arts. 7.o) Ley IRPF y 5 Reglamento IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 102
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 102
 
 # Pag. 103
 
@@ -4219,7 +4219,7 @@ Están exentos los rendimientos de trabajo percibidos por trabajos efectivamente
 realizados en el extranjero cuando se den los siguientes requisitos:
 a) Que los trabajos se realicen para una empresa o entidad no residente en España o
 un establecimiento permanente radicado en el extranjero.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 103
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 103
 
 # Pag. 104
 
@@ -4264,7 +4264,7 @@ no cooperativas (BOE de 10 de febrero), que actualiza la lista de países y terr
 figuran en el Real Decreto 1080/1991, de 5 de julio, si bien en IRPF no ha sido de
 aplicación hasta el período impositivo 2024, siendo aplicable con carácter general desde
 entonces.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 104
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 104
 
 # Pag. 105
 
@@ -4312,7 +4312,7 @@ Finalmente, esta exención es incompatible, para los contribuyentes destinados e
 extranjero, con el régimen de excesos excluidos de tributación por retribuciones percibidos
 por empleados de empresas y funcionarios destinados en el extranjero previstos en el
 artículo 9.A.3.b) del Reglamento del IRPF, cualquiera que sea su importe. El contribuyente
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 105
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 105
 
 # Pag. 106
 
@@ -4352,7 +4352,7 @@ b) Importe de la exención: (18.698,63 + 15.200) = 33.898,63 (**)
 18. Indemnizaciones satisfechas por las Administraciones Públicas por
 daños personales
 Normativa: Art. 7.q) Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 106
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 106
 
 # Pag. 107
 
@@ -4396,7 +4396,7 @@ Normativa: Art. 7.s) Ley IRPF
 Están exentas las ayudas económicas a las personas con hemofilia u otras coagulopatías
 congénitas que hayan desarrollado la hepatitis C, como consecuencia de haber recibido
 tratamiento con concentrados de factores de coagulación en el ámbito del sistema sanitario
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 107
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 107
 
 # Pag. 108
 
@@ -4435,7 +4435,7 @@ artículo 41 bis del Reglamento.
 22. Indemnizaciones del Estado y de las Comunidades Autónomas para
 compensar la privación de libertad
 Normativa: Art. 7.u) Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 108
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 108
 
 # Pag. 109
 
@@ -4479,7 +4479,7 @@ prorrogados para 2024 y 2025.
 Igualmente están exentos, con el mismo límite que el señalado en el párrafo anterior, los
 rendimientos del trabajo derivados de las aportaciones a patrimonios protegidos de personas
 con discapacidad a que se refiere la disposición adicional decimoctava de la Ley del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 109
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 109
 
 # Pag. 110
 
@@ -4525,7 +4525,7 @@ aplica de forma individual y separada para cada uno de los dos rendimientos ante
 25. Prestaciones económicas públicas vinculadas al servicio, para
 cuidados en el entorno familiar y de asistencia personalizada
 Normativa: Art. 7.x) Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 110
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 110
 
 # Pag. 111
 
@@ -4573,7 +4573,7 @@ del artículo 13. 1 de la Ley 19/2021 y que se calcula por diferencia entre la r
 correspondiente y los ingresos de la persona beneficiaria o de los miembros de la unidad de
 convivencia del ejercicio anterior. Aunque sea un importe que supone una cuantía fija e independiente
 de lo anterior tiene naturaleza de prestación de ingreso mínimo vital,
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 111
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 111
 
 # Pag. 112
 
@@ -4617,7 +4617,7 @@ Están exentas las prestaciones y ayudas familiares percibidas de cualquiera de 
 Administraciones Públicas, ya sean vinculadas a nacimiento, adopción, acogimiento o
 cuidado de hijos menores.
 Precisiones:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 112
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 112
 
 # Pag. 113
 
@@ -4657,7 +4657,7 @@ Véase el apartado sobre "Consideración fiscal de las dietas y asignaciones par
 • Rendimientos de trabajo en especie exentos
 Las rentas en especie que, de acuerdo con el artículo 42.3 de la Ley del IRPF, tienen la
 consideración de rendimientos del trabajo exentos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 113
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 113
 
 # Pag. 114
 
@@ -4699,7 +4699,7 @@ Están exentos los rendimientos del trabajo percibidos de la Organización Inter
 Comisiones de Valores, en su condición de asociación de utilidad pública, por el Secretario
 general, el personal directivo y el personal laboral que desempeñen una actividad
 directamente relacionada con el objeto estatutario de la organización.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 114
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 114
 
 # Pag. 115
 
@@ -4740,7 +4740,7 @@ En estos casos, las participaciones, acciones o derechos deberán haberse manten
 ininterrumpidamente hasta que se produzcan dichas circunstancias.
 Respecto de la forma de tributación del otro 50 por 100 de dichos rendimientos del trabajo,
 véase el apartado correspondiente contenido en el Capítulo 3.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 115
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 115
 
 # Pag. 116
 
@@ -4782,7 +4782,7 @@ transportistas.
 sacrificio obligatorio de la cabaña ganadera, en el marco de actuaciones destinadas a
 la erradicación de epidemias o enfermedades. La exención solo afectará a los animales
 destinados a la reproducción.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 116
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 116
 
 # Pag. 117
 
@@ -4806,7 +4806,7 @@ acuerdo con planes técnicos de gestión forestal, ordenación de montes, planes
 o planes de repoblación forestal aprobados por la Administración forestal competente,
 siempre que el período de producción medio, según la especie de que se trate, determinado
 por la Administración forestal competente, sea igual o superior a 20 años.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 117
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 117
 
 # Pag. 118
 
@@ -4863,7 +4863,7 @@ estuvieran
 obligados a
 presentar antes del
 28 de octubre.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 118
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 118
 
 # Pag. 119
 
@@ -4923,7 +4923,7 @@ máximo: y cumplan los
 persona el artículo 24.
 beneficiaria. • Que hayan
 presentado la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 119
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 119
 
 # Pag. 120
 
@@ -4982,7 +4982,7 @@ Alimentación, y
 • Localizada en los
 municipios incluidos
 en el anexo 1 del
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 120
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 120
 
 # Pag. 121
 
@@ -5040,7 +5040,7 @@ viabilidad y (UE) 1408/2013, Registro General de la
 normal de la Producción Agrícola
 funcionamiento regulado por Real
 de las Decreto 9/2015, de 16
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 121
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 121
 
 # Pag. 122
 
@@ -5099,7 +5099,7 @@ AVALES DE SAECA ley sujeto y NO subvención del Titulares de
 A LAS 7/2024 exento: coste del aval explotaciones agrarias
 EXPLOTACIONES hasta 75.000 inscritos en el Registro
 AGRARIAS
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 122
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 122
 
 # Pag. 123
 
@@ -5159,7 +5159,7 @@ apoyo al ámbito agrario
 contempladas en el
 título IV del Real
 Decreto-ley 7/2024, a
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 123
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 123
 
 # Pag. 124
 
@@ -5218,7 +5218,7 @@ otras subvenciones, b) del artículo 4.2.
 ayudas, ingresos o
 recursos para la
 misma finalidad,
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 124
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 124
 
 # Pag. 125
 
@@ -5274,7 +5274,7 @@ SUBVENCIONES Art.70 Rendimiento de • Objeto: los Personas titulares de
 PARA TITULARES Real actividades gastos de salas de exhibición
 DE SALAS DE Decreto- económicas funcionamiento y cinematográfica
 ley sujeto y NO
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 125
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 125
 
 # Pag. 126
 
@@ -5335,7 +5335,7 @@ prevista en el
 artículo 11 del
 Real Decreto-ley
 6/2024, de 5 de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 126
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 126
 
 # Pag. 127
 
@@ -5394,7 +5394,7 @@ públicas o
 privadas,
 nacionales o
 internacionales
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 127
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 127
 
 # Pag. 128
 
@@ -5449,7 +5449,7 @@ privadas,
 nacionales o
 internacionales
 otorgadas para
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 128
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 128
 
 # Pag. 129
 
@@ -5517,7 +5517,7 @@ protección civil»
 mediante Orden
 PJC/1222/2024, de 6 de
 noviembre.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 129
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 129
 
 # Pag. 130
 
@@ -5560,7 +5560,7 @@ de mayo, recaída en recurso contencioso-administrativo núm. 7851/2021 (ROJ: ST
 "en las situaciones de separación, divorcio o nulidad del matrimonio que hubieren determinado el cese de la
 ocupación efectiva como vivienda habitual para el cónyuge que ha de abandonar el domicilio habitual por tales
 causas, el requisito de ocupación efectiva de la vivienda habitual en el momento de la transmisión o en
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 130
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 130
 
 # Pag. 131
 
@@ -5602,7 +5602,7 @@ enajenación de la vivienda.
 Respecto al concepto de vivienda habitual, véase la disposición adicional vigésima tercera de la Ley del IRPF y
 artículo 41 bis del Reglamento.
 Exención por reinversión en vivienda habitual
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 131
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 131
 
 # Pag. 132
 
@@ -5644,7 +5644,7 @@ El tratamiento de los rendimientos que derivan de la renta vitalicia no tiene ni
 como rendimientos del capital mobiliario.
 El comentario detallado de esta exención por la transmisión de elementos patrimoniales por contribuyentes
 mayores de 65 años con reinversión del importe obtenido en rentas vitalicias se contiene en el Capítulo 11.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 132
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 132
 
 # Pag. 133
 
@@ -5691,7 +5691,7 @@ enero, febrero y marzo de 2015, conforme a lo establecido en los artículos 2 y 
 2/2015, de 6 de marzo (BOE de 7 de marzo) o los temporales de lluvia en la Comunidad Autónoma de
 Canarias y en el sur y este peninsular en los meses de septiembre y octubre de 2015 de acuerdo con los
 artículos 2 y 10 del Real Decreto-ley 12/2015, de 30 de octubre (BOE de 31 de octubre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 133
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 133
 
 # Pag. 134
 
@@ -5743,7 +5743,7 @@ de noviembre (BOE de 6 de noviembre), por el que se adoptan medidas urgentes de 
 causados por la Depresión Aislada en Niveles Altos (DANA) en los municipios contenidos en el Anexo del
 citado Real Decreto-Ley, así como las ayudas destinadas a paliar daños personales, vivienda, establecimientos
 industriales, mercantiles y de servicios, a corporaciones locales, y a personas físicas o jurídicas, previstas en el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 134
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 134
 
 # Pag. 135
 
@@ -5786,7 +5786,7 @@ ciudades de Ceuta y Melilla;
 • El Real Decreto 853/2021, de 5 de octubre, por el que se regulan los programas de ayuda
 en materia de rehabilitación residencial y vivienda social del Plan de Recuperación,
 Transformación y Resiliencia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 135
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 135
 
 # Pag. 136
 
@@ -5828,7 +5828,7 @@ Legislativo 1/2020, de 5 de mayo, por el que se aprueba el texto refundido de la
 Concursal.
 En todos los casos es requisito necesario para que las rentas se declaren exentas que las
 deudas no deriven del ejercicio de actividades económicas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 136
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 136
 
 # Pag. 137
 
@@ -5848,7 +5848,7 @@ una entidad vinculada a esta última.
 Novedad: téngase en cuenta que el Real Decreto -ley 6/2022, de 29 de marzo ha
 introducido esta exención con efectos desde el 31 de marzo de 2022 y ejercicios
 anteriores no prescritos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 137
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 137
 
 # Pag. 138
 
@@ -5900,7 +5900,7 @@ PP
 computable.
 • En caso de
 reparación:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 138
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 138
 
 # Pag. 139
 
@@ -5958,7 +5958,7 @@ artículo 1, y puedan
 condición de
 heredero mediante
 la documentación
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 139
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 139
 
 # Pag. 140
 
@@ -6015,7 +6015,7 @@ otras ayudas sin
 que la suma total
 de las ayudas que
 reciba el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 140
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 140
 
 # Pag. 141
 
@@ -6074,7 +6074,7 @@ beneficiarios de las
 ayudas para
 vivienda
 establecidas en el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 141
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 141
 
 # Pag. 142
 
@@ -6131,7 +6131,7 @@ Universitario.
 * Estas ayudas
 son compatibles
 con otras ayudas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 142
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 142
 
 # Pag. 143
 
@@ -6189,7 +6189,7 @@ públicas, o entes personal.
 públicos o privados,
 nacionales, de la Requisitos:
 Unión Europea o de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 143
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 143
 
 # Pag. 144
 
@@ -6241,7 +6241,7 @@ base a lo previsto en el art.47.5 del texto refundido de la Ley del
 ET, de empresas con domicilio de actividad en los municipios
 señalados que hayan sufrido daños consecuencia directa de la
 DANA;
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 144
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 144
 
 # Pag. 145
 
@@ -6283,7 +6283,7 @@ de la Unión Europea o del Espacio Económico Europeo y que persigan objetivos i
 a los de los organismos o entidades antes señalados.
 El resto de premios (distintos de los que acabamos de enumerar) se consideran ganancias
 patrimoniales e integran la base imponible general del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 145
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 145
 
 # Pag. 146
 
@@ -6321,7 +6321,7 @@ Normativa: disposición transitoria novena Ley del IRPF
 La parte de la ganancia patrimonial generada con anterioridad a 20 de enero de 2006 (no
 así las pérdidas patrimoniales) derivada de elementos patrimoniales no afectos al desarrollo
 de actividades económicas que a 31 de diciembre de 1996 tuviesen un período de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 146
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 146
 
 # Pag. 147
 
@@ -6361,7 +6361,7 @@ refundido de la Ley de Regulación de los Planes y Fondos de Pensiones.
 • Para la integración en otro contrato de seguro colectivo, de los derechos que
 correspondan al trabajador según el contrato original en el caso de cese de la relación
 laboral.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 147
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 147
 
 # Pag. 148
 
@@ -6406,7 +6406,7 @@ autorizadas para operar en España, sin perjuicio de los límites, requisitos o 
 aseguradoras, imponga su normativa sectorial.
 • Ayudas económicas que se concedan por gastos de enfermedad no
 cubiertos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 148
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 148
 
 # Pag. 149
 
@@ -6446,7 +6446,7 @@ demora.
 Dicha regularización únicamente se realizará respecto de los ejercicios en que no hubiera
 prescrito el derecho de la Administración para determinar la deuda tributaria mediante la
 oportuna liquidación.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 149
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 149
 
 # Pag. 150
 
@@ -6488,7 +6488,7 @@ comentan.
 en un país o territorio calificado reglamentariamente como paraíso fiscal (actualmente
 jurisdicción no cooperativa). Estas personas no perderán su condición de contribuyentes
 por el IRPF en el período impositivo en que se produzca el cambio de residencia y en los
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 150
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 150
 
 # Pag. 151
 
@@ -6531,7 +6531,7 @@ No obstante lo anterior, para determinar el período de permanencia en territori
 se computarán las estancias temporales en España que sean consecuencia de las
 obligaciones contraídas en acuerdos de colaboración cultural o humanitaria, a título gratuito,
 con las Administraciones Públicas españolas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 151
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 151
 
 # Pag. 152
 
@@ -6580,7 +6580,7 @@ No se considerarán contribuyentes, a título de reciprocidad, los nacionales ex
 tengan su residencia habitual en España por su condición de miembros de misiones
 diplomáticas u oficinas consulares extranjeras, o por ser titulares de cargo o empleo oficial de
 Estados extranjeros, o por ser funcionarios en activo que ejerzan en España cargo o empleo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 152
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 152
 
 # Pag. 153
 
@@ -6620,7 +6620,7 @@ b. Rendimientos del capital inmobiliario y ganancias patrimoniales derivadas de 
 inmuebles, que se entenderán obtenidos en el lugar en que radiquen estos.
 c. Rendimientos de actividades económicas, ya sean empresariales o profesionales, que se
 entenderán obtenidos donde radique el centro de gestión de cada una de ellas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 153
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 153
 
 # Pag. 154
 
@@ -6660,7 +6660,7 @@ reglas de individualización de rentas del IRPF.
 Cuando una de las distintas Comunidades Autónomas fuera de régimen foral (Navarra o País
 Vasco), se atenderá también a este criterio para determinar la competencia foral o estatal en
 orden a la exacción del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 154
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 154
 
 # Pag. 155
 
@@ -6699,7 +6699,7 @@ residentes en el extranjero en el ejercicio 2025, harán constar en dicho aparta
 específica "20".
 No se consideran contribuyentes del IRPF
 Normativa: Art. 8.3 Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 155
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 155
 
 # Pag. 156
 
@@ -6740,7 +6740,7 @@ de la autoridad judicial de oficio o a instancia del Ministerio Fiscal de esta s
 Atendiendo a lo anterior, y teniendo en cuenta las modificaciones incorporadas por la Ley 8/2021 en materia
 de personas con discapacidad, las referencias realizadas en el artículo 82 de la Ley del IRPF a la patria
 potestad prorrogada o rehabilitada, deben entenderse hechas a las siguientes medidas judiciales:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 156
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 156
 
 # Pag. 157
 
@@ -6777,7 +6777,7 @@ Tributación individual y opción por la tributación conjunta
 La Sede electrónica de la Agencia Tributaria incorpora un «Asistente virtual de Renta»,
 donde podrá consultar las opciones de tributación, individual o conjunta, en función de
 sus circunstancias personales y familiares.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 157
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 157
 
 # Pag. 158
 
@@ -6820,7 +6820,7 @@ Importante: desde 2024, el cambio de la opción de tributación elegida (individ
 conjunta) en una autoliquidación anterior, se realiza marcando la casilla [124] de la
 página 3 del modelo de declaración de IRPF.
 La opción por declarar conjuntamente
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 158
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 158
 
 # Pag. 159
 
@@ -6863,7 +6863,7 @@ características generales:
 • Para determinar la existencia o no de la obligación de declarar, el importe de las
 rentas, la base imponible y liquidable y la deuda tributaria, se aplicarán, con carácter
 general, las reglas de tributación individual, sin que proceda, salvo en los casos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 159
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 159
 
 # Pag. 160
 
@@ -6906,7 +6906,7 @@ en el Capítulo 13.
 En cualquiera de las modalidades de unidad familiar el mínimo personal aplicable en la
 declaración conjunta será de 5.550 euros anuales, con independencia del número de
 miembros integrados en la misma.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 160
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 160
 
 # Pag. 161
 
@@ -6946,7 +6946,7 @@ minorará la base imponible del ahorro, que tampoco podrá resultar negativa.
 Importante: no se aplicará la reducción por tributación conjunta cuando el
 contribuyente conviva con el padre o la madre de alguno de los hijos que forman
 parte de su unidad familiar.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 161
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 161
 
 # Pag. 162
 
@@ -6983,7 +6983,7 @@ Para la aplicación de este régimen especial los contribuyentes deben cumplir l
 condiciones:
 1. Que no hayan sido residentes en España durante los cinco periodos impositivos
 anteriores a aquel en el que se produzca su desplazamiento a territorio español.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 162
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 162
 
 # Pag. 163
 
@@ -7025,7 +7025,7 @@ internacional previsto en la Ley 14/2013, de 27 de septiembre, de apoyo a los
 emprendedores y su internacionalización.
 Importante: podrán aplicar este régimen a los trabajadores que se desplacen a
 España para trabajar a distancia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 163
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 163
 
 # Pag. 164
 
@@ -7070,7 +7070,7 @@ residencia deberán solicitar el citado informe con carácter previo a su despla
 español, a través de la Dirección General de Industria y de la Pequeña y Mediana Empresa. Este
 informe tiene carácter preceptivo y será evacuado en el plazo de 10 días hábiles desde que
 ENISA reciba la correspondiente solicitud.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 164
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 164
 
 # Pag. 165
 
@@ -7116,7 +7116,7 @@ derivados de su condición de administrador, si obtuviera rendimientos de activi
 territorio español, se incumpliría el requisito previsto en el artículo 93.1.c) de la Ley del IRPF.
 Contenido del régimen especial
 Normativa: Art. 114 Reglamento IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 165
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 165
 
 # Pag. 166
 
@@ -7164,7 +7164,7 @@ Intereses y otros rendimientos obtenidos por la cesión a terceros de capitales 
 Ganancias patrimoniales que se pongan de manifiesto con ocasión de transmisiones
 ○
 de elementos patrimoniales.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 166
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 166
 
 # Pag. 167
 
@@ -7199,7 +7199,7 @@ El porcentaje de retención o ingreso a cuenta sobre rendimientos del trabajo se
 por 100. Ahora bien, cuando las retribuciones satisfechas por un mismo pagador de
 rendimientos del trabajo durante el año natural excedan de 600.000 euros, el porcentaje
 de retención aplicable en 2025 al exceso será el 47 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 167
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 167
 
 # Pag. 168
 
@@ -7242,7 +7242,7 @@ por cada contribuyente.
 Téngase en cuenta que, en atención a los especiales requisitos exigidos para poder aplicar
 este régimen fiscal especial por los trabajadores desplazados, teletrabajadores, profesionales
 altamente cualificados y emprendedores, la vía de presentación de este modelo será
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 168
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 168
 
 # Pag. 169
 
@@ -7284,7 +7284,7 @@ en España, un documento justificativo emitido por el empleador en el que se exp
 reconocimiento de la relación laboral o estatutaria con el contribuyente, la fecha de inicio
 de la actividad que conste en el alta en la Seguridad Social en España, el centro de
 trabajo y su dirección, así como la duración del contrato de trabajo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 169
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 169
 
 # Pag. 170
 
@@ -7332,7 +7332,7 @@ justificativo de la realización de esas actividades a que se refiere el artícu
 Reglamento, salvo que la autorización de residencia aportada sea la de formación,
 investigación, desarrollo e innovación.
 Renuncia y exclusión del régimen especial
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 170
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 170
 
 # Pag. 171
 
@@ -7377,7 +7377,7 @@ establecidos, con carácter general, para la presentación de las declaraciones 
 perjuicio del plazo específicamente establecido en el artículo 4.2 de la citada Orden
 HFP/1338/2023 para la domiciliación bancaria del pago de las deudas tributarias resultantes
 de las declaraciones.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 171
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 171
 
 # Pag. 172
 
@@ -7417,7 +7417,7 @@ que el contribuyente desplazado aplique en ese período impositivo este régimen
 especial.
 b. Que adquieran su residencia fiscal en España como consecuencia de su
 desplazamiento a territorio español.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 172
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 172
 
 # Pag. 173
 
@@ -7456,7 +7456,7 @@ HFP/1338/2023, de 13 de diciembre (BOE de 15 de diciembre), cuya presentación s
 efectuará de forma individual por cada familiar que desee optar por el régimen y como
 máximo en el mayor de los siguientes plazos:
 • seis meses a contar desde la fecha su entrada en territorio español, o
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 173
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 173
 
 # Pag. 174
 
@@ -7498,7 +7498,7 @@ Renuncia y exclusión del régimen especial para familiares de
 contribuyentes desplazados
 Normativa: Arts. 117.3 y 118.4 Reglamento IRPF
 Régimen de renuncia
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 174
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 174
 
 # Pag. 175
 
@@ -7537,7 +7537,7 @@ diciembre). A este respecto, téngase en cuenta que, atendiendo a los especiales
 exigidos para poder aplicar este régimen fiscal especial por los trabajadores desplazados,
 teletrabajadores, profesionales altamente cualificados y emprendedores, la vía de
 presentación de este modelo será electrónica.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 175
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 175
 
 # Pag. 176
 
@@ -7584,7 +7584,7 @@ Siempre que cumplan los siguientes requisitos:
 asociados) o en un momento posterior, siempre que no hubiera finalizado el
 primer período impositivo en el que a este le resulte de aplicación el régimen
 especial.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 176
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 176
 
 # Pag. 177
 
@@ -7634,7 +7634,7 @@ Normativa: Art. 46 TRLIRNR y 21 del Reglamento IRNR
 Pueden solicitar la aplicación de este régimen opcional de tributación por el IRPF los
 contribuyentes por el Impuesto sobre la Renta de no Residentes (IRNR) que sean personas
 físicas y que cumplan las siguientes condiciones:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 177
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 177
 
 # Pag. 178
 
@@ -7676,7 +7676,7 @@ de aplicar las normas del IRPF a la totalidad de rentas obtenidas por el contrib
 durante el período impositivo, con independencia del lugar donde se hubiesen producido y
 cualquiera que sea la residencia del pagador, teniendo en cuenta las circunstancias
 personales y familiares del contribuyente que hayan sido debidamente acreditadas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 178
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 178
 
 # Pag. 179
 
@@ -7713,7 +7713,7 @@ incluir las rentas del fallecido en dicha declaración.
 Ejemplo:
 Matrimonio formado por los cónyuges "A" y "B" con los que convive su hijo "C" menor de
 edad. En el mes de junio se produce el fallecimiento del cónyuge "A".
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 179
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 179
 
 # Pag. 180
 
@@ -7752,7 +7752,7 @@ declaración, el fraccionamiento de la parte de deuda tributaria correspondiente
 rentas, en función de los períodos impositivos a los que hubiera correspondido imputar
 las rentas, con el límite máximo de 4 años, con arreglo a lo dispuesto en el artículo 63
 del Reglamento del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 180
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 180
 
 # Pag. 181
 
@@ -7785,7 +7785,7 @@ uno de los cónyuges, el mínimo por descendientes se prorrateará por partes ig
 entre ambos cónyuges si, a la fecha de devengo del IRPF, ambos tuviesen derecho a su
 aplicación, con independencia de que el cónyuge supérstite presente declaración
 conjunta con los hijos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 181
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 181
 
 # Pag. 182
 
@@ -7819,7 +7819,7 @@ El concepto fiscal de rendimientos de actividades económicas y su delimitación
 del trabajo, se comenta en el Capítulo 6.
 Rendimientos de trabajo por naturaleza
 Normativa: Art. 17.1 Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 182
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 182
 
 # Pag. 183
 
@@ -7863,7 +7863,7 @@ contingencia de fallecimiento o invalidez).
 jubilación y de fallecimiento o incapacidad, en la parte de las primas satisfechas que
 corresponda al capital en riesgo por fallecimiento o incapacidad, siempre que el
 importe de dicha parte exceda de 50 euros anuales.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 183
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 183
 
 # Pag. 184
 
@@ -7904,7 +7904,7 @@ rendimiento del trabajo en la parte que exceda de la exención prevista en el ar
 de la Ley del IRPF.
 La Ley 19/2021, de 20 de diciembre, por la que se establece el ingreso mínimo vital sustituye, con
 efectos desde 1 de enero de 2022, al Real Decreto-ley 20/2020, de 29 de mayo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 184
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 184
 
 # Pag. 185
 
@@ -7950,7 +7950,7 @@ c. Muerte del partícipe o beneficiario, que puede generar derecho a prestacione
 orfandad o a favor de otros herederos o personas designadas.
 d. Dependencia severa o gran dependencia del partícipe, regulada en la Ley de promoción de la
 autonomía personal y atención a las personas en situación de dependencia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 185
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 185
 
 # Pag. 186
 
@@ -7998,7 +7998,7 @@ arreglo a los siguientes criterios:
 Estas prestaciones se integran en la base imponible del perceptor, como rendimientos del
 trabajo, exclusivamente en la medida en que su cuantía exceda de las aportaciones que
 no hayan podido ser objeto de reducción o minoración en la base imponible por incumplir
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 186
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 186
 
 # Pag. 187
 
@@ -8041,7 +8041,7 @@ empresarial tienen en todo caso la consideración de rendimientos del trabajo.
 Téngase en cuenta que la disposición anticipada de derechos económicos de los asegurados en estos
 casos es posible en los mismos supuestos previstos para los planes de pensiones (desempleo de larga
 duración o enfermedad grave y a partir de 2025 por aportaciones con al menos diez años de antigüedad).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 187
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 187
 
 # Pag. 188
 
@@ -8084,7 +8084,7 @@ las Cortes Generales, a los miembros de las asambleas legislativas autonómicas,
 concejales de ayuntamiento y miembros de las diputaciones provinciales, cabildos
 insulares u otras entidades locales, con exclusión, en todo caso, de la parte de aquellas
 que dichas instituciones asignen para gastos de viaje y desplazamiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 188
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 188
 
 # Pag. 189
 
@@ -8127,7 +8127,7 @@ de representación de sociedades
 Tendrán la consideración de rendimientos del trabajo las retribuciones de los administradores
 y miembros de los Consejos de Administración, de las Juntas que hagan sus veces y demás
 miembros de otros órganos representativos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 189
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 189
 
 # Pag. 190
 
@@ -8168,7 +8168,7 @@ becas concedidas por las entidades sin fines lucrativos a las que sea de aplicac
 régimen especial regulado en el Título II de la Ley 49/2002, de 23 de diciembre, de
 régimen fiscal de las entidades sin fines lucrativos y de los incentivos fiscales al
 mecenazgo, y las becas concedidas por las fundaciones bancarias reguladas en el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 190
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 190
 
 # Pag. 191
 
@@ -8207,7 +8207,7 @@ Legislativo 2/2015, de 23 de octubre (BOE de 24 de octubre), las siguientes:
 • Personal al servicio del hogar familiar (Real Decreto 1620/2011, de 14 de noviembre).
 • Penados en Instituciones Penitenciarias (Real Decreto 782/2001, de 6 de julio).
 • Deportistas profesionales (Real Decreto 1006/1985, de 26 de junio).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 191
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 191
 
 # Pag. 192
 
@@ -8243,7 +8243,7 @@ con los constituidos de acuerdo con la citada Ley 41/2003, a efectos de la aplic
 los mismos términos y condiciones, de todos los beneficios fiscales que les afecten.
 Véase el cuadro sobre aportaciones a patrimonios protegidos de personas con
 discapacidad al final de este apartado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 192
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 192
 
 # Pag. 193
 
@@ -8289,7 +8289,7 @@ de la parte del bien sujeta a dicho Impuesto se determinará, a efectos del IRPF
 futuras transmisiones, de acuerdo con lo establecido en el artículo 36 de la Ley IRPF,
 por lo que, a dichos efectos, el valor determinado según las reglas del Impuesto sobre
 Sucesiones y Donaciones (ISD) tendrá como límite el valor de mercado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 193
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 193
 
 # Pag. 194
 
@@ -8332,7 +8332,7 @@ hubiera dejado de integrar en el período impositivo en que recibió la aportaci
 consecuencia de la aplicación de la exención prevista en el artículo 7.w) de la Ley del
 IRPF y presentar la correspondiente autoliquidación complementaria en los términos
 antes indicados.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 194
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 194
 
 # Pag. 195
 
@@ -8352,7 +8352,7 @@ sociedad.
 Atención: en cuanto a la repercusión fiscal que la disposición anticipada de las
 aportaciones realizadas por el titular del patrimonio protegido tiene para los aportantes
 véase el Capítulo 13.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 195
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 195
 
 # Pag. 196
 
@@ -8407,7 +8407,7 @@ ITPAJD: exento por el artículo acuerdo con lo establecido en el artículo
 respecto a AJD porque las dichos efectos, el valor determinado
 aportaciones deben contar en según las reglas del ISD tendrá como
 escritura pública. límite el valor de mercado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 196
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 196
 
 # Pag. 197
 
@@ -8449,7 +8449,7 @@ períodos impositivos siguientes
 hasta agotar, en su caso, en cada
 uno de ellos los importes máximos
 de reducción.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 197
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 197
 
 # Pag. 198
 
@@ -8498,7 +8498,7 @@ Fondos de inversión a largo plazo europeos regulados en el Reglamento (UE)
 ○
 2015/760 del Parlamento Europeo y del Consejo, de 29 de abril de 2015, sobre los
 fondos de inversión a largo plazo europeos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 198
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 198
 
 # Pag. 199
 
@@ -8549,7 +8549,7 @@ económicos especiales procedan directa o indirectamente de una entidad resident
 un país o territorio calificado como jurisdicción no cooperativa o con el que no exista
 normativa sobre asistencia mutua en materia de intercambio de información tributaria
 en los términos previstos en la LGT, que sea de aplicación.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 199
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 199
 
 # Pag. 200
 
@@ -8585,7 +8585,7 @@ o partícipes, consejeros o administradores,
 entidades pertenezcan a un grupo.
 Cuando la vinculación se defina en función de la relación socio-sociedad, la
 participación del socio deberá ser igual o superior al 25 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 200
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 200
 
 # Pag. 201
 
@@ -8632,7 +8632,7 @@ y, en tal supuesto, las cantidades pagadas por la empresa a los suministradores 
 supuesto de mediación de pago, en los términos anteriormente señalados, sino como retribuciones en especie
 acordadas en el contrato de trabajo, por lo que resultaría de aplicación todas las previsiones que respecto a las
 retribuciones en especie se recogen en el artículo 42 de la Ley del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 201
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 201
 
 # Pag. 202
 
@@ -8677,7 +8677,7 @@ efectiva se efectúe por otras personas o entidades especializadas, siempre que,
 se den los siguientes requisitos:
 Tengan por finalidad la actualización, capacitación o reciclaje de su personal.
 ○
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 202
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 202
 
 # Pag. 203
 
@@ -8723,7 +8723,7 @@ que el principal hubiese sido puesto a disposición del prestatario con anterior
 fecha.
 Rendimientos de trabajo en especie exentos
 Normativa: Art. 42.3 Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 203
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 203
 
 # Pag. 204
 
@@ -8763,7 +8763,7 @@ lugar elegido por aquel para desarrollar su trabajo en los días en que este se 
 distancia o mediante teletrabajo.
 6. Que la empresa que los entregue, lleve y conserve relación de los entregados a cada uno
 de sus empleados o trabajadores, con expresión de:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 204
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 204
 
 # Pag. 205
 
@@ -8804,7 +8804,7 @@ de los empleados de centros educativos autorizados
 Está exenta la prestación del servicio de educación preescolar, infantil, primaria, secundaria
 obligatoria, bachillerato y formación profesional por centros educativos autorizados, a los
 hijos de sus empleados, con carácter gratuito o por precio inferior al normal del mercado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 205
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 205
 
 # Pag. 206
 
@@ -8849,7 +8849,7 @@ emisora.
 6. La empresa que entregue las tarjetas o el medio electrónico de pago, deberá llevar y con-
 servar relación de los entregados a cada uno de sus trabajadores, con expresión del
 número de documento y de la cuantía anual puesta a disposición del trabajador.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 206
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 206
 
 # Pag. 207
 
@@ -8891,7 +8891,7 @@ a la que preste servicios el trabajador al que le entreguen las acciones.
 No obstante, no se entenderá incumplido este requisito cuando para recibir las
 acciones o participaciones se exija a los trabajadores una antigüedad mínima, que
 deberá ser la misma para todos ellos, o que sean contribuyentes por el IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 207
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 207
 
 # Pag. 208
 
@@ -8935,7 +8935,7 @@ Valoración:
 Véanse las reglas especiales de valoración de estas acciones y participaciones en el
 apartado “Cómputo de rendimientos de trabajo en especie" de este capítulo.
 Imputación temporal del importe no exento
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 208
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 208
 
 # Pag. 209
 
@@ -8978,7 +8978,7 @@ grupo o cada una de las empresas que lo componen deberá cumplir con los requisi
 Los emprendedores que quieran acogerse a los beneficios y especialidades de esta ley deberán obtener la
 ”certificación del emprendimiento innovador y escalable del modelo de negocio” a que se refiere el artículo 4
 de la Ley y estar inscrita como tal en el Registro Mercantil o en el Registro de Cooperativas competente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 209
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 209
 
 # Pag. 210
 
@@ -9013,7 +9013,7 @@ Normativa: Art. 43.1.1º Ley IRPF
 1. Utilización de vivienda
 La regla de valoración de la retribución en especie derivada de la utilización de vivienda,
 viene determinada en función de que la vivienda sea o no propiedad del pagador:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 210
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 210
 
 # Pag. 211
 
@@ -9046,7 +9046,7 @@ vivienda, incluidos los tributos que graven la operación, sin que esta valoraci
 inferior a la que hubiera correspondido de haberse aplicado la regla anterior prevista para las
 viviendas propiedad del pagador (el 10 o el 5 por 100 sobre el valor catastral de la vivienda
 con el límite del 10 por 100 de las restantes contraprestaciones del trabajo).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 211
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 211
 
 # Pag. 212
 
@@ -9092,7 +9092,7 @@ objeto de revisión en 2015, asciende a 80.000 euros.
 ¿Cómo debe valorarse esta retribución, si los ingresos a cuenta efectuados por la empresa
 en el ejercicio 2025 por dicha retribución en especie, que no han sido repercutidos al
 trabajador, han ascendido a 928 euros?
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 212
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 212
 
 # Pag. 213
 
@@ -9131,7 +9131,7 @@ límite máximo de valoración fiscal (10% x 33.000 = 3.300) = 3.300
 Nota: prevalece el coste para el pagador al ser dicha valoración superior a la que hubiera correspondido de
 haber aplicado la regla de valoración por la utilización de viviendas propiedad del pagador.
 • Ingresos a cuenta = 1.385
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 213
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 213
 
 # Pag. 214
 
@@ -9165,7 +9165,7 @@ independiente si fuesen satisfechos por la empresa.
 c. Vehículo perteneciente a empresas que tengan como actividad habitual la cesión de uso
 de vehículos automóviles: la valoración no podrá ser inferior al precio ofertado al
 público del servicio de que se trate.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 214
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 214
 
 # Pag. 215
 
@@ -9207,7 +9207,7 @@ siempre que, en este caso, el valor de mercado que correspondería al vehículo 
 fuera nuevo, antes de impuestos, no sea superior a 40.000 euros.
 • En el caso de utilización mixta del vehículo (fines de la empresa y fines
 particulares del empleado)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 215
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 215
 
 # Pag. 216
 
@@ -9248,7 +9248,7 @@ con objeto de determinar el rendimiento íntegro del trabajo.
 tenga la facultad de disponer del vehículo para fines particulares, exista o no una utilización efectiva para
 tales fines.
 Ejemplo 1: utilización mixta del vehículo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 216
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 216
 
 # Pag. 217
 
@@ -9289,7 +9289,7 @@ Solución:
 • Valoración de la entrega del vehículo: (23.000 – 13.800) (1) = 9.200
 • Ingreso a cuenta no repercutido = 4.300
 Total retribución en especie: (9.200 + 4.300) = 13.500
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 217
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 217
 
 # Pag. 218
 
@@ -9328,7 +9328,7 @@ hayan sido imputadas al perceptor.
 Precisión: téngase en cuenta que, con efectos desde el 13 de enero de 2019, la Directiva (UE) 2016/2341 del
 Parlamento Europeo y del Consejo de 14 de diciembre de 2016, derogó la Directiva 2003/41/CE a que se
 refiere el artículo 43.1.1ª.e) de la Ley del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 218
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 218
 
 # Pag. 219
 
@@ -9370,7 +9370,7 @@ valoración resultante se podrá reducir hasta en un 30 por 100, en los término
 condiciones que se han comentado en este Capítulo.
 f. Entrega de acciones o participaciones concedidas a los trabajadores de
 una empresa emergente
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 219
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 219
 
 # Pag. 220
 
@@ -9392,7 +9392,7 @@ exenta de estos rendimientos prevista en el artículo 14.2.m) de la Ley del IRPF
 examina más adelante.
 Atención: véase el cuadro: entrega de acciones de forma gratuita o por precio inferior al
 normal de mercado por la empresa a sus trabajadores.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 220
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 220
 
 # Pag. 221
 
@@ -9442,7 +9442,7 @@ tipo a imputar.
 B. EMPRESAS B. EMPRESAS EMPRESAS
 EMERGENTES (a partir EMERGENTES (a partir de 1 EMERGENTES (a partir
 de 1 de enero de 2023) de enero de 2023) de 1 de enero de 2023)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 221
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 221
 
 # Pag. 222
 
@@ -9492,7 +9492,7 @@ obtenido otros RT a los
 que se hubiera aplicado la
 reducción (art. 18,
 párrafos 1º y 3º Ley IRPF).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 222
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 222
 
 # Pag. 223
 
@@ -9533,7 +9533,7 @@ que se justifique mediante factura o documento equivalente.
 • En otro caso, siempre que se justifique la realidad del desplazamiento, la cantidad que re-
 sulte de computar 0,26 euros por kilómetro recorrido, más los gastos de peaje y
 aparcamiento que se justifiquen.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 223
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 223
 
 # Pag. 224
 
@@ -9579,7 +9579,7 @@ se realice de forma ininterrumpida, sin solución de continuidad, manteniéndose
 período superior a nueve meses, con independencia de la actividad que se realice y las características de
 esta. Criterio fijado por el Tribunal Supremo en la Sentencia núm. 229/2022, de 23 de febrero (ROJ: STS
 668/2022).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 224
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 224
 
 # Pag. 225
 
@@ -9619,7 +9619,7 @@ euros/día euros/día
 residencia del perceptor España Extranjero
 Manutención, con carácter general 26,67 euros/día 48,08 euros/día
 Manutención (personal de vuelo) 36,06 euros/día 66,11 euros/día
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 225
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 225
 
 # Pag. 226
 
@@ -9656,7 +9656,7 @@ siguientes personas con destino en el extranjero, siempre que sean contribuyente
 IRPF.
 • Funcionarios públicos españoles.
 • Personal al servicio de la Administración del Estado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 226
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 226
 
 # Pag. 227
 
@@ -9697,7 +9697,7 @@ regulado en el artículo 9. A.3.b.2º del Reglamento de IRPF o la exención del 
 ello con independencia de que el pagador hubiere calculado las retenciones a cuenta del IRPF aplicando el
 régimen de excesos.
 Centros de trabajo móviles o itinerantes
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 227
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 227
 
 # Pag. 228
 
@@ -9742,7 +9742,7 @@ sus servicios.
 b. Por gastos de manutención.
 Desplazamientos en territorio español: 26,67 euros diarios.
 Desplazamientos al extranjero: 48,08 euros diarios.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 228
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 228
 
 # Pag. 229
 
@@ -9783,7 +9783,7 @@ siempre que, además:
 • Las cantidades recibidas correspondan exclusivamente a:
 a. Gastos de locomoción y manutención del empleado o trabajador y sus familiares
 durante el traslado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 229
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 229
 
 # Pag. 230
 
@@ -9818,7 +9818,7 @@ de 2006 (BOE de 26 de julio).
 También están exceptuadas de gravamen las cantidades percibidas por los miembros de las
 Mesas Electorales, de acuerdo con lo establecido en la Orden INT/212/2023, de 1 de marzo,
 de regulación de la dieta de los miembros de las mesas electorales. (BOE de 6 de marzo).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 230
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 230
 
 # Pag. 231
 
@@ -9856,7 +9856,7 @@ Fase 3ª:
 (-) Reducción por obtención de rendimientos de trabajo (solo para contribuyentes con rendimientos netos de
 trabajo inferiores a 19.747,50 euros y rentas distintas a las de trabajo que no superen 6.500 euros).
 (=) Rendimiento neto reducido del trabajo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 231
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 231
 
 # Pag. 232
 
@@ -9895,7 +9895,7 @@ de los derivados de sistemas de previsión social: reducción del 30 por 100
 En general
 Se aplicará una reducción del 30 por 100 del importe de los rendimientos íntegros cuando se
 den todos y cada uno de los siguientes requisitos:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 232
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 232
 
 # Pag. 233
 
@@ -9940,7 +9940,7 @@ particularidades:
 • Se considerará como período de generación el número de años de servicio del
 trabajador.
 • Estos rendimientos pueden cobrarse también de forma fraccionada.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 233
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 233
 
 # Pag. 234
 
@@ -9982,7 +9982,7 @@ con anterioridad a 1 de enero de 2015 que tuvieran previsto el inicio de su perc
 de forma fraccionada en períodos impositivos que se inicien a partir de dicha fecha, la
 sustitución de la forma de percepción inicialmente acordada por su percepción en un
 único período impositivo no alterará el inicio del período de generación del rendimiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 234
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 234
 
 # Pag. 235
 
@@ -10026,7 +10026,7 @@ Pasivas, así como las prestaciones satisfechas por colegios de huérfanos e ins
 similares, en los supuestos de lesiones no invalidantes.
 3. Las prestaciones satisfechas por lesiones no invalidantes o incapacidad permanente,
 en cualquiera de sus grados, por empresas y por entes públicos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 235
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 235
 
 # Pag. 236
 
@@ -10068,7 +10068,7 @@ representativos, o de ambas, producidas a partir de 1 de enero de 2013 en las qu
 de los rendimientos del trabajo derivados de la extinción supere los 700.000 euros se
 establecen para la aplicación de la reducción del 30 por 100 los siguientes límites
 adicionales específicos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 236
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 236
 
 # Pag. 237
 
@@ -10105,7 +10105,7 @@ El menor de:
 a. Importe establecido como obligatorio por el Estatuto de los Trabajadores: 200.000
 b. Importe máximo indemnización exenta: 180.000
 Ingresos íntegros fiscalmente computables (550.000 – 180.000) = 370.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 237
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 237
 
 # Pag. 238
 
@@ -10140,7 +10140,7 @@ durante tres años, motivará la obligación de presentar una autoliquidación c
 de los intereses de demora, en el plazo que medie entre la fecha en que se incumpla el requisito y la
 finalización del plazo reglamentario de declaración correspondiente al período impositivo en que
 se produzca dicho incumplimiento (disposición transitoria decimoséptima del Reglamento del IRPF).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 238
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 238
 
 # Pag. 239
 
@@ -10182,7 +10182,7 @@ C 1. Prestaciones percibidas en forma de capital derivadas de contratos
 de seguros colectivos que instrumentan compromisos por pensiones de
 las empresas
 Normativa: disposición transitoria undécima Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 239
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 239
 
 # Pag. 240
 
@@ -10225,7 +10225,7 @@ gran invalidez
 No obstante, podrá aplicarse una reducción única del 75 por 100 sobre la totalidad del
 rendimiento si se cumplen los siguientes requisitos:
 • Que se trate de contratos de seguro concertados a partir del 31 de diciembre de 1994.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 240
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 240
 
 # Pag. 241
 
@@ -10262,7 +10262,7 @@ Importante: a partir de 1 de enero de 2015 la aplicación de las reducciones del
 transitorio se limita a las prestaciones en forma de capital que se perciban en los plazos
 que se indican en el apartado "Límites temporales para la aplicación de las reducciones
 del régimen transitorio".
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 241
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 241
 
 # Pag. 242
 
@@ -10311,7 +10311,7 @@ contingencias acaecidas con posterioridad a partir de 1 de enero de 2015, en el 
 acaezca la contingencia correspondiente, o en los dos ejercicios siguientes), salvo en aquellos supuestos
 en que el rendimiento íntegro del trabajo viene determinado por diferencia entre el importe recibido y las
 aportaciones que no hayan podido ser objeto de reducción o minoración en la base imponible del IRPF .
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 242
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 242
 
 # Pag. 243
 
@@ -10365,7 +10365,7 @@ para la aplicación de la reducción derivada de la disposición transitoria duo
 considerarse que el supuesto de disposición anticipada acaece en el ejercicio en el que se cumpla el requisito
 de antigüedad de las aportaciones (transcurso de 10 años) y, además, se haya solicitado la disposición
 expresamente por el partícipe.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 243
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 243
 
 # Pag. 244
 
@@ -10415,7 +10415,7 @@ momento de acceder a la jubilación en el régimen de la Seguridad Social corres
 No obstante, si se trata de prestaciones que perciban los beneficiarios del plan de pensiones en caso de
 fallecimiento del partícipe, será el ejercicio en que acaezca el fallecimiento el que determine el límite temporal
 de aplicación de la reducción, siempre que se cumplan los requisitos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 244
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 244
 
 # Pag. 245
 
@@ -10452,7 +10452,7 @@ Los salarios brutos de doña P.O.R en los últimos años fueron:
 Determinar si doña P.O.R. puede aplicar la nueva reducción por rendimientos de
 actividades artísticas obtenidos de manera excepcional en 2025.
 Solución:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 245
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 245
 
 # Pag. 246
 
@@ -10503,7 +10503,7 @@ número de años de servicio del trabajador.
 de huérfanos e instituciones similares, empresas y
 • Estos rendimientos pueden cobrarse también por entes públicos.
 de forma fraccionada.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 246
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 246
 
 # Pag. 247
 
@@ -10550,7 +10550,7 @@ irregular en el tiempo.
 B) Límites específicos adicionales para determinados rendimientos con período de generación superior
 a dos años, distintos de los derivados de sistemas de previsión social, sin perjuicio del límite general
 que se señala en la letra A):
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 247
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 247
 
 # Pag. 248
 
@@ -10576,7 +10576,7 @@ La cuantía del rendimiento no podrá superar 300.000 euros, o, si es inferior, 
 multiplicar el salario medio anual del conjunto de los declarantes en el IRPF (22.100 euros), por el número
 de años de generación del rendimiento, pudiendo duplicarse dicho límite en los casos reflejados en el
 apartado correspondiente de los límites.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 248
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 248
 
 # Pag. 249
 
@@ -10646,7 +10646,7 @@ antelación.
 • Restantes
 prestaciones por
 invalidez.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 249
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 249
 
 # Pag. 250
 
@@ -10695,7 +10695,7 @@ siempre que hubieran
 transcurrido más de
 dos años desde la
 primera aportación.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 250
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 250
 
 # Pag. 251
 
@@ -10748,7 +10748,7 @@ período anterior al 12 de cuantía de la indemnización no
 febrero de 2012 resultase exenta obtenida: Contingencias a tener en cuenta
 un número de días para el rescate anticipado en caso
 superior, en cuyo caso se • Hasta 700.000 euros: de desempleo:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 251
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 251
 
 # Pag. 252
 
@@ -10800,7 +10800,7 @@ demandante de empleo.
 prestación correspondiente a la jubilación también cuando el trabajador pase a situación legal de desempleo en los
 casos contemplados en los artículos 49.1.g) [por muerte, jubilación o incapacidad del empresario], 52 [por causas
 objetivas] y 57 [procedimiento concursal] del Estatuto de los Trabajadores (ET).(Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 252
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 252
 
 # Pag. 253
 
@@ -10851,7 +10851,7 @@ Gastos deducibles del artículo 19 de la Ley del IRPF
 Una vez determinado el rendimiento íntegro del trabajo, debe procederse a la deducción de
 los gastos que la Ley del IRPF califica como deducibles para determinar el rendimiento neto.
 A estos efectos tienen la consideración de gastos fiscalmente deducibles exclusivamente los
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 253
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 253
 
 # Pag. 254
 
@@ -10889,7 +10889,7 @@ Atención: los gastos deducibles del artículo 19.2.f) de la Ley del IRPF se apl
 unidad familiar en el supuesto de tributación conjunta.
 Bajo este concepto se incluyen las siguientes cantidades deducibles como gastos:
 a. Por obtención de rendimientos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 254
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 254
 
 # Pag. 255
 
@@ -10936,7 +10936,7 @@ deducible por ese concepto, el importe total que podrá ser objeto de deducción
 2.000 euros, con el límite de los rendimientos netos del trabajo derivados de los puestos
 de trabajo aceptados por todos los contribuyentes que tengan derecho a la aplicación de
 ese gasto.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 255
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 255
 
 # Pag. 256
 
@@ -10979,7 +10979,7 @@ Precisiones:
 No puede entenderse como trabajador activo a un contribuyente en situación legal de desempleo, que
 desarrolle una actividad económica, que esté prejubilado, un administrador de una sociedad a la que no presta
 servicios en el marco de una relación laboral, o que percibe una pensión por incapacidad permanente total que
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 256
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 256
 
 # Pag. 257
 
@@ -11025,7 +11025,7 @@ personas con discapacidad.
 En el supuesto de tributación conjunta de unidades familiares en las que existan varios
 trabajadores activos que tengan la consideración de persona con discapacidad, el importe
 total del gasto deducible por ese concepto será la cuantía que corresponda al
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 257
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 257
 
 # Pag. 258
 
@@ -11071,7 +11071,7 @@ Solución
 Importe total de los gastos deducibles por ambos conceptos (2.000 + 3.500) = 5.500
 Por movilidad geográfica: 2.000
 Por trabajador activo con discapacidad: 3.500
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 258
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 258
 
 # Pag. 259
 
@@ -11109,7 +11109,7 @@ Rendimiento neto positivo Importe de la reducción
 Entre 14.852 y 17.673,52 euros 7.302 - [1,75 x (RNT - 14.852)] (*)
 (*) RNT = rendimiento neto del trabajo que será el resultado de minorar el rendimiento íntegro con los gastos previstos en las letras a), b), c),
 d) y e) del artículo 19.2 de la Ley del IRPF (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 259
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 259
 
 # Pag. 260
 
@@ -11146,7 +11146,7 @@ Regla general
 Normativa: Art. 14.1 a) Ley IRPF
 Los rendimientos del trabajo, tanto los ingresos como los gastos, se imputan al período
 impositivo en el que sean exigibles por su perceptor.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 260
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 260
 
 # Pag. 261
 
@@ -11191,7 +11191,7 @@ Por tanto, en función de si los atrasos se perciben antes del inicio del plazo 
 declaraciones del IRPF correspondiente al ejercicio 2025, durante dicho plazo o con posterioridad al mismo y
 dependiendo de si se trata de atrasos de ejercicios anteriores a 2025 o del propio ejercicio 2025, nos
 encontramos con las siguientes situaciones:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 261
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 261
 
 # Pag. 262
 
@@ -11237,7 +11237,7 @@ Normativa: Art. 7.3 Reglamento IRPF
 En el caso de rendimientos derivados de la cesión de la explotación de los derechos de autor
 que se devenguen a lo largo de varios años, el contribuyente podrá optar por imputar el
 anticipo a cuenta de los mismos a medida que vayan devengándose los derechos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 262
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 262
 
 # Pag. 263
 
@@ -11275,7 +11275,7 @@ F. Prestaciones derivadas de planes de pensiones
 Los rendimientos del trabajo derivados de estas prestaciones deben imputarse al período
 impositivo en que se perciban, aunque este no corresponda con aquel en el que se produjo la
 contingencia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 263
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 263
 
 # Pag. 264
 
@@ -11315,7 +11315,7 @@ salario por año de servicio por el tiempo de prestación de servicios anterior 
 prorrateándose por meses los períodos de tiempo inferiores a un año, y a razón de 33 días
 de salario por año de servicio por el tiempo de prestación de servicios posterior,
 prorrateándose igualmente por meses los períodos de tiempo inferiores a un año.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 264
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 264
 
 # Pag. 265
 
@@ -11353,7 +11353,7 @@ Véanse al respecto dentro de este Capítulo en Fase 1ª: Determinación del ren
 apartado destinado a examinar la reducción por "Rendimientos con período de generación superior a dos
 años".
 2. Prestación de desempleo en su modalidad de pago único.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 265
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 265
 
 # Pag. 266
 
@@ -11383,7 +11383,7 @@ rendimiento neto previo calculado (13.640 euros).(Volver)
 exentas, distintas de las del trabajo superiores a 6.500 euros (en concreto tiene 5.500 euros), la cuantía de la
 reducción por obtención de rendimientos del trabajo aplicando el artículo 20 de la Ley del IRPF será: 7.302 euros.
 (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 266
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 266
 
 # Pag. 267
 
@@ -11415,7 +11415,7 @@ b. Han de derivar, directa o indirectamente, de elementos patrimoniales ya sea u
 derecho de naturaleza real o personal o una facultad.
 c. Los elementos patrimoniales, bienes o derechos, de los que derivan los rendimientos de
 capital han de ser de titularidad del contribuyente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 267
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 267
 
 # Pag. 268
 
@@ -11457,7 +11457,7 @@ afectos a actividades económicas, no genera rendimientos del capital inmobiliar
 da lugar a la aplicación del régimen especial de imputación de rentas inmobiliarias, con
 excepción de la vivienda habitual, los solares no edificados y los inmuebles de naturaleza
 rústica.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 268
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 268
 
 # Pag. 269
 
@@ -11499,7 +11499,7 @@ subarriendo tiene la consideración de rendimientos del capital inmobiliario, si
 proceda aplicar sobre el rendimiento neto la reducción por arrendamiento de bienes
 inmuebles destinados a vivienda, establecida en el artículo 23.2 de la Ley del IRPF, que más
 adelante se comenta.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 269
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 269
 
 # Pag. 270
 
@@ -11542,7 +11542,7 @@ de renta imputada por la titularidad del inmueble , siempre que este no se convi
 vivienda habitual del contribuyente.
 La imputación de rentas por los inmuebles que hayan estado durante el ejercicio, total o parcialmente, a
 disposición de sus propietarios o usufructuarios se comenta en el Capítulo 10.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 270
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 270
 
 # Pag. 271
 
@@ -11585,7 +11585,7 @@ cuenta que las modificaciones en el importe fijado como precio del alquiler (cua
 que sea el importe de la reducción), determinan que el rendimiento íntegro del capital
 inmobiliario correspondiente a los periodos a los que afecte sea el correspondiente a los
 nuevos importes acordados por las partes.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 271
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 271
 
 # Pag. 272
 
@@ -11624,7 +11624,7 @@ familiares, hasta el tercer grado inclusive, el rendimiento neto total no podrá
 renta imputada derivada de dicho inmueble. Esta regla especial de valoración se comenta en
 el apartado "Rendimiento mínimo computable en caso de parentesco" de este mismo
 Capítulo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 272
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 272
 
 # Pag. 273
 
@@ -11665,7 +11665,7 @@ no contratación del referido seguro de vida debe ser la imposibilidad de accede
 La deducibilidad de estos gastos, solo opera (debido a la necesaria correlación de los gastos
 con los ingresos) respecto a la parte del período impositivo en que la vivienda se encuentre
 alquilada, esto es, que se calculan de forma proporcional al número de días del periodo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 273
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 273
 
 # Pag. 274
 
@@ -11709,7 +11709,7 @@ Debe tenerse en cuenta lo siguiente:
 a) El importe total máximo a deducir por los intereses y demás gastos de financiación y por
 los gastos de conservación y reparación no podrá exceder, para cada bien o derecho, de
 la cuantía de los rendimientos íntegros obtenidos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 274
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 274
 
 # Pag. 275
 
@@ -11748,7 +11748,7 @@ vigilancia, portería, cuidado de jardines, etc.
 En particular, las cuotas de la comunidad de propietarios cuando se trata de inmuebles en
 régimen de propiedad horizontal.
 3. Gastos de formalización del contrato y defensa jurídica
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 275
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 275
 
 # Pag. 276
 
@@ -11786,7 +11786,7 @@ dicho rendimiento.
 Además de los conceptos específicamente enumerados anteriormente, tienen la
 consideración de fiscalmente deducibles cualquier otro gasto siempre que sea necesario para
 la obtención de los correspondientes ingresos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 276
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 276
 
 # Pag. 277
 
@@ -11828,7 +11828,7 @@ los bienes adquiridos.
 Criterio interpretativo fijado por el Tribunal Supremo (Sala de lo Contencioso-Administrativo) en su
 Sentencia núm. 1130/2021, de 15 de septiembre ( ROJ : STS 3483/2021).
 2. Valor catastral, excluido el valor del suelo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 277
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 277
 
 # Pag. 278
 
@@ -11877,7 +11877,7 @@ contribuyente podrá deducir en concepto de amortización la que resulte de apli
 y el 3 por 100 (máximo). Cuando posteriormente proceda a la transmisión de dicha vivienda, para determinar el
 importe de la ganancia patrimonial, tendrá que minorar el importe que haya deducido previamente en concepto de
 amortización del inmueble.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 278
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 278
 
 # Pag. 279
 
@@ -11917,7 +11917,7 @@ Recuerde: en el supuesto de que el inmueble no hubiera estado arrendado durante
 todo el año, la amortización deducible, los intereses y demás gastos de financiación, los
 gastos en primas de seguros, comunidad, Impuesto sobre Bienes Inmuebles,
 suministros etc., serán los que correspondan al número de días del año en que el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 279
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 279
 
 # Pag. 280
 
@@ -11955,7 +11955,7 @@ dicho inmueble ha estado arrendado percibiendo una renta anual 20.000 euros.
 Calcular la amortización que corresponde a un bien inmueble que se encuentra alquilado.
 Solución:
 Amortización
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 280
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 280
 
 # Pag. 281
 
@@ -11994,7 +11994,7 @@ Por tanto, debe entenderse que constituyen reparaciones y conservaciones las des
 vida útil del inmueble y su capacidad productiva o de uso, mientras que cabe considerar como mejoras las
 que redundan bien en un aumento de la capacidad o habitabilidad del inmueble, bien en un alargamiento
 de su vida útil.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 281
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 281
 
 # Pag. 282
 
@@ -12039,7 +12039,7 @@ b. De duración vitalicia: 3 por 100 del coste de adquisición satisfecho
 Límite del gasto en amortización en este caso: los rendimientos íntegros derivados de cada derecho o
 facultad
 (=) Rendimiento neto del capital inmobiliario
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 282
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 282
 
 # Pag. 283
 
@@ -12079,7 +12079,7 @@ plenamente identificada la finalidad del arrendamiento en los términos exigidos
 el uso exclusivo de la vivienda para una persona física determinada (Criterio fijado por el Tribunal Económico-
 Administrativo Central, en su Resolución de 8 de septiembre de 2016, en recurso extraordinario de alzada para
 la unificación de criterio).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 283
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 283
 
 # Pag. 284
 
@@ -12122,7 +12122,7 @@ lucrativos a las que sea de aplicación el régimen especial regulado en el tít
 de la Ley 49/2002, de 23 de diciembre, de régimen fiscal de las entidades sin fines
 lucrativos y de los incentivos fiscales al mecenazgo, que destine la vivienda a
 alguno de los siguientes fines:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 284
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 284
 
 # Pag. 285
 
@@ -12168,7 +12168,7 @@ netos positivos derivada de ingresos no incluidos o de gastos indebidamente dedu
 en la autoliquidación del contribuyente y que se regularicen en alguno de los procedimientos
 citados en el párrafo anterior, incluso cuando esas circunstancias hayan sido declaradas o
 aceptadas por el contribuyente durante la tramitación del procedimiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 285
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 285
 
 # Pag. 286
 
@@ -12217,7 +12217,7 @@ modelo 238 "Declaración informativa para la comunicación de información por p
 operadores de plataformas", de modo que para el ejercicio 2024 y siguientes, se elimina
 la obligación de presentar la declaración informativa sobre la cesión de uso de viviendas
 con fines turísticos (modelo 179).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 286
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 286
 
 # Pag. 287
 
@@ -12261,7 +12261,7 @@ actuaciones de rehabilitación del artículo 41.1 del Reglamento
 del IRPF finalizadas con 2 años de antelación a la firma del
 contrato.
 50 por 100 Para el resto de arrendamientos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 287
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 287
 
 # Pag. 288
 
@@ -12300,7 +12300,7 @@ rendimiento neto resultante sobre la que se aplicará la reducción del 30 por 1
 superar el importe de 300.000 euros anuales.
 Téngase en cuenta que en el caso de que existan rendimientos irregulares positivos y negativos la base
 máxima de la reducción será su suma algebraica.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 288
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 288
 
 # Pag. 289
 
@@ -12342,7 +12342,7 @@ localizados en municipios en los que los valores catastrales hayan sido revisado
 modificados, o determinados mediante un procedimiento de valoración colectiva de
 carácter general, de conformidad con la normativa catastral, siempre que hubieran
 entrado en vigor a partir de 1 de enero de 2012, al igual que en 2023 y 2024.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 289
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 289
 
 # Pag. 290
 
@@ -12382,7 +12382,7 @@ comentados, el rendimiento neto reducido será el mayor de las dos cantidades si
 a. Rendimiento neto correspondiente al arrendamiento o cesión del inmueble, una vez
 aplicadas sobre el mismo, en su caso, las reducciones que procedan de las anteriormente
 comentadas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 290
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 290
 
 # Pag. 291
 
@@ -12413,7 +12413,7 @@ Comunidad de propietarios 580 1.385 540
 Amortización del bien inmueble 200 300 320
 Rendimiento neto 3.435 –2.585 3.130
 2. Reducción sobre los rendimientos derivados del arrendamiento de las viviendas 1 y 2:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 291
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 291
 
 # Pag. 292
 
@@ -12454,7 +12454,7 @@ cada una de ellas en proporción a su participación en dicha titularidad. Por c
 cada uno de los cotitulares deberá declarar como rendimiento la cantidad que resulte de
 aplicar al rendimiento total producido por el inmueble o derecho el porcentaje que represente
 su participación en la titularidad del mismo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 292
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 292
 
 # Pag. 293
 
@@ -12491,7 +12491,7 @@ imputarán al período impositivo en que la sentencia judicial adquiera firmeza,
 aunque no se hayan cobrado en dicho ejercicio.
 Supuestos especiales de integración de rentas pendientes de imputación
 1. Pérdida de la condición de contribuyente por cambio de residencia
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 293
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 293
 
 # Pag. 294
 
@@ -12533,7 +12533,7 @@ propiedad del contribuyente o del que ostente el derecho de usufructo, y sus uso
 ejercicio, recogiendo la información necesaria para declarar los rendimientos del capital inmo-
 biliario y las rentas inmobiliarias imputadas que les correspondan.
 Datos particulares de cada inmueble
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 294
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 294
 
 # Pag. 295
 
@@ -12569,7 +12569,7 @@ f. Naturaleza. Se marcará con una "X" la casilla que corresponda a la naturalez
 del inmueble urbano o rústico:
 Casilla [0067] Inmueble urbano.
 Casilla [0068] Inmueble rústico.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 295
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 295
 
 # Pag. 296
 
@@ -12613,7 +12613,7 @@ objeto principal del arrendamiento, subarrendamiento o cesión, cuando no esté
 especificada la parte de la contraprestación que corresponde individualmente a cada
 uno de ellos (por ejemplo, la plaza de garaje arrendada conjuntamente con una
 vivienda por un único importe).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 296
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 296
 
 # Pag. 297
 
@@ -12653,7 +12653,7 @@ corresponda al inmueble accesorio se ajusta a los dispuesto en el artículo 14.2
 Reglamento del IRPF.
 Inmuebles arrendados o cedidos a terceros y constitución o cesión de
 derechos o facultades de uso o disfrute sobre los mismos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 297
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 297
 
 # Pag. 298
 
@@ -12695,7 +12695,7 @@ de 2025 celebró un nuevo contrato pactando una renta mensual de 1.000 euros.
 La vivienda fue adquirida en el año 2000 por un importe equivalente a 120.000 euros más
 9.000 euros de gastos. Para su adquisición solicitaron un préstamo hipotecario del Banco
 "Z" por el que han pagado a lo largo de 2025 la cantidad de 400 euros de intereses y 2.200
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 298
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 298
 
 # Pag. 299
 
@@ -12736,7 +12736,7 @@ hipotecario) (1): 400
 Total gastos deducibles: 4.956,86
 Rendimiento neto (11.500 – 4.956,86) = 6.543,14
 • Desde el 1 de enero hasta el 31 de mayo de 2025: 4.500 - (4.956,86 x 5/12) = 2.434,64
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 299
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 299
 
 # Pag. 300
 
@@ -12781,7 +12781,7 @@ intereses) (Volver gastos reparación)
 De acuerdo con el artículo 14.2.a) del Reglamento de IRPF la amortización no podrá exceder, en cada año, del
 resultado de aplicar el 3 por 100 sobre al mayor de los siguientes valores: valor catastral de construcción (39.120
 euros) o coste de adquisición, excluido el suelo (66.228,60 euros). (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 300
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 300
 
 # Pag. 301
 
@@ -12824,7 +12824,7 @@ hipotecario) (1) : 200 x 9/12 = 150
 • Tributos, recargos y tasas (IBI): 260 x 9/12 = 195
 • Gastos de Comunidad: 850 x 9/12 = 637,50
 • Amortización:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 301
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 301
 
 # Pag. 302
 
@@ -12869,7 +12869,7 @@ procedimiento previsto en el artículo 18 de la Ley 12/2023, de 24 de mayo, por 
 derecho a la vivienda como consecuencia de la Resolución de 14 de marzo de 2024,
 de la Secretaría de Estado de Vivienda y Agenda Urbana (BOE de 15 de marzo), con
 un período de vigencia comprendido entre el 16 de marzo de 2024 y el 16 de marzo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 302
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 302
 
 # Pag. 303
 
@@ -12906,7 +12906,7 @@ hipotecario) (1) : 3.600
 Total gastos deducibles: 5.311
 Rendimiento neto (3.600 – 5.311) = -1.711
 Reducción por arrendamiento vivienda (4) : 0
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 303
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 303
 
 # Pag. 304
 
@@ -12936,7 +12936,7 @@ arredramiento celebrado el año 2020. (Volver)
 3. Suma de rendimientos netos reducidos del capital inmobiliario
 La suma de rendimientos netos reducidos del capital inmobiliario de los tres
 arrendamientos: (3.028,11 + 328,71 + 151,80) = 3.508,62
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 304
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 304
 
 # Pag. 305
 
@@ -12965,7 +12965,7 @@ se comprenderán entre los procedentes de las indicadas actividades.
 Importante: en ningún caso tienen la consideración de elementos patrimoniales afectos
 a actividades económicas, los activos representativos de la participación en fondos
 propios de una entidad y de la cesión de capitales a terceros [Art. 29.1 c) Ley IRPF].
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 305
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 305
 
 # Pag. 306
 
@@ -13005,7 +13005,7 @@ Normativa: Disposición transitoria décima Ley IRPF
 • La distribución de los beneficios a que se refiere el artículo 25.1 a) y b) Ley IRPF
 obtenidos durante los períodos impositivos en los que hubiera sido de aplicación el
 régimen de atribución de rentas por sociedades civiles que hubieran llevado contabilidad
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 306
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 306
 
 # Pag. 307
 
@@ -13047,7 +13047,7 @@ La Administración tributaria podrá comprobar que las operaciones realizadas en
 personas o entidades vinculadas se han valorado por su valor de mercado y efectuará,
 en su caso, las correcciones valorativas que procedan respecto de las operaciones
 sujetas al Impuesto sobre Sociedades, al IRPF o al Impuesto sobre la Renta de no
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 307
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 307
 
 # Pag. 308
 
@@ -13087,7 +13087,7 @@ del ahorro, establece la incorporación de todas las rentas así calificadas, cu
 sean los instrumentos financieros en que se materialicen y el plazo de su generación, en una
 base única denominada base imponible del ahorro.
 La base imponible del ahorro se compone de los siguientes rendimientos:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 308
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 308
 
 # Pag. 309
 
@@ -13103,12 +13103,12 @@ autor, y de la prestación de asistencia técnica.
 subarrendamientos y de la cesión del derecho a la explotación de la imagen.
 En la siguiente imagen se representa gráficamente la clasificación de los rendimientos del
 capital mobiliario según su integración en la base imponible:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 309
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 309
 
 # Pag. 310
 
 Capítulo 5. Rendimientos del capital mobiliario
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 310
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 310
 
 # Pag. 311
 
@@ -13160,7 +13160,7 @@ o minas
 • Subarrendamiento percibido por el
 subarrendador (*)
 • Cesión derecho explotación imagen (*)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 311
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 311
 
 # Pag. 312
 
@@ -13196,7 +13196,7 @@ En concreto: Distribución de la prima de emisión y la reducción
 de capital con devolución de aportaciones
 Normativa: Arts. 25.1.e) y 33.3.a) Ley IRPF
 Hay que distinguir entre:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 312
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 312
 
 # Pag. 313
 
@@ -13241,7 +13241,7 @@ en su caso, en los siguientes importes:
 • En el importe de los beneficios repartidos con anterioridad a la fecha de la distribución
 de la prima de emisión o a la de la reducción de capital, procedentes de reservas
 incluidas en los citados fondos propios.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 313
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 313
 
 # Pag. 314
 
@@ -13286,7 +13286,7 @@ realizó el año anterior, una prima de emisión de 2 euros por acción.
 El capital social de la entidad “Max, S.A" en el último ejercicio cerrado con anterioridad a la
 fecha de distribución de la prima estaba formado por 2.500 acciones de valor nominal de
 10 euros, y existían reservas constituidas por importe de 2.500 euros, de las que 1.250
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 314
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 314
 
 # Pag. 315
 
@@ -13328,7 +13328,7 @@ A. Reducción de capital y distribución de la prima de emisión efectuadas
 con posterioridad al 23 de septiembre de 2010 por sociedades de
 inversión de capital variable (SICAV)
 Normativa: Art. 94.1.c) y d) y 94.2.b) Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 315
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 315
 
 # Pag. 316
 
@@ -13373,7 +13373,7 @@ instituciones de inversión colectiva que cumplan los requisitos para mantener e
 ciento en el Impuesto sobre Sociedades.
 B. Dividendos y participaciones en beneficios procedentes de
 determinados valores tomados en préstamo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 316
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 316
 
 # Pag. 317
 
@@ -13417,7 +13417,7 @@ Precisión: aunque el artículo 26.1.a) de la Ley del IRPF alude a la Ley 24/198
 Valores, dicha referencia debe entenderse realizada a la Ley 6/2023, de 17 de marzo, de los Mercados de
 Valores y de los Servicios de Inversión (BOE de 18 de marzo).
 No serán deducibles:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 317
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 317
 
 # Pag. 318
 
@@ -13454,7 +13454,7 @@ Rendimiento computable: 2.100
 Retención soportada (19% s/2.100): 399
 Total ingresos íntegros (1.020 + 300 + 2.100) = 3.420
 Gastos deducibles = 31
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 318
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 318
 
 # Pag. 319
 
@@ -13493,7 +13493,7 @@ en el Capítulo 18.
 • Rentas derivadas de las operaciones de cesión temporal de activos financieros con pacto
 de recompra (REPOS). Se denominan así las operaciones de venta que incluyen un
 compromiso de recompra, opcional o no opcional, que se realiza en un momento
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 319
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 319
 
 # Pag. 320
 
@@ -13534,7 +13534,7 @@ amortización o reembolso.
 intereses y cualquier otra forma de retribución pactada como contraprestación a la cesión
 a terceros de capitales propios y no esté comprendida en el concepto de rendimiento
 implícito en los términos comentados en el párrafo anterior.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 320
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 320
 
 # Pag. 321
 
@@ -13578,7 +13578,7 @@ No obstante, los importes de las compensaciones por la distribución de la prima
 por reducciones de capital con devolución de aportaciones o por derechos de suscripción
 preferente o de asignación gratuita generados durante la duración del préstamo, tendrán para
 el prestamista el tratamiento aplicable a los mismos que se comenta en el Capítulo 11.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 321
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 321
 
 # Pag. 322
 
@@ -13621,7 +13621,7 @@ computará como rendimiento del capital mobiliario la diferencia entre la
 compensación percibida y la inversión inicialmente realizada. Esta compensación se
 incrementará en las cantidades que se hubieran obtenido previamente por la transmisión
 de los valores recibidos. En caso de que los valores recibidos en el canje no se hubieran
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 322
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 322
 
 # Pag. 323
 
@@ -13662,7 +13662,7 @@ por la cesión a terceros de capitales propios
 Si la retribución es dineraria, la integración en la base imponible de estos rendimientos se
 efectuará por el importe íntegro, sin descontar la retención practicada sobre dicho
 rendimiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 323
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 323
 
 # Pag. 324
 
@@ -13704,7 +13704,7 @@ cuenta efectuados.
 En cuanto a la retención:
 Como regla general, los rendimientos del capital mobiliario derivados de los activos
 financieros están sujetos a retención o a ingreso a cuenta.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 324
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 324
 
 # Pag. 325
 
@@ -13743,7 +13743,7 @@ Obligaciones adquisición
 mencionados cuando se realicen durante los 30 días inmediatamente anteriores al vencimiento del cupón por un
 contribuyente del IRPF a un contribuyente del Impuesto sobre Sociedades o a una persona o entidad no residente
 en territorio español. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 325
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 325
 
 # Pag. 326
 
@@ -13782,7 +13782,7 @@ a. Intereses y otras retribuciones pactadas o estimadas
 bienes y/o derechos.
 b. Operaciones sobre activos financieros (rendimientos implícitos):
 RCM= Valor de enajenación o reembolso - Valor adquisición o suscripción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 326
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 326
 
 # Pag. 327
 
@@ -13821,7 +13821,7 @@ correspondiente a la retribución por el ejercicio de sus funciones.
 • Una entidad y los cónyuges o personas unidas por relaciones de parentesco, en
 línea directa o colateral, por consanguinidad o afinidad hasta el tercer grado de los
 socios o partícipes, consejeros o administradores.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 327
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 327
 
 # Pag. 328
 
@@ -13862,7 +13862,7 @@ propios por valor de 50.000 euros y el porcentaje de participación del contribu
 descontados los gastos inherentes a dicha transmisión satisfechos por el transmitente.
 Dichas obligaciones las adquirió en marzo de 2013 por 7.815 euros. El día 28 de
 diciembre vuelve a comprar 100 obligaciones de la misma empresa por 8.414 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 328
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 328
 
 # Pag. 329
 
@@ -13900,7 +13900,7 @@ Notas:
 (1) Al proceder los rendimientos de un préstamo realizado a una entidad vinculada con el contribuyente,
 deben integrarse en la base imponible general los intereses correspondientes al exceso del importe de los
 capitales propios cedidos a la entidad vinculada (70.000 euros) respecto del resultado de multiplicar por tres
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 329
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 329
 
 # Pag. 330
 
@@ -13943,7 +13943,7 @@ Gastos deducibles = 41
 Rendimiento neto = 7.674,50
 8. Total rendimientos íntegros y netos a integrar en la base imponible general =
 714,50
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 330
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 330
 
 # Pag. 331
 
@@ -13985,7 +13985,7 @@ cobertura de las contingencias, como, por ejemplo, la jubilación o la invalidez
 Tienen la consideración de operaciones de capitalización las basadas en técnica actuarial, que consistan en
 obtener compromisos determinados en cuanto a su duración y a su importe a cambio de desembolsos únicos o
 periódicos previamente fijados. Véase el Anexo de la Ley 20/2015, de 14 de julio, de ordenación, supervisión y
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 331
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 331
 
 # Pag. 332
 
@@ -14022,7 +14022,7 @@ de fallecimiento o incapacidad y el capital percibido corresponde a la contingen
 supervivencia, podrá detraerse también la parte de las primas satisfechas que
 corresponda al capital en riesgo por fallecimiento o incapacidad que se haya consumido
 hasta el momento, siempre que, durante toda la vigencia del contrato, el capital en riesgo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 332
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 332
 
 # Pag. 333
 
@@ -14058,7 +14058,7 @@ el propio contribuyente, esto es, se considerarán rendimientos de capital mobil
 se den los siguientes requisitos:
 • Que sea percibida por el acreedor hipotecario del contribuyente como beneficiario del
 mismo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 333
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 333
 
 # Pag. 334
 
@@ -14101,7 +14101,7 @@ continuación.
 Cuando se perciba un capital diferido, la parte del rendimiento neto total correspondiente a
 primas satisfechas con anterioridad a 31 de diciembre de 1994, que se hubiera
 generado con anterioridad a 20 de enero de 2006, podrá reducirse de la siguiente forma:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 334
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 334
 
 # Pag. 335
 
@@ -14137,7 +14137,7 @@ a cuyo rendimiento neto se le hubiera aplicado el régimen transitorio, obtenido
 enero de 2015 hasta el momento de la imputación temporal del capital diferido,
 distinguiéndose las siguientes situaciones a efectos de la aplicación de los porcentajes de
 reducción (denominados también coeficientes de abatimiento):
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 335
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 335
 
 # Pag. 336
 
@@ -14174,7 +14174,7 @@ vigencia de la misma:
 Edad del perceptor Porcentaje aplicable
 Menos de 40 años 40 por 100
 Entre 40 y 49 años 35 por 100
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 336
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 336
 
 # Pag. 337
 
@@ -14212,7 +14212,7 @@ se considerará rendimiento de capital mobiliario el resultado de aplicar a cada
 siguientes porcentajes en función de la duración de la renta:
 Duración de la renta Porcentaje aplicable
 Inferior o igual a 5 años 12 por 100
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 337
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 337
 
 # Pag. 338
 
@@ -14246,7 +14246,7 @@ Entre 66 y 69 años 20 por 100
 70 o más años 8 por 100
 Estos porcentajes serán los correspondientes a la edad del rentista en el momento de la
 constitución de la renta y permanecerán constantes durante toda la vigencia de la misma.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 338
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 338
 
 # Pag. 339
 
@@ -14283,7 +14283,7 @@ esta posibilidad de conversión se recoja en el contrato de seguro, tributarán 
 momento de constitución de las rentas de acuerdo con lo comentado en este número.
 En ningún caso, resultará de aplicación este régimen de tributación cuando el capital se
 ponga a disposición del contribuyente por cualquier medio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 339
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 339
 
 # Pag. 340
 
@@ -14324,7 +14324,7 @@ de las rentas en el momento de la constitución de las mismas.
 En ambos supuestos, no serán de aplicación los porcentajes previstos para rentas
 inmediatas vitalicias o temporales. La aplicación de este régimen está condicionada, además,
 al cumplimiento de los siguientes requisitos (Art. 19 Reglamento IRPF):
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 340
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 340
 
 # Pag. 341
 
@@ -14365,7 +14365,7 @@ Aplicando el régimen especial de prestaciones por jubilación, resulta:
 Rendimientos de capital mobiliario durante los 10 primeros años de cobro de la renta:
 Rentas percibidas (4.500 x 10) = 45.000
 Primas satisfechas (5.000 x 9) = 45.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 341
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 341
 
 # Pag. 342
 
@@ -14403,7 +14403,7 @@ salvo cuando hayan sido adquiridas por herencia, legado o cualquier otro título
 rendimiento del capital mobiliario será el resultado de aplicar a cada anualidad los
 porcentajes previstos, respectivamente, para las rentas inmediatas vitalicias o
 temporales derivadas de contratos de seguros de vida.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 342
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 342
 
 # Pag. 343
 
@@ -14431,7 +14431,7 @@ Inferior o igual a 5 años 12 por 100
 Superior a 5 e inferior o igual a 10 años 16 por 100
 Superior a 10 e inferior o igual a 15 años 20 por 100
 Superior a 15 años 25 por 100
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 343
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 343
 
 # Pag. 344
 
@@ -14469,7 +14469,7 @@ contratos, siempre que:
 noviembre, de Instituciones de Inversión Colectiva (BOE de 5 de noviembre).
 • Se trate de instituciones de inversión colectiva amparadas por la Directiva 2009/65/
 CE, de 13 de julio, del Parlamento Europeo y del Consejo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 344
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 344
 
 # Pag. 345
 
@@ -14509,7 +14509,7 @@ Instrumentación y forma de percepción de las prestaciones
 Instrumentación
 Los recursos aportados deben instrumentarse a través de seguros individuales de vida en los
 que el contratante, asegurado y beneficiario sea el propio contribuyente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 345
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 345
 
 # Pag. 346
 
@@ -14550,7 +14550,7 @@ fallecimiento del asegurado en ningún momento podrá exceder de los siguientes
 porcentajes respecto del importe destinado a la constitución de la renta vitalicia:
 Años desde la constitución de la renta vitalicia Porcentaje
 1.º 95 por 100
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 346
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 346
 
 # Pag. 347
 
@@ -14581,7 +14581,7 @@ momento de la constitución de la renta vitalicia.
 Individuales de Ahorro Sistemático de contratos de seguro formalizados antes de 1
 de enero de 2015.
 Normativa: Disposición transitoria trigésima primera Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 347
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 347
 
 # Pag. 348
 
@@ -14624,7 +14624,7 @@ a. La rentabilidad que se ponga de manifiesto en la constitución de la renta vi
 asegurada (diferencia entre el valor actual actuarial de la renta y la suma de las primas
 satisfechas) se encuentra exenta del IRPF, de acuerdo con lo previsto en el artículo 7.v)
 de la Ley del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 348
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 348
 
 # Pag. 349
 
@@ -14660,7 +14660,7 @@ el contratante, asegurado y beneficiario salvo en caso de fallecimiento.
 En el condicionado del contrato se hará constar de forma expresa y destacada que se trata
 de un Seguro Individual de Ahorro a Largo Plazo y sus siglas (SIALP) quedan reservadas a
 los contratos celebrados a partir del 1 de enero de 2015 que cumplan los requisitos previstos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 349
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 349
 
 # Pag. 350
 
@@ -14705,7 +14705,7 @@ los contratos celebrados a partir del 1 de enero de 2015 que cumplan los requisi
 en esta Ley e integrarán depósitos y contratos financieros contratados a partir de dicha fecha.
 Características y requisitos
 a. Número de planes por contribuyente
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 350
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 350
 
 # Pag. 351
 
@@ -14747,7 +14747,7 @@ la suma de las primas satisfechas o de las aportaciones efectuadas al depósito 
 contrato financiero.
 No obstante lo anterior, si la citada garantía fuera inferior al 100 por 100, el producto
 financiero contratado deberá tener un vencimiento de al menos un año.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 351
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 351
 
 # Pag. 352
 
@@ -14789,7 +14789,7 @@ El titular de un Plan de Ahorro a Largo Plazo podrá movilizar íntegramente los
 económicos del seguro individual de ahorro a largo plazo y los fondos constituidos en la
 cuenta individual de ahorro a largo plazo a otro Plan de Ahorro a Largo Plazo del que será
 titular sin que ello implique la disposición de los recursos y, en consecuencia, sin pérdida del
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 352
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 352
 
 # Pag. 353
 
@@ -14829,7 +14829,7 @@ la producción o distribución de bienes o servicios, se califican como rendimie
 actividades profesionales o artísticas.
 Finalmente, cuando no se ceda el derecho a su explotación, se calificarán como
 rendimientos derivados de actividades empresariales.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 353
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 353
 
 # Pag. 354
 
@@ -14869,7 +14869,7 @@ actividad económica. Los rendimientos percibidos por el titular del inmueble o 
 real sobre el mismo tienen la consideración de rendimientos de capital inmobiliario.
 • Rendimientos procedentes de la cesión del derecho a la explotación de
 la imagen
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 354
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 354
 
 # Pag. 355
 
@@ -14905,7 +14905,7 @@ Asimismo, en la determinación de los gastos deducibles no tiene cabida la amort
 del bien inmueble que se va a subarrendar, ya que es necesario que la amortización
 recaiga sobre inmuebles propiedad del contribuyente, lo que no sucede en el caso
 subarriendo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 355
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 355
 
 # Pag. 356
 
@@ -14943,7 +14943,7 @@ Los rendimientos del capital mobiliario, con un período de generación superior
 que se vinieran percibiendo de forma fraccionada con anterioridad a 1 de enero de 2015, con
 derecho a la aplicación de la reducción del artículo 26.2 de la Ley del IRPF en su redacción
 en vigor a 31 de diciembre de 2014, podrán seguir aplicando la reducción por irregularidad
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 356
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 356
 
 # Pag. 357
 
@@ -14986,7 +14986,7 @@ el bien haya sido adquirido específicamente para que el socio disfrute de él s
 con actividad industrial), la regularización debe realizarse conforme a los artículos 25.1.d) y 43 de la Ley del
 IRPF. Por ejemplo, cuando esa sociedad es una constructora, que ha adquirido el yate precisamente para que
 lo disfrute el socio sin pagar nada a cambio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 357
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 357
 
 # Pag. 358
 
@@ -15025,7 +15025,7 @@ rendimientos en su declaración del IRPF.
 Cuando no resulte debidamente acreditada la titularidad de los bienes o derechos, la
 Administración Tributaria tendrá derecho a considerar como titular a quien figure como tal en
 un registro fiscal o en cualquier otro registro de carácter público.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 358
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 358
 
 # Pag. 359
 
@@ -15062,7 +15062,7 @@ Normativa: Art. 14.2.f) Ley IRPF
 Los rendimientos estimados del capital mobiliario se imputarán al período impositivo en
 que se entiendan producidos. Dicho período coincidirá con aquel en que se realizó la
 prestación del bien o derecho generador del rendimiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 359
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 359
 
 # Pag. 360
 
@@ -15100,7 +15100,7 @@ El tipo de interés pactado es del 7,5 por 100, pagadero anualmente durante el m
 mayo, estando adicionalmente prevista una prima de conversión, consistente en una
 rebaja del 20 por 100 sobre la cotización en Bolsa de las acciones de la Sociedad “P.S.”
 en el día de la conversión.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 360
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 360
 
 # Pag. 361
 
@@ -15149,7 +15149,7 @@ Los gastos satisfechos por el matrimonio en relación con la cafetería durante 
 Don L.C.A. y Doña D.Z.H. optan por presentar declaración conjunta en el IRPF.
 Determinar el rendimiento neto del capital mobiliario a integrar en la base imponible
 general y en la base imponible del ahorro.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 361
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 361
 
 # Pag. 362
 
@@ -15189,7 +15189,7 @@ Ingresos íntegros = 37
 Retención (19% s/37) (*) = 7,03
 (*) El tipo de retención aplicable en 2025 es el 19 por 100. Las retenciones soportadas sobre los rendimientos del
 capital mobiliario deben incluirse en la casilla [0597] de la declaración. (Volver).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 362
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 362
 
 # Pag. 363
 
@@ -15229,7 +15229,7 @@ Amortización local = 900
 Amortización mobiliario (10% s/ 15.000) = 1.500
 Total (800 + 1.100 + 360 + 900 + 1.500) = 4.660
 c. Rendimiento neto (15.600 - 4.660) = 10.940
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 363
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 363
 
 # Pag. 364
 
@@ -15239,7 +15239,7 @@ e. Rendimiento neto reducido = 10.940
 f. Retenciones soportadas (19% s/15.600) (*) = 2.964
 (*) El tipo de retención aplicable en 2025 es el 19 por 100. Las retenciones soportadas sobre los rendimientos del
 capital mobiliario deben incluirse en la casilla [0597] de la declaración. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 364
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 364
 
 # Pag. 365
 
@@ -15286,7 +15286,7 @@ en forma de capital
 prestaciones derivadas de seguros
 cuyo beneficiario es el acreedor
 hipotecario, con ciertos requisitos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 365
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 365
 
 # Pag. 366
 
@@ -15331,7 +15331,7 @@ N = nº de años de duración de la
 renta temporal, con el máximo de 10
 años. Si la renta es vitalicia, se
 tomará como divisor 10 años
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 366
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 366
 
 # Pag. 367
 
@@ -15380,7 +15380,7 @@ apartados.
 B. Si resulta de aplicación la regla
 especial de imputación temporal
 (art.14.2.h, Ley IRPF):
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 367
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 367
 
 # Pag. 368
 
@@ -15396,7 +15396,7 @@ Nota al cuadro:
 (1) Cuando dichas rentas se hubieran constituido con anterioridad a 01-01-1999, la rentabilidad es únicamente el
 resultado de aplicar los porcentajes señalados para las rentas vitalicias o temporales inmediatas, según
 corresponda. Véase la D.T. quinta de la Ley del IRPF . (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 368
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 368
 
 # Pag. 369
 
@@ -15429,7 +15429,7 @@ procedan del ejercicio de:
 • Actividades de comercio.
 • Actividades de prestación de servicios.
 • Actividades de artesanía.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 369
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 369
 
 # Pag. 370
 
@@ -15479,7 +15479,7 @@ Social de los trabajadores por cuenta propia o autónomos, o en una mutualidad d
 social que actúe como alternativa al citado régimen especial conforme a lo previsto en la
 disposición adicional decimoquinta de la Ley 30/1995, de 8 de noviembre, de ordenación y
 supervisión de los seguros privados.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 370
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 370
 
 # Pag. 371
 
@@ -15521,7 +15521,7 @@ D. Arrendamiento de bienes inmuebles
 Se considera que el arrendamiento de inmuebles se realiza como actividad económica,
 únicamente cuando para la ordenación de esta se utilice, al menos, una persona empleada
 con contrato laboral y a jornada completa.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 371
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 371
 
 # Pag. 372
 
@@ -15561,7 +15561,7 @@ La normativa reguladora del IRPF establece como reglas de diferenciación las si
 • Son rendimientos de actividades profesionales los que deriven del ejercicio de las
 actividades incluidas en las Secciones Segunda (actividades profesionales de carácter
 general) y Tercera (actividades profesionales de carácter artístico o deportivo) de las
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 372
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 372
 
 # Pag. 373
 
@@ -15607,7 +15607,7 @@ salvo cuando dicha actividad suponga la ordenación por cuenta propia de los med
 producción y de recursos humanos, o de uno de ambos, con la finalidad de intervenir en la
 producción de bienes o servicios, en cuyo caso los rendimientos se califican como derivados
 de actividades económicas. En el supuesto de que así suceda los rendimientos son
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 373
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 373
 
 # Pag. 374
 
@@ -15647,7 +15647,7 @@ No obstante, cuando tales actividades supongan la ordenación por cuenta propia 
 de recursos humanos o de uno de ambos, con la finalidad de intervenir en la producción o distribución de
 bienes o servicios (por ejemplo, cuando el contribuyente ya viniera ejerciendo actividades económicas y su
 participación en las conferencias, coloquios o cursos se corresponda con materias relacionadas directamente
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 374
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 374
 
 # Pag. 375
 
@@ -15663,7 +15663,7 @@ empresariales mercantiles las agrícolas, las ganaderas y las actividades de art
 siempre que en este último caso las ventas de los objetos construidos o fabricados por los
 artesanos se realicen por estos en sus talleres. El resto de actividades empresariales se
 reputan mercantiles.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 375
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 375
 
 # Pag. 376
 
@@ -15693,7 +15693,7 @@ Propiedad intelectual o Autores que editan sus propias obras Empresarial
 industrial
 Autores que no editan sus propias obras y ordenan por Profesional
 cuenta propia medios de producción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 376
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 376
 
 # Pag. 377
 
@@ -15716,7 +15716,7 @@ Análisis y elaboración de fórmulas magistrales Profesional
 Notarios, Registradores y Agentes de Aduanas Profesional
 (1) Los trabajadores de entidades aseguradoras o de los mediadores anteriores, aunque produzcan
 excepcionalmente algún seguro, perciben rendimientos del trabajo. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 377
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 377
 
 # Pag. 378
 
@@ -15749,7 +15749,7 @@ B02 Actividad ganadera dependiente
 B03 Actividad forestal
 B04 Producción de mejillón en batea
 B05 Actividad pesquera, excepto la actividad de producción de mejillón en batea
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 378
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 378
 
 # Pag. 379
 
@@ -15785,7 +15785,7 @@ Al respecto, se consideran utilizados para necesidades privadas de forma accesor
 notoriamente irrelevante, los bienes del inmovilizado adquiridos y utilizados para el
 desarrollo de la actividad económica que se destinen al uso personal del contribuyente en
 días u horas inhábiles durante los cuales se interrumpa el ejercicio de la actividad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 379
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 379
 
 # Pag. 380
 
@@ -15830,7 +15830,7 @@ La afectación parcial de un elemento patrimonial comporta importantes consecuen
 fiscales ya que, los ingresos y gastos correspondientes a dicha parte del bien deben incluirse
 entre los correspondientes a la actividad económica a que esté afecto.
 Precisiones:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 380
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 380
 
 # Pag. 381
 
@@ -15870,7 +15870,7 @@ siguiente tratamiento:
 los mismos, incluidas las amortizaciones.
 • En el cónyuge no ejerciente, estos elementos patrimoniales comunes no tendrán incidencia alguna, es
 decir, que no tendrá que imputar ningún ingreso ni ningún gasto.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 381
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 381
 
 # Pag. 382
 
@@ -15915,7 +15915,7 @@ general a los automóviles de turismo.
 3. Don A.A.R., medico oftalmólogo, utiliza dos habitaciones de su vivienda exclusivamente
 como consulta. Dichas habitaciones, que tienen 40 m2 y así consta en la
 correspondiente alta del Impuesto sobre Actividades Económicas, representan el 30 por
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 382
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 382
 
 # Pag. 383
 
@@ -15956,7 +15956,7 @@ de la adquisición se tomará el valor de adquisición a efectos del Impuesto so
 Sucesiones y Donaciones, sin que pueda exceder del valor de mercado.
 Nota: los componentes del valor de adquisición se comentan con mayor detalle en el Capítulo 11 de este
 Manual.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 383
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 383
 
 # Pag. 384
 
@@ -15997,7 +15997,7 @@ Patrimoniales y Actos Jurídicos Documentados, notaria y Registro de la Propieda
 equivalente a 5.000 euros.
 Durante los años en que el local estuvo alquilado el valor de adquisición del inmueble ha
 sido superior al valor catastral del mismo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 384
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 384
 
 # Pag. 385
 
@@ -16035,7 +16035,7 @@ citados ejercicios]. Para los ejercicios 2003 a 2017, el porcentaje aplicable es
 27/2003, de 10 de enero, y para los ejercicios 2007 a 2017, artículo 14.2, letra a) del Reglamento del IRPF].
 (Volver)
 2. Desafectación del local (31-05-2025) (2)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 385
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 385
 
 # Pag. 386
 
@@ -16068,7 +16068,7 @@ contenidas en la Ley del IRPF para las ganancias y pérdidas patrimoniales, con 
 siguiente especialidad: No se pueden aplicar los coeficientes reductores aplicables a los
 bienes adquiridos con anterioridad a 31 de diciembre 1994.
 Véase en el Capítulo 11 el apartado dedicado a la transmisión de elementos patrimoniales afectos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 386
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 386
 
 # Pag. 387
 
@@ -16098,7 +16098,7 @@ cuando el destinatario sea empresario) como al volumen de compras en bienes y
 servicios (250.000 euros, excluidas las adquisiciones de inmovilizado, para todas las
 actividades en estimación objetiva -comprendidas también las actividades agrícolas,
 ganaderas y forestales-).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 387
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 387
 
 # Pag. 388
 
@@ -16150,7 +16150,7 @@ percibiéndose de forma fraccionada con
 autónomos económicamente
 dependientes con único cliente no
 vinculado:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 388
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 388
 
 # Pag. 389
 
@@ -16204,7 +16204,7 @@ gastos. • Libro registro de Bienes de inversión.
 inversión. fondos y suplidos
 b. Actividades profesionales:
 • Libro registro de ventas e
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 389
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 389
 
 # Pag. 390
 
@@ -16217,7 +16217,7 @@ gastos.
 inversión.
 • Libro registro de provisiones de
 fondos y suplidos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 390
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 390
 
 # Pag. 391
 
@@ -16269,7 +16269,7 @@ empleo y a la inversión
 (x) Índices correctores
 (=) Rendimiento neto de módulos
 (=) Rendimiento neto de módulos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 391
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 391
 
 # Pag. 392
 
@@ -16307,7 +16307,7 @@ Para las actividades cuyo rendimiento neto se fija en función del volumen de
 operaciones (agrícolas, ganaderas, forestales y de transformación de productos
 naturales):
 – Libro registro de ventas e ingresos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 392
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 392
 
 # Pag. 393
 
@@ -16343,7 +16343,7 @@ C. Profesionales en estimación directa, en cualquiera de sus modalidades:
 • Libro registro de bienes de inversión.
 • Libro registro de provisiones de fondos y suplidos.
 D. Empresarios y profesionales en estimación objetiva.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 393
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 393
 
 # Pag. 394
 
@@ -16375,7 +16375,7 @@ estimación directa, el resto de contribuyentes del IRPF que realicen actividade
 económicas están obligados a llevar los libros registros que en cada caso determina la
 normativa del IRPF, aun cuando lleven contabilidad ajustada a lo dispuesto en el Código
 de Comercio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 394
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 394
 
 # Pag. 395
 
@@ -16419,7 +16419,7 @@ documentales.
 • Libro registro de bienes de
 inversión (si se practican
 amortizaciones).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 395
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 395
 
 # Pag. 396
 
@@ -16460,7 +16460,7 @@ Impuesto sobre Sociedades y en la Ley del IRPF
 La Ley LIS y la Ley del IRPF establecen, en determinados supuestos, criterios especiales de
 imputación fiscal diferentes del criterio general del devengo anteriormente comentado. Estos
 supuestos son, entre otros, los siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 396
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 396
 
 # Pag. 397
 
@@ -16505,7 +16505,7 @@ haberse producido la pérdida de la condición de contribuyente.
 Por tanto, de acuerdo con esta última regla, cuando el contribuyente pierda su condición en
 2026, el período impositivo al que corresponderá la autoliquidación rectificativa será el 2025,
 por ser el último período en que ha tenido la condición de contribuyente del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 397
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 397
 
 # Pag. 398
 
@@ -16546,7 +16546,7 @@ Reversión de gastos que no hayan sido fiscalmente deducibles
 Normativa: Art. 11.5 LIS
 No se integrarán en la base imponible aquellos ingresos que proceden de la reversión de
 gastos que no hayan sido fiscalmente deducibles.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 398
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 398
 
 # Pag. 399
 
@@ -16588,7 +16588,7 @@ Supremo núm. 398/2022, de 30 de marzo (Sala de lo Contencioso), recaída en el 
 Atención: los contribuyentes que determinen el rendimiento neto por estimación directa
 normal cuando no estén obligados a llevar contabilidad ajustada al Código de Comercio
 (profesionales y empresarios que desarrollen actividades que no tengan carácter
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 399
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 399
 
 # Pag. 400
 
@@ -16632,7 +16632,7 @@ medio de otras entidades en atribución de rentas en que participen.
 Criterio de imputación del anticipo a cuenta de la cesión de la explotación
 de los derechos de autor
 Normativa: Art. 7.3 Reglamento IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 400
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 400
 
 # Pag. 401
 
@@ -16670,7 +16670,7 @@ que pueden darse entre los miembros de la misma unidad familiar en relación con
 siguientes cuestiones:
 A. Prestaciones de trabajo entre miembros de la misma unidad familiar
 Normativa: Art. 30.2 2ª Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 401
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 401
 
 # Pag. 402
 
@@ -16708,7 +16708,7 @@ mediante el método de estimación objetiva, no resultan en ningún caso deducib
 retribuciones estipuladas con su cónyuge o hijos menores por el trabajo que estos realicen al
 servicio de la actividad, ya que en el citado método el rendimiento neto se determina en
 función de signos, índices o módulos objetivos que ya prevén esta circunstancia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 402
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 402
 
 # Pag. 403
 
@@ -16721,7 +16721,7 @@ mercado, en su defecto) correspondientes a las cesiones de bienes o derechos que
 cónyuge o los hijos menores realicen para su utilización en la actividad. Por su parte, las
 contraprestaciones percibidas por el cónyuge o hijos menores tienen la consideración de
 rendimientos del capital y como tales deben declararlas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 403
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 403
 
 # Pag. 404
 
@@ -16755,7 +16755,7 @@ conjunto de las actividades desarrolladas por el contribuyente, supere los 600.0
 anuales.
 Cuando en el año inmediato anterior se hubiese iniciado una actividad, el importe neto de
 la cifra de negocios se elevará al año, a estos únicos efectos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 404
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 404
 
 # Pag. 405
 
@@ -16795,7 +16795,7 @@ el rendimiento por esta modalidad, salvo que se renuncie a la misma en los térm
 más adelante se comentan.
 c. Ninguna actividad desarrollada por el contribuyente se encuentre en la
 modalidad normal del método de estimación directa.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 405
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 405
 
 # Pag. 406
 
@@ -16838,7 +16838,7 @@ Partidas negativas
 Al importe obtenido conforme a lo previsto en el apartado anterior, se deducirán en todo caso
 las siguientes partidas:
 • Los importes de las devoluciones de ventas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 406
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 406
 
 # Pag. 407
 
@@ -16880,7 +16880,7 @@ recientemente por la Orden HAC/1526/2024, de 11 de diciembre (BOE de 9 de enero)
 Téngase en cuenta que a partir del 3 de febrero de 2025, como consecuencia del desarrollo de nuevas
 herramientas de asistencia en materia censal junto con la mejora producida en los programas de ayuda a la
 cumplimentación, se suprime la declaración censal simplificada (modelo 037) al entender que la simplificación
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 407
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 407
 
 # Pag. 408
 
@@ -16923,7 +16923,7 @@ se simultaneará el método de estimación directa, modalidad normal, para la de
 del rendimiento neto de la nueva actividad y el método de estimación directa, modalidad
 simplificada, para el resto de actividades, tributando todas ellas en el siguiente ejercicio por
 estimación directa, modalidad normal, como consecuencia de la renuncia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 408
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 408
 
 # Pag. 409
 
@@ -16962,7 +16962,7 @@ incluida en el método de estimación objetiva.
 el importe neto de la cifra de negocios de su actividad profesional no ha superado en el
 ejercicio 2024 el importe de 600.000 euros anuales?
 Solución:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 409
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 409
 
 # Pag. 410
 
@@ -16999,7 +16999,7 @@ método de estimación directa, al no haber renunciado expresamente a su aplicac
 En el ejercicio 2026 deberá aplicar la modalidad normal del método de estimación directa,
 ya que el importe neto de la cifra de negocios elevado al año supera los 600.000 euros
 anuales (425.000 x 12/6 = 850.000).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 410
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 410
 
 # Pag. 411
 
@@ -17041,7 +17041,7 @@ Para ello, deberán aplicarse los criterios fiscales de imputación, calificaci�
 a continuación se detallan en cada una de las partidas que tienen la consideración de
 ingresos computables y gastos deducibles, así como los incentivos fiscales establecidos para
 las empresas de reducida dimensión.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 411
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 411
 
 # Pag. 412
 
@@ -17060,7 +17060,7 @@ B02 Actividad ganadera dependiente
 B03 Actividad forestal
 B04 Producción de mejillón en batea
 B05 Actividad pesquera, excepto la actividad de producción de mejillón en batea
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 412
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 412
 
 # Pag. 413
 
@@ -17097,7 +17097,7 @@ al final del ejercicio) final del ejercicio)
 (-) Otros consumos de explotación (-) Otros consumos de explotación
 (-) Sueldos y salarios (-) Sueldos y salarios
 (-) Seguridad Social a cargo de la empresa (-) Seguridad Social a cargo de la empresa
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 413
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 413
 
 # Pag. 414
 
@@ -17146,7 +17146,7 @@ amortización del inmovilizado inmaterial
 (-) Incentivos fiscales al mecenazgo: de colaboración en actividades de interés
 convenios de colaboración en actividades general
 de interés general
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 414
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 414
 
 # Pag. 415
 
@@ -17185,7 +17185,7 @@ cantidades recibidas por cuenta de terceros, no formarán parte de los ingresos.
 Cuando medie contraprestación y esta sea notoriamente inferior al valor de mercado de los
 bienes vendidos y de los servicios prestados, la valoración de los mismos se efectuará por su
 valor normal en el mercado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 415
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 415
 
 # Pag. 416
 
@@ -17227,7 +17227,7 @@ actividad económica habitual.
 3. Ingresos por subvenciones corrientes y por subvenciones de
 capital
 Especialidades fiscales de determinadas subvenciones y ayudas públicas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 416
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 416
 
 # Pag. 417
 
@@ -17267,7 +17267,7 @@ reparar la destrucción que ocasione la misma en elementos patrimoniales.
 • La percepción de ayudas al abandono de la actividad de transporte por carretera
 satisfechas por el Ministerio de Fomento (actualmente, Ministerio de Transportes y
 Movilidad Sostenible) a transportistas que cumplan los requisitos establecidos en la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 417
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 417
 
 # Pag. 418
 
@@ -17300,7 +17300,7 @@ Cuando no existan pérdidas, solo se excluirá de gravamen el importe de las ayu
 El siguiente cuadro recoge el tratamiento fiscal de estas subvenciones y ayudas
 públicas en función del importe percibido y del resultado producido (ganancia o pérdida
 patrimonial) en los elementos a los que la ayuda o subvención se refiere.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 418
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 418
 
 # Pag. 419
 
@@ -17339,7 +17339,7 @@ Normativa: Art. 4 Reglamento IRPF
 En virtud de su exención que establece el artículo 7.m) de la Ley del IRPF para estas ayudas,
 no se incluirán entre los ingresos de las actividades profesionales que, en su caso, puedan
 desarrollar quienes tengan reconocida la condición de deportistas de alto nivel las ayudas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 419
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 419
 
 # Pag. 420
 
@@ -17385,7 +17385,7 @@ adopción de soluciones de digitalización disponibles en el mercado, incluidas 
 Digitalización del Programa recogido en la plataforma Acelera pyme.
 Los beneficiarios recibirán una ayuda en función de su tamaño, midiendo éste según su número de empleados.
 El derecho de cobro que nace de la resolución de concesión de esta ayuda se denomina “bono digital”.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 420
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 420
 
 # Pag. 421
 
@@ -17427,7 +17427,7 @@ criterio de valoración de los ingresos el precio normal de mercado de los mismo
 No deberá computarse dentro de los ingresos íntegros derivados de las ventas o
 prestaciones de servicios realizadas en el ámbito de la actividad empresarial o profesional, el
 IVA devengado cuyas cuotas deban incluirse en las declaraciones-liquidaciones
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 421
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 421
 
 # Pag. 422
 
@@ -17468,7 +17468,7 @@ que hubieran gozado de la libertad de amortización prevista en la disposición 
 decimoctava de la LIS así como en el caso de transmisión de elementos patrimoniales que
 hayan gozado de la libertad amortización prevista en la disposición adicional undécima del
 texto refundido de la LIS para el cálculo de la ganancia o pérdida patrimonial a que, en su
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 422
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 422
 
 # Pag. 423
 
@@ -17510,7 +17510,7 @@ Solución:
 Existencias finales: Valoración: 60.000
 Existencias iniciales: Valoración 40.000
 Variación de existencias (60.000 – 40.000) = + 20.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 423
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 423
 
 # Pag. 424
 
@@ -17548,7 +17548,7 @@ correspondiente a “Otros conceptos fiscalmente deducibles (excepto provisiones
 Tienen la consideración fiscal de deducibles los gastos que cumplan los siguientes requisitos:
 a. Que estén vinculados a la actividad económica desarrollada. Es decir, que sean propios
 de la actividad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 424
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 424
 
 # Pag. 425
 
@@ -17593,7 +17593,7 @@ Dentro de esta categoría se recogen las adquisiciones corrientes de bienes efec
 terceros, siempre que cumplan los dos siguientes requisitos:
 1. Que se realicen para la obtención de los ingresos.
 2. Que se trate de bienes integrantes del activo corriente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 425
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 425
 
 # Pag. 426
 
@@ -17637,7 +17637,7 @@ el gasóleo empleado en agricultura, ganadería y pesca
 Dado que a los contribuyentes del IRPF se les han de aplicar las normas previstas para
 los sujetos pasivos del IS, se ha de tener en cuenta la norma de registro y valoración
 10ª (Existencias), que establece en su apartado 1 que los impuestos indirectos que
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 426
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 426
 
 # Pag. 427
 
@@ -17673,7 +17673,7 @@ Se deben incluir las cantidades devengadas por terceros en virtud de una relaci�
 Entre las mismas, se incluyen los sueldos, pagas extraordinarias, retribuciones en especie
 (incluido el ingreso a cuenta que corresponda realizar por las mismas, siempre que no se
 haya repercutido a los perceptores), así como los premios.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 427
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 427
 
 # Pag. 428
 
@@ -17714,7 +17714,7 @@ c. Indemnizaciones
 Comprende las cantidades que se entregan al personal de la empresa para resarcirle de un
 daño o perjuicio, aunque resulten exentas para el perceptor. Se incluyen específicamente en
 este apartado las indemnizaciones por despido y jubilaciones anticipadas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 428
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 428
 
 # Pag. 429
 
@@ -17756,7 +17756,7 @@ dichas contribuciones.
 Asimismo, serán deducibles las contribuciones efectuadas por las empresas promotoras
 previstas en la Directiva (UE) 2016/2341 del Parlamento Europeo y del Consejo, de 14 de
 diciembre de 2016, relativa a las actividades y la supervisión de los fondos de pensiones de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 429
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 429
 
 # Pag. 430
 
@@ -17795,7 +17795,7 @@ Se incluyen:
 Autónomos (RETA) o,
 Importante: regularización de las cuotas del RETA satisfechas en el ejercicio
 anterior.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 430
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 430
 
 # Pag. 431
 
@@ -17841,7 +17841,7 @@ como menor gasto deducible por cuotas satisfechas a la Seguridad Social en ese
 ejercicio siguiente en la casilla [0197], y si el importe supera el de las cuotas
 satisfechas a la Seguridad Social, el exceso deberá reflejarse como un mayor
 rendimiento en ese ejercicio en la casilla [0178], relativa a “Otros ingresos”.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 431
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 431
 
 # Pag. 432
 
@@ -17890,7 +17890,7 @@ ley 6/2024, de 5 de noviembre, como consecuencia directa e inmediata de los
 siniestros descritos en el artículo 1 del citado Real Decreto-ley con motivo de la
 DANA, tendrán derecho a una nueva prestación extraordinaria en los mismos
 términos y condiciones, por el periodo comprendido entre el 1 de febrero al 31 de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 432
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 432
 
 # Pag. 433
 
@@ -17934,7 +17934,7 @@ Legislativo 8/2015, de 30 de octubre, por el que se aprueba el texto refundido d
 la Seguridad Social, e integrada en la disposición adicional decimoctava de dicho texto refundido.
 Por tanto, la referencia efectuada a la disposición derogada se entenderá realizada a la disposición
 correspondiente del texto refundido.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 433
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 433
 
 # Pag. 434
 
@@ -17978,7 +17978,7 @@ límites cuantitativos establecidos para dichos gastos de manutención, sin que,
 remisión se contemplen gastos distintos a los de manutención, como los gastos de estancia, ni otros
 aspectos regulados en el artículo 9 respecto a los gastos de manutención distintos a sus límites
 cuantitativos, dada su distinta naturaleza.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 434
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 434
 
 # Pag. 435
 
@@ -18013,7 +18013,7 @@ Por el concepto de “arrendamiento”, las cantidades satisfechas por el alquil
 arrendamiento operativo o por cesión de bienes muebles e inmuebles para el uso o a
 disposición de la empresa.
 Especialidades
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 435
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 435
 
 # Pag. 436
 
@@ -18057,7 +18057,7 @@ deducible con las dos limitaciones siguientes:
 1. La cantidad deducible no podrá ser superior al resultado de aplicar al coste del bien
 el doble del coeficiente de amortización lineal máximo según las tablas de amortización
 oficialmente aprobadas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 436
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 436
 
 # Pag. 437
 
@@ -18099,7 +18099,7 @@ puesta a disposición y entró en funcionamiento el día 1 de julio de 2025 y qu
 económica de la que es titular tiene el ejercicio 2025 la consideración de empresa de
 reducida dimensión.
 Solución:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 437
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 437
 
 # Pag. 438
 
@@ -18138,7 +18138,7 @@ Se consideran gastos de conservación y reparación del activo material afecto:
 materiales.
 • Los de sustitución de elementos no susceptibles de amortización y cuya inutilización sea
 consecuencia del funcionamiento o uso normal de los bienes en que estén integrados.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 438
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 438
 
 # Pag. 439
 
@@ -18181,7 +18181,7 @@ desarrollo de la actividad y a su porcentaje de titularidad en el inmueble, salv
 arrendatario de la vivienda, en cuyo caso podía deducir el gasto correspondiente a las rentas satisfechas por el
 arrendamiento de la vivienda en proporción a la parte exclusivamente afectada a la actividad económica en
 relación con la totalidad de la misma. Por el contrario, se exigía que los gastos derivados de los suministros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 439
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 439
 
 # Pag. 440
 
@@ -18219,7 +18219,7 @@ De acuerdo con el artículo 30.2.5ª.a) de la Ley del IRPF tienen la consideraci
 gasto deducible para la determinación del rendimiento neto en estimación directa, las
 primas de seguro de enfermedad satisfechas por el contribuyente en la parte
 correspondiente a su propia cobertura y a la de su cónyuge e hijos menores de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 440
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 440
 
 # Pag. 441
 
@@ -18253,7 +18253,7 @@ dichas operaciones, cuyas cuotas no resulten deducibles en las autoliquidaciones
 IVA de este impuesto. Entre otros supuestos, dicha circunstancia se producirá cuando la
 actividad económica desarrollada esté sometida a los siguientes regímenes especiales del
 IVA:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 441
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 441
 
 # Pag. 442
 
@@ -18294,7 +18294,7 @@ recargos del período ejecutivo y el recargo por declaración extemporánea sin 
 previo.
 7. Gastos financieros
 Delimitación de los gastos financieros deducibles o no deducibles:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 442
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 442
 
 # Pag. 443
 
@@ -18338,7 +18338,7 @@ No obstante, cuando la duración de la actividad sea inferior al año, el import
 caso, deducible será el que resulte de multiplicar un millón de euros por la proporción
 existente entre el tiempo de duración de la actividad en el período impositivo respecto del
 año.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 443
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 443
 
 # Pag. 444
 
@@ -18376,7 +18376,7 @@ c. Que el deudor esté procesado por el delito de alzamiento de bienes.
 d. Que las obligaciones hayan sido reclamadas judicialmente o sean objeto de un
 litigio judicial o procedimiento arbitral de cuya solución dependa su cobro.
 No serán deducibles las siguientes pérdidas por deterioro de créditos:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 444
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 444
 
 # Pag. 445
 
@@ -18417,7 +18417,7 @@ deducidas minorarían, a efectos fiscales, el valor del correspondiente inmovili
 Atención: hasta el 31 de diciembre de 2015 los intangibles de vida útil indefinida,
 incluido el fondo de comercio, no se amortizaban contablemente, pero si se tenía en
 cuenta su deterioro permitiéndose deducir, a efectos fiscales, su precio de adquisición
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 445
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 445
 
 # Pag. 446
 
@@ -18456,7 +18456,7 @@ mecenazgo se comenta en el Capítulo 16.
 interés general
 Normativa: Art. 26 Ley 49/2002, de 23 de diciembre, de régimen fiscal de las entidades
 sin fines lucrativos y de los incentivos fiscales al mecenazgo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 446
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 446
 
 # Pag. 447
 
@@ -18497,7 +18497,7 @@ directa ya que esta última (la modalidad simplificada) tiene para estos gastos 
 específico en el IRPF.
 Modalidad normal
 Normativa: Art. 14 de la LIS
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 447
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 447
 
 # Pag. 448
 
@@ -18539,7 +18539,7 @@ b. Los concernientes a los costes de cumplimiento de contratos que excedan a los
 beneficios económicos que se esperan recibir de los mismos.
 c. Los derivados de reestructuraciones, excepto si se refieren a obligaciones legales o
 contractuales y no meramente tácitas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 448
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 448
 
 # Pag. 449
 
@@ -18579,7 +18579,7 @@ aplicable el porcentaje del 5 por 100 y a la inversa.
 Gastos fiscalmente no deducibles
 Normativa: Arts. 15 y 15 bis LIS
 No tienen la consideración de gastos fiscalmente deducibles:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 449
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 449
 
 # Pag. 450
 
@@ -18624,7 +18624,7 @@ participaciones en el capital o fondos propios de cualquier tipo de entidades, o
 realización de aportaciones en el capital o fondos propios de otras entidades del grupo,
 salvo que el contribuyente acredite que existen motivos económicos válidos para la
 realización de dichas operaciones.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 450
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 450
 
 # Pag. 451
 
@@ -18666,7 +18666,7 @@ Para los empresarios no mercantiles y los profesionales este requisito se referi
 anotación en su libro registro de bienes de inversión de la cuota de amortización anual
 correspondiente a cada uno de dichos bienes.
 Efectividad de la amortización: Sistemas de amortización
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 451
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 451
 
 # Pag. 452
 
@@ -18698,7 +18698,7 @@ Edificios comerciales, administrativos, 2 por 100 100 años
 de servicios y viviendas
 Instalaciones Subestaciones. Redes de transporte 5 por 100 40 años
 y distribución de energía
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 452
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 452
 
 # Pag. 453
 
@@ -18731,7 +18731,7 @@ Producciones cinematográficas, 33 por 100 6 años
 fonográficas, videos y series
 audiovisuales
 Otros elementos 10 por 100 20 años
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 453
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 453
 
 # Pag. 454
 
@@ -18773,7 +18773,7 @@ por los siguientes coeficientes:
 El porcentaje constante así determinado no podrá ser inferior al 11 por 100.
 El importe pendiente de amortizar en el período impositivo en que se produzca la
 conclusión de la vida útil se amortizará en dicho período impositivo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 454
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 454
 
 # Pag. 455
 
@@ -18809,7 +18809,7 @@ supuesto de adquisición de bienes y posterior afectación a la actividad econó
 desarrollada, la amortización tomará como base el valor de adquisición que tuviesen los
 bienes en el momento de la afectación.
 B. Inicio del cómputo de la amortización
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 455
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 455
 
 # Pag. 456
 
@@ -18855,7 +18855,7 @@ se debe incluir el importe correspondiente a la reversión del deterioro o corre
 valor con el límite que establece la disposición transitoria decimoquinta de la LIS, cuyo
 comentario se realiza en el apartado sobre "Pérdidas por deterioro del valor de los
 elementos patrimoniales" de este Capítulo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 456
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 456
 
 # Pag. 457
 
@@ -18895,7 +18895,7 @@ patrimonial.
 Precisión: la disposición derogatoria 2.z) de la LIS declara vigente el artículo 7 de la Ley 16/2012 en lo
 que se refiere al Impuesto sobre Sociedades.
 Supuestos de libertad de amortización
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 457
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 457
 
 # Pag. 458
 
@@ -18939,7 +18939,7 @@ neto positivo de la actividad económica a la que se hubieran afectado los eleme
 patrimoniales previo a la deducción de las cantidades pendientes y, en su caso, a la
 minoración del 5 por 100 por provisiones y gastos de difícil justificación prevista para la
 modalidad simplificada de estimación directa.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 458
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 458
 
 # Pag. 459
 
@@ -18980,7 +18980,7 @@ De acuerdo con lo establecido en el artículo 12.3 de la LIS podrán amortizarse
 • Los elementos del inmovilizado material e intangible, excluidos los edificios, afectos
 a las actividades de investigación y desarrollo. Los edificios podrán amortizarse de forma
 lineal durante un período de 10 años, en la parte que se hallen afectos a las actividades
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 459
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 459
 
 # Pag. 460
 
@@ -19021,7 +19021,7 @@ de acuerdo con lo definido en el Real Decreto 244/2019, de 5 de abril.
 • Uso térmico de consumo propio que utilicen energía procedente de fuentes renovables,
 que sustituyan instalaciones que utilicen energía procedente de fuentes no renovables
 fósiles.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 460
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 460
 
 # Pag. 461
 
@@ -19066,7 +19066,7 @@ Para poder aplicar este incentivo en el ejercicio 2025 se exige el cumplimiento 
 requisitos que se señalan a continuación:
 • Que las instalaciones se han de haber puesto a disposición del contribuyente a partir
 del 20 de octubre de 2022.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 461
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 461
 
 # Pag. 462
 
@@ -19108,7 +19108,7 @@ b. Sistemas de producción de gases renovables (biogás, biometano, hidrógeno r
 acreditación de inscripción en el Registro de instalaciones de producción de gas
 procedente de fuentes renovables regulado en el artículo 19 del Real Decreto 376/2022,
 de 17 de mayo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 462
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 462
 
 # Pag. 463
 
@@ -19147,7 +19147,7 @@ Grupo Descripción máximo (*) máximo
 lineales máximos aplicables son el resultado de multiplicar por 1,1 los señalados en el cuadro. Estos
 coeficientes así determinados resultan aplicables durante la vida útil de los activos nuevos adquiridos en el
 período antes indicado. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 463
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 463
 
 # Pag. 464
 
@@ -19180,7 +19180,7 @@ quincuagésima novena Ley IRPF
 Atención: téngase en cuenta que el Real Decreto-ley 4/2024, de 26 de junio (BOE de
 27 de junio), con efectos desde el 1 de enero de 2024, añadió la disposición adicional
 quincuagésima novena a la Ley del IRPF y modificó la disposición adicional
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 464
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 464
 
 # Pag. 465
 
@@ -19220,7 +19220,7 @@ potencia normal o de alta potencia, en los términos definidos en el artículo 2
 Directiva 2014/94/UE, del Parlamento Europeo y del Consejo, de 22 de octubre de
 2014, relativa a la implantación de una infraestructura para los combustibles
 alternativos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 465
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 465
 
 # Pag. 466
 
@@ -19257,7 +19257,7 @@ epígrafe, se consideran empresas de reducida dimensión en el ejercicio 2025 aq
 en las que el importe neto de la cifra de negocios en el período impositivo inmediato
 anterior (ejercicio 2024) haya sido inferior a 10 millones de euros, cualquiera que sea el
 importe neto de la cifra de negocios en el propio ejercicio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 466
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 466
 
 # Pag. 467
 
@@ -19302,7 +19302,7 @@ cumplan las condiciones para ser consideradas como de reducida dimensión tanto 
 período impositivo en que se realice la operación como en los dos períodos impositivos
 anteriores a este último.
 Ejemplos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 467
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 467
 
 # Pag. 468
 
@@ -19342,7 +19342,7 @@ Atención: la determinación del importe neto de la cifra de negocios se efectú
 acuerdo con lo comentado al respecto en este mismo Capítulo.
 Libertad de amortización con creación de empleo
 Normativa: Art. 102 LIS
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 468
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 468
 
 # Pag. 469
 
@@ -19385,7 +19385,7 @@ Cumpliéndose todos y cada uno de los anteriores requisitos, la libertad de amor
 podrá aplicarse desde la entrada en funcionamiento de los elementos susceptibles de
 acogerse a la misma.
 Incompatibilidad
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 469
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 469
 
 # Pag. 470
 
@@ -19425,7 +19425,7 @@ a que se refiere este beneficio fiscal.
 b) Que se trate de elementos nuevos del inmovilizado material y de inversiones
 inmobiliarias, así como de elementos del inmovilizado intangible, afectos a actividades
 económicas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 470
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 470
 
 # Pag. 471
 
@@ -19472,7 +19472,7 @@ Compatibilidad
 Este régimen de amortización será compatible con cualquier beneficio fiscal que pudiera
 proceder por razón de los elementos patrimoniales sujetos a la misma. Además, este
 régimen es subsidiario del de libertad de amortización con creación de empleo, por lo que
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 471
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 471
 
 # Pag. 472
 
@@ -19511,7 +19511,7 @@ de deudores a que se refiere el artículo 13.1 de la LIS, los titulares de activ
 económicas cuyo rendimiento neto se determine en el método de estimación directa, en
 cualquiera de sus dos modalidades, podrán deducir la pérdida por deterioro sobre el saldo de
 deudores no afectados por la provisión individualizada con arreglo a los siguientes requisitos:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 472
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 472
 
 # Pag. 473
 
@@ -19554,7 +19554,7 @@ período (en el que alcance o supere el límite de los 10 millones) como en los 
 períodos impositivos anteriores a este último.
 Régimen transitorio: Amortización de elementos patrimoniales
 objeto de reinversión por empresas de reducida dimensión
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 473
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 473
 
 # Pag. 474
 
@@ -19595,7 +19595,7 @@ Fase 2ª. Determinación del rendimiento neto
 reducido
 Para determinar rendimiento neto reducido se aplicará sobre el rendimiento neto calculado de
 acuerdo con lo indicado en la Fase 1ª anterior las siguientes reducciones:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 474
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 474
 
 # Pag. 475
 
@@ -19633,7 +19633,7 @@ aun cuando individualmente pudieran derivar de actuaciones desarrolladas a lo la
 un período que cumpliera los requisitos anteriormente indicados, procedan del ejercicio
 de una actividad económica que de forma regular o habitual obtenga este tipo de
 rendimientos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 475
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 475
 
 # Pag. 476
 
@@ -19672,7 +19672,7 @@ Reducciones generales por el ejercicio de determinadas
 actividades económicas
 1. Reducción para trabajadores autónomos económicamente
 dependientes o con único cliente no vinculado
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 476
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 476
 
 # Pag. 477
 
@@ -19716,7 +19716,7 @@ Para determinar cuándo hay vinculación ha de atenderse a lo dispuesto en el ar
 • Una entidad y sus consejeros o administradores, salvo en lo correspondiente a la
 retribución por el ejercicio de sus funciones.
 • Una entidad y los cónyuges o personas unidas por relaciones de parentesco, en
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 477
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 477
 
 # Pag. 478
 
@@ -19758,7 +19758,7 @@ f) Que al menos el 70 por 100 de los ingresos del período impositivo estén suj
 retención o ingreso a cuenta.
 g) Que no se realice actividad económica alguna a través de entidades en régimen de
 atribución de rentas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 478
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 478
 
 # Pag. 479
 
@@ -19795,7 +19795,7 @@ rendimientos de actividades económicas.
 Atención: el concepto de "rentas excluidas las exentas, distintas de las de actividades
 económicas" a que se refiere el artículo 32.2.3ª, incluye la suma algebraica de los
 rendimientos netos (del trabajo y del capital mobiliario e inmobiliario), de imputaciones
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 479
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 479
 
 # Pag. 480
 
@@ -19831,7 +19831,7 @@ rendimientos netos (del trabajo, capital mobiliario e inmobiliario, y de activid
 económicas), de imputaciones de rentas y de las ganancias y pérdidas patrimoniales
 computadas en el año, sin aplicar las reglas de integración y compensación. Ahora bien,
 los rendimientos deben computarse por su importe neto, esto es, una vez deducidos los
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 480
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 480
 
 # Pag. 481
 
@@ -19870,7 +19870,7 @@ determinadas actividades económicas antes comentadas, previstas en el artículo
 Ley del IRPF, el saldo resultante del rendimiento neto de las actividades económicas no
 podrá ser negativo.
 • En el caso de tributación conjunta debe tenerse en cuenta lo siguiente:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 481
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 481
 
 # Pag. 482
 
@@ -19910,7 +19910,7 @@ ejercido actividad económica alguna en el año anterior a la fecha de inicio de
 consideración aquellas actividades en cuyo ejercicio se hubiera cesado sin haber llegado a obtener
 rendimientos netos positivos desde su inicio.
 Importe de la reducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 482
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 482
 
 # Pag. 483
 
@@ -19938,7 +19938,7 @@ La reducción no resulta de aplicación en el período impositivo en el que más
 100 de los ingresos del mismo procedan de una persona o entidad de la que el
 contribuyente haya obtenido rendimientos del trabajo en el año anterior a la fecha de inicio de
 la actividad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 483
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 483
 
 # Pag. 484
 
@@ -19981,7 +19981,7 @@ actividades económicas computadas en dichos ejercicios.
 En caso de que, en alguno de los tres ejercicios anteriores el rendimiento neto fuera negativo se computará
 ○
 como 0 a efectos del cálculo de dicha media.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 484
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 484
 
 # Pag. 485
 
@@ -20017,7 +20017,7 @@ Los rendimientos netos de los años anteriores fueron más moderados:
 2023: 145.000
 2024: 105.000
 Como gastos asociados al proyecto, se conocen los siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 485
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 485
 
 # Pag. 486
 
@@ -20044,7 +20044,7 @@ euros.
 En este caso, dado que 227.500 euros excede 150.000 euros, aplica el límite de 150.000
 euros. Por tanto, doña P.O.R minorará sus rendimientos netos de actividades económicas
 en el 30% de 150.000 euros = 45.000 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 486
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 486
 
 # Pag. 487
 
@@ -20088,7 +20088,7 @@ cliente no vinculado: cliente no vinculado *
 • Reducción general. Nota (*): Es incompatible con gastos de difícil
 • Incremento adicional para contribuyentes justificación
 con rendimiento neto de la actividad inferior
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 487
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 487
 
 # Pag. 488
 
@@ -20125,7 +20125,7 @@ tales junto con el resto de ganancias o pérdidas patrimoniales.
 Véase al respecto dentro del Capítulo 11 dedicado a "Ganancias y pérdidas patrimoniales" de
 este Manual las normas específicas de valoración que se comentan en relación con los
 "Elementos patrimoniales afectos o desafectados con menos de tres años de antelación".
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 488
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 488
 
 # Pag. 489
 
@@ -20168,7 +20168,7 @@ Asimismo, en concepto de “ingresos y gastos extraordinarios”, figuran las si
 partidas:
 • Ingreso extraordinario (consecuencia de la venta del local destinado a consulta): 80.900
 • Gasto extraordinario (consecuencia de la venta equipos rayos X): 7.200
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 489
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 489
 
 # Pag. 490
 
@@ -20204,7 +20204,7 @@ Variación de existencias 3.000 3.000 (3)
 Total ingresos 137.800 138.400
 Gastos Sueldos y salarios 18.900 17.700 (4)
 Seguridad Social 5.900 5.900
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 490
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 490
 
 # Pag. 491
 
@@ -20236,7 +20236,7 @@ Rendimiento neto reducido total 58.100 (11)
 Notas a la tabla:
 (1) Dentro de los ingresos deben figurar 600 euros, en concepto de autoconsumo, al valorar a precio de mercado
 las 10 radiografías efectuadas a su hijo. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 491
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 491
 
 # Pag. 492
 
@@ -20286,7 +20286,7 @@ del 5 por 100 (con una cuantía máxima de 2.000 euros) por el conjunto de las p
 difícil justificación a que se refiere el artículo 30.2.4ª de la Ley del IRPF). Tampoco cumple los requisitos para
 aplicar las reducciones del artículo 32.2.3º y 32.3 de la Ley del IRPF.
 (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 492
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 492
 
 # Pag. 493
 
@@ -20319,7 +20319,7 @@ El método de estimación objetiva resulta aplicable en 2025 a las actividades e
 excluidas las agrícolas, ganaderas y forestales cuyo comentario se realiza en el Capítulo
 siguiente, desarrolladas directamente por personas físicas, en las que concurran las
 siguientes circunstancias:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 493
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 493
 
 # Pag. 494
 
@@ -20360,7 +20360,7 @@ noviembre, por el que se adoptan medidas urgentes de respuesta ante los daños
 causados por la Depresión Aislada en Niveles Altos (DANA) en diferentes municipios
 entre el 28 de octubre y el 4 de noviembre de 2024 y que hubieran venido determinando
 el rendimiento neto en el período impositivo 2024 por el método de estimación objetiva,
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 494
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 494
 
 # Pag. 495
 
@@ -20405,7 +20405,7 @@ En caso de inicio de la actividad, se entenderá efectuada la renuncia cuando se
 plazo reglamentario el pago fraccionado correspondiente al primer trimestre de ejercicio de la
 actividad en la forma dispuesta para el método de estimación directa.
 Consecuencias de la renuncia
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 495
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 495
 
 # Pag. 496
 
@@ -20446,7 +20446,7 @@ inmediato anterior derivado del ejercicio de actividades económicas (250.000 eu
 el conjunto de actividades económicas, excepto las agrícolas, ganaderas y forestales y
 125.000 euros para las operaciones en las que exista obligación de expedir factura
 cuando el destinatario sea empresario) como al volumen de compras en bienes y
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 496
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 496
 
 # Pag. 497
 
@@ -20487,7 +20487,7 @@ recargo de equivalencia que grave la operación, para aquellas actividades que t
 por el régimen simplificado del Impuesto sobre el Valor Añadido.
 Precisión: como regla general, la magnitud por volumen de ingresos del método de estimación objetiva se
 evaluará de forma independiente por cada contribuyente que ejerza la actividad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 497
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 497
 
 # Pag. 498
 
@@ -20525,7 +20525,7 @@ Respecto a la LIS véase la Ley 27/2014, de 27 de noviembre, del Impuesto sobre 
 En estos supuestos, el contribuyente debe cumplir las obligaciones de
 documentación de dichas operaciones en los términos y condiciones establecidos en
 los artículos 13 a 16, Capítulo V ("Información y documentación sobre entidades y
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 498
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 498
 
 # Pag. 499
 
@@ -20565,7 +20565,7 @@ epígrafes del Impuesto sobre Actividades Económicas (IAE) (Art. 38.1 Reglament
 IRPF).
 c. Determinar el rendimiento neto de alguna actividad económica en el método de
 estimación directa, en cualquiera de sus dos modalidades
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 499
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 499
 
 # Pag. 500
 
@@ -20603,7 +20603,7 @@ el artículo 32.2 del Reglamento del IRPF el contribuyente quedará excluido del
 de aplicación del método de estimación objetiva para todas sus actividades económicas
 durante, al menos, los tres años siguientes, con independencia del tipo de actividades
 que se desarrollen en estos años.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 500
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 500
 
 # Pag. 501
 
@@ -20640,7 +20640,7 @@ o partícipes; los cónyuges, descendientes y ascendientes de estos; así como p
 entidades en régimen de atribución de rentas en las que participen cualquiera de las
 personas anteriores cuando se den las circunstancias indicadas en las reglas de
 determinación del volumen de rendimientos íntegros y de compras.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 501
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 501
 
 # Pag. 502
 
@@ -20676,7 +20676,7 @@ pesca y de la acuicultura y de caracoles empleados
 644.1 Comercio al por menor de pan, pastelería, confitería y similares y 6
 de leche y productos lácteos empleados
 (*) Cualquier día del año.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 502
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 502
 
 # Pag. 503
 
@@ -20716,7 +20716,7 @@ de artículos para la higiene y el aseo personal
 653.1 Comercio al por menor de muebles 4
 empleados
 (*) Cualquier día del año.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 503
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 503
 
 # Pag. 504
 
@@ -20756,7 +20756,7 @@ situados en la vía pública empleados
 prendas deportivas de vestido, calzado y tocado, armas, empleados
 cartuchería y artículos de pirotecnia
 (*) Cualquier día del año.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 504
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 504
 
 # Pag. 505
 
@@ -20795,7 +20795,7 @@ empleados
 análogos empleados
 676 Servicios en chocolaterías, heladerías y horchaterías 3
 (*) Cualquier día del año.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 505
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 505
 
 # Pag. 506
 
@@ -20833,7 +20833,7 @@ empleados
 751.5 Engrase y lavado de vehículos 5
 empleados
 (*) Cualquier día del año.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 506
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 506
 
 # Pag. 507
 
@@ -20871,7 +20871,7 @@ La determinación de las operaciones económicas incluidas en cada actividad de 
 relacionadas en el punto anterior de este apartado deberá efectuarse de acuerdo con las
 normas del Impuesto sobre Actividades Económicas (IAE) en la medida en que resulten
 aplicables.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 507
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 507
 
 # Pag. 508
 
@@ -20914,7 +20914,7 @@ No obstante, el empresario se computará como una persona no asalariada. En aque
 supuestos en que pueda acreditarse una dedicación inferior a 1.800 horas/año por causas
 objetivas, tales como jubilación, incapacidad, pluralidad de actividades o cierre temporal
 de la explotación, se computará el tiempo efectivo dedicado a la actividad. En estos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 508
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 508
 
 # Pag. 509
 
@@ -20957,7 +20957,7 @@ personales o materiales.
 Cuando se trate de entidades en régimen de atribución de rentas deberán computarse
 no solo la magnitud específica correspondiente a la actividad económica desarrollada por la
 propia entidad en régimen de atribución, sino también las correspondientes a las
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 509
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 509
 
 # Pag. 510
 
@@ -20993,7 +20993,7 @@ Fase 4ª
 (-) REINTEGRO DE SUBVENCIONES
 (-) GASTOS EXTRAORDINARIOS POR CIRCUNSTANCIAS EXCEPCIONALES (Incendios, inundaciones,
 hundimientos, etc, , comunicadas a la AEAT en tiempo y forma)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 510
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 510
 
 # Pag. 511
 
@@ -21031,7 +21031,7 @@ IRPF del anexo II Orden HAC/1347/2024, de 28 de noviembre (BOE de 30 de noviembr
 En la Orden que desarrolla el método de estimación objetiva se fijan una serie de reglas que
 debe aplicar el contribuyente para calcular el promedio de los signos, índices o módulos
 relativos a todo el período en que haya ejercido la actividad durante dicho año natural para el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 511
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 511
 
 # Pag. 512
 
@@ -21068,7 +21068,7 @@ También tendrán esta consideración, su cónyuge y los hijos menores que convi
 no concurrir alguno de los requisitos siguientes:
 • Que trabajen habitualmente y con continuidad en la actividad empresarial.
 • Que exista el correspondiente contrato laboral.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 512
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 512
 
 # Pag. 513
 
@@ -21109,7 +21109,7 @@ Cuando el cónyuge o los hijos menores del empresario tengan la consideración d
 asalariados, se computarán al 50 por 100, siempre que el titular de la actividad se compute
 por entero, antes de aplicar, en su caso, la reducción prevista para personas con
 discapacidad anteriormente comentada, y no haya más de una persona asalariada.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 513
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 513
 
 # Pag. 514
 
@@ -21150,7 +21150,7 @@ Títular: el cierre de la actividad como consecuencia de la existencia de esta c
 pueda acreditarse una dedicación inferior a 1.800 horas/año. En este caso el tiempo efectivo dedicado a
 la actividad es de 1.391 horas de las que se computarán el 75 por 100 al tener el contribuyente un
 grado de discapacidad de 33 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 514
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 514
 
 # Pag. 515
 
@@ -21187,7 +21187,7 @@ Cuando el número de horas sea inferior o superior al indicado, se estimará com
 de la persona asalariada la proporción existente entre el número de horas efectivamente
 trabajadas y las fijadas en el convenio colectivo o, en su defecto, 1.800 horas.
 El número de unidades del módulo "personal asalariado" se expresará con dos decimales.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 515
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 515
 
 # Pag. 516
 
@@ -21227,7 +21227,7 @@ asalariado" empleadas en la actividad
 Don A.C.M. es titular de un establecimiento de comercio al por menor de productos
 alimenticios y bebidas, epígrafe 647.1 del IAE, que viene determinando el rendimiento neto
 de su actividad por el método de estimación objetiva.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 516
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 516
 
 # Pag. 517
 
@@ -21264,7 +21264,7 @@ La unidad del módulo "Superficie del local" es el metro cuadrado (m2).
 Por superficie del local se tomará la definida en la Regla 14ª.1.F, letras a), b), c) y h), de la
 Instrucción para la aplicación de las Tarifas del Impuesto sobre Actividades Económicas
 (IAE), aprobada por Real Decreto Legislativo 1175/1990, de 28 de septiembre (BOE de 29 de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 517
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 517
 
 # Pag. 518
 
@@ -21301,7 +21301,7 @@ Normativa: Instrucción 2.1.6ª para la aplicación de los signos, índices o m�
 IRPF del anexo II Orden HAC/1347/2024, de 28 de noviembre (BOE de 30 de noviembre).
 Se entenderá por potencia eléctrica la contratada con la empresa suministradora de la
 energía, cuya unidad es el kilovatio contratado (kW).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 518
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 518
 
 # Pag. 519
 
@@ -21340,7 +21340,7 @@ La capacidad de carga de un vehículo o conjunto de vehículos será igual a la 
 entre la masa total máxima autorizada determinada teniendo en cuenta las posibles
 limitaciones administrativas, que en su caso, se reseñen en las Tarjetas de Inspección
 Técnica, con el límite de 40 toneladas, y la suma de las taras correspondientes a los
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 519
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 519
 
 # Pag. 520
 
@@ -21380,7 +21380,7 @@ de octubre).
 o recreo que se limitan a conceder al usuario un tiempo de uso o de juego a cambio del
 precio de la partida, sin que puedan conceder ningún tipo de premio en metálico, en
 especie o en forma de puntos canjeables por objetos o dinero.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 520
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 520
 
 # Pag. 521
 
@@ -21419,7 +21419,7 @@ que figura en la Tarjeta de Inspección Técnica del vehículo, expresada en cab
 Módulo "Distancia recorrida"
 Normativa: Instrucción 7 para la aplicación de los signos, índices o módulos en el IRPF
 del anexo II Orden HAC/1347/2024, de 28 de noviembre (BOE de 30 de noviembre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 521
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 521
 
 # Pag. 522
 
@@ -21462,7 +21462,7 @@ módulos, deberán presentar, en el plazo de 30 días a contar desde la fecha en
 producido las alteraciones o la situación de incapacidad temporal, escrito ante la
 Administración o, en su defecto, Delegación de la Agencia Estatal de Administración
 Tributaria, en el que se ponga de manifiesto el hecho de haberse producido dichas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 522
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 522
 
 # Pag. 523
 
@@ -21497,7 +21497,7 @@ Minoración = RA x (Coeficiente por incremento del nº de personas asalariadas +
 Coeficiente por tramos)
 Siendo RA el importe del rendimiento anual por unidad antes de amortización del
 módulo "personal asalariado" correspondiente a la actividad de que se trate.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 523
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 523
 
 # Pag. 524
 
@@ -21535,7 +21535,7 @@ Hasta 1,00 0,10
 Entre 1,01 y 3,00 0,15
 Entre 3,01 y 5,00 0,20
 Entre 5,01 y 8,00 0,25
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 524
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 524
 
 # Pag. 525
 
@@ -21571,7 +21571,7 @@ absolutos:
 • Personas asalariadas en el año 2024: 4 personas
 • Personas asalariadas en el año 2025: 6 personas
 • Incremento del número de personas asalariadas: 2 personas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 525
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 525
 
 # Pag. 526
 
@@ -21605,7 +21605,7 @@ coeficiente por incremento del número de asalariados más el coeficiente por tr
 Este incentivo permite reducir el rendimiento neto previo de la actividad en el importe
 correspondiente a la depreciación efectiva experimentada por el inmovilizado, material o
 intangible, afecto a la misma por funcionamiento, uso, disfrute u obsolescencia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 526
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 526
 
 # Pag. 527
 
@@ -21641,7 +21641,7 @@ instalaciones de recarga afectos a la misma.
 • El coeficiente de amortización utilizable puede ser cualquier porcentaje entre el
 máximo y el mínimo. Este último porcentaje es el resultado de dividir 100 entre el
 período máximo que figura en la tabla para cada grupo de elementos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 527
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 527
 
 # Pag. 528
 
@@ -21688,7 +21688,7 @@ amortizarse libremente, hasta el límite de 3.005,06 euros anuales.
 • En todo caso, deberá disponerse de los justificantes documentales de la adquisición de
 los elementos amortizables y que los mismos consten debidamente registrados en el
 correspondiente libro registro de bienes de inversión.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 528
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 528
 
 # Pag. 529
 
@@ -21723,7 +21723,7 @@ Ubicación de los quioscos Índice aplicable
 Madrid y Barcelona 1,00
 Municipios de más de100.000 habitantes 0,95
 Resto de municipios 0,80
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 529
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 529
 
 # Pag. 530
 
@@ -21757,7 +21757,7 @@ Actividades de transporte de mercancías por carretera y servicios de
 mudanzas (epígrafes IAE: 722 y 757)
 Normativa: Instrucción 2.3 a.4) Orden HAC/1347/2024, de 28 de noviembre (BOE de 30
 de noviembre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 530
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 530
 
 # Pag. 531
 
@@ -21788,7 +21788,7 @@ Concurriendo estos requisitos, la cuantía del índice corrector será la que, e
 número de personas asalariadas y, en su caso, la población del municipio en que se ejerce la
 actividad, se indica a continuación:
 • Si la actividad se ejerce sin personal asalariado:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 531
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 531
 
 # Pag. 532
 
@@ -21824,7 +21824,7 @@ Más de 180 días (no constituye actividad de temporada) ---
 Índice corrector de exceso
 Normativa: Instrucción 2.3 b.3) Orden HAC/1347/2024, de 28 de noviembre (BOE de 30
 de noviembre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 532
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 532
 
 # Pag. 533
 
@@ -21861,7 +21861,7 @@ en régimen de autoservicio o mixto en establecimientos cuya sala de ventas teng
 una superficie inferior a 400 metros cuadrados.
 651.1 Comercio al por menor de productos textiles, confecciones para el hogar, 23.638,67
 alfombras y similares y artículos de tapicería
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 533
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 533
 
 # Pag. 534
 
@@ -21898,7 +21898,7 @@ artículos citados.
 fotográficos
 659.4 Comercio al por menor de libros, periódicos, artículos de papelería y escritorio y 25.207,02
 artículos de dibujo y bellas artes, excepto en quioscos situados en la vía pública
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 534
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 534
 
 # Pag. 535
 
@@ -21933,7 +21933,7 @@ clases de mercancías n.c.o.p.
 676 Servicios en chocolaterías, heladerías y horchaterías 25.528,25
 681 Servicios de hospedaje en hoteles y moteles de una o dos estrellas. 61.512,19
 682 Servicios de hospedaje en hostales y pensiones. 32.840,94
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 535
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 535
 
 # Pag. 536
 
@@ -21965,7 +21965,7 @@ artículos del hogar usados.
 972.1 Servicios de peluquería de señora y caballero. 18.051,81
 972.2 Salones e institutos de belleza 26.945,44
 973.3 Servicios de copias de documentos con máquinas fotocopiadoras. 24.192,95
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 536
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 536
 
 # Pag. 537
 
@@ -22002,7 +22002,7 @@ Los índices correctores se aplican en el orden en el que acaban de indicarse, q
 en el que aparecen en la declaración, siempre que no sean incompatibles entre sí, sobre el
 rendimiento neto minorado o, en su caso, sobre el rectificado por aplicación de los mismos.
 Las incompatibilidades entre los diferentes índices correctores son las siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 537
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 537
 
 # Pag. 538
 
@@ -22042,7 +22042,7 @@ se produzca, aportando, a tal efecto, la justificación correspondiente y hacien
 su caso, de las indemnizaciones a percibir por razón de tales alteraciones. La Administración
 tributaria verificará la certeza de la causa que motiva la reducción del rendimiento y el
 importe de la misma.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 538
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 538
 
 # Pag. 539
 
@@ -22086,7 +22086,7 @@ totalidad de acuerdo con el apartado 1 c) de la disposición adicional quinta de
 del IRPF si su importe es superior a valor de adquisición del elemento patrimonial
 destruido. Pero si su importe es inferior se integrará en la base imponible la
 diferencia negativa.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 539
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 539
 
 # Pag. 540
 
@@ -22124,7 +22124,7 @@ Determinación del rendimiento neto reducido total
 Para determinar el rendimiento neto reducido total, al rendimiento neto reducido de la
 actividad calculado conforme a lo explicado en el apartado anterior podrá aplicarse la
 siguiente reducción cuyas condiciones, cuantía y límite de esta reducción están recogidos en
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 540
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 540
 
 # Pag. 541
 
@@ -22161,7 +22161,7 @@ Cafetera 01-06-2021 9.400 euros 8.400 euros
 Vitrina térmica 01-07-2022 4.000 euros 2.500 euros
 Instalación de aire 01-08-2022 6.600 euros 3.900 euros
 acondicionado
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 541
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 541
 
 # Pag. 542
 
@@ -22199,7 +22199,7 @@ Módulo 6. Máquinas recreativas tipo "A".
 El local no dispone de ninguna máquina recreativa tipo "A". Por tanto, número de
 unidades = 0,00
 Módulo 7. Máquinas recreativas tipo "B".
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 542
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 542
 
 # Pag. 543
 
@@ -22233,7 +22233,7 @@ módulo "personal asalariado" de 2025 respecto de 2024 se multiplicará por 0,40
 Coeficiente por incremento del número de personas asalariadas: 0,40 x 0,66= 0,264.
 b. Coeficiente de minoración por tramos del número de unidades del módulo "personal
 asalariado".
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 543
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 543
 
 # Pag. 544
 
@@ -22273,7 +22273,7 @@ que asciende a 1.000 euros (valor de adquisición 9.400 - Amortización acumulad
 última cantidad. (Volver)
 (4) Las mesas y sillas nuevas pueden amortizarse libremente por ser su valor unitario inferior a 601,01 euros y porque, además, el
 importe global de los elementos patrimoniales nuevos adquiridos en el año 2025 no supera la cantidad de 3.005,06 euros. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 544
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 544
 
 # Pag. 545
 
@@ -22311,7 +22311,7 @@ Rendimiento neto de módulos = 30.586,03 + [1,30 x (41.368,57 – 30.586,03)] = 
 euros.
 4ª Fase: Determinación del rendimiento neto de la actividad.
 Procede aplicar, en primer lugar, la reducción general del 5 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 545
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 545
 
 # Pag. 546
 
@@ -22341,7 +22341,7 @@ aplicar la reducción del artículo 32.2.3. de la Ley del IRPF.
 Determinación del rendimiento neto reducido total de la actividad.
 El rendimiento neto reducido total coincide con el rendimiento neto reducido total de la
 actividad = 41.173,16 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 546
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 546
 
 # Pag. 547
 
@@ -22368,7 +22368,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 4 Superficie del horno 100 dm2 629,86
 Cuantía a efectos del índice corrector de exceso: 41.602,30 euros
 Epígrafe IAE: 419.2 - Industrias de la bollería, pastelería y galletas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 547
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 547
 
 # Pag. 548
 
@@ -22396,7 +22396,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 2 Personal no asalariado Persona 12.723,18
 3 Superficie del local m2 26,45
 Cuantía a efectos del índice corrector de exceso: 19.670,55 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 548
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 548
 
 # Pag. 549
 
@@ -22424,7 +22424,7 @@ Nota.- El rendimiento neto derivado de la aplicación de los signos o módulos a
 derivado de la elaboración de platos precocinados, siempre que se desarrolle con carácter accesorio a la
 actividad principal.
 Cuantía a efectos del índice corrector de exceso: 21.635,71 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 549
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 549
 
 # Pag. 550
 
@@ -22453,7 +22453,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 4 Superficie local no independiente m2 69,28
 5 Consumo de energía eléctrica 100 kWh 35,90
 Cuantía a efectos del índice corrector de exceso: 16.237,81 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 550
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 550
 
 # Pag. 551
 
@@ -22485,7 +22485,7 @@ no independiente
 NOTA: El rendimiento neto resultante de la aplicación de los signos o módulos anteriores incluye, en su caso, el
 derivado de la fabricación y comercio al por menor de productos de pastelería salada y platos precocinados, de
 la degustación de los productos objeto de su actividad acompañados de cualquier tipo de bebidas, cafés,
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 551
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 551
 
 # Pag. 552
 
@@ -22517,7 +22517,7 @@ actividad principal.
 Cuantía a efectos del índice corrector de exceso: 42.925,01 euros
 Epígrafe IAE: 644.3 - Comercio al por menor de productos de
 pastelería, bollería y confitería
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 552
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 552
 
 # Pag. 553
 
@@ -22553,7 +22553,7 @@ fabricación
 2 Resto personal asalariado Persona 2.254,90
 3 Personal no asalariado Persona 13.214,47
 4 Superficie del del local de m2 27,71
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 553
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 553
 
 # Pag. 554
 
@@ -22585,7 +22585,7 @@ NOTA: El rendimiento neto resultante de la aplicación de los signos o módulos 
 derivado de la comercialización de loterías, siempre que esta actividad se desarrolle con carácter accesorio a la
 actividad principal
 Cuantía a efectos del índice corrector de exceso: 15.822,10 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 554
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 554
 
 # Pag. 555
 
@@ -22615,7 +22615,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 Cuantía a efectos del índice corrector de exceso: 23.638,67 euros
 Epígrafe IAE: 651.2 - Comercio al por menor de toda clase de
 prendas para el vestido y tocado
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 555
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 555
 
 # Pag. 556
 
@@ -22642,7 +22642,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 3 Superficie del local m2 28,98
 4 Consumo de energía eléctrica 100 kWh 58,57
 Cuantía a efectos del índice corrector de exceso: 14.862,05 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 556
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 556
 
 # Pag. 557
 
@@ -22674,7 +22674,7 @@ Nota: El rendimiento neto resultante de la aplicación de los signos o módulos 
 el derivado de la comercialización de loterías, siempre que esta actividad se desarrolle con carácter accesorio a
 la actividad principal
 Cuantía a efectos del índice corrector de exceso: 25.333 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 557
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 557
 
 # Pag. 558
 
@@ -22702,7 +22702,7 @@ menaje, ferretería, adorno, regalo, o reclamo (incluyendo
 bisutería y pequeños electrodomésticos)
 Módulo Definición Unidad Rendimiento anual por unidad (euros)
 1 Personal asalariado Persona 3.709,88
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 558
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 558
 
 # Pag. 559
 
@@ -22729,7 +22729,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 3 Consumo de energía eléctrica 100 kWh 81,88
 4 Superficie del local m2 39,68
 Cuantía a efectos del índice corrector de exceso: 32.765,35 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 559
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 559
 
 # Pag. 560
 
@@ -22756,7 +22756,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 1 Personal asalariado Persona 2.746,19
 2 Personal no asalariado Persona 14.222,25
 3 Consumo de energía eléctrica 100 kWh 119,67
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 560
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 560
 
 # Pag. 561
 
@@ -22787,7 +22787,7 @@ laboratorio de terceros y la entrega de las correspondientes copias y ampliacion
 se desarrolle con carácter accesorio a la actividad principal de comercio al por menor de aparatos e
 instrumentos fotográficos
 Cuantía a efectos del índice corrector de exceso: 35.524,14 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 561
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 561
 
 # Pag. 562
 
@@ -22821,7 +22821,7 @@ eléctrica
 Nota: El rendimiento neto resultante de la aplicación de los signos o módulos anteriores incluye, en su caso, el
 derivado de la venta de artículos de escaso valor tales como dulces, artículos de fumador, etc., los servicios de
 publicidad exterior y comercialización de tarjetas de transporte público, tarjetas para uso telefónico y otras
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 562
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 562
 
 # Pag. 563
 
@@ -22848,7 +22848,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 2 Personal no asalariado Persona 16.124,43
 3 Potencia fiscal vehículo CVF 258,24
 Cuantía a efectos del índice corrector de exceso: 23.978,80 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 563
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 563
 
 # Pag. 564
 
@@ -22879,7 +22879,7 @@ Cuantía a efectos del índice corrector de exceso: 14.379,72 euros
 Epígrafe IAE: 663.2 - Comercio al por menor fuera de un
 establecimiento comercial permanente de artículos textiles y de
 confección
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 564
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 564
 
 # Pag. 565
 
@@ -22908,7 +22908,7 @@ Cuantía a efectos del índice corrector de exceso: 16.886,56 euros
 Epígrafe IAE: 663.9 - Comercio al por menor fuera de un
 establecimiento comercial permanente de otras clases de
 mercancías n.c.o.p.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 565
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 565
 
 # Pag. 566
 
@@ -22938,7 +22938,7 @@ Rendimiento anual por
 Módulo Definición Unidad unidad (euros)
 1 Personal asalariado Persona 3.602,80
 2 Personal no asalariado Persona 16.174,82
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 566
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 566
 
 # Pag. 567
 
@@ -22971,7 +22971,7 @@ reproductoras de compact-disc y vídeos musicales, loterías, máquinas de apues
 uso de teléfono, siempre que se realicen con carácter accesorio a la actividad principal
 Cuantía a efectos del índice corrector de exceso: 39.070,26 euros
 Epígrafe IAE: 673.1 - Cafés y bares de categoría especial
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 567
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 567
 
 # Pag. 568
 
@@ -23003,7 +23003,7 @@ Módulo Definición Unidad unidad (euros)
 7 Máguinas tipo "B" Máquina tipo "B" 2.947,75
 NOTA: El rendimiento neto resultante de la aplicación de los signos o módulos anteriores incluye, en su
 caso, el derivado de máquinas de recreo tales como billar, futbolín, dardos, etc., así como de los expositores de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 568
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 568
 
 # Pag. 569
 
@@ -23035,7 +23035,7 @@ Módulo Definición Unidad unidad (euros)
 3 Potencia eléctrica kW contratado 541,68
 4 Mesas Mesa 220,45
 5 Máquinas tipo "A" Máquina tipo "A" 806,23
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 569
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 569
 
 # Pag. 570
 
@@ -23067,7 +23067,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 2 Personal no asalariado Persona 17.541,62
 3 Número de plazas Plaza 270,85
 Cuantía a efectos del índice corrector de exceso: 32.840,94 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 570
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 570
 
 # Pag. 571
 
@@ -23096,7 +23096,7 @@ Módulo Definición Unidad (euros)
 NOTA: El rendimiento neto derivado de la aplicación de los signos o módulos anteriores incluye, en su caso, el
 derivado de las actividades profesionales relacionadas con los seguros del ramo del automóvil, siempre que se
 desarrollen con carácter accesorio a la actividad principal.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 571
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 571
 
 # Pag. 572
 
@@ -23123,7 +23123,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 1 Personal asalariado Persona 4.409,02
 2 Personal no asalariado Persona 18.146,29
 3 Superficie del local m2 94,48
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 572
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 572
 
 # Pag. 573
 
@@ -23151,7 +23151,7 @@ Módulo Definición Unidad unidad (euros)
 3 Distancia recorrida 1000 Kilómetros 45,08
 NOTA: El rendimiento neto resultante de la aplicación de los signos o módulos anteriores incluye, en su caso, el
 derivado de la prestación de servicios de publicidad que utilicen como soporte el vehículo, siempre que se
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 573
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 573
 
 # Pag. 574
 
@@ -23180,7 +23180,7 @@ Cuantía a efectos del índice corrector de exceso: 28.280,74 euros
 Epígrafe IAE: 757 - Servicios de mudanzas
 Módulo Definición Unidad Rendimiento anual por unidad (euros)
 1 Personal asalariado Persona 2.566,32
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 574
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 574
 
 # Pag. 575
 
@@ -23208,7 +23208,7 @@ Cuantía a efectos del índice corrector de exceso: 47.233,25 euros
 Epígrafe IAE: 933.9 - Otras actividades de enseñanza, tales como
 idiomas corte y confección, mecanografía, taquigrafía,
 preparación de exámenes y oposicones y similares n.c.o.p.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 575
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 575
 
 # Pag. 576
 
@@ -23234,7 +23234,7 @@ Módulo Definición Unidad Rendimiento anual por unidad (euros)
 Cuantía a efectos del índice corrector de exceso: 37.224,77 euros
 Epígrafe IAE: 972.1 - Servicios de peluquería de señora y
 caballero
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 576
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 576
 
 # Pag. 577
 
@@ -23265,7 +23265,7 @@ los productos necesarios para la continuación de tratamientos efectuados en el 
 Cuantía a efectos del índice corrector de exceso: 26.945,44 euros
 Epígrafe IAE: 973.3 - Servicios de copias de documentos con
 máquinas fotocopiadoras
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 577
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 577
 
 # Pag. 578
 
@@ -23280,7 +23280,7 @@ derivado de los servicios de reproducción de planos y la encuadernación de sus
 actividades se desarrollen con carácter accesorio a la actividad principal de servicios de copias de documentos
 con máquinas fotocopiadoras.
 Cuantía a efectos del índice corrector de exceso: 24.192,95 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 578
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 578
 
 # Pag. 579
 
@@ -23313,7 +23313,7 @@ ganaderas y forestales desarrolladas directamente por personas físicas en las q
 las siguientes circunstancias:
 1. Tratarse de actividades incluidas en la relación contenida en la Orden HAC/1347/2024, de
 28 de noviembre (BOE de 30 de noviembre), que más adelante se reproduce.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 579
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 579
 
 # Pag. 580
 
@@ -23356,7 +23356,7 @@ pero hubieran renunciado a la aplicación del mismo en dicho período impositivo
 durante el mes de diciembre de dicho año o mediante la presentación en el plazo
 reglamentario de la declaración correspondiente al pago fraccionado del cuarto trimestre
 de 2024 en la forma dispuesta para el método de estimación directa, podrán volver a
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 580
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 580
 
 # Pag. 581
 
@@ -23402,7 +23402,7 @@ La renuncia al método de estimación objetiva en relación con una actividad cu
 origina, a efectos del IRPF, que el contribuyente quede sometido obligatoriamente al método
 de estimación directa, en la modalidad del mismo que corresponda, para la determinación del
 rendimiento neto de la totalidad de las actividades que desarrolle, durante un período mínimo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 581
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 581
 
 # Pag. 582
 
@@ -23442,7 +23442,7 @@ cuando el destinatario sea empresario) como al volumen de compras en bienes y
 servicios (250.000 euros, excluidas las adquisiciones de inmovilizado, para todas las
 actividades en estimación objetiva -comprendidas también las actividades agrícolas,
 ganaderas y forestales-).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 582
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 582
 
 # Pag. 583
 
@@ -23481,7 +23481,7 @@ desarrolladas por el contribuyente la cantidad de 250.000 euros anuales,
 excluidas las adquisiciones del inmovilizado
 Normativa: Disposición transitoria trigésima segunda Ley IRPF y art. 32.2 b)
 Reglamento IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 583
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 583
 
 # Pag. 584
 
@@ -23522,7 +23522,7 @@ términos previstos en el artículo 18 de la LIS, deberán valorarse de forma im
 su valor normal de mercado, entendiéndose como tal el que se habría acordado por
 personas o entidades independientes en condiciones de libre competencia.
 Respecto a la LIS véase la Ley 27/2014, de 27 de noviembre, del Impuesto sobre Sociedades.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 584
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 584
 
 # Pag. 585
 
@@ -23559,7 +23559,7 @@ siguientes en el ámbito de aplicación de la modalidad simplificada del método
 directa, salvo renuncia al mismo.
 Actividades económicas desarrolladas a través de entidades en
 régimen de atribución de rentas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 585
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 585
 
 # Pag. 586
 
@@ -23591,7 +23591,7 @@ En todo caso, el rendimiento neto determinado por la entidad en régimen de atri
 rentas se atribuirá a los socios, herederos, comuneros o partícipes, según las normas o
 pactos aplicables en cada caso y, si estos no constaran a la Administración en forma
 fehaciente, se atribuirá por partes iguales.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 586
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 586
 
 # Pag. 587
 
@@ -23627,7 +23627,7 @@ Producción de mejillón en batea, con un máximo de 5 bateas en cualquier día 
 Importante: cada una de las diez actividades enumeradas anteriormente tienen la
 consideración de independientes entre sí a efectos de la aplicación del método de
 estimación objetiva, por lo que, en caso de desarrollarse varias, la determinación del
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 587
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 587
 
 # Pag. 588
 
@@ -23666,7 +23666,7 @@ Por lo que se refiere a la ganadería que se considera incluida en esta activida
 matizarse que se trata de aquella que no tenga la consideración de ganadería
 independiente, tal como ésta se define en el epígrafe relativo a la actividad 3 (ganadería
 independiente clasificada en la división 0 del IAE).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 588
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 588
 
 # Pag. 589
 
@@ -23709,7 +23709,7 @@ alimente fundamentalmente con pastos, silos, henos o piensos obtenidos en tierra
 explotadas por el dueño del ganado.
 d. El ganado que se alimente fundamentalmente con piensos no producidos en la
 finca en que se críe.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 589
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 589
 
 # Pag. 590
 
@@ -23748,7 +23748,7 @@ Actividad 6: Otros trabajos, servicios y actividades accesorios realizados
 por titulares de actividades forestales, que estén excluidos o no incluidos
 en el régimen especial de la agricultura, ganadería y pesca del IVA
 (REAGP)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 590
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 590
 
 # Pag. 591
 
@@ -23788,7 +23788,7 @@ ingresos derivados de la realización de los citados trabajos y servicios no con
 de las actividades numeradas con las claves 5 y 6, sino que se incluirán como un servicio
 diferenciado más de la actividad agrícola o ganadera (clave 1) o forestal (clave 2)
 desarrollada.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 591
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 591
 
 # Pag. 592
 
@@ -23831,7 +23831,7 @@ pasteurización, refrigeración, congelación, secado, clasificación, limpieza,
 acondicionamiento, descascarado, descortezado, astillado, troceado, desinfección o
 desinsectación. Tampoco tiene la consideración de proceso de transformación, la simple
 obtención de materias primas agropecuarias que no requieran el sacrificio del ganado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 592
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 592
 
 # Pag. 593
 
@@ -23871,7 +23871,7 @@ INGRESOS ÍNTEGROS (incluidas subvenciones, indemnizaciones y ayuda PAC pago ún
 (*) Cuando el perceptor de la ayuda directa de pago único de la PAC hubiera obtenido ingresos por
 actividades agrícolas y ganaderas, distintos de la ayuda directa, por cuantía inferior al 25 por 100 del
 importe del total de los ingresos de tales actividades, el índice de rendimiento neto a aplicar sobre las
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 593
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 593
 
 # Pag. 594
 
@@ -23907,7 +23907,7 @@ Para ello dentro de cada actividad agrícola, ganadera y forestal que tenga la c
 de independiente, los ingresos íntegros procedentes de cada uno de los tipos de productos
 obtenidos, o de servicios prestados, se consignarán en el apartado D3 de la declaración en la
 casilla que corresponda de las numeradas del 1 al 16 conforme a la relación contenida en el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 594
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 594
 
 # Pag. 595
 
@@ -23949,7 +23949,7 @@ Procesos de
 transformación: 0,23
 3 Ganado bovino de carne, ovino de carne, caprino de carne, avicultura
 y cunicultura
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 595
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 595
 
 # Pag. 596
 
@@ -23993,7 +23993,7 @@ ganaderos o titulares de explotaciones forestales y producción de rendimiento n
 mejillón en batea 0,56
 16 Servicios de cría, guarda y engorde de cualquier tipo de ganado Índice de
 rendimiento neto:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 596
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 596
 
 # Pag. 597
 
@@ -24032,7 +24032,7 @@ efectuará por su valor normal en el mercado.
 En las operaciones económicas realizadas con una sociedad con la que se den
 relaciones de vinculación, en los términos previstos en el artículo 18 de la LIS, el titular de
 la actividad deberá efectuar de forma imperativa su valoración por el valor normal de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 597
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 597
 
 # Pag. 598
 
@@ -24075,7 +24075,7 @@ bienes o prestaciones de servicios realizadas a otras personas de forma gratuita
 En uno u otro caso, la valoración a efectos fiscales de los ingresos correspondientes a estas
 operaciones debe realizarse imperativamente por el valor normal de mercado de los bienes
 o servicios cedidos, o que hayan sido objeto de autoconsumo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 598
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 598
 
 # Pag. 599
 
@@ -24118,7 +24118,7 @@ como ingresos en el mismo ejercicio en el que se devenguen los gastos que estén
 financiando.
 Véase al respecto la norma de registro y valoración 18ª del Plan General de Contabilidad.
 Reglas especiales aplicables a determinadas subvenciones o ayudas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 599
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 599
 
 # Pag. 600
 
@@ -24167,7 +24167,7 @@ efectos de aplicar los índices de rendimiento neto que correspondan.
 percibidas por los agricultores o ganaderos que suscriben pólizas del seguro agrario
 combinado, ya sean percibidas de la Entidad Estatal de Seguros Agrarios (ENESA) o de
 las Comunidades Autónomas, no deben incluirse entre los ingresos que se toman como
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 600
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 600
 
 # Pag. 601
 
@@ -24213,7 +24213,7 @@ Su importe no superará el límite de 25.000 euros por persona beneficiaria y se
 descontará, en su caso, la ayuda directa abonada por el artículo 11 del Real Decreto-ley
 6/2024, sin que pueda sobrepasarse en ningún caso los topes que para las ayudas de
 minimis establece la normativa comunitaria.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 601
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 601
 
 # Pag. 602
 
@@ -24254,7 +24254,7 @@ correspondientes al tipo de producto dañado o perdido. (Volver)
 recibida, dado que el total de ingresos por actividades agrícolas y ganaderas, distintos de la ayuda directa,
 obtenidos por el contribuyente no es inferior al 25 por 100 del importe del total de los ingresos de tales
 actividades. Por ello, el importe de la ayuda directa recibida se acumula a los ingresos procedentes de los
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 602
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 602
 
 # Pag. 603
 
@@ -24291,7 +24291,7 @@ caprino
 2004, los coeficientes de amortización lineal máximos aplicables serán el resultado de multiplicar por 1,1 los
 señalados en el cuadro. El nuevo coeficiente así determinado será aplicable durante la vida útil de los activos
 nuevos adquiridos en el período antes indicado.(Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 603
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 603
 
 # Pag. 604
 
@@ -24330,7 +24330,7 @@ instalaciones de recarga afectos a la misma.
 • El coeficiente de amortización utilizable puede ser cualquier porcentaje entre el
 máximo y el mínimo. Este último porcentaje es el resultado de dividir 100 entre el
 período máximo que figura en la tabla para cada grupo de elementos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 604
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 604
 
 # Pag. 605
 
@@ -24377,7 +24377,7 @@ por el método de estimación objetiva podrán aplicar la libertad de amortizaci
 en la disposición adicional decimoctava de la LIS para determinados vehículos y
 nuevas infraestructuras de recarga afectos a la citada actividad económica, con
 sujeción a determinados requisitos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 605
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 605
 
 # Pag. 606
 
@@ -24415,7 +24415,7 @@ que se indican a continuación, en función del porcentaje que el coste del pers
 represente en relación con el volumen total de ingresos de la actividad:
 Índice corrector aplicable por utilización de personal asalariado
 Porcentaje (coste personal asalariado/volumen ingresos x 100) Índice
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 606
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 606
 
 # Pag. 607
 
@@ -24451,7 +24451,7 @@ Normativa: Instrucción 2.3.d) del anexo I Orden HAC/1347/2024, de 28 de noviemb
 Cuando en las actividades ganaderas se alimente el ganado con piensos y otros productos
 para la alimentación adquiridos a terceros, que representen más del 50 por 100 del importe
 total de los consumidos, a los rendimientos procedentes de dichas actividades se les aplicará
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 607
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 607
 
 # Pag. 608
 
@@ -24490,7 +24490,7 @@ agrícolas:
 ganadería y pesca del Impuesto sobre el Valor Añadido.
 • Aprovechamientos que correspondan al cedente en las actividades agrícolas
 desarrolladas en régimen de aparcería.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 608
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 608
 
 # Pag. 609
 
@@ -24527,7 +24527,7 @@ podrá ser de aplicación este índice corrector.
 mejillón en batea
 Normativa: Instrucción 2.3.i) del anexo I Orden HAC/1347/2024, de 28 de noviembre
 (BOE de 30 de noviembre)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 609
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 609
 
 # Pag. 610
 
@@ -24567,7 +24567,7 @@ inclusión en el Catálogo General de Explotaciones Prioritarias del Ministerio 
 Pesca y Alimentación.
 Véase el Real Decreto 613/2001, de 8 de junio, sobre mejora y modernización de las estructuras de producción
 de las explotaciones agrarias (BOE de 9 de junio).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 610
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 610
 
 # Pag. 611
 
@@ -24612,7 +24612,7 @@ amortizables.
 • Indemnizaciones y ayudas por cese de actividades económicas.
 • Indemnizaciones percibidas en sustitución de derechos económicos de duración
 indefinida.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 611
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 611
 
 # Pag. 612
 
@@ -24651,7 +24651,7 @@ el coste de personal asalariado, ascienden a 14.000 euros.
 • Don L.H.I. opta por imputar los ingresos de su actividad con arreglo al criterio de cobros
 y pagos, de acuerdo con el cual, los ingresos correspondientes a 2025 que constan en
 el libro registro de ingresos han sido los siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 612
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 612
 
 # Pag. 613
 
@@ -24689,7 +24689,7 @@ establo
 Remolque 10-02-2013 3.155 3.155
 Máquina abonadora 10-02-2018 7.500 7.200
 Instalación de riego 10-02-2020 2.500 1.015
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 613
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 613
 
 # Pag. 614
 
@@ -24727,7 +24727,7 @@ Parte proporcional de la ayuda directa desacoplada de la PAC (54.880 ÷ 103.755 
 Ingresos computables (54.880 + 3.305,86) = 58.185,86
 Ingresos computables por venta de ganado ovino de carne
 Ingresos registrados: 29.835
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 614
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 614
 
 # Pag. 615
 
@@ -24761,7 +24761,7 @@ Utilizando la tabla de amortización contenida en la Orden HAC/1347/2024, de 28 
 noviembre (BOE de 30 de noviembre), y de acuerdo con las reglas para su aplicación
 establecidas en la misma, el importe de la amortización que puede deducirse del
 rendimiento neto previo se determina del siguiente modo:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 615
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 615
 
 # Pag. 616
 
@@ -24798,7 +24798,7 @@ Como el citado porcentaje está comprendido entre el 10 y el 20 por 100, procede
 índice corrector 0,90. Por tanto:
 Rendimiento neto de módulos: (14.704,42 x 0,90) = 13.233,98 euros
 4ª Fase: Determinación del rendimiento neto de la actividad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 616
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 616
 
 # Pag. 617
 
@@ -24823,7 +24823,7 @@ Al ser los rendimientos de las actividades económicas superiores a 12.000 euros
 Por tanto:
 Rendimiento neto de la actividad = 12.572,28
 igual a: Rendimiento neto reducido total de la actividad = 12.572,28
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 617
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 617
 
 # Pag. 618
 
@@ -24855,7 +24855,7 @@ Arroz Arroz
 Productos del olivo Aceituna (de almazara o de mesa) 0,26
 Forrajes Plantas forrajeras de escarda (nabo forrajero, remolacha forrajera, col 0,37
 forrajera, calabaza forrajera, zanahoria forrajera, etc.) y otras plantas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 618
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 618
 
 # Pag. 619
 
@@ -24893,12 +24893,19 @@ accesorias las que el agricultor o ganadero participe como monitor, guía o expe
 realizadas por como excursionismo, senderismo, rutas ecológicas, etc.
 agricultores
 Otros trabajos y servicios accesorios prestados por agricultores 0,56
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 619
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 619
 
 # Pag. 620
 
 Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
 Explotaciones ganaderas
+Importante: el cuadro siguiente incluye los índices de rendimiento neto aplicables en
+2025 con las modificaciones establecidas en la Orden HAC /484/2026, de 14 de mayo,
+por la que se modifican para el período impositivo 2025 los índices de rendimiento neto
+aplicables en el método de estimación objetiva del Impuesto sobre la Renta de las
+Personas Físicas para las actividades agrícolas y ganaderas afectadas por diversas
+circunstancias excepcionales (BOE de 18 de mayo) que se identifican con un asterisco
+(*).
 Denominación grupo Productos Índices
 Avicultura Carne y huevos procedentes de pollos, gallinas, patos, 0,13
 faisanes, perdices, codornices, etc.
@@ -24912,15 +24919,15 @@ Caprino Carne (intensiva) (*) 0,09
 Carne (extensiva) (*) 0,09
 Leche (intensiva) (*) 0,18
 Leche (extensiva) (*) 0,18
-Cunicultura Cunicultura 0,13
-Ovino Carne (intensiva) (*) 0,09
-Carne (extensiva) (*) 0,09
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 620
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 620
 
 # Pag. 621
 
 Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
 Denominación grupo Productos Índices
+Cunicultura Cunicultura 0,13
+Ovino Carne (intensiva) (*) 0,09
+Carne (extensiva) (*) 0,09
 Leche (intensiva) (*) 0,18
 Leche (extensiva) (*) 0,18
 Porcino Carne (intensiva) 0,13
@@ -24934,11 +24941,11 @@ excursionismo, senderismo, rutas ecológicas, etc.
 Servicios de cría, guarda o engorde de cualquier tipo de ganado (incluidas aves) 0,37
 Otros trabajos y servicios accesorios prestados por ganaderos 0,56
 Producción de mejillón en batea 0,56
-Otras actividades ganaderas no Apicultura 0,26
+Otras actividades ganaderas no Apicultura (*) 0,13
 incluidas expresamente en otros
 apartados
 Equinos, animales para peletería (visón, chinchilla, etc.), etc. 0,32
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 621
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 621
 
 # Pag. 622
 
@@ -24955,9 +24962,6170 @@ igual o inferior a 30 años
 Actividad forestal de extracción de resina 0,32
 Actividades accesorias realizadas por titulares de explotaciones forestales 0,42
 Otros trabajos y servicios accesorios prestados por titulares de explotaciones forestales 0,56
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 622
+Anexo: Reducción de los índices de rendimiento neto, aplicables
+en 2025, por las actividades agrícolas y ganaderas afectadas por
+circunstancias excepcionales agrupados por Comunidades
+Autónomas, Provincias, ámbitos territoriales y actividades
+Normativa: Orden HAC/484/2026, de 14 de mayo, por la que se modifican para el
+período impositivo 2025 los índices de rendimiento neto aplicables en el método de
+estimación objetiva del Impuesto sobre la Renta de las Personas Físicas para las
+actividades agrícolas y ganaderas afectadas por diversas circunstancias
+excepcionales. (BOE de 18 de mayo).
+Advertencia: esta reproducción no tiene validez jurídica alguna. Para fines jurídicos
+consulte el texto publicado en el Boletín Oficial del Estado.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 622
 
 # Pag. 623
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Andalucía
+Todas las provincias
+Índice rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales (excepto los que se detallen Uva para vino con 0,22
+con un índice inferior) D.O.
+Uva para vino sin 0,18
+D.O.
+Provincia: Almería
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Forrajes: Alfalfa. 0,07
+Todos los términos municipales (excepto los que se detallen con un Frutos secos: 0,13
+índice inferior). Almendra.
+Términos municipales de: Adra, Balanegra, Berja, Dalías, Ejido (El), Productos 0,18
+Enix, Felix, Mojonera (La), Roquetas de Mar y Vícar. hortícolas:
+Pimiento.
+Términos municipales de: Albanchez, Albox, Alcóntar, Arboleas, Frutos secos: 0,09
+Armuña de Almanzora, Cantoria, Chercos, Cóbdar, Fines, Laroya, Almendra.
+Líjar, Olula del Río, Oria, Partaloa, Serón, Somontín, Suflí y Zurgena.
+Productos del 0,13
+olivo.
+Términos municipales de: Alcudia de Monteagud, Benitagla, Cereales. 0,05
+Benizalón, Castro de Filabres, Lubrín, Lucainena de las Torres, Olula
+de Castro, Senés, Sorbas, Tabernas, Tahal, Turrillas, Uleila del
+Productos del 0,13
+Campo y Velefique.
+olivo.
+Términos municipales de: Almería, Benahadux, Carboneras, Gádor, Cereales. 0,05
+Huércal de Almería, Níjar, Pechina, Rioja, Santa Fe de Mondújar y
+Viator.
+Términos municipales de: Bacares, Bayarque, Sierro y Vélez-Rubio. Frutos secos: 0,05
+Almendra.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 623
+
+# Pag. 624
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Almería
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos del 0,13
+olivo.
+Términos municipales de: Chirivel. Frutos secos: 0,09
+Almendra.
+Términos municipales de: Lúcar, Macael, Purchena, Taberno, Tíjola y Productos del 0,13
+Urrácal. olivo.
+Términos municipales de: Pulpí. Productos 0,18
+hortícolas:
+Lechuga.
+Términos municipales de: Vélez-Blanco. Productos del 0,13
+olivo.
+Provincia: Cádiz
+Índice
+Ámbito territorial Actividad rendimiento neto
+Todos los términos municipales. Oleaginosas: Colza. 0,22
+Términos municipales de: Alcalá del Valle, Setenil de las Productos hortícolas: 0,18
+Bodegas y Torre Alháquime. Espárrago.
+Términos municipales de: Barbate, Chiclana de la Frontera, Patata. 0,13
+Conil de la Frontera y Vejer de la Frontera.
+Productos hortícolas: 0,18
+Tomate.
+Tubérculos: Boniato. 0,13
+Términos municipales de: Chipiona y Sanlúcar de Flores y plantas 0,22
+Barrameda. ornamentales.
+Productos hortícolas: 0,18
+Tomate.
+Uva para vino con D.O. 0,16
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 624
+
+# Pag. 625
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Cádiz
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Rota. Flores y plantas 0,22
+ornamentales.
+Productos hortícolas: 0,18
+Tomate.
+Uva para vino sin D.O. 0,13
+Términos municipales de: Trebujena. Uva para vino con D.O. 0,16
+Provincia: Córdoba
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Aguilar de la Frontera, Baena, Castro del Río, Frutos 0,13
+Espejo, Montemayor y Puente Genil. secos:
+Almendra.
+Productos 0,13
+del olivo.
+Términos municipales de: Alcaracejos, Añora, Belalcázar, Belmez, Blázquez Productos 0,05
+(Los), Cardeña, Conquista, Dos Torres, Espiel, Fuente Obejuna, Fuente la del olivo.
+Lancha, Granjuela (La), Guijo (El), Hinojosa del Duque, Obejo, Pedroche,
+Peñarroya-Pueblonuevo, Pozoblanco, Santa Eufemia, Torrecampo,
+Valsequillo, Villaharta, Villanueva de Córdoba, Villanueva del Duque,
+Villanueva del Rey, Villaralto, Villaviciosa de Córdoba y Viso (El).
+Términos municipales de: Almedinilla, Benamejí, Cabra, Carcabuey, Productos 0,09
+Encinas Reales, Fuente-Tójar, Iznájar, Lucena y Priego de Córdoba. del olivo.
+Términos municipales de: Almodóvar del Río, Fuente Palmera, Cítricos. 0,13
+Hornachuelos, Palma del Río y Posadas.
+Frutos 0,13
+secos:
+Almendra.
+Términos municipales de: Bujalance, Cañete de las Torres, Doña Mencía, Productos 0,13
+Luque, Montilla, Monturque, Moriles, Nueva Carteya, Rute, Valenzuela y del olivo.
+Zuheros.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 625
+
+# Pag. 626
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Córdoba
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Carlota (La), Carpio (El), Fuente Carreteros, Frutos 0,13
+Guadalcázar, Guijarrosa (La), Pedro Abad, Rambla (La), Santaella, Victoria secos:
+(La) y Villa del Río. Almendra.
+Términos municipales de: Córdoba, Montoro y Villafranca de Córdoba. Frutos 0,13
+secos:
+Almendra.
+Provincia: Granada
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Leguminosas: Yeros. 0,18
+Productos hortícolas: 0,05
+Col-repollo.
+Productos hortícolas: 0,13
+Guisante verde.
+Productos hortícolas: 0,18
+Haba verde.
+Productos hortícolas: 0,13
+Judías verdes.
+Términos municipales de: Albuñán, Aldeire, Beas de Guadix, Cereales: Cebada. 0,05
+Calahorra (La), Cogollos de Guadix, Cortes y Graena, Dehesas
+de Guadix, Dólar, Ferreira, Huéneja y Lugros.
+Términos municipales de: Benalúa, Purullena y Villanueva de las Cereales: Cebada. 0,13
+Torres.
+Términos municipales de: Dúrcal, Nevada y Padul. Ovino y caprino de 0,07
+carne.
+Términos municipales de: Fonelas, Gor, Gorafe, Guadix y Valle Cereales: Cebada. 0,09
+del Zalabí.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 626
+
+# Pag. 627
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Huelva
+Índice
+Ámbito territorial Actividad rendimiento neto
+Todos los términos municipales. Leguminosas: 0,18
+Garbanzo.
+Términos municipales de: Almonte, Bollullos Par del Condado, Uva para vino con 0,16
+Bonares, Hinojos y Rociana del Condado. D.O.
+Provincia: Jaén
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Algodón. 0,26
+Productos 0,18
+hortícolas:
+Ajo.
+Productos 0,13
+hortícolas:
+Cebolla.
+Términos municipales de: Albanchez de Mágina, Arquillos, Baños de la Productos del 0,13
+Encina, Begíjar, Bélmez de la Moraleda, Canena, Castillo de Locubín, olivo.
+Chilluévar, Frailes, Fuerte del Rey, Jabalquinto, Lahiguera, Linares,
+Martos, Pegalajar, Quesada, Rus, Sorihuela del Guadalimar y
+Torredelcampo.
+Términos municipales de: Alcalá la Real, Bailén, Beas de Segura, Bedmar Productos del 0,18
+y Garcíez, Carboneros, Carolina (La), Castellar, Cazorla, Hornos, Iruela olivo.
+(La), Iznatoraf, Lopera, Marmolejo, Porcuna, Sabiote, Santiago de
+Calatrava, Santisteban del Puerto, Segura de la Sierra, Vilches,
+Villacarrillo, Villanueva del Arzobispo, Villares (Los) y Úbeda.
+Términos municipales de: Arroyo del Ojanco, Cazalilla, Ibros, Jamilena y Productos del 0,09
+Torreperogil. olivo.
+Términos municipales de: Escañuela, Lupión y Torreblascopedro. Productos del 0,05
+olivo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 627
+
+# Pag. 628
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Málaga
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Cítricos: 0,18
+Limón.
+Productos 0,18
+hortícolas:
+Coliflor.
+Todos los términos municipales (excepto los que se detallen con un índice Uva para vino 0,16
+inferior). con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Alameda, Almargen, Antequera, Archidona, Uva de mesa. 0,22
+Ardales, Campillos, Cañete la Real, Cuevas Bajas, Cuevas de San
+Marcos, Fuente de Piedra, Humilladero, Mollina, Sierra de Yeguas, Teba,
+Valle de Abdalajís, Villanueva de Algaidas, Villanueva de Tapia,
+Villanueva de la Concepción, Villanueva del Rosario y Villanueva del
+Trabuco.
+Términos municipales de: Alcaucín. Frutos no 0,26
+cítricos:
+Aguacate.
+Uva de mesa. 0,11
+Términos municipales de: Alfarnate. Ovino y 0,05
+caprino de
+leche.
+Uva de mesa. 0,11
+Términos municipales de: Alfarnatejo. Uva de mesa. 0,11
+Términos municipales de: Algarrobo. Frutos no 0,19
+cítricos:
+Aguacate.
+Ovino y 0,07
+caprino de
+carne.
+Uva de mesa. 0,11
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 628
+
+# Pag. 629
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Málaga
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Alhaurín de la Torre. Productos 0,13
+hortícolas:
+Alcachofa.
+Términos municipales de: Alhaurín el Grande. Patata. 0,09
+Uva para vino 0,11
+con D.O.
+Uva para vino 0,09
+sin D.O.
+Términos municipales de: Almáchar. Frutos no 0,26
+cítricos:
+Aguacate.
+Uva de mesa. 0,11
+Términos municipales de: Alozaina, Cártama, Pizarra, Tolox, Yunquera y Uva para vino 0,11
+Álora. con D.O.
+Uva para vino 0,09
+sin D.O.
+Términos municipales de: Periana y Árchez. Frutos no 0,26
+cítricos:
+Aguacate.
+Ovino y 0,13
+caprino de
+leche.
+Uva de mesa. 0,11
+Términos municipales de: Arenas y Canillas de Aceituno. Frutos no 0,26
+cítricos:
+Aguacate.
+Ovino y 0,05
+caprino de
+leche.
+Uva de mesa. 0,11
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 629
+
+# Pag. 630
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Málaga
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Benamargosa. Frutos no 0,19
+cítricos:
+Aguacate.
+Ovino y 0,03
+caprino de
+carne.
+Ovino y 0,09
+caprino de
+leche.
+Uva de mesa. 0,11
+Términos municipales de: Benamocarra, Cútar y Vélez-Málaga. Frutos no 0,19
+cítricos:
+Aguacate.
+Uva de mesa. 0,11
+Términos municipales de: Borge (El), Comares, Cómpeta, Iznate, Frutos no 0,26
+Macharaviaya, Nerja, Salares y Sedella. cítricos:
+Aguacate.
+Uva de mesa. 0,11
+Términos municipales de: Canillas de Albaida. Frutos no 0,26
+cítricos:
+Aguacate.
+Ovino y 0,05
+caprino de
+carne.
+Ovino y 0,05
+caprino de
+leche.
+Uva de mesa. 0,11
+Términos municipales de: Casabermeja, Colmenar, Moclinejo, Málaga, Uva de mesa. 0,16
+Rincón de la Victoria y Totalán.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 630
+
+# Pag. 631
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Málaga
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Coín. Patata. 0,09
+Términos municipales de: Estepona. Frutos no 0,19
+cítricos:
+Níspero.
+Términos municipales de: Frigiliana. Frutos no 0,26
+cítricos:
+Aguacate.
+Ovino y 0,09
+caprino de
+leche.
+Uva de mesa. 0,11
+Términos municipales de: Riogordo. Ovino y 0,03
+caprino de
+carne.
+Ovino y 0,09
+caprino de
+leche.
+Uva de mesa. 0,11
+Términos municipales de: Sayalonga. Frutos no 0,26
+cítricos:
+Aguacate.
+Ovino y 0,03
+caprino de
+carne.
+Uva de mesa. 0,11
+Términos municipales de: Torrox y Viñuela. Frutos no 0,26
+cítricos:
+Aguacate.
+Ovino y 0,03
+caprino de
+carne.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 631
+
+# Pag. 632
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Málaga
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Ovino y 0,13
+caprino de
+leche.
+Uva de mesa. 0,11
+Provincia: Sevilla
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Cereales: Avena. 0,18
+Forrajes: Alfalfa. 0,13
+Productos hortícolas: 0,13
+Coliflor.
+Productos hortícolas: 0,18
+Haba verde.
+Todos los términos municipales (excepto los que se detallen Leguminosas: 0,18
+con un índice inferior). Garbanzo.
+Patata. 0,18
+Términos municipales de: Alcalá del Río, Alcolea del Río, Cítricos. 0,13
+Cantillana, Lora del Río, Rinconada (La), Tocina, Villanueva
+del Río y Minas y Villaverde del Río.
+Frutos no cítricos: 0,26
+Ciruela.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos no cítricos: 0,26
+Nectarina.
+Frutos secos: 0,13
+Almendra.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 632
+
+# Pag. 633
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Sevilla
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Oleaginosas: Girasol. 0,22
+Patata. 0,13
+Productos hortícolas: 0,13
+Cebolla.
+Términos municipales de: Algaba (La). Frutos secos: 0,13
+Almendra.
+Oleaginosas: Girasol. 0,22
+Patata. 0,13
+Productos hortícolas: 0,13
+Cebolla.
+Términos municipales de: Arahal. Cereales: Trigo blando. 0,13
+Cereales: Trigo duro. 0,18
+Términos municipales de: Brenes. Cítricos. 0,13
+Frutos no cítricos: 0,26
+Ciruela.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos no cítricos: 0,26
+Nectarina.
+Frutos secos: 0,13
+Almendra.
+Patata. 0,13
+Productos hortícolas: 0,13
+Cebolla.
+Términos municipales de: Burguillos. Cítricos. 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 633
+
+# Pag. 634
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Sevilla
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no cítricos: 0,26
+Ciruela.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos no cítricos: 0,26
+Nectarina.
+Frutos secos: 0,13
+Almendra.
+Oleaginosas: Girasol. 0,22
+Productos hortícolas: 0,13
+Cebolla.
+Términos municipales de: Cabezas de San Juan (Las). Cereales: Quinoa. 0,18
+Cereales: Cebada. 0,18
+Cereales: Trigo blando. 0,18
+Cereales: Trigo duro. 0,18
+Cereales:Triticale. 0,18
+Cítricos. 0,18
+Flores y plantas 0,22
+ornamentales.
+Frutos secos: 0,18
+Almendra.
+Leguminosas: 0,13
+Garbanzo.
+Leguminosas: 0,13
+Guisantes grano.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 634
+
+# Pag. 635
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Sevilla
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Oleaginosas. 0,16
+Patata. 0,13
+Productos hortícolas: 0,18
+Tomate.
+Remolacha azucarera. 0,07
+Términos municipales de: Carmona, Morón de la Frontera, Cereales: Trigo blando. 0,18
+Osuna y Écija.
+Cereales: Trigo duro. 0,18
+Términos municipales de: Coronil (El) y Montellano. Algodón. 0,26
+Cereales: Trigo. 0,18
+Frutos secos: 0,18
+Almendra.
+Leguminosas: 0,13
+Garbanzo.
+Leguminosas: 0,13
+Guisantes grano.
+Oleaginosas: Girasol. 0,16
+Remolacha azucarera. 0,07
+Términos municipales de: Dos Hermanas, Palmar de Troya Algodón. 0,26
+(El) y Utrera.
+Cereales: Trigo. 0,18
+Frutos secos: 0,18
+Almendra.
+Leguminosas: 0,13
+Garbanzo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 635
+
+# Pag. 636
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Sevilla
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Leguminosas: 0,13
+Guisantes grano.
+Oleaginosas: Girasol. 0,16
+Patata. 0,13
+Productos hortícolas: 0,18
+Tomate.
+Remolacha azucarera. 0,07
+Términos municipales de: Guillena. Cítricos. 0,13
+Frutos secos: 0,13
+Almendra.
+Oleaginosas: Girasol. 0,22
+Patata. 0,13
+Productos hortícolas: 0,13
+Cebolla.
+Términos municipales de: Lebrija. Cereales: Quinoa. 0,05
+Cereales: Cebada. 0,18
+Cereales: Trigo blando. 0,18
+Cereales: Trigo duro. 0,18
+Cereales:Triticale. 0,18
+Cítricos. 0,18
+Flores y plantas 0,22
+ornamentales.
+Frutos secos: 0,18
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 636
+
+# Pag. 637
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Sevilla
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Almendra.
+Leguminosas: 0,13
+Garbanzo.
+Leguminosas: 0,13
+Guisantes grano.
+Oleaginosas. 0,16
+Patata. 0,13
+Productos hortícolas: 0,18
+Tomate.
+Remolacha azucarera. 0,07
+Términos municipales de: Molares (Los). Cereales: Trigo. 0,18
+Leguminosas: 0,13
+Garbanzo.
+Leguminosas: 0,13
+Guisantes grano.
+Oleaginosas: Girasol. 0,16
+Remolacha azucarera. 0,07
+Términos municipales de: Palacios y Villafranca (Los). Algodón. 0,26
+Cereales: Trigo. 0,18
+Frutos secos: 0,18
+Almendra.
+Leguminosas: 0,13
+Garbanzo.
+Leguminosas: 0,13
+Guisantes grano.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 637
+
+# Pag. 638
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Sevilla
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Oleaginosas: Girasol. 0,16
+Productos hortícolas: 0,18
+Tomate.
+Términos municipales de: Peñaflor. Cítricos. 0,13
+Frutos no cítricos: 0,26
+Ciruela.
+Frutos no cítricos: 0,26
+Nectarina.
+Frutos secos: 0,13
+Almendra.
+Oleaginosas: Girasol. 0,22
+Productos hortícolas: 0,13
+Cebolla.
+Términos municipales de: Puebla de los Infantes (La). Cítricos. 0,13
+Oleaginosas: Girasol. 0,22
+Términos municipales de: Cuervo de Sevilla (El). Cereales: Cebada. 0,18
+Cereales: Trigo blando. 0,18
+Cereales: Trigo duro. 0,18
+Cereales:Triticale. 0,18
+Cítricos. 0,18
+Flores y plantas 0,22
+ornamentales.
+Frutos secos: 0,18
+Almendra.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 638
+
+# Pag. 639
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Sevilla
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Leguminosas: 0,13
+Garbanzo.
+Leguminosas: 0,13
+Guisantes grano.
+Oleaginosas. 0,16
+Patata. 0,13
+Productos hortícolas: 0,18
+Tomate.
+Aragón
+Huesca
+Provincia: Huesca
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Abiego, Alquézar y Frutos secos: Almendra. 0,13
+Loporzano.
+Productos del olivo. 0,13
+Términos municipales de: Abizanda. Cereales. 0,18
+Productos del olivo. 0,18
+Términos municipales de: Adahuesca. Frutos secos: Almendra. 0,18
+Productos del olivo. 0,18
+Términos municipales de: Agüero. Cereales. 0,09
+Términos municipales de: Albalate de Cinca. Frutos no cítricos: Cereza y 0,26
+guinda.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 639
+
+# Pag. 640
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Huesca
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Albalatillo, Albero Bajo, Productos hortícolas. 0,18
+Barbués, Castejón de Monegros y Huerto.
+Términos municipales de: Albelda. Cereales: Maíz. 0,18
+Frutos no cítricos. 0,26
+Frutos secos: Almendra. 0,18
+Productos del olivo. 0,13
+Términos municipales de: Alcampell y Fraga. Productos del olivo. 0,13
+Términos municipales de: Alcolea de Cinca, Monzón, Frutos no cítricos. 0,26
+Sariñena, Sena y Velilla de Cinca.
+Términos municipales de: Alfántega. Cereales: Maíz. 0,09
+Frutos no cítricos. 0,26
+Frutos secos: Almendra. 0,05
+Productos del olivo. 0,05
+Términos municipales de: Almudévar. Frutos secos: Almendra. 0,18
+Uva para vino sin D.O. 0,13
+Términos municipales de: Altorricón. Cereales: Maíz. 0,18
+Frutos no cítricos. 0,19
+Términos municipales de: Azanuy-Alins. Frutos secos: Almendra. 0,05
+Productos del olivo. 0,09
+Términos municipales de: Azara y Barbuñales. Uva para vino con D.O. 0,22
+Términos municipales de: Azlor, Olvena y Santaliestra y Frutos secos: Almendra. 0,18
+San Quílez.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 640
+
+# Pag. 641
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Huesca
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Baélls. Frutos secos: Almendra. 0,09
+Productos del olivo. 0,18
+Términos municipales de: Bailo y Fiscal. Cereales. 0,18
+Términos municipales de: Ballobar. Cereales: Trigo blando. 0,18
+Frutos no cítricos: Caqui. 0,26
+Frutos no cítricos: Cereza y 0,19
+guinda.
+Términos municipales de: Barbastro. Frutos secos: Almendra. 0,18
+Productos del olivo. 0,18
+Productos hortícolas: 0,18
+Tomate.
+Uva para vino con D.O. 0,22
+Términos municipales de: Bárcabo. Forrajes: Alfalfa. 0,13
+Productos del olivo. 0,13
+Términos municipales de: Belver de Cinca. Cereales:Triticale. 0,05
+Frutos no cítricos. 0,19
+Términos municipales de: Benabarre y Torralba de Frutos secos. 0,18
+Aragón.
+Términos municipales de: Bierge. Frutos secos: Almendra. 0,05
+Términos municipales de: Binaced. Cereales: Maíz. 0,18
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos no cítricos: 0,26
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 641
+
+# Pag. 642
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Huesca
+Índice
+Ámbito territorial Actividad rendimiento neto
+Nectarina.
+Frutos secos. 0,18
+Productos del olivo. 0,05
+Productos hortícolas. 0,18
+Uva para vino sin D.O. 0,18
+Términos municipales de: Binéfar. Cereales. 0,09
+Frutos no cítricos: 0,07
+Manzana.
+Frutos no cítricos: 0,07
+Nectarina.
+Términos municipales de: Camporrélls. Frutos secos: Almendra. 0,18
+Productos del olivo. 0,09
+Términos municipales de: Candasnos. Frutos no cítricos. 0,13
+Frutos secos. 0,18
+Términos municipales de: Castelflorite. Cereales: Maíz. 0,18
+Forrajes: Alfalfa. 0,26
+Oleaginosas: Girasol. 0,22
+Términos municipales de: Castillazuelo. Frutos secos: Almendra. 0,05
+Productos del olivo. 0,05
+Términos municipales de: Castillonroy y Peralta de Frutos secos: Almendra. 0,09
+Calasanz.
+Productos del olivo. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 642
+
+# Pag. 643
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Huesca
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Esplús. Cereales: Maíz. 0,18
+Frutos secos. 0,13
+Términos municipales de: Estada. Cereales: Maíz. 0,09
+Frutos secos: Almendra. 0,09
+Productos del olivo. 0,09
+Términos municipales de: Estadilla. Cereales: Maíz. 0,09
+Frutos no cítricos: Pera. 0,19
+Frutos secos: Almendra. 0,13
+Productos del olivo. 0,13
+Uva para vino con D.O. 0,16
+Términos municipales de: Aínsa-Sobrarbe, Estopiñán Frutos secos. 0,18
+del Castillo y Viacamp y Litera.
+Productos del olivo. 0,18
+Términos municipales de: Fonz. Productos del olivo. 0,18
+Términos municipales de: Grado (El). Cereales. 0,13
+Términos municipales de: Graus, Puebla de Castro (La) Frutos secos. 0,18
+y Tolva.
+Productos del olivo. 0,18
+Uva para vino sin D.O. 0,18
+Términos municipales de: Gurrea de Gállego. Cereales. 0,18
+Frutos secos: Almendra. 0,13
+Términos municipales de: Igriés. Frutos secos: Almendra. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 643
+
+# Pag. 644
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Huesca
+Índice
+Ámbito territorial Actividad rendimiento neto
+Productos del olivo. 0,13
+Términos municipales de: Lanaja, Poleñino y Pueyo de Cereales: Maíz. 0,18
+Santa Cruz.
+Términos municipales de: Loarre. Frutos secos: Almendra. 0,09
+Términos municipales de: Loscorrales. Frutos secos: Almendra. 0,13
+Productos del olivo. 0,18
+Términos municipales de: Montanuy. Forrajes: Otros forrajes 0,26
+varios.
+Términos municipales de: Ontiñena. Frutos no cítricos: Cereza y 0,19
+guinda.
+Términos municipales de: Pozán de Vero y Santa María Frutos secos: Almendra. 0,05
+de Dulcis.
+Productos del olivo. 0,05
+Uva para vino con D.O. 0,22
+Términos municipales de: Salas Altas. Frutos secos: Almendra. 0,13
+Productos del olivo. 0,09
+Uva para vino con D.O. 0,22
+Términos municipales de: Salas Bajas. Frutos secos: Almendra. 0,18
+Productos del olivo. 0,18
+Uva para vino con D.O. 0,22
+Términos municipales de: Salillas. Productos del olivo. 0,09
+Términos municipales de: San Esteban de Litera. Cereales. 0,18
+Productos del olivo. 0,18
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 644
+
+# Pag. 645
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Huesca
+Índice
+Ámbito territorial Actividad rendimiento neto
+Productos hortícolas. 0,18
+Términos municipales de: Tamarite de Litera. Cereales: Maíz. 0,13
+Frutos no cítricos: 0,07
+Manzana.
+Frutos secos: Almendra. 0,05
+Productos del olivo. 0,13
+Términos municipales de: Villanueva de Sigena. Frutos no cítricos. 0,26
+Frutos secos. 0,18
+Términos municipales de: San Miguel del Cinca. Cereales: Maíz. 0,18
+Frutos no cítricos. 0,26
+Productos del olivo. 0,18
+Productos hortícolas. 0,18
+Términos municipales de: Sotonera (La). Frutos no cítricos: Cereza y 0,26
+guinda.
+Frutos secos: Almendra. 0,13
+Términos municipales de: Hoz y Costean. Frutos secos: Almendra. 0,09
+Productos del olivo. 0,13
+Uva para vino con D.O. 0,22
+Teruel
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 645
+
+# Pag. 646
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Ababuj. Cereales: Cebada. 0,09
+Términos municipales de: Abejuela, Torrijas y Villar del Cobo. Cereales. 0,13
+Leguminosas. 0,18
+Términos municipales de: Aguatón, Alba, Barrachina, Bañón, Uva para vino sin 0,13
+Blancas, Burbáguena, Báguena, Caminreal, Castejón de Tornos, D.O.
+Cella, Fuentes Claras, Monreal del Campo, Odón, Ojos Negros,
+Pozuel del Campo, San Martín del Río, Singra, Tornos, Torralba de
+los Sisones, Torrelacárcel, Torrijo del Campo y Villafranca del
+Campo.
+Términos municipales de: Aguaviva y Alcorisa. Cereales:Triticale. 0,18
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Alacón y Castelnou. Cereales: Trigo. 0,05
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Albalate del Arzobispo. Cereales: Trigo. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 646
+
+# Pag. 647
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Albarracín. Cereales: Trigo 0,18
+blando.
+Cereales:Triticale. 0,13
+Leguminosas. 0,18
+Términos municipales de: Alcañiz. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,19
+Melocotón.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Alloza, Berge y Castelserás. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,05
+Almendra.
+Productos 0,09
+hortícolas: Tomate.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 647
+
+# Pag. 648
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Andorra. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Arens de Lledó. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Productos del olivo. 0,13
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Argente. Cereales:Triticale. 0,18
+Términos municipales de: Ariño, Blesa, Bordón, Calanda, Cañada Frutos no cítricos: 0,13
+de Verich (La), Cerollera (La), Cretas, Foz-Calanda, Mata de los Albaricoque.
+Olmos (La), Molinos, Monroyo, Muniesa, Oliete, Olmos (Los),
+Portellada (La), Torre de Arcas, Torre del Compte y Valderrobres.
+Frutos no cítricos: 0,26
+Melocotón.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 648
+
+# Pag. 649
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Azaila. Cereales:Triticale. 0,09
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Bádenas, Nogueras y Santa Cruz de Cereales. 0,05
+Nogueras.
+Forrajes. 0,26
+Leguminosas. 0,05
+Oleaginosas. 0,11
+Términos municipales de: Bea, Cucalón, Ferreruela de Huerva, Cereales. 0,13
+Fonfría y Lanzuela.
+Forrajes. 0,26
+Leguminosas. 0,13
+Oleaginosas. 0,16
+Términos municipales de: Beceite, Fuentespalda y Lledó. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 649
+
+# Pag. 650
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos secos: 0,13
+Almendra.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Belmonte de San José, Torrecilla de Frutos no cítricos: 0,13
+Alcañiz y Torrevelilla. Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,18
+Almendra.
+Productos del olivo. 0,18
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Bello. Patata. 0,18
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Bronchales y Orihuela del Tremedal. Cereales: Cebada. 0,05
+Leguminosas. 0,18
+Términos municipales de: Bueña. Cereales: Cebada. 0,09
+Leguminosas. 0,18
+Uva para vino sin 0,13
+D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 650
+
+# Pag. 651
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Calaceite y Valdealgorfa. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,18
+Almendra.
+Productos del olivo. 0,13
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Calamocha. Cereales. 0,13
+Forrajes. 0,19
+Leguminosas. 0,13
+Oleaginosas. 0,16
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Castellote. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,05
+Almendra.
+Productos del olivo. 0,09
+Productos 0,09
+hortícolas: Tomate.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 651
+
+# Pag. 652
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Codoñera (La). Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Productos del olivo. 0,05
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Fórnoles, Parras de Castellote (Las) y Frutos no cítricos: 0,13
+Valjunquera. Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Productos del olivo. 0,09
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Fortanete. Cereales. 0,09
+Forrajes. 0,13
+Leguminosas. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 652
+
+# Pag. 653
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Patata. 0,05
+Términos municipales de: Fresneda (La), Ráfales y Valdeltormo. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,13
+Almendra.
+Productos del olivo. 0,13
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Frías de Albarracín. Cereales: Cebada. 0,09
+Leguminosas. 0,18
+Términos municipales de: Galve, Gúdar, Noguera de Albarracín y Cereales. 0,05
+Orrios.
+Términos municipales de: Gea de Albarracín. Cereales. 0,05
+Forrajes. 0,19
+Frutos no cítricos. 0,13
+Leguminosas. 0,05
+Oleaginosas. 0,06
+Patata. 0,09
+Términos municipales de: Ginebrosa (La). Cereales:Triticale. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 653
+
+# Pag. 654
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,13
+Almendra.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Griegos. Cereales. 0,05
+Leguminosas. 0,18
+Términos municipales de: Guadalaviar y Saldón. Cereales. 0,18
+Leguminosas. 0,18
+Términos municipales de: Híjar y Puebla de Híjar (La). Cereales. 0,18
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Jatiel. Cereales: Cebada. 0,05
+Frutos no cítricos: 0,13
+Albaricoque.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 654
+
+# Pag. 655
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no cítricos: 0,26
+Melocotón.
+Leguminosas. 0,13
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Jorcas. Cereales. 0,18
+Términos municipales de: Josa y Salcedillo. Cereales. 0,13
+Leguminosas. 0,13
+Términos municipales de: Lagueruela. Cereales. 0,09
+Forrajes. 0,26
+Leguminosas. 0,09
+Oleaginosas. 0,11
+Términos municipales de: Loscos. Cereales: Trigo 0,18
+blando.
+Frutos secos: 0,13
+Almendra.
+Leguminosas. 0,18
+Términos municipales de: Martín del Río. Cereales:Triticale. 0,05
+Términos municipales de: Mas de las Matas. Cereales:Triticale. 0,13
+Frutos no cítricos: 0,13
+Albaricoque.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 655
+
+# Pag. 656
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,18
+Almendra.
+Productos del olivo. 0,18
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Mazaleón. Frutos no cítricos. 0,19
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos secos: 0,13
+Almendra.
+Productos del olivo. 0,18
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Monterde de Albarracín y Terriente. Cereales. 0,13
+Términos municipales de: Mora de Rubielos. Cereales: Trigo. 0,05
+Términos municipales de: Peñarroya de Tastavins. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,05
+Almendra.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 656
+
+# Pag. 657
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos del olivo. 0,05
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Rubielos de la Cérida. Cereales. 0,18
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Samper de Calanda. Cereales. 0,18
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Productos del olivo. 0,05
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: San Agustín. Cereales: Cebada. 0,13
+Términos municipales de: Santa Eulalia. Cereales. 0,13
+Leguminosas. 0,13
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Sarrión. Cereales: Cebada. 0,18
+Términos municipales de: Seno. Cereales: Cebada. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 657
+
+# Pag. 658
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Productos del olivo. 0,09
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Torremocha de Jiloca y Villarquemado. Cereales. 0,18
+Leguminosas. 0,18
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Urrea de Gaén. Cereales. 0,13
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Valdecuenca. Cereales. 0,09
+Leguminosas. 0,18
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 658
+
+# Pag. 659
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Teruel
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Vinaceite. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,26
+Melocotón.
+Productos del olivo. 0,05
+Productos 0,09
+hortícolas: Tomate.
+Uva para vino sin 0,13
+D.O.
+Zaragoza
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Agón. Cereales: Trigo blando. 0,05
+Cereales:Triticale. 0,05
+Frutos secos: Almendra. 0,05
+Productos del olivo. 0,05
+Uva para vino con D.O. 0,16
+Términos municipales de: Aguarón, Encinacorba, Paniza y Frutos secos: Almendra. 0,05
+Tosos.
+Uva para vino con D.O. 0,16
+Términos municipales de: Aguilón. Cereales: Cebada. 0,05
+Cereales: Trigo blando. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 659
+
+# Pag. 660
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Cereales: Trigo duro. 0,05
+Frutos secos: Almendra. 0,13
+Términos municipales de: Ainzón. Cereales: Cebada. 0,05
+Cereales: Trigo blando. 0,05
+Cereales: Trigo duro. 0,05
+Frutos no cítricos: 0,07
+Manzana.
+Frutos secos: Almendra. 0,05
+Productos del olivo. 0,13
+Uva para vino con D.O. 0,16
+Términos municipales de: Alfajarín, Chiprana, Farlete, Cereales: Cebada. 0,13
+Malanquilla, Santa Eulalia de Gállego y Villafranca de
+Ebro.
+Términos municipales de: Alfamén. Frutos no cítricos: Cereza 0,26
+y guinda.
+Frutos no cítricos: 0,26
+Melocotón.
+Frutos no cítricos: 0,26
+Nectarina.
+Términos municipales de: Almonacid de la Cuba y Vera de Frutos secos: Almendra. 0,09
+Moncayo.
+Términos municipales de: Almonacid de la Sierra. Frutos no cítricos: Cereza 0,26
+y guinda.
+Uva para vino con D.O. 0,22
+Términos municipales de: Almunia de Doña Godina (La). Frutos no cítricos: 0,07
+Albaricoque.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 660
+
+# Pag. 661
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos no cítricos: Cereza 0,26
+y guinda.
+Frutos no cítricos: 0,07
+Melocotón.
+Frutos no cítricos: 0,26
+Nectarina.
+Términos municipales de: Ambel y Borja. Cereales: Cebada. 0,05
+Cereales: Trigo blando. 0,05
+Cereales: Trigo duro. 0,05
+Cereales:Triticale. 0,05
+Frutos no cítricos: 0,07
+Manzana.
+Frutos secos: Almendra. 0,05
+Productos del olivo. 0,05
+Uva para vino con D.O. 0,06
+Términos municipales de: Aniñón y Torralba de Ribota. Frutos no cítricos: Cereza 0,19
+y guinda.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,07
+Melocotón.
+Productos del olivo. 0,05
+Términos municipales de: Aranda de Moncayo. Cereales: Cebada. 0,09
+Cereales: Trigo blando. 0,09
+Frutos no cítricos: Cereza 0,19
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 661
+
+# Pag. 662
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+y guinda.
+Frutos secos: Almendra. 0,13
+Términos municipales de: Arándiga y Frasno (El). Frutos no cítricos: 0,07
+Ciruela.
+Frutos no cítricos: 0,07
+Melocotón.
+Productos del olivo. 0,05
+Términos municipales de: Ateca. Frutos no cítricos: Cereza 0,19
+y guinda.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,19
+Melocotón.
+Uva para vino con D.O. 0,22
+Términos municipales de: Azuara. Cereales: Cebada. 0,09
+Cereales: Trigo blando. 0,05
+Cereales: Trigo duro. 0,05
+Cereales:Triticale. 0,05
+Términos municipales de: Bárboles. Frutos no cítricos: 0,26
+Manzana.
+Frutos secos: Almendra. 0,13
+Términos municipales de: Belchite. Frutos secos: Almendra. 0,05
+Términos municipales de: Belmonte de Gracián, Mara, Frutos no cítricos: 0,19
+Miedes de Aragón, Orera y Villalba de Perejil. Ciruela.
+Frutos secos: Almendra. 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 662
+
+# Pag. 663
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Uva para vino con D.O. 0,16
+Términos municipales de: Cadrete, Cuarte de Huerva y Forrajes: Alfalfa. 0,07
+María de Huerva.
+Términos municipales de: Calatayud. Cereales: Cebada. 0,13
+Cereales: Trigo blando. 0,13
+Cereales:Triticale. 0,13
+Frutos no cítricos: Cereza 0,13
+y guinda.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,19
+Melocotón.
+Frutos no cítricos: Pera. 0,26
+Términos municipales de: Calatorao. Cereales: Maíz. 0,05
+Frutos no cítricos: 0,07
+Albaricoque.
+Frutos no cítricos: 0,07
+Manzana.
+Frutos no cítricos: 0,07
+Melocotón.
+Frutos no cítricos: 0,19
+Nectarina.
+Términos municipales de: Castejón de Alarba. Cereales: Cebada. 0,13
+Cereales: Trigo blando. 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 663
+
+# Pag. 664
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Cereales:Triticale. 0,13
+Frutos no cítricos: Cereza 0,13
+y guinda.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+Melocotón.
+Términos municipales de: Castiliscar, Sos del Rey Católico Cereales: Avena. 0,09
+y Sádaba.
+Cereales: Cebada. 0,05
+Términos municipales de: Cervera de la Cañada. Frutos no cítricos: Cereza 0,19
+y guinda.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,07
+Melocotón.
+Productos del olivo. 0,13
+Uva para vino con D.O. 0,22
+Términos municipales de: Chodes. Frutos no cítricos: 0,19
+Manzana.
+Términos municipales de: Ejea de los Caballeros. Cereales: Maíz. 0,18
+Oleaginosas: Girasol. 0,16
+Términos municipales de: Épila. Cereales: Maíz. 0,18
+Frutos no cítricos: 0,26
+Manzana.
+Frutos no cítricos: Pera. 0,26
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 664
+
+# Pag. 665
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos secos: Almendra. 0,09
+Términos municipales de: Fuendejalón. Cereales: Cebada. 0,13
+Cereales: Trigo duro. 0,13
+Cereales:Triticale. 0,13
+Términos municipales de: Fuendetodos. Cereales: Cebada. 0,05
+Cereales: Trigo blando. 0,05
+Cereales: Trigo duro. 0,05
+Términos municipales de: Gallur. Frutos no cítricos: 0,26
+Albaricoque.
+Frutos no cítricos: 0,19
+Nectarina.
+Términos municipales de: Gelsa. Cereales: Maíz. 0,13
+Términos municipales de: Grisén. Cereales: Cebada. 0,09
+Cereales: Trigo blando. 0,09
+Cereales: Trigo duro. 0,09
+Productos del olivo. 0,13
+Términos municipales de: Herrera de los Navarros. Cereales: Cebada. 0,13
+Cereales: Trigo blando. 0,13
+Cereales:Triticale. 0,13
+Frutos secos: Almendra. 0,05
+Términos municipales de: Illueca. Cereales: Cebada. 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 665
+
+# Pag. 666
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Cereales: Trigo blando. 0,13
+Términos municipales de: Jarque de Moncayo. Cereales. 0,13
+Frutos no cítricos: Cereza 0,19
+y guinda.
+Frutos secos: Almendra. 0,18
+Términos municipales de: Lucena de Jalón. Cereales: Maíz. 0,18
+Frutos no cítricos: 0,26
+Manzana.
+Frutos no cítricos: Pera. 0,26
+Frutos secos: Almendra. 0,13
+Términos municipales de: Magallón. Cereales: Cebada. 0,05
+Cereales: Trigo blando. 0,05
+Cereales: Trigo duro. 0,05
+Cereales:Triticale. 0,05
+Frutos secos: Almendra. 0,05
+Productos del olivo. 0,05
+Uva para vino con D.O. 0,06
+Términos municipales de: Maluenda. Frutos no cítricos: Cereza 0,19
+y guinda.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,07
+Manzana.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 666
+
+# Pag. 667
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos no cítricos: 0,19
+Melocotón.
+Frutos no cítricos: Pera. 0,26
+Términos municipales de: Mesones de Isuela. Cereales: Cebada. 0,13
+Cereales: Trigo blando. 0,13
+Cereales: Trigo duro. 0,13
+Frutos secos: Almendra. 0,13
+Productos del olivo. 0,18
+Productos hortícolas. 0,13
+Términos municipales de: Monegrillo. Cereales: Trigo blando. 0,13
+Cereales: Trigo duro. 0,13
+Términos municipales de: Morata de Jalón. Frutos no cítricos: 0,19
+Manzana.
+Productos del olivo. 0,13
+Términos municipales de: Morata de Jiloca, Munébrega y Cereales: Cebada. 0,13
+Olvés.
+Cereales: Trigo blando. 0,13
+Frutos no cítricos: Cereza 0,13
+y guinda.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,19
+Melocotón.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 667
+
+# Pag. 668
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos no cítricos: Pera. 0,26
+Términos municipales de: Moros y Villarroya de la Sierra. Frutos no cítricos: Cereza 0,19
+y guinda.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,19
+Melocotón.
+Términos municipales de: Moyuela y Valmadrid. Cereales: Cebada. 0,18
+Cereales: Trigo blando. 0,18
+Cereales: Trigo duro. 0,18
+Términos municipales de: Mozota. Cereales. 0,13
+Términos municipales de: Novallas. Cereales: Cebada. 0,18
+Cereales: Maíz. 0,18
+Cereales: Trigo blando. 0,18
+Cereales: Trigo duro. 0,18
+Frutos secos: Almendra. 0,13
+Oleaginosas: Girasol. 0,22
+Productos del olivo. 0,13
+Términos municipales de: Novillas y Santa Cruz de Grío. Productos del olivo. 0,18
+Términos municipales de: Osera de Ebro. Cereales: Cebada. 0,18
+Términos municipales de: Paracuellos de Jiloca. Cereales: Cebada. 0,13
+Cereales: Trigo blando. 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 668
+
+# Pag. 669
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos no cítricos: Cereza 0,19
+y guinda.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,19
+Melocotón.
+Frutos no cítricos: Pera. 0,26
+Términos municipales de: Pedrola. Cereales: Cebada. 0,13
+Cereales: Trigo blando. 0,18
+Cereales: Trigo duro. 0,18
+Cereales:Triticale. 0,18
+Frutos secos: Almendra. 0,13
+Oleaginosas: Girasol. 0,16
+Productos del olivo. 0,13
+Términos municipales de: Plasencia de Jalón. Frutos no cítricos: Pera. 0,13
+Términos municipales de: Pozuelo de Aragón. Cereales: Cebada. 0,13
+Cereales: Trigo duro. 0,13
+Términos municipales de: Pradilla de Ebro. Cereales: Cebada. 0,13
+Cereales: Maíz. 0,13
+Términos municipales de: Quinto. Frutos no cítricos: 0,26
+Albaricoque.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 669
+
+# Pag. 670
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos secos: Almendra. 0,09
+Productos del olivo. 0,05
+Términos municipales de: Ricla. Frutos no cítricos: 0,07
+Melocotón.
+Términos municipales de: Sediles. Cereales: Cebada. 0,13
+Cereales: Trigo blando. 0,13
+Frutos no cítricos: Cereza 0,19
+y guinda.
+Frutos no cítricos: 0,19
+Melocotón.
+Términos municipales de: Tabuenca. Cereales: Cebada. 0,13
+Cereales: Trigo blando. 0,13
+Cereales: Trigo duro. 0,13
+Cereales:Triticale. 0,13
+Términos municipales de: Tarazona. Cereales: Cebada. 0,18
+Cereales: Maíz. 0,18
+Cereales: Trigo blando. 0,18
+Cereales: Trigo duro. 0,18
+Frutos secos: Almendra. 0,09
+Oleaginosas: Girasol. 0,11
+Términos municipales de: Tauste. Cereales: Cebada. 0,09
+Cereales: Maíz. 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 670
+
+# Pag. 671
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Cereales: Trigo blando. 0,18
+Cereales: Trigo duro. 0,18
+Forrajes: Alfalfa. 0,26
+Términos municipales de: Tierga. Cereales: Cebada. 0,05
+Cereales: Trigo blando. 0,05
+Cereales: Trigo duro. 0,05
+Cereales:Triticale. 0,05
+Frutos secos: Almendra. 0,05
+Términos municipales de: Trasobares. Cereales: Cebada. 0,09
+Cereales: Trigo blando. 0,09
+Cereales: Trigo duro. 0,09
+Cereales:Triticale. 0,09
+Frutos secos: Almendra. 0,05
+Términos municipales de: Velilla de Jiloca. Cereales: Cebada. 0,13
+Cereales: Trigo duro. 0,13
+Frutos no cítricos: Cereza 0,13
+y guinda.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,19
+Melocotón.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 671
+
+# Pag. 672
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Zaragoza
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos no cítricos: Pera. 0,26
+Términos municipales de: Vierlas. Cereales: Cebada. 0,13
+Frutos secos: Almendra. 0,05
+Términos municipales de: Villar de los Navarros. Cereales: Cebada. 0,13
+Cereales: Trigo blando. 0,13
+Frutos secos: Almendra. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 672
+
+# Pag. 673
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Canarias
+Provincia: Las Palmas
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Agaete, Moya, Palmas de Gran Apicultura. 0,09
+Canaria (Las), Santa María de Guía de Gran Canaria y Teror.
+Patata. 0,13
+Productos del olivo. 0,05
+Uva para vino con 0,11
+D.O.
+Términos municipales de: Agüimes, Aldea de San Nicolás Apicultura. 0,09
+(La), Artenara, Gáldar, Ingenio, Mogán y Valsequillo de Gran
+Canaria.
+Productos del olivo. 0,05
+Uva para vino con 0,11
+D.O.
+Términos municipales de: Antigua, Betancuria y Puerto del Otros productos 0,19
+Rosario. agrícolas: Aloe Vera.
+Ovino y caprino de 0,13
+leche.
+Patata. 0,13
+Productos del olivo. 0,13
+Productos hortícolas. 0,13
+Productos hortícolas: 0,13
+Piña tropical.
+Términos municipales de: Arrecife, Haría, San Bartolomé, Productos hortícolas: 0,13
+Teguise, Tinajo, Tías y Yaiza. Sandía.
+Productos hortícolas: 0,13
+Tomate.
+Uva para vino con 0,11
+D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 673
+
+# Pag. 674
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Las Palmas
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Arucas y Firgas. Apicultura. 0,09
+Patata. 0,13
+Términos municipales de: Oliva (La). Ovino y caprino de 0,13
+leche.
+Patata. 0,13
+Productos del olivo. 0,13
+Productos hortícolas. 0,13
+Productos hortícolas: 0,13
+Piña tropical.
+Términos municipales de: Pájara y Tuineje. Otros productos 0,19
+agrícolas: Aloe Vera.
+Patata. 0,13
+Productos del olivo. 0,13
+Productos hortícolas. 0,13
+Productos hortícolas: 0,13
+Piña tropical.
+Términos municipales de: San Bartolomé de Tirajana. Apicultura. 0,09
+Cítricos. 0,05
+Frutos no cítricos. 0,07
+Frutos no cítricos: 0,07
+Aguacate.
+Frutos no cítricos: 0,07
+Albaricoque.
+Frutos secos: 0,05
+Almendra.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 674
+
+# Pag. 675
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Las Palmas
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos tropicales: 0,07
+Mango.
+Productos del olivo. 0,05
+Uva para vino con 0,11
+D.O.
+Términos municipales de: Santa Brígida. Apicultura. 0,09
+Frutos secos: 0,09
+Almendra.
+Patata. 0,13
+Productos del olivo. 0,05
+Uva para vino con 0,11
+D.O.
+Términos municipales de: Santa Lucía de Tirajana y Tejeda. Apicultura. 0,09
+Frutos secos: 0,05
+Almendra.
+Productos del olivo. 0,05
+Uva para vino con 0,11
+D.O.
+Términos municipales de: Telde. Apicultura. 0,09
+Frutos secos: 0,09
+Almendra.
+Productos del olivo. 0,05
+Uva para vino con 0,11
+D.O.
+Términos municipales de: Valleseco. Apicultura. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 675
+
+# Pag. 676
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Las Palmas
+Índice
+Ámbito territorial Actividad rendimiento neto
+Patata. 0,13
+Productos del olivo. 0,05
+Términos municipales de: Vega de San Mateo. Apicultura. 0,09
+Frutos secos: 0,09
+Almendra.
+Patata. 0,13
+Productos del olivo. 0,05
+Uva para vino con 0,06
+D.O.
+Provincia: Tenerife
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Agulo, Arafo, Buenavista del Norte, Uva para vino 0,16
+Candelaria, Garachico, Guancha (La), Güímar, Icod de los Vinos, con D.O.
+Matanza de Acentejo (La), Orotava (La), Realejos (Los), Rosario (El),
+San Cristóbal de La Laguna, San Juan de la Rambla, Santa Cruz de
+Tenerife, Santa Úrsula, Sauzal (El), Silos (Los), Tacoronte, Tanque (El),
+Tegueste y Victoria de Acentejo (La).
+Términos municipales de: Alajeró, Hermigua y Vallehermoso. Uva para vino 0,11
+con D.O.
+Términos municipales de: Frontera. Apicultura. 0,09
+Avicultura. 0,03
+Bovino de 0,05
+carne.
+Cítricos. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 676
+
+# Pag. 677
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Tenerife
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Cunicultura. 0,03
+Frutos no 0,13
+cítricos.
+Frutos no 0,13
+cítricos:
+Aguacate.
+Frutos no 0,13
+cítricos:
+Manzana.
+Frutos 0,13
+tropicales:
+Mango.
+Frutos 0,13
+tropicales:
+Papaya.
+Frutos 0,19
+tropicales:
+Plátano.
+Otros productos 0,13
+agrícolas: Aloe
+Vera.
+Ovino y caprino 0,09
+de leche.
+Patata. 0,09
+Porcino de 0,05
+carne.
+Productos del 0,05
+olivo.
+Productos 0,09
+hortícolas.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 677
+
+# Pag. 678
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Tenerife
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,09
+hortícolas: Piña
+tropical.
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Fuencaliente de la Palma, Paso (El) y Villa de Uva para vino 0,22
+Mazo. con D.O.
+Términos municipales de: Garafía y Puntagorda. Cítricos. 0,13
+Términos municipales de: San Miguel de Abona y Vilaflor de Chasna. Patata. 0,13
+Términos municipales de: San Sebastián de la Gomera y Valle Gran Uva para vino 0,06
+Rey. con D.O.
+Términos municipales de: Valverde. Apicultura. 0,05
+Avicultura. 0,09
+Bovino de 0,05
+carne.
+Cítricos. 0,09
+Cunicultura. 0,05
+Frutos no 0,19
+cítricos.
+Frutos no 0,13
+cítricos:
+Aguacate.
+Frutos no 0,13
+cítricos:
+Ciruela.
+Frutos no 0,13
+cítricos: Higo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 678
+
+# Pag. 679
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Tenerife
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no 0,13
+cítricos:
+Manzana.
+Frutos no 0,07
+cítricos: Pera.
+Frutos secos: 0,09
+Almendra.
+Frutos 0,19
+tropicales.
+Otros productos 0,19
+agrícolas: Aloe
+Vera.
+Ovino y caprino 0,13
+de leche.
+Patata. 0,05
+Porcino de 0,05
+carne.
+Productos del 0,18
+olivo.
+Productos 0,09
+hortícolas.
+Productos 0,09
+hortícolas: Piña
+tropical.
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Pinar de El Hierro (El). Apicultura. 0,13
+Avicultura. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 679
+
+# Pag. 680
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Tenerife
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Bovino de 0,07
+carne.
+Cereales. 0,09
+Cítricos. 0,09
+Cunicultura. 0,03
+Frutos no 0,13
+cítricos.
+Frutos no 0,13
+cítricos:
+Aguacate.
+Frutos no 0,13
+cítricos: Higo.
+Frutos secos: 0,09
+Almendra.
+Ovino y caprino 0,09
+de leche.
+Patata. 0,09
+Porcino de 0,07
+carne.
+Productos del 0,13
+olivo.
+Productos 0,13
+hortícolas.
+Uva para vino 0,11
+con D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 680
+
+# Pag. 681
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Cantabria
+Provincia: Cantabria
+Ámbito territorial Actividad Índice rendimiento neto
+Términos municipales de: Valdeolea y Valdeprado del Río. Cereales: Cebada. 0,13
+Cereales: Centeno. 0,13
+Términos municipales de: Valderredible. Cereales: Cebada. 0,13
+Cereales: Centeno. 0,13
+Cereales:Triticale. 0,13
+Castilla-La Mancha
+Provincia: Albacete
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Albatana, Hellín y Ontur. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,13
+Melocotón.
+Términos municipales de: Casas-Ibáñez, Cenizate, Chinchilla de Uva para vino con 0,11
+Monte-Aragón, Fuente-Álamo, Roda (La) y Villalgordo del Júcar. D.O.
+Uva para vino sin 0,09
+D.O.
+Términos municipales de: Madrigueras, Mahora, Navas de Frutos secos: 0,18
+Jorquera y Tarazona de la Mancha. Almendra.
+Frutos secos: 0,18
+Pistacho.
+Uva para vino con 0,11
+D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 681
+
+# Pag. 682
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Albacete
+Índice
+Ámbito territorial Actividad rendimiento neto
+Uva para vino sin 0,09
+D.O.
+Términos municipales de: Tobarra. Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,13
+Melocotón.
+Uva para vino con 0,11
+D.O.
+Uva para vino sin 0,09
+D.O.
+Provincia: Ciudad Real
+Ámbito territorial Actividad Índice rendimiento neto
+Términos municipales de: Tomelloso. Uva para vino con D.O. 0,22
+Uva para vino sin D.O. 0,18
+Provincia: Cuenca
+Índice rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Campillo de Altobuey y Motilla del Cereales: Cebada. 0,18
+Palancar.
+Leguminosas: 0,18
+Lentejas.
+Uva para vino con 0,22
+D.O.
+Uva para vino sin 0,18
+D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 682
+
+# Pag. 683
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Cuenca
+Índice rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Cañada Juncosa. Cereales: Cebada. 0,18
+Términos municipales de: Casas de Benítez. Frutos secos: 0,18
+Almendra.
+Uva para vino con 0,22
+D.O.
+Uva para vino sin 0,18
+D.O.
+Términos municipales de: Casas de Fernando Alonso, Casas Uva para vino con 0,22
+de los Pinos y Provencio (El). D.O.
+Uva para vino sin 0,18
+D.O.
+Términos municipales de: Gabaldón, Paracuellos y Cereales: Cebada. 0,18
+Valverdejo.
+Leguminosas: 0,18
+Lentejas.
+Términos municipales de: San Clemente. Cereales: Cebada. 0,18
+Frutos secos: 0,18
+Almendra.
+Productos del olivo. 0,18
+Uva para vino con 0,22
+D.O.
+Uva para vino sin 0,18
+D.O.
+Términos municipales de: Sisante. Frutos secos: 0,18
+Almendra.
+Productos del olivo. 0,18
+Uva para vino con 0,22
+D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 683
+
+# Pag. 684
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Cuenca
+Índice rendimiento
+Ámbito territorial Actividad neto
+Uva para vino sin 0,18
+D.O.
+Provincia: Guadalajara
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Aldeanueva de Guadalajara, Cereales: Cebada. 0,13
+Caspueñas, Saúca y Trijueque.
+Términos municipales de: Anguita, Hortezuela de Océn y Leguminosas: Yeros. 0,18
+Torremocha del Campo.
+Términos municipales de: Argecilla. Cereales. 0,18
+Cereales: Cebada. 0,18
+Leguminosas: Yeros. 0,18
+Términos municipales de: Brihuega. Cereales. 0,18
+Cereales: Cebada. 0,18
+Términos municipales de: Casa de Uceda, Miñosa (La), Pozo Cereales: Cebada. 0,18
+de Guadalajara, Romanillos de Atienza y Uceda.
+Términos municipales de: Casar (El), Muduex y Valdegrudas. Cereales: Cebada. 0,09
+Términos municipales de: Embid, Estriégana, Maranchón, Cereales. 0,18
+Molina de Aragón y Rebollosa de Jadraque.
+Términos municipales de: Espinosa de Henares. Leguminosas: 0,13
+Guisantes grano.
+Términos municipales de: Ledanca. Cereales: Cebada. 0,09
+Cereales: Trigo. 0,18
+Términos municipales de: Miedes de Atienza. Cereales: Cebada. 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 684
+
+# Pag. 685
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Guadalajara
+Índice
+Ámbito territorial Actividad rendimiento neto
+Cereales: Trigo. 0,13
+Leguminosas: Yeros. 0,05
+Términos municipales de: Riba de Saelices. Cereales. 0,18
+Leguminosas: Yeros. 0,18
+Términos municipales de: Rueda de la Sierra y Villel de Cereales. 0,13
+Mesa.
+Términos municipales de: Sigüenza. Cereales: Cebada. 0,13
+Cereales: Trigo. 0,18
+Términos municipales de: Torija. Cereales: Cebada. 0,13
+Leguminosas: Yeros. 0,09
+Términos municipales de: Yunquera de Henares. Cereales: Trigo. 0,18
+Provincia: Toledo
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Almorox, Hormigos, Santa Cruz del Cereales. 0,18
+Retamar y Villafranca de los Caballeros.
+Términos municipales de: Añover de Tajo y Bargas. Cereales. 0,13
+Términos municipales de: Camarena, Carriches, Cebolla y Frutos secos: 0,05
+Villacañas. Avellana.
+Términos municipales de: Consuegra y Totanés. Cereales. 0,13
+Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 685
+
+# Pag. 686
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Toledo
+Índice
+Ámbito territorial Actividad rendimiento neto
+Pistacho.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Corral de Almaguer, Lominchar, Cereales. 0,13
+Toledo, Villatobas y Viso de San Juan (El).
+Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,13
+Pistacho.
+Leguminosas. 0,05
+Uva para vino sin 0,09
+D.O.
+Términos municipales de: Escalona. Cereales. 0,18
+Frutos secos: 0,05
+Almendra.
+Términos municipales de: Gerindote. Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,13
+Pistacho.
+Uva para vino sin 0,09
+D.O.
+Términos municipales de: Madridejos. Cereales. 0,05
+Términos municipales de: Mejorada. Cereales. 0,13
+Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,05
+Avellana.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 686
+
+# Pag. 687
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Toledo
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos secos: 0,13
+Pistacho.
+Leguminosas. 0,05
+Uva para vino sin 0,09
+D.O.
+Términos municipales de: Seseña. Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,13
+Pistacho.
+Leguminosas. 0,05
+Uva para vino sin 0,09
+D.O.
+Términos municipales de: Sonseca. Cereales. 0,13
+Frutos secos: 0,13
+Almendra.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Talavera de la Reina. Frutos secos: 0,05
+Avellana.
+Ovino y caprino de 0,09
+carne.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 687
+
+# Pag. 688
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Castilla y León
+Provincia: Ávila
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Frutos secos: Nuez. 0,09
+Todos los términos municipales (excepto los que se detallen Frutos no cítricos: 0,19
+con un índice inferior). Cereza y guinda.
+Términos municipales de: Arenal (El). Frutos no cítricos: 0,13
+Cereza y guinda.
+Términos municipales de: Aveinte, Madrigal de las Altas Torres, Cereales. 0,18
+Narros de Saldueña, Peñalba de Ávila, San Pedro del Arroyo y
+Sigeres.
+Términos municipales de: Berlanas (Las) y Mingorría. Cereales. 0,13
+Términos municipales de: Candeleda. Remolacha 0,05
+azucarera.
+Términos municipales de: Gimialcón, Palacios de Goda y Cereales. 0,09
+Rasueros.
+Términos municipales de: San Pascual. Cereales. 0,05
+Provincia: Burgos
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Forrajes: 0,26
+Alfalfa.
+Frutos 0,13
+secos:
+Nuez.
+Términos municipales de: Abajas, Altos (Los), Arandilla, Arcos, Balbases Cereales. 0,13
+(Los), Celada del Camino, Cuevas de San Clemente, Espinosa de Cervera,
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 688
+
+# Pag. 689
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Burgos
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Galbarros, Haza, Hontanas, Hontoria de la Cantera, Iglesias, Isar, Madrigal
+del Monte, Medina de Pomar, Modúbar de la Emparedada, Navas de Bureba,
+Oña, Piérnigas, Quintanilla del Coco, Retuerta, Revilla Vallejera, Revilla del
+Campo, Revilla y Ahedo (La), Sasamón, Sotresgudo, Tamarón, Villadiego,
+Villamayor de los Montes, Villangómez, Villanueva de Carazo, Villaquirán de
+la Puebla y Villayerno Morquillas.
+Términos municipales de: Albillos, Ameyugo, Arauzo de Miel, Arauzo de Cereales. 0,18
+Torre, Atapuerca, Bañuelos de Bureba, Cavia, Cayuela, Cogollos, Cubo de
+Bureba, Estépar, Fresno de Rodilla, Merindad de Cuesta-Urria, Merindad de
+Río Ubierna, Merindad de Sotoscueva, Miranda de Ebro, Palacios de
+Riopisuerga, Pedrosa del Príncipe, Pinilla Trasmonte, Quintanabureba,
+Quintanapalla, Quintanilla San García, Redecilla del Campo, Salinillas de
+Bureba, Santa Cruz de la Salceda, Santa María Rivarredonda, Santibáñez de
+Esgueva, Santo Domingo de Silos, Sargentes de la Lora, Sarracín, Tejada,
+Tosantos, Tórtoles de Esgueva, Vallarta de Bureba, Valle de Valdebezana,
+Valle de las Navas, Vileña, Villafruela, Villambistia, Villariezo y Villasandino.
+Términos municipales de: Aranda de Duero. Frutos 0,13
+secos.
+Términos municipales de: Arenillas de Riopisuerga. Cereales. 0,13
+Forrajes. 0,07
+Términos municipales de: Baños de Valdearados y Tubilla del Lago. Cereales. 0,09
+Uva para 0,11
+vino con
+D.O.
+Términos municipales de: Burgos, Castrillo de la Vega, Castrojeriz, Ciruelos Cereales. 0,09
+de Cervera, Ibeas de Juarros, Padilla de Arriba, Santa María del Mercadillo,
+Valle de Valdelucio, Vallejera, Villalbilla de Burgos, Villaquirán de los Infantes
+y Zuñeda.
+Términos municipales de: Caleruega. Cereales. 0,18
+Uva para 0,06
+vino con
+D.O.
+Términos municipales de: Cueva de Roa (La). Remolacha 0,09
+azucarera.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 689
+
+# Pag. 690
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Burgos
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Uva para 0,22
+vino con
+D.O.
+Términos municipales de: Fresnillo de las Dueñas y Grisaleña. Forrajes. 0,19
+Términos municipales de: Fuentelcésped, Gumiel de Izán, Gumiel de Uva para 0,22
+Mercado, Horra (La), Nava de Roa y Olmedillo de Roa. vino con
+D.O.
+Términos municipales de: Fuentelisendo, Fuentemolinos, Fuentenebro, Uva para 0,16
+Pedrosa de Duero y San Juan del Monte. vino con
+D.O.
+Términos municipales de: Fuentespina. Uva para 0,11
+vino con
+D.O.
+Términos municipales de: Grijalba, Poza de la Sal, Puentedura, Quintanillas Cereales. 0,05
+(Las) y Valle de Sedano.
+Términos municipales de: Hontoria de Valdearados. Cereales. 0,13
+Uva para 0,16
+vino con
+D.O.
+Términos municipales de: Lerma. Cereales. 0,13
+Forrajes. 0,13
+Términos municipales de: Melgar de Fernamental. Cereales. 0,18
+Forrajes. 0,26
+Términos municipales de: Padilla de Abajo. Forrajes. 0,26
+Términos municipales de: Quemada y San Martín de Rubiales. Cereales. 0,18
+Uva para 0,22
+vino con
+D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 690
+
+# Pag. 691
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Burgos
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Sotillo de la Ribera. Cereales. 0,18
+Uva para 0,11
+vino con
+D.O.
+Términos municipales de: Terradillos de Esgueva. Cereales. 0,13
+Uva para 0,06
+vino con
+D.O.
+Términos municipales de: Vadocondes. Forrajes. 0,13
+Productos 0,13
+hortícolas.
+Términos municipales de: Valdeande. Cereales. 0,09
+Uva para 0,06
+vino con
+D.O.
+Términos municipales de: Valdezate. Cereales. 0,13
+Uva para 0,22
+vino con
+D.O.
+Términos municipales de: Villalbilla de Gumiel. Cereales. 0,18
+Uva para 0,16
+vino con
+D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 691
+
+# Pag. 692
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: León
+Índice rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Frutos secos: 0,13
+Castaña.
+Leguminosas: 0,18
+Lentejas.
+Términos municipales de: Cabreros del Río. Remolacha 0,07
+azucarera.
+Términos municipales de: Castrocalbón, Castrocontrigo y Cereales. 0,05
+Quintana y Congosto.
+Términos municipales de: Cea, Santa María del Monte de Cea Cereales. 0,09
+y Villazanzo de Valderaduey.
+Términos municipales de: Izagre. Cereales. 0,13
+Términos municipales de: Matadeón de los Oteros y Valverde- Forrajes. 0,13
+Enrique.
+Términos municipales de: Sahagún. Cereales. 0,13
+Uva para vino con 0,22
+D.O.
+Términos municipales de: Santa Cristina de Valmadrigal. Forrajes. 0,07
+Términos municipales de: Santa Elena de Jamuz. Cereales. 0,09
+Uva para vino con 0,11
+D.O.
+Términos municipales de: Valderas. Forrajes. 0,26
+Provincia: Palencia
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Productos 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 692
+
+# Pag. 693
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Palencia
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+hortícolas:
+Ajo.
+Términos municipales de: Abarca de Campos y Frechilla. Cereales. 0,18
+Forrajes. 0,19
+Términos municipales de: Abia de las Torres, Dueñas, Osorno la Mayor y Cereales. 0,13
+Torquemada.
+Forrajes. 0,19
+Términos municipales de: Aguilar de Campoo, Autilla del Pino, Autillo de Cereales. 0,13
+Campos, Bustillo del Páramo de Carrión, Castrejón de la Peña, Cervatos
+de la Cueza, Cevico de la Torre, Cubillas de Cerrato, Espinosa de
+Villagonzalo, Fuentes de Nava, Hontoria de Cerrato, Moratinos, Población
+de Cerrato, Quintanilla de Onsoña, Saldaña, Vertavillo, Villaconancio,
+Villamuriel de Cerrato, Villanueva del Rebollar, Villarrabé y Villarramiel.
+Términos municipales de: Ampudia y Villamartín de Campos. Cereales. 0,13
+Forrajes. 0,07
+Términos municipales de: Astudillo. Cereales. 0,18
+Forrajes. 0,07
+Términos municipales de: Baltanás. Cereales. 0,09
+Forrajes. 0,19
+Términos municipales de: Baquerín de Campos. Cereales. 0,18
+Forrajes. 0,13
+Términos municipales de: Becerril de Campos. Cereales. 0,09
+Forrajes. 0,07
+Términos municipales de: Boadilla de Rioseco. Remolacha 0,07
+azucarera.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 693
+
+# Pag. 694
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Palencia
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Calzada de los Molinos, Capillas, Carrión de los Cereales. 0,18
+Condes, Castil de Vela, Herrera de Pisuerga, Hérmedes de Cerrato, Loma
+de Ucieza, Paredes de Nava, Pedrosa de la Vega, Pino del Río, Pomar de
+Valdivia, Riberos de la Cueza, Tariego de Cerrato, Valde-Ucieza, Valle de
+Cerrato, Villaherreros, Villamuera de la Cueza, Villanuño de Valdavia y
+Villasarracino.
+Términos municipales de: Castrillo de Villavega, Castromocho, Cisneros, Forrajes. 0,19
+Piña de Campos, Santoyo y Valle del Retortillo.
+Términos municipales de: Cevico Navero, Palenzuela, Villalobón, Villodre y Cereales. 0,09
+Villovieco.
+Términos municipales de: Congosto de Valdavia y Espinosa de Cerrato. Cereales. 0,05
+Términos municipales de: Cordovilla la Real, Hornillos de Cerrato, Reinoso Forrajes. 0,07
+de Cerrato, Santa Cruz de Boedo, Torremormojón y Villameriel.
+Términos municipales de: Magaz de Pisuerga y Villerías de Campos. Cereales. 0,13
+Forrajes. 0,13
+Términos municipales de: Mazariegos. Cereales. 0,09
+Forrajes. 0,13
+Términos municipales de: Mazuecos de Valdeginate, Meneses de Campos Forrajes. 0,13
+y Pedraza de Campos.
+Términos municipales de: Palencia. Cereales. 0,05
+Forrajes. 0,26
+Términos municipales de: Támara de Campos, Villahán, Villalcázar de Forrajes. 0,26
+Sirga y Villamediana.
+Términos municipales de: Villaviudas. Cereales. 0,18
+Forrajes. 0,26
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 694
+
+# Pag. 695
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Salamanca
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Frutos secos: 0,18
+Castaña.
+Términos municipales de: Aldearrubia. Productos 0,18
+hortícolas.
+Términos municipales de: Almenara de Tormes, Espino de la Cereales. 0,13
+Orbada, Galindo y Perahuy, Santiago de la Puebla y Valdunciel.
+Términos municipales de: Anaya de Alba y Topas. Cereales. 0,18
+Términos municipales de: Arabayona de Mógica y Poveda de las Productos 0,09
+Cintas. hortícolas.
+Términos municipales de: Barbadillo, Calzada de Don Diego, Cereales. 0,09
+Canillas de Abajo, Carrascal de Barregas, Castellanos de
+Villiquera, Mancera de Abajo, Salmoral y Vellés (La).
+Términos municipales de: Campo de Peñaranda (El). Remolacha 0,07
+azucarera.
+Términos municipales de: Cordovilla. Productos 0,05
+hortícolas: Ajo.
+Términos municipales de: Lagunilla. Frutos no cítricos: 0,07
+Cereza y guinda.
+Términos municipales de: Matilla de los Caños del Río y Robliza Cereales. 0,05
+de Cojos.
+Provincia: Segovia
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Frutos no 0,07
+cítricos:
+Ciruela.
+Frutos no 0,26
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 695
+
+# Pag. 696
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Segovia
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+cítricos:
+Manzana.
+Frutos secos: 0,13
+Almendra.
+Términos municipales de: Aldeanueva del Codonal y Honrubia de la Uva para vino 0,22
+Cuesta. con D.O.
+Términos municipales de: Aldehorno. Uva para vino 0,16
+con D.O.
+Términos municipales de: Aldeonte, Barbolla, Cabezuela, Cantimpalos, Cereales. 0,13
+Castroserracín, Fresno de la Fuente, Fuentesoto, Navares de Ayuso,
+Sepúlveda y Urueñas.
+Términos municipales de: Armuña, Bernardos, Cantalejo, Condado de Cereales. 0,09
+Castilnovo, Escobar de Polendos, Juarros de Voltoya, Migueláñez,
+Navares de Enmedio, Santa María la Real de Nieva, Santiuste de San
+Juan Bautista y Sauquillo de Cabezas.
+Términos municipales de: Codorniz, Cuevas de Provanco, Fuentepiñel, Cereales. 0,18
+Laguna de Contreras, Maderuelo, Martín Muñoz de las Posadas,
+Muñopedro, Nava de la Asunción, Riaza, San Cristóbal de la Vega y
+Valtiendas.
+Términos municipales de: Cuéllar y Membibre de la Hoz. Productos 0,13
+hortícolas:
+Ajo.
+Términos municipales de: Fuente el Olmo de Fuentidueña. Productos 0,09
+hortícolas.
+Términos municipales de: Fuentepelayo. Cereales. 0,05
+Términos municipales de: Nieva. Uva para vino 0,11
+con D.O.
+Términos municipales de: Rapariegos. Cereales. 0,13
+Productos 0,09
+hortícolas.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 696
+
+# Pag. 697
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Segovia
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: San Cristóbal de Cuéllar y Vallelado. Productos 0,18
+hortícolas:
+Ajo.
+Provincia: Soria
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Abejar, Alentisque, Almazul, Arenillas, Cereales. 0,13
+Barcones, Borobia, Caltojar, Cañamaque, Ciria, Fuentearmegil, Garray,
+Matalebreras, Matamala de Almazán, Monteagudo de las Vicarías,
+Quintana Redonda, Quiñonería, Recuerda, Rello, Reznos, Serón de
+Nágima, Soria, Taroda, Velilla de la Sierra, Viana de Duero, Villaciervos y
+Ólvega.
+Términos municipales de: Alcubilla de las Peñas, Aldealafuente, Cereales. 0,18
+Aldehuela de Periáñez, Almaluez, Almazán, Almenar de Soria, Arancón,
+Arcos de Jalón, Bayubas de Abajo, Cabrejas del Campo, Calatañazor,
+Candilichera, Castilruiz, Cihuela, Deza, Fuentelmonge, Fuentepinilla,
+Langa de Duero, Maján, Miño de Medinaceli, Montejo de Tiermes, Morón
+de Almazán, Noviercas, Rábanos (Los), San Pedro Manrique, Santa
+María de Huerta, Tajueco y Torlengua.
+Términos municipales de: Baraona. Cereales. 0,05
+Términos municipales de: Barca. Cereales. 0,13
+Productos 0,18
+hortícolas.
+Términos municipales de: Berlanga de Duero. Cereales. 0,13
+Forrajes. 0,19
+Términos municipales de: Hinojosa del Campo. Productos 0,18
+hortícolas.
+Términos municipales de: Losilla (La). Forrajes. 0,07
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 697
+
+# Pag. 698
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Soria
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Medinaceli. Cereales. 0,18
+Remolacha 0,03
+azucarera.
+Términos municipales de: Retortillo de Soria, Riba de Escalote (La) y Cereales. 0,09
+Velilla de los Ajos.
+Términos municipales de: San Esteban de Gormaz. Cereales. 0,18
+Frutos no 0,07
+cítricos:
+Cereza y
+guinda.
+Productos 0,13
+hortícolas.
+Uva para vino 0,22
+con D.O.
+Términos municipales de: Velamazán. Cereales. 0,09
+Productos 0,09
+hortícolas.
+Provincia: Valladolid
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Frutos no 0,19
+cítricos: Pera.
+Productos 0,13
+hortícolas:
+Calabaza.
+Productos 0,13
+hortícolas:
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 698
+
+# Pag. 699
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Valladolid
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Judías verdes.
+Términos municipales de: Aguilar de Campos, Corrales de Duero, Forrajes. 0,13
+Esguevillas de Esgueva, Palazuelo de Vedija, San Llorente, Villalón
+de Campos y Villamuriel de Campos.
+Términos municipales de: Alaejos, Benafarces, Campillo (El), San Cereales. 0,18
+Martín de Valvení, San Vicente del Palacio, Siete Iglesias de
+Trabancos, Torre de Esgueva, Torrelobatón, Valverde de Campos,
+Vega de Ruiponce, Velilla y Villaverde de Medina.
+Términos municipales de: Alcazarén y Hornillos de Eresma. Uva para vino 0,16
+con D.O.
+Términos municipales de: Arroyo de la Encomienda, Bocigas, Bustillo Cereales. 0,13
+de Chaves, Castrobol, Ciguñuela, Gatón de Campos, Mayorga,
+Mudarra (La) y Villalar de los Comuneros.
+Términos municipales de: Bahabón. Cereales. 0,09
+Productos 0,13
+hortícolas: Ajo.
+Términos municipales de: Becilla de Valderaduey, Castromonte, Forrajes. 0,19
+Ceinos de Campos, Morales de Campos y Villafrechós.
+Términos municipales de: Bercero y Mojados. Productos 0,18
+hortícolas: Ajo.
+Términos municipales de: Cabreros del Monte, Castrodeza, Peñaflor Cereales. 0,13
+de Hornija, Tiedra y Trigueros del Valle.
+Forrajes. 0,13
+Términos municipales de: Campaspero y Olmedo. Cereales. 0,18
+Productos 0,18
+hortícolas: Ajo.
+Términos municipales de: Canalejas de Peñafiel. Cereales. 0,18
+Productos 0,13
+hortícolas: Ajo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 699
+
+# Pag. 700
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Valladolid
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Casasola de Arión. Productos 0,18
+hortícolas.
+Términos municipales de: Castrillo-Tejeriego y Cuenca de Campos. Cereales. 0,13
+Forrajes. 0,07
+Términos municipales de: Castronuevo de Esgueva. Forrajes. 0,13
+Productos 0,18
+hortícolas: Ajo.
+Términos municipales de: Castroverde de Cerrato. Cereales. 0,09
+Forrajes. 0,13
+Términos municipales de: Cigales, Corcos, Fuensaldaña, Mota del Cereales. 0,09
+Marqués, Mucientes, Parrilla (La), Quintanilla de Trigueros, Rubí de
+Bracamonte, Villafrades de Campos, Villalba de la Loma y Zaratán.
+Términos municipales de: Cistérniga. Cereales. 0,09
+Remolacha 0,07
+azucarera.
+Términos municipales de: Cogeces de Íscar, Curiel de Duero, Productos 0,13
+Pesquera de Duero, San Miguel del Arroyo, Sardón de Duero, hortícolas: Ajo.
+Valbuena de Duero y Villarmentero de Esgueva.
+Términos municipales de: Herrín de Campos. Remolacha 0,07
+azucarera.
+Términos municipales de: Medina del Campo. Cereales. 0,18
+Productos 0,13
+hortícolas.
+Uva para vino 0,22
+con D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 700
+
+# Pag. 701
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Valladolid
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Medina de Rioseco y Villaco. Cereales. 0,18
+Forrajes. 0,19
+Términos municipales de: Monasterio de Vega. Cereales. 0,05
+Forrajes. 0,26
+Términos municipales de: Moral de la Reina, Piña de Esgueva, Forrajes. 0,07
+Renedo de Esgueva, Urueña, Villabrágima, Villalba de los Alcores y
+Villanueva de los Infantes.
+Términos municipales de: Olmos de Esgueva. Cereales. 0,18
+Forrajes. 0,13
+Términos municipales de: Olmos de Peñafiel. Cereales. 0,18
+Forrajes. 0,07
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Rábano. Cereales. 0,13
+Productos 0,05
+hortícolas: Ajo.
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Rueda. Cereales. 0,05
+Uva para vino 0,11
+con D.O.
+Términos municipales de: Santervás de Campos, Valdenebro de los Cereales. 0,18
+Valles, Villacarralón, Villanubla y Villanueva de San Mancio.
+Forrajes. 0,07
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 701
+
+# Pag. 702
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Valladolid
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Seca (La). Cereales. 0,18
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Serrada. Uva para vino 0,22
+con D.O.
+Términos municipales de: Tordehumos. Forrajes. 0,26
+Términos municipales de: Torre de Peñafiel. Cereales. 0,13
+Uva para vino 0,11
+con D.O.
+Términos municipales de: Unión de Campos (La). Cereales. 0,05
+Términos municipales de: Valdestillas. Productos 0,13
+hortícolas: Ajo.
+Uva para vino 0,06
+con D.O.
+Términos municipales de: Valladolid. Cereales. 0,13
+Productos 0,13
+hortícolas.
+Productos 0,13
+hortícolas: Ajo.
+Términos municipales de: Ventosa de la Cuesta. Productos 0,18
+hortícolas: Ajo.
+Uva para vino 0,22
+con D.O.
+Términos municipales de: Villalbarba. Remolacha 0,09
+azucarera.
+Términos municipales de: Villardefrades. Cereales. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 702
+
+# Pag. 703
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Valladolid
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Forrajes. 0,07
+Remolacha 0,09
+azucarera.
+Provincia: Zamora
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Frutos secos: 0,05
+Castaña.
+Uva para vino 0,18
+sin D.O.
+Todos los términos municipales (excepto los que se detallen con un Uva para vino 0,22
+índice inferior). con D.O.
+Términos municipales de: Abezames, Fonfría, Guarrate, Montamarta, Cereales. 0,18
+Pinilla de Toro, Tábara y Vezdemarbán.
+Términos municipales de: Alcañices, Belver de los Montes, Villalobos y Cereales. 0,13
+Villalpando.
+Términos municipales de: Bóveda de Toro (La), Cañizo, Fuentelapeña, Cereales. 0,09
+Fuentesaúco, San Cebrián de Castro, Villabuena del Puente, Villamor
+de los Escuderos, Villanueva del Campo y Villarrín de Campos.
+Términos municipales de: Castrillo de la Guareña y Micereces de Tera. Productos 0,13
+hortícolas.
+Términos municipales de: Castroverde de Campos y Quintanilla del Forrajes. 0,19
+Olmo.
+Términos municipales de: Coreses. Productos 0,09
+hortícolas.
+Términos municipales de: Cotanes del Monte. Forrajes. 0,07
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 703
+
+# Pag. 704
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Zamora
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Cuelgamures. Productos 0,13
+hortícolas: Ajo.
+Términos municipales de: Ferreras de Abajo y Manganeses de la Cereales. 0,05
+Lampreana.
+Términos municipales de: Pozuelo de Tábara. Remolacha 0,05
+azucarera.
+Términos municipales de: Toro. Cereales. 0,09
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Valdescorriel. Cereales. 0,09
+Frutos secos. 0,05
+Términos municipales de: Vega de Villalobos. Forrajes. 0,26
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 704
+
+# Pag. 705
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Cataluña
+Barcelona
+Provincia: Barcelona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Abrera, Begues, Cervelló, Collbató, Martorell, Apicultura. 0,13
+Olesa de Montserrat, Prat de Llobregat (El), Sant Boi de Llobregat, Sant
+Climent de Llobregat, Sant Feliu de Llobregat, Torrelles de Llobregat,
+Vallirana y Viladecans.
+Términos municipales de: Alpens, Bagà, Berga, Borredà, Brull (El), Bovino de 0,09
+Calldetenes, Castell de l'Areny, Castellar de n'Hug, Cercs, Esquirol (L'), carne.
+Fogars de la Selva, Folgueroles, Fígols, Gisclareny, Guardiola de
+Berguedà, Masies de Roda (Les), Masies de Voltregà (Les), Montesquiu,
+Nou de Berguedà (La), Olvan, Orís, Pobla de Lillet (La), Quar (La), Roda de
+Ter, Rupit i Pruit, Sagàs, Saldes, Sant Agustí de Lluçanès, Sant Boi de
+Lluçanès, Sant Jaume de Frontanyà, Sant Julià de Cerdanyola, Sant Julià
+de Vilatorta, Sant Martí d'Albars, Sant Pere de Torelló, Sant Quirze de
+Besora, Sant Sadurní d'Osormort, Sant Vicenç de Torelló, Santa Eugènia
+de Berga, Seva, Sobremunt, Sora, Taradell, Tavertet, Tavèrnoles, Torelló,
+Vallcebre y Vilanova de Sau.
+Términos municipales de: Argençola y Castellfollit de Riubregós. Oleaginosas: 0,06
+Colza.
+Términos municipales de: Balenyà. Cereales. 0,18
+Términos municipales de: Esparreguera. Apicultura. 0,13
+Oleaginosas: 0,16
+Colza.
+Términos municipales de: Gurb, Manlleu y Vic. Bovino de 0,09
+carne.
+Cereales. 0,18
+Términos municipales de: Lluçà y Perafita. Bovino de 0,09
+carne.
+Cereales. 0,13
+Términos municipales de: Montmajor y Viver i Serrateix. Cereales. 0,18
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 705
+
+# Pag. 706
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Barcelona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Oleaginosas: 0,22
+Colza.
+Términos municipales de: Montmaneu. Cereales. 0,09
+Oleaginosas: 0,06
+Colza.
+Términos municipales de: Olost. Cereales. 0,13
+Términos municipales de: Pujalt. Oleaginosas: 0,11
+Colza.
+Términos municipales de: Sant Martí de Tous. Frutos secos: 0,05
+Almendra.
+Términos municipales de: Vilada. Bovino de 0,09
+carne.
+Cereales. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 706
+
+# Pag. 707
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Gerona
+Provincia: Girona
+Ámbito territorial Actividad Índice
+rendimiento
+neto
+Términos municipales de: Agullana, Albanyà, Albons, Argelaguer, Armentera Bovino de 0,09
+(L'), Avinyonet de Puigventós, Banyoles, Besalú, Beuda, Bisbal d'Empordà carne.
+(La), Biure, Boadella i les Escaules, Bordils, Borrassà, Breda, Bàscara,
+Cabanelles, Cabanes, Cadaqués, Campdevànol, Campelles, Campllong,
+Camprodon, Camós, Canet d'Adri, Cantallops, Capmany, Cassà de la Selva,
+Castellfollit de la Roca, Celrà, Cervià de Ter, Cistella, Colera, Cornellà del Terri,
+Corçà, Crespià, Darnius, Escala (L'), Espolla, Esponellà, Far d'Empordà (El),
+Figueres, Flaçà, Foixà, Fontcoberta, Forallac, Fornells de la Selva, Fortià,
+Garrigoles, Garriguella, Garrigàs, Girona, Gombrèn, Jafre, Jonquera (La), Juià,
+Lladó, Llagostera, Llambilles, Llanars, Llançà, Llers, Llosses (Les),
+Madremanya, Maià de Montcal, Masarac, Massanes, Maçanet de Cabrenys,
+Mieres, Mollet de Peralada, Molló, Montagut i Oix, Navata, Ogassa, Olot, Ordis,
+Palafrugell, Palau de Santa Eulàlia, Palol de Revardit, Pardines, Parlavà, Pera
+(La), Planes d'Hostoles (Les), Planoles, Pont de Molins, Pontós, Porqueres,
+Port de la Selva (El), Portbou, Preses (Les), Quart, Queralbs, Rabós, Ribes de
+Freser, Ripoll, Riudaura, Riudellots de la Selva, Riumors, Roses, Rupià, Sales
+de Llierca, Salt, Sant Andreu Salou, Sant Aniol de Finestres, Sant Climent
+Sescebes, Sant Feliu de Pallerols, Sant Ferriol, Sant Gregori, Sant Jaume de
+Llierca, Sant Joan de Mollet, Sant Joan de les Abadesses, Sant Joan les Fonts,
+Sant Jordi Desvalls, Sant Julià de Ramis, Sant Llorenç de la Muga, Sant Martí
+Vell, Sant Martí de Llémena, Sant Miquel de Campmajor, Sant Miquel de
+Fluvià, Sant Mori, Sant Pau de Segúries, Sant Pere Pescador, Santa Llogaia
+d'Àlguema, Santa Pau, Sarrià de Ter, Saus, Camallera i Llampaies, Selva de
+Mar (La), Serinyà, Setcases, Terrades, Torroella de Fluvià, Tortellà, Toses,
+Vajol (La), Vall d'en Bas (La), Vall de Bianya (La), Vallfogona de Ripollès,
+Ventalló, Verges, Vidreres, Vidrà, Vila-sacra, Vilabertran, Vilablareix,
+Viladamat, Viladasens, Vilademuls, Viladrau, Vilafant, Vilajuïga, Vilallonga de
+Ter, Vilamacolum, Vilamalla, Vilamaniscle, Vilanant, Vilaür y Vilopriu.
+Términos municipales de: Aiguaviva. Bovino de 0,09
+carne.
+Frutos no 0,26
+cítricos:
+Manzana.
+Frutos no 0,13
+cítricos:
+Pera.
+Frutos 0,13
+secos:
+Avellana.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 707
+
+# Pag. 708
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Términos municipales de: Amer, Anglès, Brunyola i Sant Martí Sapresa, Cellera Frutos 0,13
+de Ter (La) y Sant Julià del Llor i Bonmatí. secos:
+Avellana.
+Términos municipales de: Bescanó, Caldes de Malavella, Santa Coloma de Bovino de 0,09
+Farners y Vilobí d'Onyar. carne.
+Frutos 0,13
+secos:
+Avellana.
+Términos municipales de: Bolvir, Fontanals de Cerdanya, Ger, Guils de Cereales. 0,13
+Cerdanya, Isòvol y Meranges.
+Términos municipales de: Castelló d'Empúries, Palau-saverdera, Pau, Pedret i Bovino de 0,18
+Marzà, Peralada y Siurana. cría.
+Términos municipales de: Fontanilles, Palau-sator y Torroella de Montgrí. Frutos no 0,26
+cítricos:
+Manzana.
+Términos municipales de: Gualta y Tallada d'Empordà (La). Bovino de 0,09
+carne.
+Frutos no 0,26
+cítricos:
+Manzana.
+Términos municipales de: Cruïlles, Monells i Sant Sadurní de l'Heura. Bovino de 0,09
+carne.
+Frutos 0,13
+secos:
+Almendra.
+Lleida
+Provincia: Lleida
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Abella de la Conca, Castell de Mur, Conca Frutos secos: 0,13
+de Dalt, Gavet de la Conca, Isona i Conca Dellà, Llimiana, Talarn y Almendra.
+Tremp.
+Términos municipales de: Avellanes i Santa Linya (Les) y Àger. Apicultura. 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 708
+
+# Pag. 709
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Lleida
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Cereales. 0,18
+Términos municipales de: Agramunt, Puigverd d'Agramunt y Tàrrega. Cereales. 0,18
+Términos municipales de: Alàs i Cerc. Forrajes: Maíz. 0,07
+Términos municipales de: Albesa. Cereales. 0,18
+Frutos no cítricos. 0,26
+Frutos secos. 0,18
+Términos municipales de: Aitona, Alcanó, Alcarràs, Alfés, Anglesola, Frutos no cítricos. 0,26
+Arbeca, Menàrguens, Montoliu de Lleida, Ponts, Puiggròs, Sarroca
+de Lleida, Sudanell, Sunyer, Tornabous, Torrefarrera, Térmens y
+Vallfogona de Balaguer.
+Términos municipales de: Alcoletge, Alguaire y Soses. Frutos no cítricos. 0,07
+Términos municipales de: Alòs de Balaguer. Productos del 0,18
+olivo.
+Uva para vino 0,11
+con D.O.
+Términos municipales de: Artesa de Segre. Cereales. 0,18
+Frutos no cítricos. 0,26
+Uva para vino 0,06
+con D.O.
+Términos municipales de: Castelló de Farfanya y Sentiu de Sió (La). Frutos secos. 0,18
+Términos municipales de: Balaguer, Bellcaire d'Urgell, Bellmunt Cereales. 0,18
+d'Urgell, Ivars de Noguera, Penelles y Torrelameu.
+Frutos no cítricos. 0,26
+Términos municipales de: Barbens, Bell-lloc d'Urgell, Bellvís, Linyola, Frutos no cítricos. 0,13
+Palau d'Anglesola (El), Poal (El) y Portella (La).
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 709
+
+# Pag. 710
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Lleida
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Bellver de Cerdanya, Lles de Cerdanya, Cereales. 0,13
+Montellà i Martinet, Ossó de Sió y Prullans.
+Términos municipales de: Biosca. Cereales: Trigo. 0,18
+Términos municipales de: Cabanabona y Oliola. Cereales. 0,05
+Forrajes. 0,07
+Leguminosas. 0,09
+Oleaginosas. 0,11
+Términos municipales de: Camarasa. Apicultura. 0,13
+Cereales. 0,18
+Frutos no cítricos. 0,26
+Frutos secos. 0,18
+Términos municipales de: Castellar de la Ribera y Pinell de Solsonès. Cereales: Trigo. 0,18
+Oleaginosas: 0,22
+Colza.
+Términos municipales de: Cogul (El). Frutos no cítricos: 0,13
+Nectarina.
+Términos municipales de: Corbins, Lleida y Torres de Segre. Frutos no cítricos. 0,19
+Términos municipales de: Foradada. Uva para vino 0,11
+con D.O.
+Términos municipales de: Llobera y Torà. Cereales: Trigo. 0,13
+Oleaginosas: 0,16
+Colza.
+Términos municipales de: Odèn. Uva para vino sin 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 710
+
+# Pag. 711
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Lleida
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+D.O.
+Términos municipales de: Os de Balaguer. Apicultura. 0,13
+Cereales. 0,18
+Frutos no cítricos. 0,26
+Términos municipales de: Vilanova de l'Aguda. Cereales. 0,18
+Forrajes. 0,07
+Frutos no cítricos. 0,26
+Leguminosas. 0,09
+Oleaginosas. 0,11
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 711
+
+# Pag. 712
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Tarragona
+Provincia: Tarragona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Aiguamúrcia, Alió, Bràfim, Cabra del Camp, Frutos secos: 0,05
+Figuerola del Camp, Mont-ral, Nulles, Pla de Santa Maria (El), Riba Avellana.
+(La), Rourell (El) y Vila-rodona.
+Productos del 0,18
+olivo.
+Términos municipales de: Albiol (L'), Almoster, Argentera (L'), Bisbal Frutos secos: 0,05
+de Falset (La), Borges del Camp (Les), Canonja (La), Capafonts, Avellana.
+Capçanes, Castellvell del Camp, Colldejou, Cornudella de Montsant,
+Duesaigües, Falset, Febró (La), Gratallops, Guiamets (Els), Lloar (El),
+Maspujols, Masroig (El), Molar (El), Mont-roig del Camp, Morera de
+Montsant (La), Nou de Gaià (La), Pallaresos (Els), Perafort, Pobla de
+Montornès (La), Porrera, Pradell de la Teixeta, Prades, Pratdip,
+Riudecols, Roda de Berà, Secuita (La), Tarragona, Torre de
+Fontaubella (La), Torredembarra, Torroja del Priorat, Ulldemolins,
+Vandellòs i l'Hospitalet de l'Infant, Vilallonga del Camp, Vilanova
+d'Escornalbou, Vilaplana y Vilella Baixa (La).
+Términos municipales de: Alcanar, Freginals y Galera (La). Apicultura. 0,13
+Cítricos: 0,13
+Mandarina.
+Productos del 0,13
+olivo.
+Términos municipales de: Alcover, Milà (El) y Vilabella. Frutos secos: 0,05
+Avellana.
+Productos del 0,18
+olivo.
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Aldover, Benifallet y Xerta. Cítricos: 0,18
+Mandarina.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 712
+
+# Pag. 713
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Tarragona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos del 0,09
+olivo.
+Términos municipales de: Aleixar (L'), Alforja, Arbolí, Marçà, Pobla de Frutos secos: 0,05
+Mafumet (La), Riudecanyes y Selva del Camp (La). Avellana.
+Uva para vino con 0,06
+D.O.
+Uva para vino sin 0,05
+D.O.
+Términos municipales de: Alfara de Carles, Paüls y Perelló (El). Productos del 0,09
+olivo.
+Términos municipales de: Altafulla, Bellmunt del Priorat, Poboleda y Frutos secos: 0,05
+Vilella Alta (La). Avellana.
+Uva para vino con 0,22
+D.O.
+Uva para vino sin 0,18
+D.O.
+Términos municipales de: Ametlla de Mar (L'). Cereales. 0,09
+Productos del 0,09
+olivo.
+Términos municipales de: Amposta. Apicultura. 0,13
+Arroz. 0,22
+Cítricos: 0,05
+Mandarina.
+Productos del 0,13
+olivo.
+Términos municipales de: Barberà de la Conca, Blancafort, Conesa, Frutos secos: 0,05
+Montblanc, Pira, Savallà del Comtat, Solivella, Vilanova de Prades y Almendra.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 713
+
+# Pag. 714
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Tarragona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Vimbodí i Poblet. Frutos secos: 0,05
+Avellana.
+Productos del 0,18
+olivo.
+Uva para vino con 0,22
+D.O.
+Uva para vino sin 0,18
+D.O.
+Términos municipales de: Botarell, Cabacés, Constantí, Margalef, Frutos secos: 0,05
+Reus, Riera de Gaià (La), Salomó, Salou y Vila-seca. Avellana.
+Uva para vino con 0,11
+D.O.
+Uva para vino sin 0,09
+D.O.
+Términos municipales de: Cambrils, Montbrió del Camp, Riudoms y Cítricos: 0,13
+Vinyols i els Arcs. Mandarina.
+Frutos secos: 0,05
+Avellana.
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Catllar (El), Creixell, Figuera (La), Morell Frutos secos: 0,05
+(El), Renau y Vespella de Gaià. Avellana.
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 714
+
+# Pag. 715
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Tarragona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Mas de Barberans y Sénia (La). Apicultura. 0,13
+Productos del 0,13
+olivo.
+Términos municipales de: Corbera d'Ebre y Vilalba dels Arcs. Frutos no cítricos: 0,13
+Cereza y guinda.
+Términos municipales de: Espluga de Francolí (L'), Llorac, Passanant Frutos secos: 0,05
+i Belltall, Piles (Les), Pontils, Santa Coloma de Queralt, Senan, Almendra.
+Vallclara, Vallfogona de Riucorb y Vilaverd.
+Frutos secos: 0,05
+Avellana.
+Productos del 0,18
+olivo.
+Términos municipales de: Forès. Frutos secos: 0,05
+Almendra.
+Frutos secos: 0,05
+Avellana.
+Productos del 0,18
+olivo.
+Uva para vino con 0,11
+D.O.
+Uva para vino sin 0,09
+D.O.
+Términos municipales de: Garidells (Els), Montferri, Puigpelat, Querol, Frutos secos: 0,05
+Rodonyà, Vallmoll y Valls. Avellana.
+Productos del 0,18
+olivo.
+Uva para vino con 0,22
+D.O.
+Uva para vino sin 0,18
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 715
+
+# Pag. 716
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Tarragona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+D.O.
+Términos municipales de: Godall. Apicultura. 0,13
+Cereales: Cebada. 0,05
+Cítricos: 0,09
+Mandarina.
+Productos del 0,13
+olivo.
+Términos municipales de: Masdenverge. Cítricos: 0,13
+Mandarina.
+Productos del 0,13
+olivo.
+Términos municipales de: Masó (La) y Pont d'Armentera (El). Frutos secos: 0,05
+Avellana.
+Productos del 0,18
+olivo.
+Uva para vino con 0,06
+D.O.
+Uva para vino sin 0,05
+D.O.
+Términos municipales de: Pinell de Brai (El). Frutos no cítricos: 0,26
+Cereza y guinda.
+Términos municipales de: Rocafort de Queralt y Sarral. Frutos secos: 0,05
+Almendra.
+Frutos secos: 0,05
+Avellana.
+Productos del 0,18
+olivo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 716
+
+# Pag. 717
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Tarragona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Roquetes. Cereales. 0,09
+Cítricos: 0,18
+Mandarina.
+Productos del 0,09
+olivo.
+Términos municipales de: Sant Carles de la Ràpita. Apicultura. 0,13
+Arroz. 0,06
+Productos del 0,13
+olivo.
+Términos municipales de: Santa Bàrbara. Cereales: Cebada. 0,09
+Cítricos: 0,13
+Mandarina.
+Productos del 0,13
+olivo.
+Términos municipales de: Tivenys. Cítricos: 0,18
+Mandarina.
+Frutos no cítricos. 0,26
+Productos del 0,09
+olivo.
+Términos municipales de: Tortosa. Cereales. 0,09
+Cítricos: 0,18
+Mandarina.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 717
+
+# Pag. 718
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Tarragona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos del 0,09
+olivo.
+Productos 0,13
+hortícolas:
+Alcachofa.
+Productos 0,18
+hortícolas: Apio.
+Productos 0,13
+hortícolas:
+Lechuga.
+Términos municipales de: Ulldecona. Apicultura. 0,13
+Cereales: Cebada. 0,09
+Cereales:Triticale. 0,09
+Cítricos: 0,05
+Mandarina.
+Productos del 0,13
+olivo.
+Términos municipales de: Deltebre. Arroz. 0,11
+Cereales. 0,09
+Cítricos: 0,18
+Mandarina.
+Productos del 0,09
+olivo.
+Términos municipales de: Sant Jaume d'Enveja. Arroz. 0,16
+Productos del 0,13
+olivo.
+Términos municipales de: Aldea (L') y Camarles. Arroz. 0,11
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 718
+
+# Pag. 719
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Tarragona
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Cítricos: 0,18
+Mandarina.
+Productos del 0,09
+olivo.
+Productos 0,13
+hortícolas:
+Alcachofa.
+Productos 0,18
+hortícolas: Apio.
+Productos 0,13
+hortícolas:
+Lechuga.
+Términos municipales de: Ampolla (L'). Arroz. 0,11
+Cítricos: 0,18
+Mandarina.
+Productos del 0,09
+olivo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 719
+
+# Pag. 720
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Extremadura
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Acedera, Medellín, Mengabril, Rena y Santa Arroz. 0,16
+Amalia.
+Cereales: 0,18
+Maíz.
+Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+Términos municipales de: Aceuchal y Nogales. Productos 0,13
+hortícolas:
+Ajo.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Alange y Oliva de Mérida. Cereales: 0,18
+Maíz.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Albuera (La). Productos 0,13
+hortícolas:
+Ajo.
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 720
+
+# Pag. 721
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Alburquerque. Cereales: 0,18
+Maíz.
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Alconchel, Alconera, Berlanga, Calzadilla de los Uva para vino 0,16
+Barros, Castuera, Esparragalejo, Esparragosa de la Serena, Feria, con D.O.
+Garlitos, Hinojosa del Valle, Hornachos, Malpartida de la Serena,
+Monterrubio de la Serena, Parra (La), Puebla de Sancho Pérez, Puebla
+Uva para vino 0,13
+del Prior, Quintana de la Serena, Talarrubias, Usagre, Valencia de las
+sin D.O.
+Torres y Valle de la Serena.
+Términos municipales de: Almendral y Santa Marta. Productos 0,18
+hortícolas:
+Ajo.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Almendralejo, Bienvenida, Carrascalejo (El), Uva para vino 0,22
+Casas de Don Pedro, Corte de Peleas, Cristina, Fregenal de la Sierra, con D.O.
+Fuente de Cantos, Haba (La), Medina de las Torres, Nava de Santiago
+(La), Ribera del Fresno, Torre de Miguel Sesmero, Torremejía, Valencia
+Uva para vino 0,18
+del Ventoso y Valverde de Leganés.
+sin D.O.
+Términos municipales de: Arroyo de San Serván. Cereales: 0,18
+Maíz.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 721
+
+# Pag. 722
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Azuaga. Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Badajoz y Olivenza. Cereales: 0,18
+Maíz.
+Patata. 0,13
+Productos 0,13
+hortícolas:
+Ajo.
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 722
+
+# Pag. 723
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Barcarrota. Patata. 0,13
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Cabeza la Vaca y Monesterio. Frutos secos: 0,09
+Castaña.
+Términos municipales de: Calamonte, Entrín Bajo, Higuera de Llerena, Uva para vino 0,16
+Higuera de la Serena, Llerena, Magacela, Mirandilla, Puebla de la Reina y con D.O.
+Trujillanos.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Calera de León. Frutos secos: 0,05
+Castaña.
+Términos municipales de: Campanario y Maguilla. Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Codosera (La). Cereales: 0,13
+Maíz.
+Frutos secos: 0,05
+Castaña.
+Patata. 0,13
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Don Álvaro y Puebla de la Calzada. Cereales: 0,18
+Maíz.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 723
+
+# Pag. 724
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,13
+hortícolas:
+Ajo.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Don Benito. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Frutos no 0,07
+cítricos:
+Ciruela.
+Frutos no 0,07
+cítricos:
+Melocotón.
+Frutos no 0,07
+cítricos:
+Nectarina.
+Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 724
+
+# Pag. 725
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Fuente del Maestre. Patata. 0,13
+Productos 0,13
+hortícolas:
+Ajo.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Garrovilla (La). Cereales: 0,13
+Maíz.
+Frutos no 0,07
+cítricos:
+Ciruela.
+Frutos no 0,07
+cítricos:
+Melocotón.
+Frutos no 0,07
+cítricos:
+Nectarina.
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Granja de Torrehermosa. Productos 0,13
+hortícolas:
+Tomate.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 725
+
+# Pag. 726
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Guareña y Villagonzalo. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Jerez de los Caballeros y Valdelacalzada. Cereales: 0,18
+Maíz.
+Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+Términos municipales de: Lobón. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Productos 0,13
+hortícolas:
+Ajo.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 726
+
+# Pag. 727
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Mérida. Cereales: 0,18
+Maíz.
+Patata. 0,13
+Productos 0,13
+hortícolas:
+Ajo.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Montijo. Cereales: 0,13
+Maíz.
+Productos 0,13
+hortícolas:
+Ajo.
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Navalvillar de Pela y Zarza (La). Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 727
+
+# Pag. 728
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Peraleda del Zaucejo. Productos 0,18
+hortícolas:
+Ajo.
+Términos municipales de: Puebla de Alcocer. Arroz. 0,16
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Salvatierra de los Barros. Frutos secos: 0,05
+Castaña.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: San Pedro de Mérida. Cereales: 0,13
+Maíz.
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Santos de Maimona (Los). Patata. 0,13
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Solana de los Barros y Villafranca de los Barros. Productos 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 728
+
+# Pag. 729
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+hortícolas:
+Ajo.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Talavera la Real. Cereales: 0,13
+Maíz.
+Patata. 0,13
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Torremayor. Cereales: 0,18
+Maíz.
+Frutos no 0,07
+cítricos:
+Ciruela.
+Frutos no 0,07
+cítricos:
+Melocotón.
+Frutos no 0,07
+cítricos:
+Nectarina.
+Productos 0,13
+hortícolas:
+Ajo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 729
+
+# Pag. 730
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Valdecaballeros. Cereales: 0,13
+Maíz.
+Términos municipales de: Valdetorres. Arroz. 0,16
+Cereales: 0,13
+Maíz.
+Patata. 0,13
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Valverde de Mérida. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 730
+
+# Pag. 731
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Villalba de los Barros. Patata. 0,13
+Productos 0,13
+hortícolas:
+Ajo.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Villanueva de la Serena. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Frutos no 0,07
+cítricos:
+Ciruela.
+Frutos no 0,07
+cítricos:
+Melocotón.
+Frutos no 0,07
+cítricos:
+Nectarina.
+Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 731
+
+# Pag. 732
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Badajoz
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Villar de Rena. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Zalamea de la Serena. Cereales: 0,18
+Maíz.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Guadiana del Caudillo y Pueblonuevo del Cereales: 0,18
+Guadiana. Maíz.
+Productos 0,18
+hortícolas:
+Tomate.
+Provincia: Cáceres
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Abadía, Aldehuela de Jerte, Majadas, Cereales: 0,18
+Navalmoral de la Mata, Oliva de Plasencia, Portaje, Tiétar, Toril, Maíz.
+Valdeobispo y Zarza de Granadilla.
+Términos municipales de: Acebo, Arroyomolinos de la Vera, Frutos secos: 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 732
+
+# Pag. 733
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Cáceres
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Caminomorisco, Casar de Palomero, Castañar de Ibor, Gargüera, Castaña.
+Madrigal de la Vera, Navalvillar de Ibor, Villamiel, Villanueva de la Sierra y
+Villar del Pedroso.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Acehúche, Pesga (La), Serradilla, Trujillo y Uva para vino 0,16
+Valverde del Fresno. con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Ahigal, Albalá, Montánchez, Robledillo de Gata, Uva para vino 0,16
+Robledillo de Trujillo, Talaveruela de la Vera, Torre de Don Miguel, Torre con D.O.
+de Santa María y Villa del Campo.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Alcollarín. Arroz. 0,16
+Cereales: 0,13
+Maíz.
+Términos municipales de: Alcuéscar, Arroyo de la Luz, Arroyomolinos, Uva para vino 0,22
+Casas de Don Gómez, Ceclavín, Cerezo, Descargamaría, Eljas, con D.O.
+Herguijuela, Hernán-Pérez, Hoyos, Madroñera, Peraleda de la Mata,
+Perales del Puerto, Pozuelo de Zarzón, Salvatierra de Santiago y
+Uva para vino 0,18
+Santibáñez el Bajo.
+sin D.O.
+Términos municipales de: Aldeanueva de la Vera, Barrado, Cabañas del Frutos secos: 0,09
+Castillo, Cabezabellosa, Cabezuela del Valle, Casas del Castañar, Casas Castaña.
+del Monte, Gargantilla, Guijo de Santa Bárbara, Navaconcejo,
+Navezuelas, Rebollar, Segura de Toro, Tornavacas, Torno (El),
+Torremenga, Valencia de Alcántara, Villar de Plasencia y Villasbuenas de
+Gata.
+Términos municipales de: Alía, Guadalupe, Hervás y Santa Cruz de Frutos secos: 0,05
+Paniagua. Castaña.
+Uva para vino 0,16
+con D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 733
+
+# Pag. 734
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Cáceres
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Almoharín y Miajadas. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Berzocana, Cabrero, Garciaz, Garganta (La), Frutos secos: 0,05
+Garganta la Olla, Jerte, Pasarón de la Vera, Pinofranqueado, Piornal, Castaña.
+Robledollano y Valdastillas.
+Términos municipales de: Calzadilla, Gata, Huélaga, Rosalejo, Talayuela, Cereales: 0,18
+Tejeda de Tiétar y Vegaviana. Maíz.
+Productos 0,18
+hortícolas:
+Tomate.
+Términos municipales de: Campo Lugar. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Frutos no 0,07
+cítricos:
+Ciruela.
+Frutos no 0,07
+cítricos:
+Melocotón.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 734
+
+# Pag. 735
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Cáceres
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no 0,07
+cítricos:
+Nectarina.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Cañamero, Mohedas de Granadilla y Torrecilla Frutos secos: 0,09
+de los Ángeles. Castaña.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Carcaboso, Casillas de Coria, Holguera y Cereales: 0,13
+Morcillo. Maíz.
+Términos municipales de: Casatejada. Cereales: 0,13
+Maíz.
+Patata. 0,13
+Términos municipales de: Cilleros. Cereales: 0,18
+Maíz.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 735
+
+# Pag. 736
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Cáceres
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Collado de la Vera y Villanueva de la Vera. Cereales: 0,18
+Maíz.
+Frutos secos: 0,09
+Castaña.
+Términos municipales de: Coria. Cereales: 0,13
+Maíz.
+Frutos secos: 0,05
+Castaña.
+Productos 0,13
+hortícolas:
+Ajo.
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Cuacos de Yuste. Cereales: 0,13
+Maíz.
+Frutos secos: 0,05
+Castaña.
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Escurial. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+Términos municipales de: Galisteo y Pueblonuevo de Miramontes. Cereales: 0,18
+Maíz.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 736
+
+# Pag. 737
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Cáceres
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Granja (La). Cereales: 0,18
+Maíz.
+Patata. 0,13
+Términos municipales de: Guijo de Galisteo y Logrosán. Arroz. 0,16
+Cereales: 0,13
+Maíz.
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Jaraíz de la Vera. Cereales: 0,18
+Maíz.
+Frutos secos: 0,09
+Castaña.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Jarandilla de la Vera. Cereales: 0,18
+Maíz.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 737
+
+# Pag. 738
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Cáceres
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos secos: 0,09
+Castaña.
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Losar de la Vera. Frutos secos: 0,09
+Castaña.
+Productos 0,18
+hortícolas:
+Tomate.
+Términos municipales de: Madrigalejo. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Malpartida de Plasencia. Cereales: 0,18
+Maíz.
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 738
+
+# Pag. 739
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Cáceres
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Montehermoso. Arroz. 0,16
+Cereales: 0,13
+Maíz.
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Moraleja. Cereales: 0,13
+Maíz.
+Productos 0,13
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Plasencia. Cereales: 0,13
+Maíz.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,13
+sin D.O.
+Términos municipales de: Riolobos. Arroz. 0,16
+Cereales: 0,18
+Maíz.
+Productos 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 739
+
+# Pag. 740
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Cáceres
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Uva para vino 0,18
+sin D.O.
+Términos municipales de: Torrejoncillo. Cereales: 0,13
+Maíz.
+Productos 0,13
+hortícolas:
+Tomate.
+Términos municipales de: Alagón del Río. Cereales: 0,18
+Maíz.
+Patata. 0,13
+Productos 0,18
+hortícolas:
+Tomate.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 740
+
+# Pag. 741
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Galicia
+Provincia: Lugo
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Baralla, Becerreá, Cervantes, Bovino de carne. 0,07
+Fonsagrada (A), Navia de Suarna, Nogais (As), Pedrafita do
+Cebreiro y Triacastela.
+Términos municipales de: Pantón, Quiroga, Saviñao (O) y Sober. Apicultura. 0,05
+Bovino de carne. 0,07
+Bovino de leche. 0,07
+Cereales. 0,09
+Forrajes. 0,19
+Frutos no 0,19
+cítricos.
+Frutos secos. 0,05
+Ovino y caprino 0,05
+de carne.
+Productos 0,13
+hortícolas.
+Uva para vino 0,16
+con D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 741
+
+# Pag. 742
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Avión y Chandrexa de Apicultura. 0,05
+Queixa.
+Bovino de carne. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Términos municipales de: Baltar y Trasmiras. Apicultura. 0,05
+Bovino de carne. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+Productos hortícolas. 0,13
+Términos municipales de: Barco de Valdeorras (O) y Apicultura. 0,05
+Carballeda de Valdeorras.
+Bovino de carne. 0,07
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 742
+
+# Pag. 743
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos secos. 0,05
+Otros productos agrícolas: 0,19
+Viveros.
+Ovino y caprino de carne. 0,05
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Beade, Carballeda de Avia, Apicultura. 0,05
+Leiro, Maside, Melón, Petín y Rúa (A).
+Bovino de carne. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Bolo (O), Peroxa (A) y Apicultura. 0,05
+Vilardevós.
+Bovino de carne. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 743
+
+# Pag. 744
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Forestales con periodo de 0,03
+corta>30años.
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Castrelo do Val. Apicultura. 0,05
+Bovino de carne. 0,07
+Flores y plantas 0,16
+ornamentales.
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+Productos hortícolas. 0,13
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Cualedro. Apicultura. 0,05
+Bovino de carne. 0,07
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 744
+
+# Pag. 745
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+Productos hortícolas. 0,13
+Términos municipales de: Xinzo de Limia. Apicultura. 0,05
+Bovino de carne. 0,07
+Bovino de leche. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 745
+
+# Pag. 746
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Patata. 0,09
+Productos hortícolas. 0,13
+Términos municipales de: Gudiña (A). Apicultura. 0,05
+Bovino de carne. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+Términos municipales de: Irixo (O). Apicultura. 0,05
+Bovino de carne. 0,07
+Bovino de leche. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos secos. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 746
+
+# Pag. 747
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Ovino y caprino de carne. 0,05
+Términos municipales de: Larouco, Ribadavia y Rubiá. Apicultura. 0,05
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Laza y Monterrei. Apicultura. 0,05
+Bovino de carne. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Maceda. Apicultura. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 747
+
+# Pag. 748
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Bovino de carne. 0,07
+Bovino de leche. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Productos hortícolas: 0,13
+Tomate.
+Términos municipales de: Manzaneda. Apicultura. 0,05
+Bovino de carne. 0,07
+Bovino de leche. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 748
+
+# Pag. 749
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Mezquita (A). Apicultura. 0,05
+Bovino de carne. 0,07
+Bovino de leche. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Productos hortícolas. 0,13
+Términos municipales de: Montederramo. Apicultura. 0,05
+Bovino de carne. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos secos. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 749
+
+# Pag. 750
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Ovino y caprino de carne. 0,05
+Términos municipales de: Oímbra. Apicultura. 0,05
+Bovino de carne. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+Productos hortícolas. 0,13
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Pereiro de Aguiar (O). Apicultura. 0,05
+Bovino de carne. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 750
+
+# Pag. 751
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Productos hortícolas. 0,13
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Piñor y Viana do Bolo. Apicultura. 0,05
+Bovino de carne. 0,07
+Bovino de leche. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Términos municipales de: Porqueira y Vilar de Barrio. Apicultura. 0,05
+Bovino de carne. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 751
+
+# Pag. 752
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+Términos municipales de: Pobra de Trives (A). Apicultura. 0,05
+Bovino de carne. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Hongos para consumo 0,13
+humano.
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+Productos hortícolas. 0,13
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Riós. Apicultura. 0,05
+Bovino de carne. 0,07
+Bovino de leche. 0,07
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 752
+
+# Pag. 753
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Productos hortícolas. 0,13
+Términos municipales de: Taboadela. Apicultura. 0,05
+Bovino de carne. 0,07
+Bovino de leche. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Términos municipales de: Veiga (A). Apicultura. 0,05
+Bovino de carne. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta <30años.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 753
+
+# Pag. 754
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Productos hortícolas. 0,13
+Términos municipales de: Verín. Apicultura. 0,05
+Bovino de carne. 0,07
+Cereales. 0,13
+Flores y plantas 0,16
+ornamentales.
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Forrajes. 0,19
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+Patata. 0,09
+Productos hortícolas. 0,13
+Uva para vino con D.O. 0,16
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 754
+
+# Pag. 755
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Uva para vino sin D.O. 0,13
+Términos municipales de: Vilamartín de Valdeorras. Apicultura. 0,05
+Bovino de carne. 0,07
+Forestales con periodo de 0,05
+corta <30años.
+Forestales con periodo de 0,03
+corta>30años.
+Frutos no cítricos. 0,19
+Frutos secos. 0,05
+Otros productos agrícolas: 0,19
+Viveros.
+Ovino y caprino de carne. 0,05
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Vilariño de Conso. Apicultura. 0,05
+Bovino de carne. 0,07
+Cereales. 0,13
+Forestales con periodo de 0,05
+corta < 30años.
+Forestales con periodo de 0,03
+corta > 30años.
+Forrajes. 0,19
+Frutos no cítricos. 0,19
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 755
+
+# Pag. 756
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Ourense
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos secos. 0,05
+Ovino y caprino de carne. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 756
+
+# Pag. 757
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Madrid (Comunidad de)
+Provincia: Madrid
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Ajalvir y Madrid. Cereales: Trigo blando. 0,18
+Términos municipales de: Alcalá de Henares. Cereales: Cebada. 0,18
+Cereales: Trigo blando. 0,13
+Términos municipales de: Anchuelo. Cereales. 0,05
+Leguminosas. 0,09
+Términos municipales de: Aranjuez. Cereales: Centeno. 0,13
+Forrajes: Alfalfa. 0,13
+Leguminosas. 0,13
+Oleaginosas: Colza. 0,22
+Productos hortícolas: 0,18
+Ajo.
+Términos municipales de: Arganda del Rey. Leguminosas. 0,09
+Términos municipales de: Ciempozuelos. Cereales: Cebada. 0,18
+Cereales: Centeno. 0,13
+Forrajes: Alfalfa. 0,13
+Leguminosas. 0,13
+Oleaginosas: Colza. 0,22
+Términos municipales de: Cobeña. Cereales: Trigo blando. 0,18
+Leguminosas: 0,18
+Guisantes grano.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 757
+
+# Pag. 758
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Madrid
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Chinchón, Colmenar de Oreja y Leguminosas: 0,05
+Villaconejos. Garbanzo.
+Leguminosas: Lentejas. 0,18
+Productos hortícolas: 0,18
+Ajo.
+Términos municipales de: Getafe. Cereales: Cebada. 0,13
+Leguminosas: 0,13
+Garbanzo.
+Términos municipales de: Leganés. Cereales: Trigo blando. 0,18
+Cereales:Triticale. 0,18
+Términos municipales de: Loeches. Cereales: Cebada. 0,18
+Términos municipales de: Moraleja de Enmedio. Cereales:Triticale. 0,18
+Términos municipales de: Navalcarnero y Villamanta. Productos del olivo. 0,18
+Uva para vino con D.O. 0,22
+Términos municipales de: Paracuellos de Jarama. Cereales: Avena. 0,18
+Términos municipales de: Pozuelo del Rey. Leguminosas: 0,18
+Garbanzo.
+Términos municipales de: Ribatejada. Cereales. 0,13
+Términos municipales de: San Martín de la Vega y Titulcia. Cereales: Centeno. 0,13
+Forrajes: Alfalfa. 0,13
+Leguminosas. 0,13
+Oleaginosas: Colza. 0,22
+Términos municipales de: Santos de la Humosa (Los). Cereales. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 758
+
+# Pag. 759
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Madrid
+Índice
+Ámbito territorial Actividad rendimiento neto
+Leguminosas. 0,05
+Términos municipales de: Talamanca de Jarama, Cereales. 0,18
+Valdeolmos-Alalpardo, Valdepiélagos y Valdetorres de
+Jarama.
+Leguminosas. 0,18
+Términos municipales de: Torrejón de Ardoz. Cereales: Avena. 0,13
+Términos municipales de: Torremocha de Jarama. Leguminosas. 0,13
+Términos municipales de: Torres de la Alameda. Cereales. 0,18
+Leguminosas. 0,13
+Términos municipales de: Valdemoro. Avicultura. 0,03
+Términos municipales de: Valverde de Alcalá. Cereales. 0,13
+Leguminosas. 0,13
+Términos municipales de: Villalbilla. Cereales. 0,05
+Leguminosas. 0,05
+Oleaginosas. 0,11
+Región de Murcia
+Provincia: Murcia
+Índice rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales. Cereales. 0,18
+Uva para vino sin D.O. 0,18
+Todos los términos municipales (excepto los que se Uva para vino con D.O. 0,22
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 759
+
+# Pag. 760
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Murcia
+Índice rendimiento
+Ámbito territorial Actividad neto
+detallen con un índice inferior)
+Términos municipales de: Albudeite Cítricos: Limón 0,05
+Cítricos: Mandarina 0,05
+Cítricos: Naranja 0,05
+Frutos no cítricos: 0,07
+Albaricoque
+Frutos no cítricos: 0,07
+Ciruela
+Frutos no cítricos: 0,07
+Melocotón
+Frutos secos: Almendra 0,05
+Patata 0,18
+Productos del olivo 0,18
+Términos municipales de: Alhama de Murcia Productos hortícolas: 0,13
+Brócoli
+Productos hortícolas: 0,18
+Cebolla
+Productos hortícolas: 0,13
+Coliflor
+Productos hortícolas: 0,13
+Lechuga
+Términos municipales de: Archena Frutos no cítricos: 0,19
+Melocotón
+Términos municipales de: Calasparra Frutos no cítricos: 0,26
+Ciruela
+Términos municipales de: Campos del Río Cítricos: Limón 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 760
+
+# Pag. 761
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Murcia
+Índice rendimiento
+Ámbito territorial Actividad neto
+Cítricos: Naranja 0,05
+Frutos no cítricos: 0,07
+Albaricoque
+Frutos no cítricos: 0,07
+Ciruela
+Frutos no cítricos: 0,07
+Melocotón
+Frutos no cítricos: 0,13
+Nectarina
+Frutos secos: Almendra 0,09
+Patata 0,18
+Productos del olivo 0,13
+Términos municipales de: Caravaca de la Cruz Frutos no cítricos: 0,26
+Melocotón
+Productos hortícolas: 0,18
+Pimiento
+Productos hortícolas: 0,05
+Tomate
+Términos municipales de: Jumilla Frutos no cítricos: 0,19
+Albaricoque
+Frutos no cítricos: 0,19
+Melocotón
+Frutos no cítricos: 0,13
+Nectarina
+Frutos no cítricos: Pera 0,13
+Términos municipales de: Lorquí Frutos no cítricos: 0,13
+Melocotón
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 761
+
+# Pag. 762
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Murcia
+Índice rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Moratalla Productos hortícolas: 0,13
+Calabacín
+Términos municipales de: Mula Cítricos: Limón 0,18
+Cítricos: Mandarina 0,13
+Cítricos: Pomelo 0,13
+Frutos no cítricos: 0,19
+Albaricoque
+Frutos no cítricos: 0,19
+Melocotón
+Frutos no cítricos: 0,07
+Nectarina
+Productos hortícolas: 0,13
+Tomate
+Términos municipales de: Puerto Lumbreras Cítricos: Pomelo 0,18
+Términos municipales de: San Pedro del Pinatar Patata 0,13
+Términos municipales de: Totana Productos hortícolas: 0,18
+Brócoli
+Productos hortícolas: 0,13
+Cebolla
+Productos hortícolas: 0,18
+Coliflor
+Productos hortícolas: 0,18
+Col-repollo
+Productos hortícolas: 0,13
+Espinaca
+Productos hortícolas: 0,13
+Lechuga
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 762
+
+# Pag. 763
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Murcia
+Índice rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Yecla Frutos no cítricos: 0,26
+Melocotón
+Uva para vino con D.O. 0,11
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 763
+
+# Pag. 764
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+La Rioja
+La Rioja
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Anguciana, Azofra, Badarán, Berceo, Briones, Frutos no 0,26
+Briñas, Canillas de Río Tuerto, Castañares de Rioja, Cañas, Cordovín, cítricos: Pera.
+Gimileo, Hervías, Hormilla, Hormilleja, Ollauri, Rodezno, San Asensio,
+San Vicente de la Sonsierra, Torrecilla sobre Alesanco, Villar de Torre,
+Productos 0,18
+Villarejo y Ábalos.
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+Términos municipales de: Agoncillo, Alberite, Alcanadre, Ausejo, Clavijo, Frutos no 0,26
+Entrena, Fuenmayor, Lagunilla del Jubera, Leza de Río Leza, Ocón, cítricos: Cereza
+Ribafrecha y Sorzano. y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Aguilar del Río Alhama, Arnedo, Autol, Frutos no 0,26
+Cervera del Río Alhama, Herce y Tudelilla. cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Productos 0,18
+hortícolas:
+Judías verdes.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 764
+
+# Pag. 765
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+La Rioja
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,18
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Albelda de Iregua, Corera, Murillo de Río Frutos no 0,26
+Leza, Nalda, Redal (El) y Santa Engracia del Jubera. cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Uva para vino 0,22
+con D.O.
+Términos municipales de: Aldeanueva de Ebro, Alfaro y Rincón de Soto. Frutos no 0,19
+cítricos:
+Albaricoque.
+Frutos no 0,26
+cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos:
+Melocotón.
+Frutos no 0,26
+cítricos:
+Nectarina.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 765
+
+# Pag. 766
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+La Rioja
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Almendra.
+Productos 0,18
+hortícolas:
+Judías verdes.
+Productos 0,18
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Alesanco, Alesón, Arenzana de Abajo, Frutos no 0,26
+Arenzana de Arriba, Bañares, Baños de Río Tobía, Bezares, Bobadilla, cítricos: Pera.
+Casalarreina, Cellorigo, Cenicero, Cidamón, Cihuri, Cirueña, Cuzcurrita
+de Río Tirón, Foncea, Galbárruli, Haro, Huércanos, Manjarrés, Nájera,
+Productos 0,18
+Sajazarra, San Millán de Yécora, San Torcuato, Santa Coloma,
+hortícolas:
+Torremontalbo, Treviana, Tricio, Uruñuela, Ventosa, Villalba de Rioja y
+Pimiento.
+Zarratón.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Arnedillo. Frutos secos: 0,13
+Almendra.
+Uva para vino 0,06
+con D.O.
+Términos municipales de: Arrúbal y Galilea. Frutos no 0,26
+cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 766
+
+# Pag. 767
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+La Rioja
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos secos: 0,13
+Almendra.
+Uva para vino 0,06
+con D.O.
+Términos municipales de: Baños de Rioja, Camprovín, Cárdenas, Frutos no 0,26
+Fonzaleche, Herramélluri, Leiva, Ochánduri y Tirgo. cítricos: Pera.
+Productos 0,18
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,11
+con D.O.
+Términos municipales de: Bergasa, Bergasillas Bajera, Grávalos, Igea y Frutos no 0,26
+Quel. cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Productos 0,18
+hortícolas:
+Judías verdes.
+Productos 0,18
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,22
+con D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 767
+
+# Pag. 768
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+La Rioja
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Calahorra. Frutos no 0,19
+cítricos:
+Albaricoque.
+Frutos no 0,26
+cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos:
+Melocotón.
+Frutos no 0,26
+cítricos:
+Nectarina.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Productos 0,18
+hortícolas:
+Judías verdes.
+Productos 0,18
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,11
+con D.O.
+Términos municipales de: Cornago y Préjano. Frutos secos: 0,13
+Almendra.
+Uva para vino 0,22
+con D.O.
+Términos municipales de: Corporales, Estollo, Grañón, Ledesma de la Frutos no 0,26
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 768
+
+# Pag. 769
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+La Rioja
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Cogolla, Manzanares de Rioja, San Millán de la Cogolla, Santo Domingo cítricos: Pera.
+de la Calzada, Santurde de Rioja, Santurdejo, Villalobar de Rioja,
+Villarta-Quintana y Villaverde de Rioja.
+Productos 0,18
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+Términos municipales de: Daroca de Rioja, Hornos de Moncalvillo y Cereales. 0,05
+Medrano.
+Frutos no 0,26
+cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Uva para vino 0,06
+con D.O.
+Términos municipales de: Enciso, Munilla, Muro de Aguas, Navajún, Frutos secos: 0,13
+Robres del Castillo, Valdemadera y Zarzosa. Almendra.
+Términos municipales de: Lardero, Logroño y Villamediana de Iregua. Frutos no 0,26
+cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Uva para vino 0,11
+con D.O.
+Términos municipales de: Matute. Uva para vino 0,22
+con D.O.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 769
+
+# Pag. 770
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+La Rioja
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Términos municipales de: Navarrete. Cereales. 0,05
+Frutos no 0,26
+cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Uva para vino 0,11
+con D.O.
+Términos municipales de: Pradejón y Villar de Arnedo (El). Frutos no 0,26
+cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Productos 0,18
+hortícolas:
+Judías verdes.
+Productos 0,18
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,11
+con D.O.
+Términos municipales de: Santa Eulalia Bajera. Frutos no 0,26
+cítricos: Cereza
+y guinda.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 770
+
+# Pag. 771
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+La Rioja
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Productos 0,18
+hortícolas:
+Judías verdes.
+Productos 0,18
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,06
+con D.O.
+Términos municipales de: Sojuela y Sotés. Cereales. 0,05
+Frutos no 0,26
+cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Uva para vino 0,16
+con D.O.
+Términos municipales de: Tormantos. Frutos no 0,26
+cítricos: Pera.
+Productos 0,18
+hortícolas:
+Pimiento.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 771
+
+# Pag. 772
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+La Rioja
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,18
+hortícolas:
+Tomate.
+Uva para vino 0,06
+con D.O.
+Términos municipales de: Viguera. Uva para vino 0,16
+con D.O.
+Términos municipales de: Villarroya. Frutos no 0,26
+cítricos: Cereza
+y guinda.
+Frutos no 0,26
+cítricos: Pera.
+Frutos secos: 0,13
+Almendra.
+Productos 0,18
+hortícolas:
+Judías verdes.
+Productos 0,18
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas:
+Tomate.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 772
+
+# Pag. 773
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Comunitat Valenciana
+Alicante
+Provincia: Alicante
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales (excepto los que se detallen con Uva para vino con 0,22
+un índice inferior). D.O.
+Uva para vino sin 0,18
+D.O.
+Términos municipales de: Agost, Algueña, Elda, Fondó de les Uva de mesa. 0,16
+Neus (El)/Hondón de las Nieves, Hondón de los Frailes, Novelda,
+Petrer, Pinós (El)/Pinoso y Romana (La).
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Agres. Frutos no cítricos: 0,07
+Ciruela.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,07
+Melocotón.
+Frutos secos: 0,13
+Almendra.
+Términos municipales de: Alcosser, Almudaina, Beniarrés, Frutos no cítricos: 0,26
+Benillup, Benimarfull, Gorga, Millena, Muro de Alcoy y Planes. Cereza y guinda.
+Términos municipales de: Alfafara. Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+Manzana.
+Frutos no cítricos: 0,26
+Melocotón.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 773
+
+# Pag. 774
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Alicante
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos no cítricos: 0,26
+Pera.
+Frutos secos: 0,13
+Almendra.
+Productos del olivo. 0,05
+Términos municipales de: Aspe. Productos 0,18
+hortícolas: Otras
+coles.
+Uva de mesa. 0,16
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Finestrat, Orxeta, Relleu y Frutos secos: 0,13
+Villajoyosa/Vila Joiosa (La). Almendra.
+Productos del olivo. 0,13
+Términos municipales de: Ibi. Frutos no cítricos: 0,26
+Cereza y guinda.
+Frutos no cítricos: 0,26
+Ciruela.
+Términos municipales de: Monforte del Cid. Uva de mesa. 0,11
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Monóvar/Monòver. Frutos no cítricos: 0,13
+Melocotón.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 774
+
+# Pag. 775
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Alicante
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Uva de mesa. 0,16
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Sella. Frutos no cítricos: 0,07
+Caqui.
+Frutos secos: 0,13
+Almendra.
+Productos del olivo. 0,13
+Términos municipales de: Vall d'Ebo (La), Vall de Gallinera, Vall de Frutos no cítricos: 0,07
+Laguar (La) y Vall d´Alcalà (La). Cereza y guinda.
+Términos municipales de: Villena. Frutos no cítricos: 0,26
+Albaricoque.
+Frutos no cítricos: 0,13
+Ciruela.
+Castellón
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Todos los términos municipales (excepto los que se detallen con Frutos secos: 0,13
+un índice inferior). Algarroba.
+Frutos secos: 0,18
+Almendra.
+Términos municipales de: Atzeneta del Maestrat, Benafigos, Frutos secos: 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 775
+
+# Pag. 776
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Castillo de Villamalefa, Coves de Vinromà (Les), Llucena/Lucena Algarroba.
+del Cid, Ludiente, Sierra Engarcerán y Vilafamés.
+Frutos secos: 0,09
+Almendra.
+Frutos secos: 0,13
+Avellana.
+Términos municipales de: Aín. Frutos secos: 0,09
+Algarroba.
+Frutos secos: 0,05
+Almendra.
+Productos del 0,13
+olivo.
+Términos municipales de: Albocàsser, Canet lo Roig, Catí, Jana Frutos no cítricos: 0,07
+(La), Salzadella (La), Sant Mateu, Serratella (La), Tírig y Xert. Cereza y guinda.
+Productos del 0,09
+olivo.
+Términos municipales de: Alcalà de Xivert, Benlloc, Cabanes, Frutos secos: 0,09
+Costur, Figueroles, Oropesa del Mar/Orpesa, Torre d'en Doménec Algarroba.
+(La), Torreblanca y Vilanova d'Alcolea.
+Frutos secos: 0,09
+Almendra.
+Términos municipales de: Alcora (L'). Frutos secos: 0,09
+Algarroba.
+Frutos secos: 0,09
+Almendra.
+Frutos secos: 0,13
+Avellana.
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 776
+
+# Pag. 777
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+D.O.
+Términos municipales de: Alfondeguilla. Cítricos: 0,13
+Mandarina.
+Cítricos: Naranja. 0,18
+Frutos secos: 0,05
+Almendra.
+Productos del 0,13
+olivo.
+Términos municipales de: Algimia de Almonacid, Benafer, Borriol, Frutos secos: 0,13
+Castellnovo, Cinctorres, Geldo, Navajas, Pavías, Sant Joan de Almendra.
+Moró, Segorbe y Teresa.
+Términos municipales de: Almedíjar. Frutos secos: 0,13
+Almendra.
+Productos del 0,09
+olivo.
+Uva para vino con 0,06
+D.O.
+Uva para vino sin 0,05
+D.O.
+Términos municipales de: Almenara. Cítricos: 0,18
+Mandarina.
+Cítricos: Naranja. 0,18
+Productos 0,18
+hortícolas:
+Calabaza.
+Productos 0,13
+hortícolas: Melón.
+Productos 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 777
+
+# Pag. 778
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+hortícolas: Sandía.
+Productos 0,13
+hortícolas: Tomate.
+Términos municipales de: Altura. Frutos no cítricos: 0,19
+Níspero.
+Frutos secos: 0,13
+Almendra.
+Hongos para 0,09
+consumo humano:
+Trufa.
+Términos municipales de: Ares del Maestrat, Benassal y Culla. Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,13
+Avellana.
+Términos municipales de: Artana. Cítricos: 0,09
+Mandarina.
+Cítricos: Naranja. 0,05
+Frutos no cítricos: 0,07
+Aguacate.
+Productos del 0,13
+olivo.
+Términos municipales de: Azuébar. Cítricos: 0,18
+Mandarina.
+Cítricos: Naranja. 0,18
+Frutos secos: 0,09
+Algarroba.
+Frutos secos: 0,09
+Almendra.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 778
+
+# Pag. 779
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos del 0,13
+olivo.
+Uva para vino con 0,11
+D.O.
+Uva para vino sin 0,09
+D.O.
+Términos municipales de: Barracas, Bejís, Fuente la Reina, Frutos secos: 0,13
+Higueras, Montán, Pina de Montalgrao, Sacañet, Toro (El), Torás y Almendra.
+Villanueva de Viver.
+Hongos para 0,09
+consumo humano:
+Trufa.
+Términos municipales de: Betxí. Cítricos: Limón. 0,05
+Cítricos: 0,18
+Mandarina.
+Cítricos: Naranja. 0,18
+Frutos no cítricos: 0,19
+Aguacate.
+Productos del 0,13
+olivo.
+Términos municipales de: Benicarló, Peníscola/Peñíscola y Patata. 0,18
+Vinaròs.
+Productos del 0,13
+olivo.
+Productos 0,13
+hortícolas: Brócoli.
+Productos 0,13
+hortícolas: Coliflor.
+Productos 0,18
+hortícolas: Col-
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 779
+
+# Pag. 780
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+repollo.
+Productos 0,13
+hortícolas:
+Escarola.
+Productos 0,13
+hortícolas:
+Lechuga.
+Términos municipales de: Borriana/Burriana. Cítricos: 0,13
+Mandarina.
+Cítricos: Naranja. 0,13
+Frutos no cítricos: 0,13
+Aguacate.
+Frutos no cítricos: 0,13
+Granado.
+Frutos secos: 0,05
+Almendra.
+Productos del 0,09
+olivo.
+Productos 0,05
+hortícolas: Tomate.
+Términos municipales de: Càlig. Productos del 0,13
+olivo.
+Productos 0,13
+hortícolas: Brócoli.
+Productos 0,13
+hortícolas: Coliflor.
+Productos 0,18
+hortícolas: Col-
+repollo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 780
+
+# Pag. 781
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,13
+hortícolas:
+Escarola.
+Productos 0,13
+hortícolas:
+Lechuga.
+Términos municipales de: Caudiel. Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,18
+Nuez.
+Hongos para 0,09
+consumo humano:
+Trufa.
+Productos del 0,18
+olivo.
+Términos municipales de: Cervera del Maestre. Productos del 0,13
+olivo.
+Productos 0,13
+hortícolas: Brócoli.
+Productos 0,13
+hortícolas:
+Lechuga.
+Términos municipales de: Cortes de Arenoso. Frutos secos: 0,09
+Almendra.
+Frutos secos: 0,18
+Avellana.
+Términos municipales de: Chilches/Xilxes. Productos 0,18
+hortícolas:
+Calabaza.
+Productos 0,09
+hortícolas: Melón.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 781
+
+# Pag. 782
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,13
+hortícolas: Sandía.
+Términos municipales de: Chodos/Xodos, Villahermosa del Río y Frutos secos: 0,09
+Vistabella del Maestrat. Almendra.
+Frutos secos: 0,13
+Avellana.
+Términos municipales de: Chóvar. Frutos secos: 0,05
+Algarroba.
+Frutos secos: 0,09
+Almendra.
+Productos del 0,05
+olivo.
+Uva para vino con 0,16
+D.O.
+Uva para vino sin 0,13
+D.O.
+Términos municipales de: Eslida. Frutos secos: 0,13
+Almendra.
+Productos del 0,09
+olivo.
+Términos municipales de: Gaibiel y Matet. Frutos secos: 0,13
+Almendra.
+Productos del 0,18
+olivo.
+Términos municipales de: Jérica. Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,18
+Nuez.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 782
+
+# Pag. 783
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Hongos para 0,09
+consumo humano:
+Trufa.
+Términos municipales de: Llosa (La). Productos 0,09
+hortícolas:
+Calabaza.
+Productos 0,18
+hortícolas: Melón.
+Productos 0,18
+hortícolas: Sandía.
+Términos municipales de: Moncofa. Cítricos: Naranja. 0,09
+Frutos no cítricos: 0,13
+Pera.
+Productos 0,09
+hortícolas:
+Pimiento.
+Productos 0,18
+hortícolas: Tomate.
+Términos municipales de: Nules. Cítricos: Limero y 0,13
+otros cítricos.
+Cítricos: 0,05
+Mandarina.
+Cítricos: Naranja. 0,05
+Frutos no cítricos: 0,07
+Aguacate.
+Frutos no cítricos: 0,13
+Caqui.
+Frutos no cítricos: 0,13
+Granado.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 783
+
+# Pag. 784
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Frutos secos: 0,05
+Algarroba.
+Frutos secos: 0,05
+Almendra.
+Productos del 0,05
+olivo.
+Productos 0,09
+hortícolas:
+Berenjena.
+Productos 0,09
+hortícolas:
+Calabacín.
+Productos 0,09
+hortícolas: Melón.
+Productos 0,09
+hortícolas:
+Pimiento.
+Productos 0,09
+hortícolas: Sandía.
+Productos 0,09
+hortícolas: Tomate.
+Términos municipales de: Pobla Tornesa (La). Frutos secos: 0,09
+Almendra.
+Términos municipales de: Rossell, Torre d'En Besora (La) y Vilar Productos del 0,09
+de Canes. olivo.
+Términos municipales de: Sant Jordi/San Jorge. Productos del 0,13
+olivo.
+Términos municipales de: San Rafael del Río. Patata. 0,18
+Productos del 0,13
+olivo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 784
+
+# Pag. 785
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,13
+hortícolas: Coliflor.
+Productos 0,18
+hortícolas: Col-
+repollo.
+Productos 0,13
+hortícolas:
+Lechuga.
+Términos municipales de: Santa Magdalena de Pulpis. Patata. 0,18
+Productos del 0,13
+olivo.
+Productos 0,13
+hortícolas: Brócoli.
+Productos 0,13
+hortícolas: Coliflor.
+Productos 0,13
+hortícolas:
+Lechuga.
+Términos municipales de: Soneja. Frutos no cítricos: 0,07
+Níspero.
+Frutos secos: 0,13
+Almendra.
+Términos municipales de: Sot de Ferrer. Frutos no cítricos: 0,13
+Caqui.
+Frutos no cítricos: 0,07
+Níspero.
+Frutos secos: 0,13
+Almendra.
+Términos municipales de: Traiguera. Productos del 0,13
+olivo.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 785
+
+# Pag. 786
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Productos 0,13
+hortícolas: Brócoli.
+Productos 0,18
+hortícolas: Col-
+repollo.
+Términos municipales de: Useras/Useres (Les) y Vall d'Alba. Frutos secos: 0,09
+Algarroba.
+Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,13
+Avellana.
+Términos municipales de: Vall de Almonacid. Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,09
+Nuez.
+Términos municipales de: Vall d'Uixó (La). Cítricos: Limero y 0,13
+otros cítricos.
+Cítricos: 0,13
+Mandarina.
+Cítricos: Naranja. 0,18
+Frutos no cítricos: 0,19
+Aguacate.
+Frutos secos: 0,13
+Almendra.
+Productos del 0,13
+olivo.
+Términos municipales de: Vilavella (La). Cítricos: 0,05
+Mandarina.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 786
+
+# Pag. 787
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+Cítricos: Naranja. 0,05
+Frutos no cítricos: 0,07
+Aguacate.
+Frutos secos: 0,09
+Algarroba.
+Productos del 0,09
+olivo.
+Términos municipales de: Viver. Frutos secos: 0,13
+Almendra.
+Frutos secos: 0,09
+Nuez.
+Hongos para 0,09
+consumo humano:
+Trufa.
+Productos del 0,18
+olivo.
+Términos municipales de: Zucaina. Frutos secos: 0,05
+Almendra.
+Frutos secos: 0,18
+Avellana.
+Términos municipales de: Alqueries (Les)/Alquerías del Niño Cítricos: 0,05
+Perdido. Mandarina.
+Cítricos: Naranja. 0,05
+Frutos no cítricos: 0,07
+Aguacate.
+Frutos no cítricos: 0,07
+Granado.
+Productos del 0,13
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 787
+
+# Pag. 788
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Castellón
+Índice
+rendimiento
+Ámbito territorial Actividad neto
+olivo.
+Valencia
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Todos los términos municipales (excepto los que se detallen Frutos secos: 0,18
+con un índice inferior). Algarroba.
+Términos municipales de: Atzeneta d'Albaida y Palomar (El). Frutos no cítricos: 0,19
+Albaricoque.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+Melocotón.
+Términos municipales de: Albaida. Frutos no cítricos: 0,26
+Albaricoque.
+Frutos no cítricos: 0,26
+Ciruela.
+Frutos no cítricos: 0,26
+Melocotón.
+Términos municipales de: Albal y Silla. Arroz. 0,16
+Términos municipales de: Albalat dels Tarongers. Frutos no cítricos: 0,26
+Granado.
+Términos municipales de: Alcublas. Cereales: Avena. 0,05
+Cereales: Cebada. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 788
+
+# Pag. 789
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos secos: 0,13
+Almendra.
+Uva para vino con D.O. 0,06
+Uva para vino sin D.O. 0,05
+Términos municipales de: Alcúdia (L'), Alginet, Benimodo, Frutos no cítricos: 0,19
+Carlet, Catadau y Godelleta. Albaricoque.
+Términos municipales de: Alfafar, Catarroja, Favara, Arroz. 0,22
+Massanassa, Sedaví y València.
+Términos municipales de: Alfauir y Almiserà. Frutos no cítricos: 0,19
+Caqui.
+Productos del olivo. 0,05
+Términos municipales de: Alfara de la Baronia. Frutos no cítricos: 0,19
+Aguacate.
+Términos municipales de: Alfarp y Llombai. Frutos no cítricos: 0,13
+Albaricoque.
+Términos municipales de: Alfarrasí y Frutos no cítricos: 0,13
+Montitxelvo/Montichelvo. Caqui.
+Términos municipales de: Algar de Palancia. Cítricos: Mandarina. 0,05
+Cítricos: Naranja. 0,09
+Frutos no cítricos: 0,07
+Aguacate.
+Términos municipales de: Almussafes. Productos hortícolas: 0,05
+Cebolla.
+Productos hortícolas: 0,18
+Escarola.
+Productos hortícolas: 0,05
+Verduras chinas.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 789
+
+# Pag. 790
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Andilla. Cereales: Cebada. 0,05
+Frutos secos: 0,13
+Almendra.
+Términos municipales de: Aielo de Rugat, Oliva, Rugat, Frutos no cítricos: 0,19
+Sempere y Terrateig. Caqui.
+Términos municipales de: Bèlgida. Frutos no cítricos: 0,13
+Caqui.
+Frutos no cítricos: 0,07
+Ciruela.
+Frutos no cítricos: 0,07
+Melocotón.
+Términos municipales de: Benaguasil, Benissanó, Bétera, Frutos no cítricos: 0,26
+Domeño, Llíria, Olocau y Pobla de Vallbona (La). Aguacate.
+Términos municipales de: Benavites. Cítricos: Mandarina. 0,13
+Cítricos: Naranja. 0,13
+Frutos no cítricos: 0,26
+Aguacate.
+Frutos no cítricos: 0,26
+Caqui.
+Productos hortícolas: 0,05
+Calabaza.
+Productos hortícolas: 0,05
+Melón.
+Términos municipales de: Benicolet. Cítricos: Mandarina. 0,18
+Frutos no cítricos: 0,07
+Caqui.
+Términos municipales de: Benifairó de les Valls. Cítricos: Mandarina. 0,09
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 790
+
+# Pag. 791
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Cítricos: Naranja. 0,13
+Frutos no cítricos: 0,26
+Aguacate.
+Frutos no cítricos: 0,13
+Caqui.
+Términos municipales de: Benifaió. Productos hortícolas: 0,05
+Col china.
+Productos hortícolas: 0,13
+Verduras chinas.
+Términos municipales de: Benissoda. Frutos no cítricos: 0,26
+Ciruela.
+Frutos no cítricos: 0,19
+Melocotón.
+Términos municipales de: Bugarra. Cítricos: Mandarina. 0,18
+Cítricos: Naranja. 0,13
+Frutos no cítricos: 0,07
+Aguacate.
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,07
+Caqui.
+Frutos no cítricos: 0,13
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Uva para vino con D.O. 0,06
+Uva para vino sin D.O. 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 791
+
+# Pag. 792
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Términos municipales de: Canet d'En Berenguer y Llutxent. Cítricos: Mandarina. 0,18
+Frutos no cítricos: 0,26
+Caqui.
+Términos municipales de: Carrícola. Frutos no cítricos: 0,13
+Ciruela.
+Frutos no cítricos: 0,13
+Melocotón.
+Términos municipales de: Casinos. Cítricos: Mandarina. 0,18
+Cítricos: Naranja. 0,13
+Frutos no cítricos: 0,07
+Caqui.
+Frutos no cítricos: 0,13
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Uva para vino con D.O. 0,06
+Uva para vino sin D.O. 0,05
+Términos municipales de: Castelló de Rugat. Frutos no cítricos: 0,26
+Albaricoque.
+Frutos no cítricos: 0,19
+Caqui.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+Melocotón.
+Términos municipales de: Castellonet de la Conquesta. Cítricos: Mandarina. 0,18
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 792
+
+# Pag. 793
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Cítricos: Naranja. 0,18
+Frutos no cítricos: 0,26
+Aguacate.
+Productos del olivo. 0,05
+Términos municipales de: Quartell. Cítricos: Mandarina. 0,18
+Cítricos: Naranja. 0,18
+Términos municipales de: Montserrat, Quatretonda, Simat de Frutos no cítricos: 0,26
+la Valldigna y Vallada. Caqui.
+Términos municipales de: Cullera. Arroz. 0,22
+Productos hortícolas: 0,09
+Col china.
+Productos hortícolas: 0,05
+Verduras chinas.
+Términos municipales de: Chulilla. Cítricos: Mandarina. 0,13
+Cítricos: Naranja. 0,13
+Cítricos: Pomelo. 0,18
+Frutos no cítricos: 0,26
+Albaricoque.
+Frutos no cítricos: 0,07
+Caqui.
+Frutos no cítricos: 0,07
+Cereza y guinda.
+Frutos no cítricos: 0,13
+Ciruela.
+Frutos no cítricos: 0,13
+Melocotón.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 793
+
+# Pag. 794
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos secos: 0,05
+Almendra.
+Uva para vino con D.O. 0,06
+Uva para vino sin D.O. 0,05
+Términos municipales de: Faura. Cítricos: Mandarina. 0,09
+Cítricos: Naranja. 0,13
+Frutos no cítricos: 0,19
+Aguacate.
+Productos hortícolas: 0,18
+Calabaza.
+Términos municipales de: Gestalgar. Frutos no cítricos: 0,07
+Caqui.
+Frutos no cítricos: 0,07
+Cereza y guinda.
+Frutos no cítricos: 0,13
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Uva para vino con D.O. 0,06
+Uva para vino sin D.O. 0,05
+Términos municipales de: Guadasséquies. Frutos no cítricos: 0,07
+Caqui.
+Términos municipales de: Losa del Obispo. Cítricos: Mandarina. 0,13
+Cítricos: Naranja. 0,09
+Frutos no cítricos: 0,13
+Albaricoque.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 794
+
+# Pag. 795
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos no cítricos: 0,07
+Caqui.
+Frutos no cítricos: 0,07
+Cereza y guinda.
+Frutos no cítricos: 0,13
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Productos hortícolas: 0,05
+Tomate.
+Uva para vino con D.O. 0,06
+Uva para vino sin D.O. 0,05
+Términos municipales de: Llocnou de Sant Jeroni. Cítricos: Mandarina. 0,18
+Cítricos: Naranja. 0,18
+Productos del olivo. 0,05
+Términos municipales de: Mogente/Moixent. Cítricos: Mandarina. 0,13
+Cítricos: Naranja. 0,13
+Frutos no cítricos: 0,26
+Caqui.
+Términos municipales de: Montaverner. Frutos no cítricos: 0,19
+Melocotón.
+Términos municipales de: Montroi/Montroy. Frutos no cítricos: 0,07
+Albaricoque.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 795
+
+# Pag. 796
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Melocotón.
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Otos. Frutos no cítricos: 0,13
+Caqui.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,07
+Melocotón.
+Términos municipales de: Pedralba. Cítricos: Mandarina. 0,13
+Cítricos: Naranja. 0,18
+Cítricos: Pomelo. 0,13
+Frutos no cítricos: 0,26
+Aguacate.
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,07
+Caqui.
+Frutos no cítricos: 0,13
+Melocotón.
+Frutos secos: 0,09
+Almendra.
+Uva para vino con D.O. 0,06
+Uva para vino sin D.O. 0,05
+Términos municipales de: Pobla del Duc (La). Frutos no cítricos: 0,19
+Albaricoque.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 796
+
+# Pag. 797
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos no cítricos: 0,07
+Caqui.
+Frutos no cítricos: 0,19
+Ciruela.
+Frutos no cítricos: 0,19
+Melocotón.
+Términos municipales de: Real. Frutos no cítricos: 0,07
+Albaricoque.
+Frutos no cítricos: 0,13
+Melocotón.
+Productos del olivo. 0,18
+Uva para vino con D.O. 0,16
+Uva para vino sin D.O. 0,13
+Términos municipales de: Riba-roja de Túria. Cítricos: Mandarina. 0,13
+Productos hortícolas: 0,09
+Alcachofa.
+Productos hortícolas: 0,09
+Calabaza.
+Productos hortícolas: 0,05
+Cebolla.
+Productos hortícolas: 0,09
+Lechuga.
+Términos municipales de: Sagunto/Sagunt. Cítricos: Mandarina. 0,18
+Cítricos: Naranja. 0,18
+Frutos no cítricos: 0,26
+Aguacate.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 797
+
+# Pag. 798
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Productos hortícolas: 0,05
+Calabaza.
+Productos hortícolas: 0,05
+Melón.
+Términos municipales de: Sollana. Arroz. 0,16
+Productos hortícolas: 0,05
+Col china.
+Productos hortícolas: 0,09
+Escarola.
+Productos hortícolas: 0,09
+Otras coles.
+Productos hortícolas: 0,13
+Verduras chinas.
+Términos municipales de: Sueca. Arroz. 0,16
+Cítricos: Mandarina. 0,18
+Patata. 0,05
+Productos hortícolas: 0,05
+Col china.
+Productos hortícolas: 0,05
+Calabaza.
+Productos hortícolas: 0,05
+Cebolla.
+Productos hortícolas: 0,09
+Verduras chinas.
+Términos municipales de: Torrent. Cítricos: Mandarina. 0,18
+Frutos no cítricos: 0,19
+Caqui.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 798
+
+# Pag. 799
+
+Apéndice: Relación de productos naturales, servicios y actividades accesorios realizados por agricultores, ganaderos y titulares de actividades forestales e índices de rendimiento aplicables en el ejercicio 2025
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Frutos secos: 0,13
+Algarroba.
+Términos municipales de: Torres Torres. Frutos no cítricos: 0,13
+Aguacate.
+Términos municipales de: Vilamarxant. Cítricos: Mandarina. 0,18
+Frutos no cítricos: 0,26
+Aguacate.
+Uva para vino con D.O. 0,22
+Uva para vino sin D.O. 0,18
+Términos municipales de: Villar del Arzobispo. Cítricos: Mandarina. 0,09
+Cítricos: Naranja. 0,09
+Cítricos: Pomelo. 0,13
+Frutos no cítricos: 0,13
+Albaricoque.
+Frutos no cítricos: 0,07
+Caqui.
+Frutos no cítricos: 0,07
+Cereza y guinda.
+Frutos no cítricos: 0,13
+Ciruela.
+Frutos no cítricos: 0,13
+Melocotón.
+Frutos secos: 0,05
+Almendra.
+Productos del olivo. 0,18
+Productos hortícolas: 0,05
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 799
+
+# Pag. 800
+
+Capítulo 9. Rendimientos de actividades económicas en estimación objetiva (II) (Actividades agrícolas, ganaderas y forestales)
+Provincia: Valencia
+Índice
+Ámbito territorial Actividad rendimiento neto
+Tomate.
+Uva para vino con D.O. 0,06
+Uva para vino sin D.O. 0,05
+Términos municipales de: Gátova. Frutos no cítricos: 0,07
+Cereza y guinda.
+Frutos secos: 0,09
+Almendra.
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 800
+
+# Pag. 801
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Capítulo 10. Regímenes especiales:
@@ -24984,9 +31152,9 @@ donde podrá consultar como declarar un inmueble vacío a disposición del titul
 Normativa: Art. 85 Ley IRPF
 Concepto y requisitos de la imputación de rentas inmobiliarias
 Concepto
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 623
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 801
 
-# Pag. 624
+# Pag. 802
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Tienen la consideración de rentas inmobiliarias imputadas aquellas rentas que el
@@ -25024,9 +31192,9 @@ A diferencia de lo anterior, cuando el inmueble se encuentra afecto al desarroll
 económica de arrendamiento de forma exclusiva, no existirá obligación de imputar rentas
 inmobiliarias, aunque parte del período impositivo el inmueble no se encuentre arrendado, pero sí en
 expectativa de alquiler.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 624
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 802
 
-# Pag. 625
+# Pag. 803
 
 Régimen de imputación de rentas inmobiliarias
 • Que no constituyan la vivienda habitual del contribuyente. A estos efectos, se
@@ -25071,9 +31239,9 @@ se realiza mediante la aplicación de los siguientes porcentajes:
 El 2 por 100, con carácter general. Dicho porcentaje debe aplicarse sobre el valor
 catastral del inmueble que figure en el recibo del Impuesto sobre Bienes Inmuebles
 (Urbana) correspondiente al ejercicio 2025.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 625
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 803
 
-# Pag. 626
+# Pag. 804
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 El 1,1 por 100 en los siguientes supuestos:
@@ -25110,9 +31278,9 @@ semanas o meses) del período de aprovechamiento.
 Si a la fecha de devengo del IRPF los inmuebles carecieran de valor catastral o este no
 hubiera sido notificado al titular, se tomará como base de imputación el precio de adquisición
 del derecho de aprovechamiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 626
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 804
 
-# Pag. 627
+# Pag. 805
 
 Régimen de imputación de rentas inmobiliarias
 No procederá la imputación de renta inmobiliaria a los titulares de estos derechos
@@ -25152,9 +31320,9 @@ En concreto, deberán consignarse los siguientes datos por cada uno de ellos:
 a. Parte del inmueble que está a disposición del contribuyente, casilla [0087]: si la totalidad
 del inmueble ha permanecido a disposición del contribuyente en el ejercicio, se
 consignará el porcentaje del 100 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 627
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 805
 
-# Pag. 628
+# Pag. 806
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Cuando debido a un uso o destino simultáneo del inmueble solo una parte del mismo
@@ -25191,9 +31359,9 @@ Solución
 • Apartamento adquirido en 2025. Renta inmobiliaria imputada:
 1,1 por 100 s/ (50% x 105.000) x 62 ÷ 365 = 98,10 (2)
 Total rentas inmobiliarias imputadas (448,80 + 98,10) = 546,90
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 628
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 806
 
-# Pag. 629
+# Pag. 807
 
 Régimen de imputación de rentas inmobiliarias
 Notas al ejemplo:
@@ -25234,9 +31402,9 @@ Como consecuencia de lo anterior, siguen tributando en el régimen de entidades 
 del IRPF, en cuanto sus actividades son ajenas al ámbito mercantil, las siguientes sociedades civiles:
 Las que se dediquen a actividades agrícolas, ganaderas, forestales, mineras.
 ○
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 629
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 807
 
-# Pag. 630
+# Pag. 808
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Las de carácter profesional (sección segunda del Impuesto sobre Actividades Económicas).
@@ -25276,9 +31444,9 @@ Importante: las entidades No residentes que carecen de NIF consignarán en la ca
 de residencia y marcarán la casilla [1563] para indicar esta circunstancia.
 Delimitación negativa
 Normativa: Art. 7 LIS
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 630
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 808
 
-# Pag. 631
+# Pag. 809
 
 Régimen de atribución de rentas
 No se incluyen en el régimen especial de atribución de rentas, entre otras, las siguientes
@@ -25322,9 +31490,9 @@ Sociedades, en calidad de contribuyente, por las siguientes rentas positivas que
 corresponda atribuir a todos los partícipes residentes en países o territorios que
 consideren a la entidad en atribución de rentas como contribuyente por imposición
 personal sobre la renta:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 631
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 809
 
-# Pag. 632
+# Pag. 810
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Rentas obtenidas en territorio español que estén sujetas y exentas de tributación
@@ -25366,9 +31534,9 @@ deducibles los de administración y depósito de valores negociables. Cuando se 
 de la prestación de asistencia técnica, del arrendamiento de bienes muebles, negocios o minas o de
 subarrendamientos, se deducirán de los rendimientos íntegros los gastos necesarios para su obtención y, en
 su caso, el importe del deterioro sufrido por los bienes o derechos de los que procedan los ingresos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 632
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 810
 
-# Pag. 633
+# Pag. 811
 
 Régimen de atribución de rentas
 En ningún caso la entidad de régimen de atribución podrá aplicar la reducción del 30 por 100
@@ -25412,9 +31580,9 @@ reducciones.
 Los gastos propios de cada uno de los comuneros, socios o partícipes que, por no haberse
 pactado su pago con cargo a la entidad en régimen de atribución de renta, sean satisfechos
 por cada uno de ellos tendrán el carácter de deducibles para ellos, siempre que exista la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 633
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 811
 
-# Pag. 634
+# Pag. 812
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 debida correlación con la obtención de los ingresos. La deducibilidad de estos gastos se
@@ -25455,9 +31623,9 @@ permanente que no sean personas físicas, no resultarán de aplicación los coef
 reductores o de abatimiento a que se refiere la disposición transitoria novena de la Ley
 del IRPF.
 5. Imputación de rentas inmobiliarias
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 634
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 812
 
-# Pag. 635
+# Pag. 813
 
 Régimen de atribución de rentas
 La determinación de la renta atribuible se efectuará conforme a las normas del IRPF que
@@ -25497,9 +31665,9 @@ fuente. El exceso se computará en los cuatro años siguientes conforme vayan ob
 rentas positivas del mismo país y fuente.
 Calificación de la renta atribuida y criterios de atribución
 Normativa: Art. 88 Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 635
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 813
 
-# Pag. 636
+# Pag. 814
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Las rentas obtenidas por las entidades incluidas en este régimen que deban atribuirse a los
@@ -25539,9 +31707,9 @@ rentas inmobiliarias deberá declararse en el apartado "C" de la declaración.
 Obligaciones tributarias de las entidades en régimen de
 atribución de rentas
 1. Obligaciones de información
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 636
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 814
 
-# Pag. 637
+# Pag. 815
 
 Régimen de atribución de rentas
 Normativa: Arts. 90 Ley IRPF y 70 Reglamento IRPF. Véase también Orden
@@ -25584,9 +31752,9 @@ así como el texto refundido de la Ley de Sociedades de Capital, aprobado por el
 La obligación de presentar la declaración informativa anual deberá ser cumplida por quien
 tenga la consideración de representante de la entidad de acuerdo con lo previsto en la
 normativa general tributaria, o por sus miembros contribuyentes por el IRPF o por el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 637
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 815
 
-# Pag. 638
+# Pag. 816
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Impuesto sobre Sociedades en el caso de entidades constituidas en el extranjero.
@@ -25620,9 +31788,9 @@ b. Obligaciones a cargo de cada uno de los socios, comuneros o partícipes:
 Imputación de rentas de las agrupaciones de
 interés económico, españolas y europeas, y de las
 uniones temporales de empresas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 638
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 816
 
-# Pag. 639
+# Pag. 817
 
 Imputación de rentas de las agrupaciones de interés económico, españolas y europeas, y de las uniones temporales de empresas
 Normativa: Arts. 43 a 47 LIS
@@ -25660,9 +31828,9 @@ de los socios, minorando la cuota según corresponda por aplicación de las norm
 IRPF o del Impuesto sobre Sociedades, según que el socio sea contribuyente,
 respectivamente, de los citados impuestos.
 • Las retenciones e ingresos a cuenta correspondientes a la entidad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 639
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 817
 
-# Pag. 640
+# Pag. 818
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 La reserva de nivelación de bases imponibles a que se refiere el artículo 105 de la LIS se
@@ -25701,9 +31869,9 @@ Normativa: Art. 91 Ley IRPF
 El régimen de transparencia fiscal internacional supone la imputación a una persona o
 entidad residente en territorio español de determinadas rentas obtenidas por una entidad
 participada mayoritariamente que resida en el extranjero cuando la imposición sobre esas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 640
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 818
 
-# Pag. 641
+# Pag. 819
 
 Imputación de rentas en el régimen de transparencia fiscal internacional
 rentas en el extranjero es notoriamente inferior a la que se hubiera producido en territorio
@@ -25741,9 +31909,9 @@ mismas rentas en el Impuesto sobre Sociedades español.
 Delimitación negativa: entidades no residentes en territorio español
 excluidas del régimen de transparencia fiscal internacional
 Normativa: Art. 91.14 Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 641
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 819
 
-# Pag. 642
+# Pag. 820
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 La imputación de rentas en el régimen de transparencia fiscal internacional no es de
@@ -25782,9 +31950,9 @@ formular cuentas anuales consolidadas, o bien que su constitución y operativa r
 motivos económicos válidos.
 Se entenderá que el grupo de sociedades a que se refiere el artículo 42 del Código de Comercio incluye las
 entidades multigrupo y asociadas en los términos de la legislación mercantil.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 642
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 820
 
-# Pag. 643
+# Pag. 821
 
 Imputación de rentas en el régimen de transparencia fiscal internacional
 • Rentas obtenidas de entidades que desarrollen actividades económicas
@@ -25822,9 +31990,9 @@ e. Transmisión de los bienes y derechos referidos en las letras a), b), c) y d)
 que genere rentas.
 f. Instrumentos financieros derivados, excepto los designados para cubrir un riesgo
 específicamente identificado derivado de la realización de actividades económicas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 643
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 821
 
-# Pag. 644
+# Pag. 822
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 g. Actividades de seguros, crediticias, operaciones de arrendamiento financiero y
@@ -25863,9 +32031,9 @@ acuerdo social, entendiéndose aplicadas las últimas cantidades abonadas a dich
 reservas.
 Importante: una misma renta positiva solamente podrá ser objeto de imputación por
 una sola vez, cualquiera que sea la forma y la entidad en que se manifieste.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 644
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 822
 
-# Pag. 645
+# Pag. 823
 
 Imputación de rentas en el régimen de transparencia fiscal internacional
 Determinación del importe de la renta positiva a imputar y
@@ -25899,9 +32067,9 @@ duración superior a 12 meses.
 Medidas para evitar la doble imposición
 Deducción de la cuota líquida del IRPF
 Normativa: Art. 91.9 Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 645
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 823
 
-# Pag. 646
+# Pag. 824
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Será deducible de la cuota líquida del IRPF el impuesto o gravamen efectivamente satisfecho
@@ -25939,9 +32107,9 @@ computará por la diferencia entre el valor de adquisición y de titularidad y e
 transmisión de aquellas.
 A tal efecto, el valor de adquisición y de titularidad se estimará integrado por:
 (+) El precio o cantidad desembolsada para su adquisición.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 646
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 824
 
-# Pag. 647
+# Pag. 825
 
 Imputación de rentas en el régimen de transparencia fiscal internacional
 (+) El importe de los beneficios sociales que, sin efectiva distribución, hubiesen sido
@@ -25980,9 +32148,9 @@ Obligaciones formales especificas derivadas del régimen de
 transparencia fiscal internacional
 Normativa: Art. 91.11 Ley IRPF. Véase también orden de aprobación del modelo del
 IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 647
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 825
 
-# Pag. 648
+# Pag. 826
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Los contribuyentes a quienes resulte de aplicación este régimen deberán presentar
@@ -26015,9 +32183,9 @@ b. En las oficinas de Correos, en la forma que reglamentariamente se establezca.
 c. En las representaciones diplomáticas u oficinas consulares de España en el extranjero.
 d. En las oficinas de asistencia en materia de registros.
 e. En cualquier otro que establezcan las disposiciones vigentes.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 648
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 826
 
-# Pag. 649
+# Pag. 827
 
 Imputación de rentas por la cesión de derechos de imagen
 Imputación de rentas por la cesión de derechos de
@@ -26055,9 +32223,9 @@ titular del derecho de imagen sean inferiores al 85 por 100 de la suma de los ci
 rendimientos más la total contraprestación a cargo de la persona o entidad con la que el
 contribuyente mantiene la relación laboral y que ha obtenido la cesión de los derechos de
 imagen.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 649
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 827
 
-# Pag. 650
+# Pag. 828
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Contenido del régimen especial y momento de la imputación
@@ -26094,9 +32262,9 @@ a. El impuesto o impuestos de naturaleza idéntica o similar al IRPF o al Impues
 Sociedades que, satisfecho en el extranjero por la persona o entidad no residente primera
 cesionaria, corresponda a la parte de la renta neta derivada de la cuantía que debe incluir
 en su base imponible.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 650
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 828
 
-# Pag. 651
+# Pag. 829
 
 Imputación de rentas por la cesión de derechos de imagen
 b. El IRPF o el Impuesto sobre Sociedades que, satisfecho en España por la persona o
@@ -26135,9 +32303,9 @@ imputadas
 Normativa: Art. 92.6 de la Ley IRPF
 El régimen de imputación que se comenta en este apartado se complementa con las medidas
 establecidas para evitar la sobreimposición de las rentas imputadas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 651
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 829
 
-# Pag. 652
+# Pag. 830
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 A tal efecto, no se imputarán en el impuesto personal de los socios de la primera cesionaria
@@ -26172,9 +32340,9 @@ Conforme al artículo 1 de la Ley 35/2003 de 4 de noviembre, de Instituciones de
 de fondos, bienes o derechos del público para gestionarlos e invertirlos en bienes, derechos, valores u
 otros instrumentos, financieros o no, siempre que el rendimiento del inversor se establezca en función
 de los resultados colectivos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 652
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 830
 
-# Pag. 653
+# Pag. 831
 
 Imputación de rentas por socios o partícipes de instituciones de inversión colectiva constituidas en países o territorios calificados como jurisdicción no cooperativa
 Aquellas actividades cuyo objeto sea distinto del descrito en el párrafo anterior no tendrán el carácter
@@ -26216,9 +32384,9 @@ constituidas en países o territorios calificados reglamentariamente como jurisd
 cooperativa deben imputar cada año, aunque no se haya producido la transmisión o
 reembolso, en la parte general de la base imponible la diferencia positiva entre el valor
 liquidativo de la participación al día del cierre del período impositivo y su valor de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 653
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 831
 
-# Pag. 654
+# Pag. 832
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 adquisición al inicio del citado período. A estos efectos, se presumirá, salvo prueba en
@@ -26256,9 +32424,9 @@ Los dividendos y participaciones en beneficios distribuidos por las institucione
 colectiva, que procedan de beneficios obtenidos con anterioridad a 1 de enero de 1999, se
 integrarán en la base imponible de los socios o partícipes de los mismos. A estos efectos, se
 entenderá que las primeras reservas distribuidas han sido dotadas con los primeros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 654
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 832
 
-# Pag. 655
+# Pag. 833
 
 Imputación de rentas por socios o partícipes de instituciones de inversión colectiva constituidas en países o territorios calificados como jurisdicción no cooperativa
 beneficios ganados.
@@ -26297,9 +32465,9 @@ Respecto de la definición de jurisdicciones no cooperativas sus apartados 1 y 2
 como los regímenes fiscales perjudiciales, que se determinen por la Ministra de Hacienda
 mediante Orden Ministerial conforme a los criterios que se establecen en los apartados
 siguientes de este artículo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 655
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 833
 
-# Pag. 656
+# Pag. 834
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 2. La relación de países y territorios que tienen la consideración de jurisdicciones no
@@ -26338,9 +32506,9 @@ elemento indiciario de esta.
 jurisdicciones no cooperativas se podrá actualizar atendiendo a los criterios del Código de
 Conducta en materia de Fiscalidad Empresarial de la Unión Europea o del Foro de
 Regímenes Fiscales Perjudiciales de la OCDE.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 656
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 834
 
-# Pag. 657
+# Pag. 835
 
 Imputación de rentas por socios o partícipes de instituciones de inversión colectiva constituidas en países o territorios calificados como jurisdicción no cooperativa
 Atención: todas referencias efectuadas en la normativa del IRPF a paraísos fiscales, a
@@ -26381,9 +32549,9 @@ la lista de países relacionados en la Orden HFP/115/2023, de 9 de febrero, los 
 territorios: Antigua y Barbuda, Brunei, Islas Cook, Granada, Jordania, Líbano, Liberia,
 Liechtenstein, Macao, Mauricio, Mónaco, Monserrat, Nauru, San Vicente y las Granadinas, y
 Santa Lucía.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 657
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 835
 
-# Pag. 658
+# Pag. 836
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 Atención: no obstante, téngase en cuenta que la Orden HFP/115/2023, de 9 de febrero,
@@ -26420,9 +32588,9 @@ ejercicio 2024.
 22. Seychelles.
 23. Trinidad y Tobago.
 24. Vanuatu.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 658
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 836
 
-# Pag. 659
+# Pag. 837
 
 Régimen especial: Ganancias patrimoniales por cambio de residencia
 Régimen especial: Ganancias patrimoniales por
@@ -26462,9 +32630,9 @@ neto se determina en el método de estimación directa, modalidad normal. De acu
 con los datos y registros contables de la entidad, los ingresos del ejercicio han
 ascendido a 50.000 euros, siendo los gastos deducibles, incluidas las amortizaciones
 fiscalmente computables, de 20.000 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 659
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 837
 
-# Pag. 660
+# Pag. 838
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 • El día 10 de enero de 2025 ha vendido en bolsa por 150.000 euros, descontados los
@@ -26510,9 +32678,9 @@ Total gastos deducibles: 7.260,00
 1.3. Rendimientos de actividad económica:
 • Ingresos íntegros: 50.000
 • Gastos deducibles, incluidas amortizaciones: 20.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 660
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 838
 
-# Pag. 661
+# Pag. 839
 
 Caso práctico
 • Rendimiento neto (50.000 - 20.000) = 30.000
@@ -26551,9 +32719,9 @@ Total rendimiento neto computable del capital mobiliario (900 + 600 – 5) = 1.4
 2.3. Rendimiento actividades económicas:
 • Rendimiento neto atribuido: 15.000
 2.4. Ganancias patrimoniales a integrar en la base imponible del ahorro: (2)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 661
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 839
 
-# Pag. 662
+# Pag. 840
 
 Capítulo 10. Regímenes especiales: imputación y atribución de rentas
 • Renta imputable (25.000 + 25.000) = 50.000
@@ -26572,9 +32740,9 @@ aplicación de los porcentajes de reducción incrementados.(Volver)
 (2) Al tratarse en ambos casos de ganancias obtenidas por la transmisión de elementos patrimoniales (venta de
 acciones e inmueble) su importe se integra en la base imponible del ahorro. Con relación a las ganancias y
 pérdidas que integran la base imponible del ahorro véase el Capítulo 11. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 662
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 840
 
-# Pag. 663
+# Pag. 841
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Capítulo 11. Ganancias y pérdidas
@@ -26604,9 +32772,9 @@ fincas rústicas, acciones, etc. y, entre las segundas, las herencias, legados y
 deriven de una transmisión previa. Es el caso, entre otros, de la obtención de premios de
 cualquier tipo, ya sean en metálico o en especie, de subvenciones, etc.
 • Las permutas de bienes o derechos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 663
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 841
 
-# Pag. 664
+# Pag. 842
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 • Las pérdidas debidamente justificadas en elementos patrimoniales.
@@ -26652,9 +32820,9 @@ Respecto a los excesos de adjudicación debe tenerse en cuenta la Resolución de
 Administrativo Central (TEAC) de 7 de junio de 2018, Reclamación núm. 00/02488/2017, recaída en
 recurso extraordinario de alzada para unificación de criterio, cuyos criterios se recogen en el cuadro
 resumen al que puede acceder al final del capítulo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 664
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 842
 
-# Pag. 665
+# Pag. 843
 
 Concepto
 En estos tres supuestos (división de la cosa común, disolución de la sociedad de
@@ -26693,9 +32861,9 @@ la cuantía legal o judicialmente reconocida.
 Véase esta exención del artículo 7.d) Ley IRPF en el Capítulo 2 de este Manual.
 • Premios literarios, artísticos o científicos, relevantes, expresamente declarados exentos.
 Véase esta exención del artículo 7.l) Ley IRPF en el Capítulo 2 de este Manual.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 665
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 843
 
-# Pag. 666
+# Pag. 844
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 • Premios de las loterías y apuestas organizadas por la Sociedad Estatal de Loterías y
@@ -26735,9 +32903,9 @@ entidad, que constituyen rendimientos de capital mobiliario.
 • Transmisión, reembolso, amortización, canje o conversión de cualquier clase de activos
 representativos de la captación y utilización de capitales ajenos, que únicamente generan
 rendimientos de capital mobiliario.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 666
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 844
 
-# Pag. 667
+# Pag. 845
 
 Concepto
 • Resultados derivados de operaciones de capitalización y de contratos de seguro de vida o
@@ -26780,9 +32948,9 @@ efectuados con posterioridad al 23 de septiembre de 2010 por sociedades de inver
 También pueden producirse efectos fiscales inmediatos en el caso de reducción de capital
 que tenga por finalidad la devolución de aportaciones y no proceda de beneficios no
 distribuidos, correspondiente a valores no admitidos a negociación en alguno de los
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 667
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 845
 
-# Pag. 668
+# Pag. 846
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 mercados regulados de valores definidos en la Directiva 2014/65/UE del Parlamento Europeo
@@ -26829,9 +32997,9 @@ positiva entre el valor de transmisión correspondiente al valor nominal de los 
 efectivamente transmitidos y el valor de transmisión, se minorará del valor de adquisición de los restantes
 valores o participaciones homogéneos hasta su anulación. El exceso que pudiera resultar tributará como
 ganancia patrimonial.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 668
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 846
 
-# Pag. 669
+# Pag. 847
 
 Concepto
 b) Transmisiones lucrativas por causa de muerte del
@@ -26875,9 +33043,9 @@ dispone:
 6. En los casos de transmisión de participaciones "ínter vivos", en favor del cónyuge, descendientes o
 adoptados, de una empresa individual, un negocio profesional o de participaciones en entidades del donante a
 los que sea de aplicación la exención regulada en el apartado octavo del artículo 4 de la Ley 19/1991, de 6 de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 669
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 847
 
-# Pag. 670
+# Pag. 848
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 junio, del Impuesto sobre el Patrimonio, se aplicará una reducción en la base imponible para determinar la
@@ -26919,9 +33087,9 @@ desequilibrio económico en relación con la posición del otro, que implique un
 anterior en el matrimonio.
 Estas compensaciones no darán derecho a reducir la base imponible del pagador ni
 constituirá renta para el perceptor.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 670
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 848
 
-# Pag. 671
+# Pag. 849
 
 Concepto
 Este supuesto no podrá dar lugar, en ningún caso, a la actualización de los valores de los
@@ -26956,9 +33124,9 @@ patrimonio del contribuyente un período de tiempo, redondeado por exceso, super
 • 5 años, en el caso de acciones admitidas a negociación en alguno de los mercados
 secundarios oficiales de valores definidos en la Directiva 2004/39/CE del Parlamento
 Europeo y del Consejo, de 21 de abril de 2004, relativa a los mercados de instrumentos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 671
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 849
 
-# Pag. 672
+# Pag. 850
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 financieros, y representativos de la participación en fondos propios de sociedades o
@@ -26998,9 +33166,9 @@ Véase, dentro del Capítulo 16, en el apartado "Deducción por donativos", los 
 a las donaciones de bienes.
 B. Transmisión de vivienda habitual por mayores de 65 años o por
 personas en situación de dependencia severa o de gran dependencia
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 672
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 850
 
-# Pag. 673
+# Pag. 851
 
 Ganancias y pérdidas patrimoniales que no se integran en la base imponible del IRPF
 Normativa: Art. 33.4.b) y disposición adicional decimoquinta Ley IRPF
@@ -27040,9 +33208,9 @@ dependencia severa o de gran dependencia de conformidad con la Ley 39/2006, de 1
 diciembre.
 Véase el concepto de vivienda habitual a efectos de esta exención que contiene la disposición adicional
 vigésimo tercera de la Ley de IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 673
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 851
 
-# Pag. 674
+# Pag. 852
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Y, en concreto para el caso de separación o divorcio, téngase en cuenta el criterio interpretativo fijado
@@ -27076,9 +33244,9 @@ Estarán exentas en un 50 por 100 las ganancias patrimoniales que se pongan de m
 con ocasión de la transmisión de inmuebles urbanos adquiridos a título oneroso entre el 12
 de mayo de 2012 y el 31 de diciembre de 2012.
 La exención alcanza a inmuebles urbanos tanto afectos como no afectos a actividades económicas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 674
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 852
 
-# Pag. 675
+# Pag. 853
 
 Ganancias y pérdidas patrimoniales que no se integran en la base imponible del IRPF
 Esta exención parcial no resulta aplicable cuando el contribuyente hubiera adquirido o
@@ -27120,9 +33288,9 @@ refundido de la Ley Concursal, como consecuencia de:
 • Acuerdo de refinanciación judicialmente homologado a que se refería el artículo 71 bis
 y la disposición adicional cuarta de la Ley 22/2003, de 9 de julio, Concursal y que,
 desde el 1 de septiembre de 2020, se regula en el Título II del libro segundo, artículos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 675
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 853
 
-# Pag. 676
+# Pag. 854
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 596 a 630, del Real Decreto Legislativo 1/2020, de 5 de mayo, por el que se aprueba
@@ -27163,9 +33331,9 @@ demográfico (Programa PREE 5000), incluido en el Programa de regeneración y re
 demográfico del Plan de rehabilitación y regeneración urbana del Plan de Recuperación,
 Transformación y Resiliencia, así como su concesión directa a las comunidades
 autónomas;
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 676
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 854
 
-# Pag. 677
+# Pag. 855
 
 Ganancias y pérdidas patrimoniales que no se integran en la base imponible del IRPF
 • Real Decreto 737/2020, de 4 de agosto, por el que se regula el programa de ayudas para
@@ -27204,9 +33372,9 @@ cumpla el plazo de un año desde el inicio del procedimiento judicial distinto d
 por objeto la ejecución del crédito sin que este haya sido satisfecho.
 En ambos casos, al no proceder de la transmisión de elementos patrimoniales, la pérdida patrimonial se
 integrará en la base imponible general, de acuerdo lo dispuesto en el artículo 48 de la Ley del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 677
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 855
 
-# Pag. 678
+# Pag. 856
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 B. Las debidas a transmisiones lucrativas por actos “inter vivos” o a
@@ -27253,9 +33421,9 @@ como un supuesto de aplicación de renta a acciones de consumo del contribuyente
 contraprestación por la prestación de servicios profesionales. Se trata de gastos satisfechos en su ámbito
 particular, sin vinculación alguna con rendimientos de los que pudiera resultar su deducibilidad, por lo que no
 pueden computarse como pérdida patrimonial, no teniendo incidencia en la liquidación del impuesto.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 678
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 856
 
-# Pag. 679
+# Pag. 857
 
 Ganancias y pérdidas patrimoniales que no se integran en la base imponible del IRPF
 D. Las debidas a pérdidas en el juego obtenidas en el período impositivo
@@ -27295,9 +33463,9 @@ ejercicio en que se generan las derivadas de la transmisión de elementos patrim
 cuando se vuelvan a adquirir en un plazo determinado los mismos elementos patrimoniales
 transmitidos o, en el supuesto de que los elementos transmitidos fueran valores o
 participaciones, cuando se adquieran valores o participaciones homogéneos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 679
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 857
 
-# Pag. 680
+# Pag. 858
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Tienen esta consideración, aquellos que procedan de un mismo emisor y formen parte de
@@ -27341,9 +33509,9 @@ Esta limitación, recogida en el artículo 33.5.f) de la Ley del IRPF, tiene por
 fiscalmente pérdidas patrimoniales derivadas de transmisiones que, en la práctica, no suponen una salida real
 del patrimonio, al haberse recomprado los mismos valores en un breve plazo.
 A. Cuándo se considera que hay una recompra
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 680
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 858
 
-# Pag. 681
+# Pag. 859
 
 Ganancias y pérdidas patrimoniales que no se integran en la base imponible del IRPF
 Se considera que existe una recompra cuando se adquieren valores homogéneos dentro de los dos
@@ -27386,9 +33554,9 @@ La valoración de las acciones en la citada fecha, según su cotización en el m
 ascendió a 7.500 euros, cantidad esta que el hijo declaró como valor de las mismas a
 efectos del Impuesto sobre Sucesiones y Donaciones.
 Solución:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 681
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 859
 
-# Pag. 682
+# Pag. 860
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 En esta operación se han producido dos ganancias patrimoniales:
@@ -27429,9 +33597,9 @@ La compensación percibida por la hermana a quien no se adjudica el bien cuando 
 la cosa común, comportaría para ella una ganancia patrimonial sujeta al IRPF, al existir
 una actualización del valor de ese bien entre el momento de su adquisición (3.500 ÷ 2 =
 1.750 euros) y el de su adjudicación (30.000 ÷ 2 = 15.000 euros) y ser esa diferencia de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 682
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 860
 
-# Pag. 683
+# Pag. 861
 
 Ganancias y pérdidas patrimoniales que no se integran en la base imponible del IRPF
 valor positiva (15.000 - 1.750 = 13.250 euros).
@@ -27466,9 +33634,9 @@ Determinación del importe de las ganancias o
 pérdidas patrimoniales: normas generales
 Derivadas de transmisiones onerosas o lucrativas
 Reglas generales de cálculo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 683
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 861
 
-# Pag. 684
+# Pag. 862
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Normativa: Arts. 34 a 36 Ley IRPF y 40 Reglamento IRPF
@@ -27511,9 +33679,9 @@ aquellos que resulten de la aplicación de las normas del ISD, sin que puedan ex
 del valor de mercado.
 De acuerdo con las citadas normas, se tomará el valor real de los bienes y derechos minorado por las
 cargas y deudas que fueren deducibles.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 684
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 862
 
-# Pag. 685
+# Pag. 863
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 A este respecto, el Tribunal Supremo en reiterada jurisprudencia, asimila valor real a valor normal de
@@ -27562,9 +33730,9 @@ Importante: lo establecido para los pactos sucesorios solamente será de aplicac
 a las transmisiones de bienes efectuadas con posterioridad al 11 de julio de 2021
 que hubieran sido adquiridos de forma lucrativa por causa de muerte en virtud de
 contratos o pactos sucesorios con efectos de presente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 685
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 863
 
-# Pag. 686
+# Pag. 864
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Véase al respecto la disposición transitoria primera.4 de la Ley 11/2021, de 9 de
@@ -27606,9 +33774,9 @@ enero de 2003.
 En relación con el cómputo de las amortizaciones, debe tenerse en cuenta que:
 • No procede computar amortización por aquellos bienes no susceptibles de depreciación como, por
 ejemplo, los terrenos, los valores mobiliarios, etc.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 686
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 864
 
-# Pag. 687
+# Pag. 865
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 • Las amortizaciones "fiscalmente deducibles" corresponden a los inmuebles o muebles afectos a
@@ -27656,9 +33824,9 @@ b. De la cantidad anterior podrán deducirse los gastos y tributos inherentes a 
 excluidos los intereses, en cuanto hubieren resultado satisfechos por el transmitente.
 Precisión: tratamiento de las cantidades entregadas en concepto de arras en caso de transmisión de un
 inmueble.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 687
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 865
 
-# Pag. 688
+# Pag. 866
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 El contrato de arras es un documento privado en virtud del cual comprador y vendedor pactan la reserva de la
@@ -27705,9 +33873,9 @@ dicho y cada una de las mejoras realizadas, teniendo en cuenta que si se hubiese
 mejoras en los elementos patrimoniales transmitidos se tomará como período de
 permanencia de estas en el patrimonio del contribuyente el número de años que medie entre
 la fecha en que se hubiesen realizado y el 31 de diciembre de 1996, redondeado por exceso.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 688
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 866
 
-# Pag. 689
+# Pag. 867
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 Esquemas-resumen
@@ -27738,9 +33906,9 @@ de prestación de asistencia técnica que no constituya actividad económica).
 Donaciones con el límite del valor de mercado.
 (-) Gastos y tributos inherentes a la transmisión satisfechos por el transmitente.
 = Valor de transmisión
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 689
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 867
 
-# Pag. 690
+# Pag. 868
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Régimen transitorio aplicable a las ganancias patrimoniales
@@ -27779,9 +33947,9 @@ f. Que el valor de transmisión de todos los elementos patrimoniales a cuya gana
 patrimonial le hubiera resultado de aplicación este régimen transitorio, transmitidos desde
 el 1 de enero de 2015 hasta la fecha de transmisión del elemento patrimonial, no haya
 superado 400.000 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 690
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 868
 
-# Pag. 691
+# Pag. 869
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 2. Cálculo de la parte de la ganancia patrimonial generada antes de 20 de
@@ -27816,9 +33984,9 @@ y la generada con anterioridad al 20 de enero de 2006.
 Tratándose de valores admitidos a negociación en alguno de los mercados secundarios
 oficiales de valores definidos en la Directiva 2004/39/CE del Parlamento Europeo y del
 Consejo, de 21 de abril de 2004, relativa a los mercados de instrumentos financieros y de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 691
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 869
 
-# Pag. 692
+# Pag. 870
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 acciones o participaciones en instituciones de inversión colectiva, al existir una cotización
@@ -27857,9 +34025,9 @@ inferior al Valor Patrimonio 2005 ganancia patrimonial: patrimonial es reducible
 = Ganancia patrimonial = Ganancia patrimonial generada
 generada antes del 20-01- antes del 20-01-2006
 2006
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 692
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 870
 
-# Pag. 693
+# Pag. 871
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 SITUACIÓN 2
@@ -27899,9 +34067,9 @@ el número de años, redondeado por exceso, que medie entre la fecha de adquisic
 de ser anterior al 31 de diciembre de 1994) y el 31 de diciembre de 1996. De acuerdo con
 esta regla, un año y un día constituirán dos años; dos años y un día constituirán tres años, y
 así sucesivamente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 693
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 871
 
-# Pag. 694
+# Pag. 872
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 En el caso de derechos de suscripción se tomará como período de permanencia el que
@@ -27940,9 +34108,9 @@ participaciones cotizadas en mercados oficiales adquiridas con anterioridad al 3
 diciembre de 1994 cuando su valor de adquisición sea superior al valor a efectos del
 Impuesto sobre el Patrimonio de 2005, dado que en ese caso no se aplicarían los
 coeficientes de abatimiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 694
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 872
 
-# Pag. 695
+# Pag. 873
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 B. Valor de transmisión inferior a 400.000 euros
@@ -27978,9 +34146,9 @@ VT1: Valor de transmisión acumulado correspondiente a todos los elementos patri
 patrimonial le hubiera resultado de aplicación este régimen, transmitidos desde 01-01-2015 hasta la fecha de
 transmisión del elemento patrimonial a cuya ganancia se quiere aplicar la D.T. 9ª Ley del IRPF.
 VT2: Valor de transmisión del elemento patrimonial respecto de cuya ganancia se calcula la reducción.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 695
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 873
 
-# Pag. 696
+# Pag. 874
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Situaciones Aplicación de los coeficientes de abatimiento
@@ -28020,9 +34188,9 @@ o participaciones que tengan la consideración de valores homogéneos, se deber�
 las transmisiones le pudiera resultar de aplicación lo establecido en la mencionada disposición transitoria.
 3.3. Aplicación los coeficientes reductores o de abatimiento que
 correspondan
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 696
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 874
 
-# Pag. 697
+# Pag. 875
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 Una vez determinado el importe de la ganancia patrimonial reducible, se aplican los
@@ -28061,9 +34229,9 @@ de Inversión, Mobiliaria e Inmobiliaria.
 En el cuadro siguiente figuran los porcentajes reductores aplicables a la ganancia patrimonial
 reducible en función de la naturaleza del elemento patrimonial que la genera y el período de
 permanencia del elemento en el patrimonio del contribuyente a 31 de diciembre de 1996.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 697
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 875
 
-# Pag. 698
+# Pag. 876
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Naturaleza del elemento patrimonial transmitido
@@ -28098,9 +34266,9 @@ procedentes de bienes o derechos adquiridos antes del 31 de diciembre de 1996 co
 antelación superior a:
 • 5 años, en el caso de acciones admitidas a negociación en mercados secundarios
 oficiales. Es decir, las adquiridas antes del 31 de diciembre de 1991.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 698
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 876
 
-# Pag. 699
+# Pag. 877
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 • 10 años, si se trata de bienes inmuebles y derechos sobre los mismos. Es decir, los
@@ -28138,9 +34306,9 @@ Bono cultural joven:
 La Ley 22/2021, de 28 de diciembre, de Presupuestos Generales del Estado para el año
 2022 (BOE de 29 de diciembre) creó, con efectos 1 de enero de 2022, el denominado
 “Bono Cultural Joven”, destinado a facilitar el acceso del público joven a la cultura.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 699
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 877
 
-# Pag. 700
+# Pag. 878
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Se trata de una ayuda para la adquisición de productos y servicios culturales ofrecidos
@@ -28182,9 +34350,9 @@ salvo que este último hubiese sido repercutido al contribuyente.
 En el caso de costas judiciales deben distinguirse dos situaciones:
 a. Contribuyente obligado —por sentencia judicial— al pago de los gastos de defensa
 jurídica en que ha incurrido la parte vencedora en el proceso.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 700
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 878
 
-# Pag. 701
+# Pag. 879
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 Se trata de una pérdida patrimonial, tanto por la indemnización como por los intereses
@@ -28235,9 +34403,9 @@ que al ser el vigente en el momento de presentación de su autoliquidación, era
 la doctrina de este Tribunal Central, vinculaba a la Administración Tributaria. Véanse las Resoluciones del
 TEAC de 29 de mayo de 2023, recursos núm. 00-02478-2022 y 00-08937-2022, recaídas en sendos recursos
 extraordinarios de alzada para la unificación de criterio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 701
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 879
 
-# Pag. 702
+# Pag. 880
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Importante: no se integrará en la base imponible del IRPF la devolución, en efectivo o a
@@ -28277,9 +34445,9 @@ Al haberse efectuado mejoras en el chalet en un año distinto al de su adquisici
 distinguirse la parte del valor de enajenación que corresponde a cada componente, es
 decir, al chalet y a la mejora, con objeto de aplicar el coeficiente reductor correspondiente a
 la ganancia patrimonial derivada de la transmisión del chalet.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 702
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 880
 
-# Pag. 703
+# Pag. 881
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 La determinación de la ganancia o pérdida patrimonial obtenida se efectuará distinguiendo
@@ -28312,9 +34480,9 @@ Ganancia patrimonial generada con posterioridad al 20-01-2006: (227.000 ÷ 11.80
 6.952(5) = 133.703,64
 2. Determinación de la ganancia patrimonial correspondiente a la mejora:
 Valor de transmisión: 150.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 703
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 881
 
-# Pag. 704
+# Pag. 882
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Valor de adquisición: 75.000
@@ -28357,9 +34525,9 @@ El valor de dichas acciones a efectos del Impuesto sobre el Patrimonio correspon
 ejercicio 2005 ascendió a 66.000 euros.
 Determinar el importe de la ganancia o pérdida patrimonial obtenida en dicha operación.
 Solución:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 704
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 882
 
-# Pag. 705
+# Pag. 883
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas generales
 1. Determinación de la ganancia o pérdida patrimonial total:
@@ -28392,9 +34560,9 @@ Ganancia patrimonial reducida (9.000 – 7.800) = 1.200
 4. Determinación de la ganancia patrimonial no reducible (generada a partir del 20-
 01-2006):
 Valor de transmisión: 75.000,00
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 705
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 883
 
-# Pag. 706
+# Pag. 884
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Valor a efectos del Impuesto sobre el Patrimonio 2005 (valor de adquisición): 66.000
@@ -28431,9 +34599,9 @@ valoración
 Además de las normas generales hasta aquí expuestas, la Ley contempla determinadas
 normas específicas de valoración para la determinación de los valores de adquisición, de
 transmisión o de ambos, en relación con las ganancias y pérdidas patrimoniales derivadas de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 706
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 884
 
-# Pag. 707
+# Pag. 885
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 los siguientes bienes o derechos:
@@ -28470,9 +34638,9 @@ antigüedad de estas acciones la que corresponda a las acciones de las cuales pr
 c. Valor de adquisición en caso de transmisiones de derechos de suscripción
 realizadas con anterioridad a 1 de enero de 2017
 Normativa: Disposición transitoria vigésima novena Ley IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 707
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 885
 
-# Pag. 708
+# Pag. 886
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Para la determinación del valor de adquisición de los valores, se deducirá el importe
@@ -28508,9 +34676,9 @@ liberadas recibidas la que corresponde a las acciones de las que proceden (5 de 
 Información Acciones adquiridas el 05-03-2001 Acciones liberadas Total
 Número de acciones 900 600 1.500
 Coste de adquisición 9.000 0 9.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 708
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 886
 
-# Pag. 709
+# Pag. 887
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Información Acciones adquiridas el 05-03-2001 Acciones liberadas Total
@@ -28527,9 +34695,9 @@ Valor de adquisición 9.000 500
 Ganancia patrimonial 6.000 500
 (*) De la transmisión de las 1.600 acciones, corresponden 1.500 a las adquiridas el 05-03-2001 (que incluyen las
 600 acciones totalmente liberadas) y 100 a las adquiridas parcialmente liberadas el 14-09-2011. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 709
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 887
 
-# Pag. 710
+# Pag. 888
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Transmisión de derechos de suscripción
@@ -28570,9 +34738,9 @@ ganancia patrimonial que se haya generado con anterioridad a 20 de enero de 2006
 sobre la que resultan aplicables los coeficientes reductores o de abatimiento) de la generada
 con posterioridad a dicha fecha sobre la que no resultan aplicables los coeficientes
 reductores o de abatimiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 710
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 888
 
-# Pag. 711
+# Pag. 889
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 La determinación de la ganancia patrimonial generada con anterioridad a 20 de enero de
@@ -28612,9 +34780,9 @@ homogéneos preexistentes en su patrimonio, se tomará como valor de adquisició
 de cotización de los valores en la fecha de cancelación del préstamo. Este valor de
 cotización se tomará como valor de transmisión para calcular la renta derivada de la
 devolución efectuada con valores homogéneos preexistentes.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 711
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 889
 
-# Pag. 712
+# Pag. 890
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Téngase en cuenta que, si bien la disposición adicional decimoctava de la Ley 62/2003 ha sido derogada en lo
@@ -28649,9 +34817,9 @@ detalle:
 1º. Determinación de la ganancia o pérdida patrimonial total:
 Información Adquiridas el 02-02-1990 Adquiridas el 06-05-1995
 Número de acciones vendidas (400) 250 150
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 712
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 890
 
-# Pag. 713
+# Pag. 891
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Información Adquiridas el 02-02-1990 Adquiridas el 06-05-1995
@@ -28682,9 +34850,9 @@ Valor de transmisión: 4.500
 Valor a efectos I. Patrimonio 2005 (valor de adquisición): 3.750
 Ganancia patrimonial no reducible (4.500 - 3.750) = 750
 5º. Determinación de la ganancia patrimonial computable:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 713
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 891
 
-# Pag. 714
+# Pag. 892
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 La ganancia patrimonial computable asciende a: (750+ 150) = 900
@@ -28727,9 +34895,9 @@ totalmente.
 Compensación por los Dividendo: Rendimiento Dividendo: Rendimiento del capital mobiliario
 derechos de asignación del capital mobiliario sometido a retención.
 no ejercidos ni sometido a retención.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 714
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 892
 
-# Pag. 715
+# Pag. 893
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Opciones del Tributación
@@ -28766,9 +34934,9 @@ Capital, aprobado por el Real Decreto Legislativo 1/2010, de 2 de julio (BOE de 
 asignación gratuita de las nuevas acciones en los casos de aumento de capital con cargo a reservas les
 resultarán aplicables las reglas de transmisibilidad previstas en dicho precepto para los derechos de
 suscripción preferente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 715
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 893
 
-# Pag. 716
+# Pag. 894
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 En consecuencia, siguiendo régimen fiscal establecido para los derechos de suscripción preferente, y de
@@ -28807,9 +34975,9 @@ Precisión: el hecho de tratarse de acciones de una sociedad que ha dejado de co
 secundario oficial o existan dificultades para su venta no comporta de forma automática la existencia de una
 pérdida patrimonial para los socios, sino que es necesaria la disolución y liquidación de la sociedad. Conforme
 a lo anterior, en su caso, se podrá computar una pérdida patrimonial en los términos establecidos en el artículo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 716
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 894
 
-# Pag. 717
+# Pag. 895
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 37.1. e) de la Ley del IRPF.
@@ -28851,9 +35019,9 @@ dicha transmisión, sin que pueda computarse, en estos casos, un valor de adquis
 dichos derechos y para el que se tomará como período de permanencia el comprendido
 entre el momento de la adquisición del valor del que proceda el derecho y el de la
 transmisión de este último.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 717
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 895
 
-# Pag. 718
+# Pag. 896
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 b. Valor de adquisición de las acciones parcialmente liberadas.
@@ -28893,9 +35061,9 @@ Para determinar la ganancia o pérdida patrimonial obtenida es preciso, en prime
 identificar las acciones vendidas dentro de la totalidad de las poseídas. Para ello, debe
 aplicarse el criterio legal de que las acciones vendidas son aquellas que se adquirieron en
 primer lugar (criterio FIFO). Es decir que las 3.000 acciones vendidas corresponden a las
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 718
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 896
 
-# Pag. 719
+# Pag. 897
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 1.500 suscritas el 03-01-1991 y a 1.500 de las adquiridas el 21-12-2000.
@@ -28926,9 +35094,9 @@ c. Ganancia patrimonial reducida
 Ganancia patrimonial reducida (12.309,31– 7.301,07) = 5.008,23
 5. Determinación de la ganancia patrimonial no reducible (generada a partir del 20-
 01-2006):
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 719
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 897
 
-# Pag. 720
+# Pag. 898
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Ganancia generada a partir del 20-01-2006: (28.500 ÷ 12.725 días) x 7.229 días (4) =
@@ -28971,9 +35139,9 @@ reductores o de abatimiento.
 La determinación de la ganancia patrimonial generada con anterioridad a 20 de enero de
 2006 y la aplicación, en su caso, de los coeficientes reductores se efectuará de acuerdo con
 la regla general comentada en este mismo Capítulo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 720
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 898
 
-# Pag. 721
+# Pag. 899
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Especialidades en la tributación de los socios contribuyentes del
@@ -29009,9 +35177,9 @@ socios o beneficios contabilizados.
 En consecuencia, se establece para estas sociedades civiles una regla especial equivalente
 a la anterior para el cálculo del valor de adquisición de las participaciones, teniendo en
 cuenta la inexistencia de contabilidad y sin que existan en este caso ajustes al valor de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 721
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 899
 
-# Pag. 722
+# Pag. 900
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 adquisición derivados del coste de titularidad, que consiste en entender que a 1 de enero de
@@ -29050,9 +35218,9 @@ a la adquisición (VT2) (2) = 4.000
 Valor de titularidad (Reservas) VT = VA + VT1 – VT2
 VT = (VA) 30.000 + (VT1) 5.000 – (VT2) 4.000 = 31.000
 3º. Ganancia patrimonial = Valor de transmisión – Valor de titularidad (VT) = 14.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 722
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 900
 
-# Pag. 723
+# Pag. 901
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Ganancia patrimonial = 45.000 – 31.000 = 14.000
@@ -29091,9 +35259,9 @@ a. El precio efectivamente pactado en la transmisión.
 b. El valor de cotización en mercados secundarios oficiales de valores definidos en
 la Directiva 2014/65/UE del Parlamento Europeo y del Consejo, de 15 de mayo de 2014,
 relativa a los mercados de instrumentos financieros y, en particular, en sistemas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 723
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 901
 
-# Pag. 724
+# Pag. 902
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 multilaterales de negociación de valores previstos en el Capítulo I del Título X del texto
@@ -29134,9 +35302,9 @@ como ganancia patrimonial. Cuando no se hubieran transmitido la totalidad de los
 derechos de suscripción, se entenderá que los transmitidos correspondieron a los valores
 adquiridos en primer lugar.
 C. Identificación de los valores transmitidos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 724
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 902
 
-# Pag. 725
+# Pag. 903
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Para poder individualizar los valores transmitidos, especialmente cuando no se hubiera
@@ -29177,9 +35345,9 @@ acciones o participaciones suscritas el valor y fecha de adquisición de las tra
 reembolsadas.
 Este régimen de diferimiento fiscal en la tributación de las ganancias patrimoniales solo
 resulta aplicable en los siguientes casos:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 725
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 903
 
-# Pag. 726
+# Pag. 904
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 1. En los reembolsos de participaciones en instituciones de inversión colectiva que tengan la
@@ -29221,9 +35389,9 @@ noviembre, de instituciones de inversión colectiva, aprobado por el Real Decret
 de 13 de julio (BOE de 20 de julio), o bien tenga por objeto acciones de las denominadas
 sociedades de inversión de capital variable índice cotizadas (sigla SICAV índice
 cotizadas), conforme al mismo precepto.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 726
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 904
 
-# Pag. 727
+# Pag. 905
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Además, a partir del 1 de enero de 2022, tampoco será aplicable este régimen de
@@ -29263,9 +35431,9 @@ El traspaso de las participaciones de un fondo a otro se realiza el mismo día 1
 2025, siendo el valor liquidativo de las mismas a la citada fecha de 6.000 euros por
 participación.
 El valor y fecha de adquisición de las participaciones traspasadas es el siguiente:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 727
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 905
 
-# Pag. 728
+# Pag. 906
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Participaciones Fecha de adquisición Precio / participación Valor de adquisición
@@ -29299,9 +35467,9 @@ aportación o en el inmediato anterior.
 • El valor de mercado del bien o derecho aportado.
 El valor de transmisión que prevalezca deberá ser el que se considere como valor de
 adquisición de los títulos recibidos como consecuencia de la aportación no dineraria.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 728
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 906
 
-# Pag. 729
+# Pag. 907
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Precisión: en los supuestos en que se regularice en sede de persona física la ganancia o pérdida patrimonial
@@ -29341,9 +35509,9 @@ Valor de transmisión:
 3. Valor de mercado del solar: 138.000
 Valor de transmisión que prevalece (1): 138.600
 Valor de adquisición: 93.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 729
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 907
 
-# Pag. 730
+# Pag. 908
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Ganancia patrimonial (138.600 - 93.000) = 45.600
@@ -29381,9 +35549,9 @@ Patrimonio.
 de la entidad.
 3. Que se posean de manera ininterrumpida por el aportante durante el año anterior a la
 fecha del documento público en que se formalice la aportación.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 730
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 908
 
-# Pag. 731
+# Pag. 909
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Valoración de activos recibidos
@@ -29421,9 +35589,9 @@ recibidos, y
 El artículo 37.1.e) de la Ley del IRPF únicamente se refiere a “los casos de separación de los socios ...”,
 sin distinguir o precisar cuáles han de ser las causas de separación del socio de la sociedad ni limitarlas a
 los casos en que la normativa mercantil atribuye a los socios la posibilidad de ejercer el derecho a
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 731
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 909
 
-# Pag. 732
+# Pag. 910
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 separarse de la sociedad, por lo que debe entenderse que los supuestos de ‘separación de los socios’ que
@@ -29471,9 +35639,9 @@ misma, un solar cuyo valor contable a la citada fecha ascendía a 16.500 euros y
 la cantidad de 6.000 euros, que corresponden a reservas voluntarias de la sociedad. El
 valor de mercado del solar adjudicado se estima, según dictámenes periciales emitidos al
 efecto, en 132.000 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 732
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 910
 
-# Pag. 733
+# Pag. 911
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 La participación societaria fue adquirida por don R.O.L. el día 3 de mayo de 1993,
@@ -29509,9 +35677,9 @@ ganancia.
 Las reglas para la valoración de los bienes y la tributación aplicable al socio en función del
 resultado obtenido son las siguientes.
 Valoración de los bienes
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 733
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 911
 
-# Pag. 734
+# Pag. 912
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 El valor de adquisición y, en su caso, de titularidad de las acciones o participaciones en el
@@ -29547,9 +35715,9 @@ El valor de adquisición de cada uno de los restantes elementos de activo adjudi
 distintos de los créditos, dinero o signo que lo represente, era el que resultaba de distribuir el
 resultado positivo entre ellos en función del valor de mercado que resulte del balance final de
 liquidación de la sociedad que se extinguía.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 734
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 912
 
-# Pag. 735
+# Pag. 913
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Fecha de adquisición de elementos adjudicados distintos de los créditos,
@@ -29583,9 +35751,9 @@ La determinación de la ganancia patrimonial generada con anterioridad a 20 de e
 2006 y la aplicación, en su caso, de los coeficientes reductores se efectuará de acuerdo con
 las reglas de distribución comentadas en el apartado "Determinación del importe de las
 ganancias o pérdidas patrimoniales: normas generales", de este mismo Capítulo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 735
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 913
 
-# Pag. 736
+# Pag. 914
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Régimen especial de diferimiento de la tributación
@@ -29624,9 +35792,9 @@ particular, el régimen no se aplicará cuando la operación no se efectúe por 
 económicos válidos, tales como la reestructuración o la racionalización de las
 actividades de las entidades que participan en la operación, sino con la mera finalidad
 de conseguir una ventaja fiscal.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 736
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 914
 
-# Pag. 737
+# Pag. 915
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Pérdida de la condición de residente en territorio español
@@ -29666,9 +35834,9 @@ entidad adquirente no es residente en territorio español, dicha comunicación s
 la entidad transmitente. Y si ni la entidad adquirente ni la transmitente son residentes en
 territorio español, serán los socios, siempre que sean residentes en territorio español los que
 deben presentar la comunicación.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 737
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 915
 
-# Pag. 738
+# Pag. 916
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 7. Traspasos
@@ -29704,9 +35872,9 @@ Nota al ejemplo:
 (1) Las obras de reforma del local no pueden considerarse como precio de adquisición del derecho de traspaso, ya
 que dichas cantidades no fueron satisfechas para adquirir el derecho de traspaso que, de acuerdo con los datos
 del ejemplo, no fue adquirido mediante precio. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 738
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 916
 
-# Pag. 739
+# Pag. 917
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 8. Indemnizaciones o capitales asegurados por pérdidas o
@@ -29742,9 +35910,9 @@ Solución:
 Nota al ejemplo:
 (1) La determinación de la parte proporcional del valor de adquisición que corresponde al daño se determina
 aplicando el porcentaje del 60 por 100 al valor de adquisición del chalet (150.300 x 60%) = 90.180. (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 739
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 917
 
-# Pag. 740
+# Pag. 918
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 9. Permuta de bienes o derechos, incluido el canje de valores
@@ -29779,9 +35947,9 @@ La determinación de la ganancia patrimonial generada con anterioridad a 20 de e
 2006 y la aplicación, en su caso, de los coeficientes reductores se efectuará de acuerdo con
 las reglas de distribución comentadas en este mismo Capítulo.
 Ejemplo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 740
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 918
 
-# Pag. 741
+# Pag. 919
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Don A.O.P. transmitió el día 25 de junio de 2025 un solar de su propiedad a cambio de un
@@ -29816,9 +35984,9 @@ Ganancia patrimonial susceptible de reducción (233.533,61 x 400.000) ÷ 600.000
 155.689,07
 b. Reducción aplicable
 Número de años de permanencia hasta 31-12-1996: hasta 8 años
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 741
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 919
 
-# Pag. 742
+# Pag. 920
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Reducción por coeficientes de abatimiento (66,66% x 155.689,07) = 103.782,33
@@ -29859,9 +36027,9 @@ deducido de su contabilidad; siempre que se cumplan los requisitos:
 algún otro Estado miembro de la Unión Europea o en el de cualquier otro Estado siempre
 que, en este último caso, los valores recibidos sean representativos del capital social de
 una entidad residente en España.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 742
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 920
 
-# Pag. 743
+# Pag. 921
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 • Que la entidad que adquiera los valores sea residente en territorio español o esté
@@ -29901,9 +36069,9 @@ valor de mercado de las acciones o participaciones y el valor de estas calculado
 a lo indicado antes (esto es, por valor fiscal de los entregados), salvo que las acciones o
 participaciones queden afectos a un establecimiento permanente situado en territorio
 español.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 743
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 921
 
-# Pag. 744
+# Pag. 922
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 • Aplazamiento del pago de la deuda por cambio de residencia a otros
@@ -29943,9 +36111,9 @@ En la extinción de rentas vitalicias o temporales la ganancia o pérdida patrim
 computará, para el obligado al pago de aquellas, por diferencia entre el valor de
 adquisición del capital recibido y la suma de las rentas efectivamente satisfechas. En
 cuanto al rentista, este agota su tributación durante el cobro de la renta.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 744
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 922
 
-# Pag. 745
+# Pag. 923
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 11. Transmisiones de elementos patrimoniales a cambio de una
@@ -29980,9 +36148,9 @@ euros, incluidos los gastos y tributos inherentes a la transmisión.
 El contribuyente no había realizado desde 1 de enero de 2015 transmisión de elementos
 patrimoniales a cuya ganancia le fuera aplicable la disposición transitoria novena de la Ley
 del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 745
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 923
 
-# Pag. 746
+# Pag. 924
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Determinar las rentas fiscales derivadas de dicha operación en el ejercicio 2025.
@@ -30013,9 +36181,9 @@ Ganancia patrimonial no reducible (157.000 –88.820,27) = 68.179,73
 6. Determinación del rendimiento del capital mobiliario derivado de la anualidad.
 Rendimientos del capital mobiliario: (15.000 x 24%) (3) = 3.600
 Notas al ejemplo:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 746
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 924
 
-# Pag. 747
+# Pag. 925
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 (1) La ganancia patrimonial reducible es la que se estima generada antes del 20-01-2006. Su determinación se
@@ -30057,9 +36225,9 @@ reductores o de abatimiento.
 La determinación de la ganancia patrimonial generada con anterioridad a 20 de enero de
 2006 y la aplicación, en su caso, de los coeficientes reductores se efectuará de acuerdo con
 las reglas de distribución comentadas en este mismo Capítulo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 747
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 925
 
-# Pag. 748
+# Pag. 926
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Ejemplo: Transmisión o extinción de derechos reales de goce o disfrute
@@ -30095,9 +36263,9 @@ uno de los ejercicios. (Volver)
 13. Incorporaciones de bienes o derechos que no deriven de una
 transmisión
 Normativa: Art. 37. 1. l) Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 748
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 926
 
-# Pag. 749
+# Pag. 927
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 En las incorporaciones de bienes o derechos que no deriven de una transmisión, se
@@ -30135,9 +36303,9 @@ Normativa: Arts. 37.1.n) Ley IRPF y 40.2 Reglamento IRPF
 Sin perjuicio de la aplicación de las normas específicas de valoración hasta ahora
 comentadas que, en su caso, puedan resultar aplicables, para la determinación de la
 ganancia o pérdida patrimonial derivada de elementos afectos o desafectados con menos de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 749
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 927
 
-# Pag. 750
+# Pag. 928
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 tres años de antelación a la fecha de la transmisión, deberán tenerse en cuenta también las
@@ -30176,9 +36344,9 @@ De esta última regla se exceptúan los elementos afectos a actividades económi
 transmitan a partir de 31 de marzo de 2012, cuando los mismos hayan gozado de la
 libertad de amortización con o sin mantenimiento de empleo prevista en la disposición
 adicional trigésima de la Ley IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 750
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 928
 
-# Pag. 751
+# Pag. 929
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Precisión: En relación con la amortización del inmovilizado intangible de vida útil indefinida señalar que,
@@ -30217,9 +36385,9 @@ Tratándose de elementos patrimoniales actualizados de acuerdo con lo previsto e
 dirigidas a la consolidación de las finanzas públicas y al impulso de la actividad económica o,
 en su caso, en el artículo 5 del Real Decreto-ley 7/1996, de 7 de junio, la determinación de la
 ganancia o pérdida patrimonial obtenida se efectuará de acuerdo con las siguientes reglas:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 751
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 929
 
-# Pag. 752
+# Pag. 930
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 • La diferencia entre el precio de adquisición y las amortizaciones contabilizadas
@@ -30257,9 +36425,9 @@ Hasta
 Años 1 1 2 3 4 5 6 7 8 9 10 11 12
 Reducción 4% 8% 12% 19% 26% 33% 40% 47% 54% 61% 74% 87% 100%
 Ejemplo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 752
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 930
 
-# Pag. 753
+# Pag. 931
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Don J.V.C, empresario del taxi, que determina el rendimiento neto de su actividad en el
@@ -30299,9 +36467,9 @@ de las que hubieran sido fiscalmente deducibles de no haberse aplicado aquella.
 El citado exceso (esto es, la diferencia entre la amortización practicada y la que hubiera
 correspondido) tendrá, para el transmitente, la consideración de rendimiento íntegro de la
 actividad económica en el período impositivo en que se efectúe la transmisión.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 753
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 931
 
-# Pag. 754
+# Pag. 932
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Para el caso concreto de transmisión de determinados vehículos y nuevas infraestructuras de
@@ -30339,9 +36507,9 @@ Total amortizaciones: (26.244 + 486) = 26.730
 Total valor de adquisición (54.000 –26.730) =27.270
 Ganancia patrimonial (197.000 – 27.270) = 169.730
 Nota al ejemplo:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 754
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 932
 
-# Pag. 755
+# Pag. 933
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 (1) Al haberse efectuado la afectación del inmueble con anterioridad al 01-01-1999, se ha tomado como valor de
@@ -30349,9 +36517,9 @@ adquisición el valor del inmueble a efectos del Impuesto sobre el Patrimonio. E
 siguientes: el catastral, el declarado a efectos del Impuesto sobre Sucesiones y Donaciones y el comprobado por
 la Administración a efectos de este último tributo.
 (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 755
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 933
 
-# Pag. 756
+# Pag. 934
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Cuadro resumen de las reglas especiales
@@ -30392,9 +36560,9 @@ contribuyente en que se produzca la citada transmisión.
 La retención a practicar sobre las ganancias patrimoniales
 derivadas de la transmisión de derechos de suscripción es el 19
 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 756
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 934
 
-# Pag. 757
+# Pag. 935
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Fondos de inversión La ganancia o pérdida vendrá determinada por la diferencia entre
@@ -30436,9 +36604,9 @@ representativos de la participación del socio, y
 • El valor de mercado de los títulos, numerario o derechos
 recibidos o el valor de mercado de los entregados.
 Régimen especial de diferimiento fiscal en determinados casos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 757
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 935
 
-# Pag. 758
+# Pag. 936
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Traspasos La ganancia patrimonial se computará al cedente por el importe
@@ -30478,9 +36646,9 @@ Si el derecho está constituido sobre inmuebles que no generen
 rendimientos del capital inmobiliario, el derecho se consume por el
 uso, por lo que el valor de adquisición deberá minorarse
 proporcionalmente al tiempo de uso.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 758
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 936
 
-# Pag. 759
+# Pag. 937
 
 Determinación del importe de las ganancias o pérdidas patrimoniales: normas específicas de valoración
 Incorporación de bienes y derechos Se computará como ganancia patrimonial el valor de mercado de
@@ -30499,9 +36667,9 @@ más: Mejoras
 menos: Amortizaciones + enajenaciones previas + pérdidas
 Los coeficientes reductores del régimen transitorio no resultan
 aplicables a las ganancias patrimoniales obtenidas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 759
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 937
 
-# Pag. 760
+# Pag. 938
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Monedas virtuales
@@ -30542,9 +36710,9 @@ medidas de prevención y lucha contra el fraude fiscal, modificó la Ley del IRP
 incorporar ciertas obligaciones de información que han sido objeto de desarrollo
 reglamentario en los artículos 39 bis y 39 ter del RGAT, dando lugar a la aprobación de
 los modelos 172 y 173.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 760
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 938
 
-# Pag. 761
+# Pag. 939
 
 Monedas virtuales
 Veáse al respecto la Orden HFP/887/2023, de 26 de julio, por la que se aprueban el modelo 172
@@ -30582,9 +36750,9 @@ cada tipo de criptomoneda, por la diferencia que exista entre el importe de euro
 en la venta (salvo que sea inferior a su valor normal de mercado en la fecha de la venta, en
 cuyo caso prevalecerá este último) y su importe de adquisición en euros, determinado, en su
 caso, aplicando el tipo de cambio a euros de la divisa vigente en la fecha de adquisición de la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 761
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 939
 
-# Pag. 762
+# Pag. 940
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 criptomoneda objeto de la venta, teniendo en cuenta los gastos y tributos que se originan por
@@ -30625,9 +36793,9 @@ Resumen:
 • Imputable al ejercicio en que se entrega la moneda en virtud del contrato de
 compraventa.
 • Renta del ahorro porque procede de la transmisión de un elemento patrimonial
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 762
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 940
 
-# Pag. 763
+# Pag. 941
 
 Monedas virtuales
 b) Intercambio de una moneda virtual por otra diferente
@@ -30665,9 +36833,9 @@ Las criptomonedas de un tipo, computables por unidades o fracciones de unidades,
 origen en un mismo protocolo informático y todas las del mismo tipo poseen las mismas
 características, siendo iguales entre sí, lo que confiere a las diferentes unidades o fracciones
 de unidades de la criptomoneda en cuestión la naturaleza de bienes homogéneos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 763
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 941
 
-# Pag. 764
+# Pag. 942
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 A efectos de determinar la correspondiente ganancia o pérdida patrimonial y en la medida en
@@ -30707,9 +36875,9 @@ Normativa: Arts. 14.2.k) y 45 Ley IRPF
 En estos casos, el importe de un crédito no devuelto a su vencimiento no constituye de forma
 automática una pérdida patrimonial, al mantener el acreedor su derecho de crédito, debiendo
 acudir a la regla especial de imputación temporal prevista en el artículo 14.2.k) de la Ley del
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 764
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 942
 
-# Pag. 765
+# Pag. 943
 
 Monedas virtuales
 IRPF para estos supuestos de créditos no cobrados.
@@ -30746,9 +36914,9 @@ pérdida patrimonial.
 Ley del IRPF para estos supuestos de créditos no cobrados.
 • Formará parte de la renta general, debiendo integrarse en la base imponible general
 del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 765
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 943
 
-# Pag. 766
+# Pag. 944
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Declaración y tributación de las ganancias y
@@ -30785,9 +36953,9 @@ En todo caso, la ganancia patrimonial derivada del premio se imputará al perío
 exigible de acuerdo con las bases del concurso.
 b) Subvenciones para la adquisición de viviendas de protección oficial o de precio
 tasado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 766
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 944
 
-# Pag. 767
+# Pag. 945
 
 Declaración y tributación de las ganancias y pérdidas patrimoniales
 c) Subvenciones o ayudas destinadas a la entrada de la vivienda habitual o a la
@@ -30831,9 +36999,9 @@ de la isla de La Palma (BOE de 26 de junio), con la finalidad de paliar el efect
 los precios ocasionado por la crisis energética derivada de la invasión de Ucrania, y que el
 artículo 74 del Real Decreto-ley 20/2022, de 27 de diciembre, de medidas de respuesta a las
 consecuencias económicas y sociales de la Guerra de Ucrania y de apoyo a la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 767
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 945
 
-# Pag. 768
+# Pag. 946
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 reconstrucción de la isla de La Palma y a otras situaciones de vulnerabilidad (BOE 28 de
@@ -30881,9 +37049,9 @@ k) Bono Cultural Joven, ayuda creada por la Ley 22/2021, de 28 de diciembre, de
 Presupuestos Generales del Estado para el año 2022 (BOE de 29 de diciembre), y cuyo
 ámbito temporal de aplicación se ha extendido, con vigencia indefinida, por la disposición
 adicional centésima cuarta de la Ley 31/2022, de 23 de diciembre, de Presupuestos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 768
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 946
 
-# Pag. 769
+# Pag. 947
 
 Declaración y tributación de las ganancias y pérdidas patrimoniales
 Generales del Estado para el año 2023 (BOE de 24 de diciembre).
@@ -30928,9 +37096,9 @@ integrar en la base imponible general.
 Por tanto, tras la Sentencia núm. 24/2023, de 12 de enero de 2023, los intereses indemnizatorios (en general)
 se califican como ganancia patrimonial a integrar en la base imponible general, ya que, como afirma el Tribunal
 Supremo no se han puesto de manifiesto con ocasión de la trasmisión de elementos patrimoniales.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 769
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 947
 
-# Pag. 770
+# Pag. 948
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Ganancias y pérdidas patrimoniales que integran la base
@@ -30973,9 +37141,9 @@ propietario del bien, situación susceptible de ser incluida en el concepto de a
 la previsión normativa del IRPF, por lo que la renta obtenida es una ganancia patrimonial que tributa
 de manera independiente a la que, en su caso, se pueda producir posteriormente con ocasión de la
 formalización de la venta.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 770
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 948
 
-# Pag. 771
+# Pag. 949
 
 Declaración y tributación de las ganancias y pérdidas patrimoniales
 La renta obtenida a cambio de ofrecer el derecho de opción de compra (la prima del contrato)
@@ -31024,9 +37192,9 @@ de 2021, conocida como DAC 7, por la que se modifica la Directiva 2011/16/ UE, i
 el 1 de enero de 2024 a los operadores de plataformas digitales de la UE y externos a la UE
 nuevas obligaciones de registro y de comunicación de información sobre las ventas y servicios
 realizados a través de ellas por algunos de sus usuarios.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 771
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 949
 
-# Pag. 772
+# Pag. 950
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Este intercambio de información en el marco UE se complementa a nivel internacional con la
@@ -31073,9 +37241,9 @@ regulada en el artículo artículo 74 del Real Decreto-ley 20/2022, de 27 de dic
 • El "Bono Social Térmico" (casilla [0362])
 • Bono Cultural Joven (casilla [0323])
 • Otros bonos culturales (casilla [0304])
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 772
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 950
 
-# Pag. 773
+# Pag. 951
 
 Declaración y tributación de las ganancias y pérdidas patrimoniales
 • Ayudas públicas a los titulares de bienes integrantes del Patrimonio Histórico Español destinadas a su
@@ -31112,9 +37280,9 @@ inmediatamente anteriores al inicio de las obras de rehabilitación o, en otro c
 de mercado que tuviera la vivienda en el momento de dicho inicio. A estos efectos, se
 descontará del precio de adquisición o del valor de mercado de la vivienda la parte
 proporcional correspondiente al suelo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 773
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 951
 
-# Pag. 774
+# Pag. 952
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Por lo tanto, para que las obras puedan considerarse de rehabilitación, será necesario en primer lugar que
@@ -31155,9 +37323,9 @@ Caso de autopromoción previa a la transmisión de la vivienda habitual
 A efectos de aplicar la exención por reinversión, la transmisión de la vivienda tiene que efectuarse en el plazo
 de los dos años posteriores a la adquisición de la nueva vivienda, teniendo en cuenta lo dispuesto el artículo
 5.1 del Código Civil, según el cual los plazos fijados por años se computan de fecha a fecha.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 774
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 952
 
-# Pag. 775
+# Pag. 953
 
 Ganancias excluidas de gravamen en supuestos de reinversión
 En los supuestos de ejecución directa de las obras de construcción por parte del contribuyente, la fecha de
@@ -31198,9 +37366,9 @@ contribuyente requeridos por la normativa del Impuesto; una vez acondicionada co
 disfrutar de cuantos beneficios fiscales establezca el IRPF para las viviendas habituales con carácter
 general, con los mismos requisitos, condiciones y limitaciones.
 • Adquisición de la propiedad en pro indiviso: cómputo del plazo de tres años.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 775
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 953
 
-# Pag. 776
+# Pag. 954
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 En relación con los beneficios fiscales relacionados con la vivienda habitual, en los supuestos de
@@ -31254,9 +37422,9 @@ contribuyente, en un plazo de doce meses, contados a partir de la fecha de adqui
 terminación de las obras.
 No obstante, se entenderá que la vivienda adquirida no pierde el carácter de habitual cuando
 concurran las siguientes circunstancias:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 776
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 954
 
-# Pag. 777
+# Pag. 955
 
 Ganancias excluidas de gravamen en supuestos de reinversión
 • Cuando se produzca el fallecimiento del contribuyente.
@@ -31302,9 +37470,9 @@ la vivienda habitual cuando, para el cónyuge que permaneció en la misma consti
 en ese momento o hubiera tenido tal consideración hasta cualquier día de los dos años anteriores a la
 fecha de transmisión.
 • Supuesto de contrato de arrendamiento con opción a compra
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 777
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 955
 
-# Pag. 778
+# Pag. 956
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Por virtud del contrato de opción una de las partes, concedente de la opción, atribuye a la otra, beneficiaria
@@ -31353,9 +37521,9 @@ transmisión, lo que daría lugar a una total exención de la ganancia, o en su 
 proporción a los importes reinvertidos dentro de dicho plazo de dos años. Resolución del recurso extraordinario
 de alzada para la unificación de criterio del TEAC de fecha 11 de septiembre de 2014, Reclamación número
 00/02463/2013, recaída en recurso extraordinario de alzada para unificación de criterio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 778
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 956
 
-# Pag. 779
+# Pag. 957
 
 Ganancias excluidas de gravamen en supuestos de reinversión
 La reinversión no se efectúa fuera de plazo cuando la venta se hubiere efectuado a plazos o
@@ -31399,9 +37567,9 @@ por reinversión, siempre que la aplicación de la exención no se desmienta por
 circunstancia de la declaración del mismo ejercicio o de los siguientes.
 Véase al respecto la Resolución del TEAC de 8 de septiembre de 2016, Reclamación número 00/06371/2015,
 recaída en recurso extraordinario de alzada para unificación de criterio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 779
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 957
 
-# Pag. 780
+# Pag. 958
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Asimismo, en relación con la aplicación de la exención por reinversión en vivienda habitual, téngase en cuenta
@@ -31448,9 +37616,9 @@ pendiente.
 En el mismo año 2025, compra una nueva vivienda habitual por un importe de 91.000
 euros, invirtiendo a tal efecto el resto del importe obtenido en la venta de su anterior
 vivienda.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 780
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 958
 
-# Pag. 781
+# Pag. 959
 
 Ganancias excluidas de gravamen en supuestos de reinversión
 Determinar la cuantía de la ganancia patrimonial exenta por reinversión.
@@ -31486,9 +37654,9 @@ Requisitos y condiciones para la aplicación de la exención
 Los requisitos y condiciones para la aplicación de esta exención son los que a continuación
 se comentan:
 A. Reinversión total o parcial
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 781
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 959
 
-# Pag. 782
+# Pag. 960
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 La exención podrá ser total, si se reinvierte el importe total obtenido por la transmisión de las
@@ -31523,9 +37691,9 @@ inclusión de los intereses de demora.
 La autoliquidación complementaria se presentará en el plazo que media entre la fecha en que
 se produzca el incumplimiento y la finalización del plazo reglamentario de declaración
 correspondiente al período impositivo en que se produzca dicho incumplimiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 782
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 960
 
-# Pag. 783
+# Pag. 961
 
 Ganancias excluidas de gravamen en supuestos de reinversión
 Transmisión de elementos patrimoniales por contribuyentes
@@ -31565,9 +37733,9 @@ fórmulas de contraseguro en caso de fallecimiento, el cumplimiento de los sigui
 requisitos (disposición adicional novena Reglamento IRPF):
 • En el supuesto de mecanismos de reversión en caso de fallecimiento del asegurado,
 únicamente podrá existir un potencial beneficiario de la renta vitalicia que revierta.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 783
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 961
 
-# Pag. 784
+# Pag. 962
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 • En el supuesto de periodos ciertos de prestación, dichos períodos no podrán exceder
@@ -31600,9 +37768,9 @@ c. El contribuyente deberá comunicar a la entidad aseguradora que la renta vita
 que se contrata constituye la reinversión del importe obtenido por la transmisión de
 elementos patrimoniales, a efectos de la aplicación de la exención prevista en este
 artículo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 784
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 962
 
-# Pag. 785
+# Pag. 963
 
 Ganancias excluidas de gravamen en supuestos de reinversión
 Otros requisitos y condiciones para la aplicación de la exención
@@ -31638,9 +37806,9 @@ El incumplimiento de cualquiera de las condiciones establecidas en este artícul
 anticipación, total o parcial, de los derechos económicos derivados de la renta vitalicia
 constituida, determinará el sometimiento a gravamen de la ganancia patrimonial
 correspondiente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 785
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 963
 
-# Pag. 786
+# Pag. 964
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 En tal caso, el contribuyente imputará la ganancia patrimonial no exenta al año de su
@@ -31674,9 +37842,9 @@ Nota al ejemplo:
 supera, considerando las reinversiones anteriores, esta cantidad, únicamente se considerará reinvertido el
 importe de la diferencia entre 240.000 euros y el importe de las reinversiones anteriores, esto es, 190.000 euros
 (240.000 – 50.000).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 786
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 964
 
-# Pag. 787
+# Pag. 965
 
 Ganancias excluidas de gravamen en supuestos de reinversión
 Como el importe que se considera reinvertido (190.000 euros) es inferior al total de lo percibido en la transmisión
@@ -31711,9 +37879,9 @@ En ningún caso tendrán este tratamiento, para el transmitente, las operaciones
 contratos de rentas vitalicias o temporales. Cuando se transmitan bienes y derechos a
 cambio de una renta vitalicia o temporal, la ganancia o pérdida patrimonial para el rentista se
 imputará al período impositivo en que se constituya la renta.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 787
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 965
 
-# Pag. 788
+# Pag. 966
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 B. Ayudas públicas
@@ -31756,9 +37924,9 @@ capital de empresas agrícolas societarias, podrán imputarse como rendimientos 
 actividades económicas por cuartas partes, en el período impositivo en el que se
 obtengan y en los tres siguientes.
 C. Créditos vencidos y no cobrados
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 788
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 966
 
-# Pag. 789
+# Pag. 967
 
 Imputación temporal de las ganancias y pérdidas patrimoniales
 Las pérdidas patrimoniales derivadas de créditos vencidos y no cobrados podrán imputarse
@@ -31801,9 +37969,9 @@ declaración de concurso.
 • En cualquier estado del procedimiento, cuando se compruebe el pago o la
 consignación de la totalidad de los créditos reconocidos o la íntegra satisfacción de los
 acreedores por cualquier otro medio o que ya no existe la situación de insolvencia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 789
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 967
 
-# Pag. 790
+# Pag. 968
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 • Una vez terminada la fase común del concurso, cuando quede firme la resolución que
@@ -31843,9 +38011,9 @@ La imputación de las ganancias o pérdidas patrimoniales producidas en ejercici
 a 2025 se realizará en el presente ejercicio de acuerdo con las siguientes reglas:
 a) Ganancias y pérdidas derivadas de transmisiones de elementos patrimoniales
 realizadas a plazos o con precio aplazado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 790
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 968
 
-# Pag. 791
+# Pag. 969
 
 Imputación temporal de las ganancias y pérdidas patrimoniales
 Cualquiera que sea el período de generación de la ganancia o pérdida patrimonial producida
@@ -31886,9 +38054,9 @@ establecido en las tablas de amortización oficialmente aprobadas.
 En el supuesto de que el rendimiento neto de la actividad se determine mediante el método de estimación
 objetiva, deberá tomarse como período de amortización a estos efectos el período máximo establecido en las
 tablas de amortización oficialmente aprobadas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 791
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 969
 
-# Pag. 792
+# Pag. 970
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Individualización de las ganancias y pérdidas
@@ -31922,9 +38090,9 @@ mitad del bien aportado. Véase al respecto la Resolución del TEAC de 23 de ene
 número 00/020204/2023, recaída en recurso extraordinario de alzada en unificación de criterio.
 B. Cuando no resulte debidamente acreditada la titularidad de bienes o
 derechos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 792
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 970
 
-# Pag. 793
+# Pag. 971
 
 Individualización de las ganancias y pérdidas patrimoniales
 Cuando no resulte debidamente acreditada la titularidad de bienes o derechos, la
@@ -31973,9 +38141,9 @@ Conforme a la regla especial, las ganancias patrimoniales que consistan en adqui
 bienes y derechos que no se deriven de una transmisión previa, como las ganancias en el
 juego y supuestos análogos, se atribuyen a la persona a quien corresponda el derecho a su
 obtención o que las haya ganado directamente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 793
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 971
 
-# Pag. 794
+# Pag. 972
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 En el caso de las ganancias patrimoniales originadas por una subvención, se imputarán
@@ -32012,9 +38180,9 @@ El impuesto de salida que se establece en el IRPF pretende gravar la ganancia pa
 contribuyente que pierda tal condición por el cambio de residencia, aunque todavía no se
 haya materializado dicha ganancia al no haber sido transmitidas dichas acciones o
 participaciones, pues el desplazamiento de una persona física o a otro país transfiere la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 794
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 972
 
-# Pag. 795
+# Pag. 973
 
 Régimen especial: Ganancias patrimoniales por cambio de residencia
 potestad tributaria a este último, dando lugar, cuando se trata de patrimonios financieros de
@@ -32051,9 +38219,9 @@ de entidad cuya titularidad corresponda al contribuyente, y su valor de adquisic
 Para el cómputo de la citada ganancia patrimonial se tomará el valor de mercado de las
 acciones o participaciones en la fecha de devengo del último período impositivo que
 deba declararse por el IRPF, determinado de acuerdo con las siguientes reglas:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 795
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 973
 
-# Pag. 796
+# Pag. 974
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 a) Los valores admitidos a negociación en alguno de los mercados regulados de valores
@@ -32094,9 +38262,9 @@ Imputación temporal y declaración e ingreso
 Las ganancias patrimoniales deberán integrarse en la base imponible correspondiente al
 último período que deba declararse por el IRPF practicándose autoliquidación rectificativa,
 sin sanción, ni intereses de demora ni recargo alguno, en el plazo de declaración del
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 796
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 974
 
-# Pag. 797
+# Pag. 975
 
 Régimen especial: Ganancias patrimoniales por cambio de residencia
 impuesto correspondiente al primer ejercicio en que el contribuyente no tuviera tal condición
@@ -32132,9 +38300,9 @@ doble imposición internacional que contenga cláusula de intercambio de informa
 En dicho aplazamiento resultará de aplicación lo dispuesto en la LGT, y su normativa de
 desarrollo, y específicamente en lo relativo al devengo de intereses y a la constitución de
 garantías para dicho aplazamiento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 797
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 975
 
-# Pag. 798
+# Pag. 976
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Véanse los artículos 65 y 82 de la Ley 58/2003, de 17 de diciembre, General Tributaria (LGT) y los artículos 44
@@ -32175,9 +38343,9 @@ tributaria la ampliación del citado plazo a efectos de prorrogar el vencimiento
 aplazamiento.
 La ampliación en ningún caso puede exceder de cinco ejercicios adicionales.
 d. Solicitud de ampliación del plazo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 798
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 976
 
-# Pag. 799
+# Pag. 977
 
 Régimen especial: Ganancias patrimoniales por cambio de residencia
 La solicitud deberá presentarse en plazo de los tres meses anteriores a la finalización de
@@ -32216,9 +38384,9 @@ produzca alguna de las siguientes circunstancias:
 1. Que se transmitan inter vivos las acciones o participaciones.
 2. Que el contribuyente pierda la condición de residente en un Estado miembro de la Unión
 Europea o del Espacio Económico Europeo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 799
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 977
 
-# Pag. 800
+# Pag. 978
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 3. Que se incumpla la obligación de comunicación a que se refiere la letra c) de este
@@ -32259,9 +38427,9 @@ patrimoniales por cambio de residencia.
 • Valor de mercado de las acciones o participaciones.
 • Estado al que se traslada la residencia, con indicación del domicilio, así como las
 posteriores variaciones en el domicilio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 800
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 978
 
-# Pag. 801
+# Pag. 979
 
 Régimen especial: Ganancias patrimoniales por cambio de residencia
 La comunicación deberá presentarse en el plazo comprendido entre la fecha del
@@ -32300,9 +38468,9 @@ euros.
 Dicho piso fue adquirido el día 20-12-1994 por un importe equivalente a 90.000 euros,
 siendo esta la cantidad declarada como base imponible a efectos del Impuesto sobre
 Transmisiones Patrimoniales. Los gastos inherentes a la adquisición satisfechos por el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 801
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 979
 
-# Pag. 802
+# Pag. 980
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 adquirente en enero de 1995, en concepto de notaría, registro e Impuesto sobre
@@ -32341,9 +38509,9 @@ reembolsos de acciones o participaciones de instituciones de inversión colectiv
 2. Transmisión del piso:
 Valor de transmisión (150.000 – 1.900) (1) = 148.100
 Valor de adquisición (2): 96.380
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 802
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 980
 
-# Pag. 803
+# Pag. 981
 
 Caso práctico
 Ganancia patrimonial (148.100,00 – 96.380,00) = 51.720
@@ -32381,9 +38549,9 @@ oficiales que se recibieron por canje de valores de participaciones preferentes 
 en la base imponible del ahorro), deberá declararse en el subapartado "Ganancias y
 pérdidas patrimoniales derivadas de transmisiones de acciones o participaciones
 negociadas" del apartado F2 de la declaración.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 803
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 981
 
-# Pag. 804
+# Pag. 982
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Notas al ejemplo:
@@ -32406,9 +38574,9 @@ patrimonial total entre el número de días existente entre la fecha de adquisic
 2006, que asciende a 4.049 días, respecto del número total de días que el piso ha permanecido en el patrimonio
 del contribuyente, es decir, entre los días 20-12-1994 y 01-07-2025, que asciende a 11.151 días.
 (Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 804
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 982
 
-# Pag. 805
+# Pag. 983
 
 Cuadro: Excesos de adjudicación en la extinción del condominio. Resolución del TEAC de 7 de junio de 2018
 Cuadro: Excesos de adjudicación en la extinción
@@ -32446,9 +38614,9 @@ indivisas de participación a cambio de precio: Dado que el
 valor del inmueble no ha experimentado aumento de valor
 no se generaría para ellos ganancia o pérdida
 patrimonial a título oneroso.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 805
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 983
 
-# Pag. 806
+# Pag. 984
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Mayor al valor Comunero al que se adjudica en su totalidad el inmueble y
@@ -32497,9 +38665,9 @@ adjudicación
 Comunero/s que reciben una parte del inmueble inferior a
 la que correspondería por su cuota de participación y
 compensación en metálico por el resto. Estarían
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 806
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 984
 
-# Pag. 807
+# Pag. 985
 
 Cuadro: Excesos de adjudicación en la extinción del condominio. Resolución del TEAC de 7 de junio de 2018
 trasmitiendo al primero a título oneroso la parte de cuota
@@ -32548,9 +38716,9 @@ con lo expuesto, no existiría alteración patrimonial con motivo de la disoluci
 inmuebles siempre que los valores de adjudicación se correspondan con su respectivo valor de mercado y que
 las adjudicaciones efectuadas se correspondan con la respectiva cuota de titularidad, conservando los bienes
 adjudicados los valores y fechas de adquisición originarios.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 807
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 985
 
-# Pag. 808
+# Pag. 986
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Cuadros: usufructo sobre bienes inmuebles
@@ -32593,9 +38761,9 @@ rendimientos de capital inmobiliario y por la transmisión de la nuda propiedad 
 el IRPF una ganancia o pérdida patrimonial.
 Usufructo Valoración de los derechos de usufructo (Artículos 49 y 51 Reglamento del ISD y
 artículos 10 texto refundido de la Ley del ITPAJD)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 808
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 986
 
-# Pag. 809
+# Pag. 987
 
 Cuadros: usufructo sobre bienes inmuebles
 • Usufructo temporal: Se reputará proporcional al valor total de los bienes sobre
@@ -32625,9 +38793,9 @@ ISD)
 Nuda propiedad El valor de la nuda propiedad se computará por la diferencia entre el valor del
 usufructo y el valor total de los bienes.
 Este cuadro tiene carácter meramente informativo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 809
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 987
 
-# Pag. 810
+# Pag. 988
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Constitución del usufructo
@@ -32694,9 +38862,9 @@ durante cada uno de los años de
 - duración de usufructo.
 a. Inmuebles cuyos
 Testamento
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 810
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 988
 
-# Pag. 811
+# Pag. 989
 
 Cuadros: usufructo sobre bienes inmuebles
 Propietario que constituye el Persona a favor de la que
@@ -32732,9 +38900,9 @@ en el tiempo en caso de
 usufructo vitalicio (artículo 15 del
 Reglamento del IRPF).
 Este cuadro tiene carácter meramente informativo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 811
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 989
 
-# Pag. 812
+# Pag. 990
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Transmisión del usufructo
@@ -32797,9 +38965,9 @@ consideración de esta como gasto. revisados, modificados o
 Con el límite de los rendimientos determinados mediante
 íntegros obtenidos por dicho un procedimiento de
 arrendamiento. valoración colectiva de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 812
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 990
 
-# Pag. 813
+# Pag. 991
 
 Cuadros: usufructo sobre bienes inmuebles
 Persona que lo adquiere
@@ -32842,9 +39010,9 @@ propietario oneroso inmueble en el nudo propietario (Ver consolidación del domi
 • A título
 gratuito
 Este cuadro tiene carácter meramente informativo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 813
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 991
 
-# Pag. 814
+# Pag. 992
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Extinción del usufructo y consolidación del dominio
@@ -32902,9 +39070,9 @@ si arrienda o cede el bien o
 imputación de rentas inmobiliarias
 (salvo si pasa a constituir su
 vivienda habitual)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 814
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 992
 
-# Pag. 815
+# Pag. 993
 
 Cuadros: usufructo sobre bienes inmuebles
 Extinción del
@@ -32976,9 +39144,9 @@ propiedad. del dominio en el nudo
 propietario tributará por la
 Por transmisión mayor de las liquidaciones:
 ○
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 815
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 993
 
-# Pag. 816
+# Pag. 994
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 Extinción del
@@ -33012,9 +39180,9 @@ la propiedad, sino que es el propio régimen legal de este derecho real de goce 
 muerte de usufructuario lo extingue (artículo 513.1º, Código Civil), recuperando el propietario las facultades de
 goce de las que se había visto privado en su constitución. (Volver)
 Este cuadro tiene carácter meramente informativo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 816
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 994
 
-# Pag. 817
+# Pag. 995
 
 Cuadros: usufructo sobre bienes inmuebles
 Transmisión del bien inmueble posterior a la consolidación del
@@ -33059,9 +39227,9 @@ inherentes a la
 mejoras efectuadas satisfechos por
 en los bienes el transmitente.
 adquiridos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 817
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 995
 
-# Pag. 818
+# Pag. 996
 
 Capítulo 11. Ganancias y pérdidas patrimoniales
 CÁLCULO DE LA GANANCIA O PÉRDIDA PATRIMONIAL
@@ -33078,9 +39246,9 @@ ISD de la
 liquidación del valor
 del usufructo.
 Este cuadro tiene carácter meramente informativo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 818
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 996
 
-# Pag. 819
+# Pag. 997
 
 Capítulo 12. Integración y compensación de rentas
 Capítulo 12. Integración y compensación
@@ -33110,9 +39278,9 @@ Este grupo comprende los siguientes componentes de la renta del contribuyente:
 • Rendimientos del trabajo, del capital inmobiliario, del capital mobiliario (exclusivamente
 los previstos en el apartado 4 del artículo 25 de la Ley del IRPF. Es decir, entre otros, los
 derivados de la propiedad intelectual, de la prestación de asistencia técnica, del
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 819
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 997
 
-# Pag. 820
+# Pag. 998
 
 Capítulo 12. Integración y compensación de rentas
 arrendamiento de bienes muebles, negocios o minas o de subarrendamientos y de la
@@ -33145,9 +39313,9 @@ socios o partícipes con la entidad, la participación deberá ser igual o super
 transmisiones de elementos patrimoniales, con independencia del periodo de generación.
 En los cuadros siguientes se recogen, de forma gráfica, los componentes de la renta general
 y de la renta del ahorro.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 820
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 998
 
-# Pag. 821
+# Pag. 999
 
 Introducción
 Cuadros resumen de componentes de la renta general y de la
@@ -33178,9 +39346,9 @@ calificados como jurisdicción no
 cooperativa.
 Imputaciones de AIE y UTE .
 RENTA GENERAL
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 821
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 999
 
-# Pag. 822
+# Pag. 1000
 
 Capítulo 12. Integración y compensación de rentas
 Componentes de la renta del ahorro
@@ -33216,9 +39384,9 @@ compensación alguna entre las rentas integrantes de cada uno de dichos grupos.
 Como resultado de la aplicación de las reglas de integración y compensación de
 rentas se obtiene, respectivamente, la base imponible general y la base imponible del
 ahorro.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 822
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1000
 
-# Pag. 823
+# Pag. 1001
 
 Reglas de integración y compensación de rentas
 Integración y compensación de rentas en la base imponible
@@ -33258,9 +39426,9 @@ las pérdidas) o negativo (importe de las pérdidas superior al de las ganancias
 imputaciones de rentas obtenidas en el período impositivo, con el límite máximo del
 25 por 100 de dicho saldo positivo.
 El resto no compensado se compensará en los cuatro años siguientes en este orden:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 823
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1001
 
-# Pag. 824
+# Pag. 1002
 
 Capítulo 12. Integración y compensación de rentas
 • En primer lugar, con el saldo positivo de las ganancias y pérdidas patrimoniales de
@@ -33294,16 +39462,16 @@ el límite del 25 por 100 del saldo positivo de los rendimientos e imputaciones 
 antes de dichas compensaciones.
 Las operaciones de integración y compensación de rentas en la base imponible
 general comentadas anteriormente se recogen en el esquema siguiente:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 824
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1002
 
-# Pag. 825
+# Pag. 1003
 
 Reglas de integración y compensación de rentas
 Cuadro-resumen de integración y compensación de rentas en la
 base imponible general
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 825
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1003
 
-# Pag. 826
+# Pag. 1004
 
 Capítulo 12. Integración y compensación de rentas
 Integración y compensación de rentas en la base imponible del
@@ -33343,9 +39511,9 @@ mobiliario integrantes de la base imponible del ahorro, obtenido en el mismo per
 impositivo, con el límite del 25 por 100 de dicho saldo positivo.
 Si tras dicha compensación quedase saldo negativo, su importe se compensará en los
 cuatro años siguientes en el mismo orden establecido en los párrafos anteriores.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 826
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1004
 
-# Pag. 827
+# Pag. 1005
 
 Reglas de integración y compensación de rentas
 Las compensaciones anteriores deberán efectuarse en la cuantía máxima que permita cada
@@ -33384,9 +39552,9 @@ de las pérdidas pendientes de compensación de los ejercicios 2021, 2022, 2023 
 Con relación a estos últimos debe tener en cuenta que comprende todas las pérdidas
 patrimoniales pendientes de compensación de los ejercicios 2021, 2022, 2023 y 2024
 incluidas las derivadas de deuda subordinada o de participaciones preferentes.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 827
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1005
 
-# Pag. 828
+# Pag. 1006
 
 Capítulo 12. Integración y compensación de rentas
 En ningún caso se efectuará la compensación fuera del plazo de cuatro años, mediante la
@@ -33415,16 +39583,16 @@ podrá superar conjuntamente el límite del 25 por 100 del saldo positivo de ren
 capital mobiliario de 2025 antes de compensaciones.
 Las operaciones de integración y compensación de rentas en la base imponible del
 ahorro que han sido comentadas se recogen, de forma gráfica, en el cuadro siguiente:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 828
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1006
 
-# Pag. 829
+# Pag. 1007
 
 Reglas de integración y compensación de rentas
 Cuadro-resumen de integración y compensación de rentas en la
 base imponible del ahorro
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 829
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1007
 
-# Pag. 830
+# Pag. 1008
 
 Capítulo 12. Integración y compensación de rentas
 Reglas de integración y compensación en
@@ -33462,9 +39630,9 @@ Efectuar la integración y compensación de dichas rentas en la declaración del
 2025.
 Solución:
 1. Integración y compensación de rentas en la base imponible general:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 830
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1008
 
-# Pag. 831
+# Pag. 1009
 
 Caso práctico
 a. Rendimientos e imputaciones de rentas del ejercicio 2025:
@@ -33506,9 +39674,9 @@ todos los saldos pendientes.
 c. Compensación de saldo netos negativos de pérdidas y ganancias patrimoniales de
 ejercicios anteriores:
 • Compensación saldo neto negativo de pérdidas 2021: 700
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 831
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1009
 
-# Pag. 832
+# Pag. 1010
 
 Capítulo 12. Integración y compensación de rentas
 • Compensación saldo neto negativo de pérdidas 2022: 2.100
@@ -33522,9 +39690,9 @@ por 100 s/4.000).
 e. Total compensaciones (700 + 2.100 + 200) = 3.000
 f. Compensaciones a realizar (hasta el importe del saldo positivo): (800 + 3.000) = 3.800
 g. Base imponible del ahorro (4.000 – 3.800) = 200
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 832
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1010
 
-# Pag. 833
+# Pag. 1011
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Capítulo 13. Determinación de la renta
@@ -33554,14 +39722,14 @@ remanente, si lo hubiera, de las reducciones por tributación conjunta y por pen
 compensatorias, sin que pueda resultar negativa como consecuencia de tales disminuciones.
 El proceso de determinación de estas dos magnitudes puede representarse
 esquemáticamente de la siguiente forma:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 833
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1011
 
-# Pag. 834
+# Pag. 1012
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 834
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1012
 
-# Pag. 835
+# Pag. 1013
 
 Reducciones de la base imponible general
 Reducciones de la base imponible general
@@ -33599,9 +39767,9 @@ En casos de separación legal o ausencia de vínculo matrimonial en los que la g
 sea compartida, si no se justifica la existencia de mutuo acuerdo entre los progenitores para que a la
 "tributación conjunta" se acoja uno u otro, mutuo acuerdo que deberá ser previo a la presentación de las
 declaraciones, los dos progenitores, y también todos los hijos, deberán tributar en régimen de "tributación
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 835
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1013
 
-# Pag. 836
+# Pag. 1014
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 individual", como obliga la redacción de los artículos 82.1 2ª y 82.2 de la Ley del IRPF, no siendo por ello
@@ -33639,9 +39807,9 @@ especie por el promotor de planes de pensiones del sistema de empleo (incluidos 
 simplificados). Todo ello, en los términos del texto refundido de la Ley de Regulación de
 los Planes y Fondos de Pensiones, aprobado por Real Decreto Legislativo 1/2002, de 29
 de noviembre (BOE de 13 de diciembre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 836
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1014
 
-# Pag. 837
+# Pag. 1015
 
 Reducciones de la base imponible general
 Modalidades de planes de pensiones por razón de los sujetos constituyentes (entidades
@@ -33688,9 +39856,9 @@ supervisión de los fondos de pensiones de empleo (FPE) derogó a partir del 13 
 las referencias a la Directiva 2003/41/CE se entenderán hechas a la citada Directiva (UE) 2016/2341.
 También indicar que esta directiva ha sido incorporada al ordenamiento jurídico español a través del Real
 Decreto-ley 3/2020, de 4 de febrero (BOE de 5 de febrero).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 837
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1015
 
-# Pag. 838
+# Pag. 1016
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 2. Aportaciones y contribuciones a mutualidades de previsión
@@ -33729,9 +39897,9 @@ concertados con mutualidades de previsión social por trabajadores por cuenta aj
 socios trabajadores, incluidas las contribuciones del promotor que les hubiesen sido
 imputadas en concepto de rendimientos del trabajo, cuando se efectúen de acuerdo con
 lo previsto en la disposición adicional primera del texto refundido de la Ley de Regulación
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 838
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1016
 
-# Pag. 839
+# Pag. 1017
 
 Reducciones de la base imponible general
 de Planes y Fondos de Pensiones, relativa a la protección de los compromisos por
@@ -33772,9 +39940,9 @@ en la normativa reguladora de los planes y fondos de pensiones.
 b. Las contingencias cubiertas deberán ser únicamente las previstas en el artículo 8.6 del
 texto refundido de la Ley de Regulación de los Planes y Fondos de Pensiones aprobado
 por el Real Decreto Legislativo 1/2002, de 29 de noviembre (jubilación, incapacidad
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 839
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1017
 
-# Pag. 840
+# Pag. 1018
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 laboral total y permanente para la profesión habitual o absoluta y permanente para todo
@@ -33817,9 +39985,9 @@ de imputación a los asegurados.
 c. En el condicionado de la póliza debe constar de forma expresa y destacada que se trata
 de un Plan de Previsión Social Empresarial, quedando reservada esta denominación a los
 contratos de seguro que cumplan los requisitos legalmente establecidos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 840
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1018
 
-# Pag. 841
+# Pag. 1019
 
 Reducciones de la base imponible general
 d. Las contingencias cubiertas deberán ser únicamente las previstas en el artículo 8.6 del
@@ -33857,9 +40025,9 @@ Los mencionados seguros privados deberán cumplir en todo caso los siguientes re
 a. El contribuyente deberá ser el tomador, asegurado y beneficiario. No obstante. en el caso
 de fallecimiento podrá generar derecho a prestaciones en los términos previstos en la
 normativa reguladora de los planes y fondos de pensiones.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 841
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1019
 
-# Pag. 842
+# Pag. 1020
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 b. El seguro tendrá obligatoriamente que ofrecer una garantía de interés y utilizar técnicas
@@ -33898,9 +40066,9 @@ desempleo en los casos contemplados en los artículos 49.1.g) [por muerte, jubil
 empresario], 51 [despido colectivo], 52 [por causas objetivas] y 57 [procedimiento concursal] del texto
 refundido de la Ley del Estatuto de los Trabajadores aprobado por el Real Decreto Legislativo 2/2015, de
 23 de octubre.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 842
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1020
 
-# Pag. 843
+# Pag. 1021
 
 Reducciones de la base imponible general
 Además, respecto a las prestaciones percibidas téngase en cuenta la posible aplicación del régimen
@@ -33939,9 +40107,9 @@ de los Planes y Fondos de Pensiones aprobado por el Real Decreto Legislativo 1/2
 de 29 de noviembre, que son desempleo de larga duración, enfermedad grave y a partir
 de 2025 por aportaciones y contribuciones empresariales realizadas con al menos 10
 años de antigüedad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 843
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1021
 
-# Pag. 844
+# Pag. 1022
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 En el supuesto de que el partícipe, mutualista o asegurado dispusiera, total o
@@ -33986,9 +40154,9 @@ medidas urgentes para el impulso del Plan de respuesta inmediata, reconstrucció
 relanzamiento frente a los daños causados por la Depresión Aislada en Niveles Altos
 (DANA) en diferentes municipios entre el 28 de octubre y el 4 de noviembre de
 2024 (BOE de 12 de noviembre), estableció en todos estos casos, con carácter
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 844
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1022
 
-# Pag. 845
+# Pag. 1023
 
 Reducciones de la base imponible general
 excepcional y exclusivamente durante el periodo comprendido entre el 13 de
@@ -34031,9 +40199,9 @@ asciende a 7.200 euros) multiplicado por tres para un periodo máximo de seis me
 computados desde el 13 de noviembre de 2024.
 Por tanto, (7.200 euros x 3) ÷ 12 x 6 = 10.800 euros.
 Reembolso de derechos consolidados
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 845
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1023
 
-# Pag. 846
+# Pag. 1024
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 El reembolso de derechos consolidados se sujetará al régimen fiscal establecido para las
@@ -34072,9 +40240,9 @@ trabajo del trabajador (*) contribución (***)
 empresarial (**)
 Rendimientos íntegros del Igual o inferior a 500 El resultado de multiplicar la
 trabajo igual o inferior a euros. contribución empresarial por 2,5.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 846
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1024
 
-# Pag. 847
+# Pag. 1025
 
 Reducciones de la base imponible general
 60.000 euros Entre 500,01 y 1.500 1.250 euros, más el resultado de
@@ -34113,9 +40281,9 @@ en el artículo 52.1.b) 2º de la Ley del IRPF no puede ser multiplicado por la
 realización de aportaciones a diversos de los instrumentos de los
 mencionados en dicho precepto, y detallados a continuación.
 Debe tratarse de una de las siguientes aportaciones:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 847
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1025
 
-# Pag. 848
+# Pag. 1026
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Aportaciones a los planes de pensiones sectoriales previstos en el
@@ -34160,9 +40328,9 @@ colectivo de dependencia contratados por esta para cubrir compromisos por pensio
 imputados al trabajador se establece un límite adicional, propio e independiente de los
 anteriores, de 5.000 euros anuales.
 Estos límites se aplicarán individualmente a cada partícipe integrado en la unidad familiar.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 848
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1026
 
-# Pag. 849
+# Pag. 1027
 
 Reducciones de la base imponible general
 Excepcionalmente, la empresa promotora podrá realizar aportaciones a un plan de
@@ -34203,9 +40371,9 @@ indican:
 empresariales, o de aportaciones del trabajador al mismo instrumento de previsión
 social por importe igual o inferior a las cantidades que resulten del siguiente cuadro,
 en función del rendimiento íntegro que perciba el trabajador del empleador que realice
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 849
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1027
 
-# Pag. 850
+# Pag. 1028
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 las contribuciones y del importe anual de la contribución empresarial:
@@ -34244,9 +40412,9 @@ planes de pensiones de empleo, de los que sea promotor y, además, partícipe.
 Mutualidades de Previsión Social de las que sea mutualista.
 • Aportaciones propias que el empresario individual o el profesional realice a
 planes de previsión social empresarial.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 850
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1028
 
-# Pag. 851
+# Pag. 1029
 
 Reducciones de la base imponible general
 Recuerde: en todo caso, la cuantía máxima de reducción por aplicación de los
@@ -34284,9 +40452,9 @@ la edad del contribuyente y, en su caso, de la edad del aportante.
 incluyendo las prestaciones causadas, podrán instrumentarse, mediante contratos de
 seguros colectivos de dependencia efectuados de acuerdo con lo previsto en la
 disposición adicional primera del texto refundido de la Ley de Regulación de los
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 851
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1029
 
-# Pag. 852
+# Pag. 1030
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Planes y fondos de Pensiones, aprobado por el Real Decreto Legislativo 1/2002, de 29
@@ -34326,9 +40494,9 @@ Las cantidades aportadas por los partícipes, mutualistas o asegurados a sistema
 previsión social, incluidas las realizadas por el promotor o por la empresa que les hubiesen
 sido imputadas que no hubieran podido ser objeto de reducción en los ejercicios 2020 a
 2024 por insuficiencia de base imponible o por aplicación del límite porcentual del 30 por 100
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 852
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1030
 
-# Pag. 853
+# Pag. 1031
 
 Reducciones de la base imponible general
 de la suma de los rendimientos netos del trabajo y de actividades económicas, se imputarán
@@ -34371,9 +40539,9 @@ Atención: el artículo 1 del Real Decreto 1039/2022, de 27 de diciembre (BOE de
 diciembre) modificó el artículo 51 y la disposición transitoria decimonovena del
 Reglamento del IRPF para facilitar la aplicación de los excesos pendientes de reducción
 y mitigar su complejidad. Para ello, se elimina la aplicación proporcional de los excesos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 853
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1031
 
-# Pag. 854
+# Pag. 1032
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 entre aportaciones o contribuciones, y se permite la aplicación del límite máximo
@@ -34404,9 +40572,9 @@ previsión social correspondientes a los ejercicios 2020 a 2024 pendientes de re
 excepto por contribuciones empresariales a seguros colectivos de dependencia", o bien
 en el apartado relativo a "Exceso no reducido derivado de contribuciones empresariales
 a seguros colectivos de dependencia pendientes de reducir en los ejercicios siguientes".
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 854
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1032
 
-# Pag. 855
+# Pag. 1033
 
 Reducciones de la base imponible general
 Ejemplo: aportaciones a sistemas de previsión social
@@ -34447,9 +40615,9 @@ Los pasos a seguir son los siguientes:
 anuales máximas permitidas por el artículo 51.6 y la disposición adicional
 decimosexta de la Ley del IRPF:
 • Aportaciones al Plan de pensiones individual realizadas en 2025: 500 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 855
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1033
 
-# Pag. 856
+# Pag. 1034
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 El importe anual máximo conjunto de aportaciones y contribuciones empresariales
@@ -34491,9 +40659,9 @@ Como límite máximo conjunto para las reducciones (tanto de los excesos
 correspondientes al ejercicio 2024 como por las aportaciones y contribuciones a planes
 de pensiones realizadas en el ejercicio 2025) se aplica la menor de las siguientes
 cantidades:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 856
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1034
 
-# Pag. 857
+# Pag. 1035
 
 Reducciones de la base imponible general
 a. Límite porcentual: 30% s/30.500 euros de los rendimientos netos de trabajo =
@@ -34532,9 +40700,9 @@ anterior).
 5. Cantidades objeto de reducción en la base imponible por aportaciones y
 contribuciones de 2025:
 • Cantidades procedentes de aportaciones al plan de pensiones privado: 500 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 857
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1035
 
-# Pag. 858
+# Pag. 1036
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 • Cantidades procedentes de contribuciones empresariales: 1.400 euros.
@@ -34570,9 +40738,9 @@ Base imponible general = 30.500
 Reducción por aportaciones y contribuciones empresariales a planes de pensiones:
 • Reducción de excesos 2024= -5.000
 • Remanente de base imponible (30.000 - 5.000) = 25.500
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 858
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1036
 
-# Pag. 859
+# Pag. 1037
 
 Reducciones de la base imponible general
 • Reducción por aportaciones y contribuciones 2025(*) = -4.150
@@ -34590,9 +40758,9 @@ Por contribuciones a seguros colectivos de dependencia = 1.000
 aportaciones y contribuciones realizadas en 2025 al conjunto de instrumentos de previsión social, por
 lo que solo podrá reducirse hasta dicho importe, 4.150 euros, quedando pendiente de reducción para
 los 5 ejercicios siguientes el exceso tal y como se concretó con anterioridad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 859
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1037
 
-# Pag. 860
+# Pag. 1038
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Cuadro: Reducciones en base imponible aplicables por aportaciones y
@@ -34641,9 +40809,9 @@ Máximo 1.500
 • Contribución entre +
 de 1.500 euros = CE
 x 1. Máximo 4.250
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 860
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1038
 
-# Pag. 861
+# Pag. 1039
 
 Reducciones de la base imponible general
 Calificación a
@@ -34685,9 +40853,9 @@ euros = CE x 1. Máximo 4.250
 (*) Abreviaturas utilizadas en el cuadro:
 • RNT: Rendimiento neto del trabajo
 • CE: Contribución empresarial
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 861
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1039
 
-# Pag. 862
+# Pag. 1040
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 B. Planes de Pensiones del sistema asociado y Planes de Pensiones del sistema
@@ -34724,9 +40892,9 @@ autónomo/ autónomo empresario
 empresario o profesional para él
 individual o
 profesional
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 862
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1040
 
-# Pag. 863
+# Pag. 1041
 
 Reducciones de la base imponible general
 7. Aportaciones a sistemas de previsión social de los que sea
@@ -34762,9 +40930,9 @@ acuerdo con los límites generales, y el contribuyente, según este régimen de 
 adicional), será el cónyuge partícipe, mutualista o titular quien solicite trasladar el exceso de
 aportaciones no reducido a ejercicios futuros. Al año siguiente, el exceso podrá ser reducido
 teniendo en cuenta nuevamente los límites aplicables a las aportaciones.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 863
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1041
 
-# Pag. 864
+# Pag. 1042
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Ejemplo: Aportaciones a sistemas de previsión social de los que sea
@@ -34803,9 +40971,9 @@ correspondiente al cónyuge no supere 1.350 euros, (4.500 x 30%) y sin que la su
 de 1.500 euros aportados por el cónyuge. (Volver)
 8. Productos paneuropeos de pensiones individuales
 Normativa: disposición adicional quincuagésima segunda la Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 864
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1042
 
-# Pag. 865
+# Pag. 1043
 
 Reducciones de la base imponible general
 A los productos paneuropeos de pensiones individuales regulados en el Reglamento (UE)
@@ -34844,9 +41012,9 @@ Los sistemas de previsión social deben estar constituidos a favor de alguna de 
 con discapacidad que a continuación se relacionan:
 a. Personas afectadas de un grado de discapacidad física o sensorial igual o superior al
 65 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 865
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1043
 
-# Pag. 866
+# Pag. 1044
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 b. Personas afectadas de un grado de discapacidad psíquica igual o superior al 33 por
@@ -34883,9 +41051,9 @@ discapacidad partícipes.
 b. 10.000 euros anuales para las aportaciones realizadas por cada una de las personas con
 las que el partícipe con discapacidad tenga relación de parentesco en línea directa o
 colateral hasta el tercer grado inclusive, por el cónyuge o por los que le tuvieren a su
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 866
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1044
 
-# Pag. 867
+# Pag. 1045
 
 Reducciones de la base imponible general
 cargo en régimen de tutela o acogimiento o al que haya sido designado judicialmente
@@ -34931,9 +41099,9 @@ favor en la base imponible de estas, de forma proporcional a la cuantía de dich
 aportaciones.
 Véase al respecto, dentro del "Caso práctico" incluido en este mismo Capítulo, el supuesto de concurrencia de
 aportaciones a un plan de pensiones constituido a favor de una persona con discapacidad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 867
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1045
 
-# Pag. 868
+# Pag. 1046
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Importante: cuando la propia persona con discapacidad realice simultáneamente
@@ -34972,9 +41140,9 @@ constituidos a favor de personas con discapacidad pendientes de reducir en los
 ejercicios siguientes".
 3. Percepción de prestaciones y disposición anticipada de
 derechos consolidados
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 868
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1046
 
-# Pag. 869
+# Pag. 1047
 
 Reducciones de la base imponible general
 La percepción de las prestaciones y las consecuencias de la disposición anticipada de
@@ -35012,9 +41180,9 @@ patrimonios protegidos únicamente las personas afectadas por los siguientes gra
 discapacidad:
 • Discapacidad psíquica igual o superior al 33 por 100.
 • Discapacidad física o sensorial igual o superior al 65 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 869
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1047
 
-# Pag. 870
+# Pag. 1048
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 2. Titulares de patrimonios protegidos constituidos con arreglo al derecho civil propio
@@ -35053,9 +41221,9 @@ judiciales dictadas en sustitución de otras resoluciones anteriores a dicha Ley
 8/2021).
 2. Contribuyentes cuyas aportaciones no dan derecho a la reducción en el IRPF
 Normativa: Art. 54.4 y 5 Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 870
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1048
 
-# Pag. 871
+# Pag. 1049
 
 Reducciones de la base imponible general
 No generan derecho a reducción las siguientes aportaciones:
@@ -35095,9 +41263,9 @@ En cuanto a la valoración de aportaciones no dinerarias consistentes en bienes 
 artículo 18 de la Ley 49/2002, de 23 de diciembre, el importe será el valor contable que tuviesen el bien o
 derecho en el momento de la transmisión y, en su defecto, el valor determinado conforme a las normas del
 Impuesto sobre el Patrimonio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 871
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1049
 
-# Pag. 872
+# Pag. 1050
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Por lo que se refiere a su tratamiento fiscal para los aportantes no existe ganancia o pérdida patrimonial [art.
@@ -35137,9 +41305,9 @@ debe hacerse constar en el anexo C.4 de la declaración en el apartado "Exceso n
 reducido de las aportaciones a patrimonios protegidos de personas con discapacidad
 pendientes de reducir en los ejercicios siguientes".
 3. Disposición anticipada de los bienes o derechos aportados
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 872
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1050
 
-# Pag. 873
+# Pag. 1051
 
 Reducciones de la base imponible general
 Normativa: Art. 54. 5 Ley IRPF
@@ -35184,9 +41352,9 @@ mediante la presentación de la oportuna autoliquidación complementaria o recti
 (desde 2024) con inclusión de los intereses de demora que procedan, en el plazo que media
 entre la fecha en que se produzca la disposición y la finalización del plazo reglamentario de
 declaración correspondiente al período impositivo en que se realice dicha disposición.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 873
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1051
 
-# Pag. 874
+# Pag. 1052
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 b) Obligaciones para el titular del patrimonio protegido.
@@ -35224,9 +41392,9 @@ que implique un empeoramiento en su situación anterior en el matrimonio, tiene 
 una pensión que se fijará en la resolución judicial de separación o divorcio o en el convenio
 regulador formalizado ante el Secretario judicial (actualmente, Letrado de la Administración
 de Justicia) o el Notario.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 874
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1052
 
-# Pag. 875
+# Pag. 1053
 
 Reducciones de la base imponible general
 Para el pagador, la pensión compensatoria satisfecha, siempre que haya sido fijada en la
@@ -35267,9 +41435,9 @@ la Administración de Justicia) o en escritura pública ante Notario a que se re
 artículo 90 del Código Civil, o del convenio equivalente previsto en los ordenamientos de
 las Comunidades Autónomas.
 b. Anualidades por alimentos a favor de otras personas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 875
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1053
 
-# Pag. 876
+# Pag. 1054
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Para el pagador, las cantidades satisfechas en concepto de alimentos a favor de otras
@@ -35308,9 +41476,9 @@ previsto en los ordenamientos de las Comunidades Autónomas, aprobado por la aut
 ante el Letrado de la Administración de Justicia o en escritura pública ante Notario.
 (*) Véanse, dentro del Capítulo 15 las especialidades para el pagador de estas anualidades por alimentos a
 favor de los hijos y un ejemplo en el que se detallan las operaciones de liquidación en estos supuestos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 876
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1054
 
-# Pag. 877
+# Pag. 1055
 
 Reducciones de la base imponible general
 Reducciones por aportaciones a la mutualidad de previsión
@@ -35344,9 +41512,9 @@ base imponible
 Las aportaciones anuales no podrán rebasar la cantidad de 24.250 euros anuales,
 incluidas las aportaciones efectuadas por los promotores en concepto de rendimientos del
 trabajo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 877
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1055
 
-# Pag. 878
+# Pag. 1056
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 No se admitirán aportaciones una vez que finalice la vida laboral como deportista profesional o se
@@ -35386,9 +41554,9 @@ ejercicio 2025 no aplicadas cuyo importe se solicita poder reducir en los 5 ejer
 siguientes, debe hacerse constar en el anexo C.4 de la declaración en el apartado
 "Exceso no reducido de las aportaciones a la mutualidad de previsión social de
 deportistas profesionales pendientes de reducir en los ejercicios siguientes".
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 878
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1056
 
-# Pag. 879
+# Pag. 1057
 
 Reducciones de la base imponible general
 5. Disposición de derechos consolidados
@@ -35429,9 +41597,9 @@ Tales aportaciones podrán ser objeto de reducción de la base imponible, en la 
 cobertura de las contingencias previstas en el artículo 8.6 del texto refundido de la Ley de regulación de los
 Planes y Fondos de Pensiones, siempre que se cumplan los requisitos anteriormente comentados para las
 aportaciones a sistemas de previsión social en general.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 879
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1057
 
-# Pag. 880
+# Pag. 1058
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Como límite máximo conjunto de reducción de estas aportaciones se aplicará el indicado
@@ -35440,9 +41608,9 @@ social.
 Recuerde: la base liquidable general y la base liquidable del ahorro no pueden resultar
 negativas como consecuencia de la aplicación de las reducciones hasta ahora
 comentadas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 880
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1058
 
-# Pag. 881
+# Pag. 1059
 
 Reducciones de la base imponible general
 Cuadro resumen: Reducciones de la base imponible general
@@ -35507,9 +41675,9 @@ contribución empresarial
 Primas satisfechas por Hasta 5.000 por 2,5. Máximo 1.250
 la empresa a seguros ○ Contribución entre
 colectivos de 500,01 y 1.500 euros =
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 881
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1059
 
-# Pag. 882
+# Pag. 1060
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Importe
@@ -35581,9 +41749,9 @@ euros para contribuciones
 empresariales imputadas por
 seguros colectivos de
 dependencia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 882
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1060
 
-# Pag. 883
+# Pag. 1061
 
 Reducciones de la base imponible general
 Importe
@@ -35640,9 +41808,9 @@ anualidades por
 alimentos a favor de
 los hijos véase las
 especialidades en la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 883
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1061
 
-# Pag. 884
+# Pag. 1062
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Importe
@@ -35684,9 +41852,9 @@ comentado, sin que esta pueda resultar negativa como consecuencia de tales reduc
 A estos efectos la base liquidable general solo puede ser negativa cuando lo sea la base imponible general por ser
 sus componentes negativos superiores a los positivos. En estos casos, no podrá aplicarse ninguna de las
 reducciones hasta ahora comentadas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 884
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1062
 
-# Pag. 885
+# Pag. 1063
 
 Base liquidable general y base liquidable general sometida a gravamen
 Si la base liquidable general resultase negativa en los términos anteriormente comentados,
@@ -35721,9 +41889,9 @@ impositivos anteriores en que hayan tributado individualmente.
 determinadas en tributación conjunta serán compensables, exclusivamente, por
 aquellos contribuyentes a quienes correspondan de acuerdo con las reglas sobre
 individualización de rentas contenidas en la Ley del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 885
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1063
 
-# Pag. 886
+# Pag. 1064
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Base liquidable del ahorro
@@ -35761,9 +41929,9 @@ Solución:
 Nota previa: respecto a la declaración de incapacidad del hijo que, como consecuencia de
 la Ley 8/2021, de 2 de junio (BOE de 3 de junio), las resoluciones judiciales por las que se
 establecía la prórroga o rehabilitación de la patria potestad solo tendrán en cuenta mientras
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 886
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1064
 
-# Pag. 887
+# Pag. 1065
 
 Caso práctico. Aportaciones a plan de pensiones y patrimonio protegido de hijo con discapacidad
 no se dicte una nueva resolución judicial que la sustituya.
@@ -35802,9 +41970,9 @@ contribuciones a sistemas de previsión social”.
 • Total (1.500 + 2.500) = 4.000
 Límite porcentual de reducción (30% s/55.500) = 16.650
 Reducción aplicable por aportaciones y contribuciones 2025: 4.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 887
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1065
 
-# Pag. 888
+# Pag. 1066
 
 Capítulo 13. Determinación de la renta del contribuyente sujeta a gravamen: base liquidable
 Remanente de base imponible general (55.500 – 4.000) = 51.500
@@ -35841,9 +42009,9 @@ patrimonios protegidos de personas con discapacidad pendientes de reducir en los
 Así, corresponderá:
 Al padre: 6.250-5.773,81 = 476,19 euros.
 A cada uno de los hijos: 5.000 - 4.619,05 = 380,95 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 888
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1066
 
-# Pag. 889
+# Pag. 1067
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Capítulo 14. Adecuación del impuesto a
@@ -35875,9 +42043,9 @@ Comunidades Autónomas de régimen común y Ciudades con Estatuto de Autonomía 
 modifican determinadas normas tributarias (BOE de 19 de diciembre) ha otorgado a las
 Comunidades Autónomas competencias normativas sobre el importe del mínimo
 personal y familiar aplicable para el cálculo del gravamen autonómico.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 889
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1067
 
-# Pag. 890
+# Pag. 1068
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 A estos efectos, el artículo 46.1 a) de la citada Ley 22/2009 dispone que las Comunidades
@@ -35920,9 +42088,9 @@ Aunque el importe del mínimo del contribuyente sea de 5.550 euros, tanto tribut
 debe recordarse que en los supuestos de tributación conjunta resulta aplicable una reducción de la base
 imponible de 3.400 euros para las unidades familiares integradas por ambos cónyuges y, en su caso, los hijos
 que formen parte de dicha unidad familiar. En los supuestos de unidad familiar formada por el padre o la madre
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 890
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1068
 
-# Pag. 891
+# Pag. 1069
 
 Mínimo del contribuyente
 y todos los hijos que convivan con uno u otro puede resultar aplicable una reducción de 2.150 euros anuales.
@@ -35955,9 +42123,9 @@ donde podrá consultar el mínimo correspondiente al descendiente con el que con
 requisitos que debe cumplir, así como los incrementos que le correspondan por razón
 de su edad o su grado de discapacidad.
 Normativa: Arts. 58 y 61 Ley IRPF y 53 Reglamento IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 891
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1069
 
-# Pag. 892
+# Pag. 1070
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Concepto y requisitos de los descendientes
@@ -35997,9 +42165,9 @@ b) Que el descendiente conviva con el contribuyente.
 La ausencia de un hijo de forma esporádica de la vivienda habitual durante los períodos lectivos del curso
 escolar no rompe el requisito de convivencia exigido para poder aplicar el contribuyente el mínimo por
 descendientes, siempre y cuando se cumplan el resto de los requisitos establecidos al respecto.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 892
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1070
 
-# Pag. 893
+# Pag. 1071
 
 Mínimo por descendientes
 No obstante, en ese caso debe tenerse en cuenta que se asimila a la convivencia la
@@ -36046,9 +42214,9 @@ mínimo por descendientes, aplicarán las especialidades contempladas en ellos p
 de gravamen, por lo que, a contrario sensu, si tal derecho existe, como efectivamente sucedería en el caso de
 tener el progenitor la guarda y custodia de los hijos de modo compartido, entonces han de aplicar
 necesariamente el mínimo por descendientes.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 893
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1071
 
-# Pag. 894
+# Pag. 1072
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 c) Que el descendiente no haya obtenido en el ejercicio 2025 rentas superiores a 8.000
@@ -36091,9 +42259,9 @@ No obstante, si fallece uno de los progenitores a lo largo del período impositi
 rentas del descendiente son superiores a 1.800 euros, el mínimo se prorrateará al 50 por
 100 entre los dos progenitores, siempre que el progenitor fallecido a la fecha de su
 fallecimiento tuviese derecho al mínimo por descendientes, siendo irrelevante que el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 894
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1072
 
-# Pag. 895
+# Pag. 1073
 
 Mínimo por descendientes
 progenitor supérstite tribute conjuntamente con el descendiente.
@@ -36127,9 +42295,9 @@ concepto, la cuantía aplicable es de 2.400 euros.
 Importante: el número de orden de los descendientes, incluidas las personas
 vinculadas al contribuyente por razón de tutela y acogimiento en los términos previstos
 en la legislación civil o, fuera de los casos anteriores, a quienes tengan atribuida por
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 895
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1073
 
-# Pag. 896
+# Pag. 1074
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 resolución judicial su guarda y custodia, se asignará en función de la edad de los que
@@ -36159,9 +42327,9 @@ acogimiento preadoptivo deberán entenderse hechas a la delegación de guarda pa
 preadoptiva prevista en el artículo 176 bis del Código Civil, mientras que las referencias que se realizasen al
 acogimiento simple deberán entenderse hechas al acogimiento familiar temporal previsto en el artículo 173 bis
 del Código Civil.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 896
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1074
 
-# Pag. 897
+# Pag. 1075
 
 Mínimo por descendientes
 Acogimiento familiar Aplicación del mínimo Incremento por
@@ -36195,9 +42363,9 @@ urgencia o temporales el incremento del mínimo por descendientes solo será pos
 cuando el descendiente sea menor de tres años. Igualmente, en los casos de menores
 sobre los que se tenga la guarda y custodia por resolución judicial, el incremento del
 mínimo por descendientes solo será aplicable si son menores de tres años.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 897
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1075
 
-# Pag. 898
+# Pag. 1076
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Condiciones para la aplicación del mínimo por descendientes
@@ -36232,9 +42400,9 @@ a. Que el ascendiente sea mayor de 65 años a la fecha de devengo del impuesto
 (normalmente el 31 de diciembre) o, cualquiera que sea su edad, que se trate de una
 persona con un grado de discapacidad igual o superior al 33 por 100.
 b. Que convivan con el contribuyente, al menos, la mitad del período impositivo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 898
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1076
 
-# Pag. 899
+# Pag. 1077
 
 Mínimo por ascendientes
 La exigencia de este requisito impide la posibilidad de aplicar el mínimo por el ascendiente entre varios
@@ -36276,9 +42444,9 @@ iguales.
 No obstante, cuando los contribuyentes tengan distinto grado de parentesco con el ascendiente, la
 aplicación del mínimo corresponderá a los de grado más cercano, salvo que estos no tengan rentas
 anuales, excluidas las exentas, superiores a 8.000 euros, en cuyo caso corresponderá a los del siguiente
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 899
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1077
 
-# Pag. 900
+# Pag. 1078
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 grado.
@@ -36310,9 +42478,9 @@ Igual o superior al 33 por 100 e inferior al 65 por 100 y que 3.000 3.000 6.000
 acredite necesitar ayuda de terceras personas o movilidad
 reducida
 Igual o superior al 65 por 100 9.000 3.000 12.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 900
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1078
 
-# Pag. 901
+# Pag. 1079
 
 Mínimo por discapacidad
 Mínimo por discapacidad de ascendientes o descendientes:
@@ -36348,9 +42516,9 @@ Igual o superior al 65 por 100 9.000 3.000 12.000
 Acreditación de la discapacidad, de la necesidad de ayuda de
 terceras personas o de la existencia de dificultades de movilidad
 Normativa: Art. 72 Reglamento IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 901
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1079
 
-# Pag. 902
+# Pag. 1080
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Tienen la consideración de personas con discapacidad, a efectos del IRPF, los
@@ -36392,9 +42560,9 @@ Igualmente, se considerará acreditado un grado de discapacidad igual o superior
 resoluciones judiciales anteriores a la Ley 8/2021 (mientras no se hubiera dictado una
 nueva resolución judicial que las sustituyera por nuevas medidas adaptadas a la Ley
 8/2021).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 902
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1080
 
-# Pag. 903
+# Pag. 1081
 
 Mínimo por discapacidad
 • Cuando se trate de personas con discapacidad para las que se haya establecido la
@@ -36438,16 +42606,16 @@ No obstante, cuando los contribuyentes tengan distinto grado de parentesco con e
 ascendiente o descendiente, la aplicación del mínimo corresponderá a los de grado más
 cercano, salvo que estos no tengan rentas anuales, excluidas las exentas, superiores a
 8.000 euros, en cuyo caso corresponderá a los del siguiente grado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 903
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1081
 
-# Pag. 904
+# Pag. 1082
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 d. No procederá la aplicación de estos mínimos cuando los ascendientes o
 descendientes presenten declaración por el IRPF con rentas superiores a 1.800 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 904
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1082
 
-# Pag. 905
+# Pag. 1083
 
 Cuadro-resumen del mínimo personal, por descendientes, por ascendientes y por discapacidad
 Cuadro-resumen del mínimo personal, por
@@ -36480,9 +42648,9 @@ Mínimo por 1.150 euros anuales por cada ascendiente
 ascendientes + 1.400 euros anuales, si tiene más de 75 años.
 (*) En caso de fallecimiento del ascendiente 1.150 euros.
 Discapacidad del ascendiente:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 905
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1083
 
-# Pag. 906
+# Pag. 1084
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 • 3.000 euros anuales, si el grado de discapacidad es igual o mayor del 33 por
@@ -36515,9 +42683,9 @@ Mínimo por descendientes
 • 2.820 euros anuales por el segundo.
 • 4.170 euros anuales por el tercero.
 • 4.700 euros anuales por el cuarto y siguientes.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 906
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1084
 
-# Pag. 907
+# Pag. 1085
 
 Importes del mínimo personal y familiar aprobados por las Comunidades Autónomas para el cálculo del gravamen autonómico
 Cuando un descendiente sea menor de tres años, la cuantía que corresponda al mínimo por
@@ -36552,9 +42720,9 @@ Mínimo del contribuyente
 Mínimo por descendientes
 • 2.640 euros anuales por el primer descendiente.
 • 2.970 euros anuales por el segundo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 907
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1085
 
-# Pag. 908
+# Pag. 1086
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 • 4.400 euros anuales por el tercero.
@@ -36588,9 +42756,9 @@ Mínimo por el segundo, el mínimo por el tercero y el mínimo por el cuarto
 y siguientes descendientes
 • 2970 euros anuales por el segundo descendiente.
 • 4.400 euros anuales por el tercer descendiente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 908
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1086
 
-# Pag. 909
+# Pag. 1087
 
 Importes del mínimo personal y familiar aprobados por las Comunidades Autónomas para el cálculo del gravamen autonómico
 • 4.950 euros anuales por el cuarto descendiente y siguientes.
@@ -36624,9 +42792,9 @@ aprobado por Decreto-legislativo 1/2009, de 21 de abril
 Se establecen los siguientes importes de los mínimos del contribuyente, por descendientes,
 por ascendientes y por discapacidad, que deben aplicar los contribuyentes residentes en el
 territorio de la Comunidad Autónoma de Canarias para el cálculo del gravamen autonómico:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 909
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1087
 
-# Pag. 910
+# Pag. 1088
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Mínimo del contribuyente
@@ -36658,9 +42826,9 @@ familiar
 Normativa: Art. 1 bis Texto Refundido de las disposiciones legales de la comunidad de
 Castilla y León en materia de tributos propios y cedidos, aprobado por Decreto
 Legislativo 1/2013, de 12 de septiembre
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 910
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1088
 
-# Pag. 911
+# Pag. 1089
 
 Importes del mínimo personal y familiar aprobados por las Comunidades Autónomas para el cálculo del gravamen autonómico
 Se establece los mismos importes del mínimo del contribuyente, por descendientes y
@@ -36697,9 +42865,9 @@ Mínimo por descendientes
 • 2.503 euros anuales por el primer descendiente.
 • 2.816 euros anuales por el segundo.
 • 4.172 euros anuales por el tercero.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 911
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1089
 
-# Pag. 912
+# Pag. 1090
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 • 4.694 euros anuales por el cuarto y siguientes.
@@ -36733,9 +42901,9 @@ Mínimo del contribuyente
 Mínimo por descendientes
 • 2.575,85 euros anuales por el primer descendiente.
 • 2.897,83 euros anuales por el segundo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 912
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1090
 
-# Pag. 913
+# Pag. 1091
 
 Importes del mínimo personal y familiar aprobados por las Comunidades Autónomas para el cálculo del gravamen autonómico
 • 4.400 euros anuales por el tercero.
@@ -36768,9 +42936,9 @@ Cuantías aplicables
 superior al 33 por 100 e inferior al 65 por 100.
 • 9.900 euros anuales cuando sea una persona con un grado de discapacidad igual o
 superior al 65 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 913
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1091
 
-# Pag. 914
+# Pag. 1092
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Importante: la cuantía del concepto "gastos de asistencia" no se modifica por lo que el
@@ -36803,9 +42971,9 @@ descendientes
 • 3.300 euros anuales por cada contribuyente, ascendiente o descendiente,cuando sea
 una persona con un grado de discapacidad igual o superior al 33 por 100 e inferior al 65
 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 914
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1092
 
-# Pag. 915
+# Pag. 1093
 
 Importes del mínimo personal y familiar aprobados por las Comunidades Autónomas para el cálculo del gravamen autonómico
 • 9.900 euros anuales por cada contribuyente, ascendiente o descendiente, cuando sea
@@ -36813,9 +42981,9 @@ una persona con un grado de discapacidad igual o superior al 65 por 100.
 • Más 3.300 euros anuales en concepto de gastos de asistencia por cada contribuyente,
 ascendiente o descendiente que acredite necesitar ayuda de terceras personas o
 movilidad reducida y con un grado de discapacidad igual o superior al 65 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 915
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1093
 
-# Pag. 916
+# Pag. 1094
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Cuadro comparativo de los importes de los mínimos personales
@@ -36867,9 +43035,9 @@ anuales, por personas o
 descendiente movilidad
 menor de tres reducida o un
 años.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 916
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1094
 
-# Pag. 917
+# Pag. 1095
 
 Importes del mínimo personal y familiar aprobados por las Comunidades Autónomas para el cálculo del gravamen autonómico
 grado de
@@ -36926,9 +43094,9 @@ general. 1º. de más de 65 años o discapacidad = o
 + 1.162 euros anuales por el • 9.090 euros
 anuales, mayor 2º. + 1.414 euros anuales, anuales, si el
 de 65 años. • 4.040 euros mayor de 75 años. grado de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 917
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1095
 
-# Pag. 918
+# Pag. 1096
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 + 1.414 euros anuales por el discapacidad= o
@@ -36983,9 +43151,9 @@ euros anuales, 2º. anuales, si el
 mayor de 65 • 4.400 euros + 1.502,58 euros grado de
 años. anuales por el anuales, mayor de 75 discapacidad= o
 3º. años. > al 65%.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 918
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1096
 
-# Pag. 919
+# Pag. 1097
 
 Importes del mínimo personal y familiar aprobados por las Comunidades Autónomas para el cálculo del gravamen autonómico
 + 1.502,58 • 4.950 euros + 3.219,81
@@ -37039,9 +43207,9 @@ adicionales, anuales por el + 3.300 euros
 mayor de 75 4º y siguientes. anuales, si
 años. necesita ayuda
 de terceras
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 919
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1097
 
-# Pag. 920
+# Pag. 1098
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 + 3.080 euros personas o
@@ -37076,9 +43244,9 @@ normativas en la regulación de las cuantías del mínimo personal y familiar, e
 este determinado conforme a lo dispuesto en la Ley del IRPF debe utilizarse para el cálculo
 tanto del gravamen estatal como del gravamen autonómico
 1. Tributación individual de don A.T.C.:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 920
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1098
 
-# Pag. 921
+# Pag. 1099
 
 Ejemplos prácticos
 Mínimo estatal Mínimo autonómico
@@ -37113,9 +43281,9 @@ Total mínimo por 4.550 Total mínimo por 4.550
 descendientes descendientes
 Mínimo por Hijo 1º (27 años) 1.500 Mínimo por Hijo 1º (27 años) 1.500
 discapacidad (50% s/3.000) discapacidad (50% s/3.000)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 921
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1099
 
-# Pag. 922
+# Pag. 1100
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Mínimo estatal Mínimo autonómico
@@ -37151,9 +43319,9 @@ Los restantes hijos no han obtenido rentas en el ejercicio.
 Determinar el importe del mínimo personal y familiar de ambos contribuyentes en el
 supuesto de tributación individual y de tributación conjunta a efectos del cálculo del
 gravamen estatal y del gravamen autonómico.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 922
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1100
 
-# Pag. 923
+# Pag. 1101
 
 Ejemplos prácticos
 Solución:
@@ -37189,9 +43357,9 @@ contribuyente autonómico). (Volver mínimo estatal) (Volver mínimo autonómico
 Mínimo estatal Mínimo autonómico
 Mínimo del General 5.550 Mínimo del General 6.105
 contribuyente contribuyente
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 923
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1101
 
-# Pag. 924
+# Pag. 1102
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Mínimo estatal Mínimo autonómico
@@ -37231,9 +43399,9 @@ la Comunitat Valenciana, que modifica el importe correspondiente al mínimo por 
 Mínimo estatal Mínimo autonómico
 Mínimo del General 5.550 Mínimo del General 6.105
 contribuyente contribuyente
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 924
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1102
 
-# Pag. 925
+# Pag. 1103
 
 Ejemplos prácticos
 Mínimo estatal Mínimo autonómico
@@ -37272,9 +43440,9 @@ euros anuales. Por el ejercicio 2025 no ha presentado declaración por el IRPF.
 Determinar el importe del mínimo personal y familiar del matrimonio en el supuesto
 de tributación conjunta de la unidad familiar a efectos del cálculo del gravamen estatal y del
 gravamen autonómico.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 925
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1103
 
-# Pag. 926
+# Pag. 1104
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Solución:
@@ -37312,9 +43480,9 @@ grado del 33%) grado del 33%)
 Del descendiente 9.000 Del descendiente 9.000
 (Hijo 1º con un (Hijo 1º con un
 grado del 65%) grado del 65%)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 926
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1104
 
-# Pag. 927
+# Pag. 1105
 
 Ejemplos prácticos
 Mínimo estatal Mínimo autonómico
@@ -37352,9 +43520,9 @@ por incapacidad permanente absoluta que percibe de la Seguridad Social, sin que 
 correspondiente certificado de discapacidad emitido por el organismo correspondiente. El
 padre, de 77 años, pensionista, han percibido en 2025 rendimientos del trabajo que
 asciende a 22.800 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 927
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1105
 
-# Pag. 928
+# Pag. 1106
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Determinar el importe del mínimo personal y familiar de ambos cónyuges en el supuesto de
@@ -37387,9 +43555,9 @@ Hijo 2º (10 años) 1.350 Hijo 2º (10 años) 1.410
 (50% s/2.700) (50% s/2.820)
 Total mínimo por 2.550 Total mínimo por 2.665
 descendientes descendientes
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 928
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1106
 
-# Pag. 929
+# Pag. 1107
 
 Ejemplos prácticos
 Mínimo estatal Mínimo autonómico
@@ -37429,9 +43597,9 @@ absoluta o gran invalidez, por lo que procede su aplicación reconociendo una di
 1. Tributación conjunta de la unidad familiar (3)
 Mínimo estatal Mínimo autonómico
 Mínimo del contribuyente 5.550 Mínimo del contribuyente 5.790
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 929
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1107
 
-# Pag. 930
+# Pag. 1108
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Mínimo estatal Mínimo autonómico
@@ -37468,9 +43636,9 @@ residentes en la Comunidad Autónoma de Andalucía). No obstante, en la tributac
 podrá reducirse la base imponible en 3.400 euros anuales con carácter previo a las reducciones legalmente
 establecidas. Véase, a este respecto, el Capítulo 13 anterior en que se comentan las reducciones de la base
 imponible general y del ahorro.(Volver)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 930
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1108
 
-# Pag. 931
+# Pag. 1109
 
 Ejemplos prácticos
 Ejemplo 5. Matrimonio con hijos comunes y no comunes,
@@ -37506,9 +43674,9 @@ Hijo 3º (21 años) 2.000 Hijo 3º (21 años) 2.200
 (50% s/4.000) (50% s/4.400)
 Total mínimo por 5.750 Total mínimo por 6.085
 descendientes descendientes
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 931
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1109
 
-# Pag. 932
+# Pag. 1110
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Mínimo estatal Mínimo autonómico
@@ -37541,9 +43709,9 @@ caso del mínimo para el segundo y tercer descendiente y el mínimo por discapac
 aprobado por la Comunidad Autónoma de Illes Balears que aumenta en un 10 por 100 los importes fijados en los
 artículos 57, 58, 59 y 60 de la Ley del IRPF. (Volver)
 3. Tributación conjunta de la unidad familiar (3)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 932
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1110
 
-# Pag. 933
+# Pag. 1111
 
 Ejemplos prácticos
 Mínimo estatal Mínimo autonómico:
@@ -37581,9 +43749,9 @@ Doña M.M.A., de 31 años de edad y residencia en Logroño adoptó con fecha 5 d
 2025, mediante resolución judicial que fue inscrita en el Registro Civil en noviembre de ese
 año, a un menor de 5 años de edad con un grado de discapacidad del 40 por 100 que
 convive con ella y que no ha obtenido rentas, excluidas las exentas, superiores a 8.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 933
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1111
 
-# Pag. 934
+# Pag. 1112
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 euros anuales ni ha presentado declaración del IRPF.
@@ -37619,9 +43787,9 @@ correspondiente y en los dos siguientes". (Volver unidad familiar) (Volver incre
 (3) En la determinación del mínimo por discapacidad del descendiente se ha aplicado el importe aprobado por la
 Comunidad Autónoma de La Rioja que modifica el importe correspondiente al mínimo por discapacidad de
 descendientes. (Volver hijo)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 934
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1112
 
-# Pag. 935
+# Pag. 1113
 
 Cuadro: Separaciones judiciales, divorcios o nulidades (con hijos): Tributación conjunta y aplicación del mínimo por descendientes
 Cuadro: Separaciones judiciales, divorcios o
@@ -37679,9 +43847,9 @@ por descendientes, salvo lo
 1º) Que convivan con el indicado en el supuesto siguiente
 contribuyente o [dependencia económica] .
 dependan
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 935
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1113
 
-# Pag. 936
+# Pag. 1114
 
 Capítulo 14. Adecuación del impuesto a las circunstancias personales y familiares del contribuyente: mínimo personal y familiar
 Condiciones de
@@ -37735,9 +43903,9 @@ prorrateará el mínimo en caso de
 guardia y custodia compartida o
 convivencia con los dos padres o
 en el caso de dependencia
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 936
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1114
 
-# Pag. 937
+# Pag. 1115
 
 Cuadro: Separaciones judiciales, divorcios o nulidades (con hijos): Tributación conjunta y aplicación del mínimo por descendientes
 Condiciones de
@@ -37757,9 +43925,9 @@ exigidos.
 1.800 euros, ninguno de ellos
 puede aplicar el mínimo por
 descendientes.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 937
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1115
 
-# Pag. 938
+# Pag. 1116
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Capítulo 15. Cálculo del impuesto:
@@ -37794,9 +43962,9 @@ de régimen común pueden, de acuerdo con lo dispuesto en el artículo 46.1 de l
 22/2009, de 18 de diciembre (BOE de 19 de diciembre), asumir competencias normativas en
 la determinación del importe del mínimo personal y familiar aplicable para el cálculo del
 gravamen autonómico y sobre la escala autonómica aplicable a la base liquidable general.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 938
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1116
 
-# Pag. 939
+# Pag. 1117
 
 Introducción
 Respecto al importe del mínimo personal y familiar aplicable para el cálculo del
@@ -37832,9 +44000,9 @@ de la base liquidable general hasta el importe de esta última y, en su caso, de
 liquidable del ahorro por el resto.
 La aplicación del mínimo personal y familiar y la determinación de las cuotas íntegras del
 IRPF, se representan de forma gráfica en el esquema que figura en el siguiente apartado:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 939
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1117
 
-# Pag. 940
+# Pag. 1118
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Esquema gráfico: Aplicación de mínimo personal y familiar y
@@ -37848,9 +44016,9 @@ y autonómica, del IRPF obteniéndose las correspondientes cuotas parciales (Cuo
 Fase 2ª: A la parte de la base liquidable general correspondiente al mínimo personal y
 familiar estatal establecido en el IRPF se le aplica la escala general del IRPF, obteniéndose
 la cuota parcial (Cuota 3).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 940
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1118
 
-# Pag. 941
+# Pag. 1119
 
 Introducción
 Fase 3ª: A la parte de la base liquidable general correspondiente al mínimo personal y
@@ -37888,9 +44056,9 @@ sobre la cuantía de la base liquidable general) la escala del ahorro autonómic
 Fase 4ª: A partir de las cuatro cuotas parciales obtenidas se calculan la cuota íntegra del
 ahorro estatal (Cuota A menos Cuota C) y cuota íntegra del ahorro autonómica (Cuota B
 menos Cuota D).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 941
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1119
 
-# Pag. 942
+# Pag. 1120
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Gravamen de la base liquidable general
@@ -37920,9 +44088,9 @@ Normativa: Art. 74.1.1º y 2 Ley IRPF
 A la base liquidable general se le aplicarán los tipos de la escala autonómica del IRPF que,
 conforme a lo previsto en la Ley 22/2009, por el que se regula el sistema de financiación de
 las Comunidades Autónomas de régimen común y Ciudades con Estatuto de Autonomía,
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 942
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1120
 
-# Pag. 943
+# Pag. 1121
 
 Gravamen de la base liquidable general
 hayan sido aprobadas por la Comunidad Autónoma.
@@ -37954,9 +44122,9 @@ Comunidad Autónoma de Aragón
 Normativa: Art. 110-1 Texto Refundido de las disposiciones dictadas por la Comunidad
 Autónoma de Aragón en materia de tributos cedidos, aprobado por Decreto Legislativo
 1/2005, de 26 de septiembre
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 943
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1121
 
-# Pag. 944
+# Pag. 1122
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Escala aplicable en el ejercicio 2025 por los contribuyentes residentes en dicho ejercicio en esta Comunidad
@@ -37985,9 +44153,9 @@ Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
 17.707,20 1.751,36 15.300,00 14,00
 33.007,20 3.893,36 20.400,00 19,20
 53.407,20 7.810,16 16.592,80 21,50
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 944
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1122
 
-# Pag. 945
+# Pag. 1123
 
 Gravamen de la base liquidable general
 Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
@@ -38018,9 +44186,9 @@ Base liquidable desde Cuota íntegra Resto base liquidable hasta Tipo aplicable
 120.000 22.015 55.000 23,75
 175.000 35.077,50 En adelante 24,75
 Comunidad Autónoma de Canarias
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 945
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1123
 
-# Pag. 946
+# Pag. 1124
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Normativa: Art.18 bis Texto Refundido de las disposiciones legales vigentes dictadas
@@ -38051,9 +44219,9 @@ Base liquidable (euros) Cuota íntegra (euros) Resto base liquidable (euros) Tip
 13.000 1.105 8.000 11,00
 21.000 1.985 14.200 14,50
 35.200 4.044 24.800 18,00
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 946
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1124
 
-# Pag. 947
+# Pag. 1125
 
 Gravamen de la base liquidable general
 Base liquidable (euros) Cuota íntegra (euros) Resto base liquidable (euros) Tipo aplicable (%)
@@ -38082,9 +44250,9 @@ Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
 0,00 0,00 12.450,00 9
 12.450,00 1.120,50 7.750,00 12,00
 20.200,00 2.050,50 15.000,00 14,00
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 947
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1125
 
-# Pag. 948
+# Pag. 1126
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
@@ -38111,9 +44279,9 @@ Comunidad Autónoma de Extremadura
 Normativa: Art. 1 Texto Refundido de las disposiciones legales de la Comunidad
 Autónoma de Extremadura en materia de tributos cedidos por el Estado, aprobado por
 Decreto Legislativo 1/2018, de 10 de abril
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 948
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1126
 
-# Pag. 949
+# Pag. 1127
 
 Gravamen de la base liquidable general
 Escala aplicable en el ejercicio 2025 por los contribuyentes residentes en dicho ejercicio en esta Comunidad
@@ -38142,9 +44310,9 @@ Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
 21.068,60 2.110,38 14.131,40 14,90
 35.200,00 4.215,96 24.800,00 18,40
 60.000,00 8.779,16 En adelante 22,50
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 949
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1127
 
-# Pag. 950
+# Pag. 1128
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Comunidad de Madrid
@@ -38173,9 +44341,9 @@ Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
 20.200,00 2.050,75 13.800,00 13,30
 34.000,00 3.886,15 26.000,00 17,90
 60.000,00 8.540,15 En adelante. 22,50
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 950
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1128
 
-# Pag. 951
+# Pag. 1129
 
 Gravamen de la base liquidable general
 Comunidad Autónoma de La Rioja
@@ -38206,9 +44374,9 @@ Autónoma
 Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
 (euros) (euros) (euros) (%)
 0 0 12.000 9,00
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 951
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1129
 
-# Pag. 952
+# Pag. 1130
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
@@ -38236,9 +44404,9 @@ Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
 12.450,00 1.182,75 7.750,00 12,00
 20.200,00 2.112,75 15.000,00 15,00
 35.200,00 4.362,75 24.800,00 18,50
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 952
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1130
 
-# Pag. 953
+# Pag. 1131
 
 Gravamen de la base liquidable general
 Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
@@ -38266,9 +44434,9 @@ Base liquidable Incremento en cuota íntegra Resto base liquidable del Tipo
 hasta (euros) estatal (euros) ahorro hasta (euros) aplicable (%)
 0 0 6.000 9,50
 6.000,00 570 44.000 10,50
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 953
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1131
 
-# Pag. 954
+# Pag. 1132
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Base liquidable Incremento en cuota íntegra Resto base liquidable del Tipo
@@ -38300,9 +44468,9 @@ Resto: 2.690 al 15,00% = 403,5
 Cuota 2 resultante = 2.218,39 + 403,5 = 2.621,89
 2. Aplicación de las escalas de gravamen a la base liquidable general
 correspondiente al mínimo personal y familiar
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 954
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1132
 
-# Pag. 955
+# Pag. 1133
 
 Ejemplo práctico: cálculo de las cuotas íntegras estatal y autonómica
 Dado que el importe de la base liquidable general (23.900) es superior al del mínimo
@@ -38332,9 +44500,9 @@ presenta determinadas especialidades respecto del procedimiento liquidatorio has
 comentado, por el hecho de que, al no poder ser considerados residentes en el territorio de
 ninguna Comunidad Autónoma, estas carecen de competencia normativa sobre el IRPF
 aplicable a los mismos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 955
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1133
 
-# Pag. 956
+# Pag. 1134
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Son contribuyentes del IRPF, residentes en el extranjero, las personas de nacionalidad
@@ -38367,9 +44535,9 @@ Base liquidable hasta Cuota íntegra Resto base liquidable hasta Tipo aplicable
 35.200,00 4.362,75 24.800,00 18,50
 60.000,00 8.950,75 240.000,00 22,50
 300.000,00 62.950,75 En adelante 24,50
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 956
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1134
 
-# Pag. 957
+# Pag. 1135
 
 Gravamen aplicable a contribuyentes del IRPF residentes en el extranjero
 Escala del artículo 65 Ley IRPF
@@ -38397,9 +44565,9 @@ liquidable general no reduce la base liquidable del ahorro, sino que a su import
 aplican las escalas estatal y autonómica y la cuota resultante minora la cuantía obtenida
 de aplicar las citadas escalas a la totalidad de la base liquidable del ahorro, de forma
 equivalente a cómo opera en la base liquidable general.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 957
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1135
 
-# Pag. 958
+# Pag. 1136
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Régimen fiscal especial aplicable a los trabajadores
@@ -38433,9 +44601,9 @@ siguiente escala:
 Base liquidable Incremento en cuota íntegra Resto base liquidable del Tipo
 hasta (euros) estatal (euros) ahorro hasta (euros) aplicable (%)
 0 0 6.000 19
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 958
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1136
 
-# Pag. 959
+# Pag. 1137
 
 Régimen fiscal especial aplicable a los trabajadores desplazados a territorio español
 Base liquidable Incremento en cuota íntegra Resto base liquidable del Tipo
@@ -38470,9 +44638,9 @@ autonómica) con arreglo al siguiente procedimiento:
 1. El importe de las anualidades por alimentos se diferenciará del resto de la base liquidable
 general, obteniéndose de esta forma dos bases para la aplicación de las escalas de
 gravamen:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 959
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1137
 
-# Pag. 960
+# Pag. 1138
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 • Base "A": importe de la anualidad por alimentos.
@@ -38513,9 +44681,9 @@ pago de aquellas no puede asimilarse a convivencia a efectos de la aplicación d
 mínimo por descendientes. Véanse al respecto las resoluciones del TEAC de 29 de
 mayo de 2023 (reclamaciones números 00/08646/2022/00/00 y 00/10590/2022),
 recaídas en recurso extraordinario de alzada para unificación de criterio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 960
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1138
 
-# Pag. 961
+# Pag. 1139
 
 Especialidades en la determinación de la cuota íntegra estatal y autonómica
 En resumen, el régimen previsto en los artículos 64 y 75 de la Ley del IRPF sólo es
@@ -38558,9 +44726,9 @@ mientras sea menor de edad y aún después, cuando no haya terminado su
 formación por causa que no le sea imputable.
 Entre los alimentos se incluirán los gastos de embarazo y parto, en cuanto no estén
 cubiertos de otro modo”.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 961
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1139
 
-# Pag. 962
+# Pag. 1140
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Téngase en cuenta que la actualización del importe de las anualidades por alimentos conforme al
@@ -38596,9 +44764,9 @@ Cuota 2 = 1.080
 2. Aplicación de las escalas de gravamen al resto de base liquidable general, base
 "B" (51.000 euros)
 a. Escala general del IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 962
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1140
 
-# Pag. 963
+# Pag. 1141
 
 Especialidades en la determinación de la cuota íntegra estatal y autonómica
 Hasta 35.200 = 4.362,75
@@ -38631,9 +44799,9 @@ Cuota 8 = 727,65
 Cuota general estatal (Cuota 5 − Cuota 7): 8.425,75 − 715,35 = 7.710,40
 Cuota general autonómica (Cuota 6 − Cuota 8): 8.410 − 727,65 =7.682,35
 6. Gravamen de la base liquidable del ahorro (5.000)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 963
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1141
 
-# Pag. 964
+# Pag. 1142
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Gravamen estatal (5.000 x 9,50%) = 475
@@ -38670,9 +44838,9 @@ autonómica. Como resultado se obtienen las cuotas parciales 1 y 2.
 2. Al importe del mínimo personal y familiar (siempre que no supere la base liquidable
 general o, en su caso, la base liquidable general incrementada con las rentas exentas con
 progresividad) se le aplican, sucesivamente, la escala de gravamen general,
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 964
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1142
 
-# Pag. 965
+# Pag. 1143
 
 Especialidades en la determinación de la cuota íntegra estatal y autonómica
 obteniéndose de esta forma la cuota parcial 3 y la escala de gravamen autonómica o
@@ -38709,9 +44877,9 @@ Hasta 20.200 = 2.112,75
 Resto: 6.600 al 15% = 990
 Cuota 1 (2.112,75 + 990) = 3.102,75
 b. Escala autonómica del IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 965
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1143
 
-# Pag. 966
+# Pag. 1144
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Hasta 20.200 = 2.050,50
@@ -38743,9 +44911,9 @@ Gravamen estatal
 Gravamen autonómico
 2.800 x 9,5% = 266
 8. Determinación de las cuotas íntegras
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 966
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1144
 
-# Pag. 967
+# Pag. 1145
 
 Especialidades en la determinación de la cuota íntegra estatal y autonómica
 Cuota íntegra estatal (2.296,79 +266) = 2.562,79
@@ -38784,9 +44952,9 @@ Importante: en aquellos supuestos en que no exista remanente de mínimo personal
 familiar, si la cuantía de la base liquidable del ahorro incrementada en el importe de las
 rentas exentas con progresividad, no supera la cifra de 6.000 euros, no será preciso
 efectuar los cálculos anteriormente comentados.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 967
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1145
 
-# Pag. 968
+# Pag. 1146
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Ejemplo
@@ -38823,9 +44991,9 @@ Resto (80.000 al 11,5%) = 9.200
 Cuota A (5.190 + 9.200) = 14.390
 Escala del ahorro autonómica
 Hasta 50.000 = 5.190
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 968
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1146
 
-# Pag. 969
+# Pag. 1147
 
 Especialidades en la determinación de la cuota íntegra estatal y autonómica
 Resto (80.000 al 11,5%) = 9.200
@@ -38857,9 +45025,9 @@ alimentos en favor de los hijos y rentas exentas con progresividad incorpora las
 especialidades liquidatorias de cada una de dichas rentas tal y como se comenta en el
 ejemplo siguiente.
 Ejemplo:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 969
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1147
 
-# Pag. 970
+# Pag. 1148
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 Don J.R.F., residente en la Comunidad de Madrid, ha obtenido en el ejercicio 2025 una
@@ -38895,9 +45063,9 @@ Cuota 2 = 238
 Escala general del IRPF
 Hasta 20.200 = 2.112,75
 Resto: 3.850 al 15% = 577,50
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 970
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1148
 
-# Pag. 971
+# Pag. 1149
 
 Especialidades en la determinación de la cuota íntegra estatal y autonómica
 Cuota 3 = 2.690,25
@@ -38931,9 +45099,9 @@ Cuota estatal = (cuota 1 + cuota 3 - cuota 5):
 266 + 2.690,25 – 715,35 = 2.240,90
 Cuota autonómica = (cuota 2 + cuota 4 - cuota 6):
 238 + 2.385,33 – 659,39= 1.963,94
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 971
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1149
 
-# Pag. 972
+# Pag. 1150
 
 Capítulo 15. Cálculo del impuesto: determinación de las cuotas íntegras
 6. Determinación de los tipos medios de gravamen
@@ -38944,9 +45112,9 @@ Cuota íntegra general estatal (base liquidable general x TME) 23.900 x 8,34% =
 1.993,26
 Cuota íntegra general autonómica: (base liquidable general x TMA) 23.900 x 7,31% =
 1.747,09
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 972
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1150
 
-# Pag. 973
+# Pag. 1151
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Capítulo 16. Deducciones generales de
@@ -38979,9 +45147,9 @@ conforme al artículo 46 de la Ley 22/2009, de 18 diciembre o, en su defecto, lo
 establecidos en el artículo 78.2 de la Ley del IRPF en la redacción vigente a 31 de diciembre
 de 2012.
 2. Deducción por inversión en empresas de nueva o reciente creación
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 973
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1151
 
-# Pag. 974
+# Pag. 1152
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Los contribuyentes pueden deducir íntegramente de la cuota íntegra estatal el importe que
@@ -39018,9 +45186,9 @@ temporal, aplicándose en 2021, 2022, 2023, 2024 y 2025:
 1. Deducción por obras de mejora que reduzcan la demanda de calefacción y refrigeración.
 2. Deducción por obras de mejora que reduzcan el consumo de energía primaria no
 renovable.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 974
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1152
 
-# Pag. 975
+# Pag. 1153
 
 Introducción
 3. Deducción por obras de rehabilitación energética de edificios de uso predominante
@@ -39059,9 +45227,9 @@ Finalmente, el contribuyente deberá conservar en su poder los justificantes de 
 deducciones practicadas para cualquier comprobación por parte de la Administración
 tributaria, sin que sea necesario que adjunte a su declaración los justificantes de las
 deducciones practicadas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 975
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1153
 
-# Pag. 976
+# Pag. 1154
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 7. Deducción aplicable a las unidades familiares formadas por residentes
@@ -39078,18 +45246,18 @@ El importe de esta deducción no se reparte al 50 por 100 entre la cuota íntegr
 autonómica, sino que minora cada una de ellas en la forma que establece la disposición
 adicional cuadragésima octava de la Ley del IRPF y que se comenta en el apartado referido a
 dicha deducción.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 976
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1154
 
-# Pag. 977
+# Pag. 1155
 
 Introducción
 Esquema gráfico de la aplicación sobre el importe de las cuotas
 integras de las deducciones generales y autonómicas
 En el cuadro siguiente se representa, de forma esquemática, la aplicación de las
 deducciones generales y autonómicas a que se ha hecho referencia en el ejercicio 2025:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 977
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1155
 
-# Pag. 978
+# Pag. 1156
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Deducción por inversión en vivienda habitual:
@@ -39125,9 +45293,9 @@ relación con las cantidades satisfechas para la adquisición o construcción de
 vivienda en un período impositivo devengado con anterioridad a 1 de enero de 2013,
 salvo en aquellos casos en que el contribuyente no pudo practicarla debido a que el
 importe invertido acumulado en la misma no hubiese superado (a 31 de diciembre de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 978
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1156
 
-# Pag. 979
+# Pag. 1157
 
 Deducción por inversión en vivienda habitual: Régimen transitorio
 2012) las cantidades invertidas en viviendas anteriores, en la medida que hubiesen sido
@@ -39168,9 +45336,9 @@ adquirieron. Como consecuencia, quienes no hubieran practicado ni consignado la
 deducción antes de 2013, podrán aplicar la citada deducción en los siguientes casos:
 • Cuando no hubieran presentado declaración por no resultar obligado a ello por
 razón de las rentas obtenidas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 979
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1157
 
-# Pag. 980
+# Pag. 1158
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Cuando no hubieran practicado ni consignado la deducción antes de 2013 porque
@@ -39207,9 +45375,9 @@ No obstante, se entenderá que la vivienda tuvo el carácter de habitual cuando,
 haber transcurrido los tres años indicados, se produzca el fallecimiento del contribuyente o
 concurran otras circunstancias que necesariamente exijan el cambio de domicilio, tales como
 celebración de matrimonio, separación matrimonial, traslado laboral, obtención del primer
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 980
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1158
 
-# Pag. 981
+# Pag. 1159
 
 Deducción por inversión en vivienda habitual: Régimen transitorio
 empleo, cambio de empleo, u otras circunstancias análogas justificadas.
@@ -39250,9 +45418,9 @@ por afinidad, hasta el tercer grado inclusive, que convivan con él.
 • Cuando el contribuyente disfrute de vivienda habitual por razón de cargo o empleo y la
 vivienda adquirida no sea objeto de utilización. En este supuesto, el plazo de doce meses
 comenzará a contarse a partir de la fecha del cese en el correspondiente cargo o empleo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 981
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1159
 
-# Pag. 982
+# Pag. 1160
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Cuando se produzca alguna de las circunstancias señaladas en este número o en el anterior,
@@ -39296,9 +45464,9 @@ inversión en vivienda habitual está condicionado a que el importe comprobado d
 del contribuyente al finalizar el período impositivo exceda del valor que arrojase su
 comprobación al comienzo del mismo al menos en la cuantía de las inversiones realizadas,
 sin computar los intereses y demás gastos de financiación.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 982
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1160
 
-# Pag. 983
+# Pag. 1161
 
 Deducción por inversión en vivienda habitual: Régimen transitorio
 La comprobación de la situación patrimonial tiene como objetivo asegurar que las inversiones en vivienda
@@ -39343,9 +45511,9 @@ participaciones en un fondo de inversión valoradas en 55.200 euros; una cuenta 
 de 5.700 euros y un automóvil adquirido en 2024 por un importe de 25.242 euros y cuya
 valoración actual se estima en 21.035 euros. El importe del préstamo pendiente a dicha
 fecha era de 95.000 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 983
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1161
 
-# Pag. 984
+# Pag. 1162
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 El patrimonio, a 31 de diciembre de 2025, está constituido por la vivienda, los fondos de
@@ -39379,9 +45547,9 @@ Adquisición, construcción, rehabilitación y ampliación de la
 vivienda habitual
 Normativa: Arts. 68.1 y 78.2 Ley IRPF, redacción a 31-12-2012; 55 Reglamento IRPF,
 redacción a 31-12-2012
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 984
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1162
 
-# Pag. 985
+# Pag. 1163
 
 Deducción por inversión en vivienda habitual: Régimen transitorio
 ¿Quiénes tienen derecho a esta deducción?
@@ -39423,9 +45591,9 @@ Por el contrario, no podrán aplicar la deducción por inversión en vivienda ha
 contribuyentes que, estando obligado a presentar declaración por razón de las rentas y
 habiéndola presentado, no hubieran practicado la deducción antes de 2013 a pesar de haber
 tenido en alguno de tales períodos cuotas íntegras a las que poder aplicarla.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 985
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1163
 
-# Pag. 986
+# Pag. 1164
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Atención: desaparición de la modalidad de construcción en 2022 y aplicación del
@@ -39468,9 +45636,9 @@ tomándose en su defecto la fecha de escritura de declaración de obra nueva.
 adquisición jurídica se entiende obtenida conforme con las disposiciones del Código
 Civil, cuando concurran el contrato (título) y la tradición o entrega de la vivienda
 (modo).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 986
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1164
 
-# Pag. 987
+# Pag. 1165
 
 Deducción por inversión en vivienda habitual: Régimen transitorio
 Conforme a lo anterior, en el ejercicio 2025 en los casos de construcción de vivienda
@@ -39515,9 +45683,9 @@ teniendo para él y los hijos comunes la condición de habitual como en el supue
 dicha condición para los hijos comunes y el otro progenitor. Véase al respecto la Resolución del TEAC de 23
 de noviembre de 2021. Reclamación número 00/00629/2021, recaída en recurso extraordinario de alzada en
 unificación de criterio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 987
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1165
 
-# Pag. 988
+# Pag. 1166
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Desmembración del domino (usufructo y nuda propiedad) mortis causa, límite temporal del derecho a la
@@ -39569,9 +45737,9 @@ vivienda, pagando el 100 por 100 de las cuotas del préstamo, este no podrá pra
 inversión en vivienda habitual por el 100 por 100 de la vivienda a partir del fallecimiento –tan solo por el 50
 por 100 del cual ya era propietario con anterioridad a 2013–, debido a que la adquisición de la otra mitad no
 deriva de la disolución de la sociedad de gananciales sino de la herencia, siendo dicha adquisición acaecida
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 988
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1166
 
-# Pag. 989
+# Pag. 1167
 
 Deducción por inversión en vivienda habitual: Régimen transitorio
 a partir de 2013, y por tanto, una vez suprimida la deducción por inversión en vivienda habitual no le
@@ -39611,9 +45779,9 @@ anterioridad a 1 de enero de 2013, siempre que además las obras se hayan termin
 antes de 1 de enero de 2017.
 Conceptos que no dan derecho a deducción
 Normativa: Art. 55.2 Reglamento IRPF. redacción a 31-12-2012
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 989
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1167
 
-# Pag. 990
+# Pag. 1168
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 A efectos de la deducción, en ningún caso tienen la consideración de inversión en vivienda
@@ -39655,9 +45823,9 @@ amortización del anterior.
 Por ello, las anualidades (cuota de amortización e intereses) y demás cuantías que se satisfagan por el
 préstamo o crédito resultante -en su constitución, vida y cancelación-, en la parte proporcional que, del total
 capital obtenido en este, sea atribuible a la amortización o cancelación del préstamo originario -cuando este se
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 990
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1168
 
-# Pag. 991
+# Pag. 1169
 
 Deducción por inversión en vivienda habitual: Régimen transitorio
 haya destinado exclusivamente a la adquisición de la vivienda habitual-, incluida en su caso la cancelación
@@ -39707,9 +45875,9 @@ habitual, así como las deducciones vinculadas a la adecuación de la vivienda p
 En estos supuestos, formarán parte de la base de la deducción, además de la
 amortización del capital y de los intereses, los demás gastos derivados de dicha
 financiación entre los que pueden citarse los siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 991
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1169
 
-# Pag. 992
+# Pag. 1170
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • El coste de los instrumentos de cobertura del riesgo de tipo de interés de los
@@ -39751,9 +45919,9 @@ En este caso, la aplicación de la deducción por la parte adquirida hasta compl
 dominio del inmueble tendrá como límite el importe que habría tenido derecho a deducirse desde la fecha de
 extinción del condominio el comunero que deja de ser titular del inmueble si dicha extinción no hubiera tenido
 lugar. La deducción estará condicionada también a que al comunero que deja de ser propietario no se le
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 992
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1170
 
-# Pag. 993
+# Pag. 1171
 
 Deducción por inversión en vivienda habitual: Régimen transitorio
 hubiera agotado a la fecha de extinción del condominio la posibilidad de seguir practicando la deducción por
@@ -39795,9 +45963,9 @@ los requisitos de terminación en plazo, ocupación y residencia efectiva y
 permanente previstas para la misma.
 Porcentajes de deducción
 Normativa: Art. 68.1.1º Ley IRPF. redacción a 31-12-2012
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 993
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1171
 
-# Pag. 994
+# Pag. 1172
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Los porcentajes de deducción aplicables en la adquisición, rehabilitación o ampliación de la
@@ -39836,9 +46004,9 @@ a. Los contribuyentes que hubieran satisfecho cantidades para la realización de
 instalaciones de adecuación de la vivienda habitual de las personas con discapacidad con
 anterioridad a 1 de enero de 2013, siempre y cuando las citadas obras o instalaciones
 hayan concluido antes de 1 de enero de 2017.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 994
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1172
 
-# Pag. 995
+# Pag. 1173
 
 Deducción por inversión en vivienda habitual: Régimen transitorio
 b. Los contribuyentes que sean copropietarios del inmueble en el que residan las personas
@@ -39876,9 +46044,9 @@ La base de la deducción está constituida por el importe satisfecho en el ejerc
 contribuyente en concepto de obras e instalaciones de adecuación de la vivienda por razones
 de discapacidad en los términos anteriormente comentados.
 Base máxima de inversión deducible
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 995
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1173
 
-# Pag. 996
+# Pag. 1174
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Normativa: Arts. 68.1. 4º d) Ley IRPF, redacción a 31-12-2012
@@ -39910,9 +46078,9 @@ Normativa: Arts. 68.1 y disposición adicional trigésima octava.2 Ley IRPF
 La deducción por inversión en empresas de nueva o reciente creación se introduce en el
 IRPF con la finalidad de favorecer la captación por empresas, de nueva o reciente creación,
 de fondos propios procedentes de contribuyentes que, además del capital financiero, deseen
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 996
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1174
 
-# Pag. 997
+# Pag. 1175
 
 Deducción por inversión en empresas de nueva o reciente creación
 aportar sus conocimientos empresariales o profesionales para el desarrollo de la sociedad en
@@ -39951,9 +46119,9 @@ aplicación de la exención por reinversión regulada en el artículo 38.2 de la
 IRPF, únicamente formará parte de la base de la deducción correspondiente a las
 nuevas acciones o participaciones suscritas la parte de la reinversión que exceda del
 importe total obtenido en la transmisión de aquellas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 997
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1175
 
-# Pag. 998
+# Pag. 1176
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 En ningún caso se puede practicar deducción por las nuevas acciones o participaciones
@@ -39990,9 +46158,9 @@ de los períodos impositivos de la entidad concluidos con anterioridad a la tran
 c. El importe de la cifra de los fondos propios de la entidad no podrá ser superior
 a 400.000 euros en el inicio del período impositivo de la misma en que el contribuyente
 adquiera las acciones o participaciones.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 998
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1176
 
-# Pag. 999
+# Pag. 1177
 
 Deducción por inversión en empresas de nueva o reciente creación
 Cuando la entidad forme parte de un grupo de sociedades en el sentido del artículo 42 del Código de
@@ -40030,9 +46198,9 @@ consideran incluidos en las anteriores operaciones.
 3. No distribuir ni haber distribuido dividendos, o retornos en el caso de cooperativas.
 4. No cotizar en un mercado regulado.
 5. Tener su sede social, domicilio social o establecimiento permanente en España.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 999
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1177
 
-# Pag. 1000
+# Pag. 1178
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 6. Tener al 60 por 100 de la plantilla con un contrato laboral en España. En las cooperativas se computarán
@@ -40071,9 +46239,9 @@ informativa en relación con el cumplimiento de requisitos, identificación de s
 partícipes, porcentaje y período de tenencia de la participación.
 Nota: la obligación de presentar una declaración informativa por las entidades de nueva o reciente creación y
 la información que debe incluir se establece en el artículo 69.1 del Reglamento del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1000
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1178
 
-# Pag. 1001
+# Pag. 1179
 
 Deducción por inversión en empresas de nueva o reciente creación
 Asimismo, en relación con esta declaración informativa véase la Orden HAP/2455/2013, de 27 de diciembre,
@@ -40111,9 +46279,9 @@ sociedad anónima “XX”:
 Determinar el importe de la deducción por inversión en empresas de nueva o reciente
 creación en 2025 suponiendo que se cumplen los requisitos exigidos para aplicar la misma.
 Solución:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1001
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1179
 
-# Pag. 1002
+# Pag. 1180
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Nota previa: los contribuyentes residentes en la Comunidad Autónoma de Aragón pueden
@@ -40152,9 +46320,9 @@ Deducciones por incentivos y estímulos a la
 inversión empresarial en actividades económicas
 en estimación directa
 Normativa: Arts. 68.2 y 69.2 Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1002
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1180
 
-# Pag. 1003
+# Pag. 1181
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Los contribuyentes que desarrollen actividades económicas en estimación directa podrán
@@ -40194,9 +46362,9 @@ El porcentaje de deducción que corresponde a cada modalidad de inversión y los
 (conjunto o específicos) aplicables a las deducciones generadas aparecen reflejados,
 respectivamente, en el cuadro del Régimen General de Deducciones y en el cuadro de los
 Regímenes Especiales de Deducciones.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1003
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1181
 
-# Pag. 1004
+# Pag. 1182
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Dichos límites se aplican sobre la cuota que resulte de minorar la suma de las cuotas
@@ -40235,9 +46403,9 @@ Como regla general, una misma inversión no podrá dar lugar a la aplicación de
 deducción por el mismo contribuyente salvo disposición expresa, ni podrá dar lugar a la
 aplicación de una deducción en más de un contribuyente.
 e) Mantenimiento de las inversiones
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1004
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1182
 
-# Pag. 1005
+# Pag. 1183
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Normativa: Art. 39.5 LIS
@@ -40277,9 +46445,9 @@ actividades económicas previstas en el artículo 68.2 de la Ley del IRPF que es
 pendientes de aplicación a 1 de enero de 2016 en los términos previstos en el artículo
 69 de la Ley del IRPF, siempre que se cumplan las condiciones y requisitos establecidos
 en la LIS (disposición transitoria trigésima Ley IRPF).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1005
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1183
 
-# Pag. 1006
+# Pag. 1184
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 2. Régimen general de deducciones
@@ -40299,9 +46467,9 @@ ejercicio 2025.
 A continuación, se muestra el cuadro donde se recogen cada una de estas modalidades de
 deducción, su porcentaje de deducción y el límite conjunto, así como estudio y comentario
 específico de cada una de ellas:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1006
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1184
 
-# Pag. 1007
+# Pag. 1185
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Cuadro régimen general de deducción (Ley 27/2014, de 27 de noviembre,
@@ -40341,9 +46509,9 @@ Sociedades, herencias yacentes, comunidades de bienes, etc.) que determinen sus
 rendimientos netos en estimación directa, en cualquiera de sus dos modalidades,
 podrán ser objeto de deducción por cada uno de los socios, herederos, comuneros o
 partícipes en proporción a su participación en el resultado de la entidad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1007
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1185
 
-# Pag. 1008
+# Pag. 1186
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Artículo 35 LIS "Deducción por actividades de investigación y desarrollo e
@@ -40380,9 +46548,9 @@ utilizarse para aplicaciones industriales o para su explotación comercial.
 efectos, se entenderá como lanzamiento de un nuevo producto su introducción en el
 mercado y como nuevo producto, aquel cuya novedad sea esencial y no meramente
 formal o accidental.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1008
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1186
 
-# Pag. 1009
+# Pag. 1187
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 • La creación, combinación y configuración de software avanzado, mediante nuevos
@@ -40423,9 +46591,9 @@ Normativa: Art. 35.1.c) LIS
 Los porcentajes de deducción son:
 • Con carácter general el 25 por 100 de los gastos efectuados en el período impositivo por
 este concepto.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1009
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1187
 
-# Pag. 1010
+# Pag. 1188
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 No obstante, en el caso de que los gastos efectuados en la realización de actividades de
@@ -40460,9 +46628,9 @@ ya existentes. Se considerarán nuevos aquellos productos o procesos cuyas carac
 aplicaciones, desde el punto de vista tecnológico, difieran sustancialmente de las existentes
 con anterioridad.
 Precisión:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1010
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1188
 
-# Pag. 1011
+# Pag. 1189
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 La novedad no ha de ser meramente formal o accesoria, sino que supone la existencia de un cambio esencial,
@@ -40501,9 +46669,9 @@ d. Obtención del certificado de cumplimiento de las normas de aseguramiento de 
 de la serie ISO 9000, GMP o similares, sin incluir aquellos gastos correspondientes a la
 implantación de dichas normas.
 2. Delimitación de los gastos de innovación tecnológica
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1011
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1189
 
-# Pag. 1012
+# Pag. 1190
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Se consideran gastos de innovación tecnológica los realizados por el contribuyente en cuanto
@@ -40543,9 +46711,9 @@ apartado 2 del artículo 35 de la LIS; la incorporación o modificación de inst
 máquinas, equipos y sistemas para la producción que no estén afectados a actividades
 calificadas como de investigación y desarrollo o de innovación; la solución de problemas
 técnicos de procesos productivos interrumpidos; el control de calidad y la normalización
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1012
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1190
 
-# Pag. 1013
+# Pag. 1191
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 de productos y procesos; la prospección en materia de ciencias sociales y los estudios de
@@ -40583,9 +46751,9 @@ Las claves para la delimitación del concepto de productor, a efectos de esta de
 (entendido el término no como documento que refleja un precio sino como hechura o modo de quedar
 definitivamente plasmada la obra);
 • Responsabilidad o asunción del riesgo de producción;
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1013
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1191
 
-# Pag. 1014
+# Pag. 1192
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Titularidad de los derechos derivados de la propiedad de la obra audiovisual.
@@ -40626,9 +46794,9 @@ Importante: el productor y los contribuyentes que participen en la financiación
 que podrán firmarse asimismo en cualquier fase de la producción siendo necesario
 que ambos comuniquen a la Administración tributaria con anterioridad a la finalización
 del período impositivo en que este último (productor) tenga derecho a aplicar la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1014
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1192
 
-# Pag. 1015
+# Pag. 1193
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 deducción esta circunstancia, aportando tanto el contrato de financiación suscrito como
@@ -40665,9 +46833,9 @@ derecho al productor o a los contribuyentes que participen en la financiación (
 una deducción que será:
 • Del 30 por 100 respecto del primer millón de base de la deducción.
 • Del 25 por 100 sobre el exceso de dicho importe.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1015
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1193
 
-# Pag. 1016
+# Pag. 1194
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 En cuanto a la definición de producciones españolas de largometrajes y cortometrajes cinematográficos y de
@@ -40711,9 +46879,9 @@ Atención: en el caso del financiador, podrá aplicar la deducción prevista en 
 parte de los costes de la producción, así como los gastos para la obtención de copias,
 publicidad y promoción a cargo del productor hasta el límite del 30 por 100 de los costes
 de producción.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1016
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1194
 
-# Pag. 1017
+# Pag. 1195
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Requisitos
@@ -40757,9 +46925,9 @@ territorio español
 para financiar las inversiones que
 generan derecho a deducción.
 Límites
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1017
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1195
 
-# Pag. 1018
+# Pag. 1196
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 a. Límite general: el importe de esta deducción, conjuntamente con el resto de ayudas
@@ -40797,9 +46965,9 @@ de la obra.
 En el caso particular de que la inversión en una producción española sea mediante la
 producción de una serie de ficción, animación o documental, la deducción puede aplicarse a
 partir del periodo impositivo en que finalice la temporada de la serie.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1018
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1196
 
-# Pag. 1019
+# Pag. 1197
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 No obstante, en el supuesto de producciones de animación, la deducción se aplicará a
@@ -40835,9 +47003,9 @@ algún Estado miembro del Espacio Económico Europeo
 En el caso particular de una obra audiovisual cuya entrega se realice por episodios (por ejemplo, una serie
 de televisión), la determinación de la base de la deducción, el importe de la deducción, así como la cuantía
 máxima de dicha deducción se determinarán por cada uno de los episodios que integren la misma.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1019
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1197
 
-# Pag. 1020
+# Pag. 1198
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 En consecuencia, la base de la deducción de cada uno de los capítulos estará constituida por los gastos
@@ -40874,9 +47042,9 @@ será de 10 millones de euros por cada episodio producido.
 b. Cuando el productor se encargue de la ejecución de servicios de efectos visuales y
 los gastos realizados en territorio español sean inferiores a 1 millón de euros: del
 30 por 100 de la base de la deducción.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1020
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1198
 
-# Pag. 1021
+# Pag. 1199
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 El importe de esta deducción no podrá superar el importe que establece el Reglamento
@@ -40926,9 +47094,9 @@ a') Que la producción obtenga el correspondiente certificado que acredite el ca
 en relación con su contenido o su vinculación con la realidad cultural española o europea,
 emitido por el Instituto de Cinematografía y de las Artes Audiovisuales, o por el órgano
 correspondiente de la Comunidad Autónoma con competencia en la materia.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1021
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1199
 
-# Pag. 1022
+# Pag. 1200
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Atención: no es necesario obtener el certificado a que se refiere esta letra a') para la
@@ -40969,9 +47137,9 @@ El derecho a aplicar la deducción se generará en el período impositivo en el 
 finalizada la producción, se cumplan todos y cada uno de los requisitos expuestos, si
 bien se aplicará en el período impositivo en el que finalice la producción ejecutiva en España
 de la obra extranjera.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1022
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1200
 
-# Pag. 1023
+# Pag. 1201
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Caso particular: entrega de unidades de obra ejecutadas
@@ -41012,9 +47180,9 @@ en que el productor incurra en los citados gastos, pero nunca después del perí
 que el productor incurra en los mismos.
 • No adquieran derechos de propiedad intelectual o de otra índole respecto de los
 resultados de la producción, cuya propiedad deberá ser en todo caso del productor.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1023
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1201
 
-# Pag. 1024
+# Pag. 1202
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • No estén vinculados, en el sentido del artículo 18 de la LIS, con el contribuyente que
@@ -41053,9 +47221,9 @@ para financiar los gastos que generen el derecho a la misma.
 Importe máximo de la deducción
 • Para el productor: la deducción generada en cada período impositivo no podrá superar
 el importe de 500.000 euros por contribuyente y período.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1024
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1202
 
-# Pag. 1025
+# Pag. 1203
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 • Para el financiador: aunque puede determinar el importe de la deducción en las mismas
@@ -41096,9 +47264,9 @@ Música.
 Véase al respecto la Orden ECD/2836/2015, de 18 de diciembre, por la que se regula el procedimiento
 para la obtención del certificado del Instituto Nacional de las Artes Escénicas y de la Música, previsto en la
 LIS.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1025
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1203
 
-# Pag. 1026
+# Pag. 1204
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 b. Que, de los beneficios obtenidos en el desarrollo de estas actividades en el ejercicio en el
@@ -41138,9 +47306,9 @@ inversión y los dos años posteriores o, excepcionalmente, de acuerdo con un pl
 de inversión aprobado por la Administración tributaria a propuesta del sujeto pasivo”, y en su
 apartado 3 que “La deducción se practicará en la cuota íntegra correspondiente al período
 impositivo en que se efectúe la inversión”.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1026
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1204
 
-# Pag. 1027
+# Pag. 1205
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 De acuerdo con lo anterior, para 2025 los rendimientos netos de actividades económicas del
@@ -41179,9 +47347,9 @@ inmediato anterior.
 • 12.000 euros por cada persona/año de incremento del promedio de plantilla de
 trabajadores, con las mismas condiciones, si el grado de discapacidad es igual o superior
 al 65 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1027
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1205
 
-# Pag. 1028
+# Pag. 1206
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Atención: el artículo 38 de la LIS establece dos cantidades diferentes a deducir
@@ -41220,9 +47388,9 @@ Planes de pensiones de empleo
 ○
 Planes de previsión social empresarial
 ○
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1028
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1206
 
-# Pag. 1029
+# Pag. 1207
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Planes de pensiones regulados en la Directiva (UE) 2016/2341 del Parlamento
@@ -41261,9 +47429,9 @@ Solución:
 a. Por los trabajadores con retribuciones brutas anuales inferiores a 27.000 euros
 10% s/ (2.000 € contribución anual x 3 trabajadores) = 600 euros
 b. Por el trabajador con retribución bruta anual de 41.800 euros
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1029
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1207
 
-# Pag. 1030
+# Pag. 1208
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 10% s/ [(27.000 ÷ 41.800) x 2.500 contribución anual] = 161,48 euros
@@ -41304,9 +47472,9 @@ los artículos 39.7 de la LIS y 69 de la Ley del IRPF.
 Cuando existan saldos pendientes de deducciones de ejercicios anteriores, el límite que
 proceda (25 por 100 o 50 por 100) se aplicará conjuntamente a las deducciones del
 ejercicio 2025 y a los saldos pendientes de ejercicios anteriores.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1030
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1208
 
-# Pag. 1031
+# Pag. 1209
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Atención: a efectos del cálculo de este límite conjunto (25 por 100 o 50 por 100) no se
@@ -41347,9 +47515,9 @@ criterios del Manual de aplicación de los beneficios fiscales previstos en el a
 incentivos fiscales al mecenazgo, correspondientes a los gastos de propaganda y publicidad de proyección
 plurianual, que sirvan para la promoción de los acontecimientos de excepcional interés público, aprobado
 por la Resolución de 25 de enero de 2018 (BOE de 11 de junio).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1031
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1209
 
-# Pag. 1032
+# Pag. 1210
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Cuando el contenido del soporte publicitario se refiera de modo esencial a la divulgación del
@@ -41391,9 +47559,9 @@ en que no puede exceder del 90 por 100 de las donaciones efectuadas al consorcio
 entidades de titularidad pública o entidades a que se refiere el artículo 2 de la Ley
 49/2002, de 23 de diciembre, encargadas de la realización de programas y actividades
 relacionadas con el acontecimiento a lo largo de toda la duración del programa.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1032
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1210
 
-# Pag. 1033
+# Pag. 1211
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 De aplicarse la deducción objeto de examen en este apartado por gastos vinculados a
@@ -41420,9 +47588,9 @@ Acontecimientos de excepcional interés público % deducción conjunto
 "125 aniversario del Real Club de Tenis Barcelona" 15 por 100 25/50 por 100
 "750 aniversario del Consolat del Mar" 15 por 100 25/50 por 100
 “Congreso de la Unión Internacional de Arquitectos” 15 por 100 25/50 por 100
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1033
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1211
 
-# Pag. 1034
+# Pag. 1212
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Límite
@@ -41447,9 +47615,9 @@ Acontecimientos de excepcional interés público % deducción conjunto
 "Vigésimo aniversario del Festival Bilbao BBK Live" 15 por 100 25/50 por 100
 “75.ª edición del Festival Música y Danza de Granada” 15 por 100 25/50 por 100
 “150.º aniversario del nacimiento de Manuel de Falla” 15 por 100 25/50 por 100
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1034
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1212
 
-# Pag. 1035
+# Pag. 1213
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Límite
@@ -41480,9 +47648,9 @@ vinculados a los siguientes eventos:
 • “Plan de Fomento de la ópera en la Calle del Teatro Real” establecido, para las
 temporadas artísticas 2020/2021, 2021/2022 y 2022/2023, en la disposición adicional
 quinta del Real Decreto-ley 17/2020, de 5 de mayo, por el que se aprueban medidas de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1035
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1213
 
-# Pag. 1036
+# Pag. 1214
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 apoyo al sector cultural y de carácter tributario para hacer frente al impacto económico y
@@ -41534,9 +47702,9 @@ Ley 26/2022, de 19 de diciembre, por la que se modifica la Ley 38/2015, de 29 de
 septiembre, del sector ferroviario (BOE de 20 de diciembre), y su régimen fiscal específico
 por la disposición final trigésima sexta de la Ley 31/2022, de 23 de diciembre, de
 Presupuestos Generales del Estado para el año 2023 (BOE de 24 de diciembre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1036
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1214
 
-# Pag. 1037
+# Pag. 1215
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 • Programa deportivo “RETO DE” establecido por la disposición adicional decimoctava de
@@ -41588,9 +47756,9 @@ programas como acontecimientos de excepcional interés público (BOE de 9 de jul
 • "75.ª edición del Festival Música y Danza de Granada" establecido por el artículo 1 del
 Real Decreto-ley 8/2025, de 8 de julio, por el que se declaran diversas iniciativas y
 programas como acontecimientos de excepcional interés público (BOE de 9 de julio).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1037
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1215
 
-# Pag. 1038
+# Pag. 1216
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • "150.º aniversario del nacimiento de Manuel de Falla" establecido por el artículo 1 del
@@ -41637,9 +47805,9 @@ respectivo consorcio u órgano administrativo, conforme a lo dispuesto en el art
 fines lucrativos y de los incentivos fiscales al mecenazgo (BOE de 24 de diciembre).
 3.3. Saldos pendientes de aplicación de programas de apoyo finalizados
 con anterioridad a 1 de enero de 2025
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1038
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1216
 
-# Pag. 1039
+# Pag. 1217
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Importante: téngase en cuenta que los acontecimientos “Plan de Fomento de la ópera
@@ -41692,9 +47860,9 @@ de 23 de diciembre, de Presupuestos Generales del Estado para el año 2009 (BOE 
 • “Centenario de la Costa Brava” establecido en la disposición adicional quincuagésima sexta de la Ley 2/2008,
 de 23 de diciembre, de Presupuestos Generales del Estado para el año 2009 (BOE de 24 de diciembre).
 • “Symposium Conmemorativo del 90 Aniversario del Salón Internacional del Automóvil de Barcelona
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1039
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1217
 
-# Pag. 1040
+# Pag. 1218
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 2009” establecido en la disposición final primera de la Ley 4/2008, de 23 de diciembre (BOE de 25 de
@@ -41758,9 +47926,9 @@ séptima de la Ley 2/2012, de 29 de junio, de Presupuestos Generales del Estado 
 de junio), modificada por la disposición final décima octava de la de la Ley 36/2014, de 26 de diciembre, de
 Presupuestos Generales del Estado para el año 2015 (BOE de 30 de diciembre).
 • “Campeonato del Mundo de Ciclismo en Carretera Ponferrada 2014”, establecido en la disposición adicional
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1040
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1218
 
-# Pag. 1041
+# Pag. 1219
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 quincuagésima octava de la Ley 2/2012, de 29 de junio, de Presupuestos Generales del Estado para el año
@@ -41824,9 +47992,9 @@ diciembre).
 quincuagésima segunda de la Ley 22/2013, de 23 de diciembre, de Presupuestos Generales del Estado para el
 año 2014 (BOE de 26 de diciembre).
 • “Expo Milán 2015” establecido en la disposición adicional quincuagésima tercera de la Ley 22/2013, de 23 de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1041
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1219
 
-# Pag. 1042
+# Pag. 1220
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 diciembre, de Presupuestos Generales del Estado para el año 2014 (BOE de 26 de diciembre).
@@ -41890,9 +48058,9 @@ Generales del Estado para el año 2017 (BOE de 28 de junio).
 • “60 Aniversario de la Fundación de la Escuela de Organización Industrial”, establecido en la disposición
 adicional quincuagésima novena de la Ley 36/2014, de 26 de diciembre, de Presupuestos Generales del Estado
 para el año 2015 (BOE de 30 de diciembre) y modificado por la disposición final vigésima novena de la Ley
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1042
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1220
 
-# Pag. 1043
+# Pag. 1221
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 3/2017, de 27 de junio, de Presupuestos Generales del Estado para el año 2017 (BOE de 28 de junio).
@@ -41956,9 +48124,9 @@ octubre).
 48/2015, de 29 de octubre, de Presupuestos Generales del Estado para el año 2016 (BOE de 30 de octubre).
 • “2150 aniversario de Numancia”, establecido en la disposición adicional sexagésima primera de la Ley
 48/2015, de 29 de octubre, de Presupuestos Generales del Estado para el año 2016 (BOE de 30 de octubre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1043
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1221
 
-# Pag. 1044
+# Pag. 1222
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • “V Centenario del fallecimiento de Fernando el Católico”, establecido en la disposición adicional sexagésima
@@ -42022,9 +48190,9 @@ tercera de la Ley 3/2017, de 27 de junio, de Presupuestos Generales del Estado p
 de junio).
 • “Lorca, Aula de la Historia”, establecido en la disposición adicional septuagésima cuarta de la Ley 3/2017, de
 27 de junio, de Presupuestos Generales del Estado para el año 2017 (BOE de 28 de junio).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1044
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1222
 
-# Pag. 1045
+# Pag. 1223
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 • "Plan de Fomento de la Lectura (2017-2020)", establecido en la disposición adicional septuagésima quinta de
@@ -42088,9 +48256,9 @@ octogésima de la Ley 6/2018, de 3 de julio, de Presupuestos Generales del Estad
 de julio).
 • “Bádminton World Tour” establecido en la disposición adicional octogésima primera de la Ley 6/2018, de 3 de
 julio, de Presupuestos Generales del Estado para el año 2018 (BOE de 4 de julio).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1045
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1223
 
-# Pag. 1046
+# Pag. 1224
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • “Nuevas Metas” establecido en la disposición adicional octogésima segunda de la Ley 6/2018, de 3 de julio, de
@@ -42154,9 +48322,9 @@ sobre el Cambio Climático (COP25), décimo quinta sesión de la Conferencia de 
 Reunión de las Partes del Protocolo de Kioto (COP-MOP15) y la segunda sesión de la Conferencia de las
 Partes como Reunión de las Partes del Acuerdo de París (CMA2) y quincuagésimo primera reunión de
 los Órganos Subsidiarios de la Convención, tanto del Órgano Subsidiario de Asesoramiento Científico y
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1046
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1224
 
-# Pag. 1047
+# Pag. 1225
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Tecnológico (SBSTA) como del Órgano Subsidiario de Implementación (SBI)" establecido en el artículo 1
@@ -42220,9 +48388,9 @@ establecido por la disposición adicional octogésima tercera de la Ley 11/2020,
 Presupuestos Generales del Estado para el año 2021 (BOE de 31 de diciembre).
 • “Nuevas Metas II” establecido por la disposición adicional octogésima quinta de la Ley 11/2020, de 30 de
 diciembre, de Presupuestos Generales del Estado para el año 2021 (BOE de 31 de diciembre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1047
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1225
 
-# Pag. 1048
+# Pag. 1226
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • “Programa Deporte Inclusivo II” establecido por la disposición adicional nonagésima cuarta de la Ley 11/2020,
@@ -42286,9 +48454,9 @@ diciembre).
 • “Centenario del Rugby en España y de la Unió Esportiva Santboiana”, establecido por la disposición
 adicional septuagésima sexta de la Ley 11/2020, de 30 de diciembre, de Presupuestos Generales del Estado
 para el año 2021 (BOE de 31 de diciembre).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1048
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1226
 
-# Pag. 1049
+# Pag. 1227
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 • “Solheim Cup 2023”, establecido por la disposición adicional septuagésima séptima de la Ley 11/2020, de 30
@@ -42352,9 +48520,9 @@ funcionamiento de la cadena logística, y por el que se transpone la Directiva (
 2020, por la que se fijan normas específicas con respecto a la Directiva 96/71/CE y la Directiva 2014/67/UE para
 el desplazamiento de los conductores en el sector del transporte por carretera, y de medidas excepcionales en
 materia de revisión de precios en los contratos públicos de obras (BOE de 2 de marzo).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1049
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1227
 
-# Pag. 1050
+# Pag. 1228
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Año Santo Jubilar San Isidro Labrador”, establecido por la disposición adicional vigésimo novena de la Ley
@@ -42395,9 +48563,9 @@ general positiva del período impositivo correspondiente a los rendimientos neto
 actividades económicas del período impositivo objeto de inversión en elementos nuevos del
 inmovilizado material o inversiones inmobiliarias.
 3. Plazo para realizar la inversión
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1050
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1228
 
-# Pag. 1051
+# Pag. 1229
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 La inversión en elementos patrimoniales afectos a actividades económicas deberá realizarse
@@ -42438,9 +48606,9 @@ reinvertidos no se aplicó la deducción por rentas obtenidas en Ceuta o Melilla
 las rentas obtenidas en la isla de La Palma, ni la reducción por inicio de actividad del artículo 32.3 de la Ley del
 IRPF, aunque dicha deducción o reducción se aplique en el ejercicio siguiente (ejercicio de la inversión).
 5. Límites
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1051
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1229
 
-# Pag. 1052
+# Pag. 1230
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 El importe de la deducción no podrá exceder de la suma de la cuota íntegra estatal y
@@ -42481,9 +48649,9 @@ Durante 2025 cumple los requisitos para ser considerada entidad de reducida dime
 obtiene unos rendimientos netos de la actividad por importe de 45.000 euros, siendo la
 base liquidable general del ejercicio que se corresponde con esos rendimientos de 43.200
 euros y la suma de su cuota íntegra estatal y autonómica de 10.673 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1052
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1230
 
-# Pag. 1053
+# Pag. 1231
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 El 5 de septiembre de 2025 con los rendimientos obtenidos en el ejercicio adquiere
@@ -42518,9 +48686,9 @@ Las inversiones que permanezcan en el archipiélago canario, realizadas por pers
 que desarrollen actividades económicas en Canarias y determinen sus rendimientos en
 estimación directa, podrán acogerse al Régimen General de deducciones previsto en la LIS
 con los porcentajes y límites específicos señalados en el cuadro siguiente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1053
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1231
 
-# Pag. 1054
+# Pag. 1232
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Nota: téngase en cuenta que aunque se incluye en este cuadro la nueva deducción por contribuciones
@@ -42567,9 +48735,9 @@ Por inversiones en territorios de África Occidental [art. 27 15/10 por 100 25 p
 bis.1.a) Ley 19/1994] o 50 por 100
 Por gastos de propaganda y publicidad [art. 27 bis.1.b) Ley 15/10 por 100 25 por 100 o
 19/1994] 50 por 100
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1054
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1232
 
-# Pag. 1055
+# Pag. 1233
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Porcentaje de Límite
@@ -42607,9 +48775,9 @@ comentarios sobre la misma en el "Régimen general de deducciones" del apartado
 "Deducciones por incentivos y estímulos a la inversión empresarial en actividades
 económicas en estimación directa" de este capítulo.
 Aplicación en Canarias de las deducciones de los artículos 35 y 36 LIS
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1055
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1233
 
-# Pag. 1056
+# Pag. 1234
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Normativa: Art. 94 Ley 20/1991, de 7 de junio de 1991, de modificación de los aspectos
@@ -42649,9 +48817,9 @@ cumplan los criterios establecidos en el apartado 2 del artículo 35 de la LIS, 
 Canarias.
 Por tanto, los porcentajes aplicables y la base deducción en cada una de las deducciones de
 los artículos 35 y 36 de la LIS son:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1056
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1234
 
-# Pag. 1057
+# Pag. 1235
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Modalidades de inversión Porcentaje Base de deducción
@@ -42702,9 +48870,9 @@ Deducción por producción 40 por 100 Costes directos
 de determinados Importe máximo de 900.000 € por contribuyente en caso de
 espectáculos en vivo (art. producción y exhibición de espectáculos en vivo de artes
 36.3 LIS) escénicas y musicales
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1057
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1235
 
-# Pag. 1058
+# Pag. 1236
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 b. Requisitos y condiciones para la aplicación de las deducciones
@@ -42745,9 +48913,9 @@ producción.
 Recuerde: desde el 1 de enero de 2021, el límite absoluto de las deducciones de los
 apartados 1 y 2 del artículo 36 LIS no puede ser superior al resultado de incrementar en
 un 80 por 100 el importe máximo a nivel estatal de esta deducción. Por tanto, el límite
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1058
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1236
 
-# Pag. 1059
+# Pag. 1237
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 de esta deducción en Canarias es de 36.000.000 euros, con carácter general, por cada
@@ -42780,9 +48948,9 @@ LIS discapacidad ≥ 33% e < 65%
 15.600 € Por cada persona/año de incremento del promedio de la plantilla con
 discapacidad ≥ 65%
 b. Requisitos y condiciones para la aplicación de la deducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1059
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1237
 
-# Pag. 1060
+# Pag. 1238
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Respecto a los requisitos y condiciones determinantes de la aplicación de esta deducción del
@@ -42822,9 +48990,9 @@ artículos 35, y 36.1 y 3 de la LIS exceda del 10 por 100 de la mencionada cuota
 Atención: a la deducción del artículo 38 de la LIS le resultan de aplicación los límites
 de deducción del artículo 94.1.b) de la Ley 20/1991, ya que el artículo 26 de la Ley
 61/1978 contenía, en su apartado seis, una deducción por trabajadores con
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1060
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1238
 
-# Pag. 1061
+# Pag. 1239
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 discapacidad en el momento de su derogación. Por lo tanto, esta deducción estará
@@ -42864,9 +49032,9 @@ B. Deducción por inversiones en territorios de África Occidental y por
 gastos de propaganda y publicidad
 Normativa: artículo 27 bis Ley 19/1994, de 6 de julio, de modificación del Régimen
 Económico y Fiscal de Canarias
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1061
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1239
 
-# Pag. 1062
+# Pag. 1240
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Incluye dos deducciones:
@@ -42902,9 +49070,9 @@ a) Porcentajes de la deducción
 caso de que el importe neto de la cifra de negocios en el período impositivo inmediato
 anterior sea igual o inferior a 10 millones de euros y con una plantilla media en dicho
 período inferior a 50 personas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1062
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1240
 
-# Pag. 1063
+# Pag. 1241
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 • El 10 por 100 del importe satisfecho por estos gastos de propaganda y publicidad cuando
@@ -42941,9 +49109,9 @@ Conforme a lo anterior, no cabe considerar la disposición adicional duodécima 
 43/1995, de 27 de diciembre, del Impuesto sobre Sociedades, como régimen sustitutorio
 equivalente de la deducción por activos fijos nuevos.
 a. Activos fijos nuevos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1063
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1241
 
-# Pag. 1064
+# Pag. 1242
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Los contribuyentes pueden deducir de la cuota íntegra el 25 por 100 de las inversiones que
@@ -42986,9 +49154,9 @@ circunstancia, en caso de comprobación o investigación de la situación tribut
 contribuyente, mediante la justificación de que el elemento objeto de la deducción va a
 producir o ha producido alguno de los siguientes efectos:
 • Disminución del coste de producción unitario del bien o servicio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1064
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1242
 
-# Pag. 1065
+# Pag. 1243
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 • Mejora de la calidad del bien o servicio.
@@ -43026,9 +49194,9 @@ concepto (incluidos los saldos de las deducciones pendientes de aplicación a 1 
 2015) se podrán aplicar, respetando los límites que les resulten de aplicación, en las
 liquidaciones de los períodos impositivos que concluyan en los 15 años inmediatos y
 sucesivos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1065
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1243
 
-# Pag. 1066
+# Pag. 1244
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 El cómputo del plazo para la aplicación de la citada deducción podrá diferirse hasta el primer
@@ -43068,9 +49236,9 @@ sobre la totalidad de la cuota íntegra y no únicamente sobre la parte de la mi
 corresponda a rendimientos de las actividades económicas desarrolladas en Canarias.
 Atención: en el caso de las islas de La Palma, La Gomera y El Hierro, el porcentaje del
 70 por 100 se eleva al 80 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1066
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1244
 
-# Pag. 1067
+# Pag. 1245
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 2. Deducción por rendimientos derivados de la venta de bienes
@@ -43110,9 +49278,9 @@ Para la aplicación de la deducción deben cumplirse los siguientes requisitos:
 agrícolas, ganaderas, industriales y pesqueras, siempre que, en este último caso, la
 pesca de altura se desembarque en los puertos canarios y se manipule o transforme en el
 archipiélago.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1067
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1245
 
-# Pag. 1068
+# Pag. 1246
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Que los contribuyentes estén domiciliados en Canarias. Si los contribuyentes están
@@ -43147,9 +49315,9 @@ gravamen (suma de los tipos medios de gravamen general y autonómico, casillas [
 ejercicio que se destinen a la reserva para inversiones en Canarias, prevista en el artículo 27
 de la Ley 19/1994, de 6 de julio, de modificación del Régimen Económico y Fiscal de
 Canarias.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1068
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1246
 
-# Pag. 1069
+# Pag. 1247
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Véase también el Real Decreto 1758/2007, de 28 de diciembre, por el que se aprueba el Reglamento de
@@ -43188,9 +49356,9 @@ Cuando se trate de cantidades destinadas a inversiones en elementos patrimoniale
 afectos a la actividad de arrendamiento de vivienda a que se refiere la disposición
 adicional decimoquinta de la Ley 19/1994, en todo caso, deberá respetarse el plazo
 máximo de materialización.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1069
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1247
 
-# Pag. 1070
+# Pag. 1248
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Téngase en cuenta que como consecuencia de la situación de crisis sanitaria ocasionada con el Covid-19,
@@ -43232,9 +49400,9 @@ resulte de aplicación la disposición adicional decimoquinta. En relación a di
 requisitos, se incluye el supuesto del arrendamiento de viviendas protegidas rehabilitadas
 en favor de personas inscritas en el Registro Público de Demandantes de Vivienda
 Protegida de Canarias.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1070
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1248
 
-# Pag. 1071
+# Pag. 1249
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 En el caso de actividades de arrendamiento de viviendas protegidas efectuadas por la
@@ -43277,9 +49445,9 @@ normativa de desarrollo.
 Las mismas consecuencias tendrá el incumplimiento del plazo de seis meses para el efectivo
 inicio del arrendamiento de vivienda a que se refiere la disposición adicional decimoquinta de
 la Ley 19/1994.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1071
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1249
 
-# Pag. 1072
+# Pag. 1250
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Véase el apartado 10 de la citada disposición adicional decimoquinta.
@@ -43317,9 +49485,9 @@ Cuando se trate de contribuyentes que cumplan las condiciones del artículo 101 
 para ser considerados entidades de reducida dimensión, en el período impositivo en el
 que se obtiene el beneficio con cargo al cual se dota la reserva, la inversión podrá
 consistir en la adquisición de elementos usados del inmovilizado, siempre que los bienes
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1072
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1250
 
-# Pag. 1073
+# Pag. 1251
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 adquiridos no se hayan beneficiado anteriormente del régimen de la reserva para
@@ -43365,9 +49533,9 @@ del régimen general regulado en el artículo 27 de esta Ley, siempre que se
 ○
 corresponda con dotaciones que se hubieran realizado con cargo a beneficios
 obtenidos en periodos impositivos iniciados a partir de 1 de enero de 2021.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1073
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1251
 
-# Pag. 1074
+# Pag. 1252
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 del régimen de deducción por inversiones en Canarias.
@@ -43409,9 +49577,9 @@ de la Ley 19/1994.
 1. Acciones o participaciones en el capital emitidas por sociedades como consecuencia
 de su constitución o ampliación de capital que desarrollen en el archipiélago su actividad,
 siempre que se cumplan los requisitos establecidos en el citado precepto legal.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1074
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1252
 
-# Pag. 1075
+# Pag. 1253
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 En el marco del régimen especial de materialización de la Reserva para Inversiones en
@@ -43457,9 +49625,9 @@ dotaciones efectuadas en cada ejercicio y en los términos que se prevean
 reglamentariamente. La emisión de los correspondientes títulos valores estará sujeta a
 autorización administrativa previa por parte de la Administración competente para el
 otorgamiento del correspondiente título administrativo habitante.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1075
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1253
 
-# Pag. 1076
+# Pag. 1254
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Nota: tenga en cuenta que los apartados 2, 4.A) y C), 5, 8 y 12 del artículo 27 de la Ley
@@ -43499,9 +49667,9 @@ incompatibilidades del apartado 12 del artículo 27 de dicha Ley, para los mismo
 gastos objeto de inversión.
 Véase el apartado 11 de la citada disposición adicional decimoquinta.
 f) Inversiones anticipadas de futuras dotaciones
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1076
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1254
 
-# Pag. 1077
+# Pag. 1255
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Normativa: Art. 27.11 y disposición transitoria octava.2 Ley 19/1994, de 6 de julio, de
@@ -43542,9 +49710,9 @@ responde el diseño del modelo de IRPF.
 La información sobre dotaciones y materializaciones efectuadas en 2025 de la reserva para
 inversiones en Canarias correspondiente a los ejercicios 2021 a 2025 e inversiones
 anticipadas de futuras dotaciones se suministrará con arreglo al desglose contenido en el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1077
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1255
 
-# Pag. 1078
+# Pag. 1256
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 epígrafe correspondiente del anexo A.4 de la declaración de la siguiente forma:
@@ -43579,9 +49747,9 @@ Se indicará el importe de las inversiones efectuadas en 2025 en concepto de
 materialización anticipada de futuras dotaciones en las previstas en el artículo 27.4. C y D
 2º a 6º, y D. A. 15ª (4.º)Ley 19/1994.
 Régimen fiscal especial de las Illes Balears
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1078
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1256
 
-# Pag. 1079
+# Pag. 1257
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Normativa: Disposición adicional septuagésima Ley 31/2022, de 23 de diciembre, de
@@ -43612,9 +49780,9 @@ a) Cuantía y límites de la deducción
 Normativa: número 13 de la disposición adicional septuagésima. Cuatro Ley 31/2022,
 de 23 de diciembre, de Presupuestos Generales del Estado para el año 2023
 Cuantía de la deducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1079
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1257
 
-# Pag. 1080
+# Pag. 1258
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Los contribuyentes del IRPF que desarrollen actividades económicas en estimación directa
@@ -43655,9 +49823,9 @@ Comercio y su normativa de desarrollo desde el ejercicio en que se han obtenido 
 beneficios que se destinan a dotar la reserva para inversiones en las Illes Balears hasta
 aquel en que deban permanecer en funcionamiento los bienes objeto de la materialización
 de la inversión.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1080
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1258
 
-# Pag. 1081
+# Pag. 1259
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 • Contabilización separada de la dotación para la reserva para inversiones e
@@ -43700,9 +49868,9 @@ de 23 de diciembre, de Presupuestos Generales del Estado para el año 2023
 Se exige que las cantidades destinadas a dicha reserva se materialicen en el plazo
 máximo de tres años, contados desde la fecha de devengo del impuesto correspondiente
 al ejercicio en que se ha dotado la misma.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1081
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1259
 
-# Pag. 1082
+# Pag. 1260
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Tal y como señala el artículo 18 del Reglamento de desarrollo del Régimen Fiscal
@@ -43747,9 +49915,9 @@ fuera del mismo que se utilice para conectar entre sí las distintas islas del a
 4. Las aplicaciones informáticas y los derechos de propiedad industrial, que no sean meros signos
 distintivos del contribuyente o de sus productos, y que vayan a aplicarse exclusivamente en procesos
 productivos o actividades comerciales que se desarrollen en el ámbito territorial balear, así como los
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1082
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1260
 
-# Pag. 1083
+# Pag. 1261
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 derechos de propiedad intelectual que sean objeto de reproducción y distribución exclusivamente en
@@ -43792,9 +49960,9 @@ materialización de las cantidades destinadas a la reserva para inversiones en l
 Balears, salvo por el importe de la misma que excede del valor neto contable del
 elemento patrimonial que se sustituye y que tuvo la consideración de materialización
 de la reserva regulada en este apartado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1083
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1261
 
-# Pag. 1084
+# Pag. 1262
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 En los casos de pérdida del elemento patrimonial se deberá proceder a su
@@ -43836,9 +50004,9 @@ de la Ley 31/2022, así como el incumplimiento de cualquier otro de los requisit
 establecidos en la citada disposición, salvo el requisito de su contabilización separada y
 de la información que sobre la reserva de inversiones en las Illes Balears ha de constar
 la memoria de las cuentas anuales, dará lugar a que el contribuyente proceda a la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1084
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1262
 
-# Pag. 1085
+# Pag. 1263
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 integración, en la cuota íntegra del IRPF del ejercicio en que ocurrieran estas
@@ -43876,9 +50044,9 @@ sociedad promotora.
 tarifas del Impuesto sobre Actividades Económicas, aprobadas por el Real Decreto Legislativo
 1175/1990, de 28 de septiembre, por el que se aprueban las tarifas y la instrucción del Impuesto sobre
 Actividades Económicas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1085
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1263
 
-# Pag. 1086
+# Pag. 1264
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Por tanto, en la medida en que las actividades desarrolladas no se encuentren incluidas entre las
@@ -43925,9 +50093,9 @@ Se consideran inversiones que contribuyen a la mejora o a la protección del med
 en el territorio de las Illes Balears, aquellas a las que se refiere el artículo 8 del Reglamento
 desarrollo del Régimen Fiscal Especial de las Illes Balears, aprobado por Real Decreto,
 710/2024, de 23 de julio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1086
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1264
 
-# Pag. 1087
+# Pag. 1265
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Inversiones que contribuyen a la mejora o a la protección del medio ambiente
@@ -43972,9 +50140,9 @@ para el año 2023
 precio de adquisición o coste de producción de los elementos patrimoniales, con
 exclusión de los intereses, impuestos estatales indirectos y sus recargos, sin que pueda
 resultar superior a su valor de mercado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1087
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1265
 
-# Pag. 1088
+# Pag. 1266
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Gastos de investigación y desarrollo: el importe de la materialización de la reserva en
@@ -44016,9 +50184,9 @@ Importe de la materialización de las inversiones de la letra B
 Normativa: véase el número 6 del apartado Cuatro de la disposición adicional
 septuagésima. Ley 31/2022, de 23 de diciembre, de Presupuestos Generales del Estado
 para el año 2023
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1088
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1266
 
-# Pag. 1089
+# Pag. 1267
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 En los casos de creación de puestos de trabajo, se considerará producida la materialización
@@ -44066,9 +50234,9 @@ suscripción haya supuesto la materialización de la reserva, así como su fecha
 entenderán financiadas con los fondos derivados de las acciones o participaciones emitidas según el orden en
 el que se haya producido su desembolso efectivo. En el caso de desembolsos efectuados en la misma fecha,
 se considerará que contribuyen de forma proporcional a la financiación de la inversión.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1089
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1267
 
-# Pag. 1090
+# Pag. 1268
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Importe de la materialización de las inversiones de la letra C
@@ -44105,9 +50273,9 @@ Ley 31/2022, de 23 de diciembre, de Presupuestos Generales del Estado para el a�
 Los contribuyentes pueden llevar a cabo inversiones anticipadas, que se considerarán como
 materialización de la reserva para inversiones que se dote con cargo a beneficios obtenidos
 en el período impositivo en el que se realiza la inversión o en los tres posteriores,
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1090
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1268
 
-# Pag. 1091
+# Pag. 1269
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 siempre que se cumplan los restantes requisitos exigidos en el mismo.
@@ -44143,9 +50311,9 @@ previamente declarada en las inversiones previstas en las letras A y B del núme
 apartado cuatro de la disposición adicional septuagésima. Ley 31/2022, de 23 de
 diciembre, de Presupuestos Generales del Estado para el año 2023.
 • Casilla [1685], [1783] y [1940]
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1091
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1269
 
-# Pag. 1092
+# Pag. 1270
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Se indicará el importe de las materializaciones efectuadas con cargo a la dotación
@@ -44180,9 +50348,9 @@ Véase el cuadro sobre los límites de ayudas a mínimis, que son aplicables a l
 beneficios fiscales del Régimen fiscal especial de las Illes Balears y se recogen en el
 apartado 3 de este apartado sobre el régimen fiscal especial de las Illes Balears.
 • Incremento del porcentaje de la bonificación
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1092
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1270
 
-# Pag. 1093
+# Pag. 1271
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 La bonificación se incrementará hasta el 25 por 100 en aquellos períodos impositivos en
@@ -44217,9 +50385,9 @@ Bonificación declarante: 300 (*) x 10% = 30
 (*) Al aplicar el declarante la bonificación sobre 1.500, el cónyuge sólo podrá aplicar la
 bonificación sobre el importe restante de la cuota: 1.800 – 1.500 = 300
 El importe de la bonificación en tributación conjunta será 375 + 30 = 405
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1093
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1271
 
-# Pag. 1094
+# Pag. 1272
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Requisitos
@@ -44259,9 +50427,9 @@ Cuando la entidad se haya constituido en el primer período impositivo en que te
 efectos el régimen previsto en este apartado, la aplicación de la bonificación requerirá
 que cumpla los requisitos para que resulte de aplicación el tipo de gravamen reducido
 para entidades de nueva creación regulados en el artículo 29.1 de la LIS.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1094
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1272
 
-# Pag. 1095
+# Pag. 1273
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 A estos efectos, no se entenderá iniciada una actividad económica, de acuerdo con el artículo 29.1 de
@@ -44297,9 +50465,9 @@ deducción por rendimientos derivados de la venta de bienes corporales producido
 Illes Balears), conjuntamente con cualquier otra ayuda percibida al amparo de la normativa
 sobre ayudas de “minimis”, no podrán superar los importes que, para su respectivo ámbito de
 aplicación, establecen los Reglamentos que se recogen en el siguiente cuadro:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1095
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1273
 
-# Pag. 1096
+# Pag. 1274
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Normativa sector/actividad Límites
@@ -44354,9 +50522,9 @@ límite del Reglamento (UE)
 de enero de 2027, el Reglamento
 (UE) 2024/3118 de la Comisión,
 obliga a que la información sobre
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1096
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1274
 
-# Pag. 1097
+# Pag. 1275
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación directa
 Normativa sector/actividad Límites
@@ -44404,9 +50572,9 @@ entrada en vigor si tales ayudas Unión.
 reúnen todas las condiciones
 establecidas en él.
 Notas comunes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1097
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1275
 
-# Pag. 1098
+# Pag. 1276
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Normativa sector/actividad Límites
@@ -44446,9 +50614,9 @@ Normativa: Arts. 68.2 y 69.2 Ley IRPF
 Cuando se trate de contribuyentes que ejerzan actividades económicas y determinen su
 rendimiento neto por el método de estimación objetiva, los incentivos y estímulos a la
 inversión empresarial establecidos o que se establezcan en la normativa del Impuesto sobre
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1098
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1276
 
-# Pag. 1099
+# Pag. 1277
 
 Deducciones por incentivos y estímulos a la inversión empresarial en actividades económicas en estimación objetiva
 Sociedades solo les serán de aplicación cuando así se establezca reglamentariamente
@@ -44482,9 +50650,9 @@ autonómico integradas en aquellas, el Comité Olímpico Español y el Comité P
 Español.
 d. Las federaciones y asociaciones de las entidades sin fines lucrativos a que se refieren los
 párrafos anteriores.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1099
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1277
 
-# Pag. 1100
+# Pag. 1278
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 e. Las entidades no residentes en territorio español que operen en el mismo con
@@ -44522,9 +50690,9 @@ p. Las entidades de la Iglesia Católica contempladas en los artículos IV y V d
 sobre Asuntos Económicos suscrito entre el Estado español y la Santa Sede y las
 entidades de otras iglesias, confesiones o comunidades religiosas, que tengan suscritos
 acuerdos de cooperación con el Estado español.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1100
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1278
 
-# Pag. 1101
+# Pag. 1279
 
 Deducciones por donativos y otras aportaciones
 q. El Instituto de España y las Reales Academias integradas en el mismo, así como de las
@@ -44564,9 +50732,9 @@ Actos Jurídicos Documentados.
 Español o de bienes culturales de calidad garantizada. En ambos supuestos, la base
 de la deducción será la valoración efectuada al efecto por la Junta de calificación,
 valoración y exportación.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1101
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1279
 
-# Pag. 1102
+# Pag. 1280
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Desde el 1 de enero de 2024, la cesión de uso de un bien mueble o inmueble, por un
@@ -44604,9 +50772,9 @@ relevancia económica, evitando que la donación pueda adquirir un carácter one
 perseguido por el legislador, se acota el importe que pudiera recibir el donante al 15 por 100
 del valor del donativo, donación o aportación realizada, y en cualquier caso se establece un límite
 máximo de 25.000 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1102
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1280
 
-# Pag. 1103
+# Pag. 1281
 
 Deducciones por donativos y otras aportaciones
 Atención: como regla general, solo dan derecho a deducción los donativos, donaciones
@@ -44637,9 +50805,9 @@ entidad
 Importante: la aplicación del porcentaje de deducción por donativos a una misma
 entidad exige la realización de donativos durante, al menos, tres años consecutivos.
 Por tanto, desde desde 2024 se reduce de 4 a 3 años el número de ejercicios en que se
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1103
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1281
 
-# Pag. 1104
+# Pag. 1282
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 han de realizar los donativos a una misma entidad por importe igual o superior a los del
@@ -44671,9 +50839,9 @@ Base de deducción Importe hasta Porcentaje de deducción
 250 euros 85
 Resto base de deducción 45
 Tipo incrementado por reiteración de donaciones a una misma entidad 50
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1104
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1282
 
-# Pag. 1105
+# Pag. 1283
 
 Deducciones por donativos y otras aportaciones
 Atención: téngase en cuenta que, dado que no se ha producido la aprobación de los
@@ -44713,9 +50881,9 @@ funciones de carácter cultural y de investigación científica establecidos por
 de 24 de marzo, reguladora de la Biblioteca Nacional de España y por el Real Decreto
 640/2016, de 9 de diciembre, por el que se aprueba el Estatuto de la Biblioteca Nacional
 de España.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1105
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1283
 
-# Pag. 1106
+# Pag. 1284
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 5. Las llevadas a cabo por la Fundación Deporte Joven en colaboración con el Consejo
@@ -44759,9 +50927,9 @@ innovación llevadas a cabo por la Fundación Española para la Ciencia y la Tec
 13. Las llevadas a cabo por la Agencia Estatal de Investigación para el fomento y financiación
 de las actuaciones que derivan de las políticas de I+D de la Administración General del
 Estado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1106
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1284
 
-# Pag. 1107
+# Pag. 1285
 
 Deducciones por donativos y otras aportaciones
 14. La I+D+I en Biomedicina y Ciencias de la Salud de la Acción Estratégica en Salud
@@ -44806,9 +50974,9 @@ respectivo Consorcio:
 • “Primavera Sound, created in Barcelona”
 • “Año Tàpies. Cien años del nacimiento del artista Antoni Tàpies (1923 – 2012)”
 • “Eduardo Chillida 100 años”
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1107
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1285
 
-# Pag. 1108
+# Pag. 1286
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • “VIII Centenario de la Catedral gótica de Toledo, primada de España”
@@ -44854,9 +51022,9 @@ incluidas en el ámbito de la Ley 49/2002
 Don S.M.A. ha realizado las siguientes donaciones:
 • A la ONG “TT” incluida en el ámbito de la Ley 49/2002 a la que con anterioridad no
 habían efectuado donación alguna, la cantidad de 1.000 euros en 2025.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1108
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1286
 
-# Pag. 1109
+# Pag. 1287
 
 Deducciones por donativos y otras aportaciones
 • A la fundación “XX” incluida en el ámbito de la Ley 49/2002 a la que se ha efectuado
@@ -44891,9 +51059,9 @@ que se han de realizar donativos a una misma entidad por importe igual o superio
 el 31 de diciembre de 2023. (Volver)
 Donativos realizados a entidades no incluidas en el ámbito de la
 Ley 49/2002
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1109
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1287
 
-# Pag. 1110
+# Pag. 1288
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Normativa: Art. 68.3.b) Ley IRPF
@@ -44928,9 +51096,9 @@ Las deducciones por razón de donativos, donaciones y aportaciones deducibles, r
 al amparo del régimen de deducciones establecido por la Ley 49/2002 habrán de acreditarse
 mediante certificación expedida por la entidad beneficiaria, en la que, además del número
 de identificación fiscal del donante y de la entidad, se haga constar lo siguiente:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1110
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1288
 
-# Pag. 1111
+# Pag. 1289
 
 Deducciones por donativos y otras aportaciones
 1. Mención expresa de que la entidad donataria se encuentra incluida entre las reguladas en
@@ -44964,9 +51132,9 @@ b. Número de identificación fiscal.
 c. Importe del donativo.
 d. Indicación de si el donativo da derecho a la aplicación de alguna de las deducciones
 aprobadas por las comunidades autónomas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1111
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1289
 
-# Pag. 1112
+# Pag. 1290
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Importante: en el caso de que, una vez efectuada la donación, esta fuese revocada
@@ -45000,9 +51168,9 @@ estatal y autonómica que proporcionalmente corresponda a las rentas computadas 
 determinación de las bases liquidables que hubieran sido obtenidas en Ceuta o Melilla.
 b. Contribuyentes con residencia en Ceuta o Melilla durante un plazo igual
 o superior a tres años
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1112
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1290
 
-# Pag. 1113
+# Pag. 1291
 
 Deducción por rentas obtenidas en Ceuta o Melilla
 Los contribuyentes que mantengan su residencia habitual y efectiva en Ceuta o Melilla
@@ -45040,9 +51208,9 @@ concertados con mutualidades de previsión social que originen rendimientos del 
 de acuerdo con lo dispuesto en el citado artículo, planes de previsión asegurados y las
 prestaciones percibidas por los beneficiarios de planes de previsión social empresarial y
 de los seguros de dependencia).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1113
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1291
 
-# Pag. 1114
+# Pag. 1292
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Atención: a efectos de aplicar esta deducción la residencia viene dada por el hecho
@@ -45082,9 +51250,9 @@ Melilla y se utilice efectivamente en dichos territorios.
 Melilla que correspondan a rentas a las que resulte de aplicación la bonificación
 establecida en el artículo 33 de la LIS, en los siguientes supuestos:
 1. Cuando tengan su domicilio y objeto social exclusivo en dichos territorios.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1114
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1292
 
-# Pag. 1115
+# Pag. 1293
 
 Deducción por rentas obtenidas en Ceuta o Melilla
 2. Los rendimientos procedentes de depósitos o cuentas en toda clase de instituciones
@@ -45124,9 +51292,9 @@ Don M.V.C., soltero y sin hijos, trasladó su residencia de Cádiz a Ceuta el 20
 las siguientes rentas:
 • Rendimiento neto reducido del trabajo: 31.000
 • Rendimiento neto reducido de capital mobiliario: 500
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1115
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1293
 
-# Pag. 1116
+# Pag. 1294
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Rendimiento neto reducido de capital inmobiliario: 3.200
@@ -45159,9 +51327,9 @@ Escala autonómica
 Hasta 20.200,00: 2.112,75
 Resto 14.000,00 al 15%: 2.100
 Cuota 2 (2.112,75 + 2.100) = 4.212,75
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1116
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1294
 
-# Pag. 1117
+# Pag. 1295
 
 Deducción por rentas obtenidas en Ceuta o Melilla
 b. Aplicación de las escalas de gravamen a la base liquidable general
@@ -45191,9 +51359,9 @@ Para su cálculo deben seguirse los siguientes pasos:
 [60% x Cuota íntegra general / Base liquidable general x Base liquidable general
 obtenida en Ceuta]
 60% [(3.685,50 + 3.685,50) ÷ 34.200 x 31.000] = 4.008,78
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1117
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1295
 
-# Pag. 1118
+# Pag. 1296
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Cálculo de la deducción correspondiente a las rentas obtenidas en Ceuta incluidas en la
@@ -45210,9 +51378,9 @@ Parte autonómica: 2.035,01
 4. Cuota líquida
 • Parte estatal (5.778 – 2.035,01) = 3.742,99
 • Parte autonómica ((5.778 – 2.035,01) = 4.107,68
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1118
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1296
 
-# Pag. 1119
+# Pag. 1297
 
 Deducción por residencial habitual y efectiva en la isla de La Palma durante el ejercicio 2025
 Deducción por residencial habitual y efectiva en la
@@ -45248,9 +51416,9 @@ computadas para la determinación de las bases liquidables que hubieran sido obt
 en isla de La Palma.
 b. Contribuyentes con residencia en la isla de La Palma durante un plazo
 igual o superior a tres años
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1119
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1297
 
-# Pag. 1120
+# Pag. 1298
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Los contribuyentes que hayan mantenido su residencia habitual y efectiva en la isla de La
@@ -45291,9 +51459,9 @@ artículo 33.4 y 5 de la LIS. Véase al respecto la Ley 27/2014, de 27 de noviem
 Sociedades (BOE de 28 de noviembre).
 • Las ganancias patrimoniales que procedan de bienes inmuebles radicados en la isla de
 La Palma o de bienes muebles situados en dichos territorios.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1120
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1298
 
-# Pag. 1121
+# Pag. 1299
 
 Deducción por residencial habitual y efectiva en la isla de La Palma durante el ejercicio 2025
 • Los rendimientos del capital mobiliario procedentes de obligaciones o préstamos,
@@ -45329,9 +51497,9 @@ Patrimonio Histórico del Estado y de las Comunidades Autónomas.
 • Rehabilitación de edificios, el mantenimiento y reparación de sus tejados y
 fachadas, así como la mejora de infraestructuras de su propiedad, situados en el
 entorno que sea objeto de protección de las ciudades españolas o de los conjuntos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1121
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1299
 
-# Pag. 1122
+# Pag. 1300
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 arquitectónicos, arqueológicos, naturales o paisajísticos y de los bienes declarados
@@ -45367,9 +51535,9 @@ La Ley 26/2014, de 27 de noviembre, por la que se modifican la Ley 35/2006, de 2
 noviembre, del Impuesto sobre la Renta de las Personas Físicas, el texto refundido de la Ley
 del Impuesto sobre la Renta de no Residentes, aprobado por el Real Decreto Legislativo
 5/2004, de 5 de marzo, y otras normas tributarias (BOE de 28 de marzo) suprimió desde 1 de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1122
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1300
 
-# Pag. 1123
+# Pag. 1301
 
 Deducción por alquiler de la vivienda habitual: Régimen transitorio
 enero de 2015, la deducción por alquiler de la vivienda habitual.
@@ -45408,9 +51576,9 @@ La disposición transitoria decimoquinta de la Ley de IRPF mantiene, para los co
 que tengan derecho al régimen transitorio, la aplicación de la regulación contenida en los
 artículos 67.1, 68.7 y 77.1 de la Ley del IRPF, en su redacción en vigor a 31 de diciembre de
 2014.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1123
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1301
 
-# Pag. 1124
+# Pag. 1302
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Cuantía y requisitos para la aplicación de la deducción
@@ -45449,9 +51617,9 @@ Importante: los contribuyentes con derecho a la aplicación del régimen transit
 base imponible, en los términos anteriormente comentados, sea igual o superior a
 24.107,20 euros anuales, en tributación individual o en tributación conjunta, no podrán
 aplicar la presente deducción.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1124
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1302
 
-# Pag. 1125
+# Pag. 1303
 
 Deducción por alquiler de la vivienda habitual: Régimen transitorio
 Ejemplo
@@ -45487,9 +51655,9 @@ de 5 de octubre, de medidas urgentes para impulsar la actividad de rehabilitaci�
 en el contexto del Plan de Recuperación, Transformación y Resiliencia), modificó la Ley del
 IRPF para introducir tres nuevas deducciones temporales en la cuota íntegra estatal que son
 aplicables sobre las cantidades invertidas en obras de rehabilitación que contribuyan a
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1125
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1303
 
-# Pag. 1126
+# Pag. 1304
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 alcanzar determinadas mejoras de la eficiencia energética de la vivienda habitual o
@@ -45528,9 +51696,9 @@ hasta el 31 de diciembre de 2025 por obras realizadas durante dicho periodo que 
 las condiciones y requisitos que se indican en los apartados siguientes.
 No obstante, la deducción se practicará en el período impositivo en el que se expida el
 certificado de eficiencia energética emitido después de la realización de las obras.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1126
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1304
 
-# Pag. 1127
+# Pag. 1305
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 A pesar de que haya satisfecho cantidades por las obras realizadas, la Ley del IRPF no permite la deducción
@@ -45569,9 +51737,9 @@ Atención: asimismo, se podrá aplicar esta deducción respecto de las obras rea
 en viviendas de tipo unifamiliar.
 Quedan excluidas las obras que se realicen en:
 • Las partes de las viviendas afectas a una actividad económica.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1127
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1305
 
-# Pag. 1128
+# Pag. 1306
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Las plazas de garaje, trasteros, jardines, parques, piscinas e instalaciones deportivas y
@@ -45609,9 +51777,9 @@ y después de las obras.
 Los certificados de eficiencia energética expedidos antes del inicio de las obras serán
 válidos para acreditar el cumplimiento de los requisitos siempre que no hubiera
 transcurrido un plazo de dos años entre la fecha de su expedición y la del inicio de estas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1128
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1306
 
-# Pag. 1129
+# Pag. 1307
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 Si el certificado energético previo a la realización de las obras, expedido en los dos años anteriores a la
@@ -45653,9 +51821,9 @@ realización de las obras en la parte que proporcionalmente se corresponda con s
 la vivienda habitual, con independencia de que la factura correspondiente a las obras se haya expedido
 únicamente a nombre de uno de los cotitulares de la vivienda.
 Por tanto, quedan excluidos los nudos propietarios, usufructuarios y arrendatarios.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1129
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1307
 
-# Pag. 1130
+# Pag. 1308
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Importe de la deducción e incompatibilidades con las restantes
@@ -45694,9 +51862,9 @@ instalaciones, inversión en equipos y materiales y otros gastos necesarios para
 así como la emisión de los correspondientes certificados de eficiencia energética.
 Así por ejemplo, el importe correspondiente a la licencia de obras municipal se considera un gasto necesario
 para el desarrollo de la propia obra, ya que no sería posible la ejecución de la misma sin este documento.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1130
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1308
 
-# Pag. 1131
+# Pag. 1309
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 Ahora bien, si estos importes se satisfacen con posterioridad a la fecha máxima de expedición del certificado
@@ -45734,9 +51902,9 @@ aislamiento térmico de la vivienda por un importe total de 8.900 euros que se h
 efectivos el 30 de junio de 2025 mediante transferencia bancaria.
 Por el cambio de ventanas solicitó y obtuvo una ayuda de su Comunidad Autónoma de
 residencia que ascendió a 1.500 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1131
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1309
 
-# Pag. 1132
+# Pag. 1310
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Además, en otra vivienda de su titularidad alquilada realizó durante el mes de diciembre el
@@ -45777,9 +51945,9 @@ aplicándola en la factura en concepto de anticipo al mismo.
 • Base máxima de la deducción: 5.000 euros
 • Importe de la deducción: (5.000 x 20%) = 1.000
 Contribuyente doña R.L.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1132
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1310
 
-# Pag. 1133
+# Pag. 1311
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 • Base de deducción: 5.500
@@ -45815,9 +51983,9 @@ posterior tomando en consideración las cantidades satisfechas desde el 6 de oct
 medidas urgentes para impulsar la actividad de rehabilitación edificatoria en el contexto del
 Plan de Recuperación, Transformación y Resiliencia), hasta el 31 de diciembre del período
 impositivo en el que se expida en certificado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1133
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1311
 
-# Pag. 1134
+# Pag. 1312
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Por tanto, la deducción se aplicará en 2025 cuando el certificado emitido después de la
@@ -45853,9 +52021,9 @@ Importante: esta deducción no resulta aplicable en viviendas de obra nueva o de
 construcción ya que, al no existir en estos casos un certificado de eficiencia energética
 anterior y otro posterior a las obras, como exige la norma no puede acreditarse la
 correspondiente reducción o mejora respecto de la situación previa.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1134
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1312
 
-# Pag. 1135
+# Pag. 1313
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 Situación distinta es la de aquellas viviendas de nueva construcción en las que se
@@ -45897,9 +52065,9 @@ certificado emitido con posterioridad a las mismas
 Los certificados de eficiencia energética emitidos después de la realización de las
 obras determinan el periodo impositivo en el que se practica la deducción y deberá
 ser expedido en 2025.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1135
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1313
 
-# Pag. 1136
+# Pag. 1314
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Si bien la deducción se genera en el período impositivo en el que se expide el certificado energético, hasta
@@ -45937,9 +52105,9 @@ A. Base de la deducción
 La base de esta deducción estará constituida por las cantidades satisfechas, casilla [1668]
 de la declaración, mediante tarjeta de crédito o débito, transferencia bancaria, cheque
 nominativo o ingreso en cuentas en entidades de crédito, a las personas o entidades que
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1136
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1314
 
-# Pag. 1137
+# Pag. 1315
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 realicen tales obras, así como a las personas o entidades que expidan los citados
@@ -45980,9 +52148,9 @@ a la instalación o sustitución de equipos que utilicen combustibles de origen 
 En el caso de viviendas de naturaleza ganancial, las cantidades satisfechas con cargo a la sociedad de
 gananciales por un matrimonio en régimen de sociedad legal de gananciales, se atribuirán a cada cónyuge al
 50 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1137
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1315
 
-# Pag. 1138
+# Pag. 1316
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 En caso de vivienda de titularidad compartida, cada copropietario de la vivienda podrá practicar la deducción
@@ -46020,9 +52188,9 @@ Para acreditar el cumplimiento de los requisitos exigidos para la práctica de e
 se solicitó la expedición de un certificado eficiencia energética antes y después de las
 obras. Este último fue expedido el 20 de diciembre de 2025 y supuso la calificación de la
 vivienda como clase energética «B», en la escala de consumo de energía.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1138
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1316
 
-# Pag. 1139
+# Pag. 1317
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 Determinar el importe de la deducción para 2025, tanto en tributación individual como en
@@ -46044,9 +52212,9 @@ Declaración conjunta de don T.P. y doña P.Z
 • Base de deducción: 20.000 euros = 20.000
 • Base máxima de la deducción: 7.500 euros
 • Importe de la deducción: (7.500 x 40%) = 3.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1139
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1317
 
-# Pag. 1140
+# Pag. 1318
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 3. Deducción por obras de rehabilitación energética de edificios
@@ -46082,9 +52250,9 @@ comunidad de propietarios satisfaga el importe de las obras de mejora realizadas
 o no financiación ajena) siempre que se hubiera expedido el certificado de eficiencia
 energética con anterioridad a la finalización de dicho periodo.
 Ámbito objetivo de la deducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1140
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1318
 
-# Pag. 1141
+# Pag. 1319
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 A. Tipo de viviendas que dan derecho a la deducción
@@ -46123,9 +52291,9 @@ la mejora de la calificación energética del edificio para obtener una clase en
 ○
 «A» o «B», en la misma escala de calificación (la del consumo energético), respecto
 del expedido antes del inicio de las mismas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1141
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1319
 
-# Pag. 1142
+# Pag. 1320
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Atención: para acceder a dicha deducción las obras a las que se hace referencia han
@@ -46165,9 +52333,9 @@ las obras, las fechas de los certificados de eficiencia energética anterior y p
 obras, el consumo de energía primaria no renovable que figure en cada uno de
 ellos, dato que podrá extraerse del indicador global contenido en el apartado 2) del
 Anexo II, la letra de la calificación energética del edificio y las cantidades satisfechas.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1142
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1320
 
-# Pag. 1143
+# Pag. 1321
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 Ámbito subjetivo de la deducción
@@ -46207,9 +52375,9 @@ aquellas necesarias para su ejecución, incluyendo los honorarios profesionales,
 redacción de proyectos técnicos, dirección de obras, coste de ejecución de obras o
 instalaciones, inversión en equipos y materiales y otros gastos necesarios para su desarrollo,
 así como la emisión de los correspondientes certificados de eficiencia energética.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1143
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1321
 
-# Pag. 1144
+# Pag. 1322
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Así por ejemplo, el importe correspondiente a la licencia de obras municipal se considera un gasto necesario
@@ -46249,9 +52417,9 @@ Las cantidades satisfechas no deducidas (bases pendientes de deducción) por exc
 la base máxima anual de deducción podrán deducirse, con el mismo límite, en los cuatro
 ejercicios siguientes, sin que en ningún caso la base acumulada de la deducción pueda
 exceder de 15.000 euros (límite máximo plurianual).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1144
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1322
 
-# Pag. 1145
+# Pag. 1323
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 El límite de 15.000 euros de la base acumulada de deducción debe entenderse como límite aplicable de
@@ -46295,9 +52463,9 @@ futuros en la casilla [1857] del Anexo C.5 de la declaración.
 D. Porcentaje de deducción
 El porcentaje de deducción aplicable sobre la base de deducción, en los términos
 anteriormente comentados, es el 60 por 100.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1145
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1323
 
-# Pag. 1146
+# Pag. 1324
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Incompatibilidades
@@ -46340,9 +52508,9 @@ Solución:
 NOTA: a pesar de haber satisfecho en 2024 cantidades por la realización de las obras, no tuvo derecho a
 practicar la deducción en ese periodo impositivo al no haber sido expedido el certificado. Al haberse expedido en
 el período impositivo siguiente, 2025, la deducción se practicará en dicho período impositivo posterior (2025)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1146
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1324
 
-# Pag. 1147
+# Pag. 1325
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 tomando en consideración en este caso las cantidades satisfechas el 1 de diciembre de 2024 (8.000 euros) y las
@@ -46374,9 +52542,9 @@ A. Si Don J.G y Doña T.K. presentan declaración individual en ese
 ejercicio 2027
 1. Cuando en 2025 presentaron declaración individual
 • Cantidades pendientes 2025: 1.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1147
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1325
 
-# Pag. 1148
+# Pag. 1326
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Base máxima de deducción (la menor de):
@@ -46406,9 +52574,9 @@ B. Si Don J.G y Doña T.K. presentan declaración conjunta en 2026
 • Cantidades pendientes 2025: 7.000 euros
 • Base máxima de deducción (la menor de):
 - Base máxima anual por declaración: 5.000
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1148
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1326
 
-# Pag. 1149
+# Pag. 1327
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 - Base acumulada: 10.000
@@ -46418,9 +52586,9 @@ Deducciones por obras de mejora de eficiencia energética en viviendas
 • Base acumulada: 10.000 – 5.000 = 5.000
 Nota: las cantidades satisfechas no deducidas por exceder de la base máxima anual de
 deducción (2.000 euros) podrán deducirse en el ejercicio 2027.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1149
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1327
 
-# Pag. 1150
+# Pag. 1328
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Cuadro-Resumen: Deducciones por obras de mejora de
@@ -46470,9 +52638,9 @@ después de las obras
 debe ser expedido
 antes de 01.01.2026.
 Certificado Reducción de al menos un 7% Reducción de al menos un Reducción de al menos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1150
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1328
 
-# Pag. 1151
+# Pag. 1329
 
 Deducciones por obras de mejora de eficiencia energética en viviendas
 Deducción por obras de Deducción por obras de Deducción por obras
@@ -46524,9 +52692,9 @@ concedidas.
 Base anual 5.000 € 7.500 € 5.000 €
 máxima por
 declaración
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1151
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1329
 
-# Pag. 1152
+# Pag. 1330
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Deducción por obras de Deducción por obras de Deducción por obras
@@ -46552,9 +52720,9 @@ acumulada de la
 deducción pueda
 exceder de 15.000
 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1152
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1330
 
-# Pag. 1153
+# Pag. 1331
 
 Deducciones por la adquisición de vehículos eléctricos "enchufables" y de pila de combustible y puntos de recarga
 Deducciones por la adquisición de vehículos
@@ -46587,9 +52755,9 @@ efectiva en la isla de La Palma), y 5 (Deducción por actuaciones para la protec
 difusión del Patrimonio Histórico Español y de las ciudades, conjuntos y bienes
 declarados Patrimonio Mundial) del artículo 68 de la Ley del IRPF.
 Estas deducciones son:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1153
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1331
 
-# Pag. 1154
+# Pag. 1332
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 1. Deducción por la adquisición de vehículos eléctricos
@@ -46625,9 +52793,9 @@ En los supuestos de matrimonios casados en régimen económico de gananciales, s
 requisitos exigidos, la deducción se practicará exclusivamente por el cónyuge a cuyo nombre se ha matriculado
 el vehículo, con independencia de que este se haya adquirido con fondos gananciales.
 b. Adquisición mediante un primer pago a cuenta y pagos posteriores:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1154
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1332
 
-# Pag. 1155
+# Pag. 1333
 
 Deducciones por la adquisición de vehículos eléctricos "enchufables" y de pila de combustible y puntos de recarga
 En este caso, los contribuyentes podrán practicar la deducción cuando abonen, entre el
@@ -46662,9 +52830,9 @@ siguientes requisitos y condiciones:
 Importante: en caso de que con posterioridad a su adquisición el vehículo se
 afectara a una actividad económica se perderá el derecho a la deducción practicada
 • Debe pertenecer a alguna de las siguientes categorías:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1155
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1333
 
-# Pag. 1156
+# Pag. 1334
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 a. Turismos M1: Vehículos de motor con al menos cuatro ruedas diseñados y fabricados
@@ -46711,9 +52879,9 @@ embarcado.
 Vehículo eléctrico híbrido de células de combustible (FCHV): Vehículo eléctrico de
 ○
 células de combustible que equipa, además, baterías eléctricas recargables.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1156
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1334
 
-# Pag. 1157
+# Pag. 1335
 
 Deducciones por la adquisición de vehículos eléctricos "enchufables" y de pila de combustible y puntos de recarga
 • Si se trata de un vehículo de la categoría L deberá cumplir las siguientes exigencias:
@@ -46751,9 +52919,9 @@ La deducción resulta aplicable a las cantidades satisfechas por los contribuyen
 30 de junio de 2023 hasta el 31 de diciembre de 2025, para la instalación durante dicho
 período de sistemas de recarga de baterías para vehículos eléctricos que cumpla las
 siguientes condiciones:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1157
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1335
 
-# Pag. 1158
+# Pag. 1336
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • La instalación debe realizarse en un inmueble de propiedad del contribuyente.
@@ -46790,9 +52958,9 @@ A. Base de deducción
 La base de la deducción estará constituida por las cantidades satisfechas, mediante
 tarjeta de crédito o débito, transferencia bancaria, cheque nominativo o ingreso en
 cuentas en entidades de crédito, a las personas o entidades que realicen la instalación.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1158
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1336
 
-# Pag. 1159
+# Pag. 1337
 
 Deducciones por la adquisición de vehículos eléctricos "enchufables" y de pila de combustible y puntos de recarga
 No obstante, se descontarán aquellas cuantías que, en su caso, hubieran sido
@@ -46818,9 +52986,9 @@ Porcentaje de deducción
 El porcentaje de deducción aplicable sobre la base de deducción, en los términos
 anteriormente comentados, es el 15 por 100 de las cantidades satisfechas para la
 instalación de sistemas de recarga de baterías para vehículos eléctricos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1159
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1337
 
-# Pag. 1160
+# Pag. 1338
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Cuadro-Resumen- Deducciones por la adquisición de vehículos
@@ -46866,9 +53034,9 @@ vehículo antes de que finalice el
 segundo período impositivo
 inmediato posterior a aquel en el
 que se produjo dicho primer pago.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1160
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1338
 
-# Pag. 1161
+# Pag. 1339
 
 Deducciones por la adquisición de vehículos eléctricos "enchufables" y de pila de combustible y puntos de recarga
 Deducción por la adquisición de
@@ -46898,9 +53066,9 @@ de la
 deducción
 Porcentaje de 15% 15%
 deducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1161
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1339
 
-# Pag. 1162
+# Pag. 1340
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Ejemplo: Deducción por la adquisición de vehículos eléctricos y
@@ -46943,9 +53111,9 @@ todavía no ha sido concedida.
 Nota: véase Ia INSTRUCCIÓN TÉCNICA COMPLEMENTARIA (ITC) BT-52 del Real Decreto 1053/2014, de
 12 de diciembre, por el que se aprueba una nueva Instrucción Técnica Complementaria (ITC) BT 52
 "Instalaciones con fines especiales. Infraestructura para la recarga de vehículos eléctricos", del Reglamento
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1162
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1340
 
-# Pag. 1163
+# Pag. 1341
 
 Deducciones por la adquisición de vehículos eléctricos "enchufables" y de pila de combustible y puntos de recarga
 electrotécnico para baja tensión, aprobado por Real Decreto 842/2002, de 2 de agosto, y se modifican otras
@@ -46991,9 +53159,9 @@ como límite la base máxima anual de deducción). Para ello, de acuerdo con el 
 Reglamento del IRPF, se añadirá a la cuota líquida estatal de la declaración del IRPF
 correspondiente al ejercicio en que se hayan concedido la subvención el importe de la deducción
 indebidamente practicada.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1163
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1341
 
-# Pag. 1164
+# Pag. 1342
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 • Base máxima de la deducción: 4.000 euros
@@ -47031,9 +53199,9 @@ otro Estado miembro de la Unión Europea o del Espacio Económico Europeo.
 • Que en el Estado miembro de la Unión Europea o del Espacio Económico Europeo en el
 que resida cualquiera de los miembros de la unidad familiar exista normativa sobre
 asistencia mutua en materia de intercambio de información tributaria en los términos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1164
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1342
 
-# Pag. 1165
+# Pag. 1343
 
 Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Económico Europeo
 previstos en la LGT, que sea de aplicación.
@@ -47075,9 +53243,9 @@ IRPF
 Estados miembros de la Unión Europea en el artículo 46 del texto refundido de la Ley del
 Impuesto sobre la Renta de no Residentes.
 • No disponga de número de identificación fiscal.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1165
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1343
 
-# Pag. 1166
+# Pag. 1344
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Cálculo de la deducción
@@ -47121,9 +53289,9 @@ eficiencia energética en viviendas
 • 100% Deducciones por la adquisición de vehículos
 eléctricos “enchufables” y de pila de combustible y
 Σ Cuota líquida previa estatal + Cuota líquida previa autonómica + Cuota IRNR = Cuantía obtenida (C1)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1166
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1344
 
-# Pag. 1167
+# Pag. 1345
 
 Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Económico Europeo
 Cuota líquida previa estatal = Cuota líquida previa autonómica =
@@ -47152,9 +53320,9 @@ Cuando sean varios los contribuyentes del IRPF integrados en la unidad familiar,
 minoración se efectuará de forma proporcional a las respectivas cuotas íntegras, una vez
 efectuadas las deducciones previstas en los artículos 67 y 77 de esta Ley, de cada uno de
 ellos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1167
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1345
 
-# Pag. 1168
+# Pag. 1346
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 Ejemplo: Deducción aplicable a las unidades familiares formadas
@@ -47192,9 +53360,9 @@ residentes fiscales en la UE/EEE
 las deducciones: (31.250 − 1.550) = 29.700
 - Contribuyente don "C" Suma de cuotas íntegras estatal y autonómica minoradas en
 las deducciones (300 − 0) = 300
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1168
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1346
 
-# Pag. 1169
+# Pag. 1347
 
 Deducción aplicable a las unidades familiares formadas por residentes fiscales en Estados miembros de la Unión Europea o del Espacio Económico Europeo
 - No residente doña "B":Cuota por Impuesto sobre la Renta de no Residentes: 380
@@ -47227,9 +53395,9 @@ Parte que corresponde a don "C": 11 x (1,25 ÷ 100) (*) = 0,14
 b. El resto se divide entre dos
 Parte que corresponde a don "A": (1.089 - 13,61) ÷ 2 (**) = 537,70
 Parte que corresponde a don "C": (11 - 0,14) ÷ 2 (**) = 5,43
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1169
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1347
 
-# Pag. 1170
+# Pag. 1348
 
 Capítulo 16. Deducciones generales de la cuota en el ejercicio 2025
 (**) Estos importes minorarán la cuota íntegra estatal y la cuota íntegra autonómica
@@ -47240,9 +53408,9 @@ Importe que minora la cuota íntegra autonómica =537,69
 Don “C”:
 Importe que minora la cuota íntegra estatal (0,14 + 5,43) = 5,57
 Importe que minora la cuota íntegra autonómica = 5,43
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1170
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1348
 
-# Pag. 1171
+# Pag. 1349
 
 Capítulo 17. Deducciones autonómicas de la cuota aplicables en el ejercicio 2025
 Capítulo 17. Deducciones autonómicas
@@ -47250,9 +53418,9 @@ de la cuota aplicables en el ejercicio
 2025
 Puede consultar las deducciones aprobadas por cada Comunidad Autónoma para
 2025 en la Parte 2 de este Manual.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1171
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1349
 
-# Pag. 1172
+# Pag. 1350
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Capítulo 18. Cuota líquida, cuota
@@ -47263,14 +53431,14 @@ Una vez cuantificado el importe de las cuotas líquidas, estatal y autonómica, 
 cuenta la cesión del IRPF a las Comunidades Autónomas, las operaciones restantes que
 deben realizarse para determinar el resultado de la declaración se recogen, de forma gráfica
 y resumida, en el siguiente cuadro:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1172
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1350
 
-# Pag. 1173
+# Pag. 1351
 
 Introducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1173
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1351
 
-# Pag. 1174
+# Pag. 1352
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Incremento de las cuotas líquidas, estatal y
@@ -47305,9 +53473,9 @@ autonómica.
 El importe del tramo estatal y el importe del tramo autonómico serán los practicados en
 las declaraciones correspondientes a los ejercicios 2002 a 2024 que deban regularizarse.
 Así, por ejemplo:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1174
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1352
 
-# Pag. 1175
+# Pag. 1353
 
 Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores
 Para el ejercicio 2008, si se pierde el derecho a la deducción por inversión en vivienda
@@ -47348,9 +53516,9 @@ ejercicio.
 Para el ejercicio 2015 el importe del tramo estatal será el consignado en la casilla
 [0492] y el del tramo autonómico en la casilla [0493], de la declaración del citado
 ejercicio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1175
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1353
 
-# Pag. 1176
+# Pag. 1354
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Para el ejercicio 2016 el importe del tramo estatal será el consignado en la casilla
@@ -47388,9 +53556,9 @@ deducciones a las que se ha perdido el derecho en 2025 se consignará en la casi
 • Deducciones autonómicas de la cuota de los ejercicios 1998 a 2024:
 El importe de las deducciones autonómicas indebidas más los intereses de demora se
 aplicarán en su totalidad a incrementar la cuota líquida autonómica.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1176
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1354
 
-# Pag. 1177
+# Pag. 1355
 
 Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores
 Importante: las deducciones incorrecta o indebidamente practicadas en el ejercicio en
@@ -47423,9 +53591,9 @@ que hubieran formado parte en ejercicios anteriores de la base de la
 deducción por inversión en vivienda habitual o de deducciones
 establecidas por la Comunidad Autónoma
 Normativa: Disposición adicional cuadragésima quinta Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1177
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1355
 
-# Pag. 1178
+# Pag. 1356
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 No se integrará en la base imponible del IRPF la devolución, en efectivo o a través de
@@ -47469,9 +53637,9 @@ b. Si la devolución de estas cantidades se produce a través de la compensació
 estas con una parte del capital pendiente de amortización no resultará de aplicación la
 adición a la cuota líquida estatal y autonómica antes comentada respecto de la parte de las
 cantidades que se destine directamente por la entidad financiera, tras el acuerdo con el
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1178
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1356
 
-# Pag. 1179
+# Pag. 1357
 
 Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores
 contribuyente afectado, a minorar el principal del préstamo.
@@ -47511,9 +53679,9 @@ inversión empresarial, se produzca el incumplimiento de alguno de los requisito
 en la normativa reguladora del Impuesto sobre Sociedades para consolidar el derecho a
 dichas deducciones, la regularización deberá realizarla el propio contribuyente en la
 declaración del ejercicio en que haya tenido lugar el incumplimiento, sumando a la cuota
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1179
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1357
 
-# Pag. 1180
+# Pag. 1358
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 líquida del impuesto, en los términos comentados en los dos primeros puntos anteriores, el
@@ -47555,9 +53723,9 @@ del Patrimonio Histórico Español en el patrimonio del adquirente durante un pl
 años
 Véase, dentro del Capítulo 16, al examinar esta deducción el período de permanencia de estos bienes en el
 patrimonio de su titular.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1180
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1358
 
-# Pag. 1181
+# Pag. 1359
 
 Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores
 Deducción por obras de mejora de la eficiencia energética de viviendas
@@ -47596,9 +53764,9 @@ establecidos en dicha norma.
 Deducción por la instalación de infraestructura de recarga
 La pérdida del derecho a esta deducción se puede producir por el incumplimiento de los
 requisitos exigidos para consolidarla. Entre otros, los siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1181
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1359
 
-# Pag. 1182
+# Pag. 1360
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 • Cuando habiéndose practicado la deducción sin descontar de la base de deducción una
@@ -47639,9 +53807,9 @@ presentación de las declaraciones positivas de los últimos ejercicios anterior
 tipos de interés de demora vigentes en cada uno de dichos ejercicios de acuerdo con lo
 establecido en las respectivas Leyes de Presupuestos Generales del Estado son los que se
 recogen en los cuadros siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1182
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1360
 
-# Pag. 1183
+# Pag. 1361
 
 Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores
 Vencimiento del plazo de presentación de las Tipos de intereses de demora vigentes en cada uno
@@ -47667,9 +53835,9 @@ Ejercicio Fecha Ejercicio Tipo vigente
 2010 30-06-2011 2010 5,00
 2011 02-07-2012 2011 5,00
 2012 01-07-2013 2012 5,00
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1183
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1361
 
-# Pag. 1184
+# Pag. 1362
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Vencimiento del plazo de presentación de las Tipos de intereses de demora vigentes en cada uno
@@ -47698,9 +53866,9 @@ presente la declaración correspondiente al ejercicio 2025.
 La suma de los intereses de demora correspondientes a cada uno de dichos ejercicios
 determinará el importe total de los intereses de demora correspondientes a la deducción
 indebida.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1184
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1362
 
-# Pag. 1185
+# Pag. 1363
 
 Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores
 En la determinación de los intereses de demora pueden distinguirse, a estos efectos, tres
@@ -47740,9 +53908,9 @@ y 2022 el 3,75 por 100, y para los años 2023, 2024 y 2025 el 4,0625 por 100.
 • Período final
 Es el comprendido entre el 1 de enero de 2026 y el día de presentación de la declaración del
 ejercicio 2025 (30 de junio de 2026).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1185
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1363
 
-# Pag. 1186
+# Pag. 1364
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 La determinación de los intereses correspondientes a este período puede realizarse
@@ -47774,9 +53942,9 @@ Año Cantidades invertidas Base máxima aplicable Deducciones practicadas
 declaración de 2025, si dicha declaración se presenta e ingresa el día 30 de junio de 2026
 y las declaraciones de los ejercicios 2022, 2023 y 2024 fueron positivas?
 Solución:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1186
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1364
 
-# Pag. 1187
+# Pag. 1365
 
 Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores
 Nota previa: téngase en cuenta que, con efectos desde el 1 de enero de 2023, se elevó de 60.000 a 100.000
@@ -47810,9 +53978,9 @@ El tipo de interés de demora vigente en el año 2023 era el 4,0625 por 100. Por
 b. Periodo intermedio: del 01-01-24 al 31-12-25 (731 días)
 Es el periodo comprendido entre el día 1 de enero de 2024 y 31 de diciembre de 2025. El
 tipo de interés de demora vigente en 2024 y 2025 era el 4,0625 por 100. Por lo tanto:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1187
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1365
 
-# Pag. 1188
+# Pag. 1366
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 • Intereses de demora año 2024: [(18.000 x 4,0625 ÷ 100)] = 731,25
@@ -47847,9 +54015,9 @@ c. Intereses de demora totales correspondientes a la deducción del ejercicio 20
 Intereses de demora totales: 1015,14 + 2.031,25 + 1.010,10 = 4.056,49 euros
 2.3 Intereses de demora correspondientes a la deducción indebida de
 2024 (50.000 euros)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1188
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1366
 
-# Pag. 1189
+# Pag. 1367
 
 Incremento de las cuotas líquidas, estatal y autonómica, por pérdida del derecho a deducciones de ejercicios anteriores
 a. Periodo inicial: del 01-07-25 al 31-12-25 (184 días)
@@ -47881,9 +54049,9 @@ rentas obtenidas y gravadas en el extranjero
 Normativa: Art. 80 Ley IRPF
 Objeto y régimen general de la deducción
 Objeto de la deducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1189
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1367
 
-# Pag. 1190
+# Pag. 1368
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Esta deducción tiene por objeto evitar que una renta obtenida en el extranjero por
@@ -47923,9 +54091,9 @@ residente en Málaga, figuran las siguientes magnitudes:
 Dentro de la base imponible general, cuyos componentes son todos positivos, figuran
 6.000 euros obtenidos en el extranjero, habiendo satisfecho el contribuyente en el país de
 obtención por un impuesto de naturaleza análoga al IRPF la cantidad de 1.100 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1190
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1368
 
-# Pag. 1191
+# Pag. 1369
 
 Deducciones de la cuota líquida total
 De forma análoga, en la base imponible del ahorro, cuyos componentes son todos
@@ -47960,9 +54128,9 @@ general.
 Escala general: 5.550 al 9,50% = 527,25
 Cuota 3 resultante: 527,25
 Escala autonómica 5.550 al 9,50% = 527,25
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1191
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1369
 
-# Pag. 1192
+# Pag. 1370
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Cuota 4 resultante: 527,25
@@ -47992,9 +54160,9 @@ Por rendimientos: 1.100
 Por ganancia patrimonial: 1.080
 B. Resultado de aplicar el tipo medio efectivo de gravamen, general y del ahorro,
 a la parte de base liquidable, general y del ahorro, gravada en el extranjero.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1192
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1370
 
-# Pag. 1193
+# Pag. 1371
 
 Deducciones de la cuota líquida total
 B.1. Tipo medio efectivo de gravamen general
@@ -48029,9 +54197,9 @@ Novedad 2025: a partir del 1 de enero de 2025, los contribuyentes que obtengan
 rendimientos íntegros del trabajo inferiores a 18.276 euros, podrán aplicar la siguiente
 deducción siempre que cumplan los restantes requisitos exigidos.
 Ámbito subjetivo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1193
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1371
 
-# Pag. 1194
+# Pag. 1372
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Los contribuyentes cuyos rendimientos íntegros del trabajo sean inferiores a 18.276 euros
@@ -48066,9 +54234,9 @@ correspondiente íntegramente a los rendimientos del trabajo anteriormente citad
 haber otras rentas que integren la base liquidable general.
 Determinar el importe de la deducción por obtención de rendimientos del trabajo que
 tendría derecho a aplicar de acuerdo con los datos suministrados.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1194
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1372
 
-# Pag. 1195
+# Pag. 1373
 
 Deducciones de la cuota líquida total
 Solución:
@@ -48105,9 +54273,9 @@ contribuyentes tendrán derecho a la deducción siempre que no tengan rentas, ex
 las exentas, distintas de las del trabajo antes referidas (es decir, los rendimientos del
 trabajo derivados de la prestación efectiva de servicios correspondientes a una relación
 laboral o estatutaria) superiores a 6.500 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1195
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1373
 
-# Pag. 1196
+# Pag. 1374
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 En este caso, aunque los rendimientos íntegros del trabajo derivados de la prestación
@@ -48142,9 +54310,9 @@ Téngase en cuenta que para determinar la parte de la suma de la cuota íntegras
 autonómica que corresponde a estos rendimientos netos se han de tener en cuenta estos
 rendimientos íntegros minorados exclusivamente en aquellos gastos deducibles vinculados
 a ellos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1196
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1374
 
-# Pag. 1197
+# Pag. 1375
 
 Deducciones de la cuota líquida total
 Deducción por doble imposición internacional en los supuestos
@@ -48182,9 +54350,9 @@ Normativa: Art. 92.4 Ley IRPF
 En los supuestos de imputación de rentas por la cesión de derechos de imagen, los
 impuestos que pueden deducir por este concepto los declarantes que hayan incluido las
 rentas derivadas de dicha cesión son los siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1197
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1375
 
-# Pag. 1198
+# Pag. 1376
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 a. El impuesto personal pagado, en España o en el extranjero, por la persona o entidad
@@ -48224,9 +54392,9 @@ corresponda satisfacer en España por la imputación de renta por la cesión de 
 imagen incluida en la base imponible.
 Retenciones deducibles correspondientes a rendimientos
 bonificados
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1198
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1376
 
-# Pag. 1199
+# Pag. 1377
 
 Deducciones de la cuota líquida total
 Normativa: Disposición transitoria sexta LIS
@@ -48262,9 +54430,9 @@ Importante: la cuota resultante de la autoliquidación habrá de resultar una ca
 positiva o cero.
 Cuota diferencial
 Normativa: Art. 79 Ley IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1199
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1377
 
-# Pag. 1200
+# Pag. 1378
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 De la cuota resultante de la autoliquidación se deducirá el importe de los pagos a cuenta
@@ -48307,9 +54475,9 @@ del IRPF, por haber pasado a tener su residencia habitual en territorio español
 este impuesto, podrán deducir el importe que, en su caso, hubieran satisfecho en concepto
 de cuotas del Impuesto sobre la Renta de no Residentes, siempre que se trate de cuotas de
 este impuesto devengadas en el ejercicio 2025.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1200
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1378
 
-# Pag. 1201
+# Pag. 1379
 
 Cuota diferencial
 Las retenciones e ingresos a cuenta del Impuesto sobre la Renta de no Residentes que, en
@@ -48350,9 +54518,9 @@ Introducción
 La cuota diferencial, como regla general, constituye el resultado de la declaración. Sin
 embargo, en aquellos supuestos en que el contribuyente tenga derecho a la deducción por
 maternidad establecida en el artículo 81 de la Ley del IRPF, o a las deducciones por familia
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1201
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1379
 
-# Pag. 1202
+# Pag. 1380
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 numerosa o personas con discapacidad a cargo previstas en el artículo 81 bis de la Ley del
@@ -48390,9 +54558,9 @@ casillas [0623] y [0624] en la deducción por descendientes con discapacidad a c
 deducción por cónyuge no separado legalmente con discapacidad; de las casillas [0660] y [0661] en la
 deducción por familia numerosa y, por último de las casillas [0662] y [0663] en la deducción por ascendiente,
 separado legalmente o sin vínculo matrimonial, con dos hijos sin derecho a percibir anualidades por alimentos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1202
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1380
 
-# Pag. 1203
+# Pag. 1381
 
 Resultado de la declaración
 Deducción por maternidad e incremento adicional por gastos de
@@ -48426,9 +54594,9 @@ momento posterior se den alguna de las circunstancias antes señaladas.
 A. Beneficiarios de la deducción
 El artículo 81 de la Ley del IRPF regula la deducción por maternidad que minora la cuota
 diferencial del IRPF y que podrán aplicar las siguientes personas:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1203
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1381
 
-# Pag. 1204
+# Pag. 1382
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 1. Las mujeres con hijos menores de tres años con derecho a la aplicación del mínimo
@@ -48471,9 +54639,9 @@ En el supuesto de existencia de varios contribuyentes con derecho a la deducció
 maternidad respecto del mismo tutelado o acogido o menor bajo su guarda y custodia
 para la convivencia preadoptiva o por resolución judicial, su importe deberá repartirse
 entre ellos por partes iguales.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1204
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1382
 
-# Pag. 1205
+# Pag. 1383
 
 Resultado de la declaración
 Importante: con la única excepción de los supuestos señalados en la letra b) anterior, la
@@ -48508,9 +54676,9 @@ acogimientos familiares simples, de urgencia o temporales, ni en los casos de me
 respecto de los que se tenga la guarda y custodia por resolución judicial.
 Cuantía y límite de la deducción
 Cuantía de la deducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1205
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1383
 
-# Pag. 1206
+# Pag. 1384
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 A. En general
@@ -48550,9 +54718,9 @@ momento del nacimiento o aquel en que con posterioridad se cumplan los requisito
 para tener derecho a la deducción.
 B. Régimen transitorio aplicable a situaciones anteriores a 1 de enero de
 2023
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1206
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1384
 
-# Pag. 1207
+# Pag. 1385
 
 Resultado de la declaración
 Cuando en el período impositivo 2022 se hubiera tenido derecho a la deducción por
@@ -48588,9 +54756,9 @@ El importe de la deducción por maternidad se podrá incrementar hasta en 1.000 
 adicionales cuando el contribuyente que tenga derecho a la misma hubiera satisfecho en el
 período impositivo gastos de custodia del hijo menor de tres años en guarderías o centros de
 educación infantil autorizados.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1207
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1385
 
-# Pag. 1208
+# Pag. 1386
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Importante: a diferencia de la deducción general por maternidad, los contribuyentes con
@@ -48628,9 +54796,9 @@ c. Que su abono corresponda a gastos que se hayan producido por meses completos.
 d. Que no tengan para el contribuyente la consideración de rendimientos del trabajo
 en especie exentos por aplicación de lo dispuesto en el artículo 42.3. b) o d) de la Ley
 del IRPF, es decir, por:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1208
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1386
 
-# Pag. 1209
+# Pag. 1387
 
 Resultado de la declaración
 • La contratación directa o indirectamente por empresas o empleadores del servicio de
@@ -48672,9 +54840,9 @@ Ley del IRPF que condiciona la aplicabilidad del incremento del importe de la de
 por maternidad debe entenderse en el sentido de que la autorización exigida por el
 citado precepto a las guarderías o centros de educación infantil no es la otorgada por la
 Administración educativa correspondiente, que tan solo será exigible a los centros de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1209
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1387
 
-# Pag. 1210
+# Pag. 1388
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 educación infantil, sino la que resulte precisa para la apertura y funcionamiento de la
@@ -48711,9 +54879,9 @@ cuando parte de los mismos tengan el carácter de no lectivos.
 incremento respecto del mismo acogido o tutelado, su importe se prorrateará entre
 ellos por partes iguales.
 Límites de la deducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1210
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1388
 
-# Pag. 1211
+# Pag. 1389
 
 Resultado de la declaración
 El incremento de la deducción por cada hijo que otorgue derecho a la misma no podrá
@@ -48749,9 +54917,9 @@ septiembre de 2022, que ha estado matriculado durante el ejercicio salvo el mes 
 en un centro de educación infantil privado autorizado de la Comunidad de Madrid.
 Los gastos satisfechos por los servicios prestados por este centro son los siguientes:
 • 300 euros por la matrícula.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1211
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1389
 
-# Pag. 1212
+# Pag. 1390
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 • 500 euros/mes (importe que corresponde a cada uno de los meses completos de enero
@@ -48789,9 +54957,9 @@ Deducción correspondiente a cada uno de los mellizos:
 Nota: en este supuesto, la contribuyente, con posterioridad al nacimiento de los mellizos ha pasado a estar
 de alta en la Seguridad Social con posterioridad al nacimiento, alcanzando los 30 días cotizados que exige
 el artículo 81 de la Ley del IRPF en mayo, por lo que le corresponden 100 euros por cada mes a partir de
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1212
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1390
 
-# Pag. 1213
+# Pag. 1391
 
 Resultado de la declaración
 ese momento (incluido mayo) más el incremento de 150 euros correspondientes al mes en que alcanza
@@ -48834,9 +55002,9 @@ por lo que el cálculo será 1000 euros ÷ 12 meses x 2 meses) = 166,67 euros.
 • Límite del incremento: 166,67 euros.
 • El incremento de 166,67 euros no supera el límite del importe total del gasto efectivo
 no subvencionado de los gastos de custodia: 2.290 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1213
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1391
 
-# Pag. 1214
+# Pag. 1392
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Nota: de acuerdo con el artículo 81 de la Ley del IRPF y el artículo 60 del Reglamento del IRPF, el gasto
@@ -48872,9 +55040,9 @@ Deducción correspondiente a cada uno de los mellizos:
 • Número de meses de cumplimiento de los requisitos: 12 meses
 • Importe de la deducción: (12 meses x 100 euros) = 1.200
 • Límite de la deducción por hijo (1.200 euros).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1214
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1392
 
-# Pag. 1215
+# Pag. 1393
 
 Resultado de la declaración
 • Importe total de la deducción correspondiente a los mellizos = 1.200 x 2 hijos = 2.400
@@ -48918,9 +55086,9 @@ el cálculo será 1000 euros ÷ 12 meses x 6 meses) = 500 euros.
 • Límite del incremento: 500 euros.
 • El incremento de 500 euros no supera el límite del importe total del gasto efectivo no
 subvencionado de los gastos de custodia: 2.290 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1215
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1393
 
-# Pag. 1216
+# Pag. 1394
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Nota: de acuerdo con el artículo 81 de la Ley del IRPF y el artículo 60 del Reglamento del IRPF, el gasto total
@@ -48959,9 +55127,9 @@ ajena para tener derecho a la deducción por lo que se ha de tener en cuenta lo 
 • En el momento del nacimiento de cada uno de los menores, Doña M.D.O cumplía el
 requisito de estar dada de alta en la Seguridad Social, por lo que tendrá derecho a
 cobrar por cada uno de ellos la deducción por maternidad hasta que los mismos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1216
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1394
 
-# Pag. 1217
+# Pag. 1395
 
 Resultado de la declaración
 alcancen la edad de 3 años.
@@ -48995,9 +55163,9 @@ Estas deducciones son:
 sin derecho a percibir anualidades por alimentos.
 Requisitos y otras condiciones para la aplicación de las
 deducciones
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1217
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1395
 
-# Pag. 1218
+# Pag. 1396
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 A. En general
@@ -49039,9 +55207,9 @@ a. Por cada descendiente con discapacidad, los contribuyentes que tengan derecho
 aplicación del mínimo por descendientes previsto en el artículo 58 de la Ley del IRPF.
 b. Por cada ascendiente con discapacidad, los contribuyentes que tengan derecho a la
 aplicación del mínimo por ascendientes previsto en el artículo 59 de la Ley del IRPF.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1218
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1396
 
-# Pag. 1219
+# Pag. 1397
 
 Resultado de la declaración
 c. Por el cónyuge no separado legalmente con discapacidad, los contribuyentes cuyo
@@ -49085,9 +55253,9 @@ regulador ante el Secretario judicial o en escritura pública ante Notario.
 Esta deducción será aplicable a los ascendientes separados legalmente, o sin vínculo matrimonial con dos
 hijos sin derecho a percibir anualidades por alimentos en los supuestos en los que quede probado que no
 perciben esos alimentos a pesar de estar reconocidos por sentencia judicial. Véase al respecto la
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1219
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1397
 
-# Pag. 1220
+# Pag. 1398
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Sentencia del Tribunal Supremo núm. 1.368/2022, de 25 de octubre (Sala de lo Contencioso), recaída en
@@ -49130,9 +55298,9 @@ mínimo de hijos exigido para que dicha familia haya adquirido la condición de 
 numerosa de categoría general o especial, según corresponda.
 • Deducción por ascendiente separado legalmente, o sin vínculo matrimonial, con
 dos hijos sin derecho a percibir anualidades por alimentos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1220
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1398
 
-# Pag. 1221
+# Pag. 1399
 
 Resultado de la declaración
 Hasta 1.200 euros anuales por ser un ascendiente separado legalmente, o sin vínculo
@@ -49173,9 +55341,9 @@ y prestaciones análogas a las anteriores, el requisito de percibir las citadas 
 se entenderá cumplido cuando tales prestaciones se perciban en cualquier día del mes,
 y no será aplicable el requisito de alta en el régimen correspondiente de la Seguridad
 Social o Mutualidad.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1221
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1399
 
-# Pag. 1222
+# Pag. 1400
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Límite de las deducciones
@@ -49216,9 +55384,9 @@ carácter alternativo devengadas en cada período impositivo ni, en el caso de q
 hubiera cedido a su favor el derecho a la deducción, se tendrán en cuenta de forma
 conjunta las cotizaciones y cuotas totales a la Seguridad Social y Mutualidades
 correspondientes a todos los contribuyentes que tuvieran derecho a la deducción.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1222
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1400
 
-# Pag. 1223
+# Pag. 1401
 
 Resultado de la declaración
 Incompatibilidades entre las deducciones
@@ -49258,9 +55426,9 @@ El Servicio Público de Empleo Estatal, la Seguridad Social, y las mutualidades 
 las de la Seguridad Social y cualquier otro organismo que abonen las prestaciones y pensiones estarán
 obligados a suministrar por vía electrónica a la Agencia Estatal de Administración Tributaria durante los diez
 primeros días de cada mes los datos de las personas a las que hayan satisfecho las citadas prestaciones o
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1223
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1401
 
-# Pag. 1224
+# Pag. 1402
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 pensiones durante el mes anterior.
@@ -49300,9 +55468,9 @@ de cada ascendiente o descendiente que de derecho a la deducción.
 La solicitud se podrá presentar utilizando una de las dos modalidades siguientes:
 a. Modalidad individual.
 Se presentará una solicitud por cada contribuyente con derecho a deducción.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1224
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1402
 
-# Pag. 1225
+# Pag. 1403
 
 Resultado de la declaración
 En este tipo de solicitud se abonará al solicitante la cantidad que resulte de dividir el
@@ -49342,9 +55510,9 @@ interesado. El acuerdo que deniegue la solicitud habrá de ser en todo caso moti
 El abono de las deducciones de forma anticipada se efectuará mensualmente por la Agencia
 Estatal de Administración Tributaria, mediante transferencia bancaria, por el importe que
 corresponda en función de si es una solicitud individual o colectiva y de los meses en que se
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1225
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1403
 
-# Pag. 1226
+# Pag. 1404
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 cumplan las condiciones. El Ministro de Hacienda (en la actualidad, Ministra de Hacienda),
@@ -49382,9 +55550,9 @@ anticipado de forma indebida, total o parcialmente, deberán proceder a regulari
 situación en la declaración del IRPF correspondiente al ejercicio en que se haya percibido el
 abono anticipado indebidamente.
 Cesión del derecho a la deducción
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1226
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1404
 
-# Pag. 1227
+# Pag. 1405
 
 Resultado de la declaración
 En qué consiste
@@ -49421,9 +55589,9 @@ a. El importe de la deducción no se prorrateará entre ellos, sino que se aplic
 íntegramente por el contribuyente en cuyo favor se hubiera cedido la deducción.
 b. Se computarán los meses en que cualquiera de los contribuyentes que tuvieran derecho a
 la deducción cumpla los requisitos.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1227
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1405
 
-# Pag. 1228
+# Pag. 1406
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 c. Se tendrán en cuenta de forma conjunta las cotizaciones y cuotas totales a la Seguridad
@@ -49462,9 +55630,9 @@ mediante el ingreso de las cantidades percibidas en exceso en el lugar, forma y 
 determine la Ministra de Hacienda.
 Véase al respecto la Orden HFP/105/2017, de 6 de febrero, por la que se aprueba los modelos 121 y 122 (BOE
 de 10 de febrero).
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1228
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1406
 
-# Pag. 1229
+# Pag. 1407
 
 Resultado de la declaración
 Importante: no serán exigibles intereses de demora por la percepción, a través del
@@ -49501,9 +55669,9 @@ Abono anticipado:
 Diferencia (1.200 - 600) = - 600
 Resultado de la declaración (2.300 - 600): 1.700 (a ingresar)
 Notas al ejemplo:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1229
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1407
 
-# Pag. 1230
+# Pag. 1408
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 (1) Al tratarse de un contribuyente que percibe una pensión de la Seguridad Social no les resulta de aplicación el
@@ -49540,9 +55708,9 @@ Abono anticipado: 0
 Resultado de la declaración (1.100 + 500) = -1.600 (a devolver)
 B) Contribuyente don L.V.P
 Cuota diferencial: + 250
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1230
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1408
 
-# Pag. 1231
+# Pag. 1409
 
 Resultado de la declaración
 Deducción por ascendiente con discapacidad a cargo
@@ -49585,9 +55753,9 @@ la cuota diferencial de la declaración conjunta del matrimonio asciende a -1.30
 que Don T.F.P. solicito el abono anticipado de la deducción el 1 de octubre de 2025.
 Solución:
 Cuota diferencial: - 1.300
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1231
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1409
 
-# Pag. 1232
+# Pag. 1410
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Deducción por cónyuge no separado legalmente con discapacidad a cargo. (1)
@@ -49630,9 +55798,9 @@ Determinar el importe de la deducción por familia numerosa correspondiente ejer
 progenitor su derecho a la deducción, que solicitaron en marzo de forma colectiva el abono
 anticipado y que la cuota diferencial IRPF de dona M.G.B. ha sido en el año 2025 de 300
 euros.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1232
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1410
 
-# Pag. 1233
+# Pag. 1411
 
 Resultado de la declaración
 Solución:
@@ -49668,9 +55836,9 @@ Notas al ejemplo:
 tuvieran derecho a la deducción cumpla los requisitos (en este caso 12 meses) y dona M.G.B. aplicara
 íntegramente en su declaración de IRPF de 2025 el importe de la deducción que corresponda y la totalidad del
 pago anticipado percibido. Volver
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1233
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1411
 
-# Pag. 1234
+# Pag. 1412
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 (2) Al haber cesión se tienen en cuenta de forma conjunta las cotizaciones y cuotas totales a la Seguridad Social y
@@ -49716,9 +55884,9 @@ deducción por ascendiente, separado legalmente o sin vínculo matrimonial, con 
 sin derecho a percibir anualidades por alimentos como los requisitos para aplicar la
 deducción por familia numerosa ya que de acuerdo con lo establecido por el artículo 2 de
 la Ley 40/2003, de 18 de noviembre, de Protección a las Familias Numerosas ya equipara
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1234
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1412
 
-# Pag. 1235
+# Pag. 1413
 
 Resultado de la declaración
 a familia numerosa la constituida por un ascendiente con dos hijos, en el que uno de ellos
@@ -49757,9 +55925,9 @@ Notas al ejemplo:
 desempleo (noviembre y diciembre), no le resulta de aplicación el límite del importe de las cotizaciones y cuotas
 satisfechas a la Seguridad Social y Mutualidades que si se establece para los contribuyentes que realizan una
 actividad por cuenta propia o ajena.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1235
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1413
 
-# Pag. 1236
+# Pag. 1414
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 El límite será la cuantía anual de la deducción 1.200 euros y en la medida en que se ha cumplido todo el año los
@@ -49796,9 +55964,9 @@ régimen de transparencia fiscal internacional, casilla [0589].
 rentas derivadas de la cesión de derechos de imagen, casilla [0590].
 (=) Importe del IRPF que corresponde a la Comunidad Autónoma de residencia del
 contribuyente.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1236
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1414
 
-# Pag. 1237
+# Pag. 1415
 
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 Regularización de situaciones tributarias: la
@@ -49836,9 +56004,9 @@ obligado tributario deberá presentar una autoliquidación rectificativa.
 Téngase en cuenta que las autoliquidaciones rectificativas no permitirán la presentación de
 documentación adjunta.
 Plazo de presentación
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1237
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1415
 
-# Pag. 1238
+# Pag. 1416
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 La autoliquidación rectificativa de una autoliquidación previa de 2025 se podrá presentar
@@ -49878,9 +56046,9 @@ sólo se efectuará cuando, existiendo discrepancia de criterio administrativo, 
 posible realizar la modificación de que se trate a través de las restantes casillas del
 modelo de declaración.
 Efectos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1238
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1416
 
-# Pag. 1239
+# Pag. 1417
 
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 Importante: la autoliquidación rectificativa no producirá efectos respecto de aquellos
@@ -49923,9 +56091,9 @@ El plazo para efectuar la devolución será de seis meses desde la finalización
 ○
 reglamentario para la presentación de la autoliquidación (en general, el 30 de junio) o
 desde la presentación de la autoliquidación rectificativa si aquel hubiera finalizado.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1239
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1417
 
-# Pag. 1240
+# Pag. 1418
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 En cuanto al plazo de resolución, ténganse en cuenta las recientes Sentencias del Tribunal Supremo
@@ -49971,9 +56139,9 @@ anteriores a 2024 se efectuarán de acuerdo con el sistema anterior previsto en 
 artículo 67 bis, en la redacción dada por el Real Decreto 1074/2017, de 29 de diciembre.
 Por tanto, en los supuestos que se analizan a continuación, las referencias efectuadas a
 la autoliquidación rectificativa han de entenderse realizadas a las autoliquidaciones
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1240
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1418
 
-# Pag. 1241
+# Pag. 1419
 
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 complementarias en la medida en que afecten a autoliquidaciones de ejercicios
@@ -50014,9 +56182,9 @@ rectificativa, según proceda, del ejercicio al que correspondan deberá present
 de finalizar el plazo de presentación (hasta el 30 de junio de 2026).
 • Cuando se trate de atrasos del propio ejercicio 2025, estos se deben incluir en la propia
 autoliquidación de dicho ejercicio.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1241
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1419
 
-# Pag. 1242
+# Pag. 1420
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 b. Si los atrasos se perciben entre 8 de abril y el 30 de junio de 2026, esto es, durante el plazo de
@@ -50057,9 +56225,9 @@ Para un comentario detallado sobre las "cláusulas suelo" véase el Capítulo 2.
 Cuando tales cantidades objeto de devolución se hubieran incluido en declaración
 correspondiente al ejercicio 2025 como gasto deducible, perderán tal consideración debiendo
 practicarse autoliquidación rectificativa correspondiente a este ejercicio, sin sanción, ni
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1242
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1420
 
-# Pag. 1243
+# Pag. 1421
 
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 intereses de demora, ni recargo alguno en el plazo comprendido entre la fecha del acuerdo y
@@ -50097,9 +56265,9 @@ relación con el rendimiento cedido del IRPF, cuando concurran las siguientes ci
 a. Que en el año en el cual se produce el cambio de residencia o en el siguiente, la base imponible del IRPF
 sea superior en, al menos, un 50 por 100 a la del año anterior al cambio. En caso de tributación conjunta
 se determinará de acuerdo con las normas de individualización.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1243
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1421
 
-# Pag. 1244
+# Pag. 1422
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 b. Que en el año en el cual se produce la situación a que se refiere el párrafo a) anterior, su tributación
@@ -50140,9 +56308,9 @@ Las autoliquidaciones rectificativas correspondientes al ejercicio 2025 se prese
 plazo que media entre la fecha de la disposición anticipada y la finalización del plazo
 reglamentario de declaración correspondiente al período impositivo en que se realice la
 disposición anticipada.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1244
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1422
 
-# Pag. 1245
+# Pag. 1423
 
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 Véanse, dentro del Capítulo 13, el apartado "Reducciones por aportaciones y contribuciones a sistemas de previsión
@@ -50179,9 +56347,9 @@ plazo que media entre la fecha en que se produzca la disposición y la finalizac
 reglamentario de declaración correspondiente al período impositivo en que se realice dicha
 disposición.
 b) En el titular del patrimonio protegido que recibió la aportación
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1245
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1423
 
-# Pag. 1246
+# Pag. 1424
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 El titular del patrimonio protegido que recibió la aportación deberá integrar en su base
@@ -50219,9 +56387,9 @@ Normativa: Art. 41.5 Reglamento IRPF
 Recuerde: en aquellos supuestos en que la situación que motive la regularización
 afecte a períodos impositivos anteriores a 2024, consúltese el manual práctico
 correspondiente al citado período impositivo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1246
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1424
 
-# Pag. 1247
+# Pag. 1425
 
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 Deberá presentarse autoliquidación rectificativa correspondiente al ejercicio 2025 cuando,
@@ -50260,9 +56428,9 @@ correspondiente al citado período impositivo.
 El incumplimiento de cualquiera de las condiciones establecidas para la aplicación de la
 exención por reinversión en rentas vitalicias, o la anticipación, total o parcial, de los derechos
 económicos derivados de la renta vitalicia constituida, determinará el sometimiento a
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1247
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1425
 
-# Pag. 1248
+# Pag. 1426
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 gravamen de la ganancia patrimonial correspondiente.
@@ -50298,9 +56466,9 @@ La autoliquidación rectificativa correspondiente al ejercicio 2025 deberá pres
 entre la fecha en que se incumpla el requisito y la finalización del plazo reglamentario de declaración
 correspondiente al período impositivo en que se produzca dicho incumplimiento.
 Dicha autoliquidación generará intereses de demora que, en su caso, serán liquidados por la Administración.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1248
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1426
 
-# Pag. 1249
+# Pag. 1427
 
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 Atención: si la declaración rectificativa del ejercicio 2025 responde a esta circunstancia
@@ -50331,9 +56499,9 @@ rectificativa" de la declaración.
 10. Recompra de elementos patrimoniales que hayan originado
 pérdidas computadas en la declaración
 Normativa: Art. 73.2 Reglamento IRPF
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1249
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1427
 
-# Pag. 1250
+# Pag. 1428
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Recuerde: en aquellos supuestos en que la situación que motive la regularización
@@ -50371,9 +56539,9 @@ caso, sería 2024). Si afectara a otro período impositivo, consúltese el manua
 correspondiente al período impositivo que corresponda.
 Los supuestos que dan lugar a la presentación de una autoliquidación rectificativa son los
 siguientes:
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1250
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1428
 
-# Pag. 1251
+# Pag. 1429
 
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 a. En general
@@ -50414,9 +56582,9 @@ en que se produzca alguna de las circunstancias referidas en el artículo 95 bis
 del IRPF y el final del inmediato siguiente plazo de declaraciones por el IRPF, o en el plazo
 de declaración del IRPF correspondiente al primer ejercicio en que el contribuyente no tuviera
 tal condición como consecuencia del cambio de residencia, si este fuera posterior.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1251
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1429
 
-# Pag. 1252
+# Pag. 1430
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Por tanto, de acuerdo con esta última regla, cuando el contribuyente pierda su condición en
@@ -50458,9 +56626,9 @@ normativa de desarrollo, en cuanto al devengo de intereses de demora y a la cons
 garantías para dicho aplazamiento. Si la declaración rectificativa responde a esta
 circunstancia el contribuyente deberá marcar esta opción en el apartado "Autoliquidación
 rectificativa" de la declaración.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1252
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1430
 
-# Pag. 1253
+# Pag. 1431
 
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 Respecto a la LGT véase la Ley 58/2003, de 17 de diciembre, General Tributaria (BOE de 18 de diciembre).
@@ -50497,9 +56665,9 @@ Dentro del mes siguiente al fin del plazo de declaración 1 por 100
 Dentro de los 2 meses siguientes al fin del plazo de declaración 2 por 100
 Dentro de los 3 meses siguientes al fin del plazo de declaración 3 por 100
 Dentro de los 4 meses siguientes al fin del plazo de declaración 4 por 100
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1253
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1431
 
-# Pag. 1254
+# Pag. 1432
 
 Capítulo 18. Cuota líquida, cuota resultante de la autoliquidación, cuota diferencial y resultado de la declaración
 Dentro de los 5 meses siguientes al fin del plazo de declaración 5 por 100
@@ -50511,9 +56679,9 @@ Dentro de los 10 meses siguientes al fin del plazo de declaración 10 por 100
 Dentro de los 11 meses siguientes al fin del plazo de declaración 11 por 100
 Dentro de los 12 meses siguientes al fin del plazo de declaración 12 por 100
 Más de 12 meses 15 por 100 + intereses de demora
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1254
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1432
 
-# Pag. 1255
+# Pag. 1433
 
 ANEXO: Índice por capítulos de los esquemas y cuadros resúmenes incluidos en el Manual
 ANEXO: Índice por capítulos de los
@@ -50547,9 +56715,9 @@ Cuadro- resumen: medidas aprobadas para todos los contribuyentes afectados en
 general como consecuencia de la DANA que afectan al IRPF: Real Decreto-ley
 6/2024, de 5 de noviembre, Real Decreto-ley 7/2024, de 11 de noviembre y Real
 Decreto 8/2024, de 28 de noviembre
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1255
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1433
 
-# Pag. 1256
+# Pag. 1434
 
 ANEXO: Índice por capítulos de los esquemas y cuadros resúmenes incluidos en el Manual
 • Régimen fiscal especial aplicable a los trabajadores desplazados a territorio
@@ -50585,9 +56753,9 @@ del 30 por 100 del importe no exento y rescate anticipado
 Téngase en cuenta que este cuadro incluye contenido que también afecta al capítulo 2 de este Manual en
 el apartado de las rentas exentas del artículo 7 de la Ley del IRPF por “Indemnizaciones por despido o
 cese del trabajador” en caso de despido colectivo.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1256
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1434
 
-# Pag. 1257
+# Pag. 1435
 
 ANEXO: Índice por capítulos de los esquemas y cuadros resúmenes incluidos en el Manual
 Cuadro-resumen: reducción sobre rendimientos íntegros del trabajo derivados de
@@ -50623,9 +56791,9 @@ Cuadro- resumen: criterios de afectación a fines de la actividad económica
 Téngase en cuenta que este cuadro incluye contenido que también afecta al capítulo 6 del Manual en el
 apartado "Tratamiento de las ganancias o pérdidas patrimoniales derivadas de elementos afectos al
 ejercicio de actividades económicas".
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1257
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1435
 
-# Pag. 1258
+# Pag. 1436
 
 ANEXO: Índice por capítulos de los esquemas y cuadros resúmenes incluidos en el Manual
 • Método y modalidades de determinación del rendimiento neto de las actividades
@@ -50661,9 +56829,9 @@ HAC/1347/2024, con indicación de su correspondiente epígrafe en el Impuesto de
 Actividades Económicas (IAE)
 Capítulo 9. Rendimientos de actividades económicas en estimación
 objetiva (II) (Actividades agrícolas, ganaderas y forestales)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1258
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1436
 
-# Pag. 1259
+# Pag. 1437
 
 ANEXO: Índice por capítulos de los esquemas y cuadros resúmenes incluidos en el Manual
 • Actividades agrícolas, ganaderas, forestales y de transformación de productos
@@ -50705,9 +56873,9 @@ Cuadro: porcentajes reductores aplicables a la ganancia patrimonial reducible en
 función de la naturaleza del elemento patrimonial
 • Determinación del importe de las ganancias o pérdidas patrimoniales: normas
 específicas de valoración
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1259
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1437
 
-# Pag. 1260
+# Pag. 1438
 
 ANEXO: Índice por capítulos de los esquemas y cuadros resúmenes incluidos en el Manual
 Supuesto especial: pago de dividendos mediante la entrega de acciones totalmente
@@ -50747,9 +56915,9 @@ Cuadro- resumen: reducciones de la base imponible general
 Cuadro-resumen: reducciones por aportaciones y contribuciones a sistemas de
 ○
 previsión social
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1260
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1438
 
-# Pag. 1261
+# Pag. 1439
 
 ANEXO: Índice por capítulos de los esquemas y cuadros resúmenes incluidos en el Manual
 Cuadro-resumen: reducciones por pensiones compensatorias y anualidades por
@@ -50797,9 +56965,9 @@ Cuadro: regímenes especiales de deducciones (programas de apoyo a
 acontecimientos de excepcional interés público)
 Régimen especial de las inversiones empresariales en Canarias
 ○
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1261
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1439
 
-# Pag. 1262
+# Pag. 1440
 
 ANEXO: Índice por capítulos de los esquemas y cuadros resúmenes incluidos en el Manual
 Cuadro-resumen: deducciones por inversiones en Canarias
@@ -50835,9 +57003,9 @@ Esquema general: cálculo del resultado de la declaración
 Regularización de situaciones tributarias: la autoliquidación rectificativa
 ○
 Recargos aplicables
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1262
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1440
 
-# Pag. 1263
+# Pag. 1441
 
 Normativa
 Normativa
@@ -50874,11 +57042,15 @@ Orden HAC/1347/2024, de 28 de noviembre,
 por la que se desarrollan para el año 2025 el método de estimación objetiva del Impuesto sobre la Renta de
 las Personas Físicas y el régimen especial simplificado del Impuesto sobre el Valor Añadido.(BOE, 30-
 noviembre-2024)
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1263
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1441
 
-# Pag. 1264
+# Pag. 1442
 
 Normativa
+Orden HAC/484/2026, de 14 de mayo,
+por la que se modifican para el período impositivo 2025 los índices de rendimiento neto aplicables en el
+método de estimación objetiva del Impuesto sobre la Renta de las Personas Físicas para las actividades
+agrícolas y ganaderas afectadas por diversas circunstancias excepcionales. (BOE, 18-mayo-2026)
 Real Decreto-ley 6/2024, de 5 de noviembre,
 por el que se adoptan medidas urgentes de respuesta ante los daños causados por la Depresión Aislada en
 Niveles Altos (DANA) en diferentes municipios entre el 28 de octubre y el 4 de noviembre de 2024. (BOE, 06-
@@ -50902,9 +57074,9 @@ Normas autonómicas en relación al IRPF
 Para consultar la normativa autonómica ha de acceder a la Parte 2 de este Manual Práctico,
 dedicada a las deducciones aprobadas por las distintas Comunidades Autónomas. Puede
 hacerlo a través del siguiente enlace.
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1264
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1442
 
-# Pag. 1265
+# Pag. 1443
 
 Glosario de abreviaturas
 Glosario de abreviaturas
@@ -50933,9 +57105,9 @@ Glosario de abreviaturas
 23. EHA: Ministerio de Economía y Hacienda
 24. EO: Estimación Objetiva
 25. ERE: Expediente de regulación de empleo
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1265
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1443
 
-# Pag. 1266
+# Pag. 1444
 
 Glosario de abreviaturas
 26. EREV: Vehículos eléctricos de autonomía extendida
@@ -50965,9 +57137,9 @@ matriculación
 49. IS: Impuesto sobre Sociedades
 50. ISD: Impuesto de Sucesiones y Donaciones
 51. ISFAS: Instituto Social de las Fuerzas Armadas
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1266
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1444
 
-# Pag. 1267
+# Pag. 1445
 
 Glosario de abreviaturas
 52. ITP: Impuesto sobre Transmisiones Patrimoniales
@@ -50997,9 +57169,9 @@ Glosario de abreviaturas
 76. REEV: Vehículo eléctrico de autonomía extendida
 77. RETA: Régimen Especial de Trabajadores Autónomos
 78. RETM: Régimen Especial de Trabajadores del Mar
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1267
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1445
 
-# Pag. 1268
+# Pag. 1446
 
 Glosario de abreviaturas
 79. RGAT: Reglamento Gral. De las Actuaciones y los Procedimientos de Gestión e
@@ -51029,9 +57201,9 @@ Inspección Tributaria y de desarrollo de…
 102. etc: etcetera
 103. kW: kilovatio
 104. kWh: kilovatio hora
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1268
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1446
 
-# Pag. 1269
+# Pag. 1447
 
 Glosario de abreviaturas
 105. kg: kilogramo
@@ -51044,12 +57216,12 @@ Glosario de abreviaturas
 112. pdf: Archivo pdf
 113. ss: siguientes
 114. ∑: sumatorio
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1269
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1447
 
-# Pag. 1270
+# Pag. 1448
 
 Manual práctico de Renta 2025. Parte 1.
-Documento generado con fecha 27/Marzo/2026 en la dirección web
+Documento generado con fecha 20/Mayo/2026 en la dirección web
 https://sede.agenciatributaria.gob.es en la ruta:
 Inicio / Ayuda / Manuales, vídeos y folletos / Manuales prácticos
-27/03/2026 - Manual práctico de Renta 2025. Parte 1. Página 1270
+20/05/2026 - Manual práctico de Renta 2025. Parte 1. Página 1448

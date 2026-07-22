@@ -12,8 +12,9 @@ legal_refs = [
     "rd-1624-1992:art-71",
 ]
 source_refs = [
+    "aeat-dr-322-2023",
+    "aeat-dr-322-2024-2025",
     "aeat-dr-322-2026",
     "aeat-modelo-322-procedure",
     "boe-modelo-322-2007-form",
 ]
-

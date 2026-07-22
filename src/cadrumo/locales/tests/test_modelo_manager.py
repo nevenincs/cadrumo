@@ -241,7 +241,40 @@ def test_coverage_refuses_mirrored_help_and_key_echoes(tmp_path: Path) -> None:
     assert record.help_mirrored == 2
     assert record.help_key_echo == 0
     assert record.help_absent == 0
+    # The label key-echo blocks completeness; help never gates it.
     assert not record.complete
+
+
+def test_mirrored_help_is_reported_without_gating_completeness(tmp_path: Path) -> None:
+    """Fully-authored labels complete the revision while mirrored help stays visible.
+
+    Labels translate the official schema label; the registry declares no
+    help source, so help is an optional enrichment dimension that must be
+    reported honestly but never demanded.
+    """
+    registry_root = tmp_path / "registry" / "aeat"
+    modelo_dir = registry_root / "modelos" / "777"
+    _write_minimal_modelo(modelo_dir, casilla_ids=("01", "02"))
+    locale_path = modelo_dir / "revisions" / "2020" / "locales" / "en.toml"
+    locale_path.parent.mkdir(parents=True)
+    locale_path.write_text(
+        """[labels]
+"01" = "Income"
+"02" = "Expenses"
+
+[help]
+"01" = "Income"
+"02" = "Expenses"
+""",
+        encoding="utf-8",
+    )
+
+    record = ModeloLocaleManager(registry_root).coverage_record(OutputLanguage.EN, "777", "2020")
+
+    assert record.complete
+    assert record.label_translated == 2
+    assert record.help_translated == 0
+    assert record.help_mirrored == 2
 
 
 def test_coverage_counts_genuinely_authored_leaves_complete(tmp_path: Path) -> None:

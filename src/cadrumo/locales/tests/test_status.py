@@ -170,7 +170,9 @@ def test_status_command_refuses_to_count_mirrored_help_as_authored(
     assert "modelo locale=en modelo=130 revision=2019-y-siguientes label_authored=20/20" in result.output
     assert "help_authored=19/20" in result.output
     assert "help_mirrored=1" in result.output
-    assert "complete=false" in result.output
+    # Help is optional enrichment: it is reported honestly but never
+    # gates completeness, which is a labels-only contract.
+    assert "complete=true" in result.output
 
 
 def test_status_command_rejects_revision_without_modelo(manager: LocaleManager) -> None:

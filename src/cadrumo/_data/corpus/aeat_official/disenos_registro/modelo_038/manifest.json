@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "038",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "038",
+      "title": "038 - Diseño de registro actualizado 28/06/2024",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/dr038_2024.pdf",
+      "stored_path": "files/01-038-diseno-de-registro-actualizado-28-06-2024.pdf",
+      "original_filename": "dr038_2024.pdf",
+      "content_type": "application/pdf",
+      "bytes": 94268,
+      "sha256": "f2f713cd60b26548ab9fb57b457f28c5a7841423592f95debdf83a78d9e2f0fe",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

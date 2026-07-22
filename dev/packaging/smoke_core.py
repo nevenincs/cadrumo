@@ -31,11 +31,7 @@ _REPRESENTATIVE_DATA_LEAVES = (
     "registry/cadrumo/user_profile/schema.toml",
     "corpus/aeat_official/disenos_registro/modelo_100/manifest.json",
 )
-_TRACKED_DATA_ROOTS = (
-    "src/cadrumo/_data/corpus",
-    "src/cadrumo/_data/registry",
-    "src/cadrumo/_data/terminology",
-)
+_TRACKED_DATA_ROOTS = ("src/cadrumo/_data",)
 _SOURCE_DATA_PREFIX = "src/cadrumo/_data/"
 _WHEEL_DATA_PREFIX = "cadrumo/_data"
 # Corpus source binaries excluded from the compact command-bearing ``cadrumo`` wheel
@@ -545,13 +541,21 @@ def _expected_wheel_data_paths(repo_root: Path) -> set[str]:
 
 
 def _assert_wheel_contains_tracked_data(repo_root: Path, wheel: Path, expected: set[str] | None = None) -> None:
-    """Verify every tracked shipped-data file appears in the built wheel."""
+    """Verify the wheel's complete data payload equals the tracked runtime set."""
     expected_paths = _expected_wheel_data_paths(repo_root) if expected is None else expected
     with zipfile.ZipFile(wheel) as archive:
-        names = {info.filename for info in archive.infolist()}
-    missing = sorted(expected_paths - names)
-    if missing:
-        raise SystemExit(f"wheel is missing {len(missing)} tracked shipped-data files; first ten: {missing[:10]!r}")
+        actual_paths = {
+            info.filename
+            for info in archive.infolist()
+            if not info.is_dir() and info.filename.startswith(f"{_WHEEL_DATA_PREFIX}/")
+        }
+    missing = sorted(expected_paths - actual_paths)
+    unexpected = sorted(actual_paths - expected_paths)
+    if missing or unexpected:
+        raise SystemExit(
+            "wheel data payload differs from the tracked runtime set: "
+            f"missing={_format_path_sample(missing)}, unexpected={_format_path_sample(unexpected)}"
+        )
 
 
 def _assert_wheel_metadata_matches_pyproject(repo_root: Path, wheel: Path) -> None:

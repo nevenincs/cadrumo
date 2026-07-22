@@ -86,32 +86,24 @@ def test_fabricated_key_is_reported_unresolved(locale: str) -> None:
     assert _unresolved({fabricated}, locale) == {fabricated}
 
 
-def test_a_self_echoing_catalogue_value_is_reported_unresolved() -> None:
-    """A scaffold placeholder does not count as translated.
+@pytest.mark.parametrize("locale", _LOCALES)
+def test_no_catalogue_leaf_echoes_its_own_key(locale: str) -> None:
+    """No catalogue ships a scaffold placeholder in place of a translation.
 
-    This is the property a membership check cannot express, and the reason this
-    gate asks the renderer instead of the catalogue key set: ``scaffold`` writes
-    a missing key as its own dotted path, so membership would go green while the
-    operator still sees a humanised key fragment.
+    ``scaffold`` writes a missing key as its own dotted path, so a membership
+    check turns green the moment the scaffolder runs over a catalogue nobody
+    has translated. The renderer treats such a value as a miss
+    (``_render.py`` ``_lookup_translation``), which is what lets the resolution
+    checks above distinguish a translation from a reserved slot.
 
-    Driven from a real catalogue value that echoes its own key rather than a
-    constructed one, so the assertion exercises the same path a scaffolded key
-    takes. If no catalogue holds such a value the premise no longer exists and
-    the test says so instead of passing vacuously.
+    This asserts the shipped state directly: reintroducing a placeholder reds
+    the gate and names the key, rather than being absorbed as "declared".
     """
     manager = LocaleManager(_LOCALES_DIR.parent, _LOCALES_DIR)
-    for locale in _LOCALES:
-        catalogue = manager.load_locale(_LOCALES_DIR / f"{locale}.yml")
-        echoes = [key for key in manager.get_yaml_keys(catalogue) if _leaf_value(catalogue, key) == key]
-        if not echoes:
-            continue
-        assert _unresolved({echoes[0]}, locale) == {echoes[0]}, (
-            f"{echoes[0]!r} stores its own key as its value in {locale}.yml, but the "
-            f"resolution check reported it as translated; scaffold placeholders must "
-            f"never satisfy this gate."
-        )
-        return
-    pytest.fail(
-        "no catalogue holds a self-echoing value, so this gate's placeholder "
-        "premise could not be exercised; re-verify the check still rejects them",
+    catalogue = manager.load_locale(_LOCALES_DIR / f"{locale}.yml")
+    echoes = sorted(key for key in manager.get_yaml_keys(catalogue) if _leaf_value(catalogue, key) == key)
+    assert not echoes, (
+        f"{locale}.yml stores {len(echoes)} key(s) as their own value, which the renderer "
+        f"treats as untranslated: {echoes[:5]}. Author them with "
+        f"`python -m cadrumo.locales set {locale} <key> <value>`."
     )

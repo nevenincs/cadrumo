@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "151",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "151",
+      "title": "151 - Ejercicio 2023 y siguientes",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR151E2023.xls",
+      "stored_path": "files/01-151-ejercicio-2023-y-siguientes.xls",
+      "original_filename": "DR151E2023.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 1521664,
+      "sha256": "7680e5a21935c22f4b63deb0c96956d63fbcb287c5eb67a552daa7768ca0fcb9",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

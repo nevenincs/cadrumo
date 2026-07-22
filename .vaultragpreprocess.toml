@@ -30,6 +30,12 @@ on_error = "skip"
 timeout_s = 300
 
 [[rule]]
+pattern = "src/cadrumo/_data/corpus/**/*.xlsm"
+command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
+on_error = "skip"
+timeout_s = 300
+
+[[rule]]
 pattern = "src/cadrumo/_data/corpus/**/*.xlsx"
 command = "uv run --no-sync python -m dev.docs.preprocess.hook {path}"
 on_error = "skip"

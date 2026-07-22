@@ -25,6 +25,8 @@ import pytest
 from .._golden_queries import (
     GOLDEN_QUERIES,
     GoldenQuery,
+    GoldenSurface,
+    _classify,
     evaluate_query,
     extraction_sidecar_hits,
     run_query,
@@ -34,6 +36,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
 # dev/docs/preprocess/tests/test_golden_queries.py -> parents[4] is repo root.
 _REPO_ROOT = Path(__file__).resolve().parents[4]
+
+
+def test_xlsm_record_design_is_a_corpus_and_diseno_source() -> None:
+    path = "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_220/files/DR220e23.xlsm"
+    assert _classify(path) == {GoldenSurface.ANY_CORPUS_SOURCE, GoldenSurface.DISENO_SOURCE}
 
 
 @pytest.mark.parametrize(

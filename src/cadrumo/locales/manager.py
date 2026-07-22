@@ -145,6 +145,10 @@ class LocaleManager:
     def get_codebase_keys(self) -> set[str]:
         """Extract all concrete dotted translation keys from the codebase.
 
+        Only production modules are scanned: test files are excluded so a
+        fixture payload or assertion literal can never inject a phantom
+        required key that no production code requests.
+
         Combines four discovery paths:
 
         1. Regex scanner — ``tr("…")`` / ``t("…")`` literal call sites.
@@ -172,6 +176,8 @@ class LocaleManager:
         keys: set[str] = set()
         for py_file in self.src_dir.rglob("*.py"):
             if py_file.name == "test_parity.py" or py_file.name == "manager.py":
+                continue
+            if _is_test_module(py_file):
                 continue
             try:
                 content = py_file.read_text(encoding=UTF_8_ENCODING, errors="ignore")
@@ -734,3 +740,12 @@ def _flatten_raw_locale_leaves(value: object, prefix: str = "") -> dict[str, obj
 def _covered_by_namespace(key: str, namespace_prefixes: tuple[str, ...]) -> bool:
     """Return whether a dotted locale key belongs to a dynamic namespace."""
     return any(f".{prefix}." in f".{key}." for prefix in namespace_prefixes)
+
+
+def _is_test_module(path: Path) -> bool:
+    """Return whether ``path`` is a test module rather than production code.
+
+    Mirrors the AST scanner's exclusion so both key-discovery paths agree
+    on what counts as a production call site.
+    """
+    return path.name.startswith(("test_", "_test_")) or "tests" in path.parts

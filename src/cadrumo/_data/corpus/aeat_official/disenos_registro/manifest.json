@@ -1,27 +1,63 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
-  "retrieved_at": "2026-05-03",
+  "retrieved_at": "2026-07-21",
   "supported_corpus_modelos": [
     "036",
     "037",
+    "038",
     "100",
     "111",
     "115",
+    "117",
+    "122",
     "123",
+    "126",
+    "128",
     "130",
     "131",
+    "145",
+    "151",
+    "156",
+    "165",
     "180",
+    "181",
+    "182",
+    "184",
+    "185",
+    "187",
+    "188",
+    "189",
     "190",
     "193",
+    "194",
     "200",
     "202",
+    "210",
+    "216",
+    "220",
+    "222",
     "232",
+    "270",
+    "280",
+    "296",
     "303",
+    "308",
+    "309",
+    "322",
+    "341",
+    "345",
     "347",
     "349",
+    "353",
+    "360",
     "369",
     "390",
+    "490",
+    "576",
+    "604",
+    "714",
     "720",
+    "763",
     "840"
   ],
   "source_pages": [
@@ -36,8 +72,8 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "model_count": 21,
-  "artefact_count": 151,
+  "model_count": 57,
+  "artefact_count": 220,
   "modelos": [
     {
       "modelo": "036",
@@ -48,32 +84,96 @@
       "artefact_count": 0
     },
     {
+      "modelo": "038",
+      "artefact_count": 1
+    },
+    {
       "modelo": "100",
       "artefact_count": 29
     },
     {
       "modelo": "111",
-      "artefact_count": 6
+      "artefact_count": 7
     },
     {
       "modelo": "115",
-      "artefact_count": 3
-    },
-    {
-      "modelo": "123",
       "artefact_count": 4
     },
     {
+      "modelo": "117",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "122",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "123",
+      "artefact_count": 8
+    },
+    {
+      "modelo": "126",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "128",
+      "artefact_count": 1
+    },
+    {
       "modelo": "130",
-      "artefact_count": 5
+      "artefact_count": 6
     },
     {
       "modelo": "131",
       "artefact_count": 8
     },
     {
+      "modelo": "145",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "151",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "156",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "165",
+      "artefact_count": 1
+    },
+    {
       "modelo": "180",
       "artefact_count": 3
+    },
+    {
+      "modelo": "181",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "182",
+      "artefact_count": 2
+    },
+    {
+      "modelo": "184",
+      "artefact_count": 2
+    },
+    {
+      "modelo": "185",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "187",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "188",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "189",
+      "artefact_count": 1
     },
     {
       "modelo": "190",
@@ -84,20 +184,72 @@
       "artefact_count": 7
     },
     {
+      "modelo": "194",
+      "artefact_count": 2
+    },
+    {
       "modelo": "200",
-      "artefact_count": 17
+      "artefact_count": 18
     },
     {
       "modelo": "202",
-      "artefact_count": 14
+      "artefact_count": 15
+    },
+    {
+      "modelo": "210",
+      "artefact_count": 3
+    },
+    {
+      "modelo": "216",
+      "artefact_count": 2
+    },
+    {
+      "modelo": "220",
+      "artefact_count": 4
+    },
+    {
+      "modelo": "222",
+      "artefact_count": 2
     },
     {
       "modelo": "232",
       "artefact_count": 2
     },
     {
+      "modelo": "270",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "280",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "296",
+      "artefact_count": 2
+    },
+    {
       "modelo": "303",
       "artefact_count": 15
+    },
+    {
+      "modelo": "308",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "309",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "322",
+      "artefact_count": 4
+    },
+    {
+      "modelo": "341",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "345",
+      "artefact_count": 4
     },
     {
       "modelo": "347",
@@ -108,6 +260,14 @@
       "artefact_count": 3
     },
     {
+      "modelo": "353",
+      "artefact_count": 2
+    },
+    {
+      "modelo": "360",
+      "artefact_count": 1
+    },
+    {
       "modelo": "369",
       "artefact_count": 1
     },
@@ -116,7 +276,27 @@
       "artefact_count": 19
     },
     {
+      "modelo": "490",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "576",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "604",
+      "artefact_count": 4
+    },
+    {
+      "modelo": "714",
+      "artefact_count": 4
+    },
+    {
       "modelo": "720",
+      "artefact_count": 1
+    },
+    {
+      "modelo": "763",
       "artefact_count": 1
     },
     {

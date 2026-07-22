@@ -47,7 +47,7 @@ _WHEEL_CORPUS_PREFIX = f"{_WHEEL_DATA_PREFIX}/corpus/"
 
 # Corpus source binaries the wheel-split excludes; they ship in the two
 # ``aeat-data-*`` companions, so zero of them may appear in this slim wheel.
-_CORPUS_BINARY_SUFFIXES = (".pdf", ".xls", ".xlsx")
+_CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
 
 # Required functional payload that MUST survive the tests exclude. Each entry is
 # a wheel-archive path (or, for the data roots, a directory prefix probed below).

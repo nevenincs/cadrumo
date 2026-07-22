@@ -1,7 +1,7 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "202",
-  "retrieved_at": "2026-05-03",
+  "retrieved_at": "2026-07-21",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 14,
+  "artefact_count": 15,
   "artefacts": [
     {
       "modelo": "202",
@@ -183,6 +183,18 @@
       "bytes": 33426,
       "sha256": "c58221f899a6aacc674f305f86764595dfa0c7152f2f58faffa3e341521f5534",
       "retrieved_at": "2026-05-03"
+    },
+    {
+      "modelo": "202",
+      "title": "202 - Ejercicio 2025 y siguientes, actualizado 14/07/2026",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_25/DR202e25.xlsx",
+      "stored_path": "files/15-202-ejercicio-2025-y-siguientes-actualizado-14-07-2026.xlsx",
+      "original_filename": "DR202e25.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 134404,
+      "sha256": "04e7b349b24b982d985195d4ae38b68e72e75d606cf66c7ef30b62b281c7f82c",
+      "retrieved_at": "2026-07-21"
     }
   ]
 }

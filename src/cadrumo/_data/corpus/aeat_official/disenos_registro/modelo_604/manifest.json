@@ -1,0 +1,59 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "604",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html"
+  ],
+  "artefact_count": 4,
+  "artefacts": [
+    {
+      "modelo": "604",
+      "title": "604 - Diseño de registro ATF en español",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR_ATF.pdf",
+      "stored_path": "files/01-604-diseno-de-registro-atf-en-espanol.pdf",
+      "original_filename": "DR_ATF.pdf",
+      "content_type": "application/pdf",
+      "bytes": 217511,
+      "sha256": "99247eb28da6a1c68867fdf231f1ead2b66d0fcba8b57ff16f1db54abecf0df4",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "604",
+      "title": "604 - Diseño de registro ATF en inglés",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR_ATF_Ingles.pdf",
+      "stored_path": "files/02-604-diseno-de-registro-atf-en-ingles.pdf",
+      "original_filename": "DR_ATF_Ingles.pdf",
+      "content_type": "application/pdf",
+      "bytes": 208439,
+      "sha256": "97b7fae21fba5c5e6eb7c19fe854758484bbc834698124cc81e825e925dd89af",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "604",
+      "title": "604 - Ejercicio 2024",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR604_2024.xlsx",
+      "stored_path": "files/03-604-ejercicio-2024.xlsx",
+      "original_filename": "DR604_2024.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 168495,
+      "sha256": "98f7022a391e822ee2c57b6e2b1f873fd2bcc8db80a5b692fd7c6fae1e758f68",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "604",
+      "title": "604 - Ejercicios 2021 a 2023",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/DR604_2021.xlsx",
+      "stored_path": "files/04-604-ejercicios-2021-a-2023.xlsx",
+      "original_filename": "DR604_2021.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 116032,
+      "sha256": "262e743deecf303fd344084bd56e9497da5a7cfd6eeab5286719513f788fd550",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

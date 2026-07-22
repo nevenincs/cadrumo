@@ -204,6 +204,19 @@ applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR353e26v12.xlsx"
 review_status = "reviewed"
 
+[sources."aeat-dr-353-2021-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_353/files/02-353-ejercicios-2021-a-2025-198-kb-xls.xls"
+sha256 = "37f39224edc2d8aa49403f2a6408ed1b69ae06c2db9d33f59b2a6a54ab82839d"
+bytes = 202240
+retrieved_at = 2026-07-21
+applies_from = 2021-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_17/DR353e21v21.xls"
+review_status = "reviewed"
+
 [sources."aeat-modelo-353-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -259,6 +272,32 @@ bytes = 774672
 retrieved_at = 2026-05-06
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR322e26v11.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-322-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_322/files/02-322-ejercicio-2023-938-kb-xls.xls"
+sha256 = "540805f09ca397511b9c2704533dcbcffc96a781602fd7d427d11fe9264e11f0"
+bytes = 960512
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR322e23.xls"
+review_status = "reviewed"
+
+[sources."aeat-dr-322-2024-2025"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls"
+sha256 = "a70f3a2ca7dd409b6b39964b261d22b8732a767a71e3e6ef2e652e179678188b"
+bytes = 970752
+retrieved_at = 2026-07-21
+applies_from = 2024-01-01
+applies_to = 2025-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR322e24.xls"
 review_status = "reviewed"
 
 [sources."aeat-modelo-322-procedure"]
@@ -455,6 +494,32 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/390_2025.xlsx"
 review_status = "reviewed"
 
+[sources."aeat-dr-390-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/15-390-ejercicio-2023-y-siguientes-489-kb-xlsx.xlsx"
+sha256 = "179c02eddc8bab411c249fc3fda19c7015d668e1dd7930d4af79f38998b9c5a7"
+bytes = 501060
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/dr390e2023v100.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-390-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx"
+sha256 = "8be79bacc86034c3c7951d2ea671c030800ed9a4cc3f52b9e5d407bc19bc03f0"
+bytes = 556712
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/dr390e2024.xlsx"
+review_status = "reviewed"
+
 [sources."aeat-modelo-390-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"
@@ -490,6 +555,45 @@ bytes = 386694
 retrieved_at = 2026-05-06
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2025.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2023"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/03-303-ejercicio-2023-actualizado-14-12-23-376-kb-xlsx.xlsx"
+sha256 = "72e463cb29984f535c9f56917d788ff0641965f116aeab47da5f76a59eecfbe4"
+bytes = 385533
+retrieved_at = 2026-05-03
+applies_from = 2023-01-01
+applies_to = 2023-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR303e23.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2024-early"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/05-303-ejercicio-2024-hasta-periodos-08-y-2t-actualizado-01-04-24-376-kb-xlsx.xlsx"
+sha256 = "8b1f74b58b9293e60f9ea6fa3cc352a35ca3fe7d09a6705f122585e7f7da65b9"
+bytes = 385739
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-08-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR303e24.xlsx"
+review_status = "reviewed"
+
+[sources."aeat-dr-303-2024-late"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/04-303-ejercicio-2024-a-partir-de-periodos-09-y-3t-y-siguientes-actualizado-29-11-24-381-kb-xls.xlsx"
+sha256 = "2095dd633413f4aed28053bc88402461d80865f454156c01ebc4a2ab68cb76a8"
+bytes = 389379
+retrieved_at = 2026-05-03
+applies_from = 2024-07-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR303e24v200.xlsx"
 review_status = "reviewed"
 
 [sources."aeat-dr-303-2026"]

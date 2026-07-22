@@ -71,6 +71,7 @@ def _builders() -> dict[str, Callable[..., list[PreprocessOutput]]]:
         ".html": build_html,
         ".pdf": build_pdf,
         ".xls": build_workbook,
+        ".xlsm": build_workbook,
         ".xlsx": build_workbook,
     }
 

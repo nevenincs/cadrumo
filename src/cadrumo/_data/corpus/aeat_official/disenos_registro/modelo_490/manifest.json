@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "490",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "490",
+      "title": "490 - Ejercicio 2023 y siguientes",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr490e23.xlsx",
+      "stored_path": "files/01-490-ejercicio-2023-y-siguientes.xlsx",
+      "original_filename": "dr490e23.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 107327,
+      "sha256": "f55ecbfff8fb552de76f4e788ff7663269c96b6255b209b5289bf0869de89cb8",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

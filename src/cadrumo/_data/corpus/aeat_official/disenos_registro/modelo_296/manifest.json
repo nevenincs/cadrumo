@@ -1,0 +1,36 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "296",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html"
+  ],
+  "artefact_count": 2,
+  "artefacts": [
+    {
+      "modelo": "296",
+      "title": "296 - Ejercicio 2024",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_24/DR_296_2024.pdf",
+      "stored_path": "files/01-296-ejercicio-2024.pdf",
+      "original_filename": "DR_296_2024.pdf",
+      "content_type": "application/pdf",
+      "bytes": 304691,
+      "sha256": "abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d0378",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "296",
+      "title": "296 - Ejercicio 2023",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-200-299.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR_296_2023.pdf",
+      "stored_path": "files/02-296-ejercicio-2023.pdf",
+      "original_filename": "DR_296_2023.pdf",
+      "content_type": "application/pdf",
+      "bytes": 228371,
+      "sha256": "858152af847e23e3165ba38295696466dfdf96f1ec55503f606cf982a4ae778f",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

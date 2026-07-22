@@ -1728,8 +1728,6 @@ categories:
       label: Utazási közlekedési költség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
-  test_profile:
-    display_label_851219: Megjelenítési felirat 851219
 cli:
   agent:
     app_help: Az operátor ügynök keretrendszerének (szabályok, perszónák, készségek)
@@ -2697,7 +2695,6 @@ cli:
         disposition_help: 'A 303-as modell negatív eredményének rendelkezése: compensar
           (a jóváírás átvitele, alapértelmezett) vagy devolver (visszatérítés kérése;
           nem REDEME-adózónál csak az év utolsó bevallási időszakában).'
-        dt12_computation_error: 'DT12 számítási hiba: %{message}'
         file_help: Hitelesített revízió megjelölése belső benyújtottként. NEM nyújt
           be az AEAT-hoz.
         file_idempotent_noop: 'Idempotens nincs-művelet: a(z) %{calculation_revision_id}
@@ -2940,7 +2937,6 @@ cli:
           a felhalmozott tartalék eléri a jegyzett tőke kétszeresét egy eurócenttel
           meghaladó összeget. Szükséges a --sal-beneficio-neto és --sal-reserva-dotada
           opciókkal együtt.'
-        sal_computation_error: 'SAL számítási hiba: %{message}'
         sal_reserva_dotada_help: Korábbi években felhalmozott külön tartalék (44/2015.
           törvény 14. cikk). Annak ellenőrzésére szolgál, hogy a tartalék már elérte-e
           a jegyzett tőke kétszeresét egy eurócenttel meghaladó összeget. Szükséges
@@ -3013,15 +3009,12 @@ cli:
       draft_id_not_found: A(z) %{draft_id} azonosítójú piszkozat nem található
       invalid_iso_date: 'Érvénytelen dátumformátum a(z) %{label} mezőhöz: %{raw}.
         ISO 8601 (ÉÉÉÉ-HH-NN) szükséges.'
-      no_active_profile_error_value: nincs-aktiv-profil
       period_empty: Az adóidőszak nem lehet üres.
       period_missing_year: A(z) '{token}' --period értékhez év szükséges ennél a parancsnál.
         Adja meg a --year kapcsolót (pl. --period {token} --year 2024).
       period_unrecognised: 'Ismeretlen időszak: ''{raw}''. Használjon AEAT tokent:
         1T-4T (negyedévek), 0A (éves), 01-12 (hónapok), és adja meg az évet a --year
         kapcsolóval (pl. --period 1T --year 2024).'
-    next:
-      create_profile_command: aeat config profile create NÉV
   config:
     app_help: Helyi konfiguráció és diagnosztika kezelése.
     auth:
@@ -6490,9 +6483,6 @@ sheets:
       supplier_tax_id: Szállító adóazonosítója
       transfer_pricing_method_code: Transzferár-módszer
       valuation_amount: Értékelés
-some:
-  locale:
-    key: some.locale.key
 topic:
   authentication:
     body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális
@@ -6574,8 +6564,6 @@ transactions:
       el.'
     unreadable: Olvashatatlan fájl vagy nem támogatott formátum.
     verified: Az import sikeresen ellenőrizve.
-  test_diagnostics:
-    message: A 2026-03-as hónap hiányzik az importált fájlból.
 wizard:
   choices:
     general: Általános

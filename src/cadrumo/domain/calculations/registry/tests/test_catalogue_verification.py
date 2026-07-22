@@ -14,10 +14,21 @@ from .....core.resources import bundled_path
 from .._corpus_catalogue import verify_source_catalogue, verify_source_file
 from .._coverage import EvidenceTierCoverageGate, audit_registry_model_law_coverage
 from .._legal import verify_legal_catalogue
+from .._temporal import select_revision
 from .._validate import RegistryValidator
 from ._catalogue_verification_support import _catalogues, _registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_SUPPORTED_RECORD_DESIGN_YEARS = range(2023, 2027)
+_PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS = {
+    ("184", "2015-y-siguientes", 2026): "aeat-dr-184-2025",
+    ("190", "2024-y-siguientes", 2026): "aeat-dr-190-2025",
+    ("193", "2024-y-siguientes", 2026): "aeat-dr-193-2025",
+    ("200", "2024-y-siguientes", 2026): "aeat-dr-200-2025",
+    ("220", "2024-y-siguientes", 2026): "aeat-dr-220-2025",
+    ("390", "2010-y-siguientes", 2026): "aeat-dr-390-2025",
+}
 
 
 def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
@@ -30,6 +41,86 @@ def test_committed_registry_tree_has_coherent_shared_catalogues() -> None:
     verify_source_catalogue(PROJECT_ROOT, catalogues.sources)
     validator = RegistryValidator(catalogues, source_root=bundled_path())
     validator.validate_registry(modelos)
+
+
+def test_supported_period_matrix_has_applicable_record_design_sources() -> None:
+    """Every period-sensitive registry family carries its official layout revision."""
+    modelos, catalogues = _registry_tree()
+    missing: list[str] = []
+    checked: set[tuple[str, str, int]] = set()
+    required_modelos: set[str] = set()
+    resolved_exceptions: set[tuple[str, str, int]] = set()
+
+    for modelo in modelos:
+        modelo_id = str(modelo.id)
+        modelo_sources = [
+            catalogues.sources[source_ref]
+            for source_ref in modelo.source_refs
+            if catalogues.sources[source_ref].kind == "record_design"
+        ]
+        if not modelo_sources:
+            continue
+        required_modelos.add(modelo_id)
+        for revision in modelo.revisions.values():
+            sources = [
+                catalogues.sources[source_ref]
+                for source_ref in revision.source_refs
+                if catalogues.sources[source_ref].kind == "record_design"
+            ]
+            for year in _SUPPORTED_RECORD_DESIGN_YEARS:
+                if not revision.period_selector.includes_year(year):
+                    continue
+                revision_id = str(revision.id)
+                exception_key = (modelo_id, revision_id, year)
+                period_start = max(date(year, 1, 1), revision.valid_from)
+                period_end = min(date(year, 12, 31), revision.valid_to or date.max)
+                if period_start > period_end:
+                    continue
+
+                checked.add(exception_key)
+                for period in revision.period_selector.periods:
+                    selected = select_revision(
+                        modelo,
+                        filing_year=year,
+                        period=period,
+                        on=period_start,
+                    )
+                    assert selected.id == revision.id
+
+                if not sources:
+                    missing.append(f"modelo {modelo_id}, revision {revision.id}, no record-design source")
+                    continue
+
+                pending_source_ref = _PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS.get(exception_key)
+                if pending_source_ref is not None:
+                    assert modelo.cadence == "annual"
+                    assert pending_source_ref in revision.source_refs
+                    assert not any(
+                        source.applies_from is not None and source.applies_from.year >= year for source in sources
+                    ), f"remove stale record-design publication exception {exception_key}"
+                    resolved_exceptions.add(exception_key)
+                    continue
+
+                uncovered = next(
+                    (
+                        date.fromordinal(ordinal)
+                        for ordinal in range(period_start.toordinal(), period_end.toordinal() + 1)
+                        if not any(
+                            (source.applies_from is None or source.applies_from <= date.fromordinal(ordinal))
+                            and (source.applies_to is None or source.applies_to >= date.fromordinal(ordinal))
+                            for source in sources
+                        )
+                    ),
+                    None,
+                )
+                if uncovered is not None:
+                    missing.append(
+                        f"modelo {modelo_id}, revision {revision.id}, uncovered {uncovered.isoformat()}",
+                    )
+
+    assert required_modelos == {modelo_id for modelo_id, _, _ in checked}
+    assert resolved_exceptions == set(_PUBLICATION_BOUND_RECORD_DESIGN_EXCEPTIONS)
+    assert not missing, "supported record-design matrix gaps:\n" + "\n".join(missing)
 
 
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:
@@ -111,6 +202,24 @@ def test_committed_aeat_record_design_sources_match_corpus_manifests() -> None:
         checked.append(source.id)
 
     assert checked
+
+
+def test_modelo_202_active_record_design_is_latest_manifested_revision() -> None:
+    catalogues = _catalogues()
+    source = catalogues.sources["aeat-dr-202-2025"]
+    manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_202", "manifest.json")
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    candidates = [
+        artefact
+        for artefact in manifest["artefacts"]
+        if artefact["original_filename"] == "DR202e25.xlsx" and "2025 y siguientes" in artefact["title"]
+    ]
+    latest = max(candidates, key=lambda artefact: artefact["retrieved_at"])
+
+    assert source.corpus_path.endswith(latest["stored_path"])
+    assert source.sha256 == latest["sha256"]
+    assert source.bytes == latest["bytes"]
+    assert source.source_url == latest["url"]
 
 
 def test_modelo_100_record_design_sources_match_manifest() -> None:

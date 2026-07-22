@@ -1,7 +1,7 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "322",
-  "retrieved_at": "2026-05-06",
+  "retrieved_at": "2026-07-21",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 1,
+  "artefact_count": 4,
   "artefacts": [
     {
       "modelo": "322",
@@ -27,6 +27,42 @@
       "bytes": 774672,
       "sha256": "f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76",
       "retrieved_at": "2026-05-06"
+    },
+    {
+      "modelo": "322",
+      "title": "322 - Ejercicio 2023",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR322e23.xls",
+      "stored_path": "files/02-322-ejercicio-2023-938-kb-xls.xls",
+      "original_filename": "DR322e23.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 960512,
+      "sha256": "540805f09ca397511b9c2704533dcbcffc96a781602fd7d427d11fe9264e11f0",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "322",
+      "title": "322 - Ejercicios 2024 y 2025, actualizado 10/12/2025",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_24/DR322e24.xls",
+      "stored_path": "files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls",
+      "original_filename": "DR322e24.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 970752,
+      "sha256": "a70f3a2ca7dd409b6b39964b261d22b8732a767a71e3e6ef2e652e179678188b",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "322",
+      "title": "322 - Ejercicio 2022 y siguientes",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_22/DR322e22.xls",
+      "stored_path": "files/04-322-ejercicio-2022-y-siguientes.xls",
+      "original_filename": "DR322e22.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 955392,
+      "sha256": "be029175f11e632cfefb48b26058766f827612be9e06ad12de7157f15901830f",
+      "retrieved_at": "2026-07-21"
     }
   ]
 }

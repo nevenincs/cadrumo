@@ -14,6 +14,7 @@ from dev.docs.preprocess import (
     PreprocessOutput,
 )
 from dev.docs.preprocess._html import HTML_EXTRACTOR_ID, build_outputs
+from dev.packaging.extract_manual_corpus_text import _extract_raw_text, _normalise_corpus_text
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -24,6 +25,23 @@ _MANUAL_CORPUS_TEXT_ROOT = _REPO_ROOT / "src" / "cadrumo" / "_data" / "manual_co
 _CORPUS_TEXT_SUFFIX = ".corpus_text.json"
 _PART_SUFFIX = re.compile(r"\.part-\d+$")
 _SUPPORTED_CALENDAR_YEARS = range(2023, 2027)
+_SUPPORTED_MANUAL_YEARS = range(2023, 2026)
+_SUPPORTED_RENTA_PART2_YEARS = range(2024, 2026)
+_SUPPORTED_SOCIETIES_MANUAL_YEARS = range(2024, 2026)
+_PUBLICATION_BOUND_MANUAL_EXCEPTIONS = (
+    ("iva", 2026, Path("manuals/iva/2026/source.pdf")),
+    ("renta-part1", 2026, Path("manuals/renta/2026/part1/source.pdf")),
+    (
+        "renta-part2-deducciones-autonomicas",
+        2026,
+        Path("manuals/renta/2026/part2-deducciones-autonomicas/source.pdf"),
+    ),
+    (
+        "sociedades",
+        2026,
+        Path("aeat_official/manuals/modelo_200/files/manual-sociedades-2026.pdf"),
+    ),
+)
 
 
 def _sha256_of(path: Path) -> str:
@@ -91,6 +109,8 @@ def test_committed_extraction_sidecars_match_current_sources() -> None:
             failures.append(f"{rel_json}: sidecar is not paired with declared sibling source {rel_origin}")
         if output.source_sha256 != _sha256_of(origin):
             failures.append(f"{rel_json}: source_sha256 does not match current source bytes for {rel_origin}")
+        if not output.units or any(not unit.text.strip() for unit in output.units):
+            failures.append(f"{rel_json}: extraction contains no units or an empty unit")
         if origin.suffix == ".html" and output.preprocessor_id != HTML_EXTRACTOR_ID:
             failures.append(
                 f"{rel_json}: normative HTML sidecar declares retired or unknown "
@@ -137,6 +157,9 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
         if not isinstance(normalised_text, str):
             failures.append(f"{rel_sidecar}: missing normalised_text field")
             continue
+        if not normalised_text.strip():
+            failures.append(f"{rel_sidecar}: normalised_text is empty")
+            continue
         if schema_version != 1:
             failures.append(f"{rel_sidecar}: unexpected schema_version {schema_version!r}")
             continue
@@ -158,6 +181,52 @@ def test_manual_pdf_corpus_text_sidecars_exist_and_match_source_sha256() -> None
 
     assert sidecars, f"no manual corpus text sidecars found under {_MANUAL_CORPUS_TEXT_ROOT}"
     assert not failures, f"{len(failures)} stale or malformed manual PDF sidecars:\n" + "\n".join(failures[:20])
+
+
+def test_every_corpus_pdf_has_a_corpus_text_sidecar() -> None:
+    """Every bundled PDF is represented in the shipped searchable text corpus."""
+    pdfs = sorted(_CORPUS_ROOT.rglob("*.pdf"))
+    missing: list[str] = []
+
+    for pdf_path in pdfs:
+        relative_pdf = pdf_path.relative_to(_CORPUS_ROOT)
+        sidecar_path = (_MANUAL_CORPUS_TEXT_ROOT / relative_pdf).with_name(pdf_path.name + _CORPUS_TEXT_SUFFIX)
+        if not sidecar_path.is_file():
+            missing.append(sidecar_path.relative_to(_REPO_ROOT).as_posix())
+
+    assert pdfs, f"no corpus PDFs found under {_CORPUS_ROOT}"
+    assert not missing, "corpus PDFs without searchable text sidecars:\n" + "\n".join(missing)
+
+
+def test_pdf_corpus_text_sidecars_equal_current_production_extraction() -> None:
+    failures: list[str] = []
+    sidecars = sorted(_MANUAL_CORPUS_TEXT_ROOT.rglob(f"*{_CORPUS_TEXT_SUFFIX}"))
+
+    for sidecar_path in sidecars:
+        data = json.loads(sidecar_path.read_text(encoding="utf-8"))
+        corpus_path = data["corpus_path"]
+        source_path = _CORPUS_ROOT / Path(corpus_path.removeprefix("corpus/"))
+        expected = _normalise_corpus_text(_extract_raw_text(source_path))
+        if data["normalised_text"] != expected:
+            failures.append(sidecar_path.relative_to(_REPO_ROOT).as_posix())
+
+    assert sidecars
+    assert not failures, "PDF corpus text differs from production extraction:\n" + "\n".join(failures)
+
+
+def test_every_record_design_workbook_has_extraction_sidecars() -> None:
+    workbook_suffixes = {".xls", ".xlsm", ".xlsx"}
+    missing: list[str] = []
+    workbook_root = _CORPUS_ROOT / "aeat_official" / "disenos_registro"
+
+    for source in sorted(workbook_root.rglob("*")):
+        if not source.is_file() or source.suffix.lower() not in workbook_suffixes:
+            continue
+        json_sidecars = sorted(source.parent.glob(f"{source.name}*.extracted.json"))
+        if not json_sidecars or any(not path.with_suffix(".md").is_file() for path in json_sidecars):
+            missing.append(source.relative_to(_REPO_ROOT).as_posix())
+
+    assert not missing, "record-design workbooks without extraction sidecars:\n" + "\n".join(missing)
 
 
 def test_supported_taxpayer_calendars_ship_pdf_corpus_text() -> None:
@@ -182,3 +251,53 @@ def test_supported_taxpayer_calendars_ship_pdf_corpus_text() -> None:
             missing.append(f"{sidecar_path.relative_to(_REPO_ROOT).as_posix()}: missing {expected_title!r}")
 
     assert not missing, "supported taxpayer calendar corpus artifacts are missing:\n" + "\n".join(missing)
+
+
+def test_supported_tax_manual_matrix_ships_pdf_corpus_text() -> None:
+    expected: list[tuple[str, int, Path]] = []
+    for year in _SUPPORTED_MANUAL_YEARS:
+        expected.extend(
+            (
+                ("iva", year, Path("manuals") / "iva" / str(year) / "source.pdf"),
+                ("renta", year, Path("manuals") / "renta" / str(year) / "part1" / "source.pdf"),
+            ),
+        )
+    expected.extend(
+        (
+            "renta",
+            year,
+            Path("manuals") / "renta" / str(year) / "part2-deducciones-autonomicas" / "source.pdf",
+        )
+        for year in _SUPPORTED_RENTA_PART2_YEARS
+    )
+    expected.extend(
+        (
+            "sociedades",
+            year,
+            Path("aeat_official") / "manuals" / "modelo_200" / "files" / f"manual-sociedades-{year}.pdf",
+        )
+        for year in _SUPPORTED_SOCIETIES_MANUAL_YEARS
+    )
+
+    missing: list[str] = []
+    for family, year, relative_pdf in expected:
+        pdf_path = _CORPUS_ROOT / relative_pdf
+        sidecar_path = (_MANUAL_CORPUS_TEXT_ROOT / relative_pdf).with_name(pdf_path.name + _CORPUS_TEXT_SUFFIX)
+        if not pdf_path.is_file():
+            missing.append(pdf_path.relative_to(_REPO_ROOT).as_posix())
+        if not sidecar_path.is_file():
+            missing.append(sidecar_path.relative_to(_REPO_ROOT).as_posix())
+            continue
+        normalised_text = json.loads(sidecar_path.read_text(encoding="utf-8"))["normalised_text"]
+        if family not in normalised_text or str(year) not in normalised_text:
+            missing.append(
+                f"{sidecar_path.relative_to(_REPO_ROOT).as_posix()}: missing {family!r} or {year}",
+            )
+
+    for family, year, relative_pdf in _PUBLICATION_BOUND_MANUAL_EXCEPTIONS:
+        pdf_path = _CORPUS_ROOT / relative_pdf
+        sidecar_path = (_MANUAL_CORPUS_TEXT_ROOT / relative_pdf).with_name(pdf_path.name + _CORPUS_TEXT_SUFFIX)
+        if pdf_path.exists() or sidecar_path.exists():
+            missing.append(f"remove stale {family} {year} publication exception")
+
+    assert not missing, "supported tax-manual corpus artifacts are missing:\n" + "\n".join(missing)

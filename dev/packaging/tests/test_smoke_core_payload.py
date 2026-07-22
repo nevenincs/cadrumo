@@ -50,6 +50,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
     wheel = _build_wheel(_REPO_ROOT, tmp_path, uv)
     with zipfile.ZipFile(wheel) as archive:
         members = set(archive.namelist())
+    actual_runtime = {name for name in members if name.startswith("cadrumo/_data/") and not name.endswith("/")}
 
     independently_expected = {
         f"cadrumo/_data/{path.removeprefix('src/cadrumo/_data/')}"
@@ -57,7 +58,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         if "/tests/" not in path
     }
     assert _expected_wheel_data_paths(_REPO_ROOT) == independently_expected
-    assert independently_expected <= members
+    assert actual_runtime == independently_expected
     assert not {f"cadrumo/_data/corpus/{path.removeprefix(_CORPUS_SOURCE_PREFIX)}" for path in split_owned} & members
 
     companions = _build_companion_wheels(_REPO_ROOT, tmp_path, uv)
@@ -83,7 +84,7 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         for path in tracked
         if not (
             path.startswith("src/cadrumo/_data/corpus/")
-            and path.lower().endswith((".docx", ".pdf", ".xls", ".xlsx", ".zip"))
+            and path.lower().endswith((".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip"))
         )
         and "/tests/" not in path
     }

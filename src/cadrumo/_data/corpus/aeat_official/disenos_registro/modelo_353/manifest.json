@@ -1,7 +1,7 @@
 {
   "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
   "modelo": "353",
-  "retrieved_at": "2026-05-06",
+  "retrieved_at": "2026-07-21",
   "source_pages": [
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-01-99.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
@@ -14,7 +14,7 @@
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
     "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-resto-modelos.html"
   ],
-  "artefact_count": 1,
+  "artefact_count": 2,
   "artefacts": [
     {
       "modelo": "353",
@@ -27,6 +27,18 @@
       "bytes": 130282,
       "sha256": "cb1374a79a87b7c8282ff3c964d78b250bedfa11750decfa0e5e7f90e8f97380",
       "retrieved_at": "2026-05-06"
+    },
+    {
+      "modelo": "353",
+      "title": "353 - Ejercicios 2021 a 2025",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_17/DR353e21v21.xls",
+      "stored_path": "files/02-353-ejercicios-2021-a-2025-198-kb-xls.xls",
+      "original_filename": "DR353e21v21.xls",
+      "content_type": "application/vnd.ms-excel",
+      "bytes": 202240,
+      "sha256": "37f39224edc2d8aa49403f2a6408ed1b69ae06c2db9d33f59b2a6a54ab82839d",
+      "retrieved_at": "2026-07-21"
     }
   ]
 }

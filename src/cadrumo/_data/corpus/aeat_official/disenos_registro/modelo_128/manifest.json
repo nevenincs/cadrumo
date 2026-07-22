@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "128",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "128",
+      "title": "128 - Ejercicio 2020 y siguientes",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-100-199.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_20/128v01e2020_v1.07.xlsx",
+      "stored_path": "files/01-128-ejercicio-2020-y-siguientes.xlsx",
+      "original_filename": "128v01e2020_v1.07.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 112732,
+      "sha256": "2cdf1540b2aaca1cd5cf5a19380179ba72271a7656eba8a6dd157833866a5cc0",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

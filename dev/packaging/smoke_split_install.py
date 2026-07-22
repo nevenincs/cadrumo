@@ -35,7 +35,7 @@ from .smoke_core import (
 )
 from .smoke_pip_core import _create_pip_venv
 
-_CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsx", ".zip")
+_CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
 _UTF_8: Final[str] = "utf-8"
 
 _COHORT_PROBE = """

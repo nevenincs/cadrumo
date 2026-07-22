@@ -1,0 +1,60 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "345",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html"
+  ],
+  "artefact_count": 4,
+  "artefacts": [
+    {
+      "modelo": "345",
+      "title": "345 - Ejercicio 2025",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_345_2025.pdf",
+      "stored_path": "files/01-345-ejercicio-2025.pdf",
+      "original_filename": "DR_Modelo_345_2025.pdf",
+      "content_type": "application/pdf",
+      "bytes": 331991,
+      "sha256": "fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "345",
+      "title": "345 - Ejercicio 2023 y siguientes",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_300_399/archivos/dr345.pdf",
+      "stored_path": "files/02-345-ejercicio-2023-y-siguientes.pdf",
+      "original_filename": "dr345.pdf",
+      "content_type": "application/pdf",
+      "bytes": 332516,
+      "sha256": "94800d433248ad6bd9baf1213fe2ae512732d21520b923cc0ce2c044edd247de",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "345",
+      "title": "345 - Orden de actualización del ejercicio 2023",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_23/DR_345_2023.pdf",
+      "stored_path": "files/03-345-orden-de-actualizacion-del-ejercicio-2023.pdf",
+      "original_filename": "DR_345_2023.pdf",
+      "content_type": "application/pdf",
+      "bytes": 184620,
+      "sha256": "09ad1c5066e51535d367fc2a7c9f8863140141b9f2b3e836b4778085587d2da4",
+      "retrieved_at": "2026-07-21"
+    },
+    {
+      "modelo": "345",
+      "title": "345 - Diseño de registro actualizado en 2024",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/ejercicios-anteriores-modelos-300-399.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/DR_Modelo_345_2024.pdf",
+      "stored_path": "files/04-345-diseno-de-registro-actualizado-en-2024.pdf",
+      "original_filename": "DR_Modelo_345_2024.pdf",
+      "content_type": "application/pdf",
+      "bytes": 245193,
+      "sha256": "90b12b42a644c55793a93831cc279bc6cdaad832802d3e7b1f309a0743a46c1f",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}
