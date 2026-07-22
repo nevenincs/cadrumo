@@ -189,7 +189,32 @@ Sweep a retired architecture's toolchain residue, not just its provisioning: the
 uv managed-Python store outlived the runner that installed it and silently
 redirected an ARM machine to Intel builds.
 
-Resume the arm64 investigation with a debugger attached to the LIVE build, not a
+Two documented candidates were researched and tested against the real formula,
+and both are recorded here so they are not retried blind. The first is
+argon2-cffi-bindings' own SSE2 auto-detection, controlled by
+ARGON2_CFFI_USE_SSE2: it is a red herring for this crash, because that flag
+governs argon2's own optimized C which compiles after metadata, whereas the fault
+is in the cffi backend load during metadata, and setting it to 0 through the real
+formula did not help (three of three still failed). The second is ARM pointer
+authentication and branch-target-identification, the classic virtual-machine
+illegal-instruction culprits: also eliminated, because the crashing backend and a
+known-working backend both contain the same PAC and BTI instructions and the
+working one runs, so this virtual machine executes them correctly. Homebrew
+already compiles with the portable -march=armv8-a, not -march=native, and forcing
+a generic CPU target through the formula did not help either.
+
+One fix direction is proven in principle and is the strongest lead. Building the
+argon2 bindings against an already-installed working cffi instead of letting pip
+create a fresh isolated overlay — a real installer run with build isolation
+disabled — clears the crashing metadata step. Wiring that into a generated
+Homebrew formula is unfinished formula engineering, not a mystery: the formula
+must stage the build backend (setuptools, wheel, setuptools-scm) and cffi into
+the virtual environment first, then install the bindings with isolation disabled,
+and be verified green several times over. Supplying the bindings as a pre-built
+aarch64 wheel would also avoid the build entirely, at the cost of Homebrew's
+from-source expectation.
+
+If neither lands cleanly, resume with a debugger attached to the LIVE build, not a
 replay. Three independent reconstructions were tried and all confirm the same
 thing: importing the crashing overlay's cffi backend directly does not fault,
 constructing an FFI object with an equivalent cffi does not fault, and both run
