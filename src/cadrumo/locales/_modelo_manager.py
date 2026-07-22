@@ -10,12 +10,14 @@ catalogues.
 
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..core import CasillaId, read_toml
+from ..core.atomic_write import atomic_write_text
 from ..core.errors import CadrumoError
 from ..core.external_constants import UTF_8_ENCODING, OutputLanguage
 from ..core.resources import bundled_path
@@ -51,6 +53,22 @@ class ModeloLocaleDriftKind(StrEnum):
 
     MISSING = "missing"
     STALE = "stale"
+
+
+class ModeloLocaleLeafState(StrEnum):
+    """Honest per-leaf translation state for one schema-local value.
+
+    A leaf is classified into exactly one state so that reported counts
+    always partition the required key set. Only ``AUTHORED`` counts as
+    translated: a value that echoes its own key is the scaffold
+    placeholder, and a help value that merely repeats the label (in this
+    locale or the official Spanish schema label) documents nothing.
+    """
+
+    AUTHORED = "authored"
+    KEY_ECHO = "key_echo"
+    MIRRORED = "mirrored"
+    ABSENT = "absent"
 
 
 class ModeloLocaleFileTarget(BaseModel):
@@ -131,7 +149,13 @@ class ModeloLocaleDriftRecord(BaseModel):
 
 
 class ModeloLocaleCoverageRecord(BaseModel):
-    """Coverage summary for one modelo revision and locale."""
+    """Coverage summary for one modelo revision and locale.
+
+    The per-field counters partition the required key set by
+    :class:`ModeloLocaleLeafState`: ``translated`` counts authored values
+    only, while key-echo placeholders, mirrored help, and absent leaves
+    are reported separately so no counter can overstate progress.
+    """
 
     model_config = ConfigDict(frozen=True)
 
@@ -140,9 +164,22 @@ class ModeloLocaleCoverageRecord(BaseModel):
     revision_id: str = Field(min_length=1)
     label_required: int = Field(ge=0)
     label_translated: int = Field(ge=0)
+    label_key_echo: int = Field(ge=0, default=0)
     help_required: int = Field(ge=0)
     help_translated: int = Field(ge=0)
+    help_key_echo: int = Field(ge=0, default=0)
+    help_mirrored: int = Field(ge=0, default=0)
     drift: tuple[ModeloLocaleDriftRecord, ...] = ()
+
+    @property
+    def label_absent(self) -> int:
+        """Return required label leaves with no value on disk."""
+        return self.label_required - self.label_translated - self.label_key_echo
+
+    @property
+    def help_absent(self) -> int:
+        """Return required help leaves with no value on disk."""
+        return self.help_required - self.help_translated - self.help_key_echo - self.help_mirrored
 
     @property
     def required_total(self) -> int:
@@ -151,12 +188,12 @@ class ModeloLocaleCoverageRecord(BaseModel):
 
     @property
     def translated_total(self) -> int:
-        """Return total present translation leaves."""
+        """Return total authored translation leaves."""
         return self.label_translated + self.help_translated
 
     @property
     def complete(self) -> bool:
-        """Return whether all required translation leaves are present."""
+        """Return whether every required leaf is authored, not merely present."""
         return self.translated_total == self.required_total and not any(
             record.kind is ModeloLocaleDriftKind.STALE for record in self.drift
         )
@@ -165,17 +202,23 @@ class ModeloLocaleCoverageRecord(BaseModel):
 class ModeloLocaleManager:
     """Path authority for registry-local modelo schema translation files."""
 
-    def __init__(self, registry_root: Path | None = None):
+    def __init__(self, registry_root: Path | None = None, *, fragment_leaf_capacity: int = 1000):
         """Initialise the manager with a contained AEAT registry root.
 
         Args:
             registry_root: Directory containing the AEAT registry tree. When
                 omitted, the bundled ``registry/aeat`` resource is used.
+            fragment_leaf_capacity: Maximum translation leaves per fragment
+                file for fragmented locale targets. The default matches the
+                shipped fragment convention of 1000 leaves per file.
 
         Raises:
             ModeloLocaleError: If the root or required ``modelos`` directory is
-                missing.
+                missing, or the fragment capacity is not positive.
         """
+        if fragment_leaf_capacity < 1:
+            raise ModeloLocaleError(f"Fragment leaf capacity must be positive: {fragment_leaf_capacity}")
+        self.fragment_leaf_capacity = fragment_leaf_capacity
         root = bundled_path("registry", "aeat") if registry_root is None else registry_root
         self.registry_root = root.resolve()
         if not self.registry_root.is_dir():
@@ -214,6 +257,16 @@ class ModeloLocaleManager:
         except RegistryLoadError as exc:
             raise ModeloLocaleError(str(exc)) from exc
 
+    def modelo_ids(self) -> tuple[str, ...]:
+        """Return sorted directory-mode modelo ids under the registry root."""
+        return tuple(
+            sorted(
+                path.name
+                for path in self.modelos_root.iterdir()
+                if path.is_dir() and path.joinpath("manifest.toml").is_file()
+            ),
+        )
+
     def revision_ids(self, modelo_id: str) -> tuple[str, ...]:
         """Return sorted revision ids for ``modelo_id``."""
         modelo = self.load_modelo(modelo_id)
@@ -230,18 +283,7 @@ class ModeloLocaleManager:
         records are keyed by ``continuidad_id`` and deduplicated across the
         selected revisions because the target TOML file is modelo-wide.
         """
-        modelo = self.load_modelo(modelo_id)
-        revisions = _selected_revisions(modelo, revision_id)
-        records: dict[tuple[ModeloLocaleScope, str | None, ModeloLocaleFieldKind, str], ModeloLocaleInventoryKey] = {}
-        for revision in revisions:
-            for casilla in sorted(revision.casillas, key=lambda item: item.id):
-                _add_revision_inventory(records, modelo_id=str(modelo.id), revision=revision, casilla=casilla)
-                if casilla.continuidad_id is not None:
-                    _add_modelo_inventory(records, modelo_id=str(modelo.id), casilla=casilla)
-        return tuple(
-            records[key]
-            for key in sorted(records, key=lambda item: (item[0].value, item[1] or "", item[2].value, item[3]))
-        )
+        return _inventory_records(self.load_modelo(modelo_id), revision_id)
 
     def drift_records(
         self,
@@ -251,9 +293,19 @@ class ModeloLocaleManager:
     ) -> tuple[ModeloLocaleDriftRecord, ...]:
         """Return :class:`ModeloLocaleDriftRecord` rows for missing and stale schema-local leaves."""
         language = _coerce_output_language(locale)
-        expected = self.inventory_keys(modelo_id, revision_id)
+        return self._drift_from_modelo(language, self.load_modelo(modelo_id), revision_id)
+
+    def _drift_from_modelo(
+        self,
+        language: OutputLanguage,
+        modelo: ModeloDefinition,
+        revision_id: str,
+    ) -> tuple[ModeloLocaleDriftRecord, ...]:
+        """Compute drift rows for one revision of an already-loaded modelo."""
+        modelo_id = str(modelo.id)
+        expected = _inventory_records(modelo, revision_id)
         expected_by_target = _expected_keys_by_target(expected, locale=language)
-        valid_by_target = _expected_keys_by_target(self.inventory_keys(modelo_id), locale=language)
+        valid_by_target = _expected_keys_by_target(_inventory_records(modelo, None), locale=language)
 
         records: list[ModeloLocaleDriftRecord] = []
         for target in _drift_targets(language=language, modelo_id=modelo_id, revision_id=revision_id):
@@ -288,31 +340,79 @@ class ModeloLocaleManager:
         modelo_id: str,
         revision_id: str,
     ) -> ModeloLocaleCoverageRecord:
-        """Return a :class:`ModeloLocaleCoverageRecord` for one modelo revision."""
-        language = _coerce_output_language(locale)
-        expected = self.inventory_keys(modelo_id, revision_id)
+        """Return a :class:`ModeloLocaleCoverageRecord` for one modelo revision.
+
+        Counters are derived from :func:`classify_modelo_locale_leaf`, so a
+        key-echo placeholder or a mirrored help value never increments the
+        translated counts.
+        """
+        return self._coverage_from_modelo(_coerce_output_language(locale), self.load_modelo(modelo_id), revision_id)
+
+    def coverage_records(
+        self,
+        modelo_id: str,
+        *,
+        revision_id: str | None = None,
+        locales: tuple[OutputLanguage, ...],
+    ) -> tuple[ModeloLocaleCoverageRecord, ...]:
+        """Return coverage records for selected revisions and locales.
+
+        The modelo is loaded once and reused across every
+        ``revision x locale`` combination, keeping a registry-wide status
+        sweep tractable for large modelos.
+        """
+        modelo = self.load_modelo(modelo_id)
+        revision_ids = (
+            (revision_id,) if revision_id is not None else tuple(sorted(str(key) for key in modelo.revisions))
+        )
+        return tuple(
+            self._coverage_from_modelo(_coerce_output_language(language), modelo, selected)
+            for selected in revision_ids
+            for language in locales
+        )
+
+    def _coverage_from_modelo(
+        self,
+        language: OutputLanguage,
+        modelo: ModeloDefinition,
+        revision_id: str,
+    ) -> ModeloLocaleCoverageRecord:
+        """Compute one coverage record from an already-loaded modelo."""
+        modelo_id = str(modelo.id)
+        expected = _inventory_records(modelo, revision_id)
         expected_by_target = _expected_keys_by_target(expected, locale=language)
+        official_by_target = _official_labels_by_target(expected, locale=language)
 
         label_required = sum(1 for item in expected if item.field is ModeloLocaleFieldKind.LABELS)
         help_required = sum(1 for item in expected if item.field is ModeloLocaleFieldKind.HELP)
-        label_translated = 0
-        help_translated = 0
+        counts: dict[tuple[ModeloLocaleFieldKind, ModeloLocaleLeafState], int] = {}
         for target in expected_by_target:
             translation = self.load_translation_file(target)
-            label_keys = expected_by_target[target][ModeloLocaleFieldKind.LABELS]
-            help_keys = expected_by_target[target][ModeloLocaleFieldKind.HELP]
-            label_translated += len(_translated_keys(translation.labels, label_keys))
-            help_translated += len(_translated_keys(translation.help, help_keys))
+            officials = official_by_target.get(target, {})
+            for field in (ModeloLocaleFieldKind.LABELS, ModeloLocaleFieldKind.HELP):
+                table = translation.table(field)
+                for key in expected_by_target[target][field]:
+                    state = classify_modelo_locale_leaf(
+                        field,
+                        key,
+                        table.get(key),
+                        label_value=translation.labels.get(key),
+                        official_label=officials.get(key),
+                    )
+                    counts[(field, state)] = counts.get((field, state), 0) + 1
 
         return ModeloLocaleCoverageRecord(
             locale=language,
             modelo_id=modelo_id,
             revision_id=revision_id,
             label_required=label_required,
-            label_translated=label_translated,
+            label_translated=counts.get((ModeloLocaleFieldKind.LABELS, ModeloLocaleLeafState.AUTHORED), 0),
+            label_key_echo=counts.get((ModeloLocaleFieldKind.LABELS, ModeloLocaleLeafState.KEY_ECHO), 0),
             help_required=help_required,
-            help_translated=help_translated,
-            drift=self.drift_records(language, modelo_id, revision_id),
+            help_translated=counts.get((ModeloLocaleFieldKind.HELP, ModeloLocaleLeafState.AUTHORED), 0),
+            help_key_echo=counts.get((ModeloLocaleFieldKind.HELP, ModeloLocaleLeafState.KEY_ECHO), 0),
+            help_mirrored=counts.get((ModeloLocaleFieldKind.HELP, ModeloLocaleLeafState.MIRRORED), 0),
+            drift=self._drift_from_modelo(language, modelo, revision_id),
         )
 
     def scaffold_revision(
@@ -326,12 +426,20 @@ class ModeloLocaleManager:
         Missing leaves are inserted with the schema key as an untranslated
         placeholder. Existing translated values are preserved. Stale leaves are
         removed because they no longer point at registry-backed schema keys.
+        Fragmented targets are aligned fragment-by-fragment: stale keys are
+        dropped from their owning fragments and missing keys are appended to
+        the tail fragment of their field family, spilling into new fragments
+        at :attr:`fragment_leaf_capacity`.
         """
         language = _coerce_output_language(locale)
         expected = _expected_keys_by_target(self.inventory_keys(modelo_id, revision_id), locale=language)
         valid = _expected_keys_by_target(self.inventory_keys(modelo_id), locale=language)
         changed_paths: list[Path] = []
         for target in _drift_targets(language=language, modelo_id=modelo_id, revision_id=revision_id):
+            flat_path = self.resolve_target_path(target)
+            if flat_path.with_suffix("").is_dir() and not flat_path.exists():
+                changed_paths.extend(self._scaffold_fragmented_target(target, expected=expected, valid=valid))
+                continue
             current = self.load_translation_file(target)
             updated = _aligned_translation_file(current, expected=expected, valid=valid)
             changed = updated.labels != current.labels or updated.help != current.help
@@ -339,6 +447,79 @@ class ModeloLocaleManager:
             if changed or missing_required_file:
                 changed_paths.append(self.write_translation_file(updated))
         return tuple(changed_paths)
+
+    def _scaffold_fragmented_target(
+        self,
+        target: ModeloLocaleFileTarget,
+        *,
+        expected: _ExpectedKeysByTarget,
+        valid: _ExpectedKeysByTarget,
+    ) -> list[Path]:
+        """Align one fragmented locale target, preserving translated leaves."""
+        fragment_dir = self.resolve_target_path(target).with_suffix("")
+        changed: list[Path] = []
+        present: dict[ModeloLocaleFieldKind, set[str]] = {
+            ModeloLocaleFieldKind.LABELS: set(),
+            ModeloLocaleFieldKind.HELP: set(),
+        }
+        for path in sorted(fragment_dir.glob("*.toml")):
+            current = self._load_translation_path(target, path)
+            labels = {
+                key: value
+                for key, value in current.labels.items()
+                if key in _keys_for_target(valid, target, ModeloLocaleFieldKind.LABELS)
+            }
+            help_text = {
+                key: value
+                for key, value in current.help.items()
+                if key in _keys_for_target(valid, target, ModeloLocaleFieldKind.HELP)
+            }
+            present[ModeloLocaleFieldKind.LABELS].update(labels)
+            present[ModeloLocaleFieldKind.HELP].update(help_text)
+            if labels != current.labels or help_text != current.help:
+                changed.append(self._write_translation_path(path, labels=labels, help_text=help_text))
+
+        for field in (ModeloLocaleFieldKind.LABELS, ModeloLocaleFieldKind.HELP):
+            missing = sorted(_keys_for_target(expected, target, field) - present[field])
+            while missing:
+                path = self._fragment_append_target(target, field)
+                current = self._load_translation_path(target, path)
+                table = dict(current.table(field))
+                room = self.fragment_leaf_capacity - len(table)
+                batch, missing = missing[:room], missing[room:]
+                for key in batch:
+                    table[key] = key
+                labels = table if field is ModeloLocaleFieldKind.LABELS else dict(current.labels)
+                help_text = table if field is ModeloLocaleFieldKind.HELP else dict(current.help)
+                written = self._write_translation_path(path, labels=labels, help_text=help_text)
+                if written not in changed:
+                    changed.append(written)
+        return changed
+
+    def _fragment_append_target(self, target: ModeloLocaleFileTarget, field: ModeloLocaleFieldKind) -> Path:
+        """Return the fragment file that accepts new ``field`` leaves for ``target``.
+
+        The tail fragment of the field's family receives new keys until it
+        reaches :attr:`fragment_leaf_capacity`; the next numbered fragment is
+        created beyond that. A family with no fragment yet starts at the
+        conventional first name.
+        """
+        fragment_dir = self.resolve_target_path(target).with_suffix("")
+        family = [
+            path
+            for path in sorted(fragment_dir.glob("*.toml"))
+            if (match := _FRAGMENT_NAME_PATTERN.match(path.name)) is not None and match.group("family") == field.value
+        ]
+        if not family:
+            return fragment_dir / _FIRST_FRAGMENT_NAMES[field]
+        tail = family[-1]
+        if len(self._load_translation_path(target, tail).table(field)) < self.fragment_leaf_capacity:
+            return tail
+        tail_match = _FRAGMENT_NAME_PATTERN.match(tail.name)
+        if tail_match is None:  # pragma: no cover - family membership guarantees a match
+            raise ModeloLocaleError(f"Modelo locale fragment name is not numbered: {tail}")
+        number = tail_match.group("num")
+        return fragment_dir / f"{int(number) + 1:0{len(number)}d}-{field.value}.toml"
 
     def set_translation_value(
         self,
@@ -493,7 +674,11 @@ class ModeloLocaleManager:
         field: ModeloLocaleFieldKind,
         key: str,
     ) -> Path:
-        """Return the concrete TOML file that owns ``field/key`` for ``target``."""
+        """Return the concrete TOML file that owns ``field/key`` for ``target``.
+
+        A schema key with no owning fragment routes to the field family's
+        append fragment so that fragmented targets can accept new keys.
+        """
         paths = self._translation_paths(target)
         if len(paths) == 1:
             return paths[0]
@@ -506,7 +691,7 @@ class ModeloLocaleManager:
             return matches[0]
         if len(matches) > 1:
             raise ModeloLocaleError(f"Modelo locale key is duplicated across fragments: {field.value}/{key!r}")
-        raise ModeloLocaleError(f"Modelo locale key has no owning fragment: {field.value}/{key!r}")
+        return self._fragment_append_target(target, field)
 
     def _load_translation_path(self, target: ModeloLocaleFileTarget, path: Path) -> ModeloLocaleTranslationFile:
         """Load one concrete schema-local locale TOML file."""
@@ -524,9 +709,15 @@ class ModeloLocaleManager:
 
     @staticmethod
     def _write_translation_path(path: Path, *, labels: dict[str, str], help_text: dict[str, str]) -> Path:
-        """Write one concrete schema-local locale TOML file."""
+        """Atomically write one concrete schema-local locale TOML file.
+
+        A concurrent reader must never observe a truncated or empty fragment
+        mid-batch, so the rendered TOML is persisted through
+        :func:`~cadrumo.core.atomic_write.atomic_write_text`.
+        """
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(
+        atomic_write_text(
+            path,
             _render_translation_toml(labels=labels, help_text=help_text),
             encoding=UTF_8_ENCODING,
         )
@@ -550,6 +741,22 @@ class ModeloLocaleManager:
             raise ModeloLocaleError(f"Invalid {field_name}: {segment!r}")
         if any(token in segment for token in ("/", "\\", ":")):
             raise ModeloLocaleError(f"Invalid {field_name}: {segment!r}")
+
+
+def _inventory_records(
+    modelo: ModeloDefinition,
+    revision_id: str | None,
+) -> tuple[ModeloLocaleInventoryKey, ...]:
+    """Return sorted inventory rows for an already-loaded modelo."""
+    records: dict[tuple[ModeloLocaleScope, str | None, ModeloLocaleFieldKind, str], ModeloLocaleInventoryKey] = {}
+    for revision in _selected_revisions(modelo, revision_id):
+        for casilla in sorted(revision.casillas, key=lambda item: item.id):
+            _add_revision_inventory(records, modelo_id=str(modelo.id), revision=revision, casilla=casilla)
+            if casilla.continuidad_id is not None:
+                _add_modelo_inventory(records, modelo_id=str(modelo.id), casilla=casilla)
+    return tuple(
+        records[key] for key in sorted(records, key=lambda item: (item[0].value, item[1] or "", item[2].value, item[3]))
+    )
 
 
 def _selected_revisions(modelo: ModeloDefinition, revision_id: str | None) -> tuple[ModeloRevision, ...]:
@@ -726,9 +933,55 @@ def _aligned_table(current: dict[str, str], *, expected_keys: set[str], valid_ke
     return aligned
 
 
-def _translated_keys(table: dict[str, str], expected_keys: set[str]) -> set[str]:
-    """Return keys present with non-placeholder values."""
-    return {key for key in expected_keys if key in table and table[key] != key}
+_FRAGMENT_NAME_PATTERN = re.compile(r"^(?P<num>\d+)-(?P<family>labels|help)\.toml$")
+_FIRST_FRAGMENT_NAMES: dict[ModeloLocaleFieldKind, str] = {
+    ModeloLocaleFieldKind.LABELS: "001-labels.toml",
+    ModeloLocaleFieldKind.HELP: "101-help.toml",
+}
+
+
+def classify_modelo_locale_leaf(
+    field: ModeloLocaleFieldKind,
+    key: str,
+    value: str | None,
+    *,
+    label_value: str | None = None,
+    official_label: str | None = None,
+) -> ModeloLocaleLeafState:
+    """Classify one schema-local translation leaf into its honest state.
+
+    Args:
+        field: Translation table the leaf belongs to.
+        key: Schema key the leaf translates.
+        value: Stored value, or ``None`` when the leaf is missing.
+        label_value: The same target's label value for ``key``, used to
+            detect help that merely mirrors the label.
+        official_label: The official Spanish schema label for ``key``.
+
+    Returns:
+        Exactly one :class:`ModeloLocaleLeafState`; only ``AUTHORED`` may be
+        counted as translated.
+    """
+    if value is None:
+        return ModeloLocaleLeafState.ABSENT
+    if value == key:
+        return ModeloLocaleLeafState.KEY_ECHO
+    if field is ModeloLocaleFieldKind.HELP and value in {label_value, official_label}:
+        return ModeloLocaleLeafState.MIRRORED
+    return ModeloLocaleLeafState.AUTHORED
+
+
+def _official_labels_by_target(
+    items: tuple[ModeloLocaleInventoryKey, ...],
+    *,
+    locale: OutputLanguage,
+) -> dict[ModeloLocaleFileTarget, dict[str, str]]:
+    """Group official Spanish schema labels by locale TOML target and key."""
+    grouped: dict[ModeloLocaleFileTarget, dict[str, str]] = {}
+    for item in items:
+        target = _target_for_inventory_key(item, locale=locale)
+        grouped.setdefault(target, {})[item.key] = item.official_label
+    return grouped
 
 
 def _coerce_translation_table(raw: object, *, path: Path, table_name: str) -> dict[str, str]:
@@ -792,7 +1045,9 @@ __all__ = [
     "ModeloLocaleFieldKind",
     "ModeloLocaleFileTarget",
     "ModeloLocaleInventoryKey",
+    "ModeloLocaleLeafState",
     "ModeloLocaleManager",
     "ModeloLocaleScope",
     "ModeloLocaleTranslationFile",
+    "classify_modelo_locale_leaf",
 ]

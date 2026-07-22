@@ -15,7 +15,6 @@ from ...adapters.persistence.profile.transactions import TransactionCatalogueRep
 from ...core import Modelo
 from ...domain.iva import IvaCategory
 from ...domain.modelos import Modelo349OperadorRow, ModeloDetailRow, WorkUnit
-from ...domain.period import period_end_date, period_start_date
 from ...domain.transactions import TransactionCatalogueRepositoryProtocol, TransactionLifecycleState
 from ._action_errors import ModeloAggregationBindingError
 
@@ -41,15 +40,14 @@ def raise_if_m349_intracom_ledger_rows_need_operator_rows(
         return
 
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
-    period_start = period_start_date(work_unit.filing_year, work_unit.period.registry_token)
-    period_end = period_end_date(work_unit.filing_year, work_unit.period.registry_token)
+    period = work_unit.period
     transaction_ids = tuple(
         sorted(
             transaction.transaction_id
             for transaction in repository.load().transactions.values()
             if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
             and transaction.iva_category in _M349_INTRACOM_LEDGER_CATEGORIES
-            and period_start <= (transaction.raw.value_date or transaction.raw.booked_date) <= period_end
+            and period.contains(transaction.raw.value_date or transaction.raw.booked_date)
         ),
     )
     if not transaction_ids:

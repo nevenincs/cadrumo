@@ -20,7 +20,7 @@ from datetime import date
 from typing import Final, NamedTuple, cast
 
 from ...adapters.persistence.profile.justificante import JustificanteRepository
-from ...core import BindingSourceKind, Modelo, Period
+from ...core import Modelo, Period
 from ...domain.calculations.registry import (
     CasillaId,
     Modelo202Modality,
@@ -59,6 +59,7 @@ from ._cross_period_models import (
 )
 from ._m111_no_retenciones import is_m111_no_retenciones_period
 from ._observations_repository import CalculationObservationRepository
+from ._per_grupo_member_keys import per_grupo_member_requirement_keys
 from ._revision_carry_gate import revision_carry_outcome
 
 _OFFICIAL_SOURCE_KINDS: Final = frozenset(
@@ -587,7 +588,7 @@ def _requirements_from_previous_filing(
     *,
     snapshot: RegistrySnapshot,
 ) -> Iterable[CrossPeriodDependencyRequirement]:
-    grouped_keys = _per_grupo_member_requirement_keys(snapshot)
+    grouped_keys = per_grupo_member_requirement_keys(snapshot)
     source_period = requirement.periods[0]
     yield CrossPeriodDependencyRequirement(
         source_modelo=requirement.source_modelo,
@@ -617,32 +618,6 @@ def _requirements_from_relation(
             legal_refs=requirement.legal_refs,
             source_refs=requirement.source_refs,
         )
-
-
-def _per_grupo_member_requirement_keys(snapshot: RegistrySnapshot) -> set[tuple[str, int, str]]:
-    grouped_binding_ids = {
-        binding.id
-        for binding in snapshot.revision.bindings
-        if binding.source == BindingSourceKind.PREVIOUS_FILING
-        and _selector_grouping(binding.selector) == "per_grupo_member"
-    }
-    if not grouped_binding_ids:
-        return set()
-    keys: set[tuple[str, int, str]] = set()
-    for requirement in previous_filing_observation_requirements(
-        snapshot.revision,
-        filing_year=snapshot.filing_year,
-        period=snapshot.period,
-    ):
-        if any(binding_id in grouped_binding_ids for binding_id in requirement.binding_ids):
-            keys.add((requirement.source_modelo, requirement.filing_year, requirement.periods[0]))
-    return keys
-
-
-def _selector_grouping(selector: object) -> object:
-    if isinstance(selector, Mapping):
-        return next((v for k, v in selector.items() if k == "grouping"), None)
-    return getattr(selector, "grouping", None)
 
 
 class _CrossPeriodSource(NamedTuple):

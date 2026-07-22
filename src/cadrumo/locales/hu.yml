@@ -573,7 +573,8 @@ application:
         újabb, mint amit ez az alkalmazás támogat (legfeljebb {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
-      import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
+      import_bucket_collision: A(z) {bucket_id} azonosítójú bucket már létezik; használja
+        a --force-replace kapcsolót a felülírásához.
       import_missing_filing_baseline: 'A bucket-archívum profiljából hiányoznak a
         benyújtási azonossági mezők: %{missing_flags}. Javítsa a forrásprofilt, majd
         exportálja újra.'
@@ -582,7 +583,9 @@ application:
       import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
       restore_not_archived: A bucket nincs archiválva (nincs törölve); nincs mit visszaállítani.
-      unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
+      unsupported_archive_schema_version: A(z) {archive_schema_version} archívum sémaverziója
+        megelőzi az alkalmazás által támogatott verziót; migráció nélkül nem állítható
+        vissza.
   calculations:
     iva_compensation:
       errors:
@@ -630,7 +633,8 @@ application:
         filing_year_period_pair: A filing_year és a period értékeket együtt kell megadni.
         modelo_not_in_registry: A(z) %{modelo} modelo nem szerepel a számítási nyilvántartásban.
         modelo_revision_missing: A(z) %{modelo} modellnek nincsenek revizioi.
-        period_type: application.filing.runtime.errors.period_type
+        period_type: 'Belső hiba: a futásidejű sémaszolgáltatóhoz Period objektum
+          szükséges; {period_type} érkezett.'
         provider_year_missing: A(z) %{modelo} modell %{revision} reviziójához nincs
           szolgáltatói év.
         registry_empty: A(z) %{registry_root_name} registry gyökérben nincsenek modell
@@ -875,7 +879,8 @@ application:
       export_operator_profile_missing: Az exportáláshoz szükség van az operátor nevére
         az aktív profilból, de nincs perzisztált profil; exportálás előtt töltse ki
         az identity.surnames és identity.name mezőket.
-      export_output_path_invalid: application.modelo.errors.export_output_path_invalid
+      export_output_path_invalid: 'Az exportálási kimeneti útvonal érvénytelen: {output_path}
+        ({reason}).'
       export_period_unmappable: A(z) %{work_unit_id} munkaegység %{period} időszakot
         tartalmaz, amely nem képezhető le regiszter bevallási időszakra.
       export_revision_state_refused: A(z) %{calculation_revision_id} számítási revízió
@@ -6258,7 +6263,7 @@ live:
 locales:
   cli:
     allow_identical:
-      recorded: locales.cli.allow_identical.recorded
+      recorded: 'rögzítve: {allowlist_file}:{locale}:{key}'
     audit:
       file_drift: '%{locale_file}: hiányzó=%{missing_count} többlet=%{extra_count}'
       file_ok: '%{locale_file}: rendben'

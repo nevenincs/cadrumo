@@ -1,10 +1,15 @@
-"""Honesty assertion for ca and hu locale translations.
+"""Honesty assertions for the non-English locale catalogues.
 
 A locale that ships untranslated content while pretending to be a real
-translation surface is dishonest about its support. This module pins a
-contract: for every key, the value under ``ca`` and ``hu`` must differ
-from the corresponding ``en`` value, OR the deviation must appear in
-the ``_intentional_identical.json`` allowlist with an explicit reason.
+translation surface is dishonest about its support. This module pins two
+contracts. First, for every key, the value under ``ca``, ``es``, and
+``hu`` must differ from the corresponding ``en`` value, OR the deviation
+must appear in the ``_intentional_identical.json`` allowlist with an
+explicit reason. Second, no catalogue value in ANY locale (``en``
+included) may echo its own dotted key: a key-echo is the scaffold
+placeholder, never a legitimate translation, so it has no per-key
+allowlist — only a shrink-only ``_key_echo_ceiling`` ratchet recorded in
+the same allowlist file.
 
 The current state ships ca and hu as wholesale-English placeholders.
 The allowlist's ``untranslated_pending`` bucket captures that state
@@ -66,19 +71,66 @@ def _load_allowlist() -> dict[str, set[str]]:
     return result
 
 
-def _load_untranslated_ceiling(locale_code: str) -> int | None:
-    """Return the ``_untranslated_ceiling`` for *locale_code* if set."""
+def _load_metadata_ceiling(locale_code: str, field: str) -> int | None:
+    """Return one integer ``_``-prefixed metadata field for *locale_code*."""
 
     path = _LOCALES_DIR / "_intentional_identical.json"
     raw = json.loads(path.read_text(encoding="utf-8")) or {}
     data: dict[str, dict[str, object]] = raw if isinstance(raw, dict) else {}
     entries = data.get(locale_code, {})
-    ceiling = entries.get("_untranslated_ceiling") if isinstance(entries, dict) else None
+    ceiling = entries.get(field) if isinstance(entries, dict) else None
     return int(ceiling) if isinstance(ceiling, int) else None
 
 
-def test_ca_hu_values_differ_from_en_unless_allowlisted() -> None:
-    """Every ``ca`` / ``hu`` value must differ from ``en`` OR be allowlisted.
+def _load_untranslated_ceiling(locale_code: str) -> int | None:
+    """Return the ``_untranslated_ceiling`` for *locale_code* if set."""
+
+    return _load_metadata_ceiling(locale_code, "_untranslated_ceiling")
+
+
+def _key_echo_offenders(flat_leaves: dict[str, str]) -> list[str]:
+    """Return keys whose value is the key itself — the scaffold placeholder."""
+
+    return sorted(key for key, value in flat_leaves.items() if value == key)
+
+
+def test_key_echo_offender_detection_discriminates() -> None:
+    """The echo detector fires on an injected echo and stays quiet otherwise."""
+
+    assert _key_echo_offenders({"a.b": "a.b", "c.d": "translated"}) == ["a.b"]
+    assert _key_echo_offenders({"c.d": "translated"}) == []
+
+
+def test_no_locale_value_echoes_its_own_key_beyond_the_ratchet() -> None:
+    """No catalogue may grow key-echo placeholders in any locale.
+
+    A value equal to its own dotted key is the scaffold's "no translation
+    yet" marker leaking into a shipped catalogue. It is never legitimate,
+    so there is no per-key allowlist; the ``_key_echo_ceiling`` metadata
+    field in ``_intentional_identical.json`` ratchets the existing debt
+    down — a missing ceiling means zero tolerance.
+
+    To lower the ratchet after authoring a batch: update
+    ``_key_echo_ceiling`` for the locale to the new (lower) count.
+    """
+
+    failures: list[str] = []
+    for locale_code in ("ca", "en", "es", "hu"):
+        locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
+        offenders = _key_echo_offenders(_flatten(locale_raw if isinstance(locale_raw, dict) else {}))
+        ceiling = _load_metadata_ceiling(locale_code, "_key_echo_ceiling") or 0
+        if len(offenders) > ceiling:
+            failures.append(
+                f"{locale_code}.yml carries {len(offenders)} key-echo value(s) against a ceiling of "
+                f"{ceiling}. A key-echo is the scaffold placeholder, never a translation; author the "
+                f"value via `python -m cadrumo.locales set`. First five: {offenders[:5]}"
+            )
+
+    assert failures == [], "\n".join(failures)
+
+
+def test_translated_values_differ_from_en_unless_allowlisted() -> None:
+    """Every ``ca`` / ``es`` / ``hu`` value must differ from ``en`` OR be allowlisted.
 
     When the wholesale ``untranslated_pending`` bucket is active, the test
     acts as a ratchet: the number of identical-to-en keys must not exceed
@@ -95,42 +147,51 @@ def test_ca_hu_values_differ_from_en_unless_allowlisted() -> None:
     en_keys = _flatten(en_raw if isinstance(en_raw, dict) else {})
     failures: list[str] = []
 
-    for locale_code in ("ca", "hu"):
+    for locale_code in ("ca", "es", "hu"):
         locale_allows = allowlist.get(locale_code, set())
         locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
         locale_keys = _flatten(locale_raw if isinstance(locale_raw, dict) else {})
 
-        offenders: list[str] = []
-        for key, en_value in en_keys.items():
-            locale_value = locale_keys.get(key)
-            if locale_value is None:
-                continue
-            if locale_value == en_value and key not in locale_allows:
-                offenders.append(key)
-
-        if "untranslated_pending" in locale_allows:
-            # Wholesale-bucket mode: enforce the ratchet ceiling instead of
-            # requiring per-key allowlist entries. A regression that adds new
-            # untranslated strings causes the count to exceed the ceiling.
-            ceiling = _load_untranslated_ceiling(locale_code)
-            if ceiling is None:
-                failures.append(
-                    f"{locale_code}: 'untranslated_pending' bucket is active but "
-                    f"'_untranslated_ceiling' is missing from _intentional_identical.json. "
-                    f"Add the current identical-key count ({len(offenders)}) as the ceiling."
-                )
-            elif len(offenders) > ceiling:
-                failures.append(
-                    f"{locale_code}.yml has {len(offenders)} key(s) identical to en.yml, "
-                    f"exceeding the ratchet ceiling of {ceiling}. "
-                    f"New untranslated keys (first five of overflow): {offenders[ceiling:][:5]}"
-                )
-            continue
-
-        if offenders:
-            failures.append(
-                f"{locale_code}.yml carries {len(offenders)} value(s) identical to en.yml without an "
-                f"explicit allowlist entry. First five: {offenders[:5]}"
-            )
+        offenders = [
+            key
+            for key, en_value in en_keys.items()
+            if key in locale_keys and locale_keys[key] == en_value and key not in locale_allows
+        ]
+        failure = _identical_to_en_failure(
+            locale_code, offenders, bucket_active="untranslated_pending" in locale_allows
+        )
+        if failure is not None:
+            failures.append(failure)
 
     assert failures == [], "\n".join(failures)
+
+
+def _identical_to_en_failure(locale_code: str, offenders: list[str], *, bucket_active: bool) -> str | None:
+    """Render one locale's identical-to-en verdict, or ``None`` when clean.
+
+    Wholesale-bucket mode enforces the ratchet ceiling instead of requiring
+    per-key allowlist entries; a regression that adds new untranslated
+    strings pushes the count over the ceiling.
+    """
+
+    if not bucket_active:
+        if not offenders:
+            return None
+        return (
+            f"{locale_code}.yml carries {len(offenders)} value(s) identical to en.yml without an "
+            f"explicit allowlist entry. First five: {offenders[:5]}"
+        )
+    ceiling = _load_untranslated_ceiling(locale_code)
+    if ceiling is None:
+        return (
+            f"{locale_code}: 'untranslated_pending' bucket is active but "
+            f"'_untranslated_ceiling' is missing from _intentional_identical.json. "
+            f"Add the current identical-key count ({len(offenders)}) as the ceiling."
+        )
+    if len(offenders) > ceiling:
+        return (
+            f"{locale_code}.yml has {len(offenders)} key(s) identical to en.yml, "
+            f"exceeding the ratchet ceiling of {ceiling}. "
+            f"New untranslated keys (first five of overflow): {offenders[ceiling:][:5]}"
+        )
+    return None
