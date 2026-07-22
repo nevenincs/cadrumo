@@ -383,8 +383,8 @@ aggregation:
         taxonómiával.
   source_mesh:
     errors:
-      ambiguous_source_disposition: 'Belső hiba: egy binding forrástípus egynél több
-        forrásháló-diszpozíció állapotban van, vagy egyikben sem.'
+      ambiguous_source_disposition: 'Belső hiba: a(z) {source_kind} binding forrástípus
+        egynél több forrásháló-diszpozíció állapotban van, vagy egyikben sem.'
       binding_source_mismatch: A source_kind és a binding_source eltérő binding-forrás
         családra hivatkozik.
       duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'
@@ -647,8 +647,8 @@ application:
         ambiguous_casilla_schema: 'Belső hiba: a futásidejű casilla-séma nem egyértelmű
           (duplikált casilla.id értékek vagy függő képlethivatkozások).'
         blank_modelo_selection: A kért modellválasztás nem tartalmazhat üres modellazonosítókat.
-        filing_year_period_mismatch: 'Belső hiba: a bevallási év nem egyezik a megadott
-          időszakkal.'
+        filing_year_period_mismatch: 'Belső hiba: a(z) {filing_year} bevallási év
+          nem egyezik a megadott {period} időszakkal.'
         filing_year_period_pair: A filing_year és a period értékeket együtt kell megadni.
         modelo_not_in_registry: A(z) %{modelo} modelo nem szerepel a számítási nyilvántartásban.
         modelo_revision_missing: A(z) %{modelo} modellnek nincsenek revizioi.
@@ -1302,7 +1302,7 @@ application:
       invalid_oracle_environment: 'A nyilvántartási oracle környezetnek ezek egyikének
         kell lennie: {allowed_values}; kapott érték: {value}.'
       invalid_topic_locale: 'A nyilvántartási téma nyelvének ezek egyikének kell lennie:
-        {allowed_locales}; kapott érték: {locale}.'
+        {allowed_locales}; kapott érték: {locale_code}.'
       manual_section_not_found: 'A(z) {section} kézikönyvszakasz nem található itt:
         {manual_id} {year} {part}.'
       manual_section_requires_structure: 'A kézikönyvszakasz kinyert struktúrát igényel

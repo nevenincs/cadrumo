@@ -408,8 +408,8 @@ aggregation:
       source_kinds_mismatch: Los tipos de fuente no coinciden con la taxonomia aceptada.
   source_mesh:
     errors:
-      ambiguous_source_disposition: 'Error interno: un tipo de fuente de vinculación
-        está en más de un estado de la malla de fuentes, o en ninguno.'
+      ambiguous_source_disposition: 'Error interno: el tipo de fuente de vinculación
+        {source_kind} está en más de un estado de la malla de fuentes, o en ninguno.'
       binding_source_mismatch: source_kind y binding_source se refieren a familias
         de origen de binding distintas.
       duplicate_binding_owner: 'Error interno: propietario de vinculación duplicado
@@ -698,8 +698,8 @@ application:
           colgantes).'
         blank_modelo_selection: La selección de modelos solicitada no puede contener
           identificadores vacios.
-        filing_year_period_mismatch: 'Error interno: el ejercicio de declaración no
-          coincide con el periodo indicado.'
+        filing_year_period_mismatch: 'Error interno: el ejercicio de declaración {filing_year}
+          no coincide con el periodo indicado {period}.'
         filing_year_period_pair: filing_year y period deben indicarse juntos.
         modelo_not_in_registry: El modelo %{modelo} no está presente en el registro
           de cálculo.
@@ -1370,7 +1370,7 @@ application:
       invalid_oracle_environment: El entorno de oráculos del registro debe ser uno
         de {allowed_values}; se recibió {value}.
       invalid_topic_locale: El locale de temas del registro debe ser uno de {allowed_locales};
-        se recibió {locale}.
+        se recibió {locale_code}.
       manual_section_not_found: No se encontró la sección {section} en {manual_id}
         {year} {part}.
       manual_section_requires_structure: La sección del manual requiere estructura

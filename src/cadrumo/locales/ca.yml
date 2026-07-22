@@ -404,8 +404,9 @@ aggregation:
       source_kinds_mismatch: Els tipus de font no coincideixen amb la taxonomia acceptada.
   source_mesh:
     errors:
-      ambiguous_source_disposition: 'Error intern: un tipus de font de vinculació
-        és en més d''un estat de disposició de la malla de fonts, o en cap.'
+      ambiguous_source_disposition: 'Error intern: el tipus de font de vinculació
+        {source_kind} és en més d''un estat de disposició de la malla de fonts, o
+        en cap.'
       binding_source_mismatch: source_kind i binding_source fan referència a families
         d'origen de binding diferents.
       duplicate_binding_owner: 'Error intern: propietari de vinculació duplicat a
@@ -690,8 +691,8 @@ application:
           és ambigu (valors de casilla.id duplicats o referències de fórmula penjants).'
         blank_modelo_selection: La selecció de models sol.licitada no pot contenir
           identificadors buits.
-        filing_year_period_mismatch: 'Error intern: l''exercici de declaració no coincideix
-          amb el període indicat.'
+        filing_year_period_mismatch: 'Error intern: l''exercici de declaració {filing_year}
+          no coincideix amb el període indicat {period}.'
         filing_year_period_pair: filing_year i period s han d indicar junts.
         modelo_not_in_registry: El model %{modelo} no està present al registre de
           càlcul.
@@ -1357,7 +1358,7 @@ application:
       invalid_oracle_environment: L'entorn dels oracles del registre ha de ser un
         de {allowed_values}; s'ha rebut {value}.
       invalid_topic_locale: El locale de temes del registre ha de ser un de {allowed_locales};
-        sha rebut {locale}.
+        sha rebut {locale_code}.
       manual_section_not_found: No sha trobat la secció {section} a {manual_id} {year}
         {part}.
       manual_section_requires_structure: La secció del manual requereix estructura
