@@ -3,11 +3,12 @@ generated: true
 tags:
   - '#index'
   - '#locale-key-resolution'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-22'
+modified: '2026-07-22'
 related:
   - '[[2026-07-21-locale-key-resolution-adr]]'
   - '[[2026-07-21-locale-key-resolution-research]]'
+  - '[[2026-07-22-locale-key-resolution-close-honesty-review-audit]]'
 ---
 
 # `locale-key-resolution` feature index
@@ -19,6 +20,10 @@ Auto-generated index of all documents tagged with `#locale-key-resolution`.
 ### adr
 
 - `2026-07-21-locale-key-resolution-adr` - `locale-key-resolution` adr: `registry category locale key resolution` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-22-locale-key-resolution-close-honesty-review-audit` - `locale-key-resolution` audit: `campaign close honesty review`
 
 ### research
 
