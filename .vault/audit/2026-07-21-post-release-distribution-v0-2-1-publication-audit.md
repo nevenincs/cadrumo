@@ -214,8 +214,22 @@ and be verified green several times over. Supplying the bindings as a pre-built
 aarch64 wheel would also avoid the build entirely, at the cost of Homebrew's
 from-source expectation.
 
-If neither lands cleanly, resume with a debugger attached to the LIVE build, not a
-replay. Three independent reconstructions were tried and all confirm the same
+Research and experiment converge on the failure class and the fix. A CPython fix
+for an illegal instruction on older Arm (its issue 125444) is the same pattern —
+compiled code executing a processor instruction the running core does not
+support — though it is specific to 32-bit Arm and its exact instruction does not
+exist on this 64-bit target, so it confirms the category without being the same
+bug. The recurring recommendation across the cffi and argon2 ecosystem for
+architecture-specific source-build crashes is consistent with what the
+experiments here already showed: do not compile the offending dependency from
+source in the crashing context; take a pre-built wheel or build it against a
+known-good copy. That is the same conclusion reached two independent ways, so the
+fix direction is settled even though a shipped, green formula was not produced.
+
+If neither the no-build-isolation formula nor a pre-built-wheel path lands
+cleanly, resume with a debugger attached to the LIVE build, not a replay, to read
+the exact faulting instruction — but the fix does not depend on that reading,
+only a complete root-cause explanation would. Three independent reconstructions were tried and all confirm the same
 thing: importing the crashing overlay's cffi backend directly does not fault,
 constructing an FFI object with an equivalent cffi does not fault, and both run
 clean under the debugger — while the real formula build faults deterministically,
