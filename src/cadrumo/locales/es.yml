@@ -939,8 +939,9 @@ application:
       calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
         registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period}.
       calculation_revision_not_found: No existe ninguna revisión de cálculo con id=%{calculation_revision_id}.
-      caller_casilla_source_binding_conflict: 'Caller casilla inputs cannot override
-        bucket-derived source-bound casillas (source bound casillas): %{casillas}.'
+      caller_casilla_source_binding_conflict: 'Las entradas de casilla del operador
+        no pueden sobrescribir casillas vinculadas a una fuente derivada del bucket
+        (casillas vinculadas a fuente): %{casillas}.'
       computed_casilla_binding_conflict: 'Las entradas procedentes del bucket tienen
         como destino casillas calculadas; no se pueden sobreescribir con binding externo.
         Casillas afectadas: %{computed}.'
@@ -1024,9 +1025,9 @@ application:
         de IVA no coincide con la unidad de trabajo del Modelo 303.
       iva_wallet_unsupported_decision_type: 'Tipo de decisión de cartera de IVA no
         admitido: %{decision_type}.'
-      ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
-        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
-        %{period}` before calculating.'
+      ledger_preflight_blocked: 'la comprobación previa del libro bloquea el cálculo
+        del modelo: transacción %{transaction_id} %{reason}: %{detail}. Ejecuta `aeat
+        app ledger preflight --period %{period}` antes de calcular.'
       m210_ledger_manual_agrupacion_rows: El modo de fuente de libro mayor del Modelo
         210 deriva las filas anuales de agrupación de rentas de las clasificaciones
         del libro; no proporcione filas manuales de agrupación de rentas.
@@ -1156,8 +1157,8 @@ application:
         la renta del régimen de atribución quede declarada.
       cross_casilla_invariant_next_action: Asegúrate de que todas las casillas requeridas
         por el predicado %{predicate_id} sean distintas de cero antes de verificar.
-      cross_casilla_invariant_violated: 'cross-casilla invariant %{predicate_id} violated:
-        %{expression}'
+      cross_casilla_invariant_violated: 'invariante entre casillas %{predicate_id}
+        incumplida: %{expression}'
       cross_period_dependency_unclean: 'la dependencia entre períodos no está limpia:
         modelo=%{modelo} ejercicio=%{year} período=%{period} origen=%{origin} ids_origen=%{origin_ids}
         bloqueos=%{blockers}'
@@ -1628,40 +1629,53 @@ auth:
 categories:
   registry:
     amortizacion_vivienda_afecto:
+      label: categories.registry.amortizacion_vivienda_afecto.label
       notes: categories.registry.amortizacion_vivienda_afecto.notes
     arrendamiento_local:
+      label: categories.registry.arrendamiento_local.label
       notes: categories.registry.arrendamiento_local.notes
     arrendamiento_vivienda_afecta: categories.registry.arrendamiento_vivienda_afecta
     arrendamiento_vivienda_afecto:
       notes: categories.registry.arrendamiento_vivienda_afecto.notes
     asesoria_contable:
+      label: categories.registry.asesoria_contable.label
       notes: categories.registry.asesoria_contable.notes
     asesoria_fiscal:
+      label: categories.registry.asesoria_fiscal.label
       notes: categories.registry.asesoria_fiscal.notes
     asesoria_juridica:
+      label: categories.registry.asesoria_juridica.label
       notes: categories.registry.asesoria_juridica.notes
     comunidad_vivienda_afecto:
+      label: categories.registry.comunidad_vivienda_afecto.label
       notes: categories.registry.comunidad_vivienda_afecto.notes
     cuotas_autonomos_ss:
       notes: categories.registry.cuotas_autonomos_ss.notes
     cuotas_colegiales:
+      label: categories.registry.cuotas_colegiales.label
       notes: categories.registry.cuotas_colegiales.notes
     cuotas_reta: categories.registry.cuotas_reta
     formacion_profesional:
+      label: categories.registry.formacion_profesional.label
       notes: categories.registry.formacion_profesional.notes
     gastos_bancarios:
+      label: categories.registry.gastos_bancarios.label
       notes: categories.registry.gastos_bancarios.notes
     gastos_financieros:
+      label: categories.registry.gastos_financieros.label
       notes: categories.registry.gastos_financieros.notes
     hardware_amortizable:
+      label: categories.registry.hardware_amortizable.label
       notes: categories.registry.hardware_amortizable.notes
     home_office_agua: categories.registry.home_office_agua
     home_office_gas: categories.registry.home_office_gas
     home_office_internet: categories.registry.home_office_internet
     home_office_luz: categories.registry.home_office_luz
     ibi_local_afecto:
+      label: categories.registry.ibi_local_afecto.label
       notes: categories.registry.ibi_local_afecto.notes
     ibi_vivienda_afecto:
+      label: categories.registry.ibi_vivienda_afecto.label
       notes: categories.registry.ibi_vivienda_afecto.notes
     manutencion_dietas_extranjero:
       notes: categories.registry.manutencion_dietas_extranjero.notes
@@ -1680,14 +1694,19 @@ categories:
     manutencion_extranjero: categories.registry.manutencion_extranjero
     manutencion_nacional: categories.registry.manutencion_nacional
     material_oficina:
+      label: categories.registry.material_oficina.label
       notes: categories.registry.material_oficina.notes
     mobiliario_amortizable:
+      label: categories.registry.mobiliario_amortizable.label
       notes: categories.registry.mobiliario_amortizable.notes
     mutualidad_alternativa:
+      label: categories.registry.mutualidad_alternativa.label
       notes: categories.registry.mutualidad_alternativa.notes
     publicidad_marketing:
+      label: categories.registry.publicidad_marketing.label
       notes: categories.registry.publicidad_marketing.notes
     reparaciones_conservacion:
+      label: categories.registry.reparaciones_conservacion.label
       notes: categories.registry.reparaciones_conservacion.notes
     seguros_rc: categories.registry.seguros_rc
     seguros_responsabilidad_civil:
@@ -1696,10 +1715,13 @@ categories:
     seguros_salud_autonomo:
       notes: categories.registry.seguros_salud_autonomo.notes
     software_suscripcion:
+      label: categories.registry.software_suscripcion.label
       notes: categories.registry.software_suscripcion.notes
     subcontratacion:
+      label: categories.registry.subcontratacion.label
       notes: categories.registry.subcontratacion.notes
     suministros_cliente_directos:
+      label: categories.registry.suministros_cliente_directos.label
       notes: categories.registry.suministros_cliente_directos.notes
     suministros_home_office_agua:
       notes: categories.registry.suministros_home_office_agua.notes
@@ -1710,25 +1732,34 @@ categories:
     suministros_home_office_luz:
       notes: categories.registry.suministros_home_office_luz.notes
     telefonia_fija:
+      label: categories.registry.telefonia_fija.label
       notes: categories.registry.telefonia_fija.notes
     telefonia_movil:
+      label: categories.registry.telefonia_movil.label
       notes: categories.registry.telefonia_movil.notes
     tributos_deducibles: categories.registry.tributos_deducibles
     tributos_fiscalmente_deducibles:
       notes: categories.registry.tributos_fiscalmente_deducibles.notes
     vehiculo_combustible:
+      label: categories.registry.vehiculo_combustible.label
       notes: categories.registry.vehiculo_combustible.notes
     vehiculo_mantenimiento:
+      label: categories.registry.vehiculo_mantenimiento.label
       notes: categories.registry.vehiculo_mantenimiento.notes
     vehiculo_parking:
+      label: categories.registry.vehiculo_parking.label
       notes: categories.registry.vehiculo_parking.notes
     vehiculo_peaje:
+      label: categories.registry.vehiculo_peaje.label
       notes: categories.registry.vehiculo_peaje.notes
     vehiculo_seguro:
+      label: categories.registry.vehiculo_seguro.label
       notes: categories.registry.vehiculo_seguro.notes
     viajes_alojamiento:
+      label: categories.registry.viajes_alojamiento.label
       notes: categories.registry.viajes_alojamiento.notes
     viajes_transporte:
+      label: categories.registry.viajes_transporte.label
       notes: categories.registry.viajes_transporte.notes
   test_profile:
     display_label_851219: Etiqueta de visualización 851219
@@ -3055,16 +3086,16 @@ cli:
           de certificado registrada
         help: Gestiona fuentes de certificado con nombre para el proveedor de autenticación
           por certificado
-        list_help: List every registered certificate source
+        list_help: Lista cada fuente de certificado registrada
         register:
           file_help: Ruta al paquete PKCS#12 (.p12/.pfx)
-          friendly_name_help: Optional human-readable label distinct from --name
+          friendly_name_help: Etiqueta legible opcional distinta de --name
           name_help: Identificador de esta fuente de certificado (por ejemplo, personal
             o apoderado-acme)
-        register_help: Register or re-point a named certificate source
+        register_help: Registra o redirige una fuente de certificado con nombre
         remove:
-          name_help: Registered certificate source to remove
-        remove_help: Remove a registered certificate source
+          name_help: Fuente de certificado registrada a eliminar
+        remove_help: Elimina una fuente de certificado registrada
         secret:
           help: Gestiona la contraseña vinculada a una fuente de certificado con nombre
           remove:
@@ -3077,7 +3108,7 @@ cli:
           set_help: Establece (o rota) la contraseña de una fuente de certificado
             registrada
         select:
-          name_help: Registered certificate source to activate
+          name_help: Fuente de certificado registrada a activar
         select_help: Selecciona la fuente de certificado activa
       configure_help: Configurar el proveedor de autenticación activo
       diagnostics:
@@ -3334,26 +3365,26 @@ cli:
         root_folder_id_unset: No hay carpeta raíz de Google Drive configurada; ejecuta
           `aeat config google folder set <id>` primero
     init:
-      activity_help: Economic activity description (e.g. 761.1, programador)
+      activity_help: Descripción de la actividad económica (p. ej. 761.1, programador)
       auth_provider_help: Id del proveedor de autenticación a usar para el perfil
       certificate_password_env_help: Nombre de la variable de entorno que contiene
         la contraseña del certificado
       certificate_path_help: Ruta al archivo de certificado .p12 o .pfx
-      drafts_dir_help: Directory to store local filing drafts
+      drafts_dir_help: Directorio donde guardar los borradores de presentación locales
       dry_run_help: Informa de los cambios sin modificar la configuración
-      from_help: Source profile ID to import settings from
+      from_help: Id del perfil de origen desde el que importar la configuración
       help: Inicializa un nuevo perfil activo.
-      iva_regime_help: IVA regime (general, simplificado, exento, etc.)
-      manuals_root_help: Root directory for AEAT technical manuals
+      iva_regime_help: Régimen de IVA (general, simplificado, exento, etc.)
+      manuals_root_help: Directorio raíz para los manuales técnicos de la AEAT
       non_interactive_help: Ejecuta sin pedir datos al operador
-      output_language_help: Primary language for CLI output (en, es, ca)
+      output_language_help: Idioma principal de la salida de la CLI (en, es, ca)
       profile_name_help: Identificador único de este perfil de configuración
       quiet_help: Oculta el mensaje de éxito después de inicializar
-      submissions_dir_help: Directory to store submitted filing receipts
+      submissions_dir_help: Directorio donde guardar los justificantes de presentación
       success:
         next_step: 'Próximo paso: ejecuta `aeat app overview status`'
       tax_id_help: Identificador fiscal español (NIF/CIF/DNI/NIE)
-      tax_residence_ccaa_help: Autonomous community of tax residence
+      tax_residence_ccaa_help: Comunidad autónoma de residencia fiscal
     list:
       help: Listar todos los perfiles registrados y marcar el activo
     passphrase:
@@ -3549,7 +3580,7 @@ cli:
       preflight_revision_ambiguous: 'Mas de una revisión del registro coincide con
         el modelo %{modelo} periodo %{period}: %{candidates}. Vuelva a ejecutar con
         --revision-id indicando una de ellas.'
-      preflight_revision_help: Registry revision id.
+      preflight_revision_help: Id de revisión del registro.
       preflight_revision_id_help: Anulación opcional del id de revisión del registro
         para reproducción exacta (p. ej. 2024-0A); por defecto usa la revisión activa
         para el modelo, ejercicio y periodo.
@@ -3559,7 +3590,7 @@ cli:
       preflight_revision_unresolved: Ninguna revisión del registro cubre el modelo
         %{modelo} ejercicio %{filing_year} periodo %{period}. Ejecute `aeat app modelo
         describe %{modelo}` para ver los periodos y revisiones válidos.
-      preflight_year_help: Filing year.
+      preflight_year_help: Ejercicio de presentación.
       remove_help: Marcar un perfil como retirado (las snapshots inmutables se conservan)
       remove_name_help: Id del perfil a retirar
       remove_requires_yes: La retirada es destructiva. Ejecuta de nuevo 'aeat config
@@ -3862,7 +3893,7 @@ cli:
       finding_label: '-'
       finding_optional: opcional
       finding_required: obligatorio
-      logs_label: Logs
+      logs_label: Registros
       next_label: Siguiente
       note_label: Nota
       overall_label: Estado
@@ -6392,7 +6423,7 @@ locales:
       file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
       file_ok: '%{locale_file}: ok'
       key_extra: '  extra %{key}'
-      key_missing: '  missing %{key}'
+      key_missing: '  falta %{key}'
     modelo:
       audit:
         missing: faltante locale=%{locale_code} modelo=%{modelo} revision=%{revision}
@@ -6410,10 +6441,10 @@ locales:
       set:
         updated: Actualizado %{path} %{field} %{key}
     remove:
-      removed: removed %{locale_file}:%{key}
-    scaffold_updated: locale scaffold updated
+      removed: eliminado %{locale_file}:%{key}
+    scaffold_updated: catálogo de locale actualizado
     set:
-      updated: updated %{locale_file}:%{key}
+      updated: actualizado %{locale_file}:%{key}
 mcp:
   call:
     timeout: '''{command}'' superó el límite de tiempo del nivel {tier} ({seconds}s)
@@ -6654,16 +6685,16 @@ wizard:
     general: General
     irpf: IRPF
     iva: IVA
-    simplificado: Simplified
+    simplificado: Simplificado
   commands:
     status:
       created: creado
       updated: actualizado
   demo:
-    description: A demonstration section to test wizard functionality
+    description: Una sección de demostración para probar la funcionalidad del asistente.
     section:
-      title: Demo section
-    title: Demo
+      title: Sección de demostración
+    title: Demostración
   errors:
     blank_integer: Valor entero requerido para %{prompt_key}.
     blank_path: Ruta requerida para %{prompt_key}.
@@ -6696,10 +6727,10 @@ wizard:
       \ --quiet --<campo> VALOR\n\nO vuelve a ejecutar la edición guiada desde una\
       \ sesión de terminal interactiva:\n  aeat config profile edit %{profile_name}"
   other:
-    description: Other configuration options
+    description: Otras opciones de configuración
     section:
-      title: Other settings
-    title: Other
+      title: Otros ajustes
+    title: Otro
   progress:
     question_prefix: Pregunta %{q_n} de %{q_total}
     section_header: 'Paso %{section_n} de %{section_total}: %{title}'
@@ -7102,7 +7133,7 @@ wizard:
             label: Húngaro
         prompt: Idioma de salida de la CLI para este perfil
       regimes:
-        prompt: Select your applicable tax regimes
+        prompt: Selecciona tus regímenes fiscales aplicables
       surnames:
         prompt: Apellidos o razón social para cabeceras de exportación
       tax-id:
@@ -7345,10 +7376,10 @@ wizard:
         'yes':
           description: Selecciona esto para confirmar
           label: Sí
-      help: Example help text for testing
-      prompt: Example test question
+      help: Texto de ayuda de ejemplo para pruebas
+      prompt: Pregunta de ejemplo para pruebas
     main:
-      title: Main test
+      title: Prueba principal
     section:
       title: Sección de prueba
-    title: Test
+    title: Prueba

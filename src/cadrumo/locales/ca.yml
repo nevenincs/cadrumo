@@ -1596,40 +1596,53 @@ auth:
 categories:
   registry:
     amortizacion_vivienda_afecto:
+      label: categories.registry.amortizacion_vivienda_afecto.label
       notes: categories.registry.amortizacion_vivienda_afecto.notes
     arrendamiento_local:
+      label: categories.registry.arrendamiento_local.label
       notes: categories.registry.arrendamiento_local.notes
     arrendamiento_vivienda_afecta: categories.registry.arrendamiento_vivienda_afecta
     arrendamiento_vivienda_afecto:
       notes: categories.registry.arrendamiento_vivienda_afecto.notes
     asesoria_contable:
+      label: categories.registry.asesoria_contable.label
       notes: categories.registry.asesoria_contable.notes
     asesoria_fiscal:
+      label: categories.registry.asesoria_fiscal.label
       notes: categories.registry.asesoria_fiscal.notes
     asesoria_juridica:
+      label: categories.registry.asesoria_juridica.label
       notes: categories.registry.asesoria_juridica.notes
     comunidad_vivienda_afecto:
+      label: categories.registry.comunidad_vivienda_afecto.label
       notes: categories.registry.comunidad_vivienda_afecto.notes
     cuotas_autonomos_ss:
       notes: categories.registry.cuotas_autonomos_ss.notes
     cuotas_colegiales:
+      label: categories.registry.cuotas_colegiales.label
       notes: categories.registry.cuotas_colegiales.notes
     cuotas_reta: categories.registry.cuotas_reta
     formacion_profesional:
+      label: categories.registry.formacion_profesional.label
       notes: categories.registry.formacion_profesional.notes
     gastos_bancarios:
+      label: categories.registry.gastos_bancarios.label
       notes: categories.registry.gastos_bancarios.notes
     gastos_financieros:
+      label: categories.registry.gastos_financieros.label
       notes: categories.registry.gastos_financieros.notes
     hardware_amortizable:
+      label: categories.registry.hardware_amortizable.label
       notes: categories.registry.hardware_amortizable.notes
     home_office_agua: categories.registry.home_office_agua
     home_office_gas: categories.registry.home_office_gas
     home_office_internet: categories.registry.home_office_internet
     home_office_luz: categories.registry.home_office_luz
     ibi_local_afecto:
+      label: categories.registry.ibi_local_afecto.label
       notes: categories.registry.ibi_local_afecto.notes
     ibi_vivienda_afecto:
+      label: categories.registry.ibi_vivienda_afecto.label
       notes: categories.registry.ibi_vivienda_afecto.notes
     manutencion_dietas_extranjero:
       notes: categories.registry.manutencion_dietas_extranjero.notes
@@ -1648,14 +1661,19 @@ categories:
     manutencion_extranjero: categories.registry.manutencion_extranjero
     manutencion_nacional: categories.registry.manutencion_nacional
     material_oficina:
+      label: categories.registry.material_oficina.label
       notes: categories.registry.material_oficina.notes
     mobiliario_amortizable:
+      label: categories.registry.mobiliario_amortizable.label
       notes: categories.registry.mobiliario_amortizable.notes
     mutualidad_alternativa:
+      label: categories.registry.mutualidad_alternativa.label
       notes: categories.registry.mutualidad_alternativa.notes
     publicidad_marketing:
+      label: categories.registry.publicidad_marketing.label
       notes: categories.registry.publicidad_marketing.notes
     reparaciones_conservacion:
+      label: categories.registry.reparaciones_conservacion.label
       notes: categories.registry.reparaciones_conservacion.notes
     seguros_rc: categories.registry.seguros_rc
     seguros_responsabilidad_civil:
@@ -1664,10 +1682,13 @@ categories:
     seguros_salud_autonomo:
       notes: categories.registry.seguros_salud_autonomo.notes
     software_suscripcion:
+      label: categories.registry.software_suscripcion.label
       notes: categories.registry.software_suscripcion.notes
     subcontratacion:
+      label: categories.registry.subcontratacion.label
       notes: categories.registry.subcontratacion.notes
     suministros_cliente_directos:
+      label: categories.registry.suministros_cliente_directos.label
       notes: categories.registry.suministros_cliente_directos.notes
     suministros_home_office_agua:
       notes: categories.registry.suministros_home_office_agua.notes
@@ -1678,25 +1699,34 @@ categories:
     suministros_home_office_luz:
       notes: categories.registry.suministros_home_office_luz.notes
     telefonia_fija:
+      label: categories.registry.telefonia_fija.label
       notes: categories.registry.telefonia_fija.notes
     telefonia_movil:
+      label: categories.registry.telefonia_movil.label
       notes: categories.registry.telefonia_movil.notes
     tributos_deducibles: categories.registry.tributos_deducibles
     tributos_fiscalmente_deducibles:
       notes: categories.registry.tributos_fiscalmente_deducibles.notes
     vehiculo_combustible:
+      label: categories.registry.vehiculo_combustible.label
       notes: categories.registry.vehiculo_combustible.notes
     vehiculo_mantenimiento:
+      label: categories.registry.vehiculo_mantenimiento.label
       notes: categories.registry.vehiculo_mantenimiento.notes
     vehiculo_parking:
+      label: categories.registry.vehiculo_parking.label
       notes: categories.registry.vehiculo_parking.notes
     vehiculo_peaje:
+      label: categories.registry.vehiculo_peaje.label
       notes: categories.registry.vehiculo_peaje.notes
     vehiculo_seguro:
+      label: categories.registry.vehiculo_seguro.label
       notes: categories.registry.vehiculo_seguro.notes
     viajes_alojamiento:
+      label: categories.registry.viajes_alojamiento.label
       notes: categories.registry.viajes_alojamiento.notes
     viajes_transporte:
+      label: categories.registry.viajes_transporte.label
       notes: categories.registry.viajes_transporte.notes
   test_profile:
     display_label_851219: Etiqueta de visualització 851219
