@@ -70,13 +70,75 @@ retiring the `homebrew-macos-x86-64` row along with the Rosetta runner
 registration and the formula's macOS architecture split. Any readiness arithmetic
 or runbook prose still counting twelve rows is stale.
 
+### fleet-restored-and-matrix-green | high | the runner blocker is resolved and five rows now exist
+
+Superseding the runner-fleet-offline and evidence-rows-absent findings above. The
+Windows build host was not an operator-only item: it runs its listener
+interactively rather than as a service, so nothing restarts it after a drop, and
+starting that listener returned it to service. With the MacBook also powered on,
+the fleet reached five of five. The first fully successful three-OS packaging
+smoke run followed, all eight jobs including the manifest seal, and both
+acquisition lanes were dispatched from it. Five of the eleven evidence rows now
+exist: the three python rows on the smoke draft, plus the homebrew Linux x86-64
+and macOS arm64 rows.
+
+### macos-runner-resolved-as-x86-64 | high | Rosetta residue made an ARM runner build as Intel
+
+The macOS legs failed resolving `torch` for an x86-64 macOS platform while
+running on the ARM64-labelled runner. Two layers caused it. The reused checkout
+carried a virtual environment built on an x86-64 interpreter, and beneath that
+the uv managed-Python store held two Intel builds alongside one native arm64
+build; uv selects the highest patch version, which was Intel. Removing both Intel
+interpreters and the stale environment turned the macOS legs green. This is
+residue from the retired Rosetta runner, not a packaging defect, and it is the
+reason a machine can look correctly labelled while building for the wrong
+architecture.
+
+### homebrew-linux-arm64-sigill | medium | the arm64 leg dies on an illegal instruction, cause narrowed by elimination
+
+The Linux arm64 Homebrew leg fails building `argon2-cffi-bindings`, whose
+metadata subprocess exits on signal 4, an illegal instruction. Eliminated as
+causes: architecture, since the colima VM, its docker daemon, the container and
+its kernel are all native aarch64; resource contention, since it fails
+identically when run alone; the package itself, which builds cleanly in that same
+container; a source-built cffi, which builds and imports cleanly; a
+copies-based virtual environment, since both copy and symlink environments run
+correctly, including compiled-extension imports; and exotic compiler flags, since
+brew uses plain gcc there with no optimisation flags set. The failure appears only
+inside the from-source formula build, whose subprocess runs under the formula's
+own environment interpreter. The remaining hypothesis needs the tap regenerated
+and the formula build reproduced by hand.
+
+### scoop-lane-container-mode-conflict | medium | the Scoop lane and the Linux runners cannot share one docker daemon
+
+The Scoop lane's preflight requires docker in Windows-container mode, but the
+build host runs Linux mode because the two Linux runners are themselves
+containers on that same daemon. A daemon serves one mode at a time, so the two
+requirements are mutually exclusive on one host and switching would stop both
+Linux runners mid-job. This is a topology decision, not a defect.
+
 ## Recommendations
 
-Power on the Windows build host and the ARM MacBook, then run the packaging
-smoke lane and dispatch the Scoop and Homebrew acquisitions from it; this is the
-only path to the missing evidence rows and is a prerequisite for everything else.
-Set the publication opt-in variable once those rows are in hand, and dispatch the
-publication authority so PyPI upload happens through the gated pipeline rather
-than by a second bypass — exercising the authority also retires the
-publication-bypassed-pipeline finding. Treat the eleven-row contract as current
-when reconciling any remaining runbook arithmetic.
+Treat a dropped runner as a first-class check before concluding that CI capacity
+is an operator matter: the Windows listener is interactive and silently stays
+down until someone starts it, which masqueraded as an operator blocker here.
+Sweep a retired architecture's toolchain residue, not just its provisioning: the
+uv managed-Python store outlived the runner that installed it and silently
+redirected an ARM machine to Intel builds.
+
+Resume the arm64 investigation from the narrowed hypothesis space recorded above
+rather than re-deriving it: regenerate the tap and reproduce the formula's
+from-source build by hand, comparing the formula environment's interpreter
+against a hand-built one, since every simpler explanation is already eliminated.
+Decide the Scoop topology explicitly — either give that lane its own docker host,
+or accept stopping the Linux runners for the duration of a mode switch — because
+no amount of lane work resolves a one-mode-at-a-time daemon.
+
+Capture the four real-client rows in Claude Desktop and Cowork; they gate the
+matrix regardless of the other two lanes, so publication cannot pass until they
+exist. Set the publication opt-in variable only once the matrix is complete —
+arming it earlier only arms a gate that must refuse — and then dispatch the
+publication authority so the PyPI upload runs through the gated pipeline rather
+than a second bypass, which also retires the publication-bypassed-pipeline
+finding. Treat the eleven-row contract as current when reconciling any remaining
+runbook arithmetic.
