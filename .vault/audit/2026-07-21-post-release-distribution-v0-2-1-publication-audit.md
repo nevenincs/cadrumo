@@ -195,8 +195,11 @@ buildpath rebuild die `FileNotFoundError: 'maturin'`. Fixed by
 persists into the buildpath rebuild, which needs it too). The resource tail
 (greenlet, lxml, pillow, pikepdf, pydantic-core, rpds-py, rtoml, pyyaml,
 sqlalchemy, ...) built with no further cffi-overlay faults, confirming argon2
-and cryptography were the only two cffi-at-build resources. Determinism
-re-runs are in progress at report time.
+and cryptography were the only two cffi-at-build resources. The 3-of-3
+determinism gate passed: three consecutive `brew install --build-from-source`
+runs poured byte-identically (23,257 files, 670.2MB each), each with a green
+`LD_BIND_NOW=1` import of `_cffi_backend`/`_argon2_cffi_bindings`/`cryptography`
+and `aeat --version` -> `CADRUMO 0.2.1`.
 
 ### homebrew-linux-arm64-sigill | medium | the arm64 leg dies on an illegal instruction, cause narrowed by elimination
 
