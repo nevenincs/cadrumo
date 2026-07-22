@@ -13,7 +13,7 @@ domain_refs = ["modelo:123"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99"]
 related = ["irpf", "modelo-193", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Retenciones sobre rendimientos del capital mobiliario."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Periodic return of withholdings on interest and dividends."
+definition = "Periodic self-assessment of the withholdings made on certain income from movable capital, such as interest and dividends."
+
+[language.en.source]
+citation = "Articles 25 and 99 of Ley 35/2006 del IRPF."
+authority = "boe"
 
 [language.ca]
 short_description = "Retencions sobre rendiments del capital mobiliari."
+definition = "Autoliquidació periòdica de les retencions practicades sobre determinats rendiments del capital mobiliari, com interessos i dividends."
+
+[language.ca.source]
+citation = "Articulos 25 y 99 de la Ley 35/2006 del IRPF."
+authority = "boe"
 
 [language.hu]
 short_description = "Kamat- es osztalekkifizetesek forrasadojanak bevallasa."

@@ -12,7 +12,7 @@ lifecycle = "approved"
 domain_refs = ["iva-category:domestic_reverse_charge"]
 legal_refs = ["ley-37-1992:art-84"]
 created_at = 2026-06-10
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Inversion del sujeto pasivo (ISP) en operaciones interiores."
@@ -32,9 +32,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Domestic reverse charge of VAT (ISP)."
+definition = "Mechanism by which, in certain domestic operations, the person liable for VAT is the recipient rather than the supplier of the goods or service, so the recipient self-charges the tax."
+
+[language.en.source]
+citation = "Article 84 of Ley 37/1992 del IVA."
+authority = "boe"
 
 [language.ca]
-short_description = "Inversio del subjecte passiu (ISP) en operacions interiors."
+short_description = "Inversió del subjecte passiu (ISP) en operacions interiors."
+definition = "Mecanisme pel qual, en determinades operacions interiors, el subjecte passiu de l'IVA és el destinatari i no qui realitza el lliurament o el servei, de manera que el destinatari s'autorepercuteix la quota."
+
+[language.ca.source]
+citation = "Articulo 84 de la Ley 37/1992 del IVA."
+authority = "boe"
 
 [language.hu]
 short_description = "Forditott adozas belfoldi ugyletekben."

@@ -12,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-58-2003:art-98"]
 related = ["modelo-100", "modelo-130", "modelo-303", "modelo-390", "casilla", "declaracion"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Un formulario oficial de declaracion de la AEAT, identificado por un numero."
@@ -30,6 +30,11 @@ grammatical_gender = "masculine"
 
 [language.en]
 short_description = "An official AEAT declaration form, identified by a number (for example Modelo 303)."
+definition = "Standardised declaration form that the AEAT prescribes for a specific tax obligation and period, uniquely identified by its official three-digit number (for example, Modelo 100, Modelo 303, Modelo 720). Each modelo is published by Ministerial Order in the BOE and catalogued on the AEAT Sede Electronica. The number is part of the legal name: Modelo 303 and Modelo 100 are not interchangeable. It does not refer to ad hoc reports, internal spreadsheets, or census documents."
+
+[language.en.source]
+citation = "AEAT, Sede Electronica - All procedures / Modelos y formularios; each modelo is approved by Ministerial Order published in the BOE."
+authority = "aeat"
 
 [[language.en.term]]
 label = "tax form"
@@ -37,7 +42,12 @@ term_status = "admitted"
 part_of_speech = "noun"
 
 [language.ca]
-short_description = "Un formulari oficial de declaracio de l'AEAT, identificat per un numero (per exemple Model 303)."
+short_description = "Un formulari oficial de declaració de l'AEAT, identificat per un número (per exemple Model 303)."
+definition = "Formulari normalitzat de declaració que l'AEAT prescriu per a una obligació tributària i un període concrets, identificat de manera única pel seu número oficial de tres dígits (per exemple, Model 100, Model 303, Model 720). Cada model es publica mitjançant Ordre Ministerial al BOE i es cataloga a la Seu Electrònica de l'AEAT. El número forma part del nom legal: el Model 303 i el Model 100 no són intercanviables. No designa informes ad hoc, fulls de càlcul interns ni documents censals."
+
+[language.ca.source]
+citation = "AEAT, Sede Electronica - Todas las gestiones / Modelos y formularios; cada modelo se aprueba por Orden Ministerial publicada en el BOE."
+authority = "aeat"
 
 [language.hu]
 short_description = "Az AEAT hivatalos bevallasi urlapja, amelyet egy szam azonosit (peldaul Modelo 303)."

@@ -12,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-37-1992:art-1"]
 related = ["tema-iva-regime", "recargo-equivalencia", "iva-regimen-simplificado", "prorrata", "modelo-303"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "El Impuesto sobre el Valor Anadido, el impuesto espanol sobre el consumo."
@@ -35,6 +35,11 @@ hidden_search_forms = ["impuesto sobre el valor anyadido"]
 
 [language.en]
 short_description = "Spanish value-added tax, the consumption tax on goods and services."
+definition = "Indirect tax on consumption that taxes the supply of goods and services by businesses or professionals, intra-Community acquisitions, and imports of goods. It is filed via Modelos 303, 322, 349, and the annual summary 390, and includes special regimes such as the equivalence surcharge, the simplified regime, and the cash-basis scheme. It does not cover the Canary Islands IGIC or the Ceuta and Melilla IPSI."
+
+[language.en.source]
+citation = "Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Anadido (BOE-A-1992-28740)."
+authority = "boe"
 
 [[language.en.term]]
 label = "value-added tax"
@@ -43,6 +48,11 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "L'Impost sobre el Valor Afegit, l'impost espanyol sobre el consum."
+definition = "Impost indirecte que recau sobre el consum i grava els lliuraments de béns i prestacions de serveis efectuats per empresaris o professionals, les adquisicions intracomunitàries i les importacions de béns. Es declara mitjançant els Models 303, 322, 349 i el resum anual 390, i inclou règims especials com el recàrrec d'equivalència, el simplificat o el criteri de caixa. No inclou l'IGIC de Canàries ni l'IPSI de Ceuta i Melilla."
+
+[language.ca.source]
+citation = "Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Anadido (BOE-A-1992-28740)."
+authority = "boe"
 
 [language.hu]
 short_description = "A spanyol hozzaadottertek-ado, a fogyasztast terhelo ado."

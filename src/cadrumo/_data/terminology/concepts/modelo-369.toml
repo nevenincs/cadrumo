@@ -13,7 +13,7 @@ domain_refs = ["modelo:369"]
 legal_refs = ["orden-hac-610-2021:art-1", "orden-hac-610-2021:art-2"]
 related = ["iva", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "IVA de ventanilla unica (OSS / IOSS)."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "One-stop-shop (OSS/IOSS) VAT return for cross-border B2C sales."
+definition = "VAT self-assessment of the one-stop-shop special regimes (OSS and IOSS) for cross-border sales to consumers in other Member States."
+
+[language.en.source]
+citation = "Orden HAC/610/2021."
+authority = "boe"
 
 [language.ca]
-short_description = "IVA de finestreta unica (OSS / IOSS)."
+short_description = "IVA de finestreta única (OSS / IOSS)."
+definition = "Autoliquidació de l'IVA dels règims especials de finestreta única (OSS i IOSS) per a vendes transfrontereres a consumidors d'altres estats membres."
+
+[language.ca.source]
+citation = "Orden HAC/610/2021."
+authority = "boe"
 
 [language.hu]
 short_description = "Egyablakos (OSS/IOSS) afa-bevallas hataron atnyulo B2C ertekesitesre."

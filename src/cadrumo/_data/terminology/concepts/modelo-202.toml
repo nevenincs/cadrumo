@@ -13,7 +13,7 @@ domain_refs = ["modelo:202"]
 legal_refs = ["ley-27-2014:art-40", "ley-27-2014:art-29"]
 related = ["modelo-200", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Pago fraccionado del Impuesto sobre Sociedades."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Corporate income tax instalment, up to three times a year."
+definition = "Instalment payment on account of Corporate Income Tax, filed up to three times a year (April, October, and December)."
+
+[language.en.source]
+citation = "Article 40 of Ley 27/2014 del Impuesto sobre Sociedades."
+authority = "boe"
 
 [language.ca]
 short_description = "Pagament fraccionat de l'Impost sobre Societats."
+definition = "Pagament fraccionat a compte de l'Impost sobre Societats, presentat fins a tres vegades l'any (abril, octubre i desembre)."
+
+[language.ca.source]
+citation = "Articulo 40 de la Ley 27/2014 del Impuesto sobre Sociedades."
+authority = "boe"
 
 [language.hu]
 short_description = "Tarsasagiado-eloleg, evente legfeljebb harom alkalommal."

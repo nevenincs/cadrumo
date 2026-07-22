@@ -13,7 +13,7 @@ domain_refs = ["modelo:210"]
 legal_refs = ["trlirnr-rdleg-5-2004:art-2", "trlirnr-rdleg-5-2004:art-10"]
 related = ["declaracion", "autoliquidacion", "nif"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Autoliquidacion del IRNR sin establecimiento permanente."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Non-resident income tax return (no permanent establishment)."
+definition = "Self-assessment of Non-Resident Income Tax for income obtained in Spain without a permanent establishment."
+
+[language.en.source]
+citation = "Texto refundido de la Ley del IRNR (RDLeg 5/2004)."
+authority = "boe"
 
 [language.ca]
-short_description = "Autoliquidacio de l'IRNR sense establiment permanent."
+short_description = "Autoliquidació de l'IRNR sense establiment permanent."
+definition = "Autoliquidació de l'Impost sobre la Renda de no Residents per a rendes obtingudes a Espanya sense establiment permanent."
+
+[language.ca.source]
+citation = "Texto refundido de la Ley del IRNR (RDLeg 5/2004)."
+authority = "boe"
 
 [language.hu]
 short_description = "Kulfoldi illetoseguek jovedelemado-bevallasa telephely nelkul."

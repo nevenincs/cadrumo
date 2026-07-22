@@ -11,7 +11,7 @@ domain = "concepto"
 lifecycle = "approved"
 legal_refs = ["ley-58-2003:art-5"]
 created_at = 2026-06-11
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Agencia Estatal de Administración Tributaria, la autoridad fiscal española."
@@ -31,13 +31,24 @@ term_status = "admitted"
 
 [language.en]
 short_description = "The Spanish Tax Agency (Agencia Estatal de Administración Tributaria)."
+definition = "Agencia Estatal de Administracion Tributaria: the public body that manages and collects the main taxes of the Spanish State. The taxpayer files their returns with the AEAT; this application never files anything on their behalf."
 
 [[language.en.term]]
 label = "AEAT"
 term_status = "preferred"
 
 [language.ca]
-short_description = "Agencia Estatal d'Administració Tributaria, l'autoritat fiscal espanyola."
+short_description = "Agencia Estatal de Administración Tributaria, l'autoritat fiscal espanyola."
+definition = "Agencia Estatal de Administración Tributaria: l'organisme públic que gestiona i recapta els principals tributs de l'Estat espanyol. El contribuent presenta les seves declaracions davant l'AEAT; aquesta aplicació mai presenta res en nom seu."
+
+[language.ca.source]
+citation = "Sede Electrónica de la AEAT (agenciatributaria.gob.es) y Ley 58/2003, General Tributaria."
+authority = "aeat"
 
 [language.hu]
 short_description = "A spanyol Adóhivatal (Agencia Estatal de Administración Tributaria)."
+definition = "Agencia Estatal de Administración Tributaria: az az állami szerv, amely a spanyol állam fő adóit kezeli és beszedi. Az adózó az AEAT előtt nyújtja be bevallásait; ez az alkalmazás soha nem nyújt be semmit a nevében."
+
+[language.hu.source]
+citation = "Az AEAT Elektronikus Ügyfélkapuja (agenciatributaria.gob.es) és az 58/2003. törvény, az általános adózási törvény (Ley General Tributaria)."
+authority = "aeat"

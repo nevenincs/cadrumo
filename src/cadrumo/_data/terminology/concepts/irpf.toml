@@ -12,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-35-2006:art-1"]
 related = ["tema-irpf-regime", "renta", "modelo-100", "modelo-130"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "El Impuesto sobre la Renta de las Personas Fisicas, el impuesto espanol sobre la renta de los particulares."
@@ -34,6 +34,11 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "Spanish personal income tax on resident natural persons."
+definition = "Direct, personal tax on the income of natural persons resident in Spanish territory, including employment income, income from movable and immovable capital, income from economic activities, capital gains and losses, and imputed income. It is filed annually on Modelo 100, with instalment payments and withholdings on Modelos 111, 115, 130, 131, 180, and 190. It does not cover Non-Resident Income Tax or Corporate Income Tax."
+
+[language.en.source]
+citation = "Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Fisicas (BOE-A-2006-20764)."
+authority = "boe"
 
 [[language.en.term]]
 label = "personal income tax"
@@ -42,6 +47,11 @@ part_of_speech = "noun"
 
 [language.ca]
 short_description = "L'Impost sobre la Renda de les Persones Fisiques, l'impost espanyol sobre la renda dels particulars."
+definition = "Impost directe i personal que grava la renda de les persones físiques residents en territori espanyol, incloent-hi els rendiments del treball, del capital mobiliari i immobiliari, d'activitats econòmiques, els guanys i pèrdues patrimonials i les imputacions de renda. Es declara en el Model 100 anual, amb pagaments fraccionats i retencions en els Models 111, 115, 130, 131, 180 i 190. No inclou l'Impost sobre la Renda de no Residents ni l'Impost sobre Societats."
+
+[language.ca.source]
+citation = "Ley 35/2006, de 28 de noviembre, del Impuesto sobre la Renta de las Personas Fisicas (BOE-A-2006-20764)."
+authority = "boe"
 
 [language.hu]
 short_description = "A spanyol szemelyi jovedelemado, a belfoldi maganszemelyek jovedelmet terhelo ado."

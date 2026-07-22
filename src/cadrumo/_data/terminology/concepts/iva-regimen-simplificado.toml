@@ -12,7 +12,7 @@ lifecycle = "approved"
 domain_refs = ["iva-category:regimen_simplificado"]
 legal_refs = ["ley-37-1992:art-122", "ley-37-1992:art-123"]
 created_at = 2026-06-10
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Regimen simplificado del IVA (modulos)."
@@ -32,9 +32,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "The simplified VAT regime (modulos)."
+definition = "Special VAT regime in which the tax due is determined by modules or objective indices rather than by actual transactions, for activities included by ministerial order."
+
+[language.en.source]
+citation = "Articles 122 and 123 of Ley 37/1992 del IVA."
+authority = "boe"
 
 [language.ca]
-short_description = "Regim simplificat de l'IVA (moduls)."
+short_description = "Règim simplificat de l'IVA (mòduls)."
+definition = "Règim especial de l'IVA en el qual la quota es determina per mòduls o índexs objectius en lloc de per les operacions reals, per a activitats incloses per ordre ministerial."
+
+[language.ca.source]
+citation = "Articulos 122 y 123 de la Ley 37/1992 del IVA."
+authority = "boe"
 
 [language.hu]
 short_description = "Egyszerusitett afa-rendszer (modulok)."

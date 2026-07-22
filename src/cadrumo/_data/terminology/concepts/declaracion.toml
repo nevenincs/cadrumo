@@ -12,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-58-2003:art-119"]
 related = ["autoliquidacion", "modelo", "borrador"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "La presentacion de datos tributarios ante la AEAT."
@@ -32,6 +32,11 @@ term_status = "admitted"
 
 [language.en]
 short_description = "A tax return or declaration filed with the AEAT."
+definition = "Any document filed with the Tax Administration in which the occurrence of a fact relevant to the application of taxes is acknowledged or stated. The modelo is the form; the declaracion is what is filed on it."
+
+[language.en.source]
+citation = "Article 119 of Ley 58/2003, General Tributaria."
+authority = "boe"
 
 [[language.en.term]]
 label = "tax return"
@@ -42,7 +47,12 @@ label = "declaration"
 term_status = "admitted"
 
 [language.ca]
-short_description = "La presentacio de dades tributaries davant l'AEAT."
+short_description = "La presentació de dades tributàries davant l'AEAT."
+definition = "Tot document presentat davant l'Administració tributària on es reconegui o es manifesti la realització d'un fet rellevant per a l'aplicació dels tributs. El model és el formulari; la declaració és el que es presenta en aquest."
+
+[language.ca.source]
+citation = "Articulo 119 de la Ley 58/2003, General Tributaria."
+authority = "boe"
 
 [language.hu]
-short_description = "Adatszolgaltatas (bevallas) az AEAT fele."
+short_description = "Adatszolgáltatás (bevallás) az AEAT felé."

@@ -13,7 +13,7 @@ domain_refs = ["modelo:036"]
 legal_refs = ["rd-1065-2007:art-9", "rd-1065-2007:art-10"]
 related = ["censo", "declaracion", "aeat"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Declaracion censal de alta, modificacion y baja."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Census declaration: registration, changes, and deregistration."
+definition = "Census declaration used to notify the AEAT of registration, changes, or deregistration in the census of businesses, professionals, and withholding agents."
+
+[language.en.source]
+citation = "Articles 9 and 10 of Real Decreto 1065/2007."
+authority = "boe"
 
 [language.ca]
-short_description = "Declaracio censal d'alta, modificacio i baixa."
+short_description = "Declaració censal d'alta, modificació i baixa."
+definition = "Declaració censal amb la qual es comunica a l'AEAT l'alta, la modificació o la baixa al Cens d'empresaris, professionals i retenidors."
+
+[language.ca.source]
+citation = "Articulos 9 y 10 del Real Decreto 1065/2007."
+authority = "boe"
 
 [language.hu]
 short_description = "Nyilvantartasi bejelentes: kezdes, modositas, megszunes."

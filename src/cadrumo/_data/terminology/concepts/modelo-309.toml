@@ -13,7 +13,7 @@ domain_refs = ["modelo:309"]
 legal_refs = ["orden-hac-3625-2003:apartado-1", "orden-hac-3625-2003:apartado-3"]
 related = ["iva", "modelo-303", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Declaracion-liquidacion no periodica del IVA."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Non-periodic VAT return for one-off taxable operations."
+definition = "Non-periodic VAT self-assessment for those who do not file periodic self-assessments and carry out a one-off taxable operation."
+
+[language.en.source]
+citation = "Orden HAC/3625/2003."
+authority = "boe"
 
 [language.ca]
-short_description = "Declaracio-liquidacio no periodica de l'IVA."
+short_description = "Declaració-liquidació no periòdica de l'IVA."
+definition = "Declaració-liquidació no periòdica de l'IVA per a qui no presenta autoliquidacions periòdiques i realitza una operació puntual subjecta a l'impost."
+
+[language.ca.source]
+citation = "Orden HAC/3625/2003."
+authority = "boe"
 
 [language.hu]
 short_description = "Nem idoszakos afa-bevallas egyszeri ugyletekre."

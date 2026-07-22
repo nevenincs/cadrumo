@@ -9,11 +9,11 @@
 concept_id = "modelo-390"
 domain = "modelo"
 lifecycle = "approved"
-legal_refs = ["ley-37-1992:art-164"]
 domain_refs = ["modelo:390"]
+legal_refs = ["ley-37-1992:art-164"]
 related = ["iva", "modelo-303", "casilla", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Resumen anual del IVA."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Annual VAT summary return."
+definition = "Annual information return summarising the VAT operations declared on the Modelo 303 returns of the year."
+
+[language.en.source]
+citation = "Article 164 of Ley 37/1992 del IVA and its implementing regulations."
+authority = "boe"
 
 [language.ca]
 short_description = "Resum anual de l'IVA."
+definition = "Declaració informativa resum anual de l'Impost sobre el Valor Afegit que recapitula les operacions declarades en els models 303 de l'exercici."
+
+[language.ca.source]
+citation = "Articulo 164 de la Ley 37/1992 del IVA y su normativa de desarrollo."
+authority = "boe"
 
 [language.hu]
 short_description = "Eves afa-osszesito."
