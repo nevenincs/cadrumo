@@ -139,18 +139,31 @@ exports and constructing an FFI object, which succeeds; and the compiler
 identity, since the compiler the environment names is not present at the path it
 names.
 
-An attempt to bisect the captured environment did not converge, and the reason
-matters more than the attempt. Applying the capture over an interactive shell
-appeared once to reproduce the crash without brew, but that result did NOT
-replicate under a controlled harness: neither the capture alone nor the capture
-combined with the inherited environment reproduces it when applied to a clean
-environment, with the same virtual-environment flags and the same install
-command. Treat the outside-brew reproduction as unconfirmed. The only reliable
-reproducer remains a real formula install, which suggests the trigger is not a
-plain environment variable at all but something brew does structurally during a
-resource build, and it leaves open that the failure is not fully deterministic.
-Whoever resumes should first establish whether the reproducer fails on every run
-or only some, because an intermittent fault changes the whole approach.
+The failure is fully deterministic: five of five real formula installs fail. It
+is not the brew sandbox (disabling it does not help) and not the brew compiler
+shim or environment filtering (bypassing those does not help). What is
+established, and what conflicts, both matter for the next pass.
+
+Established. The crash is the dynamic loader creating the cffi backend extension,
+and the copy being loaded lives in pip's build-isolation overlay rather than the
+formula environment. When build isolation is disabled so the target compiles
+against the environment's own cffi, the metadata step that crashes instead
+completes cleanly. In a standalone virtual environment, forcing pip to rebuild
+cffi from source inside the isolated overlay — by exporting the no-binary
+directive into the environment the isolated build inherits — also makes the whole
+install succeed. Both point the finger at the specific cffi backend that the
+overlay obtains by default, which is the pre-built PyPI aarch64 wheel.
+
+Conflict, unresolved. The same no-binary directive does not work through a real
+formula install: brew's environment does not carry it into the overlay, so the
+overlay still takes the PyPI wheel. And a source-built cffi that loads correctly
+in a standalone environment still crashed once when the overlay used a
+locally-tagged wheel under brew, which is the opposite of the standalone result.
+The two harnesses therefore disagree about whether a source-built backend is
+safe, and that disagreement is the crux: the overlay interpreter and prefix under
+brew are not identical to the standalone case, and the difference has not been
+pinned. Whoever resumes should compare the exact backend binary the overlay loads
+in each harness — same bytes or not — before trusting either result.
 
 ### scoop-lane-container-mode-conflict | medium | the Scoop lane and the Linux runners cannot share one docker daemon
 
@@ -169,24 +182,29 @@ Sweep a retired architecture's toolchain residue, not just its provisioning: the
 uv managed-Python store outlived the runner that installed it and silently
 redirected an ARM machine to Intel builds.
 
-Resume the arm64 investigation from the minimal reproducer and the captured build
-environment rather than the full cohort: the reproducer fails in seconds, and the
-fault handler already names the crash site, so the remaining question is narrow —
-which of those environment variables makes the cffi backend unloadable when the
-same source builds and loads correctly by hand. Bisect that capture directly.
+Resume the arm64 investigation at the one unresolved conflict: whether the cffi
+backend the isolated overlay loads is byte-identical between the standalone
+harness that succeeds and the brew install that fails. Extract both backend
+binaries, compare them, and if they differ, diff the instructions in the diverging
+region — the fault is at load of that specific object, so the answer is in its
+bytes, not in more environment permutations. Do not re-test the sandbox, the
+compiler shim, environment filtering, architecture, contention, the package
+standalone, environment layout, install ordering, or optimisation flags; all are
+eliminated above, and one hypothesis was already withdrawn for resting on a
+partial reconstruction.
 
-Do not re-test architecture, contention, the package standalone, source-built
-cffi, environment layout, install ordering, wheel-versus-source in the overlay,
-or optimisation flags; all are eliminated above. Note also that one
-plausible-looking hypothesis was already published and withdrawn for resting on a
-partial reconstruction instead of a real install — reproduce against a real
-formula install before believing any successor.
+If the backend proves to be a stock PyPI aarch64 wheel carrying an instruction
+the virtual machine will not execute, the fix is to force that one build
+dependency to compile from source inside the isolated overlay through a channel
+brew does not filter — a pip configuration file staged for the build, or the
+formula generator emitting the resource so isolation does not fetch a wheel — not
+the environment variable tried here, which brew strips.
 
 A durable alternative worth weighing against further debugging: this lane exists
-to prove a from-source Homebrew install on one architecture. If the cause proves
-to be the virtual machine's instruction coverage rather than anything the project
-controls, the honest resolutions are to run that leg on hardware that executes
-the instructions, or to state the architecture's support level explicitly, rather
+to prove a from-source Homebrew install on one architecture. If the cause is the
+virtual machine's instruction coverage rather than anything the project controls,
+the honest resolutions are to run that leg on hardware that executes the
+instructions, or to state the architecture's support level explicitly, rather
 than to keep a permanently red lane in a release gate.
 Decide the Scoop topology explicitly — either give that lane its own docker host,
 or accept stopping the Linux runners for the duration of a mode switch — because
