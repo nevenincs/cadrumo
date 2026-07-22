@@ -134,6 +134,47 @@ that only functions on hardware with pointer authentication anyway, and keeping
 it makes the package uninstallable on the Apple-Virtualization build host, so
 compatibility is the correct call here.
 
+### homebrew-linux-arm64-cryptography-overlay-sigill | high | the real formula fails one step past argon2: cryptography's build-isolation overlay cffi faults the same way
+
+The real cadrumo formula (all 70 resources, generated from the published
+v0.2.1 release assets) was run through genuine `brew install` on the arm64
+container to de-risk the pac-ret fix beyond the minimal argon2 reproducer. It
+failed at `cryptography` 48.0.1 — a resource the previous runs never reached,
+because argon2 always crashed first. Faulthandler instrumentation (formula-level
+`ENV["PYTHONFAULTHANDLER"] = "1"` plus `--keep-tmp`) captured the exact death:
+`cryptography-cffi`'s `build.rs` runs `_cffi_src/build_openssl.py` under the
+venv python, which dies `Fatal Python error: Illegal instruction` importing
+`_cffi_backend` from the pip build-isolation overlay
+(`pip-build-env-*/overlay/.../cffi/api.py` line 41). Same class as argon2: a
+build-time load of an overlay-built cffi that carries pac-ret, which the
+formula-scope `HOMEBREW_CCCFG` `b`-drop does not cure (the drop was confirmed
+active — `OS.linux? && Hardware::CPU.arm?` evaluates true under brew ruby on
+the guest, and all direct venv resource builds through the alphabet up to
+`cryptography` succeeded, including the venv `cffi` itself).
+
+The empirical contract, consistent across argon2 and cryptography: the
+`b`-drop covers DIRECT venv resource builds; any resource whose PEP 517
+build-isolation overlay must compile-and-load cffi still faults and needs
+`build_isolation: false` so it builds against the pac-free venv cffi. In the
+70-resource set exactly two resources import cffi at build time:
+`argon2-cffi-bindings` (fixed) and `cryptography` (fails). The cryptography
+fix additionally needs `maturin` present in the venv for the isolation-off
+build (a pinned PyPI sdist resource, like `setuptools-scm` for argon2;
+maturin's own overlay build is safe — it never imports cffi). Resources
+alphabetically after `cryptography` (greenlet, lxml, pillow, pikepdf,
+pydantic-core, rpds-py, rtoml, pyyaml, sqlalchemy, …) remain UNVERIFIED on
+arm64 until a full green install; none of them imports cffi at build time, so
+no further instance of this class is expected, but the 3-of-3 green gate must
+still run.
+
+Verification-technique notes for the next pass: modern brew refuses
+path installs (`brew tap-new` a throwaway local tap and copy the formula in);
+the repository is private so the release-asset URLs 404 for unauthenticated
+curl inside the container — pre-seed `~/.cache/Homebrew/downloads/` with
+`sha256(url)--basename`-named copies of the three cadrumo sdists; clear
+`~/.cache/pip` between runs; `ENV["PYTHONFAULTHANDLER"] = "1"` in the tap copy
+turns the empty-output subprocess death into a full faulting stack.
+
 ### homebrew-linux-arm64-sigill | medium | the arm64 leg dies on an illegal instruction, cause narrowed by elimination
 
 The Linux arm64 Homebrew leg fails building `argon2-cffi-bindings`, whose
