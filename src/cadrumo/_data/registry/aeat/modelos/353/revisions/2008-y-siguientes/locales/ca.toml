@@ -14,16 +14,3 @@
 "iva.soportado.interiores" = "Quota d'IVA suportat en operacions interiors corrents - agregat del grup"
 
 [help]
-"decl.ejercicio" = "Exercici a què es refereix l'autoliquidació"
-"decl.periodo" = "Període mensual (01..12)"
-"iva.autorepercutido.intracomunitaria" = "Quota d'IVA autorepercutit en adquisicions intracomunitàries - agregat del grup"
-"iva.cuota-deducible-total" = "Total quota d'IVA deduïble (agregat del grup)"
-"iva.cuota-devengada-total" = "Total quota d'IVA meritada (agregat del grup)"
-"iva.reconciliacion.deducible-322" = "Quota deduïble agregada del grup reconciliada des dels Models 322 dels membres"
-"iva.reconciliacion.devengada-322" = "Quota meritada agregada del grup reconciliada des dels Models 322 dels membres"
-"iva.reconciliacion.resultado-322" = "Resultat agregat del grup reconciliat des dels Models 322 dels membres"
-"iva.repercutido.general" = "Quota d'IVA repercutit al tipus general (21%) - agregat del grup"
-"iva.repercutido.reducido" = "Quota d'IVA repercutit al tipus reduït (10%) - agregat del grup"
-"iva.repercutido.super-reducido" = "Quota d'IVA repercutit al tipus superreduït (4%) - agregat del grup"
-"iva.resultado-regimen-general" = "Resultat del grup (quota meritada agregada - quota deduïble agregada)"
-"iva.soportado.interiores" = "Quota d'IVA suportat en operacions interiors corrents - agregat del grup"
