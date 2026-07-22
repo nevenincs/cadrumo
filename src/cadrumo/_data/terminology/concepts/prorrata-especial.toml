@@ -65,10 +65,5 @@ citation = "A 37/1992. IVA-törvény (LIVA) 103. cikke."
 authority = "boe"
 
 [[language.hu.term]]
-label = "kulonleges aranyositas"
-term_status = "admitted"
-part_of_speech = "noun"
-
-[[language.hu.term]]
 label = "különleges arányosítás"
 term_status = "admitted"

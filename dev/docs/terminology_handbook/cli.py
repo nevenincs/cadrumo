@@ -35,6 +35,7 @@ from ._curation import (
     CurationError,
     audit_handbook,
     relate_concepts,
+    remove_term,
     retire_concept,
     set_language_field,
     set_term,
@@ -112,6 +113,20 @@ def relate(
         raise typer.BadParameter(str(exc)) from exc
     verb = "unrelated" if remove else "related"
     typer.echo(f"{verb} {concept_id} {relation} {target_id} -> {path.name}")
+
+
+@app.command("remove-term")
+def remove_term_cmd(
+    concept_id: Annotated[str, typer.Argument(help=tr("Concept id to curate."))],
+    language: Annotated[OutputLanguage, typer.Argument(help=tr("Language section code."))],
+    label: Annotated[str, typer.Argument(help=tr("Exact term label to remove."))],
+) -> None:
+    """Remove a term by its exact label from a concept's language section."""
+    try:
+        path = remove_term(concept_id, language, label)
+    except CurationError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    typer.echo(f"removed term {label!r} from {concept_id} [{language.value}] -> {path.name}")
 
 
 @app.command("retire")

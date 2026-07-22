@@ -27,6 +27,7 @@ from .. import (
     collect_enrolment_candidates,
     load_terminology_handbook,
     relate_concepts,
+    remove_term,
     retire_concept,
     scaffold_handbook,
     set_language_field,
@@ -157,6 +158,23 @@ def test_set_two_preferred_terms_is_refused(tmp_path: Path) -> None:
     # prorrata already has a preferred term; adding a second preferred must refuse.
     with pytest.raises(CurationError, match="refused"):
         set_term("prorrata", OutputLanguage.ES, "regla de prorrata", TermStatus.PREFERRED, concepts_dir=concepts)
+
+
+def test_remove_term_drops_the_named_term_and_keeps_the_rest(tmp_path: Path) -> None:
+    concepts = _tree(tmp_path, {"prorrata.toml": _PRORRATA})
+    args = ("prorrata", OutputLanguage.ES, "regla de prorrata")
+    set_term(*args, TermStatus.ADMITTED, concepts_dir=concepts, today=_TODAY)
+    remove_term(*args, concepts_dir=concepts, today=_TODAY)
+    terms = load_terminology_handbook(concepts).concept("prorrata").section(OutputLanguage.ES).terms
+    labels = [term.label for term in terms]
+    assert "regla de prorrata" not in labels
+    assert "prorrata" in labels  # the preferred term survives the removal
+
+
+def test_remove_term_refuses_a_label_not_present(tmp_path: Path) -> None:
+    concepts = _tree(tmp_path, {"prorrata.toml": _PRORRATA})
+    with pytest.raises(CurationError, match="to remove"):
+        remove_term("prorrata", OutputLanguage.ES, "no existe", concepts_dir=concepts)
 
 
 # --------------------------------------------------------------------------
