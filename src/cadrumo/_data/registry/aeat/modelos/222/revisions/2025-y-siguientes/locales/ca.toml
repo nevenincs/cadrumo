@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Exercici a què es refereix el pagament fraccionat"
+"decl.tipo-declaracion" = "Modalitat del pagament fraccionat (art. 40.2 quota íntegra / art. 40.3 base imposable)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

@@ -1,0 +1,9 @@
+[labels]
+"03" = "Withholding and advance payment tax base"
+"04" = "Withholdings and advance payments declared"
+"05" = "Total withholdings on the annual summary"
+
+[help]
+"03" = "03"
+"04" = "04"
+"05" = "05"

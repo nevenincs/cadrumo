@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Exercici a què es refereix la comunicació"
+"decl.tipo-declaracion" = "Tipus de comunicació (alta / modificació / baixa)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

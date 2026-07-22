@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "A kérelem vonatkozási éve"
+"decl.tipo-solicitud" = "Kérelem típusa (egyenértékűségi felár / 30a. cikk / 21.4. cikk / eseti adóalany / egyszerűsített szállítási szabályozás)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-solicitud" = "decl.tipo-solicitud"
