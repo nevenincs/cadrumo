@@ -1,0 +1,9 @@
+[labels]
+"decl.ejercicio" = "Tax year the self-assessment refers to"
+"decl.periodo" = "Filing period"
+"iva.union.cuota-total" = "Total output VAT of the Union scheme (cross-destination, cross-flow sum)"
+"iva.union.de.goods-distance-cuota" = "OSS Union scheme VAT amount to destination DE — distance sales + electronic interfaces"
+"iva.union.de.services-cuota" = "OSS Union scheme VAT amount to destination DE — services supplied (LIVA art. 163 unvicies)"
+"iva.union.fr.services-cuota" = "OSS Union scheme VAT amount to destination FR — services supplied (LIVA art. 163 unvicies)"
+
+[help]
