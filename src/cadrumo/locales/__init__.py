@@ -41,9 +41,12 @@ from ._modelo_manager import (
     classify_modelo_locale_leaf,
 )
 from ._registry_scanner import scan_registry_keys
+from ._status import CatalogueLeafState, CatalogueStatusRecord, catalogue_status, classify_catalogue_leaf
 from .manager import LocaleError, LocaleManager, StrictUniqueKeyLoader
 
 __all__ = [
+    "CatalogueLeafState",
+    "CatalogueStatusRecord",
     "LocaleError",
     "LocaleManager",
     "ModeloLocaleCoverageRecord",
@@ -58,6 +61,8 @@ __all__ = [
     "ModeloLocaleScope",
     "ModeloLocaleTranslationFile",
     "StrictUniqueKeyLoader",
+    "catalogue_status",
+    "classify_catalogue_leaf",
     "classify_modelo_locale_leaf",
     "get_registered_keys",
     "scan_namespace_markers",
