@@ -3055,7 +3055,7 @@ cli:
           work calculate` directamente y aporta los valores --binding / --relation
           restantes a mano.
         wizard_saved: 'Guardado como revisión de cálculo en borrador %{revision_id}
-          (estado: %{state}). Esta persistido y puede retomarse más tarde; lista las
+          (estado: %{state}). Está persistido y puede retomarse más tarde; lista las
           revisiones con `aeat app modelo work revisions --modelo %{modelo} --year
           %{year} --period %{period}` y vuelve a consultar esta con `aeat app modelo
           work revision %{revision_id}`.'
@@ -6449,7 +6449,7 @@ live:
 locales:
   cli:
     allow_identical:
-      recorded: registrado {allowlist_file}:{locale}:{key}
+      recorded: registrado {allowlist_file}:{locale_code}:{key}
     audit:
       file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
       file_ok: '%{locale_file}: ok'
