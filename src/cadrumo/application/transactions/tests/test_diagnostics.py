@@ -21,7 +21,10 @@ _SOURCE_PATH = Path("imports/n26-2026Q1.csv")
 
 
 def _message() -> tr:
-    return tr("transactions.test_diagnostics.message")
+    # A real production diagnostic key: the Translatable contract requires
+    # an authoritative Spanish catalogue entry, so a fixture-only key would
+    # inject a phantom demand into every catalogue.
+    return tr("transactions.import.verified")
 
 
 def test_kind_enum_carries_cli_values() -> None:

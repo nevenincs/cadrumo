@@ -106,6 +106,38 @@ def test_extract_placeholders_matches_renderer_grammar() -> None:
     assert extract_placeholders("%{kept} {discarded} broken {") == frozenset({"kept", "discarded"})
 
 
+def test_codebase_keys_exclude_test_module_literals(tmp_path: Path) -> None:
+    """A ``tr()`` literal inside a test module never becomes a required key.
+
+    Required keys are what production code can request; a fixture payload
+    or assertion literal in a test file must not inject a phantom demand
+    into every catalogue.
+    """
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    source_dir = tmp_path / "source"
+    tests_dir = source_dir / "tests"
+    tests_dir.mkdir(parents=True)
+    (source_dir / "surface.py").write_text(
+        'from cadrumo.core.i18n import tr\n\ndef render() -> str:\n    return tr("prod.message")\n',
+        encoding="utf-8",
+    )
+    (tests_dir / "test_surface.py").write_text(
+        'from cadrumo.core.i18n import tr\n\ndef test_render() -> None:\n    assert tr("phantom.nested")\n',
+        encoding="utf-8",
+    )
+    (source_dir / "test_toplevel.py").write_text(
+        "PAYLOAD = 'return tr(\"phantom.toplevel\")'\n",
+        encoding="utf-8",
+    )
+
+    keys = LocaleManager(src_dir=source_dir, locales_dir=locales_dir).get_codebase_keys()
+
+    assert "prod.message" in keys
+    assert "phantom.nested" not in keys
+    assert "phantom.toplevel" not in keys
+
+
 def test_audit_rejects_boolean_and_null_leaves(tmp_path: Path) -> None:
     """YAML booleans and nulls cannot pass as locale strings."""
     manager = _manager_for(

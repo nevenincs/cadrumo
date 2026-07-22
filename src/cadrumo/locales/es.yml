@@ -1798,8 +1798,6 @@ categories:
     viajes_transporte:
       label: Transporte en viajes
       notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
-  test_profile:
-    display_label_851219: Etiqueta de visualización 851219
 cli:
   agent:
     app_help: Materializa el harness del agente operador (reglas, perfiles, habilidades)
@@ -2776,7 +2774,6 @@ cli:
         disposition_help: 'Disposición del resultado negativo del Modelo 303: compensar
           (arrastrar el crédito, por defecto) o devolver (solicitar la devolución;
           solo en el último periodo del año para un contribuyente no inscrito en REDEME).'
-        dt12_computation_error: 'Error de cómputo DT12: %{message}'
         file_help: Marcar una revisión verificada como internamente presentada. NO
           envía a la AEAT
         file_idempotent_noop: 'Operación idempotente sin efecto: la revisión de cálculo
@@ -3012,7 +3009,6 @@ cli:
           Art. 14). Base del umbral estricto: la dotación se anula cuando la reserva
           acumulada alcanza el primer céntimo por encima del doble del capital social.
           Necesario junto con --sal-beneficio-neto y --sal-reserva-dotada.'
-        sal_computation_error: 'Error de cómputo SAL: %{message}'
         sal_reserva_dotada_help: Reserva especial acumulada en ejercicios anteriores
           (Ley 44/2015 Art. 14). Se usa para comprobar si la reserva ya alcanza el
           primer céntimo por encima del doble del capital social. Necesario junto
@@ -3083,15 +3079,12 @@ cli:
       draft_id_not_found: ID de borrador %{draft_id} no encontrado
       invalid_iso_date: 'Formato de fecha inválido para %{label}: %{raw}. Se requiere
         ISO 8601 (AAAA-MM-DD).'
-      no_active_profile_error_value: sin-perfil-activo
       period_empty: El periodo fiscal no puede estar vacío
       period_missing_year: El token de periodo '{token}' necesita un año en este comando.
         Añada --year (p. ej. --period {token} --year 2024).
       period_unrecognised: 'Periodo ''{raw}'' no reconocido. Use un token AEAT: 1T-4T
         (trimestres), 0A (anual), 01-12 (meses), e indique el año con --year (p. ej.
         --period 1T --year 2024).'
-    next:
-      create_profile_command: aeat config profile create NOMBRE
   config:
     app_help: Gestionar configuración local y diagnósticos
     auth:
@@ -6636,9 +6629,6 @@ sheets:
       supplier_tax_id: NIF del proveedor
       transfer_pricing_method_code: Método de valoración
       valuation_amount: Valoración
-some:
-  locale:
-    key: Clave de locale de prueba
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado
@@ -6716,8 +6706,6 @@ transactions:
     message_829073: 'Posible hueco en el historial: más de 35 días entre transacciones.'
     unreadable: Archivo ilegible o formato no soportado
     verified: Importación verificada con éxito
-  test_diagnostics:
-    message: Falta el mes 2026-03 en el archivo importado.
 wizard:
   choices:
     general: General
