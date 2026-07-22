@@ -1596,138 +1596,175 @@ auth:
 categories:
   registry:
     amortizacion_vivienda_afecto:
-      label: categories.registry.amortizacion_vivienda_afecto.label
-      notes: categories.registry.amortizacion_vivienda_afecto.notes
+      label: Amortització de l'habitatge afecte a l'activitat
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (Ley 35/2006 art. 30.2.5.b regla 4a, amortització de l'habitatge afecte).
     arrendamiento_local:
-      label: categories.registry.arrendamiento_local.label
-      notes: categories.registry.arrendamiento_local.notes
-    arrendamiento_vivienda_afecta: categories.registry.arrendamiento_vivienda_afecta
+      label: Lloguer del local de negoci
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    arrendamiento_vivienda_afecta: Part del lloguer de l'habitatge afecta a l'activitat
     arrendamiento_vivienda_afecto:
-      notes: categories.registry.arrendamiento_vivienda_afecto.notes
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
     asesoria_contable:
-      label: categories.registry.asesoria_contable.label
-      notes: categories.registry.asesoria_contable.notes
+      label: Honoraris d'assessoria comptable
+      notes: Despesa íntegrament deduïble, com a servei professional independent (Ley
+        35/2006 art. 28.1).
     asesoria_fiscal:
-      label: categories.registry.asesoria_fiscal.label
-      notes: categories.registry.asesoria_fiscal.notes
+      label: Honoraris d'assessoria fiscal
+      notes: Despesa íntegrament deduïble, com a servei professional independent (Ley
+        35/2006 art. 28.1).
     asesoria_juridica:
-      label: categories.registry.asesoria_juridica.label
-      notes: categories.registry.asesoria_juridica.notes
+      label: Honoraris d'assessoria jurídica
+      notes: Despesa íntegrament deduïble, com a servei professional independent (Ley
+        35/2006 art. 28.1).
     comunidad_vivienda_afecto:
-      label: categories.registry.comunidad_vivienda_afecto.label
-      notes: categories.registry.comunidad_vivienda_afecto.notes
+      label: Despeses de comunitat de l'habitatge afecte a l'activitat
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (Ley 35/2006 art. 30.2.5.b regla 2a, despeses de titularitat de l'habitatge).
     cuotas_autonomos_ss:
-      notes: categories.registry.cuotas_autonomos_ss.notes
+      notes: Despesa íntegrament deduïble; les quotes del RETA són una condició legal
+        per exercir l'activitat.
     cuotas_colegiales:
-      label: categories.registry.cuotas_colegiales.label
-      notes: categories.registry.cuotas_colegiales.notes
-    cuotas_reta: categories.registry.cuotas_reta
+      label: Quotes de col·legi professional
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    cuotas_reta: Quotes d'autònoms a la Seguretat Social (RETA)
     formacion_profesional:
-      label: categories.registry.formacion_profesional.label
-      notes: categories.registry.formacion_profesional.notes
+      label: Formació professional
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
     gastos_bancarios:
-      label: categories.registry.gastos_bancarios.label
-      notes: categories.registry.gastos_bancarios.notes
+      label: Despeses bancàries
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, despeses financeres
+        i bancàries).
     gastos_financieros:
-      label: categories.registry.gastos_financieros.label
-      notes: categories.registry.gastos_financieros.notes
+      label: Despeses financeres
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, despeses financeres
+        i bancàries).
     hardware_amortizable:
-      label: categories.registry.hardware_amortizable.label
-      notes: categories.registry.hardware_amortizable.notes
-    home_office_agua: categories.registry.home_office_agua
-    home_office_gas: categories.registry.home_office_gas
-    home_office_internet: categories.registry.home_office_internet
-    home_office_luz: categories.registry.home_office_luz
+      label: Maquinari informàtic amortitzable
+      notes: Íntegrament deduïble mitjançant amortització (Ley 35/2006 art. 28.1,
+        amortització de l'immobilitzat).
+    home_office_agua: Aigua de l'habitatge-oficina
+    home_office_gas: Gas de l'habitatge-oficina
+    home_office_internet: Internet de l'habitatge-oficina
+    home_office_luz: Electricitat de l'habitatge-oficina
     ibi_local_afecto:
-      label: categories.registry.ibi_local_afecto.label
-      notes: categories.registry.ibi_local_afecto.notes
+      label: IBI del local de negoci
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 14 LIS, per remissió;
+        tributs fiscalment deduïbles).
     ibi_vivienda_afecto:
-      label: categories.registry.ibi_vivienda_afecto.label
-      notes: categories.registry.ibi_vivienda_afecto.notes
+      label: IBI de l'habitatge afecte a l'activitat
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (Ley 35/2006 art. 30.2.5.b regla 2a, tributs no estatals de l'habitatge).
     manutencion_dietas_extranjero:
-      notes: categories.registry.manutencion_dietas_extranjero.notes
+      notes: 'Deduïble fins a un límit diari legal: 48,08 EUR/dia sense pernoctació,
+        91,35 EUR/dia amb pernoctació (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
-          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.con-pernocta.label
+          label: Amb pernoctació
         sin-pernocta:
-          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.sin-pernocta.label
+          label: Sense pernoctació
     manutencion_dietas_nacional:
-      notes: categories.registry.manutencion_dietas_nacional.notes
+      notes: 'Deduïble fins a un límit diari legal: 26,67 EUR/dia sense pernoctació,
+        53,34 EUR/dia amb pernoctació (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
-          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.con-pernocta.label
+          label: Amb pernoctació
         sin-pernocta:
-          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.sin-pernocta.label
-    manutencion_extranjero: categories.registry.manutencion_extranjero
-    manutencion_nacional: categories.registry.manutencion_nacional
+          label: Sense pernoctació
+    manutencion_extranjero: Dietes de manutenció a l'estranger (menjar i estada)
+    manutencion_nacional: Dietes de manutenció nacionals (menjar i estada)
     material_oficina:
-      label: categories.registry.material_oficina.label
-      notes: categories.registry.material_oficina.notes
+      label: Material d'oficina
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
     mobiliario_amortizable:
-      label: categories.registry.mobiliario_amortizable.label
-      notes: categories.registry.mobiliario_amortizable.notes
+      label: Mobiliari amortitzable
+      notes: Íntegrament deduïble mitjançant amortització (Ley 35/2006 art. 28.1,
+        amortització de l'immobilitzat).
     mutualidad_alternativa:
-      label: categories.registry.mutualidad_alternativa.label
-      notes: categories.registry.mutualidad_alternativa.notes
+      label: Aportació a mutualitat alternativa
+      notes: Deduïble fins a un límit legal de 15.000 EUR/any per contribuent, per
+        a una mutualitat alternativa que substitueix el RETA (Guia AEAT Renda, Cotitzacions
+        al RETA).
     publicidad_marketing:
-      label: categories.registry.publicidad_marketing.label
-      notes: categories.registry.publicidad_marketing.notes
+      label: Publicitat i màrqueting
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
     reparaciones_conservacion:
-      label: categories.registry.reparaciones_conservacion.label
-      notes: categories.registry.reparaciones_conservacion.notes
-    seguros_rc: categories.registry.seguros_rc
+      label: Reparacions i conservació
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    seguros_rc: Assegurança de responsabilitat civil professional
     seguros_responsabilidad_civil:
-      notes: categories.registry.seguros_responsabilidad_civil.notes
-    seguros_salud: categories.registry.seguros_salud
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
+    seguros_salud: Assegurança de salut de l'autònom
     seguros_salud_autonomo:
-      notes: categories.registry.seguros_salud_autonomo.notes
+      notes: Deduïble fins a un límit legal de 500 EUR/any per contribuent (Ley 35/2006
+        art. 30.2.5.c regla 1a, primes d'assegurança de malaltia).
     software_suscripcion:
-      label: categories.registry.software_suscripcion.label
-      notes: categories.registry.software_suscripcion.notes
+      label: Subscripcions de programari
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
     subcontratacion:
-      label: categories.registry.subcontratacion.label
-      notes: categories.registry.subcontratacion.notes
+      label: Honoraris de subcontractació
+      notes: Despesa íntegrament deduïble, com a servei professional independent (Ley
+        35/2006 art. 28.1).
     suministros_cliente_directos:
-      label: categories.registry.suministros_cliente_directos.label
-      notes: categories.registry.suministros_cliente_directos.notes
+      label: Subministraments facturats directament al client
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1).
     suministros_home_office_agua:
-      notes: categories.registry.suministros_home_office_agua.notes
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
     suministros_home_office_gas:
-      notes: categories.registry.suministros_home_office_gas.notes
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
     suministros_home_office_internet:
-      notes: categories.registry.suministros_home_office_internet.notes
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
     suministros_home_office_luz:
-      notes: categories.registry.suministros_home_office_luz.notes
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (ràtio per defecte del 30%), quan l'habitatge només s'usa parcialment per
+        a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
     telefonia_fija:
-      label: categories.registry.telefonia_fija.label
-      notes: categories.registry.telefonia_fija.notes
+      label: Despesa de telefonia fixa
+      notes: Deduïble en proporció a la superfície de l'habitatge afecta a l'activitat
+        (Ley 35/2006 art. 28.1).
     telefonia_movil:
-      label: categories.registry.telefonia_movil.label
-      notes: categories.registry.telefonia_movil.notes
-    tributos_deducibles: categories.registry.tributos_deducibles
+      label: Despesa de telefonia mòbil
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva de l'element patrimonial).
+    tributos_deducibles: Altres tributs fiscalment deduïbles
     tributos_fiscalmente_deducibles:
-      notes: categories.registry.tributos_fiscalmente_deducibles.notes
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 14 LIS, per remissió).
     vehiculo_combustible:
-      label: categories.registry.vehiculo_combustible.label
-      notes: categories.registry.vehiculo_combustible.notes
+      label: Combustible del vehicle
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
     vehiculo_mantenimiento:
-      label: categories.registry.vehiculo_mantenimiento.label
-      notes: categories.registry.vehiculo_mantenimiento.notes
+      label: Manteniment del vehicle
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
     vehiculo_parking:
-      label: categories.registry.vehiculo_parking.label
-      notes: categories.registry.vehiculo_parking.notes
+      label: Despeses d'aparcament
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
     vehiculo_peaje:
-      label: categories.registry.vehiculo_peaje.label
-      notes: categories.registry.vehiculo_peaje.notes
+      label: Despeses de peatge
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
     vehiculo_seguro:
-      label: categories.registry.vehiculo_seguro.label
-      notes: categories.registry.vehiculo_seguro.notes
+      label: Assegurança del vehicle
+      notes: Deduïble amb prova d'ús exclusiu per a l'activitat (Reglamento IRPF art.
+        22, afectació exclusiva del vehicle).
     viajes_alojamiento:
-      label: categories.registry.viajes_alojamiento.label
-      notes: categories.registry.viajes_alojamiento.notes
+      label: Allotjament de viatge
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
     viajes_transporte:
-      label: categories.registry.viajes_transporte.label
-      notes: categories.registry.viajes_transporte.notes
+      label: Transport de viatge
+      notes: Despesa íntegrament deduïble (Ley 35/2006 art. 28.1, altres serveis exteriors).
   test_profile:
     display_label_851219: Etiqueta de visualització 851219
 cli:
