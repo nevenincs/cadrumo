@@ -1,0 +1,10 @@
+[labels]
+"decl.ejercicio" = "Az adóbevallás tárgyát képező adóév"
+"decl.tipo-declaracion" = "A bevallás típusa (eredeti / helyettesítő / kiegészítő)"
+"tipo2.donante-nif" = "Az adományozó adóazonosító száma (magánszemély, jogi személy vagy referencia nonprofit kedvezményezett szervezet)"
+"tipo2.donante-nombre" = "Az adományozó neve (családi és utónév, vagy cégnév)"
+"tipo2.importe-donado" = "Az adóévben kapott adomány vagy hozzájárulás összege (előjel nélkül, euróban)"
+"tipo2.porcentaje-deduccion" = "Az adományra alkalmazandó levonási százalék (az adományozó adózási rendje, LIRPF 68.3 cikk / Ley 49/2002 különleges rendszer)"
+"tipo2.recurrencia" = "Ismétlődő adomány jelzője (több évre szóló adomány ugyanazon kedvezményezett szervezetnek, két vagy több egymást követő adóévben)"
+
+[help]
