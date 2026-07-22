@@ -944,7 +944,29 @@ def _aligned_translation_file(
 
 
 def _aligned_table(current: dict[str, str], *, expected_keys: set[str], valid_keys: set[str]) -> dict[str, str]:
-    """Preserve translated values, add placeholders, and drop stale keys."""
+    """Preserve translated values, add placeholders, and drop stale keys.
+
+    Refuses a silent mass-wipe. A partial registry load (a fingerprinting race
+    against a concurrent registry edit) can hand this a ``valid_keys`` set that is
+    missing keys ``expected_keys`` still lists; the filter below would then drop an
+    authored value and the ``setdefault`` loop would re-add it as its own key,
+    silently replacing a real translation with a key-echo placeholder. A key that
+    is expected but not valid is an inventory inconsistency, so an *authored* value
+    in that state raises rather than being wiped. A genuinely stale key -- absent
+    from both sets -- is still dropped, as intended.
+    """
+    would_wipe = sorted(
+        key
+        for key, value in current.items()
+        if value != key and key not in valid_keys and key in expected_keys
+    )
+    if would_wipe:
+        raise ModeloLocaleError(
+            f"Refusing to echo-convert {len(would_wipe)} authored modelo-locale value(s): "
+            f"key(s) expected by the revision but absent from the modelo inventory, which "
+            f"indicates a partial registry load (race), not a legitimate stale-key drop: "
+            f"{would_wipe[:5]}",
+        )
     aligned = {key: value for key, value in current.items() if key in valid_keys}
     for key in expected_keys:
         aligned.setdefault(key, key)
