@@ -388,8 +388,10 @@ def prompt_spec_with_every_spending_category(
     )
 
 
-# Concise operator-/LLM-facing descriptions for each closed Spanish IVA
-# situation. These hint the model's SELECTION; they do not ground a number —
+# Concise model-facing descriptions for each closed Spanish IVA situation.
+# Model-facing only: these reach the prompt body, never a rendered operator
+# surface, which is why they are hardcoded English rather than translation
+# keys. These hint the model's SELECTION; they do not ground a number —
 # the rate is looked up from the registry and the base/amount derived
 # downstream. The IVA catalogue's own ``label`` fields are i18n keys that are
 # not carried in the locale catalogues, so they cannot serve as hints; these
