@@ -227,9 +227,21 @@ term_status = "preferred"
 
 
 def test_duplicate_concept_id_across_fragments_raises(tmp_path: Path) -> None:
+    # Two fragments declaring the same concept_id necessarily differ in filename,
+    # so the filename-matches-concept_id guard catches the collision first (a
+    # duplicate can only exist via a filename mismatch). Either refusal is correct.
     concepts = _write(tmp_path, "iva.toml", _BROADER_PARENT)
     (concepts / "iva-copy.toml").write_text(_BROADER_PARENT, encoding="utf-8")
-    with pytest.raises(TerminologyValidationError, match="duplicate concept_id"):
+    with pytest.raises(TerminologyValidationError, match=r"named|duplicate"):
+        load_terminology_handbook(concepts)
+
+
+def test_filename_not_matching_concept_id_raises(tmp_path: Path) -> None:
+    # A fragment whose filename differs from its concept_id would fork into a
+    # duplicate file on the next curation write (the write path resolves by
+    # concept_id), so the loader refuses the mismatch up front.
+    concepts = _write(tmp_path, "wrong-name.toml", _BROADER_PARENT)  # concept_id is "iva"
+    with pytest.raises(TerminologyValidationError, match="must be named"):
         load_terminology_handbook(concepts)
 
 
