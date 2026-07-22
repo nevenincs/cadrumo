@@ -297,8 +297,16 @@ def test_check_detects_drift_on_missing_concept(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------
 def test_default_enrolment_excludes_cli_verbs_and_is_bounded() -> None:
     candidates = collect_enrolment_candidates()
-    # Ratified concept-grade set: 31 modelo + 17 IVA + 21 period + 13 topic = 82.
-    assert len(candidates) == 82
+    # Candidates are every registry entity that COULD become a concept; the
+    # concept-grade curation happens downstream (202 candidates currently reduce
+    # to 117 committed concepts). The set tracks the registry, which has grown
+    # since the original 82-snapshot: 149 modelo + 18 regimen + 21 periodo +
+    # 14 concepto = 202. Update this count when the registry gains an entity.
+    assert len(candidates) == 202
+    # The real structural invariants -- no verb/legal enrolment, and no domain
+    # outside the four concept-grade families -- must hold regardless of count.
+    allowed = {ConceptDomain.MODELO, ConceptDomain.REGIMEN, ConceptDomain.PERIODO, ConceptDomain.CONCEPTO}
+    assert {c.domain for c in candidates.values()} <= allowed
     assert not any(c.domain is ConceptDomain.CLI_VERB for c in candidates.values())
     assert not any(c.domain is ConceptDomain.LEGAL for c in candidates.values())
 
