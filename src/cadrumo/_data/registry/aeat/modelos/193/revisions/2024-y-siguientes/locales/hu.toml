@@ -1,0 +1,6 @@
+[labels]
+"decl.base-total" = "A visszatartások és előlegfizetések teljes alapja"
+"decl.retenciones-total" = "A visszatartások és előlegfizetések teljes összege"
+"decl.total-perceptores" = "A kedvezményezettek teljes száma"
+
+[help]
