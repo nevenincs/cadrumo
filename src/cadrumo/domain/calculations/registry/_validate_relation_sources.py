@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Final
 
+from ....core.aggregation import BindingSourceKind
 from ._bindings_previous_filing import _is_direct_previous_filing_binding
 from ._errors import RegistryValidationError
 from ._relations import _derive_offset_source_period
@@ -272,7 +273,7 @@ def _validate_slot_binding_source(
     relation_targets: frozenset[str] | set[str],
 ) -> list[str]:
     failures: list[str] = []
-    is_previous_filing = str(binding.source) == "previous_filing"
+    is_previous_filing = binding.source is BindingSourceKind.PREVIOUS_FILING
     is_relation_targeted = binding.id in relation_targets
     iva_wallet_owned = binding.id in IVA_WALLET_OWNED_RELATION_TARGET_BINDINGS
     # Gate (a): a previous_filing binding must carry a DIRECT selector.
