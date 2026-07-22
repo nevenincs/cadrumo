@@ -1,7 +1,7 @@
 [labels]
 "cuentas.codigo-de-cuenta" = "Codi de compte en entitat financera situada a l'estranger"
 "cuentas.valoracion" = "Valoració de compte en entitat financera situada a l'estranger"
-"decl.ejercicio" = "Exercici a què es refereix la informació"
+"decl.ejercicio" = "Exercici a què es refereix l'informació"
 "decl.tipo-declaracion" = "Tipus de declaració (originària / substitutiva / complementària)"
 "inmuebles.valoracion" = "Valoració de béns immobles o drets reals situats a l'estranger"
 "valores.identificacion" = "Identificació de valors, drets, assegurances o rendes situats a l'estranger"

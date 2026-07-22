@@ -11,12 +11,12 @@ domain = "concepto"
 lifecycle = "deprecated"
 related = ["modelo", "revision"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "El identificador de un calculo concreto de un modelo, ano, periodo y revision."
-scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
 definition = "Identificador de un unico calculo de un modelo para un ano, periodo y revision determinados. La aplicacion registra cada declaracion que la persona prepara como una work unit, lo que le permite seguir su estado a lo largo del flujo de calculo, verificacion y presentacion."
+scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
 
 [language.es.source]
 citation = "Documentacion de la aplicacion aeat; concepto interno del producto."
@@ -34,4 +34,4 @@ short_description = "A handle over one calculation of a single modelo, year, per
 short_description = "L'identificador d'un calcul concret d'un model, any, periode i revisio."
 
 [language.hu]
-short_description = "Egy modelo, ev, idoszak es revizio egyetlen szamitasanak azonositoja."
+short_description = "Egy modell, év, időszak és revízió egyetlen számításának azonosítója."

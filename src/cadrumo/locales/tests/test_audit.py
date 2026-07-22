@@ -12,7 +12,7 @@ from ...core.i18n import extract_placeholders
 from ...core.product_identity import AEAT_AUTHORITY_SHORT_NAME, PRODUCT_IDENTITY
 from ...tests.cli_runner import invoke_typer_app
 from ..cli import app
-from ..manager import _STALE_CLI_EXECUTABLE_RE, LocaleManager, _flatten_leaf_values
+from ..manager import _STALE_CLI_EXECUTABLE_RE, LocaleError, LocaleManager, _flatten_leaf_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -136,6 +136,18 @@ def test_codebase_keys_exclude_test_module_literals(tmp_path: Path) -> None:
     assert "prod.message" in keys
     assert "phantom.nested" not in keys
     assert "phantom.toplevel" not in keys
+
+
+def test_set_refuses_a_blank_locale_value(tmp_path: Path) -> None:
+    """The CLI write path never lets an empty or whitespace-only leaf in."""
+    manager = _manager_for(
+        tmp_path,
+        {locale: "audit:\n  message: 'texto'\n" for locale in _LOCALES},
+    )
+
+    for blank in ("", "   "):
+        with pytest.raises(LocaleError, match="must not be blank"):
+            manager.set_locale_value("en", "audit.message", blank)
 
 
 def test_audit_rejects_boolean_and_null_leaves(tmp_path: Path) -> None:

@@ -19,7 +19,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _REPO_ROOT: Final = Path(__file__).resolve().parents[3]
 _WORKFLOWS: Final = _REPO_ROOT / ".github" / "workflows"
-_BENCHMARK_TEST: Final = Path(__file__).with_name("test_serving_path_benchmark.py")
+_BENCHMARK_TEST: Final = _REPO_ROOT / "dev" / "packaging" / "tests" / "test_serving_path_benchmark.py"
 
 
 def test_benchmark_module_is_perf_marked_and_out_of_default_selectors() -> None:

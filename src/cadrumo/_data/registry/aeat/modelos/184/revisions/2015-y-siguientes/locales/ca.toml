@@ -1,0 +1,9 @@
+[labels]
+"decl.ejercicio" = "Exercici a què es refereix la declaració"
+"decl.tipo-declaracion" = "Tipus de declaració (originària / substitutiva / complementària)"
+"tipo2.clave" = "Clau del tipus de renda atribuïda (A=capital mobiliari, C=capital immobiliari, D=activitats econòmiques, F=guanys/pèrdues sense transmissió, G=guanys/pèrdues per transmissió, I=deduccions IRPF, J=deduccions IS, K=retencions suportades, L=excés de rendes negatives de països sense conveni)"
+"tipo2.miembro-nif" = "NIF del membre de l'entitat al qual s'atribueix la renda (soci, comuner, hereu, partícip)"
+"tipo2.renta-atribuible-importe" = "Import de la renda atribuïble / rendiment net atribuïble al membre de l'entitat (sense signe, sense coma decimal, en euros)"
+"tipo2.subclave" = "Subclau del tipus de renda atribuïda (granularitat per origen geogràfic Espanya/estranger, reduccions aplicables, etc.)"
+
+[help]

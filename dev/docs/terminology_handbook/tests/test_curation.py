@@ -27,6 +27,7 @@ from .. import (
     collect_enrolment_candidates,
     load_terminology_handbook,
     relate_concepts,
+    remove_term,
     retire_concept,
     scaffold_handbook,
     set_language_field,
@@ -159,6 +160,23 @@ def test_set_two_preferred_terms_is_refused(tmp_path: Path) -> None:
         set_term("prorrata", OutputLanguage.ES, "regla de prorrata", TermStatus.PREFERRED, concepts_dir=concepts)
 
 
+def test_remove_term_drops_the_named_term_and_keeps_the_rest(tmp_path: Path) -> None:
+    concepts = _tree(tmp_path, {"prorrata.toml": _PRORRATA})
+    args = ("prorrata", OutputLanguage.ES, "regla de prorrata")
+    set_term(*args, TermStatus.ADMITTED, concepts_dir=concepts, today=_TODAY)
+    remove_term(*args, concepts_dir=concepts, today=_TODAY)
+    terms = load_terminology_handbook(concepts).concept("prorrata").section(OutputLanguage.ES).terms
+    labels = [term.label for term in terms]
+    assert "regla de prorrata" not in labels
+    assert "prorrata" in labels  # the preferred term survives the removal
+
+
+def test_remove_term_refuses_a_label_not_present(tmp_path: Path) -> None:
+    concepts = _tree(tmp_path, {"prorrata.toml": _PRORRATA})
+    with pytest.raises(CurationError, match="to remove"):
+        remove_term("prorrata", OutputLanguage.ES, "no existe", concepts_dir=concepts)
+
+
 # --------------------------------------------------------------------------
 # relate
 # --------------------------------------------------------------------------
@@ -279,8 +297,16 @@ def test_check_detects_drift_on_missing_concept(tmp_path: Path) -> None:
 # --------------------------------------------------------------------------
 def test_default_enrolment_excludes_cli_verbs_and_is_bounded() -> None:
     candidates = collect_enrolment_candidates()
-    # Ratified concept-grade set: 31 modelo + 17 IVA + 21 period + 13 topic = 82.
-    assert len(candidates) == 82
+    # Candidates are every registry entity that COULD become a concept; the
+    # concept-grade curation happens downstream (202 candidates currently reduce
+    # to 117 committed concepts). The set tracks the registry, which has grown
+    # since the original 82-snapshot: 149 modelo + 18 regimen + 21 periodo +
+    # 14 concepto = 202. Update this count when the registry gains an entity.
+    assert len(candidates) == 202
+    # The real structural invariants -- no verb/legal enrolment, and no domain
+    # outside the four concept-grade families -- must hold regardless of count.
+    allowed = {ConceptDomain.MODELO, ConceptDomain.REGIMEN, ConceptDomain.PERIODO, ConceptDomain.CONCEPTO}
+    assert {c.domain for c in candidates.values()} <= allowed
     assert not any(c.domain is ConceptDomain.CLI_VERB for c in candidates.values())
     assert not any(c.domain is ConceptDomain.LEGAL for c in candidates.values())
 

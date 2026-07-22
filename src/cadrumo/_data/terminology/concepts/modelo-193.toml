@@ -13,7 +13,7 @@ domain_refs = ["modelo:193"]
 legal_refs = ["ley-35-2006:art-25", "ley-35-2006:art-99"]
 related = ["irpf", "modelo-123", "declaracion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Resumen anual de retenciones del capital mobiliario."
@@ -33,9 +33,24 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Annual summary of the year's capital-income withholding returns (Modelo 123)."
+definition = "Annual information return summarising the withholdings on income from movable capital declared on Modelo 123 during the year, broken down by recipient."
+
+[language.en.source]
+citation = "Articles 25 and 99 of Ley 35/2006 del IRPF."
+authority = "boe"
 
 [language.ca]
 short_description = "Resum anual de retencions del capital mobiliari."
+definition = "Declaració informativa anual que resumeix les retencions sobre rendiments del capital mobiliari declarades en els models 123 de l'exercici, amb el detall per perceptor."
+
+[language.ca.source]
+citation = "Articulos 25 y 99 de la Ley 35/2006 del IRPF."
+authority = "boe"
 
 [language.hu]
-short_description = "Eves osszesito a tokejovedelem forrasadojarol (123-as)."
+short_description = "Éves összesítő a tőkejövedelem forrásadójáról (123-as)."
+definition = "Éves tájékoztató bevallás, amely összesíti az adóévben a Modelo 123-on bevallott ingó vagyoni tőkéből származó jövedelmek visszatartásait, kedvezményezettenkénti részletezéssel."
+
+[language.hu.source]
+citation = "A 35/2006. IRPF-törvény 25. és 99. cikke."
+authority = "boe"

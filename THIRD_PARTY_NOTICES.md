@@ -102,4 +102,4 @@ builds of the following typefaces, each distributed under the
   (https://github.com/JetBrains/JetBrainsMono).
 
 The README demo recording uses **Cascadia Mono** (SIL OFL 1.1); its licence
-text ships alongside the font under `assets/readme/fonts/`.
+text ships alongside the font under `docs/_static/readme/fonts/`.

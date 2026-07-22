@@ -10,7 +10,7 @@ workflow cannot provide: it fires even when a job fails, cancels, or times out.
 
 Runners are identified here by role, not by machine name — host names are
 operator-identifying and are kept out of committed text (gated by
-`dev/packaging/tests/test_doc_privacy.py`). Substitute your own host wherever a
+`dev/quality/tests/test_doc_privacy.py`). Substitute your own host wherever a
 `<...>` placeholder appears.
 
 | Role                    | Labels                       | Platform | Location                                  | Script               |

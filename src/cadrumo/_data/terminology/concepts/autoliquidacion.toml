@@ -12,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-58-2003:art-120"]
 related = ["declaracion", "modelo", "casilla"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Declaracion en la que el obligado calcula e ingresa el impuesto."
@@ -28,13 +28,28 @@ term_status = "preferred"
 
 [language.en]
 short_description = "A self-assessment: the filer computes and pays the tax."
+definition = "A tax declaration in which the taxpayer, in addition to reporting the underlying facts, self-assesses, quantifies, and, where applicable, pays the tax due."
+
+[language.en.source]
+citation = "Article 120 of Ley 58/2003, General Tributaria."
+authority = "boe"
 
 [[language.en.term]]
 label = "self-assessment"
 term_status = "preferred"
 
 [language.ca]
-short_description = "Autoliquidacio: el mateix obligat calcula i ingressa l'impost."
+short_description = "Autoliquidació: el mateix obligat calcula i ingressa l'impost."
+definition = "Declaració tributària en la qual el mateix obligat tributari, a més de comunicar les dades, qualifica, quantifica i, si escau, ingressa el deute resultant del tribut."
+
+[language.ca.source]
+citation = "Articulo 120 de la Ley 58/2003, General Tributaria."
+authority = "boe"
 
 [language.hu]
-short_description = "Onbevallas: az adozo maga szamitja ki es fizeti meg az adot."
+short_description = "Önbevallás: az adózó maga számítja ki és fizeti meg az adót."
+definition = "Adóbevallás, amelyben az adózó maga - az adatok közlésén túl - minősíti, számszerűsíti és szükség esetén befizeti az adóból eredő tartozást."
+
+[language.hu.source]
+citation = "Az 58/2003. törvény (általános adózási törvény) 120. cikke."
+authority = "boe"

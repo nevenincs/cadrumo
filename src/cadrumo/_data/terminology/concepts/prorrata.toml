@@ -1,8 +1,9 @@
 # Terminology Handbook concept fragment.
-# One concept per file; compiled by the strict loader in
-# `dev.docs.terminology_handbook` into a frozen `ConceptRecord`. Curated prose
-# fields (definition, scope_note, short_description) are hand-edited
-# here; structural operations go through the `dev.docs.terminology_handbook` CLI.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
 
 [concept]
 concept_id = "prorrata"
@@ -12,7 +13,7 @@ domain_refs = ["modelo:303", "modelo:390"]
 legal_refs = ["ley-37-1992:art-102", "ley-37-1992:art-104"]
 related = ["casilla"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-22
 
 [concept.seed_provenance]
 source = "iate"
@@ -78,10 +79,11 @@ part_of_speech = "noun"
 grammatical_gender = "feminine"
 
 [language.hu]
-short_description = "A levonhato elozetes afa aranya, ha az adoalany levonasra jogosito es nem jogosito ugyleteket is vegez."
+short_description = "A levonható előzetes áfa aránya, ha az adóalany levonásra jogosító és nem jogosító ügyleteket is végez."
+definition = "Szabály, amely meghatározza a levonható beszerzési IVA azon részét, amelyet egy adófizetésre kötelezett levonhat, ha tevékenységében levonási jogot keletkeztető és azt nem keletkeztető ügyletek egyaránt előfordulnak. A százalékot a levonási joggal rendelkező ügyletek összegének és az összes ügylet arányaként számítják ki, felfelé kerekítve a legközelebbi egész számra."
 
 [language.hu.source]
-citation = "A spanyol afatorveny (Ley 37/1992) 102. es 104. cikke."
+citation = "A 37/1992. IVA-törvény (LIVA) 102. és 104. cikke."
 authority = "boe"
 
 [[language.hu.term]]

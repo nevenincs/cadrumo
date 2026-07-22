@@ -15,17 +15,3 @@
 "14" = "Resultat a ingressar"
 
 [help]
-"01" = "Nombre de rendes dividends i participacions"
-"02" = "Nombre de la resta de rendes"
-"03" = "Nombre total de rendes"
-"04" = "Base dividends i participacions"
-"05" = "Base resta de rendes"
-"06" = "Base total"
-"07" = "Retencions dividends i participacions"
-"08" = "Retencions resta de rendes"
-"09" = "Retencions total"
-"10" = "Ingressos d'exercicis anteriors"
-"11" = "Regularització"
-"12" = "Suma de retencions i regularització"
-"13" = "Resultat d'autoliquidacions anteriors"
-"14" = "Resultat a ingressar"

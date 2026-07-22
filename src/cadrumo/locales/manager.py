@@ -362,7 +362,14 @@ class LocaleManager:
         return locale_path
 
     def set_locale_value(self, locale: str, dotted_key: str, value: str) -> Path:
-        """Set one locale leaf while preserving the YAML layout."""
+        """Set one locale leaf while preserving the YAML layout.
+
+        A blank value is refused: an empty or whitespace-only leaf reads
+        as authored prose to nothing and as a silent gap to the operator,
+        so it must never enter a catalogue through the CLI.
+        """
+        if not value.strip():
+            raise LocaleError(f"Cannot set {dotted_key!r}: a locale value must not be blank")
         locale_path = self._locale_path(locale)
         value = _normalise_product_identity_references(value)
         parts = dotted_key.split(".")

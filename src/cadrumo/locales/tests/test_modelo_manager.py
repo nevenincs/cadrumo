@@ -104,6 +104,52 @@ def test_set_and_remove_write_one_validated_translation_leaf(registry_root: Path
     assert "01" not in after_remove.labels
 
 
+def test_set_refuses_a_blank_translation_value(registry_root: Path) -> None:
+    """The modelo write path never lets an empty or whitespace-only leaf in."""
+    manager = ModeloLocaleManager(registry_root)
+
+    for blank in ("", "   "):
+        with pytest.raises(ModeloLocaleError, match="must not be blank"):
+            manager.set_translation_value(
+                OutputLanguage.EN,
+                MODELO_ID,
+                REVISION_ID,
+                ModeloLocaleFieldKind.LABELS,
+                "01",
+                blank,
+            )
+
+
+def test_coverage_refuses_blank_and_whitespace_smuggled_values(tmp_path: Path) -> None:
+    """A blank leaf and a whitespace-padded echo never count as translated."""
+    registry_root = tmp_path / "registry" / "aeat"
+    modelo_dir = registry_root / "modelos" / "777"
+    _write_minimal_modelo(modelo_dir, casilla_ids=("01", "02"))
+    locale_path = modelo_dir / "revisions" / "2020" / "locales" / "en.toml"
+    locale_path.parent.mkdir(parents=True)
+    locale_path.write_text(
+        """[labels]
+"01" = ""
+"02" = "02 "
+
+[help]
+"01" = "Real help text."
+"02" = " Etiqueta 02 "
+""",
+        encoding="utf-8",
+    )
+
+    record = ModeloLocaleManager(registry_root).coverage_record(OutputLanguage.EN, "777", "2020")
+
+    assert record.label_translated == 0
+    assert record.label_blank == 1
+    assert record.label_key_echo == 1
+    assert record.help_translated == 1
+    # Whitespace padding cannot hide a mirror of the official label.
+    assert record.help_mirrored == 1
+    assert not record.complete
+
+
 def test_set_rejects_unknown_schema_key(registry_root: Path) -> None:
     """Manager writes are refused when a key is absent from the real schema."""
     manager = ModeloLocaleManager(registry_root)
@@ -478,3 +524,31 @@ source_refs = ["aeat-source-test"]
             ),
             encoding="utf-8",
         )
+
+
+def test_aligned_table_refuses_echo_convert_of_authored_value_under_partial_inventory() -> None:
+    """A partial inventory that would silently wipe an authored value raises.
+
+    Simulates the registry-load race: ``valid_keys`` is missing a key that
+    ``expected_keys`` still lists, so the un-guarded alignment would drop the
+    authored value and re-add it as a key-echo placeholder. The guard refuses.
+    """
+    from .._modelo_manager import _aligned_table
+
+    current = {"0001": "Real authored label", "0002": "0002"}
+    with pytest.raises(ModeloLocaleError, match="Refusing to echo-convert"):
+        _aligned_table(current, expected_keys={"0001", "0002"}, valid_keys={"0002"})
+
+
+def test_aligned_table_drops_stale_key_and_echoes_missing_expected() -> None:
+    """Normal alignment is unchanged: stale keys drop, missing expected keys echo.
+
+    A key absent from both ``valid`` and ``expected`` is a genuine stale drop (not
+    a race), so the guard does not fire; an authored value present in ``valid`` is
+    preserved; an expected key with no current value becomes a placeholder.
+    """
+    from .._modelo_manager import _aligned_table
+
+    current = {"0001": "Real label", "9999": "Stale authored label"}
+    aligned = _aligned_table(current, expected_keys={"0001", "0003"}, valid_keys={"0001", "0003"})
+    assert aligned == {"0001": "Real label", "0003": "0003"}

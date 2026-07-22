@@ -18,7 +18,7 @@
 # The smoke workflow's own no-cancel queueing concurrency guarantees a
 # running campaign is never interrupted by a newer dispatch.
 #
-# The paths list is pinned by dev/packaging/tests/test_change_class_tiers.py
+# The paths list is pinned by dev/ci/tests/test_change_class_tiers.py
 # so the tier boundary cannot drift silently.
 
 name: Cadrumo Packaging Campaign Trigger

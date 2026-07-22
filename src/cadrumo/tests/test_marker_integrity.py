@@ -52,7 +52,7 @@ _HEX_MARKERS = frozenset(
 # module carries it alongside ``integration`` + ``serial`` so the broad serial
 # passes can exclude it (``-m "integration and serial and not perf"``) and the
 # dispatch-only ci-full lane can enrol it explicitly. Its placement policy is
-# pinned by dev/packaging/tests/test_perf_gate_policy.py.
+# pinned by dev/ci/tests/test_perf_gate_policy.py.
 _EXPECTED_CONFIGURED_MARKERS = _EXECUTION_MARKERS | _HEX_MARKERS | {"docs", "serial", "perf"}
 _LEGACY_READ_MARKER = "live_" + "read"
 _LEGACY_WRITE_MARKER = "live_" + "write"

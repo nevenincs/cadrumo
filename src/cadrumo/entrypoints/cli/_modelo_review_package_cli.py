@@ -139,6 +139,13 @@ from ._modelo_review_package_rendering import (
     review_package_verify_result,
     review_package_verify_signature_result,
 )
+from ._modelo_work_options import (
+    _BucketIdOpt,
+    _ModeloOpt,
+    _PeriodOpt,
+    _RegistryRevisionOpt,
+    _YearOpt,
+)
 
 
 def _resolve_signing_bucket_id(bucket_id: str | None) -> str:
@@ -191,26 +198,11 @@ def review_package_build(
             ),
         ),
     ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    registry_revision: Annotated[
-        str | None,
-        typer.Option("--registry-revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    registry_revision: _RegistryRevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
     select: Annotated[
         str,
         typer.Option(

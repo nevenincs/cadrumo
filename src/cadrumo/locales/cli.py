@@ -183,9 +183,10 @@ def _echo_catalogue_status(record: CatalogueStatusRecord) -> None:
     """Echo one catalogue's honest state partition as a greppable row."""
     typer.echo(
         f"catalogue file={record.locale_file} required={record.required} authored={record.authored} "
-        f"key_echo={record.key_echo} unbindable={record.unbindable} "
+        f"key_echo={record.key_echo} blank={record.blank} unbindable={record.unbindable} "
         f"identical_allowlisted={record.identical_allowlisted} "
-        f"identical_pending={record.identical_pending} absent={record.absent} extra={record.extra}",
+        f"identical_pending={record.identical_pending} absent={record.absent} extra={record.extra} "
+        f"namespace_exempted={record.namespace_exempted}",
     )
 
 

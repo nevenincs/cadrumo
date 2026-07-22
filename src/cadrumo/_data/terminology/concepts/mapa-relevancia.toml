@@ -1,4 +1,9 @@
 # Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
 
 [concept]
 concept_id = "mapa-relevancia"
@@ -7,7 +12,7 @@ lifecycle = "deprecated"
 broader = ["manual-terminologia"]
 related = ["barrido-rag", "depuracion-licencia"]
 created_at = 2026-06-12
-updated_at = 2026-06-12
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "El dato comprometido que asocia cada termino barrido con destinos documentales rankeados."
@@ -36,4 +41,4 @@ part_of_speech = "noun"
 short_description = "La dada compromesa que associa cada terme amb destinacions documentals ordenades."
 
 [language.hu]
-short_description = "Az eltarolt adat, amely a terminusokat rangsorolt dokumentacios celokhoz koti."
+short_description = "Az eltárolt adat, amely a terminusokat rangsorolt dokumentációs célokhoz köti."

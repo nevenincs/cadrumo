@@ -27,6 +27,7 @@ Submodules
    cadrumo.application.calculations._maritime_exemption_service
    cadrumo.application.calculations._multi_year
    cadrumo.application.calculations._observations_repository
+   cadrumo.application.calculations._per_grupo_member_keys
    cadrumo.application.calculations._ports
    cadrumo.application.calculations._prorrata_regularizacion
    cadrumo.application.calculations._relation_prefill

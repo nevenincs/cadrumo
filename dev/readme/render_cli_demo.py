@@ -22,8 +22,8 @@ from cadrumo.domain.calculations.registry import parse_export_payload
 
 _UTF_8: Final[str] = "utf-8"
 
-OUTPUT_PATH = REPO_ROOT / "assets" / "readme" / "cli-demo.gif"
-FONT_PATH = REPO_ROOT / "assets" / "readme" / "fonts" / "CascadiaMono-Regular.ttf"
+OUTPUT_PATH = REPO_ROOT / "docs" / "_static" / "readme" / "cli-demo.gif"
+FONT_PATH = REPO_ROOT / "docs" / "_static" / "readme" / "fonts" / "CascadiaMono-Regular.ttf"
 FICHERO_PATH = DEMO_ROOT / "m115.boe"
 DISPLAY_COMMAND = (
     "aeat app quickfile --modelo=115 --year=2026 --period=1T --casilla=04=0 --output=var/readme-demo/m115.boe"

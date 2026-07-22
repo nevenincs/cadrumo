@@ -10,7 +10,7 @@ concept_id = "borrador-vs-presentado"
 domain = "concepto"
 lifecycle = "approved"
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Estado del ciclo de vida que marca una revision como definitiva localmente."
@@ -26,6 +26,11 @@ term_status = "preferred"
 
 [language.en]
 short_description = "The filed lifecycle state recorded locally (never submitted to the AEAT)."
+definition = "Filed lifecycle state: the application marks a verified revision as filed to record that the user considers it definitive. It never files with the AEAT."
+
+[language.en.source]
+citation = "aeat project glossary (application lifecycle state)."
+authority = "aeat"
 
 [[language.en.term]]
 label = "presentado"
@@ -33,6 +38,16 @@ term_status = "preferred"
 
 [language.ca]
 short_description = "Estat del cicle de vida que marca una revisio com a definitiva localment."
+definition = "Estat presentat del cicle de vida: l'aplicació marca una revisió verificada com a presentada per deixar constància que l'usuari la considera definitiva. Mai presenta davant l'AEAT."
+
+[language.ca.source]
+citation = "Glosario del proyecto aeat (estado del ciclo de vida de la aplicacion)."
+authority = "aeat"
 
 [language.hu]
-short_description = "A helyileg veglegesnek jelolt allapot (sosem kerul benyujtasra az AEAT-hoz)."
+short_description = "A helyileg véglegesnek jelölt állapot (sosem kerül benyújtásra az AEAT-hoz)."
+definition = "A benyújtott (presentado) életciklus-állapot: az alkalmazás egy ellenőrzött revíziót benyújtottként jelöl meg, hogy rögzítse, a felhasználó véglegesnek tekinti azt. Soha nem nyújtja be az AEAT-hoz."
+
+[language.hu.source]
+citation = "Az aeat projekt szószedete (az alkalmazás életciklus-állapota)."
+authority = "aeat"

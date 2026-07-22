@@ -12,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-35-2006:art-98"]
 related = ["modelo-303"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Un calculo en borrador de un modelo, guardado por la aplicacion."
@@ -28,13 +28,28 @@ term_status = "preferred"
 
 [language.en]
 short_description = "A draft calculation of a modelo saved by the application."
+definition = "Provisional calculation of a modelo that the application saves on every calculation, keeping every version so the user can review and compare them before treating one as definitive."
+
+[language.en.source]
+citation = "aeat project glossary (application concept)."
+authority = "other"
 
 [[language.en.term]]
 label = "draft"
 term_status = "preferred"
 
 [language.ca]
-short_description = "Un calcul en esborrany d'un model, desat per l'aplicacio."
+short_description = "Un càlcul en esborrany d'un model, desat per l'aplicació."
+definition = "Càlcul provisional d'un model que l'aplicació desa a cada càlcul, conservant cada versió perquè l'usuari pugui revisar-les i comparar-les abans de donar-ne una per definitiva."
+
+[language.ca.source]
+citation = "Glosario del proyecto aeat (concepto de la aplicacion)."
+authority = "aeat"
 
 [language.hu]
-short_description = "Egy modelo piszkozatszamitasa, amelyet az alkalmazas ment."
+short_description = "Egy modell piszkozatszámítása, amelyet az alkalmazás ment."
+definition = "Egy modell ideiglenes számítása, amelyet az alkalmazás minden számításnál elment, megőrizve az egyes verziókat, hogy a felhasználó azokat áttekinthesse és összehasonlíthassa, mielőtt valamelyiket véglegesnek tekinti."
+
+[language.hu.source]
+citation = "Az aeat projekt szószedete (az alkalmazás fogalma)."
+authority = "aeat"

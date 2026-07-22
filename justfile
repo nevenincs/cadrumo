@@ -121,7 +121,7 @@ env-doctor: env-playwright
     uv run --no-sync radon --version
     uv run --no-sync complexipy --help
     uvx --from semgrep==1.168.0 semgrep --version
-    npx --yes jscpd@4.2.0 --version
+    npx --yes $(uv run --no-sync python -c "from dev.audit.duplication import _JSCPD_SPEC; print(_JSCPD_SPEC)") --version
     just env-pip-check
     -just check-rag
 

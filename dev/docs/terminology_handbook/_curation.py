@@ -217,6 +217,35 @@ def set_term(
     return _commit_concept(handbook, new_concept, target_dir)
 
 
+def remove_term(
+    concept_id: str,
+    language: OutputLanguage,
+    label: str,
+    *,
+    concepts_dir: Path | None = None,
+    today: date | None = None,
+) -> Path:
+    """Remove a term by its exact label from a language section.
+
+    The counterpart to :func:`set_term`, which could only add or replace a term
+    with no way to drop a stale or duplicate one. The strict language-section
+    validator (one preferred term, unique labels) runs on the result, so
+    removing the sole preferred term is refused. Removing a label the section
+    does not carry is an error, not a silent no-op.
+    """
+    handbook, target_dir = _load_with_dir(concepts_dir)
+    concept = _require_concept(handbook, concept_id)
+    section = _section_or_new(concept, language)
+    kept = tuple(term for term in section.terms if term.label != label)
+    if len(kept) == len(section.terms):
+        raise CurationError(
+            f"no term {label!r} on concept {concept_id!r} [{language.value}] to remove",
+        )
+    updated_section = section.model_copy(update={"terms": kept})
+    new_concept = _replace_section(concept, updated_section, today=today)
+    return _commit_concept(handbook, new_concept, target_dir)
+
+
 def relate_concepts(
     concept_id: str,
     relation: str,

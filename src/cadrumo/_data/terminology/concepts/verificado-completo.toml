@@ -11,12 +11,12 @@ domain = "concepto"
 lifecycle = "deprecated"
 related = ["borrador-vs-presentado", "borrador"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "El estado de verificado completo: el borrador ha superado el contrato de completitud de la verificacion."
-scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
 definition = "Estado del ciclo de vida de un calculo que indica que un borrador ha superado el contrato de completitud de la comprobacion de verificacion. Es un control de completitud y coherencia que se ejecuta en el ordenador de la persona; no comprueba el modelo contra el portal de la AEAT ni garantiza que la agencia lo vaya a aceptar."
+scope_note = "Concepto interno de la maquinaria de busqueda/calculo de la aplicacion; documentado para el RAG de desarrollo, no es un termino tributario de cara al contribuyente y por eso queda fuera del glosario."
 
 [language.es.source]
 citation = "Documentacion de la aplicacion aeat; estado interno del ciclo de vida del calculo."
@@ -34,4 +34,4 @@ short_description = "The verified-complete lifecycle state: a draft has passed t
 short_description = "L'estat de verificat complet: l'esborrany ha superat el contracte de completesa de la verificacio."
 
 [language.hu]
-short_description = "A teljesen ellenorzott eletciklus-allapot: a piszkozat atment az ellenorzes teljessegi szerzodesen."
+short_description = "A teljesen ellenőrzött életciklus-állapot: a piszkozat átment az ellenőrzés teljességi szerződésén."

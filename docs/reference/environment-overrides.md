@@ -80,6 +80,7 @@ the process environment wins over the `.env` file.
 | `CADRUMO_FILING_HISTORY_DIR` | Path | (derived) | Directory where the persisted ModeloHistory JSON file lives |
 | `CADRUMO_FINANCIAL_TXS_DIR` | Path | (derived) | Directory where the transaction catalogue JSON file is stored |
 | `CADRUMO_FORCE_COLOR` | bool | `false` | Force ANSI colour output even when stdout is not a TTY. Operators set this when piping Cadrumo output through a terminal renderer (less -R, gh actions, etc.). Defaults to False; the should_use_color() helper consults this and the standard NO_COLOR convention through Settings rather than reading os.environ directly. |
+| `CADRUMO_FX_RATE_LOOKUP_TIMEOUT_S` | int | `15` | Timeout (seconds) for one ECB Data Portal euro reference-rate lookup. A ledger import resolves one lookup per distinct currency/date, so this budget bounds a single observation query rather than the whole import. |
 | `CADRUMO_GOOGLE_DRIVE_ROOT_FOLDER_ID` | str | unset | Drive folder ID under which `cadrumo-vault/` is created and used. Required when cadrumo_storage_provider_kind=google_drive. Operator obtains this from the Cloud Console / Drive web UI; the app creates `cadrumo-vault/` lazily on first probe. |
 | `CADRUMO_GOOGLE_DRIVE_VAULT_FOLDER_NAME` | str | `cadrumo-vault` | Folder name created under the Google Drive root for the Cadrumo vault |
 | `CADRUMO_GOOGLE_OAUTH_ACCESS_REFRESH_BUFFER_S` | int | `300` | Clock-skew buffer (seconds) before nominal expiry when refreshing Google access tokens |

@@ -5,22 +5,22 @@ standing invariants, each enforced by a conformance gate in the test tree:
 
 1. **Self-hosted fleet only.** Every `runs-on` is a `[self-hosted, ...]` label
    set; GitHub-hosted images are a spend regression
-   (`dev/packaging/tests/test_self_hosted_fleet.py`).
+   (`dev/ci/tests/test_self_hosted_fleet.py`).
 2. **Zero Actions-artifact storage.** No `upload-artifact` / `download-artifact`
    anywhere; outputs live in job logs, and release evidence rides draft
    releases per the release-asset-transport ADR
-   (`dev/packaging/tests/test_change_class_tiers.py`, transport gates).
+   (`dev/ci/tests/test_change_class_tiers.py`, transport gates).
 3. **No fork code on the fleet.** `pull_request` triggers exist only with a
    same-repo job guard; fork PRs skip every job.
 4. **Evidence honesty.** Only `packaging-smoke.yml` mints promotable
    `DistributionEvidence`; `publish-release.yml` Gate 2 pins that workflow
    path, so no other lane can enter promotion.
 5. **Machine-aware load.** No lane sizes itself as if it owns the machine
-   (`dev/packaging/tests/test_machine_aware_load.py`); see the topology below.
+   (`dev/ci/tests/test_machine_aware_load.py`); see the topology below.
 6. **Honest perf gates.** Performance benchmarks assert PROCESS CPU-TIME
    (load-immune on the shared machines) with wall-clock printed as advisory
    only, and run solely in the dispatch-only `ci-full.yml` lane
-   (`dev/packaging/tests/test_perf_gate_policy.py`).
+   (`dev/ci/tests/test_perf_gate_policy.py`).
 
 ## Fleet topology and load sizing
 

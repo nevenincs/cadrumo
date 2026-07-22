@@ -148,6 +148,13 @@ def _compile_records(concepts_dir: str) -> tuple[ConceptRecord, ...]:
             raise TerminologyValidationError(
                 f"duplicate concept_id {record.concept_id!r}: {prior.name} and {fragment.name}",
             )
+        if fragment.stem != record.concept_id:
+            raise TerminologyValidationError(
+                f"concept fragment {fragment.name!r} declares concept_id {record.concept_id!r}; "
+                f"the file must be named {record.concept_id}.toml -- the curation write path "
+                f"resolves by concept_id, so a filename mismatch silently forks the concept into "
+                f"a duplicate file on the next edit",
+            )
         seen[record.concept_id] = fragment
         records.append(record)
     records.sort(key=lambda record: record.concept_id)

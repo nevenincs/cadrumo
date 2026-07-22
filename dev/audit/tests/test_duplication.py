@@ -19,13 +19,17 @@ re-create exactly the blind spot these tests exist to close.
 
 from __future__ import annotations
 
+import re
 import shutil
+import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
 
 from dev.audit.duplication import (
+    CloneGroup,
     DuplicationOutcome,
     DuplicationResult,
     classify_jscpd_output,
@@ -259,19 +263,135 @@ def test_health_report_duplication_dimension_is_amber_with_a_measured_count() ->
 
 @pytest.mark.unit
 def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
-    """Exactly one module may construct a jscpd command.
+    """Exactly one module may construct a jscpd command, tree-wide.
 
     The false-green shipped inside a SECOND, drifting copy of the jscpd command
     that ``report.py`` built for itself. This pins the single-runner shape so the
     measurement tool cannot re-become the duplication it measures.
-    """
-    sources = [
-        path
-        for path in (_REPO_ROOT / "dev").rglob("*.py")
-        if "__pycache__" not in path.parts and path.name != Path(__file__).name
-    ]
-    builders = [path for path in sources if "jscpd@" in path.read_text(encoding="utf-8")]
 
-    assert [p.name for p in builders] == ["duplication.py"], (
-        f"jscpd must be invoked from exactly one runner; found: {[str(p) for p in builders]}"
+    Scoped to the whole GIT-TRACKED tree (not just ``dev/**/*.py``), so a
+    reintroduced scanner in the justfile, a shell script, ``src/``, or
+    ``packaging/`` is caught rather than passing silently. Narrowed to files
+    that can actually EXECUTE a command -- Python, the justfile, and
+    shell/PowerShell scripts -- so prose in a ``.vault/`` audit record or the
+    dispositions TOML's provenance string does not trip a gate about
+    invocations.
+    """
+    tracked = subprocess.run(
+        ["git", "ls-files"],
+        cwd=_REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.splitlines()
+
+    executable_suffixes = {".py", ".sh", ".bash", ".ps1", ".cmd", ".bat"}
+    candidates = [
+        rel
+        for rel in tracked
+        if Path(rel).name == "justfile" or Path(rel).suffix in executable_suffixes
+    ]
+
+    # The one canonical runner, and this test itself: it quotes the invocation
+    # in a docstring and names the literal it scans for, neither of which is a
+    # second invocation.
+    exempt = {"dev/audit/duplication.py", "dev/audit/tests/test_duplication.py"}
+
+    builders = [
+        rel
+        for rel in candidates
+        if rel not in exempt and "jscpd@" in (_REPO_ROOT / rel).read_text(encoding="utf-8")
+    ]
+
+    assert builders == [], f"jscpd must be invoked from exactly one runner; found: {builders}"
+
+
+@pytest.mark.unit
+def test_dispositions_arithmetic_reconciles() -> None:
+    """The dispositions file's own counts must add up.
+
+    The record once declared 65 observed groups while carrying 66 group blocks
+    whose own summary section summed to 66 -- an internal contradiction nobody
+    caught because nothing read the file. This pins two identities: the
+    summary section's four counts must equal the number of ``[[group]]``
+    blocks, and the non-actionable counts (the groups within jscpd's own
+    inventory) must equal the declared ``observed_groups``.
+    """
+    dispositions_path = _REPO_ROOT / "dev" / "audit" / "duplication_dispositions.toml"
+    dispositions = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
+
+    groups = dispositions["group"]
+    summary = dispositions["summary"]
+
+    assert sum(summary.values()) == len(groups), (
+        f"summary sums to {sum(summary.values())} but there are {len(groups)} recorded groups"
+    )
+    observed = summary["cluster_owned"] + summary["intentional"] + summary["advisory_residue"]
+    assert observed == dispositions["meta"]["observed_groups"], (
+        f"cluster_owned + intentional + advisory_residue ({observed}) must equal "
+        f"meta.observed_groups ({dispositions['meta']['observed_groups']})"
+    )
+
+
+_WHERE_PATH = re.compile(r"^-?\s*(.+?\.py) \[")
+
+
+def _paths_from_where(entries: list[str]) -> frozenset[str]:
+    """Extract the bare file paths a disposition's ``where`` list names."""
+    paths = set()
+    for entry in entries:
+        match = _WHERE_PATH.match(entry)
+        assert match, f"disposition `where` entry has no parseable path: {entry!r}"
+        paths.add(match.group(1))
+    return frozenset(paths)
+
+
+def _paths_from_group(group: CloneGroup) -> frozenset[str]:
+    """Extract the bare file paths a live ``CloneGroup``'s console block names.
+
+    ``CloneGroup.lines`` renders relative to the repository root
+    (``src/cadrumo/...``), while the dispositions file records paths relative
+    to ``src/cadrumo/`` -- the same convention its own header states.
+    """
+    paths = set()
+    for line in group.lines[1:]:
+        stripped = line.strip()
+        match = _WHERE_PATH.match(stripped)
+        if not match:
+            continue
+        path = match.group(1)
+        paths.add(path.removeprefix("src/cadrumo/"))
+    return frozenset(paths)
+
+
+@pytest.mark.integration
+def test_every_observed_clone_group_has_a_recorded_disposition() -> None:
+    """Every clone group the live scan observes must carry a recorded disposition.
+
+    The plan's own verification criterion -- every observed clone group carries
+    an explicit recorded disposition -- had no gate anywhere in the tree; the
+    claim could not be checked and could rot silently as consolidations landed.
+    This asserts COVERAGE (each live group's file pair is recorded in the
+    dispositions file), never a COUNT: the clone count is advisory debt per the
+    governing ADR, so a count assertion would fight that ADR and go red on
+    every genuine consolidation. The record is a superset by design -- a group
+    disappearing is progress, not a gate failure -- while a NEW, unrecorded
+    group is exactly what this gate exists to catch.
+    """
+    _require_npx()
+    result = run_duplication_scan(_REPO_ROOT)
+    assert result.outcome is DuplicationOutcome.CLONES, (
+        "the production tree is expected to carry advisory clone debt; "
+        "if this ever goes clean, update this test rather than deleting it"
+    )
+
+    dispositions_path = _REPO_ROOT / "dev" / "audit" / "duplication_dispositions.toml"
+    dispositions = tomllib.loads(dispositions_path.read_text(encoding="utf-8"))
+    recorded = {_paths_from_where(group["where"]) for group in dispositions["group"]}
+
+    uncovered = [group.render() for group in result.groups if _paths_from_group(group) not in recorded]
+
+    assert not uncovered, (
+        "the live scan observed clone group(s) with no recorded disposition in "
+        f"duplication_dispositions.toml:\n\n{chr(10).join(uncovered)}"
     )

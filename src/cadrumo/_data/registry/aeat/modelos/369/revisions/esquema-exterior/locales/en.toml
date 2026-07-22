@@ -5,7 +5,3 @@
 "iva.exterior.de.services-cuota" = "VAT output tax to destination DE — services supplied (Non-Union scheme)"
 
 [help]
-"decl.ejercicio" = "decl.ejercicio"
-"decl.periodo" = "decl.periodo"
-"iva.exterior.cuota-total" = "iva.exterior.cuota-total"
-"iva.exterior.de.services-cuota" = "iva.exterior.de.services-cuota"

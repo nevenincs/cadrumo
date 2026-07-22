@@ -1,0 +1,9 @@
+[labels]
+"decl.ejercicio" = "Tax year the return refers to"
+"decl.tipo-declaracion" = "Type of return (original / replacement / supplementary)"
+"tipo2.clave" = "Attributed-income type key (A=movable capital, C=real-estate capital, D=economic activities, F=gains/losses excl. transfer, G=gains/losses on transfer, I=IRPF deductions, J=IS deductions, K=withholdings borne, L=excess negative income from no-treaty countries)"
+"tipo2.miembro-nif" = "NIF of the entity member to whom the income is attributed (partner, co-owner, heir, participant)"
+"tipo2.renta-atribuible-importe" = "Amount of income attributable / net return attributable to the entity member (unsigned, no decimal comma, in euros)"
+"tipo2.subclave" = "Attributed-income subtype key (granularity by domestic/foreign geographic origin, applicable reductions, etc.)"
+
+[help]

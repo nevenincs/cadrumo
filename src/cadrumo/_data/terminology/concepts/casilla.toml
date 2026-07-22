@@ -1,8 +1,9 @@
-# Terminology Handbook concept fragment for the structural concept
-# "casilla". This is a domain-vocabulary concept (the numbered box on a
-# modelo), not a casilla projection: the 18,885 individual casillas are
-# machine-projected from registry snapshots at compile time, never
-# enrolled as Handbook fragments. This concept defines the WORD.
+# Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
 
 [concept]
 concept_id = "casilla"
@@ -11,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-58-2003:art-98"]
 related = ["modelo", "revision"]
 created_at = 2026-06-10
-updated_at = 2026-06-10
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Cada uno de los recuadros numerados de un modelo en los que se anota un dato de la declaracion."
@@ -57,7 +58,12 @@ term_status = "admitted"
 part_of_speech = "noun"
 
 [language.ca]
-short_description = "Cadascun dels requadres numerats d'un model on s'anota una dada de la declaracio."
+short_description = "Cadascun dels requadres numerats d'un model on s'anota una dada de la declaració."
+definition = "Requadre numerat d'un model tributari on es consigna un import, una base, una quota o una dada identificativa de la declaració. Cada casella té un número, una etiqueta oficial i, quan escau, una fórmula que la relaciona amb altres caselles."
+
+[language.ca.source]
+citation = "Disenos de Registro y manuales practicos publicados por la AEAT."
+authority = "aeat"
 
 [[language.ca.term]]
 label = "casella"
@@ -66,7 +72,12 @@ part_of_speech = "noun"
 grammatical_gender = "feminine"
 
 [language.hu]
-short_description = "Egy modelo szamozott rovata, ahova a bevallas egy adatat irjak be."
+short_description = "Egy modell számozott rovata, ahová a bevallás egy adatát írják be."
+definition = "Egy adóügyi modell számozott rovata, amelybe egy összeget, egy alapot, egy fizetendő adót vagy a bevallás egy azonosító adatát vezetik be. Minden rovatnak van száma, hivatalos elnevezése, és adott esetben egy formulája, amely más rovatokhoz kapcsolja."
+
+[language.hu.source]
+citation = "Az AEAT által közzétett nyilvántartási formátumok (Diseños de Registro) és gyakorlati kézikönyvek."
+authority = "aeat"
 
 [[language.hu.term]]
 label = "rovat"

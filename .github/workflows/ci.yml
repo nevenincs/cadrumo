@@ -122,7 +122,7 @@ jobs:
         # -n 8, never -n auto: the workstation's 24 logical CPUs are shared by
         # THREE runners (win + wsl + wsl-2); worst-case co-residency is 3 jobs,
         # so each lane gets 24/3 (machine-aware sizing, .github/ci-control-plane.md).
-        run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/packaging/tests dev/quality/tests dev/release/tests
+        run: uv run --no-sync pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)" dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests
 
   cadrumo-unit:
     name: Cadrumo / unit suite / Python 3.13

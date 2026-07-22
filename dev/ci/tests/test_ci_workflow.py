@@ -71,7 +71,7 @@ def test_ci_workflow_runs_canonical_cadrumo_commands_and_paths() -> None:
     # (machine-aware sizing, test_machine_aware_load.py).
     assert (
         'pytest -q -n 8 --timeout=900 -m "unit or (integration and not serial)"'
-        " dev/packaging/tests dev/quality/tests dev/release/tests" in static_commands
+        " dev/ci/tests dev/packaging/tests dev/quality/tests dev/release/tests" in static_commands
     )
 
     unit = document["jobs"]["cadrumo-unit"]
