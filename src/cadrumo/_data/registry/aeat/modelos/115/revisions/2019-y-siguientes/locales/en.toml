@@ -6,8 +6,3 @@
 "05" = "Result payable"
 
 [help]
-"01" = "Number of recipients"
-"02" = "Base of withholdings and payments on account"
-"03" = "Withholdings and payments on account"
-"04" = "Result of previous returns"
-"05" = "Result payable"
