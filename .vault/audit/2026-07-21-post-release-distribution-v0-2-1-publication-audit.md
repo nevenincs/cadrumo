@@ -244,6 +244,16 @@ must be the self-contained 8.x line, since 10.x splits its versioning into a
 separate distribution the isolated build cannot resolve — but that only changes
 which step the run reaches, not the fault.
 
+The compiler identity was the last reconstructible variable and it is eliminated
+too: Homebrew's named compiler resolves to the system gcc 13.3.0 (the two are the
+same binary), and cffi built with it plus Homebrew's optimisation flags
+constructs an FFI object cleanly. Every individual component of the build —
+compiler, flags, build isolation, environment variables, the sandbox, the
+compiler shim, pointer authentication, SSE2 detection — has now been tested in
+isolation and works; only the full Homebrew build orchestration faults, and it
+does so on every run while no reduction of it reproduces the fault. The
+reconstructible surface is exhausted.
+
 Because the trigger is the build environment itself, the durable resolutions are
 operational, not a formula edit: run the Linux-arm64 Homebrew leg on real arm64
 Linux hardware instead of the colima virtual machine on the Apple-silicon host,
