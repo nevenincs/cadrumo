@@ -1530,11 +1530,11 @@ auth:
 categories:
   registry:
     amortizacion_vivienda_afecto:
-      label: categories.registry.amortizacion_vivienda_afecto.label
+      label: Üzleti célra használt lakás amortizációja
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
         (Ley 35/2006 art. 30.2.5.b szabály 4.ª, üzleti célra használt lakás amortizációja).
     arrendamiento_local:
-      label: categories.registry.arrendamiento_local.label
+      label: Üzlethelyiség bérleti díja
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
     arrendamiento_vivienda_afecta: Lakás bérleti díjának üzleti hányada
     arrendamiento_vivienda_afecto:
@@ -1542,42 +1542,42 @@ categories:
         (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
         art. 30.2.5.b szabály 4.ª).
     asesoria_contable:
-      label: categories.registry.asesoria_contable.label
+      label: Könyvelési tanácsadási díj
       notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
         (Ley 35/2006 art. 28.1).
     asesoria_fiscal:
-      label: categories.registry.asesoria_fiscal.label
+      label: Adótanácsadási díj
       notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
         (Ley 35/2006 art. 28.1).
     asesoria_juridica:
-      label: categories.registry.asesoria_juridica.label
+      label: Jogi tanácsadási díj
       notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
         (Ley 35/2006 art. 28.1).
     comunidad_vivienda_afecto:
-      label: categories.registry.comunidad_vivienda_afecto.label
+      label: Üzleti célra használt lakás közös költsége
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
         (Ley 35/2006 art. 30.2.5.b szabály 2.ª, lakástulajdonlási költségek).
     cuotas_autonomos_ss:
       notes: Teljes mértékben levonható költség; a RETA-járulék a tevékenység folytatásának
         törvényi feltétele.
     cuotas_colegiales:
-      label: categories.registry.cuotas_colegiales.label
+      label: Szakmai kamarai tagdíjak
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
     cuotas_reta: Önálló vállalkozói társadalombiztosítási járulék (RETA)
     formacion_profesional:
-      label: categories.registry.formacion_profesional.label
+      label: Szakmai továbbképzés
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
     gastos_bancarios:
-      label: categories.registry.gastos_bancarios.label
+      label: Banki költségek
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, pénzügyi és
         banki költségek).
     gastos_financieros:
-      label: categories.registry.gastos_financieros.label
+      label: Pénzügyi költségek
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, pénzügyi és
         banki költségek).
     hardware_amortizable:
-      label: categories.registry.hardware_amortizable.label
+      label: Amortizálható informatikai eszközök
       notes: Teljes mértékben levonható az amortizáció útján (Ley 35/2006 art. 28.1,
         tárgyi eszközök amortizációja).
     home_office_agua: Otthoni iroda vízdíja
@@ -1585,11 +1585,11 @@ categories:
     home_office_internet: Otthoni iroda internetköltsége
     home_office_luz: Otthoni iroda villamosenergia-költsége
     ibi_local_afecto:
-      label: categories.registry.ibi_local_afecto.label
+      label: Üzlethelyiség ingatlanadója (IBI)
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 14 LIS, hivatkozás
         útján; tributos fiscalmente deducibles).
     ibi_vivienda_afecto:
-      label: categories.registry.ibi_vivienda_afecto.label
+      label: Üzleti célra használt lakás ingatlanadója (IBI)
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
         (Ley 35/2006 art. 30.2.5.b szabály 2.ª, nem állami adók a lakásra).
     manutencion_dietas_extranjero:
@@ -1613,23 +1613,23 @@ categories:
     manutencion_extranjero: Külföldi napidíj (étkezés és tartózkodás)
     manutencion_nacional: Belföldi napidíj (étkezés és tartózkodás)
     material_oficina:
-      label: categories.registry.material_oficina.label
+      label: Irodaszerek
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
     mobiliario_amortizable:
-      label: categories.registry.mobiliario_amortizable.label
+      label: Amortizálható bútorzat
       notes: Teljes mértékben levonható az amortizáció útján (Ley 35/2006 art. 28.1,
         tárgyi eszközök amortizációja).
     mutualidad_alternativa:
-      label: categories.registry.mutualidad_alternativa.label
+      label: Alternatív kölcsönös biztosítói járulék
       notes: 'Törvényi felső határig levonható: legfeljebb 15 000 EUR/év, adóalanyonként,
         a RETA-t helyettesítő alternatív mutualidad esetén (AEAT Renta útmutató, Cotizaciones
         al RETA).'
     publicidad_marketing:
-      label: categories.registry.publicidad_marketing.label
+      label: Reklám- és marketingköltség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
     reparaciones_conservacion:
-      label: categories.registry.reparaciones_conservacion.label
+      label: Javítási és karbantartási költségek
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
     seguros_rc: Szakmai felelősségbiztosítás
     seguros_responsabilidad_civil:
@@ -1639,14 +1639,14 @@ categories:
       notes: 'Törvényi felső határig levonható: legfeljebb 500 EUR/év, adóalanyonként
         (Ley 35/2006 art. 30.2.5.c szabály 1.ª, betegségbiztosítási díjak).'
     software_suscripcion:
-      label: categories.registry.software_suscripcion.label
+      label: Szoftver-előfizetések
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
     subcontratacion:
-      label: categories.registry.subcontratacion.label
+      label: Alvállalkozói díj
       notes: Teljes mértékben levonható költség, független szakmai szolgáltatásként
         (Ley 35/2006 art. 28.1).
     suministros_cliente_directos:
-      label: categories.registry.suministros_cliente_directos.label
+      label: Az ügyfélnek közvetlenül továbbszámlázott ellátások
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1).
     suministros_home_office_agua:
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
@@ -1665,11 +1665,11 @@ categories:
         (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
         art. 30.2.5.b szabály 4.ª).
     telefonia_fija:
-      label: categories.registry.telefonia_fija.label
+      label: Vezetékes telefon-költség
       notes: A lakás üzleti célra használt alapterületének aránya szerint levonható
         (Ley 35/2006 art. 28.1).
     telefonia_movil:
-      label: categories.registry.telefonia_movil.label
+      label: Mobiltelefon-költség
       notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
         IRPF art. 22, a vagyonelem kizárólagos affektációja).
     tributos_deducibles: Egyéb adózásilag levonható adók és díjak
@@ -1677,31 +1677,31 @@ categories:
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 14 LIS, hivatkozás
         útján).
     vehiculo_combustible:
-      label: categories.registry.vehiculo_combustible.label
+      label: Járműves üzemanyagköltség
       notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
         IRPF art. 22, a jármű kizárólagos affektációja).
     vehiculo_mantenimiento:
-      label: categories.registry.vehiculo_mantenimiento.label
+      label: Járműkarbantartási költség
       notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
         IRPF art. 22, a jármű kizárólagos affektációja).
     vehiculo_parking:
-      label: categories.registry.vehiculo_parking.label
+      label: Parkolási költség
       notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
         IRPF art. 22, a jármű kizárólagos affektációja).
     vehiculo_peaje:
-      label: categories.registry.vehiculo_peaje.label
+      label: Autópálya-díj
       notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
         IRPF art. 22, a jármű kizárólagos affektációja).
     vehiculo_seguro:
-      label: categories.registry.vehiculo_seguro.label
+      label: Járműbiztosítás
       notes: Az üzleti célú, kizárólagos használat igazolása esetén levonható (Reglamento
         IRPF art. 22, a jármű kizárólagos affektációja).
     viajes_alojamiento:
-      label: categories.registry.viajes_alojamiento.label
+      label: Utazási szállásköltség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
     viajes_transporte:
-      label: categories.registry.viajes_transporte.label
+      label: Utazási közlekedési költség
       notes: Teljes mértékben levonható költség (Ley 35/2006 art. 28.1, egyéb külső
         szolgáltatások).
   test_profile:
