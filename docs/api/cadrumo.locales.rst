@@ -17,5 +17,7 @@ Submodules
    cadrumo.locales._ast_scanner
    cadrumo.locales._fstring_registry
    cadrumo.locales._modelo_manager
+   cadrumo.locales._registry_scanner
+   cadrumo.locales._status
    cadrumo.locales.cli
    cadrumo.locales.manager

@@ -210,6 +210,181 @@ def test_fragmented_revision_locale_is_loaded_and_updated_in_place(tmp_path: Pat
     assert translation.help["01"] == "First revision help"
 
 
+def test_coverage_refuses_mirrored_help_and_key_echoes(tmp_path: Path) -> None:
+    """A help value repeating the label, and a key-echo, never count as translated."""
+    registry_root = tmp_path / "registry" / "aeat"
+    modelo_dir = registry_root / "modelos" / "777"
+    _write_minimal_modelo(modelo_dir, casilla_ids=("01", "02", "03"))
+    locale_path = modelo_dir / "revisions" / "2020" / "locales" / "en.toml"
+    locale_path.parent.mkdir(parents=True)
+    locale_path.write_text(
+        """[labels]
+"01" = "Income"
+"02" = "02"
+"03" = "Expenses"
+
+[help]
+"01" = "Income"
+"02" = "Etiqueta 02"
+"03" = "Total deductible expenses for the period."
+""",
+        encoding="utf-8",
+    )
+
+    record = ModeloLocaleManager(registry_root).coverage_record(OutputLanguage.EN, "777", "2020")
+
+    assert record.label_translated == 2
+    assert record.label_key_echo == 1
+    assert record.label_absent == 0
+    # "01" mirrors its own label and "02" mirrors the official Spanish label.
+    assert record.help_translated == 1
+    assert record.help_mirrored == 2
+    assert record.help_key_echo == 0
+    assert record.help_absent == 0
+    assert not record.complete
+
+
+def test_coverage_counts_genuinely_authored_leaves_complete(tmp_path: Path) -> None:
+    """Authored labels and distinct help still reach a complete record."""
+    registry_root = tmp_path / "registry" / "aeat"
+    modelo_dir = registry_root / "modelos" / "777"
+    _write_minimal_modelo(modelo_dir)
+    locale_path = modelo_dir / "revisions" / "2020" / "locales" / "en.toml"
+    locale_path.parent.mkdir(parents=True)
+    locale_path.write_text(
+        """[labels]
+"01" = "Income"
+
+[help]
+"01" = "Total cumulative business income for the tax year."
+""",
+        encoding="utf-8",
+    )
+
+    record = ModeloLocaleManager(registry_root).coverage_record(OutputLanguage.EN, "777", "2020")
+
+    assert record.complete
+    assert record.label_translated == 1
+    assert record.help_translated == 1
+    assert record.help_mirrored == 0
+
+
+def test_fragmented_scaffold_materialises_missing_keys_and_spills_at_capacity(tmp_path: Path) -> None:
+    """Scaffold appends missing keys to the tail fragment and creates the next at capacity."""
+    registry_root = tmp_path / "registry" / "aeat"
+    modelo_dir = registry_root / "modelos" / "777"
+    _write_minimal_modelo(modelo_dir, casilla_ids=("01", "02", "03"))
+    locale_dir = modelo_dir / "revisions" / "2020" / "locales" / "en"
+    locale_dir.mkdir(parents=True)
+    labels_path = locale_dir / "001-labels.toml"
+    labels_path.write_text(
+        """[labels]
+"01" = "First revision label"
+"stale-key" = "Stale label"
+""",
+        encoding="utf-8",
+    )
+
+    manager = ModeloLocaleManager(registry_root, fragment_leaf_capacity=2)
+    changed = manager.scaffold_revision(OutputLanguage.EN, "777", "2020")
+    translation = manager.load_translation_file(
+        ModeloLocaleFileTarget(
+            locale=OutputLanguage.EN,
+            modelo_id="777",
+            scope=ModeloLocaleScope.REVISION,
+            revision_id="2020",
+        ),
+    )
+
+    assert labels_path.resolve() in changed
+    assert (locale_dir / "002-labels.toml").is_file()
+    assert (locale_dir / "101-help.toml").is_file()
+    assert (locale_dir / "102-help.toml").is_file()
+    assert not (modelo_dir / "revisions" / "2020" / "locales" / "en.toml").exists()
+    assert translation.labels == {"01": "First revision label", "02": "02", "03": "03"}
+    assert translation.help == {"01": "01", "02": "02", "03": "03"}
+    assert "stale-key" not in labels_path.read_text(encoding="utf-8")
+
+
+def test_fragmented_set_accepts_new_schema_key(tmp_path: Path) -> None:
+    """A schema key with no owning fragment is appended to the field family tail."""
+    registry_root = tmp_path / "registry" / "aeat"
+    modelo_dir = registry_root / "modelos" / "777"
+    _write_minimal_modelo(modelo_dir, casilla_ids=("01", "02"))
+    locale_dir = modelo_dir / "revisions" / "2020" / "locales" / "en"
+    locale_dir.mkdir(parents=True)
+    labels_path = locale_dir / "001-labels.toml"
+    labels_path.write_text(
+        """[labels]
+"01" = "First revision label"
+""",
+        encoding="utf-8",
+    )
+    help_path = locale_dir / "101-help.toml"
+    help_path.write_text(
+        """[help]
+"01" = "First revision help"
+""",
+        encoding="utf-8",
+    )
+
+    manager = ModeloLocaleManager(registry_root)
+    written = manager.set_translation_value(
+        OutputLanguage.EN,
+        "777",
+        "2020",
+        ModeloLocaleFieldKind.LABELS,
+        "02",
+        "Second label",
+    )
+    translation = manager.load_translation_file(
+        ModeloLocaleFileTarget(
+            locale=OutputLanguage.EN,
+            modelo_id="777",
+            scope=ModeloLocaleScope.REVISION,
+            revision_id="2020",
+        ),
+    )
+
+    assert written == labels_path.resolve()
+    assert translation.labels == {"01": "First revision label", "02": "Second label"}
+    assert translation.help == {"01": "First revision help"}
+
+
+def test_fragmented_set_creates_next_fragment_when_tail_is_full(tmp_path: Path) -> None:
+    """A full tail fragment spills the new key into the next numbered fragment."""
+    registry_root = tmp_path / "registry" / "aeat"
+    modelo_dir = registry_root / "modelos" / "777"
+    _write_minimal_modelo(modelo_dir, casilla_ids=("01", "02"))
+    locale_dir = modelo_dir / "revisions" / "2020" / "locales" / "en"
+    locale_dir.mkdir(parents=True)
+    (locale_dir / "001-labels.toml").write_text(
+        """[labels]
+"01" = "First revision label"
+""",
+        encoding="utf-8",
+    )
+    (locale_dir / "101-help.toml").write_text(
+        """[help]
+"01" = "First revision help"
+""",
+        encoding="utf-8",
+    )
+
+    manager = ModeloLocaleManager(registry_root, fragment_leaf_capacity=1)
+    written = manager.set_translation_value(
+        OutputLanguage.EN,
+        "777",
+        "2020",
+        ModeloLocaleFieldKind.LABELS,
+        "02",
+        "Second label",
+    )
+
+    assert written == (locale_dir / "002-labels.toml").resolve()
+    assert '"02" = "Second label"' in written.read_text(encoding="utf-8")
+
+
 def _revision_target() -> ModeloLocaleFileTarget:
     return ModeloLocaleFileTarget(
         locale=OutputLanguage.EN,
@@ -223,7 +398,7 @@ def _revision_locale_path(registry_root: Path) -> Path:
     return registry_root / "modelos" / MODELO_ID / "revisions" / REVISION_ID / "locales" / "en.toml"
 
 
-def _write_minimal_modelo(modelo_dir: Path) -> None:
+def _write_minimal_modelo(modelo_dir: Path, casilla_ids: tuple[str, ...] = ("01",)) -> None:
     modelo_dir.mkdir(parents=True)
     (modelo_dir / "manifest.toml").write_text(
         """
@@ -255,15 +430,18 @@ source_refs = ["aeat-source-test"]
         casillas_dir = revision_dir / "casillas"
         casillas_dir.mkdir()
         casillas_dir.joinpath("0001-casillas.toml").write_text(
-            f"""
+            "\n".join(
+                f"""
 [[revisions."{revision_id}".casillas]]
-id = "01"
-number = "01"
-label = "Etiqueta 01"
+id = "{casilla_id}"
+number = "{casilla_id}"
+label = "Etiqueta {casilla_id}"
 section = ["section"]
 input_kind = "manual"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-source-test"]
-""",
+"""
+                for casilla_id in casilla_ids
+            ),
             encoding="utf-8",
         )
