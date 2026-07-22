@@ -134,12 +134,23 @@ an instruction the virtual machine refuses.
 Everything that would explain that away has been tested and eliminated: forcing
 the overlay to build cffi from source rather than take a wheel (it then builds a
 locally-tagged wheel and still crashes); overriding the optimisation flags from
-the formula; and, decisively, compiling cffi by hand with the same native-tuned
-flags Homebrew exports and constructing an FFI object, which succeeds. Outside
-brew the same build works under every flag combination tried. The differentiator
-therefore remains something in the real build environment, of which a full
-144-variable capture was taken during a failing install and is the natural input
-for the next bisection.
+the formula; compiling cffi by hand with the same native-tuned flags Homebrew
+exports and constructing an FFI object, which succeeds; and the compiler
+identity, since the compiler the environment names is not present at the path it
+names.
+
+An attempt to bisect the captured environment did not converge, and the reason
+matters more than the attempt. Applying the capture over an interactive shell
+appeared once to reproduce the crash without brew, but that result did NOT
+replicate under a controlled harness: neither the capture alone nor the capture
+combined with the inherited environment reproduces it when applied to a clean
+environment, with the same virtual-environment flags and the same install
+command. Treat the outside-brew reproduction as unconfirmed. The only reliable
+reproducer remains a real formula install, which suggests the trigger is not a
+plain environment variable at all but something brew does structurally during a
+resource build, and it leaves open that the failure is not fully deterministic.
+Whoever resumes should first establish whether the reproducer fails on every run
+or only some, because an intermittent fault changes the whole approach.
 
 ### scoop-lane-container-mode-conflict | medium | the Scoop lane and the Linux runners cannot share one docker daemon
 
