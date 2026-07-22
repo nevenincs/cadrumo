@@ -1,0 +1,19 @@
+[labels]
+"08" = "Base de retencions i ingressos a compte. Rendes dineràries"
+"09" = "Base de retencions i ingressos a compte. Rendes en espècie"
+"10" = "Base de retencions i ingressos a compte. Total"
+"11" = "Retencions i ingressos a compte. Rendes dineràries"
+"12" = "Retencions i ingressos a compte. Rendes en espècie"
+"13" = "Retencions i ingressos a compte. Total"
+"20" = "Resultats a ingressar de declaracions anteriors pel mateix concepte, exercici i període"
+"21" = "Resultat a ingressar"
+
+[help]
+"08" = "08"
+"09" = "09"
+"10" = "10"
+"11" = "11"
+"12" = "12"
+"13" = "13"
+"20" = "20"
+"21" = "21"

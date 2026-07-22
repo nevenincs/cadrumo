@@ -1,0 +1,21 @@
+[labels]
+"clave-valor" = "Az értékpapír típuskódja"
+"codigo-pais" = "Országkód"
+"declarado-nif" = "A bejelentett fél adószáma"
+"declarado-nombre" = "A bejelentett fél neve, cégneve vagy elnevezése"
+"declarante-nif" = "A bejelentő adószáma"
+"ejercicio-declaracion" = "A bevallás éve"
+"nominal-unitario-valores" = "Az értékpapírok egységnyi névértéke"
+"numero-valores" = "Az értékpapírok száma"
+"valoracion" = "Értékelés"
+
+[help]
+"clave-valor" = "clave-valor"
+"codigo-pais" = "codigo-pais"
+"declarado-nif" = "declarado-nif"
+"declarado-nombre" = "declarado-nombre"
+"declarante-nif" = "declarante-nif"
+"ejercicio-declaracion" = "ejercicio-declaracion"
+"nominal-unitario-valores" = "nominal-unitario-valores"
+"numero-valores" = "numero-valores"
+"valoracion" = "valoracion"

@@ -1,0 +1,9 @@
+[labels]
+"decl.ejercicio" = "Tax year the return refers to"
+"decl.periodo" = "Period (annual, 0A)"
+"impatriado.base-liquidable-general" = "General taxable base (impatriate regime, excluding the savings component under art. 25.1.f TRLIRNR)"
+"impatriado.cuota-diferencial" = "Net tax liability (gross general tax liability minus withholdings)"
+"impatriado.cuota-integra-general" = "Gross general tax liability (scale under art. 93.2.e.1: 24% up to €600,000, 47% on the excess)"
+"impatriado.retenciones" = "Withholdings and advance payments (art. 93.2.f)"
+
+[help]

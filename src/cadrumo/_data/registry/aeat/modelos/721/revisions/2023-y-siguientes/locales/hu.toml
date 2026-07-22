@@ -1,0 +1,10 @@
+[labels]
+"custodio.codigo-pais" = "A letétkezelő országkódja (ISO 3166-1 alfa-2)"
+"custodio.nombre-razon-social" = "A külföldi virtuális pénznem letétkezelőjének neve vagy cégneve"
+"ejercicio" = "A külföldi virtuális pénznemekről szóló bevallás tárgyát képező adóév"
+"moneda.clave-token" = "A virtuális pénznem azonosítója (ticker / token ID, például BTC, ETH)"
+"moneda.saldo-31-diciembre" = "A virtuális pénznem egyenlege vagy értéke december 31-én, euróban kifejezve"
+"moneda.saldo-inicio" = "A virtuális pénznem egyenlege vagy értéke az időszak elején (jelentős változások esetén)"
+"tipo-declaracion" = "A bevallás típusa (eredeti / kiegészítő / helyettesítő)"
+
+[help]

@@ -152,9 +152,10 @@ def status(
     """Print the honest per-leaf state partition for every locale surface.
 
     Catalogue rows partition the required codebase keys into authored,
-    key-echo, identical-to-en (allowlisted or pending), and absent. Modelo
-    rows report the same discipline per revision and locale, with mirrored
-    help counted separately from authored help.
+    key-echo, unbindable (reserved interpolation token), identical-to-en
+    (allowlisted or pending), and absent. Modelo rows report the same
+    discipline per revision and locale, with mirrored help counted
+    separately from authored help.
     """
     if revision_id is not None and modelo_id is None:
         raise typer.BadParameter("--revision requires --modelo", param_hint="--revision")
@@ -182,7 +183,8 @@ def _echo_catalogue_status(record: CatalogueStatusRecord) -> None:
     """Echo one catalogue's honest state partition as a greppable row."""
     typer.echo(
         f"catalogue file={record.locale_file} required={record.required} authored={record.authored} "
-        f"key_echo={record.key_echo} identical_allowlisted={record.identical_allowlisted} "
+        f"key_echo={record.key_echo} unbindable={record.unbindable} "
+        f"identical_allowlisted={record.identical_allowlisted} "
         f"identical_pending={record.identical_pending} absent={record.absent} extra={record.extra}",
     )
 
@@ -264,7 +266,9 @@ def allow_identical(
         path = _default_manager().allow_identical(locale, key, reason)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    typer.echo(tr("locales.cli.allow_identical.recorded", allowlist_file=path.name, locale=locale, key=key))
+    # ``locale`` is tr()'s reserved rendering-locale meta-kwarg, so the
+    # catalogue token for the exempted locale must travel as locale_code.
+    typer.echo(tr("locales.cli.allow_identical.recorded", allowlist_file=path.name, locale_code=locale, key=key))
 
 
 @app.command("canonicalize-product-identity")

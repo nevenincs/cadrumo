@@ -1,0 +1,9 @@
+[labels]
+"decl.ejercicio" = "A bevallás tárgyát képező adóév"
+"decl.periodo" = "Időszak (éves, 0A)"
+"impatriado.base-liquidable-general" = "Általános adóalap (beköltöző-rendszer, a TRLIRNR 25.1.f cikke szerinti megtakarítási rész kivételével)"
+"impatriado.cuota-diferencial" = "Különbözeti adókötelezettség (bruttó általános adókötelezettség levonva a visszatartásokkal)"
+"impatriado.cuota-integra-general" = "Bruttó általános adókötelezettség (a 93.2.e.1. cikk szerinti sáv: 24% 600 000 EUR-ig, 47% a felette)"
+"impatriado.retenciones" = "Visszatartások és előlegfizetések (93.2.f cikk)"
+
+[help]

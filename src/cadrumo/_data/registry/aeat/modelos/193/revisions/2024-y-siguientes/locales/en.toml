@@ -1,0 +1,6 @@
+[labels]
+"decl.base-total" = "Total withholding base and advance-payment base"
+"decl.retenciones-total" = "Total withholdings and advance payments"
+"decl.total-perceptores" = "Total number of recipients"
+
+[help]

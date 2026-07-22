@@ -1,0 +1,10 @@
+[labels]
+"cuentas.codigo-de-cuenta" = "Külföldi székhelyű pénzügyi intézménynél vezetett számla kódja"
+"cuentas.valoracion" = "Külföldi székhelyű pénzügyi intézménynél vezetett számla értékelése"
+"decl.ejercicio" = "Az adatszolgáltatás tárgyát képező adóév"
+"decl.tipo-declaracion" = "A bevallás típusa (eredeti / helyettesítő / kiegészítő)"
+"inmuebles.valoracion" = "Külföldön található ingatlanok vagy dologi jogok értékelése"
+"valores.identificacion" = "Külföldön található értékpapírok, jogok, biztosítások vagy jövedelmek azonosítása"
+"valores.valoracion" = "Külföldön található értékpapírok, jogok, biztosítások vagy jövedelmek értékelése"
+
+[help]

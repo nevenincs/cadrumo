@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Az önadózás vonatkozási éve"
+"decl.tipo-declaracion" = "Önadózás típusa (eredeti / helyettesítő / kiegészítő)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

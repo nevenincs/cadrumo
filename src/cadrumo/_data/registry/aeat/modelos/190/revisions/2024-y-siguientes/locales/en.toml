@@ -1,0 +1,6 @@
+[labels]
+"decl.percepciones-total" = "Total amount of payments made"
+"decl.retenciones-total" = "Total amount of withholdings and advance payments"
+"decl.total-percepciones" = "Total number of payments made"
+
+[help]

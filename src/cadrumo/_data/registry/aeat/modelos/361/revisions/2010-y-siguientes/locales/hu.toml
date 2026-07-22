@@ -1,0 +1,9 @@
+[labels]
+"ejercicio" = "A kérelem tárgyát képező év"
+"operacion-base-imponible" = "Az egyes számlák vagy importdokumentumok adóalapja"
+"operacion-cuota-iva" = "Az egyes számlák vagy importdokumentumok IVA-összege"
+"operacion-importe-solicitado-devolver" = "Az egyes ügyletekre kért visszatérítés összege"
+"operacion-prorrata-iva" = "Az egyes ügyletekre alkalmazandó levonható IVA-arányosítás"
+"periodo-solicitud" = "A kérelem időszaka"
+
+[help]

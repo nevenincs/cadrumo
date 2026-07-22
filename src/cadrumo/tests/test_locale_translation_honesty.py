@@ -94,6 +94,53 @@ def _key_echo_offenders(flat_leaves: dict[str, str]) -> list[str]:
     return sorted(key for key, value in flat_leaves.items() if value == key)
 
 
+def _reserved_token_offenders(flat_leaves: dict[str, str]) -> list[str]:
+    """Return keys whose value carries a token tr() can never interpolate.
+
+    ``tr()`` consumes ``locale`` and ``default`` as rendering directives and
+    strips them from the interpolation map, so a catalogue token named after
+    either is permanently unfillable regardless of what a call site passes.
+    """
+    from cadrumo.core.i18n import extract_placeholders
+    from cadrumo.locales import RESERVED_INTERPOLATION_TOKENS
+
+    return sorted(
+        key
+        for key, value in flat_leaves.items()
+        if isinstance(value, str) and extract_placeholders(value) & RESERVED_INTERPOLATION_TOKENS
+    )
+
+
+def test_reserved_token_offender_detection_discriminates() -> None:
+    """The detector fires on a planted reserved token and stays quiet otherwise."""
+
+    assert _reserved_token_offenders({"a.b": "x %{locale} y", "c.d": "x %{subject} y"}) == ["a.b"]
+    assert _reserved_token_offenders({"c.d": "x {default} y"}) == ["c.d"]
+    assert _reserved_token_offenders({"c.d": "plain prose"}) == []
+
+
+def test_no_catalogue_value_carries_a_reserved_interpolation_token() -> None:
+    """No locale value may name a tr() rendering directive as a placeholder.
+
+    Such a token can never bind, so the value looks authored while being
+    structurally broken. There is no allowlist and no ratchet: the shipped
+    count is zero and must stay zero.
+    """
+
+    failures: list[str] = []
+    for locale_code in ("ca", "en", "es", "hu"):
+        locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
+        offenders = _reserved_token_offenders(_flatten(locale_raw if isinstance(locale_raw, dict) else {}))
+        if offenders:
+            failures.append(
+                f"{locale_code}.yml carries {len(offenders)} value(s) with a reserved interpolation "
+                f"token (locale/default) that tr() can never fill. Rename the token (e.g. "
+                f"locale_code) in the value AND the call site. Keys: {offenders[:5]}"
+            )
+
+    assert failures == [], "\n".join(failures)
+
+
 def test_key_echo_offender_detection_discriminates() -> None:
     """The echo detector fires on an injected echo and stays quiet otherwise."""
 

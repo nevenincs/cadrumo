@@ -1,0 +1,23 @@
+[labels]
+"contraparte.clave-operacion" = "A partnerrel végzett ügylet kódja (A=értékesítések, B=beszerzések, ...)"
+"contraparte.importe-Q1" = "A partnerrel végzett ügyletek összege az első negyedévben"
+"contraparte.importe-Q2" = "A partnerrel végzett ügyletek összege a második negyedévben"
+"contraparte.importe-Q3" = "A partnerrel végzett ügyletek összege a harmadik negyedévben"
+"contraparte.importe-Q4" = "A partnerrel végzett ügyletek összege a negyedik negyedévben"
+"contraparte.nif" = "A bejelentett partner adószáma"
+"contraparte.nombre" = "A bejelentett partner neve vagy cégneve"
+"contraparte.pais-codigo" = "A partner országkódja (ISO 3166-1 alfa-2; belföldi partnereknél üres)"
+"decl.ejercicio" = "Az adóbevallás vonatkozási éve"
+"decl.tipo-declaracion" = "Bevallás típusa (eredeti / helyettesítő / kiegészítő)"
+
+[help]
+"contraparte.clave-operacion" = "contraparte.clave-operacion"
+"contraparte.importe-Q1" = "contraparte.importe-Q1"
+"contraparte.importe-Q2" = "contraparte.importe-Q2"
+"contraparte.importe-Q3" = "contraparte.importe-Q3"
+"contraparte.importe-Q4" = "contraparte.importe-Q4"
+"contraparte.nif" = "contraparte.nif"
+"contraparte.nombre" = "contraparte.nombre"
+"contraparte.pais-codigo" = "contraparte.pais-codigo"
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

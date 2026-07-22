@@ -1,0 +1,23 @@
+[labels]
+"contraparte.clave-operacion" = "Clau d'operació amb la contrapart (A=lliuraments/prestacions, B=adquisicions/recepcions, ...)"
+"contraparte.importe-Q1" = "Import d'operacions amb la contrapart en el primer trimestre"
+"contraparte.importe-Q2" = "Import d'operacions amb la contrapart en el segon trimestre"
+"contraparte.importe-Q3" = "Import d'operacions amb la contrapart en el tercer trimestre"
+"contraparte.importe-Q4" = "Import d'operacions amb la contrapart en el quart trimestre"
+"contraparte.nif" = "NIF de la contrapart declarada"
+"contraparte.nombre" = "Nom o raó social de la contrapart declarada"
+"contraparte.pais-codigo" = "Codi de país de la contrapart (ISO 3166-1 alfa-2; buit per a contraparts nacionals)"
+"decl.ejercicio" = "Exercici a què es refereix la declaració"
+"decl.tipo-declaracion" = "Tipus de declaració (originària / substitutiva / complementària)"
+
+[help]
+"contraparte.clave-operacion" = "contraparte.clave-operacion"
+"contraparte.importe-Q1" = "contraparte.importe-Q1"
+"contraparte.importe-Q2" = "contraparte.importe-Q2"
+"contraparte.importe-Q3" = "contraparte.importe-Q3"
+"contraparte.importe-Q4" = "contraparte.importe-Q4"
+"contraparte.nif" = "contraparte.nif"
+"contraparte.nombre" = "contraparte.nombre"
+"contraparte.pais-codigo" = "contraparte.pais-codigo"
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

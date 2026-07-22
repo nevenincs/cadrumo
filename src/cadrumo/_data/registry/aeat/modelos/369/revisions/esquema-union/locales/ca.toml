@@ -1,0 +1,9 @@
+[labels]
+"decl.ejercicio" = "Exercici a què es refereix l'autoliquidació"
+"decl.periodo" = "Període de la declaració"
+"iva.union.cuota-total" = "Total quota d'IVA repercutida de l'Esquema Unió (suma cross-destination, cross-flow)"
+"iva.union.de.goods-distance-cuota" = "Quota d'IVA OSS Unió a la destinació DE — vendes a distància + interfícies electròniques"
+"iva.union.de.services-cuota" = "Quota d'IVA OSS Unió a la destinació DE — serveis prestats (LIVA art. 163 unvicies)"
+"iva.union.fr.services-cuota" = "Quota d'IVA OSS Unió a la destinació FR — serveis prestats (LIVA art. 163 unvicies)"
+
+[help]

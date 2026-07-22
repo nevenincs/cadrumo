@@ -1,0 +1,9 @@
+[labels]
+"ejercicio" = "Any a què es refereix la sol·licitud"
+"operacion-base-imponible" = "Base imposable de cada factura o document d'importació"
+"operacion-cuota-iva" = "Quota d'IVA de cada factura o document d'importació"
+"operacion-importe-solicitado-devolver" = "Import sol·licitat a retornar per operació"
+"operacion-prorrata-iva" = "Prorrata d'IVA deduïble aplicable a cada operació"
+"periodo-solicitud" = "Període de la sol·licitud"
+
+[help]

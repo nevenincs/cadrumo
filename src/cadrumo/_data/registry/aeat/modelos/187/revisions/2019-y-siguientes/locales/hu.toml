@@ -1,0 +1,9 @@
+[labels]
+"03" = "Levonások és előlegfizetések adóalapja"
+"04" = "Bejelentett levonások és előlegfizetések"
+"05" = "Az éves összesítő teljes levonása"
+
+[help]
+"03" = "03"
+"04" = "04"
+"05" = "05"

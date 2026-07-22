@@ -1,0 +1,19 @@
+[labels]
+"decl.ejercicio" = "Exercici a què es refereix la declaració"
+"decl.periodo" = "Període (anual, 0A)"
+"impatriado.base-liquidable-ahorro" = "Base liquidable de l'estalvi (part de la base liquidable de les rendes art. 25.1.f TRLIRNR: dividends, interessos i guanys patrimonials de l'estalvi de font espanyola)"
+"impatriado.base-liquidable-general" = "Base liquidable general (règim d'impatriats, exclosa la part de l'estalvi art. 25.1.f TRLIRNR)"
+"impatriado.cuota-diferencial" = "Quota diferencial (quota íntegra general més quota íntegra de l'estalvi, menys retencions)"
+"impatriado.cuota-integra-ahorro" = "Quota íntegra de l'estalvi (escala art. 93.2.e.2n: 19/21/23/27/30 sobre la base liquidable de l'estalvi, redacció vigent Ley 7/2024)"
+"impatriado.cuota-integra-general" = "Quota íntegra general (escala art. 93.2.e.1r: 24% fins a 600.000 €, 47% sobre l'excés)"
+"impatriado.retenciones" = "Retencions i ingressos a compte (pagaments a compte, art. 93.2.f)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"
+"impatriado.base-liquidable-ahorro" = "impatriado.base-liquidable-ahorro"
+"impatriado.base-liquidable-general" = "impatriado.base-liquidable-general"
+"impatriado.cuota-diferencial" = "impatriado.cuota-diferencial"
+"impatriado.cuota-integra-ahorro" = "impatriado.cuota-integra-ahorro"
+"impatriado.cuota-integra-general" = "impatriado.cuota-integra-general"
+"impatriado.retenciones" = "impatriado.retenciones"

@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "A kérelem vonatkozási éve"
+"decl.estado-miembro" = "A visszatérítés szerinti tagállam, ahol az adót megfizették"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.estado-miembro" = "decl.estado-miembro"

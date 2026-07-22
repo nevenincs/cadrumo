@@ -1,0 +1,21 @@
+[labels]
+"clave-valor" = "Security type code"
+"codigo-pais" = "Country code"
+"declarado-nif" = "Tax ID of the reported holder"
+"declarado-nombre" = "Surname and first name, business name or corporate name of the reported holder"
+"declarante-nif" = "Tax ID of the filer"
+"ejercicio-declaracion" = "Filing year"
+"nominal-unitario-valores" = "Unit nominal value of the securities"
+"numero-valores" = "Number of securities"
+"valoracion" = "Valuation"
+
+[help]
+"clave-valor" = "clave-valor"
+"codigo-pais" = "codigo-pais"
+"declarado-nif" = "declarado-nif"
+"declarado-nombre" = "declarado-nombre"
+"declarante-nif" = "declarante-nif"
+"ejercicio-declaracion" = "ejercicio-declaracion"
+"nominal-unitario-valores" = "nominal-unitario-valores"
+"numero-valores" = "numero-valores"
+"valoracion" = "valoracion"

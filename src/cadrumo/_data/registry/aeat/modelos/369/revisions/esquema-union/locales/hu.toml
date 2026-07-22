@@ -1,0 +1,9 @@
+[labels]
+"decl.ejercicio" = "Az önadózás tárgyát képező adóév"
+"decl.periodo" = "A bevallás időszaka"
+"iva.union.cuota-total" = "Az uniós rendszer felszámított IVA-összesen (célországok és folyamattípusok közötti összeg)"
+"iva.union.de.goods-distance-cuota" = "OSS uniós rendszer IVA-összege DE célországba — távértékesítések + elektronikus felületek"
+"iva.union.de.services-cuota" = "OSS uniós rendszer IVA-összege DE célországba — nyújtott szolgáltatások (LIVA 163. unvicies cikk)"
+"iva.union.fr.services-cuota" = "OSS uniós rendszer IVA-összege FR célországba — nyújtott szolgáltatások (LIVA 163. unvicies cikk)"
+
+[help]

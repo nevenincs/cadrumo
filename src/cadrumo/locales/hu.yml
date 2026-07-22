@@ -383,8 +383,8 @@ aggregation:
         taxonómiával.
   source_mesh:
     errors:
-      ambiguous_source_disposition: 'Belső hiba: egy binding forrástípus egynél több
-        forrásháló-diszpozíció állapotban van, vagy egyikben sem.'
+      ambiguous_source_disposition: 'Belső hiba: a(z) {source_kind} binding forrástípus
+        egynél több forrásháló-diszpozíció állapotban van, vagy egyikben sem.'
       binding_source_mismatch: A source_kind és a binding_source eltérő binding-forrás
         családra hivatkozik.
       duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'
@@ -647,8 +647,8 @@ application:
         ambiguous_casilla_schema: 'Belső hiba: a futásidejű casilla-séma nem egyértelmű
           (duplikált casilla.id értékek vagy függő képlethivatkozások).'
         blank_modelo_selection: A kért modellválasztás nem tartalmazhat üres modellazonosítókat.
-        filing_year_period_mismatch: 'Belső hiba: a bevallási év nem egyezik a megadott
-          időszakkal.'
+        filing_year_period_mismatch: 'Belső hiba: a(z) {filing_year} bevallási év
+          nem egyezik a megadott {period} időszakkal.'
         filing_year_period_pair: A filing_year és a period értékeket együtt kell megadni.
         modelo_not_in_registry: A(z) %{modelo} modelo nem szerepel a számítási nyilvántartásban.
         modelo_revision_missing: A(z) %{modelo} modellnek nincsenek revizioi.
@@ -834,7 +834,7 @@ application:
         szám: %{value}'
       calculate_detail_casilla_unsupported: A(z) %{key} casilla a Modelo 180 perceptor/ingatlan
         részletsor mezőjét nevezi meg, nem skaláris decimális casilla bemenetet. A
-        helyi --casilla csatorna csak skaláris decimális casillakat fogad; a Modelo
+        helyi --casilla csatorna csak skaláris decimális casillákat fogad; a Modelo
         180 perceptor/ingatlan részletsorai még nem támogatottak a nyilvános --row
         felületen. Használd a aeat app modelo aggregate --modelo 180 --retencion-observation
         parancsot a támogatott éves perceptor-szám/base/retenciones forráshoz.
@@ -1302,7 +1302,7 @@ application:
       invalid_oracle_environment: 'A nyilvántartási oracle környezetnek ezek egyikének
         kell lennie: {allowed_values}; kapott érték: {value}.'
       invalid_topic_locale: 'A nyilvántartási téma nyelvének ezek egyikének kell lennie:
-        {allowed_locales}; kapott érték: {locale}.'
+        {allowed_locales}; kapott érték: {locale_code}.'
       manual_section_not_found: 'A(z) {section} kézikönyvszakasz nem található itt:
         {manual_id} {year} {part}.'
       manual_section_requires_structure: 'A kézikönyvszakasz kinyert struktúrát igényel
@@ -6302,7 +6302,7 @@ live:
 locales:
   cli:
     allow_identical:
-      recorded: 'rögzítve: {allowlist_file}:{locale}:{key}'
+      recorded: 'rögzítve: {allowlist_file}:{locale_code}:{key}'
     audit:
       file_drift: '%{locale_file}: hiányzó=%{missing_count} többlet=%{extra_count}'
       file_ok: '%{locale_file}: rendben'

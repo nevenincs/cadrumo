@@ -1,0 +1,19 @@
+[labels]
+"decl.ejercicio" = "Filing year to which the return relates"
+"decl.periodo" = "Period (annual, 0A)"
+"impatriado.base-liquidable-ahorro" = "Savings taxable base (the part of the taxable base from income under TRLIRNR art. 25.1.f: dividends, interest and savings capital gains from Spanish sources)"
+"impatriado.base-liquidable-general" = "General taxable base (impatriate regime, excluding the savings-income part under TRLIRNR art. 25.1.f)"
+"impatriado.cuota-diferencial" = "Net tax payable (gross general tax liability plus gross savings tax liability, minus withholdings)"
+"impatriado.cuota-integra-ahorro" = "Gross savings tax liability (art. 93.2.e.2º scale: 19/21/23/27/30 on the savings taxable base, wording in force per Ley 7/2024)"
+"impatriado.cuota-integra-general" = "Gross general tax liability (art. 93.2.e.1º scale: 24% up to EUR 600,000, 47% on the excess)"
+"impatriado.retenciones" = "Withholdings and advance payments (payments on account, art. 93.2.f)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"
+"impatriado.base-liquidable-ahorro" = "impatriado.base-liquidable-ahorro"
+"impatriado.base-liquidable-general" = "impatriado.base-liquidable-general"
+"impatriado.cuota-diferencial" = "impatriado.cuota-diferencial"
+"impatriado.cuota-integra-ahorro" = "impatriado.cuota-integra-ahorro"
+"impatriado.cuota-integra-general" = "impatriado.cuota-integra-general"
+"impatriado.retenciones" = "impatriado.retenciones"

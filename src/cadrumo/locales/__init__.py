@@ -41,10 +41,17 @@ from ._modelo_manager import (
     classify_modelo_locale_leaf,
 )
 from ._registry_scanner import scan_registry_keys
-from ._status import CatalogueLeafState, CatalogueStatusRecord, catalogue_status, classify_catalogue_leaf
+from ._status import (
+    RESERVED_INTERPOLATION_TOKENS,
+    CatalogueLeafState,
+    CatalogueStatusRecord,
+    catalogue_status,
+    classify_catalogue_leaf,
+)
 from .manager import LocaleError, LocaleManager, StrictUniqueKeyLoader
 
 __all__ = [
+    "RESERVED_INTERPOLATION_TOKENS",
     "CatalogueLeafState",
     "CatalogueStatusRecord",
     "LocaleError",

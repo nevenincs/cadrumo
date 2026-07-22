@@ -1,0 +1,23 @@
+[labels]
+"activos-materiales-inversiones" = "Tangible assets and investment property other than cash and receivables"
+"capital-resultados-no-distribuidos" = "Capital and undistributed profits as of the period-end date"
+"entidades-residentes-actividades" = "List of resident entities, permanent establishments and principal activities"
+"impuestos-devengados" = "Corporate Income Tax or analogous taxes accrued, including withholdings"
+"impuestos-satisfechos" = "Corporate Income Tax or analogous taxes paid, including withholdings borne"
+"ingresos-brutos-terceros" = "Gross revenues of the group obtained with third parties"
+"ingresos-brutos-vinculadas" = "Gross revenues of the group obtained with related entities"
+"otra-informacion-relevante" = "Other relevant information and explanation of the data included"
+"plantilla-media" = "Average headcount"
+"resultado-antes-impuestos" = "Profit before Corporate Income Tax or analogous taxes"
+
+[help]
+"activos-materiales-inversiones" = "activos-materiales-inversiones"
+"capital-resultados-no-distribuidos" = "capital-resultados-no-distribuidos"
+"entidades-residentes-actividades" = "entidades-residentes-actividades"
+"impuestos-devengados" = "impuestos-devengados"
+"impuestos-satisfechos" = "impuestos-satisfechos"
+"ingresos-brutos-terceros" = "ingresos-brutos-terceros"
+"ingresos-brutos-vinculadas" = "ingresos-brutos-vinculadas"
+"otra-informacion-relevante" = "otra-informacion-relevante"
+"plantilla-media" = "plantilla-media"
+"resultado-antes-impuestos" = "resultado-antes-impuestos"

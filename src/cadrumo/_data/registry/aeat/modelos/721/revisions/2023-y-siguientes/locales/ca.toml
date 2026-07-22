@@ -1,0 +1,10 @@
+[labels]
+"custodio.codigo-pais" = "Codi de país del custodi (ISO 3166-1 alfa-2)"
+"custodio.nombre-razon-social" = "Nom o raó social del custodi de la moneda virtual a l'estranger"
+"ejercicio" = "Exercici a què es refereix la declaració de monedes virtuals a l'estranger"
+"moneda.clave-token" = "Identificador de la moneda virtual (ticker / token ID, p. ex. BTC, ETH)"
+"moneda.saldo-31-diciembre" = "Saldo o valor de la moneda virtual a 31 de desembre expressat en euros"
+"moneda.saldo-inicio" = "Saldo o valor de la moneda virtual a l'inici del període (per a variacions significatives)"
+"tipo-declaracion" = "Tipus de declaració (originària / complementària / substitutiva)"
+
+[help]
