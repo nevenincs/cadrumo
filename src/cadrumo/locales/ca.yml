@@ -614,7 +614,8 @@ application:
         és més recent del que admet aquesta aplicació (fins a {max_supported}).
       delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
       delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
-      import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
+      import_bucket_collision: Ja existeix un bucket amb l'id {bucket_id}; usa --force-replace
+        per sobreescriure'l.
       import_missing_filing_baseline: 'El perfil de l''arxiu de bucket no té camps
         d''identitat per presentar: %{missing_flags}. Repara el perfil d''origen i
         torna''l a exportar.'
@@ -624,7 +625,9 @@ application:
       import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
       restore_not_archived: El bucket no està arxivat (donat de baixa); no hi ha res
         a recuperar.
-      unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
+      unsupported_archive_schema_version: La versió d'esquema de l'arxiu {archive_schema_version}
+        és anterior a l'admesa per aquesta aplicació; no es pot restaurar sense una
+        migració.
   calculations:
     iva_compensation:
       errors:
@@ -677,7 +680,8 @@ application:
         modelo_not_in_registry: El model %{modelo} no està present al registre de
           càlcul.
         modelo_revision_missing: El model %{modelo} no té revisions.
-        period_type: application.filing.runtime.errors.period_type
+        period_type: 'Error intern: es requereix un objecte Period per al proveïdor
+          d''esquema en temps d''execució; s''ha rebut {period_type}.'
         provider_year_missing: El model %{modelo} revisió %{revision} no té exercici
           de proveïdor.
         registry_empty: L arrel del registre %{registry_root_name} no té definicions
@@ -936,7 +940,8 @@ application:
       export_operator_profile_missing: L'exportació necessita el nom de l'operador
         del perfil actiu, però no existeix cap perfil persistit; completa identity.surnames
         i identity.name abans d'exportar.
-      export_output_path_invalid: application.modelo.errors.export_output_path_invalid
+      export_output_path_invalid: 'El camí de sortida de l''exportació no és vàlid:
+        {output_path} ({reason}).'
       export_period_unmappable: La unitat de treball %{work_unit_id} conté el període
         %{period}, que no es pot assignar a un període de registre.
       export_revision_state_refused: La revisió de càlcul %{calculation_revision_id}
@@ -6374,7 +6379,7 @@ live:
 locales:
   cli:
     allow_identical:
-      recorded: locales.cli.allow_identical.recorded
+      recorded: registrat {allowlist_file}:{locale}:{key}
     audit:
       file_drift: '%{locale_file}: falten=%{missing_count} sobrants=%{extra_count}'
       file_ok: '%{locale_file}: correcte'
