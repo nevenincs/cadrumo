@@ -2,7 +2,7 @@
 "decl.ejercicio" = "A bevallás vonatkozási éve"
 "decl.periodo" = "Időszak (éves, 0A)"
 "impatriado.base-liquidable-ahorro" = "Megtakarítási adóalap (a TRLIRNR 25.1.f cikke szerinti jövedelmek adóalapjának része: spanyol forrásból származó osztalék, kamat és megtakarítási tőkenyereség)"
-"impatriado.base-liquidable-general" = "Általános adóalap (kiküldött (impatriado) szabályozás, a TRLIRNR 25.1.f cikke szerinti megtakarítási jövedelem nélkül)"
+"impatriado.base-liquidable-general" = "Általános adóalap (beköltöző (impatriado) szabályozás, a TRLIRNR 25.1.f cikke szerinti megtakarítási jövedelem nélkül)"
 "impatriado.cuota-diferencial" = "Adókülönbözet (bruttó általános adóösszeg és bruttó megtakarítási adóösszeg együtt, levonásokkal csökkentve)"
 "impatriado.cuota-integra-ahorro" = "Bruttó megtakarítási adóösszeg (93.2.e.2. cikk szerinti sáv: 19/21/23/27/30 a megtakarítási adóalapra, a 7/2024. törvény hatályos szövege szerint)"
 "impatriado.cuota-integra-general" = "Bruttó általános adóösszeg (93.2.e.1. cikk szerinti sáv: 24% 600 000 EUR-ig, 47% a felette lévő rész után)"
