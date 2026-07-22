@@ -1,0 +1,6 @@
+[labels]
+"decl.base-total" = "Base total de retencions i ingressos a compte"
+"decl.retenciones-total" = "Retencions i ingressos a compte totals"
+"decl.total-perceptores" = "Nombre total de perceptors"
+
+[help]
