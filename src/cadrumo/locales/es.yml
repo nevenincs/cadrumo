@@ -1629,138 +1629,175 @@ auth:
 categories:
   registry:
     amortizacion_vivienda_afecto:
-      label: categories.registry.amortizacion_vivienda_afecto.label
-      notes: categories.registry.amortizacion_vivienda_afecto.notes
+      label: Amortización de la vivienda afecta
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª, amortización de la vivienda afecta).
     arrendamiento_local:
-      label: categories.registry.arrendamiento_local.label
-      notes: categories.registry.arrendamiento_local.notes
-    arrendamiento_vivienda_afecta: categories.registry.arrendamiento_vivienda_afecta
+      label: Alquiler del local
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    arrendamiento_vivienda_afecta: Parte del alquiler de la vivienda afecta a la actividad
     arrendamiento_vivienda_afecto:
-      notes: categories.registry.arrendamiento_vivienda_afecto.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     asesoria_contable:
-      label: categories.registry.asesoria_contable.label
-      notes: categories.registry.asesoria_contable.notes
+      label: Honorarios de asesoría contable
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
     asesoria_fiscal:
-      label: categories.registry.asesoria_fiscal.label
-      notes: categories.registry.asesoria_fiscal.notes
+      label: Honorarios de asesoría fiscal
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
     asesoria_juridica:
-      label: categories.registry.asesoria_juridica.label
-      notes: categories.registry.asesoria_juridica.notes
+      label: Honorarios de asesoría jurídica
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
     comunidad_vivienda_afecto:
-      label: categories.registry.comunidad_vivienda_afecto.label
-      notes: categories.registry.comunidad_vivienda_afecto.notes
+      label: Gastos de comunidad de la vivienda afecta
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 30.2.5.b, regla 2ª, gastos de titularidad de la vivienda).
     cuotas_autonomos_ss:
-      notes: categories.registry.cuotas_autonomos_ss.notes
+      notes: Gasto totalmente deducible; las cuotas del RETA son una condición legal
+        para el ejercicio de la actividad.
     cuotas_colegiales:
-      label: categories.registry.cuotas_colegiales.label
-      notes: categories.registry.cuotas_colegiales.notes
-    cuotas_reta: categories.registry.cuotas_reta
+      label: Cuotas colegiales
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    cuotas_reta: Cuotas de autónomos a la Seguridad Social (RETA)
     formacion_profesional:
-      label: categories.registry.formacion_profesional.label
-      notes: categories.registry.formacion_profesional.notes
+      label: Formación profesional
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
     gastos_bancarios:
-      label: categories.registry.gastos_bancarios.label
-      notes: categories.registry.gastos_bancarios.notes
+      label: Gastos bancarios
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, gastos financieros
+        y bancarios).
     gastos_financieros:
-      label: categories.registry.gastos_financieros.label
-      notes: categories.registry.gastos_financieros.notes
+      label: Gastos financieros
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, gastos financieros
+        y bancarios).
     hardware_amortizable:
-      label: categories.registry.hardware_amortizable.label
-      notes: categories.registry.hardware_amortizable.notes
-    home_office_agua: categories.registry.home_office_agua
-    home_office_gas: categories.registry.home_office_gas
-    home_office_internet: categories.registry.home_office_internet
-    home_office_luz: categories.registry.home_office_luz
+      label: Hardware amortizable
+      notes: Gasto totalmente deducible mediante amortización (Ley 35/2006 art. 28.1,
+        amortización del inmovilizado).
+    home_office_agua: Agua del despacho en casa
+    home_office_gas: Gas del despacho en casa
+    home_office_internet: Internet del despacho en casa
+    home_office_luz: Electricidad del despacho en casa
     ibi_local_afecto:
-      label: categories.registry.ibi_local_afecto.label
-      notes: categories.registry.ibi_local_afecto.notes
+      label: IBI del local afecto
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 14 LIS por remisión; tributos
+        fiscalmente deducibles).
     ibi_vivienda_afecto:
-      label: categories.registry.ibi_vivienda_afecto.label
-      notes: categories.registry.ibi_vivienda_afecto.notes
+      label: IBI de la vivienda afecta
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 30.2.5.b, regla 2ª, tributos no estatales de la vivienda).
     manutencion_dietas_extranjero:
-      notes: categories.registry.manutencion_dietas_extranjero.notes
+      notes: 'Deducible hasta un límite diario legal: 48,08 EUR/día sin pernocta,
+        91,35 EUR/día con pernocta (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
-          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.con-pernocta.label
+          label: Con pernocta
         sin-pernocta:
-          label: categories.registry.manutencion_dietas_extranjero.statutory_cap_variants.sin-pernocta.label
+          label: Sin pernocta
     manutencion_dietas_nacional:
-      notes: categories.registry.manutencion_dietas_nacional.notes
+      notes: 'Deducible hasta un límite diario legal: 26,67 EUR/día sin pernocta,
+        53,34 EUR/día con pernocta (Ley 6/2017 / Ley IRPF art. 30.2.5.c, Reglamento
+        IRPF art. 9.A.3.a).'
       statutory_cap_variants:
         con-pernocta:
-          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.con-pernocta.label
+          label: Con pernocta
         sin-pernocta:
-          label: categories.registry.manutencion_dietas_nacional.statutory_cap_variants.sin-pernocta.label
-    manutencion_extranjero: categories.registry.manutencion_extranjero
-    manutencion_nacional: categories.registry.manutencion_nacional
+          label: Sin pernocta
+    manutencion_extranjero: Dietas de manutención en el extranjero
+    manutencion_nacional: Dietas de manutención nacional
     material_oficina:
-      label: categories.registry.material_oficina.label
-      notes: categories.registry.material_oficina.notes
+      label: Material de oficina
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
     mobiliario_amortizable:
-      label: categories.registry.mobiliario_amortizable.label
-      notes: categories.registry.mobiliario_amortizable.notes
+      label: Mobiliario amortizable
+      notes: Gasto totalmente deducible mediante amortización (Ley 35/2006 art. 28.1,
+        amortización del inmovilizado).
     mutualidad_alternativa:
-      label: categories.registry.mutualidad_alternativa.label
-      notes: categories.registry.mutualidad_alternativa.notes
+      label: Mutualidad alternativa
+      notes: Deducible hasta un límite legal de 15.000 EUR/año por contribuyente,
+        para una mutualidad alternativa que sustituye al RETA (AEAT ayuda Renta, Cotizaciones
+        al RETA).
     publicidad_marketing:
-      label: categories.registry.publicidad_marketing.label
-      notes: categories.registry.publicidad_marketing.notes
+      label: Publicidad y marketing
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
     reparaciones_conservacion:
-      label: categories.registry.reparaciones_conservacion.label
-      notes: categories.registry.reparaciones_conservacion.notes
-    seguros_rc: categories.registry.seguros_rc
+      label: Reparaciones y conservación
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    seguros_rc: Seguro de responsabilidad civil profesional
     seguros_responsabilidad_civil:
-      notes: categories.registry.seguros_responsabilidad_civil.notes
-    seguros_salud: categories.registry.seguros_salud
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
+    seguros_salud: Seguro de salud del autónomo
     seguros_salud_autonomo:
-      notes: categories.registry.seguros_salud_autonomo.notes
+      notes: Deducible hasta un límite legal de 500 EUR/año por contribuyente (Ley
+        35/2006 art. 30.2.5.c, regla 1ª, primas de seguro de enfermedad).
     software_suscripcion:
-      label: categories.registry.software_suscripcion.label
-      notes: categories.registry.software_suscripcion.notes
+      label: Suscripción de software
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
     subcontratacion:
-      label: categories.registry.subcontratacion.label
-      notes: categories.registry.subcontratacion.notes
+      label: Subcontratación
+      notes: Gasto totalmente deducible, como servicio de profesional independiente
+        (Ley 35/2006 art. 28.1).
     suministros_cliente_directos:
-      label: categories.registry.suministros_cliente_directos.label
-      notes: categories.registry.suministros_cliente_directos.notes
+      label: Suministros directos del cliente
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1).
     suministros_home_office_agua:
-      notes: categories.registry.suministros_home_office_agua.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     suministros_home_office_gas:
-      notes: categories.registry.suministros_home_office_gas.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     suministros_home_office_internet:
-      notes: categories.registry.suministros_home_office_internet.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     suministros_home_office_luz:
-      notes: categories.registry.suministros_home_office_luz.notes
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (ratio por defecto 30%), cuando la vivienda está solo parcialmente afecta
+        (Ley 35/2006 art. 30.2.5.b, regla 4ª).
     telefonia_fija:
-      label: categories.registry.telefonia_fija.label
-      notes: categories.registry.telefonia_fija.notes
+      label: Telefonía fija
+      notes: Deducible en proporción a la superficie de la vivienda afecta a la actividad
+        (Ley 35/2006 art. 28.1).
     telefonia_movil:
-      label: categories.registry.telefonia_movil.label
-      notes: categories.registry.telefonia_movil.notes
-    tributos_deducibles: categories.registry.tributos_deducibles
+      label: Telefonía móvil
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del elemento patrimonial).
+    tributos_deducibles: Otros tributos y tasas fiscalmente deducibles
     tributos_fiscalmente_deducibles:
-      notes: categories.registry.tributos_fiscalmente_deducibles.notes
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 14 LIS por remisión).
     vehiculo_combustible:
-      label: categories.registry.vehiculo_combustible.label
-      notes: categories.registry.vehiculo_combustible.notes
+      label: Combustible del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     vehiculo_mantenimiento:
-      label: categories.registry.vehiculo_mantenimiento.label
-      notes: categories.registry.vehiculo_mantenimiento.notes
+      label: Mantenimiento del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     vehiculo_parking:
-      label: categories.registry.vehiculo_parking.label
-      notes: categories.registry.vehiculo_parking.notes
+      label: Aparcamiento del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     vehiculo_peaje:
-      label: categories.registry.vehiculo_peaje.label
-      notes: categories.registry.vehiculo_peaje.notes
+      label: Peajes del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     vehiculo_seguro:
-      label: categories.registry.vehiculo_seguro.label
-      notes: categories.registry.vehiculo_seguro.notes
+      label: Seguro del vehículo
+      notes: Deducible con prueba de afectación exclusiva a la actividad (Reglamento
+        IRPF art. 22, afectación exclusiva del vehículo).
     viajes_alojamiento:
-      label: categories.registry.viajes_alojamiento.label
-      notes: categories.registry.viajes_alojamiento.notes
+      label: Alojamiento en viajes
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
     viajes_transporte:
-      label: categories.registry.viajes_transporte.label
-      notes: categories.registry.viajes_transporte.notes
+      label: Transporte en viajes
+      notes: Gasto totalmente deducible (Ley 35/2006 art. 28.1, otros servicios exteriores).
   test_profile:
     display_label_851219: Etiqueta de visualización 851219
 cli:
