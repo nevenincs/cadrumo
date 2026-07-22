@@ -1,0 +1,10 @@
+[labels]
+"01" = "Number of recipients"
+"02" = "Withholding and advance-payment tax base"
+"03" = "Withholdings and advance payments"
+"04" = "Number of recipients (additional block)"
+"05" = "Withholding and advance-payment tax base (additional block)"
+"06" = "Amount due from previous returns for the same item, tax year and period"
+"07" = "Amount due"
+
+[help]

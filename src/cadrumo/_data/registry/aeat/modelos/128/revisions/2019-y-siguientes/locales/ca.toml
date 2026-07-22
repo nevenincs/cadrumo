@@ -1,0 +1,10 @@
+[labels]
+"01" = "Nombre de perceptors"
+"02" = "Base de retencions i ingressos a compte"
+"03" = "Retencions i ingressos a compte"
+"04" = "Nombre de perceptors (bloc addicional)"
+"05" = "Base de retencions i ingressos a compte (bloc addicional)"
+"06" = "Resultat a ingressar de declaracions anteriors pel mateix concepte, exercici i període"
+"07" = "Resultat a ingressar"
+
+[help]
