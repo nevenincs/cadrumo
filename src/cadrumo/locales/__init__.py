@@ -34,9 +34,11 @@ from ._modelo_manager import (
     ModeloLocaleFieldKind,
     ModeloLocaleFileTarget,
     ModeloLocaleInventoryKey,
+    ModeloLocaleLeafState,
     ModeloLocaleManager,
     ModeloLocaleScope,
     ModeloLocaleTranslationFile,
+    classify_modelo_locale_leaf,
 )
 from ._registry_scanner import scan_registry_keys
 from .manager import LocaleError, LocaleManager, StrictUniqueKeyLoader
@@ -51,10 +53,12 @@ __all__ = [
     "ModeloLocaleFieldKind",
     "ModeloLocaleFileTarget",
     "ModeloLocaleInventoryKey",
+    "ModeloLocaleLeafState",
     "ModeloLocaleManager",
     "ModeloLocaleScope",
     "ModeloLocaleTranslationFile",
     "StrictUniqueKeyLoader",
+    "classify_modelo_locale_leaf",
     "get_registered_keys",
     "scan_namespace_markers",
     "scan_registry_keys",

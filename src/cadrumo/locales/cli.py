@@ -24,6 +24,7 @@ from ._modelo_manager import (
     ModeloLocaleFieldKind,
     ModeloLocaleManager,
 )
+from ._status import CatalogueStatusRecord, catalogue_status
 from .manager import (
     LocaleAuditResult,
     LocaleError,
@@ -122,6 +123,80 @@ def _echo_placeholder_mismatch(mismatch: LocalePlaceholderMismatch) -> None:
         f"{variant.locale_file}={sorted(variant.placeholders)!r}" for variant in mismatch.variants
     )
     typer.echo(f"placeholder mismatch key={mismatch.key} {rendered_variants}")
+
+
+_MODELO_STATUS_LOCALES = (OutputLanguage.EN, OutputLanguage.CA, OutputLanguage.HU)
+
+
+@app.command("status")
+def status(
+    ctx: typer.Context,
+    modelos: Annotated[
+        bool,
+        typer.Option("--modelos", help="Include the schema-local state of every directory-mode modelo."),
+    ] = False,
+    modelo_id: Annotated[
+        str | None,
+        typer.Option("--modelo", help="Restrict the schema-local scan to one modelo id."),
+    ] = None,
+    revision_id: Annotated[
+        str | None,
+        typer.Option("--revision", help="Restrict the schema-local scan to one revision id."),
+    ] = None,
+    locales: Annotated[
+        list[OutputLanguage] | None,
+        typer.Option("--locale", help="Restrict the schema-local scan to selected locales."),
+    ] = None,
+    registry_root: RegistryRootOpt = None,
+) -> None:
+    """Print the honest per-leaf state partition for every locale surface.
+
+    Catalogue rows partition the required codebase keys into authored,
+    key-echo, identical-to-en (allowlisted or pending), and absent. Modelo
+    rows report the same discipline per revision and locale, with mirrored
+    help counted separately from authored help.
+    """
+    if revision_id is not None and modelo_id is None:
+        raise typer.BadParameter("--revision requires --modelo", param_hint="--revision")
+    manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
+    for record in catalogue_status(manager):
+        _echo_catalogue_status(record)
+    if not modelos and modelo_id is None:
+        return
+    modelo_manager = _modelo_manager(registry_root)
+    scan_locales = tuple(locales) if locales else _MODELO_STATUS_LOCALES
+    modelo_ids = (modelo_id,) if modelo_id is not None else modelo_manager.modelo_ids()
+    try:
+        for scanned_modelo_id in modelo_ids:
+            for record in modelo_manager.coverage_records(
+                scanned_modelo_id,
+                revision_id=revision_id,
+                locales=scan_locales,
+            ):
+                _echo_modelo_status(record)
+    except ModeloLocaleError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+
+
+def _echo_catalogue_status(record: CatalogueStatusRecord) -> None:
+    """Echo one catalogue's honest state partition as a greppable row."""
+    typer.echo(
+        f"catalogue file={record.locale_file} required={record.required} authored={record.authored} "
+        f"key_echo={record.key_echo} identical_allowlisted={record.identical_allowlisted} "
+        f"identical_pending={record.identical_pending} absent={record.absent} extra={record.extra}",
+    )
+
+
+def _echo_modelo_status(record: ModeloLocaleCoverageRecord) -> None:
+    """Echo one modelo revision's honest state partition as a greppable row."""
+    typer.echo(
+        f"modelo locale={record.locale.value} modelo={record.modelo_id} revision={record.revision_id} "
+        f"label_authored={record.label_translated}/{record.label_required} "
+        f"label_key_echo={record.label_key_echo} label_absent={record.label_absent} "
+        f"help_authored={record.help_translated}/{record.help_required} "
+        f"help_key_echo={record.help_key_echo} help_mirrored={record.help_mirrored} "
+        f"help_absent={record.help_absent} complete={str(record.complete).lower()}",
+    )
 
 
 @app.command("scaffold")
@@ -401,6 +476,12 @@ def _echo_modelo_coverage(record: ModeloLocaleCoverageRecord) -> None:
             help_translated=record.help_translated,
             help_required=record.help_required,
         ),
+    )
+    typer.echo(
+        f"states locale={record.locale.value} modelo={record.modelo_id} revision={record.revision_id} "
+        f"label_key_echo={record.label_key_echo} label_absent={record.label_absent} "
+        f"help_key_echo={record.help_key_echo} help_mirrored={record.help_mirrored} "
+        f"help_absent={record.help_absent}",
     )
 
 
