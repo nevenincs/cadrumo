@@ -364,8 +364,8 @@ aggregation:
       source_kinds_mismatch: Source kinds must match the accepted four-kind taxonomy.
   source_mesh:
     errors:
-      ambiguous_source_disposition: 'Internal error: a binding source kind is in more
-        than one source-mesh disposition state, or in none.'
+      ambiguous_source_disposition: 'Internal error: binding source kind {source_kind}
+        is in more than one source-mesh disposition state, or in none.'
       binding_source_mismatch: source_kind and binding_source refer to different binding-source
         families.
       duplicate_binding_owner: 'Internal error: duplicate binding owner in source
@@ -625,8 +625,8 @@ application:
           (duplicate casilla.id values or dangling formula references).'
         blank_modelo_selection: Requested modelo selection must not contain blank
           modelo ids.
-        filing_year_period_mismatch: 'Internal error: the filing year does not match
-          the supplied period.'
+        filing_year_period_mismatch: 'Internal error: filing year {filing_year} does
+          not match the supplied period {period}.'
         filing_year_period_pair: filing_year and period must be supplied together.
         modelo_not_in_registry: Modelo %{modelo} is not present in the calculation
           registry.
@@ -1247,7 +1247,7 @@ application:
       invalid_oracle_environment: Registry oracle environment must be one of {allowed_values};
         got {value}.
       invalid_topic_locale: Registry topic locale must be one of {allowed_locales};
-        got {locale}.
+        got {locale_code}.
       manual_section_not_found: Manual section {section} was not found in {manual_id}
         {year} {part}.
       manual_section_requires_structure: Manual section requires extracted structure
