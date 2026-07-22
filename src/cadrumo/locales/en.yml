@@ -364,7 +364,8 @@ aggregation:
       source_kinds_mismatch: Source kinds must match the accepted four-kind taxonomy.
   source_mesh:
     errors:
-      ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
+      ambiguous_source_disposition: 'Internal error: a binding source kind is in more
+        than one source-mesh disposition state, or in none.'
       binding_source_mismatch: source_kind and binding_source refer to different binding-source
         families.
       duplicate_binding_owner: 'Internal error: duplicate binding owner in source
@@ -373,7 +374,8 @@ aggregation:
         in source mesh.'
       duplicate_relation_owner: 'Internal error: duplicate relation owner in source
         mesh.'
-      duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
+      duplicate_row_binding_owner: 'Internal error: duplicate row-binding owner in
+        the source mesh.'
       out_of_window_summary_date_span_invalid: An out-of-window summary's maximum
         filing date must not precede its minimum filing date.
       out_of_window_summary_incomplete: An out-of-window summary must set the count,
@@ -383,14 +385,20 @@ aggregation:
       owned_sources_duplicate: Source mesh owned sources must be unique.
       relation_provenance_incomplete: Relation provenance must include source modelo,
         filing year, periods, casillas, legal refs, and source refs.
-      row_binding_index_invalid: aggregation.source_mesh.errors.row_binding_index_invalid
-      row_binding_value_invalid: aggregation.source_mesh.errors.row_binding_value_invalid
+      row_binding_index_invalid: 'Internal error: the row-binding row index must be
+        1 or greater.'
+      row_binding_value_invalid: 'Internal error: the row-binding decimal value is
+        not valid.'
       source_transaction_ids_blank: Source mesh transaction ids must not contain blanks.
       source_transaction_ids_duplicate: Source mesh transaction ids must be unique.
-      unresolved_binding_ids_blank: aggregation.source_mesh.errors.unresolved_binding_ids_blank
-      unresolved_binding_ids_duplicate: aggregation.source_mesh.errors.unresolved_binding_ids_duplicate
-      unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
-      unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
+      unresolved_binding_ids_blank: 'Internal error: unresolved binding ids cannot
+        be blank.'
+      unresolved_binding_ids_duplicate: 'Internal error: unresolved binding ids cannot
+        be duplicated.'
+      unresolved_relation_ids_blank: 'Internal error: unresolved relation ids cannot
+        be blank.'
+      unresolved_relation_ids_duplicate: 'Internal error: unresolved relation ids
+        cannot be duplicated.'
 application:
   auth:
     acquisition_lock:
@@ -554,19 +562,25 @@ application:
         requires explicit confirmation.
       archive_schema_version_from_future: The archive schema version {archive_schema_version}
         is newer than this application supports (up to {max_supported}).
-      delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
-      delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
-      import_bucket_collision: application.bucket_maintenance.errors.import_bucket_collision
+      delete_active_bucket: Cannot delete the active bucket; switch to another profile
+        first with aeat config switch NAME.
+      delete_not_confirmed: This operation is destructive. Re-run with --yes to confirm.
+      import_bucket_collision: A bucket with id {bucket_id} already exists; use --force-replace
+        to overwrite it.
       import_missing_filing_baseline: 'The bucket archive profile is missing filing
         identity fields: %{missing_flags}. Repair the source profile and export it
         again.'
-      import_payload_invalid: application.bucket_maintenance.errors.import_payload_invalid
-      import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
-      import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
-      import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      import_payload_invalid: The profile archive content is invalid or corrupted.
+      import_recovery_passphrase_required: This archive includes an encrypted recovery
+        wrap; provide the recovery passphrase to import it.
+      import_recovery_wrap_invalid: The supplied recovery passphrase could not unwrap
+        the encrypted wrap.
+      import_recovery_wrap_missing: The archive declares a recovery wrap but does
+        not contain its bytes; the archive is incomplete or corrupted.
       restore_not_archived: The bucket is not archived (tombstoned); there is nothing
         to restore.
-      unsupported_archive_schema_version: application.bucket_maintenance.errors.unsupported_archive_schema_version
+      unsupported_archive_schema_version: Archive schema version {archive_schema_version}
+        predates what this application supports; it cannot be restored without a migration.
   calculations:
     iva_compensation:
       errors:
@@ -607,15 +621,18 @@ application:
       errors:
         active_profile_load_failed: 'The active filing profile could not be loaded:
           %{reason}.'
-        ambiguous_casilla_schema: application.filing.runtime.errors.ambiguous_casilla_schema
+        ambiguous_casilla_schema: 'Internal error: the runtime casilla schema is ambiguous
+          (duplicate casilla.id values or dangling formula references).'
         blank_modelo_selection: Requested modelo selection must not contain blank
           modelo ids.
-        filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
+        filing_year_period_mismatch: 'Internal error: the filing year does not match
+          the supplied period.'
         filing_year_period_pair: filing_year and period must be supplied together.
         modelo_not_in_registry: Modelo %{modelo} is not present in the calculation
           registry.
         modelo_revision_missing: Modelo %{modelo} has no revisions.
-        period_type: application.filing.runtime.errors.period_type
+        period_type: 'Internal error: the runtime schema provider requires a Period
+          object; received {period_type}.'
         provider_year_missing: Modelo %{modelo} revision %{revision} has no provider
           year.
         registry_empty: The registry root %{registry_root_name} has no modelo definitions.
@@ -853,7 +870,8 @@ application:
       export_operator_profile_missing: Export needs the operator name from the active
         profile, but no persisted profile exists; populate identity.surnames and identity.name
         before exporting.
-      export_output_path_invalid: application.modelo.errors.export_output_path_invalid
+      export_output_path_invalid: 'The export output path is not valid: {output_path}
+        ({reason}).'
       export_period_unmappable: Work unit %{work_unit_id} carries period %{period},
         which cannot be mapped to a registry filing period.
       export_revision_state_refused: Calculation revision %{calculation_revision_id}
@@ -1648,8 +1666,6 @@ categories:
     viajes_transporte:
       label: Travel transport
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
-  test_profile:
-    display_label_851219: Display label 851219
 cli:
   agent:
     app_help: Materialise the operator agent harness (rules, personas, skills) as
@@ -2550,7 +2566,6 @@ cli:
         disposition_help: 'Modelo 303 negative-result disposition: compensar (carry
           the credit forward, default) or devolver (request a refund; only in the
           year''s last filing period for a non-REDEME taxpayer).'
-        dt12_computation_error: 'DT12 computation error: %{message}'
         file_help: Mark a verified revision as internally filed. Does NOT submit to
           AEAT
         file_idempotent_noop: 'Idempotent no-op: calculation revision %{calculation_revision_id}
@@ -2775,7 +2790,6 @@ cli:
           Art. 14). Basis for the strict threshold: the allocation is zero once accumulated
           reserve reaches the first euro cent above twice share capital. Required
           with --sal-beneficio-neto and --sal-reserva-dotada.'
-        sal_computation_error: 'SAL computation error: %{message}'
         sal_reserva_dotada_help: Special reserve accumulated in previous fiscal years
           (Law 44/2015 Art. 14). Used to check whether the reserve has reached the
           first euro cent above twice share capital. Required with --sal-beneficio-neto
@@ -2840,15 +2854,12 @@ cli:
       draft_id_not_found: Draft ID %{draft_id} not found
       invalid_iso_date: 'Invalid date format for %{label}: %{raw}. ISO 8601 (YYYY-MM-DD)
         is required.'
-      no_active_profile_error_value: no-active-profile
       period_empty: Tax period cannot be empty
       period_missing_year: Period token '{token}' needs a year on this command. Add
         --year (e.g. --period {token} --year 2024).
       period_unrecognised: 'Unrecognized period ''{raw}''. Use an AEAT token: 1T-4T
         (quarters), 0A (annual), 01-12 (months), and supply the year with --year (e.g.
         --period 1T --year 2024).'
-    next:
-      create_profile_command: aeat config profile create NAME
   config:
     app_help: Manage local configuration and diagnostics
     auth:
@@ -4303,9 +4314,9 @@ cli:
         rejected; classify it manually when ready.
       transaction_id_help: Ledger transaction id (or unambiguous hex prefix)
   locales:
-    allow_identical_key_help: cli.locales.allow_identical_key_help
-    allow_identical_locale_help: cli.locales.allow_identical_locale_help
-    allow_identical_reason_help: cli.locales.allow_identical_reason_help
+    allow_identical_key_help: Dotted locale key to exempt.
+    allow_identical_locale_help: Locale code to update.
+    allow_identical_reason_help: Why this string is legitimately identical to English.
     app_help: Audit and scaffold locale catalogues
     canonicalize_product_identity:
       locale_help: Update only this supported locale catalogue.
@@ -4814,7 +4825,8 @@ cli:
 core:
   profile:
     errors:
-      output_language_type: core.profile.errors.output_language_type
+      output_language_type: The profile output language must be a supported language
+        code in text form.
       registration_duplicate_callable: Project answers implementation registered twice
         with different callables; it must be registered exactly once.
 dotted:
@@ -5243,7 +5255,10 @@ errors:
     error_profile_validation: A profile record failed validation.
     error_redaction: A redaction helper received an argument of the wrong type.
     error_renta: An error occurred in the RENTA calculation.
-    error_renta_profile_completeness_warning: errors.error.error_renta_profile_completeness_warning
+    error_renta_profile_completeness_warning: 'RETMAR mandatory filing: this worker
+      is registered in RETMAR. Since 2023, workers registered in the maritime special
+      Social Security regime must file an IRPF declaration regardless of income level
+      (Ley 35/2006 Art. 96 BOE-A-2006-20764).'
     error_renta_validation: A RENTA field value is not valid.
     error_rental_amortization_cap_exceeded: The cumulative amortization would exceed
       the legal cap for the rental asset.
@@ -5353,7 +5368,8 @@ errors:
       could not be saved or loaded.
     fail_modelo_filing_record_persistence: The filing-record catalogue could not be
       saved or loaded.
-    fail_modelo_locale_manager: errors.fail.fail_modelo_locale_manager
+    fail_modelo_locale_manager: 'Internal error: modelo schema-local translation management
+      failed.'
     fail_modelo_verification_report_persistence: The verification-report catalogue
       could not be saved or loaded.
     fail_modelo_work_unit_persistence: The work-unit catalogue could not be saved
@@ -5464,7 +5480,8 @@ errors:
       size or etag).
     integrity_outbound_storage_corruption: A sidecar metadata file contains a field
       with an unexpected type; the storage object is corrupted.
-    integrity_period: errors.integrity.integrity_period
+    integrity_period: 'Internal error: could not build a valid period from the supplied
+      year and code.'
     integrity_portals_portal_integrity: The AEAT portal registry violates a structural
       invariant.
     integrity_profile_answer_type: A profile-answer field received an unexpected type.
@@ -5605,15 +5622,23 @@ errors:
       AEAT Brexit IVA NIF-IVA / Modelo 349 instructions.'
     modelo_ambiguous_semantic_role_casilla: More than one casilla uses semantic role
       %{semantic_role}; use the exact canonical casilla.id.
-    modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
-    modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
-    modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
-    modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
-    modelo_calculate_input: errors.refused.modelo_calculate_input
-    modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
-    modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
-    modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
-    modelo_calculate_text_input: errors.refused.modelo_calculate_text_input
+    modelo_calculate_binding_input: The supplied --binding override could not be resolved
+      for the active revision.
+    modelo_calculate_casilla_input: The supplied casilla override could not be resolved
+      for the active revision.
+    modelo_calculate_decimal_input: The supplied calculation override value is not
+      decimal-shaped.
+    modelo_calculate_detail_rows: The supplied detail rows violate the modelo calculation
+      preconditions.
+    modelo_calculate_input: The operator-supplied modelo calculation input value is
+      not valid.
+    modelo_calculate_relation_input: The supplied --relation override could not be
+      resolved for the active revision.
+    modelo_calculate_semantic_role: The registry revision does not declare the semantic
+      role required by the shortcut.
+    modelo_calculate_shortcut_input: The grouped calculation shortcut inputs are incomplete.
+    modelo_calculate_text_input: The supplied --casilla override value is not valid
+      for a text casilla.
     modelo_calculation_revision_selector_ambiguous: The calculation revision selector
       matched more than one revision; refine the selector.
     modelo_calculation_revision_selector_state: The selected calculation revision
@@ -5628,7 +5653,7 @@ errors:
       a profile and try again.
     modelo_project_invalid_decimal_override: A projection override is not a valid
       decimal amount.
-    modelo_revision_pick: errors.refused.modelo_revision_pick
+    modelo_revision_pick: Could not select the requested calculation revision.
     modelo_work_period_token: Invalid modelo period token.
     modelo_work_registry_year_mismatch: The selected registry revision does not cover
       the requested filing year.
@@ -5827,7 +5852,10 @@ errors:
       record failed validation.
     refused_profile_schema_validation: The profile data violates the schema contract.
       Correct the values shown.
-    refused_renta_maritime_exemption_inactive: errors.refused.refused_renta_maritime_exemption_inactive
+    refused_renta_maritime_exemption_inactive: 'DA 41 LIRPF exemption is inactive:
+      EU state-aid clearance has not been granted as of 2024/2025. AEAT confirms non-applicability
+      in official 2024 guidance. Activate only after EU clearance is granted (Ley
+      35/2006 DA 41 BOE-A-2006-20764, added by Ley 26/2014 BOE-A-2014-12327).'
     refused_retention_floor: 'Erase refused: %{retained_record_count} filed tax record(s)
       are still within the legal retention period (Ley 58/2003, LGT art. 66 and 70).
       The earliest safe erase date is %{earliest_safe_erase_date}. Wait until then,
@@ -5959,12 +5987,13 @@ live:
     expediente_not_found: AEAT declaration register did not return the requested expediente.
     iva_history_modelo_303_only: IVA compensation history pull only accepts Modelo
       303 observations.
-    target_period_year_mismatch: live.errors.target_period_year_mismatch
+    target_period_year_mismatch: The target year does not match the target period's
+      filing year.
     year_range_invalid: From-year must be less than or equal to to-year.
 locales:
   cli:
     allow_identical:
-      recorded: locales.cli.allow_identical.recorded
+      recorded: recorded {allowlist_file}:{locale_code}:{key}
     audit:
       file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
       file_ok: '%{locale_file}: ok'
@@ -6136,9 +6165,6 @@ sheets:
       supplier_tax_id: Supplier tax id
       transfer_pricing_method_code: Transfer pricing method
       valuation_amount: Valuation
-some:
-  locale:
-    key: Some locale key
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
@@ -6214,8 +6240,6 @@ transactions:
     message_829073: 'Potential gap: more than 35 days between transactions.'
     unreadable: Unreadable file or unsupported format
     verified: Import verified successfully
-  test_diagnostics:
-    message: Month 2026-03 is missing from the imported file.
 wizard:
   choices:
     general: General
