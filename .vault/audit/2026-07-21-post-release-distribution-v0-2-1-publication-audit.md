@@ -175,6 +175,29 @@ curl inside the container — pre-seed `~/.cache/Homebrew/downloads/` with
 `~/.cache/pip` between runs; `ENV["PYTHONFAULTHANDLER"] = "1"` in the tap copy
 turns the empty-output subprocess death into a full faulting stack.
 
+RESOLVED (2026-07-22). The full 72-resource formula builds and pours green on
+the Apple-virtualization arm64 container; `LD_BIND_NOW=1` imports of
+`_cffi_backend`, `_argon2_cffi_bindings`, and `cryptography` (with
+`default_backend()`), `aeat --version` -> `CADRUMO 0.2.1`, and an argon2id hash
+all succeed. Reaching green required two prerequisites the minimal argon2
+reproducer had masked, because in the full formula cryptography-in-batch always
+faulted before argon2's isolation-off step ever ran: (1) a `python -m venv`
+(what `virtualenv_create` builds) ships pip but NOT setuptools, and Homebrew
+installs every resource `--no-deps`, so nothing pulls setuptools in
+transitively; both isolation-off builds then die `BackendUnavailable: Cannot
+import 'setuptools.build_meta'`. Fixed by pinning `setuptools` as an explicit
+venv resource next to `setuptools-scm`/`maturin`. (2) cryptography's `maturin`
+backend shells out to the `maturin` executable by bare name; the sdist install
+places that binary at `libexec/bin`, bundles no copy in the Python package, and
+adds no PATH entry, so both the isolation-off build and the `--no-binary=:all:`
+buildpath rebuild die `FileNotFoundError: 'maturin'`. Fixed by
+`ENV.prepend_path "PATH", libexec/"bin"` before the cryptography install (it
+persists into the buildpath rebuild, which needs it too). The resource tail
+(greenlet, lxml, pillow, pikepdf, pydantic-core, rpds-py, rtoml, pyyaml,
+sqlalchemy, ...) built with no further cffi-overlay faults, confirming argon2
+and cryptography were the only two cffi-at-build resources. Determinism
+re-runs are in progress at report time.
+
 ### homebrew-linux-arm64-sigill | medium | the arm64 leg dies on an illegal instruction, cause narrowed by elimination
 
 The Linux arm64 Homebrew leg fails building `argon2-cffi-bindings`, whose

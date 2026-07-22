@@ -454,6 +454,12 @@ def generate_formula(
     # present from the resources installed above.
     venv.pip_install resources.reject {{ |r| ["argon2-cffi-bindings", "cryptography"].include?(r.name) }}
     venv.pip_install resource("argon2-cffi-bindings"), build_isolation: false
+    # cryptography's maturin build backend shells out to the `maturin`
+    # executable by bare name. The sdist install places that binary at
+    # libexec/bin, bundles no copy inside the Python package, and adds no PATH
+    # entry, so the isolation-off build dies `FileNotFoundError: 'maturin'`.
+    # Put the venv bin on PATH so the backend resolves it.
+    ENV.prepend_path "PATH", libexec/"bin"
     venv.pip_install resource("cryptography"), build_isolation: false
     venv.pip_install_and_link buildpath
   end
