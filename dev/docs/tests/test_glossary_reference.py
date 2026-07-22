@@ -68,21 +68,23 @@ def test_headword_and_alias_term_lines_present() -> None:
     its admitted alias ``Agencia Tributaria`` as an additional term line on the
     same entry, so a ``:term:`` to either resolves to one definition.
     """
-    handbook = _load_handbook()
-    rst, _ = render_glossary(_REPO_ROOT, handbook)
+    rst, _ = render_glossary(_REPO_ROOT, _load_handbook())
     assert ".. glossary::" in rst
     # Headword and alias both appear as term lines (3-space indented).
     assert "\n   AEAT\n" in rst
     assert "\n   Agencia Tributaria\n" in rst
-    # The English body is present. Derive it from the generator's own
-    # definition-preferred contract rather than a hardcoded string: authoring an
-    # English `definition` supersedes the `short_description` as the body, so a
-    # literal assertion would falsely red this gate the moment the concept gains
-    # a full English definition (which is the campaign goal, not a regression).
-    from ..glossary_reference import _body_text
-
-    aeat = next(concept for concept in handbook.concepts if concept.concept_id == "aeat")
-    assert f"\n      {_body_text(aeat)}" in rst
+    # A body paragraph renders under the entry. Structural only: assert that a
+    # 6-space-indented, non-empty line follows the alias term line, never what it
+    # says. Asserting the prose would either hardcode a localized string or pull
+    # it from the generator's own body function, both of which pass tautologically
+    # against the generator's output and break when the (localized) text changes.
+    lines = rst.splitlines()
+    alias_at = lines.index("   Agencia Tributaria")
+    body_follows = any(
+        line.startswith("      ") and line.strip()
+        for line in lines[alias_at + 1 : alias_at + 4]
+    )
+    assert body_follows, "the AEAT entry renders no body paragraph under its term lines"
 
 
 @pytest.mark.integration
