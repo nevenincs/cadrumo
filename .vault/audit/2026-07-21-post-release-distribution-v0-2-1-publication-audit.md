@@ -189,11 +189,16 @@ Sweep a retired architecture's toolchain residue, not just its provisioning: the
 uv managed-Python store outlived the runner that installed it and silently
 redirected an ARM machine to Intel builds.
 
-Resume the arm64 investigation with a debugger, not another build permutation.
-Run the failing metadata build under a debugger that stops on the illegal-
-instruction signal, read the faulting program counter, and map it to the exact
-loaded object and instruction; that ends the guessing the elimination trail could
-not. Everything cheap has been tried: the sandbox, the compiler shim, environment
+Resume the arm64 investigation with a debugger attached to the LIVE build, not a
+replay. A debugger run was attempted and produced a convergent, load-bearing
+result: importing the crashing overlay's cffi backend directly, under the
+debugger, does not fault, while the real formula build faults deterministically.
+So the crash does not survive extraction of the object — it exists only inside
+the running build subprocess. The debugger must therefore be attached to that
+subprocess as it runs, by wrapping the metadata-build interpreter invocation to
+launch under the debugger and stop on the illegal-instruction signal, rather than
+importing the artefact afterward. Only then read the faulting program counter and
+map it to the loaded object; a post-hoc import is now proven not to reproduce it. Everything cheap has been tried: the sandbox, the compiler shim, environment
 filtering, architecture, contention, the package standalone, source-built cffi,
 environment layout, install ordering, cffi optimisation flags, the cffi
 wheel-versus-source split, and the linked libffi (which is the stock system
