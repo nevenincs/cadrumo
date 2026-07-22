@@ -22,17 +22,38 @@ _COMPANIONS = (
     ("cadrumo-data-official", "cadrumo_data_official"),
 )
 
-# argon2-cffi-bindings is installed with build isolation disabled (see the
-# formula install method), so its build backend must be present in the virtual
-# environment. setuptools ships in the locked closure; setuptools-scm does not,
-# and is pinned to the self-contained 8.x line because 10.x splits its
+# argon2-cffi-bindings and cryptography are installed with build isolation
+# disabled (see the formula install method), so their build backends must be
+# present in the virtual environment. A `python -m venv` (what
+# virtualenv_create builds) ships pip but NOT setuptools, and Homebrew installs
+# every resource with `--no-deps`, so nothing pulls setuptools in transitively;
+# an isolation-disabled build then fails to load `setuptools.build_meta`.
+# setuptools is therefore pinned here as an explicit venv resource (both
+# backends need it: argon2 uses setuptools.build_meta directly, cryptography's
+# build-requires lists it), alongside the two family-specific backends that are
+# likewise absent from the locked runtime closure. setuptools-scm (argon2
+# backend) is pinned to the self-contained 8.x line because 10.x splits its
 # versioning into a separate `vcs_versioning` distribution that an
-# isolation-disabled build cannot resolve. Declared as (name, url, sha256).
+# isolation-disabled build cannot resolve. maturin (cryptography's build
+# backend, cryptography>=48 requires maturin>=1.9.4,<2,!=1.12.0) builds from its
+# own Rust source under isolation ON safely — its build overlay never imports
+# cffi, so pac-ret there does not fault — and `rust` is already a formula build
+# dependency. Declared as (name, url, sha256).
 _EXTRA_BUILD_BACKEND = (
+    (
+        "setuptools",
+        "https://files.pythonhosted.org/packages/34/26/f5d29e25ffdb535afef2d35cdb55b325298f96debd670da4c325e08d70f4/setuptools-83.0.0.tar.gz",
+        "025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef",
+    ),
     (
         "setuptools-scm",
         "https://files.pythonhosted.org/packages/4f/a4/00a9ac1b555294710d4a68d2ce8dfdf39d72aa4d769a7395d05218d88a42/setuptools_scm-8.1.0.tar.gz",
         "42dea1b65771cba93b7a515d65a65d8246e560768a66b9106a592c8e7f26c8a7",
+    ),
+    (
+        "maturin",
+        "https://files.pythonhosted.org/packages/e7/b3/addd877f871fb1860d46d3a4f206ecb10b946c85846805e6367631926fd3/maturin-1.14.1.tar.gz",
+        "9d6577a62cd08e0ceba7a0db06fb098e0c9b1b3429bad747a4f3a18215a1b3df",
     ),
 )
 _TARGETS: dict[str, dict[str, str]] = {
@@ -413,19 +434,27 @@ def generate_formula(
 {resource_text}
 
   def install
-    # Apple's Virtualization.framework guest (the Linux-arm64 build host runs as
-    # a colima VM on Apple silicon) faults on the pac-ret pointer-authentication
-    # return instruction (retaa) that Homebrew's cc shim injects via
-    # HOMEBREW_CCCFG "b". Drop it so no compiled C extension carries retaa.
-    ENV["HOMEBREW_CCCFG"] = ENV["HOMEBREW_CCCFG"].to_s.delete("b")
+    # Apple's Virtualization.framework guests (colima and Docker Desktop VMs on
+    # Apple silicon -- the dominant Linux-arm64 environment) fault on the
+    # pac-ret pointer-authentication return instruction (retaa) that Homebrew's
+    # cc shim injects via HOMEBREW_CCCFG "b". Drop it on Linux arm64 only, so
+    # no compiled C extension carries retaa there; native macOS arm64 executes
+    # pointer authentication fine and keeps the hardening.
+    if OS.linux? && Hardware::CPU.arm?
+      ENV["HOMEBREW_CCCFG"] = ENV["HOMEBREW_CCCFG"].to_s.delete("b")
+    end
     venv = virtualenv_create(libexec, "python3.13")
-    # argon2-cffi-bindings' isolated build would install a fresh cffi into a
-    # pip build-isolation overlay that re-inherits the shim's pac-ret and
-    # crashes on load. Build it with isolation off against the already-installed
-    # pac-free venv cffi instead; its build backend (setuptools, setuptools-scm)
-    # is present from the resources installed above.
-    venv.pip_install resources.reject {{ |r| r.name == "argon2-cffi-bindings" }}
+    # argon2-cffi-bindings and cryptography each run cffi at build time: an
+    # isolated PEP 517 build installs a fresh cffi into a pip build-isolation
+    # overlay that re-inherits the shim's flags (on Linux arm64: pac-ret,
+    # which crashes cffi on load under Apple virtualization -- for cryptography
+    # it faults in cryptography-cffi's build.rs running build_openssl.py).
+    # Build both with isolation off against the already-installed venv cffi
+    # instead; their build backends (setuptools, setuptools-scm, maturin) are
+    # present from the resources installed above.
+    venv.pip_install resources.reject {{ |r| ["argon2-cffi-bindings", "cryptography"].include?(r.name) }}
     venv.pip_install resource("argon2-cffi-bindings"), build_isolation: false
+    venv.pip_install resource("cryptography"), build_isolation: false
     venv.pip_install_and_link buildpath
   end
 

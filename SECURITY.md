@@ -123,6 +123,19 @@ insecure in-memory provider when a real taxpayer identifier is present. Lost
 access to the keychain or passphrase is recoverable through a BIP-39 recovery
 mnemonic minted at setup; the mnemonic itself is never persisted to disk.
 
+### Compiled-extension hardening on Homebrew Linux arm64
+
+The Homebrew formula builds its Python C extensions from source on the
+installing machine. On Linux arm64 only, the formula disables Homebrew's
+pac-ret branch-protection compiler flag (`-mbranch-protection=standard`),
+because Apple Virtualization.framework guests — the dominant Linux-arm64
+environment (colima and Docker Desktop VMs on Apple silicon) — fault on the
+ARMv8.3 pointer-authentication `retaa` instruction it emits. Extensions built
+there carry no return-address-integrity hardening, matching the baseline of
+the PyPI wheels, which are built without that flag. Native macOS arm64
+Homebrew installs, where pointer authentication executes correctly, keep the
+hardening.
+
 ## Threat model
 
 ### Assets protected

@@ -422,10 +422,7 @@ def _register_work_list_command(work_app: typer.Typer, deps: _LifecycleDeps) -> 
     @work_app.command("list", help=tr("cli.app.modelo.work.list_help"))
     def work_list(
         ctx: typer.Context,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
+        bucket_id: _BucketIdOpt = None,
         include_discarded: Annotated[
             bool,
             typer.Option(
@@ -475,10 +472,7 @@ def _register_work_status_command(work_app: typer.Typer, deps: _LifecycleDeps) -
         year: _YearOpt = None,
         period: _PeriodOpt = None,
         revision: _RevisionOpt = None,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
+        bucket_id: _BucketIdOpt = None,
         output_language: OutputLanguage | None = typer.Option(
             None,
             "--output-language",
@@ -556,14 +550,8 @@ def _register_work_discard_command(work_app: typer.Typer, deps: _LifecycleDeps) 
         year: _YearOpt = None,
         period: _PeriodOpt = None,
         revision: _RevisionOpt = None,
-        bucket_id: Annotated[
-            str | None,
-            typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-        ] = None,
-        actor: Annotated[
-            str | None,
-            typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-        ] = None,
+        bucket_id: _BucketIdOpt = None,
+        actor: _ActorOpt = None,
         reason: Annotated[
             str | None,
             typer.Option("--reason", help=tr("cli.app.modelo.work.reason_help")),

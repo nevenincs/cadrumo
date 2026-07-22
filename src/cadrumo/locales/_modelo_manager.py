@@ -67,6 +67,7 @@ class ModeloLocaleLeafState(StrEnum):
 
     AUTHORED = "authored"
     KEY_ECHO = "key_echo"
+    BLANK = "blank"
     MIRRORED = "mirrored"
     ABSENT = "absent"
 
@@ -165,21 +166,23 @@ class ModeloLocaleCoverageRecord(BaseModel):
     label_required: int = Field(ge=0)
     label_translated: int = Field(ge=0)
     label_key_echo: int = Field(ge=0, default=0)
+    label_blank: int = Field(ge=0, default=0)
     help_required: int = Field(ge=0)
     help_translated: int = Field(ge=0)
     help_key_echo: int = Field(ge=0, default=0)
+    help_blank: int = Field(ge=0, default=0)
     help_mirrored: int = Field(ge=0, default=0)
     drift: tuple[ModeloLocaleDriftRecord, ...] = ()
 
     @property
     def label_absent(self) -> int:
         """Return required label leaves with no value on disk."""
-        return self.label_required - self.label_translated - self.label_key_echo
+        return self.label_required - self.label_translated - self.label_key_echo - self.label_blank
 
     @property
     def help_absent(self) -> int:
         """Return required help leaves with no value on disk."""
-        return self.help_required - self.help_translated - self.help_key_echo - self.help_mirrored
+        return self.help_required - self.help_translated - self.help_key_echo - self.help_blank - self.help_mirrored
 
     @property
     def required_total(self) -> int:
@@ -415,9 +418,11 @@ class ModeloLocaleManager:
             label_required=label_required,
             label_translated=counts.get((ModeloLocaleFieldKind.LABELS, ModeloLocaleLeafState.AUTHORED), 0),
             label_key_echo=counts.get((ModeloLocaleFieldKind.LABELS, ModeloLocaleLeafState.KEY_ECHO), 0),
+            label_blank=counts.get((ModeloLocaleFieldKind.LABELS, ModeloLocaleLeafState.BLANK), 0),
             help_required=help_required,
             help_translated=counts.get((ModeloLocaleFieldKind.HELP, ModeloLocaleLeafState.AUTHORED), 0),
             help_key_echo=counts.get((ModeloLocaleFieldKind.HELP, ModeloLocaleLeafState.KEY_ECHO), 0),
+            help_blank=counts.get((ModeloLocaleFieldKind.HELP, ModeloLocaleLeafState.BLANK), 0),
             help_mirrored=counts.get((ModeloLocaleFieldKind.HELP, ModeloLocaleLeafState.MIRRORED), 0),
             drift=self._drift_from_modelo(language, modelo, revision_id),
         )
@@ -537,7 +542,13 @@ class ModeloLocaleManager:
         key: str,
         value: str,
     ) -> Path:
-        """Set one schema-local translated leaf after registry-key validation."""
+        """Set one schema-local translated leaf after registry-key validation.
+
+        A blank value is refused: an empty or whitespace-only leaf reads
+        as present to a membership check while carrying nothing.
+        """
+        if not value.strip():
+            raise ModeloLocaleError(f"Cannot set {key!r}: a modelo locale value must not be blank")
         field_kind = _coerce_field_kind(field)
         target = self._target_for_key(locale, modelo_id, revision_id, field_kind, key)
         path = self._translation_leaf_path(target, field_kind, key)
@@ -965,15 +976,25 @@ def classify_modelo_locale_leaf(
             detect help that merely mirrors the label.
         official_label: The official Spanish schema label for ``key``.
 
+    Comparison is whitespace-normalised so a stray space or trailing
+    punctuation cannot smuggle a placeholder past the echo check, and an
+    empty-after-strip value is its own never-authored state.
+
     Returns:
         Exactly one :class:`ModeloLocaleLeafState`; only ``AUTHORED`` may be
         counted as translated.
     """
     if value is None:
         return ModeloLocaleLeafState.ABSENT
-    if value == key:
+    stripped = value.strip()
+    if not stripped:
+        return ModeloLocaleLeafState.BLANK
+    if stripped == key or stripped.rstrip(".:").rstrip() == key:
         return ModeloLocaleLeafState.KEY_ECHO
-    if field is ModeloLocaleFieldKind.HELP and value in {label_value, official_label}:
+    if field is ModeloLocaleFieldKind.HELP and stripped in {
+        label_value.strip() if label_value is not None else None,
+        official_label.strip() if official_label is not None else None,
+    }:
         return ModeloLocaleLeafState.MIRRORED
     return ModeloLocaleLeafState.AUTHORED
 

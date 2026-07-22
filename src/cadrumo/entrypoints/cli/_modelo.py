@@ -136,6 +136,15 @@ from ._modelo_review_package_cli import register_review_package_commands
 from ._modelo_work import create_work_app
 from ._modelo_work_calculate_cli import register_work_calculate_commands
 from ._modelo_work_lifecycle_cli import register_work_lifecycle_commands
+from ._modelo_work_options import (
+    _ActorOpt,
+    _BucketIdOpt,
+    _ModeloOpt,
+    _PeriodOpt,
+    _RevisionOpt,
+    _WorkUnitIdArg,
+    _YearOpt,
+)
 from ._modelo_work_revision_cli import register_work_revision_commands
 from ._modelo_work_runs_cli import register_work_run_commands
 from ._modelo_work_verification_cli import register_work_verification_commands
@@ -635,30 +644,12 @@ register_work_wizard_commands(
 )
 def work_compare_taxation(
     ctx: typer.Context,
-    work_unit_id: Annotated[
-        str | None,
-        typer.Argument(help=tr("cli.app.modelo.work.work_unit_id_help")),
-    ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
+    work_unit_id: _WorkUnitIdArg = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
     output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -813,26 +804,11 @@ def work_history(
             ),
         ),
     ] = None,
-    modelo: Annotated[
-        str | None,
-        typer.Option("--modelo", help=tr("cli.app.modelo.work.modelo_help")),
-    ] = None,
-    year: Annotated[
-        int | None,
-        typer.Option("--year", help=tr("cli.app.modelo.work.year_help")),
-    ] = None,
-    period: Annotated[
-        str | None,
-        typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
-    ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
+    modelo: _ModeloOpt = None,
+    year: _YearOpt = None,
+    period: _PeriodOpt = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
     output_language: OutputLanguage | None = typer.Option(
         None,
         "--output-language",
@@ -1037,10 +1013,7 @@ def work_amend(
             help=tr("cli.app.modelo.work.amendment_reason_help"),
         ),
     ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
+    actor: _ActorOpt = None,
     set_overrides: Annotated[
         list[str] | None,
         typer.Option("--set", help=tr("cli.app.modelo.work.set_override_help")),

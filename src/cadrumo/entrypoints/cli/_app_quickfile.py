@@ -36,6 +36,7 @@ from ._modelo_cli_support import (
     work_calculate_input_bundle_from_cli,
 )
 from ._modelo_rendering import advisory_notice, verification_report_notices
+from ._modelo_work_options import _ActorOpt, _BucketIdOpt, _RevisionOpt
 
 app = typer.Typer(
     name="quickfile",
@@ -74,14 +75,8 @@ def quickfile(
         Path | None,
         typer.Option("--output", help=tr("cli.app.modelo.export.output_help")),
     ] = None,
-    revision: Annotated[
-        str | None,
-        typer.Option("--revision", help=tr("cli.app.modelo.work.revision_help")),
-    ] = None,
-    bucket_id: Annotated[
-        str | None,
-        typer.Option("--bucket-id", help=tr("cli.app.modelo.work.bucket_id_help")),
-    ] = None,
+    revision: _RevisionOpt = None,
+    bucket_id: _BucketIdOpt = None,
     casilla: Annotated[
         list[str] | None,
         typer.Option("--casilla", help=tr("cli.app.modelo.work.casilla_help")),
@@ -98,10 +93,7 @@ def quickfile(
         list[str] | None,
         typer.Option("--row", help=tr("cli.app.modelo.work.row_help")),
     ] = None,
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
+    actor: _ActorOpt = None,
     disposition: Annotated[
         RefundElection,
         typer.Option("--disposition", help=tr("cli.app.modelo.work.disposition_help")),
