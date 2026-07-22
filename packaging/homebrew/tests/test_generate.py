@@ -121,7 +121,14 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     assert 'depends_on "qpdf"' in formula
     assert 'uses_from_macos "libffi"' in formula
     assert 'on_linux do\n    depends_on "zlib-ng-compat"' in formula
-    assert 'virtualenv_install_with_resources using: "python3.13"' in formula
+    # The install method drops Homebrew's pac-ret branch protection (which the
+    # colima/Apple-Virtualization build host faults on via the retaa instruction)
+    # and builds argon2-cffi-bindings with isolation off against the pac-free
+    # venv cffi, so it no longer uses the bare virtualenv_install_with_resources.
+    assert 'ENV["HOMEBREW_CCCFG"] = ENV["HOMEBREW_CCCFG"].to_s.delete("b")' in formula
+    assert 'venv.pip_install resources.reject { |r| r.name == "argon2-cffi-bindings" }' in formula
+    assert 'venv.pip_install resource("argon2-cffi-bindings"), build_isolation: false' in formula
+    assert "venv.pip_install_and_link buildpath" in formula
     assert 'assert_predicate bin/"aeat", :executable?' in formula
     assert 'assert_predicate bin/"cadrumo-mcp", :executable?' in formula
     assert 'shell_output("#{bin}/aeat --version")' in formula
@@ -137,7 +144,10 @@ def test_formula_is_deterministic_and_binds_the_real_cohort(
     )
     assert "mcp" in resources
     assert "tzdata" not in resources
-    assert len(resources) == 69
+    # 68 locked + 2 data companions + setuptools-scm (added as the argon2 build
+    # backend for the isolation-disabled build) = 70.
+    assert "setuptools-scm" in resources
+    assert len(resources) == 70
     assert all(url.startswith("https://") for url, _digest in resources.values())
     # macOS is ARM-only (Intel dropped 2026-07-21), so no resource is macOS
     # conditional any more and the on_macos block disappears entirely; Linux
@@ -172,6 +182,15 @@ def test_formula_resources_match_the_locked_pypi_sdists(
     }
     for name, material in resources.items():
         if name.startswith("cadrumo-data-"):
+            continue
+        if name == "setuptools-scm":
+            # Added as the argon2 build backend for the isolation-disabled build;
+            # it is not a runtime dependency so it is absent from the lock. Pin it
+            # to its declared PyPI sdist instead.
+            assert material == (
+                "https://files.pythonhosted.org/packages/4f/a4/00a9ac1b555294710d4a68d2ce8dfdf39d72aa4d769a7395d05218d88a42/setuptools_scm-8.1.0.tar.gz",
+                "42dea1b65771cba93b7a515d65a65d8246e560768a66b9106a592c8e7f26c8a7",
+            )
             continue
         assert material == locked_sdists[name]
 
