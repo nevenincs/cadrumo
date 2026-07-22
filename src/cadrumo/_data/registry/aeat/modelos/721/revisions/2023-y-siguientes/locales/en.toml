@@ -1,0 +1,10 @@
+[labels]
+"custodio.codigo-pais" = "Custodian's country code (ISO 3166-1 alpha-2)"
+"custodio.nombre-razon-social" = "Name or company name of the foreign virtual currency custodian"
+"ejercicio" = "Tax year the foreign virtual currency return refers to"
+"moneda.clave-token" = "Virtual currency identifier (ticker / token ID, e.g. BTC, ETH)"
+"moneda.saldo-31-diciembre" = "Balance or value of the virtual currency at 31 December, expressed in euros"
+"moneda.saldo-inicio" = "Balance or value of the virtual currency at the start of the period (for significant variations)"
+"tipo-declaracion" = "Type of return (original / supplementary / replacement)"
+
+[help]
