@@ -3,15 +3,20 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Final
 
 from sqlalchemy import Engine, text
 
+from .....core import HEX_PATTERN_64
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.time import now as _utc_now
 from ..errors import StorageValidationError
 
 VARCHAR_64: Final[str] = "VARCHAR(64)"
+
+_REVISION_ID_RE: Final[re.Pattern[str]] = re.compile(HEX_PATTERN_64)
+"""Revision ids are :func:`sha256_hex` output, so lowercase hex is the whole shape."""
 
 
 def ensure_quarantine_table(engine: Engine) -> None:
@@ -71,7 +76,9 @@ def parse_revision_ancestor_ids(raw_value: object) -> tuple[str, ...]:
         raise StorageValidationError(
             translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_json",
         ) from exc
-    if not isinstance(parsed, list) or not all(isinstance(item, str) and len(item) == 64 for item in parsed):
+    if not isinstance(parsed, list) or not all(
+        isinstance(item, str) and _REVISION_ID_RE.fullmatch(item) is not None for item in parsed
+    ):
         raise StorageValidationError(
             translated_message="errors.integrity.integrity_storage_secure_object_revision_ancestry_shape",
         )
