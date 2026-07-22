@@ -10,10 +10,13 @@ from __future__ import annotations
 import importlib.resources  # nosemgrep
 import os
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
+from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
+from pathlib import Path
 from string import Formatter
+from typing import IO
 
 import i18n
 import yaml
@@ -412,18 +415,52 @@ def _recover_format_placeholder_roots(value: str) -> set[str]:
     return names
 
 
-@lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
+_I18N_LOCALES_ROOT: ContextVar[Path | None] = ContextVar("cadrumo_i18n_locales_root", default=None)
+
+
+@contextmanager
+def override_locales_root(root: Path) -> Iterator[None]:
+    """Resolve catalogues from ``root`` instead of the packaged resources.
+
+    The renderer's miss semantics — an absent key and a key-echo value are
+    both misses (:func:`_lookup_translation`) — can only be exercised
+    against a catalogue that carries the defect, and the shipped
+    catalogues are gated echo-free. This override is the sanctioned seam
+    for pointing resolution at a fixture catalogue, mirroring
+    ``override_settings()``; the packaged resources stay the sole source
+    otherwise.
+    """
+    token = _I18N_LOCALES_ROOT.set(root)
+    try:
+        yield
+    finally:
+        _I18N_LOCALES_ROOT.reset(token)
+
+
 def _locale_map(locale: str) -> dict[str, str]:
+    override = _I18N_LOCALES_ROOT.get()
+    if override is not None:
+        # Override catalogues are small test fixtures; parse fresh so one
+        # context never serves another context's contents from a cache.
+        with (override / f"{locale}.yml").open("r", encoding="utf-8") as handle:
+            return _flatten_translations(_load_locale_yaml(handle))
+    return _packaged_locale_map(locale)
+
+
+@lru_cache(maxsize=len(SUPPORTED_OUTPUT_LANGUAGES))
+def _packaged_locale_map(locale: str) -> dict[str, str]:
     resource = importlib.resources.files(PRODUCT_IDENTITY.python_package).joinpath("locales", f"{locale}.yml")
     with resource.open("r", encoding="utf-8") as handle:
-        # The C-accelerated SafeLoader parses the ~430 KB catalogue in tens of
-        # milliseconds where the pure-Python loader costs ~0.5 s on every
-        # process start; both apply identical safe-load semantics.
-        if hasattr(yaml, "CSafeLoader"):
-            loaded = yaml.load(handle, Loader=yaml.CSafeLoader) or {}
-        else:
-            loaded = yaml.safe_load(handle) or {}
-    return _flatten_translations(loaded)
+        return _flatten_translations(_load_locale_yaml(handle))
+
+
+def _load_locale_yaml(handle: IO[str]) -> object:
+    # The C-accelerated SafeLoader parses the ~430 KB catalogue in tens of
+    # milliseconds where the pure-Python loader costs ~0.5 s on every
+    # process start; both apply identical safe-load semantics.
+    if hasattr(yaml, "CSafeLoader"):
+        return yaml.load(handle, Loader=yaml.CSafeLoader) or {}
+    return yaml.safe_load(handle) or {}
 
 
 def _flatten_translations(value: object, prefix: str = "") -> dict[str, str]:
@@ -531,6 +568,7 @@ __all__ = [
     "UnmatchedPlaceholderError",
     "extract_placeholders",
     "output_language",
+    "override_locales_root",
     "register_profile_language_resolver",
     "tr",
 ]

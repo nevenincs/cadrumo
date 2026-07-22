@@ -264,7 +264,9 @@ def allow_identical(
         path = _default_manager().allow_identical(locale, key, reason)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
-    typer.echo(tr("locales.cli.allow_identical.recorded", allowlist_file=path.name, locale=locale, key=key))
+    # ``locale`` is tr()'s reserved rendering-locale meta-kwarg, so the
+    # catalogue token for the exempted locale must travel as locale_code.
+    typer.echo(tr("locales.cli.allow_identical.recorded", allowlist_file=path.name, locale_code=locale, key=key))
 
 
 @app.command("canonicalize-product-identity")
