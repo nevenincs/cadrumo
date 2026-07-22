@@ -1,0 +1,19 @@
+[labels]
+"01" = "Nombre de perceptors"
+"02" = "Base de retencions i ingressos a compte"
+"03" = "Retencions i ingressos a compte"
+"04" = "Ingressos d'exercicis anteriors"
+"05" = "Regularització"
+"06" = "Suma de retencions i regularització"
+"07" = "Resultat d'autoliquidacions anteriors"
+"08" = "Resultat a ingressar"
+
+[help]
+"01" = "01"
+"02" = "02"
+"03" = "03"
+"04" = "04"
+"05" = "05"
+"06" = "06"
+"07" = "07"
+"08" = "08"

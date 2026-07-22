@@ -1,0 +1,19 @@
+[labels]
+"08" = "Withholding and advance payment tax base. Cash income"
+"09" = "Withholding and advance payment tax base. Income in kind"
+"10" = "Withholding and advance payment tax base. Total"
+"11" = "Withholdings and advance payments. Cash income"
+"12" = "Withholdings and advance payments. Income in kind"
+"13" = "Withholdings and advance payments. Total"
+"20" = "Amounts payable from prior returns for the same item, year and period"
+"21" = "Result payable"
+
+[help]
+"08" = "08"
+"09" = "09"
+"10" = "10"
+"11" = "11"
+"12" = "12"
+"13" = "13"
+"20" = "20"
+"21" = "21"

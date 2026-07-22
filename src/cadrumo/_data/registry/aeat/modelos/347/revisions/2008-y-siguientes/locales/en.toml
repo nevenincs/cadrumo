@@ -1,0 +1,23 @@
+[labels]
+"contraparte.clave-operacion" = "Transaction code with the counterparty (A=supplies, B=acquisitions, ...)"
+"contraparte.importe-Q1" = "Amount of transactions with the counterparty in the first quarter"
+"contraparte.importe-Q2" = "Amount of transactions with the counterparty in the second quarter"
+"contraparte.importe-Q3" = "Amount of transactions with the counterparty in the third quarter"
+"contraparte.importe-Q4" = "Amount of transactions with the counterparty in the fourth quarter"
+"contraparte.nif" = "Tax ID of the declared counterparty"
+"contraparte.nombre" = "Name or business name of the declared counterparty"
+"contraparte.pais-codigo" = "Country code of the counterparty (ISO 3166-1 alpha-2; blank for domestic counterparties)"
+"decl.ejercicio" = "Filing year to which the return relates"
+"decl.tipo-declaracion" = "Return type (original / substitute / supplementary)"
+
+[help]
+"contraparte.clave-operacion" = "contraparte.clave-operacion"
+"contraparte.importe-Q1" = "contraparte.importe-Q1"
+"contraparte.importe-Q2" = "contraparte.importe-Q2"
+"contraparte.importe-Q3" = "contraparte.importe-Q3"
+"contraparte.importe-Q4" = "contraparte.importe-Q4"
+"contraparte.nif" = "contraparte.nif"
+"contraparte.nombre" = "contraparte.nombre"
+"contraparte.pais-codigo" = "contraparte.pais-codigo"
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

@@ -1,0 +1,23 @@
+[labels]
+"decl.ejercicio" = "Exercici a què es refereix l'autoliquidació"
+"decl.periodo" = "Període mensual (01..12)"
+"iva.autorepercutido.intracomunitaria" = "Quota d'IVA autorepercutida en adquisicions intracomunitàries"
+"iva.cuota-deducible-total" = "Total de quota d'IVA deduïble (suportada + autorepercutida)"
+"iva.cuota-devengada-total" = "Total de quota d'IVA meritada (repercutida + autorepercutida)"
+"iva.repercutido.general" = "Quota d'IVA repercutit al tipus general (21%)"
+"iva.repercutido.reducido" = "Quota d'IVA repercutit al tipus reduït (10%)"
+"iva.repercutido.super-reducido" = "Quota d'IVA repercutit al tipus superreduït (4%)"
+"iva.resultado-regimen-general" = "Resultat del règim general individual (quota meritada - quota deduïble)"
+"iva.soportado.interiores" = "Quota d'IVA suportat en operacions interiors corrents"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"
+"iva.autorepercutido.intracomunitaria" = "iva.autorepercutido.intracomunitaria"
+"iva.cuota-deducible-total" = "iva.cuota-deducible-total"
+"iva.cuota-devengada-total" = "iva.cuota-devengada-total"
+"iva.repercutido.general" = "iva.repercutido.general"
+"iva.repercutido.reducido" = "iva.repercutido.reducido"
+"iva.repercutido.super-reducido" = "iva.repercutido.super-reducido"
+"iva.resultado-regimen-general" = "iva.resultado-regimen-general"
+"iva.soportado.interiores" = "iva.soportado.interiores"
