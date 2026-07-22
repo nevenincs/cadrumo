@@ -16,6 +16,7 @@ from urllib.parse import urlsplit
 
 from pydantic import SecretStr
 
+from .....core.identity import IdentityError, validate_spanish_tax_id
 from .....core.logging import get_logger
 from .....domain.calculations.registry import RemoteStateGuardPolicy
 from ....persistence.storage import CLAVE_MOVIL_DIAGNOSTICS_NAMESPACE
@@ -131,17 +132,33 @@ def classify_identity(raw: str) -> str:
     Values outside the provider-supported DNI/NIE formats raise
     :class:`ClaveMovilConfigurationError`; CIF-style organization identifiers
     are intentionally rejected by the Cl@ve Movil flow.
+
+    The shape gate selects the kind, then
+    :func:`~core.identity.validate_spanish_tax_id` verifies the checksum
+    letter. ``raw`` is operator-entered configuration text, so a mistyped
+    identifier is refused here rather than surfacing later as an opaque
+    rejection from the live AEAT portal.
     """
     value = (raw or "").strip().upper()
     if _DNI_RE.match(value):
-        return "DNI"
-    if _NIE_RE.match(value):
-        return "NIE"
-    raise ClaveMovilConfigurationError(
-        f"The value you entered (length {len(value)}) is not a valid DNI "
-        "(8 digits + letter) or NIE (X/Y/Z + 7 digits + letter). "
-        "Check the identity on your document and try again.",
-    )
+        kind = "DNI"
+    elif _NIE_RE.match(value):
+        kind = "NIE"
+    else:
+        raise ClaveMovilConfigurationError(
+            f"The value you entered (length {len(value)}) is not a valid DNI "
+            "(8 digits + letter) or NIE (X/Y/Z + 7 digits + letter). "
+            "Check the identity on your document and try again.",
+        )
+    try:
+        validate_spanish_tax_id(value)
+    except IdentityError as exc:
+        raise ClaveMovilConfigurationError(
+            f"The {kind} you entered has a valid shape but its checksum letter "
+            "does not match the digits. Check the final letter on your document "
+            "and try again.",
+        ) from exc
+    return kind
 
 
 def extract_verification_code_from_html(html: str) -> str | None:
