@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Ejercicio al que se refiere el pago fraccionado"
+"decl.tipo-declaracion" = "Modalidad del pago fraccionado (art. 40.2 cuota íntegra / art. 40.3 base imponible)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"
