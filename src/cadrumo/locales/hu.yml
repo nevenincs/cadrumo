@@ -362,7 +362,7 @@ aggregation:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
         tartományon kívül van.
       perceptor_nif_blank: A perceptor NIF nem lehet üres.
-      perceptor_observations_missing: Nincsenek perceptoronkénti retencion megfigyelések
+      perceptor_observations_missing: Nincsenek perceptoronkénti retención megfigyelések
         a(z) %{modelo} %{filing_year} %{period} modellhez; a(z) %{source_kind} forrás
         nem oldható fel.
   service:
