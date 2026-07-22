@@ -476,9 +476,6 @@ def verify_export(
     )
 
 
-_MONEY_QUANT = Decimal("0.01")
-
-
 #: ``record_type`` of the cuenta-devolución (DID) page in the DR303 export
 #: layout. The DID page carries the refund-account block (IBAN / SWIFT-BIC /
 #: bank block) AEAT pays into and is emitted ONLY for a refund disposition — a
@@ -889,7 +886,7 @@ def _mismatched_casilla_ids(
         expected = values.get(parsed.casilla_id) or Decimal("0")
         if isinstance(parsed.value, Decimal):
             expected_decimal = coerce_decimal(expected, default=Decimal("0")) or Decimal("0")
-            if expected_decimal.quantize(_MONEY_QUANT) != parsed.value.quantize(_MONEY_QUANT):
+            if round_to_cents(expected_decimal) != round_to_cents(parsed.value):
                 mismatched.append(parsed.casilla_id)
         elif str(expected) != str(parsed.value):
             mismatched.append(parsed.casilla_id)

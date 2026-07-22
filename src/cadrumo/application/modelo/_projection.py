@@ -27,6 +27,7 @@ from ...core import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core import Modelo, Period
 from ...core.errors import CadrumoError
 from ...core.logging import get_logger
+from ...core.money import round_to_cents
 from ...core.resources import resources
 from ...domain.calculations.registry import (
     BindingId,
@@ -402,9 +403,7 @@ def _m130_annual_projection(year: int) -> _M130AnnualProjection:
         Decimal("0"),
     )
     if latest_ordinal < 4:
-        projected_rendimiento_neto = (total_rendimiento_neto * Decimal(4) / Decimal(latest_ordinal)).quantize(
-            Decimal("0.01"),
-        )
+        projected_rendimiento_neto = round_to_cents(total_rendimiento_neto * Decimal(4) / Decimal(latest_ordinal))
         is_extrapolated = True
     else:
         projected_rendimiento_neto = total_rendimiento_neto

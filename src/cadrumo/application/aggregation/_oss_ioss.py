@@ -33,6 +33,7 @@ from pydantic import BaseModel, Field, StringConstraints
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage import ClassificationError, DecryptionError, EnvelopeVersionError
 from ...core import STRICT_FROZEN_CONFIG, BindingSourceKind, Period
+from ...core.money import round_to_cents
 from ...domain.calculations.registry import (
     BindingId,
     ModeloRevision,
@@ -139,7 +140,7 @@ def _expected_iva_amount(candidate: OssIossLedgerCandidate) -> Decimal:
         candidate.transaction_date,
     )
     derived = candidate.base_amount * rate.pct / Decimal("100")
-    return derived.quantize(Decimal("0.01"))
+    return round_to_cents(derived)
 
 
 def validate_oss_ioss_observation(
@@ -167,7 +168,7 @@ def validate_oss_ioss_observation(
             one-cent tolerance.
     """
     expected = _expected_iva_amount(candidate)
-    persisted = candidate.iva_amount.quantize(Decimal("0.01"))
+    persisted = round_to_cents(candidate.iva_amount)
     if abs(persisted - expected) > _IVA_TOLERANCE:
         raise AggregationValidationError(
             t("oss_ioss_iva_amount_mismatches_destination_rate"),

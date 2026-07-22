@@ -49,6 +49,7 @@ from ...core.errors import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.identity import BucketId
+from ...core.money import round_to_cents
 from ...core.parsing import parse_iso8601_date
 from ...core.time import now as _utc_now
 from ...domain import canonical_decimal_string
@@ -213,7 +214,7 @@ class BusinessOperationInvoice(BaseModel):
             return amount
         if self.fx_rate is None:
             return None
-        return (amount * self.fx_rate).quantize(Decimal("0.01"))
+        return round_to_cents(amount * self.fx_rate)
 
     @field_serializer("taxable_base", "iva_amount", "total_amount", "iva_rate", "fx_rate", when_used="json")
     def _serialize_decimal(self, value: Decimal | None) -> str | None:

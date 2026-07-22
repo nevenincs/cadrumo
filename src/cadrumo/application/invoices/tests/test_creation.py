@@ -284,3 +284,33 @@ def test_create_catalogue_invoice_service_keys_feed_modelo_349(tmp_path: Path) -
     assert rows[("FR", "S")].importe == Decimal("4000.00")
     assert rows[("IT", "I")].nif_comunitario == "IT12345678901"
     assert rows[("IT", "I")].importe == Decimal("3000.00")
+
+
+def test_build_catalogue_invoice_rounds_half_cent_cuota_away_from_zero() -> None:
+    """A cuota whose residual is exactly half a cent rounds up, not to even.
+
+    AEAT publishes euro amounts under half-up rounding, so a residual of
+    exactly 0.5 cents rounds away from zero. A taxable base of 10.50 at the
+    registry-resolved 21 % tier yields exactly 2.2050, which is the boundary
+    that separates the two modes: half-up gives 2.21, while Python's default
+    banker's rounding (``ROUND_HALF_EVEN``) keeps the even cent and gives
+    2.20 — a filed cuota one cent short of the AEAT figure.
+    """
+    invoice = build_catalogue_invoice(
+        bucket_id=_BUCKET_ID,
+        kind=InvoiceKind.ISSUED,
+        counterparty_name="Ferreteria Norte SL",
+        counterparty_tax_id="A58818501",
+        counterparty_country="ES",
+        invoice_number="2026-0501",
+        issued_at=date(2026, 4, 2),
+        taxable_base=Decimal("10.50"),
+        iva_rate=Decimal("21"),
+        currency="EUR",
+    )
+
+    assert invoice.iva_total == Decimal("2.21")
+    assert invoice.iva_total != Decimal("2.20")
+    assert invoice.lines[0].iva_amount == Decimal("2.21")
+    assert invoice.base_total == Decimal("10.50")
+    assert invoice.grand_total == Decimal("12.71")
