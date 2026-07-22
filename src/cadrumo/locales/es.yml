@@ -4658,9 +4658,10 @@ cli:
         fue rechazada; clasifícala manualmente cuando quieras.
       transaction_id_help: Id de la transacción (o prefijo no ambiguo)
   locales:
-    allow_identical_key_help: cli.locales.allow_identical_key_help
-    allow_identical_locale_help: cli.locales.allow_identical_locale_help
-    allow_identical_reason_help: cli.locales.allow_identical_reason_help
+    allow_identical_key_help: Clave de locale con puntos a eximir.
+    allow_identical_locale_help: Código de locale a actualizar.
+    allow_identical_reason_help: Por qué esta cadena es legítimamente idéntica al
+      inglés.
     app_help: Auditar y generar catálogos de traducción
     canonicalize_product_identity:
       locale_help: Actualiza solo este catálogo de idioma compatible.
@@ -6455,7 +6456,7 @@ live:
 locales:
   cli:
     allow_identical:
-      recorded: locales.cli.allow_identical.recorded
+      recorded: registrado {allowlist_file}:{locale}:{key}
     audit:
       file_drift: '%{locale_file}: missing=%{missing_count} extra=%{extra_count}'
       file_ok: '%{locale_file}: ok'
