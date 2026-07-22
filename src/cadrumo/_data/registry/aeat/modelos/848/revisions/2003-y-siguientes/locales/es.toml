@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Ejercicio al que se refiere la comunicación"
+"decl.tipo-declaracion" = "Tipo de declaración (originaria / sustitutiva / complementaria)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

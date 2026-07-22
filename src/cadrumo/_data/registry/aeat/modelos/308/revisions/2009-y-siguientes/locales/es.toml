@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Ejercicio al que se refiere la solicitud"
+"decl.tipo-solicitud" = "Tipo de solicitud (recargo de equivalencia / art 30 bis / art 21.4 / sujeto pasivo ocasional / régimen simplificado transporte)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-solicitud" = "decl.tipo-solicitud"

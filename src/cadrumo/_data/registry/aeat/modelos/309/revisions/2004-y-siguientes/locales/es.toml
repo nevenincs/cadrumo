@@ -1,0 +1,13 @@
+[labels]
+"decl.ejercicio" = "Ejercicio al que se refiere la declaración"
+"decl.tipo-trigger" = "Tipo de trigger (medios de transporte nuevos / régimen agrícola / recargo de equivalencia / ejecución forzosa)"
+"iva.autorepercutido.intracomunitaria" = "Cuota IVA autorepercutida en adquisiciones intracomunitarias (medios de transporte nuevos, etc.)"
+"iva.cuota-no-periodica-total" = "Total cuota IVA no periódica (autorepercutido + soportado-recargo)"
+"iva.soportado.recargo-equivalencia" = "Cuota IVA soportado por minoristas en recargo de equivalencia (devolución a viajeros)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-trigger" = "decl.tipo-trigger"
+"iva.autorepercutido.intracomunitaria" = "iva.autorepercutido.intracomunitaria"
+"iva.cuota-no-periodica-total" = "iva.cuota-no-periodica-total"
+"iva.soportado.recargo-equivalencia" = "iva.soportado.recargo-equivalencia"

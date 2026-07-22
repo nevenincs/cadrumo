@@ -1,0 +1,11 @@
+[labels]
+"decl.ejercicio" = "Ejercicio al que se refiere la autoliquidación"
+"decl.periodo" = "Periodo de la declaración"
+"iva.exterior.cuota-total" = "Total cuota IVA repercutida del Esquema Exterior (suma de cuotas por destino)"
+"iva.exterior.de.services-cuota" = "Cuota IVA repercutido al destino DE — servicios prestados (Esquema Exterior)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"
+"iva.exterior.cuota-total" = "iva.exterior.cuota-total"
+"iva.exterior.de.services-cuota" = "iva.exterior.de.services-cuota"

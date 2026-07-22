@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Ejercicio al que se refiere la autoliquidación"
+"decl.tipo-declaracion" = "Tipo de autoliquidación (originaria / sustitutiva / complementaria)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"
