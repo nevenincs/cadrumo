@@ -3,6 +3,17 @@
 One classification produces one report: every required catalogue key is
 assigned exactly one :class:`CatalogueLeafState`, so the per-locale counts
 partition the required key set and no counter can overstate authored work.
+A mirrored, echoed, or otherwise structurally broken value is worse than
+an absent one for reporting purposes, because it looks done.
+
+The partition is an internal-consistency guarantee, not a completeness
+one: the required set is the production key inventory from
+:meth:`~cadrumo.locales.manager.LocaleManager.get_codebase_keys`, so a
+key that inventory cannot see is outside the partition entirely.
+Namespace-exempted keys are likewise outside it; their count is surfaced
+per catalogue so the exempted surface stays visible rather than silently
+unreportable.
+
 The modelo schema-local side of the same report reuses
 :meth:`~cadrumo.locales._modelo_manager.ModeloLocaleManager.coverage_records`,
 which applies the equivalent partition through
@@ -39,6 +50,7 @@ class CatalogueLeafState(StrEnum):
 
     AUTHORED = "authored"
     KEY_ECHO = "key_echo"
+    BLANK = "blank"
     UNBINDABLE = "unbindable"
     IDENTICAL_ALLOWLISTED = "identical_allowlisted"
     IDENTICAL_PENDING = "identical_pending"
@@ -48,10 +60,14 @@ class CatalogueLeafState(StrEnum):
 class CatalogueStatusRecord(BaseModel):
     """State partition of the required key set for one locale catalogue.
 
-    ``authored + key_echo + unbindable + identical_allowlisted +
-    identical_pending + absent == required`` by construction. ``extra``
-    counts catalogue keys outside the required set that no dynamic
-    namespace explains; it is informational and outside the partition.
+    ``authored + key_echo + blank + unbindable + identical_allowlisted +
+    identical_pending + absent == required`` by construction — an
+    internal-consistency guarantee over the scanner's required set, not a
+    completeness guarantee over every key production could ever request.
+    ``extra`` counts catalogue keys outside the required set that no
+    dynamic namespace explains, and ``namespace_exempted`` counts the
+    keys a namespace marker removes from ``extra``'s reach; both are
+    informational and outside the partition.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -60,11 +76,13 @@ class CatalogueStatusRecord(BaseModel):
     required: int = Field(ge=0)
     authored: int = Field(ge=0)
     key_echo: int = Field(ge=0)
+    blank: int = Field(ge=0, default=0)
     unbindable: int = Field(ge=0, default=0)
     identical_allowlisted: int = Field(ge=0)
     identical_pending: int = Field(ge=0)
     absent: int = Field(ge=0)
     extra: int = Field(ge=0)
+    namespace_exempted: int = Field(ge=0, default=0)
 
 
 def classify_catalogue_leaf(
@@ -87,19 +105,33 @@ def classify_catalogue_leaf(
         allowlisted: Whether the key carries a per-key
             deliberately-identical allowlist entry for this locale.
 
+    Comparison is whitespace-normalised so a stray space or trailing
+    punctuation cannot smuggle a scaffold placeholder past the echo check,
+    and an empty-after-strip value is its own never-authored state. Two
+    probes are deliberately NOT classified because they cannot be
+    distinguished from legitimate work: a value equal to the humanised
+    form of its key (a short English label such as "Save" for ``…save``
+    is often exactly right), and a value identical to a third locale's
+    (Spanish and Catalan legitimately share many cognate strings). A
+    discriminator that cannot tell defect from cognate would manufacture
+    false positives and teach operators to ignore the report.
+
     Returns:
         Exactly one :class:`CatalogueLeafState`; only ``AUTHORED`` and
         ``IDENTICAL_ALLOWLISTED`` describe finished work.
     """
     if value is None:
         return CatalogueLeafState.ABSENT
-    if value == key:
+    stripped = value.strip()
+    if not stripped:
+        return CatalogueLeafState.BLANK
+    if stripped == key or stripped.rstrip(".:").rstrip() == key:
         return CatalogueLeafState.KEY_ECHO
     if extract_placeholders(value) & RESERVED_INTERPOLATION_TOKENS:
         # A token named after a tr() rendering directive can never bind;
         # the value looks authored but is structurally broken.
         return CatalogueLeafState.UNBINDABLE
-    if not is_reference_locale and reference_value is not None and value == reference_value:
+    if not is_reference_locale and reference_value is not None and stripped == reference_value.strip():
         return CatalogueLeafState.IDENTICAL_ALLOWLISTED if allowlisted else CatalogueLeafState.IDENTICAL_PENDING
     return CatalogueLeafState.AUTHORED
 
@@ -139,20 +171,21 @@ def catalogue_status(manager: LocaleManager) -> tuple[CatalogueStatusRecord, ...
                 allowlisted=key in allowed_keys,
             )
             counts[state] += 1
-        extra = sum(
-            1 for key in leaves if key not in required_keys and not _covered_by_namespace(key, namespace_prefixes)
-        )
+        not_required = [key for key in leaves if key not in required_keys]
+        namespace_exempted = sum(1 for key in not_required if _covered_by_namespace(key, namespace_prefixes))
         records.append(
             CatalogueStatusRecord(
                 locale_file=locale_file,
                 required=len(required_keys),
                 authored=counts[CatalogueLeafState.AUTHORED],
                 key_echo=counts[CatalogueLeafState.KEY_ECHO],
+                blank=counts[CatalogueLeafState.BLANK],
                 unbindable=counts[CatalogueLeafState.UNBINDABLE],
                 identical_allowlisted=counts[CatalogueLeafState.IDENTICAL_ALLOWLISTED],
                 identical_pending=counts[CatalogueLeafState.IDENTICAL_PENDING],
                 absent=counts[CatalogueLeafState.ABSENT],
-                extra=extra,
+                extra=len(not_required) - namespace_exempted,
+                namespace_exempted=namespace_exempted,
             ),
         )
     return tuple(records)

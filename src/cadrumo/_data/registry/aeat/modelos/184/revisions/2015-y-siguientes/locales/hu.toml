@@ -1,0 +1,9 @@
+[labels]
+"decl.ejercicio" = "A bevallás tárgyát képező adóév"
+"decl.tipo-declaracion" = "A bevallás típusa (eredeti / helyettesítő / kiegészítő)"
+"tipo2.clave" = "A hozzárendelt jövedelem típuskódja (A=ingó vagyoni tőke, C=ingatlan vagyoni tőke, D=gazdasági tevékenységek, F=nyereség/veszteség átruházás nélkül, G=nyereség/veszteség átruházással, I=IRPF-levonások, J=IS-levonások, K=viselt visszatartások, L=nem szerződéses országokból származó negatív jövedelem többlete)"
+"tipo2.miembro-nif" = "Az entitás azon tagjának adóazonosítója, akinek a jövedelmet hozzárendelik (tag, résztulajdonos, örökös, résztvevő)"
+"tipo2.renta-atribuible-importe" = "A hozzárendelhető jövedelem / az entitás tagjának hozzárendelhető nettó hozam összege (előjel nélkül, tizedesvessző nélkül, euróban)"
+"tipo2.subclave" = "A hozzárendelt jövedelem altípuskódja (belföldi/külföldi eredet szerinti részletezés, alkalmazandó csökkentések stb.)"
+
+[help]

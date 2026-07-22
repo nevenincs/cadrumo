@@ -51,6 +51,7 @@ from ._modelo_rendering import (
     verification_report_lines,
     verification_report_payload,
 )
+from ._modelo_work_options import _ActorOpt
 
 _validate_work_unit_id: Callable[[str], str] | None = None
 _parse_amendment_casilla: Callable[[str], tuple[CasillaId, Decimal]] | None = None
@@ -333,10 +334,7 @@ def filing_record_observe_local(
         str,
         typer.Option("--period", help=tr("cli.app.modelo.work.period_help")),
     ],
-    actor: Annotated[
-        str | None,
-        typer.Option("--by", help=tr("cli.app.modelo.work.actor_help")),
-    ] = None,
+    actor: _ActorOpt = None,
     set_overrides: Annotated[
         list[str] | None,
         typer.Option(

@@ -89,9 +89,26 @@ def _load_untranslated_ceiling(locale_code: str) -> int | None:
 
 
 def _key_echo_offenders(flat_leaves: dict[str, str]) -> list[str]:
-    """Return keys whose value is the key itself — the scaffold placeholder."""
+    """Return keys whose value is the key itself — the scaffold placeholder.
 
-    return sorted(key for key, value in flat_leaves.items() if value == key)
+    Whitespace-normalised, and tolerant of trailing punctuation, so one
+    stray character cannot convert a placeholder into "authored".
+    """
+
+    offenders: list[str] = []
+    for key, value in flat_leaves.items():
+        if not isinstance(value, str):
+            continue
+        stripped = value.strip()
+        if stripped == key or stripped.rstrip(".:").rstrip() == key:
+            offenders.append(key)
+    return sorted(offenders)
+
+
+def _blank_offenders(flat_leaves: dict[str, str]) -> list[str]:
+    """Return keys whose value is empty or whitespace-only."""
+
+    return sorted(key for key, value in flat_leaves.items() if isinstance(value, str) and not value.strip())
 
 
 def _reserved_token_offenders(flat_leaves: dict[str, str]) -> list[str]:
@@ -142,23 +159,26 @@ def test_no_catalogue_value_carries_a_reserved_interpolation_token() -> None:
 
 
 def test_key_echo_offender_detection_discriminates() -> None:
-    """The echo detector fires on an injected echo and stays quiet otherwise."""
+    """The echo detector fires on injected echo variants and stays quiet otherwise."""
 
     assert _key_echo_offenders({"a.b": "a.b", "c.d": "translated"}) == ["a.b"]
+    assert _key_echo_offenders({"a.b": "a.b ", "c.d": "a.b."}) == ["a.b"]
+    assert _key_echo_offenders({"c.d": "c.d."}) == ["c.d"]
     assert _key_echo_offenders({"c.d": "translated"}) == []
+    assert _blank_offenders({"a.b": "", "c.d": "  ", "e.f": "x"}) == ["a.b", "c.d"]
 
 
-def test_no_locale_value_echoes_its_own_key_beyond_the_ratchet() -> None:
-    """No catalogue may grow key-echo placeholders in any locale.
+def test_key_echo_count_matches_the_pinned_ceiling() -> None:
+    """The committed echo ceiling must equal the observed count, both ways.
 
     A value equal to its own dotted key is the scaffold's "no translation
     yet" marker leaking into a shipped catalogue. It is never legitimate,
     so there is no per-key allowlist; the ``_key_echo_ceiling`` metadata
-    field in ``_intentional_identical.json`` ratchets the existing debt
-    down — a missing ceiling means zero tolerance.
-
-    To lower the ratchet after authoring a batch: update
-    ``_key_echo_ceiling`` for the locale to the new (lower) count.
+    field in ``_intentional_identical.json`` is a pinned statement of the
+    current debt (a missing field means zero). Equality is enforced in
+    BOTH directions: clearing echoes forces the ceiling down in the same
+    change, and new echoes require an explicit, reviewable ceiling raise
+    — shrink-only by structure, not by convention.
     """
 
     failures: list[str] = []
@@ -166,11 +186,38 @@ def test_no_locale_value_echoes_its_own_key_beyond_the_ratchet() -> None:
         locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
         offenders = _key_echo_offenders(_flatten(locale_raw if isinstance(locale_raw, dict) else {}))
         ceiling = _load_metadata_ceiling(locale_code, "_key_echo_ceiling") or 0
-        if len(offenders) > ceiling:
+        if len(offenders) < ceiling:
             failures.append(
-                f"{locale_code}.yml carries {len(offenders)} key-echo value(s) against a ceiling of "
-                f"{ceiling}. A key-echo is the scaffold placeholder, never a translation; author the "
+                f"{locale_code}.yml has {len(offenders)} key-echo value(s) but the pinned ceiling is "
+                f"{ceiling}: the debt shrank, so lower (or remove) '_key_echo_ceiling' in "
+                f"_intentional_identical.json in this same change."
+            )
+        elif len(offenders) > ceiling:
+            failures.append(
+                f"{locale_code}.yml carries {len(offenders)} key-echo value(s) against a pinned ceiling "
+                f"of {ceiling}. A key-echo is the scaffold placeholder, never a translation; author the "
                 f"value via `python -m cadrumo.locales set`. First five: {offenders[:5]}"
+            )
+
+    assert failures == [], "\n".join(failures)
+
+
+def test_no_catalogue_value_is_blank() -> None:
+    """No locale value may be empty or whitespace-only.
+
+    A blank leaf reads as present to a membership check while rendering
+    nothing to the operator. The CLI refuses to write one, so the shipped
+    count is zero and must stay zero — no allowlist, no ratchet.
+    """
+
+    failures: list[str] = []
+    for locale_code in ("ca", "en", "es", "hu"):
+        locale_raw = yaml.safe_load((_LOCALES_DIR / f"{locale_code}.yml").read_text(encoding="utf-8"))
+        offenders = _blank_offenders(_flatten(locale_raw if isinstance(locale_raw, dict) else {}))
+        if offenders:
+            failures.append(
+                f"{locale_code}.yml carries {len(offenders)} blank value(s). Author the value via "
+                f"`python -m cadrumo.locales set`, or remove the key. Keys: {offenders[:5]}"
             )
 
     assert failures == [], "\n".join(failures)

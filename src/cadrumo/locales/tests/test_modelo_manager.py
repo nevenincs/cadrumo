@@ -104,6 +104,52 @@ def test_set_and_remove_write_one_validated_translation_leaf(registry_root: Path
     assert "01" not in after_remove.labels
 
 
+def test_set_refuses_a_blank_translation_value(registry_root: Path) -> None:
+    """The modelo write path never lets an empty or whitespace-only leaf in."""
+    manager = ModeloLocaleManager(registry_root)
+
+    for blank in ("", "   "):
+        with pytest.raises(ModeloLocaleError, match="must not be blank"):
+            manager.set_translation_value(
+                OutputLanguage.EN,
+                MODELO_ID,
+                REVISION_ID,
+                ModeloLocaleFieldKind.LABELS,
+                "01",
+                blank,
+            )
+
+
+def test_coverage_refuses_blank_and_whitespace_smuggled_values(tmp_path: Path) -> None:
+    """A blank leaf and a whitespace-padded echo never count as translated."""
+    registry_root = tmp_path / "registry" / "aeat"
+    modelo_dir = registry_root / "modelos" / "777"
+    _write_minimal_modelo(modelo_dir, casilla_ids=("01", "02"))
+    locale_path = modelo_dir / "revisions" / "2020" / "locales" / "en.toml"
+    locale_path.parent.mkdir(parents=True)
+    locale_path.write_text(
+        """[labels]
+"01" = ""
+"02" = "02 "
+
+[help]
+"01" = "Real help text."
+"02" = " Etiqueta 02 "
+""",
+        encoding="utf-8",
+    )
+
+    record = ModeloLocaleManager(registry_root).coverage_record(OutputLanguage.EN, "777", "2020")
+
+    assert record.label_translated == 0
+    assert record.label_blank == 1
+    assert record.label_key_echo == 1
+    assert record.help_translated == 1
+    # Whitespace padding cannot hide a mirror of the official label.
+    assert record.help_mirrored == 1
+    assert not record.complete
+
+
 def test_set_rejects_unknown_schema_key(registry_root: Path) -> None:
     """Manager writes are refused when a key is absent from the real schema."""
     manager = ModeloLocaleManager(registry_root)
