@@ -156,14 +156,20 @@ overlay obtains by default, which is the pre-built PyPI aarch64 wheel.
 
 Conflict, unresolved. The same no-binary directive does not work through a real
 formula install: brew's environment does not carry it into the overlay, so the
-overlay still takes the PyPI wheel. And a source-built cffi that loads correctly
+overlay still takes its default cffi. And a source-built cffi that loads correctly
 in a standalone environment still crashed once when the overlay used a
-locally-tagged wheel under brew, which is the opposite of the standalone result.
-The two harnesses therefore disagree about whether a source-built backend is
-safe, and that disagreement is the crux: the overlay interpreter and prefix under
-brew are not identical to the standalone case, and the difference has not been
-pinned. Whoever resumes should compare the exact backend binary the overlay loads
-in each harness — same bytes or not — before trusting either result.
+locally-tagged wheel under brew, the opposite of the standalone result. Comparing
+the two overlay backend binaries directly deepened this rather than resolving it:
+in both the failing and the passing harness the backend is a source-built,
+unstripped object, they are different binaries, and neither contains any exotic
+instruction-set opcode in its own executable section. So the illegal instruction
+is very likely not in the cffi backend at all but in a library it loads — libffi
+is the immediate suspect, since the cffi backend links it and a libffi compiled
+with native tuning would place the trapping instruction exactly where the fault
+handler points, at module load rather than in Python-visible code. That library
+has not been examined. Whoever resumes should disassemble the libffi the overlay
+links, not the cffi backend, and treat "which cffi wheel" as a proxy that has now
+outlived its usefulness.
 
 ### scoop-lane-container-mode-conflict | medium | the Scoop lane and the Linux runners cannot share one docker daemon
 
@@ -182,23 +188,24 @@ Sweep a retired architecture's toolchain residue, not just its provisioning: the
 uv managed-Python store outlived the runner that installed it and silently
 redirected an ARM machine to Intel builds.
 
-Resume the arm64 investigation at the one unresolved conflict: whether the cffi
-backend the isolated overlay loads is byte-identical between the standalone
-harness that succeeds and the brew install that fails. Extract both backend
-binaries, compare them, and if they differ, diff the instructions in the diverging
-region — the fault is at load of that specific object, so the answer is in its
-bytes, not in more environment permutations. Do not re-test the sandbox, the
-compiler shim, environment filtering, architecture, contention, the package
-standalone, environment layout, install ordering, or optimisation flags; all are
-eliminated above, and one hypothesis was already withdrawn for resting on a
-partial reconstruction.
+Resume the arm64 investigation at libffi, not cffi. The backend binaries were
+already compared: both source-built, both free of exotic opcodes in their own
+text, so the trapping instruction is almost certainly in a linked library loaded
+alongside the backend, and libffi is the direct dependency that fits. Identify
+the libffi the overlay resolves, disassemble it, and find the illegal
+instruction; that pins whether this is native-tuned code the virtual machine
+cannot run. Do not re-test the sandbox, the compiler shim, environment filtering,
+architecture, contention, the package standalone, environment layout, install
+ordering, optimisation flags on cffi itself, or the cffi wheel-versus-source
+distinction; all are eliminated or shown to be proxies above, and one hypothesis
+was already withdrawn for resting on a partial reconstruction.
 
-If the backend proves to be a stock PyPI aarch64 wheel carrying an instruction
-the virtual machine will not execute, the fix is to force that one build
-dependency to compile from source inside the isolated overlay through a channel
-brew does not filter — a pip configuration file staged for the build, or the
-formula generator emitting the resource so isolation does not fetch a wheel — not
-the environment variable tried here, which brew strips.
+Once the offending library is known, the fix is to make that one dependency
+compile for a portable baseline inside the isolated overlay through a channel brew
+does not strip — a pip configuration file staged into the build, or the formula
+generator emitting the dependency as its own resource so build isolation never
+fetches a pre-tuned build — not the environment variable tried here, which brew
+removes before the overlay sees it.
 
 A durable alternative worth weighing against further debugging: this lane exists
 to prove a from-source Homebrew install on one architecture. If the cause is the
