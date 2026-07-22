@@ -1,0 +1,7 @@
+[labels]
+"decl.ejercicio" = "Tax year to which the return relates"
+"decl.tipo-declaracion" = "Return type (registration / change / deregistration)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-declaracion" = "decl.tipo-declaracion"

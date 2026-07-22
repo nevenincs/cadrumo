@@ -1,0 +1,13 @@
+[labels]
+"decl.ejercicio" = "Filing year to which the return relates"
+"decl.tipo-trigger" = "Trigger type (new means of transport / agricultural regime / equivalence surcharge / enforced execution)"
+"iva.autorepercutido.intracomunitaria" = "Self-charged VAT on intra-Community acquisitions (new means of transport, etc.)"
+"iva.cuota-no-periodica-total" = "Total non-periodic VAT (self-charged + surcharge input tax)"
+"iva.soportado.recargo-equivalencia" = "Input VAT borne by retailers under the equivalence surcharge (traveller refund)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.tipo-trigger" = "decl.tipo-trigger"
+"iva.autorepercutido.intracomunitaria" = "iva.autorepercutido.intracomunitaria"
+"iva.cuota-no-periodica-total" = "iva.cuota-no-periodica-total"
+"iva.soportado.recargo-equivalencia" = "iva.soportado.recargo-equivalencia"

@@ -17,6 +17,7 @@ legal_refs = [
     "ley-58-2003:art-93",
 ]
 source_refs = [
+    "aeat-dr-190-2024",
     "aeat-dr-190-2025",
     "aeat-modelo-190-instructions-2025",
     "aeat-modelo-190-procedure",

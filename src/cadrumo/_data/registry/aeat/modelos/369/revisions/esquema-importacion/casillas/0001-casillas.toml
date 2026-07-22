@@ -1,7 +1,7 @@
 [[revisions."esquema-importacion".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la autoliquidacion"
+label = "Ejercicio al que se refiere la autoliquidación"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -13,7 +13,7 @@ source_refs = ["aeat-dr-369-2021"]
 [[revisions."esquema-importacion".casillas]]
 id = "decl.periodo"
 number = "periodo"
-label = "Periodo de la declaracion"
+label = "Periodo de la declaración"
 section = ["declarante"]
 data_type = "period_code"
 semantic_role = "filing_period"

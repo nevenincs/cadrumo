@@ -13,7 +13,7 @@ source_refs = ["aeat-dr-360-2010"]
 [[revisions."2010-y-siguientes".casillas]]
 id = "decl.estado-miembro"
 number = "estado-miembro"
-label = "Estado miembro de devolucion donde se soportaron las cuotas"
+label = "Estado miembro de devolución donde se soportaron las cuotas"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "estado_miembro_devolucion"

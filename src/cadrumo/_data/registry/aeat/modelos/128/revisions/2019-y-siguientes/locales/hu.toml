@@ -1,0 +1,10 @@
+[labels]
+"01" = "Kedvezményezettek száma"
+"02" = "Visszatartások és előlegfizetések alapja"
+"03" = "Visszatartások és előlegfizetések"
+"04" = "Kedvezményezettek száma (kiegészítő blokk)"
+"05" = "Visszatartások és előlegfizetések alapja (kiegészítő blokk)"
+"06" = "Korábbi, azonos tárgyú, adóévre és időszakra vonatkozó bevallások befizetendő összege"
+"07" = "Befizetendő összeg"
+
+[help]

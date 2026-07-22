@@ -1,7 +1,7 @@
 [[revisions."2003-y-siguientes".casillas]]
 id = "decl.tipo-declaracion"
 number = "tipo-declaracion"
-label = "Tipo de declaracion (alta / variacion / baja)"
+label = "Tipo de declaración (alta / variación / baja)"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "tipo_evento_censal_iae"
@@ -13,7 +13,7 @@ source_refs = ["aeat-dr-840"]
 [[revisions."2003-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio fiscal al que se refiere la declaracion"
+label = "Ejercicio fiscal al que se refiere la declaración"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"

@@ -1,0 +1,10 @@
+[labels]
+"decl.ejercicio" = "Exercici a què es refereix la declaració"
+"decl.tipo-declaracion" = "Tipus de declaració (originària / substitutiva / complementària)"
+"tipo2.donante-nif" = "NIF del donant (persona física, jurídica o entitat sense finalitats lucratives donatària de referència)"
+"tipo2.donante-nombre" = "Cognoms i nom, o raó social, del donant"
+"tipo2.importe-donado" = "Import del donatiu, donació o aportació rebuda en l'exercici (sense signe, en euros)"
+"tipo2.porcentaje-deduccion" = "Percentatge de deducció aplicable al donatiu (règim fiscal del donant, art. 68.3 LIRPF / règim especial Llei 49/2002)"
+"tipo2.recurrencia" = "Indicador de donatiu recurrent (donatiu plurianual a la mateixa entitat donatària, dos o més exercicis consecutius)"
+
+[help]

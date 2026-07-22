@@ -1,7 +1,7 @@
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.ejercicio"
 number = "ejercicio"
-label = "Ejercicio al que se refiere la declaracion"
+label = "Ejercicio al que se refiere la declaración"
 section = ["declarante"]
 data_type = "year"
 semantic_role = "filing_year"
@@ -13,7 +13,7 @@ source_refs = ["aeat-dr-309-2023"]
 [[revisions."2004-y-siguientes".casillas]]
 id = "decl.tipo-trigger"
 number = "tipo-trigger"
-label = "Tipo de trigger (medios de transporte nuevos / regimen agricola / recargo de equivalencia / ejecucion forzosa)"
+label = "Tipo de trigger (medios de transporte nuevos / régimen agricola / recargo de equivalencia / ejecucion forzosa)"
 section = ["declarante"]
 data_type = "text"
 semantic_role = "motivo_declaracion_no_periodica"

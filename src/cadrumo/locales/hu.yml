@@ -367,25 +367,32 @@ aggregation:
         nem oldható fel.
   service:
     errors:
-      envelope_modelo_mismatch: aggregation.service.errors.envelope_modelo_mismatch
-      envelope_period_mismatch: aggregation.service.errors.envelope_period_mismatch
-      envelope_provider_payload_mismatch: aggregation.service.errors.envelope_provider_payload_mismatch
-      observations_mismatch: aggregation.service.errors.observations_mismatch
-      per_modelo_modelos_not_unique: aggregation.service.errors.per_modelo_modelos_not_unique
-      per_modelo_providers_not_unique: aggregation.service.errors.per_modelo_providers_not_unique
-      provider_modelos_not_unique: aggregation.service.errors.provider_modelos_not_unique
-      result_source_kinds_not_unique: aggregation.service.errors.result_source_kinds_not_unique
-      source_kinds_mismatch: aggregation.service.errors.source_kinds_mismatch
+      envelope_modelo_mismatch: Az aggregációs modelo nem egyezik az eredmény modelóval.
+      envelope_period_mismatch: Az aggregációs időszak nem egyezik az eredmény időszakával.
+      envelope_provider_payload_mismatch: A szolgáltató nem egyezik az aggregációs
+        payload típusával.
+      observations_mismatch: Megfigyelések nem adhatók meg a kért modelóhoz.
+      per_modelo_modelos_not_unique: A modelónkénti aggregáció modelóit pontosan egy
+        szolgáltatónak kell birtokolnia.
+      per_modelo_providers_not_unique: A modelónkénti aggregáció szolgáltatóinak egyedinek
+        kell lenniük.
+      provider_modelos_not_unique: A szolgáltató modelóinak egyedinek kell lenniük.
+      result_source_kinds_not_unique: Az eredmény forrástípusainak egyedinek kell
+        lenniük.
+      source_kinds_mismatch: A forrástípusoknak meg kell egyezniük az elfogadott négyelemű
+        taxonómiával.
   source_mesh:
     errors:
-      ambiguous_source_disposition: aggregation.source_mesh.errors.ambiguous_source_disposition
+      ambiguous_source_disposition: 'Belső hiba: egy binding forrástípus egynél több
+        forrásháló-diszpozíció állapotban van, vagy egyikben sem.'
       binding_source_mismatch: A source_kind és a binding_source eltérő binding-forrás
         családra hivatkozik.
       duplicate_binding_owner: 'Belső hiba: ismétlődő kötési tulajdonos a forráshálon.'
       duplicate_bound_casilla_owner: 'Belső hiba: ismétlődő mező-kötési tulajdonos
         a forráshálon.'
       duplicate_relation_owner: 'Belső hiba: ismétlődő kapcsolati tulajdonos a forráshálon.'
-      duplicate_row_binding_owner: aggregation.source_mesh.errors.duplicate_row_binding_owner
+      duplicate_row_binding_owner: 'Belső hiba: duplikált sor-binding tulajdonos a
+        forráshálóban.'
       out_of_window_summary_date_span_invalid: Az ablakon kívüli összesítő legkésőbbi
         benyújtási dátuma nem előzheti meg a legkorábbi benyújtási dátumot.
       out_of_window_summary_incomplete: Az ablakon kívüli összesítőnek együtt kell
@@ -394,16 +401,21 @@ aggregation:
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
       relation_provenance_incomplete: A kapcsolat eredetének tartalmaznia kell a forrás
         modellt, évet, időszakokat, mezőket, jogi hivatkozásokat és forráshivatkozásokat.
-      row_binding_index_invalid: aggregation.source_mesh.errors.row_binding_index_invalid
-      row_binding_value_invalid: aggregation.source_mesh.errors.row_binding_value_invalid
+      row_binding_index_invalid: 'Belső hiba: a sor-binding sorindexének 1-nek vagy
+        nagyobbnak kell lennie.'
+      row_binding_value_invalid: 'Belső hiba: a sor-binding decimális értéke érvénytelen.'
       source_transaction_ids_blank: A forrásháló tranzakcióazonosítói nem tartalmazhatnak
         üres értékeket.
       source_transaction_ids_duplicate: A forrásháló tranzakcióazonosítóinak egyedinek
         kell lenniük.
-      unresolved_binding_ids_blank: aggregation.source_mesh.errors.unresolved_binding_ids_blank
-      unresolved_binding_ids_duplicate: aggregation.source_mesh.errors.unresolved_binding_ids_duplicate
-      unresolved_relation_ids_blank: aggregation.source_mesh.errors.unresolved_relation_ids_blank
-      unresolved_relation_ids_duplicate: aggregation.source_mesh.errors.unresolved_relation_ids_duplicate
+      unresolved_binding_ids_blank: 'Belső hiba: a feloldatlan binding-azonosítók
+        nem lehetnek üresek.'
+      unresolved_binding_ids_duplicate: 'Belső hiba: a feloldatlan binding-azonosítók
+        nem lehetnek duplikáltak.'
+      unresolved_relation_ids_blank: 'Belső hiba: a feloldatlan reláció-azonosítók
+        nem lehetnek üresek.'
+      unresolved_relation_ids_duplicate: 'Belső hiba: a feloldatlan reláció-azonosítók
+        nem lehetnek duplikáltak.'
 application:
   auth:
     acquisition_lock:
@@ -571,17 +583,22 @@ application:
         megerősítést igényel.
       archive_schema_version_from_future: Az archívum sémaverziója ({archive_schema_version})
         újabb, mint amit ez az alkalmazás támogat (legfeljebb {max_supported}).
-      delete_active_bucket: application.bucket_maintenance.errors.delete_active_bucket
-      delete_not_confirmed: application.bucket_maintenance.errors.delete_not_confirmed
+      delete_active_bucket: Az aktív bucket nem törölhető; váltson másik profilra
+        előbb az aeat config switch NÉV paranccsal.
+      delete_not_confirmed: Ez a művelet visszafordíthatatlan. Futtassa újra a --yes
+        kapcsolóval a megerősítéshez.
       import_bucket_collision: A(z) {bucket_id} azonosítójú bucket már létezik; használja
         a --force-replace kapcsolót a felülírásához.
       import_missing_filing_baseline: 'A bucket-archívum profiljából hiányoznak a
         benyújtási azonossági mezők: %{missing_flags}. Javítsa a forrásprofilt, majd
         exportálja újra.'
-      import_payload_invalid: application.bucket_maintenance.errors.import_payload_invalid
-      import_recovery_passphrase_required: application.bucket_maintenance.errors.import_recovery_passphrase_required
-      import_recovery_wrap_invalid: application.bucket_maintenance.errors.import_recovery_wrap_invalid
-      import_recovery_wrap_missing: application.bucket_maintenance.errors.import_recovery_wrap_missing
+      import_payload_invalid: A profilarchívum tartalma érvénytelen vagy sérült.
+      import_recovery_passphrase_required: Ez az archívum titkosított helyreállítási
+        csomagolást tartalmaz; adja meg a helyreállítási jelmondatot az importáláshoz.
+      import_recovery_wrap_invalid: A megadott helyreállítási jelmondat nem tudta
+        kibontani a titkosított csomagolást.
+      import_recovery_wrap_missing: Az archívum helyreállítási csomagolást jelöl,
+        de nem tartalmazza annak bájtjait; az archívum hiányos vagy sérült.
       restore_not_archived: A bucket nincs archiválva (nincs törölve); nincs mit visszaállítani.
       unsupported_archive_schema_version: A(z) {archive_schema_version} archívum sémaverziója
         megelőzi az alkalmazás által támogatott verziót; migráció nélkül nem állítható
@@ -627,9 +644,11 @@ application:
     runtime:
       errors:
         active_profile_load_failed: 'Az aktív bevallási profil nem tölthető be: %{reason}.'
-        ambiguous_casilla_schema: application.filing.runtime.errors.ambiguous_casilla_schema
+        ambiguous_casilla_schema: 'Belső hiba: a futásidejű casilla-séma nem egyértelmű
+          (duplikált casilla.id értékek vagy függő képlethivatkozások).'
         blank_modelo_selection: A kért modellválasztás nem tartalmazhat üres modellazonosítókat.
-        filing_year_period_mismatch: application.filing.runtime.errors.filing_year_period_mismatch
+        filing_year_period_mismatch: 'Belső hiba: a bevallási év nem egyezik a megadott
+          időszakkal.'
         filing_year_period_pair: A filing_year és a period értékeket együtt kell megadni.
         modelo_not_in_registry: A(z) %{modelo} modelo nem szerepel a számítási nyilvántartásban.
         modelo_revision_missing: A(z) %{modelo} modellnek nincsenek revizioi.
@@ -4572,9 +4591,9 @@ cli:
       transaction_id_help: A főkönyvi tranzakció azonosítója (vagy egyértelmű hexadecimális
         előtag).
   locales:
-    allow_identical_key_help: cli.locales.allow_identical_key_help
-    allow_identical_locale_help: cli.locales.allow_identical_locale_help
-    allow_identical_reason_help: cli.locales.allow_identical_reason_help
+    allow_identical_key_help: A kizárandó pontozott locale kulcs.
+    allow_identical_locale_help: A frissítendő locale kódja.
+    allow_identical_reason_help: Miért egyezik jogosan ez a szöveg az angollal.
     app_help: Lokalizációs katalógusok ellenőrzése és sablonjainak létrehozása.
     canonicalize_product_identity:
       locale_help: Csak ezt a támogatott nyelvi katalógust frissítse.
@@ -5098,7 +5117,8 @@ cli:
 core:
   profile:
     errors:
-      output_language_type: core.profile.errors.output_language_type
+      output_language_type: A profil kimeneti nyelvének támogatott nyelvi kódnak kell
+        lennie szöveges formában.
       registration_duplicate_callable: A projektválaszok implementációja kétszer lett
         regisztrálva eltérő hívható objektummal; pontosan egyszer kell regisztrálni.
 dotted:
@@ -5293,7 +5313,8 @@ errors:
       az ehhez a tárolási művelethez szükséges jogosultsággal.
     auth_session_corrupt: A tárolt munkamenet metaadatai nem elemezhetők. Hitelesítse
       magát újra egy friss munkamenet létrehozásához.
-    auth_session_deserialization: errors.auth.auth_session_deserialization
+    auth_session_deserialization: A tárolt hitelesítési munkamenet-adatok nem deszerializálhatók.
+      Hitelesítsen újra egy új munkamenet létrehozásához.
     auth_session_unavailable: Nincs elérhető ellenőrzött aktív AEAT-munkamenet. Hitelesítse
       magát a folytatás előtt.
     auth_storage_bucket_recovery_verification: A megadott helyreállítási kód érvénytelen.
@@ -5536,7 +5557,10 @@ errors:
     error_profile_validation: Egy profil-rekord nem ment át az érvényesítésen.
     error_redaction: Egy szerkesztési segédprogram rossz típusú argumentumot kapott.
     error_renta: Hiba történt a RENTA-számítás során.
-    error_renta_profile_completeness_warning: errors.error.error_renta_profile_completeness_warning
+    error_renta_profile_completeness_warning: 'RETMAR kötelező bevallás: ez a munkavállaló
+      RETMAR-ban van nyilvántartva. 2023 óta a tengerészeti különleges társadalombiztosítási
+      rendszerben nyilvántartott munkavállalóknak jövedelemszinttől függetlenül IRPF-bevallást
+      kell benyújtaniuk (Ley 35/2006 96. cikk, BOE-A-2006-20764).'
     error_renta_validation: Egy RENTA-mezőérték érvénytelen.
     error_rental_amortization_cap_exceeded: A halmozott amortizáció meghaladná a bérleti
       vagyonelem jogszabályi felső határát.
@@ -5649,7 +5673,8 @@ errors:
       sikerült menteni vagy betölteni.
     fail_modelo_filing_record_persistence: A benyújtás-rekord katalógust nem sikerült
       menteni vagy betölteni.
-    fail_modelo_locale_manager: errors.fail.fail_modelo_locale_manager
+    fail_modelo_locale_manager: 'Belső hiba: a modelo séma-lokális fordításkezelés
+      meghiúsult.'
     fail_modelo_verification_report_persistence: Az ellenőrzési jelentés katalógust
       nem sikerült menteni vagy betölteni.
     fail_modelo_work_unit_persistence: A munkajegység-katalógust nem sikerült menteni
@@ -5661,7 +5686,7 @@ errors:
       az internetkapcsolatot, és próbálja újra.
     fail_outbound_storage_unavailable: A tárhelyszolgáltatás átmenetileg nem érhető
       el. Várjon néhány percet, és próbálja újra.
-    fail_repair_decision_not_found: errors.fail.fail_repair_decision_not_found
+    fail_repair_decision_not_found: A kért javítási döntés nem létezik.
     fail_review_source_load: A forrásfájl jelen van, de nem elemezhető.
     fail_sanitization_source_parse: A forrás PDF-et nem sikerült megnyitni sanitizáláshoz.
     fail_secure_storage: Biztonságos tárhelyhiba történt.
@@ -5671,14 +5696,15 @@ errors:
     fail_sede_validation: Az AEAT Sede-ről rögzített adatok nem a várt formátumban
       vannak.
     fail_site_health: Az oldalállapot-ellenőrzés meghiúsult.
-    fail_snapshot_not_found: errors.fail.fail_snapshot_not_found
+    fail_snapshot_not_found: Nem létezik pillanatkép a kért azonosítóval.
     fail_storage: Tárolási hiba történt.
     fail_storage_blob_not_found: A kért objektum nem található a titkosított tárolóban.
     fail_storage_bucket_recovery_unavailable: Az aktív bucket helyreállítási csomagja
       nem tölthető be. Előfordulhat, hogy a helyreállítás sohasem volt regisztrálva.
     fail_storage_persistence: Perzisztenciahiba történt a biztonságos tárolóban.
     fail_storage_repository: Egy adattár-művelet meghiúsult.
-    fail_storage_repository_setup: errors.fail.fail_storage_repository_setup
+    fail_storage_repository_setup: Egy repository alosztályból hiányzik egy szükséges
+      osztályattribútum, így nem hozható létre példány.
     fail_storage_secret_not_found: A kért kulcshoz nem található titkos adat.
     fail_storage_secret_store: Bemeneti/kimeneti hiba történt a titkos adatok tárolójában.
     fail_storage_secure_object_revision_conflict: A biztonságos objektumot egy másik
@@ -5761,7 +5787,8 @@ errors:
       (hash, méret vagy etag).
     integrity_outbound_storage_corruption: Egy mellékadatok fájl váratlan típusú mezőt
       tartalmaz; a tárolási objektum sérült.
-    integrity_period: errors.integrity.integrity_period
+    integrity_period: 'Belső hiba: nem sikerült érvényes időszakot létrehozni a megadott
+      évből és kódból.'
     integrity_portals_portal_integrity: Az AEAT portál-nyilvántartás sérti a strukturális
       invariánst.
     integrity_profile_answer_type: Egy profilválasz-mező váratlan típust kapott.
@@ -5769,7 +5796,8 @@ errors:
       az aktuális vetítéssel.
     integrity_profile_snapshot_not_found: Nem létezik profil-pillanatkép a megadott
       azonosítóval.
-    integrity_repair_integrity: errors.integrity.integrity_repair_integrity
+    integrity_repair_integrity: Egy javítási-integritási invariáns vagy döntési szerződés
+      sérült.
     integrity_storage_blob: Egy tárolt objektum SHA-256 hashje eltér a manifeszttől.
     integrity_storage_bucket_validation: Egy gyűjtőparaméter vagy manifestmező nem
       teljesítette az érvényesítést.
@@ -5835,15 +5863,19 @@ errors:
       rögzítettek aktív futási kontextuson kívül.'
     internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
       megjeleníteni.'
-    internal_profile_keys_registration: errors.internal.internal_profile_keys_registration
-    internal_profile_project_answers_not_registered: errors.internal.internal_profile_project_answers_not_registered
-    internal_profile_registration: errors.internal.internal_profile_registration
+    internal_profile_keys_registration: 'Belső hiba: a profilkulcsok regisztrálása
+      sikertelen.'
+    internal_profile_project_answers_not_registered: 'Belső hiba: a project_answers
+      nincs regisztrálva az alkalmazás indításakor.'
+    internal_profile_registration: 'Belső hiba: a profil regisztrálása sikertelen.'
     internal_wizard_answer_queue_overflow: 'Belső hiba: a varázsló fel nem használt
       kanonikus válaszokkal zárult.'
     internal_wizard_answer_queue_underflow: 'Belső hiba: a varázsló több kanonikus
       választ kért, mint amennyit a nem interaktív futtatás megadott.'
-    internal_wizard_catalogue_already_registered: errors.internal.internal_wizard_catalogue_already_registered
-    internal_wizard_catalogue_not_registered: errors.internal.internal_wizard_catalogue_not_registered
+    internal_wizard_catalogue_already_registered: 'Belső hiba: a varázsló-katalógus
+      másodszor is regisztrálva lett, eltérő objektumokkal.'
+    internal_wizard_catalogue_not_registered: 'Belső hiba: a varázsló-katalógus nincs
+      regisztrálva az alkalmazás indításakor.'
     internal_workflow_abort_signal: 'Belső hiba: egy munkafolyamat-szakasz megszakítási
       jelet adott ki.'
     internal_workflow_unhandled: 'Belső hiba: egy munkafolyamat-szakasz kezeletlen
@@ -5898,15 +5930,24 @@ errors:
       időszakban: {reason}. Jogalap: AEAT Brexit IVA NIF-IVA / Modelo 349 útmutató.'
     modelo_ambiguous_semantic_role_casilla: Több casilla használja a(z) %{semantic_role}
       szemantikus szerepet; használja a pontos kanonikus casilla.id értékét.
-    modelo_calculate_binding_input: errors.refused.modelo_calculate_binding_input
-    modelo_calculate_casilla_input: errors.refused.modelo_calculate_casilla_input
-    modelo_calculate_decimal_input: errors.refused.modelo_calculate_decimal_input
-    modelo_calculate_detail_rows: errors.refused.modelo_calculate_detail_rows
-    modelo_calculate_input: errors.refused.modelo_calculate_input
-    modelo_calculate_relation_input: errors.refused.modelo_calculate_relation_input
-    modelo_calculate_semantic_role: errors.refused.modelo_calculate_semantic_role
-    modelo_calculate_shortcut_input: errors.refused.modelo_calculate_shortcut_input
-    modelo_calculate_text_input: errors.refused.modelo_calculate_text_input
+    modelo_calculate_binding_input: A megadott --binding felülírás nem oldható fel
+      az aktív revízióra.
+    modelo_calculate_casilla_input: A megadott casilla felülírás nem oldható fel az
+      aktív revízióra.
+    modelo_calculate_decimal_input: A megadott számítási felülírási érték nem decimális
+      alakú.
+    modelo_calculate_detail_rows: A megadott részletsorok megsértik a modelo számítás
+      előfeltételeit.
+    modelo_calculate_input: Az operátor által megadott modelo számítási bemeneti érték
+      érvénytelen.
+    modelo_calculate_relation_input: A megadott --relation felülírás nem oldható fel
+      az aktív revízióra.
+    modelo_calculate_semantic_role: A registry-revízió nem deklarálja a rövidítés
+      által megkövetelt szemantikus szerepet.
+    modelo_calculate_shortcut_input: A csoportosított számítási rövidítés bemenetei
+      hiányosak.
+    modelo_calculate_text_input: A megadott --casilla felülírási érték nem érvényes
+      egy szöveges casillához.
     modelo_calculation_revision_selector_ambiguous: A számítási revízió választó több
       revízióra illeszkedik; pontosítsa a választót.
     modelo_calculation_revision_selector_state: A kiválasztott számítási revízió nincs
@@ -5967,7 +6008,8 @@ errors:
       regisztrálva.
     refused_auth_configure_dangling_active_profile: Az aktív-profil mutató nem oldódik
       fel egy regisztrált bucket-re.
-    refused_auth_diagnostic_payload: errors.refused.refused_auth_diagnostic_payload
+    refused_auth_diagnostic_payload: 'Elutasítva: a hitelesítési diagnosztikai payload
+      érvénytelen.'
     refused_auth_diagnostic_phone_state: A megadott telefonállapot-érték nem ismert.
       Használjon egy érvényes operátori telefonállapot-értéket.
     refused_auth_login_live_tests_disabled: Az éles bejelentkezési próbák le vannak
@@ -6036,8 +6078,10 @@ errors:
       és évhez.
     refused_inventory_service_input: Egy megadott bemenet sérti a készlet szerződést.
       Javítsa a bemenetet, és próbálja újra.
-    refused_iva_compensation_decimal_parse: errors.refused.refused_iva_compensation_decimal_parse
-    refused_iva_compensation_year_range: errors.refused.refused_iva_compensation_year_range
+    refused_iva_compensation_decimal_parse: 'Elutasítva: az IVA-kompenzáció összege
+      nem elemezhető decimálisként.'
+    refused_iva_compensation_year_range: 'Elutasítva: az IVA-kompenzáció éve az elfogadott
+      tartományon kívül van.'
     refused_iva_wallet_reconciliation_invariant: Az IVA tárca egyeztetési bemenetek
       egy szükséges feltételt sértenek. Ellenőrizze a tárca-kor beállítást, és próbálja
       újra.
@@ -6142,7 +6186,7 @@ errors:
     refused_sanitization_unknown_surface: Olyan személyes adatfelületet észleltek,
       amelyet a sanitizáló nem tud kezelni. Emberi felülvizsgálat szükséges.
     refused_sanitization_validation: A sanitizáló paraméterei nem mentek át az érvényesítésen.
-    refused_source_mesh_invariant: errors.refused.refused_source_mesh_invariant
+    refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
     refused_storage_bucket_already_present: Az importálás ütközik egy már létező tárolási
       bucket-tel.
     refused_storage_bucket_no_active: Nem oldható fel aktív bucket. Válasszon ki egy
@@ -6255,8 +6299,10 @@ filing:
     schema_mismatch: Eltérés a várt sémától.
 live:
   errors:
-    expediente_not_found: live.errors.expediente_not_found
-    iva_history_modelo_303_only: live.errors.iva_history_modelo_303_only
+    expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért
+      expedientét.
+    iva_history_modelo_303_only: Az IVA-kompenzáció előzmények letöltése csak Modelo
+      303 megfigyeléseket fogad el.
     target_period_year_mismatch: A célidőszak éve nem egyezik.
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
@@ -6376,8 +6422,10 @@ review:
     errors:
       drafts_load_failed: Nem sikerült betölteni a bevallási piszkozatokat a biztonságos
         háttértárból.
-      invoices_load_failed: review.adapters.errors.invoices_load_failed
-      transactions_load_failed: review.adapters.errors.transactions_load_failed
+      invoices_load_failed: A számlakatalógus betöltése a biztonságos háttértárból
+        sikertelen.
+      transactions_load_failed: A tranzakciókatalógus betöltése a biztonságos háttértárból
+        sikertelen.
   edit:
     errors:
       parse_failed: A szerkesztési token nem értelmezhető. A megadott érték el lett
