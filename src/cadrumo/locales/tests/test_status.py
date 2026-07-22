@@ -61,29 +61,18 @@ def test_catalogue_status_partitions_every_required_key(manager: LocaleManager) 
     by_file = {record.locale_file: record for record in catalogue_status(manager)}
 
     # The registry/f-string scanners contribute required keys beyond the
-    # fixture's source file, so assertions are relative to the three
-    # seeded ``audit.*`` keys rather than absolute totals.
-    en = by_file["en.yml"]
-    assert en.required >= 3
-    assert (en.authored, en.key_echo) == (3, 0)
-    assert en.absent == en.required - 3
-
-    ca = by_file["ca.yml"]
-    assert ca.authored == 1
-    assert ca.key_echo == 1
-    assert ca.absent == ca.required - 2
-    assert ca.identical_allowlisted == 0
-    assert ca.identical_pending == 0
-
-    hu = by_file["hu.yml"]
-    assert hu.authored == 1
-    assert hu.identical_pending == 1
-    assert hu.identical_allowlisted == 1
-    assert hu.key_echo == 0
-
-    es = by_file["es.yml"]
-    assert es.authored == 3
-    assert es.extra == 1
+    # fixture's source file, so present-leaf counts are asserted while the
+    # ``absent`` remainder is checked through the partition sum below.
+    observed = {
+        name: (record.authored, record.key_echo, record.identical_allowlisted, record.identical_pending, record.extra)
+        for name, record in by_file.items()
+    }
+    assert observed == {
+        "en.yml": (3, 0, 0, 0, 0),
+        "ca.yml": (1, 1, 0, 0, 0),
+        "hu.yml": (1, 0, 1, 1, 0),
+        "es.yml": (3, 0, 0, 0, 1),
+    }
 
     for record in by_file.values():
         partition = (

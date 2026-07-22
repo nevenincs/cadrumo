@@ -1,5 +1,6 @@
 {
   "ca": {
+    "_key_echo_ceiling": 35,
     "_untranslated_ceiling": 158,
     "application.filing.review.stale_reasons.unknown": "pure placeholder echo of the raw reason string; es.yml uses the same identical fallback alongside translated named reasons",
     "application.storage.calc_sheets.engine.guide.title": "pure placeholder template with only punctuation separators, no natural-language words to translate",
@@ -30,6 +31,7 @@
     "wizard.choices.iva": "AEAT tax name (IVA), never Catalanised"
   },
   "es": {
+    "_key_echo_ceiling": 4,
     "application.filing.review.stale_reasons.unknown": "pure %{reason} placeholder passthrough, no literal words to translate",
     "application.storage.calc_sheets.engine.guide.title": "pure %{modelo_title} - %{period}/%{filing_year} placeholder template, no literal words",
     "application.storage.calc_sheets.engine.labels.casilla": "AEAT domain term (casilla) with no translation",
@@ -77,6 +79,7 @@
     "wizard.setup.residence.ccaa.choices.murcia.label": "Spanish autonomous-community proper name"
   },
   "hu": {
+    "_key_echo_ceiling": 60,
     "_untranslated_ceiling": 106,
     "application.filing.review.stale_reasons.unknown": "Fallback default that only interpolates the raw reason value with no surrounding prose to translate",
     "application.storage.calc_sheets.engine.guide.title": "Pure title-format template interpolating modelo_title/period/filing_year, no prose to translate",
