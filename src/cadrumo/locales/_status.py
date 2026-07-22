@@ -15,6 +15,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from ..core.i18n import extract_placeholders
 from .manager import (
     _INTENTIONAL_IDENTICAL_FILENAME,
     LocaleManager,
@@ -26,12 +27,19 @@ from .manager import (
 _REFERENCE_LOCALE_FILE = "en.yml"
 _PENDING_BUCKET_KEY = "untranslated_pending"
 
+# tr() consumes these kwargs as rendering directives and strips them from the
+# interpolation map, so a catalogue token carrying one of these names can
+# never bind — the value is structurally broken no matter what a call site
+# passes.
+RESERVED_INTERPOLATION_TOKENS = frozenset({"locale", "default"})
+
 
 class CatalogueLeafState(StrEnum):
     """Honest per-leaf state for one required catalogue key in one locale."""
 
     AUTHORED = "authored"
     KEY_ECHO = "key_echo"
+    UNBINDABLE = "unbindable"
     IDENTICAL_ALLOWLISTED = "identical_allowlisted"
     IDENTICAL_PENDING = "identical_pending"
     ABSENT = "absent"
@@ -40,10 +48,10 @@ class CatalogueLeafState(StrEnum):
 class CatalogueStatusRecord(BaseModel):
     """State partition of the required key set for one locale catalogue.
 
-    ``authored + key_echo + identical_allowlisted + identical_pending +
-    absent == required`` by construction. ``extra`` counts catalogue keys
-    outside the required set that no dynamic namespace explains; it is
-    informational and outside the partition.
+    ``authored + key_echo + unbindable + identical_allowlisted +
+    identical_pending + absent == required`` by construction. ``extra``
+    counts catalogue keys outside the required set that no dynamic
+    namespace explains; it is informational and outside the partition.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -52,6 +60,7 @@ class CatalogueStatusRecord(BaseModel):
     required: int = Field(ge=0)
     authored: int = Field(ge=0)
     key_echo: int = Field(ge=0)
+    unbindable: int = Field(ge=0, default=0)
     identical_allowlisted: int = Field(ge=0)
     identical_pending: int = Field(ge=0)
     absent: int = Field(ge=0)
@@ -86,6 +95,10 @@ def classify_catalogue_leaf(
         return CatalogueLeafState.ABSENT
     if value == key:
         return CatalogueLeafState.KEY_ECHO
+    if extract_placeholders(value) & RESERVED_INTERPOLATION_TOKENS:
+        # A token named after a tr() rendering directive can never bind;
+        # the value looks authored but is structurally broken.
+        return CatalogueLeafState.UNBINDABLE
     if not is_reference_locale and reference_value is not None and value == reference_value:
         return CatalogueLeafState.IDENTICAL_ALLOWLISTED if allowlisted else CatalogueLeafState.IDENTICAL_PENDING
     return CatalogueLeafState.AUTHORED
@@ -135,6 +148,7 @@ def catalogue_status(manager: LocaleManager) -> tuple[CatalogueStatusRecord, ...
                 required=len(required_keys),
                 authored=counts[CatalogueLeafState.AUTHORED],
                 key_echo=counts[CatalogueLeafState.KEY_ECHO],
+                unbindable=counts[CatalogueLeafState.UNBINDABLE],
                 identical_allowlisted=counts[CatalogueLeafState.IDENTICAL_ALLOWLISTED],
                 identical_pending=counts[CatalogueLeafState.IDENTICAL_PENDING],
                 absent=counts[CatalogueLeafState.ABSENT],
@@ -150,6 +164,7 @@ def _string_leaves(raw_leaves: dict[str, object]) -> dict[str, str]:
 
 
 __all__ = [
+    "RESERVED_INTERPOLATION_TOKENS",
     "CatalogueLeafState",
     "CatalogueStatusRecord",
     "catalogue_status",

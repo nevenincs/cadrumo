@@ -768,7 +768,10 @@ def _registry_topic_locale(locale: str | None) -> str:
             translated_message="application.registry.errors.invalid_topic_locale",
             context={
                 "registry_service": "registry.topics",
-                "locale": locale,
+                # tr() reserves "locale" as its rendering-locale meta-kwarg,
+                # so the refused input must travel as locale_code to reach
+                # the message's interpolation slot.
+                "locale_code": locale,
                 "allowed_locales": ", ".join(SUPPORTED_OUTPUT_LANGUAGES),
             },
         )

@@ -30,12 +30,17 @@ def manager(tmp_path: Path) -> LocaleManager:
     source_dir.mkdir()
     (source_dir / "surface.py").write_text(
         "from cadrumo.core.i18n import tr\n\n"
-        "def render() -> tuple[str, str, str]:\n"
-        '    return tr("audit.first"), tr("audit.second"), tr("audit.third")\n',
+        "def render() -> tuple[str, str, str, str]:\n"
+        '    return tr("audit.first"), tr("audit.second"), tr("audit.third"), tr("audit.fourth")\n',
         encoding="utf-8",
     )
     catalogues = {
-        "en": "audit:\n  first: 'First message'\n  second: 'Second message'\n  third: 'Third message'\n",
+        # fourth carries a token named after tr()'s reserved locale
+        # meta-kwarg, so it can never bind: structurally broken.
+        "en": (
+            "audit:\n  first: 'First message'\n  second: 'Second message'\n  third: 'Third message'\n"
+            "  fourth: 'Recorded %{locale} entry'\n"
+        ),
         # first echoes its own key, second is authored, third is absent.
         "ca": "audit:\n  first: 'audit.first'\n  second: 'Segon missatge'\n",
         # first is identical to en without an allowlist entry, second is
@@ -64,19 +69,31 @@ def test_catalogue_status_partitions_every_required_key(manager: LocaleManager) 
     # fixture's source file, so present-leaf counts are asserted while the
     # ``absent`` remainder is checked through the partition sum below.
     observed = {
-        name: (record.authored, record.key_echo, record.identical_allowlisted, record.identical_pending, record.extra)
+        name: (
+            record.authored,
+            record.key_echo,
+            record.unbindable,
+            record.identical_allowlisted,
+            record.identical_pending,
+            record.extra,
+        )
         for name, record in by_file.items()
     }
     assert observed == {
-        "en.yml": (3, 0, 0, 0, 0),
-        "ca.yml": (1, 1, 0, 0, 0),
-        "hu.yml": (1, 0, 1, 1, 0),
-        "es.yml": (3, 0, 0, 0, 1),
+        "en.yml": (3, 0, 1, 0, 0, 0),
+        "ca.yml": (1, 1, 0, 0, 0, 0),
+        "hu.yml": (1, 0, 0, 1, 1, 0),
+        "es.yml": (3, 0, 0, 0, 0, 1),
     }
 
     for record in by_file.values():
         partition = (
-            record.authored + record.key_echo + record.identical_allowlisted + record.identical_pending + record.absent
+            record.authored
+            + record.key_echo
+            + record.unbindable
+            + record.identical_allowlisted
+            + record.identical_pending
+            + record.absent
         )
         assert partition == record.required
 
@@ -123,6 +140,18 @@ def test_classifier_never_reports_a_defect_as_authored() -> None:
         )
         is CatalogueLeafState.AUTHORED
     )
+    # A token named after a tr() rendering directive can never bind, so the
+    # value is structurally broken even though it reads as authored prose.
+    assert (
+        classify_catalogue_leaf(
+            "audit.first",
+            "Recorded %{locale} entry",
+            reference_value="First message",
+            is_reference_locale=False,
+            allowlisted=False,
+        )
+        is CatalogueLeafState.UNBINDABLE
+    )
 
 
 def test_status_command_reports_catalogue_partition(manager: LocaleManager) -> None:
@@ -137,6 +166,7 @@ def test_status_command_reports_catalogue_partition(manager: LocaleManager) -> N
     assert result.exit_code == 0, result.output
     assert set(rows) == {"ca.yml", "en.yml", "es.yml", "hu.yml"}
     assert (rows["ca.yml"]["authored"], rows["ca.yml"]["key_echo"]) == ("1", "1")
+    assert rows["en.yml"]["unbindable"] == "1"
     assert rows["hu.yml"]["identical_allowlisted"] == "1"
     assert rows["hu.yml"]["identical_pending"] == "1"
     assert rows["es.yml"]["extra"] == "1"
