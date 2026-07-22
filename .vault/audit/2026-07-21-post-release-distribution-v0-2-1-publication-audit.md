@@ -190,15 +190,18 @@ uv managed-Python store outlived the runner that installed it and silently
 redirected an ARM machine to Intel builds.
 
 Resume the arm64 investigation with a debugger attached to the LIVE build, not a
-replay. A debugger run was attempted and produced a convergent, load-bearing
-result: importing the crashing overlay's cffi backend directly, under the
-debugger, does not fault, while the real formula build faults deterministically.
-So the crash does not survive extraction of the object — it exists only inside
-the running build subprocess. The debugger must therefore be attached to that
-subprocess as it runs, by wrapping the metadata-build interpreter invocation to
-launch under the debugger and stop on the illegal-instruction signal, rather than
-importing the artefact afterward. Only then read the faulting program counter and
-map it to the loaded object; a post-hoc import is now proven not to reproduce it. Everything cheap has been tried: the sandbox, the compiler shim, environment
+replay. Three independent reconstructions were tried and all confirm the same
+thing: importing the crashing overlay's cffi backend directly does not fault,
+constructing an FFI object with an equivalent cffi does not fault, and both run
+clean under the debugger — while the real formula build faults deterministically,
+five times of five. The crash therefore does not survive extraction from pip's
+live build subprocess; it exists only inside that running process. Every
+reconstruction-based approach is now proven futile, so the debugger must be
+attached to the subprocess pip actually spawns. The mechanism is to interpose on
+the interpreter pip launches for the metadata hook — a wrapper on the build-backend
+Python that re-execs it under a debugger set to stop on the illegal-instruction
+signal — then read the faulting program counter and map it to the loaded object.
+This is the one path not yet taken and the only one the evidence still permits. Everything cheap has been tried: the sandbox, the compiler shim, environment
 filtering, architecture, contention, the package standalone, source-built cffi,
 environment layout, install ordering, cffi optimisation flags, the cffi
 wheel-versus-source split, and the linked libffi (which is the stock system
