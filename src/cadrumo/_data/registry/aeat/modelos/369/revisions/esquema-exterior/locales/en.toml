@@ -1,0 +1,11 @@
+[labels]
+"decl.ejercicio" = "Filing year to which the self-assessment relates"
+"decl.periodo" = "Period of the return"
+"iva.exterior.cuota-total" = "Total VAT output tax under the Non-Union scheme (sum of amounts by destination)"
+"iva.exterior.de.services-cuota" = "VAT output tax to destination DE — services supplied (Non-Union scheme)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"
+"iva.exterior.cuota-total" = "iva.exterior.cuota-total"
+"iva.exterior.de.services-cuota" = "iva.exterior.de.services-cuota"

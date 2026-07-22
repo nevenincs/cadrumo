@@ -1,7 +1,7 @@
 [[revisions."2024-y-siguientes".casillas]]
 id = "decl.total-perceptores"
 number = "136-144"
-label = "Numero total de perceptores"
+label = "Número total de perceptores"
 section = ["declarante", "resumen"]
 data_type = "integer"
 semantic_role = "total_perceptores_count"

@@ -1,0 +1,11 @@
+[labels]
+"decl.ejercicio" = "Exercici a què es refereix l'autoliquidació"
+"decl.periodo" = "Període de la declaració"
+"iva.importacion.cuota-total" = "Total de quota d'IVA repercutida del Règim d'importació (IOSS, suma per destinació)"
+"iva.importacion.de.low-value-cuota" = "Quota d'IVA IOSS a la destinació DE — vendes a distància de béns importats ≤ 150 EUR (LIVA art. 163 quinvicies)"
+
+[help]
+"decl.ejercicio" = "decl.ejercicio"
+"decl.periodo" = "decl.periodo"
+"iva.importacion.cuota-total" = "iva.importacion.cuota-total"
+"iva.importacion.de.low-value-cuota" = "iva.importacion.de.low-value-cuota"
