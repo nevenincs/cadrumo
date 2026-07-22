@@ -15,17 +15,3 @@
 "14" = "Result payable"
 
 [help]
-"01" = "Number of dividend and profit-sharing income items"
-"02" = "Number of other income items"
-"03" = "Total number of income items"
-"04" = "Base for dividends and profit-sharing"
-"05" = "Base for other income"
-"06" = "Total base"
-"07" = "Withholdings on dividends and profit-sharing"
-"08" = "Withholdings on other income"
-"09" = "Total withholdings"
-"10" = "Income from previous tax years"
-"11" = "Adjustment"
-"12" = "Sum of withholdings and adjustment"
-"13" = "Result of previous self-assessments"
-"14" = "Result payable"
