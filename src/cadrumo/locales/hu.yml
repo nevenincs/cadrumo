@@ -6302,7 +6302,7 @@ live:
 locales:
   cli:
     allow_identical:
-      recorded: 'rögzítve: {allowlist_file}:{locale}:{key}'
+      recorded: 'rögzítve: {allowlist_file}:{locale_code}:{key}'
     audit:
       file_drift: '%{locale_file}: hiányzó=%{missing_count} többlet=%{extra_count}'
       file_ok: '%{locale_file}: rendben'

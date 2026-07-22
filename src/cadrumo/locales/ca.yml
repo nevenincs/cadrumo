@@ -3060,8 +3060,6 @@ cli:
       period_unrecognised: 'Període ''{raw}'' no reconegut. Useu un testimoni AEAT:
         1T-4T (trimestres), 0A (anual), 01-12 (mesos), i indiqueu l''any amb --year
         (p. ex. --period 1T --year 2024).'
-    next:
-      create_profile_command: aeat config profile create NOM
   config:
     app_help: Gestionar configuració local i diagnòstics
     auth:
@@ -6411,7 +6409,7 @@ live:
 locales:
   cli:
     allow_identical:
-      recorded: registrat {allowlist_file}:{locale}:{key}
+      recorded: registrat {allowlist_file}:{locale_code}:{key}
     audit:
       file_drift: '%{locale_file}: falten=%{missing_count} sobrants=%{extra_count}'
       file_ok: '%{locale_file}: correcte'
