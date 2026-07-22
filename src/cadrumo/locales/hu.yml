@@ -834,7 +834,7 @@ application:
         szám: %{value}'
       calculate_detail_casilla_unsupported: A(z) %{key} casilla a Modelo 180 perceptor/ingatlan
         részletsor mezőjét nevezi meg, nem skaláris decimális casilla bemenetet. A
-        helyi --casilla csatorna csak skaláris decimális casillakat fogad; a Modelo
+        helyi --casilla csatorna csak skaláris decimális casillákat fogad; a Modelo
         180 perceptor/ingatlan részletsorai még nem támogatottak a nyilvános --row
         felületen. Használd a aeat app modelo aggregate --modelo 180 --retencion-observation
         parancsot a támogatott éves perceptor-szám/base/retenciones forráshoz.
