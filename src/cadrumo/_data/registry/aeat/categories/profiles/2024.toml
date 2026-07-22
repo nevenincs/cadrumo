@@ -9,7 +9,7 @@
 
 [[profiles]]
 category = "cuotas_colegiales"
-display_label = "categories.registry.cuotas_colegiales"
+display_label = "categories.registry.cuotas_colegiales.label"
 iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
@@ -48,7 +48,7 @@ quote = "categories.registry.cuotas_autonomos_ss.citations.1.quote"
 
 [[profiles]]
 category = "mutualidad_alternativa"
-display_label = "categories.registry.mutualidad_alternativa"
+display_label = "categories.registry.mutualidad_alternativa.label"
 iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
@@ -73,7 +73,7 @@ quote = "categories.registry.mutualidad_alternativa.citations.1.quote"
 
 [[profiles]]
 category = "arrendamiento_local"
-display_label = "categories.registry.arrendamiento_local"
+display_label = "categories.registry.arrendamiento_local.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -120,7 +120,7 @@ quote = "categories.registry.arrendamiento_vivienda_afecto.citations.1.quote"
 
 [[profiles]]
 category = "ibi_local_afecto"
-display_label = "categories.registry.ibi_local_afecto"
+display_label = "categories.registry.ibi_local_afecto.label"
 iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
@@ -243,7 +243,7 @@ quote = "categories.registry.suministros_home_office_internet.citations.1.quote"
 
 [[profiles]]
 category = "telefonia_movil"
-display_label = "categories.registry.telefonia_movil"
+display_label = "categories.registry.telefonia_movil.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -266,7 +266,7 @@ quote = "categories.registry.telefonia_movil.citations.1.quote"
 
 [[profiles]]
 category = "telefonia_fija"
-display_label = "categories.registry.telefonia_fija"
+display_label = "categories.registry.telefonia_fija.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -290,7 +290,7 @@ quote = "categories.registry.telefonia_fija.citations.1.quote"
 
 [[profiles]]
 category = "material_oficina"
-display_label = "categories.registry.material_oficina"
+display_label = "categories.registry.material_oficina.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -313,7 +313,7 @@ quote = "categories.registry.material_oficina.citations.1.quote"
 
 [[profiles]]
 category = "software_suscripcion"
-display_label = "categories.registry.software_suscripcion"
+display_label = "categories.registry.software_suscripcion.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -336,7 +336,7 @@ quote = "categories.registry.software_suscripcion.citations.1.quote"
 
 [[profiles]]
 category = "hardware_amortizable"
-display_label = "categories.registry.hardware_amortizable"
+display_label = "categories.registry.hardware_amortizable.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -359,7 +359,7 @@ quote = "categories.registry.hardware_amortizable.citations.1.quote"
 
 [[profiles]]
 category = "mobiliario_amortizable"
-display_label = "categories.registry.mobiliario_amortizable"
+display_label = "categories.registry.mobiliario_amortizable.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -382,7 +382,7 @@ quote = "categories.registry.mobiliario_amortizable.citations.1.quote"
 
 [[profiles]]
 category = "reparaciones_conservacion"
-display_label = "categories.registry.reparaciones_conservacion"
+display_label = "categories.registry.reparaciones_conservacion.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -405,7 +405,7 @@ quote = "categories.registry.reparaciones_conservacion.citations.1.quote"
 
 [[profiles]]
 category = "vehiculo_combustible"
-display_label = "categories.registry.vehiculo_combustible"
+display_label = "categories.registry.vehiculo_combustible.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -428,7 +428,7 @@ quote = "categories.registry.vehiculo_combustible.citations.1.quote"
 
 [[profiles]]
 category = "vehiculo_mantenimiento"
-display_label = "categories.registry.vehiculo_mantenimiento"
+display_label = "categories.registry.vehiculo_mantenimiento.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -451,7 +451,7 @@ quote = "categories.registry.vehiculo_mantenimiento.citations.1.quote"
 
 [[profiles]]
 category = "vehiculo_seguro"
-display_label = "categories.registry.vehiculo_seguro"
+display_label = "categories.registry.vehiculo_seguro.label"
 iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
@@ -474,7 +474,7 @@ quote = "categories.registry.vehiculo_seguro.citations.1.quote"
 
 [[profiles]]
 category = "vehiculo_peaje"
-display_label = "categories.registry.vehiculo_peaje"
+display_label = "categories.registry.vehiculo_peaje.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -497,7 +497,7 @@ quote = "categories.registry.vehiculo_peaje.citations.1.quote"
 
 [[profiles]]
 category = "vehiculo_parking"
-display_label = "categories.registry.vehiculo_parking"
+display_label = "categories.registry.vehiculo_parking.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -586,7 +586,7 @@ quote = "categories.registry.manutencion_dietas_extranjero.citations.1.quote"
 
 [[profiles]]
 category = "asesoria_fiscal"
-display_label = "categories.registry.asesoria_fiscal"
+display_label = "categories.registry.asesoria_fiscal.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -609,7 +609,7 @@ quote = "categories.registry.asesoria_fiscal.citations.1.quote"
 
 [[profiles]]
 category = "asesoria_juridica"
-display_label = "categories.registry.asesoria_juridica"
+display_label = "categories.registry.asesoria_juridica.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -632,7 +632,7 @@ quote = "categories.registry.asesoria_juridica.citations.1.quote"
 
 [[profiles]]
 category = "asesoria_contable"
-display_label = "categories.registry.asesoria_contable"
+display_label = "categories.registry.asesoria_contable.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -655,7 +655,7 @@ quote = "categories.registry.asesoria_contable.citations.1.quote"
 
 [[profiles]]
 category = "publicidad_marketing"
-display_label = "categories.registry.publicidad_marketing"
+display_label = "categories.registry.publicidad_marketing.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -678,7 +678,7 @@ quote = "categories.registry.publicidad_marketing.citations.1.quote"
 
 [[profiles]]
 category = "formacion_profesional"
-display_label = "categories.registry.formacion_profesional"
+display_label = "categories.registry.formacion_profesional.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -701,7 +701,7 @@ quote = "categories.registry.formacion_profesional.citations.1.quote"
 
 [[profiles]]
 category = "viajes_transporte"
-display_label = "categories.registry.viajes_transporte"
+display_label = "categories.registry.viajes_transporte.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -724,7 +724,7 @@ quote = "categories.registry.viajes_transporte.citations.1.quote"
 
 [[profiles]]
 category = "viajes_alojamiento"
-display_label = "categories.registry.viajes_alojamiento"
+display_label = "categories.registry.viajes_alojamiento.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -795,7 +795,7 @@ quote = "categories.registry.seguros_salud_autonomo.citations.1.quote"
 
 [[profiles]]
 category = "gastos_bancarios"
-display_label = "categories.registry.gastos_bancarios"
+display_label = "categories.registry.gastos_bancarios.label"
 iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
@@ -818,7 +818,7 @@ quote = "categories.registry.gastos_bancarios.citations.1.quote"
 
 [[profiles]]
 category = "gastos_financieros"
-display_label = "categories.registry.gastos_financieros"
+display_label = "categories.registry.gastos_financieros.label"
 iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
@@ -841,7 +841,7 @@ quote = "categories.registry.gastos_financieros.citations.1.quote"
 
 [[profiles]]
 category = "suministros_cliente_directos"
-display_label = "categories.registry.suministros_cliente_directos"
+display_label = "categories.registry.suministros_cliente_directos.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -864,7 +864,7 @@ quote = "categories.registry.suministros_cliente_directos.citations.1.quote"
 
 [[profiles]]
 category = "subcontratacion"
-display_label = "categories.registry.subcontratacion"
+display_label = "categories.registry.subcontratacion.label"
 iva_hint = "general"
 
 [profiles.proportionality]
@@ -910,7 +910,7 @@ quote = "categories.registry.tributos_fiscalmente_deducibles.citations.1.quote"
 
 [[profiles]]
 category = "amortizacion_vivienda_afecto"
-display_label = "categories.registry.amortizacion_vivienda_afecto"
+display_label = "categories.registry.amortizacion_vivienda_afecto.label"
 iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
@@ -933,7 +933,7 @@ quote = "categories.registry.amortizacion_vivienda_afecto.citations.1.quote"
 
 [[profiles]]
 category = "ibi_vivienda_afecto"
-display_label = "categories.registry.ibi_vivienda_afecto"
+display_label = "categories.registry.ibi_vivienda_afecto.label"
 iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
@@ -956,7 +956,7 @@ quote = "categories.registry.ibi_vivienda_afecto.citations.1.quote"
 
 [[profiles]]
 category = "comunidad_vivienda_afecto"
-display_label = "categories.registry.comunidad_vivienda_afecto"
+display_label = "categories.registry.comunidad_vivienda_afecto.label"
 iva_hint = "exempt_or_non_subject"
 
 [profiles.proportionality]
