@@ -11,7 +11,7 @@ domain = "concepto"
 lifecycle = "approved"
 legal_refs = ["ley-58-2003:art-99"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "El resguardo que la AEAT emite tras presentar una declaracion."
@@ -31,13 +31,23 @@ term_status = "admitted"
 
 [language.en]
 short_description = "The filing receipt the AEAT issues after you file."
+definition = "Proof document (usually a PDF) that the AEAT issues after a return is filed, carrying the secure verification code and the figures filed, as evidence of the filing."
+
+[language.en.source]
+citation = "AEAT Sede Electronica manuals on filing returns."
+authority = "aeat"
 
 [[language.en.term]]
 label = "filing receipt"
 term_status = "preferred"
 
 [language.ca]
-short_description = "El justificant que l'AEAT emet despres de presentar una declaracio."
+short_description = "El justificant que l'AEAT emet després de presentar una declaració."
+definition = "Document acreditatiu (habitualment un PDF) que l'AEAT emet després de la presentació d'una declaració, amb el codi segur de verificació i les xifres presentades, com a prova de la presentació."
+
+[language.ca.source]
+citation = "Manuales de la Sede Electronica de la AEAT sobre presentacion de declaraciones."
+authority = "aeat"
 
 [language.hu]
 short_description = "A benyujtas utan az AEAT altal kiadott bizonylat."

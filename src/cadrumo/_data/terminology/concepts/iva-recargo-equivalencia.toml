@@ -9,10 +9,10 @@
 concept_id = "iva-recargo-equivalencia"
 domain = "regimen"
 lifecycle = "approved"
-legal_refs = ["ley-37-1992:art-148"]
 domain_refs = ["iva-category:recargo_equivalencia"]
+legal_refs = ["ley-37-1992:art-148"]
 created_at = 2026-06-10
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Regimen especial de IVA para comerciantes minoristas."
@@ -32,9 +32,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "A special VAT regime for retail traders (equivalence surcharge)."
+definition = "Mandatory special VAT regime for individual retail traders in which the supplier charges a surcharge in addition to VAT, and the retailer is exempted from settling the tax on those sales."
+
+[language.en.source]
+citation = "Articles 148 to 163 of Ley 37/1992 del IVA."
+authority = "boe"
 
 [language.ca]
-short_description = "Recarrec d'equivalencia: regim especial d'IVA per a comerciants minoristes."
+short_description = "Recàrrec d'equivalència: règim especial d'IVA per a comerciants minoristes."
+definition = "Règim especial obligatori per a comerciants minoristes persones físiques en el qual el proveïdor repercuteix un recàrrec a més de l'IVA i el minorista queda exonerat de liquidar l'impost per aquestes vendes."
+
+[language.ca.source]
+citation = "Articulos 148 a 163 de la Ley 37/1992 del IVA."
+authority = "boe"
 
 [language.hu]
 short_description = "Egyenertekusegi potlek: kulonleges afa-rendszer kiskereskedoknek."

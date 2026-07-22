@@ -13,7 +13,7 @@ domain_refs = ["modelo:720"]
 legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis"]
 related = ["declaracion", "aeat"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Informativa de bienes y derechos en el extranjero."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Annual information return on assets and rights held abroad."
+definition = "Annual information return on accounts, securities, and real estate located abroad, when they exceed the established thresholds."
+
+[language.en.source]
+citation = "Disposicion adicional 18 of Ley 58/2003; article 42 bis of RD 1065/2007."
+authority = "boe"
 
 [language.ca]
 short_description = "Informativa de bens i drets a l'estranger."
+definition = "Declaració informativa anual sobre comptes, valors i immobles situats a l'estranger quan superen els llindars establerts."
+
+[language.ca.source]
+citation = "Disposicion adicional 18 de la Ley 58/2003; articulo 42 bis del RD 1065/2007."
+authority = "boe"
 
 [language.hu]
 short_description = "Eves informacios bevallas kulfoldon tartott vagyonrol."

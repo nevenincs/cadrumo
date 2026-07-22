@@ -11,7 +11,7 @@ domain = "concepto"
 lifecycle = "approved"
 legal_refs = ["rd-1065-2007:art-18"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "El Numero de Identificacion Fiscal, el identificador tributario de toda persona o entidad ante la AEAT."
@@ -43,9 +43,19 @@ part_of_speech = "abbreviation"
 
 [language.en]
 short_description = "The Spanish tax identification number for every person or entity dealing with the AEAT."
+definition = "Code that uniquely identifies each taxpayer before the AEAT. For Spanish natural persons the NIF matches the national identity document (DNI) number; for foreign natural persons it is the foreigner identity number (NIE). Legal persons and other entities also hold a NIF; in older records a company identifier could be called the Tax Identification Code (CIF). The DNI and NIE on their own are identity documents."
+
+[language.en.source]
+citation = "Real Decreto 1065/2007, Reglamento General de las actuaciones y los procedimientos de gestion e inspeccion tributaria, Title II (tax identification number)."
+authority = "boe"
 
 [language.ca]
-short_description = "El Numero d'Identificacio Fiscal, l'identificador tributari de tota persona o entitat davant l'AEAT."
+short_description = "El Número d'Identificació Fiscal, l'identificador tributari de tota persona o entitat davant l'AEAT."
+definition = "Codi que identifica de manera única cada obligat tributari davant l'AEAT. Per a les persones físiques espanyoles el NIF coincideix amb el número del Document Nacional d'Identitat (DNI); per a les persones físiques estrangeres és el Número d'Identitat d'Estranger (NIE). Les persones jurídiques i altres entitats disposen igualment d'un NIF; en registres antics l'identificador d'empresa podia anomenar-se Codi d'Identificació Fiscal (CIF). El DNI i el NIE per si sols són documents d'identitat."
+
+[language.ca.source]
+citation = "Real Decreto 1065/2007, Reglamento General de las actuaciones y los procedimientos de gestion e inspeccion tributaria, Titulo II (numero de identificacion fiscal)."
+authority = "boe"
 
 [language.hu]
 short_description = "A spanyol adoazonosito szam minden szemely vagy szervezet szamara az AEAT-nal."

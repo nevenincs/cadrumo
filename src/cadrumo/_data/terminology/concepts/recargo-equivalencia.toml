@@ -12,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-37-1992:art-148"]
 related = ["iva-recargo-equivalencia", "iva"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Recargo de IVA que paga el comerciante minorista a su proveedor."
@@ -28,6 +28,11 @@ term_status = "preferred"
 
 [language.en]
 short_description = "The VAT surcharge a retailer pays its supplier under the equivalence regime."
+definition = "Surcharge that, under the special equivalence-surcharge regime, the supplier charges the retail trader in addition to VAT, in exchange for the trader being exempted from filing VAT self-assessments on those sales."
+
+[language.en.source]
+citation = "Articles 154 and 156 of Ley 37/1992 del IVA."
+authority = "boe"
 
 [[language.en.term]]
 label = "equivalence surcharge"
@@ -35,6 +40,11 @@ term_status = "preferred"
 
 [language.ca]
 short_description = "Recarrec d'IVA que el comerciant minorista paga al seu proveidor."
+definition = "Recàrrec que, en el règim especial del recàrrec d'equivalència, el proveïdor repercuteix al comerciant minorista a més de l'IVA, a canvi que aquest quedi exonerat de presentar autoliquidacions d'IVA per aquestes vendes."
+
+[language.ca.source]
+citation = "Articulos 154 y 156 de la Ley 37/1992 del IVA."
+authority = "boe"
 
 [language.hu]
 short_description = "Az afa-potlek, amelyet a kiskereskedo fizet a beszallitojanak."

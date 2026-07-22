@@ -12,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-58-2003:art-213"]
 related = ["modelo"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "La version de las reglas de un modelo que se aplica a un periodo, segun el registro."
@@ -30,9 +30,19 @@ grammatical_gender = "feminine"
 
 [language.en]
 short_description = "The version of a modelo's rules that applies to a given period, named in the registry."
+definition = "The version of a modelo rules that applies to a specific filing period, named in the registry. For example, a revision such as 2019-y-siguientes covers filings from 2019 onward. The AEAT publishes one revision per (modelo, year, period) by Ministerial Order, so the applicable revision is a derived fact, not a choice."
+
+[language.en.source]
+citation = "AEAT, Ministerial Orders approving each modelo revision, published in the BOE."
+authority = "aeat"
 
 [language.ca]
-short_description = "La versio de les regles d'un model que s'aplica a un periode, segons el registre."
+short_description = "La versió de les regles d'un model que s'aplica a un període, segons el registre."
+definition = "La versió de les regles d'un model que regeix per a un període de presentació concret, anomenada en el registre. Per exemple, una revisió com 2019-y-siguientes cobreix les presentacions de 2019 en endavant. L'AEAT publica una revisió per a cada (model, any, període) mitjançant Ordre Ministerial, de manera que la revisió aplicable és un fet derivat, no una elecció."
+
+[language.ca.source]
+citation = "AEAT, Ordenes Ministeriales que aprueban cada revision de modelo publicadas en el BOE."
+authority = "aeat"
 
 [language.hu]
 short_description = "Egy modelo szabalyainak adott idoszakra ervenyes valtozata, a nyilvantartasban megnevezve."

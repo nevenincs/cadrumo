@@ -11,7 +11,7 @@ domain = "concepto"
 lifecycle = "approved"
 related = ["modelo", "sede-electronica"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "El fichero de texto de ancho fijo que la AEAT admite para la presentacion de un modelo."
@@ -28,9 +28,19 @@ part_of_speech = "noun"
 
 [language.en]
 short_description = "The fixed-width text file format the AEAT accepts for filing a modelo."
+definition = "A fixed-width text file format the AEAT accepts for the electronic filing of a modelo. The application generates this file when exporting a return, so the person can upload it themselves to the Sede Electronica. It takes its name from the Boletin Oficial del Estado (BOE), where each modelo record layout is published."
+
+[language.en.source]
+citation = "AEAT, record layouts published by Ministerial Order in the BOE for each modelo."
+authority = "aeat"
 
 [language.ca]
-short_description = "El fitxer de text d'amplada fixa que l'AEAT admet per a la presentacio d'un model."
+short_description = "El fitxer de text d'amplada fixa que l'AEAT admet per a la presentació d'un model."
+definition = "Format de fitxer de text d'amplada fixa que l'AEAT accepta per a la presentació electrònica d'un model. L'aplicació genera aquest fitxer en exportar una declaració, perquè la persona el pugi ella mateixa a la Seu Electrònica. Pren el seu nom del Butlletí Oficial de l'Estat (BOE), on es publica el disseny de registre de cada model."
+
+[language.ca.source]
+citation = "AEAT, Disenos de registro publicados por Orden Ministerial en el BOE para cada modelo."
+authority = "aeat"
 
 [language.hu]
 short_description = "Az AEAT altal egy modelo benyujtasahoz elfogadott rogzitett szelessegu szovegfajl."

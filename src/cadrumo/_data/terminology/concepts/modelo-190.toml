@@ -13,7 +13,7 @@ domain_refs = ["modelo:190"]
 legal_refs = ["ley-35-2006:art-99", "orden-eha-3127-2009:art-1"]
 related = ["irpf", "modelo-111", "declaracion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Resumen anual de retenciones del trabajo y actividades."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Annual summary of the year's salary and fee withholding returns (Modelo 111)."
+definition = "Annual information return summarising the withholdings on employment income and income from economic activities declared on Modelo 111 during the year, broken down by recipient."
+
+[language.en.source]
+citation = "Article 99 of Ley 35/2006 del IRPF; Orden EHA/3127/2009."
+authority = "boe"
 
 [language.ca]
 short_description = "Resum anual de retencions del treball i activitats."
+definition = "Declaració informativa anual que resumeix les retencions del treball i d'activitats econòmiques declarades en els models 111 de l'exercici, amb el detall per perceptor."
+
+[language.ca.source]
+citation = "Articulo 99 de la Ley 35/2006 del IRPF; Orden EHA/3127/2009."
+authority = "boe"
 
 [language.hu]
 short_description = "Eves osszesito a beres es vallalkozoi forrasadorol (111-es)."

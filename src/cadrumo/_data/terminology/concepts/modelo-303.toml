@@ -9,11 +9,11 @@
 concept_id = "modelo-303"
 domain = "modelo"
 lifecycle = "approved"
-legal_refs = ["ley-37-1992:art-164"]
 domain_refs = ["modelo:303"]
+legal_refs = ["ley-37-1992:art-164"]
 related = ["iva", "casilla", "autoliquidacion", "prorrata", "modelo-390"]
 created_at = 2026-06-10
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Autoliquidacion periodica del IVA en regimen general."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Periodic VAT self-assessment return."
+definition = "Periodic VAT self-assessment filed by taxable persons under the general regime, quarterly or monthly depending on turnover."
+
+[language.en.source]
+citation = "Articles 164 and 167 of Ley 37/1992 del IVA."
+authority = "boe"
 
 [language.ca]
-short_description = "Autoliquidacio periodica de l'IVA."
+short_description = "Autoliquidació periòdica de l'IVA."
+definition = "Declaració-liquidació periòdica de l'Impost sobre el Valor Afegit que presenten els subjectes passius en règim general, trimestralment o mensualment segons el volum d'operacions."
+
+[language.ca.source]
+citation = "Articulos 164 y 167 de la Ley 37/1992 del IVA."
+authority = "boe"
 
 [language.hu]
 short_description = "Idoszakos afa-onbevallas."

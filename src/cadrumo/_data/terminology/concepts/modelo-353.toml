@@ -13,7 +13,7 @@ domain_refs = ["modelo:353"]
 legal_refs = ["orden-eha-3434-2007:art-2", "orden-eha-3434-2007:art-8"]
 related = ["iva", "modelo-322", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "IVA de grupo de entidades: modelo agregado mensual."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Monthly aggregate VAT return of a VAT group, filed by the parent entity."
+definition = "Monthly aggregate self-assessment of a VAT group, filed by the parent entity with the result of the whole group."
+
+[language.en.source]
+citation = "Orden EHA/3434/2007."
+authority = "boe"
 
 [language.ca]
 short_description = "IVA de grup d'entitats: model agregat mensual."
+definition = "Autoliquidació mensual agregada del grup d'entitats d'IVA, presentada per l'entitat dominant amb el resultat de tot el grup."
+
+[language.ca.source]
+citation = "Orden EHA/3434/2007."
+authority = "boe"
 
 [language.hu]
 short_description = "Afacsoport havi osszesitett bevallasa, az anyavallalat nyujtja be."

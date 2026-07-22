@@ -13,7 +13,7 @@ domain_refs = ["modelo:180"]
 legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100"]
 related = ["irpf", "modelo-115", "declaracion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Resumen anual de retenciones sobre alquileres urbanos."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Annual summary of the year's rent-withholding returns (Modelo 115)."
+definition = "Annual information return summarising the withholdings on urban-property leases declared on Modelo 115 during the year, broken down by landlord."
+
+[language.en.source]
+citation = "Article 99 of Ley 35/2006 del IRPF; article 100 of RD 439/2007."
+authority = "boe"
 
 [language.ca]
 short_description = "Resum anual de retencions sobre lloguers urbans."
+definition = "Declaració informativa anual que resumeix les retencions sobre arrendaments d'immobles urbans declarades en els models 115 de l'exercici, amb el detall per arrendador."
+
+[language.ca.source]
+citation = "Articulo 99 de la Ley 35/2006 del IRPF; articulo 100 del RD 439/2007."
+authority = "boe"
 
 [language.hu]
 short_description = "Eves osszesito a berleti forrasado-bevallasokrol (115-os)."

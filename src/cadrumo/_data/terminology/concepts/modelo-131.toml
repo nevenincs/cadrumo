@@ -13,7 +13,7 @@ domain_refs = ["modelo:131"]
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-3"]
 related = ["irpf", "modelo-130", "autoliquidacion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Pago fraccionado del IRPF en estimacion objetiva."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Quarterly IRPF instalment under the objective-estimation (modulos) regime."
+definition = "Quarterly IRPF instalment payment for economic activities under the objective-estimation (modules) regime."
+
+[language.en.source]
+citation = "Article 110 of RD 439/2007; Orden EHA/672/2007."
+authority = "boe"
 
 [language.ca]
 short_description = "Pagament fraccionat de l'IRPF en estimacio objectiva."
+definition = "Pagament fraccionat trimestral de l'IRPF per a activitats econòmiques en estimació objectiva (mòduls)."
+
+[language.ca.source]
+citation = "Articulo 110 del RD 439/2007; Orden EHA/672/2007."
+authority = "boe"
 
 [language.hu]
 short_description = "Negyedeves szja-eloleg az atalanybecsles (modulos) szerint."

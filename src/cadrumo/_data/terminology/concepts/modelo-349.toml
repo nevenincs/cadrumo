@@ -13,7 +13,7 @@ domain_refs = ["modelo:349"]
 legal_refs = ["orden-eha-769-2010:art-1", "orden-hac-174-2020:art-1"]
 related = ["iva", "vies", "declaracion"]
 created_at = 2026-06-10
-updated_at = 2026-07-13
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "Declaracion recapitulativa de operaciones intracomunitarias."
@@ -33,9 +33,19 @@ term_status = "admitted"
 
 [language.en]
 short_description = "Recapitulative statement of intra-community supplies and acquisitions."
+definition = "Recapitulative statement of intra-Community supplies and acquisitions of goods and services carried out with operators in other Member States."
+
+[language.en.source]
+citation = "Orden EHA/769/2010; Orden HAC/174/2020."
+authority = "boe"
 
 [language.ca]
-short_description = "Declaracio recapitulativa d'operacions intracomunitaries."
+short_description = "Declaració recapitulativa d'operacions intracomunitàries."
+definition = "Declaració recapitulativa dels lliuraments i adquisicions intracomunitàries de béns i serveis realitzats amb operadors d'altres estats membres."
+
+[language.ca.source]
+citation = "Orden EHA/769/2010; Orden HAC/174/2020."
+authority = "boe"
 
 [language.hu]
 short_description = "Osszesito nyilatkozat a kozossegen beluli ugyletekrol."

@@ -12,7 +12,7 @@ lifecycle = "approved"
 legal_refs = ["ley-37-1992:art-25"]
 related = ["iva"]
 created_at = 2026-06-11
-updated_at = 2026-06-11
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "El sistema europeo de intercambio de informacion sobre el IVA para validar numeros de operador intracomunitario."
@@ -29,6 +29,11 @@ part_of_speech = "abbreviation"
 
 [language.en]
 short_description = "The EU VAT Information Exchange System for validating intra-Community VAT numbers."
+definition = "VAT Information Exchange System of the European Union, which allows checking whether a VAT identification number is registered as an intra-Community operator in another Member State. The application can query it in read-only mode to validate a VAT number before declaring an intra-Community operation."
+
+[language.en.source]
+citation = "Council Regulation (EU) No 904/2010 on administrative cooperation and combating fraud in the field of VAT; European Commission VIES system."
+authority = "eu"
 
 [[language.en.term]]
 label = "VAT Information Exchange System"
@@ -36,7 +41,12 @@ term_status = "admitted"
 part_of_speech = "noun"
 
 [language.ca]
-short_description = "El sistema europeu d'intercanvi d'informacio sobre l'IVA per validar numeros d'operador intracomunitari."
+short_description = "El sistema europeu d'intercanvi d'informació sobre l'IVA per validar números d'operador intracomunitari."
+definition = "Sistema d'Intercanvi d'Informació sobre l'IVA de la Unió Europea (VAT Information Exchange System) que permet comprovar si un número d'identificació a efectes de l'IVA està registrat com a operador intracomunitari en un altre estat membre. L'aplicació pot consultar-lo en mode de només lectura per validar un número d'IVA abans de declarar una operació intracomunitària."
+
+[language.ca.source]
+citation = "Reglamento (UE) n. 904/2010 del Consejo, sobre cooperacion administrativa y lucha contra el fraude en el ambito del IVA; Comision Europea, sistema VIES."
+authority = "eu"
 
 [language.hu]
 short_description = "Az EU hozzaadottertekado-informaciocsere-rendszere a kozossegen beluli afaszamok ellenorzesere."
