@@ -2396,14 +2396,14 @@ cli:
       readiness_help: Jelentés arról, hogy az aktív profil készen áll-e egy nyomtatvány/év/időszak
         benyújtására.
       reconcile:
-        app_help: 'Egyeztet egy modelo munkaegységet az AEAT igazolásával: a pull
+        app_help: 'Egyeztet egy modell munkaegységet az AEAT igazolásával: a pull
           letölti az igazolást az AEAT-tól és egyeztet; a file egy helyi PDF-et egyeztet;
           a history a korábbi futtatásokat listázza.'
         file_help: Egyeztet egy munkaegységet egy helyi igazolás vagy bevallás PDF
           ellen. Csak helyi; soha nem lép kapcsolatba az AEAT-tal.
         file_kind_help: 'Bizonyíték dokumentum típusa: justificante (AEAT igazolás,
-          minden modelo) vagy declaration (benyújtott bevallás PDF, rovat szintű egyeztetés,
-          csak engedélyezett modelok). Alapértelmezetten justificante.'
+          minden modell) vagy declaration (benyújtott bevallás PDF, rovat szintű egyeztetés,
+          csak engedélyezett modellek). Alapértelmezetten justificante.'
         file_path_help: A helyi igazolás vagy bevallás PDF útvonala, amellyel egyeztetni
           kell.
         history_empty: Még nincsenek rögzített egyeztetések.
@@ -5708,7 +5708,7 @@ errors:
       található.
     fail_user_profile_schema_load: A felhasználói profil sémáját nem sikerült betölteni.
     ledger_check: Egy főkönyv-konzisztencia-ellenőrzés blokkoló eredményt talált.
-    ledger_link: Egy főkönyvi tranzakciót nem sikerült modello-kötéshez kapcsolni.
+    ledger_link: Egy főkönyvi tranzakciót nem sikerült modell-kötéshez kapcsolni.
     missing_exchange_rate: Hiányzó árfolyam a megadott dátumhoz és devizához.
     modelo_036_lifecycle: Hiba történt a Modelo 036 életciklusában (regisztrálás,
       módosítás vagy törlés).
@@ -5958,7 +5958,7 @@ errors:
     modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
       decimális összeg.
     modelo_revision_pick: A modellrevízió kiválasztása érvénytelen.
-    modelo_work_period_token: Érvénytelen modello időszak.
+    modelo_work_period_token: Érvénytelen modell időszak.
     modelo_work_registry_year_mismatch: A kiválasztott nyilvántartási revízió nem
       fedi le a kért benyújtási évet.
     modelo_work_selector_ambiguous: Több modelo munkaegység is illeszkedik a választóra.
@@ -6229,7 +6229,7 @@ errors:
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'
-    modelo_not_registered: A modello nincs regisztrálva a nyilvántartásban.
+    modelo_not_registered: A modell nincs regisztrálva a nyilvántartásban.
     no_revision_for_period: A nyilvántartásban nincs a(z) %{modelo_id} modellt %{filing_year}
       adóévben %{period} időszakban lefedő revízió.
   storage:
