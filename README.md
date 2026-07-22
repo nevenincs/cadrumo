@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/readme/cadrumo-logo.svg" alt="Cadrumo logo" width="136">
+  <img src="docs/_static/readme/cadrumo-logo.svg" alt="Cadrumo logo" width="136">
 </p>
 
 # Cadrumo: turn Spanish tax records into locally verified filing artifacts
