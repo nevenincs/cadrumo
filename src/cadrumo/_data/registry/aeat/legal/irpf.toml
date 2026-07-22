@@ -1737,9 +1737,9 @@ evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "record_design"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_111/files/01-111-orden-eha-3127-2009-ejercicios-2019-y-siguientes-actualizado-mayo-2021-179-kb-xls.xlsx"
-sha256 = "3a533d3f4cb888416da9ccfe856c1252001233303d712a83d7efc5b214b9add0"
-bytes = 39564
-retrieved_at = 2026-05-03
+sha256 = "01509d418c7186209398390605272c0d5534ac2d6c22a8364193c5440ab0550b"
+bytes = 39753
+retrieved_at = 2026-07-21
 applies_from = 2019-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos/dr111e16v18.xls"
 review_status = "reviewed"
@@ -1813,7 +1813,7 @@ sha256 = "f4f4a0e9c8150288489e0a3058bedbd9a3b9f58bdba5e58b1599b7c7f5fc6cda"
 bytes = 256994
 retrieved_at = 2026-05-03
 published_at = 2023-11-30
-applies_from = 2023-12-01
+applies_from = 2023-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_180_2023.pdf"
 review_status = "reviewed"
 
@@ -2035,6 +2035,19 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_193_2025.pdf"
 review_status = "reviewed"
 
+[sources."aeat-dr-193-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_193/files/03-193-orden-hac-56-2024-ejercicios-2024-y-siguientes-556-kb-pdf.pdf"
+sha256 = "1eae714c75eb6be7d412e48141ced46d3dc7e6701473a54b21f81027c211461b"
+bytes = 566209
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/ant_100_199/archivos/DR_Mod_193.pdf"
+review_status = "reviewed"
+
 [sources."aeat-dr-190-2025"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -2046,6 +2059,19 @@ retrieved_at = 2026-05-03
 published_at = 2025-12-12
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_25/DISENOS_LOGICOS_190_2025.pdf"
+review_status = "reviewed"
+
+[sources."aeat-dr-190-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_190/files/03-190-orden-eha-3127-2009-de-10-de-noviembre-actualizada-por-orden-hac-1432-2024-de-11-de-dici.pdf"
+sha256 = "20bc8086525ce850063b9ae8644b8514483e5c34f90c8e47cfadc6c52cf7390e"
+bytes = 1176058
+retrieved_at = 2026-05-03
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_24/DISENOS_LOGICOS_190-2024.pdf"
 review_status = "reviewed"
 
 [sources."aeat-modelo-190-procedure"]
@@ -4587,9 +4613,9 @@ evidence_tier = "layout_authority"
 authority = "aeat"
 kind = "xsd"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_100/files/03-100-esquema-xsd-ejercicio-2025-actualizado-14-04-2026-796-kb-ejecutable.xsd"
-sha256 = "208e9cf5367bd7d009eb66152902f149bc90693f9734fe4831951c763d128864"
-bytes = 812095
-retrieved_at = 2026-05-03
+sha256 = "df94cc5160e8ad8244e6fc5fb0f257280b4c8c3f70107f0c2acc99d395f678c2"
+bytes = 812099
+retrieved_at = 2026-07-21
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/Renta2025.xsd"
@@ -4678,9 +4704,9 @@ evidence_tier = "official_source_guidance"
 authority = "aeat"
 kind = "manual_pdf"
 corpus_path = "corpus/manuals/renta/2025/part1/source.pdf"
-sha256 = "60e6b2d71c97d93a9e0943e6ff8c886f4dd6d3741a797cb8001dcbcadfb33528"
-bytes = 7543283
-retrieved_at = 2026-04-12
+sha256 = "02c6e8300a7f56c8c24aa947d4c39c5657c9a9eda6f5d727d44b4112d7de15d4"
+bytes = 8554799
+retrieved_at = 2026-07-22
 applies_from = 2025-01-01
 applies_to = 2025-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf"

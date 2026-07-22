@@ -217,6 +217,7 @@ exclude = [
   "src/cadrumo/_data/corpus/**/*.pdf",
   "src/cadrumo/_data/corpus/**/*.docx",
   "src/cadrumo/_data/corpus/**/*.xls",
+  "src/cadrumo/_data/corpus/**/*.xlsm",
   "src/cadrumo/_data/corpus/**/*.xlsx",
   "src/cadrumo/_data/corpus/**/*.zip",
 ]
@@ -247,6 +248,7 @@ exclude = [
   "src/cadrumo/_data/corpus/**/*.pdf",
   "src/cadrumo/_data/corpus/**/*.docx",
   "src/cadrumo/_data/corpus/**/*.xls",
+  "src/cadrumo/_data/corpus/**/*.xlsm",
   "src/cadrumo/_data/corpus/**/*.xlsx",
   "src/cadrumo/_data/corpus/**/*.zip",
 ]

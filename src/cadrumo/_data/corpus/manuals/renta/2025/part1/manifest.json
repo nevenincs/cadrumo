@@ -1,10 +1,10 @@
 {
-  "content_length": 7543283,
-  "fetched_at": "2026-04-12T18:17:55.067296Z",
+  "content_length": 8554799,
+  "fetched_at": "2026-07-21T23:17:47.6373100Z",
   "manual_id": "renta",
   "part": "part1",
   "relative_pdf_path": "source.pdf",
-  "sha256": "60e6b2d71c97d93a9e0943e6ff8c886f4dd6d3741a797cb8001dcbcadfb33528",
+  "sha256": "02c6e8300a7f56c8c24aa947d4c39c5657c9a9eda6f5d727d44b4112d7de15d4",
   "source_pdf_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf",
   "synthetic": false,
   "year": 2025

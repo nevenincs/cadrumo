@@ -54,7 +54,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _PACKAGING_ROOT = _REPO_ROOT / "packaging"
 _CORPUS_SOURCE_PREFIX = "src/cadrumo/_data/corpus/"
-_CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsx", ".zip")
+_CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
 _COMPANION_CORPUS_PREFIX = "cadrumo_data/_data/corpus/"
 # PyPI's default per-file size cap, in the decimal-MB convention the publish
 # guard and CI artifact guard use (bytes / 1e6). The split exists to keep every
@@ -109,6 +109,7 @@ def _tracked_corpus_binaries() -> set[str]:
             "src/cadrumo/_data/corpus/**/*.pdf",
             "src/cadrumo/_data/corpus/**/*.docx",
             "src/cadrumo/_data/corpus/**/*.xls",
+            "src/cadrumo/_data/corpus/**/*.xlsm",
             "src/cadrumo/_data/corpus/**/*.xlsx",
             "src/cadrumo/_data/corpus/**/*.zip",
         ],

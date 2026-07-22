@@ -1050,7 +1050,7 @@
 	<xs:simpleType name="tipo_String40LTextoY">
 		<xs:restriction base="xs:string">
 			<xs:maxLength value="40"/>
-			<xs:pattern value="([A-Z]|[0-9]|Á|É|Í|Ó|Ú|À|È|Ì|Ò|Ù|Ä|Ë|Ï|Ö|Ü|&quot;|&amp;|;|·|Â|Ê|Î|Ô|Û|Ñ|Ç|\s|\.|\-|/|_|:|,|'|\(|\))+"/>
+			<xs:pattern value="([A-Z]|[0-9]|Á|É|Í|Ó|Ú|À|È|Ì|Ò|Ù|Ä|Ë|Ï|Ö|Ü|&quot;|&amp;|;|·|Â|Ê|Î|Ô|Û|Ñ|Ç|\s|\.|\-|\+|/|_|:|,|'|\(|\))+"/>
 		</xs:restriction>
 	</xs:simpleType>
 	<xs:simpleType name="tipo_String100LTexto">
@@ -6167,7 +6167,7 @@
 												<xs:element name="X323" type="tipo_logico" minOccurs="0" maxOccurs="1"/>
 												<xs:element name="RDTOINI" type="tipo_ImpNegativo" minOccurs="0" maxOccurs="1"/>
 												<xs:element name="XART" type="tipo_logico" minOccurs="0" maxOccurs="1"/>
-												<xs:element name="RNPARED4" type="tipo_ImpPositivo" minOccurs="0" maxOccurs="1"/>
+												<xs:element name="RNPARED4" type="tipo_ImpNegativo" minOccurs="0" maxOccurs="1"/>
 											</xs:sequence>
 										</xs:complexType>
 									</xs:element>
@@ -6554,7 +6554,7 @@
 	</xs:complexType>
 	<xs:complexType name="tipo_GPFondosCoti">
 		<xs:sequence>
-			<xs:element name="Fondo" minOccurs="1" maxOccurs="60">
+			<xs:element name="Fondo" minOccurs="1" maxOccurs="200">
 				<xs:complexType>
 					<xs:sequence>
 						<xs:element name="NIFFOCO" type="tipo_Nif" minOccurs="0" maxOccurs="1"/>

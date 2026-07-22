@@ -34,4 +34,10 @@ legal_refs = [
 orden_aplicabilidad = [
     "orden-hac-657-2025:modelo-200",
 ]
-source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2024", "boe-modelo-200-2025-form"]
+source_refs = [
+    "aeat-dr-200-2024",
+    "aeat-dr-200-2025",
+    "aeat-modelo-200-manual-2024",
+    "aeat-modelo-200-manual-2025",
+    "boe-modelo-200-2025-form",
+]

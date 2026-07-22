@@ -230,7 +230,7 @@ def build_outputs(source: Path, *, repo_root: Path) -> list[PreprocessOutput]:
     """
     suffix = source.suffix.lower()
     try:
-        if suffix == ".xlsx":
+        if suffix in {".xlsx", ".xlsm"}:
             sheets = _read_xlsx_sheets(source)
         elif suffix == ".xls":
             sheets = _read_xls_sheets(source)

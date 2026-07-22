@@ -43,11 +43,12 @@ See Also:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
+from typing import Any, override
 
+from hatchling.builders.config import BuilderConfig
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 
-_CORPUS_BINARY_SUFFIXES = frozenset({".pdf", ".xls", ".xlsx"})
+_CORPUS_BINARY_SUFFIXES = frozenset({".pdf", ".xls", ".xlsm", ".xlsx"})
 _TARGET_PREFIX = "cadrumo_data/_data/corpus"
 
 # The corpus top-level subtrees this companion owns. The sibling
@@ -73,11 +74,12 @@ def _corpus_root(hook_root: Path) -> Path | None:
     return None
 
 
-class CustomBuildHook(BuildHookInterface):
+class CustomBuildHook(BuildHookInterface[BuilderConfig]):
     """Force-include this companion's corpus source binaries under the mirrored tree."""
 
     PLUGIN_NAME = "cadrumo-data-manuals-corpus"
 
+    @override
     def initialize(self, version: str, build_data: dict[str, Any]) -> None:
         """Inject the owned corpus source binaries into the build's force-include map."""
         corpus_root = _corpus_root(Path(self.root))

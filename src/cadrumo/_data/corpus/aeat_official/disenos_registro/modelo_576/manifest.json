@@ -1,0 +1,23 @@
+{
+  "source": "Agencia Tributaria Sede Electronica - Disenos de registro",
+  "modelo": "576",
+  "retrieved_at": "2026-07-21",
+  "source_pages": [
+    "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html"
+  ],
+  "artefact_count": 1,
+  "artefacts": [
+    {
+      "modelo": "576",
+      "title": "576 - Diseño de registro vigente",
+      "source_page": "https://sede.agenciatributaria.gob.es/Sede/ayuda/disenos-registro/resto-modelos.html",
+      "url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_Resto_Mod/archivos/dr576.xlsx",
+      "stored_path": "files/01-576-diseno-de-registro-vigente.xlsx",
+      "original_filename": "dr576.xlsx",
+      "content_type": "application/octet-stream",
+      "bytes": 65097,
+      "sha256": "d1964b0c5b2c360b1a06e510ae3f7fce632cd3f7882be0365a8fdb3c26e0dbc7",
+      "retrieved_at": "2026-07-21"
+    }
+  ]
+}

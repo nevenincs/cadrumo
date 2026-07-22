@@ -110,6 +110,19 @@ applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_184_2025.pdf"
 review_status = "reviewed"
 
+[sources."aeat-dr-184-2023-2024"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_184/files/02-184-orden-hap-2250-2015-actualizado-por-orden-hfp-1284-2023-de-28-de-noviembre-263-kb-pdf.pdf"
+sha256 = "c96f23aa7ddf0f48b5388d69a397140135e8a4a8b2cd0568658cafad495f8aee"
+bytes = 268429
+retrieved_at = 2026-07-21
+applies_from = 2023-01-01
+applies_to = 2024-12-31
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/archivos_23/DR_Mod_184_2023.pdf"
+review_status = "reviewed"
+
 [sources."aeat-modelo-184-procedure"]
 evidence_tier = "official_source_guidance"
 authority = "aeat"

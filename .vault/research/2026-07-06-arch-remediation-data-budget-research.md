@@ -3,7 +3,7 @@ tags:
   - '#research'
   - '#arch-remediation-data-budget'
 date: '2026-07-06'
-modified: '2026-07-17'
+modified: '2026-07-22'
 related:
   - "[[2026-07-02-arch-remediation-data-budget-adr]]"
   - "[[2026-07-02-arch-remediation-program-adr]]"
@@ -49,3 +49,17 @@ wheel-content, and bundled-corpus/registry checks and passes 38 tests at HEAD.
 Keep this research bridge as the evidence node for the accepted ADR. Future
 work should use an ADR only for an actual budget raise, data-package split, or
 wheel boundary change.
+
+## Supported-period hydration evidence
+
+Reviewed on 2026-07-22. Because the live worktree contained unrelated peer work, the reviewer used a temporary alternate Git index based on `HEAD`. The index contained exactly 244 changed or staged feature-owned files and zero peer-owned paths. This isolated index provides the authoritative landing evidence for this feature.
+
+The budget universe contained 18,396 indexed shipped-data files under `src/cadrumo/_data`, excluding every `tests/` subtree.
+
+- Whole tree: 618,845,924 bytes, or 590.177464 mebibytes (MiB), against 625 MiB. Headroom: 34.822536 MiB.
+- Runtime slice: 258,436,356 bytes, or 246.464115 MiB, against 270 MiB. Headroom: 23.535885 MiB.
+- Aggregate corpus-binary slice: 360,409,568 bytes, or 343.713348 MiB, against 380 MiB. Headroom: 36.286652 MiB.
+
+The landing real companion builds measured 80,329,080 bytes for `cadrumo-data-official` and 77,547,800 bytes for `cadrumo-data-manuals`. Both remained below the strict 100,000,000-byte cap. These are landing-rerun build results, not forecasts.
+
+Current companion sizes do not require repartitioning. Repartitioning would change physical ownership without reducing the logical total.

@@ -2,7 +2,7 @@
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 17 | An | Constante. <T + modelo + discriminante (*) + Ejercicio devengo + periodo + tipo + > |  | "<T200020250A0000>"
 2 | 18 | 5 | An | Constante |  | "<AUX>"
@@ -26,7 +26,7 @@ Total |  | Variable
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -151,7 +151,7 @@ NOTA* |  |  | El Tipo de declaración puede ser:
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -189,7 +189,7 @@ Nota 1: Cuando coincidan los caracteres 00003, 00004, 00008 o 00061 con los cara
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 1 | 1 | 2 | An | C | Inicio del identificador de modelo y página. |  | Constante "<T"
 2 | 3 | 3 | Num | C | Modelo. |  | Constante "200"
@@ -242,7 +242,7 @@ Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 48 | 551 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 1 - Correcciones valorativas - f) Efecto corrección valorativa en la BI del ejercicio (= a + b + c + d + e)
 49 | 568 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 1 - Correcciones valorativas - g) Saldo de correcciones fiscales (art. 12.3 RDL 4/2004) pendientes a fin de ejercicio [(+) = aumentos futuros; (-) = disminuciones futuras]
 50 | 585 | 17 | Num | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 1 - Datos adicionales participada - Capital
-51 | 602 | 17 | Num | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 1 - Datos adicionales participada - Reservas y otras partidas de fondos propios
+51 | 602 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 1 - Datos adicionales participada - Reservas y otras partidas de fondos propios
 52 | 619 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 1 - Datos adicionales participada - Otras partidas del patrimonio neto  (+,-)
 53 | 636 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 1 - Datos adicionales participada - Resultado del último ejercicio (+,-)
 54 | 653 | 15 | An | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 2 - Datos participada - N.I.F.
@@ -260,7 +260,7 @@ Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 66 | 841 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 2 - Correcciones valorativas - f) Efecto corrección valorativa en la BI del ejercicio (= a + b + c + d + e)
 67 | 858 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 2 - Correcciones valorativas - g) Saldo de correcciones fiscales (art. 12.3 RDL 4/2004) pendientes a fin de ejercicio [(+) = aumentos futuros; (-) = disminuciones futuras]
 68 | 875 | 17 | Num | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 2 - Datos adicionales participada - Capital
-69 | 892 | 17 | Num | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 2 - Datos adicionales participada - Reservas y otras partidas de fondos propios
+69 | 892 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 2 - Datos adicionales participada - Reservas y otras partidas de fondos propios
 70 | 909 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 2 - Datos adicionales participada - Otras partidas del patrimonio neto  (+,-)
 71 | 926 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 2 - Datos adicionales participada - Resultado del último ejercicio (+,-)
 72 | 943 | 15 | An | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 3 - Datos participada - N.I.F.
@@ -278,7 +278,7 @@ Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 84 | 1131 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 3 - Correcciones valorativas - f) Efecto corrección valorativa en la BI del ejercicio (= a + b + c + d + e)
 85 | 1148 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 3 - Correcciones valorativas - g) Saldo de correcciones fiscales (art. 12.3 RDL 4/2004) pendientes a fin de ejercicio [(+) = aumentos futuros; (-) = disminuciones futuras]
 86 | 1165 | 17 | Num | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 3 - Datos adicionales participada - Capital
-87 | 1182 | 17 | Num | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 3 - Datos adicionales participada - Reservas y otras partidas de fondos propios
+87 | 1182 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 3 - Datos adicionales participada - Reservas y otras partidas de fondos propios
 88 | 1199 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 3 - Datos adicionales participada - Otras partidas del patrimonio neto  (+,-)
 89 | 1216 | 17 | N | C | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Entidad 3 - Datos adicionales participada - Resultado del último ejercicio (+,-)
 90 | 1233 | 17 | Num |  | B. Participaciones directas - B.1. Participaciones declarante en otras entidades - Total - Datos de la declarante - Valor nominal total de la participación [1501]
@@ -343,7 +343,7 @@ Total: |  | 2092
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 1 | 1 | 2 | An | C | Inicio del identificador de modelo y página. |  | Constante "<T"
 2 | 3 | 3 | Num | C | Modelo. |  | Constante "200"
@@ -373,109 +373,109 @@ Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 25 | 463 | 40 | An | C | C. Entidades menores dependientes de diócesis, provincia religiosa o entidad eclesiástica integradas en la declaración, previamente autorizadas - Entidad 10 - Nombre o razón social
 26 | 503 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 1. Identificación.
 27 | 523 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 1. País residencia fiscal
-28 | 525 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 1. Volumen operaciones
+28 | 525 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 1. Volumen operaciones
 29 | 542 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 1. Beneficio o pérdida en el período impositivo
 30 | 559 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 1. Suma de ajustes al resultado contable
 31 | 576 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 1. Suma Deducciones por DI internac. períodos ant.
 32 | 593 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 2. Identificación.
 33 | 613 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 2. País residencia fiscal
-34 | 615 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 2. Volumen operaciones
+34 | 615 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 2. Volumen operaciones
 35 | 632 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 2. Beneficio o pérdida en el período impositivo
 36 | 649 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 2. Suma de ajustes al resultado contable
 37 | 666 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 2. Suma Deducciones por DI internac. períodos ant.
 38 | 683 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 3. Identificación.
 39 | 703 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 3. País residencia fiscal
-40 | 705 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 3. Volumen operaciones
+40 | 705 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 3. Volumen operaciones
 41 | 722 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 3. Beneficio o pérdida en el período impositivo
 42 | 739 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 3. Suma de ajustes al resultado contable
 43 | 756 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 3. Suma Deducciones por DI internac. períodos ant.
 44 | 773 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 4. Identificación.
 45 | 793 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 4. País residencia fiscal
-46 | 795 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 4. Volumen operaciones
+46 | 795 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 4. Volumen operaciones
 47 | 812 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 4. Beneficio o pérdida en el período impositivo
 48 | 829 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 4. Suma de ajustes al resultado contable
 49 | 846 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 4. Suma Deducciones por DI internac. períodos ant.
 50 | 863 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 5. Identificación.
 51 | 883 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 5. País residencia fiscal
-52 | 885 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 5. Volumen operaciones
+52 | 885 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 5. Volumen operaciones
 53 | 902 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 5. Beneficio o pérdida en el período impositivo
 54 | 919 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 5. Suma de ajustes al resultado contable
 55 | 936 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 5. Suma Deducciones por DI internac. períodos ant.
 56 | 953 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 6. Identificación.
 57 | 973 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 6. País residencia fiscal
-58 | 975 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 6. Volumen operaciones
+58 | 975 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 6. Volumen operaciones
 59 | 992 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 6. Beneficio o pérdida en el período impositivo
 60 | 1009 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 6. Suma de ajustes al resultado contable
 61 | 1026 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 6. Suma Deducciones por DI internac. períodos ant.
 62 | 1043 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 7. Identificación.
 63 | 1063 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 7. País residencia fiscal
-64 | 1065 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 7. Volumen operaciones
+64 | 1065 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 7. Volumen operaciones
 65 | 1082 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 7. Beneficio o pérdida en el período impositivo
 66 | 1099 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 7. Suma de ajustes al resultado contable
 67 | 1116 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 7. Suma Deducciones por DI internac. períodos ant.
 68 | 1133 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 8. Identificación.
 69 | 1153 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 8. País residencia fiscal
-70 | 1155 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 8. Volumen operaciones
+70 | 1155 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 8. Volumen operaciones
 71 | 1172 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 8. Beneficio o pérdida en el período impositivo
 72 | 1189 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 8. Suma de ajustes al resultado contable
 73 | 1206 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 8. Suma Deducciones por DI internac. períodos ant.
 74 | 1223 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 9. Identificación.
 75 | 1243 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 9. País residencia fiscal
-76 | 1245 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 9. Volumen operaciones
+76 | 1245 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 9. Volumen operaciones
 77 | 1262 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 9. Beneficio o pérdida en el período impositivo
 78 | 1279 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 9. Suma de ajustes al resultado contable
 79 | 1296 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 9. Suma Deducciones por DI internac. períodos ant.
 80 | 1313 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 10. Identificación.
 81 | 1333 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 10. País residencia fiscal
-82 | 1335 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 10. Volumen operaciones
+82 | 1335 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 10. Volumen operaciones
 83 | 1352 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 10. Beneficio o pérdida en el período impositivo
 84 | 1369 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 10. Suma de ajustes al resultado contable
 85 | 1386 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 10. Suma Deducciones por DI internac. períodos ant.
 86 | 1403 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 11. Identificación.
 87 | 1423 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 11. País residencia fiscal
-88 | 1425 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 11. Volumen operaciones
+88 | 1425 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 11. Volumen operaciones
 89 | 1442 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 11. Beneficio o pérdida en el período impositivo
 90 | 1459 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 11. Suma de ajustes al resultado contable
 91 | 1476 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 11. Suma Deducciones por DI internac. períodos ant.
 92 | 1493 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 12. Identificación.
 93 | 1513 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 12. País residencia fiscal
-94 | 1515 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 12. Volumen operaciones
+94 | 1515 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 12. Volumen operaciones
 95 | 1532 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 12. Beneficio o pérdida en el período impositivo
 96 | 1549 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 12. Suma de ajustes al resultado contable
 97 | 1566 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 12. Suma Deducciones por DI internac. períodos ant.
 98 | 1583 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 13. Identificación.
 99 | 1603 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 13. País residencia fiscal
-100 | 1605 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 13. Volumen operaciones
+100 | 1605 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 13. Volumen operaciones
 101 | 1622 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 13. Beneficio o pérdida en el período impositivo
 102 | 1639 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 13. Suma de ajustes al resultado contable
 103 | 1656 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 13. Suma Deducciones por DI internac. períodos ant.
 104 | 1673 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 14. Identificación.
 105 | 1693 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 14. País residencia fiscal
-106 | 1695 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 14. Volumen operaciones
+106 | 1695 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 14. Volumen operaciones
 107 | 1712 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 14. Beneficio o pérdida en el período impositivo
 108 | 1729 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 14. Suma de ajustes al resultado contable
 109 | 1746 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 14. Suma Deducciones por DI internac. períodos ant.
 110 | 1763 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 15. Identificación.
 111 | 1783 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 15. País residencia fiscal
-112 | 1785 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 15. Volumen operaciones
+112 | 1785 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 15. Volumen operaciones
 113 | 1802 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 15. Beneficio o pérdida en el período impositivo
 114 | 1819 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 15. Suma de ajustes al resultado contable
 115 | 1836 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 15. Suma Deducciones por DI internac. períodos ant.
 116 | 1853 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 16. Identificación.
 117 | 1873 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 16. País residencia fiscal
-118 | 1875 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 16. Volumen operaciones
+118 | 1875 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 16. Volumen operaciones
 119 | 1892 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 16. Beneficio o pérdida en el período impositivo
 120 | 1909 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 16. Suma de ajustes al resultado contable
 121 | 1926 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 16. Suma Deducciones por DI internac. períodos ant.
 122 | 1943 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 17. Identificación.
 123 | 1963 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 17. País residencia fiscal
-124 | 1965 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 17. Volumen operaciones
+124 | 1965 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 17. Volumen operaciones
 125 | 1982 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 17. Beneficio o pérdida en el período impositivo
 126 | 1999 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 17. Suma de ajustes al resultado contable
 127 | 2016 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 17. Suma Deducciones por DI internac. períodos ant.
 128 | 2033 | 20 | An | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 18. Identificación.
 129 | 2053 | 2 | A | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 18. País residencia fiscal
-130 | 2055 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 18. Volumen operaciones
+130 | 2055 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 18. Volumen operaciones
 131 | 2072 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 18. Beneficio o pérdida en el período impositivo
 132 | 2089 | 17 | N | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 18. Suma de ajustes al resultado contable
 133 | 2106 | 17 | Num | C | D. Información de detalle de establecimiento permanente que opere en el extranjero - 18. Suma Deducciones por DI internac. períodos ant.
@@ -525,7 +525,7 @@ Nota 1:
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -590,7 +590,7 @@ Total: |  | 1074
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2024
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2024
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. Constante "<T" . | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -637,7 +637,7 @@ Total: |  | 768
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -710,7 +710,7 @@ Total: |  | 1210
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -757,7 +757,7 @@ Total: |  | 768
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -835,7 +835,7 @@ Total: |  | 1261
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -889,7 +889,7 @@ Total: |  | 887
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -925,7 +925,7 @@ Total: |  | 581
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -1088,7 +1088,7 @@ Total: |  | 2723
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -1237,7 +1237,7 @@ Total: |  | 2502
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -1347,7 +1347,7 @@ Total: |  | 1839
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -1460,7 +1460,7 @@ Total: |  | 1890
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -1492,7 +1492,7 @@ Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 28 | 387 | 17 | Num | Liquidación III - Base imponible -  - Rentas que no limitan compensación de bases imponibles - Rentas correspondientes a la reversión de deterioros (DT 16ª.8 LIS) - Disminuciones [01509]
 29 | 404 | 17 | N | Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Parte de la base imponible que proceda de la realización de actividades a las que se aplica el régimen especial, después de la reserva de nivelación - Disminuciones [01576]
 30 | 421 | 17 | N | Liquidación III - Base imponible - Régimen especial de buques y empresas navieras en Canarias - Parte de la base imponible que proceda de la realización del resto de actividades, después de la reserva de nivelación -Disminuciones [01577]
-31 | 438 | 4 | Num | Liquidación III - Base imponible - Tipo de gravamen [00558] |  | 2 enteros y 2 decimales
+31 | 438 | 4 | Num | Liquidación III - Base imponible - Tipo de gravamen [00558] |  | Nota 1
 32 | 442 | 17 | N | Liquidación III - Base imponible - Sólo sociedades cooperativas - Cuota íntegra previa [00560]
 33 | 459 | 17 | N | Liquidación III - Base imponible - Sólo sociedades cooperativas - Pérdidas por deterioro del art.13.1 LIS y provisiones y gastos - Aumentos [00210]
 34 | 476 | 17 | N | Liquidación III - Base imponible - Sólo sociedades cooperativas - Pérdidas por deterioro del art.13.1 LIS y provisiones y gastos - Disminuciones [00480]
@@ -1527,12 +1527,17 @@ Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 63 | 969 | 200 | An | RESERVADO PARA LA AEAT
 64 | 1169 | 12 | An | Identificador de fin de registro | OBLIGATORIO | Constante "</T20014000>"
 Total: |  | 1180
+Nota 1:
+En caso de tipo de gravamen único se rellenarán los dos primeros dígitos con el tipo, y los dos últimos con 00.
+ | Ej: 25% se rellenará como 2500.
+En caso de tipo de gravamen doble se rellenarán los dos primeros dígitos con el primer tipo, y los dos últimos con el segundo.
+ | Ej: 18/19% se rellenará como 1819.
 
 # DP200014B
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -1639,7 +1644,7 @@ Si el campo "Autoliquidación rectificativa - Como consecuencia de la presentaci
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. Constante "<T" . Campo OBLIGATORIO | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -1807,7 +1812,7 @@ Total: |  | 2825
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -1983,7 +1988,7 @@ Total: |  | 2567
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -2143,7 +2148,7 @@ Total: |  | 2536
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -2324,7 +2329,7 @@ Total: |  | 3046
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -2345,7 +2350,7 @@ Total: |  | 326
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -2530,7 +2535,7 @@ Total: |  | 3114
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 1 | 1 | 2 | An |  | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num |  | Modelo. | OBLIGATORIO | Constante "200"
@@ -2710,7 +2715,7 @@ Total: |  | 2879
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -2871,7 +2876,7 @@ Total: |  | 2706
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2024
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2024
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -3048,7 +3053,7 @@ Total: |  | 2978
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -3303,7 +3308,7 @@ A cumplimentar exclusivamente por entidades que pertenezcan a grupos mercantiles
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -3321,7 +3326,7 @@ Total: |  | 275
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -3454,7 +3459,7 @@ Total: |  | 2230
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -3488,7 +3493,7 @@ Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 30 | 421 | 17 | Num | Reserva Capitalización - Total - Reducción B.I. aplicada [01032]
 31 | 438 | 17 | Num | Reserva Capitalización - Total - Reducción B.I. pdte. de aplicar en períodos futuros [01139]
 32 | 455 | 17 | Num | Reserva Capitalización - Reserva Capitalización dotada en el ejercicio [01140]
-33 | 472 | 17 | Num | Reserva Capitalización - Incremento porcentual de la plantilla media total(**) [03594]
+33 | 472 | 17 | Num | Reserva Capitalización - Incremento porcentual de la plantilla media total(**) [03594] |  | Nota 1
 34 | 489 | 1 | Num | Entidad cuyo importe neto de la cifra de negocios durante los 12 meses anteriores a la fecha en que se inicie el período impositivo al que corresponda esta reducción es inferior a 1 millón de euros
 35 | 490 | 17 | Num | Reserva de nivelación - Reducción base imponible - Ejercicio generación 2020 - Importe minoración B.I. periodo/pendiente adicionar inicio periodo [02410]
 36 | 507 | 17 | Num | Reserva de nivelación - Reducción base imponible - Ejercicio generación 2020 - Importe adicionado base imponible en periodo [02411]
@@ -3554,12 +3559,14 @@ Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 96 | 1527 | 200 | An | RESERVADO PARA LA AEAT
 97 | 1727 | 12 | An | Identificador de fin de registro | OBLIGATORIO | Constante "</T20020B00>"
 Total: |  | 1738
+Nota 1
+Sólo se admitirán valores hasta un máximo de 99999,99 (00000000009999999)
 
 # DP200020C
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -3735,7 +3742,7 @@ Total: |  | 2961
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -3854,7 +3861,7 @@ Total: |  | 1977
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 1 | 1 | 2 | An | C | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | C | Modelo. | OBLIGATORIO | Constante "200"
@@ -3924,7 +3931,7 @@ Total: |  | 812
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -3932,36 +3939,36 @@ Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 4 | 11 | 1 | An | Fin de identificador de modelo. | OBLIGATORIO | Constante ">"
 5 | 12 | 1 | An | Indicador de página complementaria |  | En blanco
 6 | 13 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2020 - Pendiente de materializar RIC a principio de período [01165]
-7 | 30 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2020 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [00928]
-8 | 47 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2020 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [00938]
+7 | 30 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2020 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 y DA 15ª Ley 19/1994 [00928]
+8 | 47 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2020 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 y DA 15ª Ley 19/1994 [00938]
 9 | 64 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2020 - Aplicado/materializado en esta liquidación - Integrado en BI por incumplimiento de requisitos [01985]
 10 | 81 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2021 - Pendiente de materializar RIC a principio de período [01744]
-11 | 98 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2021 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [01168]
-12 | 115 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2021 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [01172]
+11 | 98 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2021 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 y DA 15ª Ley 19/1994 [01168]
+12 | 115 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2021 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 y DA 15ª Ley 19/1994 [01172]
 13 | 132 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2021 - Aplicado/materializado en esta liquidación - Integrado en BI por incumplimiento de requisitos [01986]
 14 | 149 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2021 - Pendiente de materializar RIC al final de período [01175]
 15 | 166 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2022 - Pendiente de materializar RIC a principio de período [02807]
-16 | 183 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2022 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [01745]
-17 | 200 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2022 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [01746]
+16 | 183 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2022 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 y DA 15ª Ley 19/1994 [01745]
+17 | 200 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2022 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 y DA 15ª Ley 19/1994 [01746]
 18 | 217 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2022 - Aplicado/materializado en esta liquidación - Integrado en BI por incumplimiento de requisitos [02430]
 19 | 234 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2022 - Pendiente de materializar RIC al final de período [01821]
 20 | 251 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2023 - Pendiente de materializar RIC a principio de período [02975]
-21 | 268 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2023 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [02808]
-22 | 285 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2023 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [02809]
+21 | 268 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2023 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 y DA 15ª Ley 19/1994 [02808]
+22 | 285 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2023 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 y DA 15ª Ley 19/1994 [02809]
 23 | 302 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2023 - Aplicado/materializado en esta liquidación - Integrado en BI por incumplimiento de requisitos [02977]
 24 | 319 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2023 - Pendiente de materializar RIC al final de período [02822]
 25 | 336 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2024 - Pendiente de materializar RIC a principio de período [03623]
-26 | 353 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2024 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [03624]
-27 | 370 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2024 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [03625]
+26 | 353 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2024 - Aplicado/materializado en esta liquidación - Inversiones previstas letras A y B, art. 27.4 y DA 15ª Ley 19/1994 [03624]
+27 | 370 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2024 - Aplicado/materializado en esta liquidación - Inversiones previstas letras B bis, C y D art. 27.4 y DA 15ª Ley 19/1994 [03625]
 28 | 387 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2024 - Aplicado/materializado en esta liquidación - Integrado en BI por incumplimiento de requisitos [03626]
 29 | 404 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2024 - Pendiente de materializar RIC al final de período [03313]
 30 | 421 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2025 - Integrado en BI por incumplimiento de requisitos [03627]
 31 | 438 | 17 | Num | Rég. especial reserva inversiones Canarias - RIC 2025 - Pendiente de materializar RIC al final de período [03628]
-32 | 455 | 17 | Num | Rég. especial reserva inversiones Canarias - Importe de la dotación RIC con cargo a beneficios de 2024 [00927]
+32 | 455 | 17 | Num | Rég. especial reserva inversiones Canarias - Importe de la dotación RIC con cargo a beneficios de 2025 [00927]
 33 | 472 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2024 - Pendiente de dotar RIC a principio de período [03629]
 34 | 489 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2024 - Pendiente de dotar RIC al final del período [03354]
-35 | 506 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2025 - Inversiones previstas letras A y B, art. 27.4 Ley 19/1994 [03630]
-36 | 523 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2025 - Inversiones previstas letras B bis, C y D art. 27.4 Ley 19/1994 [03631]
+35 | 506 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2025 - Inversiones previstas letras A y B, art. 27.4 y DA 15ª Ley 19/1994 [03630]
+36 | 523 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2025 - Inversiones previstas letras B bis, C y D art. 27.4 y DA 15ª Ley 19/1994 [03631]
 37 | 540 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2025 - Pendiente de dotar RIC al final del período [03632]
 38 | 557 | 17 | Num | Rég. cooperativas - Determ. base imponible - 1, Ingresos computables - Resultados cooperativos [02827]
 39 | 574 | 17 | Num | Rég. cooperativas - Determ. base imponible - 1. Ingresos computables - Resultados extracooperativos [02828]
@@ -4069,17 +4076,20 @@ Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 141 | 2308 | 17 | Num | Rég. cooperativas - Detalle compensación cuotas. Total. Pendiente aplicación al principio del periodo [00694]
 142 | 2325 | 17 | Num | Rég. cooperativas - Detalle compensación cuotas. Total. Aplicado en esta liquidación [00561]
 143 | 2342 | 17 | Num | Rég. cooperativas - Detalle compensación cuotas. Total. Pendiente aplicación en períodos futuros  [00695]
-144 | 2359 | 17 | Num | Rég. cooperativas - Detalle compensación cuotas. 2024 Pendiente aplicación al principio del periodo [01225]
-145 | 2376 | 17 | Num | Rég. cooperativas - Detalle compensación cuotas. 2024 Pendiente aplicación en períodos futuros  [01226]
-146 | 2393 | 200 | An | RESERVADO PARA LA AEAT
-147 | 2593 | 12 | An | Identificador de fin de registro | OBLIGATORIO | Constante "</T20022000>"
+144 | 2359 | 17 | Num | Rég. cooperativas - Detalle compensación cuotas. 2025 Pendiente aplicación al principio del periodo [01225]
+145 | 2376 | 17 | Num | Rég. cooperativas - Detalle compensación cuotas. 2025 Pendiente aplicación en períodos futuros  [01226]
+146 | 2393 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2022 - Pendiente de dotar RIC a principio de período [03647]
+147 | 2410 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2023 - Pendiente de dotar RIC a principio de período [03648]
+148 | 2427 | 17 | Num | Rég. especial reserva inversiones Canarias - Inversiones anticipadas 2023 - Pendiente de dotar RIC al final del período [03649]
+149 | 2444 | 149 | An | RESERVADO PARA LA AEAT
+150 | 2593 | 12 | An | Identificador de fin de registro | OBLIGATORIO | Constante "</T20022000>"
 Total: |  | 2604
 
 # DP200022B
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -4098,7 +4108,7 @@ Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 15 | 166 | 17 | Num | Rég. especial reserva inversiones Illes Balears - RIIB 2024 - Pendiente de materializar RIIB al final de período [01709]
 16 | 183 | 17 | Num | Rég. especial reserva inversiones Illes Balears - RIIB 2025 - Inversiones anticipadas consideradas materialización de la RIIB en esta liquidación [03640]
 17 | 200 | 17 | Num | Rég. especial reserva inversiones Illes Balears - RIIB 2025 - Pendiente de materializar RIIB al final de período [03641]
-18 | 217 | 17 | Num | Rég. especial reserva inversiones Illes Balears - Importe de la dotación RIIB con cargo a beneficios de 2024 [02918]
+18 | 217 | 17 | Num | Rég. especial reserva inversiones Illes Balears - Importe de la dotación RIIB con cargo a beneficios de 2025 [02918]
 19 | 234 | 17 | Num | Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2023 - Pendiente de dotar RIIB a principio de período [02362]
 20 | 251 | 17 | Num | Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2023 - Pendiente de dotar RIIB al final de período [02941]
 21 | 268 | 17 | Num | Rég. especial reserva inversiones Illes Balears - Inversiones anticipadas 2024 - Pendiente de dotar RIIB a principio de período [03642]
@@ -4114,7 +4124,7 @@ Total: |  | 564
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 1 | 1 | 2 | An | C | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | C | Modelo. | OBLIGATORIO | Constante "200"
@@ -4180,7 +4190,7 @@ Total: |  | 1054
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 1 | 1 | 2 | An | C | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | C | Modelo. | OBLIGATORIO | Constante "200"
@@ -4255,7 +4265,7 @@ Total: |  | 1145
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 1 | 1 | 2 | An | C | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | C | Modelo. | OBLIGATORIO | Constante "200"
@@ -4458,7 +4468,7 @@ Total: |  | 2493
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Com | Descripción | Validación | Contenido
 1 | 1 | 2 | An | C | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | C | Modelo. | OBLIGATORIO | Constante "200"
@@ -4529,7 +4539,7 @@ Total: |  | 3685
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -4696,7 +4706,7 @@ Total: |  | 2663
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -4876,7 +4886,7 @@ Total: |  | 3012
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5009,7 +5019,7 @@ Total: |  | 2230
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5152,7 +5162,7 @@ Total: |  | 2400
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5348,7 +5358,7 @@ Total: |  | 3301
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5506,7 +5516,7 @@ Total: |  | 2655
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5602,7 +5612,7 @@ Total: |  | 1601
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5674,7 +5684,7 @@ Total: |  | 1193
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5698,7 +5708,7 @@ Total: |  | 377
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5754,7 +5764,7 @@ Total: |  | 921
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5810,7 +5820,7 @@ Total: |  | 921
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5863,7 +5873,7 @@ Total: |  | 870
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -5917,7 +5927,7 @@ Total: |  | 887
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6030,7 +6040,7 @@ Total: |  | 1890
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6131,7 +6141,7 @@ Total: |  | 1686
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6199,7 +6209,7 @@ Total: |  | 1108
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6224,7 +6234,7 @@ Total: |  | 394
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimiens permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimiens permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6284,7 +6294,7 @@ Total: |  | 989
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6331,7 +6341,7 @@ Total: |  | 717
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6401,7 +6411,7 @@ Total: |  | 1159
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6461,7 +6471,7 @@ Total: |  | 989
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6525,7 +6535,7 @@ Total: |  | 1057
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6571,7 +6581,7 @@ Total: |  | 751
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6712,7 +6722,7 @@ Total: |  | 2366
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6835,7 +6845,7 @@ Total: |  | 2060
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6901,7 +6911,7 @@ Total: |  | 1091
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -6973,7 +6983,7 @@ Total: |  | 1193
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -7027,7 +7037,7 @@ Total: |  | 887
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -7092,7 +7102,7 @@ Total: |  | 1074
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -7117,7 +7127,7 @@ Total: |  | 394
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -7182,7 +7192,7 @@ Total: |  | 1074
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -7216,7 +7226,7 @@ Total: |  | 547
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -7260,7 +7270,7 @@ Total: |  | 717
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -7289,7 +7299,7 @@ Total: |  | 462
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -7364,7 +7374,7 @@ Total: |  | 1244
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"
@@ -7427,7 +7437,7 @@ Total: |  | 1040
 
  | Agencia Tributaria
 Modelo 200 |  | Diseño de registro
-vers. 1.00 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
+vers. 1.02 |  | Impuesto sobre Sociedades e Impuesto sobre la Renta de no Residentes (establecimientos permanentes y entidades en régimen de atribución de rentas constituidas en el extranjero con presencia en territorio español) 2025
 Nº | Posic. | Lon | Tipo | Descripción | Validación | Contenido
 1 | 1 | 2 | An | Inicio del identificador de modelo y página. | OBLIGATORIO | Constante "<T"
 2 | 3 | 3 | Num | Modelo. | OBLIGATORIO | Constante "200"

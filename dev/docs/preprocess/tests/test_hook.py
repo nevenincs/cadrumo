@@ -21,6 +21,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -50,7 +51,7 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
     data = tomllib.loads(_RULE_FILE.read_text(encoding="utf-8"))
     assert data["version"] == 1
     rules = data["rule"]
-    assert len(rules) == 4
+    assert len(rules) == 5
     for rule in rules:
         assert rule["pattern"].startswith("src/cadrumo/_data/corpus/")
         assert _HOOK_COMMAND in rule["command"]
@@ -61,13 +62,14 @@ def test_rule_file_is_wellformed_and_targets_the_hook() -> None:
         "src/cadrumo/_data/corpus/normatives/html/*.html",
         "src/cadrumo/_data/corpus/**/*.pdf",
         "src/cadrumo/_data/corpus/**/*.xls",
+        "src/cadrumo/_data/corpus/**/*.xlsm",
         "src/cadrumo/_data/corpus/**/*.xlsx",
     }
 
 
 def test_every_rule_pattern_matches_committed_sources() -> None:
     """A rule over zero files is dead configuration; each must match today."""
-    for pattern in ("*.html", "*.pdf", "*.xlsx"):
+    for pattern in ("*.html", "*.pdf", "*.xlsm", "*.xlsx"):
         assert _smallest(pattern).is_file()
 
 
@@ -78,20 +80,23 @@ def test_adapted_output_satisfies_the_pinned_upstream_shape() -> None:
     payload = adapt_outputs(outputs, source=source, repo_root=_REPO_ROOT)
     assert payload["schema_version"] == UPSTREAM_SCHEMA_VERSION == 1
     assert payload["source_path"] == source.resolve().relative_to(_REPO_ROOT).as_posix()
-    units = payload["units"]
+    units = cast(list[dict[str, object]], payload["units"])
     assert isinstance(units, list) and units
     for unit in units:
-        assert unit["text"].strip()
-    metadata = payload["metadata"]
+        text = unit["text"]
+        assert isinstance(text, str) and text.strip()
+    metadata = cast(dict[str, object], payload["metadata"])
     assert metadata["source_kind"] == "normatives_html"
-    assert len(metadata["source_sha256"]) == 64
-    assert metadata["parts"] >= 1
+    source_sha256 = metadata["source_sha256"]
+    parts = metadata["parts"]
+    assert isinstance(source_sha256, str) and len(source_sha256) == 64
+    assert isinstance(parts, int) and parts >= 1
     # The payload must survive a strict UTF-8 JSON roundtrip byte-identically.
     encoded = json.dumps(payload, ensure_ascii=False).encode("utf-8")
     assert json.loads(encoded.decode("utf-8")) == payload
 
 
-@pytest.mark.parametrize("pattern", ["*.html", "*.pdf", "*.xlsx"])
+@pytest.mark.parametrize("pattern", ["*.html", "*.pdf", "*.xlsm", "*.xlsx"])
 def test_hook_units_are_parity_with_committed_sidecars(pattern: str) -> None:
     """Per source kind, hook unit texts equal the committed sidecar texts.
 
@@ -103,7 +108,12 @@ def test_hook_units_are_parity_with_committed_sidecars(pattern: str) -> None:
     source = _smallest(pattern)
     outputs = build_for_source(source, repo_root=_REPO_ROOT)
     payload = adapt_outputs(outputs, source=source, repo_root=_REPO_ROOT)
-    hook_texts = [unit["text"] for unit in payload["units"]]
+    units = cast(list[dict[str, object]], payload["units"])
+    hook_texts: list[str] = []
+    for unit in units:
+        text = unit["text"]
+        assert isinstance(text, str)
+        hook_texts.append(text)
     sidecar_files = sorted(source.parent.glob(f"{source.name}*.extracted.json"))
     assert sidecar_files, f"no committed sidecar next to {source}"
     sidecar_texts: list[str] = []
