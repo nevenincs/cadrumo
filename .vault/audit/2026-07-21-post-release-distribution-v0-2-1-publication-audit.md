@@ -107,17 +107,25 @@ correctly, including compiled-extension imports; exotic compiler flags, since
 brew uses plain gcc there with no optimisation flags set; and the cross-interpreter
 install shape the formula uses, which succeeds when run outside brew.
 
-The failure reproduces the moment brew's sanitised build environment is applied,
-and the compiler shim names the mechanism: it refuses with a message that the
-build tool has reset the environment and that a standard-environment flag is
-required. Isolated PEP 517 builds of the C-extension resources strip the
-Homebrew variables the shim depends on, so the compiler bails. Two details of
-that environment stand out: its search path omits the linuxbrew binary directory
-entirely, and the pkg-config library-directory variable is set to a literal
-two-quote string. Caveat for whoever resumes this: the environment dump used
-here is brew's summary rather than the full build environment, so the
-reproduction may apply it incompletely; confirm against a real formula install
-with the tap regenerated before treating the shim as settled.
+The compiler-shim hypothesis recorded in an earlier revision of this document is
+WITHDRAWN. It came from applying brew's summary environment dump by hand, which
+made the shim refuse with a message about the build tool having reset the
+environment. A real formula install disproves it: a minimal formula that builds
+cffi from source under genuine brew completes cleanly. The summary dump is not
+the full build environment, and reproducing with it produces a false positive —
+the caveat recorded alongside that hypothesis is what caught it.
+
+What replaces it is a minimal reproducer. A four-resource formula — argon2-cffi
+as the target, with pycparser, cffi and argon2-cffi-bindings as resources, built
+through the standard virtualenv-with-resources helper — fails identically under a
+real from-source install, on the same metadata step with the same illegal
+instruction. cffi alone succeeds in the same harness, so the trigger is specific
+to the argon2 bindings, not to compiling C extensions generally. Further
+eliminated by mirroring brew's own choices outside brew: a system-site-packages
+environment without pip, and installing cffi as a separate earlier resource so
+the target builds against an already-populated environment, both complete
+cleanly. The failure therefore requires the real build context, and the
+reproducer is now small enough to bisect that context directly.
 
 ### scoop-lane-container-mode-conflict | medium | the Scoop lane and the Linux runners cannot share one docker daemon
 
@@ -136,13 +144,15 @@ Sweep a retired architecture's toolchain residue, not just its provisioning: the
 uv managed-Python store outlived the runner that installed it and silently
 redirected an ARM machine to Intel builds.
 
-Resume the arm64 investigation at the compiler shim rather than re-deriving the
-eliminations: regenerate the tap, run the real formula install, and confirm
-whether the shim rejects the isolated C-extension builds as the summary
-environment suggests. If it does, the fix is a formula-level one — ensure the
-shim receives the Homebrew environment through the isolated build, or supply
-those two C-extension resources in a form that does not require compiling under
-the shim — not a change to the package or the container.
+Resume the arm64 investigation from the minimal reproducer rather than the full
+cohort: it fails in seconds, needs no release artefacts, and isolates the trigger
+to the argon2 bindings under a real build. Bisect the build context from there —
+sandbox posture, the staging directory, and the environment brew actually exports
+during a resource build — since every reconstruction of that context by hand so
+far completes cleanly. Do not re-test architecture, contention, the package
+standalone, cffi, environment layout, or install ordering; all are eliminated
+above, and one plausible-looking hypothesis has already been withdrawn for
+resting on a partial reconstruction rather than a real install.
 Decide the Scoop topology explicitly — either give that lane its own docker host,
 or accept stopping the Linux runners for the duration of a mode switch — because
 no amount of lane work resolves a one-mode-at-a-time daemon.
