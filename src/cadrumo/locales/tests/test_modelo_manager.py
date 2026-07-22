@@ -524,3 +524,31 @@ source_refs = ["aeat-source-test"]
             ),
             encoding="utf-8",
         )
+
+
+def test_aligned_table_refuses_echo_convert_of_authored_value_under_partial_inventory() -> None:
+    """A partial inventory that would silently wipe an authored value raises.
+
+    Simulates the registry-load race: ``valid_keys`` is missing a key that
+    ``expected_keys`` still lists, so the un-guarded alignment would drop the
+    authored value and re-add it as a key-echo placeholder. The guard refuses.
+    """
+    from .._modelo_manager import _aligned_table
+
+    current = {"0001": "Real authored label", "0002": "0002"}
+    with pytest.raises(ModeloLocaleError, match="Refusing to echo-convert"):
+        _aligned_table(current, expected_keys={"0001", "0002"}, valid_keys={"0002"})
+
+
+def test_aligned_table_drops_stale_key_and_echoes_missing_expected() -> None:
+    """Normal alignment is unchanged: stale keys drop, missing expected keys echo.
+
+    A key absent from both ``valid`` and ``expected`` is a genuine stale drop (not
+    a race), so the guard does not fire; an authored value present in ``valid`` is
+    preserved; an expected key with no current value becomes a placeholder.
+    """
+    from .._modelo_manager import _aligned_table
+
+    current = {"0001": "Real label", "9999": "Stale authored label"}
+    aligned = _aligned_table(current, expected_keys={"0001", "0003"}, valid_keys={"0001", "0003"})
+    assert aligned == {"0001": "Real label", "0003": "0003"}
