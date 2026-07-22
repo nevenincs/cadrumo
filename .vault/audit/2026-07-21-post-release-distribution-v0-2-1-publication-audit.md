@@ -226,10 +226,32 @@ source in the crashing context; take a pre-built wheel or build it against a
 known-good copy. That is the same conclusion reached two independent ways, so the
 fix direction is settled even though a shipped, green formula was not produced.
 
-If neither the no-build-isolation formula nor a pre-built-wheel path lands
-cleanly, resume with a debugger attached to the LIVE build, not a replay, to read
-the exact faulting instruction — but the fix does not depend on that reading,
-only a complete root-cause explanation would. Three independent reconstructions were tried and all confirm the same
+The fix is now pinned to specific code, and the alternative is ruled out. The
+pre-built-wheel path does not work: Homebrew forces a source-only install on
+every resource, so a wheel resource is rejected as not installable. That leaves
+the no-build-isolation path, and it is proven at the decisive point — under a
+real formula install, the virtual environment's own cffi builds from source and
+loads without faulting, and only the fresh isolated overlay's cffi crashes. A
+formula that installs the bindings against that working environment cffi with
+isolation disabled therefore avoids the crash; the version tried here failed only
+because it reached the network for the build backend, not because of any fault.
+
+The remaining work is bounded generator engineering. The generator emits a single
+`virtualenv_install_with_resources` call, which builds every resource with
+isolation on, so the bindings' build fetches its backend into the crashing
+overlay. The bindings declare their build backend as setuptools and
+setuptools-scm, and Homebrew's Python provides neither, so the fix must add those
+two (and their own resolution) as formula resources, install them and cffi into
+the virtual environment first, then install the bindings with build isolation
+disabled against that environment. That is a resource-graph change to the
+generator plus its lockfile resolution, followed by regenerating the tap and
+running the acquisition lane to green several times over — well-defined, but more
+than a one-line edit because of the build-backend resource cascade.
+
+If that formula still does not land cleanly, resume with a debugger attached to
+the LIVE build, not a replay, to read the exact faulting instruction — but the
+fix does not depend on that reading; only a complete root-cause explanation
+would. Three independent reconstructions were tried and all confirm the same
 thing: importing the crashing overlay's cffi backend directly does not fault,
 constructing an FFI object with an equivalent cffi does not fault, and both run
 clean under the debugger — while the real formula build faults deterministically,
