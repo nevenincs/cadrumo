@@ -1,4 +1,9 @@
 # Terminology Handbook concept fragment.
+# Compiled by the strict loader in `dev.docs.terminology_handbook` into a frozen
+# `ConceptRecord`. Curated prose fields (definition, scope_note,
+# short_description) are hand-edited; structural operations go
+# through the `dev.docs.terminology_handbook` CLI. `narrower` is derived at load
+# from `broader` and must never be authored here.
 
 [concept]
 concept_id = "proyeccion-busqueda"
@@ -7,7 +12,7 @@ lifecycle = "deprecated"
 broader = ["manual-terminologia"]
 related = ["clases-registro-busqueda", "mapa-relevancia"]
 created_at = 2026-06-12
-updated_at = 2026-06-12
+updated_at = 2026-07-22
 
 [language.es]
 short_description = "La compilacion que convierte conceptos, casillas, CLI y paginas en registros de busqueda."
@@ -36,4 +41,4 @@ part_of_speech = "noun"
 short_description = "La compilacio que converteix conceptes, caselles, CLI i pagines en registres de cerca."
 
 [language.hu]
-short_description = "A fordito, amely fogalmakat, mezoket, CLI-feluleteket es oldalakat keresesi rekordokka alakit."
+short_description = "A fordító, amely fogalmakat, mezőket, CLI-felületeket és oldalakat keresési rekordokká alakít."

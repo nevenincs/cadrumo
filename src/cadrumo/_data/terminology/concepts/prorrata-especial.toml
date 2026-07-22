@@ -68,3 +68,7 @@ authority = "boe"
 label = "kulonleges aranyositas"
 term_status = "admitted"
 part_of_speech = "noun"
+
+[[language.hu.term]]
+label = "különleges arányosítás"
+term_status = "admitted"
