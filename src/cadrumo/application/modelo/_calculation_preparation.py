@@ -32,7 +32,7 @@ from ...domain.modelos import (
     WorkUnitCatalogue,
     WorkUnitCatalogueRepositoryProtocol,
 )
-from ...domain.period import calculation_filing_date, period_end_date, period_start_date
+from ...domain.period import calculation_filing_date
 from ...domain.transactions import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ..calculations import IvaWalletDecisionRepository
 from ..live import Borrador100SnapshotRepository
@@ -380,14 +380,7 @@ def _m200_accounting_ledger_transaction_count(
     transaction_repository: TransactionCatalogueRepository | None,
 ) -> int:
     repository = transaction_repository or TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
-    period_start = period_start_date(
-        filing_year=work_unit.filing_year,
-        registry_period=work_unit.period.registry_token,
-    )
-    period_end = period_end_date(
-        filing_year=work_unit.filing_year,
-        registry_period=work_unit.period.registry_token,
-    )
+    period = work_unit.period
     count = 0
     for transaction in repository.load():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
@@ -397,6 +390,6 @@ def _m200_accounting_ledger_transaction_count(
         if transaction.business_classification not in _M200_ACCOUNTING_LEDGER_CLASSIFICATIONS:
             continue
         effective_date = transaction.raw.value_date or transaction.raw.booked_date
-        if period_start <= effective_date <= period_end:
+        if period.contains(effective_date):
             count += 1
     return count
