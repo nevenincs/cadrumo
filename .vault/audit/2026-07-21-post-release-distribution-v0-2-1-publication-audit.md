@@ -103,11 +103,21 @@ its kernel are all native aarch64; resource contention, since it fails
 identically when run alone; the package itself, which builds cleanly in that same
 container; a source-built cffi, which builds and imports cleanly; a
 copies-based virtual environment, since both copy and symlink environments run
-correctly, including compiled-extension imports; and exotic compiler flags, since
-brew uses plain gcc there with no optimisation flags set. The failure appears only
-inside the from-source formula build, whose subprocess runs under the formula's
-own environment interpreter. The remaining hypothesis needs the tap regenerated
-and the formula build reproduced by hand.
+correctly, including compiled-extension imports; exotic compiler flags, since
+brew uses plain gcc there with no optimisation flags set; and the cross-interpreter
+install shape the formula uses, which succeeds when run outside brew.
+
+The failure reproduces the moment brew's sanitised build environment is applied,
+and the compiler shim names the mechanism: it refuses with a message that the
+build tool has reset the environment and that a standard-environment flag is
+required. Isolated PEP 517 builds of the C-extension resources strip the
+Homebrew variables the shim depends on, so the compiler bails. Two details of
+that environment stand out: its search path omits the linuxbrew binary directory
+entirely, and the pkg-config library-directory variable is set to a literal
+two-quote string. Caveat for whoever resumes this: the environment dump used
+here is brew's summary rather than the full build environment, so the
+reproduction may apply it incompletely; confirm against a real formula install
+with the tap regenerated before treating the shim as settled.
 
 ### scoop-lane-container-mode-conflict | medium | the Scoop lane and the Linux runners cannot share one docker daemon
 
@@ -126,10 +136,13 @@ Sweep a retired architecture's toolchain residue, not just its provisioning: the
 uv managed-Python store outlived the runner that installed it and silently
 redirected an ARM machine to Intel builds.
 
-Resume the arm64 investigation from the narrowed hypothesis space recorded above
-rather than re-deriving it: regenerate the tap and reproduce the formula's
-from-source build by hand, comparing the formula environment's interpreter
-against a hand-built one, since every simpler explanation is already eliminated.
+Resume the arm64 investigation at the compiler shim rather than re-deriving the
+eliminations: regenerate the tap, run the real formula install, and confirm
+whether the shim rejects the isolated C-extension builds as the summary
+environment suggests. If it does, the fix is a formula-level one — ensure the
+shim receives the Homebrew environment through the isolated build, or supply
+those two C-extension resources in a form that does not require compiling under
+the shim — not a change to the package or the container.
 Decide the Scoop topology explicitly — either give that lane its own docker host,
 or accept stopping the Linux runners for the duration of a mode switch — because
 no amount of lane work resolves a one-mode-at-a-time daemon.
