@@ -3,8 +3,8 @@ generated: true
 tags:
   - '#index'
   - '#cli-authority-quality-backlog'
-date: '2026-07-21'
-modified: '2026-07-21'
+date: '2026-07-22'
+modified: '2026-07-22'
 related:
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S01]]'
   - '[[2026-07-17-cli-authority-quality-backlog-P01-S02]]'
@@ -37,6 +37,7 @@ related:
   - '[[2026-07-17-cli-authority-quality-backlog-plan]]'
   - '[[2026-07-18-cli-authority-quality-backlog-adr]]'
   - '[[2026-07-18-cli-authority-quality-backlog-research]]'
+  - '[[2026-07-22-cli-authority-quality-backlog-close-honesty-review-audit]]'
 ---
 
 # `cli-authority-quality-backlog` feature index
@@ -49,6 +50,10 @@ Auto-generated index of all documents tagged with `#cli-authority-quality-backlo
 
 - `2026-07-17-cli-authority-quality-backlog-adr` - `cli-authority-quality-backlog` adr: `cli-authority-quality-backlog rescope grounding` | (**status:** `accepted`)
 - `2026-07-18-cli-authority-quality-backlog-adr` - `cli-authority-quality-backlog` adr: `S27 clave-diagnostics namespace authority: storage registry is canonical` | (**status:** `accepted`)
+
+### audit
+
+- `2026-07-22-cli-authority-quality-backlog-close-honesty-review-audit` - `cli-authority-quality-backlog` audit: `Close honesty review`
 
 ### exec
 
