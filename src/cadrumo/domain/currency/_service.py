@@ -17,6 +17,7 @@ from decimal import Decimal
 from typing import Protocol
 
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.money import round_to_cents
 from ._models import (
     CurrencyNormalizationStatus,
     MonetaryAmount,
@@ -77,7 +78,7 @@ class CurrencyNormalizationService:
 
         return NormalizedAmount(
             original=amount,
-            eur_amount=eur_amount.quantize(Decimal("0.01")),
+            eur_amount=round_to_cents(eur_amount),
             status=CurrencyNormalizationStatus.NORMALIZED,
             rate=rate,
             rate_source="provider",
