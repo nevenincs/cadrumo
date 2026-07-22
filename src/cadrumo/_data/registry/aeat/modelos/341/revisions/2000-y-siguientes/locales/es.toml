@@ -1,7 +1,0 @@
-[labels]
-"decl.ejercicio" = "Ejercicio al que se refiere la autoliquidación"
-"decl.periodo" = "Periodo de liquidación al que se refiere la autoliquidación"
-
-[help]
-"decl.ejercicio" = "decl.ejercicio"
-"decl.periodo" = "decl.periodo"

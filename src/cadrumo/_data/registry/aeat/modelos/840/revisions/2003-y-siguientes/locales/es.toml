@@ -1,7 +1,0 @@
-[labels]
-"decl.ejercicio" = "Ejercicio fiscal al que se refiere la declaración"
-"decl.tipo-declaracion" = "Tipo de declaración (alta / variación / baja)"
-
-[help]
-"decl.ejercicio" = "decl.ejercicio"
-"decl.tipo-declaracion" = "decl.tipo-declaracion"

@@ -1,7 +1,0 @@
-[labels]
-"decl.ejercicio" = "Ejercicio al que se refiere la solicitud"
-"decl.estado-miembro" = "Estado miembro de devolución donde se soportaron las cuotas"
-
-[help]
-"decl.ejercicio" = "decl.ejercicio"
-"decl.estado-miembro" = "decl.estado-miembro"

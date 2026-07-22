@@ -1,9 +1,0 @@
-[labels]
-"decl.cnae" = "C.N.A.E. de la actividad principal"
-"decl.ejercicio" = "Ejercicio de devengo"
-"decl.tipo-ejercicio" = "Tipo de ejercicio (12 meses naturales / 12 meses 365 días / inferior a 12 meses)"
-
-[help]
-"decl.cnae" = "decl.cnae"
-"decl.ejercicio" = "decl.ejercicio"
-"decl.tipo-ejercicio" = "decl.tipo-ejercicio"
