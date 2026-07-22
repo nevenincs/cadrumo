@@ -41,6 +41,11 @@ authority = "boe"
 
 [language.ca]
 short_description = "Resum anual de retencions del capital mobiliari."
+definition = "Declaració informativa anual que resumeix les retencions sobre rendiments del capital mobiliari declarades en els models 123 de l'exercici, amb el detall per perceptor."
+
+[language.ca.source]
+citation = "Articulos 25 y 99 de la Ley 35/2006 del IRPF."
+authority = "boe"
 
 [language.hu]
 short_description = "Éves összesítő a tőkejövedelem forrásadójáról (123-as)."
