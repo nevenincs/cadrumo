@@ -120,7 +120,19 @@ rather than a fresh isolated-overlay cffi that would re-inherit the shim's
 pac-ret. The bindings' build backend must be present for the isolation-off build
 — setuptools plus setuptools-scm, the latter pinned to the self-contained 8.x
 line since 10.x splits its versioning into a separate distribution. This is a
-generator change, now being landed, not an infrastructure or scope decision.
+generator change, not an infrastructure or scope decision.
+
+Landed in the Homebrew formula generator with its build backend added and the
+generator's own tests updated for the new install method and resource count; the
+generator suite is green. Verification so far is the mechanism on the exact
+minimal reproducer (three clean installs plus a load under eager binding) and the
+unit tests. The end-to-end confirmation — a real Homebrew acquisition run whose
+arm64 leg mints the row — still has to run, and it needs the fix commit on origin
+plus a smoke run at that commit; both are release-pipeline deployment steps, not
+further debugging. One tradeoff to record: dropping pac-ret removes a hardening
+that only functions on hardware with pointer authentication anyway, and keeping
+it makes the package uninstallable on the Apple-Virtualization build host, so
+compatibility is the correct call here.
 
 ### homebrew-linux-arm64-sigill | medium | the arm64 leg dies on an illegal instruction, cause narrowed by elimination
 
