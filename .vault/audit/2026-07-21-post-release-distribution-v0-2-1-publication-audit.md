@@ -115,17 +115,31 @@ cffi from source under genuine brew completes cleanly. The summary dump is not
 the full build environment, and reproducing with it produces a false positive —
 the caveat recorded alongside that hypothesis is what caught it.
 
-What replaces it is a minimal reproducer. A four-resource formula — argon2-cffi
-as the target, with pycparser, cffi and argon2-cffi-bindings as resources, built
-through the standard virtualenv-with-resources helper — fails identically under a
-real from-source install, on the same metadata step with the same illegal
-instruction. cffi alone succeeds in the same harness, so the trigger is specific
-to the argon2 bindings, not to compiling C extensions generally. Further
-eliminated by mirroring brew's own choices outside brew: a system-site-packages
-environment without pip, and installing cffi as a separate earlier resource so
-the target builds against an already-populated environment, both complete
-cleanly. The failure therefore requires the real build context, and the
-reproducer is now small enough to bisect that context directly.
+What replaces it is a minimal reproducer and an exact crash site. A four-resource
+formula — argon2-cffi as the target, with pycparser, cffi and
+argon2-cffi-bindings as resources, built through the standard
+virtualenv-with-resources helper — fails identically under a real from-source
+install in seconds, needing no release artefacts. cffi alone succeeds in the same
+harness, so the trigger is specific to the argon2 bindings, not to compiling C
+extensions generally.
+
+Enabling the interpreter's fault handler from the formula turns the silent death
+into a stack. The crash is the dynamic loader creating the cffi backend
+extension module, reached from the argon2 bindings' FFI build script calling the
+cffi API constructor at metadata time. The extension being loaded lives in pip's
+build-isolation overlay, not in the formula environment. So the failing artefact
+is the cffi backend as built or fetched for the isolated build, and it executes
+an instruction the virtual machine refuses.
+
+Everything that would explain that away has been tested and eliminated: forcing
+the overlay to build cffi from source rather than take a wheel (it then builds a
+locally-tagged wheel and still crashes); overriding the optimisation flags from
+the formula; and, decisively, compiling cffi by hand with the same native-tuned
+flags Homebrew exports and constructing an FFI object, which succeeds. Outside
+brew the same build works under every flag combination tried. The differentiator
+therefore remains something in the real build environment, of which a full
+144-variable capture was taken during a failing install and is the natural input
+for the next bisection.
 
 ### scoop-lane-container-mode-conflict | medium | the Scoop lane and the Linux runners cannot share one docker daemon
 
@@ -144,15 +158,25 @@ Sweep a retired architecture's toolchain residue, not just its provisioning: the
 uv managed-Python store outlived the runner that installed it and silently
 redirected an ARM machine to Intel builds.
 
-Resume the arm64 investigation from the minimal reproducer rather than the full
-cohort: it fails in seconds, needs no release artefacts, and isolates the trigger
-to the argon2 bindings under a real build. Bisect the build context from there —
-sandbox posture, the staging directory, and the environment brew actually exports
-during a resource build — since every reconstruction of that context by hand so
-far completes cleanly. Do not re-test architecture, contention, the package
-standalone, cffi, environment layout, or install ordering; all are eliminated
-above, and one plausible-looking hypothesis has already been withdrawn for
-resting on a partial reconstruction rather than a real install.
+Resume the arm64 investigation from the minimal reproducer and the captured build
+environment rather than the full cohort: the reproducer fails in seconds, and the
+fault handler already names the crash site, so the remaining question is narrow —
+which of those environment variables makes the cffi backend unloadable when the
+same source builds and loads correctly by hand. Bisect that capture directly.
+
+Do not re-test architecture, contention, the package standalone, source-built
+cffi, environment layout, install ordering, wheel-versus-source in the overlay,
+or optimisation flags; all are eliminated above. Note also that one
+plausible-looking hypothesis was already published and withdrawn for resting on a
+partial reconstruction instead of a real install — reproduce against a real
+formula install before believing any successor.
+
+A durable alternative worth weighing against further debugging: this lane exists
+to prove a from-source Homebrew install on one architecture. If the cause proves
+to be the virtual machine's instruction coverage rather than anything the project
+controls, the honest resolutions are to run that leg on hardware that executes
+the instructions, or to state the architecture's support level explicitly, rather
+than to keep a permanently red lane in a release gate.
 Decide the Scoop topology explicitly — either give that lane its own docker host,
 or accept stopping the Linux runners for the duration of a mode switch — because
 no amount of lane work resolves a one-mode-at-a-time daemon.
