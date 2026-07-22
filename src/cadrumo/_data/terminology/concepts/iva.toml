@@ -55,4 +55,9 @@ citation = "Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Anadido
 authority = "boe"
 
 [language.hu]
-short_description = "A spanyol hozzaadottertek-ado, a fogyasztast terhelo ado."
+short_description = "A spanyol hozzáadottérték-adó, a fogyasztást terhelő adó."
+definition = "Közvetett adó, amely a fogyasztást terheli, és a vállalkozók vagy szabadfoglalkozásúak által teljesített termékértékesítéseket és szolgáltatásokat, a Közösségen belüli beszerzéseket és a termékimportot adóztatja. A Modelo 303, 322, 349 és az éves összesítő Modelo 390 útján kell bevallani, és tartalmaz különleges szabályozásokat, mint a recargo de equivalencia, az egyszerűsített szabályozás vagy a pénzforgalmi elszámolás. Nem terjed ki a Kanári-szigetek IGIC-jére, sem Ceuta és Melilla IPSI-jére."
+
+[language.hu.source]
+citation = "A 37/1992. törvény, 1992. december 28., a hozzáadottérték-adóról (BOE-A-1992-28740)."
+authority = "boe"

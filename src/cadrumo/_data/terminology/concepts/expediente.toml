@@ -46,4 +46,9 @@ citation = "Ley 39/2015 del Procedimiento Administrativo Comun y Sede Electronic
 authority = "aeat"
 
 [language.hu]
-short_description = "Egy AEAT-ugyirat."
+short_description = "Egy AEAT-ügyirat."
+definition = "Egy AEAT előtti adóügyi eljárás rendezett cselekmény- és dokumentumgyűjteménye. Az alkalmazás akkor olvashat ügyiratokat, ha csak olvasható módban van hitelesítés beállítva; azokba soha nem ír."
+
+[language.hu.source]
+citation = "A 39/2015. törvény az általános közigazgatási eljárásról, és az AEAT Elektronikus Ügyfélkapuja."
+authority = "aeat"

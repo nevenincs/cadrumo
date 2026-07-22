@@ -48,4 +48,9 @@ citation = "Articulo 99 de la Ley 35/2006 del IRPF; articulo 100 del RD 439/2007
 authority = "boe"
 
 [language.hu]
-short_description = "Uzleti berleti dijak forrasadojanak bevallasa."
+short_description = "Üzleti bérleti díjak forrásadójának bevallása."
+definition = "A városi ingatlanok - például az üzlethelyiség - bérbeadásából származó jövedelmekre alkalmazott visszatartások időszakos önbevallása."
+
+[language.hu.source]
+citation = "A 35/2006. IRPF-törvény 99. cikke; a 439/2007. királyi rendelet 100. cikke."
+authority = "boe"

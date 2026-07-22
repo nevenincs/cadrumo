@@ -48,4 +48,9 @@ citation = "Articulos 25 y 99 de la Ley 35/2006 del IRPF."
 authority = "boe"
 
 [language.hu]
-short_description = "Kamat- es osztalekkifizetesek forrasadojanak bevallasa."
+short_description = "Kamat- és osztalékkifizetések forrásadójának bevallása."
+definition = "Meghatározott ingó vagyoni tőkéből származó jövedelmekre - például kamatokra és osztalékokra - alkalmazott visszatartások időszakos önbevallása."
+
+[language.hu.source]
+citation = "A 35/2006. IRPF-törvény 25. és 99. cikke."
+authority = "boe"

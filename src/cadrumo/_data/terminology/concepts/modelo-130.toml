@@ -48,4 +48,9 @@ citation = "Ley 35/2006 del IRPF y articulo 110 del Reglamento del IRPF."
 authority = "boe"
 
 [language.hu]
-short_description = "Negyedeves szja-eloleg kozvetlen becsles alatt."
+short_description = "Negyedéves szja-előleg közvetlen becslés alatt."
+definition = "A közvetlen becslés (estimación directa) szerint jövedelmüket meghatározó önfoglalkoztatók (autónomos) által benyújtott, az IRPF terhére történő negyedéves részkifizetés önbevallása."
+
+[language.hu.source]
+citation = "A 35/2006. IRPF-törvény és az IRPF-rendelet 110. cikke."
+authority = "boe"

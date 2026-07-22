@@ -48,4 +48,9 @@ citation = "Articulo 164 de la Ley 37/1992 del IVA y su normativa de desarrollo.
 authority = "boe"
 
 [language.hu]
-short_description = "Eves afa-osszesito."
+short_description = "Éves áfa-összesítő."
+definition = "A hozzáadottérték-adó (IVA) éves összesítő tájékoztató bevallása, amely összegzi az adóévben a Modelo 303-on bevallott ügyleteket."
+
+[language.hu.source]
+citation = "A 37/1992. IVA-törvény 164. cikke és végrehajtási szabályozása."
+authority = "boe"

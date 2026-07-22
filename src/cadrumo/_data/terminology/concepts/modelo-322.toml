@@ -48,4 +48,9 @@ citation = "Orden EHA/3434/2007."
 authority = "boe"
 
 [language.hu]
-short_description = "Afacsoport-tag havi egyedi afa-bevallasa."
+short_description = "Áfacsoport-tag havi egyedi áfa-bevallása."
+definition = "Havi egyéni önbevallás, amelyet az IVA-csoportba (grupo de entidades de IVA) tartozó minden entitás benyújt."
+
+[language.hu.source]
+citation = "Az EHA/3434/2007. rendelet."
+authority = "boe"

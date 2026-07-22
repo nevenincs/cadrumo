@@ -45,4 +45,9 @@ citation = "AEAT, Ordenes Ministeriales que aprueban cada revision de modelo pub
 authority = "aeat"
 
 [language.hu]
-short_description = "Egy modelo szabalyainak adott idoszakra ervenyes valtozata, a nyilvantartasban megnevezve."
+short_description = "Egy modell szabályainak adott időszakra érvényes változata, a nyilvántartásban megnevezve."
+definition = "Egy modell szabályainak azon változata, amely egy konkrét benyújtási időszakra érvényes, a nyilvántartásban megnevezve. Például egy 2019-y-siguientes elnevezésű revízió a 2019-től kezdődő benyújtásokra vonatkozik. Az AEAT minden (modell, év, időszak) kombinációhoz miniszteri rendelettel tesz közzé egy revíziót, így az alkalmazandó revízió levezetett tény, nem választás kérdése."
+
+[language.hu.source]
+citation = "AEAT, a BOE-ban közzétett miniszteri rendeletek, amelyek az egyes modell-revíziókat jóváhagyják."
+authority = "aeat"

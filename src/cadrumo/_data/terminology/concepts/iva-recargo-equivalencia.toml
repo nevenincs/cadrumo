@@ -47,4 +47,9 @@ citation = "Articulos 148 a 163 de la Ley 37/1992 del IVA."
 authority = "boe"
 
 [language.hu]
-short_description = "Egyenertekusegi potlek: kulonleges afa-rendszer kiskereskedoknek."
+short_description = "Egyenértékűségi pótlék: különleges áfa-rendszer kiskereskedőknek."
+definition = "Kötelező különleges szabályozás természetes személy kiskereskedők számára, amelyben a beszállító az IVA-n felül egy pótlékot (recargo) hárít át, és a kiskereskedő mentesül ezen értékesítések adójának elszámolása alól."
+
+[language.hu.source]
+citation = "A 37/1992. IVA-törvény 148-163. cikkei."
+authority = "boe"

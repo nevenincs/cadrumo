@@ -47,4 +47,9 @@ citation = "Articulos 122 y 123 de la Ley 37/1992 del IVA."
 authority = "boe"
 
 [language.hu]
-short_description = "Egyszerusitett afa-rendszer (modulok)."
+short_description = "Egyszerűsített áfa-rendszer (modulok)."
+definition = "Az IVA különleges szabályozása, amelyben az adó összegét modulok vagy objektív mutatók alapján határozzák meg, nem a tényleges ügyletek alapján, a miniszteri rendelettel meghatározott tevékenységek esetén."
+
+[language.hu.source]
+citation = "A 37/1992. IVA-törvény 122. és 123. cikke."
+authority = "boe"

@@ -50,4 +50,9 @@ citation = "Sede Electronica de la AEAT (sede.agenciatributaria.gob.es)."
 authority = "aeat"
 
 [language.hu]
-short_description = "Az AEAT elektronikus ugyfelkapuja."
+short_description = "Az AEAT elektronikus ügyfélkapuja."
+definition = "Az AEAT elektronikus ügyfélkapuja (Sede Electrónica): a hivatalos portál, amelyen keresztül az adózó benyújtja bevallásait és megtekintheti ügyiratait. A felhasználó ott tölti fel az exportált fájlt, hogy azt maga nyújtsa be."
+
+[language.hu.source]
+citation = "Az AEAT Elektronikus Ügyfélkapuja (sede.agenciatributaria.gob.es)."
+authority = "aeat"

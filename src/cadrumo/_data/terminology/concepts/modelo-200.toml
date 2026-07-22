@@ -48,4 +48,9 @@ citation = "Articulos 40 y 41 de la Ley 27/2014 del Impuesto sobre Sociedades."
 authority = "boe"
 
 [language.hu]
-short_description = "Eves tarsasagiado-bevallas."
+short_description = "Éves társaságiadó-bevallás."
+definition = "A társasági adó (Impuesto sobre Sociedades) éves önbevallása, amely bevallja az entitás számviteli eredményét, adóalapját és fizetendő adóját."
+
+[language.hu.source]
+citation = "A 27/2014. társasági adóról szóló törvény 40. és 41. cikke."
+authority = "boe"

@@ -48,4 +48,9 @@ citation = "Orden EHA/3434/2007."
 authority = "boe"
 
 [language.hu]
-short_description = "Afacsoport havi osszesitett bevallasa, az anyavallalat nyujtja be."
+short_description = "Áfacsoport havi összesített bevallása, az anyavállalat nyújtja be."
+definition = "Az IVA-csoport havi összesített önbevallása, amelyet az uralkodó entitás nyújt be a teljes csoport eredményével."
+
+[language.hu.source]
+citation = "Az EHA/3434/2007. rendelet."
+authority = "boe"

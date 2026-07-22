@@ -48,4 +48,9 @@ citation = "Articulos 9 y 10 del Real Decreto 1065/2007."
 authority = "boe"
 
 [language.hu]
-short_description = "Nyilvantartasi bejelentes: kezdes, modositas, megszunes."
+short_description = "Nyilvántartási bejelentés: kezdés, módosítás, megszűnés."
+definition = "Censal bevallás, amellyel a vállalkozók, szabadfoglalkozásúak és levonásra kötelezettek nyilvántartásában (Censo) történő regisztrációt, módosítást vagy törlést jelentik be az AEAT-nak."
+
+[language.hu.source]
+citation = "Az 1065/2007. királyi rendelet 9. és 10. cikke."
+authority = "boe"

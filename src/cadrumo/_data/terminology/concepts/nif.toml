@@ -58,4 +58,9 @@ citation = "Real Decreto 1065/2007, Reglamento General de las actuaciones y los 
 authority = "boe"
 
 [language.hu]
-short_description = "A spanyol adoazonosito szam minden szemely vagy szervezet szamara az AEAT-nal."
+short_description = "A spanyol adóazonosító szám minden személy vagy szervezet számára az AEAT-nál."
+definition = "Kód, amely egyedileg azonosít minden adózót az AEAT előtt. Spanyol természetes személyek esetén a NIF megegyezik a személyazonosító igazolvány (DNI) számával; külföldi természetes személyek esetén a külföldi azonosító szám (NIE). A jogi személyek és egyéb entitások is rendelkeznek NIF-fel; régebbi nyilvántartásokban a vállalati azonosítót Adóazonosító Kódnak (CIF) is nevezhették. A DNI és a NIE önmagukban személyazonosító okmányok."
+
+[language.hu.source]
+citation = "Az 1065/2007. királyi rendelet, az adóügyi kezelési és ellenőrzési eljárások általános szabályzata, II. cím (adóazonosító szám)."
+authority = "boe"

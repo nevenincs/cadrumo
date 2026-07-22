@@ -50,4 +50,9 @@ citation = "AEAT, Sede Electronica - Todas las gestiones / Modelos y formularios
 authority = "aeat"
 
 [language.hu]
-short_description = "Az AEAT hivatalos bevallasi urlapja, amelyet egy szam azonosit (peldaul Modelo 303)."
+short_description = "Az AEAT hivatalos bevallási űrlapja, amelyet egy szám azonosít (például Modelo 303)."
+definition = "Szabványosított bevallási nyomtatvány, amelyet az AEAT egy konkrét adókötelezettségre és időszakra ír elő, egyedileg azonosítva hivatalos háromjegyű számával (például Modelo 100, Modelo 303, Modelo 720). Minden modellt miniszteri rendelettel tesznek közzé a BOE-ban, és az AEAT Elektronikus Ügyfélkapuján katalogizálják. A szám a jogi elnevezés része: a Modelo 303 és a Modelo 100 nem cserélhető fel egymással. Nem jelöl ad hoc jelentéseket, belső táblázatokat vagy censal dokumentumokat."
+
+[language.hu.source]
+citation = "AEAT, Elektronikus Ügyfélkapu - Minden ügyintézés / Modellek és nyomtatványok; minden modellt a BOE-ban közzétett miniszteri rendelettel hagynak jóvá."
+authority = "aeat"

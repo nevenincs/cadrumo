@@ -48,4 +48,9 @@ citation = "Articulo 40 de la Ley 27/2014 del Impuesto sobre Sociedades."
 authority = "boe"
 
 [language.hu]
-short_description = "Tarsasagiado-eloleg, evente legfeljebb harom alkalommal."
+short_description = "Társaságiadó-előleg, évente legfeljebb három alkalommal."
+definition = "A társasági adó terhére történő részkifizetés, amelyet évente legfeljebb háromszor (áprilisban, októberben és decemberben) nyújtanak be."
+
+[language.hu.source]
+citation = "A 27/2014. társasági adóról szóló törvény 40. cikke."
+authority = "boe"

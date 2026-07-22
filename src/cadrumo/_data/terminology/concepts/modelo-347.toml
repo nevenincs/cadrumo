@@ -48,4 +48,9 @@ citation = "Orden EHA/3012/2008."
 authority = "boe"
 
 [language.hu]
-short_description = "Eves informacios bevallas harmadik felekkel kotott ugyletekrol."
+short_description = "Éves információs bevallás harmadik felekkel kötött ügyletekről."
+definition = "Éves tájékoztató bevallás a harmadik személyekkel végzett ügyletekről, amelyek együttes összege az adóévben meghaladja a 3.005,06 eurót."
+
+[language.hu.source]
+citation = "Az EHA/3012/2008. rendelet."
+authority = "boe"

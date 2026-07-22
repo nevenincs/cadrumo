@@ -44,4 +44,9 @@ citation = "Orden HAP/2250/2015."
 authority = "boe"
 
 [language.hu]
-short_description = "Eves informacios bevallas jovedelem-hozzarendelo szervezetekrol."
+short_description = "Éves információs bevallás jövedelem-hozzárendelő szervezetekről."
+definition = "A jövedelem-hozzárendelési rendszerben (régimen de atribución de rentas) működő entitások éves tájékoztató bevallása, amely minden tagnak, örökösnek vagy résztvevőnek hozzárendeli a jövedelmek, visszatartások és levonások rá eső részét."
+
+[language.hu.source]
+citation = "A HAP/2250/2015. rendelet."
+authority = "boe"

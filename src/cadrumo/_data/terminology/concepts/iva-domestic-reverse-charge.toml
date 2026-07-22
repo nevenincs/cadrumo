@@ -47,4 +47,9 @@ citation = "Articulo 84 de la Ley 37/1992 del IVA."
 authority = "boe"
 
 [language.hu]
-short_description = "Forditott adozas belfoldi ugyletekben."
+short_description = "Fordított adózás belföldi ügyletekben."
+definition = "Olyan mechanizmus, amelynek keretében meghatározott belföldi ügyletekben az IVA adófizetésre kötelezettje a címzett, nem az, aki az értékesítést vagy szolgáltatást teljesíti, így a címzett önmagára hárítja át az adót."
+
+[language.hu.source]
+citation = "A 37/1992. IVA-törvény 84. cikke."
+authority = "boe"

@@ -48,4 +48,9 @@ citation = "Articulos 164 y 167 de la Ley 37/1992 del IVA."
 authority = "boe"
 
 [language.hu]
-short_description = "Idoszakos afa-onbevallas."
+short_description = "Időszakos áfa-önbevallás."
+definition = "Az általános szabályozás alá tartozó adófizetésre kötelezettek által benyújtott, a hozzáadottérték-adó (IVA) időszakos bevallás-elszámolása, negyedévente vagy havonta, az ügyletek volumenétől függően."
+
+[language.hu.source]
+citation = "A 37/1992. IVA-törvény 164. és 167. cikke."
+authority = "boe"

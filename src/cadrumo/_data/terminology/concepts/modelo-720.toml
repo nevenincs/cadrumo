@@ -48,4 +48,9 @@ citation = "Disposicion adicional 18 de la Ley 58/2003; articulo 42 bis del RD 1
 authority = "boe"
 
 [language.hu]
-short_description = "Eves informacios bevallas kulfoldon tartott vagyonrol."
+short_description = "Éves információs bevallás külföldön tartott vagyonról."
+definition = "Éves tájékoztató bevallás a külföldön elhelyezett számlákról, értékpapírokról és ingatlanokról, amennyiben azok meghaladják a megállapított küszöbértékeket."
+
+[language.hu.source]
+citation = "Az 58/2003. törvény 18. kiegészítő rendelkezése; az 1065/2007. királyi rendelet 42. bis cikke."
+authority = "boe"
