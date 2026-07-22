@@ -193,8 +193,15 @@ class ModeloLocaleCoverageRecord(BaseModel):
 
     @property
     def complete(self) -> bool:
-        """Return whether every required leaf is authored, not merely present."""
-        return self.translated_total == self.required_total and not any(
+        """Return whether every label is authored and no stale keys remain.
+
+        Completeness gates on labels only: labels translate an
+        authoritative source (the official Spanish schema label), while
+        the registry declares no help source, so demanding help would
+        demand prose with no authority behind it. The help partition is
+        still fully reported as an optional enrichment dimension.
+        """
+        return self.label_translated == self.label_required and not any(
             record.kind is ModeloLocaleDriftKind.STALE for record in self.drift
         )
 

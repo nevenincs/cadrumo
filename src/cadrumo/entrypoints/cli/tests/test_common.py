@@ -83,40 +83,36 @@ def _sessionless_env(tmp_path: Path) -> Iterator[Path]:
         yield root
 
 
-def test_active_profile_or_exit_locale_keys_resolve_to_real_strings() -> None:
-    """The locale catalogue provides non-placeholder values for both contract keys."""
-    error_value = tr("cli.common.errors.no_active_profile_error_value")
-    next_value = tr("cli.common.next.create_profile_command")
+# The localized cli.config.errors.no_active_profile refusal embeds this
+# locale-invariant next-step command; every cold-start channel must surface it.
+_EXPECTED_NEXT_COMMAND = "aeat config profile create NAME"
 
-    # Keys must not fall back to the dotted-key literal (unresolved placeholder).
-    assert error_value != "cli.common.errors.no_active_profile_error_value"
-    assert next_value != "cli.common.next.create_profile_command"
-    # Values must be non-empty strings.
-    assert error_value.strip()
-    assert next_value.strip()
+
+def test_active_profile_or_exit_locale_key_resolves_to_real_string() -> None:
+    """The catalogue provides a non-placeholder value for the refusal key production requests."""
+    message = tr("cli.config.errors.no_active_profile")
+
+    # The key must not fall back to the dotted-key literal (unresolved placeholder).
+    assert message != "cli.config.errors.no_active_profile"
+    assert message.strip()
+    assert _EXPECTED_NEXT_COMMAND in message
 
 
 def test_active_profile_or_exit_emits_localized_payload_in_text_channel(
     _sessionless_env: Path,
 ) -> None:
-    """A CLI verb reaching _active_profile_or_exit emits locale-sourced next-step text."""
-    expected_next = tr("cli.common.next.create_profile_command")
-
+    """A CLI verb reaching the no-active-profile refusal emits actionable next-step text."""
     result = invoke_cached_cli(["app", "ledger", "list"])
 
     assert result.exit_code != 0
-    assert expected_next in result.output
+    assert _EXPECTED_NEXT_COMMAND in result.output
 
 
 def test_active_profile_or_exit_emits_localized_payload_in_json_channel(
     _sessionless_env: Path,
 ) -> None:
-    """A CLI verb reaching _active_profile_or_exit emits locale-sourced values in JSON."""
-    expected_error = tr("cli.common.errors.no_active_profile_error_value")
-    expected_next = tr("cli.common.next.create_profile_command")
-
+    """A CLI verb reaching the no-active-profile refusal carries the guidance in JSON."""
     result = invoke_cached_cli(["--format", "json", "app", "ledger", "list"])
 
     assert result.exit_code != 0
-    # Either the error or the next value from the locale must appear.
-    assert expected_error in result.output or expected_next in result.output
+    assert _EXPECTED_NEXT_COMMAND in result.output
