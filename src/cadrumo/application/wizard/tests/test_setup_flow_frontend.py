@@ -139,12 +139,12 @@ def _tokens_with_substitutions(base: deque[str], *, activity: str, output_langua
 
     Positional substitution keeps the scripted queue aligned with the
     flow's visible sequence; the activity token (a free-text answer) and
-    the output-language token (the last SELECT before the trailing
-    preference answers) are the two the edit walk alters.
+    the output-language token (the first SELECT of the identidad section,
+    now the opening page of the flow) are the two the edit walk alters.
     """
     tokens = list(base)
     tokens[tokens.index("Software development")] = activity
-    # ``en`` appears once in the preferencias section as the output-language
-    # answer; replace that occurrence.
+    # ``en`` appears once, as the output-language answer at the head of the
+    # flow; replace that occurrence.
     tokens[tokens.index("en")] = output_language
     return tokens
