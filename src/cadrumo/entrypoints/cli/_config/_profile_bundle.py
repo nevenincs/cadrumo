@@ -21,6 +21,7 @@ import typer
 from pydantic import BaseModel, ConfigDict, SecretStr
 
 from ....core.errors import CadrumoError as _CadrumoError
+from ....core.errors import resolve_error_message as _resolve_error_message
 from ....core.external_constants import OutputLanguage
 from ....core.i18n import tr
 from ....core.json_contract import Notice, NoticeSeverity
@@ -681,7 +682,7 @@ def _validate_imported_profile_tax_id(record: object) -> None:
     try:
         validate_spanish_tax_id(tax_id.strip())
     except IdentityError as exc:
-        raise _invalid_import_tax_id(str(exc)) from exc
+        raise _invalid_import_tax_id(_resolve_error_message(exc)) from exc
 
 
 def _validate_imported_profile_filing_baseline(missing_flags: tuple[str, ...]) -> None:
