@@ -6524,9 +6524,15 @@ flows:
     'no': 'No'
     'yes': Sí
   errors:
+    blank_required: 'Este campo es obligatorio: introduce un valor.'
+    checkbox_required: Selecciona al menos una opción.
+    checkbox_unknown: 'Opción desconocida; valores aceptados: %{choices}.'
     checkpoint_store_missing: El flujo {flow_id} ofrece guardar y salir en el modo
       {mode}, pero no hay ningún almacén de puntos de guardado conectado, así que
       la ejecución se ha rechazado en lugar de perder tus respuestas.
+    invalid_confirm: Responde sí o no.
+    invalid_integer: Introduce un número entero.
+    select_unknown: 'Elige uno de los valores aceptados: %{choices}.'
     tui_abandoned: El flujo {flow_id} se cerró en el modo {mode} antes de enviarlo
       o guardarlo; no se ha registrado nada.
     unsupported_console: Esta consola no puede mostrar preguntas interactivas. Ejecuta
@@ -6535,7 +6541,9 @@ flows:
     current_answer: 'Respuesta actual: {value}'
     failure_mode: 'Atención: {text}'
     format_hint: 'Formato: {hint}'
+    optional: Opcional
     page_header: Pregunta {position} de {total} — sección {section}
+    required: Obligatorio
   review:
     action_edit: Editar una respuesta
     action_prompt: ¿Qué quieres hacer?
@@ -6553,6 +6561,10 @@ flows:
     header_tui: 'Revisión — {answered} respondidas, {remaining} obligatorias pendientes,
       listo para enviar: {eligible}'
     orphan_marker: (ya no se pregunta)
+    page_deferred: 'La pregunta %{page_key} está aplazada: decide antes de presentar.'
+    page_invalid: La pregunta %{page_key} tiene una respuesta no válida.
+    page_stale: 'Revisa la pregunta %{page_key}: cambió una respuesta anterior.'
+    required_unanswered: La pregunta obligatoria %{page_key} está sin responder.
     reset_stale_confirm: La pregunta {page_key} ya no se plantea. ¿Borrar su respuesta
       guardada?
     reset_stale_done: Se ha borrado la respuesta guardada de {page_key}.

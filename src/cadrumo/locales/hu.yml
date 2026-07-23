@@ -6371,9 +6371,15 @@ flows:
     'no': Nem
     'yes': Igen
   errors:
+    blank_required: Ez a mező kötelező - adj meg egy értéket.
+    checkbox_required: Válassz legalább egy lehetőséget.
+    checkbox_unknown: 'Ismeretlen lehetőség - elfogadott értékek: %{choices}.'
     checkpoint_store_missing: A(z) {flow_id} folyamat a(z) {mode} módban felkínálja
       a mentés és kilépés lehetőségét, de nincs bekötve ellenőrzőpont-tároló, ezért
       a futás elutasításra került, hogy a válaszaid ne vesszenek el.
+    invalid_confirm: Válaszolj igennel vagy nemmel.
+    invalid_integer: Adj meg egy egész számot.
+    select_unknown: 'Válassz az elfogadott értékek közül: %{choices}.'
     tui_abandoned: A(z) {flow_id} folyamatot {mode} módban bezárták a beküldés vagy
       mentés előtt; semmi sem került rögzítésre.
     unsupported_console: Ez a konzol nem tud interaktív kérdéseket megjeleníteni.
@@ -6382,7 +6388,9 @@ flows:
     current_answer: 'Jelenlegi válasz: {value}'
     failure_mode: 'Figyelem: {text}'
     format_hint: 'Formátum: {hint}'
+    optional: Nem kötelező
     page_header: '{position}. kérdés a(z) {total} közül — {section} szakasz'
+    required: Kötelező
   review:
     action_edit: Válasz szerkesztése
     action_prompt: Mit szeretnél tenni?
@@ -6400,6 +6408,11 @@ flows:
     header_tui: 'Áttekintés — {answered} megválaszolva, {remaining} kötelező még nyitva,
       beküldésre kész: {eligible}'
     orphan_marker: (már nem kérdezzük)
+    page_deferred: A %{page_key} kérdés elhalasztva - döntés szükséges a beküldés
+      előtt.
+    page_invalid: A %{page_key} kérdés válasza érvénytelen.
+    page_stale: Nézd át a %{page_key} kérdést - egy korábbi válasz megváltozott.
+    required_unanswered: A kötelező %{page_key} kérdés megválaszolatlan.
     reset_stale_confirm: A(z) {page_key} kérdést már nem tesszük fel. Törlöd a hozzá
       tárolt választ?
     reset_stale_done: A(z) {page_key} tárolt válasza törölve.

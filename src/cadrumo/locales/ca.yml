@@ -6489,9 +6489,15 @@ flows:
     'no': 'No'
     'yes': Sí
   errors:
+    blank_required: 'Aquest camp és obligatori: introdueix un valor.'
+    checkbox_required: Selecciona almenys una opció.
+    checkbox_unknown: 'Opció desconeguda; valors acceptats: %{choices}.'
     checkpoint_store_missing: El flux {flow_id} ofereix desar i sortir en el mode
       {mode}, però no hi ha cap magatzem de punts de desada connectat, de manera que
       l'execució s'ha rebutjat en lloc de perdre les teves respostes.
+    invalid_confirm: Respon sí o no.
+    invalid_integer: Introdueix un nombre enter.
+    select_unknown: 'Tria un dels valors acceptats: %{choices}.'
     tui_abandoned: El flux {flow_id} s'ha tancat en el mode {mode} abans d'enviar-lo
       o desar-lo; no s'ha registrat res.
     unsupported_console: Aquesta consola no pot mostrar preguntes interactives. Executa
@@ -6500,7 +6506,9 @@ flows:
     current_answer: 'Resposta actual: {value}'
     failure_mode: 'Compte: {text}'
     format_hint: 'Format esperat: {hint}'
+    optional: Opcional
     page_header: Pregunta {position} de {total} — secció {section}
+    required: Obligatori
   review:
     action_edit: Edita una resposta
     action_prompt: Què vols fer?
@@ -6518,6 +6526,10 @@ flows:
     header_tui: 'Revisió — {answered} respostes, {remaining} obligatòries pendents,
       a punt per enviar: {eligible}'
     orphan_marker: (ja no es pregunta)
+    page_deferred: 'La pregunta %{page_key} està ajornada: decideix abans de presentar.'
+    page_invalid: La pregunta %{page_key} té una resposta no vàlida.
+    page_stale: 'Revisa la pregunta %{page_key}: ha canviat una resposta anterior.'
+    required_unanswered: La pregunta obligatòria %{page_key} està sense respondre.
     reset_stale_confirm: La pregunta {page_key} ja no es planteja. Vols esborrar-ne
       la resposta desada?
     reset_stale_done: S'ha esborrat la resposta desada de {page_key}.
