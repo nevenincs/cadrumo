@@ -34,9 +34,21 @@ See Also:
 """
 
 from . import _compiler as _compiler
+from . import _copy_sources as _copy_sources
 from ._catalogue import WIZARD_FLOWS
 from ._commands import build_wizard_command
+from ._copy_sources import (
+    register_profile_copy_sources,
+    resolve_profile_schema_copy,
+    resolve_profile_terminology_copy,
+)
 from ._errors import WizardAnswerQueueUnderflowError, WizardValidationError
+from ._flow_validators import (
+    TAXPAYER_PROJECTION_VALIDATOR_ID,
+    build_taxpayer_projection_validator,
+    register_taxpayer_projection_validator,
+)
+from ._legal_zone import PageLegalZone, build_flow_legal_zones
 from ._models import (
     WizardChoice,
     WizardCondition,
@@ -56,8 +68,10 @@ from ._status import (
 from ._widgets import validate_widget_answer
 
 __all__ = [
+    "TAXPAYER_PROJECTION_VALIDATOR_ID",
     "WIZARD_FLOWS",
     "CanonicalAnswerPrompter",
+    "PageLegalZone",
     "Prompter",
     "QuestionaryPrompter",
     "WizardAnswerQueueUnderflowError",
@@ -71,9 +85,15 @@ __all__ = [
     "WizardUnsupportedConsoleError",
     "WizardValidationError",
     "WizardVisibility",
+    "build_flow_legal_zones",
+    "build_taxpayer_projection_validator",
     "build_wizard_command",
     "build_wizard_status",
     "load_active_taxpayer_profile",
     "project_answers",
+    "register_profile_copy_sources",
+    "register_taxpayer_projection_validator",
+    "resolve_profile_schema_copy",
+    "resolve_profile_terminology_copy",
     "validate_widget_answer",
 ]
