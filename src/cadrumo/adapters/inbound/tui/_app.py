@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING
 from textual.app import App
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Callable, Mapping
 
 from cadrumo.application.flows import (
     FlowCheckpointError as _FlowCheckpointError,
@@ -124,6 +124,7 @@ class FlowTuiApp(App[None]):
         checkpoint_store: CheckpointStore | None = None,
         resume_state: FlowState | None = None,
         registered_values: Mapping[str, str] | None = None,
+        on_answer_committed: Callable[[str, str], None] | None = None,
     ) -> None:
         super().__init__()
         if checkpoint_available(definition, mode) and checkpoint_store is None:
@@ -142,6 +143,14 @@ class FlowTuiApp(App[None]):
         """Domain-supplied display values currently on record, keyed by page
         key — rendered verbatim in the review table's registered column so
         the operator sees the in-flow answer beside the persisted fact."""
+        self._on_answer_committed = on_answer_committed
+        """Generic post-commit notification, fired after each successful engine
+        answer commit with ``(page_key, canonical_committed_value)`` and before
+        the frontend advances or re-renders. A locale-switch hook can
+        re-activate the language and call :meth:`rebuild_for_locale` so the
+        next page renders in the new language. Domain-blind by construction —
+        never a language hook itself. The value may be a SECRET page's raw
+        answer, so a consumer MUST NOT log it."""
         self.final_state: FlowState | None = None
         self.final_projection: ReviewProjection | None = None
         self.saved_and_exited = False
@@ -157,6 +166,10 @@ class FlowTuiApp(App[None]):
             if entry.key == self.state.cursor:
                 return entry
         return None
+
+    def _notify_answer_committed(self, page_key: str) -> None:
+        if self._on_answer_committed is not None:
+            self._on_answer_committed(page_key, self.state.answers.get(page_key, ""))
 
     def is_secret_page(self, page_key: str) -> bool:
         """Whether the page a key addresses collects a secret answer.
@@ -185,6 +198,12 @@ class FlowTuiApp(App[None]):
         if entry is None:
             return
         self.state = answer(self.definition, self.state, entry.key, raw)
+        if entry.key not in self.state.verdicts:
+            # Successful commit (no failing verdict for this page): notify
+            # before advancing/re-rendering, so a locale-switch hook's
+            # rebuild lands on the NEXT page. Fires for a staged CHECKBOX
+            # toggle too (once per toggle).
+            self._notify_answer_committed(entry.key)
         if not advance:
             self._refresh_answer_zones()
             return
@@ -296,11 +315,20 @@ class FlowTuiApp(App[None]):
         The engine state is locale-blind, so nothing in it changes; every
         zone and :class:`~cadrumo.application.flows.PageCopy` re-assembles at
         render, and each screen resolves its footer bindings at mount. Popping
-        back to a single screen and switching in a fresh
-        :class:`QuestionScreen` therefore re-resolves all operator-facing copy
-        — prompts, choices, buttons, and footer bindings — under the active
-        locale, with no substrate cache to purge.
+        back to a single screen and pushing a fresh :class:`QuestionScreen`
+        therefore re-resolves all operator-facing copy — prompts, choices,
+        buttons, and footer bindings — under the active locale, with no
+        substrate cache to purge.
+
+        The swap is deferred to after the current refresh so a caller invoking
+        this from inside :meth:`commit_answer` (the post-commit locale-switch
+        hook) does not tear the mounted screen out from under the commit's own
+        advance/re-render; the fresh screen then mounts on the already-advanced
+        cursor, so the NEXT page renders in the new language.
         """
+        self.call_after_refresh(self._rebuild_screens_for_locale)
+
+    def _rebuild_screens_for_locale(self) -> None:
         while len(self.screen_stack) > 1:
             self.pop_screen()
         self.push_screen(QuestionScreen())
@@ -362,6 +390,7 @@ def run_flow_tui(
     checkpoint_store: CheckpointStore | None = None,
     resume_state: FlowState | None = None,
     registered_values: Mapping[str, str] | None = None,
+    on_answer_committed: Callable[[str, str], None] | None = None,
 ) -> tuple[FlowState, ReviewProjection]:
     """Run the full-screen frontend to completion and return the outcome.
 
@@ -375,6 +404,7 @@ def run_flow_tui(
         checkpoint_store=checkpoint_store,
         resume_state=resume_state,
         registered_values=registered_values,
+        on_answer_committed=on_answer_committed,
     )
     app.run()
     if app.final_state is None or app.final_projection is None:

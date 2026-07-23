@@ -348,6 +348,43 @@ def test_legal_zone_renders_one_line_per_citation() -> None:
     assert "ley-35-2006:art-28" in captured
 
 
+def test_on_answer_committed_fires_per_successful_commit_with_key_and_value() -> None:
+    definition = _two_section_flow()
+    received: list[tuple[str, str]] = []
+    with create_pipe_input() as pipe:
+        pipe.send_text("alpha\rbeta\r\r")
+        frontend = LineFlowFrontend(
+            definition,
+            input=pipe,
+            output=_memory_output(),
+            on_answer_committed=lambda key, value: received.append((key, value)),
+        )
+        frontend.run(mode=FlowMode.MODIFY)
+
+    # One notification per successful commit, carrying the page key and the
+    # canonical committed value, in walk order.
+    assert received == [("p_a", "alpha"), ("p_b", "beta")]
+
+
+def test_on_answer_committed_does_not_fire_on_a_failing_verdict() -> None:
+    definition = _definition(
+        (FlowSection(id="s", title=_copy(), items=(_page("p_num", widget=FlowWidgetKind.INTEGER, answer_type=int),)),),
+    )
+    received: list[tuple[str, str]] = []
+    with create_pipe_input() as pipe:
+        # 'abc' fails the integer shape (no notification); '42' commits (one).
+        pipe.send_text("abc\r42\r\r")
+        frontend = LineFlowFrontend(
+            definition,
+            input=pipe,
+            output=_memory_output(),
+            on_answer_committed=lambda key, value: received.append((key, value)),
+        )
+        frontend.run(mode=FlowMode.MODIFY)
+
+    assert received == [("p_num", "42")]
+
+
 def test_uninjected_frontend_refuses_non_tty_console() -> None:
     # pytest captures stdio, so the test process is non-TTY. A frontend with
     # no injected IO must refuse from the environment probe directly.

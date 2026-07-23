@@ -52,6 +52,8 @@ from ._errors import FlowCheckpointError, FlowRunAbandonedError, FlowUnsupported
 from ._review import ReviewProjection, assert_submit_eligible, review
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from prompt_toolkit.input import Input
     from prompt_toolkit.output import Output
 
@@ -71,11 +73,20 @@ class LineFlowFrontend:
         input: Input | None = None,
         output: Output | None = None,
         checkpoint_store: CheckpointStore | None = None,
+        on_answer_committed: Callable[[str, str], None] | None = None,
     ) -> None:
         self._definition = definition
         self._input = input
         self._output = output
         self._store = checkpoint_store
+        self._on_answer_committed = on_answer_committed
+        """Generic post-commit notification, fired after each successful engine
+        answer commit with ``(page_key, canonical_committed_value)`` and before
+        the next page is rendered. Domain-blind — not a language hook itself,
+        though a consumer may use it to re-activate a locale mid-walk (line
+        mode re-assembles every page's copy per page, so the next page renders
+        in the new language). The value may be a SECRET page's raw answer, so a
+        consumer MUST NOT log it."""
 
     def ensure_interactive_environment(self) -> None:
         """Refuse before progress when this process cannot host prompts.
@@ -161,6 +172,10 @@ class LineFlowFrontend:
             state = answer(self._definition, state, entry.key, raw)
             failing = state.verdicts.get(entry.key)
             if not failing:
+                # Successful commit: notify before the walk moves to the next
+                # page, so a locale-switch hook applies to what renders next.
+                if self._on_answer_committed is not None:
+                    self._on_answer_committed(entry.key, state.answers.get(entry.key, ""))
                 return state
             for verdict in failing:
                 if verdict.message_key:
