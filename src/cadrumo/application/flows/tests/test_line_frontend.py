@@ -47,6 +47,7 @@ from .. import (
     FlowChoice,
     FlowCondition,
     FlowDefinition,
+    FlowLegalRef,
     FlowPage,
     FlowRunAbandonedError,
     FlowSection,
@@ -318,6 +319,33 @@ def test_ctrl_c_on_a_required_prompt_raises_a_typed_abandonment() -> None:
             frontend.run(mode=FlowMode.MODIFY)
 
     assert excinfo.value.translated_message == "errors.refused.refused_flow_run_abandoned"
+
+
+def test_legal_zone_renders_one_line_per_citation() -> None:
+    # A labelled citation renders through the tr frame; a citation with no
+    # label passes its ref token through verbatim.
+    page = FlowPage(
+        id="p_a",
+        widget=FlowWidgetKind.TEXT,
+        prompt=_copy(),
+        legal_zone=(
+            FlowLegalRef(ref="ley-35-2006:art-27", label=_copy()),
+            FlowLegalRef(ref="ley-35-2006:art-28"),
+        ),
+        answer_type=str,
+        required=False,
+    )
+    definition = _definition((FlowSection(id="s", title=_copy(), items=(page,)),))
+    buffer = StringIO()
+    with create_pipe_input() as pipe:
+        pipe.send_text("value\r\r")  # answer the page, then submit from review
+        frontend = LineFlowFrontend(definition, input=pipe, output=PlainTextOutput(buffer))
+        frontend.run(mode=FlowMode.MODIFY)
+
+    captured = buffer.getvalue()
+    resolved_label = tr("wizard.setup.title")
+    assert tr("flows.progress.legal_ref", ref="ley-35-2006:art-27", label=resolved_label) in captured
+    assert "ley-35-2006:art-28" in captured
 
 
 def test_uninjected_frontend_refuses_non_tty_console() -> None:

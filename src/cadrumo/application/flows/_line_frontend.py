@@ -31,9 +31,9 @@ import questionary
 
 from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind, PageStatus
 from ...core.i18n import tr
-from ...core.logging import get_logger
+from ._capability import NO_CONSOLE_ERRORS as _NO_CONSOLE_ERRORS
 from ._checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
-from ._copy import PageCopy, assemble_page_copy, resolve_optional_copy
+from ._copy import PageCopy, assemble_page_copy, resolve_copy, resolve_optional_copy
 from ._definition import FlowDefinition
 from ._engine import (
     SECTION_VERDICT_PREFIX,
@@ -54,25 +54,6 @@ from ._review import ReviewProjection, assert_submit_eligible, review
 if TYPE_CHECKING:
     from prompt_toolkit.input import Input
     from prompt_toolkit.output import Output
-
-_log = get_logger(__name__)
-
-
-def _resolve_no_console_error_types() -> tuple[type[BaseException], ...]:
-    """Return the prompt_toolkit error classes that signal an unsupported console host."""
-    error_types: list[type[BaseException]] = [OSError]
-    if sys.platform != "win32":
-        return tuple(error_types)
-    try:
-        from prompt_toolkit.output.win32 import NoConsoleScreenBufferError as _Win32NoConsole
-
-        error_types.insert(0, _Win32NoConsole)
-    except ImportError as exc:
-        _log.debug("flows line frontend: win32 console probe unavailable: %s", exc)
-    return tuple(error_types)
-
-
-_NO_CONSOLE_ERRORS: tuple[type[BaseException], ...] = _resolve_no_console_error_types()
 
 _REVIEW_ACTION_SUBMIT = "submit"
 _REVIEW_ACTION_EDIT = "edit"
@@ -202,6 +183,11 @@ class LineFlowFrontend:
             self._emit(tr("flows.progress.format_hint", hint=copy.format_hint))
         for failure_mode in copy.failure_modes:
             self._emit(tr("flows.progress.failure_mode", text=failure_mode))
+        for legal_ref in copy.legal_zone:
+            if legal_ref.label:
+                self._emit(tr("flows.progress.legal_ref", ref=legal_ref.ref, label=legal_ref.label))
+            else:
+                self._emit(legal_ref.ref)
         current = state.answers.get(entry.key)
         if current:
             # A SECRET page's committed value must never reach the terminal
@@ -314,8 +300,16 @@ class LineFlowFrontend:
         prompts = {
             entry.key: assemble_page_copy(entry.page).prompt for entry in visible_sequence(self._definition, state)
         }
+        section_titles = {section.id: resolve_copy(section.title) for section in self._definition.sections}
         rows_by_number: dict[str, str] = {}
+        current_section: str | None = None
         for number, row in enumerate(projection.rows, start=1):
+            if row.section_id != current_section:
+                # Group the listing by section (a resolved section-title
+                # heading) so line-mode review reads as a complete-profile
+                # summary, matching the full-screen table's grouping.
+                current_section = row.section_id
+                self._emit(section_titles.get(row.section_id, row.section_id))
             rows_by_number[str(number)] = row.key
             self._emit(
                 tr(

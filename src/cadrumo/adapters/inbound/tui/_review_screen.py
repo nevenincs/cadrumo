@@ -21,11 +21,17 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from textual.app import ComposeResult
-from textual.binding import Binding
+from textual.binding import Binding, BindingsMap
 from textual.screen import Screen
 from textual.widgets import Button, DataTable, Footer, Static
 
-from cadrumo.application.flows import assemble_page_copy, checkpoint_available, review, visible_sequence
+from cadrumo.application.flows import (
+    assemble_page_copy,
+    checkpoint_available,
+    resolve_copy,
+    review,
+    visible_sequence,
+)
 from cadrumo.core.flows import PageStatus
 from cadrumo.core.i18n import tr
 
@@ -40,15 +46,21 @@ _STATUS_GLYPHS: dict[PageStatus, str] = {
     PageStatus.DEFERRED: "…",
 }
 
+_SECTION_HEADING_PREFIX = "\x00section\x00"
+"""Row-key prefix marking a section-heading row; never a real page key, so the
+row-selection handler ignores it and it collides with no engine page."""
+
 
 class ReviewScreen(Screen[None]):
     """Clickable summary of every question with its current and registered data."""
 
+    # Keys and actions only; descriptions resolve at runtime in on_mount so
+    # the footer tracks the active language, not the import-time language.
     BINDINGS = [
-        Binding("escape", "back_to_question", tr("flows.tui.binding_return")),
-        Binding("s", "submit_flow", tr("flows.tui.binding_submit")),
-        Binding("ctrl+s", "save_exit", tr("flows.tui.binding_save_exit")),
-        Binding("ctrl+n", "restart_flow", tr("flows.tui.binding_restart")),
+        Binding("escape", "back_to_question", ""),
+        Binding("s", "submit_flow", ""),
+        Binding("ctrl+s", "save_exit", ""),
+        Binding("ctrl+n", "restart_flow", ""),
     ]
 
     def compose(self) -> ComposeResult:
@@ -60,7 +72,9 @@ class ReviewScreen(Screen[None]):
         yield Footer()
 
     def on_mount(self) -> None:
+        self._localize_bindings()
         table = self.query_one("#review-table", DataTable)
+        table.zebra_stripes = True
         table.add_columns(
             tr("flows.review.column_status"),
             tr("flows.review.column_question"),
@@ -68,6 +82,18 @@ class ReviewScreen(Screen[None]):
             tr("flows.review.column_registered"),
         )
         self.render_review()
+
+    def _localize_bindings(self) -> None:
+        """Resolve footer binding descriptions under the active language."""
+        self._bindings = BindingsMap(
+            [
+                Binding("escape", "back_to_question", tr("flows.tui.binding_return")),
+                Binding("s", "submit_flow", tr("flows.tui.binding_submit")),
+                Binding("ctrl+s", "save_exit", tr("flows.tui.binding_save_exit")),
+                Binding("ctrl+n", "restart_flow", tr("flows.tui.binding_restart")),
+            ],
+        )
+        self.refresh_bindings()
 
     @property
     def flow_app(self) -> FlowTuiApp:
@@ -89,7 +115,22 @@ class ReviewScreen(Screen[None]):
         )
         table = self.query_one("#review-table", DataTable)
         table.clear()
+        section_titles = self._section_titles(app)
+        current_section: str | None = None
         for row in projection.rows:
+            if row.section_id != current_section:
+                # Group the summary by section: a heading row opens each
+                # section so review reads as a complete-profile summary, not a
+                # flat per-page status list. The heading key is sentinel-scoped
+                # so it never resolves to a jump target.
+                current_section = row.section_id
+                table.add_row(
+                    "",
+                    section_titles.get(row.section_id, row.section_id),
+                    "",
+                    "",
+                    key=f"{_SECTION_HEADING_PREFIX}{row.section_id}",
+                )
             prompt = prompts.get(row.key, "")
             if not row.jumpable:
                 prompt = f"{prompt} {tr('flows.review.orphan_marker')}".strip()
@@ -100,9 +141,12 @@ class ReviewScreen(Screen[None]):
                 app.registered_values.get(row.key, ""),
                 key=row.key,
             )
-        self.query_one("#review-blocking", Static).update(
-            "\n".join(tr(v.message_key, **v.context) for v in projection.blocking if v.message_key),
-        )
+        blocking_text = "\n".join(tr(v.message_key, **v.context) for v in projection.blocking if v.message_key)
+        blocking = self.query_one("#review-blocking", Static)
+        blocking.update(blocking_text)
+        # The red-bordered blocking box only occupies space when it carries a
+        # refusal, so a submit-eligible review is not framed by an empty box.
+        blocking.display = bool(blocking_text)
         if checkpoint_available(app.definition, app.state.mode):
             save_note = ""
         else:
@@ -130,10 +174,16 @@ class ReviewScreen(Screen[None]):
             entry.key: assemble_page_copy(entry.page).prompt for entry in visible_sequence(app.definition, app.state)
         }
 
+    @staticmethod
+    def _section_titles(app: FlowTuiApp) -> dict[str, str]:
+        """Resolved section-title copy per section id, for the grouping headings."""
+        return {section.id: resolve_copy(section.title) for section in app.definition.sections}
+
     def on_data_table_row_selected(self, event: DataTable.RowSelected) -> None:
         page_key = event.row_key.value
-        if page_key is not None:
-            self.flow_app.edit_from_review(page_key)
+        if page_key is None or page_key.startswith(_SECTION_HEADING_PREFIX):
+            return  # a section-heading row is not a jump target
+        self.flow_app.edit_from_review(page_key)
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-submit":

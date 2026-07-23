@@ -28,12 +28,46 @@ from .. import (
     FlowChoice,
     FlowCondition,
     FlowDefinition,
+    FlowLegalRef,
     FlowPage,
     FlowRepeatingGroup,
     FlowSection,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+
+
+def test_flow_page_legal_zone_defaults_empty() -> None:
+    page = _page("p_a")
+
+    assert page.legal_zone == ()
+
+
+def test_flow_legal_ref_carries_structured_ref_and_optional_label() -> None:
+    label = _copy("wizard.setup.title")
+    with_label = FlowLegalRef(ref="ley-35-2006:art-27", label=label)
+    without_label = FlowLegalRef(ref="ley-35-2006:art-28")
+
+    assert with_label.ref == "ley-35-2006:art-27"
+    assert with_label.label is label
+    assert without_label.label is None
+
+
+def test_flow_legal_ref_rejects_a_blank_ref() -> None:
+    with pytest.raises(ValidationError):
+        FlowLegalRef(ref="")
+
+
+def test_flow_page_carries_a_structured_legal_zone() -> None:
+    page = FlowPage(
+        id="p_legal",
+        widget=FlowWidgetKind.TEXT,
+        prompt=_copy(),
+        legal_zone=(FlowLegalRef(ref="ley-35-2006:art-27"),),
+        answer_type=str,
+    )
+
+    assert page.legal_zone[0].ref == "ley-35-2006:art-27"
 
 
 class _Answers(BaseModel):

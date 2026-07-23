@@ -16,6 +16,7 @@ Consumers import from this facade only.
 from __future__ import annotations
 
 from ._bridge import flow_definition_from_wizard_flow
+from ._capability import detect_frontend_capability
 from ._checkpoint import (
     CheckpointStore,
     checkpoint_available,
@@ -25,6 +26,7 @@ from ._checkpoint import (
 from ._copy import (
     ChoiceCopy,
     CopySourceResolver,
+    LegalRefCopy,
     PageCopy,
     assemble_page_copy,
     register_copy_source,
@@ -37,6 +39,7 @@ from ._definition import (
     FlowCondition,
     FlowDefinition,
     FlowItem,
+    FlowLegalRef,
     FlowPage,
     FlowRepeatingGroup,
     FlowSection,
@@ -102,6 +105,7 @@ __all__ = [
     "FlowDefinition",
     "FlowError",
     "FlowItem",
+    "FlowLegalRef",
     "FlowNavigationError",
     "FlowPage",
     "FlowRepeatingGroup",
@@ -112,6 +116,7 @@ __all__ = [
     "FlowUnsupportedConsoleError",
     "FlowValidatorRegistryError",
     "FlowVisibility",
+    "LegalRefCopy",
     "LineFlowFrontend",
     "PageCopy",
     "ReviewProjection",
@@ -123,6 +128,7 @@ __all__ = [
     "assert_submit_eligible",
     "back_page",
     "checkpoint_available",
+    "detect_frontend_capability",
     "discard_checkpoint",
     "flow_definition_from_wizard_flow",
     "iter_flow_conditions",

@@ -57,6 +57,22 @@ class CopyRef(BaseModel):
     ref: str = Field(min_length=1)
 
 
+class FlowLegalRef(BaseModel):
+    """One structured legal citation shown on a page's provenance zone.
+
+    ``ref`` is the registry legal-ref token (``ley-35-2006:art-27``); the
+    optional ``label`` is a copy reference resolving to display text for
+    the citation. The consuming domain stamps these at definition-build
+    time — the substrate never derives a page's legal zone, it only
+    resolves and renders what the definition carries.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    ref: str = Field(min_length=1)
+    label: CopyRef | None = None
+
+
 class FlowCondition(BaseModel):
     """Single-clause predicate naming one earlier page's answer.
 
@@ -131,6 +147,7 @@ class FlowPage(BaseModel):
     help: CopyRef | None = None
     format_hint: CopyRef | None = None
     failure_modes: tuple[CopyRef, ...] = ()
+    legal_zone: tuple[FlowLegalRef, ...] = ()
     choices: tuple[FlowChoice, ...] = ()
     default: str | None = None
     required: bool = True
@@ -343,6 +360,7 @@ __all__ = [
     "FlowCondition",
     "FlowDefinition",
     "FlowItem",
+    "FlowLegalRef",
     "FlowPage",
     "FlowRepeatingGroup",
     "FlowSection",

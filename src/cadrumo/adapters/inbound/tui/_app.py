@@ -61,19 +61,59 @@ class FlowTuiApp(App[None]):
     """Full-screen projection of one flow run."""
 
     CSS = """
-    #flow-header { dock: top; height: 1; background: $primary-darken-2; }
-    #page-prompt { text-style: bold; margin: 1 2 0 2; }
-    #page-badge { color: $warning; margin: 0 2; }
-    #page-help { margin: 1 2 0 2; }
-    #page-format-hint { color: $text-muted; margin: 0 2; }
-    #page-failure-modes { color: $text-muted; margin: 0 2; }
-    #widget-area { margin: 1 2; height: auto; }
-    #live-validation { color: $error; margin: 0 2; }
-    #answer-echo { color: $success; margin: 0 2; }
-    #commit-verdicts { color: $error; margin: 0 2; }
-    #review-header { dock: top; height: 1; background: $primary-darken-2; }
-    #review-blocking { color: $error; margin: 0 2; }
+    #flow-header {
+        dock: top;
+        height: 1;
+        width: 100%;
+        background: $primary;
+        color: $text;
+        text-style: bold;
+        padding: 0 2;
+    }
+    #flow-progress { dock: top; height: 1; width: 100%; padding: 0 2; }
+    #page-body {
+        border: round $primary;
+        border-title-color: $accent;
+        border-title-style: bold;
+        padding: 1 2;
+        margin: 1 2;
+        max-width: 100;
+        height: auto;
+    }
+    #page-prompt { text-style: bold; margin: 0 0 1 0; }
+    #page-badge {
+        background: $warning 30%;
+        color: $warning;
+        width: auto;
+        padding: 0 1;
+        margin: 0 0 1 0;
+    }
+    #page-help { color: $text-muted; text-style: italic; margin: 0 0 1 0; }
+    #page-format-hint { color: $text-muted; margin: 0 0 1 0; }
+    #page-failure-modes { color: $text-muted; margin: 0 0 1 0; }
+    #page-legal-zone { color: $text-muted; text-style: italic; margin: 0 0 1 0; }
+    #widget-area { margin: 1 0; height: auto; }
+    #widget-area Input { border: tall $accent; }
+    #widget-area RadioSet, #widget-area SelectionList { border: round $panel; padding: 0 1; height: auto; }
+    #widget-area RadioButton { height: auto; }
+    #live-validation { color: $error; margin: 0; }
+    #answer-echo { color: $success; text-style: bold; margin: 0; }
+    #commit-verdicts { color: $error; margin: 0; }
+    #nav-buttons { height: auto; align-horizontal: right; margin: 1 0 0 0; }
+    #nav-buttons Button { min-width: 16; margin: 0 0 0 2; }
+    #review-header {
+        dock: top;
+        height: 1;
+        width: 100%;
+        background: $primary;
+        color: $text;
+        text-style: bold;
+        padding: 0 2;
+    }
+    #review-table { border: round $primary; margin: 1 2; height: auto; }
+    #review-blocking { color: $error; border: round $error; padding: 0 1; margin: 1 2; }
     #review-save-note { color: $warning; margin: 0 2; }
+    #btn-submit { dock: bottom; min-width: 16; margin: 1 2; }
     """
 
     def __init__(
@@ -249,6 +289,21 @@ class FlowTuiApp(App[None]):
         self.final_projection = review(self.definition, self.state)
         self.saved_and_exited = True
         self.exit()
+
+    def rebuild_for_locale(self) -> None:
+        """Re-render every screen under the newly-activated output language.
+
+        The engine state is locale-blind, so nothing in it changes; every
+        zone and :class:`~cadrumo.application.flows.PageCopy` re-assembles at
+        render, and each screen resolves its footer bindings at mount. Popping
+        back to a single screen and switching in a fresh
+        :class:`QuestionScreen` therefore re-resolves all operator-facing copy
+        — prompts, choices, buttons, and footer bindings — under the active
+        locale, with no substrate cache to purge.
+        """
+        while len(self.screen_stack) > 1:
+            self.pop_screen()
+        self.push_screen(QuestionScreen())
 
     # ── rendering plumbing ──────────────────────────────────────────────
 
