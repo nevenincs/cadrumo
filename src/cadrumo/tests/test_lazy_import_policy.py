@@ -229,6 +229,11 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
     ),
     UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: frozenset(
         {
+            # flow TUI screens -> app driver: the app imports both screens at
+            # module level, so the screens' typed access to the owning
+            # FlowTuiApp is a genuine module-load cycle break.
+            ImportEdge("adapters.inbound.tui._question_screen", "adapters.inbound.tui._app"),
+            ImportEdge("adapters.inbound.tui._review_screen", "adapters.inbound.tui._app"),
             # buckets event-history repository ports-inversion:
             # the concrete BucketEventHistoryRepository defers the storage-substrate
             # import from the persistence adapter (was domain._event_repository).
@@ -395,6 +400,11 @@ _ALLOWLIST: dict[UnsanctionedClass, frozenset[ImportEdge]] = {
     ),
     UnsanctionedClass.APPLICATION_DEFERRAL: frozenset(
         {
+            # flow-substrate bridge -> legacy wizard catalogue: deferred so the
+            # domain-blind substrate facade stays importable without the wizard
+            # surface during the migration window; no cycle exists, and the
+            # edge dies with the W03 one-shot-wizard retirement.
+            ImportEdge("application.flows._bridge", "application.wizard"),
             # buckets event-history repository ports-inversion:
             # deferred consumers now reach the concrete repository at its
             # persistence-adapter home (was a domain.buckets deferral).
@@ -770,9 +780,9 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
     UnsanctionedClass.NAMED_CYCLE_BREAK: 1,
     UnsanctionedClass.PORTS_INVERSION_PENDING: 36,
     UnsanctionedClass.DOMAIN_CYCLE_BREAK: 51,
-    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 177,  # +1 calc-sheets apply core.config Settings deferral (1d026764cc)
+    UnsanctionedClass.ADAPTER_INTERNAL_DEFERRAL: 179,  # +2 flow TUI screen->app cycle breaks (was 177)
     UnsanctionedClass.CORE_INTERNAL_DEFERRAL: 38,  # net +1 atomic_write bootstrap-cycle deferrals (_bucket_pointer_io, corpus_manifest; env_io net-zero, corpus_manifest's save_corpus_manifest site retired its own core.locks edge)
-    UnsanctionedClass.APPLICATION_DEFERRAL: 529,  # +1 ledger._actions_manual->invoices cycle-break (was 528)
+    UnsanctionedClass.APPLICATION_DEFERRAL: 530,  # +1 flows._bridge->wizard migration-window deferral (was 529)
 }
 
 # Ceiling on the total number of allowlisted edges. Editing the allowlist to add
@@ -782,7 +792,7 @@ _SITE_CEILINGS: dict[UnsanctionedClass, int] = {
 # baseline (the modelos_work_units/participation_index catalogue-repository
 # consolidation, the corpus_search/mcp/user_profile deferrals introduced by
 # intervening commits) were swept into their classified buckets in one pass.
-_ALLOWLIST_EDGE_CEILING: int = 474  # +1 calc-sheets apply core.config Settings deferral, 1d026764cc (was 473).
+_ALLOWLIST_EDGE_CEILING: int = 477  # +2 flow TUI screen->app cycle breaks, +1 flows._bridge->wizard migration-window deferral (was 474).
 
 
 def _cadrumo_relative(dotted: str) -> str:

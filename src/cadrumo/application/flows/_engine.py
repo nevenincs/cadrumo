@@ -44,7 +44,7 @@ from ._definition import (
     iter_flow_conditions,
 )
 from ._errors import FlowAnswerError, FlowNavigationError
-from ._validators import ValidationVerdict, run_answer_validation
+from ._validators import ValidationVerdict, resolve_cross_field_validator, run_answer_validation
 
 SECTION_VERDICT_PREFIX = "section:"
 """Key prefix under which section-exit verdicts land in ``FlowState.verdicts``."""
@@ -455,8 +455,6 @@ def _run_section_exit(
     section_id: str,
     answers: Mapping[str, str],
 ) -> tuple[ValidationVerdict, ...]:
-    from ._validators import resolve_cross_field_validator
-
     section = _section_by_id(definition, section_id)
     if section is None:
         return ()
