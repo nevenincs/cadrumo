@@ -1236,6 +1236,7 @@ class CensoFileFactPayload(OutputSchema):
     source: str
 
 
+@register_schema("config.profile.censo.file")
 class CensoFileIngestResult(OutputSchema):
     """Result of ``config profile censo file``: previewed or enrolled facts."""
 
