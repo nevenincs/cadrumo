@@ -54,12 +54,21 @@ from ._repair_cli import register_repair_maintenance_commands
 from ._repair_profile import register_repair_profile_command
 from ._reset_cli import register_reset_commands
 from ._sandbox import register_sandbox_commands
+from ._setup_flow_frontend import run_setup_flow_frontend as _run_setup_flow_frontend
 from ._status_rendering import unavailable_profile_record_status as _unavailable_profile_record_status
 
 _log = _get_logger(__name__)
 
-_wizard_create_command = _build_wizard_command(_get_setup_flow(), mode="create")
-_wizard_edit_command = _build_wizard_command(_get_setup_flow(), mode="edit")
+_wizard_create_command = _build_wizard_command(
+    _get_setup_flow(),
+    mode="create",
+    interactive_flow_runner=_run_setup_flow_frontend,
+)
+_wizard_edit_command = _build_wizard_command(
+    _get_setup_flow(),
+    mode="edit",
+    interactive_flow_runner=_run_setup_flow_frontend,
+)
 
 app = typer.Typer(
     name="config",
