@@ -3260,7 +3260,11 @@ cli:
           carried: {dropped_fields}. If you did not change or close these registrations,
           this may be a partial pull — re-run the censo pull or re-enter the values;
           the home-office deduction ratio may stop resolving.'
+        file_help: cli.config.profile.censo.file_help
+        file_option_help: cli.config.profile.censo.file_option_help
         help: Sync AEAT 036 censo data with this profile
+        non_official_notice: Certificate-derived facts are operator-supplied evidence,
+          never AEAT-verified; the censo enrolment stays at the non-official tier.
         pull_help: Pull your latest censo from AEAT into this profile's snapshot store.
         refresh_help: Download the latest censo from AEAT and save a snapshot
         show_help: Show the latest censo AEAT reported for this profile

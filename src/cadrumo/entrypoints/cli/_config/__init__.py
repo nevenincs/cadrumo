@@ -34,6 +34,7 @@ from .._common import activate_subcommand_output_language as _activate_subcomman
 from .._errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
 from .._errors import command_error_boundary as _command_error_boundary
 from ._apoderado import apoderado_app, register_apoderado_commands
+from ._censo_file import register_censo_commands as _register_censo_commands
 from ._auth import auth_app
 from ._auth_diagnostics import auth_diagnostics_app
 from ._bucket_archive import register_bucket_archive_commands
@@ -1206,6 +1207,7 @@ register_reset_commands(app)
 app.add_typer(repair_app, name="repair")
 app.add_typer(profile_app, name="profile")
 register_apoderado_commands(auth_app, resolve_active_profile_pointer=_resolve_active_profile_pointer)
+_register_censo_commands(profile_app)
 auth_app.add_typer(auth_diagnostics_app, name="diagnostics")
 auth_app.add_typer(certificate_app, name="certificate")
 app.add_typer(auth_app, name="auth")

@@ -3494,14 +3494,22 @@ cli:
         state_help: Si activar (on) o desactivar (off) la capacitat.
         state_label: estat
       censo:
-        apply_help: Sobrescriu el perfil amb els valors censals comunicats per AEAT
+        apply_help: Registra les dades censals analitzades al perfil actiu (per defecte
+          només previsualitza).
         compare_help: Compara camp a camp el cens AEAT amb aquest perfil
         dropped_fields_notice: 'El cens de l''AEAT ja no inclou camps que tenia la
           teva darrera instantània: {dropped_fields}. Si no has canviat ni donat de
           baixa aquestes dades, pot tractar-se d''una descàrrega parcial: torna a
           executar la descàrrega del cens o reintrodueix els valors; la proporció
           d''afectació de l''habitatge podria deixar de resoldre''s.'
-        help: Sincronitza el cens 036 d'AEAT amb aquest perfil
+        file_help: Llegeix un Certificado de Situación Censal descarregat i previsualitza
+          o registra les seves dades censals.
+        file_option_help: Ruta al PDF del Certificado de Situación Censal descarregat
+          de la Seu (tràmit G313).
+        help: Ingesta d'artefactes censals per al perfil actiu.
+        non_official_notice: Les dades derivades del certificat són evidència aportada
+          per l'operador, mai verificada per l'AEAT; l'alta censal es manté al nivell
+          no oficial.
         pull_help: Descàrrega el teu cens més recent d'AEAT al magatzem d'instantànies
           d'aquest perfil.
         refresh_help: Descàrrega d'AEAT l'últim cens i desa un snapshot

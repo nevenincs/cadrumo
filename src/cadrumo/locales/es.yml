@@ -3518,15 +3518,22 @@ cli:
         state_help: Si activar (on) o desactivar (off) la capacidad.
         state_label: estado
       censo:
-        apply_help: Sobrescribe el perfil con los valores censales comunicados por
-          AEAT
+        apply_help: Registra los datos censales analizados en el perfil activo (por
+          defecto solo previsualiza).
         compare_help: Compara campo a campo el censo AEAT con este perfil
         dropped_fields_notice: 'El censo de la AEAT ya no incluye campos que tenia
           tu última instantánea: {dropped_fields}. Si no has cambiado ni dado de baja
           estos datos, puede tratarse de una descarga parcial: vuelve a ejecutar la
           descarga del censo o reintroduce los valores; la proporción de afectación
           de la vivienda podria dejar de resolverse.'
-        help: Sincroniza el censo 036 de AEAT con este perfil
+        file_help: Lee un Certificado de Situación Censal descargado y previsualiza
+          o registra sus datos censales.
+        file_option_help: Ruta al PDF del Certificado de Situación Censal descargado
+          de la Sede (trámite G313).
+        help: Ingesta de artefactos censales para el perfil activo.
+        non_official_notice: Los datos derivados del certificado son evidencia aportada
+          por el operador, nunca verificada por la AEAT; el alta censal permanece
+          en el nivel no oficial.
         pull_help: Descarga tu censo más reciente de AEAT al almacén de instantáneas
           de este perfil.
         refresh_help: Descarga de AEAT el último censo y guarda un snapshot
