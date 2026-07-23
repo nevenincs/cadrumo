@@ -1,0 +1,373 @@
+"""The line-mode frontend: sequential paging over the engine, no full screen.
+
+This is the degradation tier for hosts that cannot run the full-screen
+TUI: a forward-sequential walk that renders each page's assembled copy
+(prompt, help, format hint, failure modes, current-answer echo) as
+plain lines, prompts through ``questionary`` primitives on injectable
+``prompt_toolkit`` IO, re-prompts in place on a failing verdict, and
+finishes in a review loop that lists every page with its status and
+offers edit-by-number, restart, save-and-exit (only where the
+definition declares checkpointing for the mode — the no-op arm renders
+an explicit unavailability line instead), and submit.
+
+The frontend contains zero flow logic: every semantic — visibility,
+validation, staleness, deferral, submit eligibility — is an engine
+transition or projection. Back-navigation in line mode is served by the
+review loop's jump-to-edit; free cursor movement is the full-screen
+frontend's job.
+
+IO injection mirrors the retired one-shot prompter's contract: explicit
+``input``/``output`` devices host the prompts (the headless pipe-input
+test drive), and an un-injected frontend applies the full non-TTY /
+Windows no-console refusal before any progress.
+"""
+
+from __future__ import annotations
+
+import sys
+from typing import TYPE_CHECKING
+
+import questionary
+
+from ...core.flows import DEFER_TOKEN, FlowMode, FlowWidgetKind
+from ...core.i18n import tr
+from ...core.logging import get_logger
+from ._checkpoint import CheckpointStore, checkpoint_available, save_checkpoint
+from ._copy import PageCopy, assemble_page_copy
+from ._definition import FlowDefinition
+from ._engine import (
+    SECTION_VERDICT_PREFIX,
+    FlowState,
+    VisiblePage,
+    answer,
+    jump_to,
+    next_page,
+    restart_flow,
+    start_flow,
+    visible_sequence,
+)
+from ._errors import FlowUnsupportedConsoleError
+from ._review import ReviewProjection, assert_submit_eligible, review
+
+if TYPE_CHECKING:
+    from prompt_toolkit.input import Input
+    from prompt_toolkit.output import Output
+
+_log = get_logger(__name__)
+
+
+def _resolve_no_console_error_types() -> tuple[type[BaseException], ...]:
+    """Return the prompt_toolkit error classes that signal an unsupported console host."""
+    error_types: list[type[BaseException]] = [OSError]
+    if sys.platform != "win32":
+        return tuple(error_types)
+    try:
+        from prompt_toolkit.output.win32 import NoConsoleScreenBufferError as _Win32NoConsole
+
+        error_types.insert(0, _Win32NoConsole)
+    except ImportError as exc:
+        _log.debug("flows line frontend: win32 console probe unavailable: %s", exc)
+    return tuple(error_types)
+
+
+_NO_CONSOLE_ERRORS: tuple[type[BaseException], ...] = _resolve_no_console_error_types()
+
+_REVIEW_ACTION_SUBMIT = "submit"
+_REVIEW_ACTION_EDIT = "edit"
+_REVIEW_ACTION_RESTART = "restart"
+_REVIEW_ACTION_SAVE_EXIT = "save_exit"
+
+
+class LineFlowFrontend:
+    """Sequential line-mode projection of one flow run."""
+
+    def __init__(
+        self,
+        definition: FlowDefinition,
+        *,
+        input: Input | None = None,
+        output: Output | None = None,
+        checkpoint_store: CheckpointStore | None = None,
+    ) -> None:
+        self._definition = definition
+        self._input = input
+        self._output = output
+        self._store = checkpoint_store
+
+    def ensure_interactive_environment(self) -> None:
+        """Refuse before progress when this process cannot host prompts.
+
+        A frontend carrying explicit IO is already bound to a device
+        that can host a prompt, so the process-stdio probe does not
+        apply to it.
+        """
+        if self._input is not None or self._output is not None:
+            return
+        if not sys.stdin.isatty():
+            raise FlowUnsupportedConsoleError(
+                translated_message="flows.errors.unsupported_console",
+            )
+        try:
+            from prompt_toolkit.output.defaults import create_output
+
+            output = create_output(always_prefer_tty=True)
+            output.flush()
+        except _NO_CONSOLE_ERRORS as exc:
+            raise FlowUnsupportedConsoleError(
+                translated_message="flows.errors.unsupported_console",
+            ) from exc
+
+    def run(self, *, mode: FlowMode, resume_state: FlowState | None = None) -> tuple[FlowState, ReviewProjection]:
+        """Walk the flow to a submitted state and return it with its projection.
+
+        ``resume_state`` continues a projection built by ``resume_flow``;
+        otherwise the run starts fresh. The walk prompts every visible
+        unanswered page in order, then enters the review loop until the
+        operator submits (or saves and exits, which raises no error and
+        returns the un-submittable state with its projection for the
+        caller to persist through the checkpoint port).
+        """
+        self.ensure_interactive_environment()
+        state = resume_state if resume_state is not None else start_flow(self._definition, mode=mode)
+        self._emit(tr(f"flows.{self._definition.id}.intro"))
+
+        while True:
+            state = self._walk_unanswered(state)
+            action, state, done = self._review_round(state)
+            if done:
+                projection = (
+                    assert_submit_eligible(self._definition, state)
+                    if action == _REVIEW_ACTION_SUBMIT
+                    else review(self._definition, state)
+                )
+                return state, projection
+
+    def _walk_unanswered(self, state: FlowState) -> FlowState:
+        while True:
+            target = self._first_unanswered(state)
+            if target is None:
+                return state
+            state = jump_to(self._definition, state, target.key)
+            state = self._ask_page(state, target)
+            state = next_page(self._definition, state)
+            state = self._render_section_blocks(state)
+
+    def _first_unanswered(self, state: FlowState) -> VisiblePage | None:
+        for entry in visible_sequence(self._definition, state):
+            if entry.key not in state.answers:
+                return entry
+        return None
+
+    def _ask_page(self, state: FlowState, entry: VisiblePage) -> FlowState:
+        copy = assemble_page_copy(entry.page)
+        while True:
+            self._render_page_header(state, entry, copy)
+            raw = self._prompt_widget(entry, copy, current=state.answers.get(entry.key))
+            state = answer(self._definition, state, entry.key, raw)
+            failing = state.verdicts.get(entry.key)
+            if not failing:
+                return state
+            for verdict in failing:
+                if verdict.message_key:
+                    self._emit(tr(verdict.message_key, **verdict.context))
+
+    def _render_page_header(self, state: FlowState, entry: VisiblePage, copy: PageCopy) -> None:
+        sequence = visible_sequence(self._definition, state)
+        position = next((index for index, item in enumerate(sequence) if item.key == entry.key), 0)
+        self._emit(
+            tr(
+                "flows.progress.page_header",
+                position=position + 1,
+                total=len(sequence),
+                section=entry.section_id,
+            ),
+        )
+        if copy.help:
+            self._emit(copy.help)
+        if copy.format_hint:
+            self._emit(tr("flows.progress.format_hint", hint=copy.format_hint))
+        for failure_mode in copy.failure_modes:
+            self._emit(tr("flows.progress.failure_mode", text=failure_mode))
+        current = state.answers.get(entry.key)
+        if current:
+            self._emit(tr("flows.progress.current_answer", value=current))
+        requirement_key = "flows.progress.required" if entry.page.required else "flows.progress.optional"
+        self._emit(tr(requirement_key))
+
+    def _prompt_widget(self, entry: VisiblePage, copy: PageCopy, *, current: str | None) -> str:
+        prompt = copy.prompt
+        default = current if current is not None else (entry.page.default or "")
+        try:
+            match entry.page.widget:
+                case FlowWidgetKind.TEXT | FlowWidgetKind.INTEGER:
+                    return self._stringify(
+                        questionary.text(prompt, default=default, input=self._input, output=self._output).ask(),
+                    )
+                case FlowWidgetKind.SECRET:
+                    return self._stringify(
+                        questionary.password(prompt, input=self._input, output=self._output).ask(),
+                    )
+                case FlowWidgetKind.CONFIRM:
+                    result = questionary.confirm(
+                        prompt,
+                        default=default.strip().lower() in {"true", "yes", "1", "y"},
+                        input=self._input,
+                        output=self._output,
+                    ).ask()
+                    if result is True:
+                        return "true"
+                    if result is False:
+                        return "false"
+                    return self._stringify(result)
+                case FlowWidgetKind.PATH:
+                    return self._stringify(
+                        questionary.path(prompt, default=default, input=self._input, output=self._output).ask(),
+                    )
+                case FlowWidgetKind.SELECT:
+                    return self._stringify(
+                        questionary.select(
+                            prompt,
+                            choices=self._render_choices(copy),
+                            default=default or None,
+                            input=self._input,
+                            output=self._output,
+                        ).ask(),
+                    )
+                case FlowWidgetKind.COMPARE_SELECT:
+                    choices = self._render_choices(copy)
+                    choices.append(
+                        questionary.Choice(title=tr("flows.compare_select.defer_label"), value=DEFER_TOKEN),
+                    )
+                    return self._stringify(
+                        questionary.select(
+                            prompt,
+                            choices=choices,
+                            default=default or None,
+                            input=self._input,
+                            output=self._output,
+                        ).ask(),
+                    )
+                case FlowWidgetKind.CHECKBOX:
+                    result = questionary.checkbox(
+                        prompt,
+                        choices=self._render_choices(copy),
+                        input=self._input,
+                        output=self._output,
+                    ).ask()
+                    if result is None:
+                        return ""
+                    return ",".join(str(item) for item in result)
+        except _NO_CONSOLE_ERRORS as exc:
+            raise FlowUnsupportedConsoleError(
+                translated_message="flows.errors.unsupported_console",
+            ) from exc
+
+    def _render_choices(self, copy: PageCopy) -> list[questionary.Choice]:
+        rendered: list[questionary.Choice] = []
+        for choice in copy.choices:
+            title = choice.label
+            if choice.provenance:
+                title = tr("flows.compare_select.candidate", label=choice.label, provenance=choice.provenance)
+            rendered.append(questionary.Choice(title=title, value=choice.value, description=choice.description))
+        return rendered
+
+    def _render_section_blocks(self, state: FlowState) -> FlowState:
+        for key, verdicts in state.verdicts.items():
+            if not key.startswith(SECTION_VERDICT_PREFIX):
+                continue
+            for verdict in verdicts:
+                if verdict.message_key:
+                    self._emit(tr(verdict.message_key, **verdict.context))
+        return state
+
+    def _review_round(self, state: FlowState) -> tuple[str, FlowState, bool]:
+        projection = review(self._definition, state)
+        self._emit(tr("flows.review.header", answered=projection.answered_count))
+        rows_by_number: dict[str, str] = {}
+        for number, row in enumerate(projection.rows, start=1):
+            rows_by_number[str(number)] = row.key
+            self._emit(
+                tr(
+                    "flows.review.row",
+                    number=number,
+                    page_key=row.key,
+                    status=row.status.value,
+                ),
+            )
+        for verdict in projection.blocking:
+            if verdict.message_key:
+                self._emit(tr(verdict.message_key, **verdict.context))
+
+        actions = [questionary.Choice(title=tr("flows.review.action_edit"), value=_REVIEW_ACTION_EDIT)]
+        if projection.submit_eligible:
+            actions.insert(0, questionary.Choice(title=tr("flows.review.action_submit"), value=_REVIEW_ACTION_SUBMIT))
+        if checkpoint_available(self._definition, state.mode):
+            actions.append(
+                questionary.Choice(title=tr("flows.review.action_save_exit"), value=_REVIEW_ACTION_SAVE_EXIT),
+            )
+        else:
+            self._emit(tr("flows.review.save_unavailable", mode=state.mode.value))
+        actions.append(questionary.Choice(title=tr("flows.review.action_restart"), value=_REVIEW_ACTION_RESTART))
+
+        action = self._stringify(
+            questionary.select(
+                tr("flows.review.action_prompt"),
+                choices=actions,
+                input=self._input,
+                output=self._output,
+            ).ask(),
+        )
+        if action == _REVIEW_ACTION_SUBMIT:
+            return action, state, True
+        if action == _REVIEW_ACTION_SAVE_EXIT:
+            if self._store is not None:
+                save_checkpoint(self._definition, state, self._store)
+            return action, state, True
+        if action == _REVIEW_ACTION_RESTART:
+            confirmed = questionary.confirm(
+                tr("flows.review.restart_confirm"),
+                default=False,
+                input=self._input,
+                output=self._output,
+            ).ask()
+            if confirmed is True:
+                return action, restart_flow(self._definition, state), False
+            return action, state, False
+        target_number = self._stringify(
+            questionary.text(
+                tr("flows.review.edit_which"),
+                input=self._input,
+                output=self._output,
+            ).ask(),
+        ).strip()
+        target_key = rows_by_number.get(target_number)
+        if target_key is None:
+            self._emit(tr("flows.review.edit_unknown", number=target_number))
+            return action, state, False
+        entry = next(
+            (item for item in visible_sequence(self._definition, state) if item.key == target_key),
+            None,
+        )
+        if entry is None:
+            self._emit(tr("flows.review.edit_not_editable", page_key=target_key))
+            return action, state, False
+        state = jump_to(self._definition, state, target_key)
+        state = self._ask_page(state, entry)
+        return action, state, False
+
+    def _emit(self, text: str) -> None:
+        """Write one operator-facing line to the device the prompts render on."""
+        output = self._output
+        if output is None:
+            from prompt_toolkit.application.current import get_app_session
+
+            output = get_app_session().output
+        output.write(f"{text}\n")
+        output.flush()
+
+    @staticmethod
+    def _stringify(value: object) -> str:
+        return "" if value is None else str(value)
+
+
+__all__ = ["LineFlowFrontend"]

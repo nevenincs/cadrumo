@@ -1123,4 +1123,15 @@ _DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.application.flows._errors.FlowUnsupportedConsoleError",
+        ErrorCode(
+            code="REFUSED_FLOW_UNSUPPORTED_CONSOLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_flow_unsupported_console",
+            default_suggestion=None,
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

@@ -47,6 +47,16 @@ class FlowCopyResolutionError(FlowError):
     """Raised when a copy reference cannot be resolved against its declared source."""
 
 
+class FlowUnsupportedConsoleError(FlowError):
+    """Raised when the host terminal cannot host an interactive flow frontend.
+
+    Surfaces when ``prompt_toolkit`` rejects the active TTY (typically
+    ``NoConsoleScreenBufferError`` under git-bash on Windows) or stdin is
+    not a TTY. Frontends catch this at their boundary and surface a
+    translated operator-facing refusal, never a raw traceback.
+    """
+
+
 __all__ = [
     "FlowAnswerError",
     "FlowCheckpointError",
@@ -55,5 +65,6 @@ __all__ = [
     "FlowError",
     "FlowNavigationError",
     "FlowSubmitError",
+    "FlowUnsupportedConsoleError",
     "FlowValidatorRegistryError",
 ]

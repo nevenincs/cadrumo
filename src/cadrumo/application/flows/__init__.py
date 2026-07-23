@@ -65,8 +65,10 @@ from ._errors import (
     FlowError,
     FlowNavigationError,
     FlowSubmitError,
+    FlowUnsupportedConsoleError,
     FlowValidatorRegistryError,
 )
+from ._line_frontend import LineFlowFrontend
 from ._resume import resume_flow
 from ._review import ReviewProjection, ReviewRow, assert_submit_eligible, review
 from ._scripted import run_scripted_flow
@@ -106,8 +108,10 @@ __all__ = [
     "FlowSection",
     "FlowState",
     "FlowSubmitError",
+    "FlowUnsupportedConsoleError",
     "FlowValidatorRegistryError",
     "FlowVisibility",
+    "LineFlowFrontend",
     "PageCopy",
     "ReviewProjection",
     "ReviewRow",
