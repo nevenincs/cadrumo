@@ -36,12 +36,18 @@ from ..user_profile import projection_for_taxpayer
 TAXPAYER_PROJECTION_VALIDATOR_ID = "taxpayer-projection-constructs"
 """Registered id of the single flow-scope taxpayer-construction validator."""
 
-# Generic, already-localized fallback verdict key. The three named legal
-# checks below have no dedicated locale key yet; each rides this fallback
-# key and is distinguished by its ``check`` context token until the
-# specific keys land through the locale lane.
+# Generic, already-localized fallback verdict key for an unclassified
+# construction failure (empty ``loc`` with no recognised field token).
 _FALLBACK_MESSAGE_KEY = "errors.refused.refused_user_profile_validation"
 _GENERIC_CHECK = "taxpayer_projection_invalid"
+
+# Each named legal check carries its own localized verdict key. An
+# unclassified failure still rides the generic fallback above.
+_CHECK_MESSAGE_KEYS: dict[str, str] = {
+    "impatriado_requires_start_date": "wizard.setup.verifier.impatriado_requires_start_date",
+    "non_resident_requires_country": "wizard.setup.verifier.non_resident_requires_country",
+    "non_resident_requires_representante": "wizard.setup.verifier.non_resident_requires_representante",
+}
 
 # Field-name token (a stable code identifier, never operator prose) → the
 # stable ``check`` token that identifies the fired construction invariant.
@@ -95,8 +101,9 @@ def _verdicts_from_validation_error(error: ValidationError) -> tuple[ValidationV
     verdicts: list[ValidationVerdict] = []
     for entry in error.errors():
         check, fields = _classify_error(entry)
+        message_key = _CHECK_MESSAGE_KEYS.get(check, _FALLBACK_MESSAGE_KEY)
         verdicts.append(
-            ValidationVerdict.failed(_FALLBACK_MESSAGE_KEY, check=check, fields=list(fields)),
+            ValidationVerdict.failed(message_key, check=check, fields=list(fields)),
         )
     if verdicts:
         return tuple(verdicts)

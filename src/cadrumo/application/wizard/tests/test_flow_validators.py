@@ -38,6 +38,13 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FALLBACK_MESSAGE_KEY = "errors.refused.refused_user_profile_validation"
 
+# Each named legal check now carries its own localized verifier verdict key.
+_VERIFIER_KEYS: dict[str, str] = {
+    "impatriado_requires_start_date": "wizard.setup.verifier.impatriado_requires_start_date",
+    "non_resident_requires_country": "wizard.setup.verifier.non_resident_requires_country",
+    "non_resident_requires_representante": "wizard.setup.verifier.non_resident_requires_representante",
+}
+
 # page-id -> schema-path (domain_key), mirroring the persistence layer's
 # question-id -> profile_key serialisation for the identity/residence pages
 # these three legal checks constrain.
@@ -65,7 +72,7 @@ def test_impatriado_without_start_date_yields_verdict(validator) -> None:
     verdicts = validator({"irpf-special-regime": "impatriado"})
     assert "impatriado_requires_start_date" in _checks(verdicts)
     row = next(v for v in verdicts if not v.ok and v.context["check"] == "impatriado_requires_start_date")
-    assert row.message_key == _FALLBACK_MESSAGE_KEY
+    assert row.message_key == _VERIFIER_KEYS["impatriado_requires_start_date"]
     assert "special_regime_start_date" in row.context["fields"]
 
 
@@ -73,6 +80,8 @@ def test_non_resident_without_country_yields_verdict(validator) -> None:
     """A NON_RESIDENT_IRNR residency with no country surfaces its typed verdict row."""
     verdicts = validator({"fiscal-residency": "non_resident_irnr"})
     assert "non_resident_requires_country" in _checks(verdicts)
+    row = next(v for v in verdicts if not v.ok and v.context["check"] == "non_resident_requires_country")
+    assert row.message_key == _VERIFIER_KEYS["non_resident_requires_country"]
 
 
 def test_non_resident_without_representante_yields_verdict(validator) -> None:
@@ -86,6 +95,7 @@ def test_non_resident_without_representante_yields_verdict(validator) -> None:
     checks = _checks(verdicts)
     assert "non_resident_requires_representante" in checks
     row = next(v for v in verdicts if not v.ok and v.context["check"] == "non_resident_requires_representante")
+    assert row.message_key == _VERIFIER_KEYS["non_resident_requires_representante"]
     assert "representante_fiscal_nif" in row.context["fields"]
 
 

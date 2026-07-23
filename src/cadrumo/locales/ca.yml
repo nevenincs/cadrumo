@@ -6871,6 +6871,10 @@ wizard:
       \ profile edit %{profile_name} --quiet --<camp> VALOR\n\nO torna a executar\
       \ l'edició guiada des d'una sessió de terminal interactiva:\n  aeat config profile\
       \ edit %{profile_name}"
+    invalid_date: 'Data no vàlida per a %{flag}: %{got}. Fes servir el format ISO-8601 (AAAA-MM-DD).'
+    invalid_decimal: 'Nombre decimal no vàlid per a %{flag}: %{got}. Fes servir el punt com a separador decimal.'
+    spouse_tax_id_required_joint: '%{flag} és obligatori quan %{condition_flag} és tributació conjunta.'
+    eu_eea_country_required: '%{flag} és obligatori quan %{condition_flag} indica residència a la UE o a l''EEE.'
   other:
     description: Altres opcions de configuració
     section:
@@ -7514,6 +7518,9 @@ wizard:
       spouse_consistency_ok: 'Tributació conjunta: les dades del cònjuge són coherents.'
       tax_id_present: 'Identificació fiscal: comprovació que el perfil té un NIF o
         NIE.'
+      impatriado_requires_start_date: 'Règim d''impatriats: la data d''inici del règim especial és obligatòria. Afegeix la data d''inici.'
+      non_resident_requires_country: 'No resident IRNR: el país de residència fiscal és obligatori. Afegeix el país de residència.'
+      non_resident_requires_representante: 'No resident IRNR: cal un representant fiscal. Afegeix el NIF i el nom del representant.'
   test:
     description: Prova la configuració i la connectivitat
     example:

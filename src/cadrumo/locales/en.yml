@@ -6434,6 +6434,10 @@ wizard:
       \ by naming the field to change:\n  aeat config profile edit %{profile_name}\
       \ --quiet --<field> VALUE\n\nOr re-run the guided edit from an interactive terminal\
       \ session:\n  aeat config profile edit %{profile_name}"
+    invalid_date: 'Invalid date for %{flag}: %{got}. Use ISO-8601 format (YYYY-MM-DD).'
+    invalid_decimal: 'Invalid decimal number for %{flag}: %{got}. Use a dot as the decimal separator.'
+    spouse_tax_id_required_joint: '%{flag} is required when %{condition_flag} is joint taxation.'
+    eu_eea_country_required: '%{flag} is required when %{condition_flag} indicates EU or EEA residence.'
   other:
     description: Other configuration options
     section:
@@ -7069,6 +7073,9 @@ wizard:
       spouse_consistency_ok: 'Joint taxation: the spouse details are consistent.'
       tax_id_present: 'Tax identification: check that the profile carries a DNI, NIE,
         NIF, or CIF.'
+      impatriado_requires_start_date: 'Impatriate regime: the special regime start date is required. Add the start date.'
+      non_resident_requires_country: 'Non-resident IRNR: the country of fiscal residence is required. Add the country of residence.'
+      non_resident_requires_representante: 'Non-resident IRNR: a fiscal representative is required. Add the representative NIF and name.'
   test:
     description: Test your configuration and connectivity
     example:
