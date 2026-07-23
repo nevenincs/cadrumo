@@ -184,8 +184,9 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozen
 
     Handles ``tr(...)`` / ``t(...)`` direct calls, ``*Error``/``*Exception``
     constructor translation keys, ``build_entry(...)`` portal-catalogue
-    translation keys, and ``message_key=`` / ``translation_key=`` / ``translated_message=``
-    dotted-literal kwargs on any callee.
+    translation keys, ``ValidationVerdict.failed(...)`` flow-verdict
+    factory keys, and ``message_key=`` / ``translation_key=`` /
+    ``translated_message=`` dotted-literal kwargs on any callee.
 
     The translation-key kwargs (``message_key=`` / ``translation_key=`` / ``translated_message=``)
     are collected callee-agnostically: any call that names one of those
@@ -203,6 +204,14 @@ def _collect_call_site_keys(node: ast.Call, findings: set[str], tr_names: frozen
         return
     if name == "build_entry":
         _collect_build_entry_keys(node, findings)
+        return
+    if name == "failed":
+        # ValidationVerdict.failed("dotted.message.key", ...) — the flow
+        # substrate's verdict factory declares its operator-facing message
+        # key as the first positional argument, not a tr() call site or a
+        # message_key kwarg, so it needs first-class collection or the
+        # scaffold prunes the authored leaves as orphans.
+        _add_first_dotted_arg(node, findings)
         return
     if name.endswith("Error") or name.endswith("Exception"):
         _add_first_dotted_arg(node, findings)

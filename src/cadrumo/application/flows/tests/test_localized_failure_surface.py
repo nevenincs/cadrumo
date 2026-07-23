@@ -1,0 +1,146 @@
+"""Localization gate for the substrate's operator-visible failure surface.
+
+Every failure string a frontend renders comes from a
+:class:`~cadrumo.application.flows.ValidationVerdict` message key or a
+frontend translation key resolved through the locale catalogues. A key
+missing from a catalogue does not fail loudly at render time — ``tr``
+falls back to a humanised English form of the key — so English prose
+silently bleeds into localized runs. This gate makes that leak a test
+failure instead: it sweeps every ``flows.*`` key referenced by the
+substrate and TUI modules and asserts each resolves in all four
+catalogues, then proves a real engine validation failure renders
+localized.
+"""
+
+from __future__ import annotations
+
+import re
+from pathlib import Path
+
+import pytest
+from pydantic import BaseModel
+
+from cadrumo.application.flows import (
+    CopyRef,
+    FlowDefinition,
+    FlowPage,
+    FlowSection,
+    answer,
+    start_flow,
+)
+from cadrumo.core import STRICT_FROZEN_CONFIG
+from cadrumo.core.flows import CheckpointAvailability, CopyRefKind, FlowMode, FlowWidgetKind
+from cadrumo.core.i18n import tr
+
+_LOCALES = ("en", "es", "ca", "hu")
+_SENTINEL = "\x00flows-localization-unresolved\x00"
+_KEY_PATTERN = re.compile(r"[\"'](flows\.[a-z0-9_.]+)[\"']")
+
+_SRC = Path(__file__).resolve().parents[4]
+_FLOW_MODULE_DIRS = (
+    _SRC / "cadrumo" / "application" / "flows",
+    _SRC / "cadrumo" / "adapters" / "inbound" / "tui",
+)
+
+
+def _referenced_flow_keys() -> frozenset[str]:
+    keys: set[str] = set()
+    for directory in _FLOW_MODULE_DIRS:
+        for module in directory.glob("*.py"):
+            keys |= set(_KEY_PATTERN.findall(module.read_text(encoding="utf-8")))
+    return frozenset(keys)
+
+
+@pytest.mark.unit
+@pytest.mark.hex_application
+def test_every_referenced_flow_key_resolves_in_all_locales() -> None:
+    """No substrate/TUI translation key may fall back to humanised English."""
+    keys = _referenced_flow_keys()
+    assert keys, "key sweep found nothing - the pattern or module set drifted"
+    missing = [
+        f"{locale}:{key}"
+        for key in sorted(keys)
+        for locale in _LOCALES
+        if tr(key, locale=locale, default=_SENTINEL) == _SENTINEL
+    ]
+    assert not missing, "flow keys missing from locale catalogues:\n" + "\n".join(missing)
+
+
+@pytest.mark.unit
+@pytest.mark.hex_application
+def test_no_flows_leaf_is_a_self_referencing_placeholder() -> None:
+    """A leaf whose value equals its own key is a scaffold echo, not a translation.
+
+    The catalogue lookup treats key==value as a miss and falls back to
+    humanised English, and the ``flows`` dynamic-root registration means
+    no scaffold reconciles these leaves — this gate replaces the
+    coverage that registration removed.
+    """
+    import yaml
+
+    echoes: list[str] = []
+    for locale in _LOCALES:
+        catalogue = _SRC / "cadrumo" / "locales" / f"{locale}.yml"
+        payload = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
+        for key, value in _flatten(payload.get(locale, payload)):
+            if key.startswith("flows.") and value == key:
+                echoes.append(f"{locale}:{key}")
+    assert not echoes, "self-referencing flows leaves (scaffold echoes):\n" + "\n".join(echoes)
+
+
+def _flatten(node: object, prefix: str = "") -> list[tuple[str, object]]:
+    if not isinstance(node, dict):
+        return [(prefix, node)]
+    leaves: list[tuple[str, object]] = []
+    for key, value in node.items():
+        dotted = f"{prefix}.{key}" if prefix else str(key)
+        leaves.extend(_flatten(value, dotted))
+    return leaves
+
+
+class _Answers(BaseModel):
+    model_config = STRICT_FROZEN_CONFIG
+
+
+def _single_required_text_flow() -> FlowDefinition:
+    ref = CopyRef(kind=CopyRefKind.LOCALE_KEY, ref="flows.progress.required")
+    return FlowDefinition(
+        id="loc-gate",
+        title=ref,
+        description=ref,
+        sections=(
+            FlowSection(
+                id="s",
+                title=ref,
+                items=(FlowPage(id="p1", widget=FlowWidgetKind.TEXT, prompt=ref, answer_type=str),),
+            ),
+        ),
+        answers_model=_Answers,
+        checkpoint={
+            FlowMode.CREATE: CheckpointAvailability.UNAVAILABLE,
+            FlowMode.MODIFY: CheckpointAvailability.UNAVAILABLE,
+        },
+    )
+
+
+@pytest.mark.unit
+@pytest.mark.hex_application
+def test_engine_validation_failure_renders_localized() -> None:
+    """A real invalid commit produces a verdict whose key resolves per locale.
+
+    The assertion is structural: the verdict carries a message KEY, the
+    key resolves in every catalogue (no sentinel fallback), and the
+    non-English renderings differ from the English one — proving the
+    rendered line tracks the locale rather than pinning any prose.
+    """
+    definition = _single_required_text_flow()
+    state = start_flow(definition, mode=FlowMode.CREATE)
+    state = answer(definition, state, "p1", "")
+    verdicts = state.verdicts.get("p1")
+    assert verdicts, "blank answer on a required page must record a failing verdict"
+    key = verdicts[0].message_key
+    assert key is not None
+    rendered = {locale: tr(key, locale=locale, default=_SENTINEL, **verdicts[0].context) for locale in _LOCALES}
+    assert _SENTINEL not in rendered.values(), f"verdict key {key!r} unresolved in a catalogue"
+    assert rendered["es"] != rendered["en"], "Spanish rendering must not fall back to English"
+    assert rendered["hu"] != rendered["en"], "Hungarian rendering must not fall back to English"
