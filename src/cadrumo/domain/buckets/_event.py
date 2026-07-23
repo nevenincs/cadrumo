@@ -99,6 +99,7 @@ class BucketEventType(StrEnum):
     PROFILE_EXPORTED = "profile.exported"
     PROFILE_IMPORTED = "profile.imported"
     PROFILE_ACTIVATED = "profile.activated"
+    PROFILE_SETUP_COMPLETED = "profile.setup.completed"
     # 036 censo live-sync against the sede Mis Datos Censales endpoint
     CENSO_REFRESHED = "profile.censo.refreshed"
     CENSO_APPLIED = "profile.censo.applied"
