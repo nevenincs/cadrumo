@@ -277,8 +277,10 @@ def test_only_one_jscpd_invocation_exists_in_the_tree() -> None:
     dispositions TOML's provenance string does not trip a gate about
     invocations.
     """
-    tracked = subprocess.run(
-        ["git", "ls-files"],
+    git = shutil.which("git")
+    assert git is not None, "git is required to enumerate the tracked tree"
+    tracked = subprocess.run(  # noqa: S603 - resolved Git with test-owned declarative argv.
+        [git, "ls-files"],
         cwd=_REPO_ROOT,
         capture_output=True,
         text=True,
