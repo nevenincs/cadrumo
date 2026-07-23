@@ -31,6 +31,7 @@ from ..flows import (
     ValidationVerdict,
     register_cross_field_validator,
 )
+from ..user_profile import projection_for_taxpayer
 
 TAXPAYER_PROJECTION_VALIDATOR_ID = "taxpayer-projection-constructs"
 """Registered id of the single flow-scope taxpayer-construction validator."""
@@ -117,8 +118,6 @@ def build_taxpayer_projection_validator(
     domain_keys = {page_id: key for page_id, key in page_domain_keys.items() if key}
 
     def _validate(answers: Mapping[str, str]) -> tuple[ValidationVerdict, ...]:
-        from ..user_profile import projection_for_taxpayer
-
         mapping: dict[str, str] = {}
         for page_id, value in answers.items():
             if REPEATING_INSTANCE_SEPARATOR in page_id:
